@@ -1,0 +1,1221 @@
+<!DOCTYPE html>
+<!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+<!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+<!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
+<!--[if gt IE 8]><!-->
+<html class="no-js">
+    <!--<![endif]-->
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+        <title>PShell</title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width">
+
+        <link rel="stylesheet" href="css/bootstrap.min.css">
+        <style>
+            body {
+                padding-top: 80px;
+                padding-bottom: 40px;
+            }
+        </style>        
+        <link rel="stylesheet" href="css/jquery-ui.min.css">
+        <link rel="stylesheet" href="css/main.css">
+        <link rel="shortcut icon" href="img/favicon.ico">
+
+        <script src="js/vendor/modernizr-2.6.2-respond-1.1.0.min.js"></script>
+        <script src="js/jquery-2.0.0.min.js"></script>
+        <script src="js/jquery-ui.min.js"></script>
+        <script src="flot/jquery.flot.js"></script>
+        <script src="flot/jquery.flot.resize.js"></script>
+
+
+        <script type='text/javascript'>
+            var base = '..';
+            var stream;
+
+            function getVersion() {
+                $.get(base + '/version', function (data) {
+                    $('#version').empty();
+                    $('#version').append(data)
+                });
+            }
+
+            function getInstanceName() {
+                $.get(base + '/config', function (config) {
+                    var name = config.instanceName;
+                    if (name && name.length > 0) {
+                        document.title = 'PShell [' + name + ']';
+                        $('#instancename').empty();
+                        $('#instancename').append(' [' + name + ']')
+                    }
+                }, 'json');
+            }
+
+            function getUser() {
+                $.get(base + '/user', function (user) {
+                    setUser(user)
+                }, 'json');
+            }
+
+            function onCommunicationError() {
+                if (communicationOk) {
+                    communicationOk = false
+                    updateState("")
+                    updateTable($("#table_devices tbody"), [])
+                    updateTable($("#table_logs tbody"), [])
+                    closeScriptMenu()
+                    closeDataMenu()
+                    enableButtons(false)
+                }
+            }
+
+            function onCommunicationOk() {
+                if (!communicationOk) {
+                    communicationOk = true
+                    enableButtons(true)
+                }
+            }
+            
+            function enableButtons(value){
+                buttons = ["updatedevices", "initdevices", "stopdevices", "openlog", "editscript", "listscript", "plotdata"]
+                for (button in buttons){
+                    $('#'+buttons[button]).prop('disabled', !value);
+                }
+            }
+
+            var communicationOk = true
+
+            function getState() {
+                // add information for
+                $.get(base + '/state', function (data) {
+                    updateState(data)                    
+                    onCommunicationOk()
+                }, 'json').error(function (xhr, textStatus, errorThrown) {
+                    onCommunicationError()
+                });
+            }
+
+            function isBlocking() {
+                return false;
+            }
+
+            var state
+            function updateState(data) {
+                state = data
+                $("#progbar")[0].children[0].textContent = data
+                $('#runscript').prop('disabled', (state != "Ready") || !communicationOk)
+                $('#abort').prop('disabled', ((state != "Busy") && (state != "Paused") && (state != "Initializing")) || !communicationOk)
+            }
+
+            function updateProgress(data) {
+                data *= 100; //0.0 to 1.0
+                data = Math.max(data, 0);
+                data = Math.min(data, 100);
+                //$('#progbar').attr('aria-valuenow', data+"%").css('width',data+"%");              
+                $('#progbar').attr("aria-valuenow", data);
+                $('#progbar').attr("style", "width: " + data + "%");
+            }
+
+            function updateTable(table, data) {
+                var tbl_body = "";
+                var odd_even = false;
+                $.each(data, function () {
+                    var tbl_row = "";
+                    $.each(this, function (k, v) {
+                        tbl_row += "<td>" + v + "</td>";
+                    })
+                    tbl_body += "<tr class=\"" + (odd_even ? "odd" : "even") + "\">" + tbl_row + "</tr>";
+                    odd_even = !odd_even;
+                })
+                table.html(tbl_body);
+            }
+
+            function onScanRecord(record) {
+                var index = record["index"]
+                var positions = record["positions"]
+                var values = record["values"]
+                var dimensions = record["dimensions"]
+
+                if (dimensions == 1) {
+                    $("#graph1").show()
+                    if (positions.length == 0) {
+                        positions = [index, ]
+                    }
+
+                    for (i = 0; i < values.length; i++) {
+                        scanData[i].data.push([positions[0], values[i]]);
+                        //if(scanData[i].length>MAXIMUM_SIZE){
+                        //    scanData[i] = scanData[i].splice(1);
+                    }
+                    repaintLinePlot()
+                } else {
+                    $("#graph1").hide()
+                    $("#tooltip").hide();
+                }
+                //Todo: area plot
+            }
+
+            function onScanStart(names) {
+                scanReadables = names
+                scanData = new Array()
+                for (i = 0; i < names.length; i++)
+                    scanData.push({data: new Array(0), label: names[i]})
+                repaintLinePlot()
+            }
+
+            var scanReadables = []
+            var scanData = [[], []];
+            var scanPlotOptions = {
+                series: {
+                    shadowSize: 0	// Drawing is faster without shadows
+                    ,
+                    points: {
+                        show: true,
+                        radius: 3
+                                //symbol: "circle" 
+                    },
+                    lines: {
+                        show: true,
+                        lineWidth: 1,
+                        //fill: boolean or number
+                        //fillColor: null or color/gradient                            
+                    }
+                },
+                yaxis: {
+                    min: null,
+                    max: null,
+                    show: true,
+                },
+                xaxis: {
+                    // mode: "time"
+                    min: null,
+                    max: null,
+                    show: true,
+                },
+                grid: {
+                    hoverable: true,
+                    clickable: false
+                },
+            };
+
+            function repaintLinePlot() {
+                var plot = $.plot($("#graph1"), scanData, scanPlotOptions);
+                plot.setData(scanData);
+                plot.setupGrid();
+                plot.draw();
+            }
+
+            function clearScanPlots() {
+                scanReadables = []
+                scanData = [[], []]
+                repaintLinePlot()
+                $("#tooltip").hide();
+            }
+
+            function setPlots(plots) {
+                clearScanPlots()
+                $("#graph1").show()
+                plotsData = new Array(0)
+                for (i = 0; i < plots.length; i++) {
+                    plot = plots[i]
+                    if (plot.rank == 1) {
+                        var y = plot.data
+                        var x = plot.x
+                        plotData = []
+                        for (j = 0; j < y.length; j++) {
+                            plotData.push([((x == null) ? j : x[j]), y[j]])
+                        }
+                        plotsData.push({data: plotData, label: plot.name})
+                    }
+                }
+
+                var plot = $.plot($("#graph1"), plotsData, scanPlotOptions);
+                plot.setData(plotsData);
+                plot.setupGrid();
+                plot.draw();
+            }
+
+            function setUser(user) {
+                var name = user[0];
+                var rights = user[1];
+                $('#username').empty();
+                if (name && name.length > 0 && name != "Default") {
+                    $('#username').append(' - ' + name)
+                }
+            }
+
+            //TODO: control the source of request with the 'executing' flag is weak
+            var anseredUI;
+            var uiEventName;
+            var uiEventResult;
+            function onEventUI(ev) {
+                if (executing){
+                    anseredUI = false
+                    uiEventResult = "Cancel"
+                    uiEventName = ev[0];                                        
+                    $("#modalinput").hide()
+                    $("#modalpwd").hide()                   
+                    $("#modalbuttoncancel").hide()
+                    $("#modalbuttonok").hide()
+                    $("#modalbuttonyes").hide()
+                    $("#modalbuttonno").hide()
+                    $("#modalselect").hide()                    
+                    switch (uiEventName){                    
+                        case  "message":                            
+                            $("#modalbuttonok").show()
+                            $('#modaltext').text(ev[1] ? ev[1] : "")                    
+                            $('#modaltitle').text(ev[2] ? ev[2] : "")                    
+                            if (ev[3]!="true"){
+                                sendUI("ok")
+                            }
+                            $("#myModal").modal('show');
+                            break;
+                        case "getstring":
+                        case "getpwd":
+                            $("#modalbuttonok").show()
+                            $("#modalbuttoncancel").show()
+                            if (uiEventName == "getpwd"){                                
+                                $("#modalpwd").show()  
+                                $("#modalpwd").val("")
+                            } else {
+                                $("#modalinput").show()  
+                                $("#modalinput").val(ev[2] ? ev[2] : "")
+                            }
+                            $('#modaltext').text(ev[1] ? ev[1] : "")                                                
+                            $('#modaltitle').text("Input")                    
+                            $("#myModal").modal('show');
+                            break;
+                        case "getopt":
+                            switch (ev[2]){  
+                                case 'YesNo': 
+                                    $("#modalbuttonyes").show()
+                                    $("#modalbuttonno").show()                                    
+                                    break;
+                                case 'YesNoCancel':                                
+                                    $("#modalbuttoncancel").show()
+                                    $("#modalbuttonyes").show()
+                                    $("#modalbuttonno").show()                                    
+                                    break;
+                                case 'OkCancel':
+                                    $("#modalbuttoncancel").show()
+                                    $("#modalbuttonok").show()
+                                default:
+                            }
+                            $('#modaltext').text(ev[1] ? ev[1] : "")                                                
+                            $('#modaltitle').text("Input")                    
+                            $("#myModal").modal('show');
+                            break;
+                        case "selectstring":
+                            $("#modalselect").show()
+                            $('#modalselect').html('');
+                            for (option in ev[3]){
+                                $('#modalselect').append('<option value = "' + ev[3][option] + '">' + ev[3][option] + '</option>')
+                            }
+                            if (ev[2]){
+                                 $('#modalselect').val(ev[2])
+                            }                                                         
+                            $("#modalbuttonok").show()
+                            $("#modalbuttoncancel").show()
+                            $('#modaltext').text(ev[1] ? ev[1] : "")                                                
+                            $('#modaltitle').text("Input")                    
+                            $("#myModal").modal('show');
+                            break;                            
+                        default:                            
+                            sendUI("Invalid command: " + name)                            
+                    }             
+                }
+            }   
+            
+            function sendUI(val) {
+                val = formatOutgoingText(val)
+                if (!anseredUI){
+                    anseredUI = true
+                    $.ajax({
+                        url: base + '/ui/'+ val,
+                        type: 'PUT',
+                    }).error(function (xhr, textStatus, errorThrown) {
+                    });
+                   
+                }
+            }
+            
+            function onModalButton(val){
+                uiEventResult = val
+            }
+
+            function appendConsole(data) {
+                $('#txtarea').append(data + '\n');
+                $('#txtarea').scrollTop($('#txtarea')[0].scrollHeight);
+            }
+
+            function clearInput() {
+                $("#command").val("");
+                $("#command").prop('disabled', false);
+                $("#command").focus();
+            }
+            
+            var executing = false
+            function evalCommand() {
+                cmd = $("#command").val();
+
+                if ((cmd == '') || (cmd.trim() != '')) { //Don't send other empty strings than token for end of composite statement
+                    if (isBlocking()) {
+                        $("#command").prop('disabled', true);
+                    }
+                    cmd = formatOutgoingText(cmd)
+                    executing = true
+                    $.get(base + '/eval/' + cmd, function (data) {
+                        executing = false
+                        if (isBlocking()) {
+                            clearInput()
+                        }
+                    }).error(function (xhr, textStatus, errorThrown) {
+                        executing = false
+                        if (isBlocking()) {
+                            clearInput()
+                        }
+                    });
+                    if (!isBlocking()) {
+                        clearInput()
+                    }
+                    historyIndex = -1;
+                }
+            }
+
+            function abort() {
+                //$.ajax({
+                //    url: base + '/abort',
+                //    type: 'PUT',
+                //}).error(function (xhr, textStatus, errorThrown) {
+                //    appendConsole(xhr.responseText)
+                //});                
+                $.get(base + '/abort', function (data) {
+                }).error(function (xhr, textStatus, errorThrown) {
+                    appendConsole(xhr.responseText)
+                });                  
+            }
+            
+            function onHome() {
+                $("#home").show()
+                $("#logs").hide()
+                $("#devices").hide()
+                $("#scripts").hide()
+                $("#data").hide()
+                $("#command").focus();
+            }
+
+            function onDevices() {
+                $("#home").hide()
+                $("#logs").hide()
+                $("#devices").show()
+                $("#scripts").hide()
+                $("#data").hide()
+                getDevices();
+            }
+
+            function onLogs() {
+                $("#home").hide()
+                $("#logs").show()
+                $("#devices").hide()
+                $("#scripts").hide()
+                $("#data").hide()
+                getLogs();
+            }
+
+            function onScripts() {
+                $("#home").hide()
+                $("#logs").hide()
+                $("#devices").hide()
+                $("#scripts").show()
+                $("#data").hide()
+                $("#data_path").focus();
+                getScripts("/")
+            }
+
+            function onData() {
+                $("#home").hide()
+                $("#logs").hide()
+                $("#devices").hide()
+                $("#scripts").hide()
+                $("#data").show()
+                $("#data_path").focus();
+            }
+
+            function getDevices() {
+                $.get(base + '/devices', function (data) {
+                    updateTable($("#table_devices tbody"), data)
+                }, 'json').error(function (xhr, textStatus, errorThrown) {
+                    getState()
+                });
+            }
+
+            function updateDevices() {
+                $.get(base + '/update', function (data) {
+                }).error(function (xhr, textStatus, errorThrown) {
+                    appendConsole(xhr.responseText)
+                });                                
+            }
+
+            function initDevices() {
+                $.get(base + '/reinit', function (data) {
+                }).error(function (xhr, textStatus, errorThrown) {
+                    appendConsole(xhr.responseText)
+                });                                
+            }
+
+            function stopDevices() {
+                $.get(base + '/stop', function (data) {
+                }).error(function (xhr, textStatus, errorThrown) {
+                    appendConsole(xhr.responseText)
+                });                                
+            }
+
+            function getLogs() {
+                $.get(base + '/logs', function (data) {
+                    updateTable($("#table_logs tbody"), data)
+                }, 'json').error(function (xhr, textStatus, errorThrown) {
+                    getState()
+                });
+            }
+
+            function openLog() {
+                if ($("#openlog").hasClass('active')) {
+                    $("#openloglist").hide()
+                } else {
+                    $("#openloglist").show()
+                    getLogFiles("/")
+                }
+                $("#table_logs").focus();
+            }
+
+            function getLogFiles(path) {
+                $("#openlogresults").empty()
+                $.get(base + '/logs/' + path, function (data) {
+                    var listItemStype = "class='list-group-item' style='height: 40px; padding: 10px 15px;' href='#'"
+                    if ($.trim(path) != '/') {
+                        //$("#scriptresults").append("<li><a href='#' onclick=getScripts('" + path + "../')>..</a> ");
+                        $("#openlogresults").append("<li><a " + listItemStype + " onclick=getLogFiles('" + path.substring(0, path.slice(0, -1).lastIndexOf("/") + 1) + "')>..</a> ");
+                    }
+                    $.each(data.split("\n"), function (i, name) {
+                        if (name.length > 0) {
+                            if (name.match(/\/$/)) {
+                                $("#openlogresults").append("<li><a " + listItemStype + " onclick=getLogFiles('" + path + name + "')>" + name + "</a> ");
+                            } else {
+                                $("#openlogresults").append("<li><a " + listItemStype + " onclick=getLogFile('" + path + name + "')>" + name + "</a> ");
+                            }
+                        }
+                    });
+                });
+            }
+
+            function getLogFile(path) {
+                closeLogFileList()
+                myWindow = window.open(base + '/logs' + path);
+                myWindow.focus();
+            }
+
+            function closeLogFileList() {
+                $("#openlog").removeClass('active')
+                $("#openloglist").hide()
+            }
+
+
+            function listScript() {
+                if ($("#listscript").hasClass('active')) {
+                    $("#scriptlist").hide()
+                    $("#scriptname").show()
+                } else {
+                    $("#scriptname").hide()
+                    $("#scriptlist").show()
+                }
+                $("#scriptcontents").focus();
+            }
+
+            function closeScriptResult() {
+                $("#scriptreturn").hide()
+                $("#scripterror").hide()
+            }
+            function closeScriptMenu() {
+                $("#listscript").removeClass('active')
+                $("#scriptlist").hide()
+                $("#scriptname").show()
+            }
+
+            function editScript() {
+                if ($("#editscript").hasClass('active')) {
+                    $("#scriptcontents").prop("readonly", true);
+                    $("#scriptcontents").addClass('shadow_ro')
+                    $("#scriptcontents").removeClass('shadow')
+                } else {
+                    $("#scriptcontents").prop("readonly", false);
+                    $("#scriptname").val("");
+                    $("#scriptcontents").removeClass('shadow_ro')
+                    $("#scriptcontents").addClass('shadow')
+                }
+                closeScriptMenu()
+                closeScriptResult()
+                $("#scriptcontents").focus();
+            }
+
+            function disableEdition() {
+                $("#editscript").removeClass('active')
+                $("#scriptcontents").prop("readonly", true);
+                $("#scriptcontents").addClass('shadow_ro')
+                $("#scriptcontents").removeClass('shadow')
+            }
+
+            function formatIncomingText(txt) {
+                txt = txt.replace(/\t/g, '    ');
+                return txt
+            }
+
+            function formatOutgoingText(txt) {
+                if (txt == '') {
+                    txt = '%0A';
+                } else {
+                    //TODO: I'm not able to encode backslash directly, %5C is not accepted by server.
+                    //Workaround replacing by a  double dagger is quite ugly.
+                    txt = txt.replace(/\\/g, '‡');
+                    txt = txt.replace(/\%/g, '%25');
+                    txt = txt.replace(/\[/g, '%5B');
+                    txt = txt.replace(/\]/g, '%5D');
+                    txt = txt.replace(/\;/g, '%3B');
+                    txt = txt.replace(/\#/g, '%23');
+                    txt = txt.replace(/\n/g, '%0A');
+                    txt = txt.replace(/\r/g, '%0D');
+                }
+                return txt
+            }
+
+            function runScript() {
+                closeScriptResult()
+                var script = $("#scriptname").val()
+                executing = true
+                if (script.length > 0) {
+                    $.get(base + '/run/' + script, function (data) {
+                        executing = false
+                        if ((data.length > 0) && (data != "null")) {
+                            $("#scriptreturn").show()
+                            $("#scriptreturn").text(data)
+                        }
+                    }).error(function (xhr, textStatus, errorThrown) {
+                        executing = false
+                        $("#scripterror").show()
+                        $("#scripterror").text(xhr.responseText)
+                    });
+                    $("#scriptcontents").focus();
+                } else {
+                    script = $("#scriptcontents").val()
+                    script = formatOutgoingText(script)
+                    $.get(base + '/evalScript/' + script, function (data) {
+                        executing = false
+                        if ((data.length > 0) && (data != "null")) {
+                            $("#scriptreturn").show()
+                            $("#scriptreturn").text(data)
+                        }
+                    }).error(function (xhr, textStatus, errorThrown) {
+                        executing = false
+                        $("#scripterror").show()
+                        $("#scripterror").text(xhr.responseText)
+                    });
+                }
+            }
+
+            function getScripts(path) {
+                $("#scriptresults").empty()
+                if (path.match(/\/$/)) {
+                    $.get(base + '/script/' + path, function (data) {
+                        var listItemStype = "class='list-group-item' style='height: 40px; padding: 10px 15px;' href='#'"
+                        if ($.trim(path) != '/') {
+                            $("#scriptresults").append("<li><a " + listItemStype + " onclick=getScripts('" + path.substring(0, path.slice(0, -1).lastIndexOf("/") + 1) + "')>..</a> ");
+                        }
+                        var entries = data.split("\n");
+                        $.each(entries, function (i, name) {
+                            if (name.length > 0) {
+                                if (name.match(/\/$/)) {
+                                    $("#scriptresults").append("<li><a " + listItemStype + " onclick=getScripts('" + path + name + "')>" + name + "</a> ");
+                                } else {
+                                    $("#scriptresults").append("<li><a " + listItemStype + " onclick=getScript('" + path + name + "')>" + name + "</a> ");
+                                }
+                            }
+                        });
+                    });
+                }
+            }
+
+            function getScript(path) {
+                $.get(base + '/script/' + path, function (data) {
+                    data = formatIncomingText(data)
+                    $("#scriptcontents").val(data);
+                    $("#scriptname").val(path.substring(1));
+                    disableEdition()
+                    closeScriptMenu()
+                    closeScriptResult()
+                }).error(function (xhr, textStatus, errorThrown) {
+                    $("#scriptname").val("");
+                    $("#scriptcontents").val("");
+                    closeScriptResult()
+                });
+            }
+
+            function plotDataset(path) {
+                closeDataResult()
+                $.get(base + '/eval/plot(load_data("' + $('#data_path').val() + '"))', function (data) {
+                    onHome()
+                }).error(function (xhr, textStatus, errorThrown) {
+                    $("#dataerror").show()
+                    $("#dataerror").text(xhr.responseText)                    
+                });
+            }
+            
+            function closeDataResult() {
+                $("#dataerror").hide()
+            }
+            
+            var connection;
+            function connect() {
+                disconnect();
+                connection = new EventSource(base + '/events');
+                connection.addEventListener('state', function (e) {
+                    jdata = JSON.parse(e.data)
+                    updateState(jdata);
+                    onCommunicationOk()
+
+                }, false);
+                connection.addEventListener('progress', function (e) {
+                    jdata = JSON.parse(e.data)
+                    updateProgress(jdata);
+                    if (jdata == 0) {
+                        clearScanPlots();
+                    }
+
+                }, false);
+                connection.addEventListener('scan', function (e) {
+                    jdata = JSON.parse(e.data)
+                    onScanStart(jdata);
+
+                }, false);
+                connection.addEventListener('record', function (e) {
+                    jdata = JSON.parse(e.data)
+                    onScanRecord(jdata);
+
+                }, false);
+                connection.addEventListener('plot', function (e) {
+                    jdata = JSON.parse(e.data)
+                    setPlots(jdata);
+
+                }, false);
+                connection.addEventListener('user', function (e) {
+                    jdata = JSON.parse(e.data)
+                    setUser(jdata);
+                }, false);
+                connection.addEventListener('ui', function (e) {
+                    jdata = JSON.parse(e.data)
+                    onEventUI(jdata);
+                }, false);                
+                connection.addEventListener('shell', function (e) {
+                    appendConsole(e.data);
+
+                }, false);
+            }
+
+            function disconnect() {
+                try {
+                    connection.close();
+                } catch (e) {
+                }
+            }
+            
+            function timer() {
+                if ($("#devices").is(":visible")) {
+                    getDevices();
+                } else if ($("#logs").is(":visible")) {
+                    getLogs();
+                } else {
+                    getState(); //In order to have a visual indication the server is offline: the state is erased
+                }
+
+                window.setTimeout(
+                        "timer()",
+                        1000
+                        );
+            }
+
+            var historyIndex = -1;
+            function up() {
+                historyIndex++;
+                if (historyIndex >= 0) {
+                    requestHistoryEntry();
+                }
+            }
+
+            function down() {
+                if (historyIndex > 0) {
+
+                    historyIndex--;
+                }
+                if (historyIndex >= 0) {
+                    requestHistoryEntry();
+                }
+            }
+
+            function requestData() {
+                closeDataResult()
+                var query = $("#data_path").val();
+                $.get(base + '/data/' + query, function (data) {
+                    data = formatIncomingText(data)
+                    $("#data_contents").val(data);
+                }).error(function (xhr, textStatus, errorThrown) {
+                    $("#data_contents").val("");
+                    $("#dataerror").show()
+                    $("#dataerror").text(xhr.responseText)                                        
+                });
+            }
+
+            function requestDataAutoCompletion() {
+                closeDataResult()
+                var query = $("#data_path").val();
+                $.get(base + '/contents/' + query, function (data) {
+                    setDataMenu(data)
+                }).error(function (xhr, textStatus, errorThrown) {
+                });
+            }
+
+            function showPopupMenu(menuName, data, onclick) {
+                $("#" + menuName).empty();
+                if (data.length > 0) {
+                    var menu = document.getElementById(menuName);
+                    $.each(data, function () {
+                        var li = document.createElement("li");
+                        var link = document.createElement("a");
+                        var text = document.createTextNode(this);
+                        link.appendChild(text);
+                        link.href = "#";
+                        li.appendChild(link);
+                        menu.appendChild(li);
+                    })
+                    $("#" + menuName + " li a").click(onclick);
+                    $("#" + menuName).show();
+                }
+            }
+
+            function setDataMenu(data) {
+                if (data.length > 0) {
+                    data = data.split("\n")
+                    showPopupMenu("datadropdownmenu", data, function () {
+                        onPopupDataMenu(this.text)
+                    })
+                    $("#datapopupmenu").show();
+                } else {
+                    closeDataMenu()
+                }
+            }
+
+            function closeDataMenu() {
+                $("#datapopupmenu").hide();
+                $("#data_path").focus();
+            }
+
+            function onPopupDataMenu(text) {
+                //var n = text.indexOf(" ");
+                var folder = text.match(/\/$/)
+                if (!folder) {
+                    text += " "
+                }
+                //replace(($("#data_path"))[0], text)
+                append(($("#data_path"))[0], text)
+                if (folder) {
+                    requestDataAutoCompletion()
+                }
+                closeDataMenu()
+            }
+
+            function requestHistoryEntry() {
+                $.get(base + '/history/' + historyIndex, function (data) {
+                    $("#command").val(data);
+                }).error(function (xhr, textStatus, errorThrown) {
+                    $("#command").val("");
+                    historyIndex = -1;
+                });
+            }
+
+            function requestAutoCompletion(input, strip) {
+                $.get(base + '/autocompletion/' + input, function (data) {
+                    setAutocompletionMenu(data, strip)
+                }, 'json').error(function (xhr, textStatus, errorThrown) {
+                });
+            }
+
+            function setAutocompletionMenu(data, strip) {
+                if (data.length > 0) {
+                    showPopupMenu("dropdownmenu", data, function () {
+                        onPopupAutoCompletion(this.text, strip)
+                    })
+                    $("#popupmenu").show();
+                } else {
+                    closeAutocompletionMenu();
+                }
+            }
+
+            function closeAutocompletionMenu() {
+                $("#popupmenu").hide();
+                $("#command").focus();
+            }
+
+            function replace(txtarea, newtxt) {
+                var text = $(txtarea).val()
+                var caret = txtarea.selectionStart + newtxt.length
+                $(txtarea).val(text.substring(0, txtarea.selectionStart) + newtxt + text.substring(txtarea.selectionEnd));
+                txtarea.setSelectionRange(caret, caret);
+            }
+
+            function append(txtarea, newtxt) {
+                var text = $(txtarea).val()
+                $(txtarea).val(text + newtxt);
+            }
+
+            function onPopupAutoCompletion(text, strip) {
+                if (strip) {
+                    var n = text.lastIndexOf(" ");
+                    var text = text.substring(0, n);
+                }
+                //$("#command").val($("#command").val() + text); 
+                replace(($("#command"))[0], text)
+                closeAutocompletionMenu()
+            }
+
+
+        </script>
+    </head>
+    <body>
+        <nav>    
+            <div class="navbar navbar-inverse navbar-fixed-top">
+                <div class="container-fluid">                           
+                    <div class="navbar-header">
+                        <a class="navbar-brand" href="#" onclick="onHome()" style="margin-right: 40px">PShell
+                            <img align="left" style="max-width:80px; margin-left: -20px; margin-top: -2px;margin-right: 5px;" src="img/icon.png">
+                        </a>        
+                        <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#myNavbar">
+                            <span class="icon-bar"></span>
+                            <span class="icon-bar"></span>
+                            <span class="icon-bar"></span> 
+                        </button>                            
+                    </div>
+
+                    <div class="navbar-collapse collapse" id="myNavbar">
+                        <ul class="nav navbar-nav">
+                            <li><a href="#" onclick="onHome()">Console</a></li>
+                            <li><a href="#" onclick="onDevices()">Devices</a></li>
+                            <li><a href="#" onclick="onLogs()">Logs</a></li>
+                            <li><a href="#" onclick="onScripts()">Scripts</a></li>                            
+                            <li><a href="#" onclick="onData()">Data</a></li>
+                        </ul>
+                        <ul id="abortbutton" class="nav navbar-nav navbar-right">
+                            <li><a href="#" onclick="abort()">Abort</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <div class="modal fade" id="myModal" role="dialog">
+            <div class="modal-dialog">            
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal">&times;</button>
+                        <h4 class="modal-title" id='modaltitle'></h4>
+                    </div>
+                    <div class="modal-body">
+                        <p id='modaltext'></p>
+                        <input class="img-rounded" id="modalinput"  type="text" style="display:none">                              
+                        <input class="img-rounded" id="modalpwd"  type="password" style="display:none">                    
+                        <select class="img-rounded" id="modalselect" style="display:none"></select>
+                    </div>
+                    <div class="modal-footer">
+                        <button id="modalbuttonok"     type="button" class="btn btn-default" data-dismiss="modal" style="width:70px; display:none" onclick="onModalButton('Yes')">Ok</button>
+                        <button id="modalbuttoncancel" type="button" class="btn btn-default" data-dismiss="modal" style="width:70px; display:none" onclick="onModalButton('Cancel')">Cancel</button>
+                        <button id="modalbuttonyes"    type="button" class="btn btn-default" data-dismiss="modal" style="width:70px; display:none" onclick="onModalButton('Yes')">Yes</button>
+                        <button id="modalbuttonno"     type="button" class="btn btn-default" data-dismiss="modal" style="width:70px; display:none" onclick="onModalButton('No')">No</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+         
+        <div id="home" class="container">
+            <div class="row">
+                <textarea class="row text-container horizontalscroll shadow_ro img-rounded" id="txtarea" readonly="readonly" rows="12" ></textarea>                              
+
+                <input class="row text-container shadow img-rounded" id="command" placeholder="" type="text">                              
+
+                <div id="popupmenu" class="dropdown clearfix" style="display:none">
+                    <ul  id="dropdownmenu"  class="dropdown-menu scrollable-menu" role="menu" aria-labelledby="dropdownMenu" style="display:block;position:absolute;margin-bottom:5px;">
+                    </ul>
+                </div>                    
+
+                <div id="graph1_container" class="graph-container shadow img-rounded">                        
+                    <div id="graph1" class="graph-placeholder"></div>
+                </div>                                   
+            </div>
+        </div>
+
+        <div id="devices" class="container" style="display:none">
+            <div class="row borderless-container">                            
+                <button id="updatedevices" type="button" class="btn btn-default pull-right" onclick="updateDevices();
+                        this.blur()" style="width:60px; font-size:smaller">Update</button>                                                   
+                <button id="initdevices" type="button" class="btn btn-default pull-right" onclick="initDevices();
+                        this.blur()" style="width:60px; font-size:smaller; margin-right:10px">Init</button>                                                   
+                <button id="stopdevices" type="button" class="btn btn-default pull-right" onclick="stopDevices();
+                        this.blur()" style="width:60px; font-size:smaller; margin-right:10px">Stop</button>                                                   
+            </div>                
+
+            <div class="row table-container">
+                <table id = "table_devices" class="table row horizontalscroll">
+
+                    <thead><tr>
+                            <th>Device</th>
+                            <th>Type</th>
+                            <th>State</th>
+                            <th>Value</th>
+                            <th>Age</th>
+                        </tr>   
+                    </thead> 
+                    <tbody></tbody>
+                </table>                        
+            </div>                                                                         
+        </div>   
+
+        <div id="logs" class="container" style="display:none">
+            <div class="row borderless-container">                            
+                <button id="openlog" type="button" class="btn btn-default pull-right" data-toggle="button" onclick="openLog()" style="width:60px; font-size:smaller; margin-right:10px">Open</button>                                                   
+            </div>                
+            <div class="row text-container shadow img-rounded single-line-list" id="openloglist" style="display:none; height:240px; overflow-y:scroll">
+                <ul id="openlogresults" class="list-group"></ul>
+            </div>                
+
+            <div class="row table-container">
+                <table id = "table_logs" class="table row horizontalscroll">                        
+                    <thead><tr>
+                            <th>Date</th>
+                            <th>Time</th>
+                            <th>Origin</th>
+                            <th>Level</th>
+                            <th>Description</th>
+                        </tr>   
+                    </thead> 
+                    <tbody></tbody>
+                </table>                        
+            </div>                                                                         
+        </div>        
+
+        <div id="scripts" class="container" style="display:none">           
+            <div class="row">
+                <!--  <p> -->                 
+                <div class="row borderless-container">                            
+                    <button id="runscript" type="button" class="btn btn-default pull-right" onclick="runScript();this.blur()" style="width:60px; font-size:smaller;">Run</button>                                                   
+                    <button id="abort" type="button" class="btn btn-default pull-right" onclick="abort();this.blur()" style="width:60px; font-size:smaller; margin-right:10px">Abort</button>                                                   
+                    <button id="editscript" type="button" class="btn btn-default pull-right" data-toggle="button" onclick="editScript()" style="width:60px; font-size:smaller; margin-right:10px">Edit</button>                                                   
+                    <button id="listscript" type="button" class="btn btn-default pull-right" data-toggle="button" onclick="listScript()" style="width:60px; font-size:smaller; margin-right:10px">Open</button>                                                   
+                </div>                
+                <input class="row text-container shadow_ro img-rounded" id="scriptname" readonly="readonly" placeholder="" type="text">
+                <div class="row text-container shadow img-rounded single-line-list" id="scriptlist" style="display:none; height:240px; overflow-y:scroll">
+                    <ul id="scriptresults" class="list-group"></ul>
+                </div>                
+                <textarea class="row text-container horizontalscroll shadow_ro img-rounded" id="scriptcontents" readonly="readonly" rows="24" ></textarea>                              
+                <div class="row text-container horizontalscroll alert alert-success fade in" id="scriptreturn" style="display:none"> </div>
+                <div class="row text-container horizontalscroll alert alert-danger fade in" id="scripterror"  style="display:none"> </div>                
+            </div>
+        </div>
+
+        <div id="data" class="container" style="display:none">
+            <div class="row">
+                <div class="row borderless-container">                            
+                    <button id="plotdata" type="button" class="btn btn-default pull-right" onclick="plotDataset()" style="width:60px; font-size:smaller;">Plot</button>                                                   
+                </div>                
+                <input class="row text-container shadow img-rounded" id="data_path" placeholder="" type="text">                              
+                <div class="row text-container horizontalscroll alert alert-danger fade in" id="dataerror"  style="display:none"> </div>                
+                <div id="datapopupmenu" class="dropdown clearfix" style="display:none">
+                    <ul  id="datadropdownmenu"  class="dropdown-menu scrollable-menu" role="menu" aria-labelledby="dropdownMenu" style="display:block;position:absolute;margin-bottom:5px;">
+                    </ul>
+                </div>                    
+                <textarea class="row text-container horizontalscroll shadow_ro img-rounded" id="data_contents" readonly="readonly" rows="26" ></textarea>                              
+            </div>
+        </div>
+
+        <footer class="footer singleline shadow">   
+            <div class="col-sm-4 statusBar progress">
+                <div id="progbar" class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width: 0%;">
+                    <span>Unknown</span>
+                </div>
+            </div>            
+            <div class="rightalign statusBar" >
+                <font size="1">PShell <span id='version'></span> <span id='instancename'></span> <span id='username'></span></font>                                   
+            </div>
+        </footer>        
+
+        <script>
+            //$("#progress").hide()
+            if (!isBlocking()) {
+                $("#abortbutton").hide()
+            }
+
+            $("<div id='tooltip'></div>").css({
+                position: "absolute",
+                display: "none",
+                border: "1px solid #fdd",
+                padding: "2px",
+                "background-color": "#fee",
+                opacity: 0.80
+            }).appendTo("body");
+
+
+            $("#graph1").bind("plothover", function (e, pos, item) {
+                if (item) {
+                    var x = item.datapoint[0].toFixed(2),
+                            y = item.datapoint[1].toFixed(2);
+                    $("#tooltip").html(x + ", " + y)
+                            .css({top: item.pageY - ($("#tooltip").height()) - 5, left: item.pageX + 5})
+                            .fadeIn(200);
+                } else {
+                    $("#tooltip").hide();
+                }
+            });
+
+
+            $(".graph-container").resizable({
+                maxWidth: 1800,
+                maxHeight: 600,
+                minWidth: 300,
+                minHeight: 200
+            });
+
+            $(".graph-container").css("width", '100.00%');
+            $(".graph-container").css("margin-right", '0%');
+            $(".row").css("width", '100%');
+
+            getState();
+            getVersion();
+            getInstanceName();
+            getUser();
+
+            $(command).keypress(function (e) {
+                if (e.which == 13) {
+                    evalCommand();
+                } else if ($("#command").val() == "") {
+                    if (e.which == 0x3A) { //Colon     or colon with shift
+                        requestAutoCompletion((":"), false)
+                    }
+                }
+            });
+
+            $(command).keydown(function (e) {
+                closeAutocompletionMenu();
+                if (e.which == 0x26) { //Up
+                    if ($("#popupmenu").is(":visible")) {
+
+                    } else {
+                        up();
+                    }
+                }
+                else if (e.which == 0x28) { //Down
+                    if ($("#popupmenu").is(":visible")) {
+
+                    } else {
+                        down();
+                    }
+                } else if (e.which == 0xBE) { //Period
+                    //var text = ($("#command").val()
+                    var text = $("#command").val().substring(0, ($("#command"))[0].selectionEnd)
+                    requestAutoCompletion(text, true)
+                } else if ((e.which == 0x20) && (e.ctrlKey)) {   //CTRL+space
+                    if (e.shiftKey) {
+                        requestAutoCompletion(("<builtins>"), false)
+                    } else {
+                        requestAutoCompletion(("<devices>"), true)
+                    }
+                } else if (((e.which == 0x58) || ((e.which == 0x78))) && (e.ctrlKey)) { //CTRL+C
+                    abort();
+                }
+            });
+
+            $('#data_path').keyup(function (e) {
+                if (e.which == 13) {
+                    requestData()
+                    return false;
+                    //} else  if (e.which == 0x2F) {
+                } else if (e.which == 0xBF) {
+                    requestDataAutoCompletion();
+                } else if (e.which == 0x20) { //Colon     or colon with shift
+                    if ((e.ctrlKey) && ($('#data_path').val() == "")) {
+                        requestDataAutoCompletion()
+                    }
+                }
+
+            });
+
+            $('#data_path').keydown(function (e) {
+                closeDataMenu();
+            });
+
+            $('#data_path').click(function (e) {
+                requestDataAutoCompletion()
+            });
+
+            $('#data_path').dblclick(function (e) {
+                requestData()
+            });
+
+            //Navbar is not collapsing by itselt after a mouse click
+            $(".navbar-nav li a").click(function (e) {
+                var toggle = $(".navbar-toggle").is(":visible");
+                if (toggle) {
+                    $(".navbar-collapse").collapse('hide');
+                }
+            });
+            
+            $('#myModal').on('hidden.bs.modal', function (e) {
+                switch (uiEventName){                    
+                    case  "message":
+                        sendUI("\\z")
+                        break;
+                    case "getstring":
+                    case "getpwd":
+                        if (uiEventResult == "Yes"){
+                            sendUI($(((uiEventName == "getpwd") ? "#modalpwd" : "#modalinput")).val())
+                        } else {
+                            sendUI("\\z")
+                        }
+                        break;
+                    case "getopt":
+                        sendUI(uiEventResult)
+                        break;
+                    case "selectstring":
+                        if (uiEventResult == "Yes"){
+                            sendUI($("#modalselect").val())
+                        } else {
+                            sendUI("\\z")
+                        }
+                        break;
+                }                
+            })            
+
+            connect();
+            timer();
+
+        </script>
+
+
+        <script>
+            window.jQuery
+                    || document
+                    .write('<script src="js/vendor/jquery-1.9.1.min.js"><\/script>')
+        </script>
+
+        <script src="js/vendor/bootstrap.min.js"></script>
+
+        <script src="js/main.js"></script>        
+
+    </body>
+</html>
+
+

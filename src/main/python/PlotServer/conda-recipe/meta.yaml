@@ -1,0 +1,19 @@
+package:
+    name: pplot
+    version: 1.0.0
+
+build:
+  number: 0
+
+source:
+    path: ..
+
+requirements:
+    build:
+        - python
+    run:
+        - python
+        - pyzmq
+
+about:
+    summary: "pplot is Python a client to PShell plot server"

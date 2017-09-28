@@ -1,0 +1,13 @@
+/build
+/target
+/home
+/nbproject
+/.nb-gradle
+/.gradle
+/*.dll
+*.*~
+*.jar
+*.log
+.nb-gradle-properties
+nbactions.xml
+**/*.class

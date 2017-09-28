@@ -1,0 +1,50 @@
+<assembly>
+    <id>bin</id>
+    <!-- Generates a zip package containing the needed files -->
+    <formats>
+        <format>zip</format>
+    </formats>
+
+    <!-- Adds dependencies to zip package under lib directory -->
+    <dependencySets>
+        <dependencySet>
+            <outputDirectory>lib</outputDirectory>
+            <unpack>false</unpack>
+        </dependencySet>
+    </dependencySets>
+    
+    <fileSets>
+        <!--  Adds startup scripts to the root directory of zip package -->
+        <fileSet>
+        	<fileMode>0755</fileMode>
+            <directory>src/main/assembly/bin</directory>
+            <outputDirectory>bin</outputDirectory>
+            <includes>
+                <include>*</include>
+            </includes>
+        </fileSet>
+        <fileSet>
+        	<directory>src/main/assembly/www</directory>
+            <outputDirectory>www</outputDirectory>
+            <includes>
+                <include>**/*</include>
+            </includes>
+        </fileSet>
+        <fileSet>
+        	<fileMode>0755</fileMode>
+        	<directory>src/main/assembly/var</directory>
+            <outputDirectory>var</outputDirectory>
+            <includes>
+                <include>**/*</include>
+            </includes>
+        </fileSet>
+        <!-- adds jar package to the root directory of zip package -->
+        <!-- <fileSet>
+            <directory>target</directory>
+            <outputDirectory></outputDirectory>
+            <includes>
+                <include>*.jar</include>
+            </includes>
+        </fileSet> -->
+    </fileSets>
+</assembly>

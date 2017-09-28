@@ -1,0 +1,435 @@
+package ch.psi.pshell.swing;
+
+import ch.psi.pshell.core.Context;
+import ch.psi.utils.Arr;
+import ch.psi.utils.Chrono;
+import ch.psi.utils.IO;
+import ch.psi.utils.State;
+import ch.psi.utils.swing.MonitoredPanel;
+import ch.psi.utils.swing.SwingUtils;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Desktop;
+import java.awt.Frame;
+import java.awt.event.ActionEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.io.File;
+import java.nio.file.FileSystems;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardWatchEventKinds;
+import java.nio.file.WatchKey;
+import java.nio.file.WatchService;
+import java.util.ArrayList;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.swing.JMenuItem;
+import javax.swing.JPopupMenu;
+import javax.swing.JTable;
+import javax.swing.UIManager;
+import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableCellRenderer;
+import javax.swing.table.TableColumn;
+
+/**
+ *
+ */
+public class ScriptsPanel extends MonitoredPanel implements UpdatablePanel {
+
+    final DefaultTableModel model;
+    ScriptsPanelListener listener;
+    JPopupMenu popupMenu;
+    JMenuItem menuRevisionHistory;
+    JMenuItem menuEdit;
+    JMenuItem menuEditExt;
+    JMenuItem menuBrowse;
+    JMenuItem menuRun;
+
+    /**
+     * The listener interface for receiving scripts panel events.
+     */
+    public interface ScriptsPanelListener {
+
+        void onScriptSelected(File file);
+    }
+
+    public ScriptsPanel() {
+        initComponents();
+        model = (DefaultTableModel) table.getModel();
+
+        popupMenu = new JPopupMenu();
+
+        menuEdit = new JMenuItem("Edit");
+        menuEdit.addActionListener((ActionEvent e) -> {
+            String script = getSelectedScript();
+            if (script != null) {
+                try {
+                    if (listener != null) {
+                        listener.onScriptSelected(Paths.get(currentPath, script).toFile());
+                    }
+
+                } catch (Exception ex) {
+                    SwingUtils.showException(ScriptsPanel.this, ex);
+                }
+            }
+        });
+
+        menuEditExt = new JMenuItem("Open external editor");
+        menuEditExt.addActionListener((ActionEvent e) -> {
+            String script = getSelectedScript();
+            if (script != null) {
+                try {
+                    File file = Paths.get(currentPath, script).toFile();
+                    if (file.exists()) {
+                        Logger.getLogger(DataPanel.class.getName()).fine("Opening desktop for: " + String.valueOf(file));
+                        Desktop.getDesktop().open(file);
+                    }
+                } catch (Exception ex) {
+                    SwingUtils.showException(ScriptsPanel.this, ex);
+                }
+            }
+        });
+
+        menuBrowse = new JMenuItem("Browse containing folder");
+        menuBrowse.addActionListener((ActionEvent e) -> {
+            String script = getSelectedScript();
+            if (script != null) {
+                try {
+                    File file = Paths.get(currentPath, script).toFile();
+                    if (file.exists()) {
+                        Logger.getLogger(DataPanel.class.getName()).fine("Opening desktop for: " + String.valueOf(file.getParentFile()));
+                        Desktop.getDesktop().open(file.getParentFile());
+                    }
+                } catch (Exception ex) {
+                    SwingUtils.showException(ScriptsPanel.this, ex);
+                }
+            }
+        });
+
+        menuRun = new JMenuItem("Run");
+        menuRun.addActionListener((ActionEvent e) -> {
+            String script = getSelectedScript();
+            if (script != null) {
+                try {
+                    File file = Paths.get(currentPath, script).toFile();
+                    if (file.exists()) {
+                        Context.getInstance().evalFileAsync(file.getAbsolutePath());
+                    }
+                } catch (Exception ex) {
+                    SwingUtils.showException(ScriptsPanel.this, ex);
+                }
+            }
+        });
+
+        menuRevisionHistory = new JMenuItem("Revision history");
+        menuRevisionHistory.addActionListener((ActionEvent e) -> {
+            String script = getSelectedScript();
+            if (script != null) {
+                try {
+                    showHistory(script);
+                } catch (Exception ex) {
+                    SwingUtils.showException(ScriptsPanel.this, ex);
+                }
+            }
+        });
+
+        popupMenu.add(menuEdit);
+        popupMenu.add(menuEditExt);
+        popupMenu.add(menuBrowse);
+        popupMenu.addSeparator();
+        popupMenu.add(menuRun);
+        popupMenu.addSeparator();
+        popupMenu.add(menuRevisionHistory);
+
+        table.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                try {
+                    if ((e.getClickCount() == 2) && (!e.isPopupTrigger())) {
+                        String file = getSelectedScript();
+                        if (file != null) {
+                            //Opening file
+                            if (listener != null) {
+                                listener.onScriptSelected(Paths.get(currentPath, file).toFile());
+                            }
+                        } else {
+                            file = getSelectedFolder();
+                            if (file != null) {
+                                //Navigating to sub-folder
+                                if (file.equals("..")) {
+                                    setPath(Paths.get(currentPath).getParent().toString());
+                                } else {
+                                    setPath(Paths.get(currentPath, file).toString());
+                                }
+                            }
+                        }
+                    }
+                } catch (Exception ex) {
+                    SwingUtils.showException(ScriptsPanel.this, ex);
+                }
+            }
+
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                checkPopup(e);
+            }
+
+            @Override
+            public void mousePressed(MouseEvent e) {
+                checkPopup(e);
+            }
+
+            private void checkPopup(MouseEvent e) {
+                try {
+                    if (e.isPopupTrigger()) {
+                        int r = table.rowAtPoint(e.getPoint());
+                        if (r >= 0 && r < table.getRowCount()) {
+                            table.setRowSelectionInterval(r, r);
+                        } else {
+                            table.clearSelection();
+                        }
+
+                        if (getSelectedScript() != null) {
+                            boolean allowRun = !Context.getInstance().getRights().denyRun;
+                            menuRun.setEnabled(allowRun && (Context.getInstance().getState() == State.Ready));
+                            menuRevisionHistory.setEnabled(Context.getInstance().isVersioningEnabled());
+                            popupMenu.show(e.getComponent(), e.getX(), e.getY());
+                        }
+                    }
+                } catch (Exception ex) {
+                    SwingUtils.showException(ScriptsPanel.this, ex);
+                }
+
+            }
+
+        });
+
+        TableColumn column = table.getColumnModel().getColumn(0);
+        column.setCellRenderer((TableCellRenderer) new DefaultTableCellRenderer() {
+            Color fileColor = null;
+            Color folderColor = null;
+
+            @Override
+            public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+                Component comp = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+                if (fileColor == null) {
+                    fileColor = comp.getForeground();
+                    folderColor = Color.GRAY;
+                    try {
+                        //Dark LAF
+                        Color back = UIManager.getColor("nimbusLightBackground");
+                        if (back.equals(folderColor)) {
+                            folderColor = folderColor.darker();
+                        }
+                    } catch (Exception ex) {
+
+                    }
+
+                }
+                String file = (String) table.getModel().getValueAt(row, 0);
+                if (file.equals("..") || file.endsWith("/")) {
+                    comp.setForeground(folderColor);
+                } else {
+                    comp.setForeground(fileColor);
+                }
+                return comp;
+            }
+        });
+    }
+
+    String getSelectedScript() {
+        try {
+            //Since can reorder...
+            int index = table.convertRowIndexToModel(table.getSelectedRow());
+            String ret = (String) model.getValueAt(index, 0);
+            if (Paths.get(currentPath, ret).toFile().isFile()) {
+                return ret;
+            }
+        } catch (Exception ex) {
+        }
+        return null;
+    }
+
+    String getSelectedFolder() {
+        try {
+            //Since can reorder...
+            int index = table.convertRowIndexToModel(table.getSelectedRow());
+            String ret = (String) model.getValueAt(index, 0);
+
+            if (ret.endsWith("/")) {
+                ret = ret.substring(0, ret.length() - 1);
+            }
+            if (ret.equals("..")) {
+                return "..";
+            } else {
+                File file = Paths.get(currentPath, ret).toFile();
+                if (file.isDirectory()) {
+                    return file.getName();
+                }
+            }
+        } catch (Exception ex) {
+        }
+        return null;
+    }
+
+    public void setListener(ScriptsPanelListener listener) {
+        this.listener = listener;
+    }
+
+    String homePath;
+    String extension;
+
+    public void initialize() {
+        initialize(Context.getInstance().getSetup().getScriptPath(), Context.getInstance().getScriptType().toString());
+    }
+
+    public void initialize(String homePath, String extension) {
+        this.homePath = homePath;
+        this.extension = extension;
+        setPath(homePath);
+    }
+
+    String currentPath;
+
+    void setPath(String path) {
+        currentPath = path;
+        buildList();
+        registerFolderEvents(Paths.get(currentPath));
+    }
+
+    @Override
+    public void update() {
+        WatchKey watchKey = watchService.poll();
+        if (watchKey == null) {
+            return;
+        }
+        watchKey.pollEvents();
+        watchKey.reset();
+
+        try {
+            buildList();
+        } catch (Exception ex) {
+            Logger.getLogger(DataPanel.class.getName()).log(Level.WARNING, null, ex);
+        }
+    }
+
+    File[] getSubFolders() {
+        ArrayList<File> ret = new ArrayList<>();
+        for (File file : IO.listSubFolders(currentPath)) {
+            if (!Arr.containsEqual(new String[]{"Lib", "cachedir"}, file.getName())) {
+                ret.add(file);
+            }
+        }
+        return ret.toArray(new File[0]);
+    }
+
+    void buildList() {
+        model.setNumRows(0);
+        try {
+            if (!new File(currentPath).getCanonicalFile().equals(new File(homePath).getCanonicalFile())) {
+                model.addRow(new Object[]{"..", ""});
+            }
+        } catch (Exception ex) {
+            Logger.getLogger(DataPanel.class.getName()).log(Level.WARNING, null, ex);
+        }
+
+        for (File file : getSubFolders()) {
+            model.addRow(new Object[]{file.getName() + "/", ""});
+        }
+        for (File file : IO.listFiles(currentPath, "*." + extension)) {
+            model.addRow(new Object[]{file.getName(), Chrono.getTimeStr(file.lastModified(), "YY/MM/dd HH:mm:ss\n")});
+        }
+    }
+
+    void showHistory(String script) throws Exception {
+        String fileName = Paths.get(currentPath, script).toString();
+        Frame parent = (Frame) this.getTopLevelAncestor();
+        RevisionHistoryDialog dlg = new RevisionHistoryDialog(parent, false, fileName);
+        SwingUtils.centerComponent(parent, dlg);
+        dlg.setVisible(true);
+    }
+
+    WatchService watchService;
+
+    void registerFolderEvents(Path path) {
+        try {
+            try {
+                if (watchService != null) {
+                    watchService.close();
+                    watchService = null;
+                }
+            } catch (Exception ex) {
+                Logger.getLogger(ScriptsPanel.class.getName()).log(Level.WARNING, null, ex);
+            }
+
+            watchService = FileSystems.getDefault().newWatchService();
+            if (watchService != null) {
+                path.register(watchService,
+                        StandardWatchEventKinds.ENTRY_CREATE,
+                        StandardWatchEventKinds.ENTRY_DELETE,
+                        StandardWatchEventKinds.ENTRY_MODIFY
+                );
+            }
+        } catch (Exception ex) {
+            Logger.getLogger(ScriptsPanel.class.getName()).log(Level.WARNING, null, ex);
+        }
+    }
+
+    /**
+     * This method is called from within the constructor to initialize the form. WARNING: Do NOT
+     * modify this code. The content of this method is always regenerated by the Form Editor.
+     */
+    @SuppressWarnings("unchecked")
+    // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
+    private void initComponents() {
+
+        jScrollPane1 = new javax.swing.JScrollPane();
+        table = new javax.swing.JTable();
+
+        table.setAutoCreateRowSorter(true);
+        table.setModel(new javax.swing.table.DefaultTableModel(
+            new Object [][] {
+
+            },
+            new String [] {
+                "Name", "Modified"
+            }
+        ) {
+            Class[] types = new Class [] {
+                java.lang.String.class, java.lang.Object.class
+            };
+            boolean[] canEdit = new boolean [] {
+                false, false
+            };
+
+            public Class getColumnClass(int columnIndex) {
+                return types [columnIndex];
+            }
+
+            public boolean isCellEditable(int rowIndex, int columnIndex) {
+                return canEdit [columnIndex];
+            }
+        });
+        table.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
+        table.getTableHeader().setReorderingAllowed(false);
+        jScrollPane1.setViewportView(table);
+
+        javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
+        this.setLayout(layout);
+        layout.setHorizontalGroup(
+            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 523, Short.MAX_VALUE)
+        );
+        layout.setVerticalGroup(
+            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 167, Short.MAX_VALUE)
+        );
+    }// </editor-fold>//GEN-END:initComponents
+
+    // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JScrollPane jScrollPane1;
+    private javax.swing.JTable table;
+    // End of variables declaration//GEN-END:variables
+}
