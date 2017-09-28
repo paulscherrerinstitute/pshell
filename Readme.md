@@ -11,10 +11,16 @@ The only requirement for running PShell is Java 8 JRE.
  * Java 8 JDK is needed if using dynamic plugins (compiled on-the-fly). 
  * Netbeans 8 is required for visually editing graphical plugins.
 
- 1. Build the JAR file pshell-*.jar or download the latest stable build from [here](https://github.com/paulscherrerinstitute/pshell/releases).
+ 1. Build the JAR file pshell-<version>-fat.jar or download the latest stable build from [here](https://github.com/paulscherrerinstitute/pshell/releases).
+
+    The project can be built executing:
+ ```
+ ./gradlew build
+ ```  
+ 
  2. Type:
  ```
- java -jar pshell-*.jar <startup options...>
+ java -jar pshell-<version>-fat.jar <startup options...>
  ```  
  
  Or else just  double-click the jar file, if the  system has an automatic java application launcher. 
