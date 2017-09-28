@@ -8,7 +8,7 @@
   <tr>
     <td>-?</td>
     <td>Print the help message.</td>
-  </tr>Auto
+  </tr>
   <tr>
     <td>-h</td>
     <td>Start the GUI help window.</td>
@@ -115,7 +115,7 @@
   </tr>
   <tr>
     <td>-clog=[level]</td>
-    <td>Set the console logging level: OFF, FINEST, FINER, FINE, INFO, WARNIN or SEVERE.</td>
+    <td>Set the console logging level: OFF, FINEST, FINER, FINE, INFO, WARNING or SEVERE.</td>
   </tr>
   <tr>
     <td>-type=[ext]</td>

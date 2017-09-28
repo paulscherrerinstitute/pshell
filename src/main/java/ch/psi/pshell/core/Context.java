@@ -205,7 +205,9 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
             throw new RuntimeException("Cannot generate configuration file");
         }
         String contextName = (config.getName().length() > 0) ? config.getName()  : "unknown";
-        System.out.println("Context: " + contextName + "\n");
+        if (config.getName().length() > 0){
+            System.out.println("\n[" + contextName + "]\n");
+        }
 
         if ((config.hostName != null) && (!config.hostName.trim().isEmpty()) && (!config.hostName.equalsIgnoreCase("null"))) {
             if (!localMode) {

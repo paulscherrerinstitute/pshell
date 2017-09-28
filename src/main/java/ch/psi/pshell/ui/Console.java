@@ -149,8 +149,8 @@ public class Console {
                     break;
                 case "about":
                     sb = new StringBuilder();
-                    sb.append("Name: ").append(App.getApplicationName());
-                    sb.append("\nVersion: ").append(App.getApplicationBuildInfo());
+                    sb.append("Name: ").append(App.getApplicationName()).append(" ").append(App.getResourceBundleValue("Application.copyright"));
+                    sb.append("\nVersion: ").append(App.getApplicationBuildInfo());                    
                     sb.append("\nFeedback: ").append(App.getResourceBundleValue("Application.feedback"))
                             .append("@")
                             .append(App.getResourceBundleValue("Application.vendor"));

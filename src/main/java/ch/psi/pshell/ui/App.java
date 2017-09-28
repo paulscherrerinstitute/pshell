@@ -97,7 +97,10 @@ public class App extends ObservableBase<AppListener> {
     }
 
     static String getHeaderMessage() {
-        return getResourceBundleValue("Application.description");
+        StringBuilder sb = new StringBuilder();
+        sb.append(getResourceBundleValue("Application.description")).append("\n");
+        sb.append(App.getResourceBundleValue("Application.copyright"));
+        return sb.toString();
     }
 
     static String getHelpMessage() {
@@ -429,7 +432,7 @@ public class App extends ObservableBase<AppListener> {
                 ex.printStackTrace();
             }
         }
-        System.out.println("Version: " + getApplicationBuildInfo());        
+        System.out.println("Version " + getApplicationBuildInfo());        
 
         if (hasArgument("?")) {
             System.out.println(getHelpMessage());

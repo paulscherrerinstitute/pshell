@@ -38,6 +38,7 @@ public class AboutDialog extends StandardDialog {
         labelFeedback = new javax.swing.JLabel();
         textHomepage = new javax.swing.JLabel();
         textVersion = new javax.swing.JLabel();
+        labelAppDesc1 = new javax.swing.JLabel();
         jPanel1 = new javax.swing.JPanel();
         buttonClose = new javax.swing.JButton();
         labelImage = new javax.swing.JLabel();
@@ -85,6 +86,9 @@ public class AboutDialog extends StandardDialog {
         textVersion.setText(bundle1.getString("Application.version")); // NOI18N
         textVersion.setName("textVersion"); // NOI18N
 
+        labelAppDesc1.setText(bundle1.getString("Application.copyright")); // NOI18N
+        labelAppDesc1.setName("labelAppDesc1"); // NOI18N
+
         javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
         jPanel2.setLayout(jPanel2Layout);
         jPanel2Layout.setHorizontalGroup(
@@ -111,7 +115,8 @@ public class AboutDialog extends StandardDialog {
                                     .addComponent(labelMail)
                                     .addGap(2, 2, 2)
                                     .addComponent(textMailDomain))))
-                        .addComponent(labelAppDesc)))
+                        .addComponent(labelAppDesc)
+                        .addComponent(labelAppDesc1)))
                 .addContainerGap())
         );
 
@@ -124,6 +129,8 @@ public class AboutDialog extends StandardDialog {
                 .addComponent(labelAppTitle)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(labelAppDesc)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(labelAppDesc1)
                 .addGap(18, 18, 18)
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(labelVersion)
@@ -184,10 +191,10 @@ public class AboutDialog extends StandardDialog {
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(jPanel2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addContainerGap())
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -195,7 +202,7 @@ public class AboutDialog extends StandardDialog {
                 .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
                     .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(jPanel2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addContainerGap())
         );
 
@@ -211,6 +218,7 @@ public class AboutDialog extends StandardDialog {
     javax.swing.JPanel jPanel1;
     javax.swing.JPanel jPanel2;
     javax.swing.JLabel labelAppDesc;
+    javax.swing.JLabel labelAppDesc1;
     javax.swing.JLabel labelAppTitle;
     javax.swing.JLabel labelFeedback;
     javax.swing.JLabel labelHomepage;
