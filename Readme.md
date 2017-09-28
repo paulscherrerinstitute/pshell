@@ -2,28 +2,38 @@
 
 PShell is a scripting environment for experiments developed at PSI.
 
+The latest stable build (pshell-<version>-fat.jar) can be download from [here](https://github.com/paulscherrerinstitute/pshell/releases).
 
 
-# Installation
+
+# Requirements
 
 The only requirement for running PShell is Java 8 JRE. 
 
  * Java 8 JDK is needed if using dynamic plugins (compiled on-the-fly). 
  * Netbeans 8 is required for visually editing graphical plugins.
 
- 1. Build the JAR file pshell-<version>-fat.jar or download the latest stable build from [here](https://github.com/paulscherrerinstitute/pshell/releases).
 
-    The project can be built executing:
+
+# Building
+
+The JAR file pshell-<version>-fat.jar can be built executing:
  ```
  ./gradlew build
  ```  
- 
- 2. Type:
+
+After executing the build command, the file pshell-<version>-fat.jar is located in the folder  ./build/libs. 
+
+
+
+# Launching
+
+Launch the application typing:
  ```
  java -jar pshell-<version>-fat.jar <startup options...>
  ```  
  
- Or else just  double-click the jar file, if the  system has an automatic java application launcher. 
+Or else just  double-click the jar file, if the  system has an automatic java application launcher. 
 
  __Note__: The optional parameter  __-home=[path]__ sets the home folder - the default folder for configuration, context, plugins and data. If this parameter is omitted, it is set to __./home__. In the first run the default folder structure is created. Individual paths can be set in {home}/config/setup.properties.
 
