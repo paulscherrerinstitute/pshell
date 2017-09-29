@@ -82,7 +82,8 @@ public abstract class ControlledVariableBase extends ProcessVariableBase impleme
         simulatedReadback = new ReadonlyRegisterBase(name + " readback", getPrecision()) {
             @Override
             protected Object doRead() throws IOException, InterruptedException {
-                return ControlledVariableBase.this.getSimulatedValue();
+                Double ret = ControlledVariableBase.this.getSimulatedValue();
+                return ((ret==null) ? 0.0 : ret);
             }
         };
         try {

@@ -85,7 +85,9 @@ public class ProcessVariable extends ProcessVariableBase {
 
     @Override
     protected void onChildValueChange(Device child, Object value, Object former) {
-        setCache(convertFromRead((Double) value));
+        if ((child == channel) && (!isSimulated())){
+            setCache(convertFromRead((Double) value));
+        }
     }
 
 }

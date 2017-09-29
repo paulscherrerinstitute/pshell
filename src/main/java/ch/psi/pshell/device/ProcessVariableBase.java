@@ -25,7 +25,7 @@ public abstract class ProcessVariableBase extends RegisterBase<Double> implement
     public double getScale() {
         return getConfig().scale;
     }
-
+    
     @Override
     public double getResolution() {
         if (Double.isNaN(getConfig().resolution) || (getConfig().resolution < 0)) {
@@ -80,6 +80,9 @@ public abstract class ProcessVariableBase extends RegisterBase<Double> implement
     protected boolean hasChanged(Object value, Object former) {
         if (former == null) {
             return (value != null);
+        }
+        if (value == null){
+            return true;
         }
         return (Math.abs((Double) value - (Double) former) > getResolution() / 2);
     }

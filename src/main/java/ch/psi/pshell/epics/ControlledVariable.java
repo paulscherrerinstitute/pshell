@@ -69,7 +69,7 @@ public class ControlledVariable extends ControlledVariableBase {
 
     @Override
     protected void onChildValueChange(Device child, Object value, Object former) {
-        if (child == channel) {
+        if ((child == channel) && (!isSimulated())){
             setCache(value);
         }
     }

@@ -77,7 +77,7 @@ public class Positioner extends PositionerBase {
 
     @Override
     protected void onChildValueChange(Device child, Object value, Object former) {
-        if (child == channel) {
+        if ((child == channel) && (!isSimulated())) {
             setCache(value);
         }
     }
