@@ -94,6 +94,7 @@ These functions provide the script API to many aspects of PShell:
     - to_array       
     - to_list 
     - inject
+    - notify
     - help       
 
  * UI interaction:

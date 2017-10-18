@@ -2024,6 +2024,22 @@ function inject(){
     get_context().injectVars()
 }
 
+function notify(subject, text, attachments, to){
+    /*Send email message.
+
+    Args:
+        subject(str): Message subject.
+        text(str): Message body.
+        attachments(list of str, optional): list of files to be attached (expansion tokens are allowed).
+        to (list ofd str, optional): recipients. If None uses the recipients defined in mail.properties.
+    Returns:
+        None
+
+    */  
+    if (!is_defined(attachments))    attachments = null
+    if (!is_defined(to))    to = null
+    get_context().notify(subject, text, attachments, to)
+}
 
 function sleep(seconds){
     java.lang.Thread.sleep(seconds * 1000);

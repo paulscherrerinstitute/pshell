@@ -2051,6 +2051,20 @@ def inject():
         caller = inspect.currentframe().f_back    
         caller.f_globals.update(get_context().scriptManager.injections)        
 
+def notify(subject, text, attachments = None, to=None):
+    """Send email message.
+
+    Args:
+        subject(str): Message subject.
+        text(str): Message body.
+        attachments(list of str, optional): list of files to be attached (expansion tokens are allowed).
+        to (list ofd str, optional): recipients. If None uses the recipients defined in mail.properties.
+    Returns:
+        None
+
+    """  
+    get_context().notify(subject, text, to_list(attachments), to_list(to))
+
 def string_to_obj(o):
     if is_string(o):
         #return globals()[o]

@@ -1,7 +1,5 @@
 package ch.psi.pshell.core;
 
-import ch.psi.pshell.scan.ScanStreamer;
-import ch.psi.pshell.data.DataServer;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -36,6 +34,8 @@ import ch.psi.utils.State;
 import ch.psi.utils.Str;
 import ch.psi.utils.Sys;
 import ch.psi.utils.Threading;
+import ch.psi.pshell.core.Configuration.NotificationLevel;
+import ch.psi.pshell.data.DataServer;
 import ch.psi.pshell.data.PlotDescriptor;
 import ch.psi.pshell.data.DataManager;
 import ch.psi.pshell.data.Table;
@@ -52,6 +52,7 @@ import ch.psi.pshell.scan.ScanBase;
 import ch.psi.pshell.scan.ScanListener;
 import ch.psi.pshell.scan.ScanRecord;
 import ch.psi.pshell.scan.ScanResult;
+import ch.psi.pshell.scan.ScanStreamer;
 import ch.psi.pshell.security.UsersManager;
 import ch.psi.pshell.scripting.InterpreterResult;
 import ch.psi.pshell.scripting.ScriptManager;
@@ -98,6 +99,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
     Thread interpreterThread;
     ScriptManager scriptManager;
     VersioningManager versioningManager;
+    NotificationManager notificationManager;
     TaskManager taskManager;
     DevicePool devicePool;
     ScriptStdio scriptStdio;
@@ -623,6 +625,21 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
         if (pluginManager != null) {
             pluginManager.onExecutedFile(fileName, result);
         }
+        boolean error = (result instanceof Throwable) && !aborted;
+        try{
+            if (error && config.getNotificationLevel()!=NotificationLevel.Off){
+                this.notify( "Execution error", "File: " + fileName + "\n" +((Throwable)result).getMessage(), null);
+            }
+            if (config.getNotificationLevel()==NotificationLevel.Completion){
+                if (aborted){
+                    notify( "Execution aborted", "File: " + fileName, null);
+                } else {
+                    notify( "Execution success", "File: " + fileName + "\nReturn:" + String.valueOf(result), null);
+                }
+            }
+        } catch (Exception ex){
+            logger.log(Level.WARNING, null, ex);
+        }
     }
 
     protected void triggerConfigurationChange(final Configurable obj) {
@@ -750,6 +767,10 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
     public TaskManager getTaskManager() {
         return taskManager;
     }
+    
+    public NotificationManager getMailManager() {
+        return notificationManager;
+    }    
 
     public VersioningManager getVersioningManager() {
         return versioningManager;
@@ -832,7 +853,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
 
         setState(State.Initializing);
 
-        for (AutoCloseable ac : new AutoCloseable[]{scanStreamer, dataStreamer, taskManager, scriptManager, devicePool, versioningManager}) {
+        for (AutoCloseable ac : new AutoCloseable[]{scanStreamer, dataStreamer, taskManager, notificationManager, scriptManager, devicePool, versioningManager}) {
             try {
                 if (ac != null) {
                     ac.close();
@@ -916,6 +937,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
             if (!firstRun) {
                 dataManager.initialize();
             }
+            notificationManager = new NotificationManager();
 
             devicePool = new DevicePool();
             logger.log(Level.INFO, "Loading Device Pool");
@@ -1002,7 +1024,8 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
             if (pluginManager != null) {
                 pluginManager.onInitialize(runCount);
             }
-            taskManager = new TaskManager();//Only instantiate it if state goes ready                
+            //Only instantiate it if state goes ready                
+            taskManager = new TaskManager();
             if (!isLocalMode()) {
                 taskManager.initialize();
             }
@@ -2329,7 +2352,29 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
     public String getBuiltinFunctionDoc(String name) throws ScriptException, IOException, ContextStateException, InterruptedException {
         return (String) evalLineBackground("_getFunctionDoc(" + String.valueOf(name) + ")");
     }
+    
+    //Mailing
+    public void notify(String subject, String text, List<String> attachments) throws IOException {    
+       notify(subject, text, attachments, null);
+    }    
 
+    public void notify(String subject, String text, List<String> attachments, List<String> to) throws IOException {    
+        File[] att = null;
+        if (attachments!=null){
+            ArrayList<File> files = new ArrayList();
+            for (String attachment:attachments){
+                files.add(new File(getSetup().expandPath(attachment)));
+            }
+            att = files.toArray(new File[0]);
+        } 
+        
+        if (to==null){
+            notificationManager.send(subject, text, att);
+        } else {
+            notificationManager.send(subject, text, att, to.toArray(new String[0]));
+        }
+    }    
+    
     //History
     void clearHistory(CommandSource source) {
         onCommand(Command.clearHistory, null, source);

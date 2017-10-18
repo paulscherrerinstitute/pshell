@@ -31,6 +31,7 @@ public class Configuration extends Config {
     public int logDaysToLive = -1;
     public LogLevel logLevel = LogLevel.Info;
     public LogLevel logLevelConsole = LogLevel.Off;
+    public NotificationLevel notificationLevel = NotificationLevel.Off;
     public boolean simulation;
     public boolean versionTrackingEnabled;
     public boolean versionTrackingManual;
@@ -56,6 +57,13 @@ public class Configuration extends Config {
         Finer,
         Finest
     }
+    
+    public enum NotificationLevel {
+        Off,
+        Completion,
+        Error
+    }
+    
 
     public Level getLogLevel() {
         return Level.parse(logLevel.toString().toUpperCase());
@@ -67,6 +75,14 @@ public class Configuration extends Config {
         return Level.parse((commandLineLogLevelConsole != null)
                 ? commandLineLogLevelConsole.toUpperCase()
                 : logLevelConsole.toString().toUpperCase());
+    }
+    
+    
+    NotificationLevel getNotificationLevel(){
+        if (notificationLevel == null){
+            return NotificationLevel.Off;
+        }
+        return notificationLevel;
     }
 
     public String getName() {
