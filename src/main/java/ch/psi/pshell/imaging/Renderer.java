@@ -465,6 +465,9 @@ public class Renderer extends MonitoredPanel implements ImageListener, ImageBuff
                 }
             }
             refresh();  //To redefine the viewport area
+            if ((mode == RendererMode.Fit) || (mode == RendererMode.Stretch)){
+                formerMode = null;
+            }
             checkPersistence();
         }
     }
@@ -658,7 +661,12 @@ public class Renderer extends MonitoredPanel implements ImageListener, ImageBuff
         return new Dimension(width, height);
     }
 
+    RendererMode formerMode;
+    
     public void zoomTo(Rectangle zoomImage) {
+        if ((mode == RendererMode.Fit) || (mode == RendererMode.Stretch)){
+            formerMode = mode;
+        }        
         BufferedImage image = getImage();
         if ((image != null)) {
             Rectangle2D zoomImageClipped = zoomImage.createIntersection(new Rectangle(image.getWidth(), image.getHeight()));
@@ -690,9 +698,14 @@ public class Renderer extends MonitoredPanel implements ImageListener, ImageBuff
 
     public void resetZoom() {
         if (zoom != defaultZoom) {
-            setZoom(defaultZoom);
-            setViewPosition(new Point(0, 0));
+            if (formerMode != null){
+                setMode(formerMode);
+            } else {        
+                setZoom(defaultZoom);
+                setViewPosition(new Point(0, 0));
+            }
         }
+        formerMode = null;
     }
 
     //Scale
@@ -1629,7 +1642,7 @@ public class Renderer extends MonitoredPanel implements ImageListener, ImageBuff
     }
 
     Overlays.Rect zoomToSelection;
-
+   
     protected void onZoomTo() {
         zoomToSelection = new Overlays.Rect(new Pen(penSelectedOverlay.getColor(), 1, Pen.LineStyle.dotted));
         addListener(new RendererListener() {
@@ -1638,7 +1651,7 @@ public class Renderer extends MonitoredPanel implements ImageListener, ImageBuff
                 if (overlay == zoomToSelection) {
                     try {
                         if ((overlay.getUtmost().x < overlay.getPosition().x) && (overlay.getUtmost().y < overlay.getPosition().y)) {
-                            resetZoom();
+                            resetZoom();  
                         } else {
                             zoomTo(overlay.isFixed() ? toImageCoord(overlay.getBounds()) : overlay.getBounds());
                         }
@@ -2040,6 +2053,7 @@ public class Renderer extends MonitoredPanel implements ImageListener, ImageBuff
         state.marker = marker;
         state.profile = profile;
         state.calibration = calibration;
+        state.formerMode = formerMode;
         try {
             Files.write(file, Serializer.encode(state, Serializer.EncoderType.bin));
         } catch (Exception ex) {
@@ -2056,8 +2070,10 @@ public class Renderer extends MonitoredPanel implements ImageListener, ImageBuff
             setCalibration(state.calibration);
             setMode(state.mode);
             setZoom(state.zoom);
+            formerMode = state.formerMode;
             if (state.marker != null) {
                 setMarker(state.marker);
+                
             }
             if (state.profile != null) {
                 setProfile(state.profile);

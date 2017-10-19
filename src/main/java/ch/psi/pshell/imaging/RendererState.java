@@ -16,6 +16,7 @@ public class RendererState implements Serializable {
     public double scaleY;
     public Point imagePosition;
     public RendererMode mode;
+    public RendererMode formerMode;
     public Overlay marker;
     Calibration calibration;
     public Renderer.Profile profile;
