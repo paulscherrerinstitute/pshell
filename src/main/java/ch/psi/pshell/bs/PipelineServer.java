@@ -572,6 +572,26 @@ public class PipelineServer extends StreamCamera {
         setGoodRegion(gr);
     }
 
+    public Map<String, Object> getSlicing() throws IOException {
+        Map<String, Object> pars = getInstanceConfig();
+        Object ret = pars.get("image_slices");
+        return ((ret != null) && (ret instanceof Map)) ? (Map) ret : null;
+    }
+
+    public void setSlicing(Map<String, Object> value) throws IOException {
+        Map<String, Object> pars = new HashMap();
+        pars.put("image_slices", value);
+        setInstanceConfig(pars);
+    }
+
+    public void setSlicing(int slices, double scale, String orientation) throws IOException {
+        Map<String, Object> gr = new HashMap<>();
+        gr.put("number_of_slices", slices);
+        gr.put("scale", scale);
+        gr.put("orientation", orientation);
+        setSlicing(gr);
+    }
+        
     /**
      * Return if the current instance is a shared connection.
      */
