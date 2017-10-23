@@ -2775,6 +2775,13 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
                     return cls;
                 }
             }
+            try {
+                Object cls = evalLineBackground(className);
+                if ((cls != null) && (cls instanceof Class)){
+                    return (Class) cls;
+                }
+            } catch (Exception ex1) {
+            }
             throw ex;
         }
     }

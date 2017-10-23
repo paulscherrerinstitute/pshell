@@ -245,11 +245,11 @@ public class DevicePoolPanel extends MonitoredPanel implements UpdatablePanel {
         public String panelClassName;
 
         public Class getDeviceClass() throws ClassNotFoundException {
-            return Class.forName(deviceClassName);
+            return Context.getInstance().getClassByName(deviceClassName);
         }
 
         public Class getPanelClass() throws ClassNotFoundException {
-            return Class.forName(panelClassName);
+            return Context.getInstance().getClassByName(panelClassName);
         }
     }
 
