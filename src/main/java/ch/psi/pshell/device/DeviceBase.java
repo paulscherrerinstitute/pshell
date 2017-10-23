@@ -185,7 +185,8 @@ public abstract class DeviceBase extends GenericDeviceBase<DeviceListener> imple
         setCache(value, null);
     }
 
-    final protected void setCache(Object value, Long timestamp) {
+    //TODO: Cannot make it final: http://bugs.jython.org/issue2634
+    protected void setCache(Object value, Long timestamp) {
         setCache(value, timestamp, 0L);
     }
 
