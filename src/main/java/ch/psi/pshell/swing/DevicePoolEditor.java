@@ -151,12 +151,6 @@ public class DevicePoolEditor extends Editor {
                     });
                     button.setBorder(javax.swing.BorderFactory.createEtchedBorder());
 
-                    try {
-
-                    } catch (Exception ex) {
-                        button.setEnabled(false);
-                    }
-
                     GroupLayout layout = new GroupLayout(this);
                     this.setLayout(layout);
                     layout.setHorizontalGroup(

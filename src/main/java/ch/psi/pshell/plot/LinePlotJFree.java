@@ -174,6 +174,22 @@ public class LinePlotJFree extends LinePlotBase {
             chartPanel.getChart().setBackgroundPaint(c);
         }
     }
+    
+    @Override
+    public void setPlotBackgroundColor(Color c) {
+        chart.getPlot().setBackgroundPaint(c);
+    }
+    
+    @Override
+    public void setPlotGridColor(Color c) {
+        ((XYPlot)chart.getPlot()).setDomainGridlinePaint(c);
+        ((XYPlot)chart.getPlot()).setRangeGridlinePaint(c);
+    }     
+    
+    @Override
+    public void setPlotOutlineColor(Color c) {
+        chart.getPlot().setOutlinePaint(c);
+    }
 
     @Override
     protected void onAppendData(LinePlotSeries series, double x, double y) {

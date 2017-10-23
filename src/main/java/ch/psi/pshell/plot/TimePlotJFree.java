@@ -131,7 +131,7 @@ public class TimePlotJFree extends TimePlotBase {
         setup();
         //chartPanel.setMouseZoomable(true, true);
     }
-
+        
     @Override
     protected void setupMenus() {
         super.setupMenus();
@@ -241,6 +241,23 @@ public class TimePlotJFree extends TimePlotBase {
         }
     }
 
+    @Override
+    public void setPlotBackgroundColor(Color c) {
+        chart.getXYPlot().setBackgroundPaint(c);
+    }
+    
+    @Override
+    public void setPlotGridColor(Color c) {
+        chart.getXYPlot().setDomainGridlinePaint(c);
+        chart.getXYPlot().setRangeGridlinePaint(c);
+    }    
+    
+    @Override
+    public void setPlotOutlineColor(Color c) {
+        chart.getXYPlot().setOutlinePaint(c);
+    }
+    
+        
     @Override
     protected void doClear() {
         for (TimeSeries ts : series) {

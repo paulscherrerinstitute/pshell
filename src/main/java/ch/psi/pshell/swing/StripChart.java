@@ -16,14 +16,17 @@ import ch.psi.pshell.device.DeviceListener;
 import ch.psi.pshell.device.TimestampedValue;
 import ch.psi.pshell.epics.ChannelDouble;
 import ch.psi.pshell.epics.Epics;
+import ch.psi.pshell.plot.PlotBase;
 import ch.psi.pshell.plot.TimePlotBase;
 import ch.psi.pshell.plot.TimePlotSeries;
+import ch.psi.pshell.plotter.Preferences;
 import ch.psi.pshell.ui.App;
 import ch.psi.utils.IO;
 import ch.psi.utils.InvokingProducer;
 import ch.psi.utils.swing.MainFrame;
 import ch.psi.utils.swing.StandardDialog;
 import ch.psi.utils.swing.SwingUtils;
+import java.awt.Color;
 import java.awt.Component;
 import java.awt.Container;
 import java.awt.Dimension;
@@ -48,6 +51,7 @@ import javax.swing.DefaultComboBoxModel;
 import javax.swing.GroupLayout;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
+import javax.swing.JColorChooser;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
 import javax.swing.JFileChooser;
@@ -90,6 +94,9 @@ public class StripChart extends StandardDialog {
     final HashMap<Device, Long> appendTimestamps = new HashMap<>();
     private int streamDevices = 0;
     final File defaultFolder;
+    
+    Color backgroundColor;
+    Color gridColor;
 
     class ChartElement {
 
@@ -405,7 +412,7 @@ public class StripChart extends StandardDialog {
         comboFormat.setEnabled(textFileName.isEnabled());
         ckFlush.setEnabled(textFileName.isEnabled());
         textStreamFilter.setEnabled(editing);
-        spinnerDragInterval.setEnabled(editing);
+        spinnerDragInterval.setEnabled(editing);        
 
         boolean saveButtonVisible = started && !ckPersistence.isSelected();
         if (saveButtonVisible && (saveButton == null)) {
@@ -466,7 +473,12 @@ public class StripChart extends StandardDialog {
         } else {
             state.add(new Object[][]{new Object[0]});
         }
-        state.add(new Object[][]{new Object[]{textStreamFilter.getText().trim(), spinnerDragInterval.getValue()}});
+        Color c = backgroundColor;
+        String background = (c == null) ? "" : c.getRed() + "," + c.getGreen() + "," + c.getBlue();                        
+        c = gridColor;
+        String grid = (c == null) ? "" : c.getRed() + "," + c.getGreen() + "," + c.getBlue();                        
+        state.add(new Object[][]{new Object[]{textStreamFilter.getText().trim(), spinnerDragInterval.getValue()}, 
+                                 new Object[]{background, grid}});
 
         String json = JsonSerializer.encode(state, true);
         //This is to make easy to access the file in text editor.
@@ -480,6 +492,9 @@ public class StripChart extends StandardDialog {
         ckPersistence.setSelected(false);
         textStreamFilter.setText("");
         spinnerDragInterval.setValue(1000);
+        backgroundColor = gridColor = null;
+        panelColorBackground.setBackground(null);        
+        panelColorGrid.setBackground(null);  
         textFileName.setText((Context.getInstance() != null) ? Context.getInstance().getConfig().dataPath : "");
         ckFlush.setSelected((Context.getInstance() != null) ? Context.getInstance().getConfig().dataScanFlushRecords : false);
         modelSeries.setRowCount(0);
@@ -537,6 +552,9 @@ public class StripChart extends StandardDialog {
         }
         textStreamFilter.setText("");
         spinnerDragInterval.setValue(1000);
+        backgroundColor = gridColor = null;
+        panelColorBackground.setBackground(null);        
+        panelColorGrid.setBackground(null);  
         ckPersistence.setSelected(false);
         textFileName.setText((Context.getInstance() != null) ? Context.getInstance().getConfig().dataPath : "");
         ckFlush.setSelected((Context.getInstance() != null) ? Context.getInstance().getConfig().dataScanFlushRecords : false);
@@ -561,12 +579,25 @@ public class StripChart extends StandardDialog {
             }
         }
         if (state.length > 3) {
-            Object[] devicePars = ((Object[][]) state[3])[0];
-            if ((devicePars.length > 0) && (devicePars[0] != null)) {
-                textStreamFilter.setText(devicePars[0].toString().trim());
+            //Loading settings
+            Object[] settings = ((Object[][]) state[3])[0];
+            if ((settings.length > 0) && (settings[0] != null)) {
+                textStreamFilter.setText(settings[0].toString().trim());
             }
-            if ((devicePars.length > 1) && (devicePars[1] != null) && (devicePars[1] instanceof Integer)) {
-                spinnerDragInterval.setValue((Integer) devicePars[1]);
+            if ((settings.length > 1) && (settings[1] != null) && (settings[1] instanceof Integer)) {
+                spinnerDragInterval.setValue((Integer) settings[1]);
+            }
+            if (((Object[][]) state[3]).length > 1){
+                //Loading colors
+                Object[] colors = ((Object[][]) state[3])[1];
+                if ((colors[0] != null) && (colors[0] instanceof String) && !((String)colors[0]).isEmpty()) {                
+                    backgroundColor =  Preferences.getColorFromString((String)colors[0]);
+                    panelColorBackground.setBackground(backgroundColor);        
+                }                                        
+                if ((colors[1] != null) && (colors[1] instanceof String) && !((String)colors[1]).isEmpty()) {                
+                    gridColor = Preferences.getColorFromString((String)colors[1]);
+                    panelColorGrid.setBackground(gridColor);        
+                }                                        
             }
         }
         updateTitle();
@@ -620,6 +651,14 @@ public class StripChart extends StandardDialog {
             if (numPlots > 1) {
                 plot.setAxisSize(50);
             }
+            
+            if (backgroundColor != null){
+                plot.setPlotBackgroundColor(backgroundColor);
+            }
+            if (gridColor != null){
+                plot.setPlotGridColor(gridColor);
+            }
+                        
             plots.add(plot);
             pnGraphs.add(plot);
         }
@@ -1183,6 +1222,12 @@ public class StripChart extends StandardDialog {
         textStreamFilter = new javax.swing.JTextField();
         jLabel3 = new javax.swing.JLabel();
         spinnerDragInterval = new javax.swing.JSpinner();
+        jPanel1 = new javax.swing.JPanel();
+        jLabel15 = new javax.swing.JLabel();
+        panelColorBackground = new javax.swing.JPanel();
+        jLabel17 = new javax.swing.JLabel();
+        panelColorGrid = new javax.swing.JPanel();
+        buttonDefaultColors = new javax.swing.JButton();
         panelPlots = new javax.swing.JPanel();
         scrollPane = new javax.swing.JScrollPane();
         pnGraphs = new javax.swing.JPanel();
@@ -1265,7 +1310,7 @@ public class StripChart extends StandardDialog {
             .addGroup(panelSeriesLayout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(panelSeriesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jScrollPane1)
+                    .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 561, Short.MAX_VALUE)
                     .addGroup(panelSeriesLayout.createSequentialGroup()
                         .addGap(0, 0, Short.MAX_VALUE)
                         .addComponent(buttonUp)
@@ -1285,7 +1330,7 @@ public class StripChart extends StandardDialog {
             panelSeriesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(panelSeriesLayout.createSequentialGroup()
                 .addGap(2, 2, 2)
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 126, Short.MAX_VALUE)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 103, Short.MAX_VALUE)
                 .addGap(4, 4, 4)
                 .addGroup(panelSeriesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(buttonDelete)
@@ -1337,7 +1382,7 @@ public class StripChart extends StandardDialog {
             panelAxisLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(panelAxisLayout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jScrollPane3)
+                .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 561, Short.MAX_VALUE)
                 .addContainerGap())
         );
         panelAxisLayout.setVerticalGroup(
@@ -1345,7 +1390,7 @@ public class StripChart extends StandardDialog {
             .addGroup(panelAxisLayout.createSequentialGroup()
                 .addGap(2, 2, 2)
                 .addComponent(jScrollPane3, javax.swing.GroupLayout.PREFERRED_SIZE, 111, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(0, 0, 0))
+                .addContainerGap())
         );
 
         buttonLoad.setText("Open");
@@ -1470,17 +1515,16 @@ public class StripChart extends StandardDialog {
                 .addContainerGap()
                 .addComponent(jLabel2)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(textStreamFilter, javax.swing.GroupLayout.DEFAULT_SIZE, 257, Short.MAX_VALUE)
-                .addGap(18, 18, 18)
+                .addComponent(textStreamFilter)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(jLabel3)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(spinnerDragInterval, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(spinnerDragInterval, javax.swing.GroupLayout.PREFERRED_SIZE, 96, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap())
         );
         jPanel3Layout.setVerticalGroup(
             jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel3Layout.createSequentialGroup()
-                .addGap(0, 0, 0)
+            .addGroup(jPanel3Layout.createSequentialGroup()
                 .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel2)
                     .addComponent(textStreamFilter, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -1488,6 +1532,90 @@ public class StripChart extends StandardDialog {
                     .addComponent(spinnerDragInterval, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addContainerGap())
         );
+
+        jPanel1.setBorder(javax.swing.BorderFactory.createTitledBorder("Colors"));
+
+        jLabel15.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
+        jLabel15.setText("Background:");
+
+        panelColorBackground.setBorder(new javax.swing.border.SoftBevelBorder(javax.swing.border.BevelBorder.RAISED));
+        panelColorBackground.setPreferredSize(new java.awt.Dimension(44, 23));
+        panelColorBackground.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                panelColorBackgroundMouseClicked(evt);
+            }
+        });
+
+        javax.swing.GroupLayout panelColorBackgroundLayout = new javax.swing.GroupLayout(panelColorBackground);
+        panelColorBackground.setLayout(panelColorBackgroundLayout);
+        panelColorBackgroundLayout.setHorizontalGroup(
+            panelColorBackgroundLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 44, Short.MAX_VALUE)
+        );
+        panelColorBackgroundLayout.setVerticalGroup(
+            panelColorBackgroundLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 16, Short.MAX_VALUE)
+        );
+
+        jLabel17.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
+        jLabel17.setText("Grid:");
+
+        panelColorGrid.setBorder(new javax.swing.border.SoftBevelBorder(javax.swing.border.BevelBorder.RAISED));
+        panelColorGrid.setPreferredSize(new java.awt.Dimension(44, 23));
+        panelColorGrid.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                panelColorGridMouseClicked(evt);
+            }
+        });
+
+        javax.swing.GroupLayout panelColorGridLayout = new javax.swing.GroupLayout(panelColorGrid);
+        panelColorGrid.setLayout(panelColorGridLayout);
+        panelColorGridLayout.setHorizontalGroup(
+            panelColorGridLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 44, Short.MAX_VALUE)
+        );
+        panelColorGridLayout.setVerticalGroup(
+            panelColorGridLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 16, Short.MAX_VALUE)
+        );
+
+        buttonDefaultColors.setText("Defaults");
+        buttonDefaultColors.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                buttonDefaultColorsActionPerformed(evt);
+            }
+        });
+
+        javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
+        jPanel1.setLayout(jPanel1Layout);
+        jPanel1Layout.setHorizontalGroup(
+            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel1Layout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(jLabel15)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(panelColorBackground, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(jLabel17)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(panelColorGrid, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(buttonDefaultColors)
+                .addContainerGap())
+        );
+        jPanel1Layout.setVerticalGroup(
+            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel1Layout.createSequentialGroup()
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addComponent(panelColorGrid, javax.swing.GroupLayout.PREFERRED_SIZE, 22, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jLabel15, javax.swing.GroupLayout.PREFERRED_SIZE, 26, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(panelColorBackground, javax.swing.GroupLayout.PREFERRED_SIZE, 22, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jLabel17, javax.swing.GroupLayout.PREFERRED_SIZE, 26, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(buttonDefaultColors, javax.swing.GroupLayout.PREFERRED_SIZE, 11, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(0, 6, Short.MAX_VALUE))
+        );
+
+        jPanel1Layout.linkSize(javax.swing.SwingConstants.VERTICAL, new java.awt.Component[] {buttonDefaultColors, jLabel15, jLabel17});
 
         javax.swing.GroupLayout panelConfigLayout = new javax.swing.GroupLayout(panelConfig);
         panelConfig.setLayout(panelConfigLayout);
@@ -1498,6 +1626,7 @@ public class StripChart extends StandardDialog {
             .addComponent(panelFile, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
             .addComponent(jPanel2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
             .addComponent(jPanel3, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+            .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
         );
         panelConfigLayout.setVerticalGroup(
             panelConfigLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -1505,6 +1634,8 @@ public class StripChart extends StandardDialog {
                 .addComponent(panelSeries, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(panelAxis, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jPanel3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -1527,11 +1658,11 @@ public class StripChart extends StandardDialog {
         pnGraphs.setLayout(pnGraphsLayout);
         pnGraphsLayout.setHorizontalGroup(
             pnGraphsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 577, Short.MAX_VALUE)
+            .addGap(0, 580, Short.MAX_VALUE)
         );
         pnGraphsLayout.setVerticalGroup(
             pnGraphsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 502, Short.MAX_VALUE)
+            .addGap(0, 528, Short.MAX_VALUE)
         );
 
         scrollPane.setViewportView(pnGraphs);
@@ -1550,7 +1681,7 @@ public class StripChart extends StandardDialog {
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addComponent(tabPane)
-                .addGap(0, 0, 0))
+                .addContainerGap())
         );
 
         pack();
@@ -1667,6 +1798,44 @@ public class StripChart extends StandardDialog {
         }
     }//GEN-LAST:event_buttonStartStopActionPerformed
 
+    private void panelColorBackgroundMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_panelColorBackgroundMouseClicked
+        Color c = JColorChooser.showDialog(this, "Choose a Color", backgroundColor);        
+        if (c!=null){
+            backgroundColor = c;
+            panelColorBackground.setBackground(backgroundColor);
+            if (started){
+                for (TimePlotBase plot : plots){
+                    plot.setPlotBackgroundColor(backgroundColor);
+                }
+            }            
+        }
+    }//GEN-LAST:event_panelColorBackgroundMouseClicked
+
+    private void panelColorGridMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_panelColorGridMouseClicked
+        Color c = JColorChooser.showDialog(this, "Choose a Color", gridColor);        
+        if (c!=null){
+            gridColor = c;
+            panelColorGrid.setBackground(gridColor);
+            if (started){
+                for (TimePlotBase plot : plots){
+                    plot.setPlotGridColor(gridColor);
+                }
+            }            
+        }
+    }//GEN-LAST:event_panelColorGridMouseClicked
+
+    private void buttonDefaultColorsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonDefaultColorsActionPerformed
+            gridColor = backgroundColor = null;
+            panelColorBackground.setBackground(null);
+            panelColorGrid.setBackground(null);
+            if (started){
+                for (TimePlotBase plot : plots){
+                    plot.setPlotGridColor(PlotBase.getGridColor());
+                    plot.setPlotBackgroundColor(PlotBase.getPlotBackground());
+                }
+            }            
+    }//GEN-LAST:event_buttonDefaultColorsActionPerformed
+
     /**
      */
     public static void main(String args[]) {
@@ -1678,6 +1847,7 @@ public class StripChart extends StandardDialog {
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JButton buttonDefaultColors;
     private javax.swing.JButton buttonDelete;
     private javax.swing.JButton buttonDown;
     private javax.swing.JButton buttonInsert;
@@ -1690,13 +1860,18 @@ public class StripChart extends StandardDialog {
     private javax.swing.JCheckBox ckPersistence;
     private javax.swing.JComboBox<String> comboFormat;
     private javax.swing.JLabel jLabel1;
+    private javax.swing.JLabel jLabel15;
+    private javax.swing.JLabel jLabel17;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
+    private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel2;
     private javax.swing.JPanel jPanel3;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane3;
     private javax.swing.JPanel panelAxis;
+    private javax.swing.JPanel panelColorBackground;
+    private javax.swing.JPanel panelColorGrid;
     private javax.swing.JPanel panelConfig;
     private javax.swing.JPanel panelFile;
     private javax.swing.JPanel panelPlots;

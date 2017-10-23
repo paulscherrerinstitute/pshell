@@ -103,4 +103,10 @@ public interface Plot<T extends PlotSeries> {
             return String.format("%1.4f", value);
         }
     }
+    
+    default void setPlotBackgroundColor(Color c) {};
+
+    default void setPlotGridColor(Color c) {};    
+    
+    default void setPlotOutlineColor(Color c) {};    
 }
