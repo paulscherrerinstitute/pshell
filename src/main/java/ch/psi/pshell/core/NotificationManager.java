@@ -47,7 +47,7 @@ public class NotificationManager implements AutoCloseable{
             Logger.getLogger(NotificationManager.class.getName()).log(Level.WARNING, null, ex);
         }        
         
-        if (config.to!=null){
+        if ((config.to!=null) && (!config.to.trim().isEmpty())){
             to = config.to.split(";");
             to = validateRecipients(to);
         } 
@@ -92,6 +92,9 @@ public class NotificationManager implements AutoCloseable{
      */
     public void send(String subject, String text, File[] attachments) throws IOException {    
         assertEnabled();
+        if (config.to==null){
+            throw new IOException("Recipients not configured");
+        }
         try{
             Mail.send(subject, text, from, to, null, null, attachments, config.host, 
                     config.port<=0 ? null : config.port, config.auth, config.usr, config.pwd);
@@ -120,7 +123,7 @@ public class NotificationManager implements AutoCloseable{
     }
 
     public boolean isEnabled(){
-        return ((config.host!=null) && (config.to!=null));
+        return (config.host!=null);
     }
 
     public void assertEnabled() throws IOException{

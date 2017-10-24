@@ -319,7 +319,7 @@ public class DevicePoolPanel extends MonitoredPanel implements UpdatablePanel {
             int row = getDeviceRow(device);
             if (row >= 0) {
                 String units = (device instanceof ProcessVariable) ? " " + ((ProcessVariable) device).getUnit() : "";
-                model.setValueAt(Str.toString(value, 5) + units, row, 3);
+                model.setValueAt(Str.toString(value, 10) + units, row, 3);
                 model.setValueAt("00:00:00", row, 4);
             }
         }
@@ -412,7 +412,7 @@ public class DevicePoolPanel extends MonitoredPanel implements UpdatablePanel {
                 pool = context.getDevicePool();
                 int row = 0;
                 for (GenericDevice dev : context.getDevicePool().getAllDevices(type)) {
-                    String[] value = LogManager.getDeviceInfo(dev, 5);
+                    String[] value = LogManager.getDeviceInfo(dev, 10);
                     model.setValueAt(String.valueOf(dev.getState()), row, 2);
                     model.setValueAt(value[0], row, 3);
                     model.setValueAt(value[1], row, 4);

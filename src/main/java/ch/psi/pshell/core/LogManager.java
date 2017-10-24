@@ -205,7 +205,7 @@ public class LogManager {
             Object value = dev.take();
             if (value != null) {
                 Integer age = dev.getAge();
-                return new String[]{Str.toString(value, 5) + units, Chrono.getEllapsedStr(age, "HH:mm:ss"), info};
+                return new String[]{Str.toString(value, maxElements) + units, Chrono.getEllapsedStr(age, "HH:mm:ss"), info};
             }
         } catch (Exception ex) {
         }
