@@ -351,7 +351,7 @@ function fit_polynomial(fy, fx, order, start_point, weights){
     Args:
         x(float array or list): observed points x 
         y(float array or list): observed points y 
-        order(int)
+        order(int): if start_point is provided order parameter is disregarded - set to  len(start_point)-1.
         start_point(optional tuple of float): initial parameters (a0, a1, a2, ...)
         weights(optional float array or list): weight for each observed point
     Returns:
