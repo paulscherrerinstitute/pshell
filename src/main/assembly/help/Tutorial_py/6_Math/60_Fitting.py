@@ -17,12 +17,6 @@ result= lscan(ao1,ai1,start,end,[step_size,],0.01)
 readable = result.getReadable(0)
 positions = result.getPositions(0)
 
-def get_function_data(function, start, end, resolution):
-    ret = []
-    for x in frange(start, end, resolution, True):
-        fit_polinomial.append(function.value(x))
-
-
 pars_polynomial = (a0, a1, a2, a3, a4, a5, a6) = fit_polynomial(readable, positions, 6)
 fitted_polynomial_function = PolynomialFunction(pars_polynomial)
 print pars_polynomial 

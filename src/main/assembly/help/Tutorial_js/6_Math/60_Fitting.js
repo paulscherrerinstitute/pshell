@@ -15,14 +15,6 @@ result= lscan(ao1,ai1,start,end,[step_size,],0.01)
 readable = result.getReadable(0)
 positions = result.getPositions(0)
 
-function get_function_data(func, start, end, resolution){
-    ret = []
-    for (var x=start; x<=end; x+=resolution){
-        fit_polinomial.push(func.value(x))
-    }
-}
-
-
 pars_polynomial = fit_polynomial(readable, positions, 6)
      //(a0, a1, a2, a3, a4, a5, a6) 
 fitted_polynomial_function = new PolynomialFunction(pars_polynomial)
