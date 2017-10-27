@@ -129,6 +129,9 @@ public class ProviderText implements Provider {
     }
 
     public Path getFilePath(String root, String path) {
+        //Filenames don't support ':'
+        path = path.replace(":", "_");  
+        
         Path ret = Paths.get(root, path);
         if (!ret.toFile().isDirectory()) {
             String extension = IO.getExtension(path);
