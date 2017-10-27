@@ -76,6 +76,12 @@ public class Epics {
     }
 
     public static <T> Channel<T> newChannel(String name, Class<T> type, Integer size) throws ChannelException, InterruptedException, TimeoutException {
+        if (type == null) {
+            try {
+                type = factory.getDefaultType(name);
+            } catch (Exception ex) {
+            }            
+        }        
         ChannelDescriptor descriptor = new ChannelDescriptor<>(type, name, false, size);
         return newChannel(descriptor);
     }
@@ -157,10 +163,15 @@ public class Epics {
             closeChannel(channel);
         }
     }
-
+    
+    
     public static EpicsRegister newChannelDevice(String name, String channelName, Class type) {
         if (type == null) {
-            type = Double.class;
+            try {
+                type = factory.getDefaultType(channelName);
+            } catch (Exception ex) {
+                type = Double.class;
+            }            
         }
         if (type == byte[].class) {
             return new ChannelByteArray(name, channelName);

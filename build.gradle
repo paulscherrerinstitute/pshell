@@ -64,7 +64,7 @@ dependencies {
     //TODO: jcae  must be published in public repo
     //compile 'ch.psi:jcae:2.9.2'            
     compile 'org.epics:caj:1.1.12'        
-    compile files('lib/ch/psi/jcae/jcae-2.9.2.jar')
+    compile files('lib/ch/psi/jcae/jcae-2.9.3.jar')
     
     //compile 'org.glassfish.jersey.core:jersey-common:2.25'
     compile 'org.glassfish.jersey.media:jersey-media-json-jackson:2.25'

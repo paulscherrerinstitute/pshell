@@ -4,6 +4,7 @@ import ch.psi.pshell.bs.Stream;
 import ch.psi.pshell.bs.Waveform;
 import ch.psi.pshell.core.Context;
 import ch.psi.pshell.core.Nameable;
+import ch.psi.pshell.device.Device;
 import ch.psi.pshell.device.Motor;
 import ch.psi.pshell.device.Movable;
 import ch.psi.pshell.device.Writable;
@@ -138,7 +139,7 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
         settleTimeout = value;
     }
 
-    void assertFieldsOk() {
+    void assertFieldsOk() {                        
         if ((writables == null) || (readables == null)) {
             throw new IllegalArgumentException();
         }
@@ -264,7 +265,7 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
         }
         return pos;
     }
-
+    
     @Override
     public void start() throws IOException, InterruptedException {
         startTimestamp = System.currentTimeMillis();
@@ -276,7 +277,7 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
             assertFieldsOk();
             recordIndex = 0;
             result = newResult();
-            setStreams();
+            openDevices();
             triggerStarted();
             moveToStart();
             try {
@@ -300,7 +301,7 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
                 triggerEnded(ex);
                 throw ex;
             } finally {
-                resetStreams();
+                closeDevices();
             }
         } finally {
             if (relative && restorePosition) {
@@ -652,10 +653,25 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
     }
 
     ArrayList<Stream> startedStreams;
+    ArrayList<Device> innerDevices;
 
-    protected void setStreams() throws IOException, InterruptedException {
+    protected void openDevices() throws IOException, InterruptedException {
         startedStreams = new ArrayList<>();
-        for (Readable r : readables) {
+        innerDevices = new ArrayList<>();
+        for (int i=0; i<writables.length; i++){
+            if (writables[i] instanceof InnerDevice){                
+                writables[i] = (Writable) ((InnerDevice)writables[i]).resolve();
+                innerDevices.add((Device) writables[i]);
+            }
+        }
+        for (int i=0; i<readables.length; i++){
+            if (readables[i] instanceof InnerDevice){
+                readables[i] = (Readable) ((InnerDevice)readables[i]).resolve();
+                innerDevices.add((Device) readables[i]);
+            }
+        }
+        
+        for (Readable r : readables) {           
             if (r instanceof Stream) {
                 if (((Stream) r).getState() == State.Ready) {
                     ((Stream) r).start(true); //Start in asynchronous mode
@@ -671,7 +687,7 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
         }
     }
 
-    protected void resetStreams() {
+    protected void closeDevices() {
         if (startedStreams != null) {
             for (Stream stream : startedStreams) {
                 try {
@@ -681,6 +697,15 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
                 }
             }
         }
+        if (innerDevices!=null){
+            for (Device dev : innerDevices){
+                try {
+                    dev.close();
+                } catch (Exception ex) {
+                    logger.log(Level.WARNING, null, ex);
+                }
+            }
+        }        
     }
 
     protected void checkInterrupted() throws InterruptedException {

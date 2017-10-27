@@ -148,7 +148,7 @@ public class ManualScan extends DiscreteScan {
         assertFieldsOk();
         recordIndex = 0;
         result = newResult();
-        setStreams();
+        openDevices();
         triggerStarted();
         moveToStart();
         onBeforeScan();
@@ -158,7 +158,7 @@ public class ManualScan extends DiscreteScan {
         try {
             onAfterScan();
             triggerEnded(null);
-            resetStreams();
+            closeDevices();
         } finally {
             endTimestamp = System.currentTimeMillis();
         }

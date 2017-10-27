@@ -93,6 +93,7 @@ import ch.psi.pshell.scan.MonitorScan
 import ch.psi.pshell.scan.BinarySearch
 import ch.psi.pshell.scan.HillClimbingSearch
 import ch.psi.pshell.scan.ScanResult
+import ch.psi.pshell.scan.InnerDevice 
 import ch.psi.pshell.bs.BsScan
 import ch.psi.pshell.bs.Stream as Stream
 import ch.psi.pshell.scripting.ViewPreference as Preference;
@@ -355,7 +356,7 @@ def lscan(writables, readables, start, end, steps, latency=0.0, relative=False, 
         ScanResult object.
 
     """    
-    latency_ms=int(latency*1000)
+    latency_ms=int(latency*1000)   
     writables=to_list(string_to_obj(writables))
     readables=to_list(string_to_obj(readables))
     start=to_list(start)
@@ -2067,14 +2068,15 @@ def notify(subject, text, attachments = None, to=None):
 
 def string_to_obj(o):
     if is_string(o):
-        #return globals()[o]
+        if "://" in o:
+            return ch.psi.pshell.scan.InnerDevice(o)
         return eval(o)
     elif is_list(o):
         ret = []
         for i in o:
             ret.append(string_to_obj(i))
         return ret
-    return o
+    return o    
 
 def _getBuiltinFunctions(filter = None):    
     ret = []
