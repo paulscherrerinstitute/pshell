@@ -33,6 +33,7 @@ import ch.psi.utils.Chrono as Chrono
 import ch.psi.pshell.core.CommandSource as CommandSource
 import ch.psi.pshell.core.ContextAdapter as ContextListener
 import ch.psi.pshell.core.Context
+import ch.psi.pshell.core.UrlDevice 
 import ch.psi.pshell.data.PlotDescriptor as PlotDescriptor
 import ch.psi.pshell.data.Table as Table
 import ch.psi.pshell.device.Device as Device
@@ -93,7 +94,6 @@ import ch.psi.pshell.scan.MonitorScan
 import ch.psi.pshell.scan.BinarySearch
 import ch.psi.pshell.scan.HillClimbingSearch
 import ch.psi.pshell.scan.ScanResult
-import ch.psi.pshell.scan.UrlDevice 
 import ch.psi.pshell.bs.BsScan
 import ch.psi.pshell.bs.Stream as Stream
 import ch.psi.pshell.scripting.ViewPreference as Preference;
