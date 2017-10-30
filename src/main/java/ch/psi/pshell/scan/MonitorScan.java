@@ -1,5 +1,6 @@
 package ch.psi.pshell.scan;
 
+import ch.psi.pshell.core.UrlDevice;
 import ch.psi.pshell.device.Device;
 import ch.psi.pshell.device.DeviceListener;
 import ch.psi.pshell.device.DummyPositioner;
@@ -118,7 +119,7 @@ public class MonitorScan extends LineScan {
 
     @Override
     protected void doScan() throws IOException, InterruptedException {
-        if (trigger instanceof InnerDevice){       
+        if (trigger instanceof UrlDevice){       
             //TODO: trigger must be equal to readables[0]: add checking
             this.trigger = (Device) readables[0];
             readables[0] = ((Cacheable) readables[0]).getCache();            

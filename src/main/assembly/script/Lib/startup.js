@@ -75,7 +75,7 @@ MonitorScan = Java.type('ch.psi.pshell.scan.MonitorScan')
 BinarySearch = Java.type('ch.psi.pshell.scan.BinarySearch')
 HillClimbingSearch = Java.type('ch.psi.pshell.scan.HillClimbingSearch')
 ScanResult = Java.type('ch.psi.pshell.scan.ScanResult')
-InnerDevice = Java.type('ch.psi.pshell.scan.InnerDevice')
+UrlDevice = Java.type('ch.psi.pshell.core.UrlDevice')
 BsScan = Java.type('ch.psi.pshell.bs.BsScan')
 Stream = Java.type('ch.psi.pshell.bs.Stream') 
 Preference = Java.type('ch.psi.pshell.scripting.ViewPreference')
@@ -1971,7 +1971,7 @@ function exec_cpython(script_name, args, python_name){
 function string_to_obj(o) {
     if (typeof o === 'string') {
         if (o.contains("://")){
-            return new InnerDevice(o)   
+            return new UrlDevice(o)   
         }            
         return eval(o)
     } else if (o instanceof Array) {

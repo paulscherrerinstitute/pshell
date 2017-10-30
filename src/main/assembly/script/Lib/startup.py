@@ -93,7 +93,7 @@ import ch.psi.pshell.scan.MonitorScan
 import ch.psi.pshell.scan.BinarySearch
 import ch.psi.pshell.scan.HillClimbingSearch
 import ch.psi.pshell.scan.ScanResult
-import ch.psi.pshell.scan.InnerDevice 
+import ch.psi.pshell.scan.UrlDevice 
 import ch.psi.pshell.bs.BsScan
 import ch.psi.pshell.bs.Stream as Stream
 import ch.psi.pshell.scripting.ViewPreference as Preference;
@@ -2070,7 +2070,7 @@ def notify(subject, text, attachments = None, to=None):
 def string_to_obj(o):
     if is_string(o):
         if "://" in o:
-            return ch.psi.pshell.scan.InnerDevice(o)
+            return ch.psi.pshell.core.UrlDevice(o)
         return eval(o)
     elif is_list(o):
         ret = []

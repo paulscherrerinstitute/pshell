@@ -1,5 +1,6 @@
 package ch.psi.pshell.scan;
 
+import ch.psi.pshell.core.UrlDevice;
 import ch.psi.pshell.bs.Provider;
 import ch.psi.pshell.bs.Stream;
 import ch.psi.pshell.bs.Waveform;
@@ -654,31 +655,31 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
     }
 
     ArrayList<Stream> startedStreams;
-    ArrayList<Device> innerDevices;
+    ArrayList<Device> urlDevices;
 
     protected void openDevices() throws IOException, InterruptedException {
         startedStreams = new ArrayList<>();
-        innerDevices = new ArrayList<>();
+        urlDevices = new ArrayList<>();
         for (int i=0; i<writables.length; i++){
-            if (writables[i] instanceof InnerDevice){                
-                writables[i] = (Writable) ((InnerDevice)writables[i]).resolve();
-                innerDevices.add((Device) writables[i]);
+            if (writables[i] instanceof UrlDevice){                
+                writables[i] = (Writable) ((UrlDevice)writables[i]).resolve();
+                urlDevices.add((Device) writables[i]);
             }
         }
         Stream innerStream = null;
         for (int i=0; i<readables.length; i++){
-            if (readables[i] instanceof InnerDevice){
-                if (((InnerDevice)readables[i]).getProtocol().equals("bs")){
+            if (readables[i] instanceof UrlDevice){
+                if (((UrlDevice)readables[i]).getProtocol().equals("bs")){
                     if (innerStream == null){
                         Provider dispatcher = Context.getInstance().getDevicePool().getByName("dispatcher", ch.psi.pshell.bs.Provider.class);
                         innerStream = new Stream("Scan devices stream", dispatcher);
-                        innerDevices.add(innerStream);
+                        urlDevices.add(innerStream);
                         innerStream.initialize();                        
                     }                                  
-                    ((InnerDevice)readables[i]).setParent(innerStream);
+                    ((UrlDevice)readables[i]).setParent(innerStream);
                 }                
-                readables[i] = (Readable) ((InnerDevice)readables[i]).resolve();
-                innerDevices.add((Device) readables[i]);
+                readables[i] = (Readable) ((UrlDevice)readables[i]).resolve();
+                urlDevices.add((Device) readables[i]);
             }
         }
         if (innerStream!=null){
@@ -711,8 +712,8 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
                 }
             }
         }
-        if (innerDevices!=null){
-            for (Device dev : innerDevices){
+        if (urlDevices!=null){
+            for (Device dev : urlDevices){
                 try {
                     dev.close();
                 } catch (Exception ex) {

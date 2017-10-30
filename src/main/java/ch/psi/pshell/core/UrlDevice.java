@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2014 Paul Scherrer Institute. All rights reserved.
  */
-package ch.psi.pshell.scan;
+package ch.psi.pshell.core;
 
 import ch.psi.pshell.bs.Scalar;
 import ch.psi.pshell.bs.Stream;
@@ -18,7 +18,7 @@ import java.util.Map;
 /**
  * Dynamic resolved devices, according to URL (protocol://name). Can be passed as argument to scans.
  */
-public class InnerDevice extends DeviceBase implements Readable, Writable {
+public class UrlDevice extends DeviceBase implements Readable, Writable {
 
     final String url;
     final String protocol;
@@ -26,8 +26,9 @@ public class InnerDevice extends DeviceBase implements Readable, Writable {
     final String id;
     final Map<String, String> pars;
     Device parent;
+    
 
-    public InnerDevice(String url) {
+    public UrlDevice(String url) {
         if (!url.contains("://")) {            
             throw  new RuntimeException("Invalid device url: " + url);
         }
@@ -50,8 +51,12 @@ public class InnerDevice extends DeviceBase implements Readable, Writable {
         this.name = pars.containsKey("name") ? pars.get("name") : id;
     }
 
-    void setParent(Device parent) {
+    public void setParent(Device parent) {
         this.parent = parent;
+    }
+
+    public Device getParent() {
+        return parent;
     }
 
     public String getProtocol() {
