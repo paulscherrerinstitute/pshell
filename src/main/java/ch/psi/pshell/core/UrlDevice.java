@@ -5,7 +5,6 @@ package ch.psi.pshell.core;
 
 import ch.psi.pshell.bs.Scalar;
 import ch.psi.pshell.bs.Stream;
-import ch.psi.pshell.core.Context;
 import ch.psi.pshell.device.Device;
 import ch.psi.pshell.device.DeviceBase;
 import ch.psi.pshell.device.Readable;
@@ -14,6 +13,7 @@ import ch.psi.pshell.epics.Epics;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Level;
 
 /**
  * Dynamic resolved devices, according to URL (protocol://name). Can be passed as argument to scans.
@@ -25,7 +25,9 @@ public class UrlDevice extends DeviceBase implements Readable, Writable {
     final String name;
     final String id;
     final Map<String, String> pars;
-    Device parent;
+    
+    Device parent;    
+    Device device;
     
 
     public UrlDevice(String url) {
@@ -50,14 +52,31 @@ public class UrlDevice extends DeviceBase implements Readable, Writable {
         this.id =id;
         this.name = pars.containsKey("name") ? pars.get("name") : id;
     }
-
+    
     public void setParent(Device parent) {
         this.parent = parent;
     }
-
+    
+    @Override
     public Device getParent() {
         return parent;
     }
+
+    @Override
+    public void doInitialize() throws IOException, InterruptedException{
+        closeDevice();        
+        device = resolve();
+        if (device != null) {
+            if (Context.getInstance().isSimulation()) {
+                device.setSimulated();
+            }
+            device.initialize();
+        }     
+    }
+    
+    public Device getDevice() {
+        return device;
+    }    
 
     public String getProtocol() {
         return protocol;
@@ -78,16 +97,20 @@ public class UrlDevice extends DeviceBase implements Readable, Writable {
 
     @Override
     public void write(Object value) throws IOException, InterruptedException {
+        if ((device!=null) && (device instanceof Writable)){
+            ((Writable)device).write(value);
+        }
     }
 
     @Override
     public Object read() throws IOException, InterruptedException {
+        if ((device!=null) && (device instanceof Readable)){
+            return ((Readable)device).read();
+        }
         return null;
     }
 
-    public Device resolve() throws IOException, InterruptedException {
-        Device dev = null;
-
+    protected Device resolve() throws IOException, InterruptedException {        
         switch (protocol) {
             case "pv":
             case "ca":
@@ -111,8 +134,7 @@ public class UrlDevice extends DeviceBase implements Readable, Writable {
                 } catch (Exception ex) {
                 }
 
-                dev = Epics.newChannelDevice(name, id, type, timestamped, precision, size);
-                break;
+                return Epics.newChannelDevice(name, id, type, timestamped, precision, size);
 
             case "bs":
                 int modulo = Scalar.DEFAULT_MODULO;
@@ -146,27 +168,35 @@ public class UrlDevice extends DeviceBase implements Readable, Writable {
                 } catch (Exception ex) {
                 }
                 if ((width >=0) && (height >=0)){
-                    dev = ((Stream) parent).addMatrix(name, id, modulo, offset, width, height);
+                    return ((Stream) getParent()).addMatrix(name, id, modulo, offset, width, height);
                 }
                 else if (waveform){
                     if (sz>=0){
-                        dev = ((Stream) parent).addWaveform(name, id, modulo, offset, sz);
+                        return ((Stream) getParent()).addWaveform(name, id, modulo, offset, sz);
                     } else {
-                        dev = ((Stream) parent).addWaveform(name, id, modulo, offset);
+                        return ((Stream) getParent()).addWaveform(name, id, modulo, offset);
                    }
                 } else{
-                    dev = ((Stream) parent).addScalar(name, id, modulo, offset);
+                    return ((Stream) getParent()).addScalar(name, id, modulo, offset);
                 }                 
-                break;
-        }
-
-        if (dev != null) {
-            if (Context.getInstance().isSimulation()) {
-                dev.setSimulated();
-            }
-            dev.initialize();
-            return dev;
         }
         throw new IOException("Invalid device: " + url);
+    }
+    
+    void closeDevice(){
+        if (device != null){
+            try {
+                device.close();
+            } catch (Exception ex) {
+                getLogger().log(Level.WARNING, null, ex);
+            }
+            device = null;
+        }        
+    }
+    
+    @Override
+    public void doClose() throws IOException{
+        closeDevice();
+        super.doClose();
     }
 }
