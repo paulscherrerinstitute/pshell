@@ -684,6 +684,7 @@ function  mscan(trigger, readables, points, timeout, async, take_initial, before
     if (!is_defined(title))    title = null;
 
     var timeout_ms = timeout * 1000
+    var trigger = string_to_obj(trigger)
     var readables = to_array(string_to_obj(readables), "ch.psi.pshell.device.Readable")
     var scanClass = Java.extend(MonitorScan)
     var scan = new scanClass(trigger, readables, points, timeout_ms, async, take_initial) {

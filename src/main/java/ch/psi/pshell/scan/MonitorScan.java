@@ -13,15 +13,14 @@ import java.io.IOException;
 /**
  *
  */
-public class MonitorScan extends LineScan {
-
-    final Device trigger;
+public class MonitorScan extends LineScan {    
     final int time_ms;
     final int points;
     final boolean async;
     final boolean takeInitialValue;
     final Object lock = new Object();
 
+    Device trigger;
     Chrono chrono;
     Exception exception;
 
@@ -119,6 +118,12 @@ public class MonitorScan extends LineScan {
 
     @Override
     protected void doScan() throws IOException, InterruptedException {
+        if (trigger instanceof InnerDevice){       
+            //TODO: trigger must be equal to readables[0]: add checking
+            this.trigger = (Device) readables[0];
+            readables[0] = ((Cacheable) readables[0]).getCache();            
+        }        
+        
         firstSample = true;
         chrono = new Chrono();
         int steps = getNumberOfSteps()[0];

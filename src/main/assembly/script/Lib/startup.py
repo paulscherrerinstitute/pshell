@@ -649,6 +649,7 @@ def mscan(trigger, readables, points, timeout = None, async = True, take_initial
 
     """      
     timeout_ms=int(timeout*1000) if ((timeout is not None) and (timeout>=0)) else -1
+    trigger = string_to_obj(trigger)
     readables=to_list(string_to_obj(readables))    
     scan = MonitorScan(trigger, readables, points, timeout_ms, async, take_initial)
     scan.before_read=before_read
