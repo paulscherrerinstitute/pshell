@@ -161,11 +161,25 @@ public class Epics {
             channel.setValueNoWait(value);
         } finally {
             closeChannel(channel);
-        }
+        }           
     }
     
     
     public static EpicsRegister newChannelDevice(String name, String channelName, Class type) {
+        return newChannelDevice(name, channelName, type, false);
+    }
+    
+    
+    public static EpicsRegister newChannelDevice(String name, String channelName, Class type, boolean timestamped) {
+        return newChannelDevice(name, channelName, type, timestamped, -1);
+    }
+
+    
+    public static EpicsRegister newChannelDevice(String name, String channelName, Class type,  boolean timestamped, int precision) {
+        return newChannelDevice(name, channelName, type, timestamped, -1, -1);
+    }
+
+    public static EpicsRegister newChannelDevice(String name, String channelName, Class type,  boolean timestamped, int precision, int size) {
         if (type == null) {
             try {
                 type = factory.getDefaultType(channelName);
@@ -174,41 +188,41 @@ public class Epics {
             }            
         }
         if (type == byte[].class) {
-            return new ChannelByteArray(name, channelName);
+            return new ChannelByteArray(name, channelName, size, timestamped);
         }
         if (type == short[].class) {
-            return new ChannelShortArray(name, channelName);
+            return new ChannelShortArray(name, channelName, size, timestamped);
         }
         if (type == int[].class) {
-            return new ChannelIntegerArray(name, channelName);
+            return new ChannelIntegerArray(name, channelName, size, timestamped);
         }
         if (type == float[].class) {
-            return new ChannelFloatArray(name, channelName);
+            return new ChannelFloatArray(name, channelName, precision, size, timestamped);
         }
         if (type == double[].class) {
-            return new ChannelDoubleArray(name, channelName);
+            return new ChannelDoubleArray(name, channelName, precision, size, timestamped);
         }
 
         if (type.isPrimitive()) {
             type = Convert.getWrapperClass(type);
         }
         if (type == Byte.class) {
-            return new ChannelByte(name, channelName);
+            return new ChannelByte(name, channelName, timestamped);
         }
         if (type == Short.class) {
-            return new ChannelShort(name, channelName);
+            return new ChannelShort(name, channelName, timestamped);
         }
         if (type == Integer.class) {
-            return new ChannelInteger(name, channelName);
+            return new ChannelInteger(name, channelName, timestamped);
         }
         if (type == Float.class) {
-            return new ChannelFloat(name, channelName);
+            return new ChannelFloat(name, channelName, precision, timestamped);
         }
         if (type == Double.class) {
-            return new ChannelDouble(name, channelName);
+            return new ChannelDouble(name, channelName, precision, timestamped);
         }
         if (type == String.class) {
-            return new ChannelString(name, channelName);
+            return new ChannelString(name, channelName, timestamped);
         }
         throw new RuntimeException("Invalid channel type");
     }

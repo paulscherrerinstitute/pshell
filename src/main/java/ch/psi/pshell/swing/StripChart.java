@@ -75,7 +75,6 @@ import javax.swing.table.TableColumn;
 public class StripChart extends StandardDialog {
 
     public static final String FILE_EXTENSION = "scd";
-    public static final String PROPERTY_DISPATCHER_URL = "ch.psi.pshell.dispatcher.url";
 
     int dragInterval = 1000;
 
@@ -671,7 +670,7 @@ public class StripChart extends StandardDialog {
                     dispatcher = Context.getInstance().getDevicePool().getByName("dispatcher", ch.psi.pshell.bs.Provider.class);
                 }
                 if (dispatcher == null) {
-                    dispatcher = newDispatcher();
+                    dispatcher = Dispatcher.createDefault();
                     //dispatcher.getConfig().disableCompression = true;
                     synchronized (instantiatedDevices) {
                         instantiatedDevices.add(dispatcher);
@@ -796,10 +795,6 @@ public class StripChart extends StandardDialog {
             }
         }
 
-    }
-
-    protected Dispatcher newDispatcher() {
-        return new Dispatcher("dispatcher", System.getProperty(PROPERTY_DISPATCHER_URL, "https://dispatcher-api.psi.ch/sf"));
     }
 
     final ArrayList<Device> instantiatedDevices = new ArrayList<>();

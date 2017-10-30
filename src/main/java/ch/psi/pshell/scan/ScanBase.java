@@ -1,5 +1,6 @@
 package ch.psi.pshell.scan;
 
+import ch.psi.pshell.bs.Provider;
 import ch.psi.pshell.bs.Stream;
 import ch.psi.pshell.bs.Waveform;
 import ch.psi.pshell.core.Context;
@@ -664,13 +665,26 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
                 innerDevices.add((Device) writables[i]);
             }
         }
+        Stream innerStream = null;
         for (int i=0; i<readables.length; i++){
             if (readables[i] instanceof InnerDevice){
+                if (((InnerDevice)readables[i]).getProtocol().equals("bs")){
+                    if (innerStream == null){
+                        Provider dispatcher = Context.getInstance().getDevicePool().getByName("dispatcher", ch.psi.pshell.bs.Provider.class);
+                        innerStream = new Stream("Scan devices stream", dispatcher);
+                        innerDevices.add(innerStream);
+                        innerStream.initialize();                        
+                    }                                  
+                    ((InnerDevice)readables[i]).setParent(innerStream);
+                }                
                 readables[i] = (Readable) ((InnerDevice)readables[i]).resolve();
                 innerDevices.add((Device) readables[i]);
             }
         }
-        
+        if (innerStream!=null){
+            innerStream.start(true); 
+            innerStream.waitCacheChange(10000);
+        }        
         for (Readable r : readables) {           
             if (r instanceof Stream) {
                 if (((Stream) r).getState() == State.Ready) {

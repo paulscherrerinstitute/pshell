@@ -24,6 +24,7 @@ import org.glassfish.jersey.jackson.JacksonFeature;
  */
 public class Dispatcher extends Provider {
 
+    public static final String PROPERTY_DISPATCHER_URL = "ch.psi.pshell.dispatcher.url";    
     Client client;
 
     public Dispatcher(String name, String address) {
@@ -185,5 +186,9 @@ public class Dispatcher extends Provider {
         } catch (IOException ex) {
             getLogger().log(Level.WARNING, null, ex);
         }
-    }
+    }    
+    
+    public static Dispatcher createDefault() {
+        return new Dispatcher("dispatcher", System.getProperty(PROPERTY_DISPATCHER_URL, "https://dispatcher-api.psi.ch/sf"));
+    }    
 }
