@@ -14,7 +14,7 @@ import java.util.logging.Logger;
  */
 public abstract class SerialDeviceBase extends DeviceBase implements SerialDevice {
 
-    Level logLevel = Level.FINER;
+    Level logLevel = Level.FINEST;
 
     protected SerialDeviceBase(String name) {
         super(name, null);
@@ -368,6 +368,14 @@ public abstract class SerialDeviceBase extends DeviceBase implements SerialDevic
     //Tools
     private void yield() throws InterruptedException {
         Thread.sleep(1);
+    }
+    
+    public void setLogLevel(Level level){
+        logLevel = level;
+    }
+
+    public Level getLogLevel(){
+        return logLevel;
     }
 
     //Repeating prototype to avoid overhead when not logging
