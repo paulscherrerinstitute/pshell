@@ -31,6 +31,7 @@ import ch.psi.pshell.scripting.ViewPreference;
 import ch.psi.pshell.scripting.Statement;
 import ch.psi.pshell.security.User;
 import ch.psi.pshell.security.UsersManagerListener;
+import ch.psi.utils.Str;
 import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.Collections;
@@ -273,9 +274,9 @@ public class ServerService {
                     argList = new ArrayList();
                     args = args.substring(0, args.lastIndexOf(")"));
                     script = script.substring(0, script.indexOf("("));
-                    String[] tokens = args.split(",");
+                    String[] tokens = Str.splitIgnoringQuotes(args, ",");                    
                     for (String token : tokens) {
-                        argList.add(token.trim());
+                        argList.add(Str.removeQuotes(token).trim());
                     }
                 }
             }

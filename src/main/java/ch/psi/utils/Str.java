@@ -118,4 +118,45 @@ public class Str {
         }
         return sj.toString();
     }
+
+    static boolean isDoubleQuotes(String str) {
+        boolean doubleQuotes = true;
+        int countSingle = count(str, "'");
+        int countDouble = count(str, "\"");
+        if ((countSingle > 0) && ((countSingle % 2) == 0)) {
+            int indexSingle = str.indexOf("'");
+            int indexDouble = str.indexOf("\"");
+            if ((indexDouble < 0) || (indexSingle < indexDouble)) {
+                doubleQuotes = false;
+            }
+        }
+        return doubleQuotes;
+    }
+
+    /**
+     * Calls splitIgnoringQuotes checking if single or double quotes are used
+     */
+    public static String[] splitIgnoringQuotes(String str, String separator) {
+        return splitIgnoringQuotes(str, separator, isDoubleQuotes(str));
+    }
+
+    /**
+     * Split strings ignoring separators in quotes
+     */
+    public static String[] splitIgnoringQuotes(String str, String separator, boolean doubleQuotes) {
+        if (doubleQuotes) {
+            return str.split(separator + "(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)", -1);
+        } else {
+            return str.split(separator + "(?=(?:[^']*'[^']*')*[^']*$)", -1);
+        }
+    }
+
+    public static String removeQuotes(String str) {
+        String quote = isDoubleQuotes(str) ? "\"" : "'";
+        int count = count(str, quote);
+        if ((count > 0) && ((count % 2) == 0)) {
+            str = str.substring(str.indexOf(quote)+1, str.lastIndexOf(quote));
+        }
+        return str;
+    }
 }
