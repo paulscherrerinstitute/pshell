@@ -1135,11 +1135,11 @@ function log(log){
     get_context().dataManager.appendLog(String(log))
 }
 
-function set_exec_pars(name, type, path, layout, persist, flush, accumulate, preserve, open, reset, group, defaults){
+function set_exec_pars(args){
     /*
        Configures the script execution parameters, overriding the system configuration.
     
-    Args:
+    Args: Dictionary
         name(str, optional): value of the {name} tag. Default is the running script name 
                              (or "scan" in the case of  a command line scan command.)
         type(str, optional): value of the {type} tag. Default is empty.
@@ -1160,22 +1160,7 @@ function set_exec_pars(name, type, path, layout, persist, flush, accumulate, pre
         defaults(bool, optional): If true restore the original execution parameters.
 
     */
-    if (!is_defined(name))   name = null;
-    if (!is_defined(type))   type = null;
-    if (!is_defined(path))   path = null;
-    if (!is_defined(layout))   layout = null;
-    if (!is_defined(persist))   persist = null;
-    if (!is_defined(flush))   flush = null;   
-    if (!is_defined(accumulate))   accumulate = null;   
-    if (!is_defined(preserve))   preserve = null;   
-    if (!is_defined(open))   open = null;   
-    if (!is_defined(reset))   reset = null;   
-    if (!is_defined(group))   group = null;   
-    if (!is_defined(defaults))   defaults = null;    
-    if (defaults){
-        get_context().resetExecutionPars()
-    }
-    get_context().setExecutionPars(name, type, path, layout, persist, flush, accumulate, preserve, open, group, reset)
+    get_context().setExecutionPars(args)
 }
     
 function get_exec_pars(){

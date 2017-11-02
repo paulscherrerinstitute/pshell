@@ -369,12 +369,13 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
                 pluginManager.onStateChange(state, former);
             }
             if (state.isProcessing()) {
-                initExecutionPars();
+                executionPars.init();
                 if (state == State.Busy) {
                     plotPreferences.init();
                 }
             } else {
-                finishExecutionPars();
+                executionPars.finish();
+                runningScriptName = null;
             }
         }
     }
@@ -1274,213 +1275,22 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
         return runningScriptName;
     }
 
-    public class ExecutionPars {
 
-        long start;
-        String name;
-        String path;
-        String type;
-        Object layout;
-        Boolean persist;
-        Boolean preserve;
-        Boolean flush;
-        Boolean accumulate;
-        int offset;
+    final ExecutionParameters executionPars = new ExecutionParameters();
 
-        public String getName() {
-            if (name == null) {
-                return (runningScriptName != null) ? runningScriptName : "console";
-            }
-            return name;
-        }
-
-        public String getType() {
-            return (type == null) ? "" : type;
-        }
-
-        private String pathName;
-
-        public String getPath() {
-            if (pathName == null) {
-                pathName = getSetup().expandPath(((path != null) && (!path.isEmpty())) ? path : getConfig().dataPath, start);
-                if (dataManager != null) {
-                    //This is done in Data manager but duplicate here to store the full file name
-                    pathName = dataManager.getProvider().getRootFileName(pathName);
-                }
-            }
-            return pathName;
-        }
-
-        public boolean isPacked() {
-            return dataManager.isDataPacked();
-        }
-
-        public boolean isOpen() {
-            return dataManager.isOpen();
-        }
-
-        public Object getLayout() {
-            return layout;
-        }
-
-        public Boolean getPersist() {
-            return (persist != null) ? persist : getConfig().autoSaveScanData;
-        }
-
-        public Boolean getFlush() {
-            return (flush != null) ? flush : getConfig().dataScanFlushRecords;
-        }
-
-        public Boolean getPreserve() {
-            return (preserve != null) ? preserve : getConfig().dataScanPreserveTypes;
-        }
-
-        public Boolean getAccumulate() {
-            return (accumulate != null) ? accumulate : !getConfig().dataScanReleaseRecords;
-        }
-
-        public int getIndex() {
-            return dataManager.getScanIndex();
-        }
-
-        public int getCount() {
-            return dataManager.getScanIndex() - offset;
-        }
-
-        public String getScript() {
-            return runningScriptName;
-        }
-
-        public String getGroup() {
-            return dataManager.getCurrentGroup();
-        }
-
-        public String getScanPath() {
-            return dataManager.getScanPath();
-        }
-
-        public Scan getScan() {
-            return dataManager.getCurrentScan();
-        }
-
-        public long getStart() {
-            return start;
-        }
-
-        public long getExecutionTime() {
-            return System.currentTimeMillis() - start;
-        }
-
-        public boolean getAborted() {
-            return aborted;
-        }
-
-        //TODO: check multiple parallel calls
-        public CommandSource getSource() {
-            CommandInfo ret = commandInfo.get(Thread.currentThread());
-            return (ret == null) ? null : ret.source;
-        }
-
-        //TODO: check multiple parallel calls
-        public Object getArgs() {
-            CommandInfo ret = commandInfo.get(Thread.currentThread());
-            return (ret == null) ? null : ret.args;
-        }
-
-        //TODO: threads created by foreground script return background
-        public boolean isBackground() {
-            return !isInterpreterThread();
-        }
-
-        @Override
-        public String toString() {
-            return getName() + (((getType() != null) && (getType().length() > 0)) ? " [" + getType() + "]" : "");
-        }
-    }
-
-    final ExecutionPars executionPars = new ExecutionPars();
-
-    public ExecutionPars getExecutionPars() {
+    public ExecutionParameters getExecutionPars() {
         return executionPars;
     }
 
-    void initExecutionPars() {
-        if (!isExecutionParsInitialized()) {
-            resetExecutionPars();
-            executionPars.start = System.currentTimeMillis();
-        }
-    }
-
-    void finishExecutionPars() {
-        executionPars.start = -1;
-        runningScriptName = null;
-    }
-
-    boolean isExecutionParsInitialized() {
-        return (executionPars.start > 0);
-    }
-
-    public void resetExecutionPars() {
-        executionPars.pathName = null;
-        executionPars.offset = 0;
-        executionPars.name = null;
-        executionPars.type = null;
-        executionPars.path = null;
-        executionPars.layout = null;
-        executionPars.persist = null;
-        executionPars.flush = null;
-        executionPars.accumulate = null;
-        executionPars.preserve = null;
-    }
-
     public void setExecutionPars(String name) {
-        setExecutionPars(name, null, null, null, null, null, null, null, null, null, null);
+        Map pars = new HashMap();
+        pars.put("name", name);
+        setExecutionPars(pars);
     }
-
-    //TODO: Change parameters to dictionary
-    //TODO: Add config of scan
-    public void setExecutionPars(String name, String type, String path, Object layout, Boolean persist, Boolean flush, Boolean accumulate, Boolean preserve, Boolean open, String group, Boolean reset) {
+    
+   public void setExecutionPars(Map pars) {
         executionPars.pathName = null;
-        if (name != null) {
-            executionPars.name = name;
-        }
-        if (type != null) {
-            executionPars.type = type;
-        }
-        if (path != null) {
-            executionPars.path = path;
-        }
-        if (layout != null) {
-            executionPars.layout = layout;
-        }
-        if (persist != null) {
-            executionPars.persist = persist;
-        }
-        if (flush != null) {
-            executionPars.flush = flush;
-        }
-        if (accumulate != null) {
-            executionPars.accumulate = accumulate;
-        }
-        if (preserve != null) {
-            executionPars.preserve = preserve;
-        }
-        if (group != null) {
-            dataManager.setCurrentGroup(group);
-        }
-        if ((Boolean.TRUE.equals(open)) && (!dataManager.isOpen())) {
-            try {
-                dataManager.openOutput();
-            } catch (IOException ex) {
-                logger.log(Level.WARNING, null, ex);
-            }
-        } else if ((Boolean.FALSE.equals(open)) && (dataManager.isOpen())) {
-            dataManager.closeOutput();
-        }
-        if (Boolean.TRUE.equals(reset)) {
-            executionPars.offset = dataManager.isOpen() ? dataManager.getScanIndex() : 0;
-            executionPars.start = System.currentTimeMillis();
-        }
+        executionPars.setOptions(pars);
     }
 
     public String getStandardScriptName(String fileName) {

@@ -7,6 +7,7 @@ import java.lang.Object as Object
 import java.beans.PropertyChangeListener
 import java.util.concurrent.Callable
 import java.util.List
+import java.util.Map
 import java.lang.reflect.Array
 
 import ch.psi.utils.Threading as Threading
@@ -737,11 +738,11 @@ def log(log){
     get_context().dataManager.appendLog(String.valueOf(log))
 }
 
-def set_exec_pars(name = null, type = null, path = null, layout = null, persist = null, flush = null, accumulate = null, preserve = null, open = null, reset=null, group=null, restore=null){
+def set_exec_pars(Map kwargs){
     /*
     Configures the script execution parameters, overriding the system configuration.
     
-    Args:
+    Args: Map
         name(str, optional): value of the {name} tag. Default is the running script name 
                              (or "scan" in the case of  a command line scan command.)
         type(str, optional): value of the {type} tag. Default is empty.
@@ -761,10 +762,7 @@ def set_exec_pars(name = null, type = null, path = null, layout = null, persist 
         restore(bool, optional): If true restore the original execution parameters.
 
     */
-    if (restore){
-        get_context().resetExecutionPars()
-    }   
-    get_context().setExecutionPars(name, type, path, layout, persist, flush, accumulate, preserve, open, group, reset)
+    get_context().setExecutionPars(kwargs)
 }
 
 def get_exec_pars(){

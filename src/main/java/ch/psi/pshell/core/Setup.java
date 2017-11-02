@@ -1,6 +1,6 @@
 package ch.psi.pshell.core;
 
-import ch.psi.pshell.core.Context.ExecutionPars;
+import ch.psi.pshell.core.ExecutionParameters;
 import ch.psi.pshell.scripting.ScriptType;
 import ch.psi.pshell.security.User;
 import ch.psi.utils.Arr;
@@ -237,7 +237,7 @@ public class Setup extends Config {
         if (user != null) {
             path = path.replace(TOKEN_USER, user);
         }
-        ExecutionPars executionContext = (Context.getInstance() == null) ? null : Context.getInstance().getExecutionPars();
+        ExecutionParameters executionContext = (Context.getInstance() == null) ? null : Context.getInstance().getExecutionPars();
         if (executionContext != null) {
             String execName = executionContext.getName();
             String execType = executionContext.getType();

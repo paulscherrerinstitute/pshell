@@ -994,7 +994,7 @@ def log(log):
     get_context().dataManager.appendLog(str(log))
 
 #TODO: Change parameters to dictionary
-def set_exec_pars(name = None, type = None, path = None, layout = None, persist = None, flush = None, accumulate = None, preserve = None, open = None, reset = None, group = None, defaults=None):
+def set_exec_pars(**args):
     """  Configures the script execution parameters, overriding the system configuration.
     
     Args:
@@ -1018,9 +1018,7 @@ def set_exec_pars(name = None, type = None, path = None, layout = None, persist 
         defaults(bool, optional): If true restore the original execution parameters.
 
     """
-    if defaults == True:
-        get_context().resetExecutionPars()
-    get_context().setExecutionPars(name, type, path, layout, persist, flush, accumulate, preserve, open, group, reset)
+    get_context().setExecutionPars(args)
 
 #TODO: Change return to dictionary
 def get_exec_pars():
