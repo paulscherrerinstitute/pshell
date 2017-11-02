@@ -6,6 +6,7 @@ package ch.psi.pshell.core;
 import ch.psi.pshell.scan.Scan;
 import ch.psi.pshell.scan.ScanListener;
 import ch.psi.pshell.scan.ScanRecord;
+import ch.psi.utils.Arr;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -15,6 +16,9 @@ import java.util.logging.Level;
  *
  */
 public class ExecutionParameters implements ScanListener {
+
+    final String[] knownOptions = new String[]{"defaults", "group", "open", "reset", "name", "type", "path",
+        "layout", "persist", "flush", "preserve", "accumulate"};
 
     long start;
     int offset;
@@ -37,8 +41,15 @@ public class ExecutionParameters implements ScanListener {
         commandOptions = options;
         checkOptions(options);
     }
-    
-    void checkOptions(Map options){
+
+    void checkOptions(Map options) {
+        if (options != null) {
+            for (Object key : options.keySet()) {
+                if (!Arr.containsEqual(knownOptions, key)) {
+                    throw new RuntimeException("Invalid option: " + key);
+                }
+            }
+        }
         Object group = getOption("group");
         if (group != null) {
             Context.getInstance().dataManager.setCurrentGroup(String.valueOf(group));
@@ -59,7 +70,7 @@ public class ExecutionParameters implements ScanListener {
         if (Boolean.TRUE.equals(reset)) {
             offset = Context.getInstance().dataManager.isOpen() ? Context.getInstance().dataManager.getScanIndex() : 0;
             start = System.currentTimeMillis();
-        }        
+        }
     }
 
     public Map getScriptOptions() {
