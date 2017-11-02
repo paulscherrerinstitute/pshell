@@ -1288,12 +1288,15 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
         setExecutionPars(pars);
     }
     
-   public void setExecutionPars(Map pars) {
-        executionPars.pathName = null;
-        executionPars.setOptions(pars);
+   public void setExecutionPars(Map pars) {        
+        executionPars.setScriptOptions(pars);
     }
 
-    public String getStandardScriptName(String fileName) {
+   public void setCommandPars(Object command, Map pars) {        
+        executionPars.setCommandOptions(command, pars);
+   }
+
+   public String getStandardScriptName(String fileName) {
         if (fileName == null) {
             return "Unknown";
         }
@@ -2343,6 +2346,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
             synchronized (runningScans) {
                 runningScans.add(scan);
             }
+            executionPars.onScanStarted(scan, plotTitle);
         }
 
         @Override
@@ -2355,6 +2359,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
             synchronized (runningScans) {
                 runningScans.remove(scan);
             }
+            executionPars.onScanEnded(scan, ex);
         }
     };
 

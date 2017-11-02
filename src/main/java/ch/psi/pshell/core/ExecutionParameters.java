@@ -4,6 +4,8 @@
 package ch.psi.pshell.core;
 
 import ch.psi.pshell.scan.Scan;
+import ch.psi.pshell.scan.ScanListener;
+import ch.psi.pshell.scan.ScanRecord;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -12,50 +14,89 @@ import java.util.logging.Level;
 /**
  *
  */
-public class ExecutionParameters {
+public class ExecutionParameters implements ScanListener {
 
     long start;
-    Map options = new HashMap();
     int offset;
 
-    void setOptions(Map options) {
+    Map scriptOptions = new HashMap();
+    Map commandOptions = new HashMap();
+
+    void setScriptOptions(Map options) {
+        pathName = null;
         if (options.containsKey("defaults")) {
             reset();
         }
-        this.options.putAll(options);
-        if (options.containsKey("group")) {
-            Context.getInstance().dataManager.setCurrentGroup(String.valueOf(options.get("group")));
+        this.scriptOptions.putAll(options);
+        checkOptions(options);
+    }
+
+    //TODO: handle threading / parallel scans
+    public void setCommandOptions(Object command, Map options) {
+        pathName = null;
+        commandOptions = options;
+        checkOptions(options);
+    }
+    
+    void checkOptions(Map options){
+        Object group = getOption("group");
+        if (group != null) {
+            Context.getInstance().dataManager.setCurrentGroup(String.valueOf(group));
         }
-        if ((Boolean.TRUE.equals(options.get("open"))) && (!Context.getInstance().dataManager.isOpen())) {
+
+        Object open = getOption("open");
+        if ((Boolean.TRUE.equals(open)) && (!Context.getInstance().dataManager.isOpen())) {
             try {
                 Context.getInstance().dataManager.openOutput();
             } catch (IOException ex) {
                 Context.getInstance().logger.log(Level.WARNING, null, ex);
             }
-        } else if ((Boolean.FALSE.equals(options.get("open"))) && (Context.getInstance().dataManager.isOpen())) {
+        } else if ((Boolean.FALSE.equals(open)) && (Context.getInstance().dataManager.isOpen())) {
             Context.getInstance().dataManager.closeOutput();
         }
-        if (Boolean.TRUE.equals(options.get("reset"))) {
+
+        Object reset = getOption("reset");
+        if (Boolean.TRUE.equals(reset)) {
             offset = Context.getInstance().dataManager.isOpen() ? Context.getInstance().dataManager.getScanIndex() : 0;
             start = System.currentTimeMillis();
+        }        
+    }
+
+    public Map getScriptOptions() {
+        return (scriptOptions == null) ? new HashMap() : scriptOptions;
+    }
+
+    public Map getCommandOptions() {
+        return (commandOptions == null) ? new HashMap() : commandOptions;
+    }
+
+    Object getOption(String option) {
+        if (getCommandOptions().containsKey(option)) {
+            return getCommandOptions().get(option);
         }
+        if (getScriptOptions().containsKey(option)) {
+            return getScriptOptions().get(option);
+        }
+        return null;
     }
 
     public String getName() {
-        if (options.containsKey("name")) {
-            return String.valueOf(options.get("name"));
+        Object option = getOption("name");
+        if (option != null) {
+            return String.valueOf(option);
         }
         return (Context.getInstance().runningScriptName != null) ? Context.getInstance().runningScriptName : "console";
     }
 
     public String getType() {
-        return (options.containsKey("type")) ? String.valueOf(options.get("type")) : "";
+        Object option = getOption("type");
+        return (option != null) ? String.valueOf(option) : "";
     }
     String pathName;
 
     public String getPath() {
         if (pathName == null) {
-            String path = (options.containsKey("path")) ? String.valueOf(options.get("path")) : null;
+            String path = (String) getOption("path");
             pathName = Context.getInstance().getSetup().expandPath(((path != null) && (!path.isEmpty())) ? path : Context.getInstance().getConfig().dataPath, start);
             if (Context.getInstance().dataManager != null) {
                 //This is done in Data manager but duplicate here to store the full file name
@@ -74,23 +115,28 @@ public class ExecutionParameters {
     }
 
     public Object getLayout() {
-        return (options.containsKey("layout")) ? String.valueOf(options.get("layout")) : Context.getInstance().getConfig().dataLayout;
+        Object option = getOption("layout");
+        return (option != null) ? option : Context.getInstance().getConfig().dataLayout;
     }
 
     public Boolean getPersist() {
-        return (options.containsKey("persist")) ? (Boolean) (options.get("persist")) : Context.getInstance().getConfig().autoSaveScanData;
+        Object option = getOption("persist");
+        return (option != null) ? (Boolean) option : Context.getInstance().getConfig().autoSaveScanData;
     }
 
     public Boolean getFlush() {
-        return (options.containsKey("flush")) ? (Boolean) (options.get("flush")) : Context.getInstance().getConfig().dataScanFlushRecords;
+        Object option = getOption("flush");
+        return (option != null) ? (Boolean) option : Context.getInstance().getConfig().dataScanFlushRecords;
     }
 
     public Boolean getPreserve() {
-        return (options.containsKey("preserve")) ? (Boolean) (options.get("preserve")) : Context.getInstance().getConfig().dataScanPreserveTypes;
+        Object option = getOption("preserve");
+        return (option != null) ? (Boolean) option : Context.getInstance().getConfig().dataScanPreserveTypes;
     }
 
     public Boolean getAccumulate() {
-        return (options.containsKey("accumulate")) ? (Boolean) (options.get("accumulate")) : !Context.getInstance().getConfig().dataScanReleaseRecords;
+        Object option = getOption("accumulate");
+        return (option != null) ? (Boolean) option : !Context.getInstance().getConfig().dataScanReleaseRecords;
     }
 
     public int getIndex() {
@@ -169,7 +215,22 @@ public class ExecutionParameters {
     public void reset() {
         pathName = null;
         offset = 0;
-        options = new HashMap();
+        scriptOptions = new HashMap();
+        commandOptions = new HashMap();
+    }
+
+    @Override
+    public void onScanStarted(Scan scan, String plotTitle) {
+    }
+
+    @Override
+    public void onNewRecord(Scan scan, ScanRecord record) {
+    }
+
+    @Override
+
+    public void onScanEnded(Scan scan, Exception ex) {
+        commandOptions = new HashMap();
     }
 
 }
