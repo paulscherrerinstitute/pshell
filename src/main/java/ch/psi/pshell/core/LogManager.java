@@ -121,34 +121,38 @@ public class LogManager {
                 }
             }
 
-            addHandler(new Handler() {
-                @Override
-                public void publish(LogRecord record) {
-                    synchronized (lastLogs) {
-                        lastLogs.add(parseLogRecord(record));
-                        if (lastLogs.size() >= LAST_LOGS_SIZE) {
-                            lastLogs.remove(0);
-                        }
-                    }
-                }
-
-                @Override
-                public void flush() {
-                }
-
-                @Override
-                public void close() throws SecurityException {
-                }
-            });
+            addHandler(lastLogsHandler);
 
         } catch (Exception ex) {
             System.err.println(ex);
         }
     }
 
+    final Handler lastLogsHandler = new Handler() {
+        @Override
+        public void publish(LogRecord record) {
+            synchronized (lastLogs) {
+                lastLogs.add(parseLogRecord(record));
+                if (lastLogs.size() >= LAST_LOGS_SIZE) {
+                    lastLogs.remove(0);
+                }
+            }
+        }
+
+        @Override
+        public void flush() {
+        }
+
+        @Override
+        public void close() throws SecurityException {
+        }
+    };
+
     //TODO: Understand why not using ROOT_LOGGER
     public static void addHandler(Handler handler) {
-        Logger.getLogger(ROOT_LOGGER).addHandler(handler);
+        if (!Arr.contains(Logger.getLogger(ROOT_LOGGER).getHandlers(), handler)) {
+            Logger.getLogger(ROOT_LOGGER).addHandler(handler);
+        }
     }
 
     public static void removeHandler(Handler handler) {
