@@ -2187,21 +2187,6 @@ def set_status(status):
     set_preference(Preference.STATUS, status)
 
 def setup_plotting( enable_plots=None, enable_table=None,plot_list = None, line_plots = None, range = None, domain=None, defaults=None):
-    """Configure scan plotting. Default None values remain option unchanged.
-       The values are reset when starting a script. 
-
-    Args:
-        enable_plots(bool): Enable scan plotting. 
-        enable_table(bool): Enable printing to scan table. 
-        plot_list (list of str or Device, or "all"): Devices to plot. 
-                                                     "all" restores default (all scan devices).
-        line_plots (list of str or Device, or "all"): Devices to force a line plot(1d) 
-                                                     "none" restores default (no device).
-        range (str or list): "auto" or [min, max]. "none" restores default (fixed to scan range).
-        domain(str): source for plot domain axis. "Time", "Index" or readable name.
-                     Default is first writable position.
-        defaults(bool): if true restore default values,
-    """
     if defaults == True: set_preference(Preference.DEFAULTS, True)
     if enable_plots is not None: set_preference(Preference.PLOT_DISABLED, not enable_plots)
     if enable_table is not None: set_preference(Preference.TABLE_DISABLED, not enable_table)
