@@ -24,7 +24,9 @@ public class ExecutionParameters  {
 
     final String[] viewOptions = new String[]{"plot_disabled", "table_disabled", "enabled_plots", 
         "plot_types", "print_scan", "auto_range", "manual_range","domain_axis", "status"};        
-
+    
+    final String[] shortcutOptions = new String[]{"line_plots", "plot_list", "range"};        
+    
     long start;
     int offset;
 
@@ -52,7 +54,9 @@ public class ExecutionParameters  {
             for (Object key : options.keySet()) {
                 if (!Arr.containsEqual(executionOptions, key)) {
                     if (!Arr.containsEqual(viewOptions, key)) {
-                        throw new RuntimeException("Invalid option: " + key);
+                        if (!Arr.containsEqual(shortcutOptions, key)) {                        
+                            throw new RuntimeException("Invalid option: " + key);
+                        }
                     }
                 }
             }
@@ -73,6 +77,38 @@ public class ExecutionParameters  {
             offset = Context.getInstance().dataManager.isOpen() ? Context.getInstance().dataManager.getScanIndex() : 0;
             start = System.currentTimeMillis();
         }
+        
+        //Process shortcuts
+        if (getOption("line_plots")!=null){
+            Map types = new HashMap();
+            List linePlots =    (List)getOption("line_plots");
+            for (Object obj: linePlots){
+                types.put(obj, 1);
+            }
+            Map plotTypes = (Map) options.get("plot_types");
+            if (plotTypes == null){
+                options.put("plot_types", types);
+            } else {
+                plotTypes.putAll(types);
+            }
+        }
+        
+        if (getOption("plot_list")!=null){
+            Object plot_list = getOption("plot_list");
+            options.put("enabled_plots", "all".equals(plot_list) ? null : plot_list);
+        }
+        
+        if (getOption("range")!=null){
+            Object range = getOption("range");
+            if ("none".equals(range)){
+                options.put("auto_range", null);
+            } else if ("auto".equals(range)){
+                options.put("auto_range", Boolean.TRUE);
+            } else {
+                options.put("manual_range", range);
+            }
+        }        
+        
         for (Object key : options.keySet()) {
             if (Arr.containsEqual(viewOptions, key)) {
                 Object val = options.get(key);

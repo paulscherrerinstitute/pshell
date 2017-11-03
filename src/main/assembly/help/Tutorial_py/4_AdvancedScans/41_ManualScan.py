@@ -19,8 +19,7 @@ scan = ManualScan(writables_names, readable_names ,start, stop, steps)
 
 
 #This option is to plot the foe each output value one 1D series, instead of all in a matrix plot
-setup_plotting(line_plots = (ai1, ai2))
-
+set_exec_pars(line_plots = (ai1, ai2))
 
 scan.start()
 m1.setSpeed(10.0)

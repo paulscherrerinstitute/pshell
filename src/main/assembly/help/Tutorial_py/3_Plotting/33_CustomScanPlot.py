@@ -5,7 +5,7 @@
 
 #Setting the 1d preference would create in the place of the matrix plot, a 1d plot where 
 #each scanned column is a series
-#setup_plotting(line_plots = (ai1,))
+#set_exec_pars(line_plots = (ai1,))
 
 p = plot(None, title="1d Plot")[0]
 def AfterReadout(record, scan):

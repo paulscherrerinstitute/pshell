@@ -2,28 +2,46 @@
 # Demonstrate configuring scan plot options
 ###################################################################################################
 
+#Scan plots can be configured inline in the scan command or with set_exec_pars function.
+#The keywords are the same.
+#If inline, the option is valid for the current scan only. 
+#If set_exec_pars is used, it is valid for all scans in the sequence.
 
-#This optional preference limits the displayed plots
-setup_plotting(plot_list = (ai1, wf1))
+
+################################################################################################### 
+# Inline configiuration
+###################################################################################################
+
+
+#Scanning with custom plotting options: Providing the visible plots and displaying wf1 as 
+#a 1d plot at each scan point, instead of a matrix plot
+a= lscan(ao1, (ai1,ai2,wf1), 0, 40, 10, 0.01, plot_list = (ai1, wf1), line_plots = (wf1,))    
+
+#Next scan have plotting options defaults restored
+a= lscan(ao1, (ai1,ai2,wf1), 0, 40, 10, 0.01)    
+
+
+################################################################################################### 
+# Configuring with set_exec_pars
+###################################################################################################
+
+
+#This optional preference sets the displayed plots
+set_exec_pars(plot_list = (ai1, wf1))
 
 #This optional preference displays wf1 as a 1d plot at each scan point, instead of a matrix plot
-setup_plotting(line_plots = (wf1,)) 
+set_exec_pars(line_plots = (wf1,)) 
 
 #This optional preference disables printing the scan table
-#setup_plotting( enable_table = False) 
+#set_exec_pars( plot_disabled = True) 
 
-#This optional preference disable all scan plotting
-#setup_plotting( enable_plots = False) 
+#This optional  disable all scan plotting
+#set_exec_pars( table_disabled = True) 
 
 #Execute the scan: 200 steps, a1 from 0 to 40
-a= lscan(ao1, (ai1,ai2,wf1), 0, 40, 100, 0.01)                    
+a= lscan(ao1, (ai1,ai2,wf1), 0, 40, 10, 0.01)                    
 
-
-
-
-#This optional preference displays wf1 as a 1d plot at each scan point, instead of a matrix plot
-setup_plotting(line_plots = (wf1,)) 
-
-ascan((m1,m2), (ai1,wf1), (0.0,0.0), (2.0,1.0), (4,4))
+#The custom plotting options continue active
+ascan((m1,ao1), (ai1,ai2,wf1), (0.0,0.0), (2.0,1.0), (4,4))
 
 

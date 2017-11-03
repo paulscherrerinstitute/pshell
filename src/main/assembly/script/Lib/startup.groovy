@@ -765,6 +765,8 @@ def set_exec_pars(Map args){
         "plot_disabled", "table_disabled", "enabled_plots", "plot_types", "print_scan", "auto_range", 
         "manual_range","domain_axis", "status".
         See set_preference for more information.    
+        
+        Shortcut entries: "line_plots": list of devices with enforced line plots.
     */
     get_context().setExecutionPars(args)
 }

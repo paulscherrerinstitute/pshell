@@ -99,7 +99,6 @@ These functions provide the script API to many aspects of PShell:
 
  * UI interaction:
     - set_status
-    - setup_plotting
     - set_preference
     - get_string
     - get_option

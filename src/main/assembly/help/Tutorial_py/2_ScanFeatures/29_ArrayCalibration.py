@@ -34,6 +34,5 @@ mc1 = MatrixCalibrated()
 set_device_alias(ac1, "wf1_calib")
 set_device_alias(ac2, "wf1_calib_1d")
 set_device_alias(mc1, "im1_calib")
-setup_plotting(line_plots = (ac2,))
 
-a= lscan(ao1, [wf1, ac1, im1, mc1, ac2], 0, 40, 50, 0.02)         
+a= lscan(ao1, [wf1, ac1, im1, mc1, ac2], 0, 40, 50, 0.02, line_plots = (ac2,))    

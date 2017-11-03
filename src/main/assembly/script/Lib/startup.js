@@ -1165,6 +1165,7 @@ function set_exec_pars(args){
         "manual_range","domain_axis", "status".
         See set_preference for more information.
 
+        Shortcut entries: "line_plots": list of devices with enforced line plots.
     */
     get_context().setExecutionPars(args)
 }

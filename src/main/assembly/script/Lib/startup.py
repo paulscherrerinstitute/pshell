@@ -1042,8 +1042,10 @@ def set_exec_pars(**args):
         
         Graphical preferences can also be set. Keys are equal to lowercase of Preference enum:
         "plot_disabled", "table_disabled", "enabled_plots", "plot_types", "print_scan", "auto_range", 
-        "manual_range","domain_axis", "status".
+        "manual_range","domain_axis", "status".        
         See set_preference for more information.
+        
+        Shortcut entries: "line_plots": list of devices with enforced line plots.
     """
     get_context().setExecutionPars(args)
 
@@ -2184,7 +2186,6 @@ def set_status(status):
     """
     set_preference(Preference.STATUS, status)
 
-#TODO: Change parameters to dictionary
 def setup_plotting( enable_plots=None, enable_table=None,plot_list = None, line_plots = None, range = None, domain=None, defaults=None):
     """Configure scan plotting. Default None values remain option unchanged.
        The values are reset when starting a script. 
