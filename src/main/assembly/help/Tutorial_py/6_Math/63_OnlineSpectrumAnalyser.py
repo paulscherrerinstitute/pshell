@@ -26,10 +26,13 @@ def plot_spectrum(signal, sampling_freq, plots = None):
 
 def get_sample(samples, sampling_freq):
     return map(lambda t:math.sin(200*2*math.pi*t/sampling_freq) + random.random(), frange(0,samples,1))
-    #Simple example sampling a device:
-    #set_exec_pars(persist=False)
-    #setup_plotting(enable_plots = False, enable_table = False)
-    #return tscan(ai1, samples, 1/sampling_freq).getReadable(0)
+    
+    #Example sampling a device with a scan: 
+    #return tscan(ai1, samples, 1/sampling_freq, persist=False, plot_disabled = True, table_disabled = True).getReadable(0)
+    
+    #Example sampling a device with an averager
+    #av.update()
+    #return list(av.samples.read())
 
 plots = None
 samples = 1024; sampling_freq = 1024.0

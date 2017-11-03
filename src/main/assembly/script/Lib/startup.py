@@ -715,7 +715,7 @@ def bsearch(writables, readable, start, end, steps, maximum = True, strategy = "
         before_read (function, optional): callback on each step, before each readout.
         after_read (function, optional): callback on each step, after each readout.
         title(str, optional): plotting window name.
-        pars(dict, optional): options to this scan (see set_exec_pars).
+        pars(dict, optional): options to this scan (see 4_pars).
 
     Returns:
         SearchResult object.
@@ -1016,11 +1016,11 @@ def log(log):
     get_context().scriptingLog(str(log))
     get_context().dataManager.appendLog(str(log))
 
-#TODO: Change parameters to dictionary
 def set_exec_pars(**args):
     """  Configures the script execution parameters, overriding the system configuration.
     
-    Args:
+    Args: 
+      args(dictionary). Keys:
         name(str, optional): value of the {name} tag. Default is the running script name 
                              (or "scan" in the case of  a command line scan command.)
         type(str, optional): value of the {type} tag. Default is empty.
@@ -1039,7 +1039,11 @@ def set_exec_pars(**args):
         reset(bool, optional): If true reset the scan counter - the {count} tag and set the timestamp to now.
         group(str, optional): Overrides default layout group name for scans
         defaults(bool, optional): If true restore the original execution parameters.
-
+        
+        Graphical preferences can also be set. Keys are equal to lowercase of Preference enum:
+        "plot_disabled", "table_disabled", "enabled_plots", "plot_types", "print_scan", "auto_range", 
+        "manual_range","domain_axis", "status".
+        See set_preference for more information.
     """
     get_context().setExecutionPars(args)
 
@@ -2198,8 +2202,8 @@ def setup_plotting( enable_plots=None, enable_table=None,plot_list = None, line_
         defaults(bool): if true restore default values,
     """
     if defaults == True: set_preference(Preference.DEFAULTS, True)
-    if enable_plots is not None: set_preference(Preference.SCAN_PLOT_DISABLED, not enable_plots)
-    if enable_table is not None: set_preference(Preference.SCAN_TABLE_DISABLED, not enable_table)
+    if enable_plots is not None: set_preference(Preference.PLOT_DISABLED, not enable_plots)
+    if enable_table is not None: set_preference(Preference.TABLE_DISABLED, not enable_table)
     if plot_list is not None: set_preference(Preference.ENABLED_PLOTS, None if plot_list == "all" else plot_list)
     if line_plots is not None:
         plots = None
@@ -2224,8 +2228,8 @@ def set_preference(preference, value):
 
     Args:
         preference(Preference): Preference name
-            Preference.SCAN_PLOT_DISABLED  #enable/disable scan plot (True/False)
-            Preference.SCAN_TABLE_DISABLED  #enable/disable scan table (True/False)
+            Preference.PLOT_DISABLED  #enable/disable scan plot (True/False)
+            Preference.TABLE_DISABLED  #enable/disable scan table (True/False)
             Preference.ENABLED_PLOTS #select Readables to be plotted (list of Readable or 
                 String (Readable names))
             Preference.PLOT_TYPES #Dictionary or (Readable or String):(String or int) pairs 

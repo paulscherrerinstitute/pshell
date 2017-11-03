@@ -664,14 +664,15 @@ public class View extends MainFrame {
             setScanPlotDisabled(preferences.scanPlotDisabled);
         }
 
+        
         @Override
         public void onPreferenceChange(ViewPreference preference, Object value) {
             switch (preference) {
-                case SCAN_PLOT_DISABLED:
-                    setScanPlotDisabled((Boolean) value);
+                case PLOT_DISABLED:
+                    setScanPlotDisabled((value==null) ? preferences.scanPlotDisabled : (Boolean) value);
                     break;
-                case SCAN_TABLE_DISABLED:
-                    setScanTableDisabled((Boolean) value);
+                case TABLE_DISABLED:
+                    setScanTableDisabled((value==null) ? preferences.scanTableDisabled : (Boolean) value);
                     break;
                 case DEFAULTS:
                     restorePreferences();

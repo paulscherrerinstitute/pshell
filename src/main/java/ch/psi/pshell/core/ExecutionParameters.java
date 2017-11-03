@@ -4,21 +4,26 @@
 package ch.psi.pshell.core;
 
 import ch.psi.pshell.scan.Scan;
-import ch.psi.pshell.scan.ScanListener;
-import ch.psi.pshell.scan.ScanRecord;
+import ch.psi.pshell.scripting.ViewPreference;
 import ch.psi.utils.Arr;
+import ch.psi.utils.State;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 
 /**
  *
  */
-public class ExecutionParameters implements ScanListener {
+public class ExecutionParameters  {
 
-    final String[] knownOptions = new String[]{"defaults", "group", "open", "reset", "name", "type", "path",
+    final String[] executionOptions = new String[]{"defaults", "group", "open", "reset", "name", "type", "path",
         "layout", "persist", "flush", "preserve", "accumulate"};
+
+    final String[] viewOptions = new String[]{"plot_disabled", "table_disabled", "enabled_plots", 
+        "plot_types", "print_scan", "auto_range", "manual_range","domain_axis", "status"};        
 
     long start;
     int offset;
@@ -45,16 +50,13 @@ public class ExecutionParameters implements ScanListener {
     void checkOptions(Map options) {
         if (options != null) {
             for (Object key : options.keySet()) {
-                if (!Arr.containsEqual(knownOptions, key)) {
-                    throw new RuntimeException("Invalid option: " + key);
+                if (!Arr.containsEqual(executionOptions, key)) {
+                    if (!Arr.containsEqual(viewOptions, key)) {
+                        throw new RuntimeException("Invalid option: " + key);
+                    }
                 }
             }
         }
-        Object group = getOption("group");
-        if (group != null) {
-            Context.getInstance().dataManager.setCurrentGroup(String.valueOf(group));
-        }
-
         Object open = getOption("open");
         if ((Boolean.TRUE.equals(open)) && (!Context.getInstance().dataManager.isOpen())) {
             try {
@@ -71,6 +73,15 @@ public class ExecutionParameters implements ScanListener {
             offset = Context.getInstance().dataManager.isOpen() ? Context.getInstance().dataManager.getScanIndex() : 0;
             start = System.currentTimeMillis();
         }
+        for (Object key : options.keySet()) {
+            if (Arr.containsEqual(viewOptions, key)) {
+                Object val = options.get(key);
+                if (val instanceof List){
+                    val = ((List)val).toArray();
+                }
+                setPlotPreference(ViewPreference.valueOf(key.toString().toUpperCase()), val);
+            }
+        }                
     }
 
     public Map getScriptOptions() {
@@ -81,7 +92,7 @@ public class ExecutionParameters implements ScanListener {
         return (commandOptions == null) ? new HashMap() : commandOptions;
     }
 
-    Object getOption(String option) {
+    public Object getOption(String option) {
         if (getCommandOptions().containsKey(option)) {
             return getCommandOptions().get(option);
         }
@@ -230,18 +241,90 @@ public class ExecutionParameters implements ScanListener {
         commandOptions = new HashMap();
     }
 
-    @Override
-    public void onScanStarted(Scan scan, String plotTitle) {
+    public void onScanStarted(Scan scan) {
     }
 
-    @Override
-    public void onNewRecord(Scan scan, ScanRecord record) {
+    public void onScanEnded(Scan scan) {
+        for (Object key : commandOptions.keySet()) {
+            if (Arr.containsEqual(viewOptions, key)) {                
+                ViewPreference pref = ViewPreference.valueOf(key.toString().toUpperCase());
+                if (scriptOptions.containsKey(key)){
+                    setPlotPreference(pref, scriptOptions.get(key));
+                } else {
+                    setPlotPreference(pref, null);
+                }
+            }
+        }        
+        commandOptions = new HashMap();        
+    }
+    
+    void onStateChange(State state){
+        if (state.isProcessing()) {
+            init();
+            if (state == State.Busy) {
+                plotPreferences.init();
+            }
+        } else {
+            finish();
+        }        
+    }  
+    
+    final ViewPreference.PlotPreferences plotPreferences = new ViewPreference.PlotPreferences();
+
+    /**
+     * Hints to graphical layer
+     */
+    void setPlotPreference(ViewPreference preference, Object value) {
+        switch (preference) {
+            case ENABLED_PLOTS:
+                if (value == null) {
+                    plotPreferences.setEnabledPlots(null);
+                } else {
+                    ArrayList<String> plots = new ArrayList<>();
+                    for (Object obj : (Object[]) value) {
+                        if (obj instanceof Nameable) {
+                            plots.add(Context.getInstance().getDataManager().getAlias((Nameable) obj));
+                        } else {
+                            plots.add(String.valueOf(obj));
+                        }
+                    }
+                    plotPreferences.setEnabledPlots(plots);
+                }
+                break;
+
+            case PLOT_TYPES:
+                if (value == null) {
+                    plotPreferences.resetPlotTypes();
+                } else {
+                    plotPreferences.setPlotTypes((Map) value);
+                }
+                break;
+            case AUTO_RANGE:
+                if (value == null) {
+                    plotPreferences.setFixedRange();
+                } else {
+                    plotPreferences.setAutoRange((Boolean) value);
+                }
+                break;
+            case MANUAL_RANGE:
+                if (value == null) {
+                    plotPreferences.setFixedRange();
+                } else {
+                    plotPreferences.setManualRange((Object[]) value);
+                }
+                break;
+            case DOMAIN_AXIS:
+                plotPreferences.setDomainAxis((String) value);
+                break;
+            case DEFAULTS:
+                plotPreferences.init();
+                break;
+        }
+        Context.getInstance().triggerPreferenceChange(preference, value);
     }
 
-    @Override
-
-    public void onScanEnded(Scan scan, Exception ex) {
-        commandOptions = new HashMap();
+    public ViewPreference.PlotPreferences getPlotPreferences() {
+        return plotPreferences;
     }
 
 }

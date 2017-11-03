@@ -568,6 +568,9 @@ public class App extends ObservableBase<AppListener> {
             public void onPreferenceChange(ViewPreference preference, Object value) {
                 switch (preference) {
                     case STATUS:
+                        if (value == null){
+                            value = context.getState().toString();
+                        }
                         pcs.firePropertyChange("message", "", String.valueOf(value));
                         break;
                 }

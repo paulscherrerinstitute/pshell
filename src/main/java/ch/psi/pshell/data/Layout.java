@@ -17,8 +17,9 @@ public interface Layout {
 
     default String getCurrentGroup(Scan scan) {
         String ret;
-        if ((getDataManager().currentGroup != null) && (!getDataManager().currentGroup.trim().isEmpty())) {
-            ret = Context.getInstance().getSetup().expandPath(getDataManager().currentGroup);
+        Object group = Context.getInstance().getExecutionPars().getOption("group");
+        if ((group != null) && (!group.toString().isEmpty())) {
+            ret = Context.getInstance().getSetup().expandPath(group.toString());
         } else {
             ret = getDefaultGroup(scan);
         }

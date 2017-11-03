@@ -202,13 +202,13 @@ public class Console {
         @Override
         public void onPreferenceChange(ViewPreference preference, Object value) {
             if (preference == ViewPreference.PRINT_SCAN) {
-                setPrintScan((Boolean) value);
+                setPrintScan((value == null) ? defaultPrintScan : (Boolean) value);
             }
         }
-
     };
 
     boolean printScan;
+    Boolean defaultPrintScan;
 
     public boolean getPrintScan(boolean value) {
         return printScan;
@@ -216,6 +216,9 @@ public class Console {
 
     public void setPrintScan(boolean value) {
         printScan = value;
+        if (defaultPrintScan == null){
+            defaultPrintScan = value;
+        }
         if (value) {
             Context.getInstance().addScanListener(scanListener);
         } else {

@@ -431,10 +431,10 @@ public class ServerService {
         public void onPreferenceChange(ViewPreference preference, Object value) {
             switch (preference) {
                 case PRINT_SCAN:
-                    printScan = (Boolean) value;
+                    printScan = (value==null) ? false : (Boolean) value;
                     break;
-                case SCAN_PLOT_DISABLED:
-                    plotScan = !((Boolean) value);
+                case PLOT_DISABLED:
+                    plotScan = (value==null) ? true : !((Boolean) value);
                     break;
             }
         }

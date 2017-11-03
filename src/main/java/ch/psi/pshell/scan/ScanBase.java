@@ -91,11 +91,6 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
             }
         }
         assertFieldsOk();
-        if (Context.getInstance() != null) {
-            for (ScanListener listener : Context.getInstance().getScanListeners()) {
-                addListener(listener);
-            }
-        }
     }
 
     String plotTitle;
@@ -268,7 +263,7 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
         }
         return pos;
     }
-    
+
     @Override
     public void start() throws IOException, InterruptedException {
         startTimestamp = System.currentTimeMillis();
@@ -465,6 +460,13 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
     abstract protected void doScan() throws IOException, InterruptedException;
 
     protected void triggerStarted() {
+        if (Context.getInstance() != null) {
+            removeAllListeners();
+            for (ScanListener listener : Context.getInstance().getScanListeners()) {
+                addListener(listener);
+            }
+        }
+        
         executionThread = Thread.currentThread();
         if (Context.getInstance() != null) {
             name = Context.getInstance().getExecutionPars().toString();

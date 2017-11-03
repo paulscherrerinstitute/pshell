@@ -13,8 +13,8 @@ import java.util.Map;
  */
 public enum ViewPreference {
 
-    SCAN_PLOT_DISABLED, //enable/disable scan plot (True/False)
-    SCAN_TABLE_DISABLED, //enable/disable scan table (True/False)
+    PLOT_DISABLED, //enable/disable scan plot (True/False)
+    TABLE_DISABLED, //enable/disable scan table (True/False)
     ENABLED_PLOTS, //select Readables to be plotted (list of Readable or String (Readable names))
     PLOT_TYPES, //dictionary or (Readable or String):(String or int) pairs where the key is a plot name and the value is the desired plot type
     PRINT_SCAN, //print scan records to console    
@@ -23,7 +23,7 @@ public enum ViewPreference {
     DOMAIN_AXIS, //set the domain axis source: "Time", "Index", or a readable name. Default(None): first positioner
     DEFAULTS, //Restore defaults preferences
     STATUS; //set application status        
-
+    
     static public String DOMAIN_AXIS_TIME = "Time";
     static public String DOMAIN_AXIS_INDEX = "Index";
 

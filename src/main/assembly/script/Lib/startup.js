@@ -1139,7 +1139,8 @@ function set_exec_pars(args){
     /*
        Configures the script execution parameters, overriding the system configuration.
     
-    Args: Dictionary
+    Args: 
+      args(dictionary). Keys:
         name(str, optional): value of the {name} tag. Default is the running script name 
                              (or "scan" in the case of  a command line scan command.)
         type(str, optional): value of the {type} tag. Default is empty.
@@ -1158,6 +1159,11 @@ function set_exec_pars(args){
         reset(bool, optional): If true reset the scan counter - the {count} tag and set the timestamp to now.
         group(str, optional): Overrides default layout group name for scans
         defaults(bool, optional): If true restore the original execution parameters.
+
+        Graphical preferences can also be set. Keys are equal to lowercase of Preference enum:
+        "plot_disabled", "table_disabled", "enabled_plots", "plot_types", "print_scan", "auto_range", 
+        "manual_range","domain_axis", "status".
+        See set_preference for more information.
 
     */
     get_context().setExecutionPars(args)
@@ -2150,8 +2156,7 @@ function set_preference(preference, value){
                 where the key is a plot name and the value is the desired plot type
             Preference.PRINT_SCAN  #Print scan records to console                       
             Preference.AUTO_RANGE # Automatic range scan plots x-axis
-            Preference.MANUAL_RANGE # M
-anually set scan plots x-axis
+            Preference.MANUAL_RANGE # Manually set scan plots x-axis
             Preference.DOMAIN_AXIS #Set the domain axis source: "Time", "Index", or a readable name. 
                                     Default(None): first positioner
             Preference.STATUS # set application status

@@ -11,10 +11,10 @@ set_preference(Preference.PLOT_TYPES, {wf1:1})
 
 
 //This optional preference disables printing the scan table
-//set_preference(Preference.SCAN_PLOT_DISABLED, true) 
+//set_preference(Preference.PLOT_DISABLED, true) 
 
 //This optional preference disable all scan plotting
-//set_preference( Preference.SCAN_TABLE_DISABLED, true) 
+//set_preference( Preference.TABLE_DISABLED, true) 
 
 //Execute the scan: 200 steps, a1 from 0 to 40
 a= lscan(ao1, [ai1,ai2,wf1], 0, 40, 100, 0.01)                    

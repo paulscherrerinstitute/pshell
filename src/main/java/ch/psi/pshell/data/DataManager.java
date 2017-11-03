@@ -44,7 +44,6 @@ public class DataManager implements AutoCloseable {
     static final Logger logger = Logger.getLogger(DataManager.class.getName());
     Layout layout;
     Provider provider;
-    String currentGroup;
 
     public static final String ATTR_START_TIMESTAMP = "Start";
     public static final String ATTR_END_TIMESTAMP = "End";
@@ -242,10 +241,6 @@ public class DataManager implements AutoCloseable {
             }
         }
         return getCurrentGroup(null);
-    }
-
-    public void setCurrentGroup(String currentGroup) {
-        this.currentGroup = currentGroup;
     }
 
     public String getCurrentGroup(Scan scan) {

@@ -368,13 +368,8 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
             if (pluginManager != null) {
                 pluginManager.onStateChange(state, former);
             }
-            if (state.isProcessing()) {
-                executionPars.init();
-                if (state == State.Busy) {
-                    plotPreferences.init();
-                }
-            } else {
-                executionPars.finish();
+            executionPars.onStateChange(state);
+            if (!state.isProcessing()) {
                 runningScriptName = null;
             }
         }
@@ -2233,64 +2228,16 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
         }
     }
 
-    final PlotPreferences plotPreferences = new PlotPreferences();
-
     /**
      * Hints to graphical layer
      */
     void setPreference(CommandSource source, ViewPreference preference, Object value) {
         onCommand(Command.setPreference, new Object[]{preference, value}, source);
-
-        switch (preference) {
-            case ENABLED_PLOTS:
-                if (value == null) {
-                    plotPreferences.setEnabledPlots(null);
-                } else {
-                    ArrayList<String> plots = new ArrayList<>();
-                    for (Object obj : (Object[]) value) {
-                        if (obj instanceof Nameable) {
-                            plots.add(dataManager.getAlias((Nameable) obj));
-                        } else {
-                            plots.add(String.valueOf(obj));
-                        }
-                    }
-                    plotPreferences.setEnabledPlots(plots);
-                }
-                break;
-
-            case PLOT_TYPES:
-                if (value == null) {
-                    plotPreferences.resetPlotTypes();
-                } else {
-                    plotPreferences.setPlotTypes((Map) value);
-                }
-                break;
-            case AUTO_RANGE:
-                if (value == null) {
-                    plotPreferences.setFixedRange();
-                } else {
-                    plotPreferences.setAutoRange((Boolean) value);
-                }
-                break;
-            case MANUAL_RANGE:
-                if (value == null) {
-                    plotPreferences.setFixedRange();
-                } else {
-                    plotPreferences.setManualRange((Object[]) value);
-                }
-                break;
-            case DOMAIN_AXIS:
-                plotPreferences.setDomainAxis((String) value);
-                break;
-            case DEFAULTS:
-                plotPreferences.init();
-                break;
-        }
-        triggerPreferenceChange(preference, value);
+        executionPars.setPlotPreference(preference, value);
     }
 
     public PlotPreferences getPlotPreferences() {
-        return plotPreferences;
+        return executionPars.getPlotPreferences();
     }
 
     @Override
@@ -2346,7 +2293,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
             synchronized (runningScans) {
                 runningScans.add(scan);
             }
-            executionPars.onScanStarted(scan, plotTitle);
+            executionPars.onScanStarted(scan);
         }
 
         @Override
@@ -2359,7 +2306,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
             synchronized (runningScans) {
                 runningScans.remove(scan);
             }
-            executionPars.onScanEnded(scan, ex);
+            executionPars.onScanEnded(scan);
         }
     };
 

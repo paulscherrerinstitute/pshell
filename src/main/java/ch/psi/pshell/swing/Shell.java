@@ -127,7 +127,7 @@ public class Shell extends MonitoredPanel {
         @Override
         public void onPreferenceChange(ViewPreference preference, Object value) {
             if (preference == ViewPreference.PRINT_SCAN) {
-                setPrintScan((Boolean) value);
+                setPrintScan((value == null) ? defaultPrintScan : (Boolean) value);
             }
         }
 
@@ -269,6 +269,7 @@ public class Shell extends MonitoredPanel {
     };
 
     boolean printScan;
+    Boolean defaultPrintScan;
 
     public boolean getPrintScan(boolean value) {
         return printScan;
@@ -276,6 +277,9 @@ public class Shell extends MonitoredPanel {
 
     public void setPrintScan(boolean value) {
         printScan = value;
+        if (defaultPrintScan == null) {
+            defaultPrintScan = value;
+        }
         if (value) {
             Context.getInstance().addScanListener(printScanListener);
         } else {
