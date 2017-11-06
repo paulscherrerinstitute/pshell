@@ -3,7 +3,7 @@ package ch.psi.pshell.core;
 import ch.psi.pshell.scan.Scan;
 import ch.psi.pshell.scan.ScanListener;
 import ch.psi.pshell.scan.ScanRecord;
-import ch.psi.pshell.scripting.ScriptManager;
+import ch.psi.pshell.scripting.JythonUtils;
 import ch.psi.pshell.scripting.ScriptType;
 import ch.psi.pshell.scripting.ViewPreference;
 import ch.psi.utils.Arr;
@@ -216,7 +216,7 @@ public class Console {
 
     public void setPrintScan(boolean value) {
         printScan = value;
-        if (defaultPrintScan == null){
+        if (defaultPrintScan == null) {
             defaultPrintScan = value;
         }
         if (value) {
@@ -296,10 +296,22 @@ public class Console {
     }
 
     static List<String> getSignatures(Object obj) {
-        Class[] excludeClasses = new Class[]{AutoCloseable.class, Observable.class, JPanel.class, JComponent.class, Container.class, Component.class};
-        if (Context.getInstance().getSetup().getScriptType() == ScriptType.py) {
-            excludeClasses = Arr.append(excludeClasses, org.python.core.PyObject.class);
+        if (obj instanceof org.python.core.PyObject) {
+            //Not parsed as normal java objects, must "dir" them
+            return JythonUtils.getSignatures((org.python.core.PyObject) obj);
+        } else {
+            Class[] excludeClasses = new Class[]{AutoCloseable.class, Observable.class, JPanel.class, JComponent.class, Container.class, Component.class};
+            String[] excludeNames = new String[]{};
+            if (Context.getInstance().getSetup().getScriptType() == ScriptType.py) {
+                excludeClasses = Arr.append(excludeClasses, JythonUtils.REFLECTION_EXCLUDE_CLASSES);
+                excludeNames = Arr.append(excludeNames, JythonUtils.REFLECTION_EXCLUDE_NAMES);
+            }
+            List<String> ret = Reflection.getMethodsSignature(obj, excludeClasses, excludeNames, true, true, true);
+            //Proxies: included methods defined in python
+            if (obj instanceof org.python.core.PyProxy) {
+                ret.addAll(JythonUtils.getSignatures(((org.python.core.PyProxy) obj)._getPyInstance()));
+            }
+            return ret;
         }
-        return Reflection.getMethodsSignature(obj, excludeClasses, new String[]{ScriptManager.JYTHON_OBJ_CLASS}, true, true, true);
     }
 }

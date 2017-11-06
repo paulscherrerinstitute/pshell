@@ -118,7 +118,7 @@ public class Reflection {
                         if (!hideMethod) {
                             if (excludeNames != null) {
                                 for (String s : excludeNames) {
-                                    hideMethod = declaringClass.getName().startsWith(s);
+                                    hideMethod = declaringClass.getName().startsWith(s) || method.getName().contains(s);
                                     if (hideMethod) {
                                         break;
                                     }
