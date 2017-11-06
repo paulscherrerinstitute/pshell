@@ -298,7 +298,7 @@ public class Console {
     static List<String> getSignatures(Object obj) {
         if (obj instanceof org.python.core.PyObject) {
             //Not parsed as normal java objects, must "dir" them
-            return JythonUtils.getSignatures((org.python.core.PyObject) obj);
+            return JythonUtils.getSignatures((org.python.core.PyObject) obj, true);
         } else {
             Class[] excludeClasses = new Class[]{AutoCloseable.class, Observable.class, JPanel.class, JComponent.class, Container.class, Component.class};
             String[] excludeNames = new String[]{};
@@ -309,7 +309,7 @@ public class Console {
             List<String> ret = Reflection.getMethodsSignature(obj, excludeClasses, excludeNames, true, true, true);
             //Proxies: included methods defined in python
             if (obj instanceof org.python.core.PyProxy) {
-                ret.addAll(JythonUtils.getSignatures(((org.python.core.PyProxy) obj)._getPyInstance()));
+                ret.addAll(JythonUtils.getSignatures(((org.python.core.PyProxy) obj)._getPyInstance(), false));
             }
             return ret;
         }
