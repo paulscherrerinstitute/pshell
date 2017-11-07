@@ -2394,21 +2394,25 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
             }
             //TODO: Clear trash left by native libraries in temp folder (Windows only)
             if (Sys.getOSFamily() == OSFamily.Windows) {
-                String temp = Sys.getTempFolder();
-                for (String pattern : new String[]{"jansi*.0", "jffi*.tmp", "jhdf*.so", "nativedata*.so"}) {
+                for (String pattern : new String[]{"jansi*.*", "jffi*.*", "jhdf*.so", "nativedata*.so", "liblz4*.so", "libbitshuffle*.dll", "BridJExtractedLibraries*"}) {
                     try {
-                        for (File f : IO.listFiles(temp, pattern)) {
+                        for (File f : IO.listFiles(Sys.getTempFolder(), pattern)) {
                             try {
-                                f.delete();
-                                logger.log(Level.FINER, "Deleted temp file" + f.getName());
+                                if (f.isDirectory()){
+                                    IO.deleteRecursive(f.getAbsolutePath());
+                                    logger.log(Level.FINER, "Deleted temp folder: " + f.getName());
+                                } else {                                    
+                                    f.delete();
+                                    logger.log(Level.FINER, "Deleted temp file: " + f.getName());
+                                }
                             } catch (Exception ex) {
-                                logger.log(Level.FINER, "Cannot delete temp file" + f.getName());
+                                logger.log(Level.FINE, "Cannot delete temp " + ((f.isDirectory()) ? "folder" : "file") + ": "+ f.getName());
                             }
                         }
                     } catch (Exception ex) {
                         logger.log(Level.WARNING, null, ex);
                     }
-                }
+                }                                
             }
 
             //Extract script path if not present - if not in local mode
