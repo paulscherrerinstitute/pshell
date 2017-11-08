@@ -75,6 +75,10 @@
         ```
         set_exec_pars(persist = False)
         ```
+    - Include add the option inline in the scan command.:
+        ```
+        scan (pos, sensor, start, end, steps, persist = False)
+        ```
 
  * What parameters are received by the scan callback functions __before_read__ and __after_read__?
 
@@ -84,6 +88,42 @@
     - __after_read__ receives 2 optional parameters:
         1. __record__: the current scan record (see Utility Classes/ScanRecord)
         2. __scan__: a reference to the current scan object, which can be used to retrieve scan state information.
+
+ * My positioner must verify the completion of the command by checking a certain channel. How can it be done?
+    - Many syntaxes are possible, the most compact: 
+        ```
+        positioner = ControlledVariable("positioner", "SETPOINT_CHANNEL_NAME", "READBACK_CHANNEL_NAME")        
+        positioner.initialize()
+        positioner.setSettlingCondition(ChannelSettlingCondition("MOVING_FLAG_CHANNEL_NAME", 0))
+        positioner.settlingCondition.latency = 100          #some delay before waiting for settling condition
+        ```
+    - More explicitly, using SettlingCondition:
+        ```
+        positioner = ControlledVariable("positioner", "SETPOINT_CHANNEL_NAME", "READBACK_CHANNEL_NAME")        
+        positioner.initialize()
+        class MySettlingCondition(SettlingCondition):
+            def doWait(self):
+                    time.sleep(0.1)
+                    cawait('MOVING_FLAG_CHANNEL_NAME', 0)    
+        positioner.setSettlingCondition(MySettlingCondition())            
+        ```
+    - Using pseudo-devices, e.g:
+        ```
+        class Positioner(Writable):
+            def write(self, value):
+                caput ("SETPOINT_CHANNEL_NAME", value)
+                time.sleep(0.1)
+                cawait('MOVING_FLAG_CHANNEL_NAME', 0)    
+        positioner = Positioner()
+        ```
+        
+ * My positioner don't have readback values in different scales than setpoints. 
+   How can I make the scan not to wait the readback reach the setpoint.
+    - ControlledVariable and Positioner devices can have the  in-position band checking disabled during 
+      scans  setting the resolution to infinity
+        ```
+        positioner.config.resolution = float('inf') 
+        ```   
 
 ---
 ## Versioning
