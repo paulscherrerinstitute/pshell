@@ -1,6 +1,5 @@
 package ch.psi.pshell.swing;
 
-import ch.psi.pshell.bs.Camtool;
 import ch.psi.pshell.bs.Dispatcher;
 import ch.psi.pshell.bs.PipelineServer;
 import ch.psi.pshell.bs.Scalar;
@@ -82,7 +81,6 @@ public class StripChart extends StandardDialog {
         Channel,
         Stream,
         Device,
-        Camtool,
         CamServer
     }
     final DefaultTableModel modelSeries;
@@ -225,9 +223,6 @@ public class StripChart extends StandardDialog {
                         break;
                     case Stream:
                         tooltip = "Format: Identifier [Modulo=10 Offset=0]";
-                        break;
-                    case Camtool:
-                        tooltip = "Format: URL Identifier";
                         break;
                     case CamServer:
                         tooltip = "Format: URL Identifier";
@@ -756,7 +751,7 @@ public class StripChart extends StandardDialog {
         String id = null;
         if (provider != null) {
             id = index + "-" + name;
-            if ((type == Type.Camtool) || (type == Type.CamServer)) {
+            if (type == Type.CamServer) {
                 //String[] tokens = name.split(" ");
                 //if (tokens.length>1){
                 //    id = tokens[1];
@@ -923,38 +918,6 @@ public class StripChart extends StandardDialog {
                         }
                         dev = stream.addScalar(name, name, modulo, offset);
                         streamDevices--;
-                        break;
-                    case Camtool:
-                        if (name.contains(" ")) {
-                            String[] tokens = name.split(" ");
-                            String url = tokens[0];
-                            name = tokens[1];
-                            Camtool ct = new Camtool(null, url);
-                            String streamUrl = (String) ct.getInstance(ct.getInstances().get(0)).get("stream");
-                            Stream s = null;
-                            synchronized (cameraStreams) {
-                                for (Stream cs : cameraStreams) {
-                                    if (cs.getAddress().equals(streamUrl)) {
-                                        s = cs;
-                                        break;
-                                    }
-                                }
-                                if (s == null) {
-                                    Logger.getLogger(StripChart.class.getName()).fine("Connecting to camtool stream: " + streamUrl);
-                                    ch.psi.pshell.bs.Provider p = new ch.psi.pshell.bs.Provider(null, streamUrl, false, false);
-                                    s = new Stream(null, p);
-                                    cameraStreams.add(s);
-                                    p.initialize();
-                                    s.start();
-                                    s.waitCacheChange(10000);
-                                    synchronized (instantiatedDevices) {
-                                        instantiatedDevices.add(s);
-                                        instantiatedDevices.add(p);
-                                    }
-                                }
-                            }
-                            dev = s.getChild(name);
-                        }
                         break;
                     case CamServer:
                         if (name.contains(" ")) {
