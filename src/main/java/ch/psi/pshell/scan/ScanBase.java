@@ -10,8 +10,9 @@ import ch.psi.pshell.device.Device;
 import ch.psi.pshell.device.Motor;
 import ch.psi.pshell.device.Movable;
 import ch.psi.pshell.device.Writable;
-import ch.psi.pshell.device.ProcessVariable;
+import ch.psi.pshell.device.Resolved;
 import ch.psi.pshell.device.Readable;
+import ch.psi.pshell.device.ReadableRegister;
 import ch.psi.pshell.device.ReadbackDevice;
 import ch.psi.pshell.device.ReadonlyRegister;
 import ch.psi.pshell.device.Stoppable;
@@ -24,7 +25,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.HashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -195,6 +195,8 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
             return ((ReadbackDevice) writable).getReadback();
         } else if (writable instanceof ReadonlyRegister) {
             return (ReadonlyRegister) writable;
+        } else if (writable instanceof Readable) {
+            return new ReadableRegister((Readable) writable);
         }
         return null;
     }
@@ -209,18 +211,17 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
                 }
             } else {
                 //Filtering some possible overshooting (Motors manage internally)
-                m.waitInPosition(pos, 5000);
+                m.waitInPosition(pos, 10000);
             }
-        } else {
+        } else{
             ReadonlyRegister readback = getReadback(writable);
-            if (readback != null) {
-                double resolution = stepSize / 2;
-                if (writable instanceof ProcessVariable) {
-                    resolution = ((ProcessVariable) writable).getResolution();
-                }
+            if ((readback!=null) && (writable instanceof Resolved)){                
+                double resolution = ((Resolved) writable).getResolution();                    
                 readback.waitValueInRange(pos, resolution, settleTimeout);
+            } else if (writable instanceof Device) {
+                ((Device)writable).waitStateNot(State.Busy, -1);
             }
-        }
+        } 
     }
 
     volatile Thread executionThread;

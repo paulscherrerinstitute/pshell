@@ -96,7 +96,8 @@ import ch.psi.pshell.scan.HillClimbingSearch
 import ch.psi.pshell.scan.ScanResult
 import ch.psi.pshell.bs.BsScan
 import ch.psi.pshell.bs.Stream as Stream
-import ch.psi.pshell.scripting.ViewPreference as Preference;
+import ch.psi.pshell.scripting.ViewPreference as Preference
+import ch.psi.pshell.scripting.ScriptUtils as ScriptUtils
 
 
 def get_context():   
@@ -105,32 +106,6 @@ def get_context():
 ###################################################################################################
 #Type conversion and checking
 ###################################################################################################
-
-class_types = {    
-    'b': "java.lang.Byte",
-    'h': "java.lang.Short",
-    'u': "java.lang.Integer",
-    'i': "java.lang.Integer",
-    'l': "java.lang.Long",
-    'c': "java.lang.Character",
-    'f': "java.lang.Float",
-    'd': "java.lang.Double",
-    'z': "java.lang.Boolean",
-    's': "java.lang.String",    
-    'o': "java.lang.Object",
-
-    '[b': "[B",          #byte
-    '[h': "[S",          #short
-    '[u': "[I",          #int
-    '[i': "[I",          #int
-    '[l': "[J",          #long
-    '[c': "[C",          #char
-    '[f': "[F",          #float
-    '[d': "[D",          #double
-    '[z': "[Z",          #boolean
-    '[s': "[Ljava.lang.String;",
-    '[o': "[Ljava.lang.Object;",
-}
 
 
 def to_array(obj, type = 'o'):   
@@ -146,18 +121,18 @@ def to_array(obj, type = 'o'):
     """     
     if type[0] == '[':
         type = type[1:]    
-    arrayType = class_types.get("["+type)    
+    arrayType = ScriptUtils.getType("["+type)    
 
     if obj is None:
         return None
     if isinstance(obj,java.util.List):
         obj = obj.toArray()    
         if type != 'o':
-            obj = Convert.toPrimitiveArray(obj, Class.forName(class_types.get(type)))
+            obj = Convert.toPrimitiveArray(obj, ScriptUtils.getType(type))
     if isinstance(obj,PyArray):                
         if type != 'o':
             if (Arr.getRank(obj)== 1) and (obj.typecode != type):
-                ret = java.lang.reflect.Array.newInstance(Class.forName(class_types.get(type)),len(obj))            
+                ret = java.lang.reflect.Array.newInstance(ScriptUtils.getType(type), len(obj))            
                 if type == 's':                              
                     for i in range(len(obj)): ret[i] = str(obj[i])   
                 elif type == 'c':                              
@@ -170,7 +145,7 @@ def to_array(obj, type = 'o'):
         return obj        
     if is_list(obj):
         if type=='o' or  type== 's':
-            ret = java.lang.reflect.Array.newInstance(Class.forName(class_types.get(type)),len(obj))
+            ret = java.lang.reflect.Array.newInstance(ScriptUtils.getType(type), len(obj))
             for i in range (len(obj)):
                 if is_list(obj[i]):
                     ret[i] = to_array(obj[i],type)
@@ -182,12 +157,12 @@ def to_array(obj, type = 'o'):
 
         if len(obj)>0 and is_list(obj[0]):
             if  len(obj[0])>0 and is_list(obj[0][0]):
-                    ret = java.lang.reflect.Array.newInstance(Class.forName(arrayType),len(obj),len(obj[0]))                    
+                    ret = java.lang.reflect.Array.newInstance(arrayType,len(obj),len(obj[0]))                    
                     for i in range(len(obj)):
                         ret[i]=to_array(obj[i], type)            
                     return ret
             else:
-                ret = java.lang.reflect.Array.newInstance(Class.forName(arrayType),len(obj))
+                ret = java.lang.reflect.Array.newInstance(arrayType,len(obj))
                 for i in range(len(obj)):
                     ret[i]=to_array(obj[i], type)            
                 return ret     
@@ -915,8 +890,7 @@ def create_dataset(path, type, unsigned=False, dimensions=None):
         None
 
     """    
-    type = Class.forName(class_types.get(type,type))
-    get_context().dataManager.createDataset(path, type, unsigned, dimensions)
+    get_context().dataManager.createDataset(path, ScriptUtils.getType(type), unsigned, dimensions)
 
 def create_table(path, names, types=None, lengths=None):
     """Create an empty table (dataset of compound type) within the current persistence context.
@@ -935,7 +909,7 @@ def create_table(path, names, types=None, lengths=None):
     type_classes = []
     if (types is not None):
         for i in range (len(types)):
-            type_classes.append(Class.forName(class_types.get(types[i],types[i])))
+            type_classes.append(ScriptUtils.getType(types[i]))
     get_context().dataManager.createDataset(path, names, type_classes, lengths)
 
 def append_dataset(path, data, index=None, type='d'):
@@ -1078,25 +1052,6 @@ def get_exec_pars():
 #EPICS channel access
 ###################################################################################################
 
-__channel_types = {
-    'b': "java.lang.Byte",
-    'i': "java.lang.Short",
-    'l': "java.lang.Integer",
-    'f': "java.lang.Float",
-    'd': "java.lang.Double",
-    's': "java.lang.String",
-    
-    '[b': "[B",
-    '[i': "[S",
-    '[l': "[I",
-    '[f': "[F",
-    '[d': "[D",
-    '[s': "[Ljava.lang.String;",
-}
-
-def __get_channel_type(type_id):
-    return None if (type_id is None) else Class.forName(__channel_types.get(type_id,type_id))
-
 def _adjust_channel_value(value, var_type=None):
     if (value is None):
         return value
@@ -1152,7 +1107,7 @@ def caget(name, type=None, size=None):
         PV value
 
     """          
-    return Epics.get(name, __get_channel_type(type), size)
+    return Epics.get(name, Epics.getChannelType(type), size)
 
 def cawait(name, value, timeout=None, comparator=None, type=None, size=None):    
     """Wait for a PV to have a given value.
@@ -1173,7 +1128,7 @@ def cawait(name, value, timeout=None, comparator=None, type=None, size=None):
     if (timeout is not None):
         timeout = int(timeout*1000)
     value = _adjust_channel_value(value)
-    Epics.waitValue(name, value, comparator, timeout, __get_channel_type(type), size)
+    Epics.waitValue(name, value, comparator, timeout, Epics.getChannelType(type), size)
 
 def caput(name, value, timeout = None):   
     """Writes to an Epics PV.
@@ -1236,7 +1191,7 @@ def camon(name, type=None, size=None, wait = sys.maxint):
     
 
 def create_channel_device(channelName, type=None, size=None, deviceName=None):
-    dev = Epics.newChannelDevice(deviceName, channelName, __get_channel_type(type))
+    dev = Epics.newChannelDevice(deviceName, channelName, Epics.getChannelType(type))
     if get_context().isSimulation():
         dev.setSimulated()
     dev.initialize()
@@ -1245,7 +1200,7 @@ def create_channel_device(channelName, type=None, size=None, deviceName=None):
     return dev
     
 def create_channel(name, type=None, size=None):        
-    return Epics.newChannel(name, __get_channel_type(type), size)
+    return Epics.newChannel(name, Epics.getChannelType(type), size)
 
 class Channel(java.beans.PropertyChangeListener, Writable, Readable):
     def __init__(self, channel_name, type = None, size = None, callback=None, alias = None):

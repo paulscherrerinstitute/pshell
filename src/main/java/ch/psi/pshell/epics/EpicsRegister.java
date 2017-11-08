@@ -29,7 +29,7 @@ public abstract class EpicsRegister<T> extends RegisterBase<T> {
         public boolean timestamped;
         public boolean status;
         public InvalidValueAction invalidValueAction;
-    }
+    }       
 
     /**
      * Persisted configuration
@@ -207,7 +207,7 @@ public abstract class EpicsRegister<T> extends RegisterBase<T> {
     public Severity getSeverity() {
         return severity;
     }
-
+    
     @Override
     protected void doInitialize() throws IOException, InterruptedException {
         try {

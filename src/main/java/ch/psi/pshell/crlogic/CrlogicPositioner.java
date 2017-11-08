@@ -7,6 +7,7 @@ import ch.psi.pshell.device.ReadbackDevice;
 import ch.psi.pshell.device.ReadonlyAsyncRegisterBase;
 import ch.psi.pshell.device.Register;
 import ch.psi.pshell.device.RegisterBase;
+import ch.psi.pshell.device.Resolved;
 import ch.psi.pshell.device.Speedable;
 import ch.psi.pshell.epics.ChannelDouble;
 import ch.psi.pshell.epics.Epics;
@@ -21,7 +22,7 @@ import java.util.concurrent.TimeUnit;
 /**
  *
  */
-public class CrlogicPositioner extends RegisterBase<Double> implements ReadbackDevice<Double>, Movable<Double>, Speedable {
+public class CrlogicPositioner extends RegisterBase<Double> implements ReadbackDevice<Double>, Movable<Double>, Speedable, Resolved{
 
     final String key;
     final String positionerReadback;

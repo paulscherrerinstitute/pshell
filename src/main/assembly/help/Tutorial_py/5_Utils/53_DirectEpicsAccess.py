@@ -20,7 +20,8 @@ cawait(channel_name, 0.0, timeout = 10.0)
 #If many IO it is better to keep the same CA connection
 channel = Channel(channel_name, 'd')
 for i in range(100):
-    print channel.get()
+    print channel.get(),
+print ""
 
 #The channel class implements Readable and Writable and therefore can be used in scans
 lscan(channel, ai2, 0, 10, 0.1)
@@ -57,3 +58,30 @@ def AfterReadout(rec):
     append_table(attrs_dataset, record)   
 
 a = lscan(m1, (ai1, ai2), 0, 0.1, 20, 0.01, after_read=AfterReadout)
+
+
+
+#Epics Registers can be configured with a ChannelSettlingCondition object to 
+#wait for a condition after a write operation.
+#The following scan is performed waiting "TESTIOC:TESTCALCOUT:Input" value to be 0 after every write.
+#A readback is used with with no dependency on the setpoint (the in-position band is set to infinity).
+
+import ch.psi.pshell.epics.ControlledVariable as ControlledVariable
+import ch.psi.pshell.epics.ChannelSettlingCondition as ChannelSettlingCondition
+caput("TESTIOC:TESTCALCOUT:Input", 0)
+positioner = ControlledVariable("positioner", "TESTIOC:TESTCALCOUT:Output", "TESTIOC:TESTSINUS:SinCalc")
+positioner.config.resolution = float('inf') 
+positioner.initialize()
+positioner.setSettlingCondition(ChannelSettlingCondition("TESTIOC:TESTCALCOUT:Input", 0))
+positioner.settlingCondition.latency = 100
+
+lscan(positioner, [ai1], 1.0, 1.5, 0.05 , latency= 0.1, range="auto")
+
+
+#A custom SettlingCondition:
+class MySettlingCondition(SettlingCondition):
+    def doWait(self):
+            time.sleep(0.1)
+            cawait('TESTIOC:TESTCALCOUT:Output', self.getValue(), timeout = 3600.0)    
+positioner.setSettlingCondition(MySettlingCondition())
+lscan(positioner, [ai1], 1.0, 1.5, 0.05 , latency= 0.1, range="auto")

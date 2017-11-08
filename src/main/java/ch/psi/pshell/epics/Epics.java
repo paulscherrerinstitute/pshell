@@ -226,4 +226,26 @@ public class Epics {
         }
         throw new RuntimeException("Invalid channel type");
     }
+    
+    public static Class getChannelType(String typeId) throws ClassNotFoundException{
+        if (typeId == null){
+            return null;
+        }
+        switch (typeId){
+            case "b": return Byte.class;
+            case "i": return Short.class;
+            case "l": return Integer.class;
+            case "f": return Float.class;
+            case "d": return Double.class;
+            case "s": return String.class;
+            case "[b": return byte[].class;
+            case "[i": return short[].class;
+            case "[l": return int[].class;
+            case "[f": return float[].class;
+            case "[d": return double[].class;
+            case "[s": return String[].class;
+        }
+        return Class.forName(typeId);
+    }
+    
 }

@@ -42,6 +42,7 @@ import ch.psi.pshell.scan.TimeScan
 import ch.psi.pshell.bs.BsScan
 import ch.psi.pshell.bs.Stream
 import ch.psi.pshell.scripting.ViewPreference as Preference
+import ch.psi.pshell.scripting.ScriptUtils as ScriptUtils
 
 
 def get_context(){
@@ -51,28 +52,6 @@ def get_context(){
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // Type conversion and checking
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-class_types = [
-    'b': "java.lang.Byte",
-    'h': "java.lang.Short",
-    'u': "java.lang.Integer",
-    'i': "java.lang.Integer",
-    'l': "java.lang.Long",
-    'c': "java.lang.Character",
-    'f': "java.lang.Float",
-    'd': "java.lang.Double",
-    's': "java.lang.String",
-    'o': "java.lang.Object",
-    '[b': "[B", //byte
-    '[h': "[S", //short
-    '[u': "[I", //int
-    '[i': "[I", //int
-    '[l': "[J", //long
-    '[c': "[C", //char
-    '[f': "[F", //float
-    '[d': "[D", //double
-    '[s': "[Ljava.lang.String;",
-    '[o': "[Ljava.lang.Object;"
-].withDefault{ key -> key }
 
 def get_rank(obj){    
     def rank = 0;
@@ -118,17 +97,17 @@ def to_array(obj, type){
     }
     def size = get_length(obj)
     //Custom class
-    if (class_types[type] == type) {
+    if (!ScriptUtils.isStandardType(type)) {
         def ret = java.lang.reflect.Array.newInstance(java.lang.Class.forName(type), size)
         for (def i = 0; i < size; i++) {
             ret[i] = obj[i]
         }
         return ret;
     }
-    def name = class_types[type]    
+    def name = ScriptUtils.getType(type).getName()  
     if (type[0] != "[") {
         def array_type = "[" + type;
-        name = class_types[array_type];
+        name = ScriptUtils.getType(array_type).getName()  
         for (def i = 1; i < rank; i++) {
             name = "[" + name;
         }
@@ -634,8 +613,7 @@ def create_dataset(path, type, unsigned=false, dimensions=null) {
          null
      
      */
-    type = Class.forName(class_types[type])
-    get_context().dataManager.createDataset(path, type, unsigned, dimensions)
+    get_context().dataManager.createDataset(path, ScriptUtils.getType(type), unsigned, dimensions)
 }
 
 def create_table(path, names, types=null, lengths=null) {
@@ -655,7 +633,7 @@ def create_table(path, names, types=null, lengths=null) {
      */
     if (types != null) {
         for (i = 0; i < types.length; i++)
-            types[i] = Class.forName(class_types[type]);
+            types[i] = ScriptUtils.getType(types[i])
     }
     get_context().dataManager.createDataset(path, names, types, lengths)
 }
@@ -798,21 +776,6 @@ def get_exec_pars(){
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // Epics Channels access
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-channel_types = [
-    'b': "java.lang.Byte",
-    'i': "java.lang.Short",
-    'l': "java.lang.Integer",
-    'f': "java.lang.Float",
-    'd': "java.lang.Double",
-    's': "java.lang.String",
-    '[b': "[B",
-    '[i': "[S",
-    '[l': "[I",
-    '[f': "[F",
-    '[d': "[D",
-    '[s': "[Ljava.lang.String;"
-]
-
 
 def caget(name, type=null, size = null) {
     /*
@@ -829,7 +792,7 @@ def caget(name, type=null, size = null) {
          PV value
      
      */
-    return Epics.get(name, java.lang.Class.forName(channel_types[type]), size)
+    return Epics.get(name, Epics.getChannelType(type), size)
 }
 
 def cawait(name, value, timeout=null, comparator = null,  type=null, size = null) {
@@ -851,7 +814,7 @@ def cawait(name, value, timeout=null, comparator = null,  type=null, size = null
      */
     if (timeout!=null)
         timeout = timeout * 1000
-    return Epics.waitValue(name, value, comparator, (int)timeout, java.lang.Class.forName(channel_types[type]), size)
+    return Epics.waitValue(name, value, comparator, (int)timeout, Epics.getChannelType(type), size)
 }
 
 def caput(name, value, timeout=null) {
@@ -888,8 +851,7 @@ def caputq(name, value) {
 
 def create_channel(name, type = null, size = null) {
     if (type == null) type = null;
-    type = java.lang.Class.forName(channel_types[type])
-    return Epics.newChannel(name, type, size)
+    return Epics.newChannel(name, Epics.getChannelType(type), size)
 }
 
 class Channel implements java.beans.PropertyChangeListener, Writable, Readable{
@@ -906,22 +868,7 @@ class Channel implements java.beans.PropertyChangeListener, Writable, Readable{
             size(int, optional): the size of the channel
             callback(function, optional): The monitor callback.
         */  
-        def channel_types = [
-            'b': "java.lang.Byte",
-            'i': "java.lang.Short",
-            'l': "java.lang.Integer",
-            'f': "java.lang.Float",
-            'd': "java.lang.Double",
-            's': "java.lang.String",
-            '[b': "[B",
-            '[i': "[S",
-            '[l': "[I",
-            '[f': "[F",
-            '[d': "[D",
-            '[s': "[Ljava.lang.String;"
-        ]        
-        type = java.lang.Class.forName(channel_types[type])
-        this.channel = Epics.newChannel(name, type, size)
+        this.channel = Epics.newChannel(name, Epics.getChannelType(type), size)
         this.callback = callback
     }
     

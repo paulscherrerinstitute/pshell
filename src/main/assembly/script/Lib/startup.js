@@ -84,6 +84,7 @@ Convert =  Java.type('ch.psi.utils.Convert')
 Arr =  Java.type('ch.psi.utils.Arr')
 Chrono =  Java.type('ch.psi.utils.Chrono')
 State =  Java.type('ch.psi.utils.State')
+ScriptingUtils = Java.type('ch.psi.pshell.scripting.ScriptUtils')
 
 
 function get_context() {
@@ -93,30 +94,6 @@ function get_context() {
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // Type conversion and checking
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-class_types = {
-    'b': "java.lang.Byte",
-    'h': "java.lang.Short",
-    'u': "java.lang.Integer",
-    'i': "java.lang.Integer",
-    'l': "java.lang.Long",
-    'c': "java.lang.Character",
-    'f': "java.lang.Float",
-    'd': "java.lang.Double",
-    's': "java.lang.String",
-    'o': "java.lang.Object",
-    '[b': "[B", //byte
-    '[h': "[S", //short
-    '[u': "[I", //int
-    '[i': "[I", //int
-    '[l': "[J", //long
-    '[c': "[C", //char
-    '[f': "[F", //float
-    '[d': "[D", //double
-    '[s': "[Ljava.lang.String;",
-    '[o': "[Ljava.lang.Object;"
-}
 
 function is_defined(obj) {
     return (typeof obj != 'undefined')
@@ -196,7 +173,7 @@ function to_array(obj, type) {
     }
 
     //Custom class
-    if (!class_types[type]) {
+    if (!ScriptingUtils.isStandardType(type)) {
         var ret = java.lang.reflect.Array.newInstance(java.lang.Class.forName(type), obj.length)
         for (var i = 0; i < obj.length; i++) {
             ret[i] = obj[i]
@@ -213,10 +190,10 @@ function to_array(obj, type) {
         }        
     }    
     
-    var name = class_types[type]
+    var name = ScriptingUtils.getType(type).getName()
     if (type[0] != "[") {
         type = "[" + type;
-        name = class_types[type];
+        name = ScriptingUtils.getType(type).getName();
         //Type 'o' always create a 1d array
         if (type!='[o'){
             for (var i = 1; i < rank; i++) {
@@ -1006,9 +983,8 @@ function create_dataset(path, type, unsigned, dimensions) {
     if (!is_defined(dimensions))
         dimensions = null;
     if (!is_defined(type))
-        type = null;
-    var type = java.lang.Class.forName((class_types[type]!=null) ? class_types[type] : type)
-    get_context().dataManager.createDataset(path, type, unsigned, dimensions)
+        type = null;    
+    get_context().dataManager.createDataset(path, ScriptingUtils.getType(type), unsigned, dimensions)
 }
 
 function create_table(path, names, types, lengths) {
@@ -1034,7 +1010,7 @@ function create_table(path, names, types, lengths) {
     if (types != null) {
         new_types = []
         for (var i = 0; i < types.length; i++){
-            new_types.push(java.lang.Class.forName((class_types[types[i]]!=null) ? class_types[types[i]] : types[i]))
+            new_types.push(ScriptingUtils.getType(types[i]))
         }
     }
     get_context().dataManager.createDataset(path, names, new_types, lengths)
@@ -1197,21 +1173,6 @@ function get_exec_pars(){
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // Epics Channels access
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-channel_types = {
-    'b': "java.lang.Byte",
-    'i': "java.lang.Short",
-    'l': "java.lang.Integer",
-    'f': "java.lang.Float",
-    'd': "java.lang.Double",
-    's': "java.lang.String",
-    '[b': "[B",
-    '[i': "[S",
-    '[l': "[I",
-    '[f': "[F",
-    '[d': "[D",
-    '[s': "[Ljava.lang.String;"
-}
-
 
 function caget(name, type, size) {
     /*
@@ -1232,7 +1193,7 @@ function caget(name, type, size) {
         type = null;
     if (!is_defined(size))
         size = null;
-    return Epics.get(name, (type==null) ? null : java.lang.Class.forName(channel_types[type]), size)
+    return Epics.get(name, Epics.getChannelType(type), size)
 }
 
 function cawait(name, value, timeout, comparator, type, size) {
@@ -1259,7 +1220,7 @@ function cawait(name, value, timeout, comparator, type, size) {
         timeout = timeout * 1000
     else
         timeout = null
-    return Epics.waitValue(name, value, comparator, timeout, (type==null) ? null : java.lang.Class.forName(channel_types[type]), size)
+    return Epics.waitValue(name, value, comparator, timeout, Epics.getChannelType(type), size)
 }
 
 function caput(name, value, timeout) {
@@ -1301,8 +1262,7 @@ function create_channel(name, type, size) {
         type = null;
     if (!is_defined(size))
         size = null;
-    type = (type==null) ? null : java.lang.Class.forName(channel_types[type])
-    return Epics.newChannel(name, type, size)
+    return Epics.newChannel(name, Epics.getChannelType(type), size)
 }
 
 
@@ -1313,8 +1273,7 @@ function create_channel_device(channelName, type, size, deviceName){
         size = null;
     if (!is_defined(deviceName))
         deviceName = null;
-    type = (type==null) ? null : java.lang.Class.forName(channel_types[type])
-    dev = Epics.newChannelDevice(deviceName, channelName,type)
+    dev = Epics.newChannelDevice(deviceName, channelName,Epics.getChannelType(type))
     if (get_context().isSimulation()){
         dev.setSimulated()
     }

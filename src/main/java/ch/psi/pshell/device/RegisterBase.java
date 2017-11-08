@@ -56,7 +56,27 @@ public abstract class RegisterBase<T> extends DeviceBase implements Register<T> 
         super.doUpdate();
         read();
     }
+    
+    /**
+     * This is called in write(). Derived classes can wait for conditions to validate the write.
+     */
+    protected void waitSettled() throws IOException, InterruptedException {
+        if (settlingCondition!=null){
+            settlingCondition.waitSettled();
+        }
+    }   
 
+    SettlingCondition settlingCondition;
+    
+    public void setSettlingCondition(SettlingCondition settlingCondition){
+        this.settlingCondition =  settlingCondition;
+        settlingCondition.register = this;
+    }    
+    
+    public SettlingCondition getSettlingCondition(){
+        return settlingCondition;
+    }    
+    
     @Override
     public int getPrecision() {
         return precision;
@@ -183,7 +203,7 @@ public abstract class RegisterBase<T> extends DeviceBase implements Register<T> 
             }
             if (logger.isLoggable(Level.FINER)) {
                 logger.log(Level.FINER, "Write: " + LogManager.getLogForValue(value));
-            }
+            }            
         } catch (IOException ex) {
             logger.log(Level.FINE, null, ex);
             resetCache();
@@ -193,6 +213,7 @@ public abstract class RegisterBase<T> extends DeviceBase implements Register<T> 
             }
             throw ex;
         }
+        waitSettled();
     }
 
     private volatile boolean trustedWrite = true;
