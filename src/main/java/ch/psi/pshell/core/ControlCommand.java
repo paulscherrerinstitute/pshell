@@ -6,7 +6,7 @@ package ch.psi.pshell.core;
  */
 public enum ControlCommand {
 
-    history, evalb, inject, reload, login, restart, run, abort, tasks, devices, users;
+    history, evalb, inject, reload, login, restart, run, abort, shutdown, tasks, devices, users;
 
     public static final Character CONTROL_COMMAND_PREFIX = ':';
     public static final Character BACKGROUND_COMMAND_PREFIX = '&';
@@ -36,7 +36,7 @@ public enum ControlCommand {
     }
 
     boolean isEval() {
-        return (this == evalb) || (this == restart) || (this == inject) || (this == reload);
+        return (this == evalb) || (this == restart) || (this == inject) || (this == reload)  || (this == shutdown);
     }
 
     boolean isScripControl() {

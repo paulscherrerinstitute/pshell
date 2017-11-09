@@ -816,7 +816,8 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
         checkoutBranch,
         checkoutRemote,
         push,
-        pull;
+        pull,
+        shutdown;
 
         void putLogTag(StringBuilder sb) {
             sb.append(Str.toTitleCase(toString()));
@@ -842,6 +843,11 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
         //TODO: Could dadd security check here?
     }
 
+    void shutdown(final CommandSource source) {
+        onCommand(Command.shutdown, null, source);
+        System.exit(0);
+    }
+    
     void restart(final CommandSource source) throws ContextStateException {
         onCommand(Command.restart, null, source);
         //A new file for each session
@@ -2063,6 +2069,10 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
             case restart:
                 assertNotRunning();
                 restart(source);
+                return null;
+            case shutdown:
+                assertNotRunning();
+                shutdown(source);
                 return null;
             case reload:
                 assertNotRunning();
