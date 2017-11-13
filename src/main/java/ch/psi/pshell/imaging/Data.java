@@ -151,6 +151,10 @@ public class Data implements Serializable {
     }
 
     Calibration calibration;
+    
+    public Data getRoi(Rectangle roi){
+        return new Data(this, roi, false);
+    }
 
     public void clear() {
         for (int i = 0; i < length; i++) {
