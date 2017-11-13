@@ -216,11 +216,17 @@ public class SourceBase extends GenericDeviceBase<ImageListener> implements Sour
     }
 
     protected void pushData(Data data) throws IOException {
-        pushImage(null, data);
+        pushImage(null, data);        
     }
 
     protected void pushImage(BufferedImage image, Data data) {
         if (!isClosed()) {
+            if (getPaused()){
+                chrono = new Chrono();
+                setState(State.Paused);
+                return;
+            }
+            
             if (backgroundEnabled) {
                 if ((backgroundData != null) && (data != null)) {
                     data = new Data(data);
@@ -256,6 +262,24 @@ public class SourceBase extends GenericDeviceBase<ImageListener> implements Sour
             setState(State.Offline);
             triggerError(ex);
         }
+    }
+    
+    volatile boolean paused;
+    public void setPaused(boolean value){
+        paused = value;
+        if (value){
+            if (getState()==State.Ready){
+                setState(State.Paused);
+            }
+        } else {
+            if (getState()==State.Paused){
+                setState(State.Ready);
+            }
+        }
+    }
+
+    public boolean getPaused(){
+        return paused;
     }
 
     void triggerImage(BufferedImage image, Data data) {
