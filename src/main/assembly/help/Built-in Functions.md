@@ -44,6 +44,7 @@ These functions provide the script API to many aspects of PShell:
     - camon
     - caput
     - caputq
+    - create_channel_device
 
  * Concurrent execution:
     - fork

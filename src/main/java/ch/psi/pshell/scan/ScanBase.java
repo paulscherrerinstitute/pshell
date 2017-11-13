@@ -1,5 +1,6 @@
 package ch.psi.pshell.scan;
 
+import ch.psi.pshell.bs.Dispatcher;
 import ch.psi.pshell.core.UrlDevice;
 import ch.psi.pshell.bs.Provider;
 import ch.psi.pshell.bs.Stream;
@@ -677,6 +678,9 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
                 if (((UrlDevice)readables[i]).getProtocol().equals("bs")){
                     if (innerStream == null){
                         Provider dispatcher = Context.getInstance().getDevicePool().getByName("dispatcher", ch.psi.pshell.bs.Provider.class);
+                        if (dispatcher == null) {
+                            dispatcher = Dispatcher.createDefault();
+                        }                        
                         innerStream = new Stream("Scan devices stream", dispatcher);
                         innerDevices.add(innerStream);
                         innerStream.initialize();                        

@@ -1189,9 +1189,21 @@ def camon(name, type=None, size=None, wait = sys.maxint):
     finally:
         Epics.closeChannel(channel)        
     
+def create_channel_device(channel_name, type=None, size=None, device_name=None):
+    """Create a device from an EPICS PV.
 
-def create_channel_device(channelName, type=None, size=None, deviceName=None):
-    dev = Epics.newChannelDevice(deviceName, channelName, Epics.getChannelType(type))
+    Args:
+        channel_name(str): PV name
+        type(str, optional): type of PV. By default gets the PV standard field type.
+            Scalar values: 'b', 'i', 'l', 'd', 's'.
+            Array: values: '[b', '[i,', '[l', '[d', '[s'.
+        size (int, optional): for arrays, number of elements to be read. Default read all.
+        device_name (str, optional): device name (if  different from hannel_name.
+    Returns:
+        None
+
+    """          
+    dev = Epics.newChannelDevice(channel_name if (device_name is None) else device_name , channel_name, Epics.getChannelType(type))
     if get_context().isSimulation():
         dev.setSimulated()
     dev.initialize()
@@ -1206,7 +1218,7 @@ class Channel(java.beans.PropertyChangeListener, Writable, Readable):
     def __init__(self, channel_name, type = None, size = None, callback=None, alias = None):
         """ Create an object that encapsulates an Epics PV connection.
         Args: 
-            name(str): value to be written
+            channel_name(str):name of the channel
             type(str, optional): type of PV. By default gets the PV standard field type.
                 Scalar values: 'b', 'i', 'l', 'd', 's'.
                 Array: values: '[b', '[i,', '[l', '[d', '[s'.
@@ -1255,9 +1267,9 @@ class Channel(java.beans.PropertyChangeListener, Writable, Readable):
         else:
             self.channel.removePropertyChangeListener(self)
 
-    def propertyChange(self, pce):
+    def propertyChange(self, pce):        
         if pce.getPropertyName() == "value":
-            if self.callback is not None:
+            if self.callback is not None:                
                 self.callback(pce.getNewValue())
 
     def put(self, value, timeout=None):
@@ -1302,7 +1314,7 @@ class Channel(java.beans.PropertyChangeListener, Writable, Readable):
     def close(self):
         """Close the channel.
         """  
-        self.channel.destroy()        
+        self.channel.destroy()     
 
     #Writable interface
     def write(self, value):
@@ -1656,6 +1668,7 @@ def create_averager(dev, count, interval=0.0, name = None):
     Returns:
         Averager device
     """
+    dev = string_to_obj(dev)
     av = Averager(dev, count, int(interval*1000)) if (name is None) else Averager(name, dev, count, int(interval*1000))
     av.initialize()
     return av

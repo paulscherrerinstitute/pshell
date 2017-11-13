@@ -26,7 +26,7 @@ public class UrlDevice extends DeviceBase implements Readable, Writable {
     final String id;
     final Map<String, String> pars;
     
-    Device parent;    
+    DeviceBase parent;    
     Device device;
     
 
@@ -53,12 +53,13 @@ public class UrlDevice extends DeviceBase implements Readable, Writable {
         this.name = pars.containsKey("name") ? pars.get("name") : id;
     }
     
-    public void setParent(Device parent) {
+    @Override
+    public void setParent(DeviceBase parent) {
         this.parent = parent;
     }
     
     @Override
-    public Device getParent() {
+    public DeviceBase getParent() {
         return parent;
     }
 
@@ -199,4 +200,5 @@ public class UrlDevice extends DeviceBase implements Readable, Writable {
         closeDevice();
         super.doClose();
     }
+    
 }

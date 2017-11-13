@@ -1,5 +1,10 @@
 package ch.psi.pshell.device;
 
+import ch.psi.pshell.bs.Dispatcher;
+import ch.psi.pshell.bs.Provider;
+import ch.psi.pshell.bs.Stream;
+import ch.psi.pshell.core.Context;
+import ch.psi.pshell.core.UrlDevice;
 import ch.psi.pshell.device.ReadonlyRegister.ReadonlyRegisterNumber;
 import ch.psi.utils.Chrono;
 import ch.psi.utils.Threading;
@@ -7,6 +12,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Performs averaging on Register devices or Readable interfaces, havinf a DescStatsDouble object as
@@ -20,6 +27,7 @@ public class Averager extends ReadonlyRegisterBase<DescStatsDouble> implements R
 
     AveragerConfig config;
     final Readable source;
+    Device innerDevice;
 
     /**
      * Entity class holding the configuration of an Averager device.
@@ -30,9 +38,12 @@ public class Averager extends ReadonlyRegisterBase<DescStatsDouble> implements R
         public int interval;    //If <=0 then is based on change events
     }
 
+    
+    
     public Averager(String name, Readable source) {
         super(name, new AveragerConfig());
-        this.source = source;
+        
+        this.source = resolveSource(source);
         if (source instanceof DeviceBase) {
             setParent(((DeviceBase) source));
         }
@@ -50,7 +61,7 @@ public class Averager extends ReadonlyRegisterBase<DescStatsDouble> implements R
         if (source instanceof ReadonlyRegister) {
             config.precision = ((ReadonlyRegister) source).getPrecision();
         }
-        this.source = source;
+        this.source = resolveSource(source);
         if (source instanceof DeviceBase) {
             DeviceBase parent = ((DeviceBase) source);
             setParent(parent);
@@ -73,6 +84,33 @@ public class Averager extends ReadonlyRegisterBase<DescStatsDouble> implements R
         this(name, source, measures, interval);
         config.precision = precision;
     }
+    
+    Readable resolveSource(Readable source){
+        if (source instanceof UrlDevice){
+            try{
+                if (((UrlDevice)source).getProtocol().equals("bs")){
+                    Provider dispatcher = Context.getInstance().getDevicePool().getByName("dispatcher", ch.psi.pshell.bs.Provider.class);
+                    if (dispatcher == null) {
+                        dispatcher = Dispatcher.createDefault();
+                    }                                            
+                    Stream stream = new Stream("Averager inner device stream", dispatcher);
+                    stream.initialize();                                                     
+                    ((UrlDevice)source).setParent(stream);
+                    innerDevice = stream;
+                }
+                ((UrlDevice)source).initialize();
+                Device dev = ((UrlDevice)source).getDevice();                
+                source = (Readable) dev;
+                if (innerDevice == null){
+                    innerDevice = dev;
+                }         
+                dev.initialize();
+            } catch (Exception ex){
+                throw new RuntimeException(ex);
+            }
+        }
+        return source;
+    }
 
     @Override
     protected void doInitialize() throws IOException, InterruptedException {
@@ -87,9 +125,17 @@ public class Averager extends ReadonlyRegisterBase<DescStatsDouble> implements R
         if (config.interval < 0) {
             config.interval = -1; //Sampling on event change
         }
+        if (innerDevice instanceof Stream){
+            ((Stream)innerDevice).start(true); 
+            ((Stream)innerDevice).waitCacheChange(10000);
+        }
+        
         if (config.interval < 0) {
             if (!(source instanceof Device)) {
                 throw new IOException("Configuration error: cannot configure read on change event if source is not a Device");
+            }
+            if (innerDevice!=null){
+                innerDevice.setMonitored(true);                
             }
             sourceListener = new DeviceAdapter() {
                 @Override
@@ -130,7 +176,7 @@ public class Averager extends ReadonlyRegisterBase<DescStatsDouble> implements R
         }
         addSample(sample);
     }
-
+    
     void addSample(Number sample) {
         try {
             synchronized (samples) {
@@ -268,6 +314,14 @@ public class Averager extends ReadonlyRegisterBase<DescStatsDouble> implements R
     }
 
     protected void doClose() throws IOException {
+        if (innerDevice!=null){
+            try {
+                innerDevice.close();
+            } catch (Exception ex) {
+                Logger.getLogger(Averager.class.getName()).log(Level.WARNING, null, ex);
+            }
+            innerDevice = null;
+        }
         if (monitoringTimer != null) {
             monitoringTimer.shutdownNow();
             monitoringTimer = null;

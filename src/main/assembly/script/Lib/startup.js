@@ -1677,7 +1677,7 @@ function create_averager(dev, count, interval, name){
     */
     if (!is_defined(interval))    interval = 0.0;
     if (!is_defined(name))    name = null;
-
+    dev = string_to_obj(dev)
     var averager = (name == null) ? new Averager(dev, count, interval*1000) : new Averager(name, dev, count, interval*1000)
     averager.initialize()
     return averager
