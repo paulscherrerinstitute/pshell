@@ -1,5 +1,6 @@
 package ch.psi.pshell.data;
 
+import ch.psi.pshell.core.Context;
 import ch.psi.utils.Arr;
 import java.lang.reflect.Array;
 
@@ -48,7 +49,7 @@ public class DataSlice {
             sliceSize = Arr.getDimensions(sliceData);
             dataType = Arr.getComponentType(sliceData);
         }
-        sliceRank = sliceSize.length;
+        sliceRank = sliceSize.length;       
     }
 
     private static int[] getPagePos(int[] dataDimension, int page) {
@@ -65,5 +66,9 @@ public class DataSlice {
 
     public boolean isCompound() {
         return ((sliceData != null) && (sliceData instanceof Object[][]));
+    }
+    
+    public int getNumberSlices(){
+        return dataDimension[Context.getInstance().getDataManager().getDepthDimension()];
     }
 }

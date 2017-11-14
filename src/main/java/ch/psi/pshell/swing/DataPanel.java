@@ -961,7 +961,7 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
                     }
                     if (dataSlice.dataRank == 3) {
                         pageSelection.setValue(0);
-                        pageSelection.setMaxValue(dataSlice.dataDimension[2] - 1);
+                        pageSelection.setMaxValue(dataSlice.getNumberSlices() - 1);
                         pageSelection.setVisible(true);
                     }
                 }

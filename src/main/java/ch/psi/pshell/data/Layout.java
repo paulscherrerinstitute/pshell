@@ -67,5 +67,5 @@ public interface Layout {
     default public int getIndex(Scan scan, ScanRecord record) throws IOException {
         return record.getIndex() - scan.getRecordIndexOffset();
     }
-
+   
 }

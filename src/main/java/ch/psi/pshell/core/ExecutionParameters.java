@@ -20,7 +20,7 @@ import java.util.logging.Level;
 public class ExecutionParameters  {
 
     final String[] executionOptions = new String[]{"defaults", "group", "open", "reset", "name", "type", "path",
-        "layout", "persist", "flush", "preserve", "accumulate"};
+        "layout", "persist", "flush", "preserve", "accumulate", "depth_dim"};
 
     final String[] viewOptions = new String[]{"plot_disabled", "table_disabled", "enabled_plots", 
         "plot_types", "print_scan", "auto_range", "manual_range","domain_axis", "status"};        
@@ -180,6 +180,15 @@ public class ExecutionParameters  {
     public Boolean getPersist() {
         Object option = getOption("persist");
         return (option != null) ? (Boolean) option : Context.getInstance().getConfig().autoSaveScanData;
+    }
+
+    public int getDepthDimension() {
+        int depthDimension = Context.getInstance().getConfig().getDepthDim();
+        Object option = getOption("depth_dim");        
+        if ((option != null) && (option instanceof Number)){
+            depthDimension = ((Number)option).intValue();
+        }
+        return (((depthDimension<0) || (depthDimension>2)) ? 0 : depthDimension);
     }
 
     public Boolean getFlush() {

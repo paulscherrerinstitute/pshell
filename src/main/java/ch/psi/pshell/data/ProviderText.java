@@ -340,7 +340,8 @@ public class ProviderText implements Provider {
                                 Integer page = Integer.valueOf(line.substring(PAGE_MARKER.length()));
                                 if (ret.containsKey(INFO_DIMENSIONS)) {
                                     int[] dimensions = (int[]) ret.get(INFO_DIMENSIONS);
-                                    ret.put(INFO_DIMENSIONS, new int[]{dimensions[0], dimensions[1], page + 1});
+                                    dimensions[getDepthDimension()] = page + 1;
+                                    ret.put(INFO_DIMENSIONS, dimensions);
                                 }
                             }
                         }
@@ -780,5 +781,5 @@ public class ProviderText implements Provider {
             }
             out.print(getLineSeparator());
         }
-    }
+    }    
 }

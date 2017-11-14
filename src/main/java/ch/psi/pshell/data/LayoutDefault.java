@@ -107,7 +107,7 @@ public class LayoutDefault implements Layout {
             if (readable instanceof ReadableMatrix) {
                 //This is very slow
                 //dataManager.createDataset(getPath(name), getDeviceType(readable), new int[]{0, 0, 0});                    
-                dataManager.createDataset(getPath(scan, name), getDeviceType(readable), new int[]{((ReadableMatrix) readable).getHeight(), ((ReadableMatrix) readable).getWidth(), 0});
+                dataManager.createDataset(getPath(scan, name), getDeviceType(readable), dataManager.getReadableMatrixDimension((ReadableMatrix) readable));
                 if (readable instanceof ReadableCalibratedMatrix) {
                     MatrixCalibration cal = ((ReadableCalibratedMatrix) readable).getCalibration();
                     if (cal != null) {

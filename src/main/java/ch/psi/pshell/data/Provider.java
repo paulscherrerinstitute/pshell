@@ -1,5 +1,6 @@
 package ch.psi.pshell.data;
 
+import ch.psi.pshell.core.Context;
 import java.io.File;
 import java.io.IOException;
 import java.util.Map;
@@ -76,6 +77,13 @@ public interface Provider {
     void createDataset(String path, String[] names, Class[] types, int[] lengths) throws IOException;
 
     void setItem(String path, Object data, Class type, int index) throws IOException;
+    
+    /**
+     * Multidimensional array writing
+     */
+    default void setItem(String path, Object data, Class type, long[] index, int[] shape) throws IOException{
+       throw new UnsupportedOperationException();
+    }
 
     default String getRootFileName(String root) {
         if (isPacked()) {
@@ -85,6 +93,9 @@ public interface Provider {
             }
         }
         return root;
-    }
+    }            
 
+    default int getDepthDimension(){
+        return Context.getInstance().getDataManager().getDepthDimension();
+    }    
 }

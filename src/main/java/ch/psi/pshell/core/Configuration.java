@@ -23,6 +23,7 @@ public class Configuration extends Config {
     public String dataProvider = "h5";
     @Defaults(values = {"default", "table"})
     public String dataLayout = "default";
+    public int depthDimension = 0;
     public boolean dataScanFlushRecords = false;
     public boolean dataScanReleaseRecords = false;
     public boolean dataScanPreserveTypes = false;
@@ -83,6 +84,10 @@ public class Configuration extends Config {
             return NotificationLevel.Off;
         }
         return notificationLevel;
+    }
+    
+    public int getDepthDim(){
+        return (((depthDimension<0) || (depthDimension>2)) ? 0 : depthDimension);
     }
 
     public String getName() {

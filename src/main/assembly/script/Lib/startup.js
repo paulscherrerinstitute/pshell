@@ -1016,17 +1016,21 @@ function create_table(path, names, types, lengths) {
     get_context().dataManager.createDataset(path, names, new_types, lengths)
 }
 
-function append_dataset(path, data, index, type) {
+function append_dataset(path, data, index, type, shape) {
     /*
      Append data to dataset.
 
      Args:
         path(str): Path to dataset relative to the current persistence context root.
         data(number or array or list): name of each column.
-        index(int, optional): if set then add the data in a specific position in the dataset.
+        index(int or list, optional): if set then add the data in a specific position in the dataset.
+                If integer is the index in an array (data must be 1 order lower than dataset)
+                If a list, specifies the full coordinate for multidimensional datasets.
         type(str, optional): array type 'b' = byte, 'h' = short, 'i' = int, 'l' = long,  'f' = float, 
                               'd' = double, 'c' = char, 's' = String,  'o' = Object 
                    default: 'd' (convert data to array of doubles)
+        shape(list, optional): only valid if index is a list, provides the shape of the data array.
+                In this case data must be a one-dimensional array.
      Returns:
         null
      
@@ -1035,13 +1039,19 @@ function append_dataset(path, data, index, type) {
         index = null;
     if (!is_defined(type))
         type = 'd';
+    if (!is_defined(shape))
+        shape = null;
     if (is_array(data)){
         data = to_array(data, type)
     }
     if (index == null)
         get_context().dataManager.appendItem(path, data);
-    else
-        get_context().dataManager.setItem(path, data, index);
+    else {
+        if (is_array(obj))
+            get_context().dataManager.setItem(path, data, index, shape);
+        else
+            get_context().dataManager.setItem(path, data, index);
+    }
 }
 
 function append_table(path, data) {
@@ -1124,6 +1134,7 @@ function set_exec_pars(args){
         path(str, optional):  If defined provides the full path name for data output root (overriding config))
                              The tag {data} can be used to enter a path relative to the standard data folder.
         layout(str, optional): Overrides default data layout.
+        depth_dim(int, optional): dimension of the depth for 2d-matrixes in 3d datasets.
         persist(bool, optional): Overrides the configuration option to auto save scan data.
         flush(bool, optional): Overrides the configuration option to flush file on each record.
         accumulate(bool, optional): Overrides the configuration option to release scan records. 

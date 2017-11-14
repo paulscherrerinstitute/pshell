@@ -912,16 +912,20 @@ def create_table(path, names, types=None, lengths=None):
             type_classes.append(ScriptUtils.getType(types[i]))
     get_context().dataManager.createDataset(path, names, type_classes, lengths)
 
-def append_dataset(path, data, index=None, type='d'):
+def append_dataset(path, data, index=None, type='d', shape=None):
     """Append data to dataset.
 
     Args:
         path(str): Path to dataset relative to the current persistence context root.
         data(number or array or list): name of each column.
-        index(int, optional): if set then add the data in a specific position in the dataset.
+        index(int or list, optional): if set then add the data in a specific position in the dataset.
+                If integer is the index in an array (data must be 1 order lower than dataset)
+                If a list, specifies the full coordinate for multidimensional datasets.
         type(str, optional): array type 'b' = byte, 'h' = short, 'i' = int, 'l' = long,  'f' = float, 
                               'd' = double, 'c' = char, 's' = String,  'o' = Object 
                    default: 'd' (convert data to array of doubles)
+        shape(list, optional): only valid if index is a list, provides the shape of the data array.
+                In this case data must be a one-dimensional array.
     Returns:
         None
 
@@ -930,7 +934,12 @@ def append_dataset(path, data, index=None, type='d'):
     if index is None:
         get_context().dataManager.appendItem(path, data)
     else:
-        get_context().dataManager.setItem(path, data, index)
+        if is_list(index):
+            if shape is None: 
+                shape = [len(index)]           
+            get_context().dataManager.setItem(path, data, index, shape)
+        else:
+            get_context().dataManager.setItem(path, data, index)
 
 def append_table(path, data):
     """Append data to a table (dataset of compound type) 
@@ -1002,6 +1011,7 @@ def set_exec_pars(**args):
         path(str, optional):  If defined provides the full path name for data output root (overriding config))
                              The tag {data} can be used to enter a path relative to the standard data folder.
         layout(str, optional): Overrides default data layout.
+        depth_dim(int, optional): dimension of 2d-matrixes in 3d datasets.
         persist(bool, optional): Overrides the configuration option to auto save scan data.
         flush(bool, optional): Overrides the configuration option to flush file on each record.
         accumulate(bool, optional): Overrides the configuration option to release scan records. 
@@ -1012,7 +1022,7 @@ def set_exec_pars(**args):
                               If false closes output root, if open.
         reset(bool, optional): If true reset the scan counter - the {count} tag and set the timestamp to now.
         group(str, optional): Overrides default layout group name for scans
-        defaults(bool, optional): If true restore the original execution parameters.
+        defaults(bool, optional): If true restore the original execution parameters.        
         
         Graphical preferences can also be set. Keys are equal to lowercase of Preference enum:
         "plot_disabled", "table_disabled", "enabled_plots", "plot_types", "print_scan", "auto_range", 
@@ -1042,7 +1052,6 @@ def get_exec_pars():
             scanPath (str): dataset or group corresponding to current scan.
             scan (Scan): reference to current scan, if any
             source (CommandSource): return the source of the script or command.
-            args (obj): return the arguments for the script.
             background (bool): return False if executing in main interpreter thread .
             aborted (bool): True if execution has been aborted
     """

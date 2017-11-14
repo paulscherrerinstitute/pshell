@@ -32,6 +32,7 @@ import ch.psi.utils.Range;
 import java.lang.reflect.Array;
 import java.util.Arrays;
 import ch.psi.pshell.device.Cacheable;
+import ch.psi.pshell.device.Readable.ReadableMatrix;
 import java.util.List;
 import java.util.Map;
 
@@ -150,7 +151,32 @@ public class DataManager implements AutoCloseable {
     public boolean getPreserveTypes() {
         return context.getExecutionPars().getPreserve();
     }
-
+        
+    public int getDepthDimension(){
+        Context context = Context.getInstance();
+        if (context.getState().isProcessing()){
+            return context.getExecutionPars().getDepthDimension();
+        }
+        return context.getConfig().getDepthDim();        
+    }
+    
+    public int[] getReadableMatrixDimension(ReadableMatrix readable){
+        int[] dimensions;
+        switch (getDepthDimension()){
+            case 1: 
+                dimensions = new int[]{readable.getHeight(), 0,readable.getWidth()};
+                break;
+            case 2:
+                dimensions = new int[]{readable.getHeight(), readable.getWidth(), 0};
+                break;
+            default:
+                dimensions = new int[]{0,readable.getHeight(), readable.getWidth()};
+                break;
+        }
+        return dimensions;
+    }
+    
+            
     Class getScanDeviceDatasetType(Object device) throws IOException {
         Class type = Double.class;
         if (getPreserveTypes()) {
@@ -607,6 +633,9 @@ public class DataManager implements AutoCloseable {
         return getData(path, 0);
     }
 
+    /**
+     * Use of "page" provides shortcut for accessing 3d data in "pages" of  2d arrays.
+     */    
     public DataSlice getData(String path, int page) throws IOException {
         DataAddress address = getAddress(path);
         if (address != null) {
@@ -618,8 +647,10 @@ public class DataManager implements AutoCloseable {
     public DataSlice getData(String root, String path) throws IOException {
         return getData(root, path, 0);
     }
-
-    //TODO: Support generic access - Only supporting for now up to 3d -> reading in pages of 2D data
+                
+    /**
+     * Use of "page" provides shortcut for accessing 3d data in "pages" of  2d arrays.
+     */
     public DataSlice getData(String root, String path, int page) throws IOException {
         root = adjustRoot(root);
 
@@ -836,6 +867,27 @@ public class DataManager implements AutoCloseable {
         }
         provider.setItem(path, val, type, index);
     }
+    
+    /**
+     * Write to multi-dimensional dataset. val must be a 1d array
+     */
+    public void setItem(String path, Object val, long[] index, int[]shape) throws IOException {
+        if (path == null) {
+            return;
+        }
+        Class type = null;
+        if (val != null) {
+            type = val.getClass();
+            if ((!type.isArray()) || (!type.getComponentType().isPrimitive())) {
+                throw new IllegalArgumentException("Value must be a 1d array of primitive type");
+            }
+        }
+        if (logger.isLoggable(Level.FINEST)) {
+            logger.finest(String.format("Append  \"%s:%s\" = %s", path, Convert.arrayToString(index, "."), LogManager.getLogForValue(val)));
+        }
+        provider.setItem(path, val, type, index, shape);
+    }
+    
 
     final HashMap<String, Integer> tableIndex = new HashMap<>();
 
@@ -934,14 +986,26 @@ public class DataManager implements AutoCloseable {
                             }
                         } else if (calibration.length == 4) {
                             MatrixCalibration c = new MatrixCalibration(calibration[0], calibration[1], calibration[2], calibration[3]);
-                            x = c.getAxisX(slice.dataDimension[1]);
-                            y = c.getAxisY(slice.dataDimension[0]);
+                            switch (getDepthDimension()){
+                                case 1:
+                                    x = c.getAxisX(slice.dataDimension[0]);
+                                    y = c.getAxisY(slice.dataDimension[2]);
+                                    break;
+                                case 2:
+                                    x = c.getAxisX(slice.dataDimension[1]);
+                                    y = c.getAxisY(slice.dataDimension[0]);
+                                    break;
+                                default:
+                                    x = c.getAxisX(slice.dataDimension[2]);
+                                    y = c.getAxisY(slice.dataDimension[1]);
+                            }
+                            
                         }
                     }
 
                     PlotDescriptor plot = null;
                     if (slice.dataRank == 3) {
-                        double[] z = Arr.indexesDouble(slice.dataDimension[2]);
+                        double[] z = Arr.indexesDouble(slice.getNumberSlices());
                         plot = new PlotDescriptor(name, root, path, data, x, y, z);
                     } else {
                         plot = new PlotDescriptor(name, root, path, data, x, y);
