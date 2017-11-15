@@ -127,7 +127,7 @@ public class DataManager implements AutoCloseable {
             return;
         }
 
-        logger.info("Setting scan strategy: " + name + " - " + layoutClass);
+        logger.info("Setting data layout: " + name + " - " + layoutClass);
         setLayout((Layout) layoutClass.newInstance());
     }
 
