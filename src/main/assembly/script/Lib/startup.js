@@ -910,21 +910,29 @@ function get_plot_snapshots(title, file_type, temp_path){
 // Data file access
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-function load_data(path, page) {
+function load_data(path, index, shape) {
     /*
      Read data from the current persistence context or from data files.
      
      Args:
-     path(str): Path to group or dataset relative to the persistence context root.
-               If in the format 'root|path' then read from path given by 'root'.
-     page(int, optional): Data page (used for 3D datasets)
+        path(str): Path to group or dataset relative to the persistence context root.
+                   If in the format 'root|path' then read from path given by 'root'.
+        index(int or listr, optional): 
+                if integer, data depth (used for 3D datasets returning a 2d matrix)
+                If a list, specifies the full coordinate for multidimensional datasets.
      Returns:
-     Data array
+         Data array
      
      */
-    if (!is_defined(page))
-        page = 0;
-    var slice = get_context().dataManager.getData(path, page)
+    if (!is_defined(index))
+        index = 0;
+    if (!is_defined(shape))
+        shape = null;
+
+    if ((shape!=null) && (is_array(index)))
+        var slice = get_context().dataManager.getData(path, index, shape)
+    else
+        var slice = get_context().dataManager.getData(path, index)
     return slice.sliceData
 }
 
@@ -963,6 +971,20 @@ function save_dataset(path, data, type) {
     }
     get_context().dataManager.setDataset(path, data)
 }
+
+function create_group(path) {
+    /*
+    Create an empty dataset within the current persistence context.
+
+    Args:
+        path(str): Path to group relative to the current persistence context root.
+    Returns:
+        null
+     
+     */
+    get_context().dataManager.createGroup(path)
+}
+
 
 function create_dataset(path, type, unsigned, dimensions) {
     /*
@@ -1047,7 +1069,7 @@ function append_dataset(path, data, index, type, shape) {
     if (index == null)
         get_context().dataManager.appendItem(path, data);
     else {
-        if (is_array(obj))
+        if (is_array(index))
             get_context().dataManager.setItem(path, data, index, shape);
         else
             get_context().dataManager.setItem(path, data, index);

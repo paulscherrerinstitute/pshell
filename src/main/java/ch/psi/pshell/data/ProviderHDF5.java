@@ -180,6 +180,73 @@ public class ProviderHDF5 implements Provider {
             }
         }
     }
+    
+    public DataSlice getData(String root, String path,  long[] index, int[] shape) throws IOException {        
+        IHDF5Reader reader = openInputFile(root);
+        try {
+            HDF5LinkInformation info = reader.getLinkInformation(path);
+            if (!info.isDataSet()) {
+                return null;
+            }
+            HDF5DataSetInformation dsinfo = reader.object().getDataSetInformation(path);
+            boolean unsigned = !dsinfo.isSigned();
+            int rank = dsinfo.getRank();
+            long[] dims = dsinfo.getDimensions();
+            int[] idims = new int[dims.length];
+            for (int i = 0; i < dims.length; i++) {
+                idims[i] = (int) dims[i];
+            }
+
+            //Assume will read it all
+            Object array = null;
+
+            switch (dsinfo.getTypeInformation().getDataClass()) {
+                case FLOAT:
+                    switch (dsinfo.getTypeInformation().getElementSize()) {
+                        case 4:                                    
+                            array = reader.float32().readMDArrayBlock(path, shape, index).getAsFlatArray();
+                            break;
+                        default:
+                            array = reader.float64().readMDArrayBlock(path, shape, index).getAsFlatArray();
+                    }
+                    break;
+                case INTEGER:
+                    switch (dsinfo.getTypeInformation().getElementSize()) {
+                        case 1:
+                            array =  unsigned ? reader.uint8().readMDArrayBlock(path, shape, index).getAsFlatArray()
+                                              : reader.int8().readMDArrayBlock(path, shape, index).getAsFlatArray();
+                            break;
+                        case 2:
+                            array =  unsigned ? reader.uint16().readMDArrayBlock(path, shape, index).getAsFlatArray()
+                                              : reader.int16().readMDArrayBlock(path, shape, index).getAsFlatArray();
+                            break;
+                        case 8:
+                            array =  unsigned ? reader.uint64().readMDArrayBlock(path, shape, index).getAsFlatArray()
+                                              : reader.int64().readMDArrayBlock(path, shape, index).getAsFlatArray();
+                            break;
+                        default:
+                            array =  unsigned ? reader.uint32().readMDArrayBlock(path, shape, index).getAsFlatArray()
+                                              : reader.int32().readMDArrayBlock(path, shape, index).getAsFlatArray();
+                    }
+                    break;
+                case ENUM:
+                case STRING:
+                case BOOLEAN:
+                case BITFIELD:
+                case COMPOUND:
+                default:
+                    break;
+            }
+            if (array != null) {
+                return new  DataSlice(root, path, idims, array, index, shape, unsigned);
+            }
+        } finally {
+            if ((reader != null) && (reader != writer)) {
+                reader.close();
+            }
+        }
+        return null;
+    }
 
     @Override
     public DataSlice getData(String root, String path, int page) throws IOException {
@@ -494,7 +561,10 @@ public class ProviderHDF5 implements Provider {
     //Data writing
     @Override
     public void createGroup(String path) {
-
+        try{
+            writer.object().createGroup(path);
+        } catch (Exception ex){            
+        }
     }
 
     @Override

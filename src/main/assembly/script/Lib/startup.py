@@ -835,18 +835,26 @@ def get_plot_snapshots(title = None, file_type = "png", temp_path = get_context(
 #Data access functions
 ###################################################################################################
 
-def load_data(path, page=0):    
+def load_data(path, index=0, shape=None):    
     """Read data from the current persistence context or from data files.
 
     Args:
         path(str): Path to group or dataset relative to the persistence context root.
                    If in the format 'root|path' then read from path given by 'root'.
-        page(int, optional): Data page (used for 3D datasets)
+        index(int or listr, optional): 
+                if integer, data depth (used for 3D datasets returning a 2d matrix)
+                If a list, specifies the full coordinate for multidimensional datasets.
+        shape(list, optional): only valid if index is a list, provides the shape of the data array.
+                In this case return a flattened a one-dimensional array.
+
     Returns:
         Data array
 
     """    
-    slice = get_context().dataManager.getData(path, page)
+    if index is not None and is_list(index):
+        slice = get_context().dataManager.getData(path, index, shape)
+    else:
+        slice = get_context().dataManager.getData(path, index)
     return slice.sliceData
 
 def get_attributes(path):    
@@ -876,6 +884,17 @@ def save_dataset(path, data, type='d'):
     """    
     data = to_array(data, type)
     get_context().dataManager.setDataset(path,data)
+
+def create_group(path):
+    """Create an empty dataset within the current persistence context.
+
+    Args:
+        path(str): Path to group relative to the current persistence context root.
+    Returns:
+        None
+
+    """    
+    get_context().dataManager.createGroup(path)
 
 def create_dataset(path, type, unsigned=False, dimensions=None):
     """Create an empty dataset within the current persistence context.
@@ -925,7 +944,7 @@ def append_dataset(path, data, index=None, type='d', shape=None):
                               'd' = double, 'c' = char, 's' = String,  'o' = Object 
                    default: 'd' (convert data to array of doubles)
         shape(list, optional): only valid if index is a list, provides the shape of the data array.
-                In this case data must be a one-dimensional array.
+                In this case data must be a flattened one-dimensional array.
     Returns:
         None
 

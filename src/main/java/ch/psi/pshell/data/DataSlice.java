@@ -15,7 +15,7 @@ public class DataSlice {
     final public int dataRank;
     final public int[] dataDimension;
     final public int sliceRank;
-    final public int[] slicePos;
+    final public long[] slicePos;
     final public int[] sliceSize;
     final public Object sliceData;
     final public boolean unsigned;
@@ -27,14 +27,14 @@ public class DataSlice {
         this.dataRank = dataDimension.length;
         this.dataType = dataType;
         this.dataDimension = dataDimension;
-        this.slicePos = new int[0];
+        this.slicePos = new long[0];
         this.unsigned = unsigned;
         sliceRank = 0;
         sliceSize = new int[0];
         sliceData = null;
     }
 
-    public DataSlice(String dataFile, String dataPath, int[] dataDimension, Object sliceData, int[] slicePos, boolean unsigned) {
+    public DataSlice(String dataFile, String dataPath, int[] dataDimension, Object sliceData, long[] slicePos, boolean unsigned) {
         this.dataFile = dataFile;
         this.dataPath = dataPath;
         this.dataRank = dataDimension.length;
@@ -49,11 +49,24 @@ public class DataSlice {
             sliceSize = Arr.getDimensions(sliceData);
             dataType = Arr.getComponentType(sliceData);
         }
-        sliceRank = sliceSize.length;       
+        this.sliceRank = sliceSize.length;       
     }
+    
+    public DataSlice(String dataFile, String dataPath, int[] dataDimension, Object sliceData, long[] slicePos,int[] slice_size, boolean unsigned) {
+        this.dataFile = dataFile;
+        this.dataPath = dataPath;
+        this.dataRank = dataDimension.length;
+        this.dataDimension = dataDimension;
+        this.slicePos = slicePos;
+        this.sliceData = sliceData;
+        this.unsigned = unsigned;
+        this.sliceSize = slice_size;
+        this.sliceRank = sliceSize.length;       
+        this.dataType = Arr.getComponentType(sliceData);
+    }    
 
-    private static int[] getPagePos(int[] dataDimension, int page) {
-        int[] pagePos = new int[dataDimension.length];
+    private static long[] getPagePos(int[] dataDimension, int page) {
+        long[] pagePos = new long[dataDimension.length];
         if (pagePos.length > 0) {
             pagePos[0] = page;
         }

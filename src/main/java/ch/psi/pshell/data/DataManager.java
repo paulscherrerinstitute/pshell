@@ -665,6 +665,29 @@ public class DataManager implements AutoCloseable {
         return ret;
     }
 
+    
+    public Object getData(String path,  long[] index, int[]shape) throws IOException {
+        DataAddress address = getAddress(path);
+        if (address != null) {
+            return getData(address.root, address.path, index, shape);
+        }
+        return getData(getOutput(), path,  index, shape);
+    }
+    
+    public DataSlice getData(String root, String path,  long[] index, int[]shape) throws IOException {
+        root = adjustRoot(root);
+
+        DataSlice ret = provider.getData(root, path, index, shape);
+        if (ret == null) {
+            throw new UnsupportedOperationException(String.format("Invalid data path : %s-%s-%s", root, path, Convert.arrayToString(index, ".")));
+                                                                
+        }
+        if (ret.sliceData == null) {
+            throw new UnsupportedOperationException("Not supported yet.");
+        }        
+        return ret;
+    }
+    
     String adjustRoot(String root) {
         if (!new File(root).exists()) {
             String base = getDataFolder();

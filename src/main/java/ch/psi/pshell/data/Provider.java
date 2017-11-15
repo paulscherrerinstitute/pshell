@@ -84,6 +84,10 @@ public interface Provider {
     default void setItem(String path, Object data, Class type, long[] index, int[] shape) throws IOException{
        throw new UnsupportedOperationException();
     }
+    
+    default DataSlice getData(String root, String path,  long[] index, int[]shape) throws IOException {        
+        throw new UnsupportedOperationException();
+    }
 
     default String getRootFileName(String root) {
         if (isPacked()) {
