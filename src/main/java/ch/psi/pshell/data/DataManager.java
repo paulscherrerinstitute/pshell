@@ -634,14 +634,14 @@ public class DataManager implements AutoCloseable {
     }
 
     /**
-     * Use of "page" provides shortcut for accessing 3d data in "pages" of  2d arrays.
+     * Shortcut for accessing 3d data in 2d arrays.
      */    
-    public DataSlice getData(String path, int page) throws IOException {
+    public DataSlice getData(String path, int index) throws IOException {
         DataAddress address = getAddress(path);
         if (address != null) {
-            return getData(address.root, address.path, page);
+            return getData(address.root, address.path, index);
         }
-        return getData(getOutput(), path, page);
+        return getData(getOutput(), path, index);
     }
 
     public DataSlice getData(String root, String path) throws IOException {
@@ -649,14 +649,14 @@ public class DataManager implements AutoCloseable {
     }
                 
     /**
-     * Use of "page" provides shortcut for accessing 3d data in "pages" of  2d arrays.
+     * Shortcut for accessing 3d data in 2d arrays.
      */
-    public DataSlice getData(String root, String path, int page) throws IOException {
+    public DataSlice getData(String root, String path, int index) throws IOException {
         root = adjustRoot(root);
 
-        DataSlice ret = provider.getData(root, path, page);
+        DataSlice ret = provider.getData(root, path, index);
         if (ret == null) {
-            throw new UnsupportedOperationException(String.format("Invalid data path : %s-%s-%d", root, path, page));
+            throw new UnsupportedOperationException(String.format("Invalid data path : %s-%s-%d", root, path, index));
         }
 
         if (ret.sliceData == null) {

@@ -927,10 +927,8 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
     DataSlice dataSlice;
     Object data;
     String[] headers;
-    int page = 0;
 
     void showData(String path) {
-        page = 0;
         tableData.setModel(new DefaultTableModel(new Object[][]{}, new String[]{}));
         tableRowHeader.setModel(new DefaultTableModel(new Object[][]{}, new String[]{}));
         tableData.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
@@ -1249,9 +1247,6 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
 
         @Override
         public String getColumnName(int column) {
-            //if ((dataSlice!=null)&&(dataSlice.dataRank==3)){
-            //    return "Z="+page;
-            // }
             return "";
         }
 

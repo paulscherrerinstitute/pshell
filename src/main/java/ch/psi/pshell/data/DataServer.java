@@ -26,11 +26,11 @@ public class DataServer extends Replier {
         StringBuffer ret = new StringBuffer();
 
         String path = request;
-        int page = 0; //TODO
+        int index = 0; //TODO
         if (path.contains("#")) {
             String[] tokens = path.split("#");
             path = tokens[0];
-            page = Integer.valueOf(tokens[1]);
+            index = Integer.valueOf(tokens[1]);
         }
 
         if ((request != "") || !dm.isOpen()) { //Empty string means current data context if open
@@ -75,7 +75,7 @@ public class DataServer extends Replier {
         ret.append("Path: ").append(path).append("\n\n");
 
         if (dm.isDataset(root, path)) {
-            ds = dm.getData(root, path, page);
+            ds = dm.getData(root, path, index);
         }
 
         ret.append("Info: ").append("\n");
@@ -129,11 +129,11 @@ public class DataServer extends Replier {
         StringBuffer ret = new StringBuffer();
 
         String path = request;
-        int page = 0; //TODO
+        int index = 0; //TODO
         if (path.contains("#")) {
             String[] tokens = path.split("#");
             path = tokens[0];
-            page = Integer.valueOf(tokens[1]);
+            index = Integer.valueOf(tokens[1]);
         }
 
         //Folder 

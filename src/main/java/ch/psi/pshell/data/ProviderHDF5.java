@@ -249,7 +249,7 @@ public class ProviderHDF5 implements Provider {
     }
 
     @Override
-    public DataSlice getData(String root, String path, int page) throws IOException {
+    public DataSlice getData(String root, String path, int index) throws IOException {
         IHDF5Reader reader = openInputFile(root);
         DataSlice ret = null;
         try {
@@ -294,10 +294,10 @@ public class ProviderHDF5 implements Provider {
                         case 3:
                             switch (dsinfo.getTypeInformation().getElementSize()) {
                                 case 4:                                    
-                                    array = getMatrixArray (reader.float32().readMDArrayBlock(path, getMatrixShape(null), getMatrixOffset(page)));
+                                    array = getMatrixArray (reader.float32().readMDArrayBlock(path, getMatrixShape(null), getMatrixOffset(index)));
                                     break;
                                 default:
-                                    array = getMatrixArray (reader.float64().readMDArrayBlock(path, getMatrixShape(null), getMatrixOffset(page)));
+                                    array = getMatrixArray (reader.float64().readMDArrayBlock(path, getMatrixShape(null), getMatrixOffset(index)));
                             }
                             break;
                     }
@@ -352,20 +352,20 @@ public class ProviderHDF5 implements Provider {
                         case 3:
                             switch (dsinfo.getTypeInformation().getElementSize()) {
                                 case 1:
-                                    array =  getMatrixArray (unsigned ? reader.uint8().readMDArrayBlock(path, getMatrixShape(null), getMatrixOffset(page)) 
-                                                                      : reader.int8().readMDArrayBlock(path, getMatrixShape(null), getMatrixOffset(page)));
+                                    array =  getMatrixArray (unsigned ? reader.uint8().readMDArrayBlock(path, getMatrixShape(null), getMatrixOffset(index)) 
+                                                                      : reader.int8().readMDArrayBlock(path, getMatrixShape(null), getMatrixOffset(index)));
                                     break;
                                 case 2:
-                                    array =  getMatrixArray (unsigned ? reader.uint16().readMDArrayBlock(path, getMatrixShape(null), getMatrixOffset(page)) 
-                                                                      : reader.int16().readMDArrayBlock(path, getMatrixShape(null), getMatrixOffset(page)));
+                                    array =  getMatrixArray (unsigned ? reader.uint16().readMDArrayBlock(path, getMatrixShape(null), getMatrixOffset(index)) 
+                                                                      : reader.int16().readMDArrayBlock(path, getMatrixShape(null), getMatrixOffset(index)));
                                     break;
                                 case 8:
-                                    array =  getMatrixArray (unsigned ? reader.uint64().readMDArrayBlock(path, getMatrixShape(null), getMatrixOffset(page)) 
-                                                                      : reader.int64().readMDArrayBlock(path, getMatrixShape(null), getMatrixOffset(page)));
+                                    array =  getMatrixArray (unsigned ? reader.uint64().readMDArrayBlock(path, getMatrixShape(null), getMatrixOffset(index)) 
+                                                                      : reader.int64().readMDArrayBlock(path, getMatrixShape(null), getMatrixOffset(index)));
                                     break;
                                 default:
-                                    array =  getMatrixArray (unsigned ? reader.uint32().readMDArrayBlock(path, getMatrixShape(null), getMatrixOffset(page)) 
-                                                                      : reader.int32().readMDArrayBlock(path, getMatrixShape(null), getMatrixOffset(page)));
+                                    array =  getMatrixArray (unsigned ? reader.uint32().readMDArrayBlock(path, getMatrixShape(null), getMatrixOffset(index)) 
+                                                                      : reader.int32().readMDArrayBlock(path, getMatrixShape(null), getMatrixOffset(index)));
                             }
                             break;
                     }
@@ -395,7 +395,7 @@ public class ProviderHDF5 implements Provider {
                     break;
             }
             if (array != null) {
-                ret = new DataSlice(root, path, idims, array, page, unsigned);
+                ret = new DataSlice(root, path, idims, array, index, unsigned);
             } else {
                 ret = new DataSlice(root, path, idims, null, unsigned);
             }

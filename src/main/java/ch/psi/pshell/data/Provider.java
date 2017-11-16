@@ -55,7 +55,7 @@ public interface Provider {
 
     Map<String, Object> getAttributes(String root, String path) throws IOException;
 
-    DataSlice getData(String root, String path, int page) throws IOException;
+    DataSlice getData(String root, String path, int index) throws IOException;
 
     boolean isDataset(String root, String path) throws IOException;
 

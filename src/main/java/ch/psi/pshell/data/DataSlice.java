@@ -65,16 +65,16 @@ public class DataSlice {
         this.dataType = Arr.getComponentType(sliceData);
     }    
 
-    private static long[] getPagePos(int[] dataDimension, int page) {
-        long[] pagePos = new long[dataDimension.length];
-        if (pagePos.length > 0) {
-            pagePos[0] = page;
+    private static long[] getIndexArray(int[] dataDimension, int index) {
+        long[] indexArray = new long[dataDimension.length];
+        if (indexArray.length > 0) {
+            indexArray[0] = index;
         }
-        return pagePos;
+        return indexArray;
     }
 
-    public DataSlice(String dataFile, String dataPath, int[] dataDimension, Object sliceData, int page, boolean unsigned) {
-        this(dataFile, dataPath, dataDimension, sliceData, getPagePos(dataDimension, page), unsigned);
+    public DataSlice(String dataFile, String dataPath, int[] dataDimension, Object sliceData, int index, boolean unsigned) {
+        this(dataFile, dataPath, dataDimension, sliceData, getIndexArray(dataDimension, index), unsigned);
     }
 
     public boolean isCompound() {

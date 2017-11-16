@@ -469,7 +469,7 @@ public class ProviderText implements Provider {
     }
 
     @Override
-    public DataSlice getData(String root, String path, int page) throws IOException {
+    public DataSlice getData(String root, String path, int index) throws IOException {
         DataSlice ret = null;
         if (!isDataset(root, path)) {
             return null;
@@ -567,7 +567,7 @@ public class ProviderText implements Provider {
                     } else {
                         if (rank == 3) {
                             if (!started) {
-                                if (line.startsWith(COMMENT_MARKER + PAGE_MARKER + page)) {
+                                if (line.startsWith(COMMENT_MARKER + PAGE_MARKER + index)) {
                                     started = true;
                                 }
                             } else if (line.startsWith(COMMENT_MARKER + PAGE_MARKER)) {
@@ -587,7 +587,7 @@ public class ProviderText implements Provider {
             } else {
                 array = data.toArray();
             }
-            ret = new DataSlice(root, path, dimensions, array, page, false);
+            ret = new DataSlice(root, path, dimensions, array, index, false);
         } catch (IOException ex) {
             throw ex;
         } catch (Exception ex) {
