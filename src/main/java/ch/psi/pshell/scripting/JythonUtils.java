@@ -112,9 +112,13 @@ public class JythonUtils {
                     for (int i = 0; i < args.size(); i++) {
                         ReflectedArgs ra = (ReflectedArgs) args.get(i);
                         if ((ra != null) && (ra.args != null) && (ra.args.length > 0)) {
-                            pars.add((ra.args)[0].getSimpleName());
+                            for  (int j=0; j<ra.args.length; j++){                            
+                                pars.add((ra.args)[j].getSimpleName());
+                            }                            
                         }
+                        break;//Only showing first overload
                     }
+                    //TODO: Didn't manage to resolve the return type
                     return name + "(" + String.join(", ", pars) + ") " + PY_METHOD_UNK_RET;
                 } else {
                     return null;
@@ -131,10 +135,10 @@ public class JythonUtils {
 
     public static List<String> getSignatures(PyObject obj, boolean includeJavaMethods) {
         List<String> ret = new ArrayList<>();
-        List<String> pythonMethods = (List) ((org.python.core.PyObject) obj).__dir__();
+        List<String> pythonMethods = (List) obj.__dir__();
         for (String s : pythonMethods) {
             if (!s.startsWith("_")) {
-                String signature = getPyMethodSignature(((org.python.core.PyObject) obj), s, includeJavaMethods);
+                String signature = getPyMethodSignature(obj, s, includeJavaMethods);
                 if (signature != null) {
                     ret.add(signature);
                 }
