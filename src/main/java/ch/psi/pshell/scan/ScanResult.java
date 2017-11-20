@@ -127,6 +127,10 @@ public class ScanResult {
     public long getTimeElapsed() {
         return records.get(records.size() - 1).getTimestamp() - records.get(0).getTimestamp();
     }
+    
+    public Scan getScan(){
+        return scan;
+    }
 
     @Override
     public String toString() {
