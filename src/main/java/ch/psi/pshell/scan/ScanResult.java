@@ -3,6 +3,7 @@ package ch.psi.pshell.scan;
 import ch.psi.pshell.core.Nameable;
 import ch.psi.pshell.device.Writable;
 import ch.psi.pshell.device.Readable;
+import ch.psi.utils.Convert;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -156,7 +157,11 @@ public class ScanResult {
             return null;
         }
             
-        Object ret = Array.newInstance(records.get(0).values[index].getClass(), dimensions);        
+        Class type = records.get(0).values[index].getClass();
+        if (Convert.isWrapperClass(type)){
+            type = Convert.getPrimitiveClass(type);
+        }
+        Object ret = Array.newInstance(type, dimensions);        
 
         for (ScanRecord rec : records){
             int[] pos = mc.getCounts(rec.index);
