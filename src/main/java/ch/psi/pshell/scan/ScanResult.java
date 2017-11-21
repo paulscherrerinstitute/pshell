@@ -3,9 +3,11 @@ package ch.psi.pshell.scan;
 import ch.psi.pshell.core.Nameable;
 import ch.psi.pshell.device.Writable;
 import ch.psi.pshell.device.Readable;
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import org.apache.commons.math3.util.MultidimensionalCounter;
 
 /**
  * ScanResult objects package all the acquired data during a scan.
@@ -131,6 +133,46 @@ public class ScanResult {
     public Scan getScan(){
         return scan;
     }
+    
+    /**
+     * Return a multidimensional array holding the scan data for the readable given by index,
+     * with same type as readable and dimensions = passes x [scan dimensions].
+     * Do not manage zigzag.
+     */
+    public Object getData(int index){        
+        int[] steps = scan.getNumberOfSteps();
+        int numDimensions = steps.length+1;
+        int[] dimensions = new int[numDimensions];
+                
+        dimensions[0] = scan.getNumberOfPasses();
+        for (int  i=0; i< steps.length; i++){
+            dimensions[i+1] = steps[i] + 1;
+        }
+        
+        MultidimensionalCounter mc = new MultidimensionalCounter(dimensions);
+        
+        //ArrayList ret = new ArrayList(); 
+        if (records.size()==0){
+            return null;
+        }
+            
+        Object ret = Array.newInstance(records.get(0).values[index].getClass(), dimensions);        
+
+        for (ScanRecord rec : records){
+            int[] pos = mc.getCounts(rec.index);
+            Object val = rec.values[index];
+            
+            //TODO: Optimize me
+            Object lowerDim = ret;
+            int i=0;
+            for (; i< numDimensions-1; i++){
+                lowerDim = Array.get(lowerDim, pos[i]);
+            }            
+            Array.set(lowerDim,  pos[i], val);
+        }
+        return ret;
+    }
+
 
     @Override
     public String toString() {
