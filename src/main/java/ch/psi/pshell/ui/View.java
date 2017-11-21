@@ -619,6 +619,11 @@ public class View extends MainFrame {
             if ((Arr.getRank(array) == 0) || (type == null) || !(Number.class.isAssignableFrom(type))) {
                 return;
             }
+            //Maintain the standard of displaying x dimension in the vertical axis (to align with scalar sampling)
+            if (Arr.getRank(array) == 2){
+                array = Convert.transpose(Convert.toDouble(array));
+            }
+            
             double[] x = null;
             if (range != null) {
                 if (range.getExtent().intValue() == Array.getLength(array)) {
