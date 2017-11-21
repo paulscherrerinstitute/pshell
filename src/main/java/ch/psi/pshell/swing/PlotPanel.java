@@ -692,6 +692,7 @@ public class PlotPanel extends MonitoredPanel {
                 plot.addSeries(series);
             } else {
                 if ((recordSize == null) || (recordSize[0] == 1)) {
+                    
                     plot = newPlot(name, isScan, 3, false);
                     SlicePlotSeries series = new SlicePlotSeries(name, start[1], end[1], steps[1] + 1, start[2], end[2], steps[2] + 1, start[0], end[0], steps[0] + 1);
                     plot.addSeries(series);
@@ -957,26 +958,25 @@ public class PlotPanel extends MonitoredPanel {
             steps = new int[3];
             steps[0] = array.length - 1;
 
-            if ((x == null) || (x.length == 0)) {
-                start[1] = 0;
-                end[1] = dims[1] - 1;
-                steps[1] = dims[1] - 1;
-            } else {
-                start[1] = x[0];
-                end[1] = x[x.length - 1];
-                steps[1] = x.length - 1;
-            }
-
             if ((y == null) || (y.length == 0)) {
                 start[2] = 0;
-                end[2] = dims[2] - 1;
-                steps[2] = dims[2] - 1;
+                end[2] = dims[1] - 1;
+                steps[2] = dims[1] - 1;
             } else {
                 start[2] = y[0];
                 end[2] = y[y.length - 1];
                 steps[2] = y.length - 1;
             }
 
+            if ((x == null) || (x.length == 0)) {
+                start[1] = 0;
+                end[1] = dims[2] - 1;
+                steps[1] = dims[2] - 1;
+            } else {
+                start[1] = x[0];
+                end[1] = x[x.length - 1];
+                steps[1] = x.length - 1;
+            }
         }
 
         PlotBase plot = addPlot(descriptor.name, false, descriptor.labelX, rank, null, start, end, steps, Double.class);
@@ -1019,11 +1019,11 @@ public class PlotPanel extends MonitoredPanel {
                             Logger.getLogger(PlotPanel.class.getName()).log(Level.WARNING, null, ex);
                         }
                     });
-                } else if (dimensions == 3) {
+                } else if (dimensions == 3) {                    
                     double[][][] array = (double[][][]) data;
                     series.setListener((SlicePlotSeries series1, int page) -> {
-                        try {
-                            series1.setData(((double[][][]) Convert.toDouble(array))[page]);
+                        try {                            
+                            series1.setData(array[page]);
                         } catch (Exception ex) {
                             Logger.getLogger(PlotPanel.class.getName()).log(Level.WARNING, null, ex);
                         }
