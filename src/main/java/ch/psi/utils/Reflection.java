@@ -104,14 +104,10 @@ public class Reflection {
                         hideMethod = true;
                     } else {
                         if (excludeClasses != null) {
-                            for (Class c : excludeClasses) {
-                                try {
-                                    hideMethod = (c.getMethod(method.getName(), method.getParameterTypes()) != null)
-                                            || (declaringClass == c);
-                                    if (hideMethod) {
-                                        break;
-                                    }
-                                } catch (NoSuchMethodException ex) {
+                            for (Class cls : excludeClasses) {
+                                if ((declaringClass == cls)) {
+                                    hideMethod = true;
+                                    break;
                                 }
                             }
                         }
