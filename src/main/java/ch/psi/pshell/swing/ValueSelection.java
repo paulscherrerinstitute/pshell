@@ -7,6 +7,7 @@ import ch.psi.utils.swing.SwingUtils;
 import java.awt.event.KeyEvent;
 import java.util.ArrayList;
 import java.util.List;
+import javax.swing.JTextField;
 
 /**
  *
@@ -57,6 +58,10 @@ public class ValueSelection extends MonitoredPanel implements Observable<ValueSe
     public void setShowText(boolean value) {
         showText = value;
         text.setVisible(value);
+    }
+    
+    public JTextField getTextField(){
+        return text;
     }
 
     boolean acceptEmpty;
