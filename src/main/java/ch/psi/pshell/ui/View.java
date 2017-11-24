@@ -381,8 +381,9 @@ public class View extends MainFrame {
             boolean allowRun = (rights != null) && !rights.denyRun;
             Component selectedDocument = tabDoc.getSelectedComponent();
             State state = App.getInstance().getState();
-            boolean showingScript = (selectedDocument instanceof ScriptEditor);
-            boolean executable = showingScript || (selectedDocument instanceof Processor);
+            boolean showingScript = (selectedDocument!=null) && (selectedDocument instanceof ScriptEditor);
+            boolean showingProcessor = (selectedDocument!=null) && (selectedDocument instanceof Processor);
+            boolean executable = showingScript || showingProcessor;
             boolean ready = (state == State.Ready);
             boolean busy = (state == State.Busy);
             boolean paused = (state == State.Paused);
@@ -397,6 +398,8 @@ public class View extends MainFrame {
             menuPause.setEnabled(buttonPause.isEnabled());
             menuStep.setEnabled(buttonStep.isEnabled());
             menuAbort.setEnabled(buttonAbort.isEnabled());
+            
+            menuCheckSyntax.setEnabled(showingScript);
 
             buttonStopAll.setEnabled(state.isInitialized() && !busy);
             menuStopAll.setEnabled(buttonStopAll.isEnabled());
@@ -1800,6 +1803,8 @@ public class View extends MainFrame {
         menuSetLogLevel = new javax.swing.JMenu();
         menuChangeUser = new javax.swing.JMenuItem();
         jSeparator4 = new javax.swing.JPopupMenu.Separator();
+        menuCheckSyntax = new javax.swing.JMenuItem();
+        jSeparator9 = new javax.swing.JPopupMenu.Separator();
         menuRun = new javax.swing.JMenuItem();
         menuDebug = new javax.swing.JMenuItem();
         menuStep = new javax.swing.JMenuItem();
@@ -2449,6 +2454,18 @@ public class View extends MainFrame {
 
         jSeparator4.setName("jSeparator4"); // NOI18N
         menuShell.add(jSeparator4);
+
+        menuCheckSyntax.setText(bundle.getString("View.menuCheckSyntax.text")); // NOI18N
+        menuCheckSyntax.setName("menuCheckSyntax"); // NOI18N
+        menuCheckSyntax.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                menuCheckSyntaxbuttonRunActionPerformed(evt);
+            }
+        });
+        menuShell.add(menuCheckSyntax);
+
+        jSeparator9.setName("jSeparator9"); // NOI18N
+        menuShell.add(jSeparator9);
 
         menuRun.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_F5, 0));
         menuRun.setText(bundle.getString("View.menuRun.text")); // NOI18N
@@ -3933,6 +3950,17 @@ public class View extends MainFrame {
         }
     }//GEN-LAST:event_menuShellStateChanged
 
+    private void menuCheckSyntaxbuttonRunActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuCheckSyntaxbuttonRunActionPerformed
+        try{
+            getSelectedEditor().parse();
+            showMessage("Syntax Check", "Script syntax ok.", JOptionPane.INFORMATION_MESSAGE);
+        } catch (ScriptException ex) {
+            showMessage("Syntax Check", ex.getMessage(), JOptionPane.WARNING_MESSAGE);
+        } catch (Exception ex) {
+            showException(ex);
+        }        
+    }//GEN-LAST:event_menuCheckSyntaxbuttonRunActionPerformed
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton buttonAbort;
     private javax.swing.JButton buttonAbout;
@@ -3972,6 +4000,7 @@ public class View extends MainFrame {
     private javax.swing.JToolBar.Separator jSeparator6;
     private javax.swing.JToolBar.Separator jSeparator7;
     private javax.swing.JPopupMenu.Separator jSeparator8;
+    private javax.swing.JPopupMenu.Separator jSeparator9;
     private javax.swing.JLabel labelUser;
     private ch.psi.pshell.swing.LoggerPanel loggerPanel;
     private javax.swing.JPanel mainPanel;
@@ -3980,6 +4009,7 @@ public class View extends MainFrame {
     private javax.swing.JMenu menuBlock;
     private javax.swing.JMenuItem menuChangeUser;
     private javax.swing.JMenuItem menuChanges;
+    private javax.swing.JMenuItem menuCheckSyntax;
     private javax.swing.JMenuItem menuCloseAll;
     private javax.swing.JMenuItem menuCloseAllPlots;
     private javax.swing.JMenuItem menuComment;
