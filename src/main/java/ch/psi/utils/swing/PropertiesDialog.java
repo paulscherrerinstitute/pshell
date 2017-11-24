@@ -414,14 +414,20 @@ public class PropertiesDialog extends StandardDialog {
 
         @Override
         public Object getCellEditorValue() {
-            Object val = editor.getCellEditorValue();
+            Object val = editor.getCellEditorValue();            
+            if (val==null){                
+                //If edition have been cancelled (cancelCellEditing), JTable.editingStopped()  an exception when 
+                //this function returns because it does not check if  editor has been removed here.
+                //Raise an exception instead so we have a more radable message
+                throw new RuntimeException("Invalid value");
+            }
             Object cur = table.getValueAt(table.getSelectedRow(), 1);
             if ((!val.equals(cur)) && (!val.equals(String.valueOf(cur)))) {
                 changed.add(table.getSelectedRow());
                 if (editionListener != null) {
                     editionListener.onChangedEditedRows(changed);
                 }
-            }
+            }            
             return val;
         }
 

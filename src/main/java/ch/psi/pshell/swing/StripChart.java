@@ -666,7 +666,6 @@ public class StripChart extends StandardDialog {
                 }
                 if (dispatcher == null) {
                     dispatcher = Dispatcher.createDefault();
-                    //dispatcher.getConfig().disableCompression = true;
                     synchronized (instantiatedDevices) {
                         instantiatedDevices.add(dispatcher);
                     }

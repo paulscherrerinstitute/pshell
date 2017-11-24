@@ -11,6 +11,7 @@ import java.awt.Container;
 import java.awt.Dialog;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
+import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Frame;
 import java.awt.Graphics;
@@ -51,8 +52,11 @@ import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPasswordField;
+import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JTable;
+import javax.swing.JTextArea;
+import javax.swing.JTextField;
 import javax.swing.JTextPane;
 import javax.swing.JTree;
 import javax.swing.JViewport;
@@ -61,6 +65,7 @@ import javax.swing.Spring;
 import javax.swing.SpringLayout;
 import javax.swing.SwingUtilities;
 import javax.swing.Timer;
+import javax.swing.border.Border;
 import javax.swing.event.AncestorEvent;
 import javax.swing.event.AncestorListener;
 import javax.swing.plaf.basic.BasicButtonUI;
@@ -73,6 +78,7 @@ import javax.swing.text.StyleConstants;
 import javax.swing.text.StyleContext;
 import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreePath;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 
 /**
  * Generic Swing utilities.
@@ -399,8 +405,63 @@ public class SwingUtils {
     }
 
     public static void showExceptionBlocking(final Component parent, final Exception ex, String title) {
-        String message = ex.toString();
-        JOptionPane.showMessageDialog(parent, message, (title == null) ? "Exception" : title, JOptionPane.WARNING_MESSAGE, null);
+        //JOptionPane.showMessageDialog(parent, message, (title == null) ? "Exception" : title, JOptionPane.WARNING_MESSAGE, null);
+        
+        int max_width = 1000;
+        int max_msg_height = 300;
+        int min_width = 400;
+        String message = ExceptionUtils.getMessage(ex);        
+        BorderLayout layout = new BorderLayout();        
+        layout.setVgap(6);
+        JPanel panel = new JPanel(layout);        
+        Border padding = BorderFactory.createEmptyBorder(8, 0, 2, 0);
+        panel.setBorder(padding);        
+        JTextArea textMessage = new JTextArea(message);     
+        textMessage.setEnabled(false);
+        textMessage.setFont(new JLabel().getFont().deriveFont(Font.BOLD));
+        textMessage.setLineWrap(false);
+        textMessage.setBorder(null);
+        textMessage.setBackground(null);
+        textMessage.setDisabledTextColor(textMessage.getForeground());
+        textMessage.setAutoscrolls(true);        
+        
+        if (textMessage.getPreferredSize().width > max_width){
+            textMessage.setPreferredSize(new Dimension(max_width,textMessage.getPreferredSize().height));
+        }else if (textMessage.getPreferredSize().width < min_width){
+            textMessage.setPreferredSize(new Dimension(min_width,textMessage.getPreferredSize().height));
+        }
+        if (textMessage.getPreferredSize().height > max_msg_height){
+            textMessage.setPreferredSize(new Dimension(textMessage.getPreferredSize().width, max_msg_height));
+        }
+        panel.add(textMessage, BorderLayout.NORTH);                
+        
+        JScrollPane scrollDetails = new javax.swing.JScrollPane();
+        JButton button = new JButton("Details");
+        button.setFont(button.getFont().deriveFont(Font.PLAIN));
+        JPanel buttonPanel = new JPanel(new BorderLayout());
+        buttonPanel.add(button, BorderLayout.WEST);
+        panel.add(buttonPanel, BorderLayout.SOUTH);  
+        button.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                panel.remove(buttonPanel);
+                panel.add(scrollDetails, BorderLayout.SOUTH);       
+                //scrollDetails.setSize(250, scrollDetails.getHeight());
+                if (scrollDetails.getPreferredSize().width > max_width){
+                    scrollDetails.setPreferredSize(new Dimension(max_width,scrollDetails.getPreferredSize().height));
+                }                                 
+                ((JDialog)panel.getTopLevelAncestor()).pack();
+            }
+        });        
+             
+        JTextArea textDetails = new JTextArea(ExceptionUtils.getStackTrace(ex));     
+        textDetails.setEditable(false);
+        textDetails.setLineWrap(false);
+        textDetails.setRows(12);
+        scrollDetails.setViewportView(textDetails);
+        scrollDetails.setAutoscrolls(true);   
+               
+        JOptionPane.showMessageDialog(parent, panel, (title == null) ? "Exception" : title, JOptionPane.WARNING_MESSAGE, null);                
     }
 
     /**
