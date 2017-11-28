@@ -81,7 +81,7 @@ public class View extends MainFrame {
 
     @Override
     public String getSessionPath() {
-        return System.getProperty("user.home");
+        return Sys.getUserHome();
     }
 
     @Override

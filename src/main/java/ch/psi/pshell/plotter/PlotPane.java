@@ -1,6 +1,7 @@
 package ch.psi.pshell.plotter;
 
 import ch.psi.pshell.plot.PlotBase;
+import ch.psi.utils.Sys;
 import ch.psi.utils.swing.SwingUtils;
 import java.awt.Component;
 import java.awt.KeyEventDispatcher;
@@ -28,7 +29,7 @@ public class PlotPane extends javax.swing.JPanel {
     public PlotPane() {
         initComponents();
         try {
-            preferences.load(System.getProperty("user.home") + "/.PlotServer.properties");
+            preferences.load(Sys.getUserHome() + "/.PlotServer.properties");
         } catch (Exception ex) {
         }
         applyPreferences();

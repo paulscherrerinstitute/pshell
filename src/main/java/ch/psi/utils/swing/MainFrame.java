@@ -2,6 +2,7 @@ package ch.psi.utils.swing;
 
 import ch.psi.pshell.ui.App;
 import ch.psi.utils.Serializer;
+import ch.psi.utils.Sys;
 import java.awt.Component;
 import java.awt.Container;
 import java.awt.Dimension;
@@ -395,7 +396,7 @@ public abstract class MainFrame extends JFrame {
 
     //Window state persistence
     public String getSessionPath() {
-        return Paths.get(System.getProperty("user.home"), "." + getClass().getName()).toString();
+        return Paths.get(Sys.getUserHome(), "." + getClass().getName()).toString();
     }
 
     //Other windows with persisted state   

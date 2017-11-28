@@ -1,6 +1,5 @@
 package ch.psi.pshell.core;
 
-import ch.psi.pshell.core.ExecutionParameters;
 import ch.psi.pshell.scripting.ScriptType;
 import ch.psi.pshell.security.User;
 import ch.psi.utils.Arr;
@@ -8,6 +7,7 @@ import ch.psi.utils.Chrono;
 import ch.psi.utils.Config;
 import ch.psi.utils.IO;
 import ch.psi.utils.Str;
+import ch.psi.utils.Sys;
 import java.awt.image.BufferedImage;
 import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
@@ -58,6 +58,7 @@ public class Setup extends Config {
     public static transient final String TOKEN_EXEC_TYPE = "{type}";
     public static transient final String TOKEN_EXEC_COUNT = "{count}";
     public static transient final String TOKEN_SYS_HOME = "{syshome}";
+    public static transient final String TOKEN_SYS_USER = "{sysuser}";
 
     String homePath;
     String outputPath;
@@ -113,7 +114,8 @@ public class Setup extends Config {
         if (fileName.trim().startsWith("~")) {
             fileName = TOKEN_SYS_HOME + Str.trimLeft(fileName).substring(1);
         }
-        fileName = fileName.replace(TOKEN_SYS_HOME, System.getProperty("user.home"));
+        fileName = fileName.replace(TOKEN_SYS_HOME, Sys.getUserHome());
+        fileName = fileName.replace(TOKEN_SYS_USER, Sys.getUserName());
         super.load(fileName);
 
         if (userDataPath != null) {
@@ -264,7 +266,8 @@ public class Setup extends Config {
         if (path.trim().startsWith("~")) {
             path = TOKEN_SYS_HOME + Str.trimLeft(path).substring(1);
         }
-        path = path.replace(TOKEN_SYS_HOME, System.getProperty("user.home"));
+        path = path.replace(TOKEN_SYS_HOME, Sys.getUserHome());
+        path = path.replace(TOKEN_SYS_USER, Sys.getUserName());
         try {
             path = Paths.get(path).toString();
         } catch (Exception ex) {

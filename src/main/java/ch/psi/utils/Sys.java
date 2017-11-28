@@ -51,8 +51,20 @@ public class Sys {
         }
     }
 
-    public static String getVmName() throws IOException {
+    public static String getVmName() {
         return String.valueOf(System.getProperty("java.vm.name"));
+    }
+
+    public static String getUserName() {
+        return String.valueOf(System.getProperty("user.name"));
+    }
+
+    public static String getUserHome() {
+        return String.valueOf(System.getProperty("user.home"));
+    }
+
+    public static String getCommand() {
+        return String.valueOf(System.getProperty("sun.java.command"));
     }
 
     public static String getProcessName() throws IOException {
