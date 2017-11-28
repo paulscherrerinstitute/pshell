@@ -251,8 +251,8 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
         restartLogger();
 
         logger.info("Context: " + contextName);
-        logger.info("Pars: " + System.getProperty("sun.java.command"));
-        logger.info("User: " + System.getProperty("user.name"));
+        logger.info("Pars: " + Sys.getCommand());
+        logger.info("User: " + Sys.getUserName());
         try {
             logger.info("Host: " + InetAddress.getLocalHost().getHostName());
         } catch (Exception ex) {
