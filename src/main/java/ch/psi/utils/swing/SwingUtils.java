@@ -410,7 +410,10 @@ public class SwingUtils {
         int max_width = 1000;
         int max_msg_height = 300;
         int min_width = 400;
-        String message = ExceptionUtils.getMessage(ex);        
+        String message = String.valueOf(ExceptionUtils.getMessage(ex)).trim();  
+        if (message.endsWith(":")){
+            message = message.substring(0, message.length() - 1);
+        }
         BorderLayout layout = new BorderLayout();        
         layout.setVgap(6);
         JPanel panel = new JPanel(layout);        
