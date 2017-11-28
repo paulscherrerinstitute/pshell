@@ -38,6 +38,7 @@ public class Stream extends DeviceBase implements Readable<StreamValue>, Cacheab
     volatile AtomicBoolean closing = new AtomicBoolean(false);
     Receiver receiver;
     Boolean fixedChildren;
+    final Boolean privateProvider;
 
     @Override
     public StreamConfig getConfig() {
@@ -52,11 +53,26 @@ public class Stream extends DeviceBase implements Readable<StreamValue>, Cacheab
         return ((Provider) getParent()).getSocketType();
     }
 
+    
+    public Stream(String name, boolean persisted) {
+        this(name, null, persisted);
+    }
+    
+    /**
+     * If provider is null then uses default provider.
+     */
     public Stream(String name, Provider provider, boolean persisted) {
         super(name, persisted ? new StreamConfig() : null);
         if (converter == null) {
             converter = new MatlabByteConverter();
         }
+        if (provider == null){
+            provider = Provider.getOrCreateDefault();
+            privateProvider = (provider != Provider.getDefault());
+        } else {
+            privateProvider = false;
+        }
+                
         setParent(provider);
         channels = new HashMap<>();
         channelNames = new ArrayList<>();
@@ -77,13 +93,25 @@ public class Stream extends DeviceBase implements Readable<StreamValue>, Cacheab
         }
     }
 
+    public Stream(String name) {
+        this(name, (Provider)null);
+    }
+
     public Stream(String name, Provider provider) {
         this(name, provider, false);
+    }
+
+    public Stream(String name, String filter) {
+        this(name, null, filter);
     }
 
     public Stream(String name, Provider provider, String filter) {
         this(name, provider);
         setFilter(filter);
+    }
+
+    public Stream(String name, Scalar... channels) {
+        this(name, null, channels);
     }
 
     public Stream(String name, Provider provider, Scalar... channels) {
@@ -505,15 +533,61 @@ public class Stream extends DeviceBase implements Readable<StreamValue>, Cacheab
         }
     }
 
+    public List<Readable> getReadables() {
+        return readables;
+    }
+    
+    StreamValue getCurrentValue(){
+        StreamValue cache = take();
+        if (cache==null){
+            throw new RuntimeException("No stream data");
+        }
+        return cache;        
+    }
+        
+    public List<String>  getIdentifiers() {
+        return getCurrentValue().getIdentifiers();
+    }    
+    
+    public List getValues() {
+
+        return getCurrentValue().getValues();
+    }
+    
+    public Object getValue(String id) {
+        return getCurrentValue().getValue(id);
+    }
+
+    public Object getValue(int index) {
+        return getCurrentValue().getValue(index);
+    }       
+    
+    public static List readChannels(List<String> names) throws IOException, InterruptedException{        
+        Stream stream = new Stream(null);
+        try{
+            for (String name : names){
+                stream.addScalar(name, name, 1,0);
+            }
+            stream.initialize();
+            stream.start();  
+            stream.waitValueNot(null, 5000);
+            return stream.getValues();
+        } finally {
+            stream.close();
+        }
+    }
+
     @Override
     protected void doClose() throws IOException {
         stop();
         channels.clear();
+        if (privateProvider){
+            try {
+                getParent().close();
+            } catch (Exception ex) {
+                getLogger().log(Level.WARNING, null, ex);
+            }
+        }
         super.doClose();
     }
-
-    public List<Readable> getReadables() {
-        return readables;
-    }
-
 }

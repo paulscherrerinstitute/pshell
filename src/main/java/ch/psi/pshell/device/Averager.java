@@ -1,9 +1,6 @@
 package ch.psi.pshell.device;
 
-import ch.psi.pshell.bs.Dispatcher;
-import ch.psi.pshell.bs.Provider;
 import ch.psi.pshell.bs.Stream;
-import ch.psi.pshell.core.Context;
 import ch.psi.pshell.core.UrlDevice;
 import ch.psi.pshell.device.ReadonlyRegister.ReadonlyRegisterNumber;
 import ch.psi.utils.Chrono;
@@ -89,11 +86,7 @@ public class Averager extends ReadonlyRegisterBase<DescStatsDouble> implements R
         if (source instanceof UrlDevice){
             try{
                 if (((UrlDevice)source).getProtocol().equals("bs")){
-                    Provider dispatcher = Context.getInstance().getDevicePool().getByName("dispatcher", ch.psi.pshell.bs.Provider.class);
-                    if (dispatcher == null) {
-                        dispatcher = Dispatcher.createDefault();
-                    }                                            
-                    Stream stream = new Stream("Averager inner device stream", dispatcher);
+                    Stream stream = new Stream("Averager inner device stream");
                     stream.initialize();                                                     
                     ((UrlDevice)source).setParent(stream);
                     innerDevice = stream;

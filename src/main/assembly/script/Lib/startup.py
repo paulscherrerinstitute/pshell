@@ -1352,8 +1352,6 @@ class Channel(java.beans.PropertyChangeListener, Writable, Readable):
     def read(self):        
         return self.get()
 
-        
-
 ###################################################################################################
 #Concurrent execution 
 ###################################################################################################
@@ -2013,7 +2011,21 @@ print (json.dumps(function(*args)))
         jsonret = ret[ret.rfind('\n')+1:].strip()  
         return json.loads(jsonret)
     
+def bsget(channel):
+    """Reads an values a bsread stream, using the default provider.
 
+    Args:
+        channel(str or  list of str): channel name(s)
+    Returns:
+        BS value or list of  values
+    
+    """
+    channels = to_list(channel)
+    ret = Stream.readChannels(channels)
+    if type(channel) is str:
+        return ret[0]
+    return ret
+            
 def flatten(data):
     """Flattens multi-dimentional or nested data.
 

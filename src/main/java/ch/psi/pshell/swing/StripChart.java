@@ -22,6 +22,7 @@ import ch.psi.pshell.plotter.Preferences;
 import ch.psi.pshell.ui.App;
 import ch.psi.utils.IO;
 import ch.psi.utils.InvokingProducer;
+import ch.psi.utils.Sys;
 import ch.psi.utils.swing.MainFrame;
 import ch.psi.utils.swing.StandardDialog;
 import ch.psi.utils.swing.SwingUtils;
@@ -429,7 +430,7 @@ public class StripChart extends StandardDialog {
 
     String getDefaultFolder() {
         if (defaultFolder == null) {
-            return System.getProperty("user.home");
+            return Sys.getUserHome();
         }
         return defaultFolder.getAbsolutePath();
     }
@@ -661,15 +662,11 @@ public class StripChart extends StandardDialog {
         update();
         if (streamDevices > 0) {
             if (dispatcher == null) {
-                if (Context.getInstance() != null) {
-                    dispatcher = Context.getInstance().getDevicePool().getByName("dispatcher", ch.psi.pshell.bs.Provider.class);
-                }
-                if (dispatcher == null) {
-                    dispatcher = Dispatcher.createDefault();
+                dispatcher = ch.psi.pshell.bs.Provider.getOrCreateDefault();                
+                if (dispatcher != ch.psi.pshell.bs.Provider.getDefault()) {
                     synchronized (instantiatedDevices) {
                         instantiatedDevices.add(dispatcher);
                     }
-                    dispatcher.initialize();
                 }
             }
             stream = new Stream("StripChart stream", dispatcher);
@@ -1800,7 +1797,7 @@ public class StripChart extends StandardDialog {
         String configPath = "./home/config";
         System.setProperty(Epics.PROPERTY_JCAE_CONFIG_FILE, Paths.get(configPath, "jcae.properties").toString());
         Epics.create();
-        create(Paths.get(System.getProperty("user.home"), "test." + FILE_EXTENSION).toFile(), null, null, false);
+        create(Paths.get(Sys.getUserHome(), "test." + FILE_EXTENSION).toFile(), null, null, false);
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables

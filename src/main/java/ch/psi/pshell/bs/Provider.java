@@ -6,6 +6,7 @@ import ch.psi.bsread.ReceiverConfig;
 import ch.psi.bsread.converter.MatlabByteConverter;
 import ch.psi.bsread.impl.StandardMessageExtractor;
 import ch.psi.pshell.bs.ProviderConfig.SocketType;
+import ch.psi.pshell.core.Context;
 import org.zeromq.ZMQ;
 
 /**
@@ -87,4 +88,19 @@ public class Provider extends DeviceBase {
 
     protected void closeStream(Stream stream) {
     }
+    
+    public static Provider getDefault() {
+        if (Context.getInstance()==null){
+            return null;
+        }
+        return Context.getInstance().getDevicePool().getByName("dispatcher", ch.psi.pshell.bs.Provider.class);
+    }
+    
+    public static Provider getOrCreateDefault() {
+        Provider dispatcher = getDefault();
+        if (dispatcher == null) {
+            dispatcher = Dispatcher.createDefault();
+        }
+        return dispatcher;
+    }              
 }

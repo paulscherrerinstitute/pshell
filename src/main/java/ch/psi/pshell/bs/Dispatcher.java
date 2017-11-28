@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
@@ -187,8 +188,14 @@ public class Dispatcher extends Provider {
             getLogger().log(Level.WARNING, null, ex);
         }
     }    
-    
+                                                                                                           
     public static Dispatcher createDefault() {
-        return new Dispatcher("dispatcher", System.getProperty(PROPERTY_DISPATCHER_URL, "https://dispatcher-api.psi.ch/sf"));
-    }    
+        Dispatcher dispatcher =  new Dispatcher("dispatcher", System.getProperty(PROPERTY_DISPATCHER_URL, "https://dispatcher-api.psi.ch/sf"));
+        try{
+            dispatcher.initialize();
+        } catch (Exception ex){
+             Logger.getLogger(Provider.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return dispatcher;
+    }                            
 }

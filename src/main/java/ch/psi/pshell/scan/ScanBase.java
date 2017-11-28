@@ -677,11 +677,7 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
             if (readables[i] instanceof UrlDevice){
                 if (((UrlDevice)readables[i]).getProtocol().equals("bs")){
                     if (innerStream == null){
-                        Provider dispatcher = Context.getInstance().getDevicePool().getByName("dispatcher", ch.psi.pshell.bs.Provider.class);
-                        if (dispatcher == null) {
-                            dispatcher = Dispatcher.createDefault();
-                        }                        
-                        innerStream = new Stream("Scan devices stream", dispatcher);
+                        innerStream = new Stream("Scan devices stream");
                         innerDevices.add(innerStream);
                         innerStream.initialize();                        
                     }                                  

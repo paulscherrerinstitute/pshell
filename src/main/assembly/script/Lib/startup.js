@@ -1967,6 +1967,23 @@ function string_to_obj(o) {
     return o
 }
 
+function bsget(channel){
+    /* Reads an values a bsread stream, using the default provider.
+
+    Args:
+        channel(str or  list of str): channel name(s)
+    Returns:
+        BS value or list of  values
+    
+    */
+    var channels = (typeof channel === 'string')? [channel]: channel
+    var ret = Stream.readChannels(channels)
+    if (typeof channel === 'string') {
+        return ret[0]
+    }
+    return ret
+}
+
 function flatten(arr) {
     var ret = [];
     if (is_java_list(arr)){

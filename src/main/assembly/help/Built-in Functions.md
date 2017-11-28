@@ -91,6 +91,7 @@ These functions provide the script API to many aspects of PShell:
  * Utilities:
     - exec_cmd
     - exec_cpython
+    - bsget
     - frange
     - flatten
     - to_array       
