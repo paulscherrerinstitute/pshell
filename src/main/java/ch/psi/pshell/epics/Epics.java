@@ -57,7 +57,7 @@ public class Epics {
         return System.getProperty("ch.psi.jcae.config.file");
     }
 
-    public static ChannelService getChannelFactory() {
+    public static DefaultChannelService getChannelFactory() {
         if (factory == null) {
             throw new RuntimeException("Epics context not initialized");
         }
@@ -67,6 +67,7 @@ public class Epics {
     final static Object creationLock = new Object();
 
     public static Channel newChannel(ChannelDescriptor descriptor) throws ChannelException, InterruptedException, TimeoutException {
+        ChannelService factory = getChannelFactory();        
         synchronized (creationLock) {
             if (factory.isDryrun()) {
                 return getChannelFactory().createChannel(new DummyChannelDescriptor(descriptor.getType(), descriptor.getName(), descriptor.getMonitored(), descriptor.getSize()));
@@ -76,6 +77,7 @@ public class Epics {
     }
 
     public static <T> Channel<T> newChannel(String name, Class<T> type, Integer size) throws ChannelException, InterruptedException, TimeoutException {
+        DefaultChannelService factory = getChannelFactory();
         if (type == null) {
             try {
                 type = factory.getDefaultType(name);
@@ -180,6 +182,7 @@ public class Epics {
     }
 
     public static EpicsRegister newChannelDevice(String name, String channelName, Class type,  boolean timestamped, int precision, int size) {
+        DefaultChannelService factory = getChannelFactory();
         if (type == null) {
             try {
                 type = factory.getDefaultType(channelName);
