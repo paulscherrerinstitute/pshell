@@ -18,7 +18,7 @@ import org.python.core.ReflectedArgs;
  */
 public class JythonUtils {
 
-    public static String PY_METHOD_UNK_RET = "<py>";
+    public static String PY_METHOD_UNK_RET = "*";
     public static String PY_METHOD_UNK_PARS = "...";
 
     public static Class[] REFLECTION_EXCLUDE_CLASSES = new Class[]{org.python.core.PyObject.class, org.python.core.PyInstance.class};
@@ -71,24 +71,47 @@ public class JythonUtils {
             List<String> pars = new ArrayList();
             try {
                 if (f.getType().getClass() == PyType.class) {
+                    PyObject code = f.__findattr__("func_code");
+                    int flags;
+                    int named_args;
                     try {
-                        name = f.__findattr__("func_code").__findattr__("co_name").asString();
+                        name = code.__findattr__("co_name").asString();
+                        pars = (List) code.__findattr__("co_varnames");
+                        flags = code.__findattr__("co_flags").asInt();
+                        named_args = code.__findattr__("co_argcount").asInt();
                     } catch (Exception ex) {
                         return null;
                     }
-                    pars = (List) f.__findattr__("func_code").__findattr__("co_varnames");
                     if (pars.size() > 0) {
+                        int args = named_args;
+                        //*arg 
+                        if ((flags & 0x04) > 0) {
+                            args++;
+                        }
+                        //**arg 
+                        if ((flags & 0x08) > 0) {
+                            args++;
+                        }
+                        args = Math.min(args, pars.size());
+
                         //Remove self
-                        pars = pars.subList(1, pars.size());
+                        pars = pars.subList(1, args);
+                        args--;
+                        
                         //Include defaults                                
                         Object def = f.__findattr__("__defaults__");
                         if ((def != null) && (def instanceof List) && (((List) def).size() > 0)) {
-                            int named_args = f.__findattr__("func_code").__findattr__("co_argcount").asInt() - 1;
                             pars = new ArrayList(pars);
                             List defaults = (List) def;
-                            int start_defaults = named_args - defaults.size();
+                            int start_defaults = named_args - 1 - defaults.size();
                             for (int i = 0; i < defaults.size(); i++) {
-                                pars.set(start_defaults + i, pars.get(start_defaults + i) + "=" + defaults.get(i));
+                                Object defaultValue = defaults.get(i);
+                                if (defaultValue == null){
+                                    defaultValue = "None";
+                                } else if (defaultValue instanceof String){
+                                    defaultValue = "'" + defaultValue + "'";
+                                }                                
+                                pars.set(start_defaults + i, pars.get(start_defaults + i) + "=" + defaultValue);
                             }
                         }
                     }
@@ -112,13 +135,15 @@ public class JythonUtils {
                     for (int i = 0; i < args.size(); i++) {
                         ReflectedArgs ra = (ReflectedArgs) args.get(i);
                         if ((ra != null) && (ra.args != null) && (ra.args.length > 0)) {
-                            for  (int j=0; j<ra.args.length; j++){                            
+                            for (int j = 0; j < ra.args.length; j++) {
                                 pars.add((ra.args)[j].getSimpleName());
-                            }                            
+                            }
                         }
                         break;//Only showing first overload
-                    }
-                    //TODO: Didn't manage to resolve the return type
+                    }                    
+                    if (f instanceof PyReflectedFunction){
+                        //TODO: Didn't manage to resolve the return type for PyReflectedFunction
+                    } 
                     return name + "(" + String.join(", ", pars) + ") " + PY_METHOD_UNK_RET;
                 } else {
                     return null;
