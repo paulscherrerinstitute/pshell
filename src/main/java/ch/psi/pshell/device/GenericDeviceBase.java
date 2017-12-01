@@ -128,16 +128,21 @@ public abstract class GenericDeviceBase<T> extends ObservableBase<T> implements 
     /**
      * Waits for a condition in state change events
      */
-    void waitConditionOnState(Condition condition, int timeout, String timeoutMsg) throws IOException, InterruptedException {
+    void waitConditionOnLock(Condition condition, int timeout, String timeoutMsg, Object lock) throws IOException, InterruptedException {
         Chrono chrono = new Chrono();
         int wait = Math.max(timeout, 0);
         while (!condition.evaluate()) {
-            assertStateNot(State.Closing);
+            //Normally interrupt the waiting if the device initializes, but waiting on states are only interrupted if device is closes.
+            if(lock ==stateWaitLock){
+                assertStateNot(State.Closing);
+            } else {
+                assertInitialized();
+            }
             if (Thread.currentThread().isInterrupted()) {
                 throw new InterruptedException();
             }
-            synchronized (stateWaitLock) {
-                stateWaitLock.wait(wait);
+            synchronized (lock) {
+                lock.wait(wait);
             }
             if (wait > 0) {
                 wait = timeout - chrono.getEllapsed();
@@ -146,6 +151,10 @@ public abstract class GenericDeviceBase<T> extends ObservableBase<T> implements 
                 }
             }
         }
+    }
+    
+    void waitConditionOnState(Condition condition, int timeout, String timeoutMsg) throws IOException, InterruptedException {
+        waitConditionOnLock(condition, timeout, timeoutMsg, stateWaitLock);
     }
 
     @Override

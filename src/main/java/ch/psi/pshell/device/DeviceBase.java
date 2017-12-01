@@ -2,6 +2,7 @@ package ch.psi.pshell.device;
 
 import ch.psi.utils.Arr;
 import ch.psi.utils.Chrono;
+import ch.psi.utils.Condition;
 import ch.psi.utils.NamedThreadFactory;
 import ch.psi.utils.Reflection.Hidden;
 import ch.psi.utils.State;
@@ -13,7 +14,6 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * The base class for Device implementations
@@ -67,9 +67,7 @@ public abstract class DeviceBase extends GenericDeviceBase<DeviceListener> imple
         //because avoid the for-sleep loop.
         boolean isReadyDefault = false;
         try {
-            if (getClass().getMethod("isReady").getDeclaringClass() == DeviceBase.class) {
-                isReadyDefault = true;
-            }
+            isReadyDefault = (getClass().getMethod("isReady").getDeclaringClass() == DeviceBase.class);
         } catch (Exception ex) {
         }
 
@@ -103,49 +101,28 @@ public abstract class DeviceBase extends GenericDeviceBase<DeviceListener> imple
         return super.isInitialized();
     }
 
+    /**
+     * Waits for a condition in value change events
+     */
+    void waitConditionOnValue(Condition condition, int timeout, String timeoutMsg) throws IOException, InterruptedException {
+        waitConditionOnLock(condition, timeout, timeoutMsg, valueWaitLock);
+    }
+
+    void waitConditionOnCache(Condition condition, int timeout, String timeoutMsg) throws IOException, InterruptedException {
+        waitConditionOnLock(condition, timeout, timeoutMsg, cacheUpdateLock);
+    }
+    
     @Override
     public void waitValue(Object value, int timeout) throws IOException, InterruptedException {
-        Chrono chrono = new Chrono();
-        int wait = Math.max(timeout, 0);
-        while (hasChanged(value, take())) {
-            assertInitialized();
-            if (Thread.currentThread().isInterrupted()) {
-                throw new InterruptedException();
-            }
-            synchronized (valueWaitLock) {
-                valueWaitLock.wait(wait);
-            }
-            if (wait > 0) {
-                wait = timeout - chrono.getEllapsed();
-                if (wait <= 0) {
-                    throw new DeviceTimeoutException("Timeout waiting value: " + value);
-                }
-            }
-        }
+        waitConditionOnValue(() -> !hasChanged(value, take()),  timeout, "Timeout waiting value: " + value);
     }
-
+    
     @Override
     public void waitValueNot(Object value, int timeout) throws IOException, InterruptedException {
-        Chrono chrono = new Chrono();
-        int wait = Math.max(timeout, 0);
-        while (!hasChanged(value, take())) {
-            assertInitialized();
-            if (Thread.currentThread().isInterrupted()) {
-                throw new InterruptedException();
-            }
-            synchronized (valueWaitLock) {
-                valueWaitLock.wait(wait);
-            }
-            if (wait > 0) {
-                wait = timeout - chrono.getEllapsed();
-                if (wait <= 0) {
-                    throw new DeviceTimeoutException("Timeout waiting value not: " + value);
-                }
-            }
-        }
+        waitConditionOnValue(() -> hasChanged(value, take()), timeout, "Timeout waiting value not: " + value);
     }
 
-    //Waiting for next sampling
+    //Waiting for next different value
     @Override
     public boolean waitValueChange(int timeout) throws InterruptedException {
         int wait = Math.max(timeout, 0);
