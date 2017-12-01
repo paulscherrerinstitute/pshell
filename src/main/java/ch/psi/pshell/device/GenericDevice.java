@@ -22,7 +22,7 @@ public interface GenericDevice<T> extends Observable<T>, Timestamped, AutoClosea
     void waitState(State state, int timeout) throws IOException, InterruptedException;
 
     void waitStateNot(State state, int timeout) throws IOException, InterruptedException;
-
+    
     void initialize() throws IOException, InterruptedException;
 
     boolean isInitialized();

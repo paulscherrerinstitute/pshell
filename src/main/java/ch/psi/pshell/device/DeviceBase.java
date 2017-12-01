@@ -13,6 +13,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * The base class for Device implementations
@@ -46,14 +47,24 @@ public abstract class DeviceBase extends GenericDeviceBase<DeviceListener> imple
     }
 
     //State
+    
+    /**
+     * This method does not return if state is ready, but should return true if last command execution is finished.
+     * In this way waitReady can be used to synchronize sequential commands
+     * By default returns if state is not a processing state (Initializing, Paused, or Busy);
+     */
     @Override
     public boolean isReady() throws IOException, InterruptedException {
-        return !(getState() == State.Busy);
+        return !getState().isProcessing();
     }
 
+    /**
+     * Waits for last command execution to finish (isRead()==true).
+     */
     @Override
     public void waitReady(int timeout) throws IOException, InterruptedException {
-        //For devices with default isReady implementation, waitStateNot(State.Busy) is preferable.
+        //For devices with default isReady implementation, waitStateNotProcessing() is preferable
+        //because avoid the for-sleep loop.
         boolean isReadyDefault = false;
         try {
             if (getClass().getMethod("isReady").getDeclaringClass() == DeviceBase.class) {
@@ -63,22 +74,15 @@ public abstract class DeviceBase extends GenericDeviceBase<DeviceListener> imple
         }
 
         if (isReadyDefault) {
-            waitStateNot(State.Busy, timeout);
+            waitConditionOnState(() -> !getState().isProcessing(), timeout, "Timeout waiting ready");
         } else {
-            //But if the device define isReady, we must then poll.            
-            Chrono chrono = new Chrono();
-            while (!isReady()) {
-                assertInitialized();
-                if (Thread.currentThread().isInterrupted()) {
-                    throw new InterruptedException();
+            waitCondition(() -> {
+                try {
+                    return isReady();
+                } catch (Exception ex) {
+                    return false;
                 }
-                if (timeout >= 0) {
-                    if (chrono.isTimeout(timeout)) {
-                        throw new DeviceTimeoutException("Timeout waiting ready");
-                    }
-                }
-                Thread.sleep(10); //Looping in 10ms because isReady can make HW access
-            }
+            }, timeout, "Timeout waiting ready");
         }
     }
 

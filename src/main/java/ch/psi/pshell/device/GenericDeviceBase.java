@@ -10,6 +10,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import ch.psi.utils.Chrono;
+import ch.psi.utils.Condition;
 import ch.psi.utils.Config;
 import ch.psi.utils.NamedThreadFactory;
 import ch.psi.utils.ObservableBase;
@@ -105,11 +106,32 @@ public abstract class GenericDeviceBase<T> extends ObservableBase<T> implements 
         }
     }
 
-    @Override
-    public void waitState(State state, int timeout) throws IOException, InterruptedException {
+    /**
+     * Waits for a condition in a for-sleep loop
+     */
+    void waitCondition(Condition condition, int timeout, String timeoutMsg) throws IOException, InterruptedException {
+        Chrono chrono = new Chrono();
+        while (!condition.evaluate()) {
+            assertInitialized();
+            if (Thread.currentThread().isInterrupted()) {
+                throw new InterruptedException();
+            }
+            if (timeout >= 0) {
+                if (chrono.isTimeout(timeout)) {
+                    throw new TimeoutException(timeoutMsg, this);
+                }
+            }
+            Thread.sleep(10); 
+        }
+    }
+
+    /**
+     * Waits for a condition in state change events
+     */
+    void waitConditionOnState(Condition condition, int timeout, String timeoutMsg) throws IOException, InterruptedException {
         Chrono chrono = new Chrono();
         int wait = Math.max(timeout, 0);
-        while (getState() != state) {
+        while (!condition.evaluate()) {
             assertStateNot(State.Closing);
             if (Thread.currentThread().isInterrupted()) {
                 throw new InterruptedException();
@@ -120,31 +142,20 @@ public abstract class GenericDeviceBase<T> extends ObservableBase<T> implements 
             if (wait > 0) {
                 wait = timeout - chrono.getEllapsed();
                 if (wait <= 0) {
-                    throw new TimeoutException("Timeout waiting state: " + state, this);
+                    throw new TimeoutException(timeoutMsg, this);
                 }
             }
         }
     }
 
     @Override
+    public void waitState(State state, int timeout) throws IOException, InterruptedException {
+        waitConditionOnState(() -> getState() == state, timeout, "Timeout waiting state: " + state);
+    }
+
+    @Override
     public void waitStateNot(State state, int timeout) throws IOException, InterruptedException {
-        Chrono chrono = new Chrono();
-        int wait = Math.max(timeout, 0);
-        while (getState() == state) {
-            assertStateNot(State.Closing);
-            if (Thread.currentThread().isInterrupted()) {
-                throw new InterruptedException();
-            }
-            synchronized (stateWaitLock) {
-                stateWaitLock.wait(wait);
-            }
-            if (wait > 0) {
-                wait = timeout - chrono.getEllapsed();
-                if (wait <= 0) {
-                    throw new TimeoutException("Timeout waiting state not: " + state, this);
-                }
-            }
-        }
+        waitConditionOnState(() -> getState() != state, timeout, "Timeout waiting state not: " + state);
     }
 
     //Initialization
@@ -158,7 +169,7 @@ public abstract class GenericDeviceBase<T> extends ObservableBase<T> implements 
         try {
             if (config != null) {
                 if (config.getFileName() == null) {
-                    if ((name == null)){
+                    if ((name == null)) {
                         getLogger().info("Annonymous device configuration cannot be persisted");
                     } else {
                         getLogger().warning("Configuration file name not set");
