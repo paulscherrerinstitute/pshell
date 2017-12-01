@@ -195,6 +195,10 @@ public final class ProcessVariablePanel extends DevicePanel {
     protected void onDeviceStateChanged(State state, State former) {
         if (!state.isInitialized()) {
             clear();
+        } else {
+            if (former == State.Initializing){
+                onDeviceValueChanged(getDevice().take(), null);
+            }
         }
     }
 
