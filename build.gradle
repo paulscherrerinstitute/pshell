@@ -62,7 +62,7 @@ if (ext.type == 'all'){
 
 dependencies {
     //TODO: jcae  must be published in public repo
-    //compile 'ch.psi:jcae:2.9.2'            
+    //compile 'ch.psi:jcae:2.9.3'            
     compile 'org.epics:caj:1.1.12'        
     compile files('lib/ch/psi/jcae/jcae-2.9.3.jar')
     
