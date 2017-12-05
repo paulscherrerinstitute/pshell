@@ -216,9 +216,9 @@ public class DataServer extends Replier {
         requester.connect("tcp://" + server);
 
         for (String tx : new String[]{
-            "2016_02/20160218/20160218_153900_test1 | scan 1/",
-            "2016_02/20160218/20160218_153900_test1 | scan 1/sin",
-            "2016_02/20160218/20160218_153900_test1 | scan 1/arr",}) {
+            "2017_12/20171201/20171201_130446_test1.h5|/scan 1/sin",
+            }) {
+            
             requester.send(tx);
             Object rec = requester.recvStr();
             System.out.println(rec);

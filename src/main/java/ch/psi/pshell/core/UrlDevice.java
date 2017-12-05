@@ -10,6 +10,7 @@ import ch.psi.pshell.device.DeviceBase;
 import ch.psi.pshell.device.Readable;
 import ch.psi.pshell.device.Writable;
 import ch.psi.pshell.epics.Epics;
+import ch.psi.pshell.epics.EpicsRegister;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -112,6 +113,7 @@ public class UrlDevice extends DeviceBase implements Readable, Writable {
     }
 
     protected Device resolve() throws IOException, InterruptedException {        
+        Device ret = null;
         switch (protocol) {
             case "pv":
             case "ca":
@@ -131,11 +133,21 @@ public class UrlDevice extends DeviceBase implements Readable, Writable {
                 } catch (Exception ex) {
                 }
                 try {
-                    type = Class.forName(pars.get("type"));
+                    type = Epics.getChannelType(pars.get("type"));
                 } catch (Exception ex) {
                 }
 
-                return Epics.newChannelDevice(name, id, type, timestamped, precision, size);
+                ret = Epics.newChannelDevice(name, id, type, timestamped, precision, size);   
+                boolean blocking = true;
+                if (pars.containsKey("blocking")){
+                    try {                             
+                        blocking = Boolean.valueOf(pars.get("blocking"));
+                    } catch (Exception ex) {
+                    }
+                }
+                ((EpicsRegister)ret).setBlockingWrite(blocking);
+                break;
+                                
 
             case "bs":
                 int modulo = Scalar.DEFAULT_MODULO;
@@ -169,17 +181,35 @@ public class UrlDevice extends DeviceBase implements Readable, Writable {
                 } catch (Exception ex) {
                 }
                 if ((width >=0) && (height >=0)){
-                    return ((Stream) getParent()).addMatrix(name, id, modulo, offset, width, height);
-                }
-                else if (waveform){
+                    ret = ((Stream) getParent()).addMatrix(name, id, modulo, offset, width, height);
+                } else if (waveform){
                     if (sz>=0){
-                        return ((Stream) getParent()).addWaveform(name, id, modulo, offset, sz);
+                        ret = ((Stream) getParent()).addWaveform(name, id, modulo, offset, sz);
                     } else {
-                        return ((Stream) getParent()).addWaveform(name, id, modulo, offset);
+                        ret = ((Stream) getParent()).addWaveform(name, id, modulo, offset);
                    }
                 } else{
-                    return ((Stream) getParent()).addScalar(name, id, modulo, offset);
+                    ret = ((Stream) getParent()).addScalar(name, id, modulo, offset);
                 }                 
+        }
+        if (ret!=null){
+            if (pars.containsKey("monitored")){
+                try {
+                    ret.setMonitored(Boolean.valueOf(pars.get("monitored")));
+                } catch (Exception ex) {
+                }
+            }
+            try {
+                ret.setPolling(Integer.valueOf(pars.get("polling")));
+            } catch (Exception ex) {
+            }            
+            try {
+                if (Boolean.valueOf(pars.get("simulated")) == true){
+                    ret.setSimulated();
+                }
+            } catch (Exception ex) {
+            }
+            return ret;
         }
         throw new IOException("Invalid device: " + url);
     }

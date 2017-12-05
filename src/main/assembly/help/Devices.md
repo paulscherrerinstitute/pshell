@@ -230,3 +230,63 @@ New devices, or family of devices, can be created in different ways:
    This class will be dynamically compiled and can be referenced in the Device Pool configuration window.
  - As a Python class extending __DeviceBase__: a new Python device class can be defined in "local.py" script and then 
    added to the Device Pool with the built-in function __add_device__ (see example in Tutorial, file "devices").
+
+<br>
+
+
+# Inline devices
+
+Besides global and local devices, scan functions can use inline devices. 
+These are declared as URL strings within the __readables__ or __writables__ parameters.
+The scan function instantiate an internal device base on the URL and close it in the end of scan. 
+Inline devices can be also used in the __create_averager__ function.        
+
+
+The format of device URL string is:
+
+```
+PROTOCOL_NAME://DEVICE_NAME
+```
+
+If the device has options they are declared as:
+
+```
+PROTOCOL_NAME://DEVICE_NAME?OPTION_1=VAL_1&...&OPTION_N=VAL_N
+```
+
+The supported protocols are:
+
+- ca: Creates a device based in an EPICS channel. Options:
+
+    - type: enforce the channel type. Scalar types: 'b', 'i', 'l', 'd', 's'. Waveform type: '[b', '[i,', '[l', '[d', '[s'.
+    - size: determines the size of a waveform.
+    - precision: number of precision digits.
+    - timestamped: if true then the value carry the IOC timestamp, otherwise the PC timestamp.
+    - blocking: if true (default) writes and waits until processing finishes. Otherwise does not wait.
+
+
+- bs: Creates a device from a BSREAD channel. 
+  All inline BSREAD values in a scan provide data from the same pulse id. Options:
+
+    - width: if width and height are defined then creates a matrix register.
+    - height: if width and height are defined then creates a matrix register.
+    - waveform: if set to true creates a waveform devices (otherwise a scalar).
+    - size: sets the array size for waveform device.
+    - modulo: set the stream sub-sampling - modulo applied to pulse-id to determine the readout.
+    - offset: stream offset in pulses.
+
+
+- Generic options:
+    - monitored: creates a monitored device.
+    - polling: sets a polling interval.
+    - simulated: creates a simulated device.
+
+Examples:
+```
+lscan("ca://CHANNEL_SETPOINT?blocking=False", ["ca://CHANNEL_READBACK_1?type=i", "ca://CHANNEL_READBACK_2?size=5:precision=0"], 0.0, 10.0, 10, latency=0.1)
+mscan("bs://CHANNEL_1", ["bs://CHANNEL_1", "bs://Float64Scalar?modulo=10", "bs://Float64Waveform?size=2048"], -1, 3.0)
+tscan (create_averager("bs://CHANNEL_1", 3, interval = 0.1), 10, 0.5)
+```
+
+
+
