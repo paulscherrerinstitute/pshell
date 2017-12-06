@@ -1,20 +1,17 @@
 package ch.psi.pshell.swing;
 
-import ch.psi.pshell.device.GenericDevice;
-import ch.psi.pshell.device.Writable;
-import ch.psi.pshell.device.Readable;
-import ch.psi.utils.Config;
+import ch.psi.pshell.core.Context;
+import ch.psi.pshell.core.DevicePool;
+import ch.psi.utils.Arr;
+import ch.psi.utils.Str;
 import ch.psi.utils.swing.StandardDialog;
 import ch.psi.utils.swing.SwingUtils;
 import java.awt.Window;
 import java.lang.reflect.Constructor;
-import java.lang.reflect.Modifier;
 import java.lang.reflect.Parameter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.swing.DefaultListModel;
 import javax.swing.JTable;
 
@@ -43,14 +40,7 @@ public class DevicePoolParametersEditor extends StandardDialog {
         textClass.setText(type.getName());
         this.referencedDevices = referencedDevices;
 
-        for (Constructor c : type.getConstructors()) {
-            if (Modifier.isPublic(c.getModifiers())) {
-                Parameter[] ps = c.getParameters();
-                if ((ps.length > 0) && (ps[0].getType() == String.class)) { //First parameter is name
-                    constructors.add(c);
-                }
-            }
-        }
+        constructors = DevicePool.getConstructors(type);
 
         DefaultListModel model = new DefaultListModel();
         for (Constructor c : constructors) {
@@ -84,36 +74,11 @@ public class DevicePoolParametersEditor extends StandardDialog {
         if (updating.compareAndSet(false, true)) {
             try {
                 textConstructors.clearSelection();
-                String[] pars = getValue().isEmpty() ? new String[0] : getValue().split(" ");
-
+                String[] pars = getValue().isEmpty() ? new String[0] : Str.splitIgnoringQuotesAndMultSpaces(getValue());;
+                pars = Arr.insert(pars, "", 0); //Add name to parameteres
                 for (int i = 0; i < constructors.size(); i++) {
                     Constructor c = constructors.get(i);
-                    boolean match = false;
-                    try {
-                        if (c.getParameterCount() == (pars.length + 1)) {
-                            match = true;
-                            for (int j = 0; j < pars.length; j++) {
-                                Class parType = c.getParameterTypes()[j + 1];
-                                if ((GenericDevice.class.isAssignableFrom(parType))
-                                        || (Writable.class.isAssignableFrom(parType))
-                                        || (Readable.class.isAssignableFrom(parType))) {
-                                    Class cls = referencedDevices.get(pars[j]);
-                                    if ((cls == null) || !parType.isAssignableFrom(cls)) {
-                                        match = false;
-                                    }
-                                } else if (parType.isArray()) {
-                                    match = false;
-                                } else {
-                                    if (Config.fromString(parType, pars[j]) == null) {
-                                        match = false;
-                                    }
-                                }
-                            }
-                        }
-                    } catch (Exception ex) {
-                        Logger.getLogger(DevicePoolParametersEditor.class.getName()).log(Level.WARNING, null, ex);
-                    }
-                    if (match) {
+                    if (Context.getInstance().getDevicePool().getAdjustedArguments(c, pars, referencedDevices) != null) {
                         textConstructors.addSelectionInterval(i, i);
                     }
                 }

@@ -53,11 +53,10 @@ public class Stream extends DeviceBase implements Readable<StreamValue>, Cacheab
         return ((Provider) getParent()).getSocketType();
     }
 
-    
     public Stream(String name, boolean persisted) {
         this(name, null, persisted);
     }
-    
+
     /**
      * If provider is null then uses default provider.
      */
@@ -66,13 +65,13 @@ public class Stream extends DeviceBase implements Readable<StreamValue>, Cacheab
         if (converter == null) {
             converter = new MatlabByteConverter();
         }
-        if (provider == null){
+        if (provider == null) {
             provider = Provider.getOrCreateDefault();
             privateProvider = (provider != Provider.getDefault());
         } else {
             privateProvider = false;
         }
-                
+
         setParent(provider);
         channels = new HashMap<>();
         channelNames = new ArrayList<>();
@@ -94,7 +93,7 @@ public class Stream extends DeviceBase implements Readable<StreamValue>, Cacheab
     }
 
     public Stream(String name) {
-        this(name, (Provider)null);
+        this(name, (Provider) null);
     }
 
     public Stream(String name, Provider provider) {
@@ -536,40 +535,40 @@ public class Stream extends DeviceBase implements Readable<StreamValue>, Cacheab
     public List<Readable> getReadables() {
         return readables;
     }
-    
-    StreamValue getCurrentValue(){
+
+    StreamValue getCurrentValue() {
         StreamValue cache = take();
-        if (cache==null){
+        if (cache == null) {
             throw new RuntimeException("No stream data");
         }
-        return cache;        
+        return cache;
     }
-        
-    public List<String>  getIdentifiers() {
+
+    public List<String> getIdentifiers() {
         return getCurrentValue().getIdentifiers();
-    }    
-    
+    }
+
     public List getValues() {
 
         return getCurrentValue().getValues();
     }
-    
+
     public Object getValue(String id) {
         return getCurrentValue().getValue(id);
     }
 
     public Object getValue(int index) {
         return getCurrentValue().getValue(index);
-    }       
-    
-    public static List readChannels(List<String> names) throws IOException, InterruptedException{        
+    }
+
+    public static List readChannels(List<String> names) throws IOException, InterruptedException {
         Stream stream = new Stream(null);
-        try{
-            for (String name : names){
-                stream.addScalar(name, name, 1,0);
+        try {
+            for (String name : names) {
+                stream.addScalar(name, name, 1, 0);
             }
             stream.initialize();
-            stream.start();  
+            stream.start();
             stream.waitValueNot(null, 5000);
             return stream.getValues();
         } finally {
@@ -581,7 +580,7 @@ public class Stream extends DeviceBase implements Readable<StreamValue>, Cacheab
     protected void doClose() throws IOException {
         stop();
         channels.clear();
-        if (privateProvider){
+        if (privateProvider) {
             try {
                 getParent().close();
             } catch (Exception ex) {

@@ -220,7 +220,7 @@ public class Config extends ObservableBase<Config.ConfigListener> {
 
     public static Object fromString(Class type, String str) {
         Method method = null;
-        if (type != null) {
+        if ((type != null) && (str != null)) {
             if (type.isArray()) {
                 try {
                     char aux = (char) ControlChar.US;
@@ -256,14 +256,22 @@ public class Config extends ObservableBase<Config.ConfigListener> {
             } catch (Exception ex) {
 
             }
-
-            for (String methodName : new String[]{"fromString", "valueOf"}) {
-                try {
-                    method = type.getMethod(methodName, String.class);
-                    if (Modifier.isStatic(method.getModifiers())) {
-                        return method.invoke(null, str);
+            
+            if (type == Boolean.class){
+                if (str.equalsIgnoreCase("true")) {
+                    return Boolean.TRUE;
+                } else if (str.equalsIgnoreCase("false")) {
+                    return Boolean.FALSE;
+                }
+            } else {
+                for (String methodName : new String[]{"fromString", "valueOf"}) {
+                    try {
+                        method = type.getMethod(methodName, String.class);
+                        if (Modifier.isStatic(method.getModifiers())) {
+                            return method.invoke(null, str);
+                        }
+                    } catch (Exception ex) {
                     }
-                } catch (Exception ex) {
                 }
             }
         }

@@ -289,7 +289,9 @@ public class DevicePoolEditor extends Editor {
                 ch.psi.pshell.imaging.FileSource.class.getName(),
                 ch.psi.pshell.imaging.MjpegSource.class.getName(),
                 ch.psi.pshell.imaging.RegisterArraySource.class.getName(),
-                ch.psi.pshell.imaging.RegisterMatrixSource.class.getName(),}));
+                ch.psi.pshell.imaging.RegisterMatrixSource.class.getName(),
+                ch.psi.pshell.imaging.Webcam.class.getName(),
+            }));
 
             for (Class type : Context.getInstance().getPluginManager().getDynamicClasses(GenericDevice.class)) {
                 knownClasses.add(type.getName());

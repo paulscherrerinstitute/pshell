@@ -1,5 +1,25 @@
 # Changelog
 
+## 1.9-SNAPSHOT
+
+### Added
+
+* Support to webcams: ch.psi.pshell.imaging.Webcam. Configured with camera id and resolution index. 
+  If empty takes the default. Existing camera ids can be read with:
+```
+ch.psi.pshell.imaging.Webcam.getWebcams()
+```
+ Available camera resolutions can be listed with: 
+```
+webcam.getResolutions()
+```
+ 
+
+### Changed
+
+* Updated Jython to 2.7.1.
+
+
 ## 1.8.0 (2017-12-05)
 
 ### Added

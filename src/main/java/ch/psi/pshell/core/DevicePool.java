@@ -22,8 +22,10 @@ import ch.psi.pshell.device.GenericDevice;
 import ch.psi.pshell.device.Readable;
 import ch.psi.pshell.device.Writable;
 import ch.psi.pshell.epics.Epics;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import ch.psi.utils.Convert;
+import ch.psi.utils.Str;
+import java.lang.reflect.Modifier;
+import java.lang.reflect.Parameter;
 
 /**
  * Class that manages the instantiation and disposal of the global device list.
@@ -150,17 +152,8 @@ public class DevicePool extends ObservableBase<DevicePoolListener> implements Au
         attr.polling = ((pars.length > 3) && (pars[3].trim().length() > 0)) ? Integer.valueOf(pars[3].trim()) : null;
         attr.monitored = ((pars.length > 4) && (pars[4].trim().length() > 0)) ? Boolean.valueOf(pars[4].trim()) : null;
 
-        //Retrive constructor arguments
-        //Managing string with spaces: ""
-        ArrayList<String> args = new ArrayList<>();
-        if ((pars.length > 1) && (pars[1].trim().length() > 0)) {
-            Matcher m = Pattern.compile("([^\"]\\S*|\".+?\")\\s*").matcher(pars[1].trim());
-            while (m.find()) {
-                //Does not remove surrounding "" here in order to be displayed correctly: must be removed when instantiating device                
-                args.add(m.group(1));
-            }
-        }
-        attr.arguments = args.toArray(new String[0]);
+        //Retrive constructor arguments managing string delimited with "" separated by spaces
+        attr.arguments = ((pars.length > 1) && (pars[1].trim().length() > 0)) ? Str.splitIgnoringQuotesAndMultSpaces(pars[1].trim()) : new String[0];
 
         //Inject the name in the constructor arguments
         attr.arguments = Arr.insert(attr.arguments, name, 0);
@@ -224,54 +217,13 @@ public class DevicePool extends ObservableBase<DevicePoolListener> implements Au
                     }
                     Class cls = Context.getInstance().getClassByName(attr.className);
                     String[] arguments = Arr.copy(attr.arguments);
-                    Class[] parClasses = new Class[arguments.length];
-                    for (int i = 0; i < arguments.length; i++) {
-                        parClasses[i] = String.class;
-                        if ((arguments[i].length() >= 2) && arguments[i].startsWith("\"") && arguments[i].endsWith("\"")) {
-                            arguments[i] = arguments[i].substring(1, arguments[i].length() - 1);
-                        }
-                    }
                     GenericDevice device;
-                    try {
-                        Constructor constructor = cls.getConstructor(parClasses);
-                        device = (GenericDevice) constructor.newInstance((Object[]) arguments);
+                    AdjustedConstructor adjustedConstructor = getAdjustedConstructor(cls, arguments);
+                    if (adjustedConstructor != null) {
+                        device = (GenericDevice) adjustedConstructor.constructor.newInstance(adjustedConstructor.arguments);
                         add(device);
-                    } catch (NoSuchMethodException ex) {
-                        //Try to convert strings to actual parameters
-                        Constructor constructor = null;
-                        Object[] newTokens = new Object[arguments.length];
-                        for (Constructor c : cls.getConstructors()) {
-                            boolean ok = false;
-                            if (c.getParameterCount() == arguments.length) {
-                                ok = true;
-                                for (int i = 0; i < arguments.length; i++) {
-                                    Class type = c.getParameterTypes()[i];
-                                    if (GenericDevice.class.isAssignableFrom(type)
-                                            || Readable.class.isAssignableFrom(type)
-                                            || Writable.class.isAssignableFrom(type)) {
-                                        newTokens[i] = getByName(arguments[i], type);
-                                    } else if (type.isArray()) {
-                                        newTokens[i] = null;
-                                    } else {
-                                        newTokens[i] = Config.fromString(type, arguments[i]);
-                                    }
-                                    if (newTokens[i] == null) {
-                                        ok = false;
-                                        break;
-                                    }
-                                }
-                            }
-                            if (ok) {
-                                constructor = c;
-                                break;
-                            }
-                        }
-                        if (constructor != null) {
-                            device = (GenericDevice) constructor.newInstance(newTokens);
-                            add(device);
-                        } else {
-                            throw ex;
-                        }
+                    } else {
+                        throw new IOException("Invalid constructor parameters for device: " + deviceName);
                     }
                     if (device != null) {
                         if (attr.simulated) {
@@ -286,6 +238,128 @@ public class DevicePool extends ObservableBase<DevicePoolListener> implements Au
                 }
             }
         }
+    }
+
+    public static class AdjustedConstructor {
+
+        Constructor constructor;
+        Object[] arguments;
+    }
+
+    public static ArrayList<Constructor> getConstructors(Class cls) {
+        ArrayList<Constructor> ret = new ArrayList<>();
+        for (Constructor c : cls.getConstructors()) {
+            if (Modifier.isPublic(c.getModifiers())) {
+                Parameter[] ps = c.getParameters();
+                if ((ps.length > 0) && (ps[0].getType() == String.class)) { //First parameter is name
+                    ret.add(c);
+                }
+            }
+        }
+        return ret;
+    }
+
+    public AdjustedConstructor getAdjustedConstructor(Class cls, String[] arguments) {
+        for (Constructor constructor : getConstructors(cls)) {
+            Object[] adjustedArguments = getAdjustedArguments(constructor, arguments, null);
+            if (adjustedArguments != null) {
+                AdjustedConstructor ret = new AdjustedConstructor();
+                ret.constructor = constructor;
+                ret.arguments = adjustedArguments;
+                return ret;
+            }
+        }
+        return null;
+    }
+
+    public Object[] getAdjustedArguments(Constructor constructor, String[] arguments, HashMap<String, Class> deviceList) {
+        Object[] adjustedArguments = null;
+        if (constructor.getParameterCount() == arguments.length) {
+            adjustedArguments = new Object[arguments.length];
+            for (int i = 0; i < arguments.length; i++) {
+                String arg = arguments[i];
+                boolean enforceString = false;
+                boolean enforceDevice = false;
+                Class enforceType = null;
+                if ((arg.length() >= 2) && arg.startsWith("\"") && arg.endsWith("\"")) {
+                    arg = arg.substring(1, arg.length() - 1);
+                    enforceString = true;
+                } else if ((arg.length() >= 2) && arg.startsWith("<") && arg.endsWith(">")) {
+                    arg = arg.substring(1, arg.length() - 1).trim();
+                    enforceDevice = true;
+                } else if (arg.startsWith("#") && (Str.count(arg, ":") == 1)) {
+                    String[] tokens = arg.substring(1, arg.length()).trim().split(":");
+                    if ((tokens.length == 2) && (tokens[0].length() > 0) && (tokens[1].length() > 0)) {
+                        switch (tokens[1].toLowerCase()) {
+                            case "int":
+                            case "integer":
+                                enforceType = Integer.class;
+                                break;
+                            case "byte":
+                                enforceType = Byte.class;
+                                break;
+                            case "long":
+                                enforceType = Long.class;
+                                break;
+                            case "short":
+                                enforceType = Short.class;
+                                break;
+                            case "float":
+                                enforceType = Float.class;
+                                break;
+                            case "double":
+                                enforceType = Double.class;
+                                break;
+                            case "boolean":
+                                enforceType = Boolean.class;
+                                break;
+                        }
+                        if (enforceType != null) {
+                            try {
+                                adjustedArguments[i] = Config.fromString(enforceType, tokens[0]); //Check if can convert                                
+                                arg = tokens[0];
+                            } catch (Exception ex) {
+                                enforceType = null;
+                            }
+                        }
+
+                    }
+                }
+
+                Class type = constructor.getParameterTypes()[i];
+                if (adjustedArguments[i] == null) {
+                    adjustedArguments[i] = arg;
+                }
+                if (GenericDevice.class.isAssignableFrom(type)
+                        || Readable.class.isAssignableFrom(type)
+                        || Writable.class.isAssignableFrom(type)) {
+                    if (deviceList != null) {
+                        Class cls = deviceList.get(arg);
+                        if ((cls == null) || !type.isAssignableFrom(cls)) {
+                            adjustedArguments[i] = null;
+                        }
+                    } else {
+                        adjustedArguments[i] = getByName(arg, type);
+                    }
+                } else if (enforceDevice) {
+                    adjustedArguments[i] = null;
+                } else if (type.isArray()) {
+                    adjustedArguments[i] = null;
+                } else if ((enforceString) && type != String.class) {
+                    adjustedArguments[i] = null;
+                } else if (enforceType != null) {
+                    if ((enforceType != type) && (Convert.getPrimitiveClass(enforceType) != type)) {
+                        return null;
+                    }
+                } else {
+                    adjustedArguments[i] = Config.fromString(type, arg);
+                }
+                if (adjustedArguments[i] == null) {
+                    return null;
+                }
+            }
+        }
+        return adjustedArguments;
     }
 
     public boolean contains(GenericDevice device) {

@@ -81,7 +81,8 @@ DevicesBase features:
 
 The __DevicePool__ lists the global devices, which must have unique names. These devices will be accessible from scripts and 
 from the shell: a global variables will be created for each device in the pool. The device pool editor allows edition of 
-device name, constructor parameters, polling, monitoring, readonly and simulation parameters.
+device name, constructor parameters, polling, monitoring, readonly and simulation parameters. 
+Devices can be added to the device pool programmatically with the __add_device__ built-in function.
 
 Some types of devices are supported out of the box:
  
@@ -94,6 +95,28 @@ Some types of devices are supported out of the box:
 The model is extensible though  and new families of devices may be added.
 
 <br>
+
+
+# Device Pool Editor
+ - The device pool editing table is accessed with menu item Devices-Definition. The columns are:
+    - __Enabled__: if unchecked the device is not instantiated.
+    - __Name__: a unique device name.
+    - __Class__: the complete class name of the device. 
+      The value can be directly typed or selected in the drop-down combo containing the known classes.
+    - __Parameters__: space separated constructor parameters. 
+      String parameters can be delimited by double quotes ("). They must in the case they contain spaces.
+      Double-clicking this field shows a button to open the parameters editor dialog, on which the 
+      existing constructor signatures are listed. The one matching the typed parameters is highlighted.
+      The parameter types are inferred from the available constructors. If conflicting signatures exist,
+      the types may be enforced:
+      - String type is enforced with double quotes (") delimiters.
+      - Device type is enforced with '<' and '>' delimiters: <DEVICE_NAME>.
+      - Numeric types can be enforced with the pattern: #VALUE:TYPE, where TYPE can be int, byte, short, 
+        long, float, double or boolean.
+    - __Polling__: if defined sets a polling interval for updating the device (in milliseconds).
+    - __Monitor__: if checked marks the device as monitored (asynchronously updated).
+    - __Readonly__: if checked marks the device as readonly (write operations are blocked).
+    - __Simulation__: if checked instantiates the device in simulation mode.
 
 
 # Abstract and Generic Devices - ch.psi.pshell.device

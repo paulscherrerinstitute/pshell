@@ -5,6 +5,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.StringJoiner;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * String utilities.
@@ -155,8 +157,18 @@ public class Str {
         String quote = isDoubleQuotes(str) ? "\"" : "'";
         int count = count(str, quote);
         if ((count > 0) && ((count % 2) == 0)) {
-            str = str.substring(str.indexOf(quote)+1, str.lastIndexOf(quote));
+            str = str.substring(str.indexOf(quote) + 1, str.lastIndexOf(quote));
         }
         return str;
+    }
+
+    public static String[] splitIgnoringQuotesAndMultSpaces(String str) {
+        ArrayList<String> args = new ArrayList<>();
+        //Matcher m = Pattern.compile("([^\"]\\S*|\".+?\")\\s*").matcher(str); //Won't accept empty strings
+        Matcher m = Pattern.compile("([^\"]\\S*|\".*?\")\\s*").matcher(str);
+        while (m.find()) {
+            args.add(m.group(1));
+        }
+        return args.toArray(new String[0]);
     }
 }
