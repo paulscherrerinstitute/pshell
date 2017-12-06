@@ -2,7 +2,7 @@ apply plugin: 'java'
 apply plugin: 'eclipse'
 apply plugin: 'maven'
 
-version = '1.8.0' 
+version = '1.9.0' 
 group = 'ch.psi'
 ext.timestamp = new Date().format("yyMMddHHmm")
 
@@ -40,22 +40,22 @@ sourceSets {
     
 if (ext.type == 'all'){
     dependencies {
-        compile 'org.python:jython-standalone:2.7.0'
+        compile 'org.python:jython-standalone:2.7.1'
         compile 'org.codehaus.groovy:groovy-all:2.4.8'
     }
 } else if (ext.type == 'py'){
     dependencies {
-        compile 'org.python:jython-standalone:2.7.0'
+        compile 'org.python:jython-standalone:2.7.1'
         provided 'org.codehaus.groovy:groovy-all:2.4.8'
     }    
 } else if (ext.type == 'groovy'){    
     dependencies {
-        provided 'org.python:jython-standalone:2.7.0'
+        provided 'org.python:jython-standalone:2.7.1'
         compile 'org.codehaus.groovy:groovy-all:2.4.8'
     }    
 } else if (ext.type == 'js'){    
     dependencies {
-        provided 'org.python:jython-standalone:2.7.0'
+        provided 'org.python:jython-standalone:2.7.1'
         provided 'org.codehaus.groovy:groovy-all:2.4.8'
     }
 }
@@ -97,7 +97,8 @@ dependencies {
     compile 'net.imagej:ij:1.51j'    
     compile 'javax.mail:javax.mail-api:1.6.0'
     compile 'com.sun.mail:javax.mail:1.6.0'
-    compile files('lib/com/bulenkov/darcula/darcula-1.0.0.jar')
+    compile 'com.github.sarxos:webcam-capture:0.3.11'
+    compile files('lib/com/bulenkov/darcula/darcula-1.0.0.jar')    
     testCompile group: 'junit', name: 'junit', version: '4.10'
 }
 
