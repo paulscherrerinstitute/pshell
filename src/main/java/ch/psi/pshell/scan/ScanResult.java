@@ -4,6 +4,7 @@ import ch.psi.pshell.core.Nameable;
 import ch.psi.pshell.device.Writable;
 import ch.psi.pshell.device.Readable;
 import ch.psi.utils.Convert;
+import java.beans.Transient;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -67,10 +68,12 @@ public class ScanResult {
         return records.size();
     }
 
+    @Transient
     public List<Readable> getReadables() {
         return Arrays.asList(scan.getReadables());
     }
 
+    @Transient
     public List<Writable> getWritables() {
         return Arrays.asList(scan.getWritables());
     }
@@ -131,6 +134,7 @@ public class ScanResult {
         return records.get(records.size() - 1).getTimestamp() - records.get(0).getTimestamp();
     }
     
+    @Transient
     public Scan getScan(){
         return scan;
     }
