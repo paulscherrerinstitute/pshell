@@ -35,6 +35,7 @@ import ch.psi.utils.Str;
 import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Map;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
@@ -255,7 +256,7 @@ public class ServerService {
             throw new ExecutionException(ex);
         }
     }
-
+    
     @GET
     @Path("run/{contents : .+}")
     @Consumes(MediaType.TEXT_PLAIN)
@@ -285,6 +286,27 @@ public class ServerService {
             } else {
                 return String.valueOf(Context.getInstance().evalFile(CommandSource.server, script, argList));
             }
+        } catch (Exception ex) {
+            throw new ExecutionException(ex);
+        }
+    }
+        
+    @PUT
+    @Path("run")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Object run(final Map contents) throws ExecutionException {
+        try {
+            String script = (String) contents.get("script");
+            Object pars = contents.get("pars");
+            Boolean background = (Boolean) contents.get("background");
+            Object ret = null;
+            if (background) {
+                ret = Context.getInstance().evalFileBackground(CommandSource.server, script, pars);
+            } else {
+                ret = Context.getInstance().evalFile(CommandSource.server, script, pars);
+            }
+            return mapper.writeValueAsString(ret);
         } catch (Exception ex) {
             throw new ExecutionException(ex);
         }
