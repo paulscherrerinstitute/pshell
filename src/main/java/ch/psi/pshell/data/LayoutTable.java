@@ -138,7 +138,7 @@ public class LayoutTable implements Layout {
                 ArrayList<PlotDescriptor> ret = new ArrayList<>();
                 DataSlice slice = dm.getData(root, path);
                 Object[][] sliceData = (Object[][]) slice.sliceData;
-                int records = slice.sliceSize[0];
+                int records = slice.sliceShape[0];
                 String[] names = (String[]) info.get(Provider.INFO_FIELD_NAMES);
                 int fields = (names != null) ? names.length : ((sliceData.length > 0) ? sliceData[0].length : 0);
                 if (names == null) {

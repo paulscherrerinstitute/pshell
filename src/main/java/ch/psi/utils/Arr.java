@@ -203,7 +203,7 @@ public class Arr {
     /**
      * [..., Y, X]
      */
-    public static int[] getDimensions(Object array) {
+    public static int[] getShape(Object array) {
         int rank = getRank(array);
         int[] ret = new int[rank];
         Object obj = array;

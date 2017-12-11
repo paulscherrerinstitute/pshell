@@ -66,7 +66,7 @@ public class GenericMatrix extends ReadonlyRegisterBase implements ReadonlyRegis
         if (data == null) {
             return data;
         }
-        Object matrix = Convert.toBidimensional(data, width, height);
+        Object matrix = Convert.reshape(data, height, width);
         matrix = Convert.matrixOp(matrix, getConfig().transpose, getConfig().mirror_x, getConfig().mirror_y);
         matrix = Convert.matrixRoi(matrix, getConfig().roi_x, getConfig().roi_y, getConfig().roi_width, getConfig().roi_height);
         return matrix;

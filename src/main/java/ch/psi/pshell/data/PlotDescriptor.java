@@ -111,9 +111,9 @@ public class PlotDescriptor {
     public boolean unsigned;
 
     public boolean isMultidimentional1dArray() {
-        int[] dims = Arr.getDimensions(data);
+        int[] shape = Arr.getShape(data);
         return ((steps != null) && (steps.length == 2) && (y != null) && (x != null) && (x.length == y.length)
-                && (dims.length > 0) && (dims[0] == x.length));
+                && (shape.length > 0) && (shape[0] == x.length));
     }
 
     public String labelX;

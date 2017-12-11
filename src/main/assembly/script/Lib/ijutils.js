@@ -98,11 +98,11 @@ function load_array(array, width, height, title){
     if (!is_defined(title))    title ="img"  
     //2D
     if ((width==null) && (height==null)){
-        if (array.typecode == '[B') proc = new ByteProcessor(array[0].length, array.length, Convert.toUnidimensional(array))
-        else if (array.typecode == '[S') proc = new ShortProcessor(array[0].length, array.length, Convert.toUnidimensional(array), null)
-        else if (array.typecode == '[I') proc = new FloatProcessor(array[0].length, array.length, Convert.toUnidimensional(array))        
-        else if (array.typecode == '[F') proc = new FloatProcessor(array[0].length, array.length, Convert.toUnidimensional(array))        
-        else if (array.typecode == '[D') proc = new FloatProcessor(array[0].length, array.length, Convert.toUnidimensional(array))        
+        if (array.typecode == '[B') proc = new ByteProcessor(array[0].length, array.length, Convert.flatten(array))
+        else if (array.typecode == '[S') proc = new ShortProcessor(array[0].length, array.length, Convert.flatten(array), null)
+        else if (array.typecode == '[I') proc = new FloatProcessor(array[0].length, array.length, Convert.flatten(array))        
+        else if (array.typecode == '[F') proc = new FloatProcessor(array[0].length, array.length, Convert.flatten(array))        
+        else if (array.typecode == '[D') proc = new FloatProcessor(array[0].length, array.length, Convert.flatten(array))        
         else throw "Invalid array type"
     //1D
     }else{

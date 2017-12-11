@@ -71,7 +71,7 @@ public class Data implements Serializable {
     }
 
     public Data(Object array2d, boolean unsigned) {
-        this(Convert.toUnidimensional(array2d), Array.getLength(Array.get(array2d, 0)), Array.getLength(array2d), unsigned);
+        this(Convert.flatten(array2d), Array.getLength(Array.get(array2d, 0)), Array.getLength(array2d), unsigned);
     }
 
     public Data(BufferedImage image) {
@@ -456,7 +456,7 @@ public class Data implements Serializable {
     }
 
     public Object getMatrix() {
-        return Convert.toBidimensional(array, width, height);
+        return Convert.reshape(array, height, width);
     }
 
     public Object getArray() {

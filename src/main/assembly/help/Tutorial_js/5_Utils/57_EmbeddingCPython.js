@@ -47,14 +47,14 @@ data = r.getReadable(0)
 a = to_npa(data, dims,'d')
 print (to_array(a.getDimensions()))
 print (to_array(a.getData()))
-plot( Convert.toBidimensional(a.getData(),a.getDimensions()[1], a.getDimensions()[0]),null, null, null, "Scan Data")
+plot( Convert.reshape(a.getData(),a.getDimensions()),null, null, null, "Scan Data")
 
 
 //Calling a module function
 b = call_jep("numpy", "transpose", [a,])
 print (to_array(b.getDimensions()))
 print (to_array(b.getData()))
-plot( Convert.toBidimensional(b.getData(),b.getDimensions()[1], b.getDimensions()[0]),null, null, null, title="Transposed")
+plot( Convert.reshape(b.getData(),b.getDimensions()),null, null, null, title="Transposed")
 
 
 

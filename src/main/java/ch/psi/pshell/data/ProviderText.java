@@ -758,21 +758,21 @@ public class ProviderText implements Provider {
         synchronized (of) {
             PrintWriter out = of.out;
             of.header = false;
-            int[] dimensions = Arr.getDimensions(data);
-            int rank = dimensions.length;
+            int[] shape = Arr.getShape(data);
+            int rank = shape.length;
             if (rank == 0) {
                 writeElement(out, data);
             } else if (rank == 1) {
-                for (int i = 0; i < dimensions[0]; i++) {
+                for (int i = 0; i < shape[0]; i++) {
                     writeElement(out, Array.get(data, i));
                     out.print(getItemSeparator());
                 }
             } else if (rank == 2) {
                 out.print(COMMENT_MARKER + PAGE_MARKER + index);
                 out.print(getLineSeparator());
-                for (int i = 0; i < dimensions[0]; i++) {
+                for (int i = 0; i < shape[0]; i++) {
                     Object item = Array.get(data, i);
-                    for (int j = 0; j < dimensions[1]; j++) {
+                    for (int j = 0; j < shape[1]; j++) {
                         writeElement(out, Array.get(item, j));
                         out.print(getItemSeparator());
                     }

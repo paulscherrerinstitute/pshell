@@ -795,12 +795,12 @@ public class DataManager implements AutoCloseable {
             type = Convert.getWrapperClass(type);
         }
 
-        int[] dimensions = Arr.getDimensions(data);
-        int rank = dimensions.length;
+        int[] shape = Arr.getShape(data);
+        int rank = shape.length;
 
-        logger.finer(String.format("Set \"%s\" type = %s dims = %s", path, type.getSimpleName(), rank, Str.toString(dimensions, 10)));
+        logger.finer(String.format("Set \"%s\" type = %s dims = %s", path, type.getSimpleName(), rank, Str.toString(shape, 10)));
         createGroup(group);
-        provider.setDataset(path, data, type, rank, dimensions, unsigned);
+        provider.setDataset(path, data, type, rank, shape, unsigned);
         appendLog("Set dataset: " + path);      //This will flush the dataset 
     }
 
@@ -964,7 +964,7 @@ public class DataManager implements AutoCloseable {
                     names = new String[fields];
                 }
                 if (fields > 0) {
-                    int records = slice.sliceSize[0];
+                    int records = slice.sliceShape[0];
                     Object[][] data = new Object[fields][records];
                     for (int i = 0; i < records; i++) {
                         for (int j = 0; j < fields; j++) {
@@ -1003,24 +1003,24 @@ public class DataManager implements AutoCloseable {
                         if (calibration.length == 2) {
                             ArrayCalibration c = new ArrayCalibration(calibration[0], calibration[1]);
                             if (slice.dataRank == 2) {
-                                y = c.getAxisX(slice.dataDimension[1]);
+                                y = c.getAxisX(slice.dataShape[1]);
                             } else {
-                                x = c.getAxisX(slice.dataDimension[0]);
+                                x = c.getAxisX(slice.dataShape[0]);
                             }
                         } else if (calibration.length == 4) {
                             MatrixCalibration c = new MatrixCalibration(calibration[0], calibration[1], calibration[2], calibration[3]);
                             switch (getDepthDimension()){
                                 case 1:
-                                    x = c.getAxisX(slice.dataDimension[0]);
-                                    y = c.getAxisY(slice.dataDimension[2]);
+                                    x = c.getAxisX(slice.dataShape[0]);
+                                    y = c.getAxisY(slice.dataShape[2]);
                                     break;
                                 case 2:
-                                    x = c.getAxisX(slice.dataDimension[1]);
-                                    y = c.getAxisY(slice.dataDimension[0]);
+                                    x = c.getAxisX(slice.dataShape[1]);
+                                    y = c.getAxisY(slice.dataShape[0]);
                                     break;
                                 default:
-                                    x = c.getAxisX(slice.dataDimension[2]);
-                                    y = c.getAxisY(slice.dataDimension[1]);
+                                    x = c.getAxisX(slice.dataShape[2]);
+                                    y = c.getAxisY(slice.dataShape[1]);
                             }
                             
                         }

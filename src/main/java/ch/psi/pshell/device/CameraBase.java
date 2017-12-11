@@ -125,7 +125,7 @@ public abstract class CameraBase extends DeviceBase implements Camera {
         public Object take() {
             try {
                 Object data = getDataArray().take();
-                return Convert.toBidimensional(data, getWidth(), getHeight());
+                return Convert.reshape(data, getHeight(), getWidth());
             } catch (Exception ex) {
                 return null;
             }

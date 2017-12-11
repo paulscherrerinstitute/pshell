@@ -60,6 +60,6 @@ public class Matrix<T> extends Scalar<T> implements ReadonlyRegisterMatrix<T> {
 
     @Override
     void set(long pulseId, long timestamp, long nanosOffset, T value) {
-        super.set(pulseId, timestamp, nanosOffset, (T) Convert.toBidimensional(value, width, height));
+        super.set(pulseId, timestamp, nanosOffset, (T) Convert.reshape(value, height, width));
     }
 }

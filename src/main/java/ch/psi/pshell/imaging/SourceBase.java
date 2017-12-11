@@ -477,11 +477,11 @@ public class SourceBase extends GenericDeviceBase<ImageListener> implements Sour
         if (buffer instanceof java.awt.image.DataBufferByte) {
             byte[] arr = ((java.awt.image.DataBufferByte) img.getRaster().getDataBuffer()).getData();
             short[] sarr = Convert.toUnsigned(arr);
-            return Convert.toBidimensional(sarr, width, height);
+            return Convert.reshape(sarr, height, width);
         } else if (buffer instanceof java.awt.image.DataBufferShort) {
             short[] arr = ((java.awt.image.DataBufferShort) img.getRaster().getDataBuffer()).getData();
             int[] iarr = Convert.toUnsigned(arr);
-            return Convert.toBidimensional(iarr, width, height);
+            return Convert.reshape(iarr, height, width);
         }
         throw new UnsupportedOperationException();
     }

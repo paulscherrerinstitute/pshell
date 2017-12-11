@@ -42,7 +42,7 @@ public class PlotScan extends DiscreteScan {
 
         ArrayofArraysReader(Object array) {
             this.array = array;
-            dimensions = Arr.getDimensions(array);
+            dimensions = Arr.getShape(array);
             counter = 0;
         }
 
@@ -80,7 +80,7 @@ public class PlotScan extends DiscreteScan {
         this.size = java.lang.reflect.Array.getLength(data);
         this.data = data;
         rank = Arr.getRank(data);
-        dimensions = Arr.getDimensions(data);
+        dimensions = Arr.getShape(data);
     }
 
     @Override

@@ -543,45 +543,122 @@ public class Convert {
         throw new IllegalArgumentException("Unsuppored tye");
     }
 
-    public static Object toBidimensional(Object array, int width, int height) {
-        if (array == null) {
+    /**
+     * Flattens a multi-dimentional array. If the array is already one-dimentional, returns a copy of the array.
+     */
+    public static Object flatten(Object array) {
+        if (array == null){
             return null;
         }
-        Class type = array.getClass().getComponentType();
-        int len = Array.getLength(array);
-        if (len < (width * height)) {
-            throw new IllegalArgumentException("Width and height parameters don't match array length");
+        
+        if (!array.getClass().isArray()){
+            throw new IllegalArgumentException("Parameter is not an array");
         }
-        Object ret = Array.newInstance(array.getClass(), height);
-
-        int index = 0;
-        for (int i = 0; i < height; i++) {
-            Object row = Array.newInstance(type, width);
-            System.arraycopy(array, index, row, 0, width);
-            Array.set(ret, i, row);
-            index += width;
-        }
-        return ret;
-    }
-
-    public static Object toUnidimensional(Object array) {
-        if ((array == null) || (!array.getClass().isArray())) {
-            return null;
-        }
-        int[] dimensions = Arr.getDimensions(array);
-        if (dimensions.length != 2) {
-            throw new IllegalArgumentException("2D array required");
-        }
-        int width = dimensions[1];
-        int height = dimensions[0];
+        
         Class type = Arr.getComponentType(array);
+        int[] shape = Arr.getShape(array);
+        int elements =  1;
+        for (int i: shape){
+            elements *=i;
+        }
+        Object ret = Array.newInstance(type, elements);
+                
+        if (shape.length==2){
+            //For 2d arrays (most usual conversion), use a faster implementation
+            int width = shape[1];
+            int height = shape[0];         
+            for (int i = 0; i < height; i++) {
+                System.arraycopy(Array.get(array, i), 0, ret, i * width, width);
+            }
+        } else {                
+            //The generic implementation
+            int index = 0;        
+            int[] pos = new int [shape.length-1];
+            int chunck = shape[shape.length-1];
 
-        Object ret = Array.newInstance(type, width * height);
-        for (int i = 0; i < height; i++) {
-            System.arraycopy(Array.get(array, i), 0, ret, i * width, width);
+            while(index<elements){
+                Object arr = array;
+                for (int i=0; i< pos.length; i++){
+                    arr = Array.get(arr, pos[i]);
+                }
+                System.arraycopy(arr, 0, ret, index, chunck);
+                index +=chunck;
+                for (int i=pos.length-1; i>=0; i--){
+                    pos[i]++;
+                    if (pos[i]<shape[i]){
+                        break;
+                    }
+                    pos[i]=0;
+                }
+            }
         }
         return ret;
     }
+    
+    /**
+     * Changes dimensionality of array. Number of elements of destination must coincide with the origin array.
+     * If array has already the destination shape, returns a copy of the array.
+     * The contiguous dimension correspond to the highest index e.g: depth, height, width
+     */
+    public static Object reshape(Object array, int... shape) {
+        if (array == null){
+            return null;
+        }
+        
+         if (!array.getClass().isArray()){
+             throw new IllegalArgumentException("Parameter is not an array");
+         }
+        
+        if (Arr.getRank(array)>1){
+            array = flatten(array);
+        }
+        
+        int elements =  1;
+        for (int i: shape){
+            elements *=i;
+        }      
+        if (elements>Array.getLength(array)){
+            throw new IllegalArgumentException("Invalid array shape");
+        }        
+        
+        Class type = Arr.getComponentType(array);
+        Object ret = Array.newInstance(type, shape);
+        int index = 0;                
+        
+        if (shape.length==2){
+            //For 2d arrays (most usual conversion), use a faster implementation
+            int width = shape[1];
+            int height = shape[0];                     
+            for (int i = 0; i < height; i++) {
+                Object row = Array.newInstance(type, width);
+                System.arraycopy(array, index, row, 0, width);
+                Array.set(ret, i, row);
+                index += width;            
+            }
+        } else {          
+            //The generic implementation
+            int[] pos = new int [shape.length-1];
+            int chunck = shape[shape.length-1];
+
+            while(index<elements) {
+                Object arr = ret;
+                for (int i=0; i< pos.length; i++){
+                    arr = Array.get(arr, pos[i]);
+                }
+                System.arraycopy(array, index, arr, 0, chunck);
+                index +=chunck;
+                for (int i=pos.length-1; i>=0; i--){
+                    pos[i]++;
+                    if (pos[i]<shape[i]){
+                        break;
+                    }
+                    pos[i]=0;
+                }
+            }
+        }
+        return ret;
+    }
+    
 
     public static Class getWrapperClass(Class primitiveType) {
         if (primitiveType.isPrimitive()) {
@@ -853,8 +930,8 @@ public class Convert {
         int rank = Arr.getRank(wrapperArray);
 
         if (rank > 1) {
-            int[] dimensions = Arr.getDimensions(wrapperArray);
-            ret = Array.newInstance(destinationClass, dimensions);
+            int[] shape = Arr.getShape(wrapperArray);
+            ret = Array.newInstance(destinationClass, shape);
             for (int i = 0; i < size; i++) {
                 Array.set(ret, i, toPrimitiveArray(Array.get(wrapperArray, i), type));
             }
@@ -889,8 +966,8 @@ public class Convert {
         int rank = Arr.getRank(primitiveArray);
 
         if (rank > 1) {
-            int[] dimensions = Arr.getDimensions(primitiveArray);
-            ret = Array.newInstance(getWrapperClass(type), dimensions);
+            int[] shape = Arr.getShape(primitiveArray);
+            ret = Array.newInstance(getWrapperClass(type), shape);
             for (int i = 0; i < size; i++) {
                 Array.set(ret, i, toWrapperArray(Array.get(primitiveArray, i)));
             }
@@ -1034,12 +1111,12 @@ public class Convert {
     }
 
     public static Object matrixRoi(Object array, int x, int y, int width, int height) {
-        int[] dims = Arr.getDimensions(array);
-        if (dims.length < 2) {
+        int[] shape = Arr.getShape(array);
+        if (shape.length < 2) {
             return null;
         }
-        int w = dims[dims.length - 1];
-        int h = dims[dims.length - 2];
+        int w = shape[shape.length - 1];
+        int h = shape[shape.length - 2];
         x = Math.min(Math.max(x, 0), w);
         y = Math.min(Math.max(y, 0), h);
         if (width < 0) {
@@ -1181,5 +1258,5 @@ public class Convert {
 
     public static Object[] toArray(Map map) {
         return toArray(new ArrayList(map.values()));
-    }
+    }    
 }

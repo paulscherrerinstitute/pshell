@@ -64,7 +64,7 @@ public abstract class ColormapSource extends SourceBase {
             pushImage(null);
             return;
         }
-        pushData(Convert.toUnidimensional(array2d), Array.getLength(Array.get(array2d, 0)), Array.getLength(array2d), unsigned);
+        pushData(Convert.flatten(array2d), Array.getLength(Array.get(array2d, 0)), Array.getLength(array2d), unsigned);
     }
 
     @Override

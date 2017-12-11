@@ -186,7 +186,7 @@ public class MatrixPlotRenderer extends MatrixPlotBase {
     protected void onSetData(MatrixPlotSeries series, double[][] data, double[][] xdata, double[][] ydata) {
         int width = data[0].length;
         int height = data.length;
-        dataBuffer = new DataBufferDouble((double[]) Convert.toUnidimensional(data), width);
+        dataBuffer = new DataBufferDouble((double[]) Convert.flatten(data), width);
         SampleModel sm = new PixelInterleavedSampleModel(DataBuffer.TYPE_DOUBLE, width, height, 1, width, new int[]{0});
         WritableRaster wr = WritableRaster.createWritableRaster(sm, dataBuffer, null);
         image = new BufferedImage(cmGray, wr, true, new Hashtable<Object, Object>());
@@ -242,6 +242,6 @@ public class MatrixPlotRenderer extends MatrixPlotBase {
         int width = series.getNumberOfBinsX();
         int height = series.getNumberOfBinsY();
 
-        return (double[][]) Convert.toBidimensional(dataBuffer.getBankData()[0], width, height);
+        return (double[][]) Convert.reshape(dataBuffer.getBankData()[0],height, width);
     }
 }

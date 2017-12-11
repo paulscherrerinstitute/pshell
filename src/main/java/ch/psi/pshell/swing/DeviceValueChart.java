@@ -183,28 +183,28 @@ public class DeviceValueChart extends DevicePanel {
                 double[] y = null;
                 double[][] z = (double[][]) Convert.toDouble(device.take());
                 if (z != null) {
-                    int[] dims = Arr.getDimensions(z);
+                    int[] shape = Arr.getShape(z);
                     double minBoundsX = 0;
-                    double maxBoundsX = dims[1] - 1;
+                    double maxBoundsX = shape[1] - 1;
                     double minBoundsY = 0;
-                    double maxBoundsY = dims[0] - 1;
+                    double maxBoundsY = shape[0] - 1;
                     if (device instanceof ReadableCalibratedMatrix) {
                         ReadableCalibratedMatrix cm = (ReadableCalibratedMatrix) device;
                         minBoundsX = cm.getCalibration().getValueX(0);
-                        maxBoundsX = cm.getCalibration().getValueX(dims[1] - 1);
+                        maxBoundsX = cm.getCalibration().getValueX(shape[1] - 1);
                         minBoundsY = cm.getCalibration().getValueY(0);
-                        maxBoundsY = cm.getCalibration().getValueY(dims[0] - 1);
+                        maxBoundsY = cm.getCalibration().getValueY(shape[0] - 1);
                     }
                     if (z.length != ((MatrixPlotSeries) series).getNumberOfBinsY()) {
                         ((MatrixPlotBase) chart).removeSeries(((MatrixPlotSeries) series));
-                        ((MatrixPlotSeries) series).setNumberOfBinsY(dims[0]);
+                        ((MatrixPlotSeries) series).setNumberOfBinsY(shape[0]);
                         ((MatrixPlotSeries) series).setRangeY(minBoundsY, maxBoundsY);
                         ((MatrixPlotBase) chart).addSeries(((MatrixPlotSeries) series));
                         ((MatrixPlotBase) chart).getAxis(Plot.AxisId.Y).setRange(minBoundsY, maxBoundsY);
                     }
                     if (z[0].length != ((MatrixPlotSeries) series).getNumberOfBinsX()) {
                         ((MatrixPlotBase) chart).removeSeries(((MatrixPlotSeries) series));
-                        ((MatrixPlotSeries) series).setNumberOfBinsX(dims[1]);
+                        ((MatrixPlotSeries) series).setNumberOfBinsX(shape[1]);
                         ((MatrixPlotSeries) series).setRangeX(minBoundsX, maxBoundsX);
                         ((MatrixPlotBase) chart).addSeries(((MatrixPlotSeries) series));
                         ((MatrixPlotBase) chart).getAxis(Plot.AxisId.X).setRange(minBoundsX, maxBoundsX);

@@ -90,9 +90,9 @@ def load_array(array, width=None, height=None, title = "img"):
     """    
     #2D
     if (width==None) and (height==None):
-        if array.typecode == '[B': proc = ByteProcessor(len(array[0]), len(array), Convert.toUnidimensional(array))
-        elif array.typecode == '[S': proc = ShortProcessor(len(array[0]), len(array), Convert.toUnidimensional(array), None)
-        elif array.typecode in ['[I','[F', '[D']: proc = FloatProcessor(len(array[0]), len(array), Convert.toUnidimensional(array))        
+        if array.typecode == '[B': proc = ByteProcessor(len(array[0]), len(array), Convert.flatten(array))
+        elif array.typecode == '[S': proc = ShortProcessor(len(array[0]), len(array), Convert.flatten(array), None)
+        elif array.typecode in ['[I','[F', '[D']: proc = FloatProcessor(len(array[0]), len(array), Convert.flatten(array))        
         else: raise Exception("Invalid array type")   
     #1D
     else:

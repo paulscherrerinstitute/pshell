@@ -692,7 +692,7 @@ public class ProviderHDF5 implements Provider {
                 double[][][] d = (double[][][]) data;
                 createDataset(path, type, get3dMatrixDims(d), unsigned);
                 for (int i = 0; i < d.length; i++) {                    
-                    MDDoubleArray array = new MDDoubleArray((double[])Convert.toUnidimensional(d[i]), getMatrixShape(d[i]));
+                    MDDoubleArray array = new MDDoubleArray((double[])Convert.flatten(d[i]), getMatrixShape(d[i]));
                     writer.float64().writeMDArrayBlockWithOffset(path, array, getMatrixOffset(i));
                 }
                 
@@ -700,14 +700,14 @@ public class ProviderHDF5 implements Provider {
                 float[][][] d = (float[][][]) data;
                 createDataset(path, type, get3dMatrixDims(d), unsigned);
                 for (int i = 0; i < d.length; i++) {
-                    MDFloatArray array = new MDFloatArray((float[])Convert.toUnidimensional(d[i]), getMatrixShape(d[i]));
+                    MDFloatArray array = new MDFloatArray((float[])Convert.flatten(d[i]), getMatrixShape(d[i]));
                     writer.float32().writeMDArrayBlockWithOffset(path, array, getMatrixOffset(i));
                 }
             } else if (type == Long.class) {
                 long[][][] d = (long[][][]) data;
                 createDataset(path, type, get3dMatrixDims(d), unsigned);
                 for (int i = 0; i < d.length; i++) {
-                    MDLongArray array = new MDLongArray((long[])Convert.toUnidimensional(d[i]), getMatrixShape(d[i]));
+                    MDLongArray array = new MDLongArray((long[])Convert.flatten(d[i]), getMatrixShape(d[i]));
                     if (unsigned) {
                         writer.uint64().writeMDArrayBlockWithOffset(path, array, getMatrixOffset(i));
                     } else {
@@ -718,7 +718,7 @@ public class ProviderHDF5 implements Provider {
                 int[][][] d = (int[][][]) data;
                 createDataset(path, type, get3dMatrixDims(d), unsigned);
                 for (int i = 0; i < d.length; i++) {
-                    MDIntArray array = new MDIntArray((int[])Convert.toUnidimensional(d[i]), getMatrixShape(d[i]));
+                    MDIntArray array = new MDIntArray((int[])Convert.flatten(d[i]), getMatrixShape(d[i]));
                     if (unsigned) {
                         writer.uint32().writeMDArrayBlockWithOffset(path, array, getMatrixOffset(i));
                     } else {
@@ -729,7 +729,7 @@ public class ProviderHDF5 implements Provider {
                 short[][][] d = (short[][][]) data;
                 createDataset(path, type, get3dMatrixDims(d), unsigned);
                 for (int i = 0; i < d.length; i++) {
-                    MDShortArray array = new MDShortArray((short[])Convert.toUnidimensional(d[i]), getMatrixShape(d[i]));
+                    MDShortArray array = new MDShortArray((short[])Convert.flatten(d[i]), getMatrixShape(d[i]));
                     if (unsigned) {
                         writer.uint16().writeMDArrayBlockWithOffset(path, array, getMatrixOffset(i));
                     } else {
@@ -740,7 +740,7 @@ public class ProviderHDF5 implements Provider {
                 byte[][][] d = (byte[][][]) data;
                 createDataset(path, type, get3dMatrixDims(d), unsigned);
                 for (int i = 0; i < d.length; i++) {
-                    MDByteArray array = new MDByteArray((byte[])Convert.toUnidimensional(d[i]), getMatrixShape(d[i]));
+                    MDByteArray array = new MDByteArray((byte[])Convert.flatten(d[i]), getMatrixShape(d[i]));
                     if (unsigned) {
                         writer.uint8().writeMDArrayBlockWithOffset(path, array, getMatrixOffset(i));
                     } else {
@@ -993,28 +993,28 @@ public class ProviderHDF5 implements Provider {
             }
             writer.bool().writeBitFieldArrayBlockWithOffset(path, new BitSet[]{bs}, index, 0);
         } else if (type == double[][].class) {
-            MDDoubleArray array = new MDDoubleArray((double[])Convert.toUnidimensional(data), getMatrixShape(data));
+            MDDoubleArray array = new MDDoubleArray((double[])Convert.flatten(data), getMatrixShape(data));
             writer.float64().writeMDArrayBlockWithOffset(path, array, getMatrixOffset(index));  
         } else if (type == float[][].class) {
-            MDFloatArray array = new MDFloatArray((float[])Convert.toUnidimensional(data), getMatrixShape(data));
+            MDFloatArray array = new MDFloatArray((float[])Convert.flatten(data), getMatrixShape(data));
             writer.float32().writeMDArrayBlockWithOffset(path, array, getMatrixOffset(index));            
             
         } else if (type == long[][].class) {
-            MDLongArray array = new MDLongArray((long[])Convert.toUnidimensional(data), getMatrixShape(data));
+            MDLongArray array = new MDLongArray((long[])Convert.flatten(data), getMatrixShape(data));
             if (writer.object().getDataSetInformation(path).isSigned()) {
                 writer.int64().writeMDArrayBlockWithOffset(path, array, getMatrixOffset(index));  
             } else {
                 writer.uint64().writeMDArrayBlockWithOffset(path, array, getMatrixOffset(index));  
             }
         } else if (type == int[][].class) {
-            MDIntArray array = new MDIntArray((int[])Convert.toUnidimensional(data), getMatrixShape(data));
+            MDIntArray array = new MDIntArray((int[])Convert.flatten(data), getMatrixShape(data));
             if (writer.object().getDataSetInformation(path).isSigned()) {
                 writer.int32().writeMDArrayBlockWithOffset(path, array, getMatrixOffset(index));  
             } else {
                 writer.uint32().writeMDArrayBlockWithOffset(path, array, getMatrixOffset(index));  
             }
         } else if (type == short[][].class) {
-            MDShortArray array = new MDShortArray((short[])Convert.toUnidimensional(data), getMatrixShape(data));
+            MDShortArray array = new MDShortArray((short[])Convert.flatten(data), getMatrixShape(data));
             if (writer.object().getDataSetInformation(path).isSigned()) {
                 writer.int16().writeMDArrayBlockWithOffset(path, array, getMatrixOffset(index));  
             } else {
@@ -1022,7 +1022,7 @@ public class ProviderHDF5 implements Provider {
             }
 
         } else if (type == byte[][].class) {
-            MDByteArray array = new MDByteArray((byte[])Convert.toUnidimensional(data), getMatrixShape(data));
+            MDByteArray array = new MDByteArray((byte[])Convert.flatten(data), getMatrixShape(data));
             if (writer.object().getDataSetInformation(path).isSigned()) {
                 writer.int8().writeMDArrayBlockWithOffset(path, array, getMatrixOffset(index));  
             } else {
@@ -1051,7 +1051,7 @@ public class ProviderHDF5 implements Provider {
     }
     
     int[] getMatrixShape(Object data){       
-        int[] dims = (data == null) ? new int[]{-1, -1} : Arr.getDimensions(data);        
+        int[] dims = (data == null) ? new int[]{-1, -1} : Arr.getShape(data);        
         switch (getDepthDimension()){
             case 1: return new int[]{dims[0], 1, dims[1]};
             case 2: return new int[]{dims[0], dims[1], 1};
@@ -1062,14 +1062,14 @@ public class ProviderHDF5 implements Provider {
     Object getMatrixArray(MDAbstractArray array){      
         int[] dimensions = array.dimensions();
         switch (getDepthDimension()){
-            case 1: return Convert.toBidimensional(array.getAsFlatArray(), dimensions[2], dimensions[0]);
-            case 2: return Convert.toBidimensional(array.getAsFlatArray(), dimensions[1], dimensions[0]);
-            default: return Convert.toBidimensional(array.getAsFlatArray(), dimensions[2], dimensions[1]);
+            case 1: return Convert.reshape(array.getAsFlatArray(), dimensions[0], dimensions[2]);
+            case 2: return Convert.reshape(array.getAsFlatArray(), dimensions[0], dimensions[1]);
+            default: return Convert.reshape(array.getAsFlatArray(), dimensions[1], dimensions[2]);
         }
     }
         
     int[] get3dMatrixDims(Object array){
-        int[] dims = Arr.getDimensions(array);  
+        int[] dims = Arr.getShape(array);  
         switch (getDepthDimension()){
             case 1: return new int[]{dims[1], dims[0], dims[2]};
             case 2: return  new int[]{dims[1], dims[2], dims[0]};

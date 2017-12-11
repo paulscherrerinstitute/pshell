@@ -111,11 +111,11 @@ public class ScanRecord {
         }
         for (Object value : getValues()) {
             if ((value != null) && (value.getClass().isArray())) {
-                int[] dims = Arr.getDimensions(value);
-                if (dims.length == 1) {
+                int[] shape = Arr.getShape(value);
+                if (shape.length == 1) {
                     values.add("[" + String.join(", ", Convert.toStringArray(value)) + "]");
                 } else {
-                    values.add("[" + Convert.arrayToString(dims, " x ") + "]");
+                    values.add("[" + Convert.arrayToString(shape, " x ") + "]");
                 }
 
             } else {

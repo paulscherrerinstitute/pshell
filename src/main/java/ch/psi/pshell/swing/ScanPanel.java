@@ -94,11 +94,11 @@ public class ScanPanel extends MonitoredPanel {
                     if (value == null) {
                         values.add(null);
                     } else if (value.getClass().isArray()) {
-                        int[] dims = Arr.getDimensions(value);
-                        if (dims.length == 1) {
+                        int[] shape = Arr.getShape(value);
+                        if (shape.length == 1) {
                             values.add(Convert.arrayToString(value, " ", 1000));
                         } else {
-                            values.add(Convert.arrayToString(dims, " x "));
+                            values.add(Convert.arrayToString(shape, " x "));
                         }
 
                     } else if (value instanceof Number) {

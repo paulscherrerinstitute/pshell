@@ -867,8 +867,8 @@ public class PlotPanel extends MonitoredPanel {
         }
         data = validatePlotDataType(data);
 
-        int[] dims = Arr.getDimensions(data);
-        int dimensions = dims.length;
+        int[] shape = Arr.getShape(data);
+        int dimensions = shape.length;
         int rank = descriptor.rank;
         double[] x = descriptor.x;
         double[] y = descriptor.y;
@@ -899,7 +899,7 @@ public class PlotPanel extends MonitoredPanel {
                 //z must be set
                 double[][] array = (double[][]) data;
                 start = new double[]{z[0], 0, 0};
-                end = new double[]{z[z.length - 1], dims[1] - 1, dims[0] - 1};
+                end = new double[]{z[z.length - 1], shape[1] - 1, shape[0] - 1};
                 steps = new int[]{z.length - 1, array[0].length - 1, array.length - 1};
                 if ((x != null) && (x.length > 0)) {
                     start[1] = x[0];
@@ -915,8 +915,8 @@ public class PlotPanel extends MonitoredPanel {
                 //2D-scan with 1d datasets of arrays
                 if (multidimentional1dDataset) {
                     start = new double[]{(Double) Arr.getMin(x), (Double) Arr.getMin(y), 0};
-                    end = new double[]{(Double) Arr.getMax(x), (Double) Arr.getMax(y), dims[1] - 1};
-                    steps = new int[]{numberSteps[0], numberSteps[1], dims[1] - 1};
+                    end = new double[]{(Double) Arr.getMax(x), (Double) Arr.getMax(y), shape[1] - 1};
+                    steps = new int[]{numberSteps[0], numberSteps[1], shape[1] - 1};
                     if ((z != null) && (z.length > 0)) {
                         start[2] = z[0];
                         end[2] = z[z.length - 1];
@@ -929,8 +929,8 @@ public class PlotPanel extends MonitoredPanel {
                     steps = new int[2];
                     if ((x == null) || (x.length == 0)) {
                         start[0] = 0;
-                        end[0] = dims[1] - 1;
-                        steps[0] = dims[1] - 1;
+                        end[0] = shape[1] - 1;
+                        steps[0] = shape[1] - 1;
                     } else {
                         //TODO:Do not support multipass scans(overlapping samples) Should create a 3d plot
                         start[0] = x[0];
@@ -939,8 +939,8 @@ public class PlotPanel extends MonitoredPanel {
                     }
                     if ((y == null) || (y.length == 0)) {
                         start[1] = 0;
-                        end[1] = dims[0] - 1;
-                        steps[1] = dims[0] - 1;
+                        end[1] = shape[0] - 1;
+                        steps[1] = shape[0] - 1;
                     } else {
                         start[1] = y[0];
                         end[1] = y[y.length - 1];
@@ -960,8 +960,8 @@ public class PlotPanel extends MonitoredPanel {
 
             if ((y == null) || (y.length == 0)) {
                 start[2] = 0;
-                end[2] = dims[1] - 1;
-                steps[2] = dims[1] - 1;
+                end[2] = shape[1] - 1;
+                steps[2] = shape[1] - 1;
             } else {
                 start[2] = y[0];
                 end[2] = y[y.length - 1];
@@ -970,8 +970,8 @@ public class PlotPanel extends MonitoredPanel {
 
             if ((x == null) || (x.length == 0)) {
                 start[1] = 0;
-                end[1] = dims[2] - 1;
-                steps[1] = dims[2] - 1;
+                end[1] = shape[2] - 1;
+                steps[1] = shape[2] - 1;
             } else {
                 start[1] = x[0];
                 end[1] = x[x.length - 1];

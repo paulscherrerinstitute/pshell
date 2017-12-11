@@ -13,68 +13,68 @@ public class DataSlice {
     final public String dataPath;
     final public Class dataType;
     final public int dataRank;
-    final public int[] dataDimension;
+    final public int[] dataShape;
     final public int sliceRank;
     final public long[] slicePos;
-    final public int[] sliceSize;
+    final public int[] sliceShape;
     final public Object sliceData;
     final public boolean unsigned;
 
     //Empty Slice
-    public DataSlice(String dataFile, String dataPath, int[] dataDimension, Class dataType, boolean unsigned) {
+    public DataSlice(String dataFile, String dataPath, int[] dataShape, Class dataType, boolean unsigned) {
         this.dataFile = dataFile;
         this.dataPath = dataPath;
-        this.dataRank = dataDimension.length;
+        this.dataRank = dataShape.length;
         this.dataType = dataType;
-        this.dataDimension = dataDimension;
+        this.dataShape = dataShape;
         this.slicePos = new long[0];
         this.unsigned = unsigned;
         sliceRank = 0;
-        sliceSize = new int[0];
+        sliceShape = new int[0];
         sliceData = null;
     }
 
-    public DataSlice(String dataFile, String dataPath, int[] dataDimension, Object sliceData, long[] slicePos, boolean unsigned) {
+    public DataSlice(String dataFile, String dataPath, int[] dataShape, Object sliceData, long[] slicePos, boolean unsigned) {
         this.dataFile = dataFile;
         this.dataPath = dataPath;
-        this.dataRank = dataDimension.length;
-        this.dataDimension = dataDimension;
+        this.dataRank = dataShape.length;
+        this.dataShape = dataShape;
         this.slicePos = slicePos;
         this.sliceData = sliceData;
         this.unsigned = unsigned;
         if (isCompound()) {
-            sliceSize = new int[]{Array.getLength(sliceData)};
+            sliceShape = new int[]{Array.getLength(sliceData)};
             dataType = Object[].class;
         } else {
-            sliceSize = Arr.getDimensions(sliceData);
+            sliceShape = Arr.getShape(sliceData);
             dataType = Arr.getComponentType(sliceData);
         }
-        this.sliceRank = sliceSize.length;       
+        this.sliceRank = sliceShape.length;       
     }
     
-    public DataSlice(String dataFile, String dataPath, int[] dataDimension, Object sliceData, long[] slicePos,int[] slice_size, boolean unsigned) {
+    public DataSlice(String dataFile, String dataPath, int[] dataShape, Object sliceData, long[] slicePos,int[] slice_size, boolean unsigned) {
         this.dataFile = dataFile;
         this.dataPath = dataPath;
-        this.dataRank = dataDimension.length;
-        this.dataDimension = dataDimension;
+        this.dataRank = dataShape.length;
+        this.dataShape = dataShape;
         this.slicePos = slicePos;
         this.sliceData = sliceData;
         this.unsigned = unsigned;
-        this.sliceSize = slice_size;
-        this.sliceRank = sliceSize.length;       
+        this.sliceShape = slice_size;
+        this.sliceRank = sliceShape.length;       
         this.dataType = Arr.getComponentType(sliceData);
     }    
 
-    private static long[] getIndexArray(int[] dataDimension, int index) {
-        long[] indexArray = new long[dataDimension.length];
+    private static long[] getIndexArray(int[] dataShape, int index) {
+        long[] indexArray = new long[dataShape.length];
         if (indexArray.length > 0) {
             indexArray[0] = index;
         }
         return indexArray;
     }
 
-    public DataSlice(String dataFile, String dataPath, int[] dataDimension, Object sliceData, int index, boolean unsigned) {
-        this(dataFile, dataPath, dataDimension, sliceData, getIndexArray(dataDimension, index), unsigned);
+    public DataSlice(String dataFile, String dataPath, int[] dataShape, Object sliceData, int index, boolean unsigned) {
+        this(dataFile, dataPath, dataShape, sliceData, getIndexArray(dataShape, index), unsigned);
     }
 
     public boolean isCompound() {
@@ -82,6 +82,6 @@ public class DataSlice {
     }
     
     public int getNumberSlices(){
-        return dataDimension[Context.getInstance().getDataManager().getDepthDimension()];
+        return dataShape[Context.getInstance().getDataManager().getDepthDimension()];
     }
 }

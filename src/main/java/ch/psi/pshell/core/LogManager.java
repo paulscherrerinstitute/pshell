@@ -295,10 +295,10 @@ public class LogManager {
     }
 
     public static String getLogForValue(Object value) {
-        int[] dims = Arr.getDimensions(value);
+        int[] shape = Arr.getShape(value);
         String log = null;
-        if (dims.length >= 2) {
-            return "[" + Convert.arrayToString(dims, " x ") + "]";
+        if (shape.length >= 2) {
+            return "[" + Convert.arrayToString(shape, " x ") + "]";
         }
         return Str.toString(value, 10);
     }
