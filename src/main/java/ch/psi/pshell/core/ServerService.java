@@ -182,7 +182,7 @@ public class ServerService {
     @Produces(MediaType.TEXT_PLAIN)
     public String dataRequest() throws ExecutionException {
         try {
-            Object ret = DataServer.execute("");
+            Object ret = DataServer.execute("", "txt");
             return (ret == null) ? "" : ret.toString();
         } catch (Exception ex) {
             throw new ExecutionException(ex);
@@ -195,7 +195,7 @@ public class ServerService {
     @Produces(MediaType.TEXT_PLAIN)
     public String dataRequest(@PathParam("request") final String request) throws ExecutionException {
         try {
-            Object ret = DataServer.execute(request);
+            Object ret = DataServer.execute(request, "txt");
             return (ret == null) ? "" : ret.toString();
         } catch (Exception ex) {
             throw new ExecutionException(ex);
