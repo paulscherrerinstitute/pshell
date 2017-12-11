@@ -38,10 +38,11 @@ public class ScriptManager implements AutoCloseable {
     public static final String JYTHON_OBJ_CLASS = "org.python.proxies";
 
     public static final String LAST_RESULT_VARIABLE = "_";
+    public static final String THREAD_RESULT_VARIABLE = "__THREAD_EXEC_RESULT__";
 
     final ScriptType type;
     final String[] libraryPath;
-    final HashMap<String, Object> injections;
+    final Map<String, Object> injections;
     final ScriptEngine engine;
     final Interpreter interpreter;
     final static Logger logger = Logger.getLogger(ScriptManager.class.getName());
@@ -50,12 +51,14 @@ public class ScriptManager implements AutoCloseable {
     String sessionFilePath;
     PrintWriter sessionOut;
     Object lastResult;
+    final Map<Thread, Object> results;
 
     public ScriptManager(ScriptType type, String[] libraryPath, HashMap<String, Object> injections) {
         logger.info("Initializing " + getClass().getSimpleName());
         this.type = type;
         this.libraryPath = libraryPath;
         this.injections = injections;
+        results = new HashMap<>();
 
         if (type == ScriptType.py) {
             setPythonPath(libraryPath);
@@ -76,7 +79,10 @@ public class ScriptManager implements AutoCloseable {
         lib = new Library(engine);
         lib.setPath(libraryPath);
         injections.put("lib", lib);
-
+        if (threaded){
+            injections.put(THREAD_RESULT_VARIABLE, results);
+        }
+        
         injectVars();
 
         interpreter = new Interpreter(engine, type, null);
@@ -160,16 +166,33 @@ public class ScriptManager implements AutoCloseable {
         try {
             evalThread = Thread.currentThread();
             setVar(LAST_RESULT_VARIABLE, null);
+            results.put(evalThread, null);
             Object ret = interpreter.evalFile(fileName);
             //In Jython, the output of last statement is not returned so we have to use a return variable
             if (ret == null) {
-                ret = getVar(LAST_RESULT_VARIABLE);
+                ret = results.get(evalThread);
             }
             saveStatement("\n#Eval file:  " + script + "\n");
             return ret;
         } finally {
             evalThread = null;
         }
+    }
+
+    public Object evalFileBackground(String script) throws ScriptException, IOException {
+        String fileName = lib.resolveFile(script);
+        if (fileName == null) {
+            throw new FileNotFoundException(script);
+        }        
+        results.put(Thread.currentThread(), null);
+        Object ret = interpreter.evalFile(fileName);
+        if (ret == null) {
+            ret = results.get(Thread.currentThread());
+            results.remove(Thread.currentThread());
+        }
+        //In Jython, the output of last statement is not returned so we have to use a return variable
+        saveStatement("\n#Eval file background:  " + script + "\n");
+        return ret;
     }
 
     @Hidden
@@ -263,6 +286,7 @@ public class ScriptManager implements AutoCloseable {
                     if (result.result != null) {
                         lastResult = result.result;
                         setVar(LAST_RESULT_VARIABLE, lastResult);
+                        results.put(evalThread, lastResult);
                     }
                     saveStatement(statement.text);
                 }
@@ -305,6 +329,7 @@ public class ScriptManager implements AutoCloseable {
                 if (ret.result != null) {
                     lastResult = ret.result;
                     setVar(LAST_RESULT_VARIABLE, lastResult);
+                    results.put(evalThread, lastResult);
                 }
                 saveStatement(line);
             }
@@ -329,6 +354,7 @@ public class ScriptManager implements AutoCloseable {
                 if (ret.result != null) {
                     lastResult = ret.result;
                     setVar(LAST_RESULT_VARIABLE, lastResult);
+                    results.put(evalThread, lastResult);
                 }
                 saveStatement(statement.text);
             }

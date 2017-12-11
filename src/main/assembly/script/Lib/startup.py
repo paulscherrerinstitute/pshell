@@ -1500,17 +1500,26 @@ def set_return(value):
 
     Returns:
         None
-    """  
-    global _
+    """      
+    import java.lang.Thread
+    global __THREAD_EXEC_RESULT__
     #In Jython, the output of last statement is not returned  when running a file so we have to use a return variable
     if __name__ == "__builtin__":
-        _=value         #Used when running file
+        if is_interpreter_thread():
+            _=value
+        __THREAD_EXEC_RESULT__[java.lang.Thread.currentThread()]=value         #Used when running file
     else:
         #if startup is imported, cannot set global
         caller = inspect.currentframe().f_back    
-        caller.f_globals["_"]=value
-        
+        if is_interpreter_thread():
+            caller.f_globals["_"]=value
+        caller.f_globals["__THREAD_EXEC_RESULT__"][java.lang.Thread.currentThread()]=value        
     return value    #Used when parsing file  
+
+def is_interpreter_thread():
+    import java.lang.Thread
+    return java.lang.Thread.currentThread().name == "Interpreter Thread" 
+
 
 ###################################################################################################
 #Versioning tools
@@ -1988,9 +1997,9 @@ def exec_cpython(script_name, args = [], method_name = None, python_name = "pyth
         #Calling a method
         import json
         import tempfile
-        import java.lang.Thread as Thread    
+        import java.lang.Thread    
         script = os.path.abspath(get_context().scriptManager.library.resolveFile(script_name))         
-        with open(get_context().setup.getContextPath()+ "/Temp" + str(Thread.currentThread().getId())+".py", "wb") as f:        
+        with open(get_context().setup.getContextPath()+ "/Temp" + str(java.lang.Thread.currentThread().getId())+".py", "wb") as f:        
             f.write(("script = '" +script +"'\n").replace('\\', '\\\\'))
             f.write("function = '" +method_name +"'\n")
             f.write("jsonargs = '" + json.dumps(args) +"'\n")

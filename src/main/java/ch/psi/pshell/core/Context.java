@@ -1233,7 +1233,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
             for (String key : argsDict.keySet()) {
                 scriptManager.setVar(key, argsDict.get(key));
             }
-            return scriptManager.evalFile(fileName);
+            return scriptManager.evalFileBackground(fileName);
         } finally {
             commandInfo.remove(Thread.currentThread());
         }

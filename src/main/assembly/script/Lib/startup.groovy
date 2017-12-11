@@ -1116,8 +1116,16 @@ def set_return(value){
     Returns:
         None
     */  
-    _=value         //Used when running file
+    if (is_interpreter_thread()){
+        _=value       
+    }
+    __THREAD_EXEC_RESULT__[Thread.currentThread()]=value  //Used when running file          
     return value    //Used when parsing file  
+}
+
+
+def is_interpreter_thread(){
+    return Thread.currentThread().name == "Interpreter Thread" 
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////

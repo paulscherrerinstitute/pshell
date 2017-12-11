@@ -1482,8 +1482,15 @@ function set_return(value){
     Returns:
         None
     */  
-    _=value         //Used when running file
+    if (is_interpreter_thread()){
+        _=value       
+    }
+    __THREAD_EXEC_RESULT__.put(java.lang.Thread.currentThread(),value)         //Used when running file
     return value    //Used when parsing file  
+}
+
+function is_interpreter_thread(){
+    return java.lang.Thread.currentThread().name == "Interpreter Thread" 
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1731,6 +1738,9 @@ function mean(data){
         Mean of the elements in the object.
 
     */
+    if (!is_array(data)){
+        data = to_array(data)
+    }
     return data.reduce(function(sum, value){return sum + value;}, 0) / data.length;
 }
 
