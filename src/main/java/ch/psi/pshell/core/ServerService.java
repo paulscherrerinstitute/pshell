@@ -2,6 +2,7 @@ package ch.psi.pshell.core;
 
 import java.io.File;
 import java.nio.file.Paths;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
@@ -39,6 +40,7 @@ import java.util.Map;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
+import java.util.Base64;
 
 /**
  * Definition of the application REST API.
@@ -227,7 +229,48 @@ public class ServerService {
             throw new ExecutionException(ex);
         }
     }
-
+    
+    @GET
+    @Path("data-json/{request : .+}")
+    @Consumes(MediaType.TEXT_PLAIN)
+    @Produces(MediaType.APPLICATION_JSON)
+    public String jsonDataRequest(@PathParam("request") final String request) throws ExecutionException {
+        try {
+            Object ret = DataServer.execute(request, "json");
+            return (ret == null) ? "" : ret.toString();
+        } catch (Exception ex) {
+            throw new ExecutionException(ex);
+        }
+        
+    }
+    
+    @GET
+    @Path("data-bs/{request : .+}")
+    @Consumes(MediaType.TEXT_PLAIN)
+    @Produces(MediaType.APPLICATION_OCTET_STREAM)
+    public byte[] bsDataRequest(@PathParam("request") final String request) throws ExecutionException {
+        try {
+            List<byte[]> req = (List<byte[]>)DataServer.execute(request, "bs");
+            int size = 16;
+            for (byte[] arr : req){
+                size+=arr.length;
+            }
+            byte[] ret = new byte[size];
+            int index=0;            
+            for (byte[] arr : req){
+                ByteBuffer b = ByteBuffer.allocate(Integer.BYTES);
+                b.putInt(arr.length);
+                System.arraycopy(b.array(), 0, ret, index, Integer.BYTES);
+                index+=Integer.BYTES;
+                System.arraycopy(arr, 0, ret, index, arr.length);
+                index+=arr.length;
+            }
+            return ret;
+        } catch (Exception ex) {
+            throw new ExecutionException(ex);            
+        }        
+    }
+   
     @GET
     @Path("script/{path : .+}")
     @Consumes(MediaType.TEXT_PLAIN)
