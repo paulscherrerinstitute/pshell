@@ -1,6 +1,7 @@
 package ch.psi.utils;
 
 import java.lang.reflect.Array;
+import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.List;
@@ -544,121 +545,121 @@ public class Convert {
     }
 
     /**
-     * Flattens a multi-dimentional array. If the array is already one-dimentional, returns a copy of the array.
+     * Flattens a multi-dimentional array. If the array is already one-dimentional, returns a copy
+     * of the array.
      */
     public static Object flatten(Object array) {
-        if (array == null){
+        if (array == null) {
             return null;
         }
-        
-        if (!array.getClass().isArray()){
+
+        if (!array.getClass().isArray()) {
             throw new IllegalArgumentException("Parameter is not an array");
         }
-        
+
         Class type = Arr.getComponentType(array);
         int[] shape = Arr.getShape(array);
-        int elements =  1;
-        for (int i: shape){
-            elements *=i;
+        int elements = 1;
+        for (int i : shape) {
+            elements *= i;
         }
         Object ret = Array.newInstance(type, elements);
-                
-        if (shape.length==2){
+
+        if (shape.length == 2) {
             //For 2d arrays (most usual conversion), use a faster implementation
             int width = shape[1];
-            int height = shape[0];         
+            int height = shape[0];
             for (int i = 0; i < height; i++) {
                 System.arraycopy(Array.get(array, i), 0, ret, i * width, width);
             }
-        } else {                
+        } else {
             //The generic implementation
-            int index = 0;        
-            int[] pos = new int [shape.length-1];
-            int chunck = shape[shape.length-1];
+            int index = 0;
+            int[] pos = new int[shape.length - 1];
+            int chunck = shape[shape.length - 1];
 
-            while(index<elements){
+            while (index < elements) {
                 Object arr = array;
-                for (int i=0; i< pos.length; i++){
+                for (int i = 0; i < pos.length; i++) {
                     arr = Array.get(arr, pos[i]);
                 }
                 System.arraycopy(arr, 0, ret, index, chunck);
-                index +=chunck;
-                for (int i=pos.length-1; i>=0; i--){
+                index += chunck;
+                for (int i = pos.length - 1; i >= 0; i--) {
                     pos[i]++;
-                    if (pos[i]<shape[i]){
+                    if (pos[i] < shape[i]) {
                         break;
                     }
-                    pos[i]=0;
+                    pos[i] = 0;
                 }
             }
         }
         return ret;
     }
-    
+
     /**
-     * Changes dimensionality of array. Number of elements of destination must coincide with the origin array.
-     * If array has already the destination shape, returns a copy of the array.
-     * The contiguous dimension correspond to the highest index e.g: depth, height, width
+     * Changes dimensionality of array. Number of elements of destination must coincide with the
+     * origin array. If array has already the destination shape, returns a copy of the array. The
+     * contiguous dimension correspond to the highest index e.g: depth, height, width
      */
     public static Object reshape(Object array, int... shape) {
-        if (array == null){
+        if (array == null) {
             return null;
         }
-        
-         if (!array.getClass().isArray()){
-             throw new IllegalArgumentException("Parameter is not an array");
-         }
-        
-        if (Arr.getRank(array)>1){
+
+        if (!array.getClass().isArray()) {
+            throw new IllegalArgumentException("Parameter is not an array");
+        }
+
+        if (Arr.getRank(array) > 1) {
             array = flatten(array);
         }
-        
-        int elements =  1;
-        for (int i: shape){
-            elements *=i;
-        }      
-        if (elements>Array.getLength(array)){
+
+        int elements = 1;
+        for (int i : shape) {
+            elements *= i;
+        }
+        if (elements > Array.getLength(array)) {
             throw new IllegalArgumentException("Invalid array shape");
-        }        
-        
+        }
+
         Class type = Arr.getComponentType(array);
         Object ret = Array.newInstance(type, shape);
-        int index = 0;                
-        
-        if (shape.length==2){
+        int index = 0;
+
+        if (shape.length == 2) {
             //For 2d arrays (most usual conversion), use a faster implementation
             int width = shape[1];
-            int height = shape[0];                     
+            int height = shape[0];
             for (int i = 0; i < height; i++) {
                 Object row = Array.newInstance(type, width);
                 System.arraycopy(array, index, row, 0, width);
                 Array.set(ret, i, row);
-                index += width;            
+                index += width;
             }
-        } else {          
+        } else {
             //The generic implementation
-            int[] pos = new int [shape.length-1];
-            int chunck = shape[shape.length-1];
+            int[] pos = new int[shape.length - 1];
+            int chunck = shape[shape.length - 1];
 
-            while(index<elements) {
+            while (index < elements) {
                 Object arr = ret;
-                for (int i=0; i< pos.length; i++){
+                for (int i = 0; i < pos.length; i++) {
                     arr = Array.get(arr, pos[i]);
                 }
                 System.arraycopy(array, index, arr, 0, chunck);
-                index +=chunck;
-                for (int i=pos.length-1; i>=0; i--){
+                index += chunck;
+                for (int i = pos.length - 1; i >= 0; i--) {
                     pos[i]++;
-                    if (pos[i]<shape[i]){
+                    if (pos[i] < shape[i]) {
                         break;
                     }
-                    pos[i]=0;
+                    pos[i] = 0;
                 }
             }
         }
         return ret;
     }
-    
 
     public static Class getWrapperClass(Class primitiveType) {
         if (primitiveType.isPrimitive()) {
@@ -980,6 +981,148 @@ public class Convert {
         return ret;
     }
 
+    public static int getPrimitiveTypeSize(Class type) {
+        if (type.isPrimitive()) {
+            type = getWrapperClass(type);
+        }
+        if (type == Double.class) {
+            return Double.BYTES;
+        } else if (type == Float.class) {
+            return Float.BYTES;
+        } else if (type == Long.class) {
+            return Long.BYTES;
+        } else if (type == Integer.class) {
+            return Integer.BYTES;
+        } else if (type == Short.class) {
+            return Short.BYTES;
+        } else if (type == Byte.class) {
+            return Byte.BYTES;
+        } else if (type == Character.class) {
+            return Character.BYTES;
+        } else {
+            throw new IllegalArgumentException("Not a number type");
+        }
+    }
+
+    public static byte[] toByteArray(Object data) {
+        if (data == null) {
+            return null;
+        }
+        Class type = Arr.getComponentType(data);
+        if (Convert.isWrapperClass(type)) {
+            type = Convert.getPrimitiveClass(type);
+        }
+        if (!type.isPrimitive()) {
+            throw new IllegalArgumentException("Invalid data type");
+        }
+        int rank = Arr.getRank(data);
+        //Transform to 1d array
+        if (rank == 0) {
+            Object arr = Array.newInstance(type, 1);
+            Array.set(arr, 0, data);
+            data = arr;
+        } else if (rank > 1) {
+            data = Convert.flatten(data);
+        }
+        int elements = Array.getLength(data);
+        int elementSize = (type == boolean.class) ? 1 : getPrimitiveTypeSize(type);
+
+        ByteBuffer buffer = ByteBuffer.allocate(elements * elementSize);
+
+        if (type == double.class) {
+            for (double v : (double[]) data) {
+                buffer.putDouble(v);
+            }
+        } else if (type == float.class) {
+            for (float v : (float[]) data) {
+                buffer.putFloat(v);
+            }
+        } else if (type == long.class) {
+            for (long v : (long[]) data) {
+                buffer.putLong(v);
+            }
+        } else if (type == int.class) {
+            for (int v : (int[]) data) {
+                buffer.putInt(v);
+            }
+        } else if (type == short.class) {
+            for (short v : (short[]) data) {
+                buffer.putShort(v);
+            }
+        } else if (type == byte.class) {
+            buffer.put((byte[]) data);
+        } else if (type == char.class) {
+            for (char v : (char[]) data) {
+                buffer.putChar(v);
+            }
+        } else if (type == boolean.class) {
+            for (boolean v : (boolean[]) data) {
+                buffer.put(v ? (byte)1 : (byte)0);
+            }
+        }
+        return buffer.array();
+    }
+
+    public static Object fromByteArray(byte[] array, Class type) {
+        if (array == null) {
+            return null;
+        }
+
+        if (Convert.isWrapperClass(type)) {
+            type = Convert.getPrimitiveClass(type);
+        }
+        if (!type.isPrimitive()) {
+            throw new IllegalArgumentException("Invalid data type");
+        }
+        int elementSize = (type == boolean.class) ? 1 : getPrimitiveTypeSize(type);
+        int elements = array.length / elementSize;
+
+        ByteBuffer buffer = ByteBuffer.wrap(array);
+
+        if (type == byte.class) {
+            return buffer.array();
+        }
+
+        Object ret = Array.newInstance(type, elements);
+        if (type == double.class) {
+            double[] arr = (double[]) ret;
+            for (int i = 0; i < elements; i++) {
+                arr[i] = buffer.getDouble();
+            }
+        } else if (type == float.class) {
+            float[] arr = (float[]) ret;
+            for (int i = 0; i < elements; i++) {
+                arr[i] = buffer.getFloat();
+            }
+        } else if (type == long.class) {
+            long[] arr = (long[]) ret;
+            for (int i = 0; i < elements; i++) {
+                arr[i] = buffer.getLong();
+            }
+        } else if (type == int.class) {
+            int[] arr = (int[]) ret;
+            for (int i = 0; i < elements; i++) {
+                arr[i] = buffer.getInt();
+            }
+        } else if (type == short.class) {
+            short[] arr = (short[]) ret;
+            for (int i = 0; i < elements; i++) {
+                arr[i] = buffer.getShort();
+            }
+        } else if (type == char.class) {
+            char[] arr = (char[]) ret;
+            for (int i = 0; i < elements; i++) {
+                arr[i] = buffer.getChar();
+            }
+        } else if (type == boolean.class) {
+            boolean[] arr = (boolean[]) ret;
+            for (int i = 0; i < elements; i++) {
+                arr[i] = (buffer.get() == 0) ? false : true;
+            }
+        }
+        return ret;
+    }
+
     public static double[][] transpose(double[][] array) {
         double[][] ret = new double[array[0].length][array.length];
         for (int i = 0; i < array.length; i++) {
@@ -1258,5 +1401,5 @@ public class Convert {
 
     public static Object[] toArray(Map map) {
         return toArray(new ArrayList(map.values()));
-    }    
+    }
 }

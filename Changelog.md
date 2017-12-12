@@ -4,6 +4,8 @@
 
 ### Added
 
+* REST API and data server provide access to data also in json, binary or bs format.
+
 * Support to webcams: ch.psi.pshell.imaging.Webcam. Configured with camera id and resolution index. 
   If empty takes the default. Existing camera ids can be read with:
 ```

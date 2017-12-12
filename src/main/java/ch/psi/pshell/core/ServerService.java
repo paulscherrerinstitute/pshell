@@ -272,6 +272,18 @@ public class ServerService {
     }
    
     @GET
+    @Path("data-bin/{request : .+}")
+    @Consumes(MediaType.TEXT_PLAIN)
+    @Produces(MediaType.APPLICATION_OCTET_STREAM)
+    public byte[] binDataRequest(@PathParam("request") final String request) throws ExecutionException {
+        try {
+            return (byte[])DataServer.execute(request, "bin");
+        } catch (Exception ex) {
+            throw new ExecutionException(ex);            
+        }        
+    }
+
+    @GET
     @Path("script/{path : .+}")
     @Consumes(MediaType.TEXT_PLAIN)
     @Produces(MediaType.TEXT_PLAIN)

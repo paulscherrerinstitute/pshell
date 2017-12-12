@@ -4,6 +4,7 @@ import ch.psi.bsread.compression.Compression;
 import ch.psi.pshell.core.Context;
 import ch.psi.pshell.bs.Encoder;
 import ch.psi.pshell.core.Replier;
+import ch.psi.utils.Convert;
 import ch.psi.utils.IO;
 import ch.psi.utils.Str;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -105,8 +106,8 @@ public class DataServer extends Replier {
         return encoder.encode();
     }
 
-    static List asBin(DataContent dc) throws Exception {
-        return asBsread(dc);
+    static byte[] asBin(DataContent dc) throws Exception {
+        return Convert.toByteArray(dc.data.sliceData);
     }
 
     public static boolean isFolder(String address) {
