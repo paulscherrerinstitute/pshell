@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.StringJoiner;
+import java.math.BigInteger;
 
 /**
  * Utilities to convert scalar and array types.
@@ -105,6 +106,17 @@ public class Convert {
         double[] ret = new double[array.length];
         for (int i = 0; i < array.length; i++) {
             ret[i] = array[i];
+        }
+        return ret;
+    }
+
+    public static double[] bigIntToDouble(BigInteger[] array) {
+        if (array == null) {
+            return null;
+        }
+        double[] ret = new double[array.length];
+        for (int i = 0; i < array.length; i++) {
+            ret[i] = array[i].doubleValue();
         }
         return ret;
     }
@@ -214,6 +226,8 @@ public class Convert {
             return shortToDouble((short[]) data);
         } else if (data instanceof long[]) {
             return longToDouble((long[]) data);
+        } else if (data instanceof BigInteger[]) {
+            return bigIntToDouble((BigInteger[]) data);
         } else if (data instanceof float[]) {
             return floatToDouble((float[]) data);
         } else if (data instanceof boolean[]) {
@@ -254,6 +268,12 @@ public class Convert {
                 double[][] ret = new double[arrayLength][];
                 for (int i = 0; i < arrayLength; i++) {
                     ret[i] = longToDouble((long[]) array[i]);
+                }
+                return ret;
+            } else if ((array[0] instanceof BigInteger[])) {
+                double[][] ret = new double[arrayLength][];
+                for (int i = 0; i < arrayLength; i++) {
+                    ret[i] = bigIntToDouble((BigInteger[]) array[i]);
                 }
                 return ret;
             } else if ((array[0] instanceof float[])) {
@@ -299,6 +319,12 @@ public class Convert {
                 ret[i] = intToDouble(((int[][]) data)[i]);
             }
             return ret;
+        } else if (data instanceof BigInteger[][]) {
+            double[][] ret = new double[arrayLength][];
+            for (int i = 0; i < arrayLength; i++) {
+                ret[i] = bigIntToDouble(((BigInteger[][]) data)[i]);
+            }
+            return ret;
         } else if (data instanceof float[][]) {
             double[][] ret = new double[arrayLength][];
             for (int i = 0; i < arrayLength; i++) {
@@ -340,6 +366,15 @@ public class Convert {
         return (value < 0) ? 0x100000000L + value : value;
     }
 
+    public static BigInteger toUnsigned(long value) {
+        BigInteger bi = BigInteger.valueOf(value);
+        
+        if (value < 0) {
+            bi = bi.add(BigInteger.ONE.shiftLeft(64));
+        }
+        return bi;
+    }
+
     //Unsigned arrays
     public static short[] toUnsigned(byte[] array) {
         if (array == null) {
@@ -374,6 +409,17 @@ public class Convert {
         return ret;
     }
 
+    public static BigInteger[] toUnsigned(long[] array) {
+        if (array == null) {
+            return null;
+        }
+        BigInteger[] ret = new BigInteger[array.length];
+        for (int i = 0; i < array.length; i++) {
+            ret[i] = toUnsigned(array[i]);
+        }
+        return ret;
+    }
+
     public static Object toUnsigned(Object data) {
         if (data instanceof Byte) {
             return Convert.toUnsigned((byte) data);
@@ -383,6 +429,9 @@ public class Convert {
         }
         if (data instanceof Integer) {
             return Convert.toUnsigned((int) data);
+        }
+        if (data instanceof Integer) {
+            return Convert.toUnsigned((long) data);
         }
         if (data instanceof byte[]) {
             return Convert.toUnsigned((byte[]) data);
@@ -411,6 +460,13 @@ public class Convert {
             long[][] ret = new long[Array.getLength(data)][];
             for (int i = 0; i < Array.getLength(data); i++) {
                 ret[i] = Convert.toUnsigned(((int[][]) data)[i]);
+            }
+            return ret;
+        }
+        if (data instanceof long[][]) {
+            BigInteger[][] ret = new BigInteger[Array.getLength(data)][];
+            for (int i = 0; i < Array.getLength(data); i++) {
+                ret[i] = Convert.toUnsigned(((long[][]) data)[i]);
             }
             return ret;
         }
@@ -1057,7 +1113,7 @@ public class Convert {
             }
         } else if (type == boolean.class) {
             for (boolean v : (boolean[]) data) {
-                buffer.put(v ? (byte)1 : (byte)0);
+                buffer.put(v ? (byte) 1 : (byte) 0);
             }
         }
         return buffer.array();

@@ -25,6 +25,7 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.BitSet;
@@ -574,6 +575,12 @@ public class ProviderHDF5 implements Provider {
                 writer.float64().write(path, (double) data);
             } else if (type == Float.class) {
                 writer.float32().write(path, (float) data);
+            } else if (type == BigInteger.class) {
+                if (unsigned) {
+                    writer.uint64().write(path,((BigInteger) data).longValue());
+                } else {
+                    writer.int64().write(path, ((BigInteger) data).longValue());
+                }
             } else if (type == Long.class) {
                 if (unsigned) {
                     writer.uint64().write(path, (long) data);
@@ -610,7 +617,10 @@ public class ProviderHDF5 implements Provider {
                 writer.float64().writeArray(path, (double[]) data);
             } else if (type == Float.class) {
                 writer.float32().writeArray(path, (float[]) data);
-            } else if (type == Long.class) {
+            } else if ((type == Long.class) || (type == BigInteger.class)) {
+                if (type == BigInteger.class){
+                    data = Convert.toPrimitiveArray(data,long.class);
+                }
                 if (unsigned) {
                     writer.uint64().writeArray(path, (long[]) data);
                 } else {
@@ -651,7 +661,10 @@ public class ProviderHDF5 implements Provider {
                 writer.float64().writeMatrix(path, (double[][]) data);
             } else if (type == Float.class) {
                 writer.float32().writeMatrix(path, (float[][]) data);
-            } else if (type == Long.class) {
+            } else if ((type == Long.class) || (type == BigInteger.class)) {
+                if (type == BigInteger.class){
+                    data = Convert.toPrimitiveArray(data,long.class);
+                }                
                 if (unsigned) {
                     writer.uint64().writeMatrix(path, (long[][]) data);
                 } else {
@@ -703,7 +716,10 @@ public class ProviderHDF5 implements Provider {
                     MDFloatArray array = new MDFloatArray((float[])Convert.flatten(d[i]), getMatrixShape(d[i]));
                     writer.float32().writeMDArrayBlockWithOffset(path, array, getMatrixOffset(i));
                 }
-            } else if (type == Long.class) {
+            } else if ((type == Long.class) || (type == BigInteger.class)) {
+                if (type == BigInteger.class){
+                    data = Convert.toPrimitiveArray(data,long.class);
+                }                
                 long[][][] d = (long[][][]) data;
                 createDataset(path, type, get3dMatrixDims(d), unsigned);
                 for (int i = 0; i < d.length; i++) {
@@ -761,7 +777,7 @@ public class ProviderHDF5 implements Provider {
             writer.float64().createMDArray(path, dimensions);
         } else if (type == Float.class) {
             writer.float32().createMDArray(path, dimensions);
-        } else if (type == Long.class) {
+        } else if ((type == Long.class) || (type==BigInteger.class)) {
             if (unsigned) {
                 writer.uint64().createMDArray(path, dimensions);
             } else {
@@ -922,10 +938,17 @@ public class ProviderHDF5 implements Provider {
                 return;
             }
         }
+        
         if (type == Double.class) {
             writer.float64().writeArrayBlockWithOffset(path, new double[]{(Double) data}, 1, index);
         } else if (type == Float.class) {
             writer.float32().writeArrayBlockWithOffset(path, new float[]{(Float) data}, 1, index);
+        } else if (type == BigInteger.class) {
+            if (writer.object().getDataSetInformation(path).isSigned()) {
+                writer.int64().writeArrayBlockWithOffset(path, new long[]{((BigInteger) data).longValue()}, 1, index);
+            } else {
+                writer.uint64().writeArrayBlockWithOffset(path, new long[]{((BigInteger) data).longValue()}, 1, index);
+            }
         } else if (type == Long.class) {
             if (writer.object().getDataSetInformation(path).isSigned()) {
                 writer.int64().writeArrayBlockWithOffset(path, new long[]{(Long) data}, 1, index);
@@ -962,7 +985,10 @@ public class ProviderHDF5 implements Provider {
             writer.float64().writeMatrixBlockWithOffset(path, new double[][]{(double[]) data}, index, 0);
         } else if (type == float[].class) {
             writer.float32().writeMatrixBlockWithOffset(path, new float[][]{(float[]) data}, index, 0);
-        } else if (type == long[].class) {
+        } else if ((type == long[].class)||(type==BigInteger[].class)) {
+            if (type == BigInteger[].class) {
+                data = Convert.toPrimitiveArray(data,long.class);
+            }            
             if (writer.object().getDataSetInformation(path).isSigned()) {
                 writer.int64().writeMatrixBlockWithOffset(path, new long[][]{(long[]) data}, index, 0);
             } else {
@@ -999,7 +1025,10 @@ public class ProviderHDF5 implements Provider {
             MDFloatArray array = new MDFloatArray((float[])Convert.flatten(data), getMatrixShape(data));
             writer.float32().writeMDArrayBlockWithOffset(path, array, getMatrixOffset(index));            
             
-        } else if (type == long[][].class) {
+        } else if ((type == long[][].class) || (type == BigInteger[][].class)) {
+            if (type == BigInteger[][].class) {
+                data = Convert.toPrimitiveArray(data,long.class);
+            }            
             MDLongArray array = new MDLongArray((long[])Convert.flatten(data), getMatrixShape(data));
             if (writer.object().getDataSetInformation(path).isSigned()) {
                 writer.int64().writeMDArrayBlockWithOffset(path, array, getMatrixOffset(index));  
@@ -1171,6 +1200,12 @@ public class ProviderHDF5 implements Provider {
                     writer.uint64().setAttr(path, name, (long) value);
                 } else {
                     writer.int64().setAttr(path, name, (long) value);
+                }
+            } else if (type == BigInteger.class) {
+                if (unsigned) {
+                    writer.uint64().setAttr(path, name, ((BigInteger) value).longValue());
+                } else {
+                    writer.int64().setAttr(path, name, ((BigInteger) value).longValue());
                 }
             } else if (type == Integer.class) {
                 if (unsigned) {

@@ -27,6 +27,7 @@ import ch.psi.utils.Arr;
 import ch.psi.utils.Convert;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
+import java.math.BigInteger;
 import java.util.function.IntFunction;
 import org.zeromq.ZMQ;
 
@@ -201,6 +202,9 @@ public class Encoder {
         }
         if (cls == Long.class){
             return unsigned ? Type.UInt32 : Type.Int64;
+        }
+        if (cls == BigInteger.class){
+            return unsigned ? Type.UInt64 : Type.Int64;
         }
         if (cls == String.class){
             return Type.String;

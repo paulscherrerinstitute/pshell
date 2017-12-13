@@ -4,6 +4,7 @@ import java.lang.reflect.Array;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.math.BigInteger;
 
 /**
  * Array manipulation utilities.
@@ -299,6 +300,9 @@ public class Arr {
         }
         if (type == Float.class) {
             return Arrays.asList((Float[]) array);
+        }
+        if (type == BigInteger.class) {
+            return Arrays.asList((BigInteger[]) array);
         }
         if (type == Long.class) {
             return Arrays.asList((Long[]) array);

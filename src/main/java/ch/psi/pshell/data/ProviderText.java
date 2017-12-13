@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.RandomAccessFile;
 import java.lang.reflect.Array;
+import java.math.BigInteger;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -246,6 +247,8 @@ public class ProviderText implements Provider {
                 size = 2;
             } else if (type == Byte.class) {
                 size = 1;
+            } else if (type == BigInteger.class) {
+                size = -1;
             }
 
             if ((type == Double.class) || (type == Float.class)) {
@@ -432,6 +435,8 @@ public class ProviderText implements Provider {
                             data = Short.valueOf(val[0]);
                         } else if (type == Byte.class) {
                             data = Byte.valueOf(val[0]);
+                        } else if (type == BigInteger.class) {
+                            data = new BigInteger(val[0]);
                         } else if (type == Boolean.class) {
                             data = Boolean.valueOf(val[0]);
                         } else if (type.isArray()) {
