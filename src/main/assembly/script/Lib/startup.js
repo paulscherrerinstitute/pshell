@@ -216,24 +216,24 @@ function lscan(writables, readables, start, end, steps, latency, relative, passe
      Line Scan: positioners change together, linearly from start to end positions.
      
      Args:
-     writables(list of Writable): Positioners set on each step.
-     readables(list of Readable): Sensors to be sampled on each step.
-     start(list of float): start positions of writables.
-     end(list of float): final positions of writables.
-     steps(int or float or list of float): number of scan steps (int) or step size (float).
-     relative (bool, optional): if true, start and end positions are relative to 
-     current at start of the scan
-     latency(float, optional): sleep time in each step before readout, defaults to 0.0.     
-     passes(int, optional): number of passes
-     zigzag(bool, optional): if true writables invert direction on each pass.    
-     before_read (function, optional): callback on each step, before each readout. Callback may have as 
-     optional parameters list of positions.
-     after_read (function, optional): callback on each step, after each readout. Callback may have as 
-     optional parameters a ScanRecord object. 
-     title(str, optional): plotting window name.
+        writables(list of Writable): Positioners set on each step.
+        readables(list of Readable): Sensors to be sampled on each step.
+        start(list of float): start positions of writables.
+        end(list of float): final positions of writables.
+        steps(int or float or list of float): number of scan steps (int) or step size (float).
+        relative (bool, optional): if true, start and end positions are relative to 
+        current at start of the scan
+        latency(float, optional): sleep time in each step before readout, defaults to 0.0.     
+        passes(int, optional): number of passes
+        zigzag(bool, optional): if true writables invert direction on each pass.    
+        before_read (function, optional): callback on each step, before each readout. Callback may have as 
+        optional parameters list of positions.
+        after_read (function, optional): callback on each step, after each readout. Callback may have as 
+        optional parameters a ScanRecord object. 
+        title(str, optional): plotting window name.
      
      Returns:
-     ScanResult object.
+         ScanResult object.
      */
     if (!is_defined(latency))    latency = 0.0;
     if (!is_defined(passes))    passes = 1;
@@ -270,21 +270,21 @@ function vscan(writables, readables, vector, line, latency, relative, passes, zi
      Vector Scan: positioners change following values provided in a vector.
      
      Args:
-     writables(list of Writable): Positioners set on each step.
-     readables(list of Readable): Sensors to be sampled on each step.
-     vector(list of list of float): table of positioner values.
-     line (bool, optional): if true, processs as line scan (1d)
-     relative (bool, optional): if true, start and end positions are relative to current at 
-     start of the scan
-     latency(float, optional): sleep time in each step before readout, defaults to 0.0.        
-     passes(int, optional): number of passes
-     zigzag(bool, optional): if true writables invert direction on each pass.
-     before_read (function, optional): callback on each step, before each readout.
-     after_read (function, optional): callback on each step, after each readout.
-     title(str, optional): plotting window name.
+        writables(list of Writable): Positioners set on each step.
+        readables(list of Readable): Sensors to be sampled on each step.
+        vector(list of list of float): table of positioner values.
+        line (bool, optional): if true, processs as line scan (1d)
+        relative (bool, optional): if true, start and end positions are relative to current at 
+        start of the scan
+        latency(float, optional): sleep time in each step before readout, defaults to 0.0.        
+        passes(int, optional): number of passes
+        zigzag(bool, optional): if true writables invert direction on each pass.
+        before_read (function, optional): callback on each step, before each readout.
+        after_read (function, optional): callback on each step, after each readout.
+        title(str, optional): plotting window name.
      
      Returns:
-     ScanResult object.
+         ScanResult object.
      */
     if (!is_defined(line))   line = false;
     if (!is_defined(latency))    latency = 0.0;
@@ -329,22 +329,22 @@ function ascan(writables, readables, start, end, steps, latency, relative, passe
      Area Scan: multi-dimentional scan, each positioner is a dimention.
      
      Args:
-     writables(list of Writable): Positioners set on each step.
-     readables(list of Readable): Sensors to be sampled on each step.
-     start(list of float): start positions of writables.
-     end(list of float): final positions of writables.
-     steps(list of int or list of float): number of scan steps (int) or step size (float).
-     relative (bool, optional): if true, start and end positions are relative to current at 
-     start of the scan
-     latency(float, optional): sleep time in each step before readout, defaults to 0.0.
-     passes(int, optional): number of passes
-     zigzag (bool, optional): if true writables invert direction on each row.
-     before_read (function, optional): callback on each step, before each readout.
-     after_read (function, optional): callback on each step, after each readout.
-     title(str, optional): plotting window name.
+        writables(list of Writable): Positioners set on each step.
+        readables(list of Readable): Sensors to be sampled on each step.
+        start(list of float): start positions of writables.
+        end(list of float): final positions of writables.
+        steps(list of int or list of float): number of scan steps (int) or step size (float).
+        relative (bool, optional): if true, start and end positions are relative to current at 
+        start of the scan
+        latency(float, optional): sleep time in each step before readout, defaults to 0.0.
+        passes(int, optional): number of passes
+        zigzag (bool, optional): if true writables invert direction on each row.
+        before_read (function, optional): callback on each step, before each readout.
+        after_read (function, optional): callback on each step, after each readout.
+        title(str, optional): plotting window name.
      
      Returns:
-     ScanResult object.
+         ScanResult object.
      */
     if (!is_defined(latency))    latency = 0.0;
     if (!is_defined(relative))   relative = false;
@@ -445,26 +445,26 @@ function  cscan(writables, readables, start, end, steps, latency, time, relative
      Continuous Scan: positioner change continuously from start to end position and readables are sampled on the fly.
      
      Args:
-     writable(Speedable or list of Motor): A positioner with a  getSpeed method or 
-     a list of motors.
-     readables(list of Readable): Sensors to be sampled on each step.
-     start(float or list of float): start positions of writables.
-     end(float or list of float): final positions of writabless.
-     steps(int or float or list of float): number of scan steps (int) or step size (float).
-     time = null
-     time (float, seconds): if not null then writables is Motor array and speeds are 
-     set according to time.
-     relative (bool, optional): if true, start and end positions are relative to 
-     current at start of the scan
-     latency(float, optional): sleep time in each step before readout, defaults to 0.0.
-     before_read (function, optional): callback on each step, before each readout. 
-     Callback may have as optional parameters list of positions.
-     after_read (function, optional): callback on each step, after each readout. 
-     Callback may have as optional parameters a ScanRecord object. 
-     title(str, optional): plotting window name.
+        writable(Speedable or list of Motor): A positioner with a  getSpeed method or 
+        a list of motors.
+        readables(list of Readable): Sensors to be sampled on each step.
+        start(float or list of float): start positions of writables.
+        end(float or list of float): final positions of writabless.
+        steps(int or float or list of float): number of scan steps (int) or step size (float).
+        time = null
+        time (float, seconds): if not null then writables is Motor array and speeds are 
+        set according to time.
+        relative (bool, optional): if true, start and end positions are relative to 
+        current at start of the scan
+        latency(float, optional): sleep time in each step before readout, defaults to 0.0.
+        before_read (function, optional): callback on each step, before each readout. 
+        Callback may have as optional parameters list of positions.
+        after_read (function, optional): callback on each step, after each readout. 
+        Callback may have as optional parameters a ScanRecord object. 
+        title(str, optional): plotting window name.
      
      Returns:
-     ScanResult object.
+        ScanResult object.
      
      */
     if (!is_defined(latency))    latency = 0.0;
@@ -601,15 +601,15 @@ function  tscan(readables, points, interval, title, before_read, after_read) {
      Time Scan: sensors are sampled in fixed time intervals.
      
      Args:
-     readables(list of Readable): Sensors to be sampled on each step.
-     points(int): number of samples.
-     interval(float): time interval between readouts.
-     before_read (function, optional): callback on each step, before each readout.
-     after_read (function, optional): callback on each step, after each readout.
-     title(str, optional): plotting window name.
+        readables(list of Readable): Sensors to be sampled on each step.
+        points(int): number of samples.
+        interval(float): time interval between readouts.
+        before_read (function, optional): callback on each step, before each readout.
+        after_read (function, optional): callback on each step, after each readout.
+        title(str, optional): plotting window name.
      
      Returns:
-     ScanResult object.
+         ScanResult object.
      */
     if (!is_defined(title))    title = null;
 
@@ -683,11 +683,11 @@ function escan(name, title) {
     /*
      Epics Scan: execute an Epics Scan Record.
      Args:
-     name(str): Name of scan record.
-     title(str, optional): plotting window name.
+        name(str): Name of scan record.
+        title(str, optional): plotting window name.
      
      Returns:
-     ScanResult object.
+         ScanResult object.
      */
 
     if (!is_defined(title))    title = null;
@@ -812,14 +812,14 @@ function plot(data, name, xdata, ydata, title) {
     /*Request one or multiple plots of user data (1d, 2d or 3d)
      
      Args:
-     data: array or list of values. For multiple plots, array of arrays or lists of values.
-     name(str or list of str, optional): Plot name or list of names (if multiple plots). 
-     xdata: array or list of values. For multiple plots, array of arrays or lists of values.
-     ydata: array or list of values. For multiple plots, array of arrays or lists of values.
-     title(str, optional): plotting window name.
+        data: array or list of values. For multiple plots, array of arrays or lists of values.
+        name(str or list of str, optional): Plot name or list of names (if multiple plots). 
+        xdata: array or list of values. For multiple plots, array of arrays or lists of values.
+        ydata: array or list of values. For multiple plots, array of arrays or lists of values.
+        title(str, optional): plotting window name.
      
      Returns:
-     ArrayList of Plot objects.
+         ArrayList of Plot objects.
      
      */
     if (!is_defined(name))   name = null;
@@ -941,10 +941,10 @@ function get_attributes(path) {
      Get the attributes from the current persistence context or from data files.
      
      Args:
-     path(str): Path to group or dataset relative to the current persistence context root.
-               If in the format 'root|path' then read from path given by 'root'.
+        path(str): Path to group or dataset relative to the current persistence context root.
+                  If in the format 'root|path' then read from path given by 'root'.
      Returns:
-     Dictionary
+         Dictionary
      
      */
     return get_context().dataManager.getAttributes(path)
@@ -991,13 +991,13 @@ function create_dataset(path, type, unsigned, dimensions) {
     Create an empty dataset within the current persistence context.
 
     Args:
-     path(str): Path to dataset relative to the current persistence context root.
-     type(str): array type 'b' = byte, 'h' = short, 'i' = int, 'l' = long,  'f' = float, 
-     'd' = double, 'c' = char, 's' = String,  'o' = Object 
-     unsigned(boolean, optional): create a dataset of unsigned type.
-     dimensions(tuple of int, optional): a 0 value means variable length in that dimension.
+        path(str): Path to dataset relative to the current persistence context root.
+        type(str): array type 'b' = byte, 'h' = short, 'i' = int, 'l' = long,  'f' = float, 
+        'd' = double, 'c' = char, 's' = String,  'o' = Object 
+        unsigned(boolean, optional): create a dataset of unsigned type.
+        dimensions(tuple of int, optional): a 0 value means variable length in that dimension.
      Returns:
-     null
+         null
      
      */
     if (!is_defined(unsigned))
@@ -1014,14 +1014,14 @@ function create_table(path, names, types, lengths) {
      Create an empty table (dataset of compound type) within the current persistence context.
 
      Args:
-     path(str): Path to dataset relative to the current persistence context root.
-     names(list of strings): name of each column
-     types(array of str):  'b' = byte, 'h' = short, 'i' = int, 'l' = long,  'f' = float, 
-     'd' = double, 'c' = char, 's' = String,  'o' = Object 
-     Note:A '[' prefix on type name indicates an array type.
-     lengths(list of int): the array length for each columns(0 for scalar types).
+        path(str): Path to dataset relative to the current persistence context root.
+        names(list of strings): name of each column
+        types(array of str):  'b' = byte, 'h' = short, 'i' = int, 'l' = long,  'f' = float, 
+        'd' = double, 'c' = char, 's' = String,  'o' = Object 
+        Note:A '[' prefix on type name indicates an array type.
+        lengths(list of int): the array length for each columns(0 for scalar types).
      Returns:
-     null
+         null
      
      */
     if (!is_defined(types))
@@ -1081,10 +1081,10 @@ function append_table(path, data) {
      Append data to a table (dataset of compound type) 
 
      Args:
-     path(str): Path to dataset relative to the current persistence context root.
-     data(list): List of valus for each column of the table. Array types can be expressed as lists.
+        path(str): Path to dataset relative to the current persistence context root.
+        data(list): List of valus for each column of the table. Array types can be expressed as lists.
      Returns:
-     null
+         null
      
      */
 
@@ -1104,9 +1104,9 @@ function flush_data() {
      Flush all data files immediately.
      
      Args:
-     null
+        null
      Returns:
-     null
+         null
      */
     get_context().dataManager.flush()
 }
@@ -1116,12 +1116,12 @@ function set_attribute(path, name, value, unsigned) {
      Set an attribute to a group or dataset.
      
      Args:
-     path(str): Path to dataset relative to the current persistence context root.
-     name(str): name of the atttribute
-     value(Object): the attribute value
-     unsigned(bool, optional):  if applies, indicate if  value is unsigned.
+        path(str): Path to dataset relative to the current persistence context root.
+        name(str): name of the atttribute
+        value(Object): the attribute value
+        unsigned(bool, optional):  if applies, indicate if  value is unsigned.
      Returns:
-     null
+         null
      */
     if (!is_defined(unsigned))
         unsigned = false;
@@ -1212,14 +1212,14 @@ function caget(name, type, size) {
      Reads an Epics PV.
      
      Args:
-     name(str): PV name
-     type(str, optional): type of PV. By default gets the PV standard field type.
-     Scalar values: 'b', 'i', 'l', 'd', 's'.
-     Array: values: '[b', '[i,', '[l', '[d', '[s'.
-     size (int, optional): for arrays, number of elements to be read. Default read all.
+        name(str): PV name
+        type(str, optional): type of PV. By default gets the PV standard field type.
+        Scalar values: 'b', 'i', 'l', 'd', 's'.
+        Array: values: '[b', '[i,', '[l', '[d', '[s'.
+        size (int, optional): for arrays, number of elements to be read. Default read all.
      
      Returns:
-     PV value
+         PV value
      
      */
     if (!is_defined(type))
@@ -1234,17 +1234,18 @@ function cawait(name, value, timeout, comparator, type, size) {
      Wait for a PV to have a given value.
      
      Args:
-     name(str): PV name
-     value (obj): value to compare to
-     timeout(float, optional): time in seconds to wait. If null, waits forever.
-     comparator(java.util.Comparator, optional): if null, equality.
-     type(str, optional): type of PV. By default gets the PV standard field type.
-     Scalar values: 'b', 'i', 'l', 'd', 's'.
-     Array: values: '[b', '[i,', '[l', '[d', '[s'.
-     size (int, optional): for arrays, number of elements to be read. Default read all.
+        name(str): PV name
+        value (obj): value to compare to
+        timeout(float, optional): time in seconds to wait. If null, waits forever.
+        comparator(java.util.Comparator or float, optional): if None waits for equality. 
+            If a numeric value is provided, waits for channel to be in range.
+        type(str, optional): type of PV. By default gets the PV standard field type.
+        Scalar values: 'b', 'i', 'l', 'd', 's'.
+        Array: values: '[b', '[i,', '[l', '[d', '[s'.
+        size (int, optional): for arrays, number of elements to be read. Default read all.
      
      Returns:
-     None
+         None
      */
     if (!is_defined(type))   type = null;
     if (!is_defined(size))   size = null;
@@ -1261,12 +1262,12 @@ function caput(name, value, timeout) {
      Writes to an Epics PV.
      
      Args:
-     name(str): PV name
-     value(scalar, string or array): new PV value.
-     timeout(int, optional): timeout in seconds to the write. If null waits forever to completion.                    
-     
+        name(str): PV name
+        value(scalar, string or array): new PV value.
+        timeout(int, optional): timeout in seconds to the write. If null waits forever to completion.                    
+
      Returns:
-     None
+         None
      */
     if (is_defined(timeout))
         timeout = timeout * 1000
@@ -1280,11 +1281,11 @@ function caputq(name, value) {
      Writes to an Epics PV and does not wait.
      
      Args:
-     name(str): PV name
-     value(scalar, string or array): new PV value.
+        name(str): PV name
+        value(scalar, string or array): new PV value.
      
      Returns:
-     None
+         None
      */
     return Epics.putq(name, value)
 }
@@ -1335,10 +1336,10 @@ function fork() {
      Start execution of methods in parallel. 
      
      Args:
-     *functions(functions references)
+        *functions(functions references)
      
      Returns:
-     List of callable objects
+        List of callable objects
      */
     var callables = []
     for( var i =0; i<arguments.length; i++){
@@ -1359,10 +1360,10 @@ function join(futures) {
      Wait parallel execution of methods.
      
      Args:
-     callables(list of Callables) : as returned from fork
+        callables(list of Callables) : as returned from fork
      
      Returns:
-     None
+        None
      */
     try{
         return Threading.join(futures)
@@ -1376,10 +1377,10 @@ function parallelize() {
      Equivalent to fork + join
      
      Args:
-     *methods(method references)
+        *methods(method references)
      
      Returns:
-     None
+        None
      */
     futures = fork.apply(this, arguments)
     return join(futures)
@@ -1392,10 +1393,10 @@ function run(script_name, args) {
     /*
      Run script: can be absolute path, relative, or short name to be search in the path.
      Args:
-     args(Dict ot Array): gobal variables set to the script(if dict), or argv varialble (if array).
+        args(Dict ot Array): gobal variables set to the script(if dict), or argv varialble (if array).
      
      Returns:
-     The script return value
+        The script return value
     */
     var script = get_context().scriptManager.library.resolveFile(script_name)
     var file = script!=null ? new File(script) : null

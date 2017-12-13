@@ -140,6 +140,29 @@ public class Epics {
         }
     }
 
+    public static <T extends Number> T waitValue(String channelName, T value, double precision, Integer timeout, Class<T> type, Integer size) throws ChannelException, InterruptedException, TimeoutException, ExecutionException {
+        if (!(value instanceof Number)){
+            throw new IllegalArgumentException("Number value required");
+        }
+        if ((type!=null)  && (!Number.class.isAssignableFrom(type))){
+            throw new IllegalArgumentException("Must be a number type");
+        }
+        Comparator<T> comparator = (T o1, T o2) -> {
+            if ((o1 == null) && (o2 == null)) {
+                return 0;
+            }            
+            if ((o1 == null) || (o2 == null)) {
+                return 1;
+            }            
+            if (Math.abs(o1.doubleValue()-o2.doubleValue()) <= precision){
+                return 0;
+            }
+            return Double.valueOf(o1.doubleValue()).compareTo(o2.doubleValue());
+        };
+        
+        return waitValue(channelName, value, comparator, timeout, type, size);
+    }
+    
     public static void put(String channelName, Object value) throws ChannelException, InterruptedException, TimeoutException, ExecutionException {
         put(channelName, value, null);
     }

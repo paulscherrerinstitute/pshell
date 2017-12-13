@@ -1144,7 +1144,8 @@ def cawait(name, value, timeout=None, comparator=None, type=None, size=None):
         name(str): PV name
         value (obj): value to compare to
         timeout(float, optional): time in seconds to wait. If None, waits forever.
-        comparator(java.util.Comparator, optional): if None, equality.
+        comparator(java.util.Comparator or float, optional): if None waits for equality. 
+            If a numeric value is provided, waits for channel to be in range.
         type(str, optional): type of PV. By default gets the PV standard field type.
             Scalar values: 'b', 'i', 'l', 'd', 's'.
             Array: values: '[b', '[i,', '[l', '[d', '[s'.

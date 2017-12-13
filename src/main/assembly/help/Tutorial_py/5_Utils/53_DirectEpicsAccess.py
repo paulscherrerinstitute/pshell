@@ -14,7 +14,7 @@ caput(channel_name, 0.0)
 caput(channel_name, 0.0)
 print (caget(channel_name))
 
-#waiting for a channel valur
+#waiting for a channel value
 cawait(channel_name, 0.0, timeout = 10.0)
 
 #If many IO it is better to keep the same CA connection

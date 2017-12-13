@@ -85,6 +85,10 @@ public class Sys {
                 return "so";
         }
     }
+    
+    public static boolean is64bits() {
+        return System.getProperty("os.arch").contains("64");
+    }    
 
     public static void addToClassPath(String s) throws Exception {
         File f = new File(s);
@@ -143,5 +147,5 @@ public class Sys {
             System.err.println(e);
         }
         return -1;
-    }
+    }    
 }
