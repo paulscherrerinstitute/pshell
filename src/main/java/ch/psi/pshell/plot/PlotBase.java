@@ -188,12 +188,15 @@ abstract public class PlotBase<T extends PlotSeries> extends MonitoredPanel impl
      */
     @Override
     public BufferedImage getSnapshot() {
-        try {
-            SwingUtilities.invokeAndWait(() -> {
-                //So plot will be updated with data set in other threads.
-            });
-        } catch (Exception ex) {
+        if (!SwingUtilities.isEventDispatchThread()){
+            try {
+                SwingUtilities.invokeAndWait(() -> {
+                    //So plot will be updated with data set in other threads.
+                });
+            } catch (Exception ex) {
+            }
         }
+        //So plot will be updated with data set in other threads.
         return SwingUtils.createImage(this);
     }
 
