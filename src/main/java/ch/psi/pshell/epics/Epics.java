@@ -67,7 +67,7 @@ public class Epics {
     final static Object creationLock = new Object();
 
     public static Channel newChannel(ChannelDescriptor descriptor) throws ChannelException, InterruptedException, TimeoutException {
-        ChannelService factory = getChannelFactory();        
+        ChannelService factory = getChannelFactory();
         synchronized (creationLock) {
             if (factory.isDryrun()) {
                 return getChannelFactory().createChannel(new DummyChannelDescriptor(descriptor.getType(), descriptor.getName(), descriptor.getMonitored(), descriptor.getSize()));
@@ -82,8 +82,8 @@ public class Epics {
             try {
                 type = factory.getDefaultType(name);
             } catch (Exception ex) {
-            }            
-        }        
+            }
+        }
         ChannelDescriptor descriptor = new ChannelDescriptor<>(type, name, false, size);
         return newChannel(descriptor);
     }
@@ -124,7 +124,7 @@ public class Epics {
         try {
             if (comparator != null) {
                 if (timeout != null) {
-                    return channel.waitForValue(value, comparator, timeout);
+                    return channel.waitForValue(value, timeout, comparator);
                 } else {
                     return channel.waitForValue(value, comparator);
                 }
@@ -141,28 +141,28 @@ public class Epics {
     }
 
     public static <T extends Number> T waitValue(String channelName, T value, double precision, Integer timeout, Class<T> type, Integer size) throws ChannelException, InterruptedException, TimeoutException, ExecutionException {
-        if (!(value instanceof Number)){
+        if (!(value instanceof Number)) {
             throw new IllegalArgumentException("Number value required");
         }
-        if ((type!=null)  && (!Number.class.isAssignableFrom(type))){
+        if ((type != null) && (!Number.class.isAssignableFrom(type))) {
             throw new IllegalArgumentException("Must be a number type");
         }
         Comparator<T> comparator = (T o1, T o2) -> {
             if ((o1 == null) && (o2 == null)) {
                 return 0;
-            }            
+            }
             if ((o1 == null) || (o2 == null)) {
                 return 1;
-            }            
-            if (Math.abs(o1.doubleValue()-o2.doubleValue()) <= precision){
+            }
+            if (Math.abs(o1.doubleValue() - o2.doubleValue()) <= Math.abs(precision)) {
                 return 0;
             }
             return Double.valueOf(o1.doubleValue()).compareTo(o2.doubleValue());
         };
-        
+
         return waitValue(channelName, value, comparator, timeout, type, size);
     }
-    
+
     public static void put(String channelName, Object value) throws ChannelException, InterruptedException, TimeoutException, ExecutionException {
         put(channelName, value, null);
     }
@@ -186,32 +186,29 @@ public class Epics {
             channel.setValueNoWait(value);
         } finally {
             closeChannel(channel);
-        }           
+        }
     }
-    
-    
+
     public static EpicsRegister newChannelDevice(String name, String channelName, Class type) {
         return newChannelDevice(name, channelName, type, false);
     }
-    
-    
+
     public static EpicsRegister newChannelDevice(String name, String channelName, Class type, boolean timestamped) {
         return newChannelDevice(name, channelName, type, timestamped, -1);
     }
 
-    
-    public static EpicsRegister newChannelDevice(String name, String channelName, Class type,  boolean timestamped, int precision) {
+    public static EpicsRegister newChannelDevice(String name, String channelName, Class type, boolean timestamped, int precision) {
         return newChannelDevice(name, channelName, type, timestamped, -1, -1);
     }
 
-    public static EpicsRegister newChannelDevice(String name, String channelName, Class type,  boolean timestamped, int precision, int size) {
+    public static EpicsRegister newChannelDevice(String name, String channelName, Class type, boolean timestamped, int precision, int size) {
         DefaultChannelService factory = getChannelFactory();
         if (type == null) {
             try {
                 type = factory.getDefaultType(channelName);
             } catch (Exception ex) {
                 type = Double.class;
-            }            
+            }
         }
         if (type == byte[].class) {
             return new ChannelByteArray(name, channelName, size, timestamped);
@@ -252,26 +249,38 @@ public class Epics {
         }
         throw new RuntimeException("Invalid channel type");
     }
-    
-    public static Class getChannelType(String typeId) throws ClassNotFoundException{
-        if (typeId == null){
+
+    public static Class getChannelType(String typeId) throws ClassNotFoundException {
+        if (typeId == null) {
             return null;
         }
-        switch (typeId){
-            case "b": return Byte.class;
-            case "i": return Short.class;
-            case "l": return Integer.class;
-            case "f": return Float.class;
-            case "d": return Double.class;
-            case "s": return String.class;
-            case "[b": return byte[].class;
-            case "[i": return short[].class;
-            case "[l": return int[].class;
-            case "[f": return float[].class;
-            case "[d": return double[].class;
-            case "[s": return String[].class;
+        switch (typeId) {
+            case "b":
+                return Byte.class;
+            case "i":
+                return Short.class;
+            case "l":
+                return Integer.class;
+            case "f":
+                return Float.class;
+            case "d":
+                return Double.class;
+            case "s":
+                return String.class;
+            case "[b":
+                return byte[].class;
+            case "[i":
+                return short[].class;
+            case "[l":
+                return int[].class;
+            case "[f":
+                return float[].class;
+            case "[d":
+                return double[].class;
+            case "[s":
+                return String[].class;
         }
         return Class.forName(typeId);
     }
-    
+
 }
