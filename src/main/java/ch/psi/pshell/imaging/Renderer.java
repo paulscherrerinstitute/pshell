@@ -2083,7 +2083,10 @@ public class Renderer extends MonitoredPanel implements ImageListener, ImageBuff
                     waitNext(10000);
                     SwingUtils.invokeDelayed(() -> {
                         setViewPosition(state.imagePosition);
-                        setShowReticle(state.reticle);
+                        //If state had no reticule, but a reticule has been enabled, do nothing.
+                        if (state.reticle){
+                            setShowReticle(true);
+                        }
                     }, 100);
                 } catch (Exception ex) {
                 }
