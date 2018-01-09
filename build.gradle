@@ -72,7 +72,8 @@ dependencies {
     compile 'org.glassfish.jersey.media:jersey-media-sse:2.25'
     //compile 'com.fasterxml.jackson.core:jackson-databind:2.8.5'  //TODO: bsread is using 2.8.8.1
     
-    compile files('lib/ch/systemsx/cisd/sis-jhdf5-batteries_included-14.12.6.jar')
+    //compile 'ch.sis:ch.sis.jhdf5:14.12.6'
+    compile files('lib/ch/systemsx/cisd/sis-jhdf5-batteries_included-14.12.6.jar')        
     compile 'org.jfree:jfreechart:1.0.19'
     compile 'org.eclipse.jgit:org.eclipse.jgit:4.6.1.201703071140-r'
     compile 'org.slf4j:slf4j-nop:1.7.25'

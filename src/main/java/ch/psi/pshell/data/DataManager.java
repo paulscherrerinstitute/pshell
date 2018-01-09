@@ -76,9 +76,10 @@ public class DataManager implements AutoCloseable {
         dataRootDepth = Paths.get(IO.getRelativePath(context.getExecutionPars().getPath(), getDataFolder())).getNameCount();
     }
 
-    int dataRootDepth;
-
+    int dataRootDepth;    
+    
     public void initialize() throws Exception {
+        initialized=false;
         logger.info("Initializing " + getClass().getSimpleName());
         closeOutput();
         setProvider(context.getConfig().dataProvider);
@@ -86,6 +87,12 @@ public class DataManager implements AutoCloseable {
         aliases.clear();
         dataRootDepth = Paths.get(IO.getRelativePath(context.getExecutionPars().getPath(), getDataFolder())).getNameCount();
         logger.info("Finished " + getClass().getSimpleName() + " initialization");
+        initialized = true;
+    }
+    
+    volatile boolean initialized;
+    public boolean isInitialized(){
+        return initialized;
     }
 
     public void setProvider(String name) throws Exception {

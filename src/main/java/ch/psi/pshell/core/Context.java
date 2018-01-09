@@ -307,13 +307,15 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
         if (instance == null) {
             instance = new Context();
             instance.pluginManager.loadExtensionsFolder();
-            try {
-                instance.dataManager.initialize(); //To provide services even if context hasn't started all right.
-            } catch (Exception ex) {
-                logger.log(Level.SEVERE, null, ex);
-            }
-
         }
+        
+        //To provide services even if context does not initialize all right (and in disabled mode).                
+        try {
+            instance.dataManager.initialize(); 
+        } catch (Throwable ex) {
+            logger.log(Level.SEVERE, null, ex);
+        }                
+        
         return instance;
     }
 
@@ -936,7 +938,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
                     exit(ex);
                 }
             }
-            if (!firstRun) {
+            if ((!firstRun)||(!dataManager.isInitialized())) {
                 dataManager.initialize();
             }
             notificationManager = new NotificationManager();
@@ -2508,7 +2510,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
         if (isEmptyMode()) {
             logger.warning("Empty mode: device pool is not loaded");
         }
-
+        
         //Load  plugins
         if (!isBareMode()) {
             pluginManager.loadPluginFolder();
