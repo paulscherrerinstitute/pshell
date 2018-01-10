@@ -15,6 +15,8 @@ import java.util.logging.Level;
  */
 public class Configuration extends Config {
 
+    public static transient final String PROPERTY_CONSOLE_LOG = "ch.psi.pshell.console.log";
+
     public boolean autoSaveScanData = true;
     public boolean createSessionFiles;
 
@@ -58,36 +60,33 @@ public class Configuration extends Config {
         Finer,
         Finest
     }
-    
+
     public enum NotificationLevel {
         Off,
         Completion,
         Error
     }
-    
 
     public Level getLogLevel() {
         return Level.parse(logLevel.toString().toUpperCase());
     }
 
-    String commandLineLogLevelConsole;
-
     public Level getConsoleLogLevel() {
-        return Level.parse((commandLineLogLevelConsole != null)
-                ? commandLineLogLevelConsole.toUpperCase()
+        String consoleLogLevel = System.getProperty(PROPERTY_CONSOLE_LOG);
+        return Level.parse((consoleLogLevel != null)
+                ? consoleLogLevel.toUpperCase()
                 : logLevelConsole.toString().toUpperCase());
     }
-    
-    
-    NotificationLevel getNotificationLevel(){
-        if (notificationLevel == null){
+
+    NotificationLevel getNotificationLevel() {
+        if (notificationLevel == null) {
             return NotificationLevel.Off;
         }
         return notificationLevel;
     }
-    
-    public int getDepthDim(){
-        return (((depthDimension<0) || (depthDimension>2)) ? 0 : depthDimension);
+
+    public int getDepthDim() {
+        return (((depthDimension < 0) || (depthDimension > 2)) ? 0 : depthDimension);
     }
 
     public String getName() {

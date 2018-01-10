@@ -1,7 +1,6 @@
 package ch.psi.pshell.ui;
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import ch.psi.pshell.core.Configuration;
 import ch.psi.pshell.core.Configuration.LogLevel;
 import ch.psi.pshell.core.Context;
 import ch.psi.pshell.core.ContextAdapter;
@@ -21,10 +20,13 @@ import ch.psi.pshell.data.PlotDescriptor;
 import ch.psi.pshell.device.GenericDevice;
 import ch.psi.pshell.plot.Plot;
 import ch.psi.pshell.plotter.Client;
+import ch.psi.pshell.plotter.Plotter;
 import ch.psi.pshell.plotter.PlotterBinder;
 import ch.psi.pshell.scripting.ViewPreference;
 import ch.psi.pshell.swing.PlotPanel;
 import ch.psi.pshell.swing.StripChart;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import ch.psi.utils.Arr;
 import ch.psi.utils.IO;
 import ch.psi.utils.ObservableBase;
@@ -54,7 +56,6 @@ import javax.swing.SwingWorker.StateValue;
 import javax.swing.UIManager;
 import javax.swing.WindowConstants;
 import javax.swing.event.SwingPropertyChangeSupport;
-import ch.psi.pshell.plotter.Plotter;
 import java.util.List;
 import java.util.Map;
 
@@ -130,9 +131,12 @@ public class App extends ObservableBase<AppListener> {
         sb.append("\n\t-home=<path>\tSet the home folder (default is ./home)");
         sb.append("\n\t-outp=<path>\tSet the output folder (default is {home})");
         sb.append("\n\t-data=<path>\tSet the data folder (default is {home}/data)");
-        sb.append("\n\t-setp=<path>\tSet the setup file(default is {home}/config/setup.properties)");
+        sb.append("\n\t-setp=<path>\tOverride the setup file(default is {config}/setup.properties)");
+        sb.append("\n\t-conf=<path>\tOverride the config file(default is {config}/config.properties)");
+        sb.append("\n\t-pool=<path>\tOverride the device pool configuration file");
+        sb.append("\n\t-plug=<path>\tOverride the plugin definition file (default is {config}/plugins.properties)");
+        sb.append("\n\t-task=<path>\tOverride the task definition file (default is {config}/tasks.properties)");
         sb.append("\n\t-clog=<level>\tSet the console logging level");
-        sb.append("\n\t-pool=<path>\tSet the device pool configuration file");
         sb.append("\n\t-user=<name>\tSet the startup user");
         sb.append("\n\t-type=<ext>\tSet the script type, overriding the setup");
         sb.append("\n\t-sbar\tAppend status bar to detached windows");
@@ -409,6 +413,11 @@ public class App extends ObservableBase<AppListener> {
         public String outp;
         public String data;
         public String user;
+        public String setp;
+        public String conf;
+        public String plug;
+        public String task;
+        public String pool;
         public LogLevel consoleLog;
     }
 
@@ -432,7 +441,7 @@ public class App extends ObservableBase<AppListener> {
                 ex.printStackTrace();
             }
         }
-        System.out.println("Version " + getApplicationBuildInfo());        
+        System.out.println("Version " + getApplicationBuildInfo());
 
         if (hasArgument("?")) {
             System.out.println(getHelpMessage());
@@ -465,49 +474,71 @@ public class App extends ObservableBase<AppListener> {
             }
         }
 
-        if (getArgumentValue("home") != null) {
-            System.setProperty(Context.PROPERTY_HOME_PATH, getArgumentValue("home"));
+        if (isArgumentDefined("setp")) {
+            System.setProperty(Context.PROPERTY_SETUP_FILE, getArgumentValue("setp"));
+        } else if (Config.isStringDefined(pshellProperties.setp)) {
+            System.setProperty(Context.PROPERTY_SETUP_FILE, pshellProperties.setp);
+        }
+
+        if (isArgumentDefined("home")) {
+            System.setProperty(Setup.PROPERTY_HOME_PATH, getArgumentValue("home"));
         } else if (Config.isStringDefined(pshellProperties.home)) {
-            System.setProperty(Context.PROPERTY_HOME_PATH, pshellProperties.home);
+            System.setProperty(Setup.PROPERTY_HOME_PATH, pshellProperties.home);
         }
 
-        if ((getArgumentValue("setp") != null) && (getArgumentValue("setp").length() > 0)) {
-            System.setProperty(Setup.PROPERTY_SETUP_FILE, getArgumentValue("setp"));
+        if (isArgumentDefined("conf")) {
+            System.setProperty(Setup.PROPERTY_CONFIG_FILE, getArgumentValue("conf"));
+        } else if (Config.isStringDefined(pshellProperties.conf)) {
+            System.setProperty(Setup.PROPERTY_CONFIG_FILE, pshellProperties.conf);
         }
 
-        if (getArgumentValue("outp") != null) {
-            System.setProperty(Context.PROPERTY_OUTPUT_PATH, getArgumentValue("outp"));
+        if (isArgumentDefined("plug")) {
+            System.setProperty(Setup.PROPERTY_PLUGINS_FILE, getArgumentValue("plug"));
+        } else if (Config.isStringDefined(pshellProperties.plug)) {
+            System.setProperty(Setup.PROPERTY_PLUGINS_FILE, pshellProperties.plug);
+        }
+
+        if (isArgumentDefined("task")) {
+            System.setProperty(Setup.PROPERTY_TASKS_FILE, getArgumentValue("task"));
+        } else if (Config.isStringDefined(pshellProperties.task)) {
+            System.setProperty(Setup.PROPERTY_TASKS_FILE, pshellProperties.task);
+        }
+
+        if (isArgumentDefined("outp")) {
+            System.setProperty(Setup.PROPERTY_OUTPUT_PATH, getArgumentValue("outp"));
         } else if (Config.isStringDefined(pshellProperties.outp)) {
-            System.setProperty(Context.PROPERTY_OUTPUT_PATH, pshellProperties.outp);
+            System.setProperty(Setup.PROPERTY_OUTPUT_PATH, pshellProperties.outp);
         }
 
-        if (getArgumentValue("data") != null) {
-            System.setProperty(Context.PROPERTY_DATA_PATH, getArgumentValue("data"));
+        if (isArgumentDefined("data")) {
+            System.setProperty(Setup.PROPERTY_DATA_PATH, getArgumentValue("data"));
         } else if (Config.isStringDefined(pshellProperties.data)) {
-            System.setProperty(Context.PROPERTY_DATA_PATH, pshellProperties.data);
+            System.setProperty(Setup.PROPERTY_DATA_PATH, pshellProperties.data);
         }
 
-        if (getArgumentValue("user") != null) {
+        if (isArgumentDefined("pool")) {
+            System.setProperty(Setup.PROPERTY_DEVICES_FILE, getArgumentValue("pool"));
+        } else if (pshellProperties.pool != null) {
+            System.setProperty(Setup.PROPERTY_DEVICES_FILE, pshellProperties.pool.toString());
+        }
+
+        if (isArgumentDefined("type")) {
+            System.setProperty(Setup.PROPERTY_SCRIPT_TYPE, getArgumentValue("type"));
+        }
+
+        if (isArgumentDefined("user")) {
             System.setProperty(Context.PROPERTY_USER, getArgumentValue("user"));
         } else if (Config.isStringDefined(pshellProperties.user)) {
             System.setProperty(Context.PROPERTY_USER, pshellProperties.user);
         }
-        if (getArgumentValue("clog") != null) {
-            System.setProperty(Context.PROPERTY_CONSOLE_LOG, getArgumentValue("clog"));
+        if (isArgumentDefined("clog")) {
+            System.setProperty(Configuration.PROPERTY_CONSOLE_LOG, getArgumentValue("clog"));
         } else if (pshellProperties.consoleLog != null) {
-            System.setProperty(Context.PROPERTY_CONSOLE_LOG, pshellProperties.consoleLog.toString());
-        }
-
-        if (getArgumentValue("type") != null) {
-            System.setProperty(Context.PROPERTY_SCRIPT_TYPE, getArgumentValue("type"));
-        }
-
-        if (getArgumentValue("pool") != null) {
-            System.setProperty(Context.PROPERTY_DEVICE_POOL, getArgumentValue("pool"));
+            System.setProperty(Configuration.PROPERTY_CONSOLE_LOG, pshellProperties.consoleLog.toString());
         }
 
         //Only used if View is not instantiated
-        if (getArgumentValue("quality") != null) {
+        if (isArgumentDefined("quality")) {
             System.setProperty(PlotPanel.PROPERTY_PLOT_QUALITY, Plot.Quality.valueOf(getArgumentValue("quality")).toString());
         }
 
@@ -544,7 +575,7 @@ public class App extends ObservableBase<AppListener> {
 
         Context.createInstance();
         logger.log(Level.INFO, "Version: " + getApplicationBuildInfo());
-        
+
         context = Context.getInstance();
         context.addListener(new ContextAdapter() {
             @Override
@@ -568,7 +599,7 @@ public class App extends ObservableBase<AppListener> {
             public void onPreferenceChange(ViewPreference preference, Object value) {
                 switch (preference) {
                     case STATUS:
-                        if (value == null){
+                        if (value == null) {
                             value = context.getState().toString();
                         }
                         pcs.firePropertyChange("message", "", String.valueOf(value));
@@ -643,9 +674,9 @@ public class App extends ObservableBase<AppListener> {
             });
 
         }
-        
+
         loadCommandLinePlugins();
-        context.redirectScriptStdio();        
+        context.redirectScriptStdio();
         if (getPlotServer() != null) {
             startPlotServerConnection(getPlotServer(), 5000);
         }
@@ -945,6 +976,13 @@ public class App extends ObservableBase<AppListener> {
             return null;
         }
         return values.get(entries - 1);
+    }
+
+    /**
+     * Returns true if argument value is set and not empty
+     */
+    static public boolean isArgumentDefined(String name) {
+        return ((getArgumentValue(name) != null) && (getArgumentValue(name).length() > 0));
     }
 
     /**

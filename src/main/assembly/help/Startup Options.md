@@ -103,11 +103,23 @@
   </tr>
   <tr>
     <td>-setp=[path]</td>
-    <td>Set the setup file, which contains  all path definitions (default is {home}/config/setup.properties).</td>
+    <td>Override the setup file, which contains all path definitions (default is {config}/setup.properties).</td>
+  </tr>
+  <tr>
+    <td>-conf=[path]</td>
+    <td>Override the config file, which stors user options (default is {config}/config.properties).</td>
   </tr>
   <tr>
     <td>-pool=[path]</td>
-    <td>Set the device pool configuration file.</td>
+    <td>Set the device pool configuration file (default is {config}/devices.properties).</td>
+  </tr>
+  <tr>
+    <td>-plug=[path]</td>
+    <td>Override the plugin definition file, which lists plugins loaded at startup (default is {config}/plugins.properties).</td>
+  </tr>
+  <tr>
+    <td>-task=[path]</td>
+    <td>Override the task definition file,  which lists tasks loaded at startup (default is {config}/tasks.properties).</td>
   </tr>
   <tr>
     <td>-user=[name]</td>

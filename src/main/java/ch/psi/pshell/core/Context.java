@@ -112,14 +112,9 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
     public int getRunCount() {
         return runCount;
     }
-
-    public static final String PROPERTY_HOME_PATH = "ch.psi.pshell.home";
-    public static final String PROPERTY_OUTPUT_PATH = "ch.psi.pshell.output";
-    public static final String PROPERTY_DATA_PATH = "ch.psi.pshell.data";
-    public static final String PROPERTY_CONSOLE_LOG = "ch.psi.pshell.console.log";
-    public static final String PROPERTY_DEVICE_POOL = "ch.psi.pshell.pool";
-    public static final String PROPERTY_USER = "ch.psi.pshell.user";
-    public static final String PROPERTY_SCRIPT_TYPE = "ch.psi.pshell.type";
+    
+    public static final String PROPERTY_SETUP_FILE = "ch.psi.pshell.setup.file";    
+    public static final String PROPERTY_USER = "ch.psi.pshell.user";    
     public static final String PROPERTY_LOCAL_MODE = "ch.psi.pshell.local";
     public static final String PROPERTY_BARE_MODE = "ch.psi.pshell.bare";
     public static final String PROPERTY_EMPTY_MODE = "ch.psi.pshell.empty";
@@ -175,10 +170,6 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
             simulation = false;
         }
 
-        if (System.getProperty(PROPERTY_HOME_PATH) == null) {
-            System.setProperty(PROPERTY_HOME_PATH, "./home");
-        }
-
         if (System.getProperty(PROPERTY_FILE_LOCK) != null) {
             fileLockEnabled = Boolean.valueOf(System.getProperty(PROPERTY_FILE_LOCK));
         } else {
@@ -187,22 +178,14 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
 
         setup = new Setup();
         try {
-            setup.outputPath = System.getProperty(PROPERTY_OUTPUT_PATH);
-            setup.userDataPath = System.getProperty(PROPERTY_DATA_PATH);
-            setup.devicePoolConfigPath = System.getProperty(PROPERTY_DEVICE_POOL);
-            setup.load(System.getProperty(PROPERTY_HOME_PATH));
+            setup.load(System.getProperty(PROPERTY_SETUP_FILE));
         } catch (IOException ex) {
             throw new RuntimeException("Cannot generate setup file");
         }
 
-        if (System.getProperty(PROPERTY_SCRIPT_TYPE) != null) {
-            setup.setScriptType(ScriptType.valueOf(System.getProperty(PROPERTY_SCRIPT_TYPE)));
-        }
-
         config = new Configuration();
         try {
-            config.load(setup.getConfigFile());
-            config.commandLineLogLevelConsole = System.getProperty(PROPERTY_CONSOLE_LOG);
+            config.load(setup.getConfigFile());            
         } catch (IOException ex) {
             throw new RuntimeException("Cannot generate configuration file");
         }

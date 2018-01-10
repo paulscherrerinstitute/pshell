@@ -28,7 +28,14 @@ import javax.imageio.ImageIO;
  */
 public class Setup extends Config {
 
-    public static transient final String PROPERTY_SETUP_FILE = "ch.psi.pshell.setup.file";
+    public static transient final String PROPERTY_HOME_PATH = "ch.psi.pshell.home";
+    public static transient final String PROPERTY_OUTPUT_PATH = "ch.psi.pshell.output";
+    public static transient final String PROPERTY_DATA_PATH = "ch.psi.pshell.data";
+    public static transient final String PROPERTY_CONFIG_FILE = "ch.psi.pshell.config.file";
+    public static transient final String PROPERTY_DEVICES_FILE = "ch.psi.pshell.devices.file";
+    public static transient final String PROPERTY_PLUGINS_FILE = "ch.psi.pshell.plugins.file";
+    public static transient final String PROPERTY_TASKS_FILE = "ch.psi.pshell.tasks.file";    
+    public static transient final String PROPERTY_SCRIPT_TYPE = "ch.psi.pshell.type";
 
     //Fixed tokens
     public static transient final String TOKEN_HOME = "{home}";
@@ -62,8 +69,6 @@ public class Setup extends Config {
 
     String homePath;
     String outputPath;
-    String userDataPath;
-    String devicePoolConfigPath;
 
     public String scriptPath = TOKEN_HOME + "/script";
     public String devicesPath = TOKEN_HOME + "/devices";
@@ -78,10 +83,10 @@ public class Setup extends Config {
     public String dataPath = TOKEN_HOMEDATA + "/data";
     public String imagesPath = TOKEN_HOMEDATA + "/images";
 
-    public String configFile = "{config}/config.properties";
-    public String configFilePlugins = "{config}/plugins.properties";
-    public String configFileDevices = "{config}/devices.properties";
-    public String configFileTasks = "{config}/tasks.properties";
+    public String configFile = TOKEN_CONFIG + "/config.properties";
+    public String configFilePlugins = TOKEN_CONFIG + "/plugins.properties";
+    public String configFileDevices = TOKEN_CONFIG + "/devices.properties";
+    public String configFileTasks = TOKEN_CONFIG + "/tasks.properties";
 
     public ScriptType scriptType = ScriptType.getDefault();
 
@@ -98,18 +103,27 @@ public class Setup extends Config {
             return type;
         }
         return scriptType;
-    }
+    }   
 
     @Override
-    public void load(String homePath) throws IOException {
-        this.homePath = homePath;
-        if (outputPath == null) {
-            outputPath = homePath;
-        }
-        String fileName = System.getProperty(PROPERTY_SETUP_FILE);
+    public void load(String fileName) throws IOException {
+        if (System.getProperty(PROPERTY_HOME_PATH) == null) {
+            System.setProperty(PROPERTY_HOME_PATH, "./home");
+        }                
+        homePath = System.getProperty(PROPERTY_HOME_PATH);
+        
+        if (System.getProperty(PROPERTY_OUTPUT_PATH) == null) {
+            System.setProperty(PROPERTY_OUTPUT_PATH, homePath);
+        }                
+        outputPath = System.getProperty(PROPERTY_OUTPUT_PATH);
+        
         //Config folder can be redirected, but setup is always located in home/config
         if (fileName == null) {
             fileName = Paths.get(homePath, "config", "setup.properties").toString();
+        } else {
+            if (IO.getExtension(fileName).isEmpty()) {
+                fileName += ".properties";
+            }                        
         }
         if (fileName.trim().startsWith("~")) {
             fileName = TOKEN_SYS_HOME + Str.trimLeft(fileName).substring(1);
@@ -117,9 +131,9 @@ public class Setup extends Config {
         fileName = fileName.replace(TOKEN_SYS_HOME, Sys.getUserHome());
         fileName = fileName.replace(TOKEN_SYS_USER, Sys.getUserName());
         super.load(fileName);
-
-        if (userDataPath != null) {
-            dataPath = userDataPath;
+        
+        if (System.getProperty(PROPERTY_DATA_PATH) != null) {
+            dataPath = System.getProperty(PROPERTY_DATA_PATH);
         }
 
         expansionTokens = new HashMap<>();
@@ -138,6 +152,37 @@ public class Setup extends Config {
         expansionTokens.put(TOKEN_WWW, wwwPath);
 
         initPaths();
+        
+        if (System.getProperty(PROPERTY_CONFIG_FILE) != null) {
+            configFile = System.getProperty(PROPERTY_CONFIG_FILE);
+            if (IO.getExtension(configFile).isEmpty()) {
+                configFile += ".properties";
+            }            
+        }
+        if (System.getProperty(PROPERTY_DEVICES_FILE) != null) {
+            configFileDevices = System.getProperty(PROPERTY_DEVICES_FILE);
+            if (IO.getExtension(configFileDevices).isEmpty()) {
+                configFileDevices += ".properties";
+            }            
+        }
+        
+        if (System.getProperty(PROPERTY_PLUGINS_FILE) != null) {
+            configFilePlugins = System.getProperty(PROPERTY_PLUGINS_FILE);
+            if (IO.getExtension(configFilePlugins).isEmpty()) {
+                configFilePlugins += ".properties";
+            }            
+        }
+
+        if (System.getProperty(PROPERTY_TASKS_FILE) != null) {
+            configFileTasks = System.getProperty(PROPERTY_TASKS_FILE);
+            if (IO.getExtension(configFileTasks).isEmpty()) {
+                configFileTasks += ".properties";
+            }            
+        }
+        
+        if (System.getProperty(PROPERTY_SCRIPT_TYPE) != null) {
+            setScriptType(ScriptType.valueOf(System.getProperty(PROPERTY_SCRIPT_TYPE)));
+        }        
     }
 
     String user = User.DEFAULT_USER_NAME;
@@ -484,13 +529,6 @@ public class Setup extends Config {
     }
 
     public String getDevicePoolFile() {
-        if ((devicePoolConfigPath != null) && (!devicePoolConfigPath.trim().isEmpty())) {
-            String ret = expandPath(devicePoolConfigPath);
-            if (IO.getExtension(ret).isEmpty()) {
-                ret += ".properties";
-            }
-            return ret;
-        }
         return expandPath(configFileDevices);
     }
 
