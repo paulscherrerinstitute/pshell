@@ -825,8 +825,13 @@ def get_plot_snapshots(title = None, file_type = "png", temp_path = get_context(
     """
     time.sleep(0.1) #Give some time to plot to be finished - it is not sync  with acquisition
     ret = []
-    for p in get_plots(title):
-        file_name = os.path.abspath(temp_path + "/" + p.getTitle() + "." + file_type)
+    plots = get_plots(title)
+    for i in range(len(plots)):
+        p = plots[i]
+        name = p.getTitle()
+        if name is None or name == "":
+            name = str(i)
+        file_name = os.path.abspath(temp_path + "/" + name + "." + file_type)
         p.saveSnapshot(file_name , file_type)
         ret.append(file_name)
     return ret
