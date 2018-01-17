@@ -102,6 +102,9 @@ public class LayoutTable implements Layout {
 
         getDataManager().createDataset(path, fieldNames, fieldTypes, fieldLength);
         getDataManager().setAttribute(path, ATTR_SCAN_WRITABLE_DIMS, (writableDims.length > 0) ? writableDims : new int[]{-1});
+        
+        setStartTimestampAttibute(scan);
+        setPlotPreferencesAttibutes(scan); 
     }
 
     @Override
@@ -126,6 +129,7 @@ public class LayoutTable implements Layout {
 
     @Override
     public void onFinish(Scan scan) throws IOException {
+        setEndTimestampAttibute(scan); 
         scanFiles.remove(scan);
     }
 

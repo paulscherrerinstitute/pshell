@@ -14,6 +14,7 @@ import ch.psi.pshell.scan.Scan;
 import ch.psi.pshell.scan.ScanRecord;
 import ch.psi.utils.Arr;
 import ch.psi.utils.Convert;
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -26,6 +27,7 @@ import java.util.logging.Logger;
  */
 public class LayoutDefault implements Layout {
 
+    public static final String ATTR_NAME = "Name";
     public static final String ATTR_SCAN_DIMENSION = "Dimensions";
     public static final String ATTR_SCAN_STEPS = "Steps";
     public static final String ATTR_SCAN_WRITABLES = "Writables";
@@ -67,6 +69,11 @@ public class LayoutDefault implements Layout {
     public String getDefaultGroup(Scan scan) {
         return "scan " + getDataManager().getScanIndex(scan) + "/";
     }
+    
+    @Override
+    public void onOpened(File output) throws IOException {
+        getDataManager().setAttribute("/", ATTR_NAME, getDataManager().getExecutionPars().getName());
+    } 
 
     @Override
     public void onStart(Scan scan) throws IOException {
@@ -74,6 +81,7 @@ public class LayoutDefault implements Layout {
         scanIndex = dataManager.getScanIndex();
         String group = getCurrentGroup(scan);
         dataManager.createGroup(group);
+        
         int dimension = 1;
         int index = 0;
         for (Writable writable : scan.getWritables()) {
@@ -98,7 +106,7 @@ public class LayoutDefault implements Layout {
             if (scan.getDimensions() > 1) {
                 //TODO: assuming for area scan one Writable for each dimension
                 dimension++;
-            }
+            }                               
         }
 
         index = 0;
@@ -111,7 +119,7 @@ public class LayoutDefault implements Layout {
                 if (readable instanceof ReadableCalibratedMatrix) {
                     MatrixCalibration cal = ((ReadableCalibratedMatrix) readable).getCalibration();
                     if (cal != null) {
-                        dataManager.setAttribute(getPath(scan, name), DataManager.ATTR_CALIBRATION, new double[]{cal.scaleX, cal.scaleY, cal.offsetX, cal.offsetY});
+                        dataManager.setAttribute(getPath(scan, name), ATTR_CALIBRATION, new double[]{cal.scaleX, cal.scaleY, cal.offsetX, cal.offsetY});
                     } else {
                         dataManager.appendLog("Calibration unavailable for: " + name);
                     }
@@ -122,7 +130,7 @@ public class LayoutDefault implements Layout {
                 if (readable instanceof ReadableCalibratedArray) {
                     ArrayCalibration cal = ((ReadableCalibratedArray) readable).getCalibration();
                     if (cal != null) {
-                        dataManager.setAttribute(getPath(scan, name), DataManager.ATTR_CALIBRATION, new double[]{cal.scale, cal.offset});
+                        dataManager.setAttribute(getPath(scan, name), ATTR_CALIBRATION, new double[]{cal.scale, cal.offset});
                     } else {
                         dataManager.appendLog("Calibration unavailable for: " + name);
                     }
@@ -142,6 +150,9 @@ public class LayoutDefault implements Layout {
         dataManager.setAttribute(group, ATTR_SCAN_STEPS, scan.getNumberOfSteps());
         dataManager.setAttribute(group, ATTR_SCAN_READABLES, scan.getReadableNames());
         dataManager.setAttribute(group, ATTR_SCAN_WRITABLES, scan.getWritableNames());
+
+        setStartTimestampAttibute(scan);
+        setPlotPreferencesAttibutes(scan);        
     }
 
     @Override
@@ -182,13 +193,14 @@ public class LayoutDefault implements Layout {
 
     @Override
     public void onFinish(Scan scan) throws IOException {
+        setEndTimestampAttibute(scan);     
         for (ch.psi.pshell.device.Readable readable : scan.getReadables()) {
             if (readable instanceof Averager) {
                 try {
                     getDataManager().flush();
                     String name = getDataManager().getAlias(readable);
                     double[] stdev = (double[]) getDataManager().getData(getPath(scan, META_GROUP + name + DEVICE_STDEV_DATASET)).sliceData;
-                    getDataManager().setAttribute(getPath(scan, name), DataManager.ATTR_ERROR_VECTOR, stdev);
+                    getDataManager().setAttribute(getPath(scan, name), ATTR_ERROR_VECTOR, stdev);
                 } catch (Exception ex) {
                     Logger.getLogger(LayoutDefault.class.getName()).log(Level.WARNING, null, ex);
                 }

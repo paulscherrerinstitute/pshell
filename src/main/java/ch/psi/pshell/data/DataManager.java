@@ -25,6 +25,7 @@ import java.util.HashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import ch.psi.pshell.core.ContextListener;
+import ch.psi.pshell.core.ExecutionParameters;
 import ch.psi.pshell.core.LogManager;
 import ch.psi.pshell.scripting.ViewPreference;
 import ch.psi.pshell.scripting.ViewPreference.PlotPreferences;
@@ -46,17 +47,6 @@ public class DataManager implements AutoCloseable {
     Layout layout;
     Provider provider;
 
-    public static final String ATTR_START_TIMESTAMP = "Start";
-    public static final String ATTR_END_TIMESTAMP = "End";
-    public static final String ATTR_CALIBRATION = "Calibration";
-    public static final String ATTR_ERROR_VECTOR = "Error Vector";
-
-    static final String PLOT_ENABLE = "PlotEnable";
-    static final String PLOT_RANGE = "PlotRange";
-    static final String PLOT_DOMAIN = "PlotDomain";
-    static final String PLOT_TYPES = "PlotTypes";
-    static final String PLOT_TYPES_SEPARATOR = "; ";
-
     /**
      * Constructor for online data management
      */
@@ -73,7 +63,7 @@ public class DataManager implements AutoCloseable {
         this.context = context;
         setProvider(provider);
         setLayout(layout);
-        dataRootDepth = Paths.get(IO.getRelativePath(context.getExecutionPars().getPath(), getDataFolder())).getNameCount();
+        dataRootDepth = Paths.get(IO.getRelativePath(getExecutionPars().getPath(), getDataFolder())).getNameCount();
     }
 
     int dataRootDepth;    
@@ -85,7 +75,7 @@ public class DataManager implements AutoCloseable {
         setProvider(context.getConfig().dataProvider);
         setLayout(context.getConfig().dataLayout);
         aliases.clear();
-        dataRootDepth = Paths.get(IO.getRelativePath(context.getExecutionPars().getPath(), getDataFolder())).getNameCount();
+        dataRootDepth = Paths.get(IO.getRelativePath(getExecutionPars().getPath(), getDataFolder())).getNameCount();
         logger.info("Finished " + getClass().getSimpleName() + " initialization");
         initialized = true;
     }
@@ -156,13 +146,13 @@ public class DataManager implements AutoCloseable {
     }
 
     public boolean getPreserveTypes() {
-        return context.getExecutionPars().getPreserve();
+        return getExecutionPars().getPreserve();
     }
         
     public int getDepthDimension(){
         Context context = Context.getInstance();
         if (context.getState().isProcessing()){
-            return context.getExecutionPars().getDepthDimension();
+            return getExecutionPars().getDepthDimension();
         }
         return context.getConfig().getDepthDim();        
     }
@@ -319,6 +309,10 @@ public class DataManager implements AutoCloseable {
         }
         return null;
     }
+    
+    public ExecutionParameters getExecutionPars() {
+        return context.getExecutionPars();
+    }    
 
     final HashMap<Scan, Integer> persistedScans = new HashMap<>();
     final ScanListener scanListener = new ScanListener() {
@@ -336,30 +330,6 @@ public class DataManager implements AutoCloseable {
                             scanIndex++;
                             persistedScans.put(scan, scanIndex);
                             layout.onStart(scan);
-                            String scanPath = getScanPath(scan);
-                            setAttribute(scanPath, ATTR_START_TIMESTAMP, scan.getStartTimestamp());
-                            if (scanPath != null) {
-                                PlotPreferences pp = context.getPlotPreferences();
-                                if (pp.enabledPlots != null) {
-                                    setAttribute(scanPath, PLOT_ENABLE, pp.enabledPlots.toArray(new String[0]));
-                                }
-                                if (pp.autoRange != null) {
-                                    setAttribute(scanPath, PLOT_RANGE, new double[]{Double.NaN, Double.NaN});
-                                }
-                                if (pp.range != null) {
-                                    setAttribute(scanPath, PLOT_RANGE, new double[]{pp.range.min, pp.range.max});
-                                }
-                                if (pp.domainAxis != null) {
-                                    setAttribute(scanPath, PLOT_DOMAIN, pp.domainAxis);
-                                }
-                                if (pp.plotTypes != null) {
-                                    ArrayList<String> list = new ArrayList<>();
-                                    for (String key : pp.plotTypes.keySet()) {
-                                        list.add(key + "=" + pp.plotTypes.get(key));
-                                    }
-                                    setAttribute(scanPath, PLOT_TYPES, String.join(PLOT_TYPES_SEPARATOR, list));
-                                }
-                            }
                             appendLog(String.format("Scan %s started in: %s", getScanIndex(), getScanPath()));
                         }
                     } catch (Exception ex) {
@@ -375,7 +345,7 @@ public class DataManager implements AutoCloseable {
                 if (persistedScans.containsKey(scan)) {
                     try {
                         layout.onRecord(scan, record);
-                        if (context.getExecutionPars().getFlush()) {
+                        if (getExecutionPars().getFlush()) {
                             flush();
                         }
                     } catch (Exception e) {
@@ -390,8 +360,6 @@ public class DataManager implements AutoCloseable {
             synchronized (persistedScans) {
                 if (persistedScans.containsKey(scan)) {
                     try {
-                        String scanPath = getScanPath(scan);
-                        setAttribute(scanPath, ATTR_END_TIMESTAMP, System.currentTimeMillis());
                         layout.onFinish(scan);
                         appendLog(String.format("Scan %s ended", getScanIndex(scan)));
                     } catch (Exception e) {
@@ -427,7 +395,7 @@ public class DataManager implements AutoCloseable {
 
     File getDataRootPath() {
         try {
-            File ret = Paths.get(getRootFileName(context.getExecutionPars().getPath())).toFile();
+            File ret = Paths.get(getRootFileName(getExecutionPars().getPath())).toFile();
             ret.mkdirs();
             return ret;
         } catch (Exception ex) {
@@ -445,7 +413,7 @@ public class DataManager implements AutoCloseable {
         if (isOpen()) {
             return;
         }
-        Object layout = context.getExecutionPars().getLayout();
+        Object layout = getExecutionPars().getLayout();
         if (layout != null) {
             try {
                 if (layout instanceof Layout) {
@@ -471,9 +439,10 @@ public class DataManager implements AutoCloseable {
             provider.openOutput(dataPath);
             outputFile = dataPath;
             lastOutputFile = outputFile;
-            if (context.getExecutionPars().getPersist()) {
+            if (getExecutionPars().getPersist()) {
                 appendLog("Open persistence context: " + outputFile);
             }
+            this.layout.onOpened(outputFile);
         }
     }
 
@@ -485,7 +454,7 @@ public class DataManager implements AutoCloseable {
         if (isOpen()) {
             try {
                 try {
-                    if (context.getExecutionPars().getPersist()) {
+                    if (getExecutionPars().getPersist()) {
                         appendLog("Close persistence context: " + outputFile);
                     }
                 } catch (Exception ex) {
@@ -992,13 +961,13 @@ public class DataManager implements AutoCloseable {
                 String name = IO.getPrefix(path);
 
                 double[] calibration = null;
-                Object o = getAttribute(root, path, ATTR_CALIBRATION);
+                Object o = getAttribute(root, path, Layout.ATTR_CALIBRATION);
                 if ((o != null) && (o instanceof double[])) {
                     calibration = (double[]) o;
                 }
 
                 double[] errorVector = null;
-                o = getAttribute(root, path, ATTR_ERROR_VECTOR);
+                o = getAttribute(root, path, Layout.ATTR_ERROR_VECTOR);
                 if ((o != null) && (o instanceof double[])) {
                     errorVector = (double[]) o;
                 }
@@ -1074,7 +1043,7 @@ public class DataManager implements AutoCloseable {
                     xdata = Arr.indexesDouble(Array.getLength(plots.get(0).data));
                 } else if (plotPreferences.domainAxis.equals(ViewPreference.DOMAIN_AXIS_TIME)) {
                     xdata = (double[]) Convert.toDouble(getData(root, path + "/meta/Timestamps").sliceData);
-                    Long start = (Long) getAttribute(root, path, ATTR_START_TIMESTAMP);
+                    Long start = (Long) getAttribute(root, path, Layout.ATTR_START_TIMESTAMP);
                     if (start == null) {
                         start = ((Double) xdata[0]).longValue();
                     }
@@ -1115,24 +1084,24 @@ public class DataManager implements AutoCloseable {
         Map<String, Object> attrs = getAttributes(root, path);
         if (attrs != null) {
             PlotPreferences ret = new PlotPreferences();
-            if (attrs.containsKey(PLOT_ENABLE)) {
-                String[] enabled = (String[]) attrs.get(PLOT_ENABLE);
+            if (attrs.containsKey(Layout.ATTR_PLOT_ENABLE)) {
+                String[] enabled = (String[]) attrs.get(Layout.ATTR_PLOT_ENABLE);
                 ret.enabledPlots = Arrays.asList(enabled);
             }
-            if (attrs.containsKey(PLOT_RANGE)) {
-                double[] range = (double[]) attrs.get(PLOT_RANGE);
+            if (attrs.containsKey(Layout.ATTR_PLOT_RANGE)) {
+                double[] range = (double[]) attrs.get(Layout.ATTR_PLOT_RANGE);
                 if (Double.isNaN(range[0])) {
                     ret.autoRange = true;
                 } else {
                     ret.range = new Range(range[0], range[1]);
                 }
             }
-            if (attrs.containsKey(PLOT_DOMAIN)) {
-                ret.domainAxis = (String) attrs.get(PLOT_DOMAIN);
+            if (attrs.containsKey(Layout.ATTR_PLOT_DOMAIN)) {
+                ret.domainAxis = (String) attrs.get(Layout.ATTR_PLOT_DOMAIN);
             }
-            if (attrs.containsKey(PLOT_TYPES)) {
+            if (attrs.containsKey(Layout.ATTR_PLOT_TYPES)) {
                 HashMap types = new HashMap();
-                for (String token : ((String) attrs.get(PLOT_TYPES)).split(PLOT_TYPES_SEPARATOR)) {
+                for (String token : ((String) attrs.get(Layout.ATTR_PLOT_TYPES)).split(Layout.ATTR_PLOT_TYPES_SEPARATOR)) {
                     String[] aux = token.split("=");
                     types.put(aux[0], aux[1]);
                 }
