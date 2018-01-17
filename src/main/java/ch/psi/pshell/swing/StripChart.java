@@ -1,6 +1,5 @@
 package ch.psi.pshell.swing;
 
-import ch.psi.pshell.bs.Dispatcher;
 import ch.psi.pshell.bs.PipelineServer;
 import ch.psi.pshell.bs.Scalar;
 import ch.psi.pshell.bs.Stream;
