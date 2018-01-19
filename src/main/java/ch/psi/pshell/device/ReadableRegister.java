@@ -32,7 +32,7 @@ public class ReadableRegister<T> extends ReadonlyRegisterBase<T>{
         }        
     }
 
-    public static class ReadableRegisterArray<T> extends ReadableRegister<T> implements Readable.ReadableArray<T>, Cacheable.CacheableArray<T>{
+    public static class ReadableRegisterArray<T> extends ReadableRegister<T> implements ReadonlyRegisterArray<T>, Readable.ReadableArray<T>, Cacheable.CacheableArray<T>{
         public ReadableRegisterArray(ReadableArray<T> readable){
             super(readable);
         }        
@@ -43,7 +43,7 @@ public class ReadableRegister<T> extends ReadonlyRegisterBase<T>{
         }
     }
 
-    public static class ReadableRegisterMatrix<T> extends ReadableRegister<T> implements Readable.ReadableMatrix<T>, Cacheable.CacheableMatrix<T>{
+    public static class ReadableRegisterMatrix<T> extends ReadableRegister<T> implements ReadonlyRegisterMatrix<T>,Readable.ReadableMatrix<T>, Cacheable.CacheableMatrix<T>{
         public ReadableRegisterMatrix(ReadableMatrix<T> readable){
             super(readable);
         }        
