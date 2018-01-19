@@ -51,6 +51,8 @@ import javax.swing.SwingUtilities;
 import ch.psi.pshell.core.ContextListener;
 import ch.psi.pshell.imaging.Overlays.Arrow;
 import ch.psi.pshell.imaging.Overlays.Text;
+import ch.psi.utils.Sys;
+import ch.psi.utils.Sys.OSFamily;
 
 /**
  */
@@ -1577,7 +1579,8 @@ public class Renderer extends MonitoredPanel implements ImageListener, ImageBuff
 
     public void onKeyPressed(KeyEvent e) {
         int key = e.getKeyCode();
-        if (key == KeyEvent.VK_CONTROL) {
+        boolean is_mac = (Sys.getOSFamily() == OSFamily.Mac);
+        if ((!is_mac && (key == KeyEvent.VK_CONTROL)) || (is_mac && (key == KeyEvent.VK_SHIFT))) {
             controlKey = true;
             if ((mouseSelectionOverlay == null) && (zoomToSelection == null)) {
                 onZoomTo();
@@ -1631,7 +1634,8 @@ public class Renderer extends MonitoredPanel implements ImageListener, ImageBuff
     public void onKeyReleased(KeyEvent e) {
         int key = e.getKeyCode();
         try {
-            if (key == KeyEvent.VK_CONTROL) {
+            boolean is_mac = (Sys.getOSFamily() == OSFamily.Mac);
+            if ((!is_mac && (key == KeyEvent.VK_CONTROL)) || (is_mac && (key == KeyEvent.VK_SHIFT))) {            
                 controlKey = false;
                 if ((mouseSelectionOverlay != null) && (mouseSelectionOverlay == zoomToSelection)) {
                     abortSelection();
