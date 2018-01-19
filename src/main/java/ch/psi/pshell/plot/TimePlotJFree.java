@@ -34,6 +34,7 @@ import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.renderer.xy.XYItemRenderer;
 import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
 import org.jfree.data.Range;
+import org.jfree.data.time.FixedMillisecond;
 import org.jfree.data.time.Millisecond;
 import org.jfree.data.time.TimeSeries;
 import org.jfree.data.time.TimeSeriesCollection;
@@ -267,7 +268,7 @@ public class TimePlotJFree extends TimePlotBase {
 
     @Override
     protected Object onAddedSeries(TimePlotSeries series) {
-        TimeSeries ts = new TimeSeries(series.name, Millisecond.class);
+        TimeSeries ts = new TimeSeries(series.name);
         this.series.add(ts);
         TimeSeriesCollection dataset = data;
         if (series.axis == 2) {
@@ -308,7 +309,7 @@ public class TimePlotJFree extends TimePlotBase {
 
     @Override
     protected void addDataPoint(int graphIndex, long time, double value) {
-        series.get(graphIndex).addOrUpdate(new Millisecond(new Date(time)), (Double.isNaN(value)) ? null : value);
+        series.get(graphIndex).addOrUpdate(new FixedMillisecond(new Date(time)), (Double.isNaN(value)) ? null : value);
     }
 
     @Override
