@@ -9,6 +9,7 @@ import groovy.lang.GroovyClassLoader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.lang.reflect.Modifier;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Path;
@@ -144,9 +145,11 @@ public class PluginManager implements AutoCloseable {
             switch (IO.getExtension(file)) {
                 case "jar":
                     for (Class cls : Loader.loadJar(fileName)) {
-                        if (Plugin.class.isAssignableFrom(cls)) {
-                            //Only 1 plugin per jar file
-                            return loadPluginClass(cls, file);
+                        if (Modifier.isPublic(cls.getModifiers())){
+                            if (Plugin.class.isAssignableFrom(cls)) {
+                                //Only 1 plugin per jar file
+                                return loadPluginClass(cls, file);
+                            }
                         }
                     }
 
