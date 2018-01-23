@@ -199,7 +199,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
             if (!localMode) {
                 String hostName = config.hostName;
                 try {
-                    hostName = InetAddress.getLocalHost().getHostName();
+                    hostName = Sys.getLocalHost();
                     if (!hostName.equalsIgnoreCase(config.hostName)) {
                         InetAddress[] addresses
                                 = InetAddress.getAllByName(hostName);
@@ -234,14 +234,11 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
         logManager = new LogManager();
         restartLogger();
 
+        logger.info("Process: " + Sys.getProcessName());
         logger.info("Context: " + contextName);
         logger.info("Pars: " + Sys.getCommand());
         logger.info("User: " + Sys.getUserName());
-        try {
-            logger.info("Host: " + InetAddress.getLocalHost().getHostName());
-        } catch (Exception ex) {
-            logger.log(Level.WARNING, null, ex);
-        }
+        logger.info("Host: " + Sys.getLocalHost());
 
         if (localMode) {
             //In local mode inherits the history, but not persist changes

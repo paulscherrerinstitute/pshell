@@ -7,6 +7,7 @@ import java.io.InputStream;
 import java.lang.management.ManagementFactory;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.net.InetAddress;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.Arrays;
@@ -67,8 +68,20 @@ public class Sys {
         return String.valueOf(System.getProperty("sun.java.command"));
     }
 
-    public static String getProcessName() throws IOException {
-        return String.valueOf(ManagementFactory.getRuntimeMXBean().getName());
+    public static String getProcessName(){
+        try {
+            return String.valueOf(ManagementFactory.getRuntimeMXBean().getName());
+        } catch (Exception ex) {
+            return "Unknown";
+        }        
+    }
+
+    public static String getLocalHost() {
+        try {
+            return InetAddress.getLocalHost().getHostName();
+        } catch (Exception ex) {
+            return "Unknown";
+        }
     }
 
     public static String getTempFolder() {
@@ -85,10 +98,10 @@ public class Sys {
                 return "so";
         }
     }
-    
+
     public static boolean is64bits() {
         return System.getProperty("os.arch").contains("64");
-    }    
+    }
 
     public static void addToClassPath(String s) throws Exception {
         File f = new File(s);
@@ -147,5 +160,5 @@ public class Sys {
             System.err.println(e);
         }
         return -1;
-    }    
+    }
 }

@@ -86,12 +86,7 @@ public class View extends MainFrame {
 
     @Override
     protected String getSessionFilename(Window window) {
-        try {
-            return "." + getComponentName(window) + "." + InetAddress.getLocalHost().getHostName() + "_" + ps.port + ".session." + sessionEncoder.toString();
-        } catch (UnknownHostException ex) {
-            Logger.getLogger(View.class.getName()).log(Level.SEVERE, null, ex);
-            throw new RuntimeException(ex.getMessage());
-        }
+        return "." + getComponentName(window) + "." + Sys.getLocalHost() + "_" + ps.port + ".session." + sessionEncoder.toString();
     }
 
     void updatePanel() {

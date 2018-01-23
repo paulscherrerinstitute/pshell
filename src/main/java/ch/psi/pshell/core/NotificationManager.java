@@ -52,11 +52,7 @@ public class NotificationManager implements AutoCloseable{
             to = validateRecipients(to);
         } 
         
-        try {
-            from = ((config.from==null)||(config.from.isEmpty()))? Sys.getProcessName() : config.from;
-        } catch (IOException ex) {
-            Logger.getLogger(NotificationManager.class.getName()).log(Level.WARNING, null, ex);
-        }
+        from = ((config.from==null)||(config.from.isEmpty()))? Sys.getProcessName() : config.from;
         
     }
         
