@@ -641,7 +641,18 @@ public class View extends MainFrame {
 
         @Override
         public void openFile(String fileName) throws Exception {
-            View.this.openDataFile(fileName);
+            if (IO.getExtension(fileName).equalsIgnoreCase(context.getScriptType().toString())){
+                View.this.openScript(fileName);
+            } else {                  
+                View.this.openDataFile(fileName);
+            }
+        }
+        
+        @Override
+        public void openScript(String script, String name) throws Exception{
+           ScriptEditor editor = newScript(script);
+           tabDoc.setTitleAt(tabDoc.indexOfComponent(editor),name);
+           tabDoc.setSelectedComponent(editor);
         }
     };
 
@@ -1241,11 +1252,12 @@ public class View extends MainFrame {
         return renderer;
     }
 
-    public void newScript(String code) throws IOException {
+    public ScriptEditor newScript(String code) throws IOException {
         final ScriptEditor editor = newScriptEditor(null);
         if (code != null) {
             editor.setText(code);
         }
+        return editor;
     }
 
     public Processor openProcessor(Class cls, String file) throws IOException, InstantiationException, IllegalAccessException {

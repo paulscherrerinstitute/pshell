@@ -4,6 +4,7 @@ import ch.psi.pshell.core.Context;
 import ch.psi.pshell.scan.Scan;
 import ch.psi.pshell.scan.ScanRecord;
 import ch.psi.pshell.scripting.ViewPreference;
+import ch.psi.utils.IO;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -13,8 +14,12 @@ import java.util.List;
  * Layout implementations define the structure of the acquired data on file.
  */
 public interface Layout {
-    
-    //Common attributers
+
+    //Common attributes
+    public static final String ATTR_NAME = "Name";
+    public static final String ATTR_FILE= "File";
+    public static final String ATTR_VERSION = "Version";
+
     public static final String ATTR_START_TIMESTAMP = "Start";
     public static final String ATTR_END_TIMESTAMP = "End";
     public static final String ATTR_CALIBRATION = "Calibration";
@@ -23,7 +28,7 @@ public interface Layout {
     public static final String ATTR_PLOT_RANGE = "PlotRange";
     public static final String ATTR_PLOT_DOMAIN = "PlotDomain";
     public static final String ATTR_PLOT_TYPES = "PlotTypes";
-    public static final String ATTR_PLOT_TYPES_SEPARATOR = "; ";    
+    public static final String ATTR_PLOT_TYPES_SEPARATOR = "; ";
 
     void initialize();
 
@@ -51,8 +56,12 @@ public interface Layout {
     }
 
     String getLogFilePath();
-    
-    default void onOpened(File output) throws IOException {}   
+
+    default void onOpened(File output) throws IOException {
+    }
+
+    default void onClosed(File output) throws IOException {
+    }
 
     void onStart(Scan scan) throws IOException;
 
@@ -83,23 +92,23 @@ public interface Layout {
     default public int getIndex(Scan scan, ScanRecord record) throws IOException {
         return record.getIndex() - scan.getRecordIndexOffset();
     }
-    
+
     //Set common attributes as expected by DataManager (can be ommited).
-    default void setStartTimestampAttibute(Scan scan) throws IOException{
+    default void setStartTimestampAttibute(Scan scan) throws IOException {
         String scanPath = getDataManager().getScanPath(scan);
         if (scanPath != null) {
-            getDataManager().setAttribute(scanPath, ATTR_START_TIMESTAMP, System.currentTimeMillis());  
+            getDataManager().setAttribute(scanPath, ATTR_START_TIMESTAMP, System.currentTimeMillis());
         }
     }
-    
-    default void setEndTimestampAttibute(Scan scan) throws IOException{
+
+    default void setEndTimestampAttibute(Scan scan) throws IOException {
         String scanPath = getDataManager().getScanPath(scan);
         if (scanPath != null) {
-            getDataManager().setAttribute(scanPath, ATTR_END_TIMESTAMP, System.currentTimeMillis());  
+            getDataManager().setAttribute(scanPath, ATTR_END_TIMESTAMP, System.currentTimeMillis());
         }
     }
-    
-    default void setPlotPreferencesAttibutes(Scan scan) throws IOException{
+
+    default void setPlotPreferencesAttibutes(Scan scan) throws IOException {
         String scanPath = getDataManager().getScanPath(scan);
         if (scanPath != null) {
             ViewPreference.PlotPreferences pp = Context.getInstance().getPlotPreferences();
@@ -122,7 +131,26 @@ public interface Layout {
                 }
                 getDataManager().setAttribute(scanPath, ATTR_PLOT_TYPES, String.join(ATTR_PLOT_TYPES_SEPARATOR, list));
             }
-        }        
+        }
     }
-   
+
+    default void setNameAttribute() throws IOException {
+        String name = getDataManager().getExecutionPars().getName();
+        getDataManager().setAttribute("/", ATTR_NAME, (name==null) ? "" : name);
+    }
+    
+    default void setScriptFileAttibute() throws IOException {
+        File file = getDataManager().getExecutionPars().getScriptFile();
+        if (file!=null){
+            String fileName = file.getPath();
+            getDataManager().setAttribute("/", ATTR_FILE, fileName);
+        }
+    }
+    
+    default void setScriptVersionAttibute() throws IOException {
+        String version = getDataManager().getExecutionPars().getScriptVersion();
+        if (version!=null){
+            getDataManager().setAttribute("/", ATTR_VERSION, version);
+        }
+    }
 }

@@ -27,7 +27,6 @@ import java.util.logging.Logger;
  */
 public class LayoutDefault implements Layout {
 
-    public static final String ATTR_NAME = "Name";
     public static final String ATTR_SCAN_DIMENSION = "Dimensions";
     public static final String ATTR_SCAN_STEPS = "Steps";
     public static final String ATTR_SCAN_WRITABLES = "Writables";
@@ -72,8 +71,14 @@ public class LayoutDefault implements Layout {
     
     @Override
     public void onOpened(File output) throws IOException {
-        getDataManager().setAttribute("/", ATTR_NAME, getDataManager().getExecutionPars().getName());
+        setNameAttribute();
+        setScriptFileAttibute();
     } 
+    
+    @Override
+    public void onClosed(File output) throws IOException {
+         setScriptVersionAttibute(); //Doing on close because file is commited asynchronously on start of scan.
+    }     
 
     @Override
     public void onStart(Scan scan) throws IOException {

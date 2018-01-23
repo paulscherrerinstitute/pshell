@@ -35,6 +35,7 @@ import ch.psi.utils.Str;
 import ch.psi.utils.Sys;
 import ch.psi.utils.Threading;
 import ch.psi.pshell.core.Configuration.NotificationLevel;
+import ch.psi.pshell.core.VersioningManager.Revision;
 import ch.psi.pshell.data.DataServer;
 import ch.psi.pshell.data.PlotDescriptor;
 import ch.psi.pshell.data.DataManager;
@@ -355,7 +356,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
             }
             executionPars.onStateChange(state);
             if (!state.isProcessing()) {
-                runningScriptName = null;
+                runningScript = null;
             }
         }
     }
@@ -1255,13 +1256,26 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
         return Threading.getFuture(() -> evalLineBackground(source, line));
     }
 
-    String runningScriptName;
+    String runningScript;
 
     public String getRunningScriptName() {
-        return runningScriptName;
+        return (runningScript==null) ? null : IO.getPrefix(runningScript);
     }
 
-
+    public File getRunningScriptFile() {
+        if (runningScript!=null){
+            File ret = new File(runningScript);
+            if (ret.exists()){
+                try{
+                    ret=ret.getCanonicalFile();
+                } catch (Exception ex){
+                }
+                return ret;
+            }
+        }
+        return null;
+    }
+    
     final ExecutionParameters executionPars = new ExecutionParameters();
 
     public ExecutionParameters getExecutionPars() {
@@ -1401,7 +1415,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
         }
         CommandInfo info = new CommandInfo(source, args, false);
         try {
-            startExecution(source, IO.getPrefix(scriptName));
+            startExecution(source, fileName);
             setSourceUI(source);
             triggerExecutingFile(fileName);
 
@@ -1559,7 +1573,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
         assertReady();
         if (fileName != null) {
             assertRunAllowed(source);
-            runningScriptName = IO.getPrefix(fileName);
+            runningScript = fileName;
         } else {
             assertConsoleCommandAllowed(source);
         }
@@ -1766,6 +1780,42 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
             throw new IOException(ex.getMessage());
         }
     }
+    
+    public Revision getFileRevision(String fileName) throws IOException, InterruptedException, ContextStateException {
+        assertVersioningEnabled();
+        Revision ret = null;
+        fileName = setup.expandPath(fileName);
+        if (IO.isSubPath(fileName, setup.getHomePath())) {
+            fileName = IO.getRelativePath(fileName, setup.getHomePath());
+            try {
+                ret =  getVersioningManager().getRevision(fileName);
+                if (getVersioningManager().getDiff(fileName).length() > 0){
+                    ret.id += " *";
+                }            
+            } catch (IOException | InterruptedException | ContextStateException ex) {
+                throw ex;
+            } catch (Exception ex) {
+                throw new IOException(ex.getMessage());
+            }      
+        }
+        return ret;
+    }
+    
+    public String getFileContents(String fileName, String revisionId) throws IOException, InterruptedException, ContextStateException {
+        assertVersioningEnabled();
+        fileName = setup.expandPath(fileName);
+        if (IO.isSubPath(fileName, setup.getHomePath())) {
+            fileName = IO.getRelativePath(fileName, setup.getHomePath());
+            try {
+                return  getVersioningManager().fetch(fileName, revisionId);         
+            } catch (IOException | InterruptedException | ContextStateException ex) {
+                throw ex;
+            } catch (Exception ex) {
+                throw new IOException(ex.getMessage());
+            }      
+        }
+        return null;
+    }    
 
     //User & Rights
     public User getUser(CommandSource source) {

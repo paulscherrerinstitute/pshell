@@ -926,6 +926,21 @@ public class VersioningManager implements AutoCloseable {
         }
         return ret;
     }
+    
+    public Revision getRevision(String fileName) throws Exception {
+        LogCommand cmd = git.log().addPath(fileName);
+        cmd.setMaxCount(1);
+        Iterable<RevCommit> logs = cmd.call();
+        for (RevCommit log : logs) {
+            Revision rev = new Revision();
+            rev.id = log.getId().getName();
+            rev.timestamp = log.getAuthorIdent().getWhen().getTime();
+            rev.commiter = log.getAuthorIdent().getName();
+            rev.message = log.getShortMessage();
+            return rev;
+        }
+        return null;
+    }
 
     final boolean contains(String fileName) throws Exception {
         return getHistory(fileName, 1).size() > 0;

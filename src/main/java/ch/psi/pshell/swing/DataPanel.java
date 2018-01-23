@@ -4,6 +4,7 @@ import ch.psi.pshell.core.Context;
 import ch.psi.pshell.data.DataManager;
 import ch.psi.pshell.data.Provider;
 import ch.psi.pshell.data.DataSlice;
+import ch.psi.pshell.data.Layout;
 import ch.psi.utils.Range;
 import ch.psi.pshell.swing.DataPanel.DataPanelListener;
 import ch.psi.pshell.ui.App;
@@ -87,6 +88,8 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
         void plotData(Object array, Range range) throws Exception;
 
         void openFile(String fileName) throws Exception;
+        
+        void openScript(String script, String name) throws Exception;
     }
 
     JTable tableData;
@@ -307,6 +310,29 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
             }
         });
         popupMenu.add(menuCopyLink);
+        
+        JMenuItem menuOpenScript = new JMenuItem("Open producing script");
+        menuOpenScript.addActionListener((ActionEvent e) -> {
+            if (listener != null) {
+                try {
+
+                    String fileName = (String) dataManager.getAttribute(currentFile.getPath(),"/", Layout.ATTR_FILE) ;
+                    String revision = (String) dataManager.getAttribute(currentFile.getPath(),"/", Layout.ATTR_VERSION) ;
+                    if (revision!=null){
+                        try {
+                            String script = Context.getInstance().getFileContents(fileName, revision);
+                            listener.openScript(script, new File(fileName).getName() + "_" + revision.substring(0,Math.min(8, revision.length())));     
+                            return;
+                        } catch (Exception ex) {
+                        }
+                    }
+                    listener.openFile(fileName);              
+                } catch (Exception ex) {
+                    SwingUtils.showException(DataPanel.this, ex);
+                }
+            }
+        });
+        popupMenu.add(menuOpenScript);        
 
         JMenuItem menuAssign = new JMenuItem("Assign to variable");
         menuAssign.addActionListener((ActionEvent e) -> {
@@ -384,6 +410,7 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
                                 }
                             }
                         }
+                        menuOpenScript.setVisible(dataPath.equals("/") && (dataManager.getAttribute(currentFile.getPath(),dataPath, Layout.ATTR_FILE) !=null));
                         menuPlotDataSeparator.setVisible(menuPlotData.isVisible());
                         popupMenu.show(e.getComponent(), e.getX(), e.getY());
                     }

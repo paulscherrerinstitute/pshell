@@ -3,10 +3,12 @@
  */
 package ch.psi.pshell.core;
 
+import ch.psi.pshell.core.VersioningManager.Revision;
 import ch.psi.pshell.scan.Scan;
 import ch.psi.pshell.scripting.ViewPreference;
 import ch.psi.utils.Arr;
 import ch.psi.utils.State;
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -143,7 +145,14 @@ public class ExecutionParameters  {
         if (option != null) {
             return String.valueOf(option);
         }
-        return (Context.getInstance().runningScriptName != null) ? Context.getInstance().runningScriptName : "console";
+        String script = Context.getInstance().getRunningScriptName();
+        if (script==null){
+            if (Context.getInstance().getRunningStatement()!=null){
+                return "script";
+            } 
+            return "console";
+        }
+        return script;
     }
 
     public String getType() {
@@ -215,9 +224,29 @@ public class ExecutionParameters  {
     }
 
     public String getScript() {
-        return Context.getInstance().runningScriptName;
+        return Context.getInstance().getRunningScriptName();
     }
 
+    public File getScriptFile() {
+        return Context.getInstance().getRunningScriptFile();
+    }
+    
+    
+    public String getScriptVersion() throws IOException {
+        File file = getScriptFile();
+        if (file!=null){
+            Revision rev;
+            try {
+                rev = Context.getInstance().getFileRevision(file.getPath());
+                if (rev != null){
+                    return rev.id;
+                }
+            } catch (Exception ex) {
+            }
+        }
+        return null;
+    }        
+    
     public String getGroup() {
         return Context.getInstance().dataManager.getCurrentGroup();
     }

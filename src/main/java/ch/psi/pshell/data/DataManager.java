@@ -460,6 +460,11 @@ public class DataManager implements AutoCloseable {
                 } catch (Exception ex) {
                     logger.log(Level.WARNING, null, ex);
                 }
+                try {
+                    this.layout.onClosed(outputFile);
+                } catch (Exception ex) {
+                    logger.log(Level.WARNING, null, ex);
+                }                
                 tableIndex.clear();
                 try {
                     provider.closeOutput();

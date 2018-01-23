@@ -495,7 +495,17 @@ public class IO {
 
     public static String getRelativePath(String fileName, String referencePath) {
         try {
-            return new File(referencePath).toURI().relativize(new File(fileName).toURI()).getPath();
+            File file = new File(fileName);
+            try{
+                file = file.getCanonicalFile();
+            } catch (Exception ex) {
+            }   
+            File referenceFile = new File(referencePath);
+            try{
+                referenceFile = referenceFile.getCanonicalFile();
+            } catch (Exception ex) {
+            }        
+            return referenceFile.toURI().relativize(file.toURI()).getPath();
         } catch (Exception ex) {
         }
         return fileName;
