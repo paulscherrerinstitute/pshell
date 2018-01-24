@@ -116,7 +116,7 @@ public class Folder {
         delete();
     }
 
-    public void cleanup(int timeToLiveMillis, boolean files, boolean directories, boolean hidden) throws IOException {
+    public void cleanup(long timeToLiveMillis, boolean files, boolean directories, boolean hidden) throws IOException {
         logger.info("Cleaning " + name + " - ttl:" + timeToLiveMillis + "ms files:" + files + " dirs:" + directories + " hidden:" + hidden);
         if (timeToLiveMillis > 0) {
             assertExists();
