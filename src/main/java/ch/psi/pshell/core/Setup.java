@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.jar.JarFile;
+import java.util.regex.Pattern;
 import javax.imageio.ImageIO;
 
 /**
@@ -294,7 +295,15 @@ public class Setup extends Config {
             path = path.replace(TOKEN_EXEC_NAME, name);
             path = path.replace("{exec}", name); //TODO: Remove, this is for backward compatibility
             path = path.replace(TOKEN_EXEC_TYPE, type);
-            path = path.replace(TOKEN_EXEC_COUNT, String.format("%04d", count));
+            while (path.contains(TOKEN_EXEC_COUNT)){
+                int i = path.indexOf(TOKEN_EXEC_COUNT) + TOKEN_EXEC_COUNT.length();
+                if ((i<path.length()) && path.substring(i,i+1).equals("%")){
+                    String format = path.substring(i).split(" ")[0];
+                    path = path.replaceFirst(Pattern.quote(TOKEN_EXEC_COUNT)+format, String.format(format, count));
+                } else {
+                    path = path.replaceFirst(Pattern.quote(TOKEN_EXEC_COUNT), String.format("%04d", count));
+                }
+            }
         }
         if (timestamp <= 0) {
             timestamp = System.currentTimeMillis();
