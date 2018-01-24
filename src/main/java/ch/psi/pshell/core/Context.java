@@ -307,7 +307,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
     void restartLogger() {
         String ext = localMode ? "local.log" : "log";
         logFileName = getSetup().expandPath(getConfig().logPath + "." + ext);
-        logManager.start(logFileName, config.logDaysToLive);
+        logManager.start(logFileName, isLocalMode() ? -1 : config.logDaysToLive);
         logManager.setLevel(config.getLogLevel());
         logManager.setConsoleLoggerLevel(config.getConsoleLogLevel());
     }

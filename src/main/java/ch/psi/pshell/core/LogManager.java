@@ -117,7 +117,8 @@ public class LogManager {
                 logFile.setFormatter(formatter);
                 addHandler(logFile);
                 if (daysToLive > 0) {
-                    new Folder(folder).cleanup(daysToLive * 24 * 3600 * 1000, true, false, false);
+                    long millisToLive = ((long)daysToLive) * 24 * 3600 * 1000;
+                    new Folder(folder).cleanup(millisToLive, true, false, false);
                 }
             }
 
