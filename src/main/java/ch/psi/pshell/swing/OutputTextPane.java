@@ -201,6 +201,8 @@ public class OutputTextPane extends JTextPane {
                 || (c == KeyEvent.VK_CONTROL)
                 || ((code == KeyEvent.VK_V) && evt.isControlDown())
                 || ((code == KeyEvent.VK_X) && evt.isControlDown())
+                || ((code == KeyEvent.VK_V) && evt.isMetaDown())
+                || ((code == KeyEvent.VK_X) && evt.isMetaDown())
                 || (c == KeyEvent.VK_DELETE)) {
             evt.consume();
         }
