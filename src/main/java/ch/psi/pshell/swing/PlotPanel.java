@@ -734,7 +734,7 @@ public class PlotPanel extends MonitoredPanel {
                         if (prefs.range != null) {
                             plot.getAxis(Plot.AxisId.X).setRange(prefs.range.min, prefs.range.max);
                         } else if ((prefs.autoRange == null) || (!prefs.autoRange)) {
-                            plot.getAxis(Plot.AxisId.X).setRange(start[0], end[0]);
+                            plot.getAxis(Plot.AxisId.X).setRange(Math.min(start[0], end[0]), Math.max(start[0], end[0]));
                         }
                     }
                     plot.getAxis(Plot.AxisId.X).setLabel(labelX);
@@ -815,7 +815,7 @@ public class PlotPanel extends MonitoredPanel {
                     plot.getAxis(Plot.AxisId.X).setRange(prefs.range.min, prefs.range.max);
                 } else if ((prefs.autoRange == null) || (!prefs.autoRange)) {
                     if ((start != null) && (start.length > 0) && (end != null) && (end.length > 0)) {
-                        plot.getAxis(Plot.AxisId.X).setRange(start[0], end[0]);
+                        plot.getAxis(Plot.AxisId.X).setRange(Math.min(start[0], end[0]), Math.max(start[0], end[0]));
                     }
                 }
                 plot.getAxis(Plot.AxisId.X).setLabel(labelX);
