@@ -1,8 +1,6 @@
 package ch.psi.pshell.scan;
 
-import ch.psi.pshell.bs.Dispatcher;
 import ch.psi.pshell.core.UrlDevice;
-import ch.psi.pshell.bs.Provider;
 import ch.psi.pshell.bs.Stream;
 import ch.psi.pshell.bs.Waveform;
 import ch.psi.pshell.core.Context;
@@ -55,6 +53,7 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
 
     int scanIndex = -1;
     String scanPath;
+    String tag;
     int pass = 1;
     boolean accumulate;
     String name = "Scan";
@@ -269,6 +268,7 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
     @Override
     public void start() throws IOException, InterruptedException {
         startTimestamp = System.currentTimeMillis();
+        tag = Context.getInstance().getExecutionPars().getTag();
         if (relative) {
             readInitialPosition();
         }
@@ -512,6 +512,11 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
     @Override
     public int getIndex() {
         return scanIndex;
+    }
+    
+    @Override
+    public String getTag(){
+        return tag;
     }
 
     @Override

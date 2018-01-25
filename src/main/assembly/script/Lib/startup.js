@@ -1167,6 +1167,7 @@ function set_exec_pars(args){
                               If false closes output root, if open.
         reset(bool, optional): If true reset the scan counter - the {count} tag and set the timestamp to now.
         group(str, optional): Overrides default layout group name for scans
+        tag(str, optional): Overrides default tag for scan names (affecting group or dataset name, according to layout)
         defaults(bool, optional): If true restore the original execution parameters.
 
         Graphical preferences can also be set. Keys are equal to lowercase of Preference enum:

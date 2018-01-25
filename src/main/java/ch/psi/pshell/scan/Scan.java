@@ -74,7 +74,9 @@ public interface Scan {
     public int getIndex();
 
     public String getPath();
-
+    
+    public String getTag();
+    
     public boolean getAccumulate();
 
     public void setUseWritableReadback(boolean value);

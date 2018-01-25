@@ -728,6 +728,7 @@ def set_exec_pars(Map args){
         path(str, optional):  If defined provides the full path name for data output root (overriding config))
                              The tag {data} can be used to enter a path relative to the standard data folder.
         layout(str, optional): Overrides default data layout.
+        depth_dim(int, optional): dimension of the depth for 2d-matrixes in 3d datasets.
         persist(bool, optional): Overrides the configuration option to auto save scan data.
         flush(bool, optional): Overrides the configuration option to flush file on each record.
         accumulate(bool, optional): Overrides the configuration option to release scan records. 
@@ -737,7 +738,9 @@ def set_exec_pars(Map args){
         open(bool, optional): If true opens data output root (instead of only doing in the first data access call)
                               If false closes output root, if open.
         reset(bool, optional): If true reset the scan counter - the {count} tag and set the timestamp to now.
-        restore(bool, optional): If true restore the original execution parameters.
+        group(str, optional): Overrides default layout group name for scans
+        tag(str, optional): Overrides default tag for scan names (affecting group or dataset name, according to layout)
+        defaults(bool, optional): If true restore the original execution parameters.
 
         Graphical preferences can also be set. Keys are equal to lowercase of Preference enum:
         "plot_disabled", "table_disabled", "enabled_plots", "plot_types", "print_scan", "auto_range", 

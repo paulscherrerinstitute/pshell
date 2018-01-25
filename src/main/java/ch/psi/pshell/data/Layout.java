@@ -3,11 +3,8 @@ package ch.psi.pshell.data;
 import ch.psi.pshell.core.Context;
 import ch.psi.pshell.scan.Scan;
 import ch.psi.pshell.scan.ScanRecord;
-import ch.psi.pshell.scripting.ViewPreference;
-import ch.psi.utils.IO;
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -44,7 +41,7 @@ public interface Layout {
         }
         if (!ret.endsWith("/")) {
             ret = ret + "/";
-        }
+        }        
         return ret;
     }
 
@@ -68,6 +65,10 @@ public interface Layout {
     void onRecord(Scan scan, ScanRecord record) throws IOException;
 
     void onFinish(Scan scan) throws IOException;
+    
+    default String getScanTag(){
+        return Context.getInstance().getSetup().expandPath(Context.getInstance().getScanTag());
+    }  
 
     default List<PlotDescriptor> getScanPlots(String root, String path, DataManager dm) throws IOException {
         //Uses default data manager plot parsing
@@ -81,76 +82,16 @@ public interface Layout {
         return Context.getInstance().getDataManager();
     }
 
-    default public boolean getPreserveTypes() {
+    default boolean getPreserveTypes() {
         return getDataManager().getPreserveTypes();
     }
 
-    default public Class getDeviceType(Object device) throws IOException {
+    default Class getDeviceType(Object device) throws IOException {
         return getDataManager().getScanDeviceDatasetType(device);
     }
 
-    default public int getIndex(Scan scan, ScanRecord record) throws IOException {
+    default int getIndex(Scan scan, ScanRecord record) throws IOException {
         return record.getIndex() - scan.getRecordIndexOffset();
     }
 
-    //Set common attributes as expected by DataManager (can be ommited).
-    default void setStartTimestampAttibute(Scan scan) throws IOException {
-        String scanPath = getDataManager().getScanPath(scan);
-        if (scanPath != null) {
-            getDataManager().setAttribute(scanPath, ATTR_START_TIMESTAMP, System.currentTimeMillis());
-        }
-    }
-
-    default void setEndTimestampAttibute(Scan scan) throws IOException {
-        String scanPath = getDataManager().getScanPath(scan);
-        if (scanPath != null) {
-            getDataManager().setAttribute(scanPath, ATTR_END_TIMESTAMP, System.currentTimeMillis());
-        }
-    }
-
-    default void setPlotPreferencesAttibutes(Scan scan) throws IOException {
-        String scanPath = getDataManager().getScanPath(scan);
-        if (scanPath != null) {
-            ViewPreference.PlotPreferences pp = Context.getInstance().getPlotPreferences();
-            if (pp.enabledPlots != null) {
-                getDataManager().setAttribute(scanPath, ATTR_PLOT_ENABLE, pp.enabledPlots.toArray(new String[0]));
-            }
-            if (pp.autoRange != null) {
-                getDataManager().setAttribute(scanPath, ATTR_PLOT_RANGE, new double[]{Double.NaN, Double.NaN});
-            }
-            if (pp.range != null) {
-                getDataManager().setAttribute(scanPath, ATTR_PLOT_RANGE, new double[]{pp.range.min, pp.range.max});
-            }
-            if (pp.domainAxis != null) {
-                getDataManager().setAttribute(scanPath, ATTR_PLOT_DOMAIN, pp.domainAxis);
-            }
-            if (pp.plotTypes != null) {
-                ArrayList<String> list = new ArrayList<>();
-                for (String key : pp.plotTypes.keySet()) {
-                    list.add(key + "=" + pp.plotTypes.get(key));
-                }
-                getDataManager().setAttribute(scanPath, ATTR_PLOT_TYPES, String.join(ATTR_PLOT_TYPES_SEPARATOR, list));
-            }
-        }
-    }
-
-    default void setNameAttribute() throws IOException {
-        String name = getDataManager().getExecutionPars().getName();
-        getDataManager().setAttribute("/", ATTR_NAME, (name==null) ? "" : name);
-    }
-    
-    default void setScriptFileAttibute() throws IOException {
-        File file = getDataManager().getExecutionPars().getScriptFile();
-        if (file!=null){
-            String fileName = file.getPath();
-            getDataManager().setAttribute("/", ATTR_FILE, fileName);
-        }
-    }
-    
-    default void setScriptVersionAttibute() throws IOException {
-        String version = getDataManager().getExecutionPars().getScriptVersion();
-        if (version!=null){
-            getDataManager().setAttribute("/", ATTR_VERSION, version);
-        }
-    }
 }

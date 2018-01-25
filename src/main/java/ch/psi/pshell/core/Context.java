@@ -1293,7 +1293,18 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
         executionPars.setCommandOptions(command, pars);
    }
 
-   public String getStandardScriptName(String fileName) {
+    String scanTag;
+
+    public String getScanTag() {
+        return (scanTag == null) ? "scan {index}%d" : scanTag;
+    }
+
+    //Sets default scan tags for layout classes
+    public void setScanTag(String value) {
+        scanTag = value;
+    }   
+    
+    public String getStandardScriptName(String fileName) {
         if (fileName == null) {
             return "Unknown";
         }

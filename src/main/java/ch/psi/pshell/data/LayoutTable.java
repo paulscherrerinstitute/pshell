@@ -17,7 +17,7 @@ import java.util.Map;
 /**
  * This data layout stores all positioners and sensors in a single table
  */
-public class LayoutTable implements Layout {
+public class LayoutTable extends LayoutBase  implements Layout {
 
     public static final String ATTR_SCAN_WRITABLE_DIMS = "Writable Dims";
 
@@ -45,14 +45,11 @@ public class LayoutTable implements Layout {
     }
 
     protected String getLogFileName() {
-        //return String.format("%s_%s_logs",Chrono.getTimeStr(System.currentTimeMillis(), "YYYYMMddHHmm"),
-        //                    dataManager.context.getExecutingContext());
         return "logs";
     }
 
     protected String getDatasetName(Scan scan) {
-        //return String.format("%s_%s_%04d", Chrono.getTimeStr(System.currentTimeMillis(), "YYYYMMddHHmm"), context, scanIndex);
-        return "scan " + getDataManager().getScanIndex(scan);
+        return (scan.getTag() != null) ? scan.getTag() : getScanTag();
     }
 
     HashMap<Scan, String> scanFiles = new HashMap<>();
@@ -113,7 +110,7 @@ public class LayoutTable implements Layout {
         int deviceIndex = 0;
         Number[] positions = record.getPositions();
         Object[] values = record.getValues();
-
+        fields = scan.getWritables().length + scan.getReadables().length;
         Object[] data = new Object[fields];
 
         for (Writable writable : scan.getWritables()) {

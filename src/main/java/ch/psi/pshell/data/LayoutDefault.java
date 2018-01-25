@@ -25,7 +25,7 @@ import java.util.logging.Logger;
 /**
  * This data layout stores each positioner and sensor as an individual dataset
  */
-public class LayoutDefault implements Layout {
+public class LayoutDefault extends LayoutBase implements Layout {
 
     public static final String ATTR_SCAN_DIMENSION = "Dimensions";
     public static final String ATTR_SCAN_STEPS = "Steps";
@@ -44,16 +44,7 @@ public class LayoutDefault implements Layout {
     public static final String SETPOINTS_DATASET_SUFFIX = "_setpoint";
 
     String group;
-    int scanIndex;
-    boolean persistSetpoints;
-
-    public boolean getPersistSetpoints() {
-        return persistSetpoints;
-    }
-
-    public void setPersistSetpoints(boolean value) {
-        persistSetpoints = value;
-    }
+ 
 
     @Override
     public void initialize() {
@@ -66,7 +57,7 @@ public class LayoutDefault implements Layout {
 
     @Override
     public String getDefaultGroup(Scan scan) {
-        return "scan " + getDataManager().getScanIndex(scan) + "/";
+        return (scan.getTag() != null) ? scan.getTag() : getScanTag();
     }
     
     @Override
@@ -83,7 +74,6 @@ public class LayoutDefault implements Layout {
     @Override
     public void onStart(Scan scan) throws IOException {
         DataManager dataManager = getDataManager();
-        scanIndex = dataManager.getScanIndex();
         String group = getCurrentGroup(scan);
         dataManager.createGroup(group);
         

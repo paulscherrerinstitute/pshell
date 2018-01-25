@@ -65,6 +65,7 @@ public class Setup extends Config {
     public static transient final String TOKEN_EXEC_NAME = "{name}";
     public static transient final String TOKEN_EXEC_TYPE = "{type}";
     public static transient final String TOKEN_EXEC_COUNT = "{count}";
+    public static transient final String TOKEN_EXEC_INDEX = "{index}";
     public static transient final String TOKEN_SYS_HOME = "{syshome}";
     public static transient final String TOKEN_SYS_USER = "{sysuser}";
 
@@ -291,11 +292,11 @@ public class Setup extends Config {
             String execType = executionContext.getType();
             String name = (execName == null) ? "unknown" : execName;
             String type = (execType == null) ? "" : execType;
-            int count = executionContext.getCount();
             path = path.replace(TOKEN_EXEC_NAME, name);
             path = path.replace("{exec}", name); //TODO: Remove, this is for backward compatibility
             path = path.replace(TOKEN_EXEC_TYPE, type);
             while (path.contains(TOKEN_EXEC_COUNT)){
+                int count = executionContext.getCount();
                 int i = path.indexOf(TOKEN_EXEC_COUNT) + TOKEN_EXEC_COUNT.length();
                 if ((i<path.length()) && path.substring(i,i+1).equals("%")){
                     String format = path.substring(i).split(" ")[0];
@@ -304,6 +305,16 @@ public class Setup extends Config {
                     path = path.replaceFirst(Pattern.quote(TOKEN_EXEC_COUNT), String.format("%04d", count));
                 }
             }
+            while (path.contains(TOKEN_EXEC_INDEX)){
+                int index = executionContext.getIndex();
+                int i = path.indexOf(TOKEN_EXEC_INDEX) + TOKEN_EXEC_INDEX.length();
+                if ((i<path.length()) && path.substring(i,i+1).equals("%")){
+                    String format = path.substring(i).split(" ")[0];
+                    path = path.replaceFirst(Pattern.quote(TOKEN_EXEC_INDEX)+format, String.format(format, index));
+                } else {
+                    path = path.replaceFirst(Pattern.quote(TOKEN_EXEC_INDEX), String.format("%04d", index));
+                }
+            }            
         }
         if (timestamp <= 0) {
             timestamp = System.currentTimeMillis();

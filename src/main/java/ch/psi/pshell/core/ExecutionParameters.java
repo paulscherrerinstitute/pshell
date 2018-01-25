@@ -21,7 +21,7 @@ import java.util.logging.Level;
  */
 public class ExecutionParameters  {
 
-    final String[] executionOptions = new String[]{"defaults", "group", "open", "reset", "name", "type", "path",
+    final String[] executionOptions = new String[]{"defaults", "group", "open", "reset", "name", "type", "path", "tag",
         "layout", "persist", "flush", "preserve", "accumulate", "depth_dim"};
 
     final String[] viewOptions = new String[]{"plot_disabled", "table_disabled", "enabled_plots", 
@@ -214,6 +214,15 @@ public class ExecutionParameters  {
         Object option = getOption("accumulate");
         return (option != null) ? (Boolean) option : !Context.getInstance().getConfig().dataScanReleaseRecords;
     }
+    
+    public String getTag() {
+        
+        String ret = (String) getOption("tag");
+        if (ret != null){
+            ret = Context.getInstance().getSetup().expandPath(ret);
+        }
+        return ret;
+    }      
 
     public int getIndex() {
         return Context.getInstance().dataManager.getScanIndex();
@@ -229,8 +238,7 @@ public class ExecutionParameters  {
 
     public File getScriptFile() {
         return Context.getInstance().getRunningScriptFile();
-    }
-    
+    }  
     
     public String getScriptVersion() throws IOException {
         File file = getScriptFile();
