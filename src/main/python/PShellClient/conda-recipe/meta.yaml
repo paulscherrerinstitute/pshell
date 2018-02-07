@@ -1,0 +1,19 @@
+package:
+    name: pshell_client
+    version: 1.0.0
+
+build:
+  number: 0
+
+source:
+    path: ..
+
+requirements:
+    build:
+        - python
+    run:
+        - python
+        - requests
+
+about:
+    summary: "pshell_client is Python a client to PShell REST interface"

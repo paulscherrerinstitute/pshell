@@ -40,7 +40,6 @@ import java.util.Map;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
-import java.util.Base64;
 
 /**
  * Definition of the application REST API.
