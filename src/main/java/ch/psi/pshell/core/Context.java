@@ -67,10 +67,13 @@ import ch.psi.pshell.security.Rights;
 import ch.psi.pshell.security.UsersManagerListener;
 import ch.psi.pshell.security.User;
 import ch.psi.pshell.security.UserAccessException;
+import ch.psi.utils.Chrono;
+import ch.psi.utils.Condition;
 import ch.psi.utils.Sys.OSFamily;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.nio.file.Files;
+import java.util.concurrent.TimeoutException;
 import java.util.jar.JarFile;
 
 /**
@@ -1040,35 +1043,93 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
         }
     };
 
-    static class CommandInfo {
+    public static class CommandInfo {
+        public final CommandSource source;
+        public final String script;
+        public final String command;
+        public final boolean background;
+        public final Object args;
+        public final Thread thread;
+        public final long id;
+        public final long start;
+        public long end;
 
-        final CommandSource source;
-        final boolean background;
-        final Object args;
-
-        CommandInfo(CommandSource source, Object args, boolean background) {
+        CommandInfo(CommandSource source, String script, String command, Object args, boolean background) {
             this.source = source;
+            this.script = script;
+            this.command = command;
             this.background = background;
             this.args = args;
+            this.thread = Thread.currentThread();
+            this.id = thread.getId();
+            this.start = System.currentTimeMillis();
+        }
+        
+        public boolean isRunning(){
+            return Context.getInstance().commandInfo.containsKey(this.thread);
+        }
+        
+        public void abort() throws InterruptedException{
+            if (background){
+                this.thread.interrupt();      
+            } else {
+                Context.getInstance().abort();
+            }
+        }
+        
+        public void join() throws InterruptedException{
+            while(isRunning()){
+                synchronized (Context.getInstance().commandInfo) {
+                    Context.getInstance().commandInfo.wait();
+                }
+            }
+        }      
+        
+        @Override
+        public String toString(){
+            return String.format("%s - %s - %s - %s", background ? String.valueOf(id) : "FG", source.toString(), command,  Str.toString(args, 10));
         }
     }
-
+    
+    public List<CommandInfo> getCommands(){
+        return new ArrayList(commandInfo.values());
+    }
+        
+     boolean abort(final CommandSource source, int commandId) throws InterruptedException{
+        onCommand(Command.abort, new Object[]{commandId}, source);
+        boolean aborted = false;
+        for (CommandInfo ci :getCommands() ){
+            if (commandId==-1){
+                if (ci.background){
+                    ci.abort();
+                    aborted = true;
+                }
+            }
+            if (ci.id == commandId){
+                ci.abort();
+                aborted = true;
+                break;
+            }
+        }
+        return aborted;
+    }
+    
     final HashMap<Thread, CommandInfo> commandInfo = new HashMap<>();
 
     Object runInInterpreterThread(Callable callable, final CommandInfo info) throws ScriptException, IOException, InterruptedException {
         assertInterpreterEnabled();
         try {
-            if (isInterpreterThread()) {
-                if (info != null) {
+            if (info != null) {
+                synchronized (commandInfo) {
                     commandInfo.put(interpreterThread, info);
                 }
+            }      
+            
+            if (isInterpreterThread()) {
                 return callable.call();
             } else {
                 try {
                     synchronized (interpreterExecutor) {
-                        if (info != null) {
-                            commandInfo.put(interpreterThread, info);
-                        }
                         return interpreterExecutor.submit(callable).get();
                     }
                 } catch (ExecutionException ex) {
@@ -1094,7 +1155,13 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
             logger.log(Level.SEVERE, null, t); //Should never happen;
             return null;
         } finally {
-            commandInfo.remove(interpreterThread);
+            synchronized (commandInfo) {
+                if (info != null) {
+                    info.end = System.currentTimeMillis();
+                }
+                commandInfo.remove(interpreterThread);
+                commandInfo.notifyAll();
+            }            
         }
     }
 
@@ -1113,7 +1180,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
                 return null;
             }
         }
-        CommandInfo info = new CommandInfo(source, null, false);
+        CommandInfo info = new CommandInfo(source, null, command, null, false);
         onCommand(Command.eval, new Object[]{command}, source);
         triggerShellCommand(source, command);
         //Verify control command
@@ -1197,7 +1264,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
         if (fileName == null) {
             return null;
         }
-        CommandInfo info = new CommandInfo(source, args, true);
+        CommandInfo info = new CommandInfo(source, fileName, null, args, true);
         final String scriptName = getStandardScriptName(fileName);
         final Map<String, Object> argsDict = parseArgs(args);
         ArrayList pars = new ArrayList();
@@ -1210,7 +1277,9 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
         assertStarted();
         assertRunAllowed(source);
         //Command source in statements execution will be CommandSource.script 
-        commandInfo.put(Thread.currentThread(), info);
+        synchronized (commandInfo) {
+            commandInfo.put(Thread.currentThread(), info);
+        }
         try {
             //TODO: args passing is not theread safe
             for (String key : argsDict.keySet()) {
@@ -1218,7 +1287,11 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
             }
             return scriptManager.evalFileBackground(fileName);
         } finally {
-            commandInfo.remove(Thread.currentThread());
+            synchronized (commandInfo) {
+                info.end = System.currentTimeMillis();
+                commandInfo.remove(Thread.currentThread());
+                commandInfo.notifyAll();
+            }  
         }
     }
 
@@ -1233,8 +1306,10 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
     Object evalLineBackground(final CommandSource source, final String line) throws ScriptException, IOException, ContextStateException, InterruptedException {
         assertInterpreterEnabled();
         assertConsoleCommandAllowed(source);
-        CommandInfo info = new CommandInfo(source, null, true);
-        commandInfo.put(Thread.currentThread(), info);
+        CommandInfo info = new CommandInfo(source, null, line, null, true);
+        synchronized (commandInfo) {
+            commandInfo.put(Thread.currentThread(), info);
+        }
         try {
             InterpreterResult result = scriptManager.evalBackground(line);
             if (result == null) {
@@ -1245,23 +1320,57 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
             }
             return result.result;
         } finally {
-            commandInfo.remove(Thread.currentThread());
+            synchronized (commandInfo) {
+                info.end = System.currentTimeMillis();
+                commandInfo.remove(Thread.currentThread());
+                commandInfo.notifyAll();
+            }              
         }
     }
 
     CompletableFuture<?> evalLineBackgroundAsync(final CommandSource source, final String line) {
         return Threading.getFuture(() -> evalLineBackground(source, line));
     }
+    
+
+    CommandInfo getNewCommand() throws TimeoutException, InterruptedException{
+        Chrono chrono = new Chrono();
+        List<CommandInfo> commands =  Context.getInstance().getCommands();
+        CommandInfo ret = null;
+        try{
+            chrono.waitCondition(() -> {
+                List<CommandInfo>  cmds =  Context.getInstance().getCommands();
+                cmds.removeAll(commands);
+                if (cmds.size()>=1){
+                    commands.clear();
+                    commands.addAll(cmds);
+                    return true;
+                }
+                return false;
+            }, 100);    
+        } catch (TimeoutException ex){
+            return null;
+        }
+        return commands.size()>0 ? commands.get(0) : null;
+    }
 
     String runningScript;
 
     public String getRunningScriptName() {
-        return (runningScript==null) ? null : IO.getPrefix(runningScript);
+        return getRunningScriptName(runningScript);
     }
 
     public File getRunningScriptFile() {
-        if (runningScript!=null){
-            File ret = new File(runningScript);
+        return getRunningScriptFile(runningScript);
+    }
+    
+    String getRunningScriptName(String script) {
+        return (script==null) ? null : IO.getPrefix(script);
+    }
+
+    File getRunningScriptFile(String script) {
+        if (script!=null){
+            File ret = new File(script);
             if (ret.exists()){
                 try{
                     ret=ret.getCanonicalFile();
@@ -1271,7 +1380,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
             }
         }
         return null;
-    }
+    }    
     
     final ExecutionParameters executionPars = new ExecutionParameters();
 
@@ -1349,7 +1458,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
             pars.add(key + "=" + argsDict.get(key));
         }
         onCommand(Command.run, pars.toArray(), source);
-        CommandInfo info = new CommandInfo(source, args, false);
+        CommandInfo info = new CommandInfo(source, fileName, null, args, false);
 
         if (args == null) {
             triggerShellCommand(source, "Run: " + scriptName);
@@ -1421,7 +1530,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
         } else {
             triggerShellCommand(source, "Debug: " + scriptName + "(" + Str.toString(args, 20) + ")");
         }
-        CommandInfo info = new CommandInfo(source, args, false);
+        CommandInfo info = new CommandInfo(source, scriptName, null, args, false);
         try {
             startExecution(source, fileName);
             setSourceUI(source);
@@ -2616,8 +2725,10 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
     public void startScriptExecution(Object args) {
         assertRunAllowed(getPublicCommandSource());
         CommandInfo info = commandInfo.get(Thread.currentThread());
-        info = new CommandInfo(CommandSource.script, args, (info == null) ? false : info.background);
-        commandInfo.put(Thread.currentThread(), info);
+        info = new CommandInfo(CommandSource.script, (info == null) ? null : info.script, null, args, (info == null) ? false : info.background);
+        synchronized (commandInfo) {
+            commandInfo.put(Thread.currentThread(), info);
+        }
     }
 
     @Hidden
@@ -2710,6 +2821,10 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
     public void abort() throws InterruptedException {
         abort(getPublicCommandSource());
     }
+    
+    public boolean abort(int commandId) throws InterruptedException{
+        return abort(getPublicCommandSource(), commandId);
+    }    
 
     public void updateAll() {
         updateAll(getPublicCommandSource());

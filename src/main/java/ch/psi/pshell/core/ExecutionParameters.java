@@ -3,6 +3,7 @@
  */
 package ch.psi.pshell.core;
 
+import ch.psi.pshell.core.Context.CommandInfo;
 import ch.psi.pshell.core.VersioningManager.Revision;
 import ch.psi.pshell.scan.Scan;
 import ch.psi.pshell.scripting.ViewPreference;
@@ -17,7 +18,8 @@ import java.util.Map;
 import java.util.logging.Level;
 
 /**
- *
+ * TODO: Not working for background commands
+ *       Unify with CommandInfo so execution parameters are specific to each command 
  */
 public class ExecutionParameters  {
 
@@ -145,7 +147,7 @@ public class ExecutionParameters  {
         if (option != null) {
             return String.valueOf(option);
         }
-        String script = Context.getInstance().getRunningScriptName();
+        String script = getScript();
         if (script==null){
             if (Context.getInstance().getRunningStatement()!=null){
                 return "script";
@@ -233,11 +235,13 @@ public class ExecutionParameters  {
     }
 
     public String getScript() {
-        return Context.getInstance().getRunningScriptName();
+        CommandInfo cmd = getCommand();
+        return (cmd!=null) ? Context.getInstance().getRunningScriptName(cmd.script) : null;
     }
 
     public File getScriptFile() {
-        return Context.getInstance().getRunningScriptFile();
+        CommandInfo cmd = getCommand();
+        return (cmd!=null) ? Context.getInstance().getRunningScriptFile(cmd.script) : null;
     }  
     
     public String getScriptVersion() throws IOException {
@@ -290,10 +294,31 @@ public class ExecutionParameters  {
         Context.CommandInfo ret = Context.getInstance().commandInfo.get(Thread.currentThread());
         return (ret == null) ? null : ret.args;
     }
+    
+    public List<CommandInfo> getCommands(){
+        return Context.getInstance().getCommands();
+    }
+    
+    public CommandInfo getCommand(){ 
+        List<CommandInfo> commands = getCommands();
+        for (CommandInfo cmd: commands){
+            if (cmd.thread == Thread.currentThread()){
+                return cmd;
+            }
+        }
+        //If not in background command, return foreground command
+        //TODO: Not considering threads created by background command
+        for (CommandInfo cmd: commands){
+            if (cmd.background==false){
+                return cmd;
+            }
+        }     
+        return null;
+    }
 
-    //TODO: threads created by foreground script return background
     public boolean isBackground() {
-        return !Context.getInstance().isInterpreterThread();
+        CommandInfo cmd = getCommand();
+        return (cmd!=null) ? cmd.background : !Context.getInstance().isInterpreterThread();
     }
 
     @Override

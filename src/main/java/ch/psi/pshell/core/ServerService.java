@@ -164,6 +164,21 @@ public class ServerService {
             throw new ExecutionException(ex);
         }
     }
+    
+    @GET
+    @Path("evalAsync/{statement : .+}")
+    @Consumes(MediaType.TEXT_PLAIN)
+    @Produces(MediaType.TEXT_PLAIN)
+    public long evalAsync(@PathParam("statement") final String statement) throws ExecutionException {
+        try {
+            String cmd = formatIncomingText(statement);
+            context.evalLineAsync(CommandSource.server, cmd.equals("\n") ? "" : cmd); //\n is token for empty string
+            Context.CommandInfo commandInfo =  Context.getInstance().getNewCommand();
+            return (commandInfo==null) ? 0 : commandInfo.id;
+        } catch (Exception ex) {
+            throw new ExecutionException(ex);
+        }
+    }    
 
     @GET
     @Path("history/{index}")
@@ -353,12 +368,23 @@ public class ServerService {
         try {
             String script = (String) contents.get("script");
             Object pars = contents.get("pars");
-            Boolean background = (Boolean) contents.get("background");
+            Boolean background = contents.containsKey("background") ? (Boolean) contents.get("background") : false;
+            Boolean async = contents.containsKey("async") ? (Boolean) contents.get("async") : false;
             Object ret = null;
-            if (background) {
-                ret = Context.getInstance().evalFileBackground(CommandSource.server, script, pars);
+            if (async){
+                if (background) {
+                    Context.getInstance().evalFileBackgroundAsync(CommandSource.server, script, pars);
+                } else {
+                    Context.getInstance().evalFileAsync(CommandSource.server, script, pars);
+                }
+                Context.CommandInfo cmd =  Context.getInstance().getNewCommand();
+                return (cmd==null) ? 0 : cmd.id;
             } else {
-                ret = Context.getInstance().evalFile(CommandSource.server, script, pars);
+                if (background) {
+                    ret = Context.getInstance().evalFileBackground(CommandSource.server, script, pars);
+                } else {
+                    ret = Context.getInstance().evalFile(CommandSource.server, script, pars);
+                }
             }
             return mapper.writeValueAsString(ret);
         } catch (Exception ex) {
@@ -428,7 +454,17 @@ public class ServerService {
             throw new ExecutionException(ex);
         }
     }
-
+    
+    @GET
+    @Path("abort/{commandId}")
+    public boolean abort(@PathParam("commandId") final Integer commandId) throws ExecutionException {
+        try {
+            return context.abort(CommandSource.server, commandId);
+        } catch (Exception ex) {
+            throw new ExecutionException(ex);
+        }
+    }
+     
     @GET
     @Path("reinit")
     public void reinit() throws ExecutionException {
