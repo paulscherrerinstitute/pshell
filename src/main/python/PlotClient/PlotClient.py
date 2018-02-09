@@ -3,7 +3,7 @@ import zmq
 import json
 import base64
 
-class PlotServer:
+class PlotClient:
     """
     A Python client to PShell plot server
     """
@@ -254,7 +254,7 @@ class PlotServer:
 
 if __name__ == "__main__":
   import time
-  ps = PlotServer(context = "Py", timeout = 5.0)
+  ps = PlotClient(context = "Py", timeout = 5.0)
   #while(True):    
   try:
     #Ckecking existing contexts
@@ -314,7 +314,7 @@ if __name__ == "__main__":
     x=[] 
     for i in range(100): x.append(float(i))
     y = [0.0] * 100; y[10] = 40.0; y[20] = 80.0
-    ps.set_line_series_data(line_series_1, x, y, error = [2.0] * len(x))
+    ps.()(line_series_1, x, y, error = [2.0] * len(x))
 
     for i in range(len(x)):
         ps.append_line_series_data(line_series_2, x [i], y[i], None)
@@ -361,5 +361,5 @@ if __name__ == "__main__":
     import traceback, time
     traceback.print_exc(file=sys.stdout)
     time.sleep(1.0)
-ps.close()
+  ps.close()
 
