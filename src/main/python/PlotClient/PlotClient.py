@@ -314,7 +314,7 @@ if __name__ == "__main__":
     x=[] 
     for i in range(100): x.append(float(i))
     y = [0.0] * 100; y[10] = 40.0; y[20] = 80.0
-    ps.()(line_series_1, x, y, error = [2.0] * len(x))
+    ps.set_line_series_data(line_series_1, x, y, error = [2.0] * len(x))
 
     for i in range(len(x)):
         ps.append_line_series_data(line_series_2, x [i], y[i], None)
