@@ -7,7 +7,7 @@ import java.awt.Color;
  */
 public class TimePlotSeries extends PlotSeries<TimePlot> {
 
-    public Color color = Color.BLUE;
+    public Color color = null;
     public int axis = 1;
 
     public TimePlotSeries(String name) {

@@ -33,6 +33,8 @@ import java.awt.Insets;
 import java.awt.LayoutManager;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -40,10 +42,12 @@ import java.nio.file.Paths;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.EventObject;
 import java.util.HashMap;
 import java.util.Vector;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.AbstractCellEditor;
 import javax.swing.BoxLayout;
 import javax.swing.DefaultCellEditor;
 import javax.swing.DefaultComboBoxModel;
@@ -59,13 +63,13 @@ import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
-import javax.swing.Timer;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableCellEditor;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
 
@@ -92,7 +96,7 @@ public class StripChart extends StandardDialog {
     final HashMap<Device, Long> appendTimestamps = new HashMap<>();
     private int streamDevices = 0;
     final File defaultFolder;
-    
+
     Color backgroundColor;
     Color gridColor;
 
@@ -304,6 +308,67 @@ public class StripChart extends StandardDialog {
         cellEditor.setClickCountToStart(2);
         colY.setCellEditor(cellEditor);
 
+        TableColumn colColors = tableSeries.getColumnModel().getColumn(5);
+        colColors.setPreferredWidth(60);
+
+        class ColorEditor extends AbstractCellEditor implements TableCellEditor {
+
+            private final JTextField field = new JTextField();
+            private Color color;
+
+            ColorEditor() {
+                field.setBorder(null);
+                field.addMouseListener(new MouseAdapter() {
+                    @Override
+                    public void mousePressed(MouseEvent e) {
+                        if (e.getClickCount() == 2) {
+                            color = JColorChooser.showDialog(StripChart.this, "Choose a Color - Click 'Cancel for default", color);
+                            field.setBackground(color);
+                            stopCellEditing();
+                        }
+                    }
+                });
+            }
+
+            @Override
+            public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
+                color = Preferences.getColorFromString((String) value);
+                field.setBackground(color);
+                field.setEditable(false);
+                return field;
+            }
+
+            @Override
+            public Object getCellEditorValue() {
+                return (color == null) ? "" : color.getRed() + "," + color.getGreen() + "," + color.getBlue();
+            }
+
+            @Override
+            public boolean isCellEditable(EventObject ev) {
+                if (ev instanceof MouseEvent) {
+                    return ((MouseEvent) ev).getClickCount() >= 2;
+                }
+                return true;
+            }
+
+            @Override
+            public boolean shouldSelectCell(EventObject ev) {
+                return false;
+            }
+        }
+        colColors.setCellEditor(new ColorEditor());
+
+        colColors.setCellRenderer(new DefaultTableCellRenderer() {
+            @Override
+            public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+                Component comp = super.getTableCellRendererComponent(table, "", isSelected, hasFocus, row, column);
+                Color color = Preferences.getColorFromString((String) value);
+                ((JLabel) comp).setBackground(color);
+                ((JLabel) comp).setEnabled(false);
+                return comp;
+            }
+        });
+
         update();
 
         tableCharts.getColumnModel().getColumn(0).setPreferredWidth(60);
@@ -316,7 +381,7 @@ public class StripChart extends StandardDialog {
             }
         });
         final DecimalFormat formatter = new DecimalFormat("#.############");
-        for (int i = 1; i < modelCharts.getColumnCount(); i++) {
+        for (int i = 1; i <= 5; i++) {
             tableCharts.getColumnModel().getColumn(i).setPreferredWidth(112);
             tableCharts.getColumnModel().getColumn(i).setCellRenderer((TableCellRenderer) new DefaultTableCellRenderer() {
                 @Override
@@ -328,6 +393,9 @@ public class StripChart extends StandardDialog {
                 }
             });
         }
+
+        TableColumn colMarkers = tableCharts.getColumnModel().getColumn(6);
+        colMarkers.setPreferredWidth(60);
 
         //Not needed with explicit stop button
         /*        
@@ -359,7 +427,9 @@ public class StripChart extends StandardDialog {
                     Double y2min = (Double) modelCharts.getValueAt(i, 3);
                     Double y2max = (Double) modelCharts.getValueAt(i, 4);
                     Double duration = (Double) modelCharts.getValueAt(i, 5);
+                    Boolean markers = (Boolean) modelCharts.getValueAt(i, 6);
                     TimePlotBase plot = plots.get(i);
+                    plot.setMarkersVisible(Boolean.TRUE.equals(markers));
                     plot.setDurationMillis((duration == null) ? 60000 : (int) (duration * 1000));
                     if ((y1min != null) && (y1max != null)) {
                         plot.setY1AxisScale(y1min, y1max);
@@ -407,8 +477,8 @@ public class StripChart extends StandardDialog {
         comboFormat.setEnabled(textFileName.isEnabled());
         ckFlush.setEnabled(textFileName.isEnabled());
         textStreamFilter.setEnabled(editing);
-        spinnerDragInterval.setEnabled(editing);      
-        spinnerUpdate.setEnabled(editing);      
+        spinnerDragInterval.setEnabled(editing);
+        spinnerUpdate.setEnabled(editing);
 
         boolean saveButtonVisible = started && !ckPersistence.isSelected();
         if (saveButtonVisible && (saveButton == null)) {
@@ -470,11 +540,11 @@ public class StripChart extends StandardDialog {
             state.add(new Object[][]{new Object[0]});
         }
         Color c = backgroundColor;
-        String background = (c == null) ? "" : c.getRed() + "," + c.getGreen() + "," + c.getBlue();                        
+        String background = (c == null) ? "" : c.getRed() + "," + c.getGreen() + "," + c.getBlue();
         c = gridColor;
-        String grid = (c == null) ? "" : c.getRed() + "," + c.getGreen() + "," + c.getBlue();                        
-        state.add(new Object[][]{new Object[]{textStreamFilter.getText().trim(), spinnerDragInterval.getValue(), spinnerUpdate.getValue()}, 
-                                 new Object[]{background, grid}});
+        String grid = (c == null) ? "" : c.getRed() + "," + c.getGreen() + "," + c.getBlue();
+        state.add(new Object[][]{new Object[]{textStreamFilter.getText().trim(), spinnerDragInterval.getValue(), spinnerUpdate.getValue()},
+        new Object[]{background, grid}});
 
         String json = JsonSerializer.encode(state, true);
         //This is to make easy to access the file in text editor.
@@ -488,19 +558,19 @@ public class StripChart extends StandardDialog {
         ckPersistence.setSelected(false);
         textStreamFilter.setText("");
         spinnerDragInterval.setValue(1000);
-        spinnerUpdate.setValue(0);
+        spinnerUpdate.setValue(100);
         backgroundColor = gridColor = null;
-        panelColorBackground.setBackground(null);        
-        panelColorGrid.setBackground(null);  
+        panelColorBackground.setBackground(null);
+        panelColorGrid.setBackground(null);
         textFileName.setText((Context.getInstance() != null) ? Context.getInstance().getConfig().dataPath : "");
         ckFlush.setSelected((Context.getInstance() != null) ? Context.getInstance().getConfig().dataScanFlushRecords : false);
         modelSeries.setRowCount(0);
         modelCharts.setDataVector(new Object[][]{
-            {"1", null, null, null, null, null},
-            {"2", null, null, null, null, null},
-            {"3", null, null, null, null, null},
-            {"4", null, null, null, null, null},
-            {"5", null, null, null, null, null}
+            {"1", null, null, null, null, null, false},
+            {"2", null, null, null, null, null, false},
+            {"3", null, null, null, null, null, false},
+            {"4", null, null, null, null, null, false},
+            {"5", null, null, null, null, null, false}
         }, SwingUtils.getTableColumnNames(tableCharts));
         file = null;
         updateTitle();
@@ -549,10 +619,10 @@ public class StripChart extends StandardDialog {
         }
         textStreamFilter.setText("");
         spinnerDragInterval.setValue(1000);
-        spinnerUpdate.setValue(0);
+        spinnerUpdate.setValue(100);
         backgroundColor = gridColor = null;
-        panelColorBackground.setBackground(null);        
-        panelColorGrid.setBackground(null);  
+        panelColorBackground.setBackground(null);
+        panelColorGrid.setBackground(null);
         ckPersistence.setSelected(false);
         textFileName.setText((Context.getInstance() != null) ? Context.getInstance().getConfig().dataPath : "");
         ckFlush.setSelected((Context.getInstance() != null) ? Context.getInstance().getConfig().dataScanFlushRecords : false);
@@ -587,18 +657,18 @@ public class StripChart extends StandardDialog {
             }
             if ((settings.length > 2) && (settings[2] != null) && (settings[2] instanceof Integer)) {
                 spinnerUpdate.setValue((Integer) settings[2]);
-            }   
-            if (((Object[][]) state[3]).length > 1){
+            }
+            if (((Object[][]) state[3]).length > 1) {
                 //Loading colors
                 Object[] colors = ((Object[][]) state[3])[1];
-                if ((colors[0] != null) && (colors[0] instanceof String) && !((String)colors[0]).isEmpty()) {                
-                    backgroundColor =  Preferences.getColorFromString((String)colors[0]);
-                    panelColorBackground.setBackground(backgroundColor);        
-                }                                        
-                if ((colors[1] != null) && (colors[1] instanceof String) && !((String)colors[1]).isEmpty()) {                
-                    gridColor = Preferences.getColorFromString((String)colors[1]);
-                    panelColorGrid.setBackground(gridColor);        
-                }                                        
+                if ((colors[0] != null) && (colors[0] instanceof String) && !((String) colors[0]).isEmpty()) {
+                    backgroundColor = Preferences.getColorFromString((String) colors[0]);
+                    panelColorBackground.setBackground(backgroundColor);
+                }
+                if ((colors[1] != null) && (colors[1] instanceof String) && !((String) colors[1]).isEmpty()) {
+                    gridColor = Preferences.getColorFromString((String) colors[1]);
+                    panelColorGrid.setBackground(gridColor);
+                }
             }
         }
         updateTitle();
@@ -609,13 +679,13 @@ public class StripChart extends StandardDialog {
 
     final ArrayList<Device> devices = new ArrayList<>();
     final HashMap<Vector, Integer> seriesIndexes = new HashMap<>();
-    
+
     public void start() throws Exception {
         stop();
         Logger.getLogger(StripChart.class.getName()).info("Start");
         chartElementProducer.reset();
         chartElementProducer.setDispatchTimer((Integer) spinnerUpdate.getValue());
-        
+
         if (modelSeries.getRowCount() == 0) {
             return;
         }
@@ -637,12 +707,13 @@ public class StripChart extends StandardDialog {
             Double y2min = (Double) modelCharts.getValueAt(i, 3);
             Double y2max = (Double) modelCharts.getValueAt(i, 4);
             Double duration = (Double) modelCharts.getValueAt(i, 5);
+            Boolean markers = (Boolean) modelCharts.getValueAt(i, 6);
 
             TimePlotBase plot = (TimePlotBase) Class.forName(HistoryChart.getTimePlotImpl()).newInstance();
             plot.setQuality(PlotPanel.getQuality());
             plot.setTimeAxisLabel(null);
             plot.setLegendVisible(true);
-            plot.setMarkersVisible(false);
+            plot.setMarkersVisible(Boolean.TRUE.equals(markers));
             plot.setDurationMillis((duration == null) ? 60000 : (int) (duration * 1000));
             if ((y1min != null) && (y1max != null)) {
                 plot.setY1AxisScale(y1min, y1max);
@@ -653,14 +724,14 @@ public class StripChart extends StandardDialog {
             if (numPlots > 1) {
                 plot.setAxisSize(50);
             }
-            
-            if (backgroundColor != null){
+
+            if (backgroundColor != null) {
                 plot.setPlotBackgroundColor(backgroundColor);
             }
-            if (gridColor != null){
+            if (gridColor != null) {
                 plot.setPlotGridColor(gridColor);
             }
-                        
+
             plots.add(plot);
             pnGraphs.add(plot);
         }
@@ -669,7 +740,7 @@ public class StripChart extends StandardDialog {
         update();
         if (streamDevices > 0) {
             if (dispatcher == null) {
-                dispatcher = ch.psi.pshell.bs.Provider.getOrCreateDefault();                
+                dispatcher = ch.psi.pshell.bs.Provider.getOrCreateDefault();
                 if (dispatcher != ch.psi.pshell.bs.Provider.getDefault()) {
                     synchronized (instantiatedDevices) {
                         instantiatedDevices.add(dispatcher);
@@ -706,11 +777,11 @@ public class StripChart extends StandardDialog {
                 final int plotIndex = ((Integer) info.get(3)) - 1;
                 final int axis = (Integer) info.get(4);
                 final TimePlotBase plot = plots.get(plotIndex);
+                final Color color = Preferences.getColorFromString((String)info.get(5));
 
-                TimePlotSeries graph = new TimePlotSeries(name, axis);
+                TimePlotSeries graph = (color != null) ? new TimePlotSeries(name, color, axis) : new TimePlotSeries(name, axis);
                 seriesIndexes.put(info, plot.getNumberOfSeries());
                 plot.addSeries(graph);
-
                 DeviceTask task = new DeviceTask();
                 task.row = i + 1;
                 task.info = info;
@@ -1150,8 +1221,9 @@ public class StripChart extends StandardDialog {
     }
 
     /**
-     * This method is called from within the constructor to initialize the form. WARNING: Do NOT
-     * modify this code. The content of this method is always regenerated by the Form Editor.
+     * This method is called from within the constructor to initialize the form.
+     * WARNING: Do NOT modify this code. The content of this method is always
+     * regenerated by the Form Editor.
      */
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
@@ -1215,11 +1287,11 @@ public class StripChart extends StandardDialog {
 
             },
             new String [] {
-                "Enabled", "Name", "Type", "Plot", "Y Axis"
+                "Enabled", "Name", "Type", "Plot", "Y Axis", "Color"
             }
         ) {
             Class[] types = new Class [] {
-                java.lang.Boolean.class, java.lang.String.class, java.lang.Object.class, java.lang.Object.class, java.lang.Object.class
+                java.lang.Boolean.class, java.lang.String.class, java.lang.Object.class, java.lang.Object.class, java.lang.Object.class, java.lang.Object.class
             };
 
             public Class getColumnClass(int columnIndex) {
@@ -1275,7 +1347,7 @@ public class StripChart extends StandardDialog {
             .addGroup(panelSeriesLayout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(panelSeriesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 561, Short.MAX_VALUE)
+                    .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 580, Short.MAX_VALUE)
                     .addGroup(panelSeriesLayout.createSequentialGroup()
                         .addGap(0, 0, Short.MAX_VALUE)
                         .addComponent(buttonUp)
@@ -1311,21 +1383,21 @@ public class StripChart extends StandardDialog {
 
         tableCharts.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
-                {"1", null, null, null, null, null},
-                {"2", null, null, null, null, null},
-                {"3", null, null, null, null, null},
-                {"4", null, null, null, null, null},
-                {"5", null, null, null, null, null}
+                {"1", null, null, null, null, null, null},
+                {"2", null, null, null, null, null, null},
+                {"3", null, null, null, null, null, null},
+                {"4", null, null, null, null, null, null},
+                {"5", null, null, null, null, null, null}
             },
             new String [] {
-                "Chart", "Y1min", "Y1max", "Y2min", "Y2max", "Duration(s)"
+                "Chart", "Y1min", "Y1max", "Y2min", "Y2max", "Duration(s)", "Markers"
             }
         ) {
             Class[] types = new Class [] {
-                java.lang.String.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class
+                java.lang.String.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.Boolean.class
             };
             boolean[] canEdit = new boolean [] {
-                false, true, true, true, true, true
+                false, true, true, true, true, true, true
             };
 
             public Class getColumnClass(int columnIndex) {
@@ -1347,7 +1419,7 @@ public class StripChart extends StandardDialog {
             panelAxisLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(panelAxisLayout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 561, Short.MAX_VALUE)
+                .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 580, Short.MAX_VALUE)
                 .addContainerGap())
         );
         panelAxisLayout.setVerticalGroup(
@@ -1470,7 +1542,7 @@ public class StripChart extends StandardDialog {
 
         jLabel3.setText("Drag Interval (ms):");
 
-        spinnerDragInterval.setModel(new javax.swing.SpinnerNumberModel(1000, -1, 99999, 1));
+        spinnerDragInterval.setModel(new javax.swing.SpinnerNumberModel(1000, -1, 99999, 100));
 
         javax.swing.GroupLayout jPanel3Layout = new javax.swing.GroupLayout(jPanel3);
         jPanel3.setLayout(jPanel3Layout);
@@ -1551,9 +1623,9 @@ public class StripChart extends StandardDialog {
             }
         });
 
-        jLabel4.setText("Update (ms):");
+        jLabel4.setText("Plot Update (ms):");
 
-        spinnerUpdate.setModel(new javax.swing.SpinnerNumberModel(0, 0, 60000, 1000));
+        spinnerUpdate.setModel(new javax.swing.SpinnerNumberModel(100, 0, 60000, 100));
 
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
@@ -1635,7 +1707,7 @@ public class StripChart extends StandardDialog {
         pnGraphs.setLayout(pnGraphsLayout);
         pnGraphsLayout.setHorizontalGroup(
             pnGraphsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 581, Short.MAX_VALUE)
+            .addGap(0, 600, Short.MAX_VALUE)
         );
         pnGraphsLayout.setVerticalGroup(
             pnGraphsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -1776,41 +1848,41 @@ public class StripChart extends StandardDialog {
     }//GEN-LAST:event_buttonStartStopActionPerformed
 
     private void panelColorBackgroundMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_panelColorBackgroundMouseClicked
-        Color c = JColorChooser.showDialog(this, "Choose a Color", backgroundColor);        
-        if (c!=null){
+        Color c = JColorChooser.showDialog(this, "Choose a Color", backgroundColor);
+        if (c != null) {
             backgroundColor = c;
             panelColorBackground.setBackground(backgroundColor);
-            if (started){
-                for (TimePlotBase plot : plots){
+            if (started) {
+                for (TimePlotBase plot : plots) {
                     plot.setPlotBackgroundColor(backgroundColor);
                 }
-            }            
+            }
         }
     }//GEN-LAST:event_panelColorBackgroundMouseClicked
 
     private void panelColorGridMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_panelColorGridMouseClicked
-        Color c = JColorChooser.showDialog(this, "Choose a Color", gridColor);        
-        if (c!=null){
+        Color c = JColorChooser.showDialog(this, "Choose a Color", gridColor);
+        if (c != null) {
             gridColor = c;
             panelColorGrid.setBackground(gridColor);
-            if (started){
-                for (TimePlotBase plot : plots){
+            if (started) {
+                for (TimePlotBase plot : plots) {
                     plot.setPlotGridColor(gridColor);
                 }
-            }            
+            }
         }
     }//GEN-LAST:event_panelColorGridMouseClicked
 
     private void buttonDefaultColorsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonDefaultColorsActionPerformed
-            gridColor = backgroundColor = null;
-            panelColorBackground.setBackground(null);
-            panelColorGrid.setBackground(null);
-            if (started){
-                for (TimePlotBase plot : plots){
-                    plot.setPlotGridColor(PlotBase.getGridColor());
-                    plot.setPlotBackgroundColor(PlotBase.getPlotBackground());
-                }
-            }            
+        gridColor = backgroundColor = null;
+        panelColorBackground.setBackground(null);
+        panelColorGrid.setBackground(null);
+        if (started) {
+            for (TimePlotBase plot : plots) {
+                plot.setPlotGridColor(PlotBase.getGridColor());
+                plot.setPlotBackgroundColor(PlotBase.getPlotBackground());
+            }
+        }
     }//GEN-LAST:event_buttonDefaultColorsActionPerformed
 
     /**

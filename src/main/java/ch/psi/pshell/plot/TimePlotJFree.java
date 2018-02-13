@@ -35,7 +35,6 @@ import org.jfree.chart.renderer.xy.XYItemRenderer;
 import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
 import org.jfree.data.Range;
 import org.jfree.data.time.FixedMillisecond;
-import org.jfree.data.time.Millisecond;
 import org.jfree.data.time.TimeSeries;
 import org.jfree.data.time.TimeSeriesCollection;
 import org.jfree.data.time.TimeSeriesDataItem;
@@ -279,6 +278,9 @@ public class TimePlotJFree extends TimePlotBase {
         dataset.addSeries(ts);
         XYPlot plot = chart.getXYPlot();
         getRenderer(series.axis).setSeriesShape(dataset.getSeriesCount() - 1, marker);
+        if (series.getColor()!=null){
+            getRenderer(series.axis).setSeriesPaint(dataset.getSeriesCount() - 1, series.getColor());
+        }
         return ts;
     }
 
