@@ -9,8 +9,6 @@ import ch.psi.utils.swing.ConfigDialog;
 import ch.psi.utils.swing.MainFrame;
 import java.awt.Window;
 import java.io.File;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.UIManager;
@@ -301,7 +299,7 @@ public class View extends MainFrame {
         } else if (Arr.containsEqual(args, "-dlaf")) {
             setLookAndFeel(MainFrame.getDarculaLookAndFeel());
         } else {
-            setLookAndFeel(MainFrame.getNimbusLookAndFeel());
+            setLookAndFeel(Sys.getOSFamily()==Sys.getOSFamily().Mac ? UIManager.getSystemLookAndFeelClassName() : MainFrame.getNimbusLookAndFeel());
         }
         //</editor-fold>
 

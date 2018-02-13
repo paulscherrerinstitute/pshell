@@ -64,14 +64,14 @@ public class ProviderHDF5 implements Provider {
         if (writerFile != null) {
             writerFile.mkdirs();
             writerFile.delete();
-            writer = HDF5Factory.open(writerFile.getPath());
+            writer = HDF5Factory.open(writerFile.getPath());    
         }
     }
 
     @Override
     public void closeOutput() {
         try {
-            if (writer != null) {
+            if (writer != null) {          
                 try {
                     writer.close();
                 } catch (Exception ex) {
@@ -884,7 +884,7 @@ public class ProviderHDF5 implements Provider {
     }
 
     @Override
-    public void setItem(String path, Object data, Class type, int index) {
+    public void setItem(String path, Object data, Class type, int index) {       
         if (type == null) {
             //For float types don't leave default '0' when writing null: set NaN instead.
             HDF5DataSetInformation info = writer.object().getDataSetInformation(path);
@@ -1151,7 +1151,7 @@ public class ProviderHDF5 implements Provider {
     }    
 
     @Override
-    public void setAttribute(String path, String name, Object value, Class type, boolean unsigned) {
+    public void setAttribute(String path, String name, Object value, Class type, boolean unsigned) {         
         if (type.isArray()) {
             Class componentType = type.getComponentType();
             if (componentType == double.class) {

@@ -99,6 +99,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
     final PluginManager pluginManager;
     final UsersManager usersManager;
     final DataManager dataManager;
+    final HashMap<Thread, ExecutionParameters> executionPars = new HashMap<>();
     ExecutorService interpreterExecutor;
     Thread interpreterThread;
     ScriptManager scriptManager;
@@ -110,6 +111,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
     TerminalServer terminalServer;
     ScanStreamer scanStreamer;
     DataServer dataStreamer;
+      
 
     int runCount;
 
@@ -282,6 +284,8 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
         });
 
         addScanListener(scanListener);
+        
+        executionPars.put(null, new ExecutionParameters()); 
     }
 
     /**
@@ -354,7 +358,6 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
             if (pluginManager != null) {
                 pluginManager.onStateChange(state, former);
             }
-            executionPars.onStateChange(state);
             if (!state.isProcessing()) {
                 runningScript = null;
             }
@@ -1000,7 +1003,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
                         }
                     }
                     return null;
-                }, null);
+                });
                 if (scriptManager == null) {
                     throw new Exception("Error instantiating script manager");
                 }
@@ -1092,7 +1095,9 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
     }
     
     public List<CommandInfo> getCommands(){
-        return new ArrayList(commandInfo.values());
+        synchronized (commandInfo){
+            return new ArrayList(commandInfo.values());
+        }
     }
         
      boolean abort(final CommandSource source, int commandId) throws InterruptedException{
@@ -1116,15 +1121,9 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
     
     final HashMap<Thread, CommandInfo> commandInfo = new HashMap<>();
 
-    Object runInInterpreterThread(Callable callable, final CommandInfo info) throws ScriptException, IOException, InterruptedException {
+    Object runInInterpreterThread(Callable callable) throws ScriptException, IOException, InterruptedException {
         assertInterpreterEnabled();
-        try {
-            if (info != null) {
-                synchronized (commandInfo) {
-                    commandInfo.put(interpreterThread, info);
-                }
-            }      
-            
+        try {    
             if (isInterpreterThread()) {
                 return callable.call();
             } else {
@@ -1156,6 +1155,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
             return null;
         } finally {
             synchronized (commandInfo) {
+                CommandInfo info = commandInfo.get(interpreterThread);
                 if (info != null) {
                     info.end = System.currentTimeMillis();
                 }
@@ -1180,7 +1180,6 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
                 return null;
             }
         }
-        CommandInfo info = new CommandInfo(source, null, command, null, false);
         onCommand(Command.eval, new Object[]{command}, source);
         triggerShellCommand(source, command);
         //Verify control command
@@ -1208,11 +1207,12 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
                     return ret;
                 }
             }
-
-            startExecution(source, null);
+        
+            CommandInfo info = new CommandInfo(source, null, command, null, false);
+            startExecution(source, null, info);
             setSourceUI(source);
             try {
-                InterpreterResult result = (InterpreterResult) runInInterpreterThread((Callable<InterpreterResult>) () -> scriptManager.eval(line), info);
+                InterpreterResult result = (InterpreterResult) runInInterpreterThread((Callable<InterpreterResult>) () -> scriptManager.eval(line));
                 if (result == null) {
                     return null;
                 }
@@ -1281,12 +1281,24 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
             commandInfo.put(Thread.currentThread(), info);
         }
         try {
+            synchronized(executionPars){
+                executionPars.put(Thread.currentThread(), new ExecutionParameters()); 
+                getExecutionPars().onExecutionStarted();
+            }
             //TODO: args passing is not theread safe
             for (String key : argsDict.keySet()) {
                 scriptManager.setVar(key, argsDict.get(key));
             }
             return scriptManager.evalFileBackground(fileName);
         } finally {
+            synchronized(executionPars){
+                try{
+                    getExecutionPars().onExecutionEnded();
+                } catch (Exception ex){
+                    logger.log(Level.WARNING, null, ex);
+                }
+                executionPars.remove(Thread.currentThread());
+            }
             synchronized (commandInfo) {
                 info.end = System.currentTimeMillis();
                 commandInfo.remove(Thread.currentThread());
@@ -1311,6 +1323,10 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
             commandInfo.put(Thread.currentThread(), info);
         }
         try {
+            synchronized(executionPars){
+                executionPars.put(Thread.currentThread(), new ExecutionParameters()); 
+                getExecutionPars().onExecutionStarted();
+            }
             InterpreterResult result = scriptManager.evalBackground(line);
             if (result == null) {
                 return null;
@@ -1320,6 +1336,14 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
             }
             return result.result;
         } finally {
+            synchronized(executionPars){
+                try{
+                    getExecutionPars().onExecutionEnded();
+                } catch (Exception ex){
+                    logger.log(Level.WARNING, null, ex);
+                }
+                executionPars.remove(Thread.currentThread());
+            }
             synchronized (commandInfo) {
                 info.end = System.currentTimeMillis();
                 commandInfo.remove(Thread.currentThread());
@@ -1382,11 +1406,13 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
         return null;
     }    
     
-    final ExecutionParameters executionPars = new ExecutionParameters();
 
-    public ExecutionParameters getExecutionPars() {
-        return executionPars;
-    }
+    public ExecutionParameters getExecutionPars() {    
+        if (executionPars.containsKey(Thread.currentThread())){
+            return executionPars.get(Thread.currentThread());
+        }
+        return executionPars.get(null);
+    }   
 
     public void setExecutionPars(String name) {
         Map pars = new HashMap();
@@ -1395,11 +1421,11 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
     }
     
    public void setExecutionPars(Map pars) {        
-        executionPars.setScriptOptions(pars);
+        getExecutionPars().setScriptOptions(pars);
     }
 
    public void setCommandPars(Object command, Map pars) {        
-        executionPars.setCommandOptions(command, pars);
+        getExecutionPars().setCommandOptions(command, pars);
    }
 
     String scanTag;
@@ -1458,7 +1484,6 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
             pars.add(key + "=" + argsDict.get(key));
         }
         onCommand(Command.run, pars.toArray(), source);
-        CommandInfo info = new CommandInfo(source, fileName, null, args, false);
 
         if (args == null) {
             triggerShellCommand(source, "Run: " + scriptName);
@@ -1467,7 +1492,8 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
         }
 
         try {
-            startExecution(source, fileName);
+            CommandInfo info = new CommandInfo(source, fileName, null, args, false);
+            startExecution(source, fileName, info);
             setSourceUI(source);
             triggerExecutingFile(fileName);
             try {
@@ -1486,7 +1512,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
                     }
                     triggerShellResult(source, ret);
                     return ret;
-                }, info);  //Command source in statements execution will be CommandSource.script 
+                });  //Command source in statements execution will be CommandSource.script 
                 return result;
             } catch (Throwable t) {
                 result = t;
@@ -1530,9 +1556,10 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
         } else {
             triggerShellCommand(source, "Debug: " + scriptName + "(" + Str.toString(args, 20) + ")");
         }
-        CommandInfo info = new CommandInfo(source, scriptName, null, args, false);
+        
         try {
-            startExecution(source, fileName);
+            CommandInfo info = new CommandInfo(source, scriptName, null, args, false);
+            startExecution(source, fileName, info);
             setSourceUI(source);
             triggerExecutingFile(fileName);
 
@@ -1567,7 +1594,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
                     Object ret = scriptManager.eval(statements, listener);
                     triggerShellResult(source, ret);
                     return ret;
-                }, info);
+                });
                 return result;
             } catch (Throwable ex) {
                 result = ex;
@@ -1599,7 +1626,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
                     scriptManager.injectVars();
                     return null;
                 }
-            }, null);
+            });
 
         } catch (Exception ex) {
             Logger.getLogger(Context.class
@@ -1621,6 +1648,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
             }
         } else if ((getState() == State.Busy) || (getState() == State.Paused)) {
             aborted = true;
+            //TODO: This is also killing background acans. Should not be only foreground?
             for (Scan scan : getRunningScans()) {
                 scan.abort();
             }
@@ -1685,9 +1713,20 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
     }
 
     //These methods are made public in order to plugins control state
+    //Start execution in interpreter thread (foreground task)
     @Hidden
     public void startExecution(final CommandSource source, String fileName) throws ContextStateException {
+        startExecution(source, fileName, null);
+    }
+    
+    @Hidden
+    public void startExecution(final CommandSource source, String fileName, CommandInfo info) throws ContextStateException {
         assertReady();
+        if (info!=null){
+            synchronized (commandInfo) {
+                commandInfo.put(interpreterThread, info);
+            }   
+        }
         if (fileName != null) {
             assertRunAllowed(source);
             runningScript = fileName;
@@ -1695,7 +1734,8 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
             assertConsoleCommandAllowed(source);
         }
         aborted = false;
-        setState(State.Busy);
+        setState(State.Busy);         
+        getExecutionPars().onExecutionStarted();
     }
 
     @Hidden
@@ -1703,6 +1743,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
         if ((state == State.Busy) || (state == State.Paused)) {
             setState(State.Ready);                  //If state has changed during execution, keep it
         }
+        getExecutionPars().onExecutionEnded();
     }
 
     void updateAll(final CommandSource source) {
@@ -2395,11 +2436,11 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
      */
     void setPreference(CommandSource source, ViewPreference preference, Object value) {
         onCommand(Command.setPreference, new Object[]{preference, value}, source);
-        executionPars.setPlotPreference(preference, value);
+        getExecutionPars().setPlotPreference(preference, value);
     }
 
     public PlotPreferences getPlotPreferences() {
-        return executionPars.getPlotPreferences();
+        return getExecutionPars().getPlotPreferences();
     }
 
     @Override
@@ -2455,7 +2496,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
             synchronized (runningScans) {
                 runningScans.add(scan);
             }
-            executionPars.onScanStarted(scan);
+            getExecutionPars().onScanStarted(scan);
         }
 
         @Override
@@ -2468,7 +2509,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
             synchronized (runningScans) {
                 runningScans.remove(scan);
             }
-            executionPars.onScanEnded(scan);
+            getExecutionPars().onScanEnded(scan);
         }
     };
 
@@ -2716,17 +2757,19 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
 
     //Public command interface    
     CommandSource getPublicCommandSource() {
-        CommandInfo ret = commandInfo.get(Thread.currentThread());
-        return (ret == null) ? CommandSource.ui : ret.source;
+        synchronized (commandInfo){
+            CommandInfo ret = commandInfo.get(Thread.currentThread());
+            return (ret == null) ? CommandSource.ui : ret.source;
+        }       
     }
 
     //For scripts to check permissions when running files
     @Hidden
     public void startScriptExecution(Object args) {
         assertRunAllowed(getPublicCommandSource());
-        CommandInfo info = commandInfo.get(Thread.currentThread());
-        info = new CommandInfo(CommandSource.script, (info == null) ? null : info.script, null, args, (info == null) ? false : info.background);
         synchronized (commandInfo) {
+            CommandInfo info = commandInfo.get(Thread.currentThread());
+            info = new CommandInfo(CommandSource.script, (info == null) ? null : info.script, null, args, (info == null) ? false : info.background);
             commandInfo.put(Thread.currentThread(), info);
         }
     }

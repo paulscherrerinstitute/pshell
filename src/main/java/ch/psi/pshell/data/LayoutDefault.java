@@ -57,7 +57,7 @@ public class LayoutDefault extends LayoutBase implements Layout {
 
     @Override
     public String getDefaultGroup(Scan scan) {
-        return (scan.getTag() != null) ? scan.getTag() : getScanTag();
+        return scan.getTag();
     }
     
     @Override

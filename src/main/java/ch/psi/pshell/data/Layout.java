@@ -65,10 +65,7 @@ public interface Layout {
     void onRecord(Scan scan, ScanRecord record) throws IOException;
 
     void onFinish(Scan scan) throws IOException;
-    
-    default String getScanTag(){
-        return Context.getInstance().getSetup().expandPath(Context.getInstance().getScanTag());
-    }  
+
 
     default List<PlotDescriptor> getScanPlots(String root, String path, DataManager dm) throws IOException {
         //Uses default data manager plot parsing

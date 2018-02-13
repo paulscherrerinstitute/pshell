@@ -4,5 +4,4 @@
 
 
 #Execute the scan: 100 samples, 10ms sampling interval
-r1 = tscan((ai1,ai2,wf1), 100, 0.01)                    
-
+r1 = tscan((ai1,ai2,wf1), 100, 0.01)

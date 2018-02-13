@@ -4,6 +4,7 @@ import ch.psi.pshell.core.UrlDevice;
 import ch.psi.pshell.bs.Stream;
 import ch.psi.pshell.bs.Waveform;
 import ch.psi.pshell.core.Context;
+import ch.psi.pshell.core.ExecutionParameters;
 import ch.psi.pshell.core.Nameable;
 import ch.psi.pshell.device.Device;
 import ch.psi.pshell.device.Motor;
@@ -267,8 +268,6 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
 
     @Override
     public void start() throws IOException, InterruptedException {
-        startTimestamp = System.currentTimeMillis();
-        tag = Context.getInstance().getExecutionPars().getTag();
         if (relative) {
             readInitialPosition();
         }
@@ -462,32 +461,40 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
     abstract protected void doScan() throws IOException, InterruptedException;
 
     protected void triggerStarted() {
-        if (Context.getInstance() != null) {
+        startTimestamp = System.currentTimeMillis();
+        Context context = Context.getInstance();
+        if (context != null) {
             removeAllListeners();
-            for (ScanListener listener : Context.getInstance().getScanListeners()) {
+            for (ScanListener listener : context.getScanListeners()) {
                 addListener(listener);
+            }
+            final ExecutionParameters execPars=context.getExecutionPars();
+            synchronized(execPars){
+                execPars.addPersistedScan(this);
+                tag = execPars.getTag();
+                tag = context.getSetup().expandPath((tag  == null) ? Context.getInstance().getScanTag() : tag);
+                name = execPars.toString();
+                scanIndex = execPars.getIndex(this);
+                accumulate = execPars.getAccumulate();                  
             }
         }
         
         executionThread = Thread.currentThread();
-        if (Context.getInstance() != null) {
-            name = Context.getInstance().getExecutionPars().toString();
-        }
         aborted = false;
         for (ScanListener listener : getListeners()) {
             listener.onScanStarted(ScanBase.this, plotTitle);
-            if (scanIndex < 0) {
-                if (Context.getInstance() != null) {
-                    scanIndex = Context.getInstance().getDataManager().getScanIndex(this);
-                    String scanRoot = Context.getInstance().getExecutionPars().getPath();
-                    if (IO.isSubPath(scanRoot, Context.getInstance().getSetup().getDataPath())) {
-                        scanRoot = IO.getRelativePath(scanRoot, Context.getInstance().getSetup().getDataPath());
-                    }
-                    scanPath = scanRoot + " | " + Context.getInstance().getDataManager().getScanPath(this);
-                    accumulate = Context.getInstance().getExecutionPars().getAccumulate();
-                }
-            }
         }
+        //Called later to let DataManager initialize storage before reading the scan path
+        if (context != null) {
+            final ExecutionParameters execPars=context.getExecutionPars();
+            synchronized(execPars){
+                String scanRoot = execPars.getPath();
+                if (IO.isSubPath(scanRoot, context.getSetup().getDataPath())) {
+                    scanRoot = IO.getRelativePath(scanRoot, context.getSetup().getDataPath());
+                }
+                scanPath = scanRoot + " | " + context.getDataManager().getScanPath(this);       
+            }
+        }        
     }
 
     ScanRecord currentRecord;

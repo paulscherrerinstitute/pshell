@@ -49,7 +49,7 @@ public class LayoutTable extends LayoutBase  implements Layout {
     }
 
     protected String getDatasetName(Scan scan) {
-        return (scan.getTag() != null) ? scan.getTag() : getScanTag();
+        return scan.getTag();
     }
 
     HashMap<Scan, String> scanFiles = new HashMap<>();

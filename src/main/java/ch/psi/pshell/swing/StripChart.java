@@ -59,6 +59,7 @@ import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
+import javax.swing.Timer;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
@@ -406,7 +407,8 @@ public class StripChart extends StandardDialog {
         comboFormat.setEnabled(textFileName.isEnabled());
         ckFlush.setEnabled(textFileName.isEnabled());
         textStreamFilter.setEnabled(editing);
-        spinnerDragInterval.setEnabled(editing);        
+        spinnerDragInterval.setEnabled(editing);      
+        spinnerUpdate.setEnabled(editing);      
 
         boolean saveButtonVisible = started && !ckPersistence.isSelected();
         if (saveButtonVisible && (saveButton == null)) {
@@ -471,7 +473,7 @@ public class StripChart extends StandardDialog {
         String background = (c == null) ? "" : c.getRed() + "," + c.getGreen() + "," + c.getBlue();                        
         c = gridColor;
         String grid = (c == null) ? "" : c.getRed() + "," + c.getGreen() + "," + c.getBlue();                        
-        state.add(new Object[][]{new Object[]{textStreamFilter.getText().trim(), spinnerDragInterval.getValue()}, 
+        state.add(new Object[][]{new Object[]{textStreamFilter.getText().trim(), spinnerDragInterval.getValue(), spinnerUpdate.getValue()}, 
                                  new Object[]{background, grid}});
 
         String json = JsonSerializer.encode(state, true);
@@ -486,6 +488,7 @@ public class StripChart extends StandardDialog {
         ckPersistence.setSelected(false);
         textStreamFilter.setText("");
         spinnerDragInterval.setValue(1000);
+        spinnerUpdate.setValue(0);
         backgroundColor = gridColor = null;
         panelColorBackground.setBackground(null);        
         panelColorGrid.setBackground(null);  
@@ -546,6 +549,7 @@ public class StripChart extends StandardDialog {
         }
         textStreamFilter.setText("");
         spinnerDragInterval.setValue(1000);
+        spinnerUpdate.setValue(0);
         backgroundColor = gridColor = null;
         panelColorBackground.setBackground(null);        
         panelColorGrid.setBackground(null);  
@@ -581,6 +585,9 @@ public class StripChart extends StandardDialog {
             if ((settings.length > 1) && (settings[1] != null) && (settings[1] instanceof Integer)) {
                 spinnerDragInterval.setValue((Integer) settings[1]);
             }
+            if ((settings.length > 2) && (settings[2] != null) && (settings[2] instanceof Integer)) {
+                spinnerUpdate.setValue((Integer) settings[2]);
+            }   
             if (((Object[][]) state[3]).length > 1){
                 //Loading colors
                 Object[] colors = ((Object[][]) state[3])[1];
@@ -602,12 +609,13 @@ public class StripChart extends StandardDialog {
 
     final ArrayList<Device> devices = new ArrayList<>();
     final HashMap<Vector, Integer> seriesIndexes = new HashMap<>();
-
+    
     public void start() throws Exception {
         stop();
         Logger.getLogger(StripChart.class.getName()).info("Start");
         chartElementProducer.reset();
-
+        chartElementProducer.setDispatchTimer((Integer) spinnerUpdate.getValue());
+        
         if (modelSeries.getRowCount() == 0) {
             return;
         }
@@ -1041,6 +1049,7 @@ public class StripChart extends StandardDialog {
 
     void stop() {
         if (started) {
+            chartElementProducer.setDispatchTimer(0);
             Logger.getLogger(StripChart.class.getName()).info("Stop");
             started = false;
             tasks.clear();
@@ -1077,6 +1086,7 @@ public class StripChart extends StandardDialog {
         if (MainFrame.isDark()) {
             //TODO: Repeating the model initialization as a workaround for the exception when spinner getting focus on Darcula LAF.
             spinnerDragInterval.setModel(new javax.swing.SpinnerNumberModel(1000, -1, 99999, 1));
+            spinnerUpdate.setModel(new javax.swing.SpinnerNumberModel(0, 0, 60000, 1000));
         }
     }
 
@@ -1181,6 +1191,8 @@ public class StripChart extends StandardDialog {
         jLabel17 = new javax.swing.JLabel();
         panelColorGrid = new javax.swing.JPanel();
         buttonDefaultColors = new javax.swing.JButton();
+        jLabel4 = new javax.swing.JLabel();
+        spinnerUpdate = new javax.swing.JSpinner();
         panelPlots = new javax.swing.JPanel();
         scrollPane = new javax.swing.JScrollPane();
         pnGraphs = new javax.swing.JPanel();
@@ -1456,7 +1468,7 @@ public class StripChart extends StandardDialog {
 
         jLabel2.setText("Stream filter:");
 
-        jLabel3.setText("Drag Interval(ms):");
+        jLabel3.setText("Drag Interval (ms):");
 
         spinnerDragInterval.setModel(new javax.swing.SpinnerNumberModel(1000, -1, 99999, 1));
 
@@ -1486,7 +1498,7 @@ public class StripChart extends StandardDialog {
                 .addContainerGap())
         );
 
-        jPanel1.setBorder(javax.swing.BorderFactory.createTitledBorder("Colors"));
+        jPanel1.setBorder(javax.swing.BorderFactory.createTitledBorder("Graphics"));
 
         jLabel15.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
         jLabel15.setText("Background:");
@@ -1507,7 +1519,7 @@ public class StripChart extends StandardDialog {
         );
         panelColorBackgroundLayout.setVerticalGroup(
             panelColorBackgroundLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 16, Short.MAX_VALUE)
+            .addGap(0, 20, Short.MAX_VALUE)
         );
 
         jLabel17.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
@@ -1529,7 +1541,7 @@ public class StripChart extends StandardDialog {
         );
         panelColorGridLayout.setVerticalGroup(
             panelColorGridLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 16, Short.MAX_VALUE)
+            .addGap(0, 20, Short.MAX_VALUE)
         );
 
         buttonDefaultColors.setText("Defaults");
@@ -1538,6 +1550,10 @@ public class StripChart extends StandardDialog {
                 buttonDefaultColorsActionPerformed(evt);
             }
         });
+
+        jLabel4.setText("Update (ms):");
+
+        spinnerUpdate.setModel(new javax.swing.SpinnerNumberModel(0, 0, 60000, 1000));
 
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
@@ -1548,27 +1564,35 @@ public class StripChart extends StandardDialog {
                 .addComponent(jLabel15)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(panelColorBackground, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(jLabel17)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(panelColorGrid, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(buttonDefaultColors)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(jLabel4)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(spinnerUpdate, javax.swing.GroupLayout.PREFERRED_SIZE, 96, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap())
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel1Layout.createSequentialGroup()
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addComponent(panelColorGrid, javax.swing.GroupLayout.PREFERRED_SIZE, 22, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(panelColorGrid, javax.swing.GroupLayout.PREFERRED_SIZE, 26, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jLabel15, javax.swing.GroupLayout.PREFERRED_SIZE, 26, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(panelColorBackground, javax.swing.GroupLayout.PREFERRED_SIZE, 22, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(panelColorBackground, javax.swing.GroupLayout.PREFERRED_SIZE, 26, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jLabel17, javax.swing.GroupLayout.PREFERRED_SIZE, 26, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(buttonDefaultColors, javax.swing.GroupLayout.PREFERRED_SIZE, 11, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGap(0, 6, Short.MAX_VALUE))
+                    .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(jLabel4)
+                            .addComponent(spinnerUpdate, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addComponent(buttonDefaultColors, javax.swing.GroupLayout.PREFERRED_SIZE, 11, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                .addContainerGap())
         );
 
-        jPanel1Layout.linkSize(javax.swing.SwingConstants.VERTICAL, new java.awt.Component[] {buttonDefaultColors, jLabel15, jLabel17});
+        jPanel1Layout.linkSize(javax.swing.SwingConstants.VERTICAL, new java.awt.Component[] {buttonDefaultColors, jLabel15, jLabel17, panelColorBackground, panelColorGrid});
 
         javax.swing.GroupLayout panelConfigLayout = new javax.swing.GroupLayout(panelConfig);
         panelConfig.setLayout(panelConfigLayout);
@@ -1611,11 +1635,11 @@ public class StripChart extends StandardDialog {
         pnGraphs.setLayout(pnGraphsLayout);
         pnGraphsLayout.setHorizontalGroup(
             pnGraphsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 580, Short.MAX_VALUE)
+            .addGap(0, 581, Short.MAX_VALUE)
         );
         pnGraphsLayout.setVerticalGroup(
             pnGraphsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 528, Short.MAX_VALUE)
+            .addGap(0, 546, Short.MAX_VALUE)
         );
 
         scrollPane.setViewportView(pnGraphs);
@@ -1817,6 +1841,7 @@ public class StripChart extends StandardDialog {
     private javax.swing.JLabel jLabel17;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
+    private javax.swing.JLabel jLabel4;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel2;
     private javax.swing.JPanel jPanel3;
@@ -1832,6 +1857,7 @@ public class StripChart extends StandardDialog {
     private javax.swing.JPanel pnGraphs;
     private javax.swing.JScrollPane scrollPane;
     private javax.swing.JSpinner spinnerDragInterval;
+    private javax.swing.JSpinner spinnerUpdate;
     private javax.swing.JTabbedPane tabPane;
     private javax.swing.JTable tableCharts;
     private javax.swing.JTable tableSeries;

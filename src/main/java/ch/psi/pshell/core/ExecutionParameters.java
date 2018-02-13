@@ -5,10 +5,13 @@ package ch.psi.pshell.core;
 
 import ch.psi.pshell.core.Context.CommandInfo;
 import ch.psi.pshell.core.VersioningManager.Revision;
+import ch.psi.pshell.data.DataManager;
+import ch.psi.pshell.data.Layout;
+import ch.psi.pshell.data.Provider;
 import ch.psi.pshell.scan.Scan;
 import ch.psi.pshell.scripting.ViewPreference;
 import ch.psi.utils.Arr;
-import ch.psi.utils.State;
+import ch.psi.utils.Reflection.Hidden;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -18,24 +21,183 @@ import java.util.Map;
 import java.util.logging.Level;
 
 /**
- * TODO: Not working for background commands
- *       Unify with CommandInfo so execution parameters are specific to each command 
+ * TODO: Not working for background commands Unify with CommandInfo so execution
+ * parameters are specific to each command
  */
-public class ExecutionParameters  {
+public class ExecutionParameters {
 
     final String[] executionOptions = new String[]{"defaults", "group", "open", "reset", "name", "type", "path", "tag",
-        "layout", "persist", "flush", "preserve", "accumulate", "depth_dim"};
+        "layout", "provider", "persist", "flush", "preserve", "accumulate", "depth_dim"};
 
-    final String[] viewOptions = new String[]{"plot_disabled", "table_disabled", "enabled_plots", 
-        "plot_types", "print_scan", "auto_range", "manual_range","domain_axis", "status"};        
-    
-    final String[] shortcutOptions = new String[]{"line_plots", "plot_list", "range"};        
-    
+    final String[] viewOptions = new String[]{"plot_disabled", "table_disabled", "enabled_plots",
+        "plot_types", "print_scan", "auto_range", "manual_range", "domain_axis", "status"};
+
+    final String[] shortcutOptions = new String[]{"line_plots", "plot_list", "range"};
+
     long start;
     int offset;
 
     Map scriptOptions = new HashMap();
     Map commandOptions = new HashMap();
+
+    //Data control variables
+    File outputFile;
+    File lastOutputFile;
+    boolean changedLayout;
+    int scanIndex;
+    Layout dataLayout;
+    Provider dataProvider;
+
+    final public HashMap<Scan, Integer> persistedScans = new HashMap<>();
+
+    public boolean isOpen() {
+        return (outputFile != null);
+    }
+
+    public boolean getChangedLayout() {
+        Object layout = getLayout();
+        return (layout != null) && (!layout.equals(Context.getInstance().getConfig().dataLayout));
+    }
+
+    public boolean getChangedProvider() {
+        Object provider = getProvider();
+        return (provider != null) && (!provider.equals(Context.getInstance().getConfig().dataProvider));
+    }
+
+    public String getOutput() {
+        if (outputFile == null) {
+            return null;
+        }
+        return outputFile.getPath();
+    }
+
+    public File getOutputFile() {
+        return outputFile;
+    }
+
+    public String getLastOutput() {
+        if (lastOutputFile == null) {
+            return null;
+        }
+        return lastOutputFile.getPath();
+    }
+
+    public int getIndex() {
+        return scanIndex;
+    }
+
+    public void setIndex(int index) {
+        scanIndex = index;
+    }
+
+    public int getCount() {
+        return scanIndex - offset;
+    }
+
+    public int getIndex(Scan scan) {
+        synchronized (persistedScans) {
+            if (!persistedScans.containsKey(scan)) {
+                return -1;
+            }
+            return persistedScans.get(scan);
+        }
+    }
+
+    public Scan[] getCurrentScans() {
+        synchronized (persistedScans) {
+            return persistedScans.keySet().toArray(new Scan[0]);
+        }
+    }
+
+    public Scan getCurrentScan() {
+        synchronized (persistedScans) {
+            for (Scan scan : getCurrentScans()) {
+                if (persistedScans.get(scan) == getIndex()) {
+                    return scan;
+                }
+            }
+        }
+        return null;
+    }
+
+    @Hidden
+    public void initializeData() throws IOException {   
+        try{
+            if (getChangedLayout()) {
+                Object layout = getLayout();
+                if (layout instanceof Layout) {
+                    setDataLayout((Layout) layout);
+                } else if (layout instanceof Class) {
+                    setDataLayout((Layout) ((Class) layout).newInstance());
+                } else if (layout instanceof String) {
+                    setDataLayout((Layout) DataManager.getLayoutClass((String) layout).newInstance());
+                } else {
+                    throw new Exception("Invalid layout parameter type");
+                }
+            }
+
+            if (getChangedProvider()) {
+                Object provider = getProvider();
+
+                if (provider instanceof Provider) {
+                    setDataProvider((Provider) provider);
+                } else if (provider instanceof Class) {
+                    setDataProvider((Provider) ((Class) provider).newInstance());
+                } else if (provider instanceof String) {
+                    setDataProvider((Provider) DataManager.getProviderClass((String) provider).newInstance());
+                } else {
+                    throw new Exception("Invalid provider parameter type");
+                }
+            }
+        }  catch (Exception ex){
+            throw new IOException (ex);
+        }        
+    }
+    @Hidden
+    public void setDataPath(File dataPath) {
+        outputFile = dataPath;
+        if (dataPath!=null){
+            lastOutputFile = outputFile;
+        } 
+    }
+    
+    @Hidden
+    public void setDataLayout(Layout layout) {
+        dataLayout = layout;
+        if (dataLayout != null) {
+            dataLayout.initialize();
+        }
+    }
+
+    @Hidden
+    public Layout getDataLayout() {
+        return dataLayout;
+    }
+
+    @Hidden
+    public Provider getDataProvider() {
+        return dataProvider;
+    }
+
+    @Hidden
+    public void setDataProvider(Provider provider) {
+        dataProvider = provider;
+    }
+
+    @Hidden
+    public boolean isScanPersisted(Scan scan) {
+        synchronized (persistedScans) {
+            return persistedScans.containsKey(scan);
+        }
+    }
+
+    @Hidden
+    public void addPersistedScan(Scan scan) {
+        synchronized (persistedScans) {
+            scanIndex++;
+            persistedScans.put(scan, scanIndex);
+        }
+    }
 
     void setScriptOptions(Map options) {
         pathName = null;
@@ -58,7 +220,7 @@ public class ExecutionParameters  {
             for (Object key : options.keySet()) {
                 if (!Arr.containsEqual(executionOptions, key)) {
                     if (!Arr.containsEqual(viewOptions, key)) {
-                        if (!Arr.containsEqual(shortcutOptions, key)) {                        
+                        if (!Arr.containsEqual(shortcutOptions, key)) {
                             throw new RuntimeException("Invalid option: " + key);
                         }
                     }
@@ -81,47 +243,47 @@ public class ExecutionParameters  {
             offset = Context.getInstance().dataManager.isOpen() ? Context.getInstance().dataManager.getScanIndex() : 0;
             start = System.currentTimeMillis();
         }
-        
+
         //Process shortcuts
-        if (getOption("line_plots")!=null){
+        if (getOption("line_plots") != null) {
             Map types = new HashMap();
-            List linePlots =    (List)getOption("line_plots");
-            for (Object obj: linePlots){
+            List linePlots = (List) getOption("line_plots");
+            for (Object obj : linePlots) {
                 types.put(obj, 1);
             }
             Map plotTypes = (Map) options.get("plot_types");
-            if (plotTypes == null){
+            if (plotTypes == null) {
                 options.put("plot_types", types);
             } else {
                 plotTypes.putAll(types);
             }
         }
-        
-        if (getOption("plot_list")!=null){
+
+        if (getOption("plot_list") != null) {
             Object plot_list = getOption("plot_list");
             options.put("enabled_plots", "all".equals(plot_list) ? null : plot_list);
         }
-        
-        if (getOption("range")!=null){
+
+        if (getOption("range") != null) {
             Object range = getOption("range");
-            if ("none".equals(range)){
+            if ("none".equals(range)) {
                 options.put("auto_range", null);
-            } else if ("auto".equals(range)){
+            } else if ("auto".equals(range)) {
                 options.put("auto_range", Boolean.TRUE);
             } else {
                 options.put("manual_range", range);
             }
-        }        
-        
+        }
+
         for (Object key : options.keySet()) {
             if (Arr.containsEqual(viewOptions, key)) {
                 Object val = options.get(key);
-                if (val instanceof List){
-                    val = ((List)val).toArray();
+                if (val instanceof List) {
+                    val = ((List) val).toArray();
                 }
                 setPlotPreference(ViewPreference.valueOf(key.toString().toUpperCase()), val);
             }
-        }                
+        }
     }
 
     public Map getScriptOptions() {
@@ -148,10 +310,10 @@ public class ExecutionParameters  {
             return String.valueOf(option);
         }
         String script = getScript();
-        if (script==null){
-            if (Context.getInstance().getRunningStatement()!=null){
+        if (script == null) {
+            if (Context.getInstance().getRunningStatement() != null) {
                 return "script";
-            } 
+            }
             return "console";
         }
         return script;
@@ -179,13 +341,14 @@ public class ExecutionParameters  {
         return Context.getInstance().dataManager.isDataPacked();
     }
 
-    public boolean isOpen() {
-        return Context.getInstance().dataManager.isOpen();
-    }
-
     public Object getLayout() {
         Object option = getOption("layout");
         return (option != null) ? option : Context.getInstance().getConfig().dataLayout;
+    }
+
+    public Object getProvider() {
+        Object option = getOption("provider");
+        return (option != null) ? option : Context.getInstance().getConfig().dataProvider;
     }
 
     public Boolean getPersist() {
@@ -195,11 +358,11 @@ public class ExecutionParameters  {
 
     public int getDepthDimension() {
         int depthDimension = Context.getInstance().getConfig().getDepthDim();
-        Object option = getOption("depth_dim");        
-        if ((option != null) && (option instanceof Number)){
-            depthDimension = ((Number)option).intValue();
+        Object option = getOption("depth_dim");
+        if ((option != null) && (option instanceof Number)) {
+            depthDimension = ((Number) option).intValue();
         }
-        return (((depthDimension<0) || (depthDimension>2)) ? 0 : depthDimension);
+        return (((depthDimension < 0) || (depthDimension > 2)) ? 0 : depthDimension);
     }
 
     public Boolean getFlush() {
@@ -216,49 +379,36 @@ public class ExecutionParameters  {
         Object option = getOption("accumulate");
         return (option != null) ? (Boolean) option : !Context.getInstance().getConfig().dataScanReleaseRecords;
     }
-    
+
     public String getTag() {
-        
-        String ret = (String) getOption("tag");
-        if (ret != null){
-            ret = Context.getInstance().getSetup().expandPath(ret);
-        }
-        return ret;
-    }      
-
-    public int getIndex() {
-        return Context.getInstance().dataManager.getScanIndex();
-    }
-
-    public int getCount() {
-        return Context.getInstance().dataManager.getScanIndex() - offset;
+        return (String) getOption("tag");
     }
 
     public String getScript() {
         CommandInfo cmd = getCommand();
-        return (cmd!=null) ? Context.getInstance().getRunningScriptName(cmd.script) : null;
+        return (cmd != null) ? Context.getInstance().getRunningScriptName(cmd.script) : null;
     }
 
     public File getScriptFile() {
         CommandInfo cmd = getCommand();
-        return (cmd!=null) ? Context.getInstance().getRunningScriptFile(cmd.script) : null;
-    }  
-    
+        return (cmd != null) ? Context.getInstance().getRunningScriptFile(cmd.script) : null;
+    }
+
     public String getScriptVersion() throws IOException {
         File file = getScriptFile();
-        if (file!=null){
+        if (file != null) {
             Revision rev;
             try {
                 rev = Context.getInstance().getFileRevision(file.getPath());
-                if (rev != null){
+                if (rev != null) {
                     return rev.id;
                 }
             } catch (Exception ex) {
             }
         }
         return null;
-    }        
-    
+    }
+
     public String getGroup() {
         return Context.getInstance().dataManager.getCurrentGroup();
     }
@@ -294,31 +444,31 @@ public class ExecutionParameters  {
         Context.CommandInfo ret = Context.getInstance().commandInfo.get(Thread.currentThread());
         return (ret == null) ? null : ret.args;
     }
-    
-    public List<CommandInfo> getCommands(){
+
+    public List<CommandInfo> getCommands() {
         return Context.getInstance().getCommands();
     }
-    
-    public CommandInfo getCommand(){ 
+
+    public CommandInfo getCommand() {
         List<CommandInfo> commands = getCommands();
-        for (CommandInfo cmd: commands){
-            if (cmd.thread == Thread.currentThread()){
+        for (CommandInfo cmd : commands) {
+            if (cmd.thread == Thread.currentThread()) {
                 return cmd;
             }
         }
         //If not in background command, return foreground command
         //TODO: Not considering threads created by background command
-        for (CommandInfo cmd: commands){
-            if (cmd.background==false){
+        for (CommandInfo cmd : commands) {
+            if (cmd.background == false) {
                 return cmd;
             }
-        }     
+        }
         return null;
     }
 
     public boolean isBackground() {
         CommandInfo cmd = getCommand();
-        return (cmd!=null) ? cmd.background : !Context.getInstance().isInterpreterThread();
+        return (cmd != null) ? cmd.background : !Context.getInstance().isInterpreterThread();
     }
 
     @Override
@@ -330,11 +480,15 @@ public class ExecutionParameters  {
         if (!isInitialized()) {
             reset();
             start = System.currentTimeMillis();
+            scanIndex = 0;
         }
     }
 
     void finish() {
         start = -1;
+        persistedScans.clear();
+        dataLayout = null;
+        dataProvider = null;        
     }
 
     boolean isInitialized() {
@@ -342,40 +496,43 @@ public class ExecutionParameters  {
     }
 
     public void reset() {
+        lastOutputFile = null;
         pathName = null;
         offset = 0;
         scriptOptions = new HashMap();
         commandOptions = new HashMap();
+        plotPreferences.init();
+        dataLayout = null;
+        dataProvider = isBackground() ? Context.getInstance().getDataManager().cloneProvider() : null;
     }
 
-    public void onScanStarted(Scan scan) {
+    void onScanStarted(Scan scan) {
     }
 
-    public void onScanEnded(Scan scan) {
+    void onScanEnded(Scan scan) {
         for (Object key : commandOptions.keySet()) {
-            if (Arr.containsEqual(viewOptions, key)) {                
+            if (Arr.containsEqual(viewOptions, key)) {
                 ViewPreference pref = ViewPreference.valueOf(key.toString().toUpperCase());
-                if (scriptOptions.containsKey(key)){
+                if (scriptOptions.containsKey(key)) {
                     setPlotPreference(pref, scriptOptions.get(key));
                 } else {
                     setPlotPreference(pref, null);
                 }
             }
-        }        
-        commandOptions = new HashMap();        
+        }
+        commandOptions = new HashMap();
     }
-    
-    void onStateChange(State state){
-        if (state.isProcessing()) {
-            init();
-            if (state == State.Busy) {
-                plotPreferences.init();
-            }
-        } else {
-            finish();
-        }        
-    }  
-    
+
+    void onExecutionStarted() {
+        Context.getInstance().getDataManager().closeOutput();
+        init();
+    }
+
+    void onExecutionEnded() {
+        finish();
+        Context.getInstance().getDataManager().closeOutput();
+    }
+
     final ViewPreference.PlotPreferences plotPreferences = new ViewPreference.PlotPreferences();
 
     /**
