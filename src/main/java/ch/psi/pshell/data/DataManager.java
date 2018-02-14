@@ -45,8 +45,9 @@ public class DataManager implements AutoCloseable {
     Provider provider;
 
     class ProviderData {
-        String logFile;
         final HashMap<String, Integer> tableIndex = new HashMap<>();
+        String logFile;
+        volatile DirectoryStream.Filter fileFilter;
     }
 
     final HashMap<Provider, ProviderData> providerData = new HashMap<>();
@@ -106,13 +107,16 @@ public class DataManager implements AutoCloseable {
     
     public void setProvider(String name) throws Exception {
         Class providerClass = getProviderClass(name);
-        if ((provider != null) && (provider.getClass() == providerClass)) {
-            return;
+        if ((provider != null)) {
+            if (provider.getClass() == providerClass){
+                return;
+            }
+            synchronized(providerData){
+                providerData.remove(provider);
+            }
         }
         logger.info("Setting data provider: " + name + " - " + providerClass);
         provider = (Provider) providerClass.newInstance();
-        fileFilter = null;
-        getFileFilter();
     }
 
     public Provider cloneProvider() {
@@ -145,7 +149,14 @@ public class DataManager implements AutoCloseable {
     void clearProviderData(){
         Provider provider = getProvider();
         synchronized(providerData){
-            providerData.remove(provider);
+            //Keeps general provider data
+            if (provider == this.provider){
+                ProviderData pd = providerData.get(provider);
+                pd.tableIndex.clear();
+                pd.logFile = null;
+            } else {
+                providerData.remove(provider);
+            }
         }
     }   
 
@@ -246,11 +257,13 @@ public class DataManager implements AutoCloseable {
         return Double.class;
     }
 
-    volatile DirectoryStream.Filter fileFilter;
-
     public DirectoryStream.Filter getFileFilter() {
-        if ((fileFilter == null) && (getProvider() != null)) {
-            fileFilter = (DirectoryStream.Filter<Path>) (Path path) -> {
+        ProviderData pd = getProviderData();
+        if (pd==null){
+            return null;
+        }
+        if (pd.fileFilter == null) {
+            pd.fileFilter = (DirectoryStream.Filter<Path>) (Path path) -> {
                 File file = path.toFile();
                 if (file.isDirectory()) {
                     if (!isDataPacked()) {
@@ -272,7 +285,7 @@ public class DataManager implements AutoCloseable {
                 return false;
             };
         }
-        return fileFilter;
+        return pd.fileFilter;
     }
 
     public String getLogFilePath() {
@@ -853,7 +866,6 @@ public class DataManager implements AutoCloseable {
      * Convenient but slow
      */
     public void appendItem(String path, Object val) throws IOException {
-        Provider provider = getProvider();
         Integer index = 0;
         ProviderData pd = getProviderData();
         synchronized (pd.tableIndex) {
@@ -1114,6 +1126,9 @@ public class DataManager implements AutoCloseable {
     @Override
     public void close() throws Exception {
         closeOutput();
+        synchronized(providerData){
+            providerData.clear();
+        }
     }
 
 }
