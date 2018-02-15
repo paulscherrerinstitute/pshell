@@ -18,6 +18,7 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.geom.Line2D;
 import java.awt.geom.Rectangle2D;
+import java.awt.image.BufferedImage;
 import java.awt.print.PageFormat;
 import java.awt.print.PrinterException;
 import java.text.DecimalFormat;
@@ -33,7 +34,6 @@ import javax.swing.JDialog;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.KeyStroke;
-import javax.swing.SwingUtilities;
 import javax.swing.event.PopupMenuEvent;
 import javax.swing.event.PopupMenuListener;
 import org.jfree.chart.ChartFactory;
@@ -199,7 +199,7 @@ public class LinePlotJFree extends LinePlotBase {
 
     @Override
     protected void onSetData(final LinePlotSeries series, final double[] x, final double[] y) {
-        //SwingUtilities.invokeLater(() -> {
+        //invokeLater(() -> {
         XYSeries s = getXYSeries(series);
         s.setNotify(false);
         if (!s.isEmpty()) {
@@ -514,10 +514,13 @@ public class LinePlotJFree extends LinePlotBase {
             }
         });
 
-        //Activate (arrow) keys
-        addKeyBindings();
+        if (!offscreen){
+            //Activate (arrow) keys
+            addKeyBindings();
+            setLayout(new BorderLayout());
+        }
 
-        setLayout(new BorderLayout());
+        
         if (chart.getTitle() != null) {
             chart.getTitle().setPaint(getAxisTextColor());
         }
@@ -530,7 +533,9 @@ public class LinePlotJFree extends LinePlotBase {
         plot.getRangeAxis().setLabelFont(LABEL_FONT);
         plot.getDomainAxis().setTickLabelFont(TICK_LABEL_FONT);
         plot.getRangeAxis().setTickLabelFont(TICK_LABEL_FONT);
-        add(chartPanel);
+        if (!offscreen){
+            add(chartPanel);
+        }
     }
 
     Style style;
@@ -576,7 +581,9 @@ public class LinePlotJFree extends LinePlotBase {
             if (hasY2) {
                 createY2();
             }
-            createPopupMenu();
+            if (!offscreen){
+                createPopupMenu();
+            }
             getAxis(Plot.AxisId.X).setLabel(labelX);
             getAxis(Plot.AxisId.Y).setLabel(labelY);
             getAxis(Plot.AxisId.Y2).setLabel(labelY2);
@@ -677,7 +684,7 @@ public class LinePlotJFree extends LinePlotBase {
                 for (AxisId axisId : ranges.keySet()) {
                     final ValueAxis axis = getValueAxis(axisId);
                     final Range range = ranges.get(axisId);
-                    SwingUtilities.invokeLater(() -> {
+                    invokeLater(() -> {
                         axis.setRange(range);
                     });
                 }
@@ -1071,7 +1078,7 @@ public class LinePlotJFree extends LinePlotBase {
         XYLineAndShapeRenderer renderer = getRenderer(series.getAxisY());
         renderer.setSeriesPaint(getSeriesIndex(series), color);
     }
-
+    
     @Override
     protected void setLinesVisible(LinePlotSeries series, boolean value) {
         XYLineAndShapeRenderer renderer = getRenderer(series.getAxisY());
@@ -1110,7 +1117,7 @@ public class LinePlotJFree extends LinePlotBase {
         marker.setLabelPaint(color);
         marker.setLabelAnchor(RectangleAnchor.CENTER);
         marker.setLabelTextAnchor(TextAnchor.TOP_RIGHT);
-        SwingUtilities.invokeLater(() -> {
+        invokeLater(() -> {
             if ((axis == null) || (axis == AxisId.X)) {
                 chartPanel.getChart().getXYPlot().addDomainMarker(marker, Layer.FOREGROUND);
             } else {
@@ -1140,7 +1147,7 @@ public class LinePlotJFree extends LinePlotBase {
         marker.setStroke(new BasicStroke(1f));
         marker.setOutlinePaint(outlineColor);
 
-        SwingUtilities.invokeLater(() -> {
+        invokeLater(() -> {
             if ((axis == null) || (axis == AxisId.X)) {
                 chartPanel.getChart().getXYPlot().addDomainMarker(marker, Layer.FOREGROUND);
             } else {
@@ -1152,7 +1159,7 @@ public class LinePlotJFree extends LinePlotBase {
 
     @Override
     public void removeMarker(final Object marker) {
-        SwingUtilities.invokeLater(() -> {
+        invokeLater(() -> {
             if (marker == null) {
                 Collection<?> c = chartPanel.getChart().getXYPlot().getRangeMarkers(Layer.FOREGROUND);
                 if (c != null) {
@@ -1294,4 +1301,9 @@ public class LinePlotJFree extends LinePlotBase {
         return chart;
     }
 
+    @Override
+    public BufferedImage getSnapshot() {
+        return chart.createBufferedImage(getSnapshotWidth(), getSnapshotHeight());
+    }    
+    
 }

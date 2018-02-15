@@ -631,13 +631,13 @@ public class RendererMenu extends JPopupMenu {
                     case Line:
                     case Horizontal:
                     case Vertical:
-                        plot = (PlotBase) LinePlotBase.newPlot(getLinePlotImpl());
+                        plot = (PlotBase) Plot.newPlot(getLinePlotImpl());
                         series = new LinePlotSeries("Selection");
                         plot.getAxis(Plot.AxisId.X).setLabel(null);
                         plot.getAxis(Plot.AxisId.Y).setLabel(null);
                         break;
                     case Rectangle:
-                        plot = (PlotBase) MatrixPlotBase.newPlot(getMatrixPlotImpl());
+                        plot = (PlotBase) Plot.newPlot(getMatrixPlotImpl());
                         plot.getAxis(Plot.AxisId.Y).setInverted(true);
                         //Rectangle dataRect = renderer.getData().getInverseRect(rect);                        
                         //series = new MatrixPlotSeries("Selection", minX, maxX, dataRect.width, minY, maxY, dataRect.height );
@@ -646,7 +646,7 @@ public class RendererMenu extends JPopupMenu {
                         break;
                 }
             } else if (integrationType != null) {
-                plot = (PlotBase) LinePlotBase.newPlot(getLinePlotImpl());
+                plot = (PlotBase) Plot.newPlot(getLinePlotImpl());
                 series = new LinePlotSeries("Integration");
                 plot.getAxis(Plot.AxisId.X).setLabel(null);
                 plot.getAxis(Plot.AxisId.Y).setLabel(null);

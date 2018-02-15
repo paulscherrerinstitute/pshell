@@ -181,7 +181,8 @@ jar {
     }       
 }
 
-task(debug, dependsOn: 'classes', type: JavaExec) {      
+task(debug, dependsOn: 'classes', type: JavaExec) {    
+    //systemProperty 'java.awt.headless' ,true        
     systemProperty 'pshell.build.time', timestamp
     systemProperty 'pshell.build.type', type    
     main = mainClass

@@ -25,6 +25,6 @@ public interface LinePlot extends Plot<LinePlotSeries> {
     }
 
     default public void setStyle(Style style) {
-    }
+    }  
 
 }

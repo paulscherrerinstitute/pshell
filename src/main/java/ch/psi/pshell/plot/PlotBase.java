@@ -31,7 +31,7 @@ import javax.swing.JMenuItem;
 import javax.swing.SwingUtilities;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import ch.psi.utils.IO;
-import ch.psi.utils.Reflection.Hidden;
+import ch.psi.utils.NamedThreadFactory;
 import ch.psi.utils.swing.ExtensionFileFilter;
 import ch.psi.utils.swing.ImageTransferHandler;
 import ch.psi.utils.swing.MainFrame;
@@ -42,6 +42,8 @@ import ch.psi.utils.swing.SwingUtils.OptionType;
 import java.awt.Color;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  *
@@ -58,6 +60,9 @@ abstract public class PlotBase<T extends PlotSeries> extends MonitoredPanel impl
 
     protected static final int DETACHED_WIDTH = 600;
     protected static final int DETACHED_HEIGHT = 400;
+    
+    protected static int SNAPSHOT_WIDTH = 1200;
+    protected static int SNAPSHOT_HEIGHT = 1000;    
 
     final Class seriesType;
 
@@ -66,6 +71,7 @@ abstract public class PlotBase<T extends PlotSeries> extends MonitoredPanel impl
     }
 
     volatile boolean instantiated;
+    final ExecutorService executor;
 
     protected PlotBase(Class<T> seriesType, String title) {
         super();
@@ -77,12 +83,15 @@ abstract public class PlotBase<T extends PlotSeries> extends MonitoredPanel impl
         this.seriesType = seriesType;
         try {
             createChart();
-            createPopupMenu();
+            if (!offscreen){
+                createPopupMenu();
+            }
         } catch (Exception ex) {
             Logger.getLogger(PlotBase.class.getName()).log(Level.INFO, null, ex);
         }
         updating = new AtomicBoolean(false);
         instantiated = true;
+        executor = offscreen ? Executors.newSingleThreadExecutor(new NamedThreadFactory("Offscreen plot update task")) :null;
     }
 
     static String imagesFolderName;
@@ -94,6 +103,27 @@ abstract public class PlotBase<T extends PlotSeries> extends MonitoredPanel impl
     public static String getImageFileFolder() {
         return imagesFolderName;
     }
+    
+    private int snapshowWidth = SNAPSHOT_WIDTH;
+    private int snapshowHeight = SNAPSHOT_HEIGHT;
+    
+    public static void setDefaultSnapshotSize(int width, int height){
+        SNAPSHOT_WIDTH = width;
+        SNAPSHOT_HEIGHT = height;
+    }    
+    
+    public void setSnapshotSize(int width, int height){
+        snapshowWidth = width;
+        snapshowHeight = height;
+    }
+    
+    public int getSnapshotWidth(){
+        return snapshowWidth;
+    }
+    
+    public int getSnapshotHeight(){
+        return snapshowHeight;
+    }    
 
     String title;
 
@@ -143,12 +173,12 @@ abstract public class PlotBase<T extends PlotSeries> extends MonitoredPanel impl
 
     @Override
     public final void update(boolean deferred) {
-        if ((!deferred) && SwingUtilities.isEventDispatchThread()) {
+        if ((!deferred) && (offscreen || SwingUtilities.isEventDispatchThread())) {
             updating.set(false);
             doUpdate();
         } else {
             if (updating.compareAndSet(false, true)) {
-                SwingUtilities.invokeLater(() -> {
+                invokeLater(() -> {
                     if (updating.compareAndSet(true, false)) {
                         try {
                             doUpdate();
@@ -188,12 +218,14 @@ abstract public class PlotBase<T extends PlotSeries> extends MonitoredPanel impl
      */
     @Override
     public BufferedImage getSnapshot() {
-        if (!SwingUtilities.isEventDispatchThread()){
-            try {
-                SwingUtilities.invokeAndWait(() -> {
-                    //So plot will be updated with data set in other threads.
-                });
-            } catch (Exception ex) {
+        if (!offscreen){
+            if (!SwingUtilities.isEventDispatchThread()){
+                try {
+                    SwingUtilities.invokeAndWait(() -> {
+                        //So plot will be updated with data set in other threads.
+                    });
+                } catch (Exception ex) {
+                }
             }
         }
         //So plot will be updated with data set in other threads.
@@ -470,7 +502,7 @@ abstract public class PlotBase<T extends PlotSeries> extends MonitoredPanel impl
     @Override
     public void requestSeriesUpdate(final T series) {
         if (series.updating.compareAndSet(false, true)) {
-            SwingUtilities.invokeLater(() -> {
+            invokeLater(() -> {
                 series.updating.set(false);
                 try {
                     updateSeries(series);
@@ -478,6 +510,14 @@ abstract public class PlotBase<T extends PlotSeries> extends MonitoredPanel impl
                     //Logger.getLogger(LinePlotBase.class.getName()).log(Level.SEVERE, null, ex);
                 }
             });
+        }
+    }
+    
+    protected void invokeLater(Runnable r){
+        if (offscreen){
+            executor.submit(r);
+        } else {
+            SwingUtilities.invokeLater(r);
         }
     }
 
@@ -600,11 +640,6 @@ abstract public class PlotBase<T extends PlotSeries> extends MonitoredPanel impl
 
     public static boolean getLighweightPopups() {
         return lighweightPopups;
-    }
-
-    @Hidden
-    public static Plot newPlot(String className) throws ClassNotFoundException, InstantiationException, IllegalAccessException {
-        return (Plot) Class.forName(className).newInstance();
     }
 
     //Preferred Colors (not all implementations may enable changing these colors)

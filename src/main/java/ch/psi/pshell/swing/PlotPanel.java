@@ -19,11 +19,13 @@ import ch.psi.pshell.device.Readable.ReadableCalibratedArray;
 import ch.psi.pshell.device.Readable.ReadableCalibratedMatrix;
 import ch.psi.pshell.device.Writable;
 import ch.psi.pshell.plot.Axis;
+import ch.psi.pshell.plot.LinePlot;
 import ch.psi.pshell.plot.LinePlot.Style;
 import ch.psi.pshell.plot.LinePlotErrorSeries;
 import ch.psi.pshell.plot.LinePlotJFree;
+import ch.psi.pshell.plot.MatrixPlot;
 import ch.psi.pshell.plot.Plot.Quality;
-import ch.psi.pshell.plot.SlicePlotBase;
+import ch.psi.pshell.plot.SlicePlot;
 import ch.psi.pshell.plot.SlicePlotDefault;
 import ch.psi.pshell.plot.SlicePlotSeries;
 import ch.psi.pshell.scan.PlotScan;
@@ -636,42 +638,42 @@ public class PlotPanel extends MonitoredPanel {
         return null;
     }
 
-    PlotBase newPlot(String name, boolean isScan, int dim, boolean allowLowerDim) throws ClassNotFoundException, InstantiationException, IllegalAccessException {
-        PlotBase requestedPlot = null;
+    Plot newPlot(String name, boolean isScan, int dim, boolean allowLowerDim) throws ClassNotFoundException, InstantiationException, IllegalAccessException {
+        Plot requestedPlot = null;
         try {
             if (isScan && (prefs.plotTypes != null)) {
                 Class type = getPlotClass(prefs.plotTypes.get(name));
                 //If device name matches a Cacheable cache name, use the rule for the parent  
                 if (type != null) {
-                    requestedPlot = (PlotBase) type.newInstance();
+                    requestedPlot =  (Plot) type.newInstance();
                 }
             }
         } catch (Exception ex) {
             Logger.getLogger(PlotPanel.class.getName()).log(Level.WARNING, null, ex);
         }
-
+        
         if (dim == 3) {
-            return (PlotBase) SlicePlotBase.newPlot(getSlicePlotImpl());
+            return  Plot.newPlot(getSlicePlotImpl());
         }
 
         if (dim == 2) {
             if ((requestedPlot != null)) {
-                if (allowLowerDim && (requestedPlot instanceof LinePlotBase)) {
+                if (allowLowerDim && (requestedPlot instanceof LinePlot)) {
                     return requestedPlot;
-                } else if (requestedPlot instanceof MatrixPlotBase) {
+                } else if (requestedPlot instanceof MatrixPlot) {
                     return requestedPlot;
                 }
             }
-            return (PlotBase) MatrixPlotBase.newPlot(getMatrixPlotImpl());
+            return Plot.newPlot(getMatrixPlotImpl());
         }
-        if ((requestedPlot != null) && (requestedPlot instanceof LinePlotBase)) {
+        if ((requestedPlot != null) && (requestedPlot instanceof LinePlot)) {
             return requestedPlot;
         }
-        return (PlotBase) LinePlotBase.newPlot(getLinePlotImpl());
+        return Plot.newPlot(getLinePlotImpl());
     }
 
-    protected PlotBase addPlot(String name, boolean isScan, String labelX, int rank, int[] recordSize, double[] start, double[] end, int[] steps, Class type) throws ClassNotFoundException, InstantiationException, IllegalAccessException {
-        PlotBase plot = null;
+    protected Plot addPlot(String name, boolean isScan, String labelX, int rank, int[] recordSize, double[] start, double[] end, int[] steps, Class type) throws ClassNotFoundException, InstantiationException, IllegalAccessException {
+        Plot plot = null;
         int recordDimensions = (recordSize == null) ? 0 : recordSize.length;
 
         if (rank == 3) {
@@ -830,7 +832,9 @@ public class PlotPanel extends MonitoredPanel {
                 addSurfacePlotMenu(((SlicePlotDefault) plot).getMatrixPlot());
             }
             plot.setTitle(name);
-            addPlot(plot);
+            if (!plot.offscreen){
+                addPlot((PlotBase)plot);
+            }
             plot.setUpdatesEnabled(false);
         }
         return plot;
@@ -979,7 +983,7 @@ public class PlotPanel extends MonitoredPanel {
             }
         }
 
-        PlotBase plot = addPlot(descriptor.name, false, descriptor.labelX, rank, null, start, end, steps, Double.class);
+        Plot plot = addPlot(descriptor.name, false, descriptor.labelX, rank, null, start, end, steps, Double.class);
         if (plot != null) {
             if (plot instanceof LinePlotBase) {
                 if ((descriptor.error != null) && (descriptor.error.length == ((double[]) data).length) && (plot instanceof LinePlotJFree)) {
@@ -990,7 +994,7 @@ public class PlotPanel extends MonitoredPanel {
                 } else {
                     ((LinePlotSeries) plot.getSeries(0)).setData(x, (double[]) data);
                 }
-            } else if (plot instanceof MatrixPlotBase) {
+            } else if (plot instanceof MatrixPlot) {
                 MatrixPlotSeries series = ((MatrixPlotSeries) plot.getSeries(0));
                 if (multidimentional1dDataset) {
                     double[] array = (double[]) data;
@@ -1001,7 +1005,7 @@ public class PlotPanel extends MonitoredPanel {
                 } else {
                     series.setData((double[][]) data);
                 }
-            } else if (plot instanceof SlicePlotBase) {
+            } else if (plot instanceof SlicePlot) {
                 final SlicePlotSeries series = ((SlicePlotSeries) plot.getSeries(0));
                 if (multidimentional1dDataset) {
                     double[][] array = (double[][]) data;
@@ -1046,9 +1050,11 @@ public class PlotPanel extends MonitoredPanel {
             }
 
             plot.update(true);
-            plot.setUpdatesEnabled(true);//This plots is user general-purpose so disable scan optimization
-            validate();
-            repaint();
+            if (!plot.offscreen){
+                plot.setUpdatesEnabled(true);//This plot is user general-purpose so disable scan optimization
+                validate();
+                repaint();
+            }
         }
         return plot;
     }

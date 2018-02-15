@@ -51,7 +51,7 @@ abstract public class MatrixPlotBase extends PlotBase<MatrixPlotSeries> implemen
         super.addSeries(series);
 
     }
-
+   
     final MatrixPlotSeriesListener seriesListener = new MatrixPlotSeriesListener() {
         @Override
         public void onSeriesAppendData(MatrixPlotSeries series, double x, double y, double z) {
@@ -129,7 +129,7 @@ abstract public class MatrixPlotBase extends PlotBase<MatrixPlotSeries> implemen
                 return;
             }
             MatrixPlotSeries s = getAllSeries()[0];
-            MatrixPlot p = newPlot(className);
+            MatrixPlot p = (MatrixPlot) Plot.newPlot(className);
             p.setTitle(getTitle());
             p.getAxis(AxisId.X).setLabel(getAxis(AxisId.X).getLabel());
             p.getAxis(AxisId.Y).setLabel(getAxis(AxisId.Y).getLabel());
@@ -331,22 +331,17 @@ abstract public class MatrixPlotBase extends PlotBase<MatrixPlotSeries> implemen
 
     abstract protected void onSetData(MatrixPlotSeries series, double[][] data, double[][] x, double[][] y);
 
-    // Known Implemenmtations
-    @Hidden
-    public static MatrixPlot newPlot(String className) throws ClassNotFoundException, InstantiationException, IllegalAccessException {
-        return (MatrixPlot) PlotBase.newPlot(className);
-    }
 
     @Hidden
     public static MatrixPlot newPlot(Style style) throws ClassNotFoundException, InstantiationException, IllegalAccessException {
         style = (style == null) ? MatrixPlot.Style.Normal : style;
         switch (style) {
             case Mesh:
-                return newPlot("ch.psi.pshell.plot.SurfacePlotJzy3d");
+                return (MatrixPlot) Plot.newPlot("ch.psi.pshell.plot.SurfacePlotJzy3d");
             case Image:
-                return newPlot(ch.psi.pshell.plot.MatrixPlotRenderer.class.getName());
+                return (MatrixPlot) Plot.newPlot(ch.psi.pshell.plot.MatrixPlotRenderer.class.getName());
             default:
-                return newPlot(ch.psi.pshell.plot.MatrixPlotJFree.class.getName());
+                return (MatrixPlot) Plot.newPlot(ch.psi.pshell.plot.MatrixPlotJFree.class.getName());
         }
     }
 

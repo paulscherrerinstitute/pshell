@@ -118,12 +118,12 @@ public class DeviceValueChart extends DevicePanel {
         if (device != null) {
             try {
                 if (device instanceof ReadonlyRegisterArray) {
-                    chart = (LinePlotBase) LinePlotBase.newPlot(PlotPanel.getLinePlotImpl());
+                    chart = (LinePlotBase) Plot.newPlot(PlotPanel.getLinePlotImpl());
                     series = new LinePlotSeries(device.getName());
                     ((LinePlotBase) chart).addSeries((LinePlotSeries) series);
                 } else if (device instanceof ReadonlyRegisterMatrix) {
                     menuInvertScale.setVisible(true);
-                    chart = (MatrixPlotBase) MatrixPlotBase.newPlot(PlotPanel.getMatrixPlotImpl());
+                    chart = (MatrixPlotBase) Plot.newPlot(PlotPanel.getMatrixPlotImpl());
                     ((MatrixPlotBase) chart).getAxis(Plot.AxisId.Y).setInverted(invertedScale);
                     ReadonlyRegisterMatrix reg = (ReadonlyRegisterMatrix) device;
                     series = new MatrixPlotSeries(device.getName(), 0, reg.getWidth() - 1, reg.getWidth(), 0, reg.getHeight() - 1, reg.getHeight());

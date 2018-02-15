@@ -179,6 +179,10 @@ public class App extends ObservableBase<AppListener> {
     static public boolean isServerMode() {
         return hasArgument("v");
     }
+    
+    static public boolean isOffscreenPlotting() {
+        return isServerMode() || isHeadless();
+    }    
 
     static public boolean isGui() {
         return !isCli() && !isServerMode() && !isHeadless();
@@ -734,73 +738,128 @@ public class App extends ObservableBase<AppListener> {
             } else if (isCli()) {
                 logger.log(Level.INFO, "Start console");
                 try {
-                    setConsolePlotEnvironment(null);
+                    if (!isHeadless()) {
+                        setConsolePlotEnvironment(null);
+                    }
                     new ch.psi.pshell.core.Console().run(System.in, System.out, !isServerMode());
                 } catch (Exception ex) {
                     logger.log(Level.WARNING, null, ex);
                 }
-            } else if (isServerMode()) {
+            } else if (isServerMode()) {              
                 logger.log(Level.INFO, "Start server");
+            }
+            if (isOffscreenPlotting()){
+                try {
+                    setOffscreenPlotEnvironment();
+                } catch (Exception ex) {
+                    logger.log(Level.WARNING, null, ex);
+                }                 
             }
         }
     }
 
     void setConsolePlotEnvironment(JFrame parent) {
-        if (!isHeadless()) {
-            Context.getInstance().setPlotListener(new PlotListener() {
-                HashMap<String, PlotPanel> panels = new HashMap<>();
+        Context.getInstance().setPlotListener(new PlotListener() {
+            HashMap<String, PlotPanel> panels = new HashMap<>();
 
-                @Override
-                public List<Plot> plot(String title, PlotDescriptor[] plots) throws Exception {
-                    if ((title == null) || (title.isEmpty())) {
-                        title = "Plots";
-                    }
-                    PlotPanel plotPanel = panels.get(title);
-                    if ((plotPanel != null) && (!plotPanel.isDisplayable())) {
-                        panels.remove(title);
-                        plotPanel = null;
-                    }
-                    if (plotPanel == null) {
-                        plotPanel = new PlotPanel();
-                        panels.put(title, plotPanel);
-                        JFrame frame = SwingUtils.showFrame(parent, title, new Dimension(600, 400), plotPanel);
-                        frame.setIconImage(Toolkit.getDefaultToolkit().getImage(App.getResourceUrl("IconSmall.png")));
-                        plotPanel.initialize();
-                        plotPanel.setPlotTitle(title);
-                    }
-                    ArrayList<Plot> ret = new ArrayList<>();
-                    plotPanel.clear();
-                    if ((plots != null) && (plots.length > 0)) {
-                        for (PlotDescriptor plot : plots) {
-                            try {
-                                if (plot != null) {
-                                    ret.add(plotPanel.addPlot(plot));
-                                } else {
-                                    ret.add(null);
-                                }
-                            } catch (Exception ex) {
-                                if (plot == null) {
-                                } else {
-                                    System.err.println("Error creating plot: " + String.valueOf((plot != null) ? plot.name : null));
-                                }
+            @Override
+            public List<Plot> plot(String title, PlotDescriptor[] plots) throws Exception {
+                title = checkPlotsTitle(title);
+                PlotPanel plotPanel = panels.get(title);
+                if ((plotPanel != null) && (!plotPanel.isDisplayable())) {
+                    panels.remove(title);
+                    plotPanel = null;
+                }
+                if (plotPanel == null) {
+                    plotPanel = new PlotPanel();
+                    panels.put(title, plotPanel);
+                    JFrame frame = SwingUtils.showFrame(parent, title, new Dimension(600, 400), plotPanel);
+                    frame.setIconImage(Toolkit.getDefaultToolkit().getImage(App.getResourceUrl("IconSmall.png")));
+                    plotPanel.initialize();
+                    plotPanel.setPlotTitle(title);
+                }
+                ArrayList<Plot> ret = new ArrayList<>();
+                plotPanel.clear();
+                if ((plots != null) && (plots.length > 0)) {
+                    for (PlotDescriptor plot : plots) {
+                        try {
+                            if (plot != null) {
+                                ret.add(plotPanel.addPlot(plot));
+                            } else {
+                                ret.add(null);
+                            }
+                        } catch (Exception ex) {
+                            if (plot == null) {
+                            } else {
+                                System.err.println("Error creating plot: " + String.valueOf((plot != null) ? plot.name : null));
                             }
                         }
                     }
-                    return ret;
                 }
+                return ret;
+            }
 
-                @Override
-                public List<Plot> getPlots(String title) {
-                    PlotPanel plotPanel = panels.get(title);
-                    if (plotPanel != null) {
-                        return plotPanel.getPlots();
-                    }
-                    return new ArrayList<Plot>();
+            @Override
+            public List<Plot> getPlots(String title) {
+                title = checkPlotsTitle(title);               
+                PlotPanel plotPanel = panels.get(title);
+                if (plotPanel != null) {
+                    return plotPanel.getPlots();
                 }
-            });
-        }
+                return new ArrayList<Plot>();
+            }
+        });
+
     }
 
+    String checkPlotsTitle(String title){
+        if ((title == null) || (title.isEmpty())) {
+            title = "Plots";
+        }    
+        return title;
+    }
+    
+    void setOffscreenPlotEnvironment() {
+        Context.getInstance().setPlotListener(new PlotListener() {
+            
+            HashMap<String, List<Plot>> panels = new HashMap<>();
+            PlotPanel plotPanel = new PlotPanel();
+
+            @Override
+            public List<Plot> plot(String title, PlotDescriptor[] plots) throws Exception {
+                title = checkPlotsTitle(title);
+                ArrayList<Plot> ret = new ArrayList<>();
+                if ((plots != null) && (plots.length > 0)) {
+                    for (PlotDescriptor plot : plots) {
+                        try {
+                            if (plot != null) {
+                                ret.add(plotPanel.addPlot(plot));
+                            } else {
+                                ret.add(null);
+                            }
+                        } catch (Exception ex) {
+                            if (plot == null) {
+                            } else {
+                                System.err.println("Error creating plot: " + ex.getMessage());
+                            }
+                        }
+                    }
+                }
+                panels.put(title, ret);
+                return ret;
+            }
+
+            @Override
+            public List<Plot> getPlots(String title) {
+                title = checkPlotsTitle(title);
+                if (panels.containsKey(title)) {
+                    return panels.get(title);
+                }
+                return new ArrayList<Plot>();
+            }
+        });
+    }
+    
     @Hidden
     public SwingPropertyChangeSupport getPropertyChangeSupport() {
         return pcs;

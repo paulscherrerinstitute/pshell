@@ -96,5 +96,4 @@ public class Axis {
         inverted = value;
         plot.onAxisRangeChanged(id);
     }
-
 }

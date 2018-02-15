@@ -114,14 +114,16 @@ public class LinePlotSeries extends PlotSeries<LinePlot> {
     }
 
     public void setData(double[] x, double[] y) {
-        if (getPlot() != null) {
-            ((LinePlotBase) getPlot()).seriesListener.onSeriesSetData(this, x, y);
+        Plot plot = getPlot();
+        if (plot != null) {
+            ((LinePlotBase) plot).seriesListener.onSeriesSetData(this, x, y);
         }
     }
 
     public void appendData(double x, double y) {
-        if (getPlot() != null) {
-            ((LinePlotBase) getPlot()).seriesListener.onSeriesAppendData(this, x, y);
+        Plot plot = getPlot();
+        if (plot != null) {
+            ((LinePlotBase) plot).seriesListener.onSeriesAppendData(this, x, y);          
         }
     }
 

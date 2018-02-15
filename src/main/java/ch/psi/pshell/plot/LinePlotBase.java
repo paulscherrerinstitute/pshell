@@ -3,7 +3,6 @@ package ch.psi.pshell.plot;
 import javax.swing.JPanel;
 import ch.psi.utils.swing.SwingUtils;
 import ch.psi.pshell.plot.LinePlotSeries.LinePlotSeriesListener;
-import ch.psi.utils.Reflection.Hidden;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Frame;
@@ -71,7 +70,7 @@ abstract public class LinePlotBase extends PlotBase<LinePlotSeries> implements L
         return str.toString();
     }
 
-    final LinePlotSeriesListener seriesListener = new LinePlotSeriesListener() {
+   final LinePlotSeriesListener seriesListener = new LinePlotSeriesListener() {
         @Override
         public void onSeriesAppendData(LinePlotSeries series, double x, double y) {
             onAppendData(series, x, y);
@@ -130,7 +129,7 @@ abstract public class LinePlotBase extends PlotBase<LinePlotSeries> implements L
     @Override
     public void detach(String className) {
         try {
-            LinePlot p = newPlot(className);
+            LinePlot p = (LinePlot) Plot.newPlot(className);
             p.setTitle(getTitle());
             if (getTitleFont() != null) {
                 p.setTitleFont(getTitleFont());
@@ -162,11 +161,6 @@ abstract public class LinePlotBase extends PlotBase<LinePlotSeries> implements L
     @Override
     protected void createPopupMenu() {
         super.createPopupMenu();
-    }
-
-    @Hidden
-    public static LinePlot newPlot(String className) throws ClassNotFoundException, InstantiationException, IllegalAccessException {
-        return (LinePlot) PlotBase.newPlot(className);
     }
 
     @Override

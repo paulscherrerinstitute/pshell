@@ -48,6 +48,7 @@ public class MatrixPlotSeries extends PlotSeries<MatrixPlot> {
     }
 
     public void setData(double[][] data, double[][] x, double[][] y) {
+        MatrixPlot plot = getPlot();
         if ((data != null) && (data.length > 0)) {
             //Late initialization
             if ((numberOfBinsX == 0) || (numberOfBinsY == 0)) {
@@ -56,8 +57,8 @@ public class MatrixPlotSeries extends PlotSeries<MatrixPlot> {
                 setNumberOfBinsY(data.length);
                 setRangeY(0, data.length);
             }
-            if (getPlot() != null) {
-                setToken(((MatrixPlotBase) getPlot()).onAddedSeries(this));
+            if (plot != null) {
+                setToken(((MatrixPlotBase) plot).onAddedSeries(this));
             }
         }
 
@@ -67,8 +68,8 @@ public class MatrixPlotSeries extends PlotSeries<MatrixPlot> {
                 Arrays.fill(data[i], Double.NaN);
             }
         }
-        if (getPlot() != null) {
-            ((MatrixPlotBase) getPlot()).seriesListener.onSeriesSetData(this, data, x, y);
+        if (plot != null) {
+            ((MatrixPlotBase) plot).seriesListener.onSeriesSetData(this, data, x, y);
         }
     }
 

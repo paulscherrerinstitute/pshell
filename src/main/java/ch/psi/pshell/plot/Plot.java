@@ -1,6 +1,8 @@
 package ch.psi.pshell.plot;
 
+import ch.psi.pshell.ui.App;
 import ch.psi.utils.Convert;
+import ch.psi.utils.Reflection.Hidden;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.image.BufferedImage;
@@ -11,6 +13,8 @@ import java.util.List;
  *
  */
 public interface Plot<T extends PlotSeries> {
+    
+    final static boolean offscreen = App.isOffscreenPlotting();
 
     //Request update on event loop
     public void update(boolean deferred);
@@ -108,5 +112,13 @@ public interface Plot<T extends PlotSeries> {
 
     default void setPlotGridColor(Color c) {};    
     
-    default void setPlotOutlineColor(Color c) {};    
+    default void setPlotOutlineColor(Color c) {};      
+    
+    
+    @Hidden
+    public static Plot newPlot(String className) throws ClassNotFoundException, InstantiationException, IllegalAccessException {
+        return (Plot) Class.forName(className).newInstance();
+    }    
+    
+    
 }

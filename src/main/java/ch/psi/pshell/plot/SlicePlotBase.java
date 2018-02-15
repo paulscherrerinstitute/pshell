@@ -1,7 +1,5 @@
 package ch.psi.pshell.plot;
 
-import ch.psi.utils.Reflection.Hidden;
-
 /**
  *
  */
@@ -50,12 +48,6 @@ abstract public class SlicePlotBase extends PlotBase<SlicePlotSeries> implements
     }
 
     protected void onSeriesRangeZChanged(SlicePlotSeries s) {
-    }
-
-    // Known Implemenmtations
-    @Hidden
-    public static SlicePlot newPlot(String className) throws ClassNotFoundException, InstantiationException, IllegalAccessException {
-        return (SlicePlot) PlotBase.newPlot(className);
     }
 
     @Override

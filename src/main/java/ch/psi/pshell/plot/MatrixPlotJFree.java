@@ -16,7 +16,6 @@ import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JRadioButtonMenuItem;
-import javax.swing.SwingUtilities;
 import javax.swing.event.PopupMenuEvent;
 import javax.swing.event.PopupMenuListener;
 import org.jfree.chart.ChartPanel;
@@ -43,6 +42,7 @@ import org.jfree.ui.RectangleInsets;
 import org.jfree.ui.TextAnchor;
 import ch.psi.pshell.imaging.Colormap;
 import ch.psi.utils.Reflection.Hidden;
+import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.List;
 import org.jfree.chart.annotations.XYTextAnnotation;
@@ -642,7 +642,7 @@ public class MatrixPlotJFree extends MatrixPlotBase {
         marker.setLabelPaint(color);
         marker.setLabelAnchor(RectangleAnchor.CENTER);
         marker.setLabelTextAnchor(TextAnchor.TOP_RIGHT);
-        SwingUtilities.invokeLater(() -> {
+        invokeLater(() -> {
             if ((axis == null) || (axis == AxisId.X)) {
                 chartPanel.getChart().getXYPlot().addDomainMarker(marker, Layer.FOREGROUND);
             } else {
@@ -670,7 +670,7 @@ public class MatrixPlotJFree extends MatrixPlotBase {
         marker.setStroke(new BasicStroke(1f));
         marker.setOutlinePaint(outlineColor);
 
-        SwingUtilities.invokeLater(() -> {
+        invokeLater(() -> {
             if ((axis == null) || (axis == AxisId.X)) {
                 chartPanel.getChart().getXYPlot().addDomainMarker(marker, Layer.FOREGROUND);
             } else {
@@ -682,7 +682,7 @@ public class MatrixPlotJFree extends MatrixPlotBase {
 
     @Override
     public void removeMarker(final Object marker) {
-        SwingUtilities.invokeLater(() -> {
+        invokeLater(() -> {
             if (marker == null) {
                 Collection<?> c = chartPanel.getChart().getXYPlot().getRangeMarkers(Layer.FOREGROUND);
                 if (c != null) {
@@ -723,4 +723,9 @@ public class MatrixPlotJFree extends MatrixPlotBase {
     public JFreeChart getChart() {
         return chart;
     }
+    
+    @Override
+    public BufferedImage getSnapshot() {
+        return chart.createBufferedImage(getSnapshotWidth(), getSnapshotHeight());
+    }     
 }

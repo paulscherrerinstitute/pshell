@@ -6,6 +6,7 @@ import ch.psi.pshell.swing.ValueSelection;
 import ch.psi.utils.Convert;
 import ch.psi.utils.swing.SwingUtils;
 import java.awt.Font;
+import java.awt.image.BufferedImage;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JMenuItem;
@@ -30,10 +31,12 @@ public class SlicePlotDefault extends SlicePlotBase {
         pageSelection.setDecimals(0);
         pageSelection.setValue(0);
         pageSelection.addListener((ValueSelection origin, double value, boolean editing) -> {
-            onPageChange((int) value);
+            if (editing) {
+                setPage((int) value);
+            }
         });
         try {
-            matrixPlot = (MatrixPlotBase) MatrixPlotBase.newPlot(PlotPanel.getMatrixPlotImpl());
+            matrixPlot = (MatrixPlotBase) Plot.newPlot(PlotPanel.getMatrixPlotImpl());
             panelPlot.add(matrixPlot);
         } catch (Exception ex) {
             Logger.getLogger(SlicePlotDefault.class.getName()).log(Level.SEVERE, null, ex);
@@ -87,14 +90,17 @@ public class SlicePlotDefault extends SlicePlotBase {
         }
     }
 
-    void onPageChange(int page) {
+    public void setPage(int page) {
         try {
             if (getSeries(0) != null) {
                 getSeries(0).setPage(page);
                 setPageTitle();
+                pageSelection.setValue(page);
             }
         } catch (Exception ex) {
-            SwingUtils.showException(this, ex);
+            if (!offscreen){
+                SwingUtils.showException(this, ex);
+            }
         }
     }
 
@@ -187,9 +193,14 @@ public class SlicePlotDefault extends SlicePlotBase {
     }
 
     @Override
-    protected void onSeriesRangeZChanged(SlicePlotSeries s) {
+    public void onSeriesRangeZChanged(SlicePlotSeries s) {
         int max = Math.max(getSeries(0).getNumberOfBinsZ() - 1, 0);
         pageSelection.setMaxValue(max);
         setPageTitle();
     }
+    
+    @Override
+    public BufferedImage getSnapshot() {
+        return matrixPlot.getSnapshot();
+    }     
 }

@@ -14,5 +14,5 @@ public interface MatrixPlot extends Plot<MatrixPlotSeries> {
         Mesh,
         Image,
     }
-
+    
 }

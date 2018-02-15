@@ -16,7 +16,7 @@ public abstract class PlotSeries<T extends Plot> implements Serializable {
     protected PlotSeries() {
         this("");
     }
-
+    
     protected PlotSeries(String name) {
         setName((name == null) ? "" : name);
         updating = new AtomicBoolean(false);
