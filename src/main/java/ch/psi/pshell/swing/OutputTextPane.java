@@ -65,7 +65,10 @@ public class OutputTextPane extends JTextPane {
     @Override
     public void setBackground(Color bg) {
         super.setBackground(bg);
-        setCaretColor(bg);
+        //Invoking otherwise not working on mac os
+        SwingUtilities.invokeLater(() -> {
+            setCaretColor(bg);
+        });
     }
 
     int textLength = -1;        //Unlimited
