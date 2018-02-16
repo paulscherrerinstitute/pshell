@@ -1302,8 +1302,11 @@ public class LinePlotJFree extends LinePlotBase {
     }
 
     @Override
-    public BufferedImage getSnapshot() {
-        return chart.createBufferedImage(getSnapshotWidth(), getSnapshotHeight());
+    public BufferedImage getSnapshot(Dimension size) {
+        if (size==null){
+            size = new Dimension(SNAPSHOT_WIDTH, SNAPSHOT_HEIGHT);
+        }
+        return chart.createBufferedImage(size.width, size.width);
     }    
     
 }

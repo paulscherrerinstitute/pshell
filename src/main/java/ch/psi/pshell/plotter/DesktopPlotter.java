@@ -15,6 +15,7 @@ import ch.psi.pshell.plot.SlicePlotSeries;
 import ch.psi.pshell.plot.TimePlotJFree;
 import ch.psi.pshell.plot.TimePlotSeries;
 import ch.psi.utils.Convert;
+import java.awt.Dimension;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -238,7 +239,7 @@ public class DesktopPlotter implements Plotter {
     }
 
     @Override
-    public byte[] getPlotSnapshot(String plot, String type) {
+    public byte[] getPlotSnapshot(String plot, String type, Integer width, Integer height) {
         String[] tokens = parseId(plot);
         PlotPanel panel = getContext(tokens);
 
@@ -247,7 +248,8 @@ public class DesktopPlotter implements Plotter {
             f = File.createTempFile("PlotServer", "." + type);
             String filename = f.getName();
             f.delete();
-            getPlot(tokens).saveSnapshot(filename, type);
+            Dimension size = ((width!=null) && (height!=null)) ? new Dimension(width, height) : null;
+            getPlot(tokens).saveSnapshot(filename, type, size);
             Path p = Paths.get(filename);
             byte[] ret = Files.readAllBytes(p);
             Files.delete(p);

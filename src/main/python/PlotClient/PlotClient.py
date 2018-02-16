@@ -241,11 +241,11 @@ class PlotClient:
         self.execute("RemoveText",  {"text":text})
 
      
-    def get_plot_snapshot(self, plot, type="png"):
+    def get_plot_snapshot(self, plot, type="png", width=None, height=None):
         """
             type (str): png, gif, bmp ot jpg
         """
-        ret = self.execute("GetPlotSnapshot", {"plot":plot, "type":type})
+        ret = self.execute("GetPlotSnapshot", {"plot":plot, "type":type, "width":width, "height":height})
         ret = json.loads(ret)
         ret = base64.b64decode(ret)
         return ret

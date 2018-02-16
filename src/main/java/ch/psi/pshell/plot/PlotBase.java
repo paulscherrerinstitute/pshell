@@ -40,6 +40,7 @@ import ch.psi.utils.swing.SwingUtils;
 import ch.psi.utils.swing.SwingUtils.OptionResult;
 import ch.psi.utils.swing.SwingUtils.OptionType;
 import java.awt.Color;
+import java.awt.Dimension;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.concurrent.ExecutorService;
@@ -103,27 +104,7 @@ abstract public class PlotBase<T extends PlotSeries> extends MonitoredPanel impl
     public static String getImageFileFolder() {
         return imagesFolderName;
     }
-    
-    private int snapshowWidth = SNAPSHOT_WIDTH;
-    private int snapshowHeight = SNAPSHOT_HEIGHT;
-    
-    public static void setDefaultSnapshotSize(int width, int height){
-        SNAPSHOT_WIDTH = width;
-        SNAPSHOT_HEIGHT = height;
-    }    
-    
-    public void setSnapshotSize(int width, int height){
-        snapshowWidth = width;
-        snapshowHeight = height;
-    }
-    
-    public int getSnapshotWidth(){
-        return snapshowWidth;
-    }
-    
-    public int getSnapshotHeight(){
-        return snapshowHeight;
-    }    
+     
 
     String title;
 
@@ -214,10 +195,11 @@ abstract public class PlotBase<T extends PlotSeries> extends MonitoredPanel impl
     }
 
     /**
-     * Should be improved in implementations to make it independent of the window state;
+     * Should be improved in implementations to make it independent of the window state
+     * (and to consider the size parameter);
      */
     @Override
-    public BufferedImage getSnapshot() {
+    public BufferedImage getSnapshot(Dimension size) {
         if (!offscreen){
             if (!SwingUtilities.isEventDispatchThread()){
                 try {
@@ -233,8 +215,8 @@ abstract public class PlotBase<T extends PlotSeries> extends MonitoredPanel impl
     }
 
     @Override
-    public void saveSnapshot(String filename, String format) throws IOException {
-        ImageIO.write(getSnapshot(), format, new File(filename));
+    public void saveSnapshot(String filename, String format, Dimension size) throws IOException {
+        ImageIO.write(getSnapshot(size), format, new File(filename));
     }
 
     @Override
@@ -248,7 +230,7 @@ abstract public class PlotBase<T extends PlotSeries> extends MonitoredPanel impl
         }
 
         try {
-            BufferedImage img = getSnapshot();
+            BufferedImage img = getSnapshot(null);
             if (img != null) {
                 ImageTransferHandler imageSelection = new ImageTransferHandler(img, data);
                 Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
@@ -268,7 +250,7 @@ abstract public class PlotBase<T extends PlotSeries> extends MonitoredPanel impl
             return NO_SUCH_PAGE;
         }
 
-        BufferedImage img = getSnapshot();
+        BufferedImage img = getSnapshot(null);
 
         //Schrinks the image if too big but does not expand it
         double scaleX = img.getWidth() > pf.getImageableWidth() ? ((double) pf.getImageableWidth()) / img.getWidth() : 1.0;
@@ -330,7 +312,7 @@ abstract public class PlotBase<T extends PlotSeries> extends MonitoredPanel impl
                             return;
                         }
                     }
-                    saveSnapshot(filename, type);
+                    saveSnapshot(filename, type, null);
                 }
             } catch (Exception ex) {
                 SwingUtils.showException(PlotBase.this, ex);

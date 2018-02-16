@@ -4,6 +4,7 @@ import ch.psi.pshell.imaging.Colormap;
 import ch.psi.pshell.plot.LinePlot;
 import ch.psi.pshell.plot.MatrixPlot;
 import ch.psi.pshell.plot.Plot;
+import java.awt.Dimension;
 
 /**
  *
@@ -59,7 +60,7 @@ public interface Plotter {
 
     String[] getContexts();
 
-    byte[] getPlotSnapshot(String plot, String type);
+    byte[] getPlotSnapshot(String plot, String type, Integer width, Integer height);
 
     void removeSeries(String series);
 

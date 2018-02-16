@@ -85,7 +85,7 @@ public class ClientTest {
         pm.setProgress(context, 1.0);
         pm.setProgress(context, null);
 
-        byte[] arr = pm.getPlotSnapshot(context + "/0", "png");
+        byte[] arr = pm.getPlotSnapshot(context + "/0", "png", 200, 100);
 
         //Files.write(Paths.get("test.png"), arr);
         

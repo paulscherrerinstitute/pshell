@@ -29,6 +29,7 @@ public class ViewTest {
         pm.addTable(context, "Table 1");
         pm.addLineSeries(context+"/0", "Series1", "red", 1, null, null, null);
         pm.addLineSeries(context+"/1", "Series2", "blue", 1, null, null, null);
+        byte[] arr = pm.getPlotSnapshot(context + "/0", "png", null, null);
         pm.addMatrixSeries(context+"/2", "Series3", 0.0, 100.0, 20, 10.0, 20.0, 10);
         pm.addMatrixSeries(context+"/Plot4", "Series4", null, null, null, null, null, null);
         pm.setProgress(context, 0.4);

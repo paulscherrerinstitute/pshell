@@ -4,6 +4,7 @@ import ch.psi.pshell.ui.App;
 import ch.psi.utils.Convert;
 import ch.psi.utils.Reflection.Hidden;
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
@@ -47,9 +48,9 @@ public interface Plot<T extends PlotSeries> {
     //Generic operations
     public void saveData(String filename) throws IOException;
 
-    public BufferedImage getSnapshot();
+    public BufferedImage getSnapshot(Dimension size);
 
-    public void saveSnapshot(String filename, String format) throws IOException;
+    public void saveSnapshot(String filename, String format, Dimension size) throws IOException;
 
     public void copy();
 

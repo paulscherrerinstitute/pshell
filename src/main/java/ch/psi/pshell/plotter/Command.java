@@ -5,6 +5,7 @@ import ch.psi.pshell.imaging.Colormap;
 import ch.psi.pshell.plot.LinePlot;
 import ch.psi.pshell.plot.MatrixPlot;
 import ch.psi.pshell.plot.Plot;
+import java.awt.Dimension;
 import java.io.IOException;
 
 /**
@@ -795,20 +796,24 @@ public abstract class Command {
 
         public String plot;
         public String type;
+        public Integer width;
+        public Integer height;
 
         public GetPlotSnapshot() {
             returnType = byte[].class;
         }
 
-        public GetPlotSnapshot(String plot, String type) {
+        public GetPlotSnapshot(String plot, String type, Integer width, Integer height) {
             this();
             this.plot = plot;
             this.type = type;
+            this.width = width;
+            this.height = height;
         }
 
         @Override
         public String invoke(Plotter pm) throws IOException {
-            byte[] ret = pm.getPlotSnapshot(plot, type);
+            byte[] ret = pm.getPlotSnapshot(plot, type, width, height);
             //return new String(ret);
             //return new String(ret, "UTF-8"); 
             return JsonSerializer.encode(ret);

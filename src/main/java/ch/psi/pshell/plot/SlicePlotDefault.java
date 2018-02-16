@@ -5,6 +5,7 @@ import ch.psi.pshell.swing.PlotPanel;
 import ch.psi.pshell.swing.ValueSelection;
 import ch.psi.utils.Convert;
 import ch.psi.utils.swing.SwingUtils;
+import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.image.BufferedImage;
 import java.util.logging.Level;
@@ -200,7 +201,7 @@ public class SlicePlotDefault extends SlicePlotBase {
     }
     
     @Override
-    public BufferedImage getSnapshot() {
-        return matrixPlot.getSnapshot();
+    public BufferedImage getSnapshot(Dimension size) {
+        return matrixPlot.getSnapshot(size);
     }     
 }

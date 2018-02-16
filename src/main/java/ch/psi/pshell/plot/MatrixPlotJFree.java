@@ -41,7 +41,9 @@ import org.jfree.ui.RectangleEdge;
 import org.jfree.ui.RectangleInsets;
 import org.jfree.ui.TextAnchor;
 import ch.psi.pshell.imaging.Colormap;
+import static ch.psi.pshell.plot.PlotBase.SNAPSHOT_WIDTH;
 import ch.psi.utils.Reflection.Hidden;
+import java.awt.Dimension;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.List;
@@ -725,7 +727,10 @@ public class MatrixPlotJFree extends MatrixPlotBase {
     }
     
     @Override
-    public BufferedImage getSnapshot() {
-        return chart.createBufferedImage(getSnapshotWidth(), getSnapshotHeight());
-    }     
+    public BufferedImage getSnapshot(Dimension size) {
+        if (size==null){
+            size = new Dimension(SNAPSHOT_WIDTH, SNAPSHOT_HEIGHT);
+        }
+        return chart.createBufferedImage(size.width, size.width);
+    }   
 }
