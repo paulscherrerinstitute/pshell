@@ -38,7 +38,6 @@ public class Console {
 
     public void run(InputStream in, PrintStream out, boolean advanced) throws IOException {
         attachInterpreterOutput();
-        setPrintScan(advanced);
         if (advanced) {
             runAdvancedConsole();
         } else {

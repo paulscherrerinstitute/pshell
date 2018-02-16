@@ -35,6 +35,7 @@ import ch.psi.pshell.scan.ScanListener;
 import ch.psi.pshell.scan.ScanRecord;
 import ch.psi.pshell.scripting.ViewPreference;
 import ch.psi.pshell.scripting.ViewPreference.PlotPreferences;
+import ch.psi.pshell.ui.App;
 import ch.psi.utils.Arr;
 import ch.psi.utils.Convert;
 import ch.psi.utils.Range;
@@ -74,6 +75,8 @@ public class PlotPanel extends MonitoredPanel {
     static public PlotLayout DEFAULT_PLOT_LAYOUT = PlotLayout.Vertical;
 
     public static final Font TITLE_FONT = new Font(Font.SANS_SERIF, Font.BOLD, 13);
+    
+    public static final boolean offscreen = App.isOffscreenPlotting();
     String plotTitle;
 
     PlotPreferences prefs;
@@ -171,11 +174,13 @@ public class PlotPanel extends MonitoredPanel {
 
     public void clear() {
         plots.clear();
-        pnGraphs.removeAll();
-        panelIndexY = 0;
-        panelIndexX = 0;
-        validate();
-        repaint();
+        if (!offscreen){
+            pnGraphs.removeAll();
+            panelIndexY = 0;
+            panelIndexX = 0;
+            validate();
+            repaint();
+        }
     }
 
     int panelIndexX = 0;
@@ -185,32 +190,34 @@ public class PlotPanel extends MonitoredPanel {
         plot.setBackground(getBackground());
         plot.setTitleFont(TITLE_FONT);
         plot.setQuality(getQuality());
-
-        GridBagConstraints c = new GridBagConstraints();
-        c.fill = GridBagConstraints.HORIZONTAL;
-        c.fill = GridBagConstraints.BOTH;
-        c.weightx = 1.0;
-        c.weighty = 1.0;
-        c.gridx = panelIndexX;
-        c.gridy = panelIndexY;
-
         plots.add(plot);
-        switch (getPlotLayout()) {
-            case Horizontal:
-                panelIndexX++;
-                break;
-            case Vertical:
-                panelIndexY++;
-                break;
-            default:
-                panelIndexX++;
-                if (panelIndexX > 1) {
-                    panelIndexX = 0;
+        
+        if (!offscreen){
+            GridBagConstraints c = new GridBagConstraints();
+            c.fill = GridBagConstraints.HORIZONTAL;
+            c.fill = GridBagConstraints.BOTH;
+            c.weightx = 1.0;
+            c.weighty = 1.0;
+            c.gridx = panelIndexX;
+            c.gridy = panelIndexY;
+
+            switch (getPlotLayout()) {
+                case Horizontal:
+                    panelIndexX++;
+                    break;
+                case Vertical:
                     panelIndexY++;
-                }
+                    break;
+                default:
+                    panelIndexX++;
+                    if (panelIndexX > 1) {
+                        panelIndexX = 0;
+                        panelIndexY++;
+                    }
+            }
+            plot.setVisible(true);
+            pnGraphs.add(plot, c);
         }
-        plot.setVisible(true);
-        pnGraphs.add(plot, c);
     }
 
     public void triggerScanStarted(final Scan scan, final String plotTitle) {
@@ -354,9 +361,10 @@ public class PlotPanel extends MonitoredPanel {
             } catch (Exception ex) {
                 Logger.getLogger(PlotPanel.class.getName()).log(Level.SEVERE, null, ex);
             }
-            validate();
-            repaint();
-
+            if (!offscreen){
+                validate();
+                repaint();
+            }
         }
 
         @Override
@@ -367,7 +375,7 @@ public class PlotPanel extends MonitoredPanel {
                     scanRecordBuffer.clear();
                     updating.set(false);
                 }
-                if (!SwingUtilities.isEventDispatchThread()) {
+                if (!offscreen && !SwingUtilities.isEventDispatchThread()) {
                     SwingUtilities.invokeLater(() -> {
                         startPlot(scan);
                     });
@@ -383,9 +391,13 @@ public class PlotPanel extends MonitoredPanel {
                 synchronized (scanRecordBuffer) {
                     scanRecordBuffer.add(record);
                     if (updating.compareAndSet(false, true)) {
-                        SwingUtilities.invokeLater(() -> {
+                        if (offscreen){
                             addRecords(scan);
-                        });
+                        } else {
+                            SwingUtilities.invokeLater(() -> {
+                                addRecords(scan);
+                            });
+                        }
                     }
                 }
             }
@@ -832,9 +844,7 @@ public class PlotPanel extends MonitoredPanel {
                 addSurfacePlotMenu(((SlicePlotDefault) plot).getMatrixPlot());
             }
             plot.setTitle(name);
-            if (!plot.offscreen){
-                addPlot((PlotBase)plot);
-            }
+            addPlot((PlotBase)plot);
             plot.setUpdatesEnabled(false);
         }
         return plot;
@@ -1050,7 +1060,7 @@ public class PlotPanel extends MonitoredPanel {
             }
 
             plot.update(true);
-            if (!plot.offscreen){
+            if (!offscreen){
                 plot.setUpdatesEnabled(true);//This plot is user general-purpose so disable scan optimization
                 validate();
                 repaint();

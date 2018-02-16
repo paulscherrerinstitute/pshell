@@ -134,6 +134,14 @@
     <td>Set the script type, overriding the setup. Allowed values:  py, js or groovy.</td>
   </tr>
   <tr>
+    <td>-dspt</td>
+    <td>Disable scan plots.</td>
+  </tr>
+  <tr>
+    <td>-dspr</td>
+    <td>Disable scan printing to output.</td>
+  </tr>
+  <tr>
     <td>-sbar</td>
     <td>Append status bar to detached windows.</td>
   </tr>

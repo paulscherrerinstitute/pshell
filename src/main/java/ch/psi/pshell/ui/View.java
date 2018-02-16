@@ -513,28 +513,24 @@ public class View extends MainFrame {
                     plotTitles.put(scan, plotTitle);
                     PlotPanel plottingPanel = getPlotPanel(plotTitles.get(scan));
                     plottingActive = !isScanPlotDisabled();
-
                     plottingPanel.setPreferences(context.getPlotPreferences());
                     if (plottingActive) {
-                        if (plottingPanel != scanPlot) {
-                            plottingPanel.triggerScanStarted(scan, plotTitle);
-                        }
+                        plottingPanel.triggerScanStarted(scan, plotTitle);
                         if (plottingPanel.isDisplayable() && SwingUtils.containsComponent(tabPlots, plottingPanel)) {
                             tabPlots.setSelectedComponent(plottingPanel);
                         }
                     }
                 }
-                //}
             }
 
             @Override
             public void onNewRecord(Scan scan, ScanRecord record) {
                 PlotPanel plottingPanel = null;
                 synchronized (plotTitles) {
-                    plottingPanel = getPlotPanel(plotTitles.get(scan));
+                    plottingPanel = getPlotPanel(plotTitles.get(scan), false);
                 }
                 if (plottingActive) {
-                    if (plottingPanel != scanPlot) {
+                    if (plottingPanel != null){
                         plottingPanel.triggerOnNewRecord(scan, record);
                     }
                 }
@@ -544,18 +540,17 @@ public class View extends MainFrame {
             public void onScanEnded(Scan scan, Exception ex) {
                 PlotPanel plottingPanel = null;
                 synchronized (plotTitles) {
-                    plottingPanel = getPlotPanel(plotTitles.get(scan));
+                    plottingPanel = getPlotPanel(plotTitles.get(scan), false);
                     plotTitles.remove(scan);
                 }
                 if (plottingActive) {
-                    if (plottingPanel != scanPlot) {
+                    if (plottingPanel != null) {
                         plottingPanel.triggerScanEnded(scan, ex);
                     }
                 }
                 //Request repaint of current file tree in Data viewer to update scan contents
                 dataPanel.onScanEnded();
             }
-
         });
 
         devicesPanel.setType(Device.class);
@@ -867,12 +862,13 @@ public class View extends MainFrame {
         return !scanPanel.isActive();
     }
 
+    boolean scanPlotDisabled =false;
     public void setScanPlotDisabled(boolean value) {
-        scanPlot.setActive((!value) && isPlotsVisible());
+        scanPlotDisabled = value;
     }
 
     public boolean isScanPlotDisabled() {
-        return !(isPlotsVisible() && scanPlot.isActive());
+        return scanPlotDisabled || !isPlotsVisible() || !App.isScanPlottingActive();
     }
 
     public Scan[] getCurrentScans() {

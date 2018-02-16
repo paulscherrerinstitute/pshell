@@ -22,6 +22,9 @@ import ch.psi.pshell.plot.Plot;
 import ch.psi.pshell.plotter.Client;
 import ch.psi.pshell.plotter.Plotter;
 import ch.psi.pshell.plotter.PlotterBinder;
+import ch.psi.pshell.scan.Scan;
+import ch.psi.pshell.scan.ScanListener;
+import ch.psi.pshell.scan.ScanRecord;
 import ch.psi.pshell.scripting.ViewPreference;
 import ch.psi.pshell.swing.PlotPanel;
 import ch.psi.pshell.swing.StripChart;
@@ -37,6 +40,7 @@ import java.awt.Dimension;
 import java.awt.GraphicsEnvironment;
 import java.awt.Image;
 import java.awt.Toolkit;
+import java.awt.Window;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.File;
@@ -139,6 +143,8 @@ public class App extends ObservableBase<AppListener> {
         sb.append("\n\t-clog=<level>\tSet the console logging level");
         sb.append("\n\t-user=<name>\tSet the startup user");
         sb.append("\n\t-type=<ext>\tSet the script type, overriding the setup");
+        sb.append("\n\t-dspt\tDisable scan plots");
+        sb.append("\n\t-dspr\tDisable printing scans to console");
         sb.append("\n\t-sbar\tAppend status bar to detached windows");
         sb.append("\n\t-strp\tShow strip chart window (can be used together with -f)");
         sb.append("\n\t-strh=<path>\tStrip chart default configuration folder.");
@@ -179,10 +185,10 @@ public class App extends ObservableBase<AppListener> {
     static public boolean isServerMode() {
         return hasArgument("v");
     }
-    
+
     static public boolean isOffscreenPlotting() {
         return isServerMode() || isHeadless();
-    }    
+    }
 
     static public boolean isGui() {
         return !isCli() && !isServerMode() && !isHeadless();
@@ -574,6 +580,13 @@ public class App extends ObservableBase<AppListener> {
         if (isSimulation()) {
             System.setProperty(Context.PROPERTY_SIMULATION, "true");
         }
+        if (hasArgument("dspt")){
+            App.setScanPlottingActive(false);
+        }
+        
+        if (hasArgument("dspr")){
+            App.setScanPrintingActive(false);
+        }
 
         System.setProperty(Context.PROPERTY_FILE_LOCK, isFileLock() ? "true" : "false");
 
@@ -735,50 +748,81 @@ public class App extends ObservableBase<AppListener> {
             if (file != null) {
                 runFile(file, !isServerMode());
                 exit(this);
-            } else if (isCli()) {
-                logger.log(Level.INFO, "Start console");
-                try {
-                    if (!isHeadless()) {
-                        setConsolePlotEnvironment(null);
+            } else {
+                setConsolePlotEnvironment(null);
+                if (isCli()) {
+                    logger.log(Level.INFO, "Start console");
+                    try {
+                        console = new ch.psi.pshell.core.Console();            
+                        console.setPrintScan(!isServerMode() && scanPrintingActive);        
+                        setupConsoleScanPlotting();
+                        console.run(System.in, System.out, !isServerMode());
+                    } catch (Exception ex) {
+                        logger.log(Level.WARNING, null, ex);
                     }
-                    new ch.psi.pshell.core.Console().run(System.in, System.out, !isServerMode());
-                } catch (Exception ex) {
-                    logger.log(Level.WARNING, null, ex);
+                } else if (isServerMode()) {
+                    logger.log(Level.INFO, "Start server");
                 }
-            } else if (isServerMode()) {              
-                logger.log(Level.INFO, "Start server");
+                if (isHeadless()) {
+                    logger.log(Level.WARNING, "Headless mode");
+                }
+                if (isOffscreenPlotting()){
+                    setupConsoleScanPlotting();
+                }
             }
-            if (isOffscreenPlotting()){
-                try {
-                    setOffscreenPlotEnvironment();
-                } catch (Exception ex) {
-                    logger.log(Level.WARNING, null, ex);
-                }                 
+        }
+    }
+
+    static volatile boolean scanPlottingActive = true;
+
+    public static boolean isScanPlottingActive() {
+        return scanPlottingActive;
+    }
+
+    public static void setScanPlottingActive(boolean value) {
+        scanPlottingActive = value;
+    }
+
+    HashMap<String, PlotPanel> plotPanels = new HashMap<>();
+
+    PlotPanel getPlotPanel(String title, Window parent, boolean create) {
+        title = checkPlotsTitle(title);
+        PlotPanel plotPanel = plotPanels.get(title);
+        if ((plotPanel != null) && (!isOffscreenPlotting() && !plotPanel.isDisplayable())) {
+            plotPanels.remove(title);
+            plotPanel = null;
+        }
+        if ((plotPanel == null) && create) {
+            plotPanel = new PlotPanel();
+            plotPanels.put(title, plotPanel);
+            if (!isOffscreenPlotting()) {
+                JFrame frame = SwingUtils.showFrame(parent, title, new Dimension(600, 400), plotPanel);
+                frame.setIconImage(Toolkit.getDefaultToolkit().getImage(App.getResourceUrl("IconSmall.png")));
             }
+            plotPanel.initialize();
+            plotPanel.setPlotTitle(title);
+        }
+        return plotPanel;
+    }
+
+    List<String> getPlotPanels() {
+        return new ArrayList(plotPanels.keySet());
+    }
+
+    void removePlotPanel(String title) {
+        title = checkPlotsTitle(title);
+        if (!title.equals(checkPlotsTitle(null))){
+            plotPanels.remove(title);
         }
     }
 
     void setConsolePlotEnvironment(JFrame parent) {
         Context.getInstance().setPlotListener(new PlotListener() {
-            HashMap<String, PlotPanel> panels = new HashMap<>();
-
             @Override
             public List<Plot> plot(String title, PlotDescriptor[] plots) throws Exception {
-                title = checkPlotsTitle(title);
-                PlotPanel plotPanel = panels.get(title);
-                if ((plotPanel != null) && (!plotPanel.isDisplayable())) {
-                    panels.remove(title);
-                    plotPanel = null;
-                }
-                if (plotPanel == null) {
-                    plotPanel = new PlotPanel();
-                    panels.put(title, plotPanel);
-                    JFrame frame = SwingUtils.showFrame(parent, title, new Dimension(600, 400), plotPanel);
-                    frame.setIconImage(Toolkit.getDefaultToolkit().getImage(App.getResourceUrl("IconSmall.png")));
-                    plotPanel.initialize();
-                    plotPanel.setPlotTitle(title);
-                }
+
                 ArrayList<Plot> ret = new ArrayList<>();
+                PlotPanel plotPanel = getPlotPanel(title, parent, true);
                 plotPanel.clear();
                 if ((plots != null) && (plots.length > 0)) {
                     for (PlotDescriptor plot : plots) {
@@ -801,8 +845,8 @@ public class App extends ObservableBase<AppListener> {
 
             @Override
             public List<Plot> getPlots(String title) {
-                title = checkPlotsTitle(title);               
-                PlotPanel plotPanel = panels.get(title);
+                title = checkPlotsTitle(title);
+                PlotPanel plotPanel = plotPanels.get(title);
                 if (plotPanel != null) {
                     return plotPanel.getPlots();
                 }
@@ -812,54 +856,92 @@ public class App extends ObservableBase<AppListener> {
 
     }
 
-    String checkPlotsTitle(String title){
-        if ((title == null) || (title.isEmpty())) {
-            title = "Plots";
-        }    
-        return title;
-    }
-    
-    void setOffscreenPlotEnvironment() {
-        Context.getInstance().setPlotListener(new PlotListener() {
-            
-            HashMap<String, List<Plot>> panels = new HashMap<>();
-            PlotPanel plotPanel = new PlotPanel();
+    void setupConsoleScanPlotting() {
+        try {
+            PlotPanel scanPlot = new PlotPanel();
+            plotPanels.put(checkPlotsTitle(null), scanPlot);
+            scanPlot.initialize();
+            scanPlot.setPlotTitle(checkPlotsTitle(null));
 
-            @Override
-            public List<Plot> plot(String title, PlotDescriptor[] plots) throws Exception {
-                title = checkPlotsTitle(title);
-                ArrayList<Plot> ret = new ArrayList<>();
-                if ((plots != null) && (plots.length > 0)) {
-                    for (PlotDescriptor plot : plots) {
-                        try {
-                            if (plot != null) {
-                                ret.add(plotPanel.addPlot(plot));
-                            } else {
-                                ret.add(null);
-                            }
-                        } catch (Exception ex) {
-                            if (plot == null) {
-                            } else {
-                                System.err.println("Error creating plot: " + ex.getMessage());
-                            }
+            context.addScanListener(new ScanListener() {
+                final HashMap<Scan, String> plotTitles = new HashMap<>();
+
+                @Override
+                public void onScanStarted(Scan scan, String title) {
+                    if (scanPlottingActive) {
+                        title = checkPlotsTitle(title);
+                        synchronized (plotTitles) {
+                            plotTitles.put(scan, title);
+                            PlotPanel plottingPanel = getPlotPanel(title, null, true);
+                            plottingPanel.setPreferences(context.getPlotPreferences());
+                            plottingPanel.triggerScanStarted(scan, title);
                         }
                     }
                 }
-                panels.put(title, ret);
-                return ret;
-            }
 
-            @Override
-            public List<Plot> getPlots(String title) {
-                title = checkPlotsTitle(title);
-                if (panels.containsKey(title)) {
-                    return panels.get(title);
+                @Override
+                public void onNewRecord(Scan scan, ScanRecord record) {
+                    if (scanPlottingActive) {
+                        PlotPanel plottingPanel = null;
+                        synchronized (plotTitles) {
+                            plottingPanel = getPlotPanel(plotTitles.get(scan), null, false);
+                        }
+                        if (plottingPanel != null) {
+                            plottingPanel.triggerOnNewRecord(scan, record);
+                        }
+                    }
                 }
-                return new ArrayList<Plot>();
-            }
-        });
+
+                @Override
+                public void onScanEnded(Scan scan, Exception ex) {
+                    if (scanPlottingActive) {
+                        PlotPanel plottingPanel = null;
+                        synchronized (plotTitles) {
+                            plottingPanel = getPlotPanel(plotTitles.get(scan), null, false);
+                            plotTitles.remove(scan);
+                        }
+                        if (plottingPanel != null) {
+                            plottingPanel.triggerScanEnded(scan, ex);
+                        }
+                    }
+                }
+
+            });
+        } catch (Exception ex) {
+            logger.log(Level.WARNING, null, ex);
+        }
+
+    }
+
+    String checkPlotsTitle(String title) {
+        if ((title == null) || (title.isEmpty())) {
+            title = "Plots";
+        }
+        return title;
     }
     
+    
+    ch.psi.pshell.core.Console console;
+    Shell shell;
+    
+    static volatile boolean scanPrintingActive = true;
+
+    public static boolean isScanPrintingActive() {
+        return scanPrintingActive;
+    }
+
+    public static void setScanPrintingActive(boolean value) {
+        if (value!=scanPrintingActive){
+            scanPrintingActive = value;
+            if (getInstance().console!=null){
+                getInstance().console.setPrintScan(true);
+            }
+            if (getInstance().shell!=null){
+                getInstance().shell.setPrintScan(true);
+            }            
+        }
+    }    
+
     @Hidden
     public SwingPropertyChangeSupport getPropertyChangeSupport() {
         return pcs;
@@ -868,9 +950,9 @@ public class App extends ObservableBase<AppListener> {
     void runFile(File file, boolean printScan) {
         logger.log(Level.INFO, "Run file: " + file.getPath());
         try {
-            ch.psi.pshell.core.Console c = new ch.psi.pshell.core.Console();
-            c.attachInterpreterOutput();
-            c.setPrintScan(printScan);
+            console = new ch.psi.pshell.core.Console();
+            console.attachInterpreterOutput();
+            console.setPrintScan(printScan && scanPrintingActive);
 
             if (!IO.getExtension(file).isEmpty()) {
                 for (Processor processor : Processor.getServiceProviders()) {
@@ -927,12 +1009,12 @@ public class App extends ObservableBase<AppListener> {
 
     void startStandaloneShell() {
         statusBar = new StatusBar();
-        Shell shell = new Shell();
+        shell = new Shell();
         JPanel mainPanel = new JPanel();
         mainPanel.setLayout(new BorderLayout());
         mainPanel.add(shell, BorderLayout.CENTER);
         mainPanel.add(statusBar, BorderLayout.SOUTH);
-        shell.setPrintScan(true);
+        shell.setPrintScan(scanPrintingActive);
         shell.initialize();
         JFrame frame = new JFrame();
         frame.setIconImage(getIconSmall());
@@ -944,6 +1026,7 @@ public class App extends ObservableBase<AppListener> {
         frame.setVisible(true);
         shell.requestFocus();
         setConsolePlotEnvironment(frame);
+        setupConsoleScanPlotting();
     }
 
     PlotterBinder pmb;
@@ -1025,8 +1108,9 @@ public class App extends ObservableBase<AppListener> {
     }
 
     /**
-     * Returns the command line argument value for a given key, if present. If not defined returns
-     * null. If defined multiple times then returns the latest.
+     * Returns the command line argument value for a given key, if present. If
+     * not defined returns null. If defined multiple times then returns the
+     * latest.
      */
     static public String getArgumentValue(String name) {
         List<String> values = getArgumentValues(name);
@@ -1045,8 +1129,8 @@ public class App extends ObservableBase<AppListener> {
     }
 
     /**
-     * Returns the command line argument values for a given key. If key is no present then returns
-     * an empty list.
+     * Returns the command line argument values for a given key. If key is no
+     * present then returns an empty list.
      */
     static public List<String> getArgumentValues(String name) {
         ArrayList<String> argumentValues = new ArrayList<>();
