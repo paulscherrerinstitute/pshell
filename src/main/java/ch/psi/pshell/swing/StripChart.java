@@ -142,6 +142,7 @@ public class StripChart extends StandardDialog {
         pnGraphs.setLayout(new BoxLayout(pnGraphs, BoxLayout.Y_AXIS));
 
         modelSeries = (DefaultTableModel) tableSeries.getModel();
+        modelSeries.addTableModelListener(modelSeriesListener);
         modelCharts = (DefaultTableModel) tableCharts.getModel();
         modelCharts.addTableModelListener(modelChartsListener);
         this.defaultFolder = defaultFolder;
@@ -417,6 +418,21 @@ public class StripChart extends StandardDialog {
 
     }
 
+    TableModelListener modelSeriesListener = new TableModelListener() {
+        @Override
+        public void tableChanged(TableModelEvent e) {
+            if (started) {
+                try{
+                    int index = e.getFirstRow();
+                    final Color color = Preferences.getColorFromString((String)modelSeries.getValueAt(index, 5));
+                    timePlotSeries.get(index).setColor(color);
+                } catch (Exception ex) {
+                    SwingUtils.showException(StripChart.this, ex);
+                }
+            }
+        }
+    };
+    
     TableModelListener modelChartsListener = new TableModelListener() {
         @Override
         public void tableChanged(TableModelEvent e) {
@@ -470,7 +486,7 @@ public class StripChart extends StandardDialog {
         buttonStartStop.setEnabled((modelSeries.getRowCount() > 0) || (started));
         buttonStartStop.setText(started ? "Stop" : "Start");
 
-        tableSeries.setEnabled(editing);
+        //tableSeries.setEnabled(editing);
         //tableCharts.setEnabled(editing);
         ckPersistence.setEnabled(editing);
         textFileName.setEnabled((ckPersistence.isSelected() && editing) || !ckPersistence.isSelected());
@@ -679,6 +695,7 @@ public class StripChart extends StandardDialog {
 
     final ArrayList<Device> devices = new ArrayList<>();
     final HashMap<Vector, Integer> seriesIndexes = new HashMap<>();
+    final ArrayList<TimePlotSeries> timePlotSeries = new ArrayList<>();
 
     public void start() throws Exception {
         stop();
@@ -781,6 +798,7 @@ public class StripChart extends StandardDialog {
 
                 TimePlotSeries graph = (color != null) ? new TimePlotSeries(name, color, axis) : new TimePlotSeries(name, axis);
                 seriesIndexes.put(info, plot.getNumberOfSeries());
+                timePlotSeries.add(graph);
                 plot.addSeries(graph);
                 DeviceTask task = new DeviceTask();
                 task.row = i + 1;
@@ -1147,6 +1165,7 @@ public class StripChart extends StandardDialog {
             dispatcher = null;
             closeProvider();
             seriesIndexes.clear();
+            timePlotSeries.clear();
             initializePlots();
             appendTimestamps.clear();
         }
@@ -1233,7 +1252,12 @@ public class StripChart extends StandardDialog {
         panelConfig = new javax.swing.JPanel();
         panelSeries = new javax.swing.JPanel();
         jScrollPane1 = new javax.swing.JScrollPane();
-        tableSeries = new javax.swing.JTable();
+        tableSeries = new JTable() {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return (column >= getColumnCount()-1) || (!started);
+            };
+        };
         buttonDelete = new javax.swing.JButton();
         buttonUp = new javax.swing.JButton();
         buttonInsert = new javax.swing.JButton();
