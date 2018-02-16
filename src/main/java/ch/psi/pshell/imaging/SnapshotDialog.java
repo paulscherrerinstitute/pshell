@@ -30,7 +30,7 @@ public class SnapshotDialog extends StandardDialog {
         initComponents();
         this.renderer = renderer;
         setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
-        setLocationRelativeTo(renderer);
+        SwingUtils.centerComponent(renderer, this);
         if (MainFrame.isDark()) {
             textFolder.setEnabled(true);
         }

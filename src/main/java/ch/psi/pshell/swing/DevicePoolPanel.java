@@ -440,7 +440,6 @@ public class DevicePoolPanel extends MonitoredPanel implements UpdatablePanel {
         if (historyDialogs.containsKey(dev)) {
             JDialog dlg = historyDialogs.get(dev);
             if (dlg.isDisplayable()) {
-                //SwingUtils.centerComponent(frame, dlg);
                 dlg.requestFocus();
                 return;
             }

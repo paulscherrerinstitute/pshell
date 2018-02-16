@@ -223,8 +223,7 @@ public abstract class MainFrame extends JFrame {
     //GUI utils
     public void showChildWindow(Window window) {
         window.setIconImage(Toolkit.getDefaultToolkit().getImage(getIcon()));
-        window.setLocationRelativeTo(this);
-        SwingUtils.centerComponent(this, window);
+        centerWindow(window);
         SwingUtilities.updateComponentTreeUI(window);
         window.setVisible(true);
         if ((window.isDisplayable()) && (window.isShowing())) {

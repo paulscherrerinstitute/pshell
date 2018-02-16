@@ -1590,7 +1590,6 @@ public class View extends MainFrame {
         if (deviceDialogs.containsKey(name)) {
             JDialog dlg = deviceDialogs.get(name);
             if (dlg.isDisplayable()) {
-                //SwingUtils.centerComponent(this, dlg);
                 dlg.requestFocus();
                 Class type = dev instanceof Source ? Renderer.class : DevicePanel.class;
                 Component[] ret = SwingUtils.getComponentsByType(dlg, type);

@@ -43,6 +43,7 @@ import org.jfree.ui.TextAnchor;
 import ch.psi.pshell.imaging.Colormap;
 import static ch.psi.pshell.plot.PlotBase.SNAPSHOT_WIDTH;
 import ch.psi.utils.Reflection.Hidden;
+import ch.psi.utils.swing.SwingUtils;
 import java.awt.Dimension;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
@@ -281,7 +282,7 @@ public class MatrixPlotJFree extends MatrixPlotBase {
         JRadioButtonMenuItem popupMenuManualScale = new JRadioButtonMenuItem("Manual");
         popupMenuManualScale.addActionListener((ActionEvent e) -> {
             ManualScaleDialog d = new ManualScaleDialog();
-            d.setLocationRelativeTo(chartPanel);
+            SwingUtils.centerComponent(chartPanel,d);
             d.setLow(((PaintScaleLegend) chart.getSubtitles().get(0)).getScale().getLowerBound());
             d.setHigh(((PaintScaleLegend) chart.getSubtitles().get(0)).getScale().getUpperBound());
             d.setMatrixPlot(MatrixPlotJFree.this);

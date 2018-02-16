@@ -277,8 +277,8 @@ public class UsersEditor extends Editor {
                         }
                     }
                 });
-                dlg.setLocationRelativeTo(this);
                 dlg.setSize(360, 480);
+                SwingUtils.centerComponent(this, dlg);
                 dlg.setVisible(true);
             }
         } catch (Exception ex) {

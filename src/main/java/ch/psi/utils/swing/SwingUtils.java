@@ -98,16 +98,20 @@ public class SwingUtils {
     /**
      * If parent is null then center in the screen
      */
-    public static void centerComponent(Component parent, Component component) {
-        if (parent == null) {
-            Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
-            component.setLocation(dim.width / 2 - component.getSize().width / 2, dim.height / 2 - component.getSize().height / 2);
+    public static void centerComponent(Component parent, Component component) {    
+        if ((Sys.getOSFamily() == OSFamily.Mac) && (component instanceof Window)){
+            ((Window)component).setLocationRelativeTo(parent);
         } else {
-            Rectangle r = parent.getBounds();
-            Dimension w = component.getSize();
-            int x = Math.max(r.x + (r.width - w.width) / 2, 4);
-            int y = Math.max(r.y + (r.height - w.height) / 2, 4);
-            component.setLocation(x, y);
+            if (parent == null) {
+                Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
+                component.setLocation(dim.width / 2 - component.getSize().width / 2, dim.height / 2 - component.getSize().height / 2);
+            } else {
+                Rectangle r = parent.getBounds();
+                Dimension w = component.getSize();
+                int x = Math.max(r.x + (r.width - w.width) / 2, 4);
+                int y = Math.max(r.y + (r.height - w.height) / 2, 4);
+                component.setLocation(x, y);
+            }
         }
     }
 

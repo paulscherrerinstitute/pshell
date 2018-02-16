@@ -14,7 +14,6 @@ public class FontDialog extends StandardDialog {
     public FontDialog(java.awt.Frame parent, boolean modal, Font font) {
         super(parent, modal);
         initComponents();
-        setLocationRelativeTo(parent);
 
         GraphicsEnvironment e = GraphicsEnvironment.getLocalGraphicsEnvironment();
         String[] fontNames = e.getAvailableFontFamilyNames();
@@ -27,6 +26,7 @@ public class FontDialog extends StandardDialog {
             checkItalic.setSelected(font.isItalic());
         }
         this.font = font;
+        SwingUtils.centerComponent(parent, this);
     }
 
     void updateFont() {

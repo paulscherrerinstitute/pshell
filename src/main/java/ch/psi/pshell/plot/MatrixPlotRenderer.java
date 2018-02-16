@@ -3,6 +3,7 @@ package ch.psi.pshell.plot;
 import ch.psi.pshell.imaging.Renderer;
 import ch.psi.pshell.imaging.RendererMode;
 import ch.psi.utils.Convert;
+import ch.psi.utils.swing.SwingUtils;
 import java.awt.BorderLayout;
 import java.awt.color.ColorSpace;
 import java.awt.event.ActionEvent;
@@ -62,7 +63,7 @@ public class MatrixPlotRenderer extends MatrixPlotBase {
         JRadioButtonMenuItem popupMenuManualScale = new JRadioButtonMenuItem("Manual");
         popupMenuManualScale.addActionListener((ActionEvent e) -> {
             MatrixPlotJFree.ManualScaleDialog d = new MatrixPlotJFree.ManualScaleDialog();
-            d.setLocationRelativeTo(renderer);
+            SwingUtils.centerComponent(renderer, d);  
             d.setLow(Double.isNaN(scaleMin) ? 0.0 : scaleMin);
             d.setHigh(Double.isNaN(scaleMax) ? 1.0 : scaleMax);
             d.setMatrixPlot(this);

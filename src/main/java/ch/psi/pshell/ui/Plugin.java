@@ -67,8 +67,8 @@ public interface Plugin extends ch.psi.pshell.core.Plugin {
                     }
                 }
             });
-            dlg.setVisible(true);
             SwingUtils.centerComponent(getTopLevel(), dlg);
+            dlg.setVisible(true);         
             dlg.requestFocus();
             return dlg;
 
