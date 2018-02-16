@@ -56,7 +56,6 @@ public class PropertiesDialog extends StandardDialog {
                 updateButtons();
             }
         });
-        setMaximumSize(new Dimension(this.getMaximumSize().width, 180));
         pack();
         updateButtons();
     }
