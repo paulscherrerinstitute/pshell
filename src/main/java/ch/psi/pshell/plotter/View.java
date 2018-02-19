@@ -240,7 +240,7 @@ public class View extends MainFrame {
 
     private void menuCloseAllPlotsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuCloseAllPlotsActionPerformed
         try {
-
+            plotPane.clear();
         } catch (Exception ex) {
             showException(ex);
         }
