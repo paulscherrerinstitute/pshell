@@ -8,6 +8,7 @@ import java.awt.Graphics;
 import java.awt.Insets;
 import java.awt.Rectangle;
 import java.io.IOException;
+import javax.swing.UIManager;
 import javax.swing.text.DefaultHighlighter.DefaultHighlightPainter;
 import javax.swing.text.Highlighter;
 import javax.swing.text.JTextComponent;
@@ -29,6 +30,7 @@ public class CodeEditor extends TextEditor {
     public final static Color TEXT_FOREGROUND_COLOR = MainFrame.isDark() ? new Color(187, 187, 187) : Color.BLACK;
     public final static Color TEXT_BACKGROUND_COLOR = DevicePanel.TEXT_EDIT_BACKGROUND_COLOR;
     public final static Color TEXT_DISABLED_BACKGROUND_COLOR = MainFrame.isDark() ? new Color(60, 63, 65) : new Color(222, 225, 229);
+    public final static Color TEXT_DISABLED_BACKGROUND_COLOR_MAC = new Color(232,232,232);
     public final static Color TEXT_SELECTION_BACKGROUND_COLOR = MainFrame.isDark() ? new Color(66, 70, 80) : new Color(184, 207, 229);
 
     RTextScrollPane scrollPane;
@@ -135,10 +137,13 @@ public class CodeEditor extends TextEditor {
 
         scrollPane = new RTextScrollPane(editorPane);
 
-        setEditorDisabledBackground(TEXT_DISABLED_BACKGROUND_COLOR);
+        if (UIManager.getLookAndFeel().getName().equalsIgnoreCase("Mac OS X")) {
+            setEditorDisabledBackground(TEXT_DISABLED_BACKGROUND_COLOR_MAC);
+        } else {
+            setEditorDisabledBackground(TEXT_DISABLED_BACKGROUND_COLOR);
+        }
         editorPane.setCaretColor(colorText);
         editorPane.setSelectionColor(TEXT_SELECTION_BACKGROUND_COLOR);
-        //editorPane.setSelectionColor(getEditor().getSelectionColor()); //To set the LAF default...
 
         editorPane.getMargin().left = 3;
         setShowLineNumbers(true);

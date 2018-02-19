@@ -39,6 +39,7 @@ import javax.swing.UIManager;
 public class ScriptEditor extends MonitoredPanel {
 
     static final Color STATEMENT_HIGHLIGHT = MainFrame.isDark() ? new Color(84, 84, 84) : new Color(200, 200, 200);
+    static final Color STATEMENT_HIGHLIGHT_MAC = new Color(208, 208, 208);
     boolean isScript = true;
 
     public ScriptEditor(boolean syntaxHighlight, boolean showLineNumbers, boolean showContextMenu) {
@@ -125,7 +126,9 @@ public class ScriptEditor extends MonitoredPanel {
         try {
             if (getTextEditor().isManualHighligting()) {
                 getTextEditor().removeAllHighlights();
-                getTextEditor().highlightLines(statement.lineNumber, statement.finalLineNumber, STATEMENT_HIGHLIGHT);
+                Color highlight = (UIManager.getLookAndFeel().getName().equalsIgnoreCase("Mac OS X")) ?
+                        STATEMENT_HIGHLIGHT_MAC : STATEMENT_HIGHLIGHT;
+                getTextEditor().highlightLines(statement.lineNumber, statement.finalLineNumber, highlight);
                 setPosition(statement.lineNumber, 1);
             }
         } catch (Exception ex) {

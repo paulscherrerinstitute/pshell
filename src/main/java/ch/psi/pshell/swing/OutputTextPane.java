@@ -50,6 +50,11 @@ public class OutputTextPane extends JTextPane {
             SwingUtilities.invokeLater(() -> {
                 setBackground(getNimbusReadonlyColor());
             });
+        } else if (UIManager.getLookAndFeel().getName().equalsIgnoreCase("Mac OS X")) {
+            //setEditable(false);
+            SwingUtilities.invokeLater(() -> {
+                setBackground(getMacOSReadonlyColor());
+            });
         }
     }
 
@@ -61,6 +66,10 @@ public class OutputTextPane extends JTextPane {
     public static Color getNimbusReadonlyColor() {
         return javax.swing.UIManager.getDefaults().getColor("menu");
     }
+    
+    public static Color getMacOSReadonlyColor() {
+        return new Color(244,244,244);
+    }    
 
     @Override
     public void setBackground(Color bg) {
