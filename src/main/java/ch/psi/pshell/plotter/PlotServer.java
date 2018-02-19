@@ -19,7 +19,7 @@ public class PlotServer implements AutoCloseable {
     //public static final String ERROR_PREFIX = "ERROR: "; 
     //final InvokingProducer<Command> commandProducer;
 
-    public static boolean debug = true;
+    public static boolean debug = false;
 
     public PlotServer(Plotter pm) {
         this(DEFAULT_PORT, pm);

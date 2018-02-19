@@ -22,14 +22,13 @@ public class View extends MainFrame {
     final Plotter pm;
     final PlotServer ps;
     final LogManager logManager;
-
     /**
      * Creates new form View
      */
     public View() {
         super();
         initComponents();
-        setTitle("Plot Server");
+        setTitle("Plotter");
         setIcon(getClass().getResource("/ch/psi/pshell/ui/Icon.ico"));
 
         pm = new DesktopPlotter(plotPane);
@@ -290,6 +289,9 @@ public class View extends MainFrame {
     public static void main(String args[]) throws Exception {
         Sys.addToLibraryPath(new File("./home/extensions").getCanonicalPath());
         Sys.addToClassPath("./home/extensions/jzy3d-1.4.0-jar-with-dependencies.jar");
+        if (Arr.containsEqual(args, "-debug")){
+            PlotServer.debug = true;
+        }
         /* Set the look and feel */
         //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
         if (Arr.containsEqual(args, "-mlaf")) {
