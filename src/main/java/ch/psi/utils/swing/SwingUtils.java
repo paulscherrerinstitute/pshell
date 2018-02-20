@@ -25,6 +25,7 @@ import java.awt.Toolkit;
 import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.InputEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
@@ -48,6 +49,7 @@ import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JMenu;
+import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -61,6 +63,7 @@ import javax.swing.JTextPane;
 import javax.swing.JTree;
 import javax.swing.JViewport;
 import javax.swing.JWindow;
+import javax.swing.KeyStroke;
 import javax.swing.Spring;
 import javax.swing.SpringLayout;
 import javax.swing.SwingUtilities;
@@ -201,6 +204,19 @@ public class SwingUtils {
             System.setProperty("com.apple.mrj.application.live-resize", "true");
         }
     }
+    
+    public static void adjustMacMenuBarAccelerators(JMenuBar menuBar) {
+        if (Sys.getOSFamily() == OSFamily.Mac){
+            for (Component c : SwingUtils.getComponentsByType(menuBar, JMenuItem.class)){
+                JMenuItem item = (JMenuItem)c;
+                if ((item.getAccelerator() != null) && (item.getAccelerator().getModifiers() & InputEvent.CTRL_MASK)!=0) {
+                    int modifiers = (item.getAccelerator().getModifiers() & ~InputEvent.CTRL_MASK & ~InputEvent.CTRL_DOWN_MASK) | InputEvent.META_MASK;
+                    item.setAccelerator(KeyStroke.getKeyStroke(item.getAccelerator().getKeyCode(), modifiers));
+                }
+                
+            }
+        }
+    }    
 
     public static boolean isFullScreen(Frame f) {
         return (f.getExtendedState() == JFrame.MAXIMIZED_BOTH) && f.isUndecorated();
@@ -317,17 +333,20 @@ public class SwingUtils {
     }
 
     public static Component[] getComponentsByType(Container parent, Class type) {
+        boolean is_menu = (parent instanceof JMenu);
+        int componentCount = is_menu ? ((JMenu)parent).getMenuComponentCount() : parent.getComponentCount();
         ArrayList<Component> ret = new ArrayList<>();
-        for (int i = 0; i < parent.getComponentCount(); i++) {
-            if (type.isAssignableFrom(parent.getComponent(i).getClass())) {
-                ret.add(parent.getComponent(i));
+        for (int i = 0; i < componentCount; i++) {
+            Component component = is_menu ? ((JMenu)parent).getMenuComponent(i): parent.getComponent(i);
+            if (type.isAssignableFrom(component.getClass())) {
+                ret.add(component);
             }
         }
 
-        for (int i = 0; i < parent.getComponentCount(); i++) {
-            Component subcomponent = parent.getComponent(i);
-            if (subcomponent instanceof Container) {
-                ret.addAll(Arrays.asList(getComponentsByType((Container) subcomponent, type)));
+        for (int i = 0; i < componentCount; i++) {
+            Component component = is_menu ? ((JMenu)parent).getMenuComponent(i): parent.getComponent(i);
+            if (component instanceof Container) {
+                ret.addAll(Arrays.asList(getComponentsByType((Container) component, type)));
             }
         }
         return ret.toArray(new Component[0]);

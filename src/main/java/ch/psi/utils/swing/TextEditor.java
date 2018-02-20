@@ -1,6 +1,8 @@
 package ch.psi.utils.swing;
 
 import ch.psi.pshell.swing.DevicePanel;
+import ch.psi.utils.Sys;
+import ch.psi.utils.Sys.OSFamily;
 import ch.psi.utils.swing.SwingUtils.OptionResult;
 import ch.psi.utils.swing.SwingUtils.OptionType;
 import java.awt.BorderLayout;
@@ -304,15 +306,17 @@ public class TextEditor extends Editor {
             });
         }
         editorPane.setComponentPopupMenu(menuPopup);
+        
+        int modifiers = (Sys.getOSFamily() == OSFamily.Mac) ? InputEvent.META_DOWN_MASK : InputEvent.CTRL_DOWN_MASK;
 
         editorPane.registerKeyboardAction(searchAction, KeyStroke.getKeyStroke(
-                KeyEvent.VK_F, InputEvent.CTRL_DOWN_MASK), JComponent.WHEN_FOCUSED);
+                KeyEvent.VK_F, modifiers), JComponent.WHEN_FOCUSED);
         editorPane.registerKeyboardAction(searchAgainAction, KeyStroke.getKeyStroke(
                 KeyEvent.VK_F3, 0), JComponent.WHEN_FOCUSED);
         editorPane.registerKeyboardAction(undoAction, KeyStroke.getKeyStroke(
-                KeyEvent.VK_Z, InputEvent.CTRL_DOWN_MASK), JComponent.WHEN_FOCUSED);
+                KeyEvent.VK_Z, modifiers), JComponent.WHEN_FOCUSED);
         editorPane.registerKeyboardAction(redoAction, KeyStroke.getKeyStroke(
-                KeyEvent.VK_Y, InputEvent.CTRL_DOWN_MASK), JComponent.WHEN_FOCUSED);
+                KeyEvent.VK_Y, modifiers), JComponent.WHEN_FOCUSED);
         editorBackground = editorPane.isEnabled() ? editorPane.getBackground() : DevicePanel.TEXT_EDIT_BACKGROUND_COLOR;
     }
 

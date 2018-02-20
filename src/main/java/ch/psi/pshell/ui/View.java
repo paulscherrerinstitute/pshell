@@ -126,9 +126,12 @@ import ch.psi.pshell.scripting.ViewPreference.PlotPreferences;
 import ch.psi.pshell.swing.DataPanel;
 import ch.psi.pshell.swing.RepositoryChangesDialog;
 import ch.psi.utils.Sys;
+import ch.psi.utils.Sys.OSFamily;
 import ch.psi.utils.swing.TextEditor;
+import java.awt.event.InputEvent;
 import javax.swing.JComboBox;
 import javax.swing.JOptionPane;
+import javax.swing.KeyStroke;
 
 /**
  * The main dialog of the Workbench.
@@ -298,6 +301,11 @@ public class View extends MainFrame {
                     toolBar.remove(c);
                 }
             }
+        }
+        if (Sys.getOSFamily() == OSFamily.Mac){
+            SwingUtils.adjustMacMenuBarAccelerators(menuBar);
+            //Not to collide with voice over shortcut
+            menuDebug.setAccelerator(KeyStroke.getKeyStroke(menuDebug.getAccelerator().getKeyCode(), KeyEvent.SHIFT_MASK));
         }
     }
 
