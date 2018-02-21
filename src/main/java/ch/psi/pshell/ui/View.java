@@ -128,7 +128,18 @@ import ch.psi.pshell.swing.RepositoryChangesDialog;
 import ch.psi.utils.Sys;
 import ch.psi.utils.Sys.OSFamily;
 import ch.psi.utils.swing.TextEditor;
-import java.awt.event.InputEvent;
+import java.awt.Color;
+import java.awt.Cursor;
+import java.awt.Graphics;
+import java.awt.Image;
+import java.awt.Point;
+import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.UnsupportedFlavorException;
+import java.awt.dnd.DnDConstants;
+import java.awt.dnd.DropTarget;
+import java.awt.dnd.DropTargetDragEvent;
+import java.awt.dnd.DropTargetDropEvent;
+import java.awt.dnd.DropTargetEvent;
 import javax.swing.JComboBox;
 import javax.swing.JOptionPane;
 import javax.swing.KeyStroke;
@@ -148,7 +159,7 @@ public class View extends MainFrame {
 
     String[] imageFileExtensions = new String[]{"png", "bmp", "gif", "tif", "tiff", "jpg", "jpeg"};
     String[] textFileExtensions = new String[]{"txt", "log"};
-    String[] dataFileExtensions = new String[]{"h5"};
+    String[] dataFileExtensions = new String[]{"h5", "hdf5"};
 
     public View() {
         super();
@@ -237,7 +248,7 @@ public class View extends MainFrame {
             @Override
             public void onUserChange(User user, User former) {
                 closeSearchPanels();
-                setConsoleLocation(preferences.consoleLocation);//User may have no rights                
+                setConsoleLocation(preferences.consoleLocation);//User may have no rights
                 setStatusTabVisible(devicesPanel, !context.getRights().hideDevices);
                 setStatusTabVisible(imagingPanel, !context.getRights().hideDevices);
                 setStatusTabVisible(scriptsPanel, !context.getRights().hideScripts);
@@ -302,14 +313,16 @@ public class View extends MainFrame {
                 }
             }
         }
-        if (Sys.getOSFamily() == OSFamily.Mac){
+        if (Sys.getOSFamily() == OSFamily.Mac) {
             SwingUtils.adjustMacMenuBarAccelerators(menuBar);
             //Not to collide with voice over shortcut
             menuDebug.setAccelerator(KeyStroke.getKeyStroke(menuDebug.getAccelerator().getKeyCode(), KeyEvent.SHIFT_MASK));
         }
+        dropListner = new DropTargetListener();
+        dropListner.enable();
     }
 
-    //TODO: This flag is used to re-inject detached windows to original tabs. 
+    //TODO: This flag is used to re-inject detached windows to original tabs.
     //Better doing with drad/drop instead of double/click + ctrl+close
     boolean ctrlPressed;
 
@@ -389,8 +402,8 @@ public class View extends MainFrame {
             boolean allowRun = (rights != null) && !rights.denyRun;
             Component selectedDocument = tabDoc.getSelectedComponent();
             State state = App.getInstance().getState();
-            boolean showingScript = (selectedDocument!=null) && (selectedDocument instanceof ScriptEditor);
-            boolean showingProcessor = (selectedDocument!=null) && (selectedDocument instanceof Processor);
+            boolean showingScript = (selectedDocument != null) && (selectedDocument instanceof ScriptEditor);
+            boolean showingProcessor = (selectedDocument != null) && (selectedDocument instanceof Processor);
             boolean executable = showingScript || showingProcessor;
             boolean ready = (state == State.Ready);
             boolean busy = (state == State.Busy);
@@ -406,7 +419,7 @@ public class View extends MainFrame {
             menuPause.setEnabled(buttonPause.isEnabled());
             menuStep.setEnabled(buttonStep.isEnabled());
             menuAbort.setEnabled(buttonAbort.isEnabled());
-            
+
             menuCheckSyntax.setEnabled(showingScript);
 
             buttonStopAll.setEnabled(state.isInitialized() && !busy);
@@ -538,7 +551,7 @@ public class View extends MainFrame {
                     plottingPanel = getPlotPanel(plotTitles.get(scan), false);
                 }
                 if (plottingActive) {
-                    if (plottingPanel != null){
+                    if (plottingPanel != null) {
                         plottingPanel.triggerOnNewRecord(scan, record);
                     }
                 }
@@ -626,10 +639,10 @@ public class View extends MainFrame {
                 return;
             }
             //Maintain the standard of displaying x dimension in the vertical axis (to align with scalar sampling)
-            if (Arr.getRank(array) == 2){
+            if (Arr.getRank(array) == 2) {
                 array = Convert.transpose(Convert.toDouble(array));
             }
-            
+
             double[] x = null;
             if (range != null) {
                 if (range.getExtent().intValue() == Array.getLength(array)) {
@@ -644,18 +657,18 @@ public class View extends MainFrame {
 
         @Override
         public void openFile(String fileName) throws Exception {
-            if (IO.getExtension(fileName).equalsIgnoreCase(context.getScriptType().toString())){
+            if (IO.getExtension(fileName).equalsIgnoreCase(context.getScriptType().toString())) {
                 View.this.openScript(fileName);
-            } else {                  
+            } else {
                 View.this.openDataFile(fileName);
             }
         }
-        
+
         @Override
-        public void openScript(String script, String name) throws Exception{
-           ScriptEditor editor = newScript(script);
-           tabDoc.setTitleAt(tabDoc.indexOfComponent(editor),name);
-           tabDoc.setSelectedComponent(editor);
+        public void openScript(String script, String name) throws Exception {
+            ScriptEditor editor = newScript(script);
+            tabDoc.setTitleAt(tabDoc.indexOfComponent(editor), name);
+            tabDoc.setSelectedComponent(editor);
         }
     };
 
@@ -686,15 +699,14 @@ public class View extends MainFrame {
             setScanPlotDisabled(preferences.scanPlotDisabled);
         }
 
-        
         @Override
         public void onPreferenceChange(ViewPreference preference, Object value) {
             switch (preference) {
                 case PLOT_DISABLED:
-                    setScanPlotDisabled((value==null) ? preferences.scanPlotDisabled : (Boolean) value);
+                    setScanPlotDisabled((value == null) ? preferences.scanPlotDisabled : (Boolean) value);
                     break;
                 case TABLE_DISABLED:
-                    setScanTableDisabled((value==null) ? preferences.scanTableDisabled : (Boolean) value);
+                    setScanTableDisabled((value == null) ? preferences.scanTableDisabled : (Boolean) value);
                     break;
                 case DEFAULTS:
                     restorePreferences();
@@ -870,7 +882,8 @@ public class View extends MainFrame {
         return !scanPanel.isActive();
     }
 
-    boolean scanPlotDisabled =false;
+    boolean scanPlotDisabled = false;
+
     public void setScanPlotDisabled(boolean value) {
         scanPlotDisabled = value;
     }
@@ -1732,9 +1745,137 @@ public class View extends MainFrame {
         }
     }
 
+    void openFile(File f) throws Exception {
+        openFile(f, null);
+    }
+
+    void openFile(File f, Processor processor) throws Exception {
+        String fileName = f.getPath();
+        String ext = IO.getExtension(f);
+        if (ext != null) {
+            ext = ext.toLowerCase();
+        }
+        if (Arr.containsEqual(imageFileExtensions, ext)) {
+            openImageFile(fileName);
+        } else if (Arr.containsEqual(textFileExtensions, ext)) {
+            openTextFile(fileName).setReadOnly(true);
+        } else if (Arr.containsEqual(dataFileExtensions, ext)) {
+            openDataFile(fileName);
+        } else if (StripChart.FILE_EXTENSION.equals(ext)) {
+            StripChart stripChart = new StripChart(View.this, false, App.getStripChartFolderArg());
+            openComponent(f.getName(), SwingUtils.getComponentByName(stripChart, "panelPlots"));// "tabPane"
+            stripChart.open(f);
+            stripChart.start();
+        } else {
+            if (processor == null) {
+                openScript(fileName);
+            } else {
+                openProcessor(processor.getClass(), fileName);
+            }
+        }
+    }
+
+    //Drag and drop
+    private DropTargetListener dropListner;
+    volatile boolean dropping;
+
+    private class DropTargetListener implements java.awt.dnd.DropTargetListener {
+        Cursor dropCursor;
+        DropTarget target;
+        
+        void enable() {
+            target = new DropTarget(tabDoc, DnDConstants.ACTION_COPY, this);
+            //In other platforms a move cursor is added by the system
+            if (Sys.getOSFamily() == OSFamily.Mac){
+                try{
+                    Toolkit toolkit = Toolkit.getDefaultToolkit();
+                    Image image =    toolkit.getImage(View.this.getClass().getResource("/ch/psi/pshell/ui/Add.png"));
+                    dropCursor = toolkit.createCustomCursor(image , new Point(12,10), "img");         
+                } catch (Exception ex){
+                    dropCursor = Cursor.getPredefinedCursor(Cursor.HAND_CURSOR);
+                }
+            }
+        }
+
+        private boolean isSupported(File file) {
+            if (file.isFile()) {
+                return true;
+            }
+            return false;
+        }
+        
+        private void start(){
+            dropping = true; 
+            if (dropCursor!=null){
+                tabDoc.setCursor (dropCursor);         
+            }
+            tabDoc.repaint();   
+        }
+        
+        private void stop(){
+            dropping = false;
+            if (dropCursor!=null){
+                tabDoc.setCursor(Cursor.getDefaultCursor());
+            }
+            tabDoc.repaint(); 
+        }
+
+        private List<File> getFiles(DropTargetDropEvent e) {
+            ArrayList<File> ret = new ArrayList<>();
+            try {
+                List<File> fileList = (List<File>) e.getTransferable().getTransferData(DataFlavor.javaFileListFlavor);
+                for (File file : fileList) {
+                    if (isSupported(file)) {
+                        ret.add(file);
+                    }
+                }
+            } catch (Exception ex) {
+            }
+            return ret;
+        }
+
+        @Override
+        public void dragEnter(DropTargetDragEvent e) {
+            start();
+        }
+
+        @Override
+        public void dragExit(DropTargetEvent e) {
+            stop();
+        }
+
+        @Override
+        public void dragOver(DropTargetDragEvent e) {         
+        }
+
+        @Override
+        public void dropActionChanged(DropTargetDragEvent e) {
+        }
+
+        @Override
+        public void drop(DropTargetDropEvent e) {
+            try {
+                e.acceptDrop(DnDConstants.ACTION_COPY);
+                List<File> fileList = getFiles(e);
+                if (getFiles(e).size() > 0) {
+                    for (File file : fileList) {
+                        openFile(file);
+                    }
+                } else {
+                    e.rejectDrop();
+                }
+                e.getDropTargetContext().dropComplete(true);
+            } catch (Exception ex) {
+                logger.log(Level.FINE, null, ex);
+            }
+            stop();            
+        }
+    }
+
     /**
-     * This method is called from within the constructor to initialize the form. WARNING: Do NOT
-     * modify this code. The content of this method is always regenerated by the Form Editor.
+     * This method is called from within the constructor to initialize the form.
+     * WARNING: Do NOT modify this code. The content of this method is always
+     * regenerated by the Form Editor.
      */
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
@@ -1751,7 +1892,18 @@ public class View extends MainFrame {
         outputPanel = new ch.psi.pshell.swing.OutputPanel();
         scriptsPanel = new ch.psi.pshell.swing.ScriptsPanel();
         dataPanel = new ch.psi.pshell.swing.DataPanel();
-        tabDoc = new javax.swing.JTabbedPane();
+        tabDoc =
+        new javax.swing.JTabbedPane() {
+            @Override
+            public void paintComponent(Graphics g)
+            {
+                super.paintComponent(g);
+                if (dropping){
+                    g.setColor(new Color(44, 144, 254));
+                    g.drawRect(0, 0, getWidth() - 1, getHeight() - 1);
+                }
+            }
+        };
         shell = new ch.psi.pshell.swing.Shell();
         tabPlots = new javax.swing.JTabbedPane();
         scanPlot = new ch.psi.pshell.swing.PlotPanel();
@@ -2863,9 +3015,9 @@ public class View extends MainFrame {
         try {
             JFileChooser chooser = new JFileChooser(context.getSetup().getScriptPath());
             //FileNameExtensionFilter filter = new FileNameExtensionFilter("Script files", "py", "groovy", "js");
-            //chooser.setFileFilter(filter);            
+            //chooser.setFileFilter(filter);
             chooser.addChoosableFileFilter(new ExtensionFileFilter("Script files (*." + context.getScriptType() + ")", new String[]{String.valueOf(context.getScriptType())}));
-            //chooser.addChoosableFileFilter(new ExtensionFileFilter("Script files (*.py, *.groovy, *.js)", new String[]{"py", "groovy", "js"}));                        
+            //chooser.addChoosableFileFilter(new ExtensionFileFilter("Script files (*.py, *.groovy, *.js)", new String[]{"py", "groovy", "js"}));
             chooser.addChoosableFileFilter(new ExtensionFileFilter("Java files (*.java)", new String[]{"java"}));
             chooser.addChoosableFileFilter(new ExtensionFileFilter("Text files (*.txt, *.log)", textFileExtensions));
             chooser.addChoosableFileFilter(new ExtensionFileFilter("Data files (*.h5)", dataFileExtensions));
@@ -2881,27 +3033,7 @@ public class View extends MainFrame {
             chooser.setAcceptAllFileFilterUsed(true);
             int rVal = chooser.showOpenDialog(this);
             if (rVal == JFileChooser.APPROVE_OPTION) {
-                String file = chooser.getSelectedFile().getPath();
-                String ext = IO.getExtension(chooser.getSelectedFile());
-                if (Arr.containsEqual(imageFileExtensions, ext)) {
-                    openImageFile(file);
-                } else if (Arr.containsEqual(textFileExtensions, ext)) {
-                    openTextFile(file).setReadOnly(true);
-                } else if (Arr.containsEqual(dataFileExtensions, ext)) {
-                    openDataFile(file);
-                } else if (StripChart.FILE_EXTENSION.equals(ext)) {
-                    StripChart stripChart = new StripChart(View.this, false, App.getStripChartFolderArg());
-                    openComponent(chooser.getSelectedFile().getName(), SwingUtils.getComponentByName(stripChart, "panelPlots"));// "tabPane"                   
-                    stripChart.open(chooser.getSelectedFile());
-                    stripChart.start();
-                } else {
-                    Processor processor = processors.get(chooser.getFileFilter());
-                    if (processor == null) {
-                        openScript(file);
-                    } else {
-                        openProcessor(processor.getClass(), file);
-                    }
-                }
+                openFile(chooser.getSelectedFile(), processors.get(chooser.getFileFilter()));
             }
         } catch (Exception ex) {
             showException(ex);
@@ -3213,7 +3345,7 @@ public class View extends MainFrame {
 
     private void menuPluginsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuPluginsActionPerformed
         try {
-            PluginsEditor editor = new PluginsEditor();  //new TextEditor();            
+            PluginsEditor editor = new PluginsEditor();  //new TextEditor();
             EditorDialog dlg = editor.getDialog(this, false);
             editor.load(context.getSetup().getPluginsConfigurationFile());
             editor.setReadOnly(context.getRights().denyConfig);
@@ -3572,7 +3704,8 @@ public class View extends MainFrame {
                         "Parameter", "Value"
                     }
             ) {
-                public Class getColumnClass(int columnIndex) {
+                public Class
+                        getColumnClass(int columnIndex) {
                     return String.class;
                 }
 
@@ -3882,7 +4015,9 @@ public class View extends MainFrame {
                     }
                     if (logQueryLevel == null) {
                         logQueryLevel = new JComboBox();
-                        SwingUtils.setEnumCombo(logQueryLevel, Configuration.LogLevel.class);
+                        SwingUtils
+                                .setEnumCombo(logQueryLevel, Configuration.LogLevel.class
+                                );
                         logQueryLevel.remove(0); //Remove LogLevel.Off
                         logQueryLevel.setSelectedItem(Configuration.LogLevel.Info);
                     }
@@ -3966,14 +4101,14 @@ public class View extends MainFrame {
     }//GEN-LAST:event_menuShellStateChanged
 
     private void menuCheckSyntaxbuttonRunActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuCheckSyntaxbuttonRunActionPerformed
-        try{
+        try {
             getSelectedEditor().parse();
             showMessage("Syntax Check", "Script syntax ok.", JOptionPane.INFORMATION_MESSAGE);
         } catch (ScriptException ex) {
             showMessage("Syntax Check", ex.getMessage(), JOptionPane.WARNING_MESSAGE);
         } catch (Exception ex) {
             showException(ex);
-        }        
+        }
     }//GEN-LAST:event_menuCheckSyntaxbuttonRunActionPerformed
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
