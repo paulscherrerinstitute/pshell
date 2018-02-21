@@ -134,12 +134,12 @@ import java.awt.Graphics;
 import java.awt.Image;
 import java.awt.Point;
 import java.awt.datatransfer.DataFlavor;
-import java.awt.datatransfer.UnsupportedFlavorException;
 import java.awt.dnd.DnDConstants;
 import java.awt.dnd.DropTarget;
 import java.awt.dnd.DropTargetDragEvent;
 import java.awt.dnd.DropTargetDropEvent;
 import java.awt.dnd.DropTargetEvent;
+import java.awt.event.WindowAdapter;
 import javax.swing.JComboBox;
 import javax.swing.JOptionPane;
 import javax.swing.KeyStroke;
@@ -317,6 +317,8 @@ public class View extends MainFrame {
             SwingUtils.adjustMacMenuBarAccelerators(menuBar);
             //Not to collide with voice over shortcut
             menuDebug.setAccelerator(KeyStroke.getKeyStroke(menuDebug.getAccelerator().getKeyCode(), KeyEvent.SHIFT_MASK));
+            //F3 is not ideal on mac to search next
+            menuFindNext.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_G, KeyEvent.META_MASK));
         }
         dropListner = new DropTargetListener();
         dropListner.enable();
@@ -846,7 +848,7 @@ public class View extends MainFrame {
                     if (detachedMap != null) {
                         detachedMap.put(title, component);
                     }
-                    dlg.addWindowListener(new java.awt.event.WindowAdapter() {
+                    dlg.addWindowListener(new WindowAdapter() {
                         @Override
                         public void windowClosing(java.awt.event.WindowEvent e) {
                             if (detachedMap != null) {
@@ -866,6 +868,25 @@ public class View extends MainFrame {
                             }
                         }
                     });
+
+                    /*
+                    //Tried to drag detached panel back to tabDoc but didn' find way to identify mouse release on JDialog after JDialog move.
+                    dlg.addComponentListener(new ComponentAdapter() {
+                        @Override
+                        public void componentMoved(ComponentEvent e) {
+                            System.out.println("Moved to: " + dlg.getLocationOnScreen());
+                            Point locationWindow = dlg.getLocationOnScreen();
+                            Point locationTab = tabDoc.getLocationOnScreen();
+                            Rectangle rectWindow = new Rectangle(locationWindow.x, locationWindow.y, dlg.getWidth(), 20);
+                            Rectangle rectTab = new Rectangle(locationTab.x, locationTab.y, tabDoc.getWidth(), 20);
+                            if (rectWindow.intersects(rectTab)) {
+                                dropListner.start();
+                            } else {
+                                dropListner.stop();
+                            }
+                        }
+                    });
+                    */
                     e.consume();
                 } else {
                     tabbedPane.setSelectedComponent(component);
@@ -1780,21 +1801,26 @@ public class View extends MainFrame {
     volatile boolean dropping;
 
     private class DropTargetListener implements java.awt.dnd.DropTargetListener {
+
         Cursor dropCursor;
         DropTarget target;
-        
+
         void enable() {
             target = new DropTarget(tabDoc, DnDConstants.ACTION_COPY, this);
             //In other platforms a move cursor is added by the system
-            if (Sys.getOSFamily() == OSFamily.Mac){
-                try{
+            if (Sys.getOSFamily() == OSFamily.Mac) {
+                try {
                     Toolkit toolkit = Toolkit.getDefaultToolkit();
-                    Image image =    toolkit.getImage(View.this.getClass().getResource("/ch/psi/pshell/ui/Add.png"));
-                    dropCursor = toolkit.createCustomCursor(image , new Point(12,10), "img");         
-                } catch (Exception ex){
+                    Image image = toolkit.getImage(View.this.getClass().getResource("/ch/psi/pshell/ui/Add.png"));
+                    dropCursor = toolkit.createCustomCursor(image, new Point(12, 10), "img");
+                } catch (Exception ex) {
                     dropCursor = Cursor.getPredefinedCursor(Cursor.HAND_CURSOR);
                 }
             }
+        }
+
+        boolean isEnabled() {
+            return target != null;
         }
 
         private boolean isSupported(File file) {
@@ -1803,21 +1829,25 @@ public class View extends MainFrame {
             }
             return false;
         }
-        
-        private void start(){
-            dropping = true; 
-            if (dropCursor!=null){
-                tabDoc.setCursor (dropCursor);         
+
+        void start() {
+            if (isEnabled()) {
+                dropping = true;
+                if (dropCursor != null) {
+                    tabDoc.setCursor(dropCursor);
+                }
+                tabDoc.repaint();
             }
-            tabDoc.repaint();   
         }
-        
-        private void stop(){
-            dropping = false;
-            if (dropCursor!=null){
-                tabDoc.setCursor(Cursor.getDefaultCursor());
+
+        void stop() {
+            if (isEnabled()) {
+                dropping = false;
+                if (dropCursor != null) {
+                    tabDoc.setCursor(Cursor.getDefaultCursor());
+                }
+                tabDoc.repaint();
             }
-            tabDoc.repaint(); 
         }
 
         private List<File> getFiles(DropTargetDropEvent e) {
@@ -1845,7 +1875,7 @@ public class View extends MainFrame {
         }
 
         @Override
-        public void dragOver(DropTargetDragEvent e) {         
+        public void dragOver(DropTargetDragEvent e) {
         }
 
         @Override
@@ -1868,7 +1898,7 @@ public class View extends MainFrame {
             } catch (Exception ex) {
                 logger.log(Level.FINE, null, ex);
             }
-            stop();            
+            stop();
         }
     }
 
