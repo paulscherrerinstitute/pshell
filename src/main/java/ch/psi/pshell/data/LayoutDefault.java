@@ -59,17 +59,6 @@ public class LayoutDefault extends LayoutBase implements Layout {
     public String getDefaultGroup(Scan scan) {
         return scan.getTag();
     }
-    
-    @Override
-    public void onOpened(File output) throws IOException {
-        setNameAttribute();
-        setScriptFileAttibute();
-    } 
-    
-    @Override
-    public void onClosed(File output) throws IOException {
-         setScriptVersionAttibute(); //Doing on close because file is commited asynchronously on start of scan.
-    }     
 
     @Override
     public void onStart(Scan scan) throws IOException {

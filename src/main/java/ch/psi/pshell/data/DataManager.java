@@ -106,7 +106,7 @@ public class DataManager implements AutoCloseable {
     }
     
     public void setProvider(String name) throws Exception {
-        Class providerClass = getProviderClass(name);
+                Class providerClass = getProviderClass(name);
         if ((provider != null)) {
             if (provider.getClass() == providerClass){
                 return;
@@ -115,8 +115,12 @@ public class DataManager implements AutoCloseable {
                 providerData.remove(provider);
             }
         }
-        logger.info("Setting data provider: " + name + " - " + providerClass);
-        provider = (Provider) providerClass.newInstance();
+        setProvider((Provider) providerClass.newInstance());
+    }
+    
+    public void setProvider(Provider provider) throws Exception {
+        logger.info("Setting data provider: " + provider.getClass().getName());
+        this.provider = provider;
     }
 
     public Provider cloneProvider() {
@@ -180,11 +184,11 @@ public class DataManager implements AutoCloseable {
         if ((getLayout() != null) && (getLayout().getClass() == layoutClass)) {
             return;
         }
-        logger.info("Setting data layout: " + name + " - " + layoutClass);
         setLayout((Layout) layoutClass.newInstance());
     }
 
     public void setLayout(Layout layout) throws Exception {
+        logger.info("Setting data layout: " + layout.getClass().getName());
         this.layout = layout;
         this.layout.initialize();
     }
@@ -993,6 +997,22 @@ public class DataManager implements AutoCloseable {
     }
 
     public List<PlotDescriptor> getScanPlots(String root, String path) throws Exception {
+        String layout = (String) getAttribute(root, "/", Layout.ATTR_LAYOUT);
+        if ((layout != null) && (!layout.equals(getLayout().getClass().getName()))){
+            DataManager aux = new DataManager(context);
+            try{
+                aux.setLayout(layout);
+                aux.setProvider(getProvider());  
+                return aux.doGetScanPlots(root, path);
+            } finally{
+                aux.close();
+            }
+        }
+        return doGetScanPlots(root, path);
+    }
+    
+    List<PlotDescriptor> doGetScanPlots(String root, String path) throws Exception {
+        
         PlotPreferences plotPreferences = getPlotPreferences(root, path);
         List<PlotDescriptor> plots = getLayout().getScanPlots(root, path, this);
         if (plots == null) {

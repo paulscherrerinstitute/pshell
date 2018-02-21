@@ -32,6 +32,19 @@ public abstract class LayoutBase implements Layout {
     public void setPersistSetpoints(boolean value) {
         persistSetpoints = value;
     }
+    
+    
+    @Override
+    public void onOpened(File output) throws IOException {
+        setLayoutAttribute();
+        setNameAttribute();
+        setScriptFileAttibute();
+    } 
+    
+    @Override
+    public void onClosed(File output) throws IOException {
+         setScriptVersionAttibute(); //Doing on close because file is commited asynchronously on start of scan.
+    }        
 
     //Set common attributes as expected by DataManager (can be ommited).
     protected void setStartTimestampAttibute(Scan scan) throws IOException {
@@ -74,10 +87,14 @@ public abstract class LayoutBase implements Layout {
         }
     }
 
+    protected void setLayoutAttribute() throws IOException {
+        getDataManager().setAttribute("/", ATTR_LAYOUT, getClass().getName());
+    }    
+    
     protected void setNameAttribute() throws IOException {
         String name = getDataManager().getExecutionPars().getName();
         getDataManager().setAttribute("/", ATTR_NAME, (name == null) ? "" : name);
-    }
+    }            
 
     protected void setScriptFileAttibute() throws IOException {
         File file = getDataManager().getExecutionPars().getScriptFile();

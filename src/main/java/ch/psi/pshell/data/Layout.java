@@ -16,6 +16,7 @@ public interface Layout {
     public static final String ATTR_NAME = "Name";
     public static final String ATTR_FILE= "File";
     public static final String ATTR_VERSION = "Version";
+    public static final String ATTR_LAYOUT = "Layout";
 
     public static final String ATTR_START_TIMESTAMP = "Start";
     public static final String ATTR_END_TIMESTAMP = "End";
