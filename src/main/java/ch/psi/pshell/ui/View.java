@@ -358,19 +358,34 @@ public class View extends MainFrame {
             tabDoc.setSelectedIndex(0);
         }
 
+        int indexMenu = 1;
         for (Processor processor : Processor.getServiceProviders()) {
-            ScriptsPanel pn = new ScriptsPanel();
-            int index = tabStatus.getTabCount() - 1;
-            tabStatus.add(pn, index);
-            tabStatus.setTitleAt(index, processor.getType());
-            pn.initialize(processor.getHomePath(), processor.getExtensions()[0]);
-            pn.setListener((File file) -> {
-                try {
-                    openProcessor(processor.getClass(), file.getAbsolutePath());
-                } catch (Exception ex) {
-                    showException(ex);
-                }
-            });
+            if (processor.createMenuNew()){
+                JMenuItem item = new JMenuItem("New " + processor.getType());
+                item.addActionListener((java.awt.event.ActionEvent evt) -> {
+                    try {
+                        openProcessor(processor.getClass(), null);
+                    } catch (Exception ex) {
+                        showException(ex);
+                    }
+                });
+                menuFile.add(item, indexMenu);
+                indexMenu++;
+            }
+            if (processor.createFilePanel()){
+                   ScriptsPanel pn = new ScriptsPanel();
+                int index = tabStatus.getTabCount() - 1;
+                tabStatus.add(pn, index);
+                tabStatus.setTitleAt(index, processor.getType());
+                pn.initialize(processor.getHomePath(), processor.getExtensions()[0]);
+                pn.setListener((File file) -> {
+                    try {
+                        openProcessor(processor.getClass(), file.getAbsolutePath());
+                    } catch (Exception ex) {
+                        showException(ex);
+                    }
+                });
+            }
         }
 
         App.getInstance().addListener(new AppListener() {
@@ -886,7 +901,7 @@ public class View extends MainFrame {
                             }
                         }
                     });
-                    */
+                     */
                     e.consume();
                 } else {
                     tabbedPane.setSelectedComponent(component);
@@ -1150,7 +1165,7 @@ public class View extends MainFrame {
         } else {
             currentProcessor = getSelectedProcessor();
             if (currentProcessor != null) {
-                logger.info("Run: " + new File(currentProcessor.getFileName()).getName() + " (" + currentProcessor.getType() + ")");
+                logger.info("Run processor: " + currentProcessor.getType() + " file: " + currentProcessor.getFileName());
                 currentProcessor.execute();
             }
         }
@@ -1299,24 +1314,30 @@ public class View extends MainFrame {
     }
 
     public Processor openProcessor(Class cls, String file) throws IOException, InstantiationException, IllegalAccessException {
-        for (Processor p : getProcessors()) {
-            if (p.getFileName() != null) {
-                if ((new File(file).getCanonicalFile()).equals((new File(p.getFileName()).getCanonicalFile()))) {
-                    if (tabDoc.indexOfComponent(p.getPanel()) >= 0) {
-                        tabDoc.setSelectedComponent(p.getPanel());
-                    } else if (detachedScripts.containsValue(p.getPanel())) {
-                        p.getPanel().getTopLevelAncestor().requestFocus();
-                    }
+        if (file != null) {
+            for (Processor p : getProcessors()) {
+                if (p.getFileName() != null) {
+                    if ((new File(file).getCanonicalFile()).equals((new File(p.getFileName()).getCanonicalFile()))) {
+                        if (tabDoc.indexOfComponent(p.getPanel()) >= 0) {
+                            tabDoc.setSelectedComponent(p.getPanel());
+                        } else if (detachedScripts.containsValue(p.getPanel())) {
+                            p.getPanel().getTopLevelAncestor().requestFocus();
+                        }
 
-                    return p;
+                        return p;
+                    }
                 }
             }
         }
-
+        
         Processor processor = (Processor) cls.newInstance();
-        processor.open(file);
-        openComponent(new File(processor.getFileName()).getName(), processor.getPanel());
-        fileHistory.put(file);
+        if (file != null) {
+            processor.open(file);
+            openComponent(new File(processor.getFileName()).getName(), processor.getPanel());
+            fileHistory.put(file);
+        } else{
+             openComponent("Unknown", processor.getPanel());
+        }
         return processor;
     }
 

@@ -1,5 +1,6 @@
-package ch.psi.pshell.ui;
+    package ch.psi.pshell.ui;
 
+import ch.psi.utils.swing.SwingUtils;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -23,9 +24,16 @@ public interface Processor {
 
     public void execute() throws Exception;
 
-    public void abort();
+    public void abort() throws InterruptedException;
 
-    public void execute(String file, Map<String, Object> vars) throws Exception;
+    /**
+     * Support to command line starting execution of processor.
+     * If implementation expects arguments from command line, this must be overridden.
+     */
+    default public void execute(String file, Map<String, Object> vars) throws Exception{
+        open(file);
+        execute();
+    }
 
     public String getHomePath();
 
@@ -42,7 +50,20 @@ public interface Processor {
 
     public boolean hasChanged();
 
-    public boolean checkChangeOnClose() throws IOException;
+    default public boolean checkChangeOnClose() throws IOException{
+        if (hasChanged()) {
+            switch (SwingUtils.showOption(getPanel(), "Closing", "Document has changed. Do you want to save it?", SwingUtils.OptionType.YesNoCancel)) {
+                case Yes:
+                    save();
+                    break;
+                case No:
+                    break;
+                case Cancel:
+                    return false;
+            }
+        }
+        return true;
+    }
 
     public String getFileName();
 
@@ -77,4 +98,11 @@ public interface Processor {
         throw new Exception("Not implemented");
     }
 
+    default boolean createFilePanel(){
+        return false;
+    }    
+    
+    default boolean createMenuNew(){
+        return false;
+    }       
 }
