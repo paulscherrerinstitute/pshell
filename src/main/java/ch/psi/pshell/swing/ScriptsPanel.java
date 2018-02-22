@@ -5,6 +5,8 @@ import ch.psi.utils.Arr;
 import ch.psi.utils.Chrono;
 import ch.psi.utils.IO;
 import ch.psi.utils.State;
+import ch.psi.utils.Sys;
+import ch.psi.utils.Sys.OSFamily;
 import ch.psi.utils.swing.MonitoredPanel;
 import ch.psi.utils.swing.SwingUtils;
 import java.awt.Color;
@@ -47,6 +49,9 @@ public class ScriptsPanel extends MonitoredPanel implements UpdatablePanel {
     JMenuItem menuBrowse;
     JMenuItem menuRun;
 
+    final boolean orderByFileName;
+    final boolean disableRowSorterOnUpdate;
+            
     /**
      * The listener interface for receiving scripts panel events.
      */
@@ -237,6 +242,8 @@ public class ScriptsPanel extends MonitoredPanel implements UpdatablePanel {
                 return comp;
             }
         });
+        orderByFileName = Sys.getOSFamily() == OSFamily.Mac; //List files on mac is not ordered
+        disableRowSorterOnUpdate = Sys.getOSFamily() == OSFamily.Mac; //On mac row sorter acts on new data
     }
 
     String getSelectedScript() {
@@ -316,16 +323,30 @@ public class ScriptsPanel extends MonitoredPanel implements UpdatablePanel {
     }
 
     File[] getSubFolders() {
-        ArrayList<File> ret = new ArrayList<>();
+        ArrayList<File> folders = new ArrayList<>();
         for (File file : IO.listSubFolders(currentPath)) {
             if (!Arr.containsEqual(new String[]{"Lib", "cachedir"}, file.getName())) {
-                ret.add(file);
+                folders.add(file);
             }
         }
-        return ret.toArray(new File[0]);
+        File[] ret = folders.toArray(new File[0]);
+        if (orderByFileName){
+            IO.orderByName(ret);
+        }        return ret;
     }
+    
+    File[] getFiles() {
+        File[] ret = IO.listFiles(currentPath, "*." + extension);
+        if (orderByFileName){
+            IO.orderByName(ret);
+        }
+        return ret;
+    }    
 
     void buildList() {
+        if (disableRowSorterOnUpdate){
+            table.setAutoCreateRowSorter(false);
+        }
         model.setNumRows(0);
         try {
             if (!new File(currentPath).getCanonicalFile().equals(new File(homePath).getCanonicalFile())) {
@@ -338,8 +359,11 @@ public class ScriptsPanel extends MonitoredPanel implements UpdatablePanel {
         for (File file : getSubFolders()) {
             model.addRow(new Object[]{file.getName() + "/", ""});
         }
-        for (File file : IO.listFiles(currentPath, "*." + extension)) {
+        for (File file : getFiles()) {
             model.addRow(new Object[]{file.getName(), Chrono.getTimeStr(file.lastModified(), "YY/MM/dd HH:mm:ss\n")});
+        }
+        if (disableRowSorterOnUpdate){
+            table.setAutoCreateRowSorter(true);
         }
     }
 
