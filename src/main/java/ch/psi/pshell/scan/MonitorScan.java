@@ -9,12 +9,17 @@ import ch.psi.pshell.device.Writable;
 import ch.psi.utils.Chrono;
 import ch.psi.pshell.device.Cacheable;
 import ch.psi.pshell.device.DeviceAdapter;
+import ch.psi.pshell.device.DeviceBase;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.logging.Level;
 
 /**
  *
  */
-public class MonitorScan extends LineScan {    
+public class MonitorScan extends LineScan {
+
     final int time_ms;
     final int points;
     final boolean async;
@@ -45,6 +50,31 @@ public class MonitorScan extends LineScan {
         this.points = points;
         this.takeInitialValue = takeInitialValue;
         this.async = async;
+    }
+
+    @Override
+    protected void openDevices() throws IOException, InterruptedException {
+        super.openDevices();
+        if ((trigger!=null) && (trigger instanceof CompositeTrigger)){
+            trigger.initialize();
+        } 
+    }
+
+    @Override
+    protected void closeDevices() {
+        super.closeDevices();
+        if ((trigger!=null) && (trigger instanceof CompositeTrigger)){
+            try {
+                trigger.close();
+            } catch (Exception ex) {
+                logger.log(Level.WARNING, null, ex);
+            }
+        }         
+    }
+
+    public MonitorScan(Device[] triggers, Readable[] readables, int points, int time_ms, boolean async, boolean takeInitialValue) {
+        this(new CompositeTrigger(triggers), readables, points, time_ms, async, takeInitialValue);
+
     }
 
     static Readable[] getReadables(Device trigger, Readable[] readables, boolean async) {
@@ -119,12 +149,12 @@ public class MonitorScan extends LineScan {
 
     @Override
     protected void doScan() throws IOException, InterruptedException {
-        if (trigger instanceof UrlDevice){       
+        if (trigger instanceof UrlDevice) {
             //TODO: trigger must be equal to readables[0]: add checking
             this.trigger = (Device) readables[0];
-            readables[0] = ((Cacheable) readables[0]).getCache();            
-        }        
-        
+            readables[0] = ((Cacheable) readables[0]).getCache();
+        }
+
         firstSample = true;
         chrono = new Chrono();
         int steps = getNumberOfSteps()[0];
