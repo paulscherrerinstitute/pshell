@@ -470,7 +470,7 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
             }
             final ExecutionParameters execPars=context.getExecutionPars();
             synchronized(execPars){
-                execPars.addPersistedScan(this);
+                execPars.addScan(this);
                 tag = execPars.getTag();
                 tag = context.getSetup().expandPath((tag  == null) ? Context.getInstance().getScanTag() : tag);
                 name = execPars.toString();

@@ -354,7 +354,7 @@ public class DataManager implements AutoCloseable {
                 return;
             }
             synchronized (this) {
-                if (getExecutionPars().getPersist()) {
+                if (getExecutionPars().isScanPersisted(scan)) {
                     try {
                         openOutput();
                         if (isOpen()) {

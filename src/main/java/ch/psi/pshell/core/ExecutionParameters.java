@@ -48,7 +48,18 @@ public class ExecutionParameters {
     Layout dataLayout;
     Provider dataProvider;
 
-    final public HashMap<Scan, Integer> persistedScans = new HashMap<>();
+    static class ScanInfo {
+
+        final int index;
+        final boolean persisted;
+
+        ScanInfo(int index, boolean persisted) {
+            this.index = index;
+            this.persisted = persisted;
+        }
+    }
+
+    final public HashMap<Scan, ScanInfo> currentScans = new HashMap<>();
 
     public boolean isOpen() {
         return (outputFile != null);
@@ -95,24 +106,24 @@ public class ExecutionParameters {
     }
 
     public int getIndex(Scan scan) {
-        synchronized (persistedScans) {
-            if (!persistedScans.containsKey(scan)) {
+        synchronized (currentScans) {
+            if (!currentScans.containsKey(scan)) {
                 return -1;
             }
-            return persistedScans.get(scan);
+            return currentScans.get(scan).index;
         }
     }
 
     public Scan[] getCurrentScans() {
-        synchronized (persistedScans) {
-            return persistedScans.keySet().toArray(new Scan[0]);
+        synchronized (currentScans) {
+            return currentScans.keySet().toArray(new Scan[0]);
         }
     }
 
     public Scan getCurrentScan() {
-        synchronized (persistedScans) {
+        synchronized (currentScans) {
             for (Scan scan : getCurrentScans()) {
-                if (persistedScans.get(scan) == getIndex()) {
+                if (currentScans.get(scan).index == getIndex()) {
                     return scan;
                 }
             }
@@ -121,8 +132,8 @@ public class ExecutionParameters {
     }
 
     @Hidden
-    public void initializeData() throws IOException {   
-        try{
+    public void initializeData() throws IOException {
+        try {
             if (getChangedLayout()) {
                 Object layout = getLayout();
                 if (layout instanceof Layout) {
@@ -149,18 +160,19 @@ public class ExecutionParameters {
                     throw new Exception("Invalid provider parameter type");
                 }
             }
-        }  catch (Exception ex){
-            throw new IOException (ex);
-        }        
+        } catch (Exception ex) {
+            throw new IOException(ex);
+        }
     }
+
     @Hidden
     public void setDataPath(File dataPath) {
         outputFile = dataPath;
-        if (dataPath!=null){
+        if (dataPath != null) {
             lastOutputFile = outputFile;
-        } 
+        }
     }
-    
+
     @Hidden
     public void setDataLayout(Layout layout) {
         dataLayout = layout;
@@ -186,16 +198,29 @@ public class ExecutionParameters {
 
     @Hidden
     public boolean isScanPersisted(Scan scan) {
-        synchronized (persistedScans) {
-            return persistedScans.containsKey(scan);
+        synchronized (currentScans) {
+            if (currentScans.containsKey(scan)){
+                return currentScans.get(scan).persisted;
+            }
         }
+        return false;
     }
+    
+    @Hidden
+    public int getScanIndex(Scan scan) {
+        synchronized (currentScans) {
+            if (currentScans.containsKey(scan)){
+                return currentScans.get(scan).index;
+            }
+        }
+        return -1;
+    }    
 
     @Hidden
-    public void addPersistedScan(Scan scan) {
-        synchronized (persistedScans) {
+    public void addScan(Scan scan) {
+        synchronized (currentScans) {
             scanIndex++;
-            persistedScans.put(scan, scanIndex);
+            currentScans.put(scan, new ScanInfo(scanIndex, getPersist()));
         }
     }
 
@@ -486,9 +511,9 @@ public class ExecutionParameters {
 
     void finish() {
         start = -1;
-        persistedScans.clear();
+        currentScans.clear();
         dataLayout = null;
-        dataProvider = null;        
+        dataProvider = null;
     }
 
     boolean isInitialized() {
