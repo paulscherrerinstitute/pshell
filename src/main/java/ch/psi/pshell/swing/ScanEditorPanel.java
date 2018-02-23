@@ -44,6 +44,7 @@ public class ScanEditorPanel extends MonitoredPanel implements Processor {
     final DefaultTableModel modelPositioners;
     final DefaultTableModel modelSensors;
     final DefaultTableModel modelParameters;
+    final DefaultTableModel modelVector;
 
     /**
      * Creates new form ScanEditorPanel
@@ -53,6 +54,7 @@ public class ScanEditorPanel extends MonitoredPanel implements Processor {
         modelPositioners = (DefaultTableModel) tablePositioners.getModel();
         modelSensors = (DefaultTableModel) tableSensors.getModel();
         modelParameters = (DefaultTableModel) tableParameters.getModel();
+        modelVector = (DefaultTableModel) tableVector.getModel();
 
         setupColumns();
 
@@ -60,11 +62,13 @@ public class ScanEditorPanel extends MonitoredPanel implements Processor {
             @Override
             public void tableChanged(TableModelEvent e) {
                 onControlChanged();
+                update();
             }
         };
         modelPositioners.addTableModelListener(tableChangeListener);
         modelSensors.addTableModelListener(tableChangeListener);
         modelParameters.addTableModelListener(tableChangeListener);
+        update();
     }
 
     void setupColumns() {
@@ -164,14 +168,21 @@ public class ScanEditorPanel extends MonitoredPanel implements Processor {
         modelPositioners.setDataVector(toObjectArray((List) state.get(1)), SwingUtils.getTableColumnNames(tablePositioners));
         modelSensors.setDataVector(toObjectArray((List) state.get(2)), SwingUtils.getTableColumnNames(tableSensors));
         modelParameters.setDataVector(toObjectArray((List) state.get(3)), SwingUtils.getTableColumnNames(tableParameters));
-        textTitle.setText((String) state.get(4));
-        spinnerPasses.setValue(state.get(5));
-        spinnerTime.setValue(state.get(6));
-        spinnerLatency.setValue(state.get(7));
-        checkRelative.setSelected((boolean) state.get(8));
-        checkZigzag.setSelected((boolean) state.get(9));
-        checkPersist.setSelected((boolean) state.get(10));
-        checkDisplay.setSelected((boolean) state.get(11));
+        if (getScanCommand().equals("vscan")){
+            ArrayList<String> columns = new ArrayList<>();
+            for (int i=0; i<modelPositioners.getRowCount(); i++ ){
+                columns.add(String.valueOf(modelPositioners.getValueAt(i, 1)));
+            }
+            modelVector.setDataVector(toObjectArray((List) state.get(4)), columns.toArray());
+        }
+        textTitle.setText((String) state.get(5));
+        spinnerPasses.setValue(state.get(6));
+        spinnerTime.setValue(state.get(7));
+        spinnerLatency.setValue(state.get(8));
+        checkRelative.setSelected((boolean) state.get(9));
+        checkZigzag.setSelected((boolean) state.get(10));
+        checkPersist.setSelected((boolean) state.get(11));
+        checkDisplay.setSelected((boolean) state.get(12));
         
         setupColumns();
         this.fileName = fileName;
@@ -194,11 +205,17 @@ public class ScanEditorPanel extends MonitoredPanel implements Processor {
 
     @Override
     public void saveAs(String fileName) throws IOException {
+        if (!getScanCommand().equals("vscan")){
+            modelVector.setColumnCount(0);
+            modelVector.setRowCount(0);
+        }
+                
         List state = new ArrayList();
         state.add(comboType.getSelectedItem());
         state.add(modelPositioners.getDataVector());
         state.add(modelSensors.getDataVector());
         state.add(modelParameters.getDataVector());
+        state.add(modelVector.getDataVector());
         state.add(textTitle.getText());
         state.add(spinnerPasses.getValue());
         state.add(spinnerTime.getValue());
@@ -232,6 +249,13 @@ public class ScanEditorPanel extends MonitoredPanel implements Processor {
 
     @Override   
     public void execute() throws Exception {
+        spinnerPasses.commitEdit();
+        spinnerTime.commitEdit();
+        spinnerLatency.commitEdit();
+        updateCommand();    
+        if (textCommand.getForeground().equals(Color.RED)){
+            throw new Exception("Error in scan definition");
+        }
         String command = getCommand();
         if (command.isEmpty()) {
             throw new Exception("No scan defined");
@@ -296,7 +320,7 @@ public class ScanEditorPanel extends MonitoredPanel implements Processor {
             textCommand.setForeground(Color.BLACK);
             textCommand.setText(cmd.toString());
         } catch (Exception ex) {
-            textCommand.setForeground(Color.BLACK);
+            textCommand.setForeground(Color.RED);
             textCommand.setText(ex.getMessage());
         }
     }
@@ -333,8 +357,8 @@ public class ScanEditorPanel extends MonitoredPanel implements Processor {
 
         textTitle.setEnabled(enabled);
         spinnerPasses.setEnabled(enabled);
-        spinnerTime.setEnabled(enabled && hasTime);
-        spinnerLatency.setEnabled(enabled && !cmd.equals("bscan"));
+        spinnerTime.setEnabled(enabled && (hasTime || cmd.equals("mscan")));
+        spinnerLatency.setEnabled(enabled && !cmd.equals("mscan"));
         checkRelative.setEnabled(enabled && hasPasses());
         checkZigzag.setEnabled(enabled && hasPasses());
         checkPersist.setEnabled(enabled);
@@ -346,17 +370,25 @@ public class ScanEditorPanel extends MonitoredPanel implements Processor {
             case "tscan":
                 labelLatency.setText("Interval (s):");
                 break;
-            case "mscan":
-                labelLatency.setText("Timeout (s):");
-                break;
             default:
                 labelLatency.setText("Latency (s):");
                 break;                
         }
-        ((TitledBorder)panelSeries.getBorder()).setTitle(cmd.equals("mscan") ? "Trigger" : "Positioners");
-        
-        updateCommand();
+         
+        if (cmd.equals("vscan")){
+            panelVector.setVisible(true);
+            if(modelVector.getColumnCount() != modelPositioners.getRowCount()){
+                modelVector.setColumnCount(modelPositioners.getRowCount());
+                modelVector.setRowCount(1000);
+            }
+            for (int i=0; i< modelPositioners.getRowCount(); i++){
+                tableVector.getColumnModel().getColumn(i).setHeaderValue(modelPositioners.getValueAt(i, 1));
+            }
+        } else{
+            panelVector.setVisible(false);
+        }
 
+        updateCommand();
     }
 
     String getScanCommand() {
@@ -393,7 +425,7 @@ public class ScanEditorPanel extends MonitoredPanel implements Processor {
     }
 
     boolean hasRange(){
-        return !Arr.containsEqual(new String[]{"tscan", "mscan", "bscan"}, getScanCommand());
+        return !Arr.containsEqual(new String[]{"tscan", "mscan", "bscan", "vscan"}, getScanCommand());
     }    
 
     List<String> getPositioners() {
@@ -515,10 +547,24 @@ public class ScanEditorPanel extends MonitoredPanel implements Processor {
             ret.add(getParName("points") + spinnerPasses.getValue());
             ret.add(getParName("interval") + spinnerLatency.getValue());
         } else if (getScanCommand()=="mscan"){
-            ret.add(getParName("points") + spinnerPasses.getValue());
-            ret.add(getParName("timeout") + ((((Number)spinnerLatency.getValue()).doubleValue() == 0) ? null : spinnerLatency.getValue()));
+            ret.add(getParName("points") + ((((Number)spinnerPasses.getValue()).doubleValue() == 0) ? -1 : spinnerPasses.getValue()));  
+            ret.add(getParName("timeout") + ((((Number)spinnerTime.getValue()).doubleValue() == 0) ? -1 : spinnerTime.getValue()));
         } else if (getScanCommand()=="vscan"){
-            ret.add(getParName("vector") + spinnerPasses.getValue());
+            StringBuilder sb = new StringBuilder();
+            sb.append("[");
+            for (int i=0; i<modelVector.getRowCount(); i++){
+                if ((modelVector.getValueAt(i, 0) == null) || (modelVector.getValueAt(i, 0).toString().trim().isEmpty())){
+                    break;
+                }
+                sb.append("[");
+                for (int j=0; j<modelVector.getColumnCount(); j++){
+                    sb.append(modelVector.getValueAt(i, j)).append(", ");
+                }
+                sb.append("], ");
+            }
+            sb.append("]");
+            ret.add(getParName("vector") + sb.toString());
+            ret.add(getParName("line") + getBoolValue(true));
         } else {
             ret.add(getParName("latency") + spinnerLatency.getValue());
             if (hasTime()) {
@@ -567,27 +613,23 @@ public class ScanEditorPanel extends MonitoredPanel implements Processor {
     private void initComponents() {
 
         jCheckBox1 = new javax.swing.JCheckBox();
+        jScrollPane2 = new javax.swing.JScrollPane();
+        jScrollPane5 = new javax.swing.JScrollPane();
+        jTable1 = new javax.swing.JTable();
         jPanel1 = new javax.swing.JPanel();
         jScrollPane1 = new javax.swing.JScrollPane();
         textCommand = new javax.swing.JTextArea();
         jPanel2 = new javax.swing.JPanel();
         jLabel1 = new javax.swing.JLabel();
         comboType = new javax.swing.JComboBox<>();
-        panelSeries = new javax.swing.JPanel();
-        jScrollPane3 = new javax.swing.JScrollPane();
-        tablePositioners = new javax.swing.JTable();
-        buttonDelete = new javax.swing.JButton();
-        buttonPosUp = new javax.swing.JButton();
-        buttonPosInsert = new javax.swing.JButton();
-        buttonPosDown = new javax.swing.JButton();
-        panelSeries1 = new javax.swing.JPanel();
+        panelSensors = new javax.swing.JPanel();
         jScrollPane4 = new javax.swing.JScrollPane();
         tableSensors = new javax.swing.JTable();
         buttonSenDelete = new javax.swing.JButton();
         buttonSenUp = new javax.swing.JButton();
         buttonSenInsert = new javax.swing.JButton();
         buttonSenDown = new javax.swing.JButton();
-        panelSeries3 = new javax.swing.JPanel();
+        panelParameters = new javax.swing.JPanel();
         labelLatency = new javax.swing.JLabel();
         spinnerLatency = new javax.swing.JSpinner();
         jLabel3 = new javax.swing.JLabel();
@@ -605,8 +647,33 @@ public class ScanEditorPanel extends MonitoredPanel implements Processor {
         buttonParsDelete = new javax.swing.JButton();
         checkPersist = new javax.swing.JCheckBox();
         checkDisplay = new javax.swing.JCheckBox();
+        jPanel4 = new javax.swing.JPanel();
+        jPanel5 = new javax.swing.JPanel();
+        panelPositioners = new javax.swing.JPanel();
+        jScrollPane3 = new javax.swing.JScrollPane();
+        tablePositioners = new javax.swing.JTable();
+        buttonDelete = new javax.swing.JButton();
+        buttonPosUp = new javax.swing.JButton();
+        buttonPosInsert = new javax.swing.JButton();
+        buttonPosDown = new javax.swing.JButton();
+        panelVector = new javax.swing.JPanel();
+        jScrollPane7 = new javax.swing.JScrollPane();
+        tableVector = new javax.swing.JTable();
 
         jCheckBox1.setText("jCheckBox1");
+
+        jTable1.setModel(new javax.swing.table.DefaultTableModel(
+            new Object [][] {
+                {null, null, null, null},
+                {null, null, null, null},
+                {null, null, null, null},
+                {null, null, null, null}
+            },
+            new String [] {
+                "Title 1", "Title 2", "Title 3", "Title 4"
+            }
+        ));
+        jScrollPane5.setViewportView(jTable1);
 
         jPanel1.setBorder(javax.swing.BorderFactory.createTitledBorder("Shell Command"));
 
@@ -636,111 +703,14 @@ public class ScanEditorPanel extends MonitoredPanel implements Processor {
 
         jLabel1.setText("Scan Type:");
 
-        comboType.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Linear", "Multidimensional", "Vector", "Continuous", "Time series", "Change event series", "Beam synchronous series" }));
+        comboType.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Linear", "Multidimensional", "Vector", "Continuous", "Time series", "Change event series" }));
         comboType.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 comboTypeActionPerformed(evt);
             }
         });
 
-        panelSeries.setBorder(javax.swing.BorderFactory.createTitledBorder("Positioners"));
-
-        tablePositioners.setModel(new javax.swing.table.DefaultTableModel(
-            new Object [][] {
-
-            },
-            new String [] {
-                "Type", "Name", "Start", "Stop", "Step"
-            }
-        ) {
-            Class[] types = new Class [] {
-                java.lang.Object.class, java.lang.String.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class
-            };
-
-            public Class getColumnClass(int columnIndex) {
-                return types [columnIndex];
-            }
-        });
-        tablePositioners.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
-        tablePositioners.getTableHeader().setReorderingAllowed(false);
-        tablePositioners.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mouseReleased(java.awt.event.MouseEvent evt) {
-                tablePositionersMouseReleased(evt);
-            }
-        });
-        tablePositioners.addKeyListener(new java.awt.event.KeyAdapter() {
-            public void keyReleased(java.awt.event.KeyEvent evt) {
-                tablePositionersKeyReleased(evt);
-            }
-        });
-        jScrollPane3.setViewportView(tablePositioners);
-
-        buttonDelete.setText("Delete");
-        buttonDelete.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                buttonDeleteActionPerformed(evt);
-            }
-        });
-
-        buttonPosUp.setText("Move Up");
-        buttonPosUp.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                buttonPosUpActionPerformed(evt);
-            }
-        });
-
-        buttonPosInsert.setText("Insert");
-        buttonPosInsert.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                buttonPosInsertActionPerformed(evt);
-            }
-        });
-
-        buttonPosDown.setText("Move Down");
-        buttonPosDown.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                buttonPosDownActionPerformed(evt);
-            }
-        });
-
-        javax.swing.GroupLayout panelSeriesLayout = new javax.swing.GroupLayout(panelSeries);
-        panelSeries.setLayout(panelSeriesLayout);
-        panelSeriesLayout.setHorizontalGroup(
-            panelSeriesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(panelSeriesLayout.createSequentialGroup()
-                .addContainerGap()
-                .addGroup(panelSeriesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jScrollPane3)
-                    .addGroup(panelSeriesLayout.createSequentialGroup()
-                        .addGap(0, 0, Short.MAX_VALUE)
-                        .addComponent(buttonPosUp)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(buttonPosDown)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(buttonPosInsert)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(buttonDelete)
-                        .addGap(0, 0, Short.MAX_VALUE)))
-                .addContainerGap())
-        );
-
-        panelSeriesLayout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {buttonDelete, buttonPosDown, buttonPosInsert, buttonPosUp});
-
-        panelSeriesLayout.setVerticalGroup(
-            panelSeriesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(panelSeriesLayout.createSequentialGroup()
-                .addGap(2, 2, 2)
-                .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 59, Short.MAX_VALUE)
-                .addGap(4, 4, 4)
-                .addGroup(panelSeriesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(buttonDelete)
-                    .addComponent(buttonPosInsert)
-                    .addComponent(buttonPosDown)
-                    .addComponent(buttonPosUp))
-                .addContainerGap())
-        );
-
-        panelSeries1.setBorder(javax.swing.BorderFactory.createTitledBorder("Sensors"));
+        panelSensors.setBorder(javax.swing.BorderFactory.createTitledBorder("Sensors"));
 
         tableSensors.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
@@ -800,15 +770,15 @@ public class ScanEditorPanel extends MonitoredPanel implements Processor {
             }
         });
 
-        javax.swing.GroupLayout panelSeries1Layout = new javax.swing.GroupLayout(panelSeries1);
-        panelSeries1.setLayout(panelSeries1Layout);
-        panelSeries1Layout.setHorizontalGroup(
-            panelSeries1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(panelSeries1Layout.createSequentialGroup()
+        javax.swing.GroupLayout panelSensorsLayout = new javax.swing.GroupLayout(panelSensors);
+        panelSensors.setLayout(panelSensorsLayout);
+        panelSensorsLayout.setHorizontalGroup(
+            panelSensorsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(panelSensorsLayout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(panelSeries1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addGroup(panelSensorsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(jScrollPane4)
-                    .addGroup(panelSeries1Layout.createSequentialGroup()
+                    .addGroup(panelSensorsLayout.createSequentialGroup()
                         .addGap(0, 0, Short.MAX_VALUE)
                         .addComponent(buttonSenUp)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -821,15 +791,15 @@ public class ScanEditorPanel extends MonitoredPanel implements Processor {
                 .addContainerGap())
         );
 
-        panelSeries1Layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {buttonSenDelete, buttonSenDown, buttonSenInsert, buttonSenUp});
+        panelSensorsLayout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {buttonSenDelete, buttonSenDown, buttonSenInsert, buttonSenUp});
 
-        panelSeries1Layout.setVerticalGroup(
-            panelSeries1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(panelSeries1Layout.createSequentialGroup()
+        panelSensorsLayout.setVerticalGroup(
+            panelSensorsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(panelSensorsLayout.createSequentialGroup()
                 .addGap(2, 2, 2)
-                .addComponent(jScrollPane4, javax.swing.GroupLayout.DEFAULT_SIZE, 67, Short.MAX_VALUE)
-                .addGap(4, 4, 4)
-                .addGroup(panelSeries1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                .addComponent(jScrollPane4, javax.swing.GroupLayout.DEFAULT_SIZE, 43, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(panelSensorsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(buttonSenDelete)
                     .addComponent(buttonSenInsert)
                     .addComponent(buttonSenDown)
@@ -837,7 +807,7 @@ public class ScanEditorPanel extends MonitoredPanel implements Processor {
                 .addContainerGap())
         );
 
-        panelSeries3.setBorder(javax.swing.BorderFactory.createTitledBorder("Parameters"));
+        panelParameters.setBorder(javax.swing.BorderFactory.createTitledBorder("Parameters"));
 
         labelLatency.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
         labelLatency.setText("Latency (s):");
@@ -868,7 +838,7 @@ public class ScanEditorPanel extends MonitoredPanel implements Processor {
         labelPasses.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
         labelPasses.setText("Passes:");
 
-        spinnerPasses.setModel(new javax.swing.SpinnerNumberModel(1, 1, 1000000, 1));
+        spinnerPasses.setModel(new javax.swing.SpinnerNumberModel(1, 0, 1000000, 1));
         spinnerPasses.addChangeListener(new javax.swing.event.ChangeListener() {
             public void stateChanged(javax.swing.event.ChangeEvent evt) {
                 spinnerPassesStateChanged(evt);
@@ -947,11 +917,11 @@ public class ScanEditorPanel extends MonitoredPanel implements Processor {
                 .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(jScrollPane6, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
                     .addGroup(jPanel3Layout.createSequentialGroup()
-                        .addGap(0, 33, Short.MAX_VALUE)
+                        .addGap(0, 0, Short.MAX_VALUE)
                         .addComponent(buttonParsInsert)
                         .addGap(30, 30, 30)
                         .addComponent(buttonParsDelete)
-                        .addGap(0, 34, Short.MAX_VALUE)))
+                        .addGap(0, 0, Short.MAX_VALUE)))
                 .addContainerGap())
         );
 
@@ -961,7 +931,7 @@ public class ScanEditorPanel extends MonitoredPanel implements Processor {
             jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel3Layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jScrollPane6, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
+                .addComponent(jScrollPane6, javax.swing.GroupLayout.DEFAULT_SIZE, 40, Short.MAX_VALUE)
                 .addGap(4, 4, 4)
                 .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(buttonParsDelete)
@@ -985,26 +955,26 @@ public class ScanEditorPanel extends MonitoredPanel implements Processor {
             }
         });
 
-        javax.swing.GroupLayout panelSeries3Layout = new javax.swing.GroupLayout(panelSeries3);
-        panelSeries3.setLayout(panelSeries3Layout);
-        panelSeries3Layout.setHorizontalGroup(
-            panelSeries3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, panelSeries3Layout.createSequentialGroup()
+        javax.swing.GroupLayout panelParametersLayout = new javax.swing.GroupLayout(panelParameters);
+        panelParameters.setLayout(panelParametersLayout);
+        panelParametersLayout.setHorizontalGroup(
+            panelParametersLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, panelParametersLayout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(panelSeries3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addGroup(panelParametersLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(jLabel7)
                     .addComponent(labelPasses)
                     .addComponent(jLabel3)
                     .addComponent(labelLatency))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(panelSeries3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(panelSeries3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                .addGroup(panelParametersLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(panelParametersLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                         .addComponent(spinnerPasses)
                         .addComponent(spinnerTime)
                         .addComponent(textTitle))
                     .addComponent(spinnerLatency, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addGap(18, 18, 18)
-                .addGroup(panelSeries3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addGroup(panelParametersLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(checkZigzag)
                     .addComponent(checkRelative)
                     .addComponent(checkPersist)
@@ -1013,42 +983,200 @@ public class ScanEditorPanel extends MonitoredPanel implements Processor {
                 .addComponent(jPanel3, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
-        panelSeries3Layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {jLabel3, jLabel7, labelLatency, labelPasses});
+        panelParametersLayout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {jLabel3, jLabel7, labelLatency, labelPasses});
 
-        panelSeries3Layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {spinnerLatency, spinnerPasses, spinnerTime});
+        panelParametersLayout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {spinnerLatency, spinnerPasses, spinnerTime});
 
-        panelSeries3Layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {checkDisplay, checkPersist, checkRelative, checkZigzag});
+        panelParametersLayout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {checkDisplay, checkPersist, checkRelative, checkZigzag});
 
-        panelSeries3Layout.setVerticalGroup(
-            panelSeries3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(panelSeries3Layout.createSequentialGroup()
-                .addContainerGap()
-                .addGroup(panelSeries3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+        panelParametersLayout.setVerticalGroup(
+            panelParametersLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(panelParametersLayout.createSequentialGroup()
+                .addGap(4, 4, 4)
+                .addGroup(panelParametersLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
                     .addComponent(jPanel3, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addGroup(javax.swing.GroupLayout.Alignment.LEADING, panelSeries3Layout.createSequentialGroup()
-                        .addGroup(panelSeries3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addGroup(javax.swing.GroupLayout.Alignment.LEADING, panelParametersLayout.createSequentialGroup()
+                        .addGroup(panelParametersLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(jLabel3)
                             .addComponent(textTitle, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                             .addComponent(checkPersist))
                         .addGap(0, 0, 0)
-                        .addGroup(panelSeries3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                        .addGroup(panelParametersLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(spinnerPasses, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                             .addComponent(labelPasses)
                             .addComponent(checkDisplay))
-                        .addGroup(panelSeries3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addGroup(panelSeries3Layout.createSequentialGroup()
-                                .addGroup(panelSeries3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                        .addGroup(panelParametersLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(panelParametersLayout.createSequentialGroup()
+                                .addGroup(panelParametersLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                                     .addComponent(jLabel7)
                                     .addComponent(spinnerTime, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                                 .addGap(0, 0, 0)
-                                .addGroup(panelSeries3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                .addGroup(panelParametersLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                                     .addComponent(labelLatency)
                                     .addComponent(spinnerLatency, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                            .addGroup(panelSeries3Layout.createSequentialGroup()
+                            .addGroup(panelParametersLayout.createSequentialGroup()
                                 .addComponent(checkRelative)
                                 .addGap(0, 0, 0)
                                 .addComponent(checkZigzag)))))
+                .addGap(2, 2, 2))
+        );
+
+        javax.swing.GroupLayout jPanel4Layout = new javax.swing.GroupLayout(jPanel4);
+        jPanel4.setLayout(jPanel4Layout);
+        jPanel4Layout.setHorizontalGroup(
+            jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 100, Short.MAX_VALUE)
+        );
+        jPanel4Layout.setVerticalGroup(
+            jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 100, Short.MAX_VALUE)
+        );
+
+        panelPositioners.setBorder(javax.swing.BorderFactory.createTitledBorder("Positioners"));
+
+        tablePositioners.setModel(new javax.swing.table.DefaultTableModel(
+            new Object [][] {
+
+            },
+            new String [] {
+                "Type", "Name", "Start", "Stop", "Step"
+            }
+        ) {
+            Class[] types = new Class [] {
+                java.lang.Object.class, java.lang.String.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class
+            };
+
+            public Class getColumnClass(int columnIndex) {
+                return types [columnIndex];
+            }
+        });
+        tablePositioners.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
+        tablePositioners.getTableHeader().setReorderingAllowed(false);
+        tablePositioners.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseReleased(java.awt.event.MouseEvent evt) {
+                tablePositionersMouseReleased(evt);
+            }
+        });
+        tablePositioners.addKeyListener(new java.awt.event.KeyAdapter() {
+            public void keyReleased(java.awt.event.KeyEvent evt) {
+                tablePositionersKeyReleased(evt);
+            }
+        });
+        jScrollPane3.setViewportView(tablePositioners);
+
+        buttonDelete.setText("Delete");
+        buttonDelete.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                buttonDeleteActionPerformed(evt);
+            }
+        });
+
+        buttonPosUp.setText("Move Up");
+        buttonPosUp.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                buttonPosUpActionPerformed(evt);
+            }
+        });
+
+        buttonPosInsert.setText("Insert");
+        buttonPosInsert.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                buttonPosInsertActionPerformed(evt);
+            }
+        });
+
+        buttonPosDown.setText("Move Down");
+        buttonPosDown.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                buttonPosDownActionPerformed(evt);
+            }
+        });
+
+        javax.swing.GroupLayout panelPositionersLayout = new javax.swing.GroupLayout(panelPositioners);
+        panelPositioners.setLayout(panelPositionersLayout);
+        panelPositionersLayout.setHorizontalGroup(
+            panelPositionersLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(panelPositionersLayout.createSequentialGroup()
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(buttonPosUp)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(buttonPosDown)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(buttonPosInsert)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(buttonDelete)
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, panelPositionersLayout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(jScrollPane3)
                 .addContainerGap())
+        );
+
+        panelPositionersLayout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {buttonDelete, buttonPosDown, buttonPosInsert, buttonPosUp});
+
+        panelPositionersLayout.setVerticalGroup(
+            panelPositionersLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(panelPositionersLayout.createSequentialGroup()
+                .addGap(2, 2, 2)
+                .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 50, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(panelPositionersLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(buttonDelete)
+                    .addComponent(buttonPosInsert)
+                    .addComponent(buttonPosDown)
+                    .addComponent(buttonPosUp))
+                .addContainerGap())
+        );
+
+        panelVector.setBorder(javax.swing.BorderFactory.createTitledBorder("Vector"));
+
+        tableVector.setModel(new javax.swing.table.DefaultTableModel(
+            new Object [][] {
+
+            },
+            new String [] {
+
+            }
+        ));
+        tableVector.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_INTERVAL_SELECTION);
+        jScrollPane7.setViewportView(tableVector);
+
+        javax.swing.GroupLayout panelVectorLayout = new javax.swing.GroupLayout(panelVector);
+        panelVector.setLayout(panelVectorLayout);
+        panelVectorLayout.setHorizontalGroup(
+            panelVectorLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(panelVectorLayout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(jScrollPane7, javax.swing.GroupLayout.DEFAULT_SIZE, 120, Short.MAX_VALUE)
+                .addGap(7, 7, 7))
+        );
+        panelVectorLayout.setVerticalGroup(
+            panelVectorLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(panelVectorLayout.createSequentialGroup()
+                .addGap(2, 2, 2)
+                .addComponent(jScrollPane7, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
+                .addGap(7, 7, 7))
+        );
+
+        javax.swing.GroupLayout jPanel5Layout = new javax.swing.GroupLayout(jPanel5);
+        jPanel5.setLayout(jPanel5Layout);
+        jPanel5Layout.setHorizontalGroup(
+            jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel5Layout.createSequentialGroup()
+                .addGap(0, 0, 0)
+                .addComponent(panelPositioners, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(panelVector, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap())
+        );
+        jPanel5Layout.setVerticalGroup(
+            jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel5Layout.createSequentialGroup()
+                .addGap(0, 0, 0)
+                .addGroup(jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(panelVector, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(panelPositioners, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addGap(0, 0, 0))
         );
 
         javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
@@ -1058,14 +1186,18 @@ public class ScanEditorPanel extends MonitoredPanel implements Processor {
             .addGroup(jPanel2Layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(panelSensors, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(panelParameters, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addGroup(jPanel2Layout.createSequentialGroup()
                         .addComponent(jLabel1)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(comboType, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addGap(0, 0, Short.MAX_VALUE))
-                    .addComponent(panelSeries, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(panelSeries1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(panelSeries3, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                    .addGroup(jPanel2Layout.createSequentialGroup()
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(jPanel4, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(6, 6, 6))
+                    .addComponent(jPanel5, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addContainerGap())
         );
         jPanel2Layout.setVerticalGroup(
@@ -1076,12 +1208,13 @@ public class ScanEditorPanel extends MonitoredPanel implements Processor {
                     .addComponent(jLabel1)
                     .addComponent(comboType, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(panelSeries, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addGap(0, 0, 0)
-                .addComponent(panelSeries1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addGap(0, 0, 0)
-                .addComponent(panelSeries3, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addContainerGap())
+                .addComponent(jPanel5, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(panelSensors, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jPanel4, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(panelParameters, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addGap(0, 0, 0))
         );
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
@@ -1092,15 +1225,14 @@ public class ScanEditorPanel extends MonitoredPanel implements Processor {
                 .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(jPanel2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                .addContainerGap())
+                    .addComponent(jPanel2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
                 .addComponent(jPanel2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGap(0, 0, 0)
                 .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap())
         );
@@ -1108,8 +1240,10 @@ public class ScanEditorPanel extends MonitoredPanel implements Processor {
 
     private void comboTypeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_comboTypeActionPerformed
         try {
+            onControlChanged();            
             update();
-            onControlChanged();
+            ((TitledBorder)panelPositioners.getBorder()).setTitle(getScanCommand().equals("mscan") ? "Trigger" : "Positioners");
+            updateUI();            
         } catch (Exception ex) {
             SwingUtils.showException(this, ex);
         }
@@ -1242,35 +1376,35 @@ public class ScanEditorPanel extends MonitoredPanel implements Processor {
     }//GEN-LAST:event_buttonParsInsertActionPerformed
 
     private void checkRelativeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_checkRelativeActionPerformed
-        updateCommand();
+        onControlChanged();
     }//GEN-LAST:event_checkRelativeActionPerformed
 
     private void checkZigzagActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_checkZigzagActionPerformed
-        updateCommand();
+        onControlChanged();
     }//GEN-LAST:event_checkZigzagActionPerformed
 
     private void spinnerPassesStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_spinnerPassesStateChanged
-        updateCommand();
+        onControlChanged();
     }//GEN-LAST:event_spinnerPassesStateChanged
 
     private void spinnerTimeStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_spinnerTimeStateChanged
-        updateCommand();
+        onControlChanged();
     }//GEN-LAST:event_spinnerTimeStateChanged
 
     private void spinnerLatencyStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_spinnerLatencyStateChanged
-        updateCommand();
+        onControlChanged();
     }//GEN-LAST:event_spinnerLatencyStateChanged
 
     private void textTitleKeyReleased(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_textTitleKeyReleased
-        updateCommand();
+        onControlChanged();
     }//GEN-LAST:event_textTitleKeyReleased
 
     private void checkPersistActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_checkPersistActionPerformed
-        updateCommand();
+        onControlChanged();
     }//GEN-LAST:event_checkPersistActionPerformed
 
     private void checkDisplayActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_checkDisplayActionPerformed
-        updateCommand();
+        onControlChanged();
     }//GEN-LAST:event_checkDisplayActionPerformed
 
 
@@ -1297,21 +1431,29 @@ public class ScanEditorPanel extends MonitoredPanel implements Processor {
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel2;
     private javax.swing.JPanel jPanel3;
+    private javax.swing.JPanel jPanel4;
+    private javax.swing.JPanel jPanel5;
     private javax.swing.JScrollPane jScrollPane1;
+    private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JScrollPane jScrollPane3;
     private javax.swing.JScrollPane jScrollPane4;
+    private javax.swing.JScrollPane jScrollPane5;
     private javax.swing.JScrollPane jScrollPane6;
+    private javax.swing.JScrollPane jScrollPane7;
+    private javax.swing.JTable jTable1;
     private javax.swing.JLabel labelLatency;
     private javax.swing.JLabel labelPasses;
-    private javax.swing.JPanel panelSeries;
-    private javax.swing.JPanel panelSeries1;
-    private javax.swing.JPanel panelSeries3;
+    private javax.swing.JPanel panelParameters;
+    private javax.swing.JPanel panelPositioners;
+    private javax.swing.JPanel panelSensors;
+    private javax.swing.JPanel panelVector;
     private javax.swing.JSpinner spinnerLatency;
     private javax.swing.JSpinner spinnerPasses;
     private javax.swing.JSpinner spinnerTime;
     private javax.swing.JTable tableParameters;
     private javax.swing.JTable tablePositioners;
     private javax.swing.JTable tableSensors;
+    private javax.swing.JTable tableVector;
     private javax.swing.JTextArea textCommand;
     private javax.swing.JTextField textTitle;
     // End of variables declaration//GEN-END:variables

@@ -10,6 +10,7 @@ import ch.psi.bsread.message.ValueImpl;
 import ch.psi.pshell.device.Device;
 import ch.psi.bsread.converter.MatlabByteConverter;
 import ch.psi.pshell.device.Cacheable;
+import ch.psi.pshell.device.ReadonlyRegisterBase;
 import ch.psi.utils.Arr;
 import ch.psi.utils.State;
 import ch.psi.utils.Str;
@@ -23,8 +24,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 
 /**
- * A device implementing a beam synchronous string, having, for each identifier, a corresponding
- * Scalar or Waveform child.
+ * A device implementing a beam synchronous string, having, for each identifier,
+ * a corresponding Scalar or Waveform child.
  */
 public class Stream extends DeviceBase implements Readable<StreamValue>, Cacheable<StreamValue> {
 
@@ -588,5 +589,43 @@ public class Stream extends DeviceBase implements Readable<StreamValue>, Cacheab
             }
         }
         super.doClose();
+    }
+
+    public class PidReader extends ReadonlyRegisterBase<Long> {
+        PidReader(){
+            super("PID");
+            setParent(Stream.this);
+        }
+        
+        @Override
+        protected Long doRead() throws IOException, InterruptedException {
+            StreamValue value = Stream.this.take();
+            return (value == null) ? null : value.pulseId;
+        }
+    };
+    
+    final PidReader pidReader = new PidReader();
+    
+    public PidReader getPidReader() {
+        return pidReader;
+    }   
+
+    public class TimestampReader extends ReadonlyRegisterBase<Long> {
+        TimestampReader(){
+            super("Timestamp");
+            setParent(Stream.this);
+        }
+        
+        @Override
+        protected Long doRead() throws IOException, InterruptedException {
+            StreamValue value = Stream.this.take();
+            return (value == null) ? null : value.pulseId;
+        }
+    };
+    
+    final TimestampReader timestampReader = new TimestampReader();
+
+    public TimestampReader getTimestampReader() {
+        return timestampReader;
     }
 }

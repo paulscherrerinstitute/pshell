@@ -138,7 +138,7 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
         settleTimeout = value;
     }
 
-    void assertFieldsOk() {                        
+    void assertFieldsOk() {
         if ((writables == null) || (readables == null)) {
             throw new IllegalArgumentException();
         }
@@ -214,15 +214,15 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
                 //Filtering some possible overshooting (Motors manage internally)
                 m.waitInPosition(pos, 10000);
             }
-        } else{
+        } else {
             ReadonlyRegister readback = getReadback(writable);
-            if ((readback!=null) && (writable instanceof Resolved)){                
-                double resolution = ((Resolved) writable).getResolution();                    
+            if ((readback != null) && (writable instanceof Resolved)) {
+                double resolution = ((Resolved) writable).getResolution();
                 readback.waitValueInRange(pos, resolution, settleTimeout);
             } else if (writable instanceof Device) {
-                ((Device)writable).waitStateNot(State.Busy, -1);
+                ((Device) writable).waitStateNot(State.Busy, -1);
             }
-        } 
+        }
     }
 
     volatile Thread executionThread;
@@ -468,17 +468,17 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
             for (ScanListener listener : context.getScanListeners()) {
                 addListener(listener);
             }
-            final ExecutionParameters execPars=context.getExecutionPars();
-            synchronized(execPars){
+            final ExecutionParameters execPars = context.getExecutionPars();
+            synchronized (execPars) {
                 execPars.addScan(this);
                 tag = execPars.getTag();
-                tag = context.getSetup().expandPath((tag  == null) ? Context.getInstance().getScanTag() : tag);
+                tag = context.getSetup().expandPath((tag == null) ? Context.getInstance().getScanTag() : tag);
                 name = execPars.toString();
                 scanIndex = execPars.getIndex(this);
-                accumulate = execPars.getAccumulate();                  
+                accumulate = execPars.getAccumulate();
             }
         }
-        
+
         executionThread = Thread.currentThread();
         aborted = false;
         for (ScanListener listener : getListeners()) {
@@ -486,15 +486,15 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
         }
         //Called later to let DataManager initialize storage before reading the scan path
         if (context != null) {
-            final ExecutionParameters execPars=context.getExecutionPars();
-            synchronized(execPars){
+            final ExecutionParameters execPars = context.getExecutionPars();
+            synchronized (execPars) {
                 String scanRoot = execPars.getPath();
                 if (IO.isSubPath(scanRoot, context.getSetup().getDataPath())) {
                     scanRoot = IO.getRelativePath(scanRoot, context.getSetup().getDataPath());
                 }
-                scanPath = scanRoot + " | " + context.getDataManager().getScanPath(this);       
+                scanPath = scanRoot + " | " + context.getDataManager().getScanPath(this);
             }
-        }        
+        }
     }
 
     ScanRecord currentRecord;
@@ -520,9 +520,9 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
     public int getIndex() {
         return scanIndex;
     }
-    
+
     @Override
-    public String getTag(){
+    public String getTag() {
         return tag;
     }
 
@@ -677,34 +677,34 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
     protected void openDevices() throws IOException, InterruptedException {
         startedStreams = new ArrayList<>();
         innerDevices = new ArrayList<>();
-        for (int i=0; i<writables.length; i++){
-            if (writables[i] instanceof UrlDevice){                
-                ((UrlDevice)writables[i]).initialize();
-                writables[i] = (Writable) ((UrlDevice)writables[i]).getDevice();
-                innerDevices.add((Device) writables[i]);                
-            }
-        }        
-        Stream innerStream = null;
-        for (int i=0; i<readables.length; i++){
-            if (readables[i] instanceof UrlDevice){
-                if (((UrlDevice)readables[i]).getProtocol().equals("bs")){
-                    if (innerStream == null){
-                        innerStream = new Stream("Scan devices stream");
-                        innerDevices.add(innerStream);
-                        innerStream.initialize();                        
-                    }                                  
-                    ((UrlDevice)readables[i]).setParent(innerStream);
-                }                
-                ((UrlDevice)readables[i]).initialize();
-                readables[i] = (Readable) ((UrlDevice)readables[i]).getDevice();
-                innerDevices.add((Device) readables[i]);                
+        for (int i = 0; i < writables.length; i++) {
+            if (writables[i] instanceof UrlDevice) {
+                ((UrlDevice) writables[i]).initialize();
+                writables[i] = (Writable) ((UrlDevice) writables[i]).getDevice();
+                innerDevices.add((Device) writables[i]);
             }
         }
-        if (innerStream!=null){
-            innerStream.start(true); 
+        Stream innerStream = null;
+        for (int i = 0; i < readables.length; i++) {
+            if (readables[i] instanceof UrlDevice) {
+                if (((UrlDevice) readables[i]).getProtocol().equals("bs")) {
+                    if (innerStream == null) {
+                        innerStream = new Stream("Scan devices stream");
+                        innerDevices.add(innerStream);
+                        innerStream.initialize();
+                    }
+                    ((UrlDevice) readables[i]).setParent(innerStream);
+                }
+                ((UrlDevice) readables[i]).initialize();
+                readables[i] = (Readable) ((UrlDevice) readables[i]).getDevice();
+                innerDevices.add((Device) readables[i]);
+            }
+        }
+        if (innerStream != null) {
+            innerStream.start(true);
             innerStream.waitCacheChange(10000);
-        }        
-        for (Readable r : readables) {           
+        }
+        for (Readable r : readables) {
             if (r instanceof Stream) {
                 if (((Stream) r).getState() == State.Ready) {
                     ((Stream) r).start(true); //Start in asynchronous mode
@@ -730,15 +730,15 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
                 }
             }
         }
-        if (innerDevices!=null){
-            for (Device dev : innerDevices){
+        if (innerDevices != null) {
+            for (Device dev : innerDevices) {
                 try {
                     dev.close();
                 } catch (Exception ex) {
                     logger.log(Level.WARNING, null, ex);
                 }
             }
-        }        
+        }
     }
 
     protected void checkInterrupted() throws InterruptedException {
@@ -761,7 +761,7 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
     public int getRecordIndex() {
         return recordIndex;
     }
-    
+
     @Override
     public int getRecordIndexOffset() {
         return recordIndexOffset;

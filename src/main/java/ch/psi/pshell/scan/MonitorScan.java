@@ -1,5 +1,7 @@
 package ch.psi.pshell.scan;
 
+import ch.psi.pshell.bs.Scalar;
+import ch.psi.pshell.bs.Stream;
 import ch.psi.pshell.core.UrlDevice;
 import ch.psi.pshell.device.Device;
 import ch.psi.pshell.device.DeviceListener;
@@ -9,10 +11,7 @@ import ch.psi.pshell.device.Writable;
 import ch.psi.utils.Chrono;
 import ch.psi.pshell.device.Cacheable;
 import ch.psi.pshell.device.DeviceAdapter;
-import ch.psi.pshell.device.DeviceBase;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.logging.Level;
 
 /**
@@ -55,6 +54,17 @@ public class MonitorScan extends LineScan {
     @Override
     protected void openDevices() throws IOException, InterruptedException {
         super.openDevices();
+        if (trigger==null){
+            for (Readable r : readables){
+                if ((r instanceof Scalar) || (r instanceof Stream.PidReader)|| (r instanceof Stream.TimestampReader)){
+                    trigger = ((Device)r).getParent();
+                    break;
+                } else if (r instanceof Device){
+                    trigger = (Device)r;
+                    break;
+                }
+            }
+        }        
         if ((trigger!=null) && (trigger instanceof CompositeTrigger)){
             trigger.initialize();
         } 
@@ -73,7 +83,7 @@ public class MonitorScan extends LineScan {
     }
 
     public MonitorScan(Device[] triggers, Readable[] readables, int points, int time_ms, boolean async, boolean takeInitialValue) {
-        this(new CompositeTrigger(triggers), readables, points, time_ms, async, takeInitialValue);
+        this(((triggers==null) || (triggers.length==0)) ? null : new CompositeTrigger(triggers), readables, points, time_ms, async, takeInitialValue);
 
     }
 
@@ -116,7 +126,9 @@ public class MonitorScan extends LineScan {
     protected void onAfterScan() {
         if (async) {
             synchronized (lock) {
-                trigger.removeListener(listener);
+                if (trigger!=null){
+                    trigger.removeListener(listener);
+                }
                 lock.notifyAll();
                 chrono = null;
             }
@@ -149,6 +161,9 @@ public class MonitorScan extends LineScan {
 
     @Override
     protected void doScan() throws IOException, InterruptedException {
+        if (trigger==null){
+            throw new IOException ("No trigger defined");
+        }
         if (trigger instanceof UrlDevice) {
             //TODO: trigger must be equal to readables[0]: add checking
             this.trigger = (Device) readables[0];

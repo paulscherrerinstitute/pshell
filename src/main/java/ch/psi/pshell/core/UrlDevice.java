@@ -17,7 +17,8 @@ import java.util.Map;
 import java.util.logging.Level;
 
 /**
- * Dynamic resolved devices, according to URL (protocol://name). Can be passed as argument to scans.
+ * Dynamic resolved devices, according to URL (protocol://name). Can be passed
+ * as argument to scans.
  */
 public class UrlDevice extends DeviceBase implements Readable, Writable {
 
@@ -26,21 +27,20 @@ public class UrlDevice extends DeviceBase implements Readable, Writable {
     final String name;
     final String id;
     final Map<String, String> pars;
-    
-    DeviceBase parent;    
+
+    DeviceBase parent;
     Device device;
-    
 
     public UrlDevice(String url) {
-        if (!url.contains("://")) {            
-            throw  new RuntimeException("Invalid device url: " + url);
+        if (!url.contains("://")) {
+            throw new RuntimeException("Invalid device url: " + url);
         }
         this.url = url;
         String[] tokens = url.split("://");
         this.protocol = tokens[0];
         pars = new HashMap<>();
-        String id = tokens[1];        
-        if (id.contains("?")) {            
+        String id = tokens[1];
+        if (id.contains("?")) {
             tokens = id.split("\\?");
             id = tokens[0].trim();
             for (String str : tokens[1].split("&")) {
@@ -50,35 +50,35 @@ public class UrlDevice extends DeviceBase implements Readable, Writable {
                 }
             }
         }
-        this.id =id;
+        this.id = id;
         this.name = pars.containsKey("name") ? pars.get("name") : id;
     }
-    
+
     @Override
     public void setParent(DeviceBase parent) {
         this.parent = parent;
     }
-    
+
     @Override
     public DeviceBase getParent() {
         return parent;
     }
 
     @Override
-    public void doInitialize() throws IOException, InterruptedException{
-        closeDevice();        
+    public void doInitialize() throws IOException, InterruptedException {
+        closeDevice();
         device = resolve();
         if (device != null) {
             if (Context.getInstance().isSimulation()) {
                 device.setSimulated();
             }
             device.initialize();
-        }     
+        }
     }
-    
+
     public Device getDevice() {
         return device;
-    }    
+    }
 
     public String getProtocol() {
         return protocol;
@@ -99,20 +99,20 @@ public class UrlDevice extends DeviceBase implements Readable, Writable {
 
     @Override
     public void write(Object value) throws IOException, InterruptedException {
-        if ((device!=null) && (device instanceof Writable)){
-            ((Writable)device).write(value);
+        if ((device != null) && (device instanceof Writable)) {
+            ((Writable) device).write(value);
         }
     }
 
     @Override
     public Object read() throws IOException, InterruptedException {
-        if ((device!=null) && (device instanceof Readable)){
-            return ((Readable)device).read();
+        if ((device != null) && (device instanceof Readable)) {
+            return ((Readable) device).read();
         }
         return null;
     }
 
-    protected Device resolve() throws IOException, InterruptedException {        
+    protected Device resolve() throws IOException, InterruptedException {
         Device ret = null;
         switch (protocol) {
             case "pv":
@@ -137,63 +137,68 @@ public class UrlDevice extends DeviceBase implements Readable, Writable {
                 } catch (Exception ex) {
                 }
 
-                ret = Epics.newChannelDevice(name, id, type, timestamped, precision, size);   
+                ret = Epics.newChannelDevice(name, id, type, timestamped, precision, size);
                 boolean blocking = true;
-                if (pars.containsKey("blocking")){
-                    try {                             
+                if (pars.containsKey("blocking")) {
+                    try {
                         blocking = Boolean.valueOf(pars.get("blocking"));
                     } catch (Exception ex) {
                     }
                 }
-                ((EpicsRegister)ret).setBlockingWrite(blocking);
+                ((EpicsRegister) ret).setBlockingWrite(blocking);
                 break;
-                                
 
             case "bs":
-                int modulo = Scalar.DEFAULT_MODULO;
-                int offset = Scalar.DEFAULT_OFFSET;
-                boolean waveform = false;
-                int sz = -1;
-                int width = -1;
-                int height = -1;
-                if ("true".equalsIgnoreCase(pars.get("waveform"))) {
-                    waveform = true;
-                }                
-                try {
-                    sz = Integer.valueOf(pars.get("size"));
-                    waveform = true;
-                } catch (Exception ex) {
-                }
-                try {
-                    width = Integer.valueOf(pars.get("width"));
-                } catch (Exception ex) {
-                }
-                try {
-                    height = Integer.valueOf(pars.get("height"));
-                } catch (Exception ex) {
-                }
-                try {
-                    modulo = Integer.valueOf(pars.get("modulo"));
-                } catch (Exception ex) {
-                }
-                try {
-                    offset = Integer.valueOf(pars.get("offset"));
-                } catch (Exception ex) {
-                }
-                if ((width >=0) && (height >=0)){
-                    ret = ((Stream) getParent()).addMatrix(name, id, modulo, offset, width, height);
-                } else if (waveform){
-                    if (sz>=0){
-                        ret = ((Stream) getParent()).addWaveform(name, id, modulo, offset, sz);
+                if (this.id.equals("PID")) {
+                    ret = ((Stream) getParent()).getPidReader();
+                } else if (this.id.equals("Timestamp")) {
+                    ret = ((Stream) getParent()).getTimestampReader();
+                } else {
+                    int modulo = Scalar.DEFAULT_MODULO;
+                    int offset = Scalar.DEFAULT_OFFSET;
+                    boolean waveform = false;
+                    int sz = -1;
+                    int width = -1;
+                    int height = -1;
+                    if ("true".equalsIgnoreCase(pars.get("waveform"))) {
+                        waveform = true;
+                    }
+                    try {
+                        sz = Integer.valueOf(pars.get("size"));
+                        waveform = true;
+                    } catch (Exception ex) {
+                    }
+                    try {
+                        width = Integer.valueOf(pars.get("width"));
+                    } catch (Exception ex) {
+                    }
+                    try {
+                        height = Integer.valueOf(pars.get("height"));
+                    } catch (Exception ex) {
+                    }
+                    try {
+                        modulo = Integer.valueOf(pars.get("modulo"));
+                    } catch (Exception ex) {
+                    }
+                    try {
+                        offset = Integer.valueOf(pars.get("offset"));
+                    } catch (Exception ex) {
+                    }
+                    if ((width >= 0) && (height >= 0)) {
+                        ret = ((Stream) getParent()).addMatrix(name, id, modulo, offset, width, height);
+                    } else if (waveform) {
+                        if (sz >= 0) {
+                            ret = ((Stream) getParent()).addWaveform(name, id, modulo, offset, sz);
+                        } else {
+                            ret = ((Stream) getParent()).addWaveform(name, id, modulo, offset);
+                        }
                     } else {
-                        ret = ((Stream) getParent()).addWaveform(name, id, modulo, offset);
-                   }
-                } else{
-                    ret = ((Stream) getParent()).addScalar(name, id, modulo, offset);
-                }                 
+                        ret = ((Stream) getParent()).addScalar(name, id, modulo, offset);
+                    }
+                }
         }
-        if (ret!=null){
-            if (pars.containsKey("monitored")){
+        if (ret != null) {
+            if (pars.containsKey("monitored")) {
                 try {
                     ret.setMonitored(Boolean.valueOf(pars.get("monitored")));
                 } catch (Exception ex) {
@@ -202,9 +207,9 @@ public class UrlDevice extends DeviceBase implements Readable, Writable {
             try {
                 ret.setPolling(Integer.valueOf(pars.get("polling")));
             } catch (Exception ex) {
-            }            
+            }
             try {
-                if (Boolean.valueOf(pars.get("simulated")) == true){
+                if (Boolean.valueOf(pars.get("simulated")) == true) {
                     ret.setSimulated();
                 }
             } catch (Exception ex) {
@@ -213,22 +218,22 @@ public class UrlDevice extends DeviceBase implements Readable, Writable {
         }
         throw new IOException("Invalid device: " + url);
     }
-    
-    void closeDevice(){
-        if (device != null){
+
+    void closeDevice() {
+        if (device != null) {
             try {
                 device.close();
             } catch (Exception ex) {
                 getLogger().log(Level.WARNING, null, ex);
             }
             device = null;
-        }        
+        }
     }
-    
+
     @Override
-    public void doClose() throws IOException{
+    public void doClose() throws IOException {
         closeDevice();
         super.doClose();
     }
-    
+
 }
