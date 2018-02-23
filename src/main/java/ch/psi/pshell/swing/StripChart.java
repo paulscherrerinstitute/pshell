@@ -86,7 +86,11 @@ public class StripChart extends StandardDialog {
         Channel,
         Stream,
         Device,
-        CamServer
+        CamServer;
+        
+        public boolean isReadOnly(){
+            return (this== CamServer) || (this==Stream);
+        } 
     }
     final DefaultTableModel modelSeries;
     final DefaultTableModel modelCharts;

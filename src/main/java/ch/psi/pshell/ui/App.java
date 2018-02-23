@@ -27,6 +27,7 @@ import ch.psi.pshell.scan.ScanListener;
 import ch.psi.pshell.scan.ScanRecord;
 import ch.psi.pshell.scripting.ViewPreference;
 import ch.psi.pshell.swing.PlotPanel;
+import ch.psi.pshell.swing.ScanEditorPanel;
 import ch.psi.pshell.swing.StripChart;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -713,6 +714,7 @@ public class App extends ObservableBase<AppListener> {
                     logger.log(Level.INFO, "Create panels");
                 } else {
                     logger.log(Level.INFO, "Create workbench");
+                    Processor.addServiceProvider(ScanEditorPanel.class);
                     view = new View();
                     if (isContextPersisted()) {
                         view.restoreState();
