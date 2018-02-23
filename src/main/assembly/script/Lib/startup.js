@@ -637,7 +637,7 @@ function  mscan(trigger, readables, points, timeout, async, take_initial, before
     Monitor Scan: sensors are sampled in timestamp change event of the trigger.
 
     Args:
-        trigger(Device): Source of the sampling triggering.
+        trigger(Device or list of Device): Source of the sampling triggering.
         readables(list of Readable): Sensors to be sampled on each step.
                                      If  trigger has cache and is included in readables, it is not read 
                                      for each step, but the change event value is used.
