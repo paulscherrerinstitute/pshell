@@ -134,7 +134,7 @@ public class Stream extends DeviceBase implements Readable<StreamValue>, Cacheab
         }
         //fixed by first initialize
         if (fixedChildren == null) {
-            fixedChildren = getChildren().length > 0;
+            fixedChildren = Arr.containsClass(getChildren(), Scalar.class);
         }
     }
 

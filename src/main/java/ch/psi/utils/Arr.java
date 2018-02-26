@@ -130,6 +130,11 @@ public class Arr {
     public static <T> boolean containsEqual(T[] array, Object item) {
         return getIndexEqual(array, item) >= 0;
     }
+    
+    public static <T> boolean containsClass(T[] array, Class cls) {
+        return getIndexClass(array, cls) >= 0;
+    }
+    
 
     public static <T> int getIndex(T[] array, Object item) {
         if ((array == null) || (item == null)) {
@@ -154,6 +159,20 @@ public class Arr {
         }
         return -1;
     }
+    
+    public static <T> int getIndexClass(T[] array, Class cls) {
+        if ((array == null) || (cls == null)) {
+            return -1;
+        }
+        for (int i = 0; i < array.length; i++) {
+            if (array[i]!=null){
+                if (cls.isAssignableFrom(array[i].getClass())) {
+                    return i;
+                }
+            }
+        }
+        return -1;
+    }    
 
     public static <T> T[] getSubArray(T[] array, int index) {
         if (array == null) {
