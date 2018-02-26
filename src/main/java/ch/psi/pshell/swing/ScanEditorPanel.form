@@ -235,7 +235,7 @@
               <Group type="103" groupAlignment="0" attributes="0">
                   <Group type="102" alignment="0" attributes="0">
                       <EmptySpace min="-2" pref="2" max="-2" attributes="0"/>
-                      <Component id="jScrollPane4" pref="43" max="32767" attributes="0"/>
+                      <Component id="jScrollPane4" pref="37" max="32767" attributes="0"/>
                       <EmptySpace min="-2" max="-2" attributes="0"/>
                       <Group type="103" groupAlignment="3" attributes="0">
                           <Component id="buttonSenDelete" alignment="3" min="-2" max="-2" attributes="0"/>
@@ -362,34 +362,26 @@
                       <Group type="103" groupAlignment="1" attributes="0">
                           <Component id="jPanel3" alignment="1" max="32767" attributes="0"/>
                           <Group type="102" alignment="0" attributes="0">
-                              <Group type="103" groupAlignment="3" attributes="0">
-                                  <Component id="jLabel3" alignment="3" min="-2" max="-2" attributes="0"/>
-                                  <Component id="textTitle" alignment="3" min="-2" max="-2" attributes="0"/>
-                                  <Component id="checkPersist" alignment="3" min="-2" max="-2" attributes="0"/>
+                              <Group type="103" groupAlignment="2" attributes="0">
+                                  <Component id="checkPersist" alignment="2" min="-2" max="-2" attributes="0"/>
+                                  <Component id="textTitle" alignment="2" min="-2" max="-2" attributes="0"/>
+                                  <Component id="jLabel3" alignment="2" min="-2" max="-2" attributes="0"/>
                               </Group>
                               <EmptySpace min="0" pref="0" max="-2" attributes="0"/>
-                              <Group type="103" groupAlignment="3" attributes="0">
-                                  <Component id="spinnerPasses" alignment="3" min="-2" max="-2" attributes="0"/>
-                                  <Component id="labelPasses" alignment="3" min="-2" max="-2" attributes="0"/>
-                                  <Component id="checkDisplay" alignment="3" min="-2" max="-2" attributes="0"/>
+                              <Group type="103" groupAlignment="2" attributes="0">
+                                  <Component id="checkDisplay" alignment="2" min="-2" max="-2" attributes="0"/>
+                                  <Component id="spinnerPasses" alignment="2" min="-2" max="-2" attributes="0"/>
+                                  <Component id="labelPasses" alignment="2" min="-2" max="-2" attributes="0"/>
                               </Group>
-                              <Group type="103" groupAlignment="0" attributes="0">
-                                  <Group type="102" attributes="0">
-                                      <Group type="103" groupAlignment="3" attributes="0">
-                                          <Component id="jLabel7" alignment="3" min="-2" max="-2" attributes="0"/>
-                                          <Component id="spinnerTime" alignment="3" min="-2" max="-2" attributes="0"/>
-                                      </Group>
-                                      <EmptySpace min="0" pref="0" max="-2" attributes="0"/>
-                                      <Group type="103" groupAlignment="3" attributes="0">
-                                          <Component id="labelLatency" alignment="3" min="-2" max="-2" attributes="0"/>
-                                          <Component id="spinnerLatency" alignment="3" min="-2" max="-2" attributes="0"/>
-                                      </Group>
-                                  </Group>
-                                  <Group type="102" attributes="0">
-                                      <Component id="checkRelative" min="-2" max="-2" attributes="0"/>
-                                      <EmptySpace min="0" pref="0" max="-2" attributes="0"/>
-                                      <Component id="checkZigzag" min="-2" max="-2" attributes="0"/>
-                                  </Group>
+                              <Group type="103" groupAlignment="2" attributes="0">
+                                  <Component id="checkRelative" alignment="2" min="-2" max="-2" attributes="0"/>
+                                  <Component id="spinnerTime" alignment="2" min="-2" max="-2" attributes="0"/>
+                                  <Component id="jLabel7" alignment="2" min="-2" max="-2" attributes="0"/>
+                              </Group>
+                              <Group type="103" groupAlignment="2" attributes="0">
+                                  <Component id="checkZigzag" alignment="2" min="-2" max="-2" attributes="0"/>
+                                  <Component id="spinnerLatency" alignment="2" min="-2" max="-2" attributes="0"/>
+                                  <Component id="labelLatency" alignment="2" min="-2" max="-2" attributes="0"/>
                               </Group>
                           </Group>
                       </Group>
@@ -506,7 +498,7 @@
                   <Group type="103" groupAlignment="0" attributes="0">
                       <Group type="102" attributes="0">
                           <EmptySpace max="-2" attributes="0"/>
-                          <Component id="jScrollPane6" pref="40" max="32767" attributes="0"/>
+                          <Component id="jScrollPane6" pref="0" max="32767" attributes="0"/>
                           <EmptySpace min="-2" pref="4" max="-2" attributes="0"/>
                           <Group type="103" groupAlignment="3" attributes="0">
                               <Component id="buttonParsDelete" alignment="3" min="-2" max="-2" attributes="0"/>
@@ -662,7 +654,7 @@
                   <Group type="103" groupAlignment="0" attributes="0">
                       <Group type="102" alignment="0" attributes="0">
                           <EmptySpace min="-2" pref="2" max="-2" attributes="0"/>
-                          <Component id="jScrollPane3" pref="50" max="32767" attributes="0"/>
+                          <Component id="jScrollPane3" pref="43" max="32767" attributes="0"/>
                           <EmptySpace max="-2" attributes="0"/>
                           <Group type="103" groupAlignment="3" attributes="0">
                               <Component id="buttonDelete" alignment="3" min="-2" max="-2" attributes="0"/>

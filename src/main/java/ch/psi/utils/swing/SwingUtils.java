@@ -23,9 +23,13 @@ import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.Toolkit;
 import java.awt.Window;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.StringSelection;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.InputEvent;
+import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
@@ -37,6 +41,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.Random;
+import java.util.StringTokenizer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.AbstractButton;
@@ -101,9 +106,9 @@ public class SwingUtils {
     /**
      * If parent is null then center in the screen
      */
-    public static void centerComponent(Component parent, Component component) {    
-        if ((Sys.getOSFamily() == OSFamily.Mac) && (component instanceof Window)){
-            ((Window)component).setLocationRelativeTo(parent);
+    public static void centerComponent(Component parent, Component component) {
+        if ((Sys.getOSFamily() == OSFamily.Mac) && (component instanceof Window)) {
+            ((Window) component).setLocationRelativeTo(parent);
         } else {
             if (parent == null) {
                 Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
@@ -204,19 +209,19 @@ public class SwingUtils {
             System.setProperty("com.apple.mrj.application.live-resize", "true");
         }
     }
-    
+
     public static void adjustMacMenuBarAccelerators(JMenuBar menuBar) {
-        if (Sys.getOSFamily() == OSFamily.Mac){
-            for (Component c : SwingUtils.getComponentsByType(menuBar, JMenuItem.class)){
-                JMenuItem item = (JMenuItem)c;
-                if ((item.getAccelerator() != null) && (item.getAccelerator().getModifiers() & InputEvent.CTRL_MASK)!=0) {
+        if (Sys.getOSFamily() == OSFamily.Mac) {
+            for (Component c : SwingUtils.getComponentsByType(menuBar, JMenuItem.class)) {
+                JMenuItem item = (JMenuItem) c;
+                if ((item.getAccelerator() != null) && (item.getAccelerator().getModifiers() & InputEvent.CTRL_MASK) != 0) {
                     int modifiers = (item.getAccelerator().getModifiers() & ~InputEvent.CTRL_MASK & ~InputEvent.CTRL_DOWN_MASK) | InputEvent.META_MASK;
                     item.setAccelerator(KeyStroke.getKeyStroke(item.getAccelerator().getKeyCode(), modifiers));
                 }
-                
+
             }
         }
-    }    
+    }
 
     public static boolean isFullScreen(Frame f) {
         return (f.getExtendedState() == JFrame.MAXIMIZED_BOTH) && f.isUndecorated();
@@ -334,17 +339,17 @@ public class SwingUtils {
 
     public static Component[] getComponentsByType(Container parent, Class type) {
         boolean is_menu = (parent instanceof JMenu);
-        int componentCount = is_menu ? ((JMenu)parent).getMenuComponentCount() : parent.getComponentCount();
+        int componentCount = is_menu ? ((JMenu) parent).getMenuComponentCount() : parent.getComponentCount();
         ArrayList<Component> ret = new ArrayList<>();
         for (int i = 0; i < componentCount; i++) {
-            Component component = is_menu ? ((JMenu)parent).getMenuComponent(i): parent.getComponent(i);
+            Component component = is_menu ? ((JMenu) parent).getMenuComponent(i) : parent.getComponent(i);
             if (type.isAssignableFrom(component.getClass())) {
                 ret.add(component);
             }
         }
 
         for (int i = 0; i < componentCount; i++) {
-            Component component = is_menu ? ((JMenu)parent).getMenuComponent(i): parent.getComponent(i);
+            Component component = is_menu ? ((JMenu) parent).getMenuComponent(i) : parent.getComponent(i);
             if (component instanceof Container) {
                 ret.addAll(Arrays.asList(getComponentsByType((Container) component, type)));
             }
@@ -429,65 +434,65 @@ public class SwingUtils {
 
     public static void showExceptionBlocking(final Component parent, final Exception ex, String title) {
         //JOptionPane.showMessageDialog(parent, message, (title == null) ? "Exception" : title, JOptionPane.WARNING_MESSAGE, null);
-        
+
         int max_width = 1000;
         int max_msg_height = 300;
         int min_width = 400;
-        String message = String.valueOf(ExceptionUtils.getMessage(ex)).trim();  
-        if (message.endsWith(":")){
+        String message = String.valueOf(ExceptionUtils.getMessage(ex)).trim();
+        if (message.endsWith(":")) {
             message = message.substring(0, message.length() - 1);
         }
-        BorderLayout layout = new BorderLayout();        
+        BorderLayout layout = new BorderLayout();
         layout.setVgap(6);
-        JPanel panel = new JPanel(layout);        
+        JPanel panel = new JPanel(layout);
         Border padding = BorderFactory.createEmptyBorder(8, 0, 2, 0);
-        panel.setBorder(padding);        
-        JTextArea textMessage = new JTextArea(message);     
+        panel.setBorder(padding);
+        JTextArea textMessage = new JTextArea(message);
         textMessage.setEnabled(false);
         textMessage.setFont(new JLabel().getFont().deriveFont(Font.BOLD));
         textMessage.setLineWrap(false);
         textMessage.setBorder(null);
         textMessage.setBackground(null);
         textMessage.setDisabledTextColor(textMessage.getForeground());
-        textMessage.setAutoscrolls(true);        
-        
-        if (textMessage.getPreferredSize().width > max_width){
-            textMessage.setPreferredSize(new Dimension(max_width,textMessage.getPreferredSize().height));
-        }else if (textMessage.getPreferredSize().width < min_width){
-            textMessage.setPreferredSize(new Dimension(min_width,textMessage.getPreferredSize().height));
+        textMessage.setAutoscrolls(true);
+
+        if (textMessage.getPreferredSize().width > max_width) {
+            textMessage.setPreferredSize(new Dimension(max_width, textMessage.getPreferredSize().height));
+        } else if (textMessage.getPreferredSize().width < min_width) {
+            textMessage.setPreferredSize(new Dimension(min_width, textMessage.getPreferredSize().height));
         }
-        if (textMessage.getPreferredSize().height > max_msg_height){
+        if (textMessage.getPreferredSize().height > max_msg_height) {
             textMessage.setPreferredSize(new Dimension(textMessage.getPreferredSize().width, max_msg_height));
         }
-        panel.add(textMessage, BorderLayout.NORTH);                
-        
+        panel.add(textMessage, BorderLayout.NORTH);
+
         JScrollPane scrollDetails = new javax.swing.JScrollPane();
         JButton button = new JButton("Details");
         button.setFont(button.getFont().deriveFont(Font.PLAIN));
         JPanel buttonPanel = new JPanel(new BorderLayout());
         buttonPanel.add(button, BorderLayout.WEST);
-        panel.add(buttonPanel, BorderLayout.SOUTH);  
+        panel.add(buttonPanel, BorderLayout.SOUTH);
         button.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 panel.remove(buttonPanel);
-                panel.add(scrollDetails, BorderLayout.SOUTH);       
+                panel.add(scrollDetails, BorderLayout.SOUTH);
                 //scrollDetails.setSize(250, scrollDetails.getHeight());
-                if (scrollDetails.getPreferredSize().width > max_width){
-                    scrollDetails.setPreferredSize(new Dimension(max_width,scrollDetails.getPreferredSize().height));
-                }                                 
-                ((JDialog)panel.getTopLevelAncestor()).pack();
+                if (scrollDetails.getPreferredSize().width > max_width) {
+                    scrollDetails.setPreferredSize(new Dimension(max_width, scrollDetails.getPreferredSize().height));
+                }
+                ((JDialog) panel.getTopLevelAncestor()).pack();
             }
-        });        
-             
-        JTextArea textDetails = new JTextArea(ExceptionUtils.getStackTrace(ex));     
+        });
+
+        JTextArea textDetails = new JTextArea(ExceptionUtils.getStackTrace(ex));
         textDetails.setEditable(false);
         textDetails.setLineWrap(false);
         textDetails.setRows(12);
         scrollDetails.setViewportView(textDetails);
-        scrollDetails.setAutoscrolls(true);   
-               
-        JOptionPane.showMessageDialog(parent, panel, (title == null) ? "Exception" : title, JOptionPane.WARNING_MESSAGE, null);                
+        scrollDetails.setAutoscrolls(true);
+
+        JOptionPane.showMessageDialog(parent, panel, (title == null) ? "Exception" : title, JOptionPane.WARNING_MESSAGE, null);
     }
 
     /**
@@ -589,8 +594,8 @@ public class SwingUtils {
     }
 
     /**
-     * Requests the focus of a JComponent at the moment it is shown. Useful to set focus of
-     * components used in JOptionPane.
+     * Requests the focus of a JComponent at the moment it is shown. Useful to
+     * set focus of components used in JOptionPane.
      */
     public static void requestFocusDeferred(JComponent c) {
         c.addAncestorListener(new AncestorListener() {
@@ -1029,6 +1034,64 @@ public class SwingUtils {
             cols.add(table.getModel().getColumnName(i));
         }
         return cols.toArray();
+    }
+
+    public static void setupTableClipboardTransfer(final JTable table) {
+        int modifier = (Sys.getOSFamily() == Sys.OSFamily.Mac) ? InputEvent.META_MASK : ActionEvent.CTRL_MASK;
+        Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+        table.registerKeyboardAction(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    StringBuilder sb = new StringBuilder();
+                    int cols = table.getSelectedColumnCount();
+                    int rows = table.getSelectedRowCount();
+                    int[] selRows = table.getSelectedRows();
+                    int[] selCols = table.getSelectedColumns();
+                    if (!   ((rows - 1 == selRows[selRows.length - 1] - selRows[0]  && rows == selRows.length) 
+                          && (cols - 1 == selCols[selCols.length - 1] - selCols[0]  && cols == selCols.length))) {
+                        throw new Exception(new Exception("Invalid copy selection"));
+                    }
+                    for (int i = 0; i < rows; i++) {
+                        for (int j = 0; j < cols; j++) {
+                            sb.append(table.getValueAt(selRows[i], selCols[j]));
+                            if (j < cols - 1) {
+                                sb.append("\t");
+                            }
+                        }
+                        sb.append("\n");
+                    }
+                    clipboard.setContents(new StringSelection(sb.toString()), null);
+                } catch (Exception ex) {
+                    showException(table, ex);
+                }
+            }
+        }, "Copy", KeyStroke.getKeyStroke(KeyEvent.VK_C, modifier, false), JComponent.WHEN_FOCUSED);
+        table.registerKeyboardAction(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    int row = table.getSelectedRows()[0];
+                    int col = table.getSelectedColumns()[0];
+                        String str = (String) (clipboard.getContents(this).getTransferData(DataFlavor.stringFlavor));
+                    String[] rows = str.split("\n");
+                    for (int i=0; i< rows.length; i++) {
+                        String[] cols = rows[i].split("\\s+");
+                        for (int j=0; j< cols.length; j++) {
+                            if (((row + i) < table.getRowCount())  && ((col + j) < table.getColumnCount())) {
+                                table.setValueAt(cols[j], row + i, col + j);
+                                if (table.getEditingRow() == row  +i && table.getEditingColumn() == col+j) {
+                                    table.getCellEditor().cancelCellEditing();                        
+                                }                              
+                            }
+                        }
+                    }
+                    table.repaint();
+                } catch (Exception ex) {
+                    showException(table, ex);
+                }
+            }
+        }, "Paste", KeyStroke.getKeyStroke(KeyEvent.VK_V, modifier, false), JComponent.WHEN_FOCUSED);
     }
 
     //JTree
