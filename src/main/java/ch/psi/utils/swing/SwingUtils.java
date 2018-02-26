@@ -41,11 +41,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.Random;
-import java.util.StringTokenizer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.AbstractButton;
 import javax.swing.BorderFactory;
+import javax.swing.DefaultCellEditor;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
@@ -63,7 +63,6 @@ import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JTable;
 import javax.swing.JTextArea;
-import javax.swing.JTextField;
 import javax.swing.JTextPane;
 import javax.swing.JTree;
 import javax.swing.JViewport;
@@ -78,6 +77,7 @@ import javax.swing.event.AncestorEvent;
 import javax.swing.event.AncestorListener;
 import javax.swing.plaf.basic.BasicButtonUI;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableColumn;
 import javax.swing.text.AttributeSet;
 import javax.swing.text.Element;
 import javax.swing.text.JTextComponent;
@@ -1093,6 +1093,23 @@ public class SwingUtils {
             }
         }, "Paste", KeyStroke.getKeyStroke(KeyEvent.VK_V, modifier, false), JComponent.WHEN_FOCUSED);
     }
+    
+    
+    public static void setEnumTableColum(JTable table, int columnIndex, Class cls) {
+        TableColumn col = table.getColumnModel().getColumn(columnIndex);
+        if ((col != null) & (cls != null) & (cls.isEnum())) {  
+            JComboBox combo = new JComboBox();
+            table.setRowHeight(Math.max(table.getRowHeight(), combo.getPreferredSize().height - 3));
+            DefaultComboBoxModel model = new DefaultComboBoxModel();
+            for (Object object : cls.getEnumConstants()) {
+                model.addElement(object);
+            }
+            combo.setModel(model);
+            DefaultCellEditor cellEditor = new DefaultCellEditor(combo);
+            cellEditor.setClickCountToStart(2);
+            col.setCellEditor(cellEditor);            
+        }
+    }    
 
     //JTree
     public static void expandAll(JTree tree) {

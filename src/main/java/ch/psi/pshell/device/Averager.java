@@ -306,6 +306,7 @@ public class Averager extends ReadonlyRegisterBase<DescStatsDouble> implements R
         };
     }
 
+    @Override
     protected void doClose() throws IOException {
         if (innerDevice!=null){
             try {

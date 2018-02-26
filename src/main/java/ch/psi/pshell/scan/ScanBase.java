@@ -680,8 +680,8 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
         for (int i = 0; i < writables.length; i++) {
             if (writables[i] instanceof UrlDevice) {
                 ((UrlDevice) writables[i]).initialize();
+                innerDevices.add((UrlDevice) writables[i]);
                 writables[i] = (Writable) ((UrlDevice) writables[i]).getDevice();
-                innerDevices.add((Device) writables[i]);
             }
         }
         Stream innerStream = null;
@@ -696,8 +696,8 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
                     ((UrlDevice) readables[i]).setParent(innerStream);
                 }
                 ((UrlDevice) readables[i]).initialize();
+                innerDevices.add((UrlDevice) readables[i]);
                 readables[i] = (Readable) ((UrlDevice) readables[i]).getDevice();
-                innerDevices.add((Device) readables[i]);
             }
         }
         if (innerStream != null) {

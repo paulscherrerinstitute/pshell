@@ -18,6 +18,7 @@ import ch.psi.pshell.plot.PlotBase;
 import ch.psi.pshell.plot.TimePlotBase;
 import ch.psi.pshell.plot.TimePlotSeries;
 import ch.psi.pshell.plotter.Preferences;
+import static ch.psi.pshell.swing.ScanEditorPanel.COLUMN_TYPE;
 import ch.psi.pshell.ui.App;
 import ch.psi.utils.IO;
 import ch.psi.utils.InvokingProducer;
@@ -275,29 +276,17 @@ public class StripChart extends StandardDialog {
 
         TableColumn colType = tableSeries.getColumnModel().getColumn(2);
         colType.setPreferredWidth(80);
-        JComboBox comboType = new JComboBox();
-        tableSeries.setRowHeight(Math.max(tableSeries.getRowHeight(), comboType.getPreferredSize().height - 3));
-        DefaultComboBoxModel model = new DefaultComboBoxModel();
-        for (Type type : Type.values()) {
-            model.addElement(type);
-        }
-        comboType.setModel(model);
-        comboType.setEditable(true);
-
-        DefaultCellEditor cellEditor = new DefaultCellEditor(comboType);
-        cellEditor.setClickCountToStart(2);
-        colType.setCellEditor(cellEditor);
+        SwingUtils.setEnumTableColum(tableSeries, 2, Type.class);
 
         TableColumn colPlot = tableSeries.getColumnModel().getColumn(3);
         colPlot.setPreferredWidth(60);
         JComboBox comboPlot = new JComboBox();
-        model = new DefaultComboBoxModel();
+        DefaultComboBoxModel model = new DefaultComboBoxModel();
         for (int i = 1; i <= 5; i++) {
             model.addElement(i);
         }
         comboPlot.setModel(model);
-        comboPlot.setEditable(true);
-        cellEditor = new DefaultCellEditor(comboPlot);
+        DefaultCellEditor cellEditor = new DefaultCellEditor(comboPlot);
         cellEditor.setClickCountToStart(2);
         colPlot.setCellEditor(cellEditor);
 
@@ -308,7 +297,6 @@ public class StripChart extends StandardDialog {
         model.addElement(1);
         model.addElement(2);
         comboY.setModel(model);
-        comboY.setEditable(true);
         cellEditor = new DefaultCellEditor(comboY);
         cellEditor.setClickCountToStart(2);
         colY.setCellEditor(cellEditor);
@@ -413,8 +401,8 @@ public class StripChart extends StandardDialog {
         modelSeries.addTableModelListener(changeListener);
         modelCharts.addTableModelListener(changeListener);
          */
-        comboType.addActionListener((ActionEvent e) -> {
-            updateTooltip();
+        ((JComboBox)((DefaultCellEditor)tableSeries.getColumnModel().getColumn(2).getCellEditor()).getComponent()).addActionListener((ActionEvent e) -> {
+                updateTooltip();
         });
         tableSeries.getSelectionModel().addListSelectionListener((ListSelectionEvent e) -> {
             updateTooltip();

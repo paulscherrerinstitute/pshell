@@ -3,6 +3,7 @@
  */
 package ch.psi.pshell.core;
 
+import ch.psi.pshell.bs.PipelineServer;
 import ch.psi.pshell.bs.Scalar;
 import ch.psi.pshell.bs.Stream;
 import ch.psi.pshell.device.Device;
@@ -12,7 +13,9 @@ import ch.psi.pshell.device.Writable;
 import ch.psi.pshell.epics.Epics;
 import ch.psi.pshell.epics.EpicsRegister;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 
@@ -27,9 +30,12 @@ public class UrlDevice extends DeviceBase implements Readable, Writable {
     final String name;
     final String id;
     final Map<String, String> pars;
+    final List<Device> instantiatedDevices = new ArrayList<>();
 
     DeviceBase parent;
     Device device;
+    
+    static List<Stream> cameraStreams= new ArrayList<>();
 
     public UrlDevice(String url) {
         if (!url.contains("://")) {
@@ -196,6 +202,50 @@ public class UrlDevice extends DeviceBase implements Readable, Writable {
                         ret = ((Stream) getParent()).addScalar(name, id, modulo, offset);
                     }
                 }
+                break;
+            case "cs":
+                String url = id;
+                if (!url.startsWith("tcp://")) {
+                    String instanceName = url.substring(url.lastIndexOf("/") + 1);
+                    url = url.substring(0, url.lastIndexOf("/"));
+                    PipelineServer server = new PipelineServer(null, url);
+                    try {
+                        server.initialize();
+                        url = server.getStream(instanceName);
+                    } finally {
+                        server.close();
+                    }
+                }
+                String channel  = pars.get("channel");
+                Stream s = null;
+                url = url.trim();
+                synchronized (cameraStreams) {
+                    for (Stream cs : cameraStreams.toArray(new Stream[0])) {
+                        if (cs.isInitialized()){
+                            if (cs.getAddress().equals(url)) {
+                                s = cs;
+                                break;
+                            }
+                        } else {
+                            cameraStreams.remove(cs);
+                        }
+                    }
+                    if (s == null) {
+                        ch.psi.pshell.bs.Provider p = new ch.psi.pshell.bs.Provider(null, url, false, false);
+                        s = new Stream(null, p);
+                        cameraStreams.add(s);
+                        instantiatedDevices.add(s);
+                        p.initialize();
+                        s.start();
+                        s.waitCacheChange(10000);
+                        synchronized (instantiatedDevices) {
+                            instantiatedDevices.add(s);
+                            instantiatedDevices.add(p);
+                        }
+                    }
+                    ret = s.getChild(channel);
+                }
+                break;
         }
         if (ret != null) {
             if (pars.containsKey("monitored")) {
@@ -223,6 +273,13 @@ public class UrlDevice extends DeviceBase implements Readable, Writable {
         if (device != null) {
             try {
                 device.close();
+                for (Device dev: instantiatedDevices){
+                    dev.close();
+                    instantiatedDevices.remove(dev);
+                    if (cameraStreams.contains(dev)){
+                        cameraStreams.remove(dev);
+                    }
+                }
             } catch (Exception ex) {
                 getLogger().log(Level.WARNING, null, ex);
             }

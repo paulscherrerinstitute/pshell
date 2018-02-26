@@ -43,6 +43,18 @@ public class Sys {
         }
         return OSFamily.Unknown;
     }
+    
+    public static boolean isMac(){
+        return getOSFamily() == OSFamily.Mac;
+    }
+    
+    public static boolean isWindows(){
+        return getOSFamily() == OSFamily.Windows;
+    }
+
+    public static boolean isLinux(){
+        return getOSFamily() == OSFamily.Linux;
+    }    
 
     public static double getJavaVersion() {
         try {
