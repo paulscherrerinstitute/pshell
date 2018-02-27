@@ -42,12 +42,11 @@ public class UrlDevice extends DeviceBase implements Readable, Writable {
             throw new RuntimeException("Invalid device url: " + url);
         }
         this.url = url;
-        String[] tokens = url.split("://");
-        this.protocol = tokens[0];
+        this.protocol = url.substring(0, url.indexOf("://"));
         pars = new HashMap<>();
-        String id = tokens[1];
+        String id = url.substring(url.indexOf("://")+3, url.length());
         if (id.contains("?")) {
-            tokens = id.split("\\?");
+            String[] tokens = id.split("\\?");
             id = tokens[0].trim();
             for (String str : tokens[1].split("&")) {
                 tokens = str.split("=");

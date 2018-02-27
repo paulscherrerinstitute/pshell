@@ -439,7 +439,7 @@ public class IO {
             return null;
         }
         String short_name = file.getName();
-        if (short_name.contains(".") == false) {
+        if (!short_name.contains(".")) {
             return "";
         }
         return short_name.substring(short_name.lastIndexOf('.') + 1);

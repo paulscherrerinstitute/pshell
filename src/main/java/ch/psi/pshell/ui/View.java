@@ -360,7 +360,7 @@ public class View extends MainFrame {
 
         int indexMenu = 1;
         for (Processor processor : Processor.getServiceProviders()) {
-            if (processor.createMenuNew()){
+            if (processor.createMenuNew()) {
                 JMenuItem item = new JMenuItem("New " + processor.getType());
                 item.addActionListener((java.awt.event.ActionEvent evt) -> {
                     try {
@@ -372,8 +372,8 @@ public class View extends MainFrame {
                 menuFile.add(item, indexMenu);
                 indexMenu++;
             }
-            if (processor.createFilePanel()){
-                   ScriptsPanel pn = new ScriptsPanel();
+            if (processor.createFilePanel()) {
+                ScriptsPanel pn = new ScriptsPanel();
                 int index = tabStatus.getTabCount() - 1;
                 tabStatus.add(pn, index);
                 tabStatus.setTitleAt(index, processor.getType());
@@ -1329,14 +1329,14 @@ public class View extends MainFrame {
                 }
             }
         }
-        
+
         Processor processor = (Processor) cls.newInstance();
         if (file != null) {
             processor.open(file);
             openComponent(new File(processor.getFileName()).getName(), processor.getPanel());
             fileHistory.put(file);
-        } else{
-             openComponent("Unknown", processor.getPanel());
+        } else {
+            openComponent("Unknown", processor.getPanel());
         }
         return processor;
     }
@@ -3195,8 +3195,12 @@ public class View extends MainFrame {
             } else {
                 Processor processor = getSelectedProcessor();
                 if (processor != null) {
-                    processor.save();
-                    tabDoc.setTitleAt(tabDoc.getSelectedIndex(), new File(processor.getFileName()).getName());
+                    if (processor.getFileName() == null) {
+                        menuSaveAsActionPerformed(null);
+                    } else {
+                        processor.save();
+                        tabDoc.setTitleAt(tabDoc.getSelectedIndex(), new File(processor.getFileName()).getName());
+                    }
                 }
             }
         } catch (Exception ex) {
