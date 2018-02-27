@@ -268,52 +268,56 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
 
     @Override
     public void start() throws IOException, InterruptedException {
-        if (relative) {
-            readInitialPosition();
-        }
         Boolean fail = false;
+        initialPosition = null;
         try {
             assertFieldsOk();
             recordIndex = 0;
             result = newResult();
             openDevices();
-            triggerStarted();
-            moveToStart();
-            try {
-                onBeforeScan();
+            try{
+                if (relative) {
+                    readInitialPosition();
+                }            
+                triggerStarted();
+                moveToStart();
                 try {
-                    for (pass = 1; pass <= getNumberOfPasses(); pass++) {
-                        doScan();
+                    onBeforeScan();
+                    try {
+                        for (pass = 1; pass <= getNumberOfPasses(); pass++) {
+                            doScan();
+                        }
+                    } finally {
+                        onAfterScan();
                     }
+                    triggerEnded(null);
+                } catch (Exception ex) {
+                    fail = true;
+                    try {
+                        assertNotAborted();
+                    } catch (Exception e) {
+                        triggerEnded(e);
+                        throw e;
+                    }
+                    triggerEnded(ex);
+                    throw ex;
                 } finally {
-                    onAfterScan();
+                    if (relative && restorePosition && (initialPosition!=null)) {
+                        try {
+                            setPosition(initialPosition);
+                        } catch (InterruptedException ex) {
+                            if (!fail) {
+                                throw ex;
+                            }
+                        } catch (Exception ex) {
+                            logger.log(Level.WARNING, null, ex);
+                        }
+                    }                
                 }
-                triggerEnded(null);
-            } catch (Exception ex) {
-                fail = true;
-                try {
-                    assertNotAborted();
-                } catch (Exception e) {
-                    triggerEnded(e);
-                    throw e;
-                }
-                triggerEnded(ex);
-                throw ex;
-            } finally {
+            } finally{
                 closeDevices();
             }
         } finally {
-            if (relative && restorePosition) {
-                try {
-                    setPosition(initialPosition);
-                } catch (InterruptedException ex) {
-                    if (!fail) {
-                        throw ex;
-                    }
-                } catch (Exception ex) {
-                    logger.log(Level.WARNING, null, ex);
-                }
-            }
             endTimestamp = System.currentTimeMillis();
         }
     }

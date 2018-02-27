@@ -337,8 +337,8 @@
               <Group type="103" groupAlignment="0" attributes="0">
                   <Group type="102" attributes="0">
                       <Group type="103" groupAlignment="0" attributes="0">
-                          <Component id="jPanel6" linkSize="10" alignment="0" min="-2" pref="134" max="-2" attributes="0"/>
-                          <Component id="jPanel3" linkSize="10" alignment="0" pref="134" max="32767" attributes="0"/>
+                          <Component id="jPanel6" linkSize="10" alignment="0" min="-2" max="-2" attributes="0"/>
+                          <Component id="jPanel3" linkSize="10" alignment="0" max="32767" attributes="0"/>
                           <Component id="jPanel4" linkSize="10" alignment="0" max="32767" attributes="0"/>
                       </Group>
                       <EmptySpace max="32767" attributes="0"/>
@@ -382,26 +382,26 @@
                   <Group type="103" groupAlignment="0" attributes="0">
                       <Group type="102" alignment="1" attributes="0">
                           <EmptySpace min="-2" pref="2" max="-2" attributes="0"/>
-                          <Group type="103" groupAlignment="3" attributes="0">
-                              <Component id="jLabel6" alignment="3" min="-2" max="-2" attributes="0"/>
-                              <Component id="textFile" alignment="3" min="-2" max="-2" attributes="0"/>
+                          <Group type="103" groupAlignment="2" attributes="0">
+                              <Component id="textFile" alignment="2" min="-2" max="-2" attributes="0"/>
+                              <Component id="jLabel6" alignment="2" min="-2" max="-2" attributes="0"/>
                           </Group>
                           <EmptySpace min="0" pref="0" max="-2" attributes="0"/>
-                          <Group type="103" groupAlignment="3" attributes="0">
-                              <Component id="jLabel8" alignment="3" min="-2" max="-2" attributes="0"/>
-                              <Component id="textTag" alignment="3" min="-2" max="-2" attributes="0"/>
+                          <Group type="103" groupAlignment="2" attributes="0">
+                              <Component id="textTag" alignment="2" min="-2" max="-2" attributes="0"/>
+                              <Component id="jLabel8" alignment="2" min="-2" max="-2" attributes="0"/>
                           </Group>
                           <EmptySpace min="0" pref="0" max="-2" attributes="0"/>
-                          <Group type="103" groupAlignment="3" attributes="0">
-                              <Component id="jLabel4" alignment="3" min="-2" max="-2" attributes="0"/>
-                              <Component id="comboLayout" alignment="3" min="-2" max="-2" attributes="0"/>
+                          <Group type="103" groupAlignment="2" attributes="0">
+                              <Component id="comboLayout" alignment="2" min="-2" max="-2" attributes="0"/>
+                              <Component id="jLabel4" alignment="2" min="-2" max="-2" attributes="0"/>
                           </Group>
                           <EmptySpace min="0" pref="0" max="-2" attributes="0"/>
-                          <Group type="103" groupAlignment="3" attributes="0">
-                              <Component id="jLabel5" alignment="3" min="-2" max="-2" attributes="0"/>
-                              <Component id="comboProvider" alignment="3" min="-2" max="-2" attributes="0"/>
+                          <Group type="103" groupAlignment="2" attributes="0">
+                              <Component id="comboProvider" alignment="2" min="-2" max="-2" attributes="0"/>
+                              <Component id="jLabel5" alignment="2" min="-2" max="-2" attributes="0"/>
                           </Group>
-                          <EmptySpace max="32767" attributes="0"/>
+                          <EmptySpace max="-2" attributes="0"/>
                       </Group>
                   </Group>
                 </DimensionLayout>
@@ -485,7 +485,7 @@
                                       <Component id="jLabel9" min="-2" max="-2" attributes="0"/>
                                       <Component id="jLabel10" min="-2" max="-2" attributes="0"/>
                                   </Group>
-                                  <EmptySpace min="-2" max="-2" attributes="0"/>
+                                  <EmptySpace max="-2" attributes="0"/>
                                   <Group type="103" groupAlignment="0" max="-2" attributes="0">
                                       <Group type="102" alignment="0" attributes="0">
                                           <Component id="radioAuto" min="-2" max="-2" attributes="0"/>
@@ -506,11 +506,11 @@
                                   </Group>
                               </Group>
                               <Group type="102" attributes="0">
-                                  <EmptySpace min="65" pref="65" max="-2" attributes="0"/>
+                                  <EmptySpace min="-2" pref="65" max="-2" attributes="0"/>
                                   <Component id="comboDomain" min="-2" max="-2" attributes="0"/>
                               </Group>
                           </Group>
-                          <EmptySpace min="11" pref="11" max="-2" attributes="0"/>
+                          <EmptySpace min="-2" pref="11" max="-2" attributes="0"/>
                       </Group>
                   </Group>
                 </DimensionLayout>
@@ -518,28 +518,28 @@
                   <Group type="103" groupAlignment="0" attributes="0">
                       <Group type="102" alignment="1" attributes="0">
                           <EmptySpace min="-2" pref="2" max="-2" attributes="0"/>
-                          <Group type="103" groupAlignment="3" attributes="0">
-                              <Component id="jLabel9" alignment="3" min="-2" max="-2" attributes="0"/>
-                              <Component id="comboDomain" alignment="3" min="-2" max="-2" attributes="0"/>
+                          <Group type="103" groupAlignment="2" attributes="0">
+                              <Component id="jLabel9" alignment="2" min="-2" max="-2" attributes="0"/>
+                              <Component id="comboDomain" alignment="2" min="-2" max="-2" attributes="0"/>
                           </Group>
-                          <EmptySpace min="0" pref="0" max="32767" attributes="0"/>
-                          <Group type="103" groupAlignment="3" attributes="0">
-                              <Component id="radioScan" alignment="3" min="-2" max="-2" attributes="0"/>
-                              <Component id="jLabel10" alignment="3" min="-2" max="-2" attributes="0"/>
-                          </Group>
-                          <EmptySpace min="0" pref="0" max="-2" attributes="0"/>
-                          <Group type="103" groupAlignment="3" attributes="0">
-                              <Component id="radioAuto" alignment="3" min="-2" max="-2" attributes="0"/>
-                              <Component id="spinnerRangeFrom" alignment="3" min="-2" max="-2" attributes="0"/>
-                              <Component id="labelRangeFrom" alignment="3" min="-2" max="-2" attributes="0"/>
+                          <EmptySpace min="0" pref="2" max="32767" attributes="0"/>
+                          <Group type="103" groupAlignment="2" attributes="0">
+                              <Component id="radioScan" alignment="2" min="-2" max="-2" attributes="0"/>
+                              <Component id="jLabel10" alignment="2" min="-2" max="-2" attributes="0"/>
                           </Group>
                           <EmptySpace min="0" pref="0" max="-2" attributes="0"/>
-                          <Group type="103" groupAlignment="3" attributes="0">
-                              <Component id="radioManual" alignment="3" min="-2" max="-2" attributes="0"/>
-                              <Component id="spinnerRangeTo" alignment="3" min="-2" max="-2" attributes="0"/>
-                              <Component id="labelRangeTo" alignment="3" min="-2" max="-2" attributes="0"/>
+                          <Group type="103" groupAlignment="2" attributes="0">
+                              <Component id="radioAuto" alignment="2" min="-2" max="-2" attributes="0"/>
+                              <Component id="spinnerRangeFrom" alignment="2" min="-2" max="-2" attributes="0"/>
+                              <Component id="labelRangeFrom" alignment="2" min="-2" max="-2" attributes="0"/>
                           </Group>
-                          <EmptySpace max="32767" attributes="0"/>
+                          <EmptySpace min="0" pref="0" max="-2" attributes="0"/>
+                          <Group type="103" groupAlignment="2" attributes="0">
+                              <Component id="radioManual" alignment="2" min="-2" max="-2" attributes="0"/>
+                              <Component id="spinnerRangeTo" alignment="2" min="-2" max="-2" attributes="0"/>
+                              <Component id="labelRangeTo" alignment="2" min="-2" max="-2" attributes="0"/>
+                          </Group>
+                          <EmptySpace max="-2" attributes="0"/>
                       </Group>
                   </Group>
                 </DimensionLayout>
@@ -675,24 +675,24 @@
                       <Group type="102" attributes="0">
                           <EmptySpace min="-2" pref="2" max="-2" attributes="0"/>
                           <Group type="103" groupAlignment="2" attributes="0">
-                              <Component id="checkSave" alignment="2" min="-2" max="-2" attributes="0"/>
-                              <Component id="textTitle" alignment="2" min="-2" max="-2" attributes="0"/>
                               <Component id="jLabel3" alignment="2" min="-2" max="-2" attributes="0"/>
+                              <Component id="textTitle" alignment="2" min="-2" max="-2" attributes="0"/>
+                              <Component id="checkSave" alignment="2" min="-2" max="-2" attributes="0"/>
                           </Group>
                           <EmptySpace min="0" pref="0" max="-2" attributes="0"/>
                           <Group type="103" groupAlignment="2" attributes="0">
                               <Component id="checkDisplay" alignment="2" min="-2" max="-2" attributes="0"/>
-                              <Component id="spinnerPasses" alignment="2" min="-2" max="-2" attributes="0"/>
                               <Component id="labelPasses" alignment="2" min="-2" max="-2" attributes="0"/>
+                              <Component id="spinnerPasses" alignment="2" min="-2" max="-2" attributes="0"/>
                           </Group>
                           <Group type="103" groupAlignment="2" attributes="0">
                               <Component id="checkRelative" alignment="2" min="-2" max="-2" attributes="0"/>
-                              <Component id="spinnerTime" alignment="2" min="-2" max="-2" attributes="0"/>
                               <Component id="jLabel7" alignment="2" min="-2" max="-2" attributes="0"/>
+                              <Component id="spinnerTime" alignment="2" min="-2" max="-2" attributes="0"/>
                           </Group>
                           <Group type="103" groupAlignment="2" attributes="0">
-                              <Component id="checkZigzag" alignment="2" min="-2" max="-2" attributes="0"/>
                               <Component id="spinnerLatency" alignment="2" min="-2" max="-2" attributes="0"/>
+                              <Component id="checkZigzag" alignment="2" min="-2" max="-2" attributes="0"/>
                               <Component id="labelLatency" alignment="2" min="-2" max="-2" attributes="0"/>
                           </Group>
                           <EmptySpace max="-2" attributes="0"/>

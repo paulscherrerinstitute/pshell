@@ -139,6 +139,10 @@ public class Averager extends ReadonlyRegisterBase<DescStatsDouble> implements R
             ((Device) source).addListener(sourceListener);
         }
     }
+    
+    public boolean isReadOnChangeEvent(){
+        return (config.interval < 0);
+    }
 
     DeviceListener sourceListener;
     ScheduledExecutorService monitoringTimer;
