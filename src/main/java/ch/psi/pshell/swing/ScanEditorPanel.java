@@ -335,8 +335,8 @@ public class ScanEditorPanel extends MonitoredPanel implements Processor {
         if (command.isEmpty()) {
             throw new Exception("No scan defined");
         }
-        String name = ((fileName == null) ? "Unknown" : IO.getPrefix(fileName)) ;
-        command = "set_exec_pars(name='" + name + "'); " + command;
+        //String name = ((fileName == null) ? "Unknown" : IO.getPrefix(fileName)) ;
+        //command = "set_exec_pars(name='" + name + "'); " + command;
         Context.getInstance().evalLineAsync(command).handle((ok, ex) -> {
             if ((ex != null) && (!Context.getInstance().isAborted())) {
                 SwingUtils.showException(this, (Exception) ex);
@@ -682,8 +682,7 @@ public class ScanEditorPanel extends MonitoredPanel implements Processor {
                     ret.add(getParName("name") + "'" + textFile.getText() + "'");
                 }
             } else {
-                //Seeting name before, in the command
-                //ret.add(getParName("name")+ "'" +  ((fileName == null) ? "Unknown" : IO.getPrefix(fileName)) + "'");
+                ret.add(getParName("name")+ "'" +  ((fileName == null) ? "Unknown" : IO.getPrefix(fileName)) + "'");
             }
             if (!textTag.getText().trim().isEmpty()) {
                 ret.add(getParName("tag") + "'" + textTag.getText() + "'");

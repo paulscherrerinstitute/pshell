@@ -1,6 +1,7 @@
 package ch.psi.pshell.data;
 
 import ch.psi.pshell.core.Context;
+import ch.psi.pshell.core.ExecutionParameters;
 import static ch.psi.pshell.data.Layout.ATTR_END_TIMESTAMP;
 import static ch.psi.pshell.data.Layout.ATTR_FILE;
 import static ch.psi.pshell.data.Layout.ATTR_NAME;
@@ -97,10 +98,16 @@ public abstract class LayoutBase implements Layout {
     }            
 
     protected void setScriptFileAttibute() throws IOException {
-        File file = getDataManager().getExecutionPars().getScriptFile();
+        ExecutionParameters pars =  getDataManager().getExecutionPars();
+        File file = pars.getScriptFile();
         if (file != null) {
             String fileName = file.getPath();
             getDataManager().setAttribute("/", ATTR_FILE, fileName);
+        } else {
+            String command = pars.getStatement();
+            if (command!=null){
+                getDataManager().setAttribute("/", ATTR_COMMAND, command);
+            }
         }
     }
 

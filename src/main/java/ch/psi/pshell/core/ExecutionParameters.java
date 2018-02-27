@@ -418,6 +418,11 @@ public class ExecutionParameters {
         CommandInfo cmd = getCommand();
         return (cmd != null) ? Context.getInstance().getRunningScriptFile(cmd.script) : null;
     }
+    
+    public String getStatement() {
+        CommandInfo cmd = getCommand();
+        return cmd.command;
+    }    
 
     public String getScriptVersion() throws IOException {
         File file = getScriptFile();
