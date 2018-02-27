@@ -197,42 +197,66 @@ public class ScanEditorPanel extends MonitoredPanel implements Processor {
     public void open(String fileName) throws IOException {
         String json = new String(Files.readAllBytes(new File(fileName).toPath()));
         List state = (List) JsonSerializer.decode(json, List.class);
-        comboType.setSelectedItem(state.get(0));
-        modelPositioners.setDataVector(toObjectArray((List) state.get(1)), SwingUtils.getTableColumnNames(tablePositioners));
-        modelSensors.setDataVector(toObjectArray((List) state.get(2)), SwingUtils.getTableColumnNames(tableSensors));
+        comboType.setSelectedItem(getStateElement(state, 0, null));
+        modelPositioners.setDataVector(toObjectArray((List) getStateElement(state, 1, List.class)), SwingUtils.getTableColumnNames(tablePositioners));
+        modelSensors.setDataVector(toObjectArray((List) getStateElement(state, 2, List.class)), SwingUtils.getTableColumnNames(tableSensors));
+        ckSync.setSelected((Boolean) getStateElement(state, 3, Boolean.class));
         if (getScanCommand().equals("vscan")) {
             ArrayList<String> columns = new ArrayList<>();
             for (int i = 0; i < modelPositioners.getRowCount(); i++) {
                 columns.add(String.valueOf(modelPositioners.getValueAt(i, 1)));
             }
-            modelVector.setDataVector(toObjectArray((List) state.get(4)), columns.toArray());
+            modelVector.setDataVector(toObjectArray((List) getStateElement(state, 4, List.class)), columns.toArray());
         }
-        textTitle.setText(String.valueOf(state.get(5)));
-        spinnerPasses.setValue(state.get(6));
-        spinnerTime.setValue(state.get(7));
-        spinnerLatency.setValue(state.get(8));
-        checkRelative.setSelected((Boolean) state.get(9));
-        checkZigzag.setSelected((Boolean) state.get(10));
-        checkSave.setSelected((Boolean) state.get(11));
-        checkDisplay.setSelected((Boolean) state.get(12));
+        textTitle.setText(String.valueOf(getStateElement(state, 5, null)));
+        spinnerPasses.setValue(getStateElement(state, 6, Number.class));
+        spinnerTime.setValue(getStateElement(state, 7, Number.class));
+        spinnerLatency.setValue(getStateElement(state, 8, Number.class));
+        checkRelative.setSelected((Boolean) getStateElement(state, 9, Boolean.class));
+        checkZigzag.setSelected((Boolean) getStateElement(state, 10, Boolean.class));
+        checkSave.setSelected((Boolean) getStateElement(state, 11, Boolean.class));
+        checkDisplay.setSelected((Boolean) getStateElement(state, 12, Boolean.class));
         
-        textFile.setText((String) state.get(13));
-        textTag.setText((String) state.get(14));
-        comboLayout.setSelectedItem(String.valueOf(state.get(15)).trim());
-        comboProvider.setSelectedItem(String.valueOf(state.get(16)).trim());
-        Integer range = ((Number) state.get(17)).intValue();
+        textFile.setText((String) getStateElement(state, 13, String.class));
+        textTag.setText((String) getStateElement(state, 14, String.class));
+        comboLayout.setSelectedItem(String.valueOf(getStateElement(state, 15, String.class)).trim());
+        comboProvider.setSelectedItem(String.valueOf(getStateElement(state, 16, String.class)).trim());
+        Integer range = ((Number) getStateElement(state, 17, Number.class)).intValue();
         buttonGrouPlotRange.setSelected((range == 2) ? radioManual.getModel() : ((range == 1) ? radioAuto.getModel() : radioScan.getModel()), true);
-        if (radioManual.isSelected() && (state.get(18)!=null) && (state.get(19)!=null)) {
-            spinnerRangeFrom.setValue(((Number) state.get(18)).doubleValue());
-            spinnerRangeTo.setValue(((Number) state.get(19)).doubleValue());
+        if (radioManual.isSelected() && (getStateElement(state, 18, null)!=Number.class) && (getStateElement(state, 19, Number.class)!=null)) {
+            spinnerRangeFrom.setValue(((Number) getStateElement(state, 18, Number.class)).doubleValue());
+            spinnerRangeTo.setValue(((Number) getStateElement(state, 19, Number.class)).doubleValue());
         }
-        comboDomain.setSelectedItem(String.valueOf(state.get(20)).trim());
+        comboDomain.setSelectedItem(String.valueOf(getStateElement(state, 20, null)).trim());
                  
         setupColumns();
         this.fileName = fileName;
         changed = false;
         updateCommand();
         update();
+    }
+    
+    Object getStateElement(List state, int index, Class type){
+        if (index >= state.size()){
+            return null;
+        }
+        Object obj = state.get(index);
+        if ((type==null) || (type.isAssignableFrom(obj.getClass()))){
+            return obj;
+        }
+       
+        if (type == Boolean.class){
+            return Boolean.FALSE;
+        } else if (type == String.class){
+            return "";
+        } else if (Number.class.isAssignableFrom(type)){
+            return new Integer(0);
+        }
+        try{
+            return type.newInstance();
+        } catch (Exception ex){
+            return null;
+        }
     }
 
     @Override
@@ -259,7 +283,7 @@ public class ScanEditorPanel extends MonitoredPanel implements Processor {
         state.add(comboType.getSelectedItem());
         state.add(modelPositioners.getDataVector());
         state.add(modelSensors.getDataVector());
-        state.add(new Vector()); //modelParameters.gettDataVector());
+        state.add(ckSync.isSelected());
         state.add(modelVector.getDataVector());
         state.add(textTitle.getText());
         state.add(spinnerPasses.getValue());
@@ -417,7 +441,8 @@ public class ScanEditorPanel extends MonitoredPanel implements Processor {
                 labelLatency.setText("Latency (s):");
                 break;
         }
-
+        ckSync.setVisible(cmd.equals("mscan"));
+        ckSync.setEnabled(enabled);
         if (cmd.equals("vscan")) {
             panelVector.setVisible(true);
             if (modelVector.getColumnCount() != modelPositioners.getRowCount()) {
@@ -560,7 +585,12 @@ public class ScanEditorPanel extends MonitoredPanel implements Processor {
                     interval = 0.0;
                 }
                 if (samples.intValue() > 1) {
-                    sensor = "create_averager(" + sensor + ", " + samples.intValue() + ", " + interval.doubleValue() + ")";
+                    //If change event serie with trigger auto-generated, then averagers must be async
+                    if ((getScanCommand().equals("mscan") && (modelPositioners.getRowCount()==0))){
+                        sensor = "create_averager(" + sensor + ", " + samples.intValue() + ", " + interval.doubleValue()+ ", " + getNullValue() + ", " + getBoolValue(true) +")";
+                    } else {
+                        sensor = "create_averager(" + sensor + ", " + samples.intValue() + ", " + interval.doubleValue() + ")";
+                    }
                 }
                 ret.add(sensor);
             }
@@ -576,8 +606,7 @@ public class ScanEditorPanel extends MonitoredPanel implements Processor {
         return ret;
     }
 
-    String getNullValue(boolean value) {
-        String ret = String.valueOf(value);
+    String getNullValue() {
         if (Context.getInstance().getSetup().getScriptType() == ScriptType.py) {
             return "None";
         }
@@ -591,17 +620,21 @@ public class ScanEditorPanel extends MonitoredPanel implements Processor {
         return par + "=";
     }
 
+
     List<String> getParameters() {
 
         boolean addSpacersCommas = (Context.getInstance().getSetup().getScriptType() == ScriptType.js);
         List<String> ret = new ArrayList<>();
-        if (getScanCommand() == "tscan") {
+        if (getScanCommand().equals("tscan")) {
             ret.add(getParName("points") + spinnerPasses.getValue());
             ret.add(getParName("interval") + spinnerLatency.getValue());
-        } else if (getScanCommand() == "mscan") {
+        } else if (getScanCommand().equals("mscan")) {
             ret.add(getParName("points") + ((((Number) spinnerPasses.getValue()).doubleValue() == 0) ? -1 : spinnerPasses.getValue()));
-            ret.add(getParName("timeout") + ((((Number) spinnerTime.getValue()).doubleValue() == 0) ? -1 : spinnerTime.getValue()));
-        } else if (getScanCommand() == "vscan") {
+            ret.add(getParName("timeout") + ((((Number) spinnerTime.getValue()).doubleValue() == 0) ? -1 : spinnerTime.getValue()));           
+            if (ckSync.isSelected()){
+                ret.add(getParName("async") + getBoolValue(false));
+            }
+        } else if (getScanCommand().equals( "vscan")) {
             StringBuilder sb = new StringBuilder();
             sb.append("[");
             for (int i = 0; i < modelVector.getRowCount(); i++) {
@@ -807,6 +840,7 @@ public class ScanEditorPanel extends MonitoredPanel implements Processor {
         panelVector = new javax.swing.JPanel();
         jScrollPane7 = new javax.swing.JScrollPane();
         tableVector = new javax.swing.JTable();
+        ckSync = new javax.swing.JCheckBox();
 
         jCheckBox1.setText("jCheckBox1");
 
@@ -1420,6 +1454,13 @@ public class ScanEditorPanel extends MonitoredPanel implements Processor {
                 .addGap(0, 0, 0))
         );
 
+        ckSync.setText("Synchronous sampling");
+        ckSync.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                ckSyncActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
         jPanel2.setLayout(jPanel2Layout);
         jPanel2Layout.setHorizontalGroup(
@@ -1433,6 +1474,8 @@ public class ScanEditorPanel extends MonitoredPanel implements Processor {
                         .addComponent(jLabel1)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(comboType, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(ckSync)
                         .addGap(0, 0, Short.MAX_VALUE))
                     .addComponent(jPanel5, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addContainerGap())
@@ -1443,7 +1486,8 @@ public class ScanEditorPanel extends MonitoredPanel implements Processor {
                 .addContainerGap()
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel1)
-                    .addComponent(comboType, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(comboType, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(ckSync))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jPanel5, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -1649,6 +1693,10 @@ public class ScanEditorPanel extends MonitoredPanel implements Processor {
         }
     }//GEN-LAST:event_comboDomainActionPerformed
 
+    private void ckSyncActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ckSyncActionPerformed
+        onControlChanged();
+    }//GEN-LAST:event_ckSyncActionPerformed
+
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton buttonDelete;
@@ -1664,6 +1712,7 @@ public class ScanEditorPanel extends MonitoredPanel implements Processor {
     private javax.swing.JCheckBox checkRelative;
     private javax.swing.JCheckBox checkSave;
     private javax.swing.JCheckBox checkZigzag;
+    private javax.swing.JCheckBox ckSync;
     private javax.swing.JComboBox<String> comboDomain;
     private javax.swing.JComboBox<String> comboLayout;
     private javax.swing.JComboBox<String> comboProvider;

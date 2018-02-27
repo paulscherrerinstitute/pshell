@@ -174,7 +174,7 @@ public class Averager extends ReadonlyRegisterBase<DescStatsDouble> implements R
         addSample(sample);
     }
     
-    void addSample(Number sample) {
+        void addSample(Number sample) {
         try {
             synchronized (samples) {
                 samples.add(sample);

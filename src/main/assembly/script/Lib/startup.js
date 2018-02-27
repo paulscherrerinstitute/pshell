@@ -1576,7 +1576,7 @@ function push_repository(all_branches, force){
     Returns:
         None
     */
-    if (!is_defined(all_branches))    all_branches = True;   
+    if (!is_defined(all_branches))    all_branches = true;   
     if (!is_defined(force))    force = false;
     
     get_context().pushToUpstream(all_branches, force)
@@ -1704,7 +1704,7 @@ function reinit(dev){
     return to_array(get_context().reinit())
 }
 
-function create_averager(dev, count, interval, name){
+function create_averager(dev, count, interval, name, monitored){
     /*
     Creates and initializes and averager for dev.
 
@@ -1713,14 +1713,20 @@ function create_averager(dev, count, interval, name){
         count(int): number of samples
         interval(float, optional): sampling interval in seconds. 
                                    If less than zero, sampling is made on data change event.
+    name(str, optional): sets the name of the device (default is: <dev name> averager)    
+    monitored (bool, optional): if true then averager processes asynchronously.
 
     Returns:
         Averager device
     */
     if (!is_defined(interval))    interval = 0.0;
     if (!is_defined(name))    name = null;
+    if (!is_defined(monitored))    monitored = false;
     dev = string_to_obj(dev)
     var averager = (name == null) ? new Averager(dev, count, interval*1000) : new Averager(name, dev, count, interval*1000)
+    if (monitored){
+        averager.setMonitored(true)
+    }
     averager.initialize()
     return averager
 }

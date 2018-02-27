@@ -1698,7 +1698,7 @@ def reinit(dev = None):
     """
     return to_list(get_context().reinit())
 
-def create_averager(dev, count, interval=0.0, name = None):
+def create_averager(dev, count, interval=0.0, name = None,  monitored = False):
     """Creates and initializes and averager for dev.
 
     Args:                 
@@ -1706,6 +1706,8 @@ def create_averager(dev, count, interval=0.0, name = None):
         count(int): number of samples
         interval(float, optional): sampling interval in seconds.
                                    If less than zero, sampling is made on data change event.
+        name(str, optional): sets the name of the device (default is: <dev name> averager)
+        monitored (bool, optional): if true then averager processes asynchronously.
 
     Returns:
         Averager device
@@ -1713,6 +1715,8 @@ def create_averager(dev, count, interval=0.0, name = None):
     dev = string_to_obj(dev)
     av = Averager(dev, count, int(interval*1000)) if (name is None) else Averager(name, dev, count, int(interval*1000))
     av.initialize()
+    if (monitored):
+       av.monitored = True 
     return av
 
 ###################################################################################################
