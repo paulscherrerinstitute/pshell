@@ -199,7 +199,7 @@ public class ScanEditorPanel extends MonitoredPanel implements Processor {
         comboType.setSelectedItem(getStateElement(state, 0, null));
         modelPositioners.setDataVector(toObjectArray((List) getStateElement(state, 1, List.class)), SwingUtils.getTableColumnNames(tablePositioners));
         modelSensors.setDataVector(toObjectArray((List) getStateElement(state, 2, List.class)), SwingUtils.getTableColumnNames(tableSensors));
-        ckSync.setSelected((Boolean) getStateElement(state, 3, Boolean.class));
+        checkSync.setSelected((Boolean) getStateElement(state, 3, Boolean.class));
         if (getScanCommand().equals("vscan")) {
             ArrayList<String> columns = new ArrayList<>();
             for (int i = 0; i < modelPositioners.getRowCount(); i++) {
@@ -227,23 +227,23 @@ public class ScanEditorPanel extends MonitoredPanel implements Processor {
             spinnerRangeTo.setValue(((Number) getStateElement(state, 19, Number.class)).doubleValue());
         }
         comboDomain.setSelectedItem(String.valueOf(getStateElement(state, 20, null)).trim());
+        checkSteps.setSelected((Boolean) getStateElement(state, 21, Boolean.class));
                  
         setupColumns();
         this.fileName = fileName;
         changed = false;
         updateCommand();
+        updateStepColumn();
         update();
     }
     
     Object getStateElement(List state, int index, Class type){
-        if (index >= state.size()){
-            return null;
+        if (index < state.size()){
+            Object obj = state.get(index);
+            if ((type==null) || (type.isAssignableFrom(obj.getClass()))){
+                return obj;
+            }
         }
-        Object obj = state.get(index);
-        if ((type==null) || (type.isAssignableFrom(obj.getClass()))){
-            return obj;
-        }
-       
         if (type == Boolean.class){
             return Boolean.FALSE;
         } else if (type == String.class){
@@ -282,7 +282,7 @@ public class ScanEditorPanel extends MonitoredPanel implements Processor {
         state.add(comboType.getSelectedItem());
         state.add(modelPositioners.getDataVector());
         state.add(modelSensors.getDataVector());
-        state.add(ckSync.isSelected());
+        state.add(checkSync.isSelected());
         state.add(modelVector.getDataVector());
         state.add(textTitle.getText());
         state.add(spinnerPasses.getValue());
@@ -300,6 +300,7 @@ public class ScanEditorPanel extends MonitoredPanel implements Processor {
         state.add(radioManual.isSelected() ? spinnerRangeFrom.getValue() : null);
         state.add(radioManual.isSelected() ? spinnerRangeTo.getValue() : null);
         state.add(comboDomain.getSelectedItem());
+        state.add(checkSteps.isSelected());
         JsonSerializer.encode(state, changed);
         String json = JsonSerializer.encode(state, true);
         Files.write(new File(fileName).toPath(), json.getBytes());
@@ -355,7 +356,11 @@ public class ScanEditorPanel extends MonitoredPanel implements Processor {
     public String getCommand() {
         return textCommand.getText();
     }
-
+    void updateStepColumn(){
+        tablePositioners.getColumnModel().getColumn(4).setHeaderValue(checkSteps.isSelected() ? "Number of Steps" : "Step Size");
+        tablePositioners.updateUI();
+    }
+    
     void updateCommand() {
         try {
             boolean hasPositioners = hasPositioners();
@@ -369,10 +374,14 @@ public class ScanEditorPanel extends MonitoredPanel implements Processor {
                 cmd.append("[").append(String.join(", ", pos)).append("], ");
             }
             cmd.append("[").append(String.join(", ", sensors)).append("], ");
-            if (hasRange()) {
+            if (hasSteps()) {
                 cmd.append("[").append(String.join(", ", getStart())).append("], ");
                 cmd.append("[").append(String.join(", ", getStop())).append("], ");
-                cmd.append("[").append(String.join(", ", getStep())).append("], ");
+                if (checkSteps.isSelected() && !scan.equals("ascan")){
+                    cmd.append((modelPositioners.getRowCount()> 0) ? ((Number)modelPositioners.getValueAt(0, 4)).intValue() : getNullValue()).append(", ");
+                } else {
+                    cmd.append("[").append(String.join(", ", getSteps())).append("], ");
+                }
             }
             cmd.append(String.join(", ", getParameters()));
             cmd.append(")");
@@ -440,8 +449,11 @@ public class ScanEditorPanel extends MonitoredPanel implements Processor {
                 labelLatency.setText("Latency (s):");
                 break;
         }
-        ckSync.setVisible(cmd.equals("mscan"));
-        ckSync.setEnabled(enabled);
+        checkSync.setVisible(cmd.equals("mscan"));
+        checkSync.setEnabled(enabled);
+        checkSteps.setVisible(hasSteps());
+        checkSteps.setEnabled(enabled);
+        
         if (cmd.equals("vscan")) {
             panelVector.setVisible(true);
             if (modelVector.getColumnCount() != modelPositioners.getRowCount()) {
@@ -451,6 +463,7 @@ public class ScanEditorPanel extends MonitoredPanel implements Processor {
             for (int i = 0; i < modelPositioners.getRowCount(); i++) {
                 tableVector.getColumnModel().getColumn(i).setHeaderValue(modelPositioners.getValueAt(i, 1));
             }
+            tableVector.updateUI();
         } else {
             panelVector.setVisible(false);
         }
@@ -480,8 +493,6 @@ public class ScanEditorPanel extends MonitoredPanel implements Processor {
                 return "tscan";
             case "Change event series":
                 return "mscan";
-            case "Beam synchronous series ":
-                return "bscan";
             default:
                 throw new RuntimeException("Invalid scan type");
         }
@@ -498,10 +509,11 @@ public class ScanEditorPanel extends MonitoredPanel implements Processor {
     boolean hasPasses() {
         return Arr.containsEqual(new String[]{"lscan", "ascan", "vscan", "cscan"}, getScanCommand());
     }
+    
+    boolean hasSteps() {
+        return Arr.containsEqual(new String[]{"lscan", "ascan", "cscan"}, getScanCommand());
+    }    
 
-    boolean hasRange() {
-        return !Arr.containsEqual(new String[]{"tscan", "mscan", "bscan", "vscan"}, getScanCommand());
-    }
 
     List<String> getPositioners() {
         List<String> ret = new ArrayList<>();
@@ -544,11 +556,15 @@ public class ScanEditorPanel extends MonitoredPanel implements Processor {
         return ret;
     }
 
-    List<String> getStep() {
+    List<String> getSteps() {
         List<String> ret = new ArrayList<>();
         if (hasPositioners()) {
             for (int i = 0; i < modelPositioners.getRowCount(); i++) {
-                ret.add(modelPositioners.getValueAt(i, 4).toString());
+                if (checkSteps.isSelected()){
+                    ret.add(String.valueOf(((Number)modelPositioners.getValueAt(i, 4)).intValue()));
+                } else {
+                    ret.add(String.valueOf(modelPositioners.getValueAt(i, 4)));
+                }
             }
         }
         return ret;
@@ -630,7 +646,7 @@ public class ScanEditorPanel extends MonitoredPanel implements Processor {
         } else if (getScanCommand().equals("mscan")) {
             ret.add(getParName("points") + ((((Number) spinnerPasses.getValue()).doubleValue() == 0) ? -1 : spinnerPasses.getValue()));
             ret.add(getParName("timeout") + ((((Number) spinnerTime.getValue()).doubleValue() == 0) ? -1 : spinnerTime.getValue()));           
-            if (ckSync.isSelected()){
+            if (checkSync.isSelected()){
                 ret.add(getParName("async") + getBoolValue(false));
             }
         } else if (getScanCommand().equals( "vscan")) {
@@ -838,7 +854,8 @@ public class ScanEditorPanel extends MonitoredPanel implements Processor {
         panelVector = new javax.swing.JPanel();
         jScrollPane7 = new javax.swing.JScrollPane();
         tableVector = new javax.swing.JTable();
-        ckSync = new javax.swing.JCheckBox();
+        checkSync = new javax.swing.JCheckBox();
+        checkSteps = new javax.swing.JCheckBox();
 
         jCheckBox1.setText("jCheckBox1");
 
@@ -1311,7 +1328,7 @@ public class ScanEditorPanel extends MonitoredPanel implements Processor {
 
             },
             new String [] {
-                "Type", "Name", "Start", "Stop", "Step"
+                "Type", "Name", "Start", "Stop", "Step Size"
             }
         ) {
             Class[] types = new Class [] {
@@ -1452,10 +1469,17 @@ public class ScanEditorPanel extends MonitoredPanel implements Processor {
                 .addGap(0, 0, 0))
         );
 
-        ckSync.setText("Synchronous sampling");
-        ckSync.addActionListener(new java.awt.event.ActionListener() {
+        checkSync.setText("Synchronous sampling");
+        checkSync.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                ckSyncActionPerformed(evt);
+                checkSyncActionPerformed(evt);
+            }
+        });
+
+        checkSteps.setText("Use number of sterps");
+        checkSteps.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                checkStepsActionPerformed(evt);
             }
         });
 
@@ -1473,8 +1497,9 @@ public class ScanEditorPanel extends MonitoredPanel implements Processor {
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(comboType, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(ckSync)
-                        .addGap(0, 0, Short.MAX_VALUE))
+                        .addComponent(checkSync)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(checkSteps))
                     .addComponent(jPanel5, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addContainerGap())
         );
@@ -1485,7 +1510,8 @@ public class ScanEditorPanel extends MonitoredPanel implements Processor {
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel1)
                     .addComponent(comboType, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(ckSync))
+                    .addComponent(checkSync)
+                    .addComponent(checkSteps))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jPanel5, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -1691,9 +1717,14 @@ public class ScanEditorPanel extends MonitoredPanel implements Processor {
         }
     }//GEN-LAST:event_comboDomainActionPerformed
 
-    private void ckSyncActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ckSyncActionPerformed
+    private void checkSyncActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_checkSyncActionPerformed
         onControlChanged();
-    }//GEN-LAST:event_ckSyncActionPerformed
+    }//GEN-LAST:event_checkSyncActionPerformed
+
+    private void checkStepsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_checkStepsActionPerformed
+        onControlChanged();
+        updateStepColumn();
+    }//GEN-LAST:event_checkStepsActionPerformed
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
@@ -1709,8 +1740,9 @@ public class ScanEditorPanel extends MonitoredPanel implements Processor {
     private javax.swing.JCheckBox checkDisplay;
     private javax.swing.JCheckBox checkRelative;
     private javax.swing.JCheckBox checkSave;
+    private javax.swing.JCheckBox checkSteps;
+    private javax.swing.JCheckBox checkSync;
     private javax.swing.JCheckBox checkZigzag;
-    private javax.swing.JCheckBox ckSync;
     private javax.swing.JComboBox<String> comboDomain;
     private javax.swing.JComboBox<String> comboLayout;
     private javax.swing.JComboBox<String> comboProvider;

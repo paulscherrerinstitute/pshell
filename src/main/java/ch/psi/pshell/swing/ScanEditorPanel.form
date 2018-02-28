@@ -142,8 +142,9 @@
                           <EmptySpace max="-2" attributes="0"/>
                           <Component id="comboType" min="-2" max="-2" attributes="0"/>
                           <EmptySpace max="-2" attributes="0"/>
-                          <Component id="ckSync" min="-2" max="-2" attributes="0"/>
-                          <EmptySpace min="0" pref="0" max="32767" attributes="0"/>
+                          <Component id="checkSync" min="-2" max="-2" attributes="0"/>
+                          <EmptySpace max="32767" attributes="0"/>
+                          <Component id="checkSteps" min="-2" max="-2" attributes="0"/>
                       </Group>
                       <Component id="jPanel5" alignment="0" max="32767" attributes="0"/>
                   </Group>
@@ -158,7 +159,8 @@
                   <Group type="103" groupAlignment="3" attributes="0">
                       <Component id="jLabel1" alignment="3" min="-2" max="-2" attributes="0"/>
                       <Component id="comboType" alignment="3" min="-2" max="-2" attributes="0"/>
-                      <Component id="ckSync" alignment="3" min="-2" max="-2" attributes="0"/>
+                      <Component id="checkSync" alignment="3" min="-2" max="-2" attributes="0"/>
+                      <Component id="checkSteps" alignment="3" min="-2" max="-2" attributes="0"/>
                   </Group>
                   <EmptySpace max="-2" attributes="0"/>
                   <Component id="jPanel5" max="32767" attributes="0"/>
@@ -894,7 +896,7 @@
                             <Column editable="true" title="Name" type="java.lang.String"/>
                             <Column editable="true" title="Start" type="java.lang.Double"/>
                             <Column editable="true" title="Stop" type="java.lang.Double"/>
-                            <Column editable="true" title="Step" type="java.lang.Double"/>
+                            <Column editable="true" title="Step Size" type="java.lang.Double"/>
                           </Table>
                         </Property>
                         <Property name="selectionModel" type="javax.swing.ListSelectionModel" editor="org.netbeans.modules.form.editors2.JTableSelectionModelEditor">
@@ -998,12 +1000,20 @@
             </Container>
           </SubComponents>
         </Container>
-        <Component class="javax.swing.JCheckBox" name="ckSync">
+        <Component class="javax.swing.JCheckBox" name="checkSync">
           <Properties>
             <Property name="text" type="java.lang.String" value="Synchronous sampling"/>
           </Properties>
           <Events>
-            <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="ckSyncActionPerformed"/>
+            <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="checkSyncActionPerformed"/>
+          </Events>
+        </Component>
+        <Component class="javax.swing.JCheckBox" name="checkSteps">
+          <Properties>
+            <Property name="text" type="java.lang.String" value="Use number of sterps"/>
+          </Properties>
+          <Events>
+            <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="checkStepsActionPerformed"/>
           </Events>
         </Component>
       </SubComponents>
