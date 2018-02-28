@@ -143,7 +143,7 @@
                           <Component id="comboType" min="-2" max="-2" attributes="0"/>
                           <EmptySpace max="-2" attributes="0"/>
                           <Component id="checkSync" min="-2" max="-2" attributes="0"/>
-                          <EmptySpace max="32767" attributes="0"/>
+                          <EmptySpace pref="192" max="32767" attributes="0"/>
                           <Component id="checkSteps" min="-2" max="-2" attributes="0"/>
                       </Group>
                       <Component id="jPanel5" alignment="0" max="32767" attributes="0"/>
@@ -659,7 +659,7 @@
                           </Group>
                           <EmptySpace max="-2" attributes="0"/>
                           <Group type="103" groupAlignment="0" attributes="0">
-                              <Component id="spinnerPasses" alignment="0" pref="157" max="32767" attributes="0"/>
+                              <Component id="spinnerPasses" alignment="0" max="32767" attributes="0"/>
                               <Component id="spinnerTime" alignment="0" max="32767" attributes="0"/>
                               <Component id="textTitle" alignment="0" max="32767" attributes="0"/>
                               <Component id="spinnerLatency" max="32767" attributes="0"/>
@@ -811,9 +811,8 @@
                   <Group type="102" alignment="0" attributes="0">
                       <EmptySpace min="-2" pref="0" max="-2" attributes="0"/>
                       <Component id="panelPositioners" max="32767" attributes="0"/>
-                      <EmptySpace min="-2" max="-2" attributes="0"/>
+                      <EmptySpace max="-2" attributes="0"/>
                       <Component id="panelVector" min="-2" max="-2" attributes="0"/>
-                      <EmptySpace min="-2" max="-2" attributes="0"/>
                   </Group>
               </Group>
             </DimensionLayout>
@@ -847,7 +846,7 @@
                           <EmptySpace max="-2" attributes="0"/>
                           <Group type="103" groupAlignment="0" attributes="0">
                               <Group type="102" alignment="0" attributes="0">
-                                  <EmptySpace min="0" pref="61" max="32767" attributes="0"/>
+                                  <EmptySpace min="0" pref="0" max="32767" attributes="0"/>
                                   <Component id="buttonPosUp" linkSize="1" min="-2" max="-2" attributes="0"/>
                                   <EmptySpace max="-2" attributes="0"/>
                                   <Component id="buttonPosDown" linkSize="1" min="-2" max="-2" attributes="0"/>
@@ -855,7 +854,7 @@
                                   <Component id="buttonPosInsert" linkSize="1" min="-2" max="-2" attributes="0"/>
                                   <EmptySpace max="-2" attributes="0"/>
                                   <Component id="buttonDelete" linkSize="1" min="-2" max="-2" attributes="0"/>
-                                  <EmptySpace min="0" pref="62" max="32767" attributes="0"/>
+                                  <EmptySpace min="0" pref="0" max="32767" attributes="0"/>
                               </Group>
                               <Component id="jScrollPane3" alignment="1" max="32767" attributes="0"/>
                           </Group>
@@ -961,7 +960,7 @@
                   <Group type="103" groupAlignment="0" attributes="0">
                       <Group type="102" alignment="0" attributes="0">
                           <EmptySpace min="-2" max="-2" attributes="0"/>
-                          <Component id="jScrollPane7" pref="120" max="32767" attributes="0"/>
+                          <Component id="jScrollPane7" pref="126" max="32767" attributes="0"/>
                           <EmptySpace min="7" pref="7" max="-2" attributes="0"/>
                       </Group>
                   </Group>
@@ -1010,7 +1009,7 @@
         </Component>
         <Component class="javax.swing.JCheckBox" name="checkSteps">
           <Properties>
-            <Property name="text" type="java.lang.String" value="Use number of sterps"/>
+            <Property name="text" type="java.lang.String" value="Use number of steps"/>
           </Properties>
           <Events>
             <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="checkStepsActionPerformed"/>
