@@ -451,8 +451,7 @@ public class ScanEditorPanel extends MonitoredPanel implements Processor {
         }
         checkSync.setVisible(cmd.equals("mscan"));
         checkSync.setEnabled(enabled);
-        checkSteps.setVisible(hasSteps());
-        checkSteps.setEnabled(enabled);
+        checkSteps.setEnabled(enabled && hasSteps());
         
         if (cmd.equals("vscan")) {
             panelVector.setVisible(true);
