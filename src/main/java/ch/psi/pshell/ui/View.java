@@ -1314,9 +1314,6 @@ public class View extends MainFrame {
     }
 
     public Processor openProcessor(Class cls, String file) throws IOException, InstantiationException, IllegalAccessException {
-        if (file == null) {
-            return null;
-        }
         if (file != null) {
             for (Processor p : getProcessors()) {
                 if ((p.getClass().isAssignableFrom(cls)) && p.getFileName() != null) {
