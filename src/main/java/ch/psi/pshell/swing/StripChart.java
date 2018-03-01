@@ -3,7 +3,10 @@ package ch.psi.pshell.swing;
 import ch.psi.pshell.bs.PipelineServer;
 import ch.psi.pshell.bs.Scalar;
 import ch.psi.pshell.bs.Stream;
+import ch.psi.pshell.core.CommandSource;
 import ch.psi.pshell.core.Context;
+import ch.psi.pshell.core.ContextAdapter;
+import ch.psi.pshell.core.ContextListener;
 import ch.psi.pshell.core.JsonSerializer;
 import ch.psi.pshell.data.Provider;
 import ch.psi.pshell.data.ProviderHDF5;
@@ -18,10 +21,13 @@ import ch.psi.pshell.plot.PlotBase;
 import ch.psi.pshell.plot.TimePlotBase;
 import ch.psi.pshell.plot.TimePlotSeries;
 import ch.psi.pshell.plotter.Preferences;
-import static ch.psi.pshell.swing.ScanEditorPanel.COLUMN_TYPE;
+import ch.psi.pshell.scripting.Statement;
+import ch.psi.pshell.scripting.ViewPreference;
 import ch.psi.pshell.ui.App;
+import ch.psi.utils.Configurable;
 import ch.psi.utils.IO;
 import ch.psi.utils.InvokingProducer;
+import ch.psi.utils.State;
 import ch.psi.utils.Sys;
 import ch.psi.utils.swing.MainFrame;
 import ch.psi.utils.swing.StandardDialog;
@@ -212,6 +218,31 @@ public class StripChart extends StandardDialog {
             }
         });
         add(buttonPause, 0);
+        
+        if (Context.getInstance() != null) {
+            Context.getInstance().addListener(new ContextAdapter() {
+                boolean hasStopped;
+                @Override
+                public void onContextStateChanged(State state, State former) {
+                     if ((state == State.Initializing) || (state == State.Closing)){
+                         if (started){
+                             stop();
+                             hasStopped = (state == State.Initializing) ;
+                         }
+                     } else if ((former == State.Initializing) && state.isActive()
+                         && (modelSeries.getRowCount() > 0) && hasStopped){
+                         try {                          
+                             start();
+                         } catch (Exception ex) {
+                             Logger.getLogger(StripChart.class.getName()).log(Level.WARNING, null, ex);
+                         }
+                         hasStopped = false;
+                     } else {
+                         hasStopped = false;
+                     }                
+                }
+            });
+        }        
     }
 
     void setButtonPause(boolean paused) {
