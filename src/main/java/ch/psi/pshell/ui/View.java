@@ -613,7 +613,7 @@ public class View extends MainFrame {
         if (App.isPlotOnly()) {
             File file = App.getFileArg();
             if (file != null) {
-
+                
             }
         } else {
             for (File file : App.getFileArgs()) {
@@ -1314,17 +1314,22 @@ public class View extends MainFrame {
     }
 
     public Processor openProcessor(Class cls, String file) throws IOException, InstantiationException, IllegalAccessException {
+        if (file == null) {
+            return null;
+        }
         if (file != null) {
             for (Processor p : getProcessors()) {
-                if (p.getFileName() != null) {
-                    if ((new File(file).getCanonicalFile()).equals((new File(p.getFileName()).getCanonicalFile()))) {
-                        if (tabDoc.indexOfComponent(p.getPanel()) >= 0) {
-                            tabDoc.setSelectedComponent(p.getPanel());
-                        } else if (detachedScripts.containsValue(p.getPanel())) {
-                            p.getPanel().getTopLevelAncestor().requestFocus();
+                if ((p.getClass().isAssignableFrom(cls)) && p.getFileName() != null) {
+                    try{
+                        if ((new File(p.resolveFile(file)).getCanonicalFile()).equals((new File(p.getFileName()).getCanonicalFile()))) {
+                            if (tabDoc.indexOfComponent(p.getPanel()) >= 0) {
+                                tabDoc.setSelectedComponent(p.getPanel());
+                            } else if (detachedScripts.containsValue(p.getPanel())) {
+                                p.getPanel().getTopLevelAncestor().requestFocus();
+                            }
+                            return p;
                         }
-
-                        return p;
+                    } catch (Exception ex){
                     }
                 }
             }
@@ -1332,6 +1337,7 @@ public class View extends MainFrame {
 
         Processor processor = (Processor) cls.newInstance();
         if (file != null) {
+            file = processor.resolveFile(file);
             processor.open(file);
             openComponent(new File(processor.getFileName()).getName(), processor.getPanel());
             fileHistory.put(file);

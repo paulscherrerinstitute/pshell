@@ -2,7 +2,10 @@
 
 import ch.psi.utils.swing.SwingUtils;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.ServiceLoader;
@@ -36,6 +39,21 @@ public interface Processor {
     }
 
     public String getHomePath();
+    
+    default public String resolveFile(String fileName) throws IOException{
+        String home = getHomePath();
+        if ((home!=null) && !home.isEmpty()){
+            Path p = Paths.get(home,fileName);
+            if (p.toFile().exists()){
+                return p.toString();
+            }
+        }
+        File f = new File(fileName);
+        if (f.exists()){
+            return  f.getPath();
+        }
+        throw new FileNotFoundException("File not found: " + fileName);
+    }
 
     public void open(String fileName) throws IOException;
 

@@ -731,7 +731,7 @@ public class App extends ObservableBase<AppListener> {
                 //Not running in GUI thread
                 new Thread(() -> {
                     context.start();
-                    if (isPlotOnly()) {
+                    if (isPlotOnly() || isConsole() ) {
                         File file = getFileArg();
                         if (file != null) {
                             runFile(file, false);
@@ -962,7 +962,7 @@ public class App extends ObservableBase<AppListener> {
                         if (view != null) {
                             view.currentProcessor = processor;
                         }
-                        processor.execute(file.getPath(), getInterpreterArgs());
+                        processor.execute(processor.resolveFile(file.getPath()), getInterpreterArgs());
                         return;
                     }
                 }

@@ -84,7 +84,7 @@ public class StatusBar extends MonitoredPanel implements PropertyChangeListener 
 
         ((javax.swing.GroupLayout) getLayout()).setHonorsVisibility(false); //In order not to change if progress bar is shown
 
-        if (App.getInstance().isDetachedAppendStatusBar()) {
+        if (App.getInstance().isDetachedAppendStatusBar() || App.getInstance().isPlotOnly()) {
             JPopupMenu popupMenu = new JPopupMenu();
             JMenuItem openLogs = new JMenuItem("Open logs");
             openLogs.addActionListener(new ActionListener() {
