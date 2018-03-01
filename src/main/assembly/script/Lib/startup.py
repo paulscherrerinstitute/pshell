@@ -1016,17 +1016,23 @@ def set_attribute(path, name, value, unsigned = False):
         value = Convert.toStringArray(to_array(value))
     get_context().dataManager.setAttribute(path, name, value, unsigned)
 
-def log(log):        
+def log(log, data_file=True):        
     """Writes a log to the system log and data context - if there is an ongoing scan or script execution.        
 
     Args:        
          log(str): Log string.
+         data_file(bool, optional): if true logs to the data file, in addiction to the system logger
 
     Returns:
         None
     """  
     get_context().scriptingLog(str(log))
-    get_context().dataManager.appendLog(str(log))
+    if data_file:
+        try:
+            get_context().dataManager.appendLog(str(log))
+        except:
+            #Do not generate exception if cannot write to data file
+            pass
 
 def set_exec_pars(**args):
     """  Configures the script execution parameters, overriding the system configuration.

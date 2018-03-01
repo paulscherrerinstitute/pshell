@@ -1130,19 +1130,28 @@ function set_attribute(path, name, value, unsigned) {
     get_context().dataManager.setAttribute(path, name, value, unsigned)
 }
 
-function log(log){
+function log(log, data_file){
     /*
     Writes a log to the automatic data saving context - only if there is an ongoing scan or 
        script execution.        
 
     Args:        
          log(str): Log string.
+         data_file(bool, optional): if true logs to the data file, in addiction to the system logger
 
     Returns:
         None
     */  
+    if (!is_defined(data_file))
+        data_file = true;
     get_context().scriptingLog(String(log))
-    get_context().dataManager.appendLog(String(log))
+    if (data_file){
+       try{
+            get_context().dataManager.appendLog(String(log))
+        } catch(err){    
+            Do not generate exception if cannot write to data file
+        }
+    }     
 }
 
 function set_exec_pars(args){
