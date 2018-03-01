@@ -1,10 +1,10 @@
 package ch.psi.pshell.device;
 
 /**
- * A Register with metadata: units, range, resolution, scale and offset. Metadata may be static or
- * persisted in configuration.
+ * A Register with metadata: units, range, resolution, scale and offset.
+ * Metadata may be static or persisted in configuration.
  */
-public interface ProcessVariable extends Register<Double> , Resolved{
+public interface ProcessVariable extends Register<Double>, Resolved {
 
     @Override
     public ProcessVariableConfig getConfig();

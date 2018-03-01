@@ -299,6 +299,10 @@ The supported protocols are:
     - offset: stream offset in pulses.
 
 
+- cs: creates a device from a stream image server. Device name set with the server URL.
+    Options:
+      - channel (str): name of the field of the image stream.
+
 - Generic options:
     - monitored: creates a monitored device.
     - polling: sets a polling interval.
