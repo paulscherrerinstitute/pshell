@@ -22,6 +22,8 @@ import java.util.List
 import java.lang.reflect.Array
 import java.awt.image.BufferedImage as BufferedImage    
 import java.awt.Color as Color
+import java.awt.Dimension as Dimension
+import java.awt.Font as Font
 
 import org.python.core.PyArray as PyArray
 
@@ -811,12 +813,13 @@ def get_plots(title=None):
 
     return get_context().getPlots(title)
 
-def get_plot_snapshots(title = None, file_type = "png", temp_path = get_context().setup.getContextPath()):
+def get_plot_snapshots(title = None, file_type = "png", size = None, temp_path = get_context().setup.getContextPath()):
     """Returns list with file names of plots snapshots from a plotting context.
 
     Args:
         title(str, optional): plotting window name.
         file_type(str, optional): "png", "jpg", "bmp" or "gif"
+        size(array, optional): [width, height]
         temp_path(str, optional): path where the files will be generated.
 
     Returns:
@@ -825,6 +828,8 @@ def get_plot_snapshots(title = None, file_type = "png", temp_path = get_context(
     """
     time.sleep(0.1) #Give some time to plot to be finished - it is not sync  with acquisition
     ret = []
+    if size != None:
+        size = Dimension(size[0], size[1])
     plots = get_plots(title)
     for i in range(len(plots)):
         p = plots[i]
@@ -832,7 +837,7 @@ def get_plot_snapshots(title = None, file_type = "png", temp_path = get_context(
         if name is None or name == "":
             name = str(i)
         file_name = os.path.abspath(temp_path + "/" + name + "." + file_type)
-        p.saveSnapshot(file_name , file_type)
+        p.saveSnapshot(file_name , file_type, size)
         ret.append(file_name)
     return ret
 

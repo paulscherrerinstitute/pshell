@@ -48,8 +48,15 @@ public interface Plot<T extends PlotSeries> {
     //Generic operations
     public void saveData(String filename) throws IOException;
 
+    default public BufferedImage getSnapshot() throws IOException{
+        return getSnapshot(null);
+    }
     public BufferedImage getSnapshot(Dimension size);
 
+    default public void saveSnapshot(String filename, String format) throws IOException{
+        saveSnapshot(filename, format, null);
+    }
+            
     public void saveSnapshot(String filename, String format, Dimension size) throws IOException;
 
     public void copy();

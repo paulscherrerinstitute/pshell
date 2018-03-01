@@ -9,6 +9,8 @@ importClass(java.beans.PropertyChangeListener)
 importClass(java.lang.Thread)
 importClass(java.awt.image.BufferedImage)
 importClass(java.awt.Color)
+importClass(java.awt.Font)
+importClass(java.awt.Dimension)
 importClass(java.io.File)
 
 CommandSource = Java.type('ch.psi.pshell.core.CommandSource')
