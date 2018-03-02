@@ -35,6 +35,8 @@ import jline.console.completer.Completer;
  * set to true, uses JLine to provide advanced capabilities as command history.
  */
 public class Console {
+    
+    static final boolean INCLUDE_IMMUTABLE_ATTRS_SIGNATURES = false;
 
     public void run(InputStream in, PrintStream out, boolean advanced) throws IOException {
         attachInterpreterOutput();
@@ -309,6 +311,9 @@ public class Console {
             //Proxies: included methods defined in python
             if (obj instanceof org.python.core.PyProxy) {
                 ret.addAll(JythonUtils.getSignatures(((org.python.core.PyProxy) obj)._getPyInstance(), false));
+            }
+            if (INCLUDE_IMMUTABLE_ATTRS_SIGNATURES){
+                ret.addAll(Reflection.getAttributesSignature(obj, excludeClasses, excludeNames, true, false, true));
             }
             return ret;
         }

@@ -3,6 +3,7 @@ package ch.psi.utils;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.reflect.Method;
+import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Parameter;
 import java.text.Collator;
@@ -59,15 +60,16 @@ public class Reflection {
     }
 
     /**
-     * Methods with this annotation are not reported in the public method parsing methods.
+     * Methods with this annotation are not reported in the public method
+     * parsing methods.
      */
     @Retention(RetentionPolicy.RUNTIME)
     public static @interface Hidden {
     }       //Methods hidden from user in online help
 
     /**
-     * Parse all signatures of the public inerface of an object - excluding methods annotated with
-     * Hidden.
+     * Parse all signatures of the public interface of an object - excluding
+     * methods annotated with Hidden.
      */
     public static ArrayList<String> getMethodsSignature(Object obj) {
         return getMethodsSignature(obj, null, null, true, true, true);
@@ -161,4 +163,82 @@ public class Reflection {
 
         return methodsSignatures;
     }
+
+    /**
+     * Returns a string with the representation of the signature of an attribute
+     */
+    public static String getAttributeSignature(Field f, boolean umlNotation) {
+        StringBuilder sb = new StringBuilder();
+        if (!umlNotation) {
+            sb.append(f.getType().getSimpleName()).append(" ");
+        }
+        sb.append(f.getName());
+        if (umlNotation) {
+            sb.append(" :").append(f.getType().getSimpleName());
+        }
+        return sb.toString();
+    }
+
+    /**
+     * Parse all public attributes of an object - attributes methods annotated
+     * with Hidden.
+     */
+    public static ArrayList<String> getAttributesSignature(Object obj, Class[] excludeClasses,
+            String[] excludeNames, boolean immutable, boolean classVariables, boolean umlNotation) {
+        ArrayList<String> attibutesSignatures = new ArrayList<>();
+
+        ArrayList<Class> superClasses = new ArrayList<>();
+        Class type = obj.getClass();
+
+        ArrayList<Field> fields = new ArrayList<>();
+        for (Field field : type.getFields()) {
+            int modifiers = field.getModifiers();
+            if (Modifier.isPublic(modifiers) && ((!immutable) || Modifier.isFinal(modifiers)) && ((classVariables) || !Modifier.isStatic(modifiers))) {
+                try {
+                    Hidden annotation = field.getAnnotation(Hidden.class);
+                    if (annotation != null) {
+                        continue;
+                    }
+                } catch (Exception ex) {
+                }
+
+                boolean hideField = false;
+                Class declaringClass = field.getDeclaringClass();
+                if (field.getName().startsWith("_")) {
+                    hideField = true;
+                } else {
+                    if (excludeClasses != null) {
+                        for (Class cls : excludeClasses) {
+                            if ((declaringClass == cls)) {
+                                hideField = true;
+                                break;
+                            }
+                        }
+                    }
+                    if (!hideField) {
+                        if (excludeNames != null) {
+                            for (String s : excludeNames) {
+                                hideField = declaringClass.getName().startsWith(s) || field.getName().contains(s);
+                                if (hideField) {
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+
+                if (hideField == false) {
+                    fields.add(field);
+                }
+            }
+        }
+
+        for (Field f : fields) {
+            attibutesSignatures.add(getAttributeSignature(f, umlNotation));
+        }
+        Collections.sort(attibutesSignatures, Collator.getInstance());
+
+        return attibutesSignatures;
+    }
+
 }
