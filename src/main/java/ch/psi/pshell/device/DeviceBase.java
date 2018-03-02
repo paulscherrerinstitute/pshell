@@ -148,6 +148,7 @@ public abstract class DeviceBase extends GenericDeviceBase<DeviceListener> imple
     volatile Chrono chronoValue;
     volatile Object cache;
     volatile Object lastTriggeredCache;
+    volatile boolean updatingCache;
 
     @Override
     public Object take() {
@@ -178,6 +179,7 @@ public abstract class DeviceBase extends GenericDeviceBase<DeviceListener> imple
             cache = value;
             cacheUpdateLock.notifyAll();
         }
+        updatingCache = true;
         try {
             boolean valueChange = hasChanged(cache, lastTriggeredCache);
             triggerCacheChanged(cache, former, chronoValue.getTimestamp(), valueChange);
@@ -193,6 +195,7 @@ public abstract class DeviceBase extends GenericDeviceBase<DeviceListener> imple
         } catch (Exception ex) {
             getLogger().log(Level.WARNING, null, ex);
         }
+        updatingCache = false;
     }
 
     final protected void setCache(DeviceBase child, Object value) {
@@ -209,6 +212,10 @@ public abstract class DeviceBase extends GenericDeviceBase<DeviceListener> imple
         } else {
             getLogger().warning("Attempt to set cache of not child device: " + child.getName());
         }
+    }
+    
+    protected boolean isUpdatingCache(){
+        return updatingCache;
     }
 
     @Override

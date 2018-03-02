@@ -95,6 +95,9 @@ public abstract class RegisterBase<T> extends DeviceBase implements Register<T> 
     @Override
     public T read() throws IOException, InterruptedException {
         assertInitialized();
+        if (updatingCache){
+            return take();
+        }
         Logger logger = getLogger();
         try {
             assertReadEnabled();

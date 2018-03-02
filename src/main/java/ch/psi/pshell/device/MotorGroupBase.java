@@ -71,13 +71,12 @@ public class MotorGroupBase extends DeviceBase implements MotorGroup {
     }
 
     @Override
-    public double[] read() throws IOException, InterruptedException {
+    public double[] read() throws IOException, InterruptedException {       
         Motor[] motors = getMotors();
         double[] ret = new double[motors.length];
         for (int i = 0; i < ret.length; i++) {
             ret[i] = motors[i].read();
         }
-        setCache(ret);
         return ret;
     }
 
@@ -263,6 +262,9 @@ public class MotorGroupBase extends DeviceBase implements MotorGroup {
 
     @Override
     public double[] getPosition() throws IOException, InterruptedException {
+        if (updatingCache){
+            return (double[]) take();
+        }         
         Motor[] motors = getMotors();
         double[] ret = new double[motors.length];
         for (int i = 0; i < ret.length; i++) {

@@ -274,8 +274,8 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
             assertFieldsOk();
             recordIndex = 0;
             result = newResult();
-            openDevices();
             try{
+                openDevices();
                 if (relative) {
                     readInitialPosition();
                 }            

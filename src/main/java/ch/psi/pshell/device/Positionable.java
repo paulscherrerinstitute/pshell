@@ -3,7 +3,7 @@ package ch.psi.pshell.device;
 import java.io.IOException;
 
 /**
- * Interface for devices that have a position value and are capable of knowing if are i position.
+ * Interface for devices that have a position value and are capable of knowing if are in position.
  */
 public interface Positionable<T> {
 

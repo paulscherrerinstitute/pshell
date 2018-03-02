@@ -3,7 +3,6 @@ package ch.psi.pshell.scan;
 import ch.psi.pshell.bs.Scalar;
 import ch.psi.pshell.bs.Stream;
 import ch.psi.pshell.core.UrlDevice;
-import ch.psi.pshell.device.Averager;
 import ch.psi.pshell.device.Device;
 import ch.psi.pshell.device.DeviceListener;
 import ch.psi.pshell.device.DummyPositioner;

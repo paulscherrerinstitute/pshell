@@ -91,6 +91,9 @@ public abstract class CameraBase extends DeviceBase implements Camera {
 
     @Override
     final public CameraImageDescriptor readImageDescriptor() throws IOException, InterruptedException {
+        if (updatingCache){
+            return (CameraImageDescriptor) take();
+        }          
         CameraImageDescriptor ret = doReadImageDescriptor();
         setCache(ret);
         return ret;
