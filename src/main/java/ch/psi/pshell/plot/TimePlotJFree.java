@@ -491,6 +491,27 @@ public class TimePlotJFree extends TimePlotBase {
         XYLineAndShapeRenderer renderer = getRenderer(series.getAxisY());
         renderer.setSeriesPaint(getSeriesIndex(series), color);
     }
+    
+    @Override
+    public ch.psi.utils.Range getAxisRange(AxisId axisId){
+        Range r = null;
+        switch (axisId){
+            case X:
+                r = chart.getXYPlot().getDomainAxis().getRange();
+                return new ch.psi.utils.Range(r.getLowerBound(), r.getUpperBound());
+            case Y:
+                r = chart.getXYPlot().getRangeAxis().getRange();
+                return new ch.psi.utils.Range(r.getLowerBound(), r.getUpperBound());                
+            case Y2:
+                if (dataY2 == null){
+                    return null;
+                }
+                r = chart.getXYPlot().getRangeAxis(1).getRange();
+                return new ch.psi.utils.Range(r.getLowerBound(), r.getUpperBound());                 
+            default:
+                return null;
+        }
+    }    
 
     int getSeriesIndex(TimePlotSeries series) {
         //return this.series.indexOf(series);

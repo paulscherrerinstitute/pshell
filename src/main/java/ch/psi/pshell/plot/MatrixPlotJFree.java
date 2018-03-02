@@ -192,6 +192,21 @@ public class MatrixPlotJFree extends MatrixPlotBase {
             yAxis.setInverted(getAxis(AxisId.Y).inverted);
         }
     }
+    
+    @Override
+    public ch.psi.utils.Range getAxisRange(AxisId axisId){
+        Range r = null;
+        switch (axisId){
+            case X:
+                r = chart.getXYPlot().getDomainAxis().getRange();
+                return new ch.psi.utils.Range(r.getLowerBound(), r.getUpperBound());
+            case Y:
+                r = chart.getXYPlot().getRangeAxis().getRange();
+                return new ch.psi.utils.Range(r.getLowerBound(), r.getUpperBound());                     
+            default:
+                return null;
+        }
+    }
 
     @Override
     protected void onRemovedSeries(MatrixPlotSeries s) {
@@ -366,7 +381,7 @@ public class MatrixPlotJFree extends MatrixPlotBase {
     @Override
     public Object addText(double x, double y, String label, Color color) {
         XYTextAnnotation annotation = new XYTextAnnotation(label, x, y);
-        chartPanel.getChart().getXYPlot().addAnnotation(annotation);
+        chart.getXYPlot().addAnnotation(annotation);
         if (color != null) {
             annotation.setPaint(color);
         }
@@ -376,14 +391,14 @@ public class MatrixPlotJFree extends MatrixPlotBase {
     @Override
     public List getTexts() {
         List ret = new ArrayList();
-        ret.addAll(chartPanel.getChart().getXYPlot().getAnnotations());
+        ret.addAll(chart.getXYPlot().getAnnotations());
         return ret;
     }
 
     @Override
     public void removeText(Object text) {
         if ((text != null) && (text instanceof XYTextAnnotation)) {
-            chartPanel.getChart().getXYPlot().removeAnnotation((XYTextAnnotation) text);
+            chart.getXYPlot().removeAnnotation((XYTextAnnotation) text);
         }
     }
 
@@ -647,9 +662,9 @@ public class MatrixPlotJFree extends MatrixPlotBase {
         marker.setLabelTextAnchor(TextAnchor.TOP_RIGHT);
         invokeLater(() -> {
             if ((axis == null) || (axis == AxisId.X)) {
-                chartPanel.getChart().getXYPlot().addDomainMarker(marker, Layer.FOREGROUND);
+                chart.getXYPlot().addDomainMarker(marker, Layer.FOREGROUND);
             } else {
-                chartPanel.getChart().getXYPlot().addRangeMarker(marker, Layer.FOREGROUND);
+                chart.getXYPlot().addRangeMarker(marker, Layer.FOREGROUND);
             }
         });
         return marker;
@@ -675,9 +690,9 @@ public class MatrixPlotJFree extends MatrixPlotBase {
 
         invokeLater(() -> {
             if ((axis == null) || (axis == AxisId.X)) {
-                chartPanel.getChart().getXYPlot().addDomainMarker(marker, Layer.FOREGROUND);
+                chart.getXYPlot().addDomainMarker(marker, Layer.FOREGROUND);
             } else {
-                chartPanel.getChart().getXYPlot().addRangeMarker(marker, Layer.FOREGROUND);
+                chart.getXYPlot().addRangeMarker(marker, Layer.FOREGROUND);
             }
         });
         return marker;
@@ -687,23 +702,23 @@ public class MatrixPlotJFree extends MatrixPlotBase {
     public void removeMarker(final Object marker) {
         invokeLater(() -> {
             if (marker == null) {
-                Collection<?> c = chartPanel.getChart().getXYPlot().getRangeMarkers(Layer.FOREGROUND);
+                Collection<?> c = chart.getXYPlot().getRangeMarkers(Layer.FOREGROUND);
                 if (c != null) {
                     Marker[] markers = c.toArray(new Marker[0]);
                     for (Marker m : markers) {
-                        chartPanel.getChart().getXYPlot().removeRangeMarker((Marker) m);
+                        chart.getXYPlot().removeRangeMarker((Marker) m);
                     }
                 }
-                c = chartPanel.getChart().getXYPlot().getDomainMarkers(Layer.FOREGROUND);
+                c = chart.getXYPlot().getDomainMarkers(Layer.FOREGROUND);
                 if (c != null) {
                     Marker[] markers = c.toArray(new Marker[0]);
                     for (Marker m : markers) {
-                        chartPanel.getChart().getXYPlot().removeDomainMarker((Marker) m);
+                        chart.getXYPlot().removeDomainMarker((Marker) m);
                     }
                 }
             } else {
-                chartPanel.getChart().getXYPlot().removeDomainMarker((Marker) marker, Layer.FOREGROUND);
-                chartPanel.getChart().getXYPlot().removeRangeMarker((Marker) marker, Layer.FOREGROUND);
+                chart.getXYPlot().removeDomainMarker((Marker) marker, Layer.FOREGROUND);
+                chart.getXYPlot().removeRangeMarker((Marker) marker, Layer.FOREGROUND);
             }
         });
     }
@@ -711,8 +726,8 @@ public class MatrixPlotJFree extends MatrixPlotBase {
     @Override
     public List getMarkers() {
         List ret = new ArrayList();
-        Collection dm = chartPanel.getChart().getXYPlot().getDomainMarkers(Layer.FOREGROUND);
-        Collection rm = chartPanel.getChart().getXYPlot().getRangeMarkers(Layer.FOREGROUND);
+        Collection dm = chart.getXYPlot().getDomainMarkers(Layer.FOREGROUND);
+        Collection rm = chart.getXYPlot().getRangeMarkers(Layer.FOREGROUND);
         if (dm != null) {
             ret.addAll(dm);
         }
@@ -721,6 +736,7 @@ public class MatrixPlotJFree extends MatrixPlotBase {
         }
         return ret;
     }
+    
 
     @Hidden
     public JFreeChart getChart() {

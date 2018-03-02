@@ -182,85 +182,88 @@ public class Data implements Serializable {
     }
 
     public ArrayProperties getProperties() {
-        ArrayProperties ret = new ArrayProperties();
+        int minIndex = -1;
+        int maxIndex = -1;
+        double min = Double.MAX_VALUE;
+        double max = Double.MIN_VALUE;
 
         if (array instanceof byte[]) {
             byte[] data = (byte[]) array;
             for (int i = 0; i < data.length; i++) {
                 double item = unsigned ? Convert.toUnsigned(data[i]) : data[i];
-                if (item < ret.min) {
-                    ret.min = item;
-                    ret.minIndex = i;
+                if (item < min) {
+                    min = item;
+                    minIndex = i;
                 }
-                if (item > ret.max) {
-                    ret.max = item;
-                    ret.maxIndex = i;
+                if (item > max) {
+                    max = item;
+                    maxIndex = i;
                 }
             }
         } else if (array instanceof short[]) {
             short[] data = (short[]) array;
             for (int i = 0; i < data.length; i++) {
                 double item = unsigned ? Convert.toUnsigned(data[i]) : data[i];
-                if (item < ret.min) {
-                    ret.min = item;
-                    ret.minIndex = i;
+                if (item < min) {
+                    min = item;
+                    minIndex = i;
                 }
-                if (item > ret.max) {
-                    ret.max = item;
-                    ret.maxIndex = i;
+                if (item > max) {
+                    max = item;
+                    maxIndex = i;
                 }
             }
         } else if (array instanceof double[]) {
             double[] data = (double[]) array;
             for (int i = 0; i < data.length; i++) {
-                if (data[i] < ret.min) {
-                    ret.min = data[i];
-                    ret.minIndex = i;
+                if (data[i] < min) {
+                    min = data[i];
+                    minIndex = i;
                 }
-                if (data[i] > ret.max) {
-                    ret.max = data[i];
-                    ret.maxIndex = i;
+                if (data[i] > max) {
+                    max = data[i];
+                    maxIndex = i;
                 }
             }
         } else if (array instanceof float[]) {
             float[] data = (float[]) array;
             for (int i = 0; i < data.length; i++) {
-                if (data[i] < ret.min) {
-                    ret.min = (double) data[i];
-                    ret.minIndex = i;
+                if (data[i] < min) {
+                    min = (double) data[i];
+                    minIndex = i;
                 }
-                if (data[i] > ret.max) {
-                    ret.max = (double) data[i];
-                    ret.maxIndex = i;
+                if (data[i] > max) {
+                    max = (double) data[i];
+                    maxIndex = i;
                 }
             }
         } else if (array instanceof long[]) {
             long[] data = (long[]) array;
             for (int i = 0; i < data.length; i++) {
-                if (data[i] < ret.min) {
-                    ret.min = (double) data[i];
-                    ret.minIndex = i;
+                if (data[i] < min) {
+                    min = (double) data[i];
+                    minIndex = i;
                 }
-                if (data[i] > ret.max) {
-                    ret.max = (double) data[i];
-                    ret.maxIndex = i;
+                if (data[i] > max) {
+                    max = (double) data[i];
+                    maxIndex = i;
                 }
             }
         } else if (array instanceof int[]) {
             int[] data = (int[]) array;
             for (int i = 0; i < data.length; i++) {
                 double item = unsigned ? Convert.toUnsigned(data[i]) : data[i];
-                if (item < ret.min) {
-                    ret.min = item;
-                    ret.minIndex = i;
+                if (item < min) {
+                    min = item;
+                    minIndex = i;
                 }
-                if (item > ret.max) {
-                    ret.max = item;
-                    ret.maxIndex = i;
+                if (item > max) {
+                    max = item;
+                    maxIndex = i;
                 }
             }
         }
-        return ret;
+        return new ArrayProperties(min, max, minIndex, maxIndex);
     }
 
     public byte[] translateToByteArray(Range range) {

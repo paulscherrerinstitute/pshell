@@ -32,6 +32,7 @@ import javax.swing.SwingUtilities;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import ch.psi.utils.IO;
 import ch.psi.utils.NamedThreadFactory;
+import ch.psi.utils.Range;
 import ch.psi.utils.swing.ExtensionFileFilter;
 import ch.psi.utils.swing.ImageTransferHandler;
 import ch.psi.utils.swing.MainFrame;
@@ -542,8 +543,18 @@ abstract public class PlotBase<T extends PlotSeries> extends MonitoredPanel impl
         axisList.put(axis, new Axis(label, this, axis));
     }
 
+    @Override
     public Axis getAxis(AxisId id) {
         return axisList.get(id);
+    }
+    
+    /**
+     * Implementations should override and return axis actually displayed (if auto-range, this will return 0,0).
+     */
+    
+    @Override
+    public Range getAxisRange(AxisId axis){
+        return new Range(getAxis(axis).min, getAxis(axis).max);
     }
 
     //Axis Callbacks

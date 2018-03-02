@@ -4,6 +4,7 @@ import ch.psi.pshell.imaging.Colormap;
 import ch.psi.pshell.swing.PlotPanel;
 import ch.psi.pshell.swing.ValueSelection;
 import ch.psi.utils.Convert;
+import ch.psi.utils.Range;
 import ch.psi.utils.swing.SwingUtils;
 import java.awt.Dimension;
 import java.awt.Font;
@@ -199,6 +200,17 @@ public class SlicePlotDefault extends SlicePlotBase {
         pageSelection.setMaxValue(max);
         setPageTitle();
     }
+    
+    @Override
+    public Range getAxisRange(AxisId axisId){
+
+        switch (axisId){
+            case Z:
+                return (getSeries(0)==null) ? null :new Range(0,   Math.max(getSeries(0).getNumberOfBinsZ() - 1, 0));
+            default:
+                return matrixPlot.getAxisRange(axisId);
+        }
+    }    
     
     @Override
     public BufferedImage getSnapshot(Dimension size) {

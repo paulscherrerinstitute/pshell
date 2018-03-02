@@ -1,6 +1,7 @@
 package ch.psi.pshell.plot;
 
 import ch.psi.pshell.plot.Plot.AxisId;
+import ch.psi.utils.Range;
 
 /**
  *
@@ -95,5 +96,9 @@ public class Axis {
     public void setInverted(boolean value) {
         inverted = value;
         plot.onAxisRangeChanged(id);
+    }
+    
+    public Range getDisplayRange(){
+        return plot.getAxisRange(id);
     }
 }

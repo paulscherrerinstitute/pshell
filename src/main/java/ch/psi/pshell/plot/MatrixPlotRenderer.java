@@ -3,6 +3,7 @@ package ch.psi.pshell.plot;
 import ch.psi.pshell.imaging.Renderer;
 import ch.psi.pshell.imaging.RendererMode;
 import ch.psi.utils.Convert;
+import ch.psi.utils.Range;
 import ch.psi.utils.swing.SwingUtils;
 import java.awt.BorderLayout;
 import java.awt.color.ColorSpace;
@@ -229,6 +230,21 @@ public class MatrixPlotRenderer extends MatrixPlotBase {
         dataBuffer = null;
         doUpdate();
     }
+    
+    @Override
+    public Range getAxisRange(AxisId axisId){
+        if (image==null){
+            return null;
+        }
+        switch (axisId){
+            case X:
+                return new Range(0, image.getWidth()-1);
+            case Y:
+                return new Range(0, image.getHeight()-1);
+            default:
+                return null;
+        }
+    }      
 
     @Override
     public void updateSeries(MatrixPlotSeries series) {

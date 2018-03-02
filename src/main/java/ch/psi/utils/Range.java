@@ -5,11 +5,9 @@ package ch.psi.utils;
  */
 public class Range {
 
-    public Double min;
-    public Double max;
+    final public Double min;
+    final public Double max;
 
-    public Range() {
-    }
 
     public Range(Double min, Double max) {
         this.min = min;
@@ -22,6 +20,15 @@ public class Range {
     }
 
     public Double getExtent() {
-        return max.doubleValue() - min.doubleValue();
+        return max - min;
+    }
+       
+    public Double getCentralValue() {
+        return (max + min)/2.0;
+    }
+    
+    @Override
+    public String toString(){
+        return min + " to " + max;
     }
 }

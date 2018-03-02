@@ -2,6 +2,7 @@ package ch.psi.pshell.plot;
 
 import ch.psi.pshell.ui.App;
 import ch.psi.utils.Convert;
+import ch.psi.utils.Range;
 import ch.psi.utils.Reflection.Hidden;
 import java.awt.Color;
 import java.awt.Dimension;
@@ -91,7 +92,9 @@ public interface Plot<T extends PlotSeries> {
     };
 
     public Axis getAxis(AxisId id);
-
+    
+    public Range getAxisRange(AxisId axis);
+    
     //Markers and text are optional
     public Object addMarker(double val, AxisId axis, String label, Color color);
 

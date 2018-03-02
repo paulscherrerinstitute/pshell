@@ -8,34 +8,41 @@ import java.util.List;
  */
 public class ArrayProperties extends Range {
 
-    public int minIndex = -1;
-    public int maxIndex = -1;
+    public final int minIndex;
+    public final int maxIndex;
 
-    public ArrayProperties() {
-        super(Double.MAX_VALUE, Double.MIN_VALUE);
-    }
+    public ArrayProperties(double min, double max, int minIndex, int maxIndex) {
+        super(min,max);
+        this.minIndex = minIndex;
+        this.maxIndex =  maxIndex;
+        
+    }    
 
     public static ArrayProperties get(Object array) {
+        int minIndex = -1;
+        int maxIndex = -1;
+        double min = Double.MAX_VALUE;
+        double max = Double.MIN_VALUE;
+        
         if (Arr.getComponentType(array).isPrimitive()) {
             array = Convert.toWrapperArray(array);
         }
         List list = Arr.toList(array);
         Iterator i = list.iterator();
-        ArrayProperties props = new ArrayProperties();
         int index = 0;
         while (i.hasNext()) {
             Double next = ((Number) i.next()).doubleValue();
-            if (next.compareTo(props.min) < 0) {
-                props.min = next;
-                props.minIndex = index;
+            if (next.compareTo(min) < 0) {
+                min = next;
+                minIndex = index;
             }
-            if (next.compareTo(props.max) > 0) {
-                props.max = next;
-                props.maxIndex = index;
+            if (next.compareTo(max) > 0) {
+                max = next;
+                maxIndex = index;
             }
             index++;
         }
-        return props;
+        return new ArrayProperties(min, max, minIndex, maxIndex);
     }
 
     @Override

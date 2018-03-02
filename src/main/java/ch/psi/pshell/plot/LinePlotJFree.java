@@ -171,7 +171,7 @@ public class LinePlotJFree extends LinePlotBase {
         super.setBackground(c);
         if (chartPanel != null) {
             chartPanel.setBackground(c);
-            chartPanel.getChart().setBackgroundPaint(c);
+            chart.setBackgroundPaint(c);
         }
     }
     
@@ -340,6 +340,27 @@ public class LinePlotJFree extends LinePlotBase {
     }
 
     @Override
+    public ch.psi.utils.Range getAxisRange(AxisId axisId){
+        Range r = null;
+        switch (axisId){
+            case X:
+                r = chart.getXYPlot().getDomainAxis().getRange();
+                return new ch.psi.utils.Range(r.getLowerBound(), r.getUpperBound());
+            case Y:
+                r = chart.getXYPlot().getRangeAxis().getRange();
+                return new ch.psi.utils.Range(r.getLowerBound(), r.getUpperBound());                
+            case Y2:
+                if (dataY2 == null){
+                    return null;
+                }
+                r = chart.getXYPlot().getRangeAxis(1).getRange();
+                return new ch.psi.utils.Range(r.getLowerBound(), r.getUpperBound());                 
+            default:
+                return null;
+        }
+    }
+    
+    @Override
     protected void onRemovedSeries(LinePlotSeries series) {
         AbstractXYDataset data = getYData(series.getAxisY());
         switch (getStyle()) {
@@ -479,7 +500,7 @@ public class LinePlotJFree extends LinePlotBase {
         chartPanel.setMaximumDrawWidth(2000);
 
         // Remove border
-        chartPanel.getChart().setBorderVisible(false);
+        chart.setBorderVisible(false);
 
         // Set size of chart
         chartPanel.setPreferredSize(new java.awt.Dimension(PREFERRED_WIDTH, PREFERRED_HEIGHT));
@@ -871,14 +892,14 @@ public class LinePlotJFree extends LinePlotBase {
         minimumMenuItem.addActionListener((ActionEvent e) -> {
             // Remove all annotation for the series
             removePointers();
-            for (Object o : chartPanel.getChart().getXYPlot().getAnnotations()) {
-                chartPanel.getChart().getXYPlot().removeAnnotation((XYAnnotation) o);
+            for (Object o : chart.getXYPlot().getAnnotations()) {
+                chart.getXYPlot().removeAnnotation((XYAnnotation) o);
             }
             for (LinePlotSeries series : getAllSeries()) {
                 double[] min = series.getMinimum();
                 XYDrawableAnnotation cross = new XYDrawableAnnotation(min[0], min[1], 10.0, 10.0, new CrossAnnotation(getSeriesColor(series)));
                 cross.setToolTipText("Minimum: " + min[0] + " / " + min[1]);
-                chartPanel.getChart().getXYPlot().addAnnotation(cross);
+                chart.getXYPlot().addAnnotation(cross);
             }
         });
         toolsMenu.add(minimumMenuItem);
@@ -888,14 +909,14 @@ public class LinePlotJFree extends LinePlotBase {
         maximumMenuItem.addActionListener((ActionEvent e) -> {
             // Remove all annotation for the series
             removePointers();
-            for (Object o : chartPanel.getChart().getXYPlot().getAnnotations()) {
-                chartPanel.getChart().getXYPlot().removeAnnotation((XYAnnotation) o);
+            for (Object o : chart.getXYPlot().getAnnotations()) {
+                chart.getXYPlot().removeAnnotation((XYAnnotation) o);
             }
             for (LinePlotSeries series : getAllSeries()) {
                 double[] max = series.getMaximum();
                 XYDrawableAnnotation cross = new XYDrawableAnnotation(max[0], max[1], 10.0, 10.0, new CrossAnnotation(getSeriesColor(series)));
                 cross.setToolTipText("Maximum: " + max[0] + " / " + max[1]);
-                chartPanel.getChart().getXYPlot().addAnnotation(cross);
+                chart.getXYPlot().addAnnotation(cross);
             }
         });
         toolsMenu.add(maximumMenuItem);
@@ -1119,9 +1140,9 @@ public class LinePlotJFree extends LinePlotBase {
         marker.setLabelTextAnchor(TextAnchor.TOP_RIGHT);
         invokeLater(() -> {
             if ((axis == null) || (axis == AxisId.X)) {
-                chartPanel.getChart().getXYPlot().addDomainMarker(marker, Layer.FOREGROUND);
+                chart.getXYPlot().addDomainMarker(marker, Layer.FOREGROUND);
             } else {
-                chartPanel.getChart().getXYPlot().addRangeMarker(marker, Layer.FOREGROUND);
+                chart.getXYPlot().addRangeMarker(marker, Layer.FOREGROUND);
             }
         });
         return marker;
@@ -1149,9 +1170,9 @@ public class LinePlotJFree extends LinePlotBase {
 
         invokeLater(() -> {
             if ((axis == null) || (axis == AxisId.X)) {
-                chartPanel.getChart().getXYPlot().addDomainMarker(marker, Layer.FOREGROUND);
+                chart.getXYPlot().addDomainMarker(marker, Layer.FOREGROUND);
             } else {
-                chartPanel.getChart().getXYPlot().addRangeMarker(marker, Layer.FOREGROUND);
+                chart.getXYPlot().addRangeMarker(marker, Layer.FOREGROUND);
             }
         });
         return marker;
@@ -1161,23 +1182,23 @@ public class LinePlotJFree extends LinePlotBase {
     public void removeMarker(final Object marker) {
         invokeLater(() -> {
             if (marker == null) {
-                Collection<?> c = chartPanel.getChart().getXYPlot().getRangeMarkers(Layer.FOREGROUND);
+                Collection<?> c = chart.getXYPlot().getRangeMarkers(Layer.FOREGROUND);
                 if (c != null) {
                     Marker[] markers = c.toArray(new Marker[0]);
                     for (Marker m : markers) {
-                        chartPanel.getChart().getXYPlot().removeRangeMarker((Marker) m);
+                        chart.getXYPlot().removeRangeMarker((Marker) m);
                     }
                 }
-                c = chartPanel.getChart().getXYPlot().getDomainMarkers(Layer.FOREGROUND);
+                c = chart.getXYPlot().getDomainMarkers(Layer.FOREGROUND);
                 if (c != null) {
                     Marker[] markers = c.toArray(new Marker[0]);
                     for (Marker m : markers) {
-                        chartPanel.getChart().getXYPlot().removeDomainMarker((Marker) m);
+                        chart.getXYPlot().removeDomainMarker((Marker) m);
                     }
                 }
             } else {
-                chartPanel.getChart().getXYPlot().removeDomainMarker((Marker) marker, Layer.FOREGROUND);
-                chartPanel.getChart().getXYPlot().removeRangeMarker((Marker) marker, Layer.FOREGROUND);
+                chart.getXYPlot().removeDomainMarker((Marker) marker, Layer.FOREGROUND);
+                chart.getXYPlot().removeRangeMarker((Marker) marker, Layer.FOREGROUND);
             }
         });
     }
@@ -1185,8 +1206,8 @@ public class LinePlotJFree extends LinePlotBase {
     @Override
     public List getMarkers() {
         List ret = new ArrayList();
-        Collection dm = chartPanel.getChart().getXYPlot().getDomainMarkers(Layer.FOREGROUND);
-        Collection rm = chartPanel.getChart().getXYPlot().getRangeMarkers(Layer.FOREGROUND);
+        Collection dm = chart.getXYPlot().getDomainMarkers(Layer.FOREGROUND);
+        Collection rm = chart.getXYPlot().getRangeMarkers(Layer.FOREGROUND);
         if (dm != null) {
             ret.addAll(dm);
         }
@@ -1202,21 +1223,21 @@ public class LinePlotJFree extends LinePlotBase {
         if (color != null) {
             annotation.setPaint(color);
         }
-        chartPanel.getChart().getXYPlot().addAnnotation(annotation);
+        chart.getXYPlot().addAnnotation(annotation);
         return annotation;
     }
 
     @Override
     public void removeText(Object text) {
         if ((text != null) && (text instanceof XYTextAnnotation)) {
-            chartPanel.getChart().getXYPlot().removeAnnotation((XYTextAnnotation) text);
+            chart.getXYPlot().removeAnnotation((XYTextAnnotation) text);
         }
     }
 
     @Override
     public List getTexts() {
         List ret = new ArrayList();
-        ret.addAll(chartPanel.getChart().getXYPlot().getAnnotations());
+        ret.addAll(chart.getXYPlot().getAnnotations());
         return ret;
     }
 
@@ -1226,7 +1247,7 @@ public class LinePlotJFree extends LinePlotBase {
     void removePointers() {
         if (pointers != null) {
             for (XYPointerAnnotation pointer : pointers) {
-                chartPanel.getChart().getXYPlot().removeAnnotation(pointer);
+                chart.getXYPlot().removeAnnotation(pointer);
             }
             pointers = null;
         }
@@ -1271,7 +1292,7 @@ public class LinePlotJFree extends LinePlotBase {
                                 pointers[i].setArrowLength(5);
                                 pointers[i].setTipRadius(10);
                                 pointers[i].setLabelOffset(25);
-                                chartPanel.getChart().getXYPlot().addAnnotation(pointers[i]);
+                                chart.getXYPlot().addAnnotation(pointers[i]);
                             } else {
                                 pointers[i].setText(text);
                                 pointers[i].setX(x);
