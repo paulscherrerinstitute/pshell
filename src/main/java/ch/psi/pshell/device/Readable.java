@@ -40,5 +40,35 @@ public interface Readable<T> extends Nameable {
 
         public MatrixCalibration getCalibration();
     }
+    
+    public abstract static class ReadableNumberDevice<T> extends DeviceBase implements ReadableNumber{
+        protected ReadableNumberDevice(String name){
+            super(name);
+        }
+    }
+    
+    public abstract static class ReadableArrayDevice<T> extends DeviceBase implements ReadableArray{
+        protected ReadableArrayDevice(String name){
+            super(name);
+        }        
+    }
+    
+    public abstract static class ReadableCalibratedArrayDevice<T> extends DeviceBase implements ReadableCalibratedArray{
+        protected ReadableCalibratedArrayDevice(String name){
+            super(name);
+        }        
+    }
+    
+    public abstract static class ReadableMatrixDevice<T> extends DeviceBase implements ReadableMatrix{
+         protected ReadableMatrixDevice(String name){
+            super(name);
+         }       
+    }
+    
+    public abstract static class ReadableCalibratedMatrixDevice<T> extends DeviceBase implements ReadableCalibratedMatrix{
+         protected ReadableCalibratedMatrixDevice(String name){
+             super(name);
+        }       
+    }    
 
 }

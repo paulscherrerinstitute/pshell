@@ -23,4 +23,18 @@ public interface Writable<T> extends Nameable {
 
         public int getSize();
     }
+    
+    
+    public abstract static class WritableNumberDevice extends DeviceBase implements WritableNumber{
+         protected WritableNumberDevice(String name){
+            super(name);
+        }       
+    }    
+    
+    public abstract static class WritableArrayDevice extends DeviceBase implements WritableArray{
+          protected WritableArrayDevice(String name){
+            super(name);
+        }          
+    }       
+    
 }

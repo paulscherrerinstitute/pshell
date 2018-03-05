@@ -40,21 +40,10 @@ public class UrlDevice extends DeviceBase implements Readable, Writable {
 
     public UrlDevice(String url) {
         this.url = url;
-        this.protocol = getUrlProtocol(url);
-        String id = getUrlId(url);        
-        pars = new HashMap<>();
-        if (id.contains("?")) {
-            String[] tokens = id.split("\\?");
-            id = tokens[0].trim();
-            for (String str : tokens[1].split("&")) {
-                tokens = str.split("=");
-                if (tokens.length == 2) {
-                    pars.put(tokens[0].trim(), tokens[1].trim());
-                }
-            }
-        }
-        this.id = id;
-        this.name = pars.containsKey("name") ? pars.get("name") : id;
+        this.protocol = getUrlProtocol(url);     
+        this.pars = getUrlPars(url);
+        this.id = getUrlId(url);
+        this.name = getUrlName(url);
     }
     
     public static String getUrlProtocol(String url){
@@ -64,12 +53,39 @@ public class UrlDevice extends DeviceBase implements Readable, Writable {
         return url.substring(0, url.indexOf("://"));
     }
     
-    public static String getUrlId(String url){
+    public static String getUrlPath(String url){
         if (!url.contains("://")) {
             throw new RuntimeException("Invalid device url: " + url);
         }        
         return url.substring(url.indexOf("://") + 3, url.length());
     }    
+    
+    public static Map<String, String> getUrlPars(String url){    
+        String path = getUrlPath(url);
+        Map<String, String> pars = new HashMap<>();
+        if (path.contains("?")) {
+            for (String str : path.split("\\?")[1].split("&")) {
+                String[] tokens = str.split("=");
+                if (tokens.length == 2) {
+                    pars.put(tokens[0].trim(), tokens[1].trim());
+                }
+            }
+        }
+        return pars;
+    }    
+    
+    public static String getUrlName(String url){   
+        Map<String, String> pars = getUrlPars(url);         
+        return pars.containsKey("name") ? pars.get("name") : getUrlId(url);
+    }      
+    
+    static String getUrlId(String url){
+        String path = getUrlPath(url);
+        if (path.contains("?")) {
+            path = path.split("\\?")[0].trim();
+        }
+        return path;
+    }      
     
     @Override
     public void setParent(DeviceBase parent) {
@@ -86,19 +102,18 @@ public class UrlDevice extends DeviceBase implements Readable, Writable {
         closeDevice();
         device = resolve();
         if (device != null) {
-            if (device instanceof Averager){
-                Device inner = ((Averager)device).getParent();
-                if (inner!=null){
-                    if (Context.getInstance().isSimulation()) {
-                        inner.setSimulated();
-                    }
-                    inner.initialize();   
-                }
-            }  else {
+            Device dev = device;
+            if ((dev instanceof Averager.AveragerStats) || (dev instanceof Averager.AveragerStatsArray)){
+                dev = dev.getParent();
+            }            
+            if ((dev!= null) && (dev instanceof Averager)){
+                dev = dev.getParent();
+            }
+            if (dev!= null){   
                 if (Context.getInstance().isSimulation()) {
-                    device.setSimulated();
+                    dev.setSimulated();
                 }
-                device.initialize();
+                dev.initialize();
             }
         }
     }
@@ -308,10 +323,23 @@ public class UrlDevice extends DeviceBase implements Readable, Writable {
                 }
             }
             if (samples != null) {
-                Averager av = pars.containsKey("name") ? new Averager(name, (Readable) ret, samples, interval) :
+                Boolean hasSetName = pars.containsKey("name");
+                Averager av = hasSetName ? new Averager(name, (Readable) ret, samples, interval) :
                                                          new Averager((Readable) ret, samples, interval);
                 if (async) {
                     av.setMonitored(true);
+                }
+                if (pars.containsKey("op")) {
+                    String opName = hasSetName ? name : null;
+                    switch(pars.get("op")){
+                        case "sum": return av.getSum(opName);      
+                        case "min": return av.getMin(opName);      
+                        case "max": return av.getMax(opName);      
+                        case "mean": return av.getMean(opName);      
+                        case "stdev": return av.getStdev(opName);   
+                        case "variance": return av.getVariance(opName);  
+                        case "samples": return av.getSamples(opName);  
+                    }
                 }
                 return av;
             }

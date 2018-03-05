@@ -214,113 +214,93 @@ public class Averager extends ReadonlyRegisterBase<DescStatsDouble> implements R
         }
         return take();
     }
-
-    public ReadableArray<double[]> getSamples() {
-        return new ReadableArray<double[]>() {
-            @Override
-            public int getSize() {
-                return config.measures;
-            }
-
-            @Override
-            public double[] read() throws IOException, InterruptedException {
-                DescStatsDouble cache = take();
-                return (cache == null) ? new double[0] : cache.getSamples();
-            }
-
-            @Override
-            public String getName() {
-                return Averager.this.getName() + " samples";
-            }
-        };
-    }
-
-    public Readable<Double> getVariance() {
-        return new Readable<Double>() {
-            @Override
-            public Double read() throws IOException, InterruptedException {
-                DescStatsDouble cache = take();
-                return (cache == null) ? null : cache.getVariance();
-            }
-
-            @Override
-            public String getName() {
-                return Averager.this.getName() + " variance";
-            }
-        };
-    }
-
-    public Readable<Double> getMean() {
-        return new Readable<Double>() {
-            @Override
-            public Double read() throws IOException, InterruptedException {
-                DescStatsDouble cache = take();
-                return (cache == null) ? null : cache.getMean();
-            }
-
-            @Override
-            public String getName() {
-                return Averager.this.getName() + " mean";
-            }
-        };
-    }
-
-    public Readable<Double> getStdev() {
-        return new Readable<Double>() {
-            @Override
-            public Double read() throws IOException, InterruptedException {
-                DescStatsDouble cache = take();
-                return (cache == null) ? null : cache.getStdev();
-            }
-
-            @Override
-            public String getName() {
-                return Averager.this.getName() + " stdev";
-            }
-        };
-    }
-
-    public Readable<Double> getMin() {
-        return new Readable<Double>() {
-            @Override
-            public Double read() throws IOException, InterruptedException {
-                DescStatsDouble cache = take();
-                return (cache == null) ? null : cache.getMin();
-            }
-
-            @Override
-            public String getName() {
-                return Averager.this.getName() + " min";
-            }
-        };
-    }
-
-    public Readable<Double> getMax() {
-        return new Readable<Double>() {
-            @Override
-            public Double read() throws IOException, InterruptedException {
-                DescStatsDouble cache = take();
-                return (cache == null) ? null : cache.getMax();
-            }
-
-            @Override
-            public String getName() {
-                return Averager.this.getName() + " max";
-            }
-        };
+    
+    public abstract class AveragerStats extends ReadableNumberDevice<Double>{
+        AveragerStats(String name, String type){
+            super((name == null) ? source.getName() + " " + type : name);
+            setParent(Averager.this);
+        }
+        
     }
     
-    public Readable<Double> getSum() {
-        return new Readable<Double>() {
+    public abstract class AveragerStatsArray extends ReadableArrayDevice<double[]>{
+        AveragerStatsArray(String name, String type){
+            super((name == null) ? source.getName() + " " + type : name);
+            setParent(Averager.this);
+        }        
+    }    
+
+    public AveragerStatsArray getSamples(String name) {
+        return new AveragerStatsArray(name, "samples") {
             @Override
-            public Double read() throws IOException, InterruptedException {
-                DescStatsDouble cache = take();
-                return (cache == null) ? null : cache.getSum();
+            public double[] read() throws IOException, InterruptedException {
+                DescStatsDouble cache = Averager.this.take();
+                return (cache == null) ? null : cache.getSamples();
             }
 
             @Override
-            public String getName() {
-                return Averager.this.getName() + " sum";
+            public int getSize() {
+                return Averager.this.config.measures;
+            }
+        };
+    }     
+
+    public AveragerStats getVariance(String name) {
+        return new AveragerStats(name, "variance") {
+            @Override
+            public Double read() throws IOException, InterruptedException {
+                DescStatsDouble cache = Averager.this.take();
+                return (cache == null) ? null : cache.getVariance();
+            }
+        };
+    } 
+
+    public AveragerStats getMean(String name) {
+        return new AveragerStats(name, "mean") {
+            @Override
+            public Double read() throws IOException, InterruptedException {
+                DescStatsDouble cache = Averager.this.take();
+                return (cache == null) ? null : cache.getMean();
+            }
+        };
+    }  
+
+    public AveragerStats getStdev(String name) {
+        return new AveragerStats(name, "stdev") {
+            @Override
+            public Double read() throws IOException, InterruptedException {
+                DescStatsDouble cache = Averager.this.take();
+                return (cache == null) ? null : cache.getStdev();
+            }
+        };
+    }  
+
+    public AveragerStats getMin(String name) {
+        return new AveragerStats(name, "min") {
+            @Override
+            public Double read() throws IOException, InterruptedException {
+                DescStatsDouble cache = Averager.this.take();
+                return (cache == null) ? null : cache.getMin();
+            }
+        };
+    }  
+
+    public AveragerStats getMax(String name) {
+        return new AveragerStats(name, "max") {
+            @Override
+            public Double read() throws IOException, InterruptedException {
+                DescStatsDouble cache = Averager.this.take();
+                return (cache == null) ? null : cache.getMax();
+            }
+        };
+    }  
+    
+    public AveragerStats getSum(String name) {
+        return new AveragerStats(name, "sum") {
+            @Override
+            public Double read() throws IOException, InterruptedException {
+                DescStatsDouble cache = Averager.this.take();
+                return (cache == null) ? null : cache.getSum();
             }
         };
     }      

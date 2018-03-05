@@ -2,6 +2,7 @@ package ch.psi.pshell.swing;
 
 import ch.psi.pshell.core.Context;
 import ch.psi.pshell.core.JsonSerializer;
+import ch.psi.pshell.core.UrlDevice;
 import ch.psi.pshell.scripting.ScriptType;
 import ch.psi.pshell.swing.StripChart.Type;
 import ch.psi.pshell.ui.Processor;
@@ -569,37 +570,43 @@ public class ScanEditorPanel extends MonitoredPanel implements Processor {
         return ret;
     }
 
+    String getSensorUrl(int index) {
+        Type type = (Type) modelSensors.getValueAt(index, 0);
+        String id = modelSensors.getValueAt(index, 1).toString().trim();
+        switch (type) {
+            case Channel:
+                return "ca://" + id;
+            case Device:
+                return id;
+            case Stream:
+                return "bs://" + id;
+            case CamServer:
+                return "cs://" + id;
+        }
+        return null;
+    }
+
     List<String> getSensors() {
         List<String> ret = new ArrayList<>();
         for (int i = 0; i < modelSensors.getRowCount(); i++) {
             Type type = (Type) modelSensors.getValueAt(i, 0);
-            String name = modelSensors.getValueAt(i, 1).toString().trim();
             String sensor = null;
-            switch (type) {
-                case Channel:
-                    sensor = "'ca://" + name + "'";
-                    break;
-                case Device:
-                    sensor = name;
-                    break;
-                case Stream:
-                    sensor = "'bs://" + name + "'";
-                    break;
-                case CamServer:
-                    sensor = "'cs://" + name + "'";
-                    break;
+            if (type == Type.Device) {
+                sensor = modelSensors.getValueAt(i, 1).toString().trim();
+            } else {
+                sensor = "'" + getSensorUrl(i) + "'";
             }
-            if (sensor != null) {
-                Integer samples = (modelSensors.getValueAt(i, 2)==null) ? 1 :((Number) modelSensors.getValueAt(i, 2)).intValue();
+            if ( sensor!= null) {
+                Integer samples = (modelSensors.getValueAt(i, 2) == null) ? 1 : ((Number) modelSensors.getValueAt(i, 2)).intValue();
                 if (Math.abs(samples.intValue()) < 2) {
                     samples = 1;
                 }
-                Double interval = (modelSensors.getValueAt(i, 2)==null) ? 0.0 :((Number) modelSensors.getValueAt(i, 3)).doubleValue();
+                Double interval = (modelSensors.getValueAt(i, 2) == null) ? 0.0 : ((Number) modelSensors.getValueAt(i, 3)).doubleValue();
 
                 if (Math.abs(samples) > 1) {
                     //If change event serie async or with trigger auto-generated, then averagers must be async
                     //boolean async = samples < 0 || (getScanCommand().equals("mscan") && ((modelPositioners.getRowCount() == 0) || (!checkSync.isSelected())));
-                boolean async = samples < 0 || (getScanCommand().equals("mscan") && !checkSync.isSelected());
+                    boolean async = samples < 0 || (getScanCommand().equals("mscan") && !checkSync.isSelected());
 
                     if (type == Type.Device) {
                         samples = Math.abs(samples);
@@ -614,7 +621,7 @@ public class ScanEditorPanel extends MonitoredPanel implements Processor {
                         if (async && (samples > 0)) {
                             samples = -samples;
                         }
-                        sensor += "samples=" + samples + "&interval=" + (int)(interval * 1000) + "'";
+                        sensor += "samples=" + samples + "&interval=" + (int) (interval * 1000) + "'";
                     }
                 }
                 ret.add(sensor);
@@ -780,14 +787,22 @@ public class ScanEditorPanel extends MonitoredPanel implements Processor {
         if ((row < 0) || (row > modelSensors.getRowCount() - 1)) {
             return null;
         }
+
         String ret = String.valueOf(modelSensors.getValueAt(row, 1));
-        if (ret.contains("?")) {
-            ret = ret.split("\\?")[0];
+        boolean hasname = false;
+        Type type = (Type) modelSensors.getValueAt(row, 0);
+        String name = null;
+        if (type != Type.Device) {
+            name = UrlDevice.getUrlPars(getSensorUrl(row)).get("name");
+            ret = (name != null) ? name : ret.split("\\?")[0];
         }
-        Integer samples = ((Integer) modelSensors.getValueAt(row, 2));
-        if ((samples != null) && (samples > 1)) {
-            ret = ret + " averager";
+        if (name == null) {
+            Integer samples = ((Integer) modelSensors.getValueAt(row, 2));
+            if ((samples != null) && (samples > 1)) {
+                ret = ret + " averager";
+            }
         }
+
         return ret;
     }
 
