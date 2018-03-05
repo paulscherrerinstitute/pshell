@@ -61,6 +61,12 @@ public class MonitorScan extends LineScan {
         if (trigger == null) {
             //Uses the stream if contains a bsread device
             for (Readable r : readables) {
+                if (r instanceof CacheReadable) {      
+                    Cacheable parent = ((CacheReadable) r).getParent();
+                    if (parent!=null){
+                        r= parent;
+                    }
+                }
                 if ((r instanceof Scalar) || (r instanceof Stream.PidReader) || (r instanceof Stream.TimestampReader)) {
                     trigger = ((Device) r).getParent();
                     break;

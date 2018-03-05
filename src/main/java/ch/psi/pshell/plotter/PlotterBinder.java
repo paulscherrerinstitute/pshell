@@ -54,7 +54,7 @@ public class PlotterBinder implements AutoCloseable {
                     pm.addMatrixPlot(plotTitle, name, null, null);
                     pm.addMatrixSeries(plotTitle + "/" + name, name, scan.getStart()[0], scan.getEnd()[0], scan.getNumberOfSteps()[0] + 1, 0.0, (double) ((ch.psi.pshell.device.Readable.ReadableArray) r).getSize() - 1, ((ch.psi.pshell.device.Readable.ReadableArray) r).getSize());
                 } else {
-                    pm.addLinePlot(plotTitle, name, (r instanceof Averager) ? Style.ErrorY : Style.Normal);
+                    pm.addLinePlot(plotTitle, name, Averager.isAverager(r) ? Style.ErrorY : Style.Normal);
                     pm.addLineSeries(plotTitle + "/" + name, name, null, null, null, null, null);
                 }
             }

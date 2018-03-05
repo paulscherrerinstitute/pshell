@@ -120,7 +120,7 @@ public class Averager extends ReadonlyRegisterBase<DescStatsDouble> implements R
         }
         if (innerDevice instanceof Stream){
             ((Stream)innerDevice).start(true); 
-            ((Stream)innerDevice).waitCacheChange(10000);
+            ((Stream)innerDevice).waitCacheChange(Stream.TIMEOUT_START_STREAMING);
         }
         
         if (config.interval < 0) {
@@ -147,12 +147,12 @@ public class Averager extends ReadonlyRegisterBase<DescStatsDouble> implements R
     DeviceListener sourceListener;
     ScheduledExecutorService monitoringTimer;
 
+    @Override
     protected void doSetMonitored(boolean value) {
         if (value) {
             if (config.interval >= 0) {
-                monitoringTimer = Threading.scheduleAtFixedRateNotRetriggerable(new Runnable() {
-                    @Override
-                    public void run() {
+                monitoringTimer = Threading.scheduleAtFixedRateNotRetriggerable(() -> {
+                    if(isInitialized()){
                         readSample();
                     }
                 }, 0, config.interval, TimeUnit.MILLISECONDS, "Snapshot Dialog Task");
@@ -225,7 +225,7 @@ public class Averager extends ReadonlyRegisterBase<DescStatsDouble> implements R
             @Override
             public double[] read() throws IOException, InterruptedException {
                 DescStatsDouble cache = take();
-                return (cache == null) ? new double[0] : cache.samples;
+                return (cache == null) ? new double[0] : cache.getSamples();
             }
 
             @Override
@@ -240,7 +240,7 @@ public class Averager extends ReadonlyRegisterBase<DescStatsDouble> implements R
             @Override
             public Double read() throws IOException, InterruptedException {
                 DescStatsDouble cache = take();
-                return (cache == null) ? null : cache.variance;
+                return (cache == null) ? null : cache.getVariance();
             }
 
             @Override
@@ -255,7 +255,7 @@ public class Averager extends ReadonlyRegisterBase<DescStatsDouble> implements R
             @Override
             public Double read() throws IOException, InterruptedException {
                 DescStatsDouble cache = take();
-                return (cache == null) ? null : cache.mean;
+                return (cache == null) ? null : cache.getMean();
             }
 
             @Override
@@ -270,7 +270,7 @@ public class Averager extends ReadonlyRegisterBase<DescStatsDouble> implements R
             @Override
             public Double read() throws IOException, InterruptedException {
                 DescStatsDouble cache = take();
-                return (cache == null) ? null : cache.stdev;
+                return (cache == null) ? null : cache.getStdev();
             }
 
             @Override
@@ -285,7 +285,7 @@ public class Averager extends ReadonlyRegisterBase<DescStatsDouble> implements R
             @Override
             public Double read() throws IOException, InterruptedException {
                 DescStatsDouble cache = take();
-                return (cache == null) ? null : cache.min;
+                return (cache == null) ? null : cache.getMin();
             }
 
             @Override
@@ -300,7 +300,7 @@ public class Averager extends ReadonlyRegisterBase<DescStatsDouble> implements R
             @Override
             public Double read() throws IOException, InterruptedException {
                 DescStatsDouble cache = take();
-                return (cache == null) ? null : cache.max;
+                return (cache == null) ? null : cache.getMax();
             }
 
             @Override
@@ -309,6 +309,32 @@ public class Averager extends ReadonlyRegisterBase<DescStatsDouble> implements R
             }
         };
     }
+    
+    public Readable<Double> getSum() {
+        return new Readable<Double>() {
+            @Override
+            public Double read() throws IOException, InterruptedException {
+                DescStatsDouble cache = take();
+                return (cache == null) ? null : cache.getSum();
+            }
+
+            @Override
+            public String getName() {
+                return Averager.this.getName() + " sum";
+            }
+        };
+    }      
+    
+    //Utilities
+    public static boolean isAverager(Readable readable){
+        if (readable instanceof Averager){
+            return true;
+        }
+        if ((readable instanceof CacheReadable) && (((CacheReadable)readable).getParent() instanceof Averager)){
+             return true;
+         }
+        return false;
+    }    
 
     @Override
     protected void doClose() throws IOException {

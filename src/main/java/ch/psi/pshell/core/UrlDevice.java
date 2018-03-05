@@ -1,11 +1,12 @@
 /*
- * Copyright (c) 2014 Paul Scherrer Institute. All rights reserved.
+ *  Copyright (c) 2014 Paul Scherrer Institute. All rights reserved.
  */
 package ch.psi.pshell.core;
 
 import ch.psi.pshell.bs.PipelineServer;
 import ch.psi.pshell.bs.Scalar;
 import ch.psi.pshell.bs.Stream;
+import ch.psi.pshell.device.Averager;
 import ch.psi.pshell.device.Device;
 import ch.psi.pshell.device.DeviceBase;
 import ch.psi.pshell.device.Readable;
@@ -34,17 +35,14 @@ public class UrlDevice extends DeviceBase implements Readable, Writable {
 
     DeviceBase parent;
     Device device;
-    
-    static List<Stream> cameraStreams= new ArrayList<>();
+
+    static List<Stream> cameraStreams = new ArrayList<>();
 
     public UrlDevice(String url) {
-        if (!url.contains("://")) {
-            throw new RuntimeException("Invalid device url: " + url);
-        }
         this.url = url;
-        this.protocol = url.substring(0, url.indexOf("://"));
+        this.protocol = getUrlProtocol(url);
+        String id = getUrlId(url);        
         pars = new HashMap<>();
-        String id = url.substring(url.indexOf("://")+3, url.length());
         if (id.contains("?")) {
             String[] tokens = id.split("\\?");
             id = tokens[0].trim();
@@ -58,7 +56,21 @@ public class UrlDevice extends DeviceBase implements Readable, Writable {
         this.id = id;
         this.name = pars.containsKey("name") ? pars.get("name") : id;
     }
-
+    
+    public static String getUrlProtocol(String url){
+        if (!url.contains("://")) {
+            throw new RuntimeException("Invalid device url: " + url);
+        }        
+        return url.substring(0, url.indexOf("://"));
+    }
+    
+    public static String getUrlId(String url){
+        if (!url.contains("://")) {
+            throw new RuntimeException("Invalid device url: " + url);
+        }        
+        return url.substring(url.indexOf("://") + 3, url.length());
+    }    
+    
     @Override
     public void setParent(DeviceBase parent) {
         this.parent = parent;
@@ -74,10 +86,20 @@ public class UrlDevice extends DeviceBase implements Readable, Writable {
         closeDevice();
         device = resolve();
         if (device != null) {
-            if (Context.getInstance().isSimulation()) {
-                device.setSimulated();
+            if (device instanceof Averager){
+                Device inner = ((Averager)device).getParent();
+                if (inner!=null){
+                    if (Context.getInstance().isSimulation()) {
+                        inner.setSimulated();
+                    }
+                    inner.initialize();   
+                }
+            }  else {
+                if (Context.getInstance().isSimulation()) {
+                    device.setSimulated();
+                }
+                device.initialize();
             }
-            device.initialize();
         }
     }
 
@@ -215,12 +237,12 @@ public class UrlDevice extends DeviceBase implements Readable, Writable {
                         server.close();
                     }
                 }
-                String channel  = pars.get("channel");
+                String channel = pars.get("channel");
                 Stream s = null;
                 url = url.trim();
                 synchronized (cameraStreams) {
                     for (Stream cs : cameraStreams.toArray(new Stream[0])) {
-                        if (cs.isInitialized()){
+                        if (cs.isInitialized()) {
                             if (cs.getAddress().equals(url)) {
                                 s = cs;
                                 break;
@@ -236,7 +258,7 @@ public class UrlDevice extends DeviceBase implements Readable, Writable {
                         instantiatedDevices.add(s);
                         p.initialize();
                         s.start();
-                        s.waitCacheChange(10000);
+                        s.waitCacheChange(Stream.TIMEOUT_START_STREAMING);
                         synchronized (instantiatedDevices) {
                             instantiatedDevices.add(s);
                             instantiatedDevices.add(p);
@@ -263,6 +285,36 @@ public class UrlDevice extends DeviceBase implements Readable, Writable {
                 }
             } catch (Exception ex) {
             }
+
+            //Averaging
+            Integer samples = null;
+            int interval = -1;
+            boolean async = false;
+            if (pars.containsKey("samples")) {
+                try {
+                    samples = Integer.valueOf(pars.get("samples"));
+                    async = samples < 0;
+                    samples = Math.abs(samples);
+                    if (samples < 2) {
+                        samples = null;
+                    }
+                } catch (Exception ex) {
+                }
+            }
+            if (pars.containsKey("interval")) {
+                try {
+                    interval = Integer.valueOf(pars.get("interval"));
+                } catch (Exception ex) {
+                }
+            }
+            if (samples != null) {
+                Averager av = pars.containsKey("name") ? new Averager(name, (Readable) ret, samples, interval) :
+                                                         new Averager((Readable) ret, samples, interval);
+                if (async) {
+                    av.setMonitored(true);
+                }
+                return av;
+            }
             return ret;
         }
         throw new IOException("Invalid device: " + url);
@@ -272,10 +324,10 @@ public class UrlDevice extends DeviceBase implements Readable, Writable {
         if (device != null) {
             try {
                 device.close();
-                for (Device dev: instantiatedDevices){
+                for (Device dev : instantiatedDevices) {
                     dev.close();
                     instantiatedDevices.remove(dev);
-                    if (cameraStreams.contains(dev)){
+                    if (cameraStreams.contains(dev)) {
                         cameraStreams.remove(dev);
                     }
                 }
@@ -291,5 +343,60 @@ public class UrlDevice extends DeviceBase implements Readable, Writable {
         closeDevice();
         super.doClose();
     }
+    
+    
+    public static Device create(String url, DeviceBase parent) throws IOException, InterruptedException {
+        UrlDevice dev = new UrlDevice(url);
+        Stream innerStream = null;
+        if (parent == null){
+            if (getUrlProtocol(url).equals("bs")){
+                innerStream = new Stream("Url device stream");
+                innerStream.initialize();     
+                parent = innerStream;
+            }
+        }
+        if (parent != null){
+            dev.setParent(parent);
+        }
+        dev.initialize();
+        if (innerStream!=null){
+            innerStream.start();
+            innerStream.waitValueChange(Stream.TIMEOUT_START_STREAMING);
+        }        
+        return dev.getDevice();
+    }  
+    
+    public static List<Device> create(List<String> url, DeviceBase parent) throws IOException, InterruptedException {
+       List<DeviceBase> parents = new ArrayList<>();
+       parents.add(parent);
+       return create(url, parents);
+    }      
+    
+    public static List<Device> create(List<String> url, List<DeviceBase> parents) throws IOException, InterruptedException {
+        Stream innerStream = null;
+        List<Device> ret = new ArrayList<>();
+        for (int i=0; i<url.size(); i++){
+            DeviceBase parent = null;
+            if (parents.size() > 0){
+                parent = (parents.size()==1) ? parents.get(0) : parents.get(i);
+            }
+            if (parent == null){
+                if (getUrlProtocol(url.get(i)).equals("bs")){
+                    if (innerStream==null){
+                        innerStream = new Stream("Url device stream");
+                        innerStream.initialize();        
+                    }
+                    parent = innerStream;
+                }
+            }            
+            Device dev = create(url.get(i), parent);
+            ret.add(dev);
+        }
+        if (innerStream!=null){
+            innerStream.start();
+            innerStream.waitValueChange(Stream.TIMEOUT_START_STREAMING);
+        }
+        return ret;
+    }      
 
 }

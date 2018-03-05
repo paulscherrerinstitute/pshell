@@ -215,20 +215,20 @@ public class ScanEditorPanel extends MonitoredPanel implements Processor {
         checkZigzag.setSelected((Boolean) getStateElement(state, 10, Boolean.class));
         checkSave.setSelected((Boolean) getStateElement(state, 11, Boolean.class));
         checkDisplay.setSelected((Boolean) getStateElement(state, 12, Boolean.class));
-        
+
         textFile.setText((String) getStateElement(state, 13, String.class));
         textTag.setText((String) getStateElement(state, 14, String.class));
         comboLayout.setSelectedItem(String.valueOf(getStateElement(state, 15, String.class)).trim());
         comboProvider.setSelectedItem(String.valueOf(getStateElement(state, 16, String.class)).trim());
         Integer range = ((Number) getStateElement(state, 17, Number.class)).intValue();
         buttonGrouPlotRange.setSelected((range == 2) ? radioManual.getModel() : ((range == 1) ? radioAuto.getModel() : radioScan.getModel()), true);
-        if (radioManual.isSelected() && (getStateElement(state, 18, null)!=Number.class) && (getStateElement(state, 19, Number.class)!=null)) {
+        if (radioManual.isSelected() && (getStateElement(state, 18, null) != Number.class) && (getStateElement(state, 19, Number.class) != null)) {
             spinnerRangeFrom.setValue(((Number) getStateElement(state, 18, Number.class)).doubleValue());
             spinnerRangeTo.setValue(((Number) getStateElement(state, 19, Number.class)).doubleValue());
         }
         comboDomain.setSelectedItem(String.valueOf(getStateElement(state, 20, null)).trim());
         checkSteps.setSelected((Boolean) getStateElement(state, 21, Boolean.class));
-                 
+
         setupColumns();
         this.fileName = fileName;
         changed = false;
@@ -236,24 +236,24 @@ public class ScanEditorPanel extends MonitoredPanel implements Processor {
         updateStepColumn();
         update();
     }
-    
-    Object getStateElement(List state, int index, Class type){
-        if (index < state.size()){
+
+    Object getStateElement(List state, int index, Class type) {
+        if (index < state.size()) {
             Object obj = state.get(index);
-            if ((type==null) || (type.isAssignableFrom(obj.getClass()))){
+            if ((type == null) || (type.isAssignableFrom(obj.getClass()))) {
                 return obj;
             }
         }
-        if (type == Boolean.class){
+        if (type == Boolean.class) {
             return Boolean.FALSE;
-        } else if (type == String.class){
+        } else if (type == String.class) {
             return "";
-        } else if (Number.class.isAssignableFrom(type)){
+        } else if (Number.class.isAssignableFrom(type)) {
             return new Integer(0);
         }
-        try{
+        try {
             return type.newInstance();
-        } catch (Exception ex){
+        } catch (Exception ex) {
             return null;
         }
     }
@@ -356,11 +356,12 @@ public class ScanEditorPanel extends MonitoredPanel implements Processor {
     public String getCommand() {
         return textCommand.getText();
     }
-    void updateStepColumn(){
+
+    void updateStepColumn() {
         tablePositioners.getColumnModel().getColumn(4).setHeaderValue(checkSteps.isSelected() ? "Number of Steps" : "Step Size");
         tablePositioners.updateUI();
     }
-    
+
     void updateCommand() {
         try {
             boolean hasPositioners = hasPositioners();
@@ -377,8 +378,8 @@ public class ScanEditorPanel extends MonitoredPanel implements Processor {
             if (hasSteps()) {
                 cmd.append("[").append(String.join(", ", getStart())).append("], ");
                 cmd.append("[").append(String.join(", ", getStop())).append("], ");
-                if (checkSteps.isSelected() && !scan.equals("ascan")){
-                    cmd.append((modelPositioners.getRowCount()> 0) ? ((Number)modelPositioners.getValueAt(0, 4)).intValue() : getNullValue()).append(", ");
+                if (checkSteps.isSelected() && !scan.equals("ascan")) {
+                    cmd.append((modelPositioners.getRowCount() > 0) ? ((Number) modelPositioners.getValueAt(0, 4)).intValue() : getNullValue()).append(", ");
                 } else {
                     cmd.append("[").append(String.join(", ", getSteps())).append("], ");
                 }
@@ -452,7 +453,7 @@ public class ScanEditorPanel extends MonitoredPanel implements Processor {
         checkSync.setVisible(cmd.equals("mscan"));
         checkSync.setEnabled(enabled);
         checkSteps.setEnabled(enabled && hasSteps());
-        
+
         if (cmd.equals("vscan")) {
             panelVector.setVisible(true);
             if (modelVector.getColumnCount() != modelPositioners.getRowCount()) {
@@ -508,11 +509,10 @@ public class ScanEditorPanel extends MonitoredPanel implements Processor {
     boolean hasPasses() {
         return Arr.containsEqual(new String[]{"lscan", "ascan", "vscan", "cscan"}, getScanCommand());
     }
-    
+
     boolean hasSteps() {
         return Arr.containsEqual(new String[]{"lscan", "ascan", "cscan"}, getScanCommand());
-    }    
-
+    }
 
     List<String> getPositioners() {
         List<String> ret = new ArrayList<>();
@@ -559,8 +559,8 @@ public class ScanEditorPanel extends MonitoredPanel implements Processor {
         List<String> ret = new ArrayList<>();
         if (hasPositioners()) {
             for (int i = 0; i < modelPositioners.getRowCount(); i++) {
-                if (checkSteps.isSelected()){
-                    ret.add(String.valueOf(((Number)modelPositioners.getValueAt(i, 4)).intValue()));
+                if (checkSteps.isSelected()) {
+                    ret.add(String.valueOf(((Number) modelPositioners.getValueAt(i, 4)).intValue()));
                 } else {
                     ret.add(String.valueOf(modelPositioners.getValueAt(i, 4)));
                 }
@@ -590,20 +590,31 @@ public class ScanEditorPanel extends MonitoredPanel implements Processor {
                     break;
             }
             if (sensor != null) {
-                Number samples = ((Number) modelSensors.getValueAt(i, 2));
-                if ((samples == null) || samples.intValue() < 0) {
+                Integer samples = (modelSensors.getValueAt(i, 2)==null) ? 1 :((Number) modelSensors.getValueAt(i, 2)).intValue();
+                if (Math.abs(samples.intValue()) < 2) {
                     samples = 1;
                 }
-                Number interval = ((Number) modelSensors.getValueAt(i, 3));
-                if (interval == null) {
-                    interval = 0.0;
-                }
-                if (samples.intValue() > 1) {
-                    //If change event serie with trigger auto-generated, then averagers must be async
-                    if ((getScanCommand().equals("mscan") && (modelPositioners.getRowCount()==0))){
-                        sensor = "create_averager(" + sensor + ", " + samples.intValue() + ", " + interval.doubleValue()+ ", " + getNullValue() + ", " + getBoolValue(true) +")";
+                Double interval = (modelSensors.getValueAt(i, 2)==null) ? 0.0 :((Number) modelSensors.getValueAt(i, 3)).doubleValue();
+
+                if (Math.abs(samples) > 1) {
+                    //If change event serie async or with trigger auto-generated, then averagers must be async
+                    //boolean async = samples < 0 || (getScanCommand().equals("mscan") && ((modelPositioners.getRowCount() == 0) || (!checkSync.isSelected())));
+                boolean async = samples < 0 || (getScanCommand().equals("mscan") && !checkSync.isSelected());
+
+                    if (type == Type.Device) {
+                        samples = Math.abs(samples);
+                        if (async) {
+                            sensor = "create_averager(" + sensor + ", " + samples + ", " + interval + ", " + getNullValue() + ", " + getBoolValue(true) + ")";
+                        } else {
+                            sensor = "create_averager(" + sensor + ", " + samples + ", " + interval + ")";
+                        }
                     } else {
-                        sensor = "create_averager(" + sensor + ", " + samples.intValue() + ", " + interval.doubleValue() + ")";
+                        sensor = sensor.substring(0, sensor.length() - 1);
+                        sensor += sensor.contains("?") ? "&" : "?";
+                        if (async && (samples > 0)) {
+                            samples = -samples;
+                        }
+                        sensor += "samples=" + samples + "&interval=" + (int)(interval * 1000) + "'";
                     }
                 }
                 ret.add(sensor);
@@ -634,7 +645,6 @@ public class ScanEditorPanel extends MonitoredPanel implements Processor {
         return par + "=";
     }
 
-
     List<String> getParameters() {
 
         boolean addSpacersCommas = (Context.getInstance().getSetup().getScriptType() == ScriptType.js);
@@ -644,11 +654,11 @@ public class ScanEditorPanel extends MonitoredPanel implements Processor {
             ret.add(getParName("interval") + spinnerLatency.getValue());
         } else if (getScanCommand().equals("mscan")) {
             ret.add(getParName("points") + ((((Number) spinnerPasses.getValue()).doubleValue() == 0) ? -1 : spinnerPasses.getValue()));
-            ret.add(getParName("timeout") + ((((Number) spinnerTime.getValue()).doubleValue() == 0) ? -1 : spinnerTime.getValue()));           
-            if (checkSync.isSelected()){
+            ret.add(getParName("timeout") + ((((Number) spinnerTime.getValue()).doubleValue() == 0) ? -1 : spinnerTime.getValue()));
+            if (checkSync.isSelected()) {
                 ret.add(getParName("async") + getBoolValue(false));
             }
-        } else if (getScanCommand().equals( "vscan")) {
+        } else if (getScanCommand().equals("vscan")) {
             StringBuilder sb = new StringBuilder();
             sb.append("[");
             for (int i = 0; i < modelVector.getRowCount(); i++) {
@@ -697,7 +707,7 @@ public class ScanEditorPanel extends MonitoredPanel implements Processor {
                     ret.add(getParName("name") + "'" + textFile.getText() + "'");
                 }
             } else {
-                ret.add(getParName("name")+ "'" +  ((fileName == null) ? "Unknown" : IO.getPrefix(fileName)) + "'");
+                ret.add(getParName("name") + "'" + ((fileName == null) ? "Unknown" : IO.getPrefix(fileName)) + "'");
             }
             if (!textTag.getText().trim().isEmpty()) {
                 ret.add(getParName("tag") + "'" + textTag.getText() + "'");

@@ -307,6 +307,10 @@ The supported protocols are:
     - monitored: creates a monitored device.
     - polling: sets a polling interval.
     - simulated: creates a simulated device.
+    - samples: if defined creates an Averager of the device value, with the iven number of samples. 
+      If samples is negative,creates an Async Averager, (__read__ averages past values instead of sampling new ones).
+    - interval: if __samples__ is defined, gives the Averager sampling interval in milliseconds.
+      If equals to -1, the Averager is not time-based: samples every change event.
 
 Examples:
 ```

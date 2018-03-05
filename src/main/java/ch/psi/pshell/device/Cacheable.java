@@ -3,12 +3,14 @@ package ch.psi.pshell.device;
 import java.io.IOException;
 
 /**
- * A Readable capable of caching the read values. The cache is accessed with the take() method.
+ * A Readable capable of caching the read values. The cache is accessed with the
+ * take() method.
  */
 public interface Cacheable<T> extends Readable<T>, Timestamped {
 
     /**
-     * Returns cache age (time since last update ) in milliseconds, or null if no cache.
+     * Returns cache age (time since last update ) in milliseconds, or null if
+     * no cache.
      */
     public Integer getAge();
 
@@ -18,8 +20,8 @@ public interface Cacheable<T> extends Readable<T>, Timestamped {
     public T take();
 
     /**
-     * If cache available and cache more recent than maximumAge then returns cache, otherwise reads
-     * from device
+     * If cache available and cache more recent than maximumAge then returns
+     * cache, otherwise reads from device
      */
     default public T take(int maximumAge) throws IOException, InterruptedException {
         T value = take();

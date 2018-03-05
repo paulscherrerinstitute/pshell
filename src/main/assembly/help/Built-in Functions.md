@@ -76,6 +76,7 @@ These functions provide the script API to many aspects of PShell:
     - stop
     - update
     - reinit
+    - create_device
     - create_averager
 
  * Mathematical functions:

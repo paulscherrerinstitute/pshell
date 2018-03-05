@@ -121,7 +121,7 @@ public class LayoutDefault extends LayoutBase implements Layout {
                 }
             } else {
                 dataManager.createDataset(getPath(scan, name), getDeviceType(readable), new int[]{0});
-                if (readable instanceof Averager) {
+                if (Averager.isAverager(readable)) {
                     dataManager.createDataset(getPath(scan, META_GROUP + name + DEVICE_MIN_DATASET), Double.class, new int[]{0});
                     dataManager.createDataset(getPath(scan, META_GROUP + name + DEVICE_MAX_DATASET), Double.class, new int[]{0});
                     dataManager.createDataset(getPath(scan, META_GROUP + name + DEVICE_STDEV_DATASET), Double.class, new int[]{0});
@@ -165,7 +165,7 @@ public class LayoutDefault extends LayoutBase implements Layout {
                 }
             }
             dataManager.setItem(path, value, index);
-            if (readable instanceof Averager) {
+            if (Averager.isAverager(readable)) {
                 DescStatsDouble v = (DescStatsDouble) value;
                 dataManager.setItem(getPath(scan, META_GROUP + name + DEVICE_MIN_DATASET), (v == null) ? null : v.getMin(), index);
                 dataManager.setItem(getPath(scan, META_GROUP + name + DEVICE_MAX_DATASET), (v == null) ? null : v.getMax(), index);
@@ -179,7 +179,7 @@ public class LayoutDefault extends LayoutBase implements Layout {
     public void onFinish(Scan scan) throws IOException {
         setEndTimestampAttibute(scan);     
         for (ch.psi.pshell.device.Readable readable : scan.getReadables()) {
-            if (readable instanceof Averager) {
+            if (Averager.isAverager(readable)) {
                 try {
                     getDataManager().flush();
                     String name = getDataManager().getAlias(readable);

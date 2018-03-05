@@ -1709,6 +1709,19 @@ def reinit(dev = None):
     """
     return to_list(get_context().reinit())
 
+def create_device(url, parent=None):
+    """Create a device form a definition string(see URLDevice)
+
+    Args:                 
+        url(str or list of string): the device definition string (or list of strings)
+        parent(bool, optional): parent device
+
+    Returns:
+        The created device (or list of devices)
+    """
+    return ch.psi.pshell.core.UrlDevice.create(url, parent)
+
+
 def create_averager(dev, count, interval=0.0, name = None,  monitored = False):
     """Creates and initializes and averager for dev.
 

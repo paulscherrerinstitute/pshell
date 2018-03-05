@@ -1715,6 +1715,22 @@ function reinit(dev){
     return to_array(get_context().reinit())
 }
 
+
+function create_device(url, parent){
+    /*
+    Create a device form a definition string(see URLDevice)
+
+    Args:                 
+        url(str): the device definition string
+        parent(bool, optional): parent device
+
+    Returns:
+        The created device
+    */
+    if (!is_defined(parent))    parent = null;
+    return UrlDevice.create(url, parent)
+}
+
 function create_averager(dev, count, interval, name, monitored){
     /*
     Creates and initializes and averager for dev.

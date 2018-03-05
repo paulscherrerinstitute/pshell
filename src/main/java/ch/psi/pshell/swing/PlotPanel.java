@@ -352,8 +352,11 @@ public class PlotPanel extends MonitoredPanel {
                                 }
                             }
                         }
-
-                        addPlot(name, true, labelX, scan.getDimensions(), recordSize, start, end, scan.getNumberOfSteps(), r.getClass());
+                        Class type = r.getClass();
+                        if (Averager.isAverager(r)){
+                            type  = Averager.class;
+                        }
+                        addPlot(name, true, labelX, scan.getDimensions(), recordSize, start, end, scan.getNumberOfSteps(), type);
                         readableIndexes.add(i);
                     }
                 }
