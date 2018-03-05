@@ -7,9 +7,19 @@ import ch.psi.pshell.bs.PipelineServer;
 import ch.psi.pshell.bs.Scalar;
 import ch.psi.pshell.bs.Stream;
 import ch.psi.pshell.device.Averager;
+import ch.psi.pshell.device.Averager.AveragerStats;
+import ch.psi.pshell.device.Averager.AveragerStatsArray;
 import ch.psi.pshell.device.Device;
 import ch.psi.pshell.device.DeviceBase;
 import ch.psi.pshell.device.Readable;
+import ch.psi.pshell.device.Readable.ReadableArray;
+import ch.psi.pshell.device.Readable.ReadableMatrix;
+import ch.psi.pshell.device.ReadonlyRegister;
+import ch.psi.pshell.device.ReadonlyRegister.ReadonlyRegisterArray;
+import ch.psi.pshell.device.ReadonlyRegister.ReadonlyRegisterMatrix;
+import ch.psi.pshell.device.RegisterStats;
+import ch.psi.pshell.device.RegisterStats.ReadableStats;
+import ch.psi.pshell.device.RegisterStats.ReadableStatsArray;
 import ch.psi.pshell.device.Writable;
 import ch.psi.pshell.epics.Epics;
 import ch.psi.pshell.epics.EpicsRegister;
@@ -103,10 +113,12 @@ public class UrlDevice extends DeviceBase implements Readable, Writable {
         device = resolve();
         if (device != null) {
             Device dev = device;
-            if ((dev instanceof Averager.AveragerStats) || (dev instanceof Averager.AveragerStatsArray)){
+            if ((dev instanceof AveragerStats) || (dev instanceof AveragerStatsArray)){
+                dev = dev.getParent();
+            } else if ((dev instanceof ReadableStats) || (dev instanceof ReadableStatsArray)){
                 dev = dev.getParent();
             }            
-            if ((dev!= null) && (dev instanceof Averager)){
+            if ((dev!= null) && ((dev instanceof Averager) ||(dev instanceof RegisterStats))){
                 dev = dev.getParent();
             }
             if (dev!= null){   
@@ -283,6 +295,7 @@ public class UrlDevice extends DeviceBase implements Readable, Writable {
                 }
                 break;
         }
+        String setName = pars.containsKey("name") ? name : null;
         if (ret != null) {
             if (pars.containsKey("monitored")) {
                 try {
@@ -322,26 +335,46 @@ public class UrlDevice extends DeviceBase implements Readable, Writable {
                 } catch (Exception ex) {
                 }
             }
-            if (samples != null) {
-                Boolean hasSetName = pars.containsKey("name");
-                Averager av = hasSetName ? new Averager(name, (Readable) ret, samples, interval) :
-                                                         new Averager((Readable) ret, samples, interval);
+            if (samples != null) { 
+                Averager av = (setName!=null) ? new Averager(name, (Readable) ret, samples, interval) :
+                                                new Averager((Readable) ret, samples, interval);
                 if (async) {
                     av.setMonitored(true);
                 }
                 if (pars.containsKey("op")) {
-                    String opName = hasSetName ? name : null;
                     switch(pars.get("op")){
-                        case "sum": return av.getSum(opName);      
-                        case "min": return av.getMin(opName);      
-                        case "max": return av.getMax(opName);      
-                        case "mean": return av.getMean(opName);      
-                        case "stdev": return av.getStdev(opName);   
-                        case "variance": return av.getVariance(opName);  
-                        case "samples": return av.getSamples(opName);  
+                        case "sum": return av.getSum(setName);      
+                        case "min": return av.getMin(setName);      
+                        case "max": return av.getMax(setName);      
+                        case "mean": return av.getMean(setName);      
+                        case "stdev": return av.getStdev(setName);   
+                        case "variance": return av.getVariance(setName);  
+                        case "samples": return av.getSamples(setName);  
                     }
                 }
                 return av;
+            } else {
+                if ((ret instanceof ReadonlyRegisterArray) || (ret instanceof ReadonlyRegisterMatrix)){
+                    if (pars.containsKey("op")) {
+                        RegisterStats rs = null;
+                        if (ret instanceof ReadonlyRegister.ReadonlyRegisterArray){
+                            rs = (setName!=null)  ? new RegisterStats(name, (ReadonlyRegisterArray) ret) :
+                                              new RegisterStats((ReadonlyRegisterArray) ret);
+                        } else if (ret instanceof ReadableMatrix){
+                            rs = (setName!=null)  ? new RegisterStats(name, (ReadonlyRegisterMatrix) ret) :
+                                              new RegisterStats((ReadonlyRegisterMatrix) ret);
+                        }
+                        switch(pars.get("op")){
+                           case "sum": return rs.getSum(setName);      
+                           case "min": return rs.getMin(setName);      
+                           case "max": return rs.getMax(setName);      
+                           case "mean": return rs.getMean(setName);      
+                           case "stdev": return rs.getStdev(setName);   
+                           case "variance": return rs.getVariance(setName);  
+                           case "samples": return rs.getSamples(setName);  
+                       }                         
+                    }
+                }              
             }
             return ret;
         }
