@@ -59,7 +59,10 @@ public class SourceBase extends GenericDeviceBase<ImageListener> implements Sour
 
     protected BufferedImage applyTransformations(BufferedImage image, Data data) {
         if (image == null) {
-            return null;
+             if (data == null) {
+                    return null;
+             }
+             image = data.toBufferedImage(false);
         }
         SourceConfig cfg = getConfig();
         if (cfg != null) {
@@ -215,7 +218,7 @@ public class SourceBase extends GenericDeviceBase<ImageListener> implements Sour
         pushImage(image, null);
     }
 
-    protected void pushData(Data data) throws IOException {
+    protected void pushData(Data data){
         pushImage(null, data);        
     }
 

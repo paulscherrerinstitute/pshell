@@ -916,11 +916,11 @@ public class Data implements Serializable {
             short[] opdata = (short[]) (op.array);
             if (unsigned) {
                 for (int i = 0; i < length; i++) {
-                    data[i] = (short) Math.max(Convert.toUnsigned(data[i]) + Convert.toUnsigned(opdata[i]), 0xFFFF);
+                    data[i] = (short) Math.min(Convert.toUnsigned(data[i]) + Convert.toUnsigned(opdata[i]), 0xFFFF);
                 }
             } else {
                 for (int i = 0; i < length; i++) {
-                    data[i] = (short) Math.max(data[i] + opdata[i], 0x7FFF);
+                    data[i] = (short) Math.min(data[i] + opdata[i], 0x7FFF);
                 }
             }
         } else if (array instanceof double[]) {
@@ -946,11 +946,11 @@ public class Data implements Serializable {
             int[] opdata = (int[]) (op.array);
             if (unsigned) {
                 for (int i = 0; i < length; i++) {
-                    data[i] = (int) Math.max(Convert.toUnsigned(data[i]) + Convert.toUnsigned(opdata[i]), 0xFFFFFFFF);
+                    data[i] = (int) Math.min(Convert.toUnsigned(data[i]) + Convert.toUnsigned(opdata[i]), 0xFFFFFFFF);
                 }
             } else {
                 for (int i = 0; i < length; i++) {
-                    data[i] = (int) Math.max(data[i] + opdata[i], 0x7FFFFFFF);
+                    data[i] = (int) Math.min(data[i] + opdata[i], 0x7FFFFFFF);
                 }
             }
         }
@@ -1267,12 +1267,12 @@ public class Data implements Serializable {
             if (unsigned) {
                 long val = Convert.toUnsigned(op.intValue());
                 for (int i = 0; i < length; i++) {
-                    data[i] = (int) Math.max(Convert.toUnsigned(data[i]) + val, 0xFFFFFFFF);
+                    data[i] = (int) Math.min(Convert.toUnsigned(data[i]) + val, 0xFFFFFFFF);
                 }
             } else {
                 int val = op.intValue();
                 for (int i = 0; i < length; i++) {
-                    data[i] = (int) Math.max(data[i] + val, 0x7FFFFFFF);
+                    data[i] = (int) Math.min(data[i] + val, 0x7FFFFFFF);
                 }
             }
         }
@@ -1389,12 +1389,12 @@ public class Data implements Serializable {
             if (unsigned) {
                 long val = Convert.toUnsigned(op.intValue());
                 for (int i = 0; i < length; i++) {
-                    data[i] = (int) Math.max(Convert.toUnsigned(data[i]) * val, 0xFFFFFFFF);
+                    data[i] = (int) Math.min(Convert.toUnsigned(data[i]) * val, 0xFFFFFFFF);
                 }
             } else {
                 int val = op.intValue();
                 for (int i = 0; i < length; i++) {
-                    data[i] = (int) Math.max(data[i] * val, 0x7FFFFFFF);
+                    data[i] = (int) Math.min(data[i] * val, 0x7FFFFFFF);
                 }
             }
         }

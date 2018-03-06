@@ -375,9 +375,10 @@ public class Utils {
         int width = Math.min(image1.getWidth(), image2.getWidth());
         int height = Math.min(image1.getHeight(), image2.getHeight());
         BufferedImage ret = inPlace ? image1 : newImage(image1, null, -1, -1);
+        int max= getMaxPixelValue(ret);
         for (int x = 0; x < width; x++) {
             for (int y = 0; y < height; y++) {
-                ret.setRGB(x, y, Math.min(image1.getRGB(x, y) + image2.getRGB(x, y), 255));
+                ret.setRGB(x, y, Math.min(image1.getRGB(x, y) + image2.getRGB(x, y), max));
             }
         }
         return ret;
@@ -387,9 +388,10 @@ public class Utils {
         int width = Math.min(image1.getWidth(), image2.getWidth());
         int height = Math.min(image1.getHeight(), image2.getHeight());
         BufferedImage ret = inPlace ? image1 : newImage(image1, null, -1, -1);
+        int max= getMaxPixelValue(ret);
         for (int x = 0; x < width; x++) {
             for (int y = 0; y < height; y++) {
-                ret.setRGB(x, y, Math.min(image1.getRGB(x, y) * image2.getRGB(x, y), 255));
+                ret.setRGB(x, y, Math.min(image1.getRGB(x, y) * image2.getRGB(x, y), max));
             }
         }
         return ret;
@@ -547,6 +549,13 @@ public class Utils {
         ret.add(min);
         ret.add(max);
         return ret;
+    }
+    
+    public static int getMaxPixelValue(BufferedImage img) {
+        switch (img.getColorModel().getPixelSize()) {
+            case 16: return 0xFFFF;
+        } 
+        return 255;
     }
 
 }
