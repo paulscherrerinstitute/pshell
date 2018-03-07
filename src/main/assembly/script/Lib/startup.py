@@ -35,7 +35,7 @@ import ch.psi.utils.Chrono as Chrono
 import ch.psi.pshell.core.CommandSource as CommandSource
 import ch.psi.pshell.core.ContextAdapter as ContextListener
 import ch.psi.pshell.core.Context
-import ch.psi.pshell.core.UrlDevice 
+import ch.psi.pshell.core.UrlDevice as UrlDevice
 import ch.psi.pshell.data.PlotDescriptor as PlotDescriptor
 import ch.psi.pshell.data.Table as Table
 import ch.psi.pshell.device.Device as Device
@@ -69,6 +69,7 @@ import ch.psi.pshell.device.Writable as Writable
 import ch.psi.pshell.device.Writable.WritableArray as WritableArray
 import ch.psi.pshell.device.Stoppable as Stoppable
 import ch.psi.pshell.device.Averager as Averager
+import ch.psi.pshell.device.ArrayAverager as ArrayAverager
 import ch.psi.pshell.device.Delta as Delta
 import ch.psi.pshell.device.DeviceAdapter as DeviceListener
 import ch.psi.pshell.device.ReadbackDeviceAdapter as ReadbackDeviceListener
@@ -1719,7 +1720,7 @@ def create_device(url, parent=None):
     Returns:
         The created device (or list of devices)
     """
-    return ch.psi.pshell.core.UrlDevice.create(url, parent)
+    return UrlDevice.create(url, parent)
 
 
 def create_averager(dev, count, interval=0.0, name = None,  monitored = False):
@@ -1737,7 +1738,10 @@ def create_averager(dev, count, interval=0.0, name = None,  monitored = False):
         Averager device
     """
     dev = string_to_obj(dev)
-    av = Averager(dev, count, int(interval*1000)) if (name is None) else Averager(name, dev, count, int(interval*1000))
+    if isinstance(dev, ReadableArray):
+        av = ArrayAverager(dev, count, int(interval*1000)) if (name is None) else ArrayAverager(name, dev, count, int(interval*1000))
+    else:
+        av = Averager(dev, count, int(interval*1000)) if (name is None) else Averager(name, dev, count, int(interval*1000))
     av.initialize()
     if (monitored):
        av.monitored = True 
@@ -2149,7 +2153,7 @@ def notify(subject, text, attachments = None, to=None):
 def string_to_obj(o):
     if is_string(o):
         if "://" in o:
-            return ch.psi.pshell.core.UrlDevice(o)
+            return UrlDevice(o)
         return eval(o)
     elif is_list(o):
         ret = []

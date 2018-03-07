@@ -6,20 +6,15 @@ package ch.psi.pshell.core;
 import ch.psi.pshell.bs.PipelineServer;
 import ch.psi.pshell.bs.Scalar;
 import ch.psi.pshell.bs.Stream;
+import ch.psi.pshell.device.ArrayAverager;
 import ch.psi.pshell.device.Averager;
-import ch.psi.pshell.device.Averager.AveragerStats;
-import ch.psi.pshell.device.Averager.AveragerStatsArray;
 import ch.psi.pshell.device.Device;
 import ch.psi.pshell.device.DeviceBase;
 import ch.psi.pshell.device.Readable;
-import ch.psi.pshell.device.Readable.ReadableArray;
-import ch.psi.pshell.device.Readable.ReadableMatrix;
-import ch.psi.pshell.device.ReadonlyRegister;
 import ch.psi.pshell.device.ReadonlyRegister.ReadonlyRegisterArray;
 import ch.psi.pshell.device.ReadonlyRegister.ReadonlyRegisterMatrix;
-import ch.psi.pshell.device.RegisterStats;
-import ch.psi.pshell.device.RegisterStats.ReadableStats;
-import ch.psi.pshell.device.RegisterStats.ReadableStatsArray;
+import ch.psi.pshell.device.ArrayRegisterStats;
+import ch.psi.pshell.device.Averager.RegisterStats;
 import ch.psi.pshell.device.Writable;
 import ch.psi.pshell.epics.Epics;
 import ch.psi.pshell.epics.EpicsRegister;
@@ -112,22 +107,26 @@ public class UrlDevice extends DeviceBase implements Readable, Writable {
         closeDevice();
         device = resolve();
         if (device != null) {
-            Device dev = device;
-            if ((dev instanceof AveragerStats) || (dev instanceof AveragerStatsArray)){
-                dev = dev.getParent();
-            } else if ((dev instanceof ReadableStats) || (dev instanceof ReadableStatsArray)){
-                dev = dev.getParent();
-            }            
-            if ((dev!= null) && ((dev instanceof Averager) ||(dev instanceof RegisterStats))){
-                dev = dev.getParent();
-            }
-            if (dev!= null){   
+            Device source = getSourceDevice(device);
+            if (source!= null){   
                 if (Context.getInstance().isSimulation()) {
-                    dev.setSimulated();
+                    source.setSimulated();
                 }
-                dev.initialize();
+                source.initialize();
             }
         }
+    }
+    
+    public static Device getSourceDevice(Device device){       
+        if ((device!= null) && (device instanceof RegisterStats)){
+            device = device.getParent();
+        }            
+        if ((device!= null) && ((device instanceof Averager) || 
+                             (device instanceof ArrayAverager) || 
+                             (device instanceof ArrayRegisterStats))){
+            device = device.getParent();
+        }
+        return device;
     }
 
     public Device getDevice() {
@@ -169,6 +168,14 @@ public class UrlDevice extends DeviceBase implements Readable, Writable {
     protected Device resolve() throws IOException, InterruptedException {
         Device ret = null;
         switch (protocol) {
+            case "dev":
+                if (Context.getInstance() != null){
+                    try{
+                        ret = (Device) Context.getInstance().getDevicePool().getByName(id);
+                    } catch (Exception ex){
+                    }
+                }
+                break;
             case "pv":
             case "ca":
                 boolean timestamped = false;
@@ -205,49 +212,62 @@ public class UrlDevice extends DeviceBase implements Readable, Writable {
             case "bs":
                 if (this.id.equals("PID")) {
                     ret = ((Stream) getParent()).getPidReader();
+                    if (pars.containsKey("filter")) {
+                        ((Stream) getParent()).setFilter(pars.get("filter"));
+                    }                  
                 } else if (this.id.equals("Timestamp")) {
                     ret = ((Stream) getParent()).getTimestampReader();
                 } else {
-                    int modulo = Scalar.DEFAULT_MODULO;
-                    int offset = Scalar.DEFAULT_OFFSET;
-                    boolean waveform = false;
-                    int sz = -1;
-                    int width = -1;
-                    int height = -1;
-                    if ("true".equalsIgnoreCase(pars.get("waveform"))) {
-                        waveform = true;
-                    }
-                    try {
-                        sz = Integer.valueOf(pars.get("size"));
-                        waveform = true;
-                    } catch (Exception ex) {
-                    }
-                    try {
-                        width = Integer.valueOf(pars.get("width"));
-                    } catch (Exception ex) {
-                    }
-                    try {
-                        height = Integer.valueOf(pars.get("height"));
-                    } catch (Exception ex) {
-                    }
-                    try {
-                        modulo = Integer.valueOf(pars.get("modulo"));
-                    } catch (Exception ex) {
-                    }
-                    try {
-                        offset = Integer.valueOf(pars.get("offset"));
-                    } catch (Exception ex) {
-                    }
-                    if ((width >= 0) && (height >= 0)) {
-                        ret = ((Stream) getParent()).addMatrix(name, id, modulo, offset, width, height);
-                    } else if (waveform) {
-                        if (sz >= 0) {
-                            ret = ((Stream) getParent()).addWaveform(name, id, modulo, offset, sz);
-                        } else {
-                            ret = ((Stream) getParent()).addWaveform(name, id, modulo, offset);
+                    //Use existing channel if already defined
+                    for (Device d : ((Stream) getParent()).getChildren()){
+                        if (d instanceof Scalar){
+                            if ( String.valueOf(id).equals (((Scalar) d).getId())){
+                                ret = d;
+                            } 
                         }
-                    } else {
-                        ret = ((Stream) getParent()).addScalar(name, id, modulo, offset);
+                    }
+                    if (ret == null){
+                        int modulo = Scalar.DEFAULT_MODULO;
+                        int offset = Scalar.DEFAULT_OFFSET;
+                        boolean waveform = false;
+                        int sz = -1;
+                        int width = -1;
+                        int height = -1;
+                        if ("true".equalsIgnoreCase(pars.get("waveform"))) {
+                            waveform = true;
+                        }
+                        try {
+                            sz = Integer.valueOf(pars.get("size"));
+                            waveform = true;
+                        } catch (Exception ex) {
+                        }
+                        try {
+                            width = Integer.valueOf(pars.get("width"));
+                        } catch (Exception ex) {
+                        }
+                        try {
+                            height = Integer.valueOf(pars.get("height"));
+                        } catch (Exception ex) {
+                        }
+                        try {
+                            modulo = Integer.valueOf(pars.get("modulo"));
+                        } catch (Exception ex) {
+                        }
+                        try {
+                            offset = Integer.valueOf(pars.get("offset"));
+                        } catch (Exception ex) {
+                        }
+                        if ((width >= 0) && (height >= 0)) {
+                            ret = ((Stream) getParent()).addMatrix(name, id, modulo, offset, width, height);
+                        } else if (waveform) {
+                            if (sz >= 0) {
+                                ret = ((Stream) getParent()).addWaveform(name, id, modulo, offset, sz);
+                            } else {
+                                ret = ((Stream) getParent()).addWaveform(name, id, modulo, offset);
+                            }
+                        } else {
+                            ret = ((Stream) getParent()).addScalar(name, id, modulo, offset);
+                        }
                     }
                 }
                 break;
@@ -336,33 +356,61 @@ public class UrlDevice extends DeviceBase implements Readable, Writable {
                 }
             }
             if (samples != null) { 
-                Averager av = (setName!=null) ? new Averager(name, (Readable) ret, samples, interval) :
-                                                new Averager((Readable) ret, samples, interval);
-                if (async) {
-                    av.setMonitored(true);
-                }
-                if (pars.containsKey("op")) {
-                    switch(pars.get("op")){
-                        case "sum": return av.getSum(setName);      
-                        case "min": return av.getMin(setName);      
-                        case "max": return av.getMax(setName);      
-                        case "mean": return av.getMean(setName);      
-                        case "stdev": return av.getStdev(setName);   
-                        case "variance": return av.getVariance(setName);  
-                        case "samples": return av.getSamples(setName);  
+                if (ret instanceof ReadableArray){
+                    boolean integrate = false;
+                    if (pars.containsKey("integrate")) {
+                        try {
+                            integrate = Boolean.valueOf(pars.get("integrate"));
+                        } catch (Exception ex) {
+                        }
+                    }                    
+                    
+                    ArrayAverager av = (setName!=null) ? new ArrayAverager(name, (ReadableArray) ret, samples, interval, integrate) :
+                                                         new ArrayAverager((ReadableArray) ret, samples, interval, integrate);
+                    if (async) {
+                        av.setMonitored(true);
                     }
+                    if (pars.containsKey("op")) {
+                        switch(pars.get("op")){
+                            case "sum": return av.getSum(setName);      
+                            case "min": return av.getMin(setName);      
+                            case "max": return av.getMax(setName);      
+                            case "mean": return av.getMean(setName);      
+                            case "stdev": return av.getStdev(setName);   
+                            case "variance": return av.getVariance(setName);  
+                            case "samples": return av.getSamples(setName);  
+                        }
+                    }
+                    return av;                    
+                } else {
+                    Averager av = (setName!=null) ? new Averager(name, (Readable) ret, samples, interval) :
+                                                new Averager((Readable) ret, samples, interval);
+                    if (async) {
+                        av.setMonitored(true);
+                    }
+                    if (pars.containsKey("op")) {
+                        switch(pars.get("op")){
+                            case "sum": return av.getSum(setName);      
+                            case "min": return av.getMin(setName);      
+                            case "max": return av.getMax(setName);      
+                            case "mean": return av.getMean(setName);      
+                            case "stdev": return av.getStdev(setName);   
+                            case "variance": return av.getVariance(setName);  
+                            case "samples": return av.getSamples(setName);  
+                        }
+                    }
+                    return av;
                 }
-                return av;
             } else {
                 if ((ret instanceof ReadonlyRegisterArray) || (ret instanceof ReadonlyRegisterMatrix)){
                     if (pars.containsKey("op")) {
-                        RegisterStats rs = null;
-                        if (ret instanceof ReadonlyRegister.ReadonlyRegisterArray){
-                            rs = (setName!=null)  ? new RegisterStats(name, (ReadonlyRegisterArray) ret) :
-                                              new RegisterStats((ReadonlyRegisterArray) ret);
-                        } else if (ret instanceof ReadableMatrix){
-                            rs = (setName!=null)  ? new RegisterStats(name, (ReadonlyRegisterMatrix) ret) :
-                                              new RegisterStats((ReadonlyRegisterMatrix) ret);
+                        ArrayRegisterStats rs = null;
+                        if (ret instanceof ReadonlyRegisterArray){
+                            rs = (setName!=null)  ? new ArrayRegisterStats(name, (ReadonlyRegisterArray) ret) :
+                                              new ArrayRegisterStats((ReadonlyRegisterArray) ret);
+                        } else if (ret instanceof ReadonlyRegisterMatrix){
+                            rs = (setName!=null)  ? new ArrayRegisterStats(name, (ReadonlyRegisterMatrix) ret) :
+                                              new ArrayRegisterStats((ReadonlyRegisterMatrix) ret);
                         }
                         switch(pars.get("op")){
                            case "sum": return rs.getSum(setName);      
@@ -371,7 +419,6 @@ public class UrlDevice extends DeviceBase implements Readable, Writable {
                            case "mean": return rs.getMean(setName);      
                            case "stdev": return rs.getStdev(setName);   
                            case "variance": return rs.getVariance(setName);  
-                           case "samples": return rs.getSamples(setName);  
                        }                         
                     }
                 }              
@@ -384,12 +431,20 @@ public class UrlDevice extends DeviceBase implements Readable, Writable {
     void closeDevice() {
         if (device != null) {
             try {
-                device.close();
-                for (Device dev : instantiatedDevices) {
+                Device dev = device;
+                //closes all parent devices, but not the externally set
+                while((dev!= null) && (!dev.equals(parent))){
                     dev.close();
-                    instantiatedDevices.remove(dev);
-                    if (cameraStreams.contains(dev)) {
-                        cameraStreams.remove(dev);
+                    if (dev == dev.getParent()){
+                        break;
+                    }
+                    dev = dev.getParent();
+                }
+                for (Device id : instantiatedDevices) {
+                    id.close();
+                    instantiatedDevices.remove(id);
+                    if (cameraStreams.contains(id)) {
+                        cameraStreams.remove(id);
                     }
                 }
             } catch (Exception ex) {

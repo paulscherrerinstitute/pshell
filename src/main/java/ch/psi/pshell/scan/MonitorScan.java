@@ -61,15 +61,12 @@ public class MonitorScan extends LineScan {
         if (trigger == null) {
             //Uses the stream if contains a bsread device
             for (Readable r : readables) {
-                if (r instanceof CacheReadable) {      
-                    Cacheable parent = ((CacheReadable) r).getParent();
-                    if (parent!=null){
-                        r= parent;
+                Device src = getSourceDevice(r);
+                if (src != null){
+                    if ((src instanceof Scalar) || (src instanceof Stream.PidReader) || (src instanceof Stream.TimestampReader)) {
+                        trigger = ((Device) src).getParent();
+                        break;
                     }
-                }
-                if ((r instanceof Scalar) || (r instanceof Stream.PidReader) || (r instanceof Stream.TimestampReader)) {
-                    trigger = ((Device) r).getParent();
-                    break;
                 }
             }
         }
@@ -77,15 +74,7 @@ public class MonitorScan extends LineScan {
             //Uses a composite trigger of all readables if not
             List<Device> triggers = new ArrayList<>();
             for (Readable r : readables) {
-                Device device = null;
-                if (r instanceof CacheReadable) {                
-                    Object parent = (Device) ((CacheReadable) r).getParent();
-                    if ((parent != null) && (parent instanceof Device)) {
-                        device = (Device) parent;
-                    }                    
-                } else if (r instanceof Device){
-                    device = ((Device)r);
-                }
+                Device device = getSourceDevice(r);                
                 if (device != null){
                     triggers.add(device);
                 }
@@ -99,6 +88,24 @@ public class MonitorScan extends LineScan {
             trigger.initialize();
         }
     }
+    
+    static Device getSourceDevice(Readable r){
+        Device dev = null;
+        if (r instanceof Device){
+            dev = (Device) r;
+        }
+        if (r instanceof CacheReadable) {      
+            Cacheable parent = ((CacheReadable) r).getParent();
+            if ((parent!=null) && (parent instanceof Device)){
+                dev = (Device) parent;
+            }   
+        }
+        if ((dev!=null) && (r instanceof Device)){
+            dev = UrlDevice.getSourceDevice(dev);
+        }
+        return dev;
+    }
+    
 
     @Override
     protected void closeDevices() {

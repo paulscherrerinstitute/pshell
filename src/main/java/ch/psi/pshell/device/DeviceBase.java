@@ -623,7 +623,6 @@ public abstract class DeviceBase extends GenericDeviceBase<DeviceListener> imple
      * If overriding call super.doClose() to propagate to children
      */
     protected void doClose() throws IOException {
-        stopSimulationTimer();
         for (Device trigger : getTriggers()) {
             trigger.removeListener(triggerListener);
         }

@@ -50,6 +50,7 @@ Writable = Java.type('ch.psi.pshell.device.Writable')
 WritableArray = Java.type('ch.psi.pshell.device.Writable.WritableArray') 
 Stoppable = Java.type('ch.psi.pshell.device.Stoppable') 
 Averager = Java.type('ch.psi.pshell.device.Averager') 
+ArrayAverager = Java.type('ch.psi.pshell.device.ArrayAverager') 
 Delta = Java.type('ch.psi.pshell.device.Delta') 
 DeviceListener = Java.type('ch.psi.pshell.device.DeviceAdapter') 
 ReadbackDeviceListener = Java.type('ch.psi.pshell.device.ReadbackDeviceAdapter') 
@@ -1750,7 +1751,11 @@ function create_averager(dev, count, interval, name, monitored){
     if (!is_defined(name))    name = null;
     if (!is_defined(monitored))    monitored = false;
     dev = string_to_obj(dev)
-    var averager = (name == null) ? new Averager(dev, count, interval*1000) : new Averager(name, dev, count, interval*1000)
+    if (dev instanceof ReadableArray) {
+        var averager = (name == null) ? new ArrayAverager(dev, count, interval*1000) : new ArrayAverager(name, dev, count, interval*1000)
+    else{
+        var averager = (name == null) ? new Averager(dev, count, interval*1000) : new Averager(name, dev, count, interval*1000)
+    }
     if (monitored){
         averager.setMonitored(true)
     }

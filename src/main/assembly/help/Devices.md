@@ -298,6 +298,13 @@ The supported protocols are:
     - modulo: set the stream sub-sampling - modulo applied to pulse-id to determine the readout.
     - offset: stream offset in pulses.
 
+  The there is a special stream device for sampling the pulse ID. It is defined using
+  device name: PID. A filter for the stream can be defined with this device,
+  with the option:
+
+    - filter: <CHANNEL1>comparator1<VALUE1> AND <CHANNEL2>comparator2<VALUE2> AND ... 
+      where comparators can be: "<", "<=", ">", ">=, "==", "!="
+
 
 - cs: creates a device from a stream image server. Device name set with the server URL.
     Options:
@@ -307,10 +314,13 @@ The supported protocols are:
     - monitored: creates a monitored device.
     - polling: sets a polling interval.
     - simulated: creates a simulated device.
-    - samples: if defined creates an Averager of the device value, with the iven number of samples. 
+    - samples: if defined creates an Averager of the device value, with the given number of samples. 
       If samples is negative,creates an Async Averager, (__read__ averages past values instead of sampling new ones).
     - interval: if __samples__ is defined, gives the Averager sampling interval in milliseconds.
       If equals to -1, the Averager is not time-based: samples every change event.
+    - integrate: if true returns the sum and not the mean, when averaging arrays.
+    - op: returns calculation on Averager or in array value. Possible values:
+          mean, min, max, stdev, variance, sum and samples(only on Averager).
 
 Examples:
 ```
