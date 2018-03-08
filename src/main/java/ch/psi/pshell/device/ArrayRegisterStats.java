@@ -53,7 +53,7 @@ public class ArrayRegisterStats extends ReadonlyRegisterBase<DescStatsDouble> im
 
     @Override
     protected DescStatsDouble doRead() throws IOException, InterruptedException {
-        Object data = source.read();
+        Object data = source.getValue();
         int rank = Arr.getRank(data);
         if (rank < 1) {
             return null;
@@ -79,7 +79,7 @@ public class ArrayRegisterStats extends ReadonlyRegisterBase<DescStatsDouble> im
         }
         
         DescStatsDouble getData() throws IOException, InterruptedException{
-            return (ArrayRegisterStats.this).isMonitored() ? ArrayRegisterStats.this.take() : ArrayRegisterStats.this.read();
+            return ArrayRegisterStats.this.read();
         }
     }   
     

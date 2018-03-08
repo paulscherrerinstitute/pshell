@@ -4,6 +4,7 @@ import ch.psi.pshell.bs.Stream;
 import ch.psi.pshell.core.UrlDevice;
 import ch.psi.pshell.device.ReadonlyRegister.ReadonlyRegisterNumber;
 import ch.psi.utils.Chrono;
+import ch.psi.utils.Reflection;
 import ch.psi.utils.Threading;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -155,11 +156,11 @@ public class Averager extends ReadonlyRegisterBase<DescStatsDouble> implements R
     protected void doSetMonitored(boolean value) {
         if (value) {
             if (config.interval >= 0) {
-                monitoringTimer = Threading.scheduleAtFixedRateNotRetriggerable(() -> {
+                    monitoringTimer = Threading.scheduleAtFixedRateNotRetriggerable(() -> {
                     if(isInitialized()){
                         readSample();
                     }
-                }, 0, config.interval, TimeUnit.MILLISECONDS, "Snapshot Dialog Task");
+                }, 0, config.interval, TimeUnit.MILLISECONDS, "Averager Task: " + getName());
             }
         } else {
             if (monitoringTimer != null) {
@@ -234,7 +235,9 @@ public class Averager extends ReadonlyRegisterBase<DescStatsDouble> implements R
             } catch (Exception ex) {
             }                   
         }
-        
+        DescStatsDouble getData() throws IOException, InterruptedException{
+            return Averager.this.getValue();
+        }        
     }
     
     public abstract class AveragerStatsArray extends ReadableArrayDevice<double[]> implements RegisterStats{
@@ -245,7 +248,10 @@ public class Averager extends ReadonlyRegisterBase<DescStatsDouble> implements R
                 this.initialize();
             } catch (Exception ex) {
             }            
-        }        
+        }     
+        DescStatsDouble getData() throws IOException, InterruptedException{
+            return Averager.this.getValue();
+        }  
     }    
 
     public AveragerStatsArray getSamples(){
@@ -256,8 +262,8 @@ public class Averager extends ReadonlyRegisterBase<DescStatsDouble> implements R
         return new AveragerStatsArray(name, "samples") {
             @Override
             public double[] read() throws IOException, InterruptedException {
-                DescStatsDouble cache = Averager.this.take();
-                return (cache == null) ? null : cache.getSamples();
+                DescStatsDouble data = getData();
+                return (data == null) ? null : data.getSamples();
             }
 
             @Override
@@ -275,8 +281,8 @@ public class Averager extends ReadonlyRegisterBase<DescStatsDouble> implements R
         return new AveragerStatsNumber(name, "variance") {
             @Override
             public Double read() throws IOException, InterruptedException {
-                DescStatsDouble cache = Averager.this.take();
-                return (cache == null) ? null : cache.getVariance();
+                DescStatsDouble data = getData();
+                return (data == null) ? null : data.getVariance();
             }
         };
     } 
@@ -289,8 +295,8 @@ public class Averager extends ReadonlyRegisterBase<DescStatsDouble> implements R
         return new AveragerStatsNumber(name, "mean") {
             @Override
             public Double read() throws IOException, InterruptedException {
-                DescStatsDouble cache = Averager.this.take();
-                return (cache == null) ? null : cache.getMean();
+                DescStatsDouble data = getData();
+                return (data == null) ? null : data.getMean();
             }
         };
     }  
@@ -303,8 +309,8 @@ public class Averager extends ReadonlyRegisterBase<DescStatsDouble> implements R
         return new AveragerStatsNumber(name, "stdev") {
             @Override
             public Double read() throws IOException, InterruptedException {
-                DescStatsDouble cache = Averager.this.take();
-                return (cache == null) ? null : cache.getStdev();
+                DescStatsDouble data = getData();
+                return (data == null) ? null : data.getStdev();
             }
         };
     }  
@@ -317,8 +323,8 @@ public class Averager extends ReadonlyRegisterBase<DescStatsDouble> implements R
         return new AveragerStatsNumber(name, "min") {
             @Override
             public Double read() throws IOException, InterruptedException {
-                DescStatsDouble cache = Averager.this.take();
-                return (cache == null) ? null : cache.getMin();
+                DescStatsDouble data = getData();
+                return (data == null) ? null : data.getMin();
             }
         };
     }  
@@ -331,8 +337,8 @@ public class Averager extends ReadonlyRegisterBase<DescStatsDouble> implements R
         return new AveragerStatsNumber(name, "max") {
             @Override
             public Double read() throws IOException, InterruptedException {
-                DescStatsDouble cache = Averager.this.take();
-                return (cache == null) ? null : cache.getMax();
+                DescStatsDouble data = getData();
+                return (data == null) ? null : data.getMax();
             }
         };
     }  
@@ -345,8 +351,8 @@ public class Averager extends ReadonlyRegisterBase<DescStatsDouble> implements R
         return new AveragerStatsNumber(name, "sum") {
             @Override
             public Double read() throws IOException, InterruptedException {
-                DescStatsDouble cache = Averager.this.take();
-                return (cache == null) ? null : cache.getSum();
+                DescStatsDouble data = getData();
+                return (data == null) ? null : data.getSum();
             }
         };
     }      

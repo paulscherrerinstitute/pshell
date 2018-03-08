@@ -577,7 +577,7 @@ public class ScanEditorPanel extends MonitoredPanel implements Processor {
             case Channel:
                 return "ca://" + id;
             case Device:
-                return id;
+                return "dev://" + id;
             case Stream:
                 return "bs://" + id;
             case CamServer:
@@ -591,7 +591,7 @@ public class ScanEditorPanel extends MonitoredPanel implements Processor {
         for (int i = 0; i < modelSensors.getRowCount(); i++) {
             Type type = (Type) modelSensors.getValueAt(i, 0);
             String sensor = null;
-            if (type == Type.Device) {
+            if (useDeviceDirect(i)) {
                 sensor = modelSensors.getValueAt(i, 1).toString().trim();
             } else {
                 sensor = "'" + getSensorUrl(i) + "'";
@@ -608,7 +608,7 @@ public class ScanEditorPanel extends MonitoredPanel implements Processor {
                     //boolean async = samples < 0 || (getScanCommand().equals("mscan") && ((modelPositioners.getRowCount() == 0) || (!checkSync.isSelected())));
                     boolean async = samples < 0 || (getScanCommand().equals("mscan") && !checkSync.isSelected());
 
-                    if (type == Type.Device) {
+                    if (useDeviceDirect(i)) {
                         samples = Math.abs(samples);
                         if (async) {
                             sensor = "create_averager(" + sensor + ", " + samples + ", " + interval + ", " + getNullValue() + ", " + getBoolValue(true) + ")";
@@ -782,17 +782,21 @@ public class ScanEditorPanel extends MonitoredPanel implements Processor {
         }
         return ret;
     }
+    
+    boolean useDeviceDirect (int row){
+        Type type = (Type) modelSensors.getValueAt(row, 0);
+        String id = modelSensors.getValueAt(row, 1).toString().trim();
+        return  (type == Type.Device) && (!id.contains("?"));
+    }
 
     String getSensorName(int row) {
         if ((row < 0) || (row > modelSensors.getRowCount() - 1)) {
             return null;
         }
-
         String ret = String.valueOf(modelSensors.getValueAt(row, 1));
-        boolean hasname = false;
         Type type = (Type) modelSensors.getValueAt(row, 0);
         String name = null;
-        if (type != Type.Device) {
+        if (!useDeviceDirect(row)) {
             name = UrlDevice.getUrlPars(getSensorUrl(row)).get("name");
             ret = (name != null) ? name : ret.split("\\?")[0];
         }

@@ -6,6 +6,7 @@ import ch.psi.pshell.device.ReadonlyRegister.ReadonlyRegisterArray;
 import ch.psi.utils.Arr;
 import ch.psi.utils.Chrono;
 import ch.psi.utils.Convert;
+import ch.psi.utils.Reflection;
 import ch.psi.utils.Threading;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -135,7 +136,7 @@ public class ArrayAverager extends ReadonlyRegisterBase<double[]> implements Rea
     public boolean isReadOnChangeEvent() {
         return (config.interval < 0);
     }
-
+    
     DeviceListener sourceListener;
     ScheduledExecutorService monitoringTimer;
 
@@ -147,7 +148,7 @@ public class ArrayAverager extends ReadonlyRegisterBase<double[]> implements Rea
                     if (isInitialized()) {
                         readSample();
                     }
-                }, 0, config.interval, TimeUnit.MILLISECONDS, "Snapshot Dialog Task");
+                }, 0, config.interval, TimeUnit.MILLISECONDS, "Array Averager Task: " + getName());
             }
         } else {
             if (monitoringTimer != null) {
@@ -249,7 +250,7 @@ public class ArrayAverager extends ReadonlyRegisterBase<double[]> implements Rea
             }
         }
         return take();
-    }
+    }  
 
     public abstract class ArrayAveragerStatsNumber extends ReadableNumberDevice<Double> implements Averager.RegisterStats {
 
@@ -261,7 +262,10 @@ public class ArrayAverager extends ReadonlyRegisterBase<double[]> implements Rea
             } catch (Exception ex) {
             }            
         }
-
+        
+        double[] getData() throws IOException, InterruptedException{
+            return ArrayAverager.this.getValue();
+        }
     }
 
     public abstract class ArrayAveragerStatsMatrix extends ReadableMatrixDevice<double[][]> implements Averager.RegisterStats {
@@ -273,7 +277,7 @@ public class ArrayAverager extends ReadonlyRegisterBase<double[]> implements Rea
                 this.initialize();
             } catch (Exception ex) {
             }            
-        }
+        }       
     }
 
     public ArrayAveragerStatsMatrix getSamples() {
@@ -309,7 +313,7 @@ public class ArrayAverager extends ReadonlyRegisterBase<double[]> implements Rea
         return new ArrayAveragerStatsNumber(name, "variance") {
             @Override
             public Double read() throws IOException, InterruptedException {
-                DescStatsDouble cache = new DescStatsDouble(ArrayAverager.this.take(), getPrecision());
+                DescStatsDouble cache = new DescStatsDouble(getData(), getPrecision());
                 return (cache == null) ? null : cache.getVariance();
             }
         };
@@ -323,7 +327,7 @@ public class ArrayAverager extends ReadonlyRegisterBase<double[]> implements Rea
         return new ArrayAveragerStatsNumber(name, "mean") {
             @Override
             public Double read() throws IOException, InterruptedException {
-                DescStatsDouble cache = new DescStatsDouble(ArrayAverager.this.take(), getPrecision());
+                DescStatsDouble cache = new DescStatsDouble(getData(), getPrecision());
                 return (cache == null) ? null : cache.getMean();
             }
         };
@@ -337,7 +341,7 @@ public class ArrayAverager extends ReadonlyRegisterBase<double[]> implements Rea
         return new ArrayAveragerStatsNumber(name, "stdev") {
             @Override
             public Double read() throws IOException, InterruptedException {
-                DescStatsDouble cache = new DescStatsDouble(ArrayAverager.this.take(), getPrecision());
+                DescStatsDouble cache = new DescStatsDouble(getData(), getPrecision());
                 return (cache == null) ? null : cache.getStdev();
             }
         };
@@ -351,7 +355,7 @@ public class ArrayAverager extends ReadonlyRegisterBase<double[]> implements Rea
         return new ArrayAveragerStatsNumber(name, "min") {
             @Override
             public Double read() throws IOException, InterruptedException {
-                DescStatsDouble cache = new DescStatsDouble(ArrayAverager.this.take(), getPrecision());
+                DescStatsDouble cache = new DescStatsDouble(getData(), getPrecision());
                 return (cache == null) ? null : cache.getMin();
             }
         };
@@ -365,7 +369,7 @@ public class ArrayAverager extends ReadonlyRegisterBase<double[]> implements Rea
         return new ArrayAveragerStatsNumber(name, "max") {
             @Override
             public Double read() throws IOException, InterruptedException {
-                DescStatsDouble cache = new DescStatsDouble(ArrayAverager.this.take(), getPrecision());
+                DescStatsDouble cache = new DescStatsDouble(getData(), getPrecision());
                 return (cache == null) ? null : cache.getMax();
             }
         };
@@ -379,7 +383,7 @@ public class ArrayAverager extends ReadonlyRegisterBase<double[]> implements Rea
         return new ArrayAveragerStatsNumber(name, "sum") {
             @Override
             public Double read() throws IOException, InterruptedException {
-                DescStatsDouble cache = new DescStatsDouble(ArrayAverager.this.take(), getPrecision());
+                DescStatsDouble cache = new DescStatsDouble(getData(), getPrecision());
                 return (cache == null) ? null : cache.getSum();
             }
         };

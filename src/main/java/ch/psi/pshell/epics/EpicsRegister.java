@@ -211,7 +211,10 @@ public abstract class EpicsRegister<T> extends RegisterBase<T> {
     @Override
     protected void doInitialize() throws IOException, InterruptedException {
         try {
-            doClose();
+            if (channel != null) {
+                Epics.closeChannel(channel);
+                channel = null;
+            }            
         } catch (Exception ex) {
             getLogger().log(Level.WARNING, null, ex);
         }

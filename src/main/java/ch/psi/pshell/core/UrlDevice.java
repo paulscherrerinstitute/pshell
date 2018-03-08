@@ -109,10 +109,12 @@ public class UrlDevice extends DeviceBase implements Readable, Writable {
         if (device != null) {
             Device source = getSourceDevice(device);
             if (source!= null){   
-                if (Context.getInstance().isSimulation()) {
-                    source.setSimulated();
+                if (!source.isInitialized()){
+                    if (Context.getInstance().isSimulation()) {
+                        source.setSimulated();
+                    }
+                    source.initialize();
                 }
-                source.initialize();
             }
         }
     }
@@ -301,7 +303,7 @@ public class UrlDevice extends DeviceBase implements Readable, Writable {
                     if (s == null) {
                         ch.psi.pshell.bs.Provider p = new ch.psi.pshell.bs.Provider(null, url, false, false);
                         s = new Stream(null, p);
-                        cameraStreams.add(s);
+                            cameraStreams.add(s);
                         instantiatedDevices.add(s);
                         p.initialize();
                         s.start();
@@ -429,16 +431,18 @@ public class UrlDevice extends DeviceBase implements Readable, Writable {
     }
 
     void closeDevice() {
-        if (device != null) {
+        if (device != null){
             try {
-                Device dev = device;
-                //closes all parent devices, but not the externally set
-                while((dev!= null) && (!dev.equals(parent))){
-                    dev.close();
-                    if (dev == dev.getParent()){
-                        break;
+                if(!"dev".equals(protocol)){
+                    Device dev = device;
+                    //closes all parent devices, but not the externally set
+                    while((dev!= null) && (!dev.equals(parent))){
+                        dev.close();
+                        if (dev == dev.getParent()){
+                            break;
+                        }
+                        dev = dev.getParent();
                     }
-                    dev = dev.getParent();
                 }
                 for (Device id : instantiatedDevices) {
                     id.close();

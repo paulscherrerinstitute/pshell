@@ -101,13 +101,17 @@ public class Threading {
             public void run() {
                 if (!scheduler.isShutdown()) {
                     Chrono chrono = new Chrono();
-                    task.run();
+                    try {
+                        task.run();
+                    } catch (Exception ex) {
+                        Logger.getLogger(Threading.class.getName()).fine("Exception in scheduler thead " + Thread.currentThread().getName() + ": " + ex.getMessage());
+                    }   
                     if (interval >= 0) {
-                        if (!scheduler.isShutdown()) {
+                        if (!scheduler.isShutdown() && !Thread.currentThread().isInterrupted()) {
                             scheduler.schedule(this, Math.max(0, interval - chrono.getEllapsed()), timeUnit);
                         }
                     }
-                }
+                } 
             }
         };
         scheduler.schedule(timer, delay, timeUnit);
