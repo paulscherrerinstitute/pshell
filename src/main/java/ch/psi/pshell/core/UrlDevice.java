@@ -45,53 +45,54 @@ public class UrlDevice extends DeviceBase implements Readable, Writable {
 
     public UrlDevice(String url) {
         this.url = url;
-        this.protocol = getUrlProtocol(url);     
+        this.protocol = getUrlProtocol(url);
         this.pars = getUrlPars(url);
         this.id = getUrlId(url);
         this.name = getUrlName(url);
     }
-    
-    public static String getUrlProtocol(String url){
+
+    public static String getUrlProtocol(String url) {
         if (!url.contains("://")) {
             throw new RuntimeException("Invalid device url: " + url);
-        }        
+        }
         return url.substring(0, url.indexOf("://"));
     }
-    
-    public static String getUrlPath(String url){
+
+    public static String getUrlPath(String url) {
         if (!url.contains("://")) {
             throw new RuntimeException("Invalid device url: " + url);
-        }        
+        }
         return url.substring(url.indexOf("://") + 3, url.length());
-    }    
-    
-    public static Map<String, String> getUrlPars(String url){    
+    }
+
+    public static Map<String, String> getUrlPars(String url) {
         String path = getUrlPath(url);
         Map<String, String> pars = new HashMap<>();
         if (path.contains("?")) {
             for (String str : path.split("\\?")[1].split("&")) {
-                String[] tokens = str.split("=");
-                if (tokens.length == 2) {
-                    pars.put(tokens[0].trim(), tokens[1].trim());
+                if (str.contains("=")) {
+                    pars.put(str.substring(0, str.indexOf("=")), str.substring(str.indexOf("=") + 1, str.length()));
+                } else {
+                    pars.put(str, null);
                 }
             }
         }
         return pars;
-    }    
-    
-    public static String getUrlName(String url){   
-        Map<String, String> pars = getUrlPars(url);         
+    }
+
+    public static String getUrlName(String url) {
+        Map<String, String> pars = getUrlPars(url);
         return pars.containsKey("name") ? pars.get("name") : getUrlId(url);
-    }      
-    
-    static String getUrlId(String url){
+    }
+
+    static String getUrlId(String url) {
         String path = getUrlPath(url);
         if (path.contains("?")) {
             path = path.split("\\?")[0].trim();
         }
         return path;
-    }      
-    
+    }
+
     @Override
     public void setParent(DeviceBase parent) {
         this.parent = parent;
@@ -108,8 +109,8 @@ public class UrlDevice extends DeviceBase implements Readable, Writable {
         device = resolve();
         if (device != null) {
             Device source = getSourceDevice(device);
-            if (source!= null){   
-                if (!source.isInitialized()){
+            if (source != null) {
+                if (!source.isInitialized()) {
                     if (Context.getInstance().isSimulation()) {
                         source.setSimulated();
                     }
@@ -118,14 +119,14 @@ public class UrlDevice extends DeviceBase implements Readable, Writable {
             }
         }
     }
-    
-    public static Device getSourceDevice(Device device){       
-        if ((device!= null) && (device instanceof RegisterStats)){
+
+    public static Device getSourceDevice(Device device) {
+        if ((device != null) && (device instanceof RegisterStats)) {
             device = device.getParent();
-        }            
-        if ((device!= null) && ((device instanceof Averager) || 
-                             (device instanceof ArrayAverager) || 
-                             (device instanceof ArrayRegisterStats))){
+        }
+        if ((device != null) && ((device instanceof Averager)
+                || (device instanceof ArrayAverager)
+                || (device instanceof ArrayRegisterStats))) {
             device = device.getParent();
         }
         return device;
@@ -171,10 +172,10 @@ public class UrlDevice extends DeviceBase implements Readable, Writable {
         Device ret = null;
         switch (protocol) {
             case "dev":
-                if (Context.getInstance() != null){
-                    try{
+                if (Context.getInstance() != null) {
+                    try {
                         ret = (Device) Context.getInstance().getDevicePool().getByName(id);
-                    } catch (Exception ex){
+                    } catch (Exception ex) {
                     }
                 }
                 break;
@@ -216,19 +217,19 @@ public class UrlDevice extends DeviceBase implements Readable, Writable {
                     ret = ((Stream) getParent()).getPidReader();
                     if (pars.containsKey("filter")) {
                         ((Stream) getParent()).setFilter(pars.get("filter"));
-                    }                  
+                    }
                 } else if (this.id.equals("Timestamp")) {
                     ret = ((Stream) getParent()).getTimestampReader();
                 } else {
                     //Use existing channel if already defined
-                    for (Device d : ((Stream) getParent()).getChildren()){
-                        if (d instanceof Scalar){
-                            if ( String.valueOf(id).equals (((Scalar) d).getId())){
+                    for (Device d : ((Stream) getParent()).getChildren()) {
+                        if (d instanceof Scalar) {
+                            if (String.valueOf(id).equals(((Scalar) d).getId())) {
                                 ret = d;
-                            } 
+                            }
                         }
                     }
-                    if (ret == null){
+                    if (ret == null) {
                         int modulo = Scalar.DEFAULT_MODULO;
                         int offset = Scalar.DEFAULT_OFFSET;
                         boolean waveform = false;
@@ -303,7 +304,7 @@ public class UrlDevice extends DeviceBase implements Readable, Writable {
                     if (s == null) {
                         ch.psi.pshell.bs.Provider p = new ch.psi.pshell.bs.Provider(null, url, false, false);
                         s = new Stream(null, p);
-                            cameraStreams.add(s);
+                        cameraStreams.add(s);
                         instantiatedDevices.add(s);
                         p.initialize();
                         s.start();
@@ -357,73 +358,90 @@ public class UrlDevice extends DeviceBase implements Readable, Writable {
                 } catch (Exception ex) {
                 }
             }
-            if (samples != null) { 
-                if (ret instanceof ReadableArray){
+            if (samples != null) {
+                if (ret instanceof ReadableArray) {
                     boolean integrate = false;
                     if (pars.containsKey("integrate")) {
-                        try {
-                            integrate = Boolean.valueOf(pars.get("integrate"));
-                        } catch (Exception ex) {
-                        }
-                    }                    
-                    
-                    ArrayAverager av = (setName!=null) ? new ArrayAverager(name, (ReadableArray) ret, samples, interval, integrate) :
-                                                         new ArrayAverager((ReadableArray) ret, samples, interval, integrate);
+                        integrate = true;
+                    }
+
+                    ArrayAverager av = (setName != null) ? new ArrayAverager(name, (ReadableArray) ret, samples, interval, integrate)
+                            : new ArrayAverager((ReadableArray) ret, samples, interval, integrate);
                     if (async) {
                         av.setMonitored(true);
                     }
                     if (pars.containsKey("op")) {
-                        switch(pars.get("op")){
-                            case "sum": return av.getSum(setName);      
-                            case "min": return av.getMin(setName);      
-                            case "max": return av.getMax(setName);      
-                            case "mean": return av.getMean(setName);      
-                            case "stdev": return av.getStdev(setName);   
-                            case "variance": return av.getVariance(setName);  
-                            case "samples": return av.getSamples(setName);  
+                        switch (pars.get("op")) {
+                            case "sum":
+                                return av.getSum(setName);
+                            case "min":
+                                return av.getMin(setName);
+                            case "max":
+                                return av.getMax(setName);
+                            case "mean":
+                                return av.getMean(setName);
+                            case "stdev":
+                                return av.getStdev(setName);
+                            case "variance":
+                                return av.getVariance(setName);
+                            case "samples":
+                                return av.getSamples(setName);
                         }
                     }
-                    return av;                    
+                    return av;
                 } else {
-                    Averager av = (setName!=null) ? new Averager(name, (Readable) ret, samples, interval) :
-                                                new Averager((Readable) ret, samples, interval);
+                    Averager av = (setName != null) ? new Averager(name, (Readable) ret, samples, interval)
+                            : new Averager((Readable) ret, samples, interval);
                     if (async) {
                         av.setMonitored(true);
                     }
                     if (pars.containsKey("op")) {
-                        switch(pars.get("op")){
-                            case "sum": return av.getSum(setName);      
-                            case "min": return av.getMin(setName);      
-                            case "max": return av.getMax(setName);      
-                            case "mean": return av.getMean(setName);      
-                            case "stdev": return av.getStdev(setName);   
-                            case "variance": return av.getVariance(setName);  
-                            case "samples": return av.getSamples(setName);  
+                        switch (pars.get("op")) {
+                            case "sum":
+                                return av.getSum(setName);
+                            case "min":
+                                return av.getMin(setName);
+                            case "max":
+                                return av.getMax(setName);
+                            case "mean":
+                                return av.getMean(setName);
+                            case "stdev":
+                                return av.getStdev(setName);
+                            case "variance":
+                                return av.getVariance(setName);
+                            case "samples":
+                                return av.getSamples(setName);
                         }
                     }
                     return av;
                 }
             } else {
-                if ((ret instanceof ReadonlyRegisterArray) || (ret instanceof ReadonlyRegisterMatrix)){
+                if ((ret instanceof ReadonlyRegisterArray) || (ret instanceof ReadonlyRegisterMatrix)) {
                     if (pars.containsKey("op")) {
                         ArrayRegisterStats rs = null;
-                        if (ret instanceof ReadonlyRegisterArray){
-                            rs = (setName!=null)  ? new ArrayRegisterStats(name, (ReadonlyRegisterArray) ret) :
-                                              new ArrayRegisterStats((ReadonlyRegisterArray) ret);
-                        } else if (ret instanceof ReadonlyRegisterMatrix){
-                            rs = (setName!=null)  ? new ArrayRegisterStats(name, (ReadonlyRegisterMatrix) ret) :
-                                              new ArrayRegisterStats((ReadonlyRegisterMatrix) ret);
+                        if (ret instanceof ReadonlyRegisterArray) {
+                            rs = (setName != null) ? new ArrayRegisterStats(name, (ReadonlyRegisterArray) ret)
+                                    : new ArrayRegisterStats((ReadonlyRegisterArray) ret);
+                        } else if (ret instanceof ReadonlyRegisterMatrix) {
+                            rs = (setName != null) ? new ArrayRegisterStats(name, (ReadonlyRegisterMatrix) ret)
+                                    : new ArrayRegisterStats((ReadonlyRegisterMatrix) ret);
                         }
-                        switch(pars.get("op")){
-                           case "sum": return rs.getSum(setName);      
-                           case "min": return rs.getMin(setName);      
-                           case "max": return rs.getMax(setName);      
-                           case "mean": return rs.getMean(setName);      
-                           case "stdev": return rs.getStdev(setName);   
-                           case "variance": return rs.getVariance(setName);  
-                       }                         
+                        switch (pars.get("op")) {
+                            case "sum":
+                                return rs.getSum(setName);
+                            case "min":
+                                return rs.getMin(setName);
+                            case "max":
+                                return rs.getMax(setName);
+                            case "mean":
+                                return rs.getMean(setName);
+                            case "stdev":
+                                return rs.getStdev(setName);
+                            case "variance":
+                                return rs.getVariance(setName);
+                        }
                     }
-                }              
+                }
             }
             return ret;
         }
@@ -431,14 +449,14 @@ public class UrlDevice extends DeviceBase implements Readable, Writable {
     }
 
     void closeDevice() {
-        if (device != null){
+        if (device != null) {
             try {
-                if(!"dev".equals(protocol)){
+                if (!"dev".equals(protocol)) {
                     Device dev = device;
                     //closes all parent devices, but not the externally set
-                    while((dev!= null) && (!dev.equals(parent))){
+                    while ((dev != null) && (!dev.equals(parent))) {
                         dev.close();
-                        if (dev == dev.getParent()){
+                        if (dev == dev.getParent()) {
                             break;
                         }
                         dev = dev.getParent();
@@ -463,60 +481,59 @@ public class UrlDevice extends DeviceBase implements Readable, Writable {
         closeDevice();
         super.doClose();
     }
-    
-    
+
     public static Device create(String url, DeviceBase parent) throws IOException, InterruptedException {
         UrlDevice dev = new UrlDevice(url);
         Stream innerStream = null;
-        if (parent == null){
-            if (getUrlProtocol(url).equals("bs")){
+        if (parent == null) {
+            if (getUrlProtocol(url).equals("bs")) {
                 innerStream = new Stream("Url device stream");
-                innerStream.initialize();     
+                innerStream.initialize();
                 parent = innerStream;
             }
         }
-        if (parent != null){
+        if (parent != null) {
             dev.setParent(parent);
         }
         dev.initialize();
-        if (innerStream!=null){
+        if (innerStream != null) {
             innerStream.start();
             innerStream.waitValueChange(Stream.TIMEOUT_START_STREAMING);
-        }        
+        }
         return dev.getDevice();
-    }  
-    
+    }
+
     public static List<Device> create(List<String> url, DeviceBase parent) throws IOException, InterruptedException {
-       List<DeviceBase> parents = new ArrayList<>();
-       parents.add(parent);
-       return create(url, parents);
-    }      
-    
+        List<DeviceBase> parents = new ArrayList<>();
+        parents.add(parent);
+        return create(url, parents);
+    }
+
     public static List<Device> create(List<String> url, List<DeviceBase> parents) throws IOException, InterruptedException {
         Stream innerStream = null;
         List<Device> ret = new ArrayList<>();
-        for (int i=0; i<url.size(); i++){
+        for (int i = 0; i < url.size(); i++) {
             DeviceBase parent = null;
-            if (parents.size() > 0){
-                parent = (parents.size()==1) ? parents.get(0) : parents.get(i);
+            if (parents.size() > 0) {
+                parent = (parents.size() == 1) ? parents.get(0) : parents.get(i);
             }
-            if (parent == null){
-                if (getUrlProtocol(url.get(i)).equals("bs")){
-                    if (innerStream==null){
+            if (parent == null) {
+                if (getUrlProtocol(url.get(i)).equals("bs")) {
+                    if (innerStream == null) {
                         innerStream = new Stream("Url device stream");
-                        innerStream.initialize();        
+                        innerStream.initialize();
                     }
                     parent = innerStream;
                 }
-            }            
+            }
             Device dev = create(url.get(i), parent);
             ret.add(dev);
         }
-        if (innerStream!=null){
+        if (innerStream != null) {
             innerStream.start();
             innerStream.waitValueChange(Stream.TIMEOUT_START_STREAMING);
         }
         return ret;
-    }      
+    }
 
 }
