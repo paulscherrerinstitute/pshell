@@ -250,12 +250,13 @@ public class ArrayAverager extends ReadonlyRegisterBase<double[]> implements Rea
             }
         }
         return take();
-    }  
-
+    }      
+    
     public abstract class ArrayAveragerStatsNumber extends ReadableNumberDevice<Double> implements Averager.RegisterStats {
-
-        ArrayAveragerStatsNumber(String name, String type) {
+        final boolean forceRead;
+        ArrayAveragerStatsNumber(String name, String type, boolean forceRead) {
             super((name == null) ? source.getName() + " " + type : name);
+            this.forceRead = forceRead;
             setParent(ArrayAverager.this);
             try {
                 this.initialize();
@@ -264,12 +265,12 @@ public class ArrayAverager extends ReadonlyRegisterBase<double[]> implements Rea
         }
         
         double[] getData() throws IOException, InterruptedException{
-            return ArrayAverager.this.getValue();
+            return forceRead ?  ArrayAverager.this.read() : ArrayAverager.this.take();
         }
+     
     }
 
     public abstract class ArrayAveragerStatsMatrix extends ReadableMatrixDevice<double[][]> implements Averager.RegisterStats {
-
         ArrayAveragerStatsMatrix(String name, String type) {
             super((name == null) ? source.getName() + " " + type : name);
             setParent(ArrayAverager.this);
@@ -306,91 +307,94 @@ public class ArrayAverager extends ReadonlyRegisterBase<double[]> implements Rea
     }
 
     public ArrayAveragerStatsNumber getVariance() {
-        return getVariance(null);
+        return getVariance(null, false);
     }
 
-    public ArrayAveragerStatsNumber getVariance(String name) {
-        return new ArrayAveragerStatsNumber(name, "variance") {
+    public ArrayAveragerStatsNumber getVariance(String name, boolean forceRead) {
+        return new ArrayAveragerStatsNumber(name, "variance", forceRead) {
             @Override
             public Double read() throws IOException, InterruptedException {
-                DescStatsDouble cache = new DescStatsDouble(getData(), getPrecision());
-                return (cache == null) ? null : cache.getVariance();
+                double[] data = getData();
+                return (data == null) ? null : new DescStatsDouble(getData(), getPrecision()).getVariance();
             }
         };
     }
 
     public ArrayAveragerStatsNumber getMean() {
-        return getMean(null);
+        return getMean(null, false);
     }
 
-    public ArrayAveragerStatsNumber getMean(String name) {
-        return new ArrayAveragerStatsNumber(name, "mean") {
+    public ArrayAveragerStatsNumber getMean(String name, boolean forceRead) {
+        return new ArrayAveragerStatsNumber(name, "mean", forceRead) {
             @Override
             public Double read() throws IOException, InterruptedException {
-                DescStatsDouble cache = new DescStatsDouble(getData(), getPrecision());
-                return (cache == null) ? null : cache.getMean();
+                double[] data = getData();
+                return (data == null) ? null : new DescStatsDouble(getData(), getPrecision()).getMean();
             }
         };
     }
 
     public ArrayAveragerStatsNumber getStdev() {
-        return getStdev(null);
+        return getStdev(null, false);
     }
 
-    public ArrayAveragerStatsNumber getStdev(String name) {
-        return new ArrayAveragerStatsNumber(name, "stdev") {
+    public ArrayAveragerStatsNumber getStdev(String name, boolean forceRead) {
+        return new ArrayAveragerStatsNumber(name, "stdev", forceRead) {
             @Override
             public Double read() throws IOException, InterruptedException {
-                DescStatsDouble cache = new DescStatsDouble(getData(), getPrecision());
-                return (cache == null) ? null : cache.getStdev();
+                double[] data = getData();
+                return (data == null) ? null : new DescStatsDouble(getData(), getPrecision()).getStdev();
             }
         };
     }
 
     public ArrayAveragerStatsNumber getMin() {
-        return getMin(null);
+        return getMin(null, false);
     }
 
-    public ArrayAveragerStatsNumber getMin(String name) {
-        return new ArrayAveragerStatsNumber(name, "min") {
+    public ArrayAveragerStatsNumber getMin(String name, boolean forceRead) {
+        return new ArrayAveragerStatsNumber(name, "min", forceRead) {
             @Override
             public Double read() throws IOException, InterruptedException {
-                DescStatsDouble cache = new DescStatsDouble(getData(), getPrecision());
-                return (cache == null) ? null : cache.getMin();
+                double[] data = getData();
+                return (data == null) ? null : new DescStatsDouble(getData(), getPrecision()).getMin();
             }
         };
     }
 
     public ArrayAveragerStatsNumber getMax() {
-        return getMax(null);
+        return getMax(null, false);
     }
 
-    public ArrayAveragerStatsNumber getMax(String name) {
-        return new ArrayAveragerStatsNumber(name, "max") {
+    public ArrayAveragerStatsNumber getMax(String name, boolean forceRead) {
+        return new ArrayAveragerStatsNumber(name, "max", forceRead) {
             @Override
             public Double read() throws IOException, InterruptedException {
-                DescStatsDouble cache = new DescStatsDouble(getData(), getPrecision());
-                return (cache == null) ? null : cache.getMax();
+                double[] data = getData();
+                return (data == null) ? null : new DescStatsDouble(getData(), getPrecision()).getMax();
             }
         };
     }
 
     public ArrayAveragerStatsNumber getSum() {
-        return getSum(null);
+        return getSum(null, false);
     }
 
-    public ArrayAveragerStatsNumber getSum(String name) {
-        return new ArrayAveragerStatsNumber(name, "sum") {
+    public ArrayAveragerStatsNumber getSum(String name, boolean forceRead) {
+        return new ArrayAveragerStatsNumber(name, "sum", forceRead) {
             @Override
             public Double read() throws IOException, InterruptedException {
-                DescStatsDouble cache = new DescStatsDouble(getData(), getPrecision());
-                return (cache == null) ? null : cache.getSum();
+                double[] data = getData();
+                return (data == null) ? null : new DescStatsDouble(getData(), getPrecision()).getSum();
             }
         };
     }
 
     @Override
     protected void doClose() throws IOException {
+        if ((source!=null) && (source instanceof Device)) {
+            ((Device) source).removeListener(sourceListener);
+        }           
         if (innerDevice != null) {
             try {
                 innerDevice.close();

@@ -55,7 +55,7 @@ public class SerialPortDevice extends StreamDevice {
             this.stopBits = getConfig().stopBits;
             this.parity = getConfig().parity;
         }
-        doClose();
+        closePort();
         super.doInitialize();
         if (isSimulated()) {
             return;
@@ -92,9 +92,8 @@ public class SerialPortDevice extends StreamDevice {
             throw new DeviceException(ex);
         }
     }
-
-    @Override
-    protected void doClose() throws IOException {
+    
+    void closePort(){
         if (isSimulated()) {
             return;
         }
@@ -119,9 +118,15 @@ public class SerialPortDevice extends StreamDevice {
             } catch (Exception ex) {
                 getLogger().log(Level.WARNING, null, ex);
             }
+            serialPort = null;
             System.gc();
-        }
+        }        
+    }
+
+    @Override
+    protected void doClose() throws IOException {
         super.doClose();
+        closePort();
     }
 
     public static ArrayList<String> getPortList() {

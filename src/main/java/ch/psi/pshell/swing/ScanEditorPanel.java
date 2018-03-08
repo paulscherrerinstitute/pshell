@@ -621,7 +621,7 @@ public class ScanEditorPanel extends MonitoredPanel implements Processor {
                         if (async && (samples > 0)) {
                             samples = -samples;
                         }
-                        sensor += "samples=" + samples + "&interval=" + (int) (interval * 1000) + "'";
+                        sensor += "samples=" + samples + "&interval=" + ((interval<0) ? -1 : (int) (interval * 1000)) + "'";
                     }
                 }
                 ret.add(sensor);

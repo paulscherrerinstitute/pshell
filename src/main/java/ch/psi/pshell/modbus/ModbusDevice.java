@@ -303,14 +303,18 @@ public abstract class ModbusDevice extends DeviceBase {
         } catch (Exception ex) {
         }
     }
+    
+    protected void closeMaster(){
+        if (master != null) {
+            disconnect();
+            master = null;
+        }        
+    }
 
     @Override
     protected synchronized void doClose() throws IOException {
         super.doClose();
-        if (master != null) {
-            disconnect();
-            master = null;
-        }
+        closeMaster();
     }
 
 }

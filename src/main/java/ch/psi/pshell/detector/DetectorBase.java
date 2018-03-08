@@ -35,7 +35,7 @@ public class DetectorBase extends DeviceBase {
 
     @Override
     protected void doInitialize() throws IOException, InterruptedException {
-        doClose();
+        closeClient();
         super.doInitialize();
         ClientConfig config = new ClientConfig().register(JacksonFeature.class);
         client = ClientBuilder.newClient(config);
@@ -82,14 +82,19 @@ public class DetectorBase extends DeviceBase {
         assertInitialized();
         Response r = target.path("state").path("stop").request().post(null);
     }
+    
+    void closeClient(){
+        if (client != null) {
+            client.close();
+            client = null;
+        }        
+    }
 
     //Overridables
     @Override
     protected void doClose() throws IOException {
-        if (client != null) {
-            client.close();
-            client = null;
-        }
+        super.doClose();
+        closeClient();
     }
 
 }

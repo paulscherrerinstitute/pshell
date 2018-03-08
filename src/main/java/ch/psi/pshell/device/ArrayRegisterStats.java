@@ -13,6 +13,7 @@ public class ArrayRegisterStats extends ReadonlyRegisterBase<DescStatsDouble> im
 
     ReadonlyRegister source;
     int precision = -1;
+    DeviceListener sourceListener;
 
     public ArrayRegisterStats(String name, ReadonlyRegisterArray source) {
         super(name);
@@ -50,10 +51,32 @@ public class ArrayRegisterStats extends ReadonlyRegisterBase<DescStatsDouble> im
     public ArrayRegisterStats(ReadonlyRegisterMatrix source) {
         this(source.getName() + " stats", source);
     } 
+    
+    @Override
+    protected void doSetMonitored(boolean value) {
+        if (value) {
+            sourceListener = new DeviceAdapter() {
+                @Override
+                public void onCacheChanged(Device device, Object value, Object former, long timestamp, boolean valueChange) {
+                    setCache(processData(value), timestamp);
+                }
+            };
+            source.addListener(sourceListener);
+        } else {
+            source.removeListener(sourceListener);
+        }
+    }    
 
     @Override
     protected DescStatsDouble doRead() throws IOException, InterruptedException {
+        if (isMonitored()){
+            return take();
+        } 
         Object data = source.getValue();
+        return processData(data);
+    }
+    
+    DescStatsDouble processData(Object data){
         int rank = Arr.getRank(data);
         if (rank < 1) {
             return null;
@@ -65,8 +88,7 @@ public class ArrayRegisterStats extends ReadonlyRegisterBase<DescStatsDouble> im
             data = Convert.toPrimitiveArray(data);
         }
         return new DescStatsDouble((double[]) Convert.toDouble(data), precision);
-
-    }
+    }    
     
     public abstract class ReadableStatsNumber extends ReadableNumberDevice<Double> implements Averager.RegisterStats{
         ReadableStatsNumber(String name, String type){
@@ -80,7 +102,7 @@ public class ArrayRegisterStats extends ReadonlyRegisterBase<DescStatsDouble> im
         
         DescStatsDouble getData() throws IOException, InterruptedException{
             return ArrayRegisterStats.this.read();
-        }
+        }        
     }   
     
     public ReadableStatsNumber getVariance(){
@@ -166,5 +188,13 @@ public class ArrayRegisterStats extends ReadonlyRegisterBase<DescStatsDouble> im
             }
         };
     }      
+    
+    @Override
+    protected void doClose() throws IOException {
+        if (source!=null) {
+            source.removeListener(sourceListener);
+        }           
+        super.doClose();
+    }    
 
 }

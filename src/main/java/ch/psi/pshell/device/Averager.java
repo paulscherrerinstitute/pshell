@@ -219,16 +219,19 @@ public class Averager extends ReadonlyRegisterBase<DescStatsDouble> implements R
         }
         return take();
     }
-    
+   
     public interface RegisterStats extends Device{
         default Device getSource(){
             return UrlDevice.getSourceDevice(this);
         }
     }
+
     
     public abstract class AveragerStatsNumber extends ReadableNumberDevice<Double> implements RegisterStats{
-        AveragerStatsNumber(String name, String type){
+        final boolean forceRead;
+        AveragerStatsNumber(String name, String type, boolean forceRead){
             super((name == null) ? source.getName() + " " + type : name);
+            this.forceRead = forceRead;
             setParent(Averager.this);
             try {
                 this.initialize();
@@ -236,13 +239,15 @@ public class Averager extends ReadonlyRegisterBase<DescStatsDouble> implements R
             }                   
         }
         DescStatsDouble getData() throws IOException, InterruptedException{
-            return Averager.this.getValue();
-        }        
+            return forceRead ?  Averager.this.read() : Averager.this.take();
+        }               
     }
     
     public abstract class AveragerStatsArray extends ReadableArrayDevice<double[]> implements RegisterStats{
-        AveragerStatsArray(String name, String type){
+        final boolean forceRead;
+        AveragerStatsArray(String name, String type, boolean forceRead){
             super((name == null) ? source.getName() + " " + type : name);
+            this.forceRead = forceRead;
             setParent(Averager.this);
             try {
                 this.initialize();
@@ -250,16 +255,16 @@ public class Averager extends ReadonlyRegisterBase<DescStatsDouble> implements R
             }            
         }     
         DescStatsDouble getData() throws IOException, InterruptedException{
-            return Averager.this.getValue();
-        }  
+            return forceRead ?  Averager.this.read() : Averager.this.take();
+        }         
     }    
 
     public AveragerStatsArray getSamples(){
-        return getSamples(null);
+        return getSamples(null, false);
     }
     
-    public AveragerStatsArray getSamples(String name) {
-        return new AveragerStatsArray(name, "samples") {
+    public AveragerStatsArray getSamples(String name, boolean forceRead) {
+        return new AveragerStatsArray(name, "samples", forceRead) {
             @Override
             public double[] read() throws IOException, InterruptedException {
                 DescStatsDouble data = getData();
@@ -274,11 +279,11 @@ public class Averager extends ReadonlyRegisterBase<DescStatsDouble> implements R
     }     
     
     public AveragerStatsNumber getVariance(){
-        return getVariance(null);
+        return getVariance(null, false);
     }
     
-    public AveragerStatsNumber getVariance(String name) {
-        return new AveragerStatsNumber(name, "variance") {
+    public AveragerStatsNumber getVariance(String name, boolean forceRead) {
+        return new AveragerStatsNumber(name, "variance", forceRead) {
             @Override
             public Double read() throws IOException, InterruptedException {
                 DescStatsDouble data = getData();
@@ -288,11 +293,11 @@ public class Averager extends ReadonlyRegisterBase<DescStatsDouble> implements R
     } 
 
     public AveragerStatsNumber getMean(){
-        return getMean(null);
+        return getMean(null, false);
     }
     
-    public AveragerStatsNumber getMean(String name) {
-        return new AveragerStatsNumber(name, "mean") {
+    public AveragerStatsNumber getMean(String name, boolean forceRead) {
+        return new AveragerStatsNumber(name, "mean", forceRead) {
             @Override
             public Double read() throws IOException, InterruptedException {
                 DescStatsDouble data = getData();
@@ -302,11 +307,11 @@ public class Averager extends ReadonlyRegisterBase<DescStatsDouble> implements R
     }  
 
     public AveragerStatsNumber getStdev(){
-        return getStdev(null);
+        return getStdev(null, false);
     }    
     
-    public AveragerStatsNumber getStdev(String name) {
-        return new AveragerStatsNumber(name, "stdev") {
+    public AveragerStatsNumber getStdev(String name, boolean forceRead) {
+        return new AveragerStatsNumber(name, "stdev", forceRead) {
             @Override
             public Double read() throws IOException, InterruptedException {
                 DescStatsDouble data = getData();
@@ -316,11 +321,11 @@ public class Averager extends ReadonlyRegisterBase<DescStatsDouble> implements R
     }  
 
     public AveragerStatsNumber getMin(){
-        return getMin(null);
+        return getMin(null, false);
     }  
     
-    public AveragerStatsNumber getMin(String name) {
-        return new AveragerStatsNumber(name, "min") {
+    public AveragerStatsNumber getMin(String name, boolean forceRead) {
+        return new AveragerStatsNumber(name, "min", forceRead) {
             @Override
             public Double read() throws IOException, InterruptedException {
                 DescStatsDouble data = getData();
@@ -330,11 +335,11 @@ public class Averager extends ReadonlyRegisterBase<DescStatsDouble> implements R
     }  
 
     public AveragerStatsNumber getMax(){
-        return getMax(null);
+        return getMax(null, false);
     }  
     
-    public AveragerStatsNumber getMax(String name) {
-        return new AveragerStatsNumber(name, "max") {
+    public AveragerStatsNumber getMax(String name, boolean forceRead) {
+        return new AveragerStatsNumber(name, "max", forceRead) {
             @Override
             public Double read() throws IOException, InterruptedException {
                 DescStatsDouble data = getData();
@@ -344,11 +349,11 @@ public class Averager extends ReadonlyRegisterBase<DescStatsDouble> implements R
     }  
     
     public AveragerStatsNumber getSum(){
-        return getSum(null);
+        return getSum(null, false);
     }
     
-    public AveragerStatsNumber getSum(String name) {
-        return new AveragerStatsNumber(name, "sum") {
+    public AveragerStatsNumber getSum(String name, boolean forceRead) {
+        return new AveragerStatsNumber(name, "sum", forceRead) {
             @Override
             public Double read() throws IOException, InterruptedException {
                 DescStatsDouble data = getData();
@@ -370,6 +375,9 @@ public class Averager extends ReadonlyRegisterBase<DescStatsDouble> implements R
 
     @Override
     protected void doClose() throws IOException {
+        if ((source!=null) && (source instanceof Device)) {
+            ((Device) source).removeListener(sourceListener);
+        }        
         if (innerDevice!=null){
             try {
                 innerDevice.close();

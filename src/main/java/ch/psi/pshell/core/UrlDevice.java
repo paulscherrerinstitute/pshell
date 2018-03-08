@@ -371,19 +371,20 @@ public class UrlDevice extends DeviceBase implements Readable, Writable {
                         av.setMonitored(true);
                     }
                     if (pars.containsKey("op")) {
+                        boolean forceRead = (!av.isMonitored() && !av.isReadOnChangeEvent());
                         switch (pars.get("op")) {
                             case "sum":
-                                return av.getSum(setName);
+                                return av.getSum(setName, forceRead);
                             case "min":
-                                return av.getMin(setName);
+                                return av.getMin(setName, forceRead);
                             case "max":
-                                return av.getMax(setName);
+                                return av.getMax(setName, forceRead);
                             case "mean":
-                                return av.getMean(setName);
+                                return av.getMean(setName, forceRead);
                             case "stdev":
-                                return av.getStdev(setName);
+                                return av.getStdev(setName, forceRead);
                             case "variance":
-                                return av.getVariance(setName);
+                                return av.getVariance(setName, forceRead);
                             case "samples":
                                 return av.getSamples(setName);
                         }
@@ -398,19 +399,19 @@ public class UrlDevice extends DeviceBase implements Readable, Writable {
                     if (pars.containsKey("op")) {
                         switch (pars.get("op")) {
                             case "sum":
-                                return av.getSum(setName);
+                                return av.getSum(setName, false);
                             case "min":
-                                return av.getMin(setName);
+                                return av.getMin(setName, false);
                             case "max":
-                                return av.getMax(setName);
+                                return av.getMax(setName, false);
                             case "mean":
-                                return av.getMean(setName);
+                                return av.getMean(setName, false);
                             case "stdev":
-                                return av.getStdev(setName);
+                                return av.getStdev(setName, false);
                             case "variance":
-                                return av.getVariance(setName);
+                                return av.getVariance(setName, false);
                             case "samples":
-                                return av.getSamples(setName);
+                                return av.getSamples(setName, false);
                         }
                     }
                     return av;

@@ -33,7 +33,7 @@ public class ModbusUDP extends ModbusDevice {
 
     @Override
     protected synchronized void doInitialize() throws IOException, InterruptedException {
-        doClose();
+        doClose(); //If do not want to close children, call closeMaster() instead.
         if ((address == null) || (address.isEmpty())) {
             throw new DeviceException("Address is not defined");
         }

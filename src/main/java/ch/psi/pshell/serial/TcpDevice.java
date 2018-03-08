@@ -68,7 +68,7 @@ public class TcpDevice extends SerialDeviceBase {
             this.timeout = getConfig().timeout;
         }
         buffer = new StringBuffer(1024);
-        doClose();
+        doClose(); //If do not want to close children, call closeSocket) instead.
         super.doInitialize();
         if (isSimulated()) {
             return;
@@ -85,15 +85,19 @@ public class TcpDevice extends SerialDeviceBase {
         return client;
     }
 
-    @Override
-    protected void doClose() throws IOException {
+    void closeSocket(){
         if (isSimulated()) {
             return;
         }
         if (client != null) {
             client.close();
             client = null;
-        }
+        }         
+    }    
+    
+    @Override
+    protected void doClose() throws IOException {
+        closeSocket();
         super.doClose();
     }
 

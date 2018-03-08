@@ -58,7 +58,7 @@ public class UdpDevice extends SerialDeviceBase {
         buffer = null;
         indexRx = 0;
 
-        doClose();
+        doClose(); //If do not want to close children, call closeSocket) instead.
         super.doInitialize();
         if (isSimulated()) {
             return;
@@ -92,20 +92,25 @@ public class UdpDevice extends SerialDeviceBase {
     public DatagramSocket getClient() {
         return socket;
     }
-
-    @Override
-    protected void doClose() throws IOException {
+    
+    void closeSocket(){
         if (waitThread != null) {
             waitThread.interrupt();
             waitThread = null;
         }
+        
         if (isSimulated()) {
             return;
         }
         if (socket != null) {
             socket.close();
             socket = null;
-        }
+        }        
+    }
+
+    @Override
+    protected void doClose() throws IOException {
+        closeSocket();
         super.doClose();
     }
 
