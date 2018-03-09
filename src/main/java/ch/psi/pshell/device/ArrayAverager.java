@@ -1,4 +1,4 @@
-    package ch.psi.pshell.device;
+package ch.psi.pshell.device;
 
 import ch.psi.pshell.bs.Stream;
 import ch.psi.pshell.device.Readable.ReadableArray;
@@ -83,20 +83,19 @@ public class ArrayAverager extends ReadonlyRegisterBase<double[]> implements Rea
     public ArrayAverager(ReadableArray source, int measures, int interval) {
         this(source, measures, interval, false);
     }
-   
+
     public ArrayAverager(ReadableArray source, int measures, int interval, boolean integrate) {
         this(source.getName() + " averager", source, measures, interval, integrate);
     }
-    
-    
+
     public ArrayAverager(String name, ReadableArray source, int measures, int interval, int precision) {
         this(name, source, measures, interval);
         config.precision = precision;
     }
-    
-    public Readable getSource(){
+
+    public Readable getSource() {
         return source;
-    }    
+    }
 
     @Override
     protected void doInitialize() throws IOException, InterruptedException {
@@ -136,7 +135,7 @@ public class ArrayAverager extends ReadonlyRegisterBase<double[]> implements Rea
     public boolean isReadOnChangeEvent() {
         return (config.interval < 0);
     }
-    
+
     DeviceListener sourceListener;
     ScheduledExecutorService monitoringTimer;
 
@@ -159,7 +158,7 @@ public class ArrayAverager extends ReadonlyRegisterBase<double[]> implements Rea
     }
 
     void readSample() {
-        if (this.isInitialized()){
+        if (this.isInitialized()) {
             try {
                 addSample(source.read());
             } catch (Exception ex) {
@@ -168,7 +167,7 @@ public class ArrayAverager extends ReadonlyRegisterBase<double[]> implements Rea
     }
 
     void addSample(Object sample) {
-        if (! this.isInitialized()){
+        if (!this.isInitialized()) {
             return;
         }
         synchronized (samples) {
@@ -250,35 +249,42 @@ public class ArrayAverager extends ReadonlyRegisterBase<double[]> implements Rea
             }
         }
         return take();
-    }      
-    
+    }
+
     public abstract class ArrayAveragerStatsNumber extends ReadableNumberDevice<Double> implements Averager.RegisterStats {
-        final boolean forceRead;
-        ArrayAveragerStatsNumber(String name, String type, boolean forceRead) {
+
+        boolean forceRead;
+
+        ArrayAveragerStatsNumber(String name, String type) {
             super((name == null) ? source.getName() + " " + type : name);
-            this.forceRead = forceRead;
             setParent(ArrayAverager.this);
             try {
                 this.initialize();
             } catch (Exception ex) {
-            }            
+            }
         }
-        
-        double[] getData() throws IOException, InterruptedException{
-            return forceRead ?  ArrayAverager.this.read() : ArrayAverager.this.take();
+
+        public ArrayAveragerStatsNumber withForceRead(boolean forceRead) {
+            this.forceRead = forceRead;
+            return this;
         }
-     
+
+        double[] getData() throws IOException, InterruptedException {
+            return forceRead ? ArrayAverager.this.read() : ArrayAverager.this.take();
+        }
+
     }
 
     public abstract class ArrayAveragerStatsMatrix extends ReadableMatrixDevice<double[][]> implements Averager.RegisterStats {
+
         ArrayAveragerStatsMatrix(String name, String type) {
             super((name == null) ? source.getName() + " " + type : name);
             setParent(ArrayAverager.this);
             try {
                 this.initialize();
             } catch (Exception ex) {
-            }            
-        }       
+            }
+        }
     }
 
     public ArrayAveragerStatsMatrix getSamples() {
@@ -307,11 +313,11 @@ public class ArrayAverager extends ReadonlyRegisterBase<double[]> implements Rea
     }
 
     public ArrayAveragerStatsNumber getVariance() {
-        return getVariance(null, false);
+        return getVariance(null);
     }
 
-    public ArrayAveragerStatsNumber getVariance(String name, boolean forceRead) {
-        return new ArrayAveragerStatsNumber(name, "variance", forceRead) {
+    public ArrayAveragerStatsNumber getVariance(String name) {
+        return new ArrayAveragerStatsNumber(name, "variance") {
             @Override
             public Double read() throws IOException, InterruptedException {
                 double[] data = getData();
@@ -321,11 +327,11 @@ public class ArrayAverager extends ReadonlyRegisterBase<double[]> implements Rea
     }
 
     public ArrayAveragerStatsNumber getMean() {
-        return getMean(null, false);
+        return getMean(null);
     }
 
-    public ArrayAveragerStatsNumber getMean(String name, boolean forceRead) {
-        return new ArrayAveragerStatsNumber(name, "mean", forceRead) {
+    public ArrayAveragerStatsNumber getMean(String name) {
+        return new ArrayAveragerStatsNumber(name, "mean") {
             @Override
             public Double read() throws IOException, InterruptedException {
                 double[] data = getData();
@@ -335,11 +341,11 @@ public class ArrayAverager extends ReadonlyRegisterBase<double[]> implements Rea
     }
 
     public ArrayAveragerStatsNumber getStdev() {
-        return getStdev(null, false);
+        return getStdev(null);
     }
 
-    public ArrayAveragerStatsNumber getStdev(String name, boolean forceRead) {
-        return new ArrayAveragerStatsNumber(name, "stdev", forceRead) {
+    public ArrayAveragerStatsNumber getStdev(String name) {
+        return new ArrayAveragerStatsNumber(name, "stdev") {
             @Override
             public Double read() throws IOException, InterruptedException {
                 double[] data = getData();
@@ -349,11 +355,11 @@ public class ArrayAverager extends ReadonlyRegisterBase<double[]> implements Rea
     }
 
     public ArrayAveragerStatsNumber getMin() {
-        return getMin(null, false);
+        return getMin(null);
     }
 
-    public ArrayAveragerStatsNumber getMin(String name, boolean forceRead) {
-        return new ArrayAveragerStatsNumber(name, "min", forceRead) {
+    public ArrayAveragerStatsNumber getMin(String name) {
+        return new ArrayAveragerStatsNumber(name, "min") {
             @Override
             public Double read() throws IOException, InterruptedException {
                 double[] data = getData();
@@ -363,11 +369,11 @@ public class ArrayAverager extends ReadonlyRegisterBase<double[]> implements Rea
     }
 
     public ArrayAveragerStatsNumber getMax() {
-        return getMax(null, false);
+        return getMax(null);
     }
 
-    public ArrayAveragerStatsNumber getMax(String name, boolean forceRead) {
-        return new ArrayAveragerStatsNumber(name, "max", forceRead) {
+    public ArrayAveragerStatsNumber getMax(String name) {
+        return new ArrayAveragerStatsNumber(name, "max") {
             @Override
             public Double read() throws IOException, InterruptedException {
                 double[] data = getData();
@@ -377,11 +383,11 @@ public class ArrayAverager extends ReadonlyRegisterBase<double[]> implements Rea
     }
 
     public ArrayAveragerStatsNumber getSum() {
-        return getSum(null, false);
+        return getSum(null);
     }
 
-    public ArrayAveragerStatsNumber getSum(String name, boolean forceRead) {
-        return new ArrayAveragerStatsNumber(name, "sum", forceRead) {
+    public ArrayAveragerStatsNumber getSum(String name) {
+        return new ArrayAveragerStatsNumber(name, "sum") {
             @Override
             public Double read() throws IOException, InterruptedException {
                 double[] data = getData();
@@ -392,9 +398,9 @@ public class ArrayAverager extends ReadonlyRegisterBase<double[]> implements Rea
 
     @Override
     protected void doClose() throws IOException {
-        if ((source!=null) && (source instanceof Device)) {
+        if ((source != null) && (source instanceof Device)) {
             ((Device) source).removeListener(sourceListener);
-        }           
+        }
         if (innerDevice != null) {
             try {
                 innerDevice.close();
