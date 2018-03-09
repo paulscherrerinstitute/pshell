@@ -28,8 +28,9 @@ import java.util.logging.Level;
  * a corresponding Scalar or Waveform child.
  */
 public class Stream extends DeviceBase implements Readable<StreamValue>, Cacheable<StreamValue> {
+
     public static final int TIMEOUT_START_STREAMING = 10000;
-    
+
     Thread thread;
     final Map<String, Scalar> channels;
     final List<String> channelNames;
@@ -525,9 +526,13 @@ public class Stream extends DeviceBase implements Readable<StreamValue>, Cacheab
             values.add(val);
         }
 
-        setCache((DeviceBase)pidReader, (Object)pulse_id, timestamp);
-        setCache((DeviceBase)timestampReader, (Object)timestamp, timestamp);
-        
+        if (pidReader != null) {
+            setCache((DeviceBase) pidReader, (Object) pulse_id, timestamp);
+        }
+        if (timestampReader != null) {
+            setCache((DeviceBase) timestampReader, (Object) timestamp, timestamp);
+        }
+
         if (fixedChildren) {
             //If ids are declared, value list is fixed and ordered 
             setCache(new StreamValue(pulse_id, timestamp, nanosOffset, channelNames, Arrays.asList(getChildrenValues())), timestamp, nanosOffset);
@@ -596,28 +601,36 @@ public class Stream extends DeviceBase implements Readable<StreamValue>, Cacheab
     }
 
     public class PidReader extends ReadonlyAsyncRegisterBase<Long> {
-        PidReader(){
+
+        PidReader() {
             super("PID");
             setParent(Stream.this);
         }
     };
-    
-    final PidReader pidReader = new PidReader();
-    
+
+    PidReader pidReader;
+
     public PidReader getPidReader() {
+        if (pidReader == null) {
+            pidReader = new PidReader();
+        }
         return pidReader;
-    }   
+    }
 
     public class TimestampReader extends ReadonlyAsyncRegisterBase<Long> {
-        TimestampReader(){
+
+        TimestampReader() {
             super("Timestamp");
             setParent(Stream.this);
         }
     };
-    
-    final TimestampReader timestampReader = new TimestampReader();
+
+    TimestampReader timestampReader;
 
     public TimestampReader getTimestampReader() {
+        if (timestampReader == null) {
+            timestampReader = new TimestampReader();
+        }
         return timestampReader;
     }
 }
