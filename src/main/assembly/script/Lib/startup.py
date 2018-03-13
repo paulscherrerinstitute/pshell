@@ -1374,16 +1374,21 @@ class Channel(java.beans.PropertyChangeListener, Writable, Readable):
 ###################################################################################################
 #Concurrent execution 
 ###################################################################################################
-
+import java.lang.Thread
 class Callable(java.util.concurrent.Callable):
     def __init__(self, method, *args):
         self.method = method
         self.args = args
+        self.thread = java.lang.Thread.currentThread()
     def call(self):
-        #try:
+        try:
+            get_context().startedChildThread(self.thread)
             return self.method(*self.args)
         #except:
         #    traceback.print_exc(file=sys.stderr)
+        finally:
+            get_context().finishedChildThread(self.thread)
+            
 
 
 def fork(*functions):

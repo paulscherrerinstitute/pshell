@@ -10,14 +10,13 @@ import ch.psi.utils.Convert;
 import java.io.IOException;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 /**
  * This data layout stores all positioners and sensors in a single table
  */
-public class LayoutTable extends LayoutBase  implements Layout {
+public class LayoutTable extends LayoutBase implements Layout {
 
     public static final String ATTR_SCAN_WRITABLE_DIMS = "Writable Dims";
 
@@ -35,13 +34,13 @@ public class LayoutTable extends LayoutBase  implements Layout {
     }
 
     @Override
-    public String getScanPath(Scan scan) {
+    public String getScanPathName(Scan scan) {
         return getCurrentGroup(scan) + getDatasetName(scan);
     }
 
     @Override
     public String getLogFilePath() {
-        return getCurrentGroup(null) + getLogFileName();
+        return getDefaultGroup(null) + getLogFileName();
     }
 
     protected String getLogFileName() {
@@ -52,25 +51,13 @@ public class LayoutTable extends LayoutBase  implements Layout {
         return scan.getTag();
     }
 
-    HashMap<Scan, String> scanFiles = new HashMap<>();
-    int scanIndex;
-    String filePrefix;
-    int fields;
-
     @Override
     public void onStart(Scan scan) throws IOException {
-        scanIndex = getDataManager().getScanIndex();
-        //Table cleanup
-        for (Scan s : scanFiles.keySet().toArray(new Scan[0])) {
-            if (s.isCompleted()) {
-                scanFiles.remove(s);
-            }
-        }
+        initialize(); //provider may have changed
+        int scanIndex = getDataManager().getScanIndex();
+        String path = getScanPath(scan);
 
-        String path = getCurrentGroup(null) + getDatasetName(scan);
-        scanFiles.put(scan, path);
-
-        fields = scan.getWritables().length + scan.getReadables().length;
+        int fields = scan.getWritables().length + scan.getReadables().length;
         String[] fieldNames = new String[fields];
         Class[] fieldTypes = new Class[fields];
         int[] fieldLength = new int[fields];
@@ -99,9 +86,8 @@ public class LayoutTable extends LayoutBase  implements Layout {
 
         getDataManager().createDataset(path, fieldNames, fieldTypes, fieldLength);
         getDataManager().setAttribute(path, ATTR_SCAN_WRITABLE_DIMS, (writableDims.length > 0) ? writableDims : new int[]{-1});
-        
-        setStartTimestampAttibute(scan);
-        setPlotPreferencesAttibutes(scan); 
+
+        super.onStart(scan);
     }
 
     @Override
@@ -110,7 +96,7 @@ public class LayoutTable extends LayoutBase  implements Layout {
         int deviceIndex = 0;
         Number[] positions = record.getPositions();
         Object[] values = record.getValues();
-        fields = scan.getWritables().length + scan.getReadables().length;
+        int fields = scan.getWritables().length + scan.getReadables().length;
         Object[] data = new Object[fields];
 
         for (Writable writable : scan.getWritables()) {
@@ -121,13 +107,7 @@ public class LayoutTable extends LayoutBase  implements Layout {
         for (ch.psi.pshell.device.Readable readable : scan.getReadables()) {
             data[index++] = values[deviceIndex++];
         }
-        getDataManager().setItem(scanFiles.get(scan), data, getIndex(scan, record));
-    }
-
-    @Override
-    public void onFinish(Scan scan) throws IOException {
-        setEndTimestampAttibute(scan); 
-        scanFiles.remove(scan);
+        getDataManager().setItem(getScanPath(scan), data, getIndex(scan, record));
     }
 
     @Override

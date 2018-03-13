@@ -271,7 +271,10 @@ public class ProviderText implements Provider {
     public Map<String, Object> getInfo(String root, String path) throws IOException {
         HashMap<String, Object> ret = new HashMap<>();
         Path filePath = getFilePath(root, path);
-        if (filePath.toFile().isFile()) {
+        File file = filePath.toFile();
+        if (!file.exists()){
+            ret.put(INFO_TYPE, INFO_VAL_TYPE_UNDEFINED);
+        } else if (filePath.toFile().isFile()) {
             ret.put(INFO_TYPE, INFO_VAL_TYPE_DATASET);
             String line;
             try (BufferedReader br = new BufferedReader(new FileReader(filePath.toFile()))) {
@@ -711,7 +714,7 @@ public class ProviderText implements Provider {
                 of = new OutputFile(out);
                 openFiles.put(path, of);
             }
-        }
+          }
         synchronized (of) {
             out.print(COMMENT_MARKER);
             out.print(String.join(getItemSeparator(), names));

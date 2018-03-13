@@ -10,7 +10,7 @@ import java.util.List;
 /**
  * Layout implementations define the structure of the acquired data on file.
  */
-public interface Layout {
+public interface Layout{
 
     //Common attributes
     public static final String ATTR_NAME = "Name";
@@ -50,11 +50,10 @@ public interface Layout {
     /**
      * Must be redefined of scan is not contained in a private group
      */
-    default String getScanPath(Scan scan) {
+    default String getScanPathName(Scan scan) {
         return getCurrentGroup(scan);
     }
 
-    String getLogFilePath();
 
     default void onOpened(File output) throws IOException {
     }
@@ -93,4 +92,14 @@ public interface Layout {
         return record.getIndex() - scan.getRecordIndexOffset();
     }
 
+    default public String getId(){
+        return getClass().getName();
+    }
+    
+    default public void appendLog(String log) throws IOException{
+    }    
+    
+    String getScanPath(Scan scan);
+    
+    void resetScanPath(Scan scan);
 }

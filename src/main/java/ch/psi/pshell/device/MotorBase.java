@@ -130,8 +130,7 @@ public abstract class MotorBase extends PositionerBase implements Motor {
 
         } else {
             int retries = Math.max(getConfig().startRetries, 1);
-            int retry = 1;
-            for (int i = 0; i < retries; i++) {
+            for (int retry = 1; retry <= retries; retry++) {
                 try {
                     doStartMove(value);
                     //In some motors the stopped flag is not changing immediately
@@ -144,7 +143,6 @@ public abstract class MotorBase extends PositionerBase implements Motor {
                     }
                     Thread.sleep(1000);
                     getLogger().log(Level.INFO, "Error starting move: " + ex.getMessage() + " - retry #" + retry + "...");
-                    retry++;
                 }
             }
         }

@@ -14,7 +14,6 @@ import ch.psi.pshell.scan.Scan;
 import ch.psi.pshell.scan.ScanRecord;
 import ch.psi.utils.Arr;
 import ch.psi.utils.Convert;
-import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -43,8 +42,6 @@ public class LayoutDefault extends LayoutBase implements Layout {
 
     public static final String SETPOINTS_DATASET_SUFFIX = "_setpoint";
 
-    String group;
- 
 
     @Override
     public void initialize() {
@@ -63,9 +60,9 @@ public class LayoutDefault extends LayoutBase implements Layout {
     @Override
     public void onStart(Scan scan) throws IOException {
         DataManager dataManager = getDataManager();
-        String group = getCurrentGroup(scan);
+        String group = getScanPath(scan);
         dataManager.createGroup(group);
-        
+
         int dimension = 1;
         int index = 0;
         for (Writable writable : scan.getWritables()) {
@@ -90,7 +87,7 @@ public class LayoutDefault extends LayoutBase implements Layout {
             if (scan.getDimensions() > 1) {
                 //TODO: assuming for area scan one Writable for each dimension
                 dimension++;
-            }                               
+            }
         }
 
         index = 0;
@@ -135,8 +132,7 @@ public class LayoutDefault extends LayoutBase implements Layout {
         dataManager.setAttribute(group, ATTR_SCAN_READABLES, scan.getReadableNames());
         dataManager.setAttribute(group, ATTR_SCAN_WRITABLES, scan.getWritableNames());
 
-        setStartTimestampAttibute(scan);
-        setPlotPreferencesAttibutes(scan);        
+            super.onStart(scan);
     }
 
     @Override
@@ -177,7 +173,6 @@ public class LayoutDefault extends LayoutBase implements Layout {
 
     @Override
     public void onFinish(Scan scan) throws IOException {
-        setEndTimestampAttibute(scan);     
         for (ch.psi.pshell.device.Readable readable : scan.getReadables()) {
             if (Averager.isAverager(readable)) {
                 try {
@@ -190,6 +185,7 @@ public class LayoutDefault extends LayoutBase implements Layout {
                 }
             }
         }
+        super.onFinish(scan);
     }
 
     @Override
@@ -317,7 +313,7 @@ public class LayoutDefault extends LayoutBase implements Layout {
         if (device == null) {
             device = "data";
         }
-        return getCurrentGroup(scan) + device;
+        return getScanPath(scan) + device;
     }
 
 }

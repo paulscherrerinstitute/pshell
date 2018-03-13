@@ -39,6 +39,8 @@ public class ExecutionParameters {
 
     Map scriptOptions = new HashMap();
     Map commandOptions = new HashMap();
+    
+    Map<Thread, Map> childThreadCommandOptions = new HashMap<>();
 
     //Data control variables
     File outputFile;
@@ -130,6 +132,14 @@ public class ExecutionParameters {
         }
         return null;
     }
+    
+    void onStartChildThread(){
+        childThreadCommandOptions.put(Thread.currentThread(), new HashMap());
+    }
+    
+    void onFinishedChildThread(){
+        childThreadCommandOptions.remove(Thread.currentThread());
+    }    
 
     @Hidden
     public void initializeData() throws IOException {
@@ -233,12 +243,24 @@ public class ExecutionParameters {
         checkOptions(options);
     }
 
-    //TODO: handle threading / parallel scans
     public void setCommandOptions(Object command, Map options) {
         pathName = null;
-        commandOptions = options;
+        if (childThreadCommandOptions.containsKey(Thread.currentThread())){
+            childThreadCommandOptions.put(Thread.currentThread(), options);
+        } else {
+            commandOptions = options;
+        }
         checkOptions(options);
     }
+    
+    public void clearCommandOptions() {
+        if (childThreadCommandOptions.containsKey(Thread.currentThread())){
+            childThreadCommandOptions.put(Thread.currentThread(), new HashMap());
+        } else {
+            commandOptions = new HashMap();
+        }
+    }    
+    
 
     void checkOptions(Map options) {
         if (options != null) {
@@ -316,7 +338,10 @@ public class ExecutionParameters {
     }
 
     public Map getCommandOptions() {
-        return (commandOptions == null) ? new HashMap() : commandOptions;
+        Map  ret = (childThreadCommandOptions.containsKey(Thread.currentThread())) ?
+            childThreadCommandOptions.get(Thread.currentThread()) : 
+            commandOptions;       
+        return (ret == null) ? new HashMap() : ret;
     }
 
     public Object getOption(String option) {
@@ -421,7 +446,7 @@ public class ExecutionParameters {
     
     public String getStatement() {
         CommandInfo cmd = getCommand();
-        return cmd.command;
+        return (cmd != null) ? cmd.command : null;
     }    
 
     public String getScriptVersion() throws IOException {
@@ -513,7 +538,7 @@ public class ExecutionParameters {
             scanIndex = 0;
         }
     }
-
+    
     void finish() {
         start = -1;
         currentScans.clear();
@@ -531,6 +556,7 @@ public class ExecutionParameters {
         offset = 0;
         scriptOptions = new HashMap();
         commandOptions = new HashMap();
+        childThreadCommandOptions = new HashMap<>();
         plotPreferences.init();
         dataLayout = null;
         dataProvider = isBackground() ? Context.getInstance().getDataManager().cloneProvider() : null;
@@ -540,7 +566,7 @@ public class ExecutionParameters {
     }
 
     void onScanEnded(Scan scan) {
-        for (Object key : commandOptions.keySet()) {
+        for (Object key : getCommandOptions().keySet()) {
             if (Arr.containsEqual(viewOptions, key)) {
                 ViewPreference pref = ViewPreference.valueOf(key.toString().toUpperCase());
                 if (scriptOptions.containsKey(key)) {
@@ -550,7 +576,7 @@ public class ExecutionParameters {
                 }
             }
         }
-        commandOptions = new HashMap();
+        clearCommandOptions();
     }
 
     void onExecutionStarted() {

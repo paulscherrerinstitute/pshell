@@ -78,6 +78,8 @@ public interface Scan {
     public String getTag();
     
     public boolean getAccumulate();
+    
+    public Thread getThread();
 
     public void setUseWritableReadback(boolean value);
 

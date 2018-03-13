@@ -77,7 +77,8 @@ import java.util.concurrent.TimeoutException;
 import java.util.jar.JarFile;
 
 /**
- * Global singleton managing creation, disposal and holding the state of the system.
+ * Global singleton managing creation, disposal and holding the state of the
+ * system.
  */
 public class Context extends ObservableBase<ContextListener> implements AutoCloseable, Configurable {
 
@@ -111,16 +112,15 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
     TerminalServer terminalServer;
     ScanStreamer scanStreamer;
     DataServer dataStreamer;
-      
 
     int runCount;
 
     public int getRunCount() {
         return runCount;
     }
-    
-    public static final String PROPERTY_SETUP_FILE = "ch.psi.pshell.setup.file";    
-    public static final String PROPERTY_USER = "ch.psi.pshell.user";    
+
+    public static final String PROPERTY_SETUP_FILE = "ch.psi.pshell.setup.file";
+    public static final String PROPERTY_USER = "ch.psi.pshell.user";
     public static final String PROPERTY_LOCAL_MODE = "ch.psi.pshell.local";
     public static final String PROPERTY_BARE_MODE = "ch.psi.pshell.bare";
     public static final String PROPERTY_EMPTY_MODE = "ch.psi.pshell.empty";
@@ -191,12 +191,12 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
 
         config = new Configuration();
         try {
-            config.load(setup.getConfigFile());            
+            config.load(setup.getConfigFile());
         } catch (IOException ex) {
             throw new RuntimeException("Cannot generate configuration file");
         }
-        String contextName = (config.getName().length() > 0) ? config.getName()  : "unknown";
-        if (config.getName().length() > 0){
+        String contextName = (config.getName().length() > 0) ? config.getName() : "unknown";
+        if (config.getName().length() > 0) {
             System.out.println("\n[" + contextName + "]\n");
         }
 
@@ -284,8 +284,8 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
         });
 
         addScanListener(scanListener);
-        
-        executionPars.put(null, new ExecutionParameters()); 
+
+        executionPars.put(null, new ExecutionParameters());
     }
 
     /**
@@ -296,14 +296,14 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
             instance = new Context();
             instance.pluginManager.loadExtensionsFolder();
         }
-        
+
         //To provide services even if context does not initialize all right (and in disabled mode).                
         try {
-            instance.dataManager.initialize(); 
+            instance.dataManager.initialize();
         } catch (Throwable ex) {
             logger.log(Level.SEVERE, null, ex);
-        }                
-        
+        }
+
         return instance;
     }
 
@@ -611,18 +611,18 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
             pluginManager.onExecutedFile(fileName, result);
         }
         boolean error = (result instanceof Throwable) && !aborted;
-        try{
-            if (error && config.getNotificationLevel()!=NotificationLevel.Off){
-                this.notify( "Execution error", "File: " + fileName + "\n" +((Throwable)result).getMessage(), null);
+        try {
+            if (error && config.getNotificationLevel() != NotificationLevel.Off) {
+                this.notify("Execution error", "File: " + fileName + "\n" + ((Throwable) result).getMessage(), null);
             }
-            if (config.getNotificationLevel()==NotificationLevel.Completion){
-                if (aborted){
-                    notify( "Execution aborted", "File: " + fileName, null);
+            if (config.getNotificationLevel() == NotificationLevel.Completion) {
+                if (aborted) {
+                    notify("Execution aborted", "File: " + fileName, null);
                 } else {
-                    notify( "Execution success", "File: " + fileName + "\nReturn:" + String.valueOf(result), null);
+                    notify("Execution success", "File: " + fileName + "\nReturn:" + String.valueOf(result), null);
                 }
             }
-        } catch (Exception ex){
+        } catch (Exception ex) {
             logger.log(Level.WARNING, null, ex);
         }
     }
@@ -752,10 +752,10 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
     public TaskManager getTaskManager() {
         return taskManager;
     }
-    
+
     public NotificationManager getMailManager() {
         return notificationManager;
-    }    
+    }
 
     public VersioningManager getVersioningManager() {
         return versioningManager;
@@ -836,7 +836,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
         onCommand(Command.shutdown, null, source);
         System.exit(0);
     }
-    
+
     void restart(final CommandSource source) throws ContextStateException {
         onCommand(Command.restart, null, source);
         //A new file for each session
@@ -925,7 +925,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
                     exit(ex);
                 }
             }
-            if ((!firstRun)||(!dataManager.isInitialized())) {
+            if ((!firstRun) || (!dataManager.isInitialized())) {
                 dataManager.initialize();
             }
             notificationManager = new NotificationManager();
@@ -1047,6 +1047,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
     };
 
     public static class CommandInfo {
+
         public final CommandSource source;
         public final String script;
         public final String command;
@@ -1067,50 +1068,50 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
             this.id = thread.getId();
             this.start = System.currentTimeMillis();
         }
-        
-        public boolean isRunning(){
+
+        public boolean isRunning() {
             return Context.getInstance().commandInfo.containsKey(this.thread);
         }
-        
-        public void abort() throws InterruptedException{
-            if (background){
-                this.thread.interrupt();      
+
+        public void abort() throws InterruptedException {
+            if (background) {
+                this.thread.interrupt();
             } else {
                 Context.getInstance().abort();
             }
         }
-        
-        public void join() throws InterruptedException{
-            while(isRunning()){
+
+        public void join() throws InterruptedException {
+            while (isRunning()) {
                 synchronized (Context.getInstance().commandInfo) {
                     Context.getInstance().commandInfo.wait();
                 }
             }
-        }      
-        
+        }
+
         @Override
-        public String toString(){
-            return String.format("%s - %s - %s - %s", background ? String.valueOf(id) : "FG", source.toString(), command,  Str.toString(args, 10));
+        public String toString() {
+            return String.format("%s - %s - %s - %s", background ? String.valueOf(id) : "FG", source.toString(), command, Str.toString(args, 10));
         }
     }
-    
-    public List<CommandInfo> getCommands(){
-        synchronized (commandInfo){
+
+    public List<CommandInfo> getCommands() {
+        synchronized (commandInfo) {
             return new ArrayList(commandInfo.values());
         }
     }
-        
-     boolean abort(final CommandSource source, int commandId) throws InterruptedException{
+
+    boolean abort(final CommandSource source, int commandId) throws InterruptedException {
         onCommand(Command.abort, new Object[]{commandId}, source);
         boolean aborted = false;
-        for (CommandInfo ci :getCommands() ){
-            if (commandId==-1){
-                if (ci.background){
+        for (CommandInfo ci : getCommands()) {
+            if (commandId == -1) {
+                if (ci.background) {
                     ci.abort();
                     aborted = true;
                 }
             }
-            if (ci.id == commandId){
+            if (ci.id == commandId) {
                 ci.abort();
                 aborted = true;
                 break;
@@ -1118,12 +1119,12 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
         }
         return aborted;
     }
-    
+
     final HashMap<Thread, CommandInfo> commandInfo = new HashMap<>();
 
     Object runInInterpreterThread(Callable callable) throws ScriptException, IOException, InterruptedException {
         assertInterpreterEnabled();
-        try {    
+        try {
             if (isInterpreterThread()) {
                 return callable.call();
             } else {
@@ -1161,7 +1162,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
                 }
                 commandInfo.remove(interpreterThread);
                 commandInfo.notifyAll();
-            }            
+            }
         }
     }
 
@@ -1207,7 +1208,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
                     return ret;
                 }
             }
-        
+
             CommandInfo info = new CommandInfo(source, null, command, null, false);
             startExecution(source, null, info);
             setSourceUI(source);
@@ -1281,29 +1282,19 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
             commandInfo.put(Thread.currentThread(), info);
         }
         try {
-            synchronized(executionPars){
-                executionPars.put(Thread.currentThread(), new ExecutionParameters()); 
-                getExecutionPars().onExecutionStarted();
-            }
+            createExecutionContext();
             //TODO: args passing is not theread safe
             for (String key : argsDict.keySet()) {
                 scriptManager.setVar(key, argsDict.get(key));
             }
             return scriptManager.evalFileBackground(fileName);
         } finally {
-            synchronized(executionPars){
-                try{
-                    getExecutionPars().onExecutionEnded();
-                } catch (Exception ex){
-                    logger.log(Level.WARNING, null, ex);
-                }
-                executionPars.remove(Thread.currentThread());
-            }
+            disposeExecutionContext();
             synchronized (commandInfo) {
                 info.end = System.currentTimeMillis();
                 commandInfo.remove(Thread.currentThread());
                 commandInfo.notifyAll();
-            }  
+            }
         }
     }
 
@@ -1323,10 +1314,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
             commandInfo.put(Thread.currentThread(), info);
         }
         try {
-            synchronized(executionPars){
-                executionPars.put(Thread.currentThread(), new ExecutionParameters()); 
-                getExecutionPars().onExecutionStarted();
-            }
+            createExecutionContext();
             InterpreterResult result = scriptManager.evalBackground(line);
             if (result == null) {
                 return null;
@@ -1336,46 +1324,71 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
             }
             return result.result;
         } finally {
-            synchronized(executionPars){
-                try{
-                    getExecutionPars().onExecutionEnded();
-                } catch (Exception ex){
-                    logger.log(Level.WARNING, null, ex);
-                }
-                executionPars.remove(Thread.currentThread());
-            }
+            disposeExecutionContext();
             synchronized (commandInfo) {
                 info.end = System.currentTimeMillis();
                 commandInfo.remove(Thread.currentThread());
                 commandInfo.notifyAll();
-            }              
+            }
         }
     }
+
+    void createExecutionContext() {
+        synchronized(executionPars){
+            executionPars.put(Thread.currentThread(), new ExecutionParameters());
+        }
+        try {
+            getExecutionPars().onExecutionStarted();
+        } catch (Exception ex) {
+            logger.log(Level.WARNING, null, ex);
+        }
+
+    }
+
+    void disposeExecutionContext() {
+        try {
+            getExecutionPars().onExecutionEnded();
+        } catch (Exception ex) {
+            logger.log(Level.WARNING, null, ex);
+        }
+        synchronized (executionPars) {            
+            executionPars.remove(Thread.currentThread());
+        }
+    }
+    
+    @Hidden
+    public void startedChildThread(Thread parent){
+        getExecutionPars(parent).onStartChildThread();
+    }
+    
+    @Hidden
+    public void finishedChildThread(Thread parent){
+        getExecutionPars(parent).onFinishedChildThread();
+    }    
 
     CompletableFuture<?> evalLineBackgroundAsync(final CommandSource source, final String line) {
         return Threading.getFuture(() -> evalLineBackground(source, line));
     }
-    
 
-    CommandInfo getNewCommand() throws TimeoutException, InterruptedException{
+    CommandInfo getNewCommand() throws TimeoutException, InterruptedException {
         Chrono chrono = new Chrono();
-        List<CommandInfo> commands =  Context.getInstance().getCommands();
+        List<CommandInfo> commands = Context.getInstance().getCommands();
         CommandInfo ret = null;
-        try{
+        try {
             chrono.waitCondition(() -> {
-                List<CommandInfo>  cmds =  Context.getInstance().getCommands();
+                List<CommandInfo> cmds = Context.getInstance().getCommands();
                 cmds.removeAll(commands);
-                if (cmds.size()>=1){
+                if (cmds.size() >= 1) {
                     commands.clear();
                     commands.addAll(cmds);
                     return true;
                 }
                 return false;
-            }, 100);    
-        } catch (TimeoutException ex){
+            }, 100);
+        } catch (TimeoutException ex) {
             return null;
         }
-        return commands.size()>0 ? commands.get(0) : null;
+        return commands.size() > 0 ? commands.get(0) : null;
     }
 
     String runningScript;
@@ -1387,46 +1400,57 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
     public File getRunningScriptFile() {
         return getRunningScriptFile(runningScript);
     }
-    
+
     String getRunningScriptName(String script) {
-        return (script==null) ? null : IO.getPrefix(script);
+        return (script == null) ? null : IO.getPrefix(script);
     }
 
     File getRunningScriptFile(String script) {
-        if (script!=null){
+        if (script != null) {
             File ret = new File(script);
-            if (ret.exists()){
-                try{
-                    ret=ret.getCanonicalFile();
-                } catch (Exception ex){
+            if (ret.exists()) {
+                try {
+                    ret = ret.getCanonicalFile();
+                } catch (Exception ex) {
                 }
                 return ret;
             }
         }
         return null;
-    }    
-    
+    }
 
-    public ExecutionParameters getExecutionPars() {    
-        if (executionPars.containsKey(Thread.currentThread())){
-            return executionPars.get(Thread.currentThread());
+    public ExecutionParameters getExecutionPars() {
+        return getExecutionPars(Thread.currentThread());
+    }
+    
+    ExecutionParameters getExecutionPars(Thread thread) {
+        synchronized(executionPars){
+            if (executionPars.containsKey(thread)) {
+                return executionPars.get(thread);
+            }
+            for (Thread t : executionPars.keySet()) {
+                ExecutionParameters ep = executionPars.get(t);
+                if (ep.childThreadCommandOptions.containsKey(t)){
+                    return ep;
+                }
+            }            
+            return executionPars.get(null);
         }
-        return executionPars.get(null);
-    }   
+    }    
 
     public void setExecutionPars(String name) {
         Map pars = new HashMap();
         pars.put("name", name);
         setExecutionPars(pars);
     }
-    
-   public void setExecutionPars(Map pars) {        
+
+    public void setExecutionPars(Map pars) {
         getExecutionPars().setScriptOptions(pars);
     }
 
-   public void setCommandPars(Object command, Map pars) {        
+    public void setCommandPars(Object command, Map pars) {
         getExecutionPars().setCommandOptions(command, pars);
-   }
+    }
 
     String scanTag;
 
@@ -1437,8 +1461,8 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
     //Sets default scan tags for layout classes
     public void setScanTag(String value) {
         scanTag = value;
-    }   
-    
+    }
+
     public String getStandardScriptName(String fileName) {
         if (fileName == null) {
             return "Unknown";
@@ -1556,7 +1580,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
         } else {
             triggerShellCommand(source, "Debug: " + scriptName + "(" + Str.toString(args, 20) + ")");
         }
-        
+
         try {
             CommandInfo info = new CommandInfo(source, scriptName, null, args, false);
             startExecution(source, fileName, info);
@@ -1718,14 +1742,14 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
     public void startExecution(final CommandSource source, String fileName) throws ContextStateException {
         startExecution(source, fileName, null);
     }
-    
+
     @Hidden
     public void startExecution(final CommandSource source, String fileName, CommandInfo info) throws ContextStateException {
         assertReady();
-        if (info!=null){
+        if (info != null) {
             synchronized (commandInfo) {
                 commandInfo.put(interpreterThread, info);
-            }   
+            }
         }
         if (fileName != null) {
             assertRunAllowed(source);
@@ -1734,7 +1758,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
             assertConsoleCommandAllowed(source);
         }
         aborted = false;
-        setState(State.Busy);         
+        setState(State.Busy);
         getExecutionPars().onExecutionStarted();
     }
 
@@ -1938,7 +1962,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
             throw new IOException(ex.getMessage());
         }
     }
-    
+
     public Revision getFileRevision(String fileName) throws IOException, InterruptedException, ContextStateException {
         assertVersioningEnabled();
         Revision ret = null;
@@ -1946,34 +1970,34 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
         if (IO.isSubPath(fileName, setup.getHomePath())) {
             fileName = IO.getRelativePath(fileName, setup.getHomePath());
             try {
-                ret =  getVersioningManager().getRevision(fileName);
-                if (getVersioningManager().getDiff(fileName).length() > 0){
+                ret = getVersioningManager().getRevision(fileName);
+                if (getVersioningManager().getDiff(fileName).length() > 0) {
                     ret.id += " *";
-                }            
+                }
             } catch (IOException | InterruptedException | ContextStateException ex) {
                 throw ex;
             } catch (Exception ex) {
                 throw new IOException(ex.getMessage());
-            }      
+            }
         }
         return ret;
     }
-    
+
     public String getFileContents(String fileName, String revisionId) throws IOException, InterruptedException, ContextStateException {
         assertVersioningEnabled();
         fileName = setup.expandPath(fileName);
         if (IO.isSubPath(fileName, setup.getHomePath())) {
             fileName = IO.getRelativePath(fileName, setup.getHomePath());
             try {
-                return  getVersioningManager().fetch(fileName, revisionId);         
+                return getVersioningManager().fetch(fileName, revisionId);
             } catch (IOException | InterruptedException | ContextStateException ex) {
                 throw ex;
             } catch (Exception ex) {
                 throw new IOException(ex.getMessage());
-            }      
+            }
         }
         return null;
-    }    
+    }
 
     //User & Rights
     public User getUser(CommandSource source) {
@@ -2363,29 +2387,29 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
     public String getBuiltinFunctionDoc(String name) throws ScriptException, IOException, ContextStateException, InterruptedException {
         return (String) evalLineBackground("_getFunctionDoc(" + String.valueOf(name) + ")");
     }
-    
-    //Mailing
-    public void notify(String subject, String text, List<String> attachments) throws IOException {    
-       notify(subject, text, attachments, null);
-    }    
 
-    public void notify(String subject, String text, List<String> attachments, List<String> to) throws IOException {    
+    //Mailing
+    public void notify(String subject, String text, List<String> attachments) throws IOException {
+        notify(subject, text, attachments, null);
+    }
+
+    public void notify(String subject, String text, List<String> attachments, List<String> to) throws IOException {
         File[] att = null;
-        if (attachments!=null){
+        if (attachments != null) {
             ArrayList<File> files = new ArrayList();
-            for (String attachment:attachments){
+            for (String attachment : attachments) {
                 files.add(new File(getSetup().expandPath(attachment)));
             }
             att = files.toArray(new File[0]);
-        } 
-        
-        if (to==null){
+        }
+
+        if (to == null) {
             notificationManager.send(subject, text, att);
         } else {
             notificationManager.send(subject, text, att, to.toArray(new String[0]));
         }
-    }    
-    
+    }
+
     //History
     void clearHistory(CommandSource source) {
         onCommand(Command.clearHistory, null, source);
@@ -2496,7 +2520,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
             synchronized (runningScans) {
                 runningScans.add(scan);
             }
-            getExecutionPars().onScanStarted(scan);
+            getExecutionPars(scan.getThread()).onScanStarted(scan);
         }
 
         @Override
@@ -2509,7 +2533,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
             synchronized (runningScans) {
                 runningScans.remove(scan);
             }
-            getExecutionPars().onScanEnded(scan);
+            getExecutionPars(scan.getThread()).onScanEnded(scan);
         }
     };
 
@@ -2601,21 +2625,21 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
                     try {
                         for (File f : IO.listFiles(Sys.getTempFolder(), pattern)) {
                             try {
-                                if (f.isDirectory()){
+                                if (f.isDirectory()) {
                                     IO.deleteRecursive(f.getAbsolutePath());
                                     logger.log(Level.FINER, "Deleted temp folder: " + f.getName());
-                                } else {                                    
+                                } else {
                                     f.delete();
                                     logger.log(Level.FINER, "Deleted temp file: " + f.getName());
                                 }
                             } catch (Exception ex) {
-                                logger.log(Level.FINE, "Cannot delete temp " + ((f.isDirectory()) ? "folder" : "file") + ": "+ f.getName());
+                                logger.log(Level.FINE, "Cannot delete temp " + ((f.isDirectory()) ? "folder" : "file") + ": " + f.getName());
                             }
                         }
                     } catch (Exception ex) {
                         logger.log(Level.WARNING, null, ex);
                     }
-                }                                
+                }
             }
 
             //Extract script path if not present - if not in local mode
@@ -2701,7 +2725,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
         if (isEmptyMode()) {
             logger.warning("Empty mode: device pool is not loaded");
         }
-        
+
         //Load  plugins
         if (!isBareMode()) {
             pluginManager.loadPluginFolder();
@@ -2731,7 +2755,8 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
     }
 
     /**
-     * Browse dynamically loaded classes in add ition to forName on current ClassLoader
+     * Browse dynamically loaded classes in add ition to forName on current
+     * ClassLoader
      */
     @Hidden
     public Class getClassByName(String className) throws ClassNotFoundException {
@@ -2746,7 +2771,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
             }
             try {
                 Object cls = evalLineBackground(className);
-                if ((cls != null) && (cls instanceof Class)){
+                if ((cls != null) && (cls instanceof Class)) {
                     return (Class) cls;
                 }
             } catch (Exception ex1) {
@@ -2757,10 +2782,10 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
 
     //Public command interface    
     CommandSource getPublicCommandSource() {
-        synchronized (commandInfo){
+        synchronized (commandInfo) {
             CommandInfo ret = commandInfo.get(Thread.currentThread());
             return (ret == null) ? CommandSource.ui : ret.source;
-        }       
+        }
     }
 
     //For scripts to check permissions when running files
@@ -2864,10 +2889,10 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
     public void abort() throws InterruptedException {
         abort(getPublicCommandSource());
     }
-    
-    public boolean abort(int commandId) throws InterruptedException{
+
+    public boolean abort(int commandId) throws InterruptedException {
         return abort(getPublicCommandSource(), commandId);
-    }    
+    }
 
     public void updateAll() {
         updateAll(getPublicCommandSource());

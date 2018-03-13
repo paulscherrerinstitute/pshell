@@ -14,9 +14,11 @@ import static ch.psi.pshell.data.Layout.ATTR_START_TIMESTAMP;
 import static ch.psi.pshell.data.Layout.ATTR_VERSION;
 import ch.psi.pshell.scan.Scan;
 import ch.psi.pshell.scripting.ViewPreference;
+import ch.psi.utils.Chrono;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 /**
  * Common layouts utilities
@@ -34,6 +36,22 @@ public abstract class LayoutBase implements Layout {
         persistSetpoints = value;
     }
     
+    public String getLogFilePath() {
+        return "logs/logs";
+    }
+
+    @Override
+    public void appendLog(String log) throws IOException {
+        DataManager dataManager = getDataManager();
+        String logFile = getLogFilePath();
+        if (logFile != null) {
+            if (!dataManager.exists(logFile)) {
+                dataManager.createDataset(logFile, String.class);
+            }
+            String time = Chrono.getTimeStr(System.currentTimeMillis(), "dd/MM/YY HH:mm:ss.SSS - ");
+            dataManager.appendItem(logFile, time + log);
+        }
+    }    
     
     @Override
     public void onOpened(File output) throws IOException {
@@ -46,24 +64,36 @@ public abstract class LayoutBase implements Layout {
     public void onClosed(File output) throws IOException {
          setScriptVersionAttibute(); //Doing on close because file is commited asynchronously on start of scan.
     }        
+    
+   @Override
+    public void onStart(Scan scan) throws IOException {
+        setStartTimestampAttibute(scan);
+        setPlotPreferencesAttibutes(scan);
+    }
+    
+    @Override
+    public void onFinish(Scan scan) throws IOException {
+        setEndTimestampAttibute(scan);
+        resetScanPath(scan);
+    }    
 
     //Set common attributes as expected by DataManager (can be ommited).
     protected void setStartTimestampAttibute(Scan scan) throws IOException {
-        String scanPath = getDataManager().getScanPath(scan);
+        String scanPath = getScanPath(scan);
         if (scanPath != null) {
             getDataManager().setAttribute(scanPath, ATTR_START_TIMESTAMP, System.currentTimeMillis());
         }
     }
 
     protected void setEndTimestampAttibute(Scan scan) throws IOException {
-        String scanPath = getDataManager().getScanPath(scan);
+        String scanPath = getScanPath(scan);
         if (scanPath != null) {
             getDataManager().setAttribute(scanPath, ATTR_END_TIMESTAMP, System.currentTimeMillis());
         }
     }
 
     protected void setPlotPreferencesAttibutes(Scan scan) throws IOException {
-        String scanPath = getDataManager().getScanPath(scan);
+        String scanPath = getScanPath(scan);
         if (scanPath != null) {
             ViewPreference.PlotPreferences pp = Context.getInstance().getPlotPreferences();
             if (pp.enabledPlots != null) {
@@ -116,5 +146,31 @@ public abstract class LayoutBase implements Layout {
         if (version != null) {
             getDataManager().setAttribute("/", ATTR_VERSION, version);
         }
+    }
+    
+    public String getScanPath(Scan scan) {
+        synchronized(scanFiles){
+            if (scanFiles.containsKey(scan)){
+                return  scanFiles.get(scan);
+            }
+            //Map cleanup
+            //for (Scan s : scanFiles.keySet().toArray(new Scan[0])) {
+            //    if (s.isCompleted()) {
+            //        scanFiles.remove(s);
+            //    }
+            //}
+            String file =  getScanPathName(scan);
+            scanFiles.put(scan, file);           
+            return file;
+        }          
+    }
+    
+    //Storing scan file names
+    HashMap<Scan, String> scanFiles = new HashMap<>();
+    
+    public void resetScanPath(Scan scan){
+        synchronized(scanFiles){
+            scanFiles.remove(scan);
+        }        
     }
 }

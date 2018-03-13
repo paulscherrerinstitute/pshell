@@ -1150,7 +1150,7 @@ function log(log, data_file){
        try{
             get_context().dataManager.appendLog(String(log))
         } catch(err){    
-            Do not generate exception if cannot write to data file
+            //Do not generate exception if cannot write to data file
         }
     }     
 }
@@ -1335,10 +1335,17 @@ function create_channel_device(channelName, type, size, deviceName){
 // Concurrent execution 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 function _getCallable(func, args) {
+    var _parent_thread = java.lang.Thread.currentThread()
     var callable = new java.util.concurrent.Callable() {
-        call: function () {           
-            //return func(args)
-            return func.apply( this, args );
+        call: function () {      
+            try {
+                get_context().startedChildThread(_parent_thread)
+                return func.apply( this, args );
+            }
+            finally {
+                get_context().finishedChildThread(_parent_thread)
+            }     
+            
         }
     }
     return callable
@@ -1753,7 +1760,7 @@ function create_averager(dev, count, interval, name, monitored){
     dev = string_to_obj(dev)
     if (dev instanceof ReadableArray) {
         var averager = (name == null) ? new ArrayAverager(dev, count, interval*1000) : new ArrayAverager(name, dev, count, interval*1000)
-    else{
+    }else{
         var averager = (name == null) ? new Averager(dev, count, interval*1000) : new Averager(name, dev, count, interval*1000)
     }
     if (monitored){
