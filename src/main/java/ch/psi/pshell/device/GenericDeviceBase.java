@@ -314,7 +314,7 @@ public abstract class GenericDeviceBase<T> extends ObservableBase<T> implements 
         }
         if (state.isInitialized()) {
             if (getPolling() > 0) {
-                schedulerPolling = newPollingScheduller(getPolling(), () -> {
+                schedulerPolling = newPollingScheduller(10, getPolling(), () -> {
                     if (isInitialized()) {
                         pollingTask();
                     }
@@ -347,10 +347,10 @@ public abstract class GenericDeviceBase<T> extends ObservableBase<T> implements 
     /**
      * Default implementation creates a private thread to poll the device, with fixed delay.
      */
-    protected ScheduledExecutorService newPollingScheduller(int interval, Runnable r) {
+    protected ScheduledExecutorService newPollingScheduller(long delay, int interval, Runnable r) {
         ScheduledExecutorService ret = Executors.newSingleThreadScheduledExecutor(
                 new NamedThreadFactory("Polling scheduler: " + getName()));
-        ret.scheduleWithFixedDelay(r, interval, interval, TimeUnit.MILLISECONDS);
+        ret.scheduleWithFixedDelay(r, delay, interval, TimeUnit.MILLISECONDS);
         return ret;
     }
 

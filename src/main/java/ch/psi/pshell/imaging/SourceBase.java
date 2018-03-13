@@ -490,8 +490,8 @@ public class SourceBase extends GenericDeviceBase<ImageListener> implements Sour
     }
 
     @Override
-    protected ScheduledExecutorService newPollingScheduller(int interval, Runnable r) {
-        return Threading.scheduleAtFixedRateNotRetriggerable(r, 10, interval, TimeUnit.MILLISECONDS, "Image source scheduler: " + getName());
+    protected ScheduledExecutorService newPollingScheduller(long delay, int interval, Runnable r) {
+        return Threading.scheduleAtFixedRateNotRetriggerable(r, delay, interval, TimeUnit.MILLISECONDS, "Image source scheduler: " + getName());
     }
 
     @Override
