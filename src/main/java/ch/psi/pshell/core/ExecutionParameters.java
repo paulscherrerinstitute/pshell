@@ -585,8 +585,9 @@ public class ExecutionParameters {
     }
 
     void onExecutionEnded() {
-        finish();
+        // Must be called before finish, as calls appendLog, and must do before layourt is reset.  
         Context.getInstance().getDataManager().closeOutput();
+        finish();
     }
 
     final ViewPreference.PlotPreferences plotPreferences = new ViewPreference.PlotPreferences();
