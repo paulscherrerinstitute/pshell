@@ -169,6 +169,8 @@ public class DataManager implements AutoCloseable {
             layoutClass = LayoutDefault.class;
         } else if (layoutName.equals("table")) {
             layoutClass = LayoutTable.class;
+        } else if (layoutName.equals("sf")) {
+            layoutClass = LayoutSF.class;
         } else {
             //Class name
             layoutClass = Context.getInstance().getClassByName(name);
@@ -412,10 +414,10 @@ public class DataManager implements AutoCloseable {
         if (dataPath != null) {
             getExecutionPars().setDataPath(dataPath);
             getProvider().openOutput(dataPath);
+            getLayout().onOpened(getExecutionPars().getOutputFile());
             if (getExecutionPars().getPersist()) {
                 appendLog("Open persistence context: " + getExecutionPars().getOutputFile());
             }
-            getLayout().onOpened(getExecutionPars().getOutputFile());
         }
     }
 
