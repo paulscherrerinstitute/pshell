@@ -576,10 +576,18 @@ public class PlotPanel extends MonitoredPanel {
                                                 x.setRange(min, max);
                                             }
                                             double[][] data = series.getData();
+                                            
                                             for (int y = 0; y < Array.getLength(val); y++) {
                                                 Object o = Array.get(val, y);
+                                                if (data[y].length <= record.getIndex()){    
+                                                    double[] aux = new double[record.getIndex()+1];
+                                                    System.arraycopy(data[y], 0, aux, 0, data[y].length );
+                                                    data[y] = aux;
+                                                }
                                                 data[y][record.getIndex()] = (Double) o;
                                             }
+                                            series.setNumberOfBinsX(data[0].length);
+                                            series.setNumberOfBinsY(data.length);                                            
                                             series.setData(data);
                                         } else {
                                             for (int y = 0; y < Array.getLength(val); y++) {
