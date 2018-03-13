@@ -13,7 +13,11 @@ public class TimeScan extends LineScan {
     final int interval_ms;
 
     public TimeScan(Readable[] readables, int points, int interval_ms) {
-        super(new Writable[0], readables, new double[]{0.0}, new double[]{points - 1}, points - 1, false, 0, 1, false);
+        this(readables, points, interval_ms, 1);
+    }
+    
+    public TimeScan(Readable[] readables, int points, int interval_ms, int passes) {
+        super(new Writable[0], readables, new double[]{0.0}, new double[]{(passes * points) - 1}, points - 1, false, 0, passes, false);
         this.interval_ms = interval_ms;
     }
 

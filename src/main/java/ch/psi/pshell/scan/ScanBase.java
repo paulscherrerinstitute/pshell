@@ -285,7 +285,9 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
                     onBeforeScan();
                     try {
                         for (pass = 1; pass <= getNumberOfPasses(); pass++) {
+                            onBeforePass(pass);
                             doScan();
+                            onAfterPass(pass);
                         }
                     } finally {
                         onAfterScan();
@@ -461,6 +463,12 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
 
     protected void onAfterReadout(ScanRecord record) {
     }
+    
+    protected void onBeforePass(int pass) {
+    }
+
+    protected void onAfterPass(int pass) {
+    }    
 
     abstract protected void doScan() throws IOException, InterruptedException;
 
