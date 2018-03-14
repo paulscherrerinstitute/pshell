@@ -20,7 +20,11 @@ public class BsScan extends ContinuousScan {
     StreamValue firstVal;
 
     public BsScan(Stream stream, int records) {
-        super(stream.getReadables().toArray(new Readable[0]), 0.0, records - 1, records - 1, false, 0, 1, false);
+        this(stream, records, 1);
+    }
+    
+    public BsScan(Stream stream, int records, int passes) {
+        super(stream.getReadables().toArray(new Readable[0]), 0.0, records - 1, records - 1, false, 0, passes, false);
         this.stream = stream;
         this.records = records;
     }
@@ -28,8 +32,8 @@ public class BsScan extends ContinuousScan {
     final DeviceAdapter listener = new DeviceAdapter() {
         @Override
         public void onValueChanged(Device device, Object value, Object former) {
-            if (getRecordIndex() < records) {
-                onBeforeReadout(new double[]{getRecordIndex()});
+            if (getRecordIndexInPass() < records) {
+                onBeforeReadout(new double[]{getRecordIndexInPass()});
                 StreamValue val = (StreamValue) value;
                 Number[] setpoints = new Number[0];
                 Number[] positions = new Number[0];
@@ -62,7 +66,7 @@ public class BsScan extends ContinuousScan {
         try {
             stream.addListener(listener);
             synchronized (listener) {
-                while (getRecordIndex() < records) {
+                while (getRecordIndexInPass() < records) {
                     stream.assertState(State.Busy);
                     assertNotAborted();
                     listener.wait();

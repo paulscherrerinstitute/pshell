@@ -64,6 +64,7 @@ public class LayoutSF extends LayoutBase implements Layout {
     public static final String ATTR_READABLE_INDEX = "Readable Index";
     public static final String ATTR_WRITABLE_INDEX = "Writable Index";
     public static final String ATTR_WRITABLE_DIMENSION = "Writable Dimension";
+    public static final String ATTR_SCAN_PASSES = "Steps";
 
 
 

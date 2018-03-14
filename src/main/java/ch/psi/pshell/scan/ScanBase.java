@@ -49,9 +49,12 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
     ScanResult result;
     int recordIndex = 0;
     int recordIndexOffset = 0;
+    int passOffset = 0;
     long startTimestamp;
     long endTimestamp;
-
+    
+    String plotTitle;
+    
     int scanIndex = -1;
     String scanPath;
     String tag;
@@ -93,8 +96,6 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
         }
         assertFieldsOk();
     }
-
-    String plotTitle;
 
     public ScanBase(Writable[] writables, Readable[] readables, double[] start, double[] end, double stepSize[],
             boolean relative, int latency, int passes, boolean zigzag) {
@@ -155,8 +156,14 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
         }
     }
 
+    @Override
     public void setPlotTitle(String plotTitle) {
         this.plotTitle = plotTitle;
+    }
+    
+    @Override
+    public String getPlotTitle(){
+        return plotTitle;
     }
 
     protected boolean isPositiveDirection(int writableIndex) {
@@ -285,6 +292,7 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
                     onBeforeScan();
                     try {
                         for (pass = 1; pass <= getNumberOfPasses(); pass++) {
+                            passOffset = recordIndex;
                             onBeforePass(pass);
                             doScan();
                             onAfterPass(pass);
@@ -443,6 +451,7 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
         ScanRecord record = new ScanRecord();
         record.index = recordIndex;
         record.pass = getCurrentPass();
+        record.indexInPass = getRecordIndexInPass();
         record.dimensions = getDimensions();
         record.timestamp = System.currentTimeMillis();
         recordIndex++;
@@ -778,6 +787,11 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
     public int getRecordIndexOffset() {
         return recordIndexOffset;
     }
+    
+    @Override
+    public int getRecordIndexInPass() {
+        return recordIndex - passOffset;
+    }    
 
     @Override
     public void setRecordIndexOffset(int value) {

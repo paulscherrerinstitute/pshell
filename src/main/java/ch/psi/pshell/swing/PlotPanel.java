@@ -441,7 +441,7 @@ public class PlotPanel extends MonitoredPanel {
         void addRecord(final Scan scan, final ScanRecord record) {
             int writablesPlots = writableIndexes.size();
             Number[] positions = record.getPositions();
-            int index = record.getIndex();
+            int index = record.getIndexInPass();
             Object[] values = record.getValues();
             boolean newPass = (currentPass != record.getPass());
 

@@ -28,6 +28,7 @@ public class LayoutDefault extends LayoutBase implements Layout {
 
     public static final String ATTR_SCAN_DIMENSION = "Dimensions";
     public static final String ATTR_SCAN_STEPS = "Steps";
+    public static final String ATTR_SCAN_PASSES = "Passes";    
     public static final String ATTR_SCAN_WRITABLES = "Writables";
     public static final String ATTR_SCAN_READABLES = "Readables";
     public static final String ATTR_READABLE_INDEX = "Readable Index";
@@ -129,6 +130,7 @@ public class LayoutDefault extends LayoutBase implements Layout {
         dataManager.createDataset(getPath(scan, META_GROUP + TIMESTAMPS_DATASET), Long.class, new int[]{0});
         dataManager.setAttribute(group, ATTR_SCAN_DIMENSION, scan.getDimensions());
         dataManager.setAttribute(group, ATTR_SCAN_STEPS, scan.getNumberOfSteps());
+        dataManager.setAttribute(group, ATTR_SCAN_PASSES, scan.getNumberOfPasses());
         dataManager.setAttribute(group, ATTR_SCAN_READABLES, scan.getReadableNames());
         dataManager.setAttribute(group, ATTR_SCAN_WRITABLES, scan.getWritableNames());
 

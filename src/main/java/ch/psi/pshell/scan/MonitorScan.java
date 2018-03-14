@@ -41,18 +41,32 @@ public class MonitorScan extends LineScan {
     }
 
     public MonitorScan(Device trigger, Readable[] readables, int points, int time_ms, boolean async, boolean takeInitialValue) {
+        this(trigger, readables, points, time_ms, true, false, 1);
+    }
+    
+    public MonitorScan(Device[] triggers, Readable[] readables, int points, int time_ms, boolean async, boolean takeInitialValue) {
+        this(triggers, readables, points, time_ms, async, takeInitialValue, 1);
+
+    }
+
+    public MonitorScan(Device[] triggers, Readable[] readables, int points, int time_ms, boolean async, boolean takeInitialValue, int passes) {
+        this(((triggers == null) || (triggers.length == 0)) ? null : new CompositeTrigger(triggers), readables, points, time_ms, async, takeInitialValue, passes);
+
+    }
+    
+    public MonitorScan(Device trigger, Readable[] readables, int points, int time_ms, boolean async, boolean takeInitialValue, int passes) {
         super((points > 0) ? new Writable[0] : new Writable[]{new DummyPositioner("Time")},
                 getReadables(trigger, readables, async),
                 new double[]{0.0},
                 (points > 0) ? new double[]{points - 1} : new double[]{time_ms},
                 (points > 0) ? points - 1 : time_ms,
-                false, 0, 1, false);
+                false, 0, passes, false);
         this.trigger = trigger;
         this.time_ms = time_ms;
         this.points = points;
         this.takeInitialValue = takeInitialValue;
         this.async = async;
-    }
+    }    
 
     @Override
     protected void openDevices() throws IOException, InterruptedException {
@@ -119,11 +133,6 @@ public class MonitorScan extends LineScan {
         }
     }
 
-    public MonitorScan(Device[] triggers, Readable[] readables, int points, int time_ms, boolean async, boolean takeInitialValue) {
-        this(((triggers == null) || (triggers.length == 0)) ? null : new CompositeTrigger(triggers), readables, points, time_ms, async, takeInitialValue);
-
-    }
-
     static Readable[] getReadables(Device trigger, Readable[] readables, boolean async) {
         for (int i = 0; i < readables.length; i++) {
             if (((readables[i] == trigger) || async) && (readables[i] instanceof Cacheable)) {
@@ -140,18 +149,18 @@ public class MonitorScan extends LineScan {
                 try {
                     appendSample(timestamp);
                     if (points > 0) {
-                        if (getRecordIndex() == points) {
-                            onAfterScan();
+                        if (getRecordIndexInPass() == points) {
+                            stopTriggerListening();
                             return;
                         }
                     }
                     if (time_ms > 0) {
                         if (chrono.isTimeout(time_ms)) {
-                            onAfterScan();
+                            stopTriggerListening();
                         }
                     }
                 } catch (Exception ex) {
-                    onAfterScan();
+                    stopTriggerListening();
                     exception = ex;
                 }
 
@@ -159,8 +168,7 @@ public class MonitorScan extends LineScan {
         }
     };
 
-    @Override
-    protected void onAfterScan() {
+    protected void stopTriggerListening() {
         if (async) {
             synchronized (lock) {
                 if (trigger != null) {
@@ -198,61 +206,65 @@ public class MonitorScan extends LineScan {
 
     @Override
     protected void doScan() throws IOException, InterruptedException {
-        if (trigger == null) {
-            throw new IOException("No trigger defined");
-        }
-        if (trigger instanceof UrlDevice) {
-            //TODO: trigger must be equal to readables[0]: add checking
-            this.trigger = (Device) readables[0];
-            readables[0] = ((Cacheable) readables[0]).getCache();
-        }
-
-        firstSample = true;
-        chrono = new Chrono();
-        int steps = getNumberOfSteps()[0];
-        if (takeInitialValue) {
-            if (trigger.take() != null) {
-                appendSample(null);
+        try{
+            if (trigger == null) {
+                throw new IOException("No trigger defined");
             }
-        }
-        if (async) {
-            trigger.addListener(listener);
-            synchronized (lock) {
-                lock.wait();
-            }
-            if (exception != null) {
-                if (exception instanceof IOException) {
-                    throw (IOException) exception;
-                }
-                throw new IOException(exception);
+            if (trigger instanceof UrlDevice) {
+                //TODO: trigger must be equal to readables[0]: add checking
+                trigger = (Device) readables[0];
+                readables[0] = ((Cacheable) readables[0]).getCache();
             }
 
-        } else {
-            if (points > 0) {
-                for (int i = 0; i <= steps; i++) {
-                    if ((i > 0) || !takeInitialValue) {
-                        trigger.waitCacheChange(0);
-                    }
+            firstSample = true;
+            chrono = new Chrono();
+            int steps = getNumberOfSteps()[0];
+            if (takeInitialValue) {
+                if (trigger.take() != null) {
                     appendSample(null);
-                    if (i == steps) {
-                        break;
+                }
+            }
+            if (async) {
+                trigger.addListener(listener);
+                synchronized (lock) {
+                    lock.wait();
+                }
+                if (exception != null) {
+                    if (exception instanceof IOException) {
+                        throw (IOException) exception;
                     }
-                    if (time_ms > 0) {
-                        if (chrono.isTimeout(time_ms)) {
+                    throw new IOException(exception);
+                }
+
+            } else {
+                if (points > 0) {
+                    for (int i = 0; i <= steps; i++) {
+                        if ((i > 0) || !takeInitialValue) {
+                            trigger.waitCacheChange(0);
+                        }
+                        appendSample(null);
+                        if (i == steps) {
                             break;
                         }
+                        if (time_ms > 0) {
+                            if (chrono.isTimeout(time_ms)) {
+                                break;
+                            }
+                        }
                     }
-                }
-            } else {
-                boolean start = true;
-                while (!chrono.isTimeout(time_ms)) {
-                    if ((!start) || !takeInitialValue) {
-                        trigger.waitCacheChange(time_ms - chrono.getEllapsed());
+                } else {
+                    boolean start = true;
+                    while (!chrono.isTimeout(time_ms)) {
+                        if ((!start) || !takeInitialValue) {
+                            trigger.waitCacheChange(time_ms - chrono.getEllapsed());
+                        }
+                        start = false;
+                        appendSample(null);
                     }
-                    start = false;
-                    appendSample(null);
                 }
             }
+        } finally {
+            stopTriggerListening();
         }
     }
 

@@ -19,6 +19,7 @@ public class ScanRecord {
     int index;
     long timestamp;
     int dimensions;
+    int indexInPass;
     Number[] setpoints;
     Number[] positions;
     Object[] values;
@@ -31,6 +32,10 @@ public class ScanRecord {
     public int getPass() {
         return pass;
     }
+    
+    public int getIndexInPass() {
+        return indexInPass;
+    }    
 
     public long getTimestamp() {
         return timestamp;
@@ -56,6 +61,7 @@ public class ScanRecord {
     public ScanRecord copy() {
         ScanRecord ret = new ScanRecord();
         ret.index = index;
+        ret.indexInPass = indexInPass;
         ret.pass = pass;
         ret.timestamp = timestamp;
         ret.dimensions = dimensions;

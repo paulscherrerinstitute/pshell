@@ -62,6 +62,8 @@ public interface Scan {
 
     public int getRecordIndex();
     
+    public int getRecordIndexInPass();
+    
     /**
      * Allows splitting records in multiple tables
      */
@@ -80,6 +82,10 @@ public interface Scan {
     public boolean getAccumulate();
     
     public Thread getThread();
+    
+    public void setPlotTitle(String plotTitle);
+    
+    public String getPlotTitle(); 
 
     public void setUseWritableReadback(boolean value);
 
