@@ -257,9 +257,9 @@ public class LayoutSF extends LayoutBase implements Layout {
         if (stream!=null){
             //TODO: Even if is called synchronously in change event, this is unsafe and should be implemented in an atomic fashion
             dataManager.setItem(group + ATTR_DATASET_PID , stream.take().getPulseId(), index);
-            dataManager.setItem(group + ATTR_DATASET_GLOBAL_TIMESTAMP, stream.take().getTimestamp(), index);
+            dataManager.setItem(group + ATTR_DATASET_GLOBAL_TIMESTAMP, record.getTimestamp(), index);
         }
-        
+         
         for (Writable writable : scan.getWritables()) {
             String path = getDataPath(scan, dataManager.getAlias(writable));
             dataManager.setItem(path + ATTR_DATASET_SETPOINT, record.getSetpoints()[deviceIndex], index);
@@ -286,7 +286,7 @@ public class LayoutSF extends LayoutBase implements Layout {
             dataManager.setItem(path + ATTR_DATASET_READBACK, value, index);
             dataManager.setItem(path + ATTR_DATASET_TIMESTAMP , (timestamp == null) ? 0 : timestamp, index);
         }
-        dataManager.setItem(group + ATTR_DATASET_TIMESTAMP, record.getTimestamp(), index);
+        dataManager.setItem(group + ATTR_DATASET_TIMESTAMP, record.getLocalTimestamp(), index);
     }
 
     @Override

@@ -7,6 +7,7 @@ import ch.psi.pshell.device.Readable;
 import ch.psi.pshell.scan.ContinuousScan;
 import ch.psi.pshell.scan.ScanRecord;
 import ch.psi.utils.State;
+import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -42,9 +43,11 @@ public class BsScan extends ContinuousScan {
                 Number[] setpoints = new Number[0];
                 Number[] positions = new Number[0];
                 Object[] values = new Object[val.values.size() + 1];
+                Long[] deviceTimestamps = new Long[values.length];
                 values[0] = val.pulseId;
                 System.arraycopy(val.values.toArray(), 0, values, 1, val.values.size());
-                ScanRecord record = newRecord(setpoints, positions, values, val.getTimestamp());
+                Arrays.fill(deviceTimestamps, val.getTimestamp());
+                ScanRecord record = newRecord(setpoints, positions, values, val.getTimestamp(), deviceTimestamps);
                 onAfterReadout(record);
                 triggerNewRecord(record);
                 synchronized (listener) {

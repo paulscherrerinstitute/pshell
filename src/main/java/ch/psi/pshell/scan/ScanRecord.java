@@ -18,6 +18,7 @@ public class ScanRecord {
 
     int index;
     long timestamp;
+    long localTimestamp;
     int dimensions;
     int indexInPass;
     Number[] setpoints;
@@ -41,7 +42,11 @@ public class ScanRecord {
     public long getTimestamp() {
         return timestamp;
     }
-
+    
+    public long getLocalTimestamp() {
+        return localTimestamp;
+    }
+    
     public int getDimensions() {
         return dimensions;
     }

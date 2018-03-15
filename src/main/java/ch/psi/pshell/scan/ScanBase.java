@@ -16,6 +16,7 @@ import ch.psi.pshell.device.ReadableRegister;
 import ch.psi.pshell.device.ReadbackDevice;
 import ch.psi.pshell.device.ReadonlyRegister;
 import ch.psi.pshell.device.Stoppable;
+import ch.psi.pshell.device.Timestamped;
 import ch.psi.pshell.device.TimestampedValue;
 import ch.psi.utils.Convert;
 import ch.psi.utils.IO;
@@ -423,9 +424,9 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
                     if (val instanceof TimestampedValue){
                         record.deviceTimestamps[j] = ((TimestampedValue)val).getTimestamp();
                         val =  ((TimestampedValue)val).getValue();
-                    }  else if (getReadables()[j] instanceof Device){
+                    }  else if (getReadables()[j] instanceof Timestamped){
                         //TODO: Not atomic, should use takeTimestasmped, but has performance impact and assumes that read() is behaving well (setting cache)
-                        record.deviceTimestamps[j] = ((Device)getReadables()[j]).getTimestamp();
+                        record.deviceTimestamps[j] = ((Timestamped)getReadables()[j]).getTimestamp();
                     }
                     
                     if (val instanceof List) { //Jython Lists
@@ -446,7 +447,8 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
                     record.values[j] = null;
                 }
             }
-            record.timestamp = (timestamp == null) ? System.currentTimeMillis() : timestamp;
+            record.localTimestamp = System.currentTimeMillis();
+            record.timestamp = (timestamp == null) ? record.localTimestamp : timestamp;
             onAfterReadout(record);
             if (record.invalidated) {
                 logger.warning("Resampling record " + record.index);
@@ -464,19 +466,21 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
         record.pass = getCurrentPass();
         record.indexInPass = getRecordIndexInPass();
         record.dimensions = getDimensions();
-        record.timestamp = System.currentTimeMillis();
+        record.localTimestamp = System.currentTimeMillis();
+        record.timestamp =  record.localTimestamp;
         recordIndex++;
         return record;
     }
     
-    protected ScanRecord newRecord(Number[] setpoints, Number[] positions, Object[] values, long timestamp, Long[] deviceTimestamps) {
-        ScanRecord ret = newRecord();
-        ret.setpoints = setpoints;
-        ret.positions = positions;
-        ret.values = values;
-        ret.timestamp = timestamp;
-        ret.deviceTimestamps = deviceTimestamps;
-        return ret;
+    protected ScanRecord newRecord(Number[] setpoints, Number[] positions, Object[] values, Long timestamp, Long[] deviceTimestamps) {
+        ScanRecord record = newRecord();
+        record.setpoints = setpoints;
+        record.positions = positions;
+        record.values = values;
+        record.localTimestamp = System.currentTimeMillis();
+        record.timestamp = (timestamp == null) ? record.localTimestamp : timestamp;
+        record.deviceTimestamps = deviceTimestamps;
+        return record;
     }
     
 

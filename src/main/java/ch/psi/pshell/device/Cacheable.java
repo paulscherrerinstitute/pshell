@@ -48,7 +48,7 @@ public interface Cacheable<T> extends Readable<T>, Timestamped {
                 public T read() throws IOException, InterruptedException {
                     return take();
                 }
-
+                
                 @Override
                 public String getName() {
                     return CacheableNumber.this.getName();
@@ -131,7 +131,7 @@ public interface Cacheable<T> extends Readable<T>, Timestamped {
             @Override
             public T read() throws IOException, InterruptedException {
                 return take();
-            }
+            }          
 
             @Override
             public String getName() {
@@ -145,9 +145,18 @@ public interface Cacheable<T> extends Readable<T>, Timestamped {
         };
     }
 
-    public interface CacheReadable<T> extends Readable<T> {
+    public interface CacheReadable<T> extends Readable<T>, Timestamped{
 
         public Cacheable getParent();
+        
+        @Override
+        default public Long getTimestamp(){
+            Cacheable parent = getParent();
+            if (parent instanceof Timestamped){
+                return ((parent).getTimestamp());
+            }
+            return null;
+        }
     }
 
     public interface CacheReadableNumber<T extends Number> extends CacheReadable<T>, ReadableNumber<T> {
