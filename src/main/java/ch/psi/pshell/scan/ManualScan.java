@@ -2,6 +2,7 @@ package ch.psi.pshell.scan;
 
 import ch.psi.pshell.device.Readable;
 import ch.psi.pshell.device.Readable.ReadableArray;
+import ch.psi.pshell.device.TimestampedValue;
 import ch.psi.pshell.device.Writable;
 import java.io.IOException;
 import java.lang.reflect.Array;
@@ -128,12 +129,19 @@ public class ManualScan extends DiscreteScan {
             record.setpoints = new Number[getWritables().length];
             record.positions = new Number[getWritables().length];
             record.values = new Object[getReadables().length];
+            record.deviceTimestamps = new Long[getReadables().length];
             for (int j = 0; j < getWritables().length; j++) {
                 record.setpoints[j] = (Number) Array.get(setpoints, j);
                 record.positions[j] = (Number) Array.get(positions, j);
             }
             for (int j = 0; j < getReadables().length; j++) {
-                record.values[j] = Array.get(values, j);
+                Object val = Array.get(values, j);
+                if (val instanceof TimestampedValue){
+                    record.deviceTimestamps[j] = ((TimestampedValue)val).getTimestamp();
+                    record.values[j] = ((TimestampedValue)val).getValue();
+                } else {
+                    record.values[j] = val;
+                }
             }
             record.timestamp = System.currentTimeMillis();
             triggerNewRecord(record);

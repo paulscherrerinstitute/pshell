@@ -1,17 +1,22 @@
 package ch.psi.pshell.data;
 
+import ch.psi.pshell.bs.BsScan;
+import ch.psi.pshell.bs.Stream;
 import ch.psi.pshell.core.Context;
 import ch.psi.pshell.device.ArrayCalibration;
 import ch.psi.pshell.device.Averager;
 import ch.psi.pshell.device.DescStatsDouble;
+import ch.psi.pshell.device.Device;
 import ch.psi.pshell.device.MatrixCalibration;
 import ch.psi.pshell.device.Readable;
 import ch.psi.pshell.device.Readable.ReadableArray;
 import ch.psi.pshell.device.Readable.ReadableCalibratedArray;
 import ch.psi.pshell.device.Readable.ReadableMatrix;
 import ch.psi.pshell.device.Readable.ReadableCalibratedMatrix;
+import ch.psi.pshell.device.TimestampedValue;
 import ch.psi.pshell.device.Writable;
 import ch.psi.pshell.device.Writable.WritableArray;
+import ch.psi.pshell.scan.MonitorScan;
 import ch.psi.pshell.scan.Scan;
 import ch.psi.pshell.scan.ScanRecord;
 import ch.psi.utils.Arr;
@@ -52,6 +57,8 @@ public class LayoutSF extends LayoutBase implements Layout {
     public static final String ATTR_DATASET_READBACK= "readback";
     public static final String ATTR_DATASET_SETPOINT= "setpoint";
     public static final String ATTR_DATASET_TIMESTAMP = "timestamp";
+    public static final String ATTR_DATASET_PID = "pid";
+    public static final String ATTR_DATASET_GLOBAL_TIMESTAMP = "global_timestamp";
     
     public static final String DEVICE_MIN_DATASET = "min";
     public static final String DEVICE_MAX_DATASET = "max";
@@ -64,7 +71,7 @@ public class LayoutSF extends LayoutBase implements Layout {
     public static final String ATTR_READABLE_INDEX = "Readable Index";
     public static final String ATTR_WRITABLE_INDEX = "Writable Index";
     public static final String ATTR_WRITABLE_DIMENSION = "Writable Dimension";
-    public static final String ATTR_SCAN_PASSES = "Steps";
+    public static final String ATTR_SCAN_PASSES  = "Steps";
 
 
 
@@ -127,7 +134,7 @@ public class LayoutSF extends LayoutBase implements Layout {
     
     @Override
     public void appendLog(String log) throws IOException{
-        dataManager.appendItem(ATTR_DATASET_LOG_TIMESTAMP, log);
+        dataManager.appendItem(ATTR_DATASET_LOG_TIMESTAMP, System.currentTimeMillis());
         dataManager.appendItem(ATTR_DATASET_LOG_DESCRIPTION, log);
     }
 
@@ -135,9 +142,26 @@ public class LayoutSF extends LayoutBase implements Layout {
     public String getDefaultGroup(Scan scan) {
         return scan.getTag();
     }
+    
+    Stream getStream(Scan scan){
+        if (scan instanceof BsScan){
+            return ((BsScan)scan).getStream();
+        }
+        if (scan instanceof MonitorScan){
+            Device trigger = ((MonitorScan)scan).getTrigger();
+            if (trigger instanceof Stream){
+                return (Stream) trigger;
+            }
+        }        
+        return null;
+    }
+    
+    Stream stream;
 
     @Override
     public void onStart(Scan scan) throws IOException {
+        stream = getStream(scan);
+        
         String group = getScanPath(scan);
         dataManager.createGroup(group);
         dataManager.createGroup(group + ATTR_GROUP_METHOD);
@@ -208,6 +232,10 @@ public class LayoutSF extends LayoutBase implements Layout {
             dataManager.createDataset(groupDev + ATTR_DATASET_TIMESTAMP, Long.class, new int[]{0});
         }
         dataManager.createDataset(group + ATTR_DATASET_TIMESTAMP, Long.class, new int[]{0});
+        if (stream!=null){
+            dataManager.createDataset(group + ATTR_DATASET_PID, Long.class, new int[]{0});
+            dataManager.createDataset(group + ATTR_DATASET_GLOBAL_TIMESTAMP, Long.class, new int[]{0});
+        }
         dataManager.setAttribute(group, ATTR_SCAN_DIMENSION, scan.getDimensions());
         dataManager.setAttribute(group, ATTR_SCAN_STEPS, scan.getNumberOfSteps());
         dataManager.setAttribute(group, ATTR_SCAN_READABLES, scan.getReadableNames());
@@ -222,8 +250,16 @@ public class LayoutSF extends LayoutBase implements Layout {
         String group = getScanPath(scan);
         Number[] positions = record.getPositions();
         Object[] values = record.getValues();
+        Long[]  deviceTimestamps = record.getDeviceTimestamps();
         int index = getIndex(scan, record);
         int deviceIndex = 0;
+ 
+        if (stream!=null){
+            //TODO: Even if is called synchronously in change event, this is unsafe and should be implemented in an atomic fashion
+            dataManager.setItem(group + ATTR_DATASET_PID , stream.take().getPulseId(), index);
+            dataManager.setItem(group + ATTR_DATASET_GLOBAL_TIMESTAMP, stream.take().getTimestamp(), index);
+        }
+        
         for (Writable writable : scan.getWritables()) {
             String path = getDataPath(scan, dataManager.getAlias(writable));
             dataManager.setItem(path + ATTR_DATASET_SETPOINT, record.getSetpoints()[deviceIndex], index);
@@ -233,6 +269,7 @@ public class LayoutSF extends LayoutBase implements Layout {
         for (ch.psi.pshell.device.Readable readable : scan.getReadables()) {
             String name = dataManager.getAlias(readable);
             String path = getDataPath(scan, name);
+            Long timestamp = deviceTimestamps[deviceIndex];
             Object value = values[deviceIndex++];
             if (!getPreserveTypes()) {
                 if ((value instanceof Boolean) || (value instanceof boolean[])) {
@@ -247,6 +284,7 @@ public class LayoutSF extends LayoutBase implements Layout {
                 dataManager.setItem(getMetaPath(scan, name) + DEVICE_STDEV_DATASET, (v == null) ? null : v.getStdev(), index);
             }
             dataManager.setItem(path + ATTR_DATASET_READBACK, value, index);
+            dataManager.setItem(path + ATTR_DATASET_TIMESTAMP , (timestamp == null) ? 0 : timestamp, index);
         }
         dataManager.setItem(group + ATTR_DATASET_TIMESTAMP, record.getTimestamp(), index);
     }

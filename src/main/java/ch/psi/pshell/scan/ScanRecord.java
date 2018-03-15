@@ -23,6 +23,7 @@ public class ScanRecord {
     Number[] setpoints;
     Number[] positions;
     Object[] values;
+    Long[] deviceTimestamps;
     int pass;
 
     public int getIndex() {
@@ -56,6 +57,10 @@ public class ScanRecord {
     public Object[] getValues() {
         return values;
     }
+    
+    public Long[] getDeviceTimestamps() {
+        return deviceTimestamps;
+    }    
 
     @Hidden
     public ScanRecord copy() {
@@ -68,6 +73,7 @@ public class ScanRecord {
         ret.setpoints = Arr.copy(setpoints);
         ret.positions = Arr.copy(positions);
         ret.values = Arr.copy(values);
+        ret.deviceTimestamps = Arr.copy(deviceTimestamps);
         return ret;
     }
 

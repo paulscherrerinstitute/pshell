@@ -3,7 +3,7 @@ package ch.psi.pshell.epics;
 import ch.psi.pshell.device.TimestampedValue;
 
 /**
- * A timestamped value containing a pulse ID.
+ * A timestamped value containing a severity field
  */
 public class EpicsTimestampedValue<T> extends TimestampedValue<T> {
 

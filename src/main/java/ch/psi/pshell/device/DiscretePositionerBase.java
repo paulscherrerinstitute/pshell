@@ -14,7 +14,7 @@ public abstract class DiscretePositionerBase extends RegisterBase<String> implem
     String[] positions;
 
     public DiscretePositionerBase(String name, RegisterConfig config) {
-        super(name, config);
+        super(name, config); 
         setDefaultReadback();
     }
 
@@ -234,12 +234,14 @@ public abstract class DiscretePositionerBase extends RegisterBase<String> implem
     }
 
     //Overidables
-    //These are not abstracts because they are not mandatory: setReadback and setVelocity can be used instead.
+    //These is not abstract because they are not mandatory: setReadback can be used instead.
     protected String doReadReadback() throws IOException, InterruptedException {
         return null;
     }
 
     //Abstracts
-    abstract protected void doStop() throws IOException, InterruptedException;
+    protected void doStop() throws IOException, InterruptedException{
+        
+    }
 
 }

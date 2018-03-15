@@ -68,6 +68,11 @@ public class MonitorScan extends LineScan {
         this.async = async;
     }    
 
+    public Device getTrigger(){
+        return trigger;
+    }
+            
+            
     @Override
     protected void openDevices() throws IOException, InterruptedException {
         super.openDevices();

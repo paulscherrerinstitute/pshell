@@ -16,6 +16,7 @@ import ch.psi.pshell.device.ReadableRegister;
 import ch.psi.pshell.device.ReadbackDevice;
 import ch.psi.pshell.device.ReadonlyRegister;
 import ch.psi.pshell.device.Stoppable;
+import ch.psi.pshell.device.TimestampedValue;
 import ch.psi.utils.Convert;
 import ch.psi.utils.IO;
 import ch.psi.utils.ObservableBase;
@@ -406,6 +407,7 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
 
             record.invalidated = false;
             record.values = new Object[getReadables().length];
+            record.deviceTimestamps = new Long[getReadables().length];
             for (int j = 0; j < getWritables().length; j++) {
                 ReadonlyRegister readback = getReadback(getWritables()[j]);
                 if ((readback != null) && useWritableReadback) {
@@ -417,14 +419,23 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
 
             for (int j = 0; j < getReadables().length; j++) {
                 try {
-                    record.values[j] = getReadables()[j].read();
-                    if (record.values[j] instanceof List) { //Jython Lists
-                        record.values[j] = Convert.toArray((List) record.values[j]);
-                        record.values[j] = Convert.toDouble(record.values[j]); //TODO: let Data manager make this transformation based on getPreserveTypes()
-                    } else if (record.values[j] instanceof Map) { //JS Lists
-                        record.values[j] = Convert.toArray((Map) record.values[j]);
-                        record.values[j] = Convert.toDouble(record.values[j]); //TODO: let Data manager make this transformation based on getPreserveTypes()
+                    Object val = getReadables()[j].read();
+                    if (val instanceof TimestampedValue){
+                        record.deviceTimestamps[j] = ((TimestampedValue)val).getTimestamp();
+                        val =  ((TimestampedValue)val).getValue();
+                    }  else if (getReadables()[j] instanceof Device){
+                        //TODO: Not atomic, should use takeTimestasmped, but has performance impact and assumes that read() is behaving well (setting cache)
+                        record.deviceTimestamps[j] = ((Device)getReadables()[j]).getTimestamp();
                     }
+                    
+                    if (val instanceof List) { //Jython Lists
+                        val = Convert.toArray((List) val);
+                        val = Convert.toDouble(val); //TODO: let Data manager make this transformation based on getPreserveTypes()
+                    } else if (val instanceof Map) { //JS Lists
+                        val = Convert.toArray((Map) val);
+                        val = Convert.toDouble(val); //TODO: let Data manager make this transformation based on getPreserveTypes()
+                    }
+                    record.values[j] = val;
                 } catch (InterruptedException ex) {
                     throw ex;
                 } catch (Exception ex) {
@@ -457,15 +468,17 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
         recordIndex++;
         return record;
     }
-
-    protected ScanRecord newRecord(Number[] setpoints, Number[] positions, Object[] values, long timestamp) {
+    
+    protected ScanRecord newRecord(Number[] setpoints, Number[] positions, Object[] values, long timestamp, Long[] deviceTimestamps) {
         ScanRecord ret = newRecord();
         ret.setpoints = setpoints;
         ret.positions = positions;
         ret.values = values;
         ret.timestamp = timestamp;
+        ret.deviceTimestamps = deviceTimestamps;
         return ret;
     }
+    
 
     protected void onBeforeReadout(double[] pos) {
     }

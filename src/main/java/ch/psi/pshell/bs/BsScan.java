@@ -28,6 +28,10 @@ public class BsScan extends ContinuousScan {
         this.stream = stream;
         this.records = records;
     }
+    
+    public Stream getStream(){
+        return stream;
+    }
 
     final DeviceAdapter listener = new DeviceAdapter() {
         @Override
