@@ -95,9 +95,9 @@ public class PlotDescriptor {
         //y = aux;
     }
 
-    final public String name;
-    final public String root;
-    final public String path;
+    public String name;
+    public String root;
+    public String path;
 
     public Object data;
     public int rank;
