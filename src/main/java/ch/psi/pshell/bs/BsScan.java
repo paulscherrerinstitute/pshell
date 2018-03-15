@@ -47,7 +47,7 @@ public class BsScan extends ContinuousScan {
                 values[0] = val.pulseId;
                 System.arraycopy(val.values.toArray(), 0, values, 1, val.values.size());
                 Arrays.fill(deviceTimestamps, val.getTimestamp());
-                ScanRecord record = newRecord(setpoints, positions, values, val.getTimestamp(), deviceTimestamps);
+                ScanRecord record = newRecord(setpoints, positions, values, val.pulseId, val.getTimestamp(), deviceTimestamps);
                 onAfterReadout(record);
                 triggerNewRecord(record);
                 synchronized (listener) {

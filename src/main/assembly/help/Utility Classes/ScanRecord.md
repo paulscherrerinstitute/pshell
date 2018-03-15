@@ -7,8 +7,11 @@ Methods:
 
   * int getIndex(): the sequential index of the present record within the scan. 
   * int getPass(): the number of the current scan pass.
-  * int getIndexInPass(): the sequential index of the present record within the current scan pass. 
-  * long getTimestamp(): the system time in milliseconds after sampling the record sensor. 
+  * int getIndexInPass(): the sequential index of the present record within the current scan pass.
+  * long getLocalTimestamp(): the system time in milliseconds after sampling the record sensor. 
+  * Long getRemoteTimestamp(): the record timestamp notified by device.
+  * long getTimestamp(): returns the device timestamp, if present, otherwise the local timestamp.
+  * Long[] getDeviceTimestamps(): the readable timestamps, which may differ from the record timestamp.
   * Number[] getSetpoints(): the setpoint for each positioner.
   * Number[] getPositions (): the readback for each positioner.
   * Object[] getValues(): the readout of each sensor, which can be a scalar or an array.

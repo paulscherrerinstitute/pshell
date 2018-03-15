@@ -255,9 +255,8 @@ public class LayoutSF extends LayoutBase implements Layout {
         int deviceIndex = 0;
  
         if (stream!=null){
-            //TODO: Even if is called synchronously in change event, this is unsafe and should be implemented in an atomic fashion
-            dataManager.setItem(group + ATTR_DATASET_PID , stream.take().getPulseId(), index);
-            dataManager.setItem(group + ATTR_DATASET_GLOBAL_TIMESTAMP, record.getTimestamp(), index);
+            dataManager.setItem(group + ATTR_DATASET_PID , record.getId(), index);
+            dataManager.setItem(group + ATTR_DATASET_GLOBAL_TIMESTAMP, record.getRemoteTimestamp(), index);
         }
          
         for (Writable writable : scan.getWritables()) {

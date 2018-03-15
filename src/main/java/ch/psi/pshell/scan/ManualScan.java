@@ -148,7 +148,7 @@ public class ManualScan extends DiscreteScan {
                 }
             }
             record.localTimestamp = System.currentTimeMillis();
-            record.timestamp = (timestamp == null) ? record.localTimestamp : timestamp;
+            record.timestamp = timestamp;
             triggerNewRecord(record);
         } catch (Exception ex) {
             logger.log(Level.WARNING, null, ex);

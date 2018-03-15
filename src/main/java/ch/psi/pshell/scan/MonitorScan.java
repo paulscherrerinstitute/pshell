@@ -2,6 +2,7 @@ package ch.psi.pshell.scan;
 
 import ch.psi.pshell.bs.Scalar;
 import ch.psi.pshell.bs.Stream;
+import ch.psi.pshell.bs.StreamValue;
 import ch.psi.pshell.core.UrlDevice;
 import ch.psi.pshell.device.Device;
 import ch.psi.pshell.device.DeviceListener;
@@ -71,7 +72,10 @@ public class MonitorScan extends LineScan {
     public Device getTrigger(){
         return trigger;
     }
-            
+    
+    public Stream getStream(){
+        return ((trigger!=null) && (trigger instanceof Stream)) ? (Stream) trigger : null;
+    }            
             
     @Override
     protected void openDevices() throws IOException, InterruptedException {
@@ -192,17 +196,25 @@ public class MonitorScan extends LineScan {
                 timestamp = 0L;
             }
         }
+        long id = 0;
+        Stream stream = getStream();
+        if (stream != null){
+            StreamValue val = stream.take();
+            if (val!=null){
+                id = val.getPulseId();
+            }
+        }
         if (firstSample) {
             firstSample = false;
             initialTimestamp = timestamp - chrono.getEllapsed();
         }
         if (points > 0) {
             //Based on index
-            processPosition(new double[0], timestamp);
+            processPosition(new double[0], timestamp, id);
         } else {
             //Based on time            
             //processPosition(new double[]{chrono.getEllapsed()});      
-            processPosition(new double[]{timestamp - initialTimestamp}, timestamp);
+            processPosition(new double[]{timestamp - initialTimestamp}, timestamp, id);
         }
     }
 

@@ -16,16 +16,17 @@ import java.util.ArrayList;
  */
 public class ScanRecord {
 
-    int index;
-    long timestamp;
-    long localTimestamp;
+    int index;   
     int dimensions;
     int indexInPass;
     Number[] setpoints;
     Number[] positions;
     Object[] values;
+    long localTimestamp; //Always set  
+    Long timestamp;   
     Long[] deviceTimestamps;
     int pass;
+    long id;
 
     public int getIndex() {
         return index;
@@ -37,15 +38,7 @@ public class ScanRecord {
     
     public int getIndexInPass() {
         return indexInPass;
-    }    
-
-    public long getTimestamp() {
-        return timestamp;
-    }
-    
-    public long getLocalTimestamp() {
-        return localTimestamp;
-    }
+    }      
     
     public int getDimensions() {
         return dimensions;
@@ -63,21 +56,44 @@ public class ScanRecord {
         return values;
     }
     
+    public long getTimestamp() {
+        return (timestamp == null) ? localTimestamp : timestamp;
+    }
+    
+    public long getLocalTimestamp() {
+        return localTimestamp;
+    }
+    
+    public Long getRemoteTimestamp() {
+        return timestamp;
+    }  
+    
     public Long[] getDeviceTimestamps() {
         return deviceTimestamps;
     }    
-
+    
+    public long getId() {
+        return id;
+    }
+    
+    @Hidden
+    public void setId(long value) {
+        id = value;
+    }   
+    
     @Hidden
     public ScanRecord copy() {
         ScanRecord ret = new ScanRecord();
         ret.index = index;
         ret.indexInPass = indexInPass;
         ret.pass = pass;
-        ret.timestamp = timestamp;
         ret.dimensions = dimensions;
         ret.setpoints = Arr.copy(setpoints);
         ret.positions = Arr.copy(positions);
         ret.values = Arr.copy(values);
+        ret.id = id;
+        ret.timestamp = timestamp;
+        ret.localTimestamp = localTimestamp;
         ret.deviceTimestamps = Arr.copy(deviceTimestamps);
         return ret;
     }

@@ -386,12 +386,17 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
     protected ScanRecord processPosition(double[] pos) throws IOException, InterruptedException {
         return processPosition(pos, null);
     }
-
+    
     protected ScanRecord processPosition(double[] pos, Long timestamp) throws IOException, InterruptedException {
+        return processPosition(pos, timestamp, 0);
+    }
+
+    protected ScanRecord processPosition(double[] pos, Long timestamp, long id) throws IOException, InterruptedException {
         checkInterrupted();
         assertNotAborted();
 
         ScanRecord record = newRecord();
+        record.id = id;
         record.setpoints = new Number[getWritables().length];
         record.positions = new Number[getWritables().length];
         for (int i = 0; i < getWritables().length; i++) {
@@ -448,7 +453,7 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
                 }
             }
             record.localTimestamp = System.currentTimeMillis();
-            record.timestamp = (timestamp == null) ? record.localTimestamp : timestamp;
+            record.timestamp = timestamp;
             onAfterReadout(record);
             if (record.invalidated) {
                 logger.warning("Resampling record " + record.index);
@@ -472,13 +477,14 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
         return record;
     }
     
-    protected ScanRecord newRecord(Number[] setpoints, Number[] positions, Object[] values, Long timestamp, Long[] deviceTimestamps) {
+    protected ScanRecord newRecord(Number[] setpoints, Number[] positions, Object[] values, long id, Long timestamp, Long[] deviceTimestamps) {
         ScanRecord record = newRecord();
         record.setpoints = setpoints;
         record.positions = positions;
         record.values = values;
+        record.id = id;
         record.localTimestamp = System.currentTimeMillis();
-        record.timestamp = (timestamp == null) ? record.localTimestamp : timestamp;
+        record.timestamp = timestamp;
         record.deviceTimestamps = deviceTimestamps;
         return record;
     }
