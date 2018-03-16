@@ -75,8 +75,10 @@ import ch.psi.pshell.device.DeviceAdapter as DeviceListener
 import ch.psi.pshell.device.ReadbackDeviceAdapter as ReadbackDeviceListener
 import ch.psi.pshell.device.MotorAdapter as MotorListener
 import ch.psi.pshell.device.MoveMode as MoveMode
+import ch.psi.pshell.device.SettlingCondition as SettlingCondition
 import ch.psi.pshell.epics.Epics as Epics
 import ch.psi.pshell.epics.EpicsScan as EpicsScan
+import ch.psi.pshell.epics.ChannelSettlingCondition as ChannelSettlingCondition
 import ch.psi.pshell.imaging.Source as Source
 import ch.psi.pshell.imaging.SourceBase as SourceBase
 import ch.psi.pshell.imaging.DirectSource as DirectSource
@@ -373,8 +375,8 @@ class ManualScan (ch.psi.pshell.scan.ManualScan):
     def __init__(self, writables, readables, start = None, end = None, steps = None, relative = False):
         ch.psi.pshell.scan.ManualScan.__init__(self, writables, readables, start, end, steps, relative)
 
-    def append(self,setpoints, positions, values):
-        ch.psi.pshell.scan.ManualScan.append(self, to_array(setpoints), to_array(positions), to_array(values))
+    def append(self,setpoints, positions, values, timestamps=None):
+        ch.psi.pshell.scan.ManualScan.append(self, to_array(setpoints), to_array(positions), to_array(values), None if (timestamps is None) else to_array(timestamps))
 
 class BinarySearch(ch.psi.pshell.scan.BinarySearch):
     def onBeforeReadout(self, pos):

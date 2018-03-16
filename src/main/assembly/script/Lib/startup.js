@@ -56,8 +56,10 @@ DeviceListener = Java.type('ch.psi.pshell.device.DeviceAdapter')
 ReadbackDeviceListener = Java.type('ch.psi.pshell.device.ReadbackDeviceAdapter') 
 MotorListener = Java.type('ch.psi.pshell.device.MotorAdapter') 
 MoveMode  = Java.type('ch.psi.pshell.device.MoveMode') 
+SettlingCondition = Java.type('ch.psi.pshell.device.SettlingCondition')
 Epics = Java.type('ch.psi.pshell.epics.Epics') 
 EpicsScan = Java.type('ch.psi.pshell.epics.EpicsScan') 
+ChannelSettlingCondition = Java.type('ch.psi.pshell.epics.ChannelSettlingCondition')
 Source = Java.type('ch.psi.pshell.imaging.Source') 
 SourceBase = Java.type('ch.psi.pshell.imaging.SourceBase') 
 DirectSource = Java.type('ch.psi.pshell.imaging.DirectSource') 
@@ -586,7 +588,7 @@ function bscan(stream, records, timeout, before_read, after_read, title) {
     var timeout_ms = timeout * 1000
 
     var readables = stream
-    if (!is_array((stream)){
+    if (!is_array(stream)){
         readables = string_to_obj(stream)
     }
     var scanClass = Java.extend(BsScan)
