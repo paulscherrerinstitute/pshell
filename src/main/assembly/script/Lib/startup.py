@@ -644,12 +644,13 @@ def hscan(config, writable, readables, start, end, steps, passes=1, zigzag=False
     scan.start()
     return scan.getResult()
 
-def bscan(stream, records, passes=1, **pars):
+def bscan(stream, records, timeout = None, passes=1, **pars):
     """BS Scan: records all values in a beam synchronous stream.
 
     Args:
-        stream(Stream): stream object
+        stream(Stream): stream object or list of chanel names to build stream from
         records(int): number of records to store
+        timeout(float, optional): maximum scan time in seconds. 
         passes(int, optional): number of passes
         pars(keyworded variable length arguments, optional): scan optional named arguments:
             - title(str, optional): plotting window name.     
@@ -663,8 +664,10 @@ def bscan(stream, records, passes=1, **pars):
         ScanResult object.
 
     """    
-    stream=string_to_obj(stream)
-    scan = BsScan(stream,int(records), int(passes))    
+    timeout_ms=int(timeout*1000) if ((timeout is not None) and (timeout>=0)) else -1
+    if not is_list(stream):
+        stream=string_to_obj(stream)
+    scan = BsScan(stream,int(records), timeout_ms, int(passes))    
     processScanPars(scan, pars)
     scan.start()
     return scan.getResult()

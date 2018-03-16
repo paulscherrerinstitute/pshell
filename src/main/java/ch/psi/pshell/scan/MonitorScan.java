@@ -32,6 +32,7 @@ public class MonitorScan extends LineScan {
     Device trigger;
     Chrono chrono;
     Exception exception;
+        long initialTimestamp;
 
     public MonitorScan(Device trigger, Readable[] readables, int points) {
         this(trigger, readables, points, -1);
@@ -203,9 +204,8 @@ public class MonitorScan extends LineScan {
             if (val!=null){
                 id = val.getPulseId();
             }
-        }
-        if (firstSample) {
-            firstSample = false;
+        }     
+        if (getRecordIndexInPass()==0) {
             initialTimestamp = timestamp - chrono.getEllapsed();
         }
         if (points > 0) {
@@ -217,9 +217,6 @@ public class MonitorScan extends LineScan {
             processPosition(new double[]{timestamp - initialTimestamp}, timestamp, id);
         }
     }
-
-    long initialTimestamp;
-    boolean firstSample;
 
     @Override
     protected void doScan() throws IOException, InterruptedException {
@@ -233,7 +230,6 @@ public class MonitorScan extends LineScan {
                 readables[0] = ((Cacheable) readables[0]).getCache();
             }
 
-            firstSample = true;
             chrono = new Chrono();
             int steps = getNumberOfSteps()[0];
             if (takeInitialValue) {

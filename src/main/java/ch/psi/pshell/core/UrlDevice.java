@@ -40,15 +40,21 @@ public class UrlDevice extends DeviceBase implements Readable, Writable {
 
     DeviceBase parent;
     Device device;
+    String givenName;
 
     static List<Stream> cameraStreams = new ArrayList<>();
 
     public UrlDevice(String url) {
+        this(null, url);
+    }
+    
+    public UrlDevice(String name, String url) {
         this.url = url;
         this.protocol = getUrlProtocol(url);
         this.pars = getUrlPars(url);
         this.id = getUrlId(url);
-        this.name = getUrlName(url);
+        this.name = (name==null) ? getUrlName(url) : name;
+        givenName = (pars.containsKey("name") || (name!=null)) ? this.name : null;
     }
 
     public static String getUrlProtocol(String url) {
@@ -318,7 +324,6 @@ public class UrlDevice extends DeviceBase implements Readable, Writable {
                 }
                 break;
         }
-        String setName = pars.containsKey("name") ? name : null;
         if (ret != null) {
             if (pars.containsKey("monitored")) {
                 try {
@@ -365,7 +370,7 @@ public class UrlDevice extends DeviceBase implements Readable, Writable {
                         integrate = true;
                     }
 
-                    ArrayAverager av = (setName != null) ? new ArrayAverager(name, (ReadableArray) ret, samples, interval, integrate)
+                    ArrayAverager av = (givenName != null) ? new ArrayAverager(name, (ReadableArray) ret, samples, interval, integrate)
                             : new ArrayAverager((ReadableArray) ret, samples, interval, integrate);
                     if (async) {
                         av.setMonitored(true);
@@ -374,24 +379,24 @@ public class UrlDevice extends DeviceBase implements Readable, Writable {
                         boolean forceRead = (!av.isMonitored() && !av.isReadOnChangeEvent());
                         switch (pars.get("op")) {
                             case "sum":
-                                return av.getSum(setName).withForceRead(forceRead);
+                                return av.getSum(givenName).withForceRead(forceRead);
                             case "min":
-                                return av.getMin(setName).withForceRead(forceRead);
+                                return av.getMin(givenName).withForceRead(forceRead);
                             case "max":
-                                return av.getMax(setName).withForceRead(forceRead);
+                                return av.getMax(givenName).withForceRead(forceRead);
                             case "mean":
-                                return av.getMean(setName).withForceRead(forceRead);
+                                return av.getMean(givenName).withForceRead(forceRead);
                             case "stdev":
-                                return av.getStdev(setName).withForceRead(forceRead);
+                                return av.getStdev(givenName).withForceRead(forceRead);
                             case "variance":
-                                return av.getVariance(setName).withForceRead(forceRead);
+                                return av.getVariance(givenName).withForceRead(forceRead);
                             case "samples":
-                                return av.getSamples(setName);
+                                return av.getSamples(givenName);
                         }
                     }
                     return av;
                 } else {
-                    Averager av = (setName != null) ? new Averager(name, (Readable) ret, samples, interval)
+                    Averager av = (givenName != null) ? new Averager(name, (Readable) ret, samples, interval)
                             : new Averager((Readable) ret, samples, interval);
                     if (async) {
                         av.setMonitored(true);
@@ -399,19 +404,19 @@ public class UrlDevice extends DeviceBase implements Readable, Writable {
                     if (pars.containsKey("op")) {
                         switch (pars.get("op")) {
                             case "sum":
-                                return av.getSum(setName);
+                                return av.getSum(givenName);
                             case "min":
-                                return av.getMin(setName);
+                                return av.getMin(givenName);
                             case "max":
-                                return av.getMax(setName);
+                                return av.getMax(givenName);
                             case "mean":
-                                return av.getMean(setName);
+                                return av.getMean(givenName);
                             case "stdev":
-                                return av.getStdev(setName);
+                                return av.getStdev(givenName);
                             case "variance":
-                                return av.getVariance(setName);
+                                return av.getVariance(givenName);
                             case "samples":
-                                return av.getSamples(setName);
+                                return av.getSamples(givenName);
                         }
                     }
                     return av;
@@ -421,25 +426,25 @@ public class UrlDevice extends DeviceBase implements Readable, Writable {
                     if (pars.containsKey("op")) {
                         ArrayRegisterStats rs = null;
                         if (ret instanceof ReadonlyRegisterArray) {
-                            rs = (setName != null) ? new ArrayRegisterStats(name, (ReadonlyRegisterArray) ret)
+                            rs = (givenName != null) ? new ArrayRegisterStats(name, (ReadonlyRegisterArray) ret)
                                     : new ArrayRegisterStats((ReadonlyRegisterArray) ret);
                         } else if (ret instanceof ReadonlyRegisterMatrix) {
-                            rs = (setName != null) ? new ArrayRegisterStats(name, (ReadonlyRegisterMatrix) ret)
+                            rs = (givenName != null) ? new ArrayRegisterStats(name, (ReadonlyRegisterMatrix) ret)
                                     : new ArrayRegisterStats((ReadonlyRegisterMatrix) ret);
                         }
                         switch (pars.get("op")) {
                             case "sum":
-                                return rs.getSum(setName);
+                                return rs.getSum(givenName);
                             case "min":
-                                return rs.getMin(setName);
+                                return rs.getMin(givenName);
                             case "max":
-                                return rs.getMax(setName);
+                                return rs.getMax(givenName);
                             case "mean":
-                                return rs.getMean(setName);
+                                return rs.getMean(givenName);
                             case "stdev":
-                                return rs.getStdev(setName);
+                                return rs.getStdev(givenName);
                             case "variance":
-                                return rs.getVariance(setName);
+                                return rs.getVariance(givenName);
                         }
                     }
                 }

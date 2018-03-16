@@ -564,7 +564,7 @@ function hscan(config, writable, readables, start, end, steps, passes, zigzag, b
     return scan.getResult()
 }
 
-function bscan(stream, records, before_read, after_read, title) {
+function bscan(stream, records, timeout, before_read, after_read, title) {
     /*
     BS Scan: records all values in a beam synchronous stream.
 
@@ -582,9 +582,15 @@ function bscan(stream, records, before_read, after_read, title) {
 
     */
     if (!is_defined(title))    title = null;
-    var stream = string_to_obj(stream)
+    if (!is_defined(timeout))    timeout = -1;
+    var timeout_ms = timeout * 1000
+
+    var readables = stream
+    if (!is_array((stream)){
+        readables = string_to_obj(stream)
+    }
     var scanClass = Java.extend(BsScan)
-    var scan = new scanClass(stream,records) {
+    var scan = new scanClass(readables,records, timeout_ms) {
         onBeforeReadout: function (pos) {
             if (is_defined(before_read))
                 before_read(pos , scan)

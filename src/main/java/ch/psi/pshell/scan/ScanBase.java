@@ -717,6 +717,13 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
 
     ArrayList<Stream> startedStreams;
     ArrayList<Device> innerDevices;
+    
+    protected ArrayList<Stream> getStartedStreams(){
+        return startedStreams;
+    }
+    protected ArrayList<Device> getInnerDevices(){
+        return innerDevices;
+    }   
 
     protected void openDevices() throws IOException, InterruptedException {
         startedStreams = new ArrayList<>();

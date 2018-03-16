@@ -421,8 +421,8 @@ public class ScanEditorPanel extends MonitoredPanel implements Processor {
         comboType.setEnabled(enabled);
         textTitle.setEnabled(enabled);
         spinnerPasses.setEnabled(enabled);
-        spinnerTime.setEnabled(enabled && (hasTime || cmd.equals("mscan")));
-        spinnerLatency.setEnabled(enabled && !cmd.equals("mscan"));
+        spinnerTime.setEnabled(enabled && (hasTime || cmd.equals("mscan") || cmd.equals("bscan")));
+        spinnerLatency.setEnabled(enabled && !cmd.equals("mscan") && !cmd.equals("bscan"));
         checkRelative.setEnabled(enabled && hasPasses());
         checkZigzag.setEnabled(enabled && hasPasses());
         checkSave.setEnabled(enabled);
@@ -494,13 +494,15 @@ public class ScanEditorPanel extends MonitoredPanel implements Processor {
                 return "tscan";
             case "Change event series":
                 return "mscan";
+            case "Stream series":
+                return "bscan";                
             default:
                 throw new RuntimeException("Invalid scan type");
         }
     }
 
     boolean hasPositioners() {
-        return !Arr.containsEqual(new String[]{"tscan"}, getScanCommand());
+        return !Arr.containsEqual(new String[]{"tscan", "bscan"}, getScanCommand());
     }
 
     boolean hasTime() {
@@ -665,6 +667,9 @@ public class ScanEditorPanel extends MonitoredPanel implements Processor {
             if (checkSync.isSelected()) {
                 ret.add(getParName("async") + getBoolValue(false));
             }
+        } else if (getScanCommand().equals("bscan")) {
+            ret.add(getParName("records") + ((((Number) spinnerPasses.getValue()).doubleValue() == 0) ? -1 : spinnerPasses.getValue()));
+            ret.add(getParName("timeout") + ((((Number) spinnerTime.getValue()).doubleValue() == 0) ? -1 : spinnerTime.getValue()));
         } else if (getScanCommand().equals("vscan")) {
             StringBuilder sb = new StringBuilder();
             sb.append("[");
@@ -721,7 +726,7 @@ public class ScanEditorPanel extends MonitoredPanel implements Processor {
             }
             if ((!comboLayout.getSelectedItem().toString().trim().isEmpty())
                     && !comboLayout.getSelectedItem().equals(comboLayout.getModel().getElementAt(0))) {
-                ret.add(getParName("layout") + "'" + comboLayout.getSelectedItem() + "'");
+                ret.add(getParName("layout") + "'" + String.valueOf(comboLayout.getSelectedItem()).toLowerCase()+ "'");
             }
             if ((!comboProvider.getSelectedItem().toString().trim().isEmpty())
                     && !comboProvider.getSelectedItem().equals(comboProvider.getModel().getElementAt(0))) {
@@ -928,7 +933,7 @@ public class ScanEditorPanel extends MonitoredPanel implements Processor {
 
         jLabel1.setText("Scan Type:");
 
-        comboType.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Linear", "Multidimensional", "Vector", "Continuous", "Time series", "Change event series" }));
+        comboType.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Linear", "Multidimensional", "Vector", "Continuous", "Time series", "Change event series", "Stream series" }));
         comboType.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 comboTypeActionPerformed(evt);
@@ -1043,10 +1048,20 @@ public class ScanEditorPanel extends MonitoredPanel implements Processor {
         jLabel5.setText("Provider:");
 
         comboLayout.setEditable(true);
-        comboLayout.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Default", "Table" }));
+        comboLayout.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { " ", "Default", "Table", "SF" }));
+        comboLayout.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                comboLayoutActionPerformed(evt);
+            }
+        });
 
         comboProvider.setEditable(true);
-        comboProvider.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "h5", "txt" }));
+        comboProvider.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { " ", "h5", "txt" }));
+        comboProvider.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                comboProviderActionPerformed(evt);
+            }
+        });
 
         jLabel6.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
         jLabel6.setText("File:");
@@ -1752,6 +1767,14 @@ public class ScanEditorPanel extends MonitoredPanel implements Processor {
         onControlChanged();
         updateStepColumn();
     }//GEN-LAST:event_checkStepsActionPerformed
+
+    private void comboLayoutActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_comboLayoutActionPerformed
+        onControlChanged();
+    }//GEN-LAST:event_comboLayoutActionPerformed
+
+    private void comboProviderActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_comboProviderActionPerformed
+        onControlChanged();
+    }//GEN-LAST:event_comboProviderActionPerformed
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
