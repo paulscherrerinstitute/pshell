@@ -73,6 +73,7 @@ import ch.psi.utils.Sys.OSFamily;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.util.concurrent.TimeoutException;
 import java.util.jar.JarFile;
 
@@ -934,7 +935,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
             logger.log(Level.INFO, "Loading Device Pool");
             try {
                 devicePool.initialize();
-            } catch (FileNotFoundException ex) {
+            } catch (FileNotFoundException| NoSuchFileException ex) {
                 logger.log(Level.FINE, null, ex);
             }
             devicePool.addListener(new DevicePoolListener() {

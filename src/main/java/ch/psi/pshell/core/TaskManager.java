@@ -1,6 +1,8 @@
 package ch.psi.pshell.core;
 
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.nio.file.NoSuchFileException;
 import java.util.ArrayList;
 import java.util.Properties;
 import java.util.logging.Level;
@@ -40,10 +42,12 @@ public class TaskManager implements AutoCloseable {
                     Logger.getLogger(TaskManager.class.getName()).log(Level.WARNING, null, ex);
                 }
             }
-            Logger.getLogger(TaskManager.class.getName()).fine("Finished " + getClass().getSimpleName() + " initialization");
+        } catch (FileNotFoundException | NoSuchFileException ex) {
+            Logger.getLogger(TaskManager.class.getName()).log(Level.FINER, null, ex);
         } catch (Exception ex) {
-            Logger.getLogger(TaskManager.class.getName()).log(Level.FINE, null, ex);
+            Logger.getLogger(TaskManager.class.getName()).log(Level.WARNING, null, ex);
         }
+        Logger.getLogger(TaskManager.class.getName()).fine("Finished " + getClass().getSimpleName() + " initialization");
     }
 
     public void create(String script, int delay, int interval) {

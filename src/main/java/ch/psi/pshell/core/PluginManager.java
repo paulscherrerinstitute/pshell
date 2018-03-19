@@ -12,6 +12,7 @@ import java.io.FileNotFoundException;
 import java.lang.reflect.Modifier;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -25,8 +26,9 @@ import javax.tools.JavaCompiler;
 import javax.tools.ToolProvider;
 
 /**
- * Manages the loading of plugins, both dynamic (.java files) and compiled (.class or .jar). Source
- * or binary files should contain an implementation of the Plugin interface.
+ * Manages the loading of plugins, both dynamic (.java files) and compiled
+ * (.class or .jar). Source or binary files should contain an implementation of
+ * the Plugin interface.
  */
 public class PluginManager implements AutoCloseable {
 
@@ -138,14 +140,14 @@ public class PluginManager implements AutoCloseable {
         logger.info("Load plugin: " + fileName);
         try {
             for (Plugin p : plugins) {
-                if (p.getPluginFile().getCanonicalFile().equals(file.getCanonicalFile())) {
+                if ((p.getPluginFile() != null) && (p.getPluginFile().getCanonicalFile().equals(file.getCanonicalFile()))) {
                     throw new Exception("Plugin file already loaded: " + fileName);
                 }
             }
             switch (IO.getExtension(file)) {
                 case "jar":
                     for (Class cls : Loader.loadJar(fileName)) {
-                        if (Modifier.isPublic(cls.getModifiers())){
+                        if (Modifier.isPublic(cls.getModifiers())) {
                             if (Plugin.class.isAssignableFrom(cls)) {
                                 //Only 1 plugin per jar file
                                 return loadPluginClass(cls, file);
@@ -290,7 +292,7 @@ public class PluginManager implements AutoCloseable {
                     }
                 }
             }
-        } catch (FileNotFoundException ex) {
+        } catch (FileNotFoundException | NoSuchFileException ex) {
             logger.log(Level.FINE, null, ex);
         } catch (Exception ex) {
             logger.log(Level.WARNING, null, ex);
