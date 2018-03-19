@@ -1,5 +1,78 @@
 # Changelog
 
+
+## 1.9.0
+
+### Added
+
+* Scan editor dialog (graphical configuration of simple scans).
+
+* __cawait__ can be called with range parameter instead of comparator.
+    
+* Added support to BigInteger in data persistence.
+
+* Included 'tag' execution parameter to configure scan data root name.
+
+* Included Python client to REST API.
+
+* Configuration of colors and markers in StripChart.
+
+* Offscreen plotting, so that plot commands (and __get_plot_snapshot__) work in server mode.
+
+* Plot snapshots with arbitrary sizes. 
+
+* Drag and drop files to Document tab.
+
+* ReadonlyProcessVariable (analog inputs with units and calibration).
+
+* Averaging in URLDevice parameters. Parameters 'samples' and 'interval' to setup
+  averaging, and parameter 'op' to retrieve Averager child devices.
+
+* RegisterStats to provide URLDevice operations on waveforms (parameter 'op').
+
+* New data layout: LayoutSF (proposal for SwissFEL common format).
+
+* Script callbacks for start/end of scan passes: __before_pass__ and __after_pass__.
+
+
+### Changed
+
+* Convert.flatten and Convert.reshape handling multi-dimensional array shape conversion
+  (replacing Convert.toBidimensional, Convert.toUnidimensional).
+
+* Replaced Millisecond into FixedMillisecond in TimePlotJFree, which has better performance.
+
+* Token {count} can have  customized format. E.g: {count}%02d.
+
+* Monitor scan supporting multiple triggers.
+
+* Device polling first event is immediate (timer delay=0) .
+
+* Move scan common optional arguments to **pars(so signatures don't get too big): 
+  __title__, __before_read__ and __after_read__, __before_pass__ and __after_pass__.
+ 
+* Ability to abort background scans: both server __evalAsync__ command  and  __run__ with async flag
+  return command id. It can be aborted with abort/id  in the server.
+
+* Included local timestamp and device timestamps in scan record.
+
+
+### Fixed
+
+* get_plot_snapshot manage names of plots with no title.
+
+* Many GUI fixes for Mac OS (accelerators, colors, sizes...).
+
+* Log cleanup bug fix (time to live in ms was truncated because was not a long).
+
+* Read calls in the cache change event callback return the cache, and do not trigger new read.
+
+* Workaround to bug in JFreeChart when appending very small values to matric plot.
+
+* Fixed return values of simultaneous commands dependent and persistence of simultaneous scans.
+
+
+
 ## 1.9-SNAPSHOT
 
 ### Added
@@ -20,6 +93,7 @@ webcam.getResolutions()
 ### Changed
 
 * Updated Jython to 2.7.1.
+
 
 
 ## 1.8.0 (2017-12-05)
