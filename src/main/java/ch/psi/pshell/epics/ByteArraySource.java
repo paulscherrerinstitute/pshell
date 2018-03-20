@@ -8,10 +8,10 @@ import ch.psi.pshell.imaging.RegisterArraySource;
 public class ByteArraySource extends RegisterArraySource {
 
     public ByteArraySource(String name, String channelName) {
-        super(name, new ChannelByteArray(name + " data", channelName));
+        this(name, channelName, -1);
     }
 
     public ByteArraySource(String name, String channelName, int size) {
-        super(name, new ChannelByteArray(name + " data", channelName, size));
+        super(name, new ChannelByteArray(name + " data", channelName, size, false));
     }
 }

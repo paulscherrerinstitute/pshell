@@ -403,7 +403,7 @@ public class StripChart extends StandardDialog {
         });
         final DecimalFormat formatter = new DecimalFormat("#.############");
         for (int i = 1; i <= 5; i++) {
-            tableCharts.getColumnModel().getColumn(i).setPreferredWidth(112);
+            tableCharts.getColumnModel().getColumn(i).setPreferredWidth(90);
             tableCharts.getColumnModel().getColumn(i).setCellRenderer((TableCellRenderer) new DefaultTableCellRenderer() {
                 @Override
                 public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
@@ -416,7 +416,11 @@ public class StripChart extends StandardDialog {
         }
 
         TableColumn colMarkers = tableCharts.getColumnModel().getColumn(6);
-        colMarkers.setPreferredWidth(60);
+        colMarkers.setPreferredWidth(80);
+        
+        TableColumn colLocalTime = tableCharts.getColumnModel().getColumn(7);
+        colLocalTime.setPreferredWidth(90);        
+        
 
         //Not needed with explicit stop button
         /*        
@@ -534,7 +538,17 @@ public class StripChart extends StandardDialog {
             saveButton = null;
         }
     }
+    
+    boolean isSeriesTableRowEditable(int row, int column){
+        boolean editing = !started;
+        return ((column >= tableSeries.getColumnCount()-1) || editing);
+    }
 
+    boolean isChartTableRowEditable(int row, int column){
+        boolean editing = !started;
+        return (column>1) && (editing || (column<7));
+    }
+    
     String getDefaultFolder() {
         if (defaultFolder == null) {
             return Sys.getUserHome();
@@ -745,6 +759,7 @@ public class StripChart extends StandardDialog {
             Double y2max = (Double) modelCharts.getValueAt(i, 4);
             Double duration = (Double) modelCharts.getValueAt(i, 5);
             Boolean markers = (Boolean) modelCharts.getValueAt(i, 6);
+            Boolean localTime = (Boolean) modelCharts.getValueAt(i, 7);
 
             TimePlotBase plot = (TimePlotBase) Class.forName(HistoryChart.getTimePlotImpl()).newInstance();
             plot.setQuality(PlotPanel.getQuality());
@@ -823,6 +838,8 @@ public class StripChart extends StandardDialog {
                 DeviceTask task = new DeviceTask();
                 task.row = i + 1;
                 task.info = info;
+                Boolean localTime = (Boolean) modelCharts.getValueAt(plotIndex, 7);
+                task.localTime = (localTime == null) ? false : localTime;
                 Thread t = new Thread(task, "Strip chart: " + name);
                 t.setDaemon(true);
                 tasks.add(task);
@@ -918,27 +935,33 @@ public class StripChart extends StandardDialog {
         int index;
         Double current;
         final Object persistLock = new Object();
+        boolean localTime;
 
         void add(Device device, Object value, Long timestamp, TimePlotBase plot, int seriesIndex) {
             try {
-                TimestampedValue tValue = device.takeTimestamped();
-                if (tValue != null) {
-                    if (timestamp == null) {
-                        //To Make sure  value/timestamp pair is correct                
-                        value = tValue.getValue();
-                        timestamp = tValue.getTimestamp();
-                    } else {
-                        if (timestamp <= tValue.getTimestamp()) {
-                            //Won't plot dragging values lower than current
-                            return;
+                long now = System.currentTimeMillis();
+                if (localTime){
+                    value = device.take();
+                    timestamp = now;
+                } else {
+                    TimestampedValue tValue = device.takeTimestamped();
+                    if (tValue != null) {
+                        if (timestamp == null) {
+                            //To Make sure  value/timestamp pair is correct                
+                            value = tValue.getValue();
+                            timestamp = tValue.getTimestamp();
+                        } else {
+                            if (timestamp <= tValue.getTimestamp()) {
+                                //Won't plot dragging values lower than current
+                                return;
+                            }
                         }
                     }
                 }
                 if ((value == null) || (value instanceof Number)) {
-                    Double d = (value == null) ? Double.NaN : ((Number) value).doubleValue();
-                    long time = (timestamp == null) ? System.currentTimeMillis() : timestamp;
-
-                    appendTimestamps.put(device, System.currentTimeMillis());
+                    Double d = (value == null) ? Double.NaN : ((Number) value).doubleValue(); 
+                    long time = (timestamp == null) ? now : timestamp;
+                    appendTimestamps.put(device, now);
 
                     //plot.add(seriesIndex, time, d);
                     //Invoking event thread to prevent https://sourceforge.net/p/jfreechart/bugs/1009/ (JFreeChart is not thread safe)
@@ -1023,6 +1046,7 @@ public class StripChart extends StandardDialog {
                     case Stream:
                         int modulo = Scalar.DEFAULT_MODULO;
                         int offset = Scalar.DEFAULT_OFFSET;
+                        boolean useLocalTimestamp = false;
                         if (name.contains(" ")) {
                             String[] tokens = name.split(" ");
                             name = tokens[0];
@@ -1033,6 +1057,7 @@ public class StripChart extends StandardDialog {
                             }
                         }
                         dev = stream.addScalar(name, name, modulo, offset);
+                        ((Scalar)dev).setUseLocalTimestamp(useLocalTimestamp);
                         streamDevices--;
                         break;
                     case CamServer:
@@ -1279,7 +1304,7 @@ public class StripChart extends StandardDialog {
         tableSeries = new JTable() {
             @Override
             public boolean isCellEditable(int row, int column) {
-                return (column >= getColumnCount()-1) || (!started);
+                return isSeriesTableRowEditable(row, column);
             };
         };
         buttonDelete = new javax.swing.JButton();
@@ -1288,7 +1313,12 @@ public class StripChart extends StandardDialog {
         buttonDown = new javax.swing.JButton();
         panelAxis = new javax.swing.JPanel();
         jScrollPane3 = new javax.swing.JScrollPane();
-        tableCharts = new javax.swing.JTable();
+        tableCharts = new JTable() {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return isChartTableRowEditable(row, column);
+            };
+        };
         panelFile = new javax.swing.JPanel();
         buttonLoad = new javax.swing.JButton();
         buttonSave = new javax.swing.JButton();
@@ -1431,21 +1461,21 @@ public class StripChart extends StandardDialog {
 
         tableCharts.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
-                {"1", null, null, null, null, null, null},
-                {"2", null, null, null, null, null, null},
-                {"3", null, null, null, null, null, null},
-                {"4", null, null, null, null, null, null},
-                {"5", null, null, null, null, null, null}
+                {"1", null, null, null, null, null, null, null},
+                {"2", null, null, null, null, null, null, null},
+                {"3", null, null, null, null, null, null, null},
+                {"4", null, null, null, null, null, null, null},
+                {"5", null, null, null, null, null, null, null}
             },
             new String [] {
-                "Chart", "Y1min", "Y1max", "Y2min", "Y2max", "Duration(s)", "Markers"
+                "Chart", "Y1min", "Y1max", "Y2min", "Y2max", "Duration(s)", "Markers", "Local Time"
             }
         ) {
             Class[] types = new Class [] {
-                java.lang.String.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.Boolean.class
+                java.lang.String.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.Boolean.class, java.lang.Boolean.class
             };
             boolean[] canEdit = new boolean [] {
-                false, true, true, true, true, true, true
+                false, true, true, true, true, true, true, true
             };
 
             public Class getColumnClass(int columnIndex) {

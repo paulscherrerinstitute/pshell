@@ -33,31 +33,31 @@ public class Scienta extends AreaDetector {
 
     public Scienta(String name, String channelCtrl, String channelData) {
         super(name, channelCtrl, channelData);
-        slices = new ChannelInteger(name + " slices", channelCtrl + ":SLICES");
-        frames = new ChannelInteger(name + " frames", channelCtrl + ":FRAMES");
+        slices = new ChannelInteger(name + " slices", channelCtrl + ":SLICES", false);
+        frames = new ChannelInteger(name + " frames", channelCtrl + ":FRAMES", false);
 
-        lowEnergy = new ChannelDouble(name + " low energy", channelCtrl + ":LOW_ENERGY", 3);
-        centerEnergy = new ChannelDouble(name + " center energy", channelCtrl + ":CENTRE_ENERGY", 3);
-        highEnergy = new ChannelDouble(name + " high energy", channelCtrl + ":HIGH_ENERGY", 3);
-        stepSize = new ChannelDouble(name + " step size", channelCtrl + ":STEP_SIZE", 3);
-        stepTime = new ChannelDouble(name + " step time", channelCtrl + ":STEP_TIME", 3);
+        lowEnergy = new ChannelDouble(name + " low energy", channelCtrl + ":LOW_ENERGY", 3, false);
+        centerEnergy = new ChannelDouble(name + " center energy", channelCtrl + ":CENTRE_ENERGY", 3, false);
+        highEnergy = new ChannelDouble(name + " high energy", channelCtrl + ":HIGH_ENERGY", 3, false);
+        stepSize = new ChannelDouble(name + " step size", channelCtrl + ":STEP_SIZE", 3, false);
+        stepTime = new ChannelDouble(name + " step time", channelCtrl + ":STEP_TIME", 3, false);
 
-        energyWidth = new ChannelDouble(name + " energy width", channelCtrl + ":ENERGY_WIDTH_RBV", 3);
+        energyWidth = new ChannelDouble(name + " energy width", channelCtrl + ":ENERGY_WIDTH_RBV", 3, false);
         energyWidth.setAccessType(AccessType.Read);
-        passEnergy = new ChannelString(name + " pass energy", channelCtrl + ":PASS_ENERGY");
-        lensMode = new ChannelString(name + " lens mode", channelCtrl + ":LENS_MODE");
-        acquisitionMode = new ChannelString(name + " lens mode", channelCtrl + ":ACQ_MODE");
-        channelBegin = new ChannelDouble(name + " channel begin", channelCtrl + ":CHANNEL_BEGIN_RBV", 3);
+        passEnergy = new ChannelString(name + " pass energy", channelCtrl + ":PASS_ENERGY", false);
+        lensMode = new ChannelString(name + " lens mode", channelCtrl + ":LENS_MODE", false);
+        acquisitionMode = new ChannelString(name + " lens mode", channelCtrl + ":ACQ_MODE", false);
+        channelBegin = new ChannelDouble(name + " channel begin", channelCtrl + ":CHANNEL_BEGIN_RBV", 3, false);
         channelBegin.setAccessType(AccessType.Read);
-        channelEnd = new ChannelDouble(name + " channel end", channelCtrl + ":CHANNEL_END_RBV", 3);
+        channelEnd = new ChannelDouble(name + " channel end", channelCtrl + ":CHANNEL_END_RBV", 3, false);
         channelEnd.setAccessType(AccessType.Read);
-        sliceBegin = new ChannelDouble(name + " slice begin", channelCtrl + ":SLICE_BEGIN_RBV", 3);
+        sliceBegin = new ChannelDouble(name + " slice begin", channelCtrl + ":SLICE_BEGIN_RBV", 3, false);
         sliceBegin.setAccessType(AccessType.Read);
-        sliceEnd = new ChannelDouble(name + " slice end", channelCtrl + ":SLICE_END_RBV", 3);
+        sliceEnd = new ChannelDouble(name + " slice end", channelCtrl + ":SLICE_END_RBV", 3, false);
         sliceEnd.setAccessType(AccessType.Read);
-        numChannels = new ChannelInteger(name + " num channels", channelCtrl + ":NUM_CHANNELS_RBV");
+        numChannels = new ChannelInteger(name + " num channels", channelCtrl + ":NUM_CHANNELS_RBV", false);
         numChannels.setAccessType(AccessType.Read);
-        numSlices = new ChannelInteger(name + " num slices", channelCtrl + ":SLICES_RBV");
+        numSlices = new ChannelInteger(name + " num slices", channelCtrl + ":SLICES_RBV", false);
         numSlices.setAccessType(AccessType.Read);
         numChannels.addListener(new DeviceAdapter() {
             @Override
@@ -71,12 +71,12 @@ public class Scienta extends AreaDetector {
                 }
             }
         });
-        acquisitionTime = new ChannelDouble(name + " acquire time", channelCtrl + ":TOTAL_ACQ_TIME_RBV", 3);
+        acquisitionTime = new ChannelDouble(name + " acquire time", channelCtrl + ":TOTAL_ACQ_TIME_RBV", 3, false);
         acquisitionTime.setAccessType(AccessType.Read);
 
 
         /*
-         spectrum = new ChannelDoubleArray(name + " spectrum", channelCtrl + ":INT_SPECTRUM", 8, 200) {
+         spectrum = new ChannelDoubleArray(name + " spectrum", channelCtrl + ":INT_SPECTRUM", 8, 200, false) {
          @Override
          protected double[] doRead() throws IOException, InterruptedException {
          numChannels.getValue();
@@ -86,14 +86,14 @@ public class Scienta extends AreaDetector {
          spectrum.setAccessType(AccessType.Read);
          */
         spectrum = new ScientaSpectrum();
-        image = new ChannelDoubleArray(name + " image", channelCtrl + ":IMAGE", 8);
+        image = new ChannelDoubleArray(name + " image", channelCtrl + ":IMAGE", 8, -1, false);
         image.setAccessType(AccessType.Read);
-        extio = new ChannelDoubleArray(name + " extio", channelCtrl + ":EXTIO", 8);
+        extio = new ChannelDoubleArray(name + " extio", channelCtrl + ":EXTIO", 8, -1, false);
         extio.setAccessType(AccessType.Read);
 
-        currentChannel = new ChannelDouble(name + " current channel", channelCtrl + ":CURRENT_CHANNEL_RBV", 0);
+        currentChannel = new ChannelDouble(name + " current channel", channelCtrl + ":CURRENT_CHANNEL_RBV", 0, false);
         currentChannel.setAccessType(AccessType.Read);
-        totalPoints = new ChannelDouble(name + " total points", channelCtrl + ":TOTAL_POINTS_RBV", 0);
+        totalPoints = new ChannelDouble(name + " total points", channelCtrl + ":TOTAL_POINTS_RBV", 0, false);
         totalPoints.setAccessType(AccessType.Read);
 
         addChildren(new Device[]{slices, frames,
@@ -507,7 +507,7 @@ public class Scienta extends AreaDetector {
         Stats(String name, int index) {
             super(name, channelCtrl.split(":")[0] + ":Stats" + index + ":Total_RBV", 3);
             this.index = index;
-            uid = new ChannelInteger(name + " uid", channelCtrl.split(":")[0] + ":Stats" + index + ":UniqueId_RBV");
+            uid = new ChannelInteger(name + " uid", channelCtrl.split(":")[0] + ":Stats" + index + ":UniqueId_RBV", false);
             //setParent(Scienta.this);
             addChild(uid);
         }

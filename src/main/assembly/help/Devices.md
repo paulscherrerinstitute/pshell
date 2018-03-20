@@ -279,12 +279,11 @@ PROTOCOL_NAME://DEVICE_NAME?OPTION_1=VAL_1&...&OPTION_N=VAL_N
 
 The supported protocols are:
 
-- ca: Creates a device based in an EPICS channel. Options:
+- ca: Creates a device based in an EPICS channel (with timestamp and status). Options:
 
     - type: enforce the channel type. Scalar types: 'b', 'i', 'l', 'd', 's'. Waveform type: '[b', '[i,', '[l', '[d', '[s'.
     - size: determines the size of a waveform.
     - precision: number of precision digits.
-    - timestamped: if true then the value carry the IOC timestamp, otherwise the PC timestamp.
     - blocking: if true (default) writes and waits until processing finishes. Otherwise does not wait.
 
 

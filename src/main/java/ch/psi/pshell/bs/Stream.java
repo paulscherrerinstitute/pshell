@@ -9,6 +9,7 @@ import ch.psi.bsread.ReceiverConfig;
 import ch.psi.bsread.message.ValueImpl;
 import ch.psi.pshell.device.Device;
 import ch.psi.bsread.converter.MatlabByteConverter;
+import ch.psi.bsread.message.Timestamp;
 import ch.psi.pshell.device.Cacheable;
 import ch.psi.pshell.device.ReadonlyAsyncRegisterBase;
 import ch.psi.utils.Arr;
@@ -500,6 +501,9 @@ public class Stream extends DeviceBase implements Readable<StreamValue>, Cacheab
             Scalar c = channels.get(channel);
             ValueImpl v = data.get(channel);
             Object val = v.getValue();
+            
+            long devTimestamp = c.getUseLocalTimestamp() ? v.getTimestamp().getAsMillis() : timestamp;
+            long devNanosOffset = c.getUseLocalTimestamp() ? v.getTimestamp().getNs() % 1000000L : nanosOffset;            
             try {
                 if ((!fixedChildren) && (c == null) && (val != null)) {
                     c = (val.getClass().isArray()) ? new Waveform(channel, this, channel) : new Scalar(channel, this, channel);
@@ -510,13 +514,13 @@ public class Stream extends DeviceBase implements Readable<StreamValue>, Cacheab
                     }
                 }
 
-                if (c != null) {
-                    c.set(pulse_id, timestamp, nanosOffset, val);
+                if (c != null) {    
+                    c.set(pulse_id, devTimestamp, devNanosOffset, val);
                 }
             } catch (Exception ex) {
                 getLogger().log(Level.FINE, null, ex);
                 if (c != null) {
-                    c.set(pulse_id, timestamp, nanosOffset, null);
+                    c.set(pulse_id, devTimestamp, devNanosOffset, null);
                 }
             }
             if (debug) {

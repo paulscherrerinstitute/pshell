@@ -27,7 +27,7 @@ public class PsiCamera extends ArraySource {
     public PsiCamera(String name, String prefix) {
         super(name, prefix + ":FPICTURE", new PsiCameraConfig());
         this.prefix = prefix;
-        channelStatus = new ChannelString(name + " status", prefix + ":INIT");
+        channelStatus = new ChannelString(name + " status", prefix + ":INIT", false);
         channelStatus.addListener(new DeviceAdapter() {
             @Override
             public void onValueChanged(Device device, Object value, Object former) {

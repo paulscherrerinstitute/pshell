@@ -39,12 +39,12 @@ public class DiscretePositioner extends DiscretePositionerBase {
     public DiscretePositioner(String name) {
         super(name, new DiscretePositionerConfig());
         setPositions(getConfig().positions);
-        setpoint = new ChannelString(name + " setpoint", getConfig().setpoint_pv);
+        setpoint = new ChannelString(name + " setpoint", getConfig().setpoint_pv, false);
         readback = Config.isStringDefined(getConfig().readback_pv)
                 ? newReadbackChannel(getConfig().readback_pv)
                 : setpoint;
         stop = Config.isStringDefined(getConfig().stop_pv)
-                ? new ChannelInteger(name + "stop", getConfig().stop_pv)
+                ? new ChannelInteger(name + "stop", getConfig().stop_pv, false)
                 : null;
         setChildren(new Device[]{setpoint, readback, stop});
         setReadback(readback);
@@ -66,12 +66,12 @@ public class DiscretePositioner extends DiscretePositionerBase {
 
     protected DiscretePositioner(String name, String channelSetpoint, String channelReadback, String channelStop, String... positions) {
         super(name, positions);
-        setpoint = new ChannelString(name + " setpoint", channelSetpoint);
+        setpoint = new ChannelString(name + " setpoint", channelSetpoint, false);
         readback = (channelReadback != null)
                 ? newReadbackChannel(channelReadback)
                 : setpoint;
         stop = (channelStop != null)
-                ? new ChannelInteger(name + "stop", getConfig().stop_pv)
+                ? new ChannelInteger(name + "stop", getConfig().stop_pv, false)
                 : null;
         setChildren(new Device[]{setpoint, readback, stop});
         setReadback(readback);

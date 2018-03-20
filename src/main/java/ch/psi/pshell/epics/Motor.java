@@ -47,16 +47,16 @@ public class Motor extends MotorBase {
         super(name, new EpicsMotorConfig());
         this.channelName = channelName;
         setpoint = new ChannelDouble(name + " setpoint", this.channelName + ".VAL");
-        velocity = new ChannelDouble(name + " speed", this.channelName + ".VELO");
+        velocity = new ChannelDouble(name + " speed", this.channelName + ".VELO", -1, false);
         readback = new ReadbackChannel(name + " readback", this.channelName + ".RBV");
         readback.setAccessType(AccessType.Read);
-        state = new ChannelInteger(name + " state", this.channelName + ".MSTA");
+        state = new ChannelInteger(name + " state", this.channelName + ".MSTA", false);
         state.setAccessType(AccessType.Read);
-        stop = new ChannelInteger(name + " stop", this.channelName + ".STOP");
-        mode = new ChannelString(name + " mode", this.channelName + ".SPMG");
-        done = new ChannelShort(name + " done", this.channelName + ".DMOV");
+        stop = new ChannelInteger(name + " stop", this.channelName + ".STOP", false);
+        mode = new ChannelString(name + " mode", this.channelName + ".SPMG", false);
+        done = new ChannelShort(name + " done", this.channelName + ".DMOV", false);
         if (getConfig().hasEnable) {
-            enabled = new ChannelInteger(name + " enabled", this.channelName + "_able.VAL");
+            enabled = new ChannelInteger(name + " enabled", this.channelName + "_able.VAL", false);
             enabled.setAccessType(AccessType.Read);
         } else {
             enabled = null;

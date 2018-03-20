@@ -50,7 +50,7 @@ public class Manipulator extends DiscretePositionerBase {
         if (!Config.isStringDefined(getConfig().stop_pv)) {
             throw new StopNotConfiguredException();
         }
-        try (ChannelInteger channel = new ChannelInteger(getName() + " stop", getConfig().stop_pv + ".PROC")) {
+        try (ChannelInteger channel = new ChannelInteger(getName() + " stop", getConfig().stop_pv + ".PROC", false)) {
             channel.initialize();
             channel.write(1);
         }
@@ -66,7 +66,7 @@ public class Manipulator extends DiscretePositionerBase {
         for (int i = 0; i < getConfig().positions.length; i++) {
             if (value.equals(getConfig().positions[i].trim())) {
                 if (i < getConfig().position_pvs.length) {
-                    try (ChannelInteger channel = new ChannelInteger(getName() + " " + getConfig().positions[i], getConfig().position_pvs[i].trim() + ".PROC")) {
+                    try (ChannelInteger channel = new ChannelInteger(getName() + " " + getConfig().positions[i], getConfig().position_pvs[i].trim() + ".PROC", false)) {
                         channel.initialize();
                         channel.write(1);
                         setpoint = value;

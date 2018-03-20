@@ -21,7 +21,7 @@ public class Scaler extends ReadonlyRegisterBase<int[]> implements ReadonlyRegis
     public Scaler(String name, String channel) {
         super(name);
         this.channelName = channel;
-        control = new ChannelInteger(getName() + " control", channel + ".CNT");
+        control = new ChannelInteger(getName() + " control", channel + ".CNT", false);
         channels = new ArrayList<>();
         setTrackChildren(true);
         addChild(control);

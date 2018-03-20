@@ -16,10 +16,12 @@ public class Scalar<T> extends ReadonlyAsyncRegisterBase<T> {
     private String id;
     private int modulo = DEFAULT_MODULO;
     private int offset = DEFAULT_OFFSET;
+    
 
     public int TIMEOUT_UPDATE = 10000;
 
     final Object lock = new Object();
+    boolean useLocalTimestamp = true;
 
     private volatile Long pulseId;
 
@@ -53,6 +55,14 @@ public class Scalar<T> extends ReadonlyAsyncRegisterBase<T> {
         setParent(stream);
     }
 
+    public void setUseLocalTimestamp(boolean value){
+        useLocalTimestamp = value;
+    }
+    
+    public boolean getUseLocalTimestamp(){
+        return useLocalTimestamp;
+    }   
+    
     @Override
     protected void doInitialize() throws IOException, InterruptedException {
         super.doInitialize();
