@@ -165,15 +165,28 @@ public abstract class TimePlotBase extends PlotBase<TimePlotSeries> implements T
     //Appending elements
     @Override
     public void addTerminator(int index) {
-        add(index, Double.NaN);
+        Long timestamp = getLastTimestamp(index);
+        addTerminator(index, (timestamp==null)? System.currentTimeMillis() : timestamp+1);
     }
 
     @Override
     public void addTerminators() {
+        for (int i=0; i< getNumberOfSeries(); i++){
+            addTerminator(i);
+        }
+    }
+    
+    @Override
+    public void addTerminator(int index, long time) {
+        add(index, time, Double.NaN);
+    }
+
+    @Override
+    public void addTerminators(long time) {
         double[] terminators = new double[getNumberOfSeries()];
         Arrays.fill(terminators, Double.NaN);
-        add(terminators);
-    }
+        add(time, terminators);
+    }    
 
     @Override
     public void add(double value) {
@@ -213,6 +226,21 @@ public abstract class TimePlotBase extends PlotBase<TimePlotSeries> implements T
     abstract public List<TimestampedValue<Double>> getSeriestData(int index);
 
     abstract public String getSeriesName(int index);
+    
+    abstract public TimestampedValue<Double> getItem(int index, int itemIndex) ;
+
+    public TimestampedValue<Double> getLastItem(int index) {
+        return getItem(index, -1);
+    }    
+    
+    public Double getLastValue(int index) {
+        TimestampedValue<Double> ret = getLastItem(index);
+        return (ret==null) ? null : ret.getValue();
+    }      
+    public Long getLastTimestamp(int index) {
+        TimestampedValue<Double> ret = getLastItem(index);
+        return (ret==null) ? null : ret.getTimestamp();
+    }     
 
     //Configuration
     @Override

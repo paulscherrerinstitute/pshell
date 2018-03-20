@@ -54,5 +54,9 @@ public interface TimePlot extends Plot<TimePlotSeries> {
     void addTerminator(int index);
 
     void addTerminators();
+    
+    void addTerminator(int index, long time);
+
+    void addTerminators(long time);    
         
 }

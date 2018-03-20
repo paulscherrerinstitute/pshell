@@ -131,7 +131,7 @@ public class TimePlotJFree extends TimePlotBase {
         setup();
         //chartPanel.setMouseZoomable(true, true);
     }
-        
+
     @Override
     protected void setupMenus() {
         super.setupMenus();
@@ -245,19 +245,18 @@ public class TimePlotJFree extends TimePlotBase {
     public void setPlotBackgroundColor(Color c) {
         chart.getXYPlot().setBackgroundPaint(c);
     }
-    
+
     @Override
     public void setPlotGridColor(Color c) {
         chart.getXYPlot().setDomainGridlinePaint(c);
         chart.getXYPlot().setRangeGridlinePaint(c);
-    }    
-    
+    }
+
     @Override
     public void setPlotOutlineColor(Color c) {
         chart.getXYPlot().setOutlinePaint(c);
     }
-    
-        
+
     @Override
     protected void doClear() {
         for (TimeSeries ts : series) {
@@ -278,7 +277,7 @@ public class TimePlotJFree extends TimePlotBase {
         dataset.addSeries(ts);
         XYPlot plot = chart.getXYPlot();
         getRenderer(series.axis).setSeriesShape(dataset.getSeriesCount() - 1, marker);
-        if (series.getColor()!=null){
+        if (series.getColor() != null) {
             getRenderer(series.axis).setSeriesPaint(dataset.getSeriesCount() - 1, series.getColor());
         }
         return ts;
@@ -333,6 +332,19 @@ public class TimePlotJFree extends TimePlotBase {
             }
         }
         return ret;
+    }
+
+    @Override
+    public TimestampedValue<Double> getItem(int index, int itemIndex) {
+        TimeSeries s = series.get(index);
+        if (itemIndex == -1) {
+            itemIndex = s.getItemCount() - 1;
+        }
+        if ((itemIndex < 0) || (itemIndex >= s.getItemCount())) {
+            return null;
+        }
+        TimeSeriesDataItem item = s.getDataItem(itemIndex);
+        return new TimestampedValue<Double>((item.getValue() != null) ? item.getValue().doubleValue() : Double.NaN, item.getPeriod().getMiddleMillisecond());
     }
 
     @Override
@@ -491,27 +503,27 @@ public class TimePlotJFree extends TimePlotBase {
         XYLineAndShapeRenderer renderer = getRenderer(series.getAxisY());
         renderer.setSeriesPaint(getSeriesIndex(series), color);
     }
-    
+
     @Override
-    public ch.psi.utils.Range getAxisRange(AxisId axisId){
+    public ch.psi.utils.Range getAxisRange(AxisId axisId) {
         Range r = null;
-        switch (axisId){
+        switch (axisId) {
             case X:
                 r = chart.getXYPlot().getDomainAxis().getRange();
                 return new ch.psi.utils.Range(r.getLowerBound(), r.getUpperBound());
             case Y:
                 r = chart.getXYPlot().getRangeAxis().getRange();
-                return new ch.psi.utils.Range(r.getLowerBound(), r.getUpperBound());                
+                return new ch.psi.utils.Range(r.getLowerBound(), r.getUpperBound());
             case Y2:
-                if (dataY2 == null){
+                if (dataY2 == null) {
                     return null;
                 }
                 r = chart.getXYPlot().getRangeAxis(1).getRange();
-                return new ch.psi.utils.Range(r.getLowerBound(), r.getUpperBound());                 
+                return new ch.psi.utils.Range(r.getLowerBound(), r.getUpperBound());
             default:
                 return null;
         }
-    }    
+    }
 
     int getSeriesIndex(TimePlotSeries series) {
         //return this.series.indexOf(series);
