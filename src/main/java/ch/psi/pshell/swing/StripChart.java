@@ -261,7 +261,7 @@ public class StripChart extends StandardDialog {
                         tooltip = "Format: DeviceName";
                         break;
                     case Stream:
-                        tooltip = "Format: Identifier [Modulo=10 Offset=0]";
+                        tooltip = "Format: Identifier [Modulo=10 Offset=0 GlobalTime=true]";
                         break;
                     case CamServer:
                         tooltip = "Format: URL Identifier";
@@ -1046,18 +1046,19 @@ public class StripChart extends StandardDialog {
                     case Stream:
                         int modulo = Scalar.DEFAULT_MODULO;
                         int offset = Scalar.DEFAULT_OFFSET;
-                        boolean useLocalTimestamp = false;
+                        boolean useGlobalTimestamp = true;
                         if (name.contains(" ")) {
                             String[] tokens = name.split(" ");
                             name = tokens[0];
                             try {
                                 modulo = Integer.valueOf(tokens[1]);
                                 offset = Integer.valueOf(tokens[2]);
+                                useGlobalTimestamp= !tokens[3].equalsIgnoreCase("false");
                             } catch (Exception ex) {
                             }
                         }
                         dev = stream.addScalar(name, name, modulo, offset);
-                        ((Scalar)dev).setUseLocalTimestamp(useLocalTimestamp);
+                        ((Scalar)dev).setUseLocalTimestamp(!useGlobalTimestamp);
                         streamDevices--;
                         break;
                     case CamServer:
@@ -1267,8 +1268,6 @@ public class StripChart extends StandardDialog {
         if ((started) && (!persisting)) {
             try {
                 String file = openProvider();
-                //String createDataset( String name, String type, int index){
-                //void addDataset(String id, Long timestamp, Double value, int index){
                 for (DeviceTask task : tasks) {
                     try {
                         task.saveDataset();
@@ -1281,11 +1280,6 @@ public class StripChart extends StandardDialog {
                 closeProvider();
             }
         }
-        //void openProvider() throws IOException{
-        //void closeProvider(){
-        //String createDataset( String name, String type, int index){
-        //void addDataset(String id, Long timestamp, Double value, int index){
-
     }
 
     /**
