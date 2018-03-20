@@ -17,7 +17,10 @@ public class TimeScan extends LineScan {
     }
     
     public TimeScan(Readable[] readables, int points, int interval_ms, int passes) {
-        super(new Writable[0], readables, new double[]{0.0}, new double[]{points - 1}, points - 1, false, 0, passes, false);
+        super(new Writable[0], readables, new double[]{0.0}, 
+                (points<0) ? new double[]{100.0} : new double[]{points - 1}, 
+                (points<0) ? Integer.MAX_VALUE : points - 1, 
+                false, 0, passes, false);
         this.interval_ms = interval_ms;
     }
 
@@ -26,7 +29,7 @@ public class TimeScan extends LineScan {
         int steps = getNumberOfSteps()[0];
         Chrono chrono = new Chrono();
         int timeout = interval_ms;
-        for (int i = 0; i <= steps; i++) {
+        for (int i = 0; (i <= steps) || (steps==Integer.MAX_VALUE); i++) {
             processPosition(new double[0]);
             if (i == steps) {
                 break;
