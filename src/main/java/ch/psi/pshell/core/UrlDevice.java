@@ -18,6 +18,7 @@ import ch.psi.pshell.device.Averager.RegisterStats;
 import ch.psi.pshell.device.Writable;
 import ch.psi.pshell.epics.Epics;
 import ch.psi.pshell.epics.EpicsRegister;
+import ch.psi.pshell.epics.InvalidValueAction;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -173,7 +174,7 @@ public class UrlDevice extends DeviceBase implements Readable, Writable {
         }
         return null;
     }
-
+    
     protected Device resolve() throws IOException, InterruptedException {
         Device ret = null;
         switch (protocol) {
@@ -181,19 +182,19 @@ public class UrlDevice extends DeviceBase implements Readable, Writable {
                 if (Context.getInstance() != null) {
                     try {
                         ret = (Device) Context.getInstance().getDevicePool().getByName(id);
+                        if (ret==null){
+                            ret = (Device) Context.getInstance().evalLineBackground(name);
+                        }                        
                     } catch (Exception ex) {
                     }
                 }
                 break;
             case "pv":
             case "ca":
-                boolean timestamped = false;
+                boolean timestamped = true;
                 int precision = -1;
                 int size = -1;
                 Class type = null;
-                if ("true".equalsIgnoreCase(pars.get("timestamped"))) {
-                    timestamped = true;
-                }
                 try {
                     size = Integer.valueOf(pars.get("size"));
                 } catch (Exception ex) {
@@ -207,7 +208,7 @@ public class UrlDevice extends DeviceBase implements Readable, Writable {
                 } catch (Exception ex) {
                 }
 
-                ret = Epics.newChannelDevice(name, id, type, timestamped, precision, size);
+                ret = Epics.newChannelDevice(name, id, type, timestamped, precision, size, InvalidValueAction.Nullify);
                 boolean blocking = true;
                 if (pars.containsKey("blocking")) {
                     try {

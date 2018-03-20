@@ -3,10 +3,8 @@ package ch.psi.pshell.swing;
 import ch.psi.pshell.bs.PipelineServer;
 import ch.psi.pshell.bs.Scalar;
 import ch.psi.pshell.bs.Stream;
-import ch.psi.pshell.core.CommandSource;
 import ch.psi.pshell.core.Context;
 import ch.psi.pshell.core.ContextAdapter;
-import ch.psi.pshell.core.ContextListener;
 import ch.psi.pshell.core.JsonSerializer;
 import ch.psi.pshell.data.Provider;
 import ch.psi.pshell.data.ProviderHDF5;
@@ -17,14 +15,12 @@ import ch.psi.pshell.device.DeviceListener;
 import ch.psi.pshell.device.TimestampedValue;
 import ch.psi.pshell.epics.ChannelDouble;
 import ch.psi.pshell.epics.Epics;
+import ch.psi.pshell.epics.InvalidValueAction;
 import ch.psi.pshell.plot.PlotBase;
 import ch.psi.pshell.plot.TimePlotBase;
 import ch.psi.pshell.plot.TimePlotSeries;
 import ch.psi.pshell.plotter.Preferences;
-import ch.psi.pshell.scripting.Statement;
-import ch.psi.pshell.scripting.ViewPreference;
 import ch.psi.pshell.ui.App;
-import ch.psi.utils.Configurable;
 import ch.psi.utils.IO;
 import ch.psi.utils.InvokingProducer;
 import ch.psi.utils.State;
@@ -94,10 +90,10 @@ public class StripChart extends StandardDialog {
         Stream,
         Device,
         CamServer;
-        
-        public boolean isReadOnly(){
-            return (this== CamServer) || (this==Stream);
-        } 
+
+        public boolean isReadOnly() {
+            return (this == CamServer) || (this == Stream);
+        }
     }
     final DefaultTableModel modelSeries;
     final DefaultTableModel modelCharts;
@@ -218,31 +214,32 @@ public class StripChart extends StandardDialog {
             }
         });
         add(buttonPause, 0);
-        
+
         if (Context.getInstance() != null) {
             Context.getInstance().addListener(new ContextAdapter() {
                 boolean hasStopped;
+
                 @Override
                 public void onContextStateChanged(State state, State former) {
-                     if ((state == State.Initializing) || (state == State.Closing)){
-                         if (started){
-                             stop();
-                             hasStopped = (state == State.Initializing) ;
-                         }
-                     } else if ((former == State.Initializing) && state.isActive()
-                         && (modelSeries.getRowCount() > 0) && hasStopped){
-                         try {                          
-                             start();
-                         } catch (Exception ex) {
-                             Logger.getLogger(StripChart.class.getName()).log(Level.WARNING, null, ex);
-                         }
-                         hasStopped = false;
-                     } else {
-                         hasStopped = false;
-                     }                
+                    if ((state == State.Initializing) || (state == State.Closing)) {
+                        if (started) {
+                            stop();
+                            hasStopped = (state == State.Initializing);
+                        }
+                    } else if ((former == State.Initializing) && state.isActive()
+                            && (modelSeries.getRowCount() > 0) && hasStopped) {
+                        try {
+                            start();
+                        } catch (Exception ex) {
+                            Logger.getLogger(StripChart.class.getName()).log(Level.WARNING, null, ex);
+                        }
+                        hasStopped = false;
+                    } else {
+                        hasStopped = false;
+                    }
                 }
             });
-        }        
+        }
     }
 
     void setButtonPause(boolean paused) {
@@ -258,7 +255,7 @@ public class StripChart extends StandardDialog {
                 Type type = Type.valueOf(modelSeries.getValueAt(row, 2).toString());
                 switch (type) {
                     case Channel:
-                        tooltip = "Format: ChannelName [Polling=-1 Timestamped=false Precision=-1]";
+                        tooltip = "Format: ChannelName [Polling=-1 Precision=-1]";
                         break;
                     case Device:
                         tooltip = "Format: DeviceName";
@@ -432,8 +429,8 @@ public class StripChart extends StandardDialog {
         modelSeries.addTableModelListener(changeListener);
         modelCharts.addTableModelListener(changeListener);
          */
-        ((JComboBox)((DefaultCellEditor)tableSeries.getColumnModel().getColumn(2).getCellEditor()).getComponent()).addActionListener((ActionEvent e) -> {
-                updateTooltip();
+        ((JComboBox) ((DefaultCellEditor) tableSeries.getColumnModel().getColumn(2).getCellEditor()).getComponent()).addActionListener((ActionEvent e) -> {
+            updateTooltip();
         });
         tableSeries.getSelectionModel().addListSelectionListener((ListSelectionEvent e) -> {
             updateTooltip();
@@ -445,9 +442,9 @@ public class StripChart extends StandardDialog {
         @Override
         public void tableChanged(TableModelEvent e) {
             if (started) {
-                try{
+                try {
                     int index = e.getFirstRow();
-                    final Color color = Preferences.getColorFromString((String)modelSeries.getValueAt(index, 5));
+                    final Color color = Preferences.getColorFromString((String) modelSeries.getValueAt(index, 5));
                     timePlotSeries.get(index).setColor(color);
                 } catch (Exception ex) {
                     SwingUtils.showException(StripChart.this, ex);
@@ -455,7 +452,7 @@ public class StripChart extends StandardDialog {
             }
         }
     };
-    
+
     TableModelListener modelChartsListener = new TableModelListener() {
         @Override
         public void tableChanged(TableModelEvent e) {
@@ -817,7 +814,7 @@ public class StripChart extends StandardDialog {
                 final int plotIndex = ((Integer) info.get(3)) - 1;
                 final int axis = (Integer) info.get(4);
                 final TimePlotBase plot = plots.get(plotIndex);
-                final Color color = Preferences.getColorFromString((String)info.get(5));
+                final Color color = Preferences.getColorFromString((String) info.get(5));
 
                 TimePlotSeries graph = (color != null) ? new TimePlotSeries(name, color, axis) : new TimePlotSeries(name, axis);
                 seriesIndexes.put(info, plot.getNumberOfSeries());
@@ -990,20 +987,18 @@ public class StripChart extends StandardDialog {
                 switch (type) {
                     case Channel:
                         int polling = -1;
-                        boolean timestamped = false;
+                        boolean timestamped = true;
                         int precision = -1;
                         if (name.contains(" ")) {
                             String[] tokens = name.split(" ");
                             name = tokens[0];
                             try {
                                 polling = Integer.valueOf(tokens[1]);
-                                timestamped = Boolean.valueOf(tokens[2]);
-                                precision = Integer.valueOf(tokens[3]);
+                                precision = Integer.valueOf(tokens[2]);
                             } catch (Exception ex) {
                             }
                         }
-
-                        dev = new ChannelDouble(name, name, precision, timestamped);
+                        dev = new ChannelDouble(name, name, precision, timestamped, InvalidValueAction.Nullify);
 
                         synchronized (instantiatedDevices) {
                             instantiatedDevices.add(dev);
@@ -1016,7 +1011,13 @@ public class StripChart extends StandardDialog {
                         break;
                     case Device:
                         if (Context.getInstance() != null) {
-                            dev = Context.getInstance().getDevicePool().getByName(name, Device.class);
+                            try {
+                                dev = Context.getInstance().getDevicePool().getByName(name, Device.class);
+                                if (dev == null) {
+                                    dev = (Device) Context.getInstance().evalLineBackground(name);
+                                }
+                            } catch (Exception ex) {
+                            }
                         }
                         break;
                     case Stream:
