@@ -501,9 +501,8 @@ public class Stream extends DeviceBase implements Readable<StreamValue>, Cacheab
             Scalar c = channels.get(channel);
             ValueImpl v = data.get(channel);
             Object val = v.getValue();
-            
-            long devTimestamp = c.getUseLocalTimestamp() ? v.getTimestamp().getAsMillis() : timestamp;
-            long devNanosOffset = c.getUseLocalTimestamp() ? v.getTimestamp().getNs() % 1000000L : nanosOffset;            
+            long devTimestamp = timestamp;
+            long devNanosOffset = nanosOffset;
             try {
                 if ((!fixedChildren) && (c == null) && (val != null)) {
                     c = (val.getClass().isArray()) ? new Waveform(channel, this, channel) : new Scalar(channel, this, channel);
@@ -514,7 +513,11 @@ public class Stream extends DeviceBase implements Readable<StreamValue>, Cacheab
                     }
                 }
 
-                if (c != null) {    
+                if (c != null) {
+                    if (c.getUseLocalTimestamp() && (v.getTimestamp() != null)){
+                        devTimestamp = v.getTimestamp().getAsMillis();
+                        devNanosOffset = v.getTimestamp().getNs() % 1000000L;
+                    }
                     c.set(pulse_id, devTimestamp, devNanosOffset, val);
                 }
             } catch (Exception ex) {
