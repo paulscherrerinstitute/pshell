@@ -1176,6 +1176,7 @@ function set_exec_pars(args){
         path(str, optional):  If defined provides the full path name for data output root (overriding config))
                              The tag {data} can be used to enter a path relative to the standard data folder.
         layout(str, optional): Overrides default data layout.
+        provider(str, optional): Overrides default data provider.
         depth_dim(int, optional): dimension of the depth for 2d-matrixes in 3d datasets.
         persist(bool, optional): Overrides the configuration option to auto save scan data.
         flush(bool, optional): Overrides the configuration option to flush file on each record.
