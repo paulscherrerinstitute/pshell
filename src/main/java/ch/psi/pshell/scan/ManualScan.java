@@ -14,7 +14,7 @@ import java.util.logging.Level;
 public class ManualScan extends DiscreteScan {
 
     public ManualScan(Writable[] writables, Readable[] readables) {
-        super(writables, readables, null, null, -1, false, 0, 1, false);
+        this(writables, readables,null, null, null, false);
     }
 
     public ManualScan(Writable[] writables, Readable[] readables, double[] start, double[] end, int numberOfSteps[], boolean relative) {
