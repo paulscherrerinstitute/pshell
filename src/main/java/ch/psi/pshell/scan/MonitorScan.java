@@ -57,11 +57,11 @@ public class MonitorScan extends LineScan {
     }
     
     public MonitorScan(Device trigger, Readable[] readables, int points, int time_ms, boolean async, boolean takeInitialValue, int passes) {
-        super((points > 0) ? new Writable[0] : new Writable[]{new DummyPositioner("Time")},
+        super(((points > 0)||(time_ms<0)) ? new Writable[0] : new Writable[]{new DummyPositioner("Time")},
                 getReadables(trigger, readables, async),
                 new double[]{0.0},
-                (points > 0) ? new double[]{points - 1} : new double[]{time_ms},
-                (points > 0) ? points - 1 : time_ms,
+                (points > 0) ? new double[]{points - 1} : new double[]{(time_ms>=0) ? time_ms : 100.0},
+                (points > 0) ? points - 1 : ((time_ms>=0) ? time_ms : Integer.MAX_VALUE),
                 false, 0, passes, false);
         this.trigger = trigger;
         this.time_ms = time_ms;
@@ -172,7 +172,7 @@ public class MonitorScan extends LineScan {
                 } catch (Exception ex) {
                     stopTriggerListening();
                     exception = ex;
-                }
+                    }
 
             }
         }
