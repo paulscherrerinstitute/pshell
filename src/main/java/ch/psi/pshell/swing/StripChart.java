@@ -6,8 +6,6 @@ import ch.psi.pshell.bs.Stream;
 import ch.psi.pshell.core.Context;
 import ch.psi.pshell.core.ContextAdapter;
 import ch.psi.pshell.core.JsonSerializer;
-import ch.psi.pshell.data.Provider;
-import ch.psi.pshell.data.ProviderHDF5;
 import ch.psi.pshell.data.ProviderText;
 import ch.psi.pshell.device.Device;
 import ch.psi.pshell.device.DeviceAdapter;
@@ -20,6 +18,7 @@ import ch.psi.pshell.plot.PlotBase;
 import ch.psi.pshell.plot.TimePlotBase;
 import ch.psi.pshell.plot.TimePlotSeries;
 import ch.psi.pshell.plotter.Preferences;
+import ch.psi.pshell.scan.StripScanExecutor;
 import ch.psi.pshell.ui.App;
 import ch.psi.utils.IO;
 import ch.psi.utils.InvokingProducer;
@@ -125,6 +124,7 @@ public class StripChart extends StandardDialog {
     JButton buttonPause = new JButton();
 
     boolean persisting;
+    StripScanExecutor persistenceExecutor;
 
     public StripChart(java.awt.Frame parent, boolean modal, File defaultFolder) {
         super(parent, modal);
@@ -139,9 +139,8 @@ public class StripChart extends StandardDialog {
         buttonStartStop.setEnabled(false);
         textFileName.setEnabled(false);
         comboFormat.setEnabled(false);
-        ckFlush.setEnabled(false);
+        comboLayout.setEnabled(false);
         textFileName.setText((Context.getInstance() != null) ? Context.getInstance().getConfig().dataPath : "");
-        ckFlush.setSelected((Context.getInstance() != null) ? Context.getInstance().getConfig().dataScanFlushRecords : false);
         updateTitle();
         setCancelledOnEscape(false);
 
@@ -417,22 +416,10 @@ public class StripChart extends StandardDialog {
 
         TableColumn colMarkers = tableCharts.getColumnModel().getColumn(6);
         colMarkers.setPreferredWidth(80);
-        
-        TableColumn colLocalTime = tableCharts.getColumnModel().getColumn(7);
-        colLocalTime.setPreferredWidth(90);        
-        
 
-        //Not needed with explicit stop button
-        /*        
-        TableModelListener changeListener = new TableModelListener() {
-            @Override
-            public void tableChanged(TableModelEvent e) {                
-                stop();
-            }
-        };
-        modelSeries.addTableModelListener(changeListener);
-        modelCharts.addTableModelListener(changeListener);
-         */
+        TableColumn colLocalTime = tableCharts.getColumnModel().getColumn(7);
+        colLocalTime.setPreferredWidth(90);
+
         ((JComboBox) ((DefaultCellEditor) tableSeries.getColumnModel().getColumn(2).getCellEditor()).getComponent()).addActionListener((ActionEvent e) -> {
             updateTooltip();
         });
@@ -483,15 +470,8 @@ public class StripChart extends StandardDialog {
     };
 
     public void initializePlots() {
-        //Redoing layout because it may have been changed by View's initComponents()
-        //panelPlots.removeAll();
-        //panelPlots.setLayout(new BorderLayout());
-        //panelPlots.add(scrollPane);
-        //pnGraphs.setLayout(new GridBagLayout());
-
         pnGraphs.removeAll();
         plots.clear();
-
     }
 
     JButton saveButton;
@@ -515,7 +495,7 @@ public class StripChart extends StandardDialog {
         ckPersistence.setEnabled(editing);
         textFileName.setEnabled((ckPersistence.isSelected() && editing) || !ckPersistence.isSelected());
         comboFormat.setEnabled(textFileName.isEnabled());
-        ckFlush.setEnabled(textFileName.isEnabled());
+        comboLayout.setEnabled(textFileName.isEnabled());
         textStreamFilter.setEnabled(editing);
         spinnerDragInterval.setEnabled(editing);
         spinnerUpdate.setEnabled(editing);
@@ -538,17 +518,17 @@ public class StripChart extends StandardDialog {
             saveButton = null;
         }
     }
-    
-    boolean isSeriesTableRowEditable(int row, int column){
+
+    boolean isSeriesTableRowEditable(int row, int column) {
         boolean editing = !started;
-        return ((column >= tableSeries.getColumnCount()-1) || editing);
+        return ((column >= tableSeries.getColumnCount() - 1) || editing);
     }
 
-    boolean isChartTableRowEditable(int row, int column){
+    boolean isChartTableRowEditable(int row, int column) {
         boolean editing = !started;
-        return (column>1) && (editing || (column<7));
+        return (column > 1) && (editing || (column < 7));
     }
-    
+
     String getDefaultFolder() {
         if (defaultFolder == null) {
             return Sys.getUserHome();
@@ -585,7 +565,7 @@ public class StripChart extends StandardDialog {
         state.add(modelSeries.getDataVector());
         state.add(modelCharts.getDataVector());
         if (ckPersistence.isSelected()) {
-            state.add(new Object[][]{new Object[]{textFileName.getText(), String.valueOf(comboFormat.getSelectedItem()), ckFlush.isSelected()}});
+            state.add(new Object[][]{new Object[]{textFileName.getText(), String.valueOf(comboFormat.getSelectedItem()), true, comboLayout.getSelectedItem()}});
         } else {
             state.add(new Object[][]{new Object[0]});
         }
@@ -613,7 +593,8 @@ public class StripChart extends StandardDialog {
         panelColorBackground.setBackground(null);
         panelColorGrid.setBackground(null);
         textFileName.setText((Context.getInstance() != null) ? Context.getInstance().getConfig().dataPath : "");
-        ckFlush.setSelected((Context.getInstance() != null) ? Context.getInstance().getConfig().dataScanFlushRecords : false);
+        comboFormat.setSelectedItem(getInitFormat());
+        comboLayout.setSelectedItem(getInitLayout());
         modelSeries.setRowCount(0);
         modelCharts.setDataVector(new Object[][]{
             {"1", null, null, null, null, null, false},
@@ -626,6 +607,27 @@ public class StripChart extends StandardDialog {
         updateTitle();
         initializeTable();
         update();
+    }
+
+    String getInitFormat() {
+        if (Context.getInstance() != null) {
+            if (Context.getInstance().getDataManager().getProvider() instanceof ProviderText) {
+                return "txt";
+            }
+        }
+        return "h5";
+    }
+
+    String getInitLayout() {
+        if (Context.getInstance() != null) {
+            switch (Context.getInstance().getDataManager().getLayout().getId()) {
+                case ("LayoutTable"):
+                    return "table";
+                case ("LayoutSF"):
+                    return "sf";
+            }
+        }
+        return "default";
     }
 
     File file;
@@ -675,8 +677,8 @@ public class StripChart extends StandardDialog {
         panelColorGrid.setBackground(null);
         ckPersistence.setSelected(false);
         textFileName.setText((Context.getInstance() != null) ? Context.getInstance().getConfig().dataPath : "");
-        ckFlush.setSelected((Context.getInstance() != null) ? Context.getInstance().getConfig().dataScanFlushRecords : false);
-        comboFormat.setSelectedIndex(((Context.getInstance() != null) && (Context.getInstance().getDataManager().getProvider() instanceof ProviderText)) ? 1 : 0);
+        comboFormat.setSelectedItem(getInitFormat());
+        comboLayout.setSelectedItem(getInitLayout());
         if (state.length > 1) {
 
         }
@@ -691,8 +693,8 @@ public class StripChart extends StandardDialog {
                 if ((persistPars.length > 1) && (((String) persistPars[1]).equalsIgnoreCase("txt"))) {
                     comboFormat.setSelectedIndex(1);
                 }
-                if (persistPars.length > 2) {
-                    ckFlush.setSelected(Boolean.TRUE.equals(persistPars[2]));
+                if (persistPars.length > 3) {
+                    comboLayout.setSelectedItem((String) persistPars[3]);
                 }
             }
         }
@@ -816,8 +818,11 @@ public class StripChart extends StandardDialog {
                 Logger.getLogger(StripChart.class.getName()).log(Level.WARNING, null, ex);
             }
         }
+
         if (ckPersistence.isSelected()) {
-            openProvider();
+            String path = Context.getInstance().getSetup().expandPath(textFileName.getText().trim().replace("{name}", "StripChart"));
+            persistenceExecutor = new StripScanExecutor();
+            persistenceExecutor.start(path, getNames(), String.valueOf(comboFormat.getSelectedItem()), String.valueOf(comboLayout.getSelectedItem()), true);
         }
 
         Vector[] rows = (Vector[]) vector.toArray(new Vector[0]);
@@ -848,77 +853,36 @@ public class StripChart extends StandardDialog {
         }
     }
 
-    Provider provider;
-
-    String openProvider() throws IOException {
-        closeProvider();
-        if (textFileName.getText().trim().isEmpty() || (Context.getInstance() == null)) {
-            return null;
-        }
-        String dataFileName = textFileName.getText().trim();
-        provider = (comboFormat.getSelectedIndex() == 1) ? new ProviderText() : new ProviderHDF5();
-        dataFileName = Context.getInstance().getSetup().expandPath(dataFileName.replace("{name}", "StripChart"));
-        File root = new File(provider.getRootFileName(dataFileName));
-        Logger.getLogger(StripChart.class.getName()).info("Opening output: " + root.getPath());
-        provider.openOutput(root);
-        return provider.getRootFileName(dataFileName);
-    }
-
-    void closeProvider() {
-        if (provider != null) {
-            Logger.getLogger(StripChart.class.getName()).info("Closing output");
-            try {
-                provider.closeOutput();
-            } catch (IOException ex) {
-                Logger.getLogger(StripChart.class.getName()).log(Level.SEVERE, null, ex);
+    String[] getNames() {
+        Vector[] rows = (Vector[]) modelSeries.getDataVector().toArray(new Vector[0]);
+        ArrayList<String> names = new ArrayList<>();
+        for (int i = 0; i < rows.length; i++) {
+            Vector info = rows[i];
+            if (info.get(0).equals(true)) {
+                String name = ((String) info.get(1)).trim();
+                Type type = Type.valueOf(info.get(2).toString());
+                name = getId(name, type, i + 1);
+                names.add(name);
             }
-            provider = null;
         }
+        return names.toArray(new String[0]);
     }
 
-    String createDataset(String name, Type type, int index) {
+    String getId(String name, Type type, int index) {
         String id = null;
-        if (provider != null) {
-            id = index + "-" + name;
-            if (type == Type.CamServer) {
-                //String[] tokens = name.split(" ");
-                //if (tokens.length>1){
-                //    id = tokens[1];
-                //} 
-                if (id.contains("//")) {
-                    id = id.substring(id.indexOf("//") + 2); //Remove 'http://' or 'https://'
-                }
-            }
-            if (!provider.isPacked()) { //Filenames don't support ':'
-                id = id.replace(":", "_");
-            }
-            id = id.replace("/", "_");
-            try {
-                provider.createDataset(id, new String[]{"Timestamp", "Value"}, new Class[]{Long.class, Double.class}, new int[]{0, 0});
-                provider.setAttribute(id, "Type", type.toString(), String.class, false);
-                provider.setAttribute(id, "Name", name, String.class, false);
-                provider.setAttribute(id, "Index", Integer.valueOf(index), Integer.class, false);
-                provider.flush();
-            } catch (IOException ex) {
-                id = null;
-                Logger.getLogger(StripChart.class.getName()).log(Level.WARNING, null, ex);
+        id = index + "-" + name;
+        if (type == Type.CamServer) {
+            if (id.contains("//")) {
+                id = id.substring(id.indexOf("//") + 2); //Remove 'http://' or 'https://'
             }
         }
+
+        if (!Context.getInstance().getDataManager().getProvider().isPacked()) { //Filenames don't support ':'
+            id = id.replace(":", "_");
+        }
+        id = id.replace("/", "_");
+
         return id;
-    }
-
-    void addDataset(String id, Long timestamp, Object value, int index) {
-        if ((id != null) && (provider != null)) {
-            try {
-                provider.setItem(id, new Object[]{timestamp, value}, Object[].class, index);
-                if (ckFlush.isSelected()) {
-                    provider.flush();
-                }
-            } catch (IOException ex) {
-                Logger.getLogger(StripChart.class.getName()).log(Level.WARNING, null, ex);
-            }
-        }
-
     }
 
     final ArrayList<Device> instantiatedDevices = new ArrayList<>();
@@ -940,7 +904,7 @@ public class StripChart extends StandardDialog {
         void add(Device device, Object value, Long timestamp, TimePlotBase plot, int seriesIndex) {
             try {
                 long now = System.currentTimeMillis();
-                if (localTime){
+                if (localTime) {
                     value = device.take();
                     timestamp = now;
                 } else {
@@ -959,7 +923,7 @@ public class StripChart extends StandardDialog {
                     }
                 }
                 if ((value == null) || (value instanceof Number)) {
-                    Double d = (value == null) ? Double.NaN : ((Number) value).doubleValue(); 
+                    Double d = (value == null) ? Double.NaN : ((Number) value).doubleValue();
                     long time = (timestamp == null) ? now : timestamp;
                     appendTimestamps.put(device, now);
 
@@ -968,14 +932,12 @@ public class StripChart extends StandardDialog {
                     chartElementProducer.post(new ChartElement(plot, seriesIndex, time, d));
 
                     if (persisting) {
-                        if (d == null) {
-                            d = Double.NaN;
-                        }
+                        Double val = (d == null) ? Double.NaN : d;
                         synchronized (persistLock) {
-                            if (!d.equals(current)) {
-                                addDataset(id, time, d, index);
+                            if (!val.equals(current)) {
+                                persistenceExecutor.append(id, val, now, time);
                                 index++;
-                                current = d;
+                                current = val;
                             }
                         }
                     }
@@ -995,9 +957,7 @@ public class StripChart extends StandardDialog {
             final int seriesIndex = seriesIndexes.get(info);
             final TimePlotBase plot = plots.get(plotIndex);
 
-            if (persisting) {
-                id = createDataset(name, type, row);
-            }
+            id = getId(name, type, row);
 
             Device dev = null;
             final DeviceListener deviceListener = new DeviceAdapter() {
@@ -1053,12 +1013,12 @@ public class StripChart extends StandardDialog {
                             try {
                                 modulo = Integer.valueOf(tokens[1]);
                                 offset = Integer.valueOf(tokens[2]);
-                                useGlobalTimestamp= !tokens[3].equalsIgnoreCase("false");
+                                useGlobalTimestamp = !tokens[3].equalsIgnoreCase("false");
                             } catch (Exception ex) {
                             }
                         }
                         dev = stream.addScalar(name, name, modulo, offset);
-                        ((Scalar)dev).setUseLocalTimestamp(!useGlobalTimestamp);
+                        ((Scalar) dev).setUseLocalTimestamp(!useGlobalTimestamp);
                         streamDevices--;
                         break;
                     case CamServer:
@@ -1164,17 +1124,16 @@ public class StripChart extends StandardDialog {
                 final int axis = (Integer) info.get(4);
                 final int seriesIndex = seriesIndexes.get(info);
                 final TimePlotBase plot = plots.get(plotIndex);
-                id = createDataset(name, type, row);
-                int index = 0;
+                id = getId(name, type, row);
 
-                Number current = null;
+                Double current = null;
                 for (TimestampedValue<Double> item : plot.getSeriestData(seriesIndex)) {
-                    Number value = item.getValue();
+                    Double value = item.getValue();
                     if (value == null) {
                         value = Double.NaN;
                     }
                     if (!value.equals(current)) {
-                        addDataset(id, item.getTimestamp(), value, index++);
+                        persistenceExecutor.append(id, value, item.getTimestamp(), item.getTimestamp());
                         current = value;
                     }
                 }
@@ -1213,7 +1172,9 @@ public class StripChart extends StandardDialog {
                 cameraStreams.clear();
             }
             dispatcher = null;
-            closeProvider();
+            if (persistenceExecutor != null) {
+                persistenceExecutor.finish();
+            }
             seriesIndexes.clear();
             timePlotSeries.clear();
             initializePlots();
@@ -1267,7 +1228,9 @@ public class StripChart extends StandardDialog {
     void saveData() throws IOException {
         if ((started) && (!persisting)) {
             try {
-                String file = openProvider();
+                persistenceExecutor = new StripScanExecutor();
+                String path = Context.getInstance().getSetup().expandPath(textFileName.getText().trim().replace("{name}", "StripChart"));
+                persistenceExecutor.start(path, getNames(), String.valueOf(comboFormat.getSelectedItem()), String.valueOf(comboLayout.getSelectedItem()), false);
                 for (DeviceTask task : tasks) {
                     try {
                         task.saveDataset();
@@ -1277,7 +1240,7 @@ public class StripChart extends StandardDialog {
                 }
                 SwingUtils.showMessage(this, "Strip Chart", "Success saving data to: \n" + file);
             } finally {
-                closeProvider();
+                persistenceExecutor.finish();
             }
         }
     }
@@ -1323,7 +1286,8 @@ public class StripChart extends StandardDialog {
         textFileName = new javax.swing.JTextField();
         jLabel1 = new javax.swing.JLabel();
         comboFormat = new javax.swing.JComboBox<>();
-        ckFlush = new javax.swing.JCheckBox();
+        jLabel5 = new javax.swing.JLabel();
+        comboLayout = new javax.swing.JComboBox<>();
         jPanel3 = new javax.swing.JPanel();
         jLabel2 = new javax.swing.JLabel();
         textStreamFilter = new javax.swing.JTextField();
@@ -1419,7 +1383,7 @@ public class StripChart extends StandardDialog {
             .addGroup(panelSeriesLayout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(panelSeriesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 580, Short.MAX_VALUE)
+                    .addComponent(jScrollPane1)
                     .addGroup(panelSeriesLayout.createSequentialGroup()
                         .addGap(0, 0, Short.MAX_VALUE)
                         .addComponent(buttonUp)
@@ -1491,7 +1455,7 @@ public class StripChart extends StandardDialog {
             panelAxisLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(panelAxisLayout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 580, Short.MAX_VALUE)
+                .addComponent(jScrollPane3)
                 .addContainerGap())
         );
         panelAxisLayout.setVerticalGroup(
@@ -1577,7 +1541,9 @@ public class StripChart extends StandardDialog {
 
         comboFormat.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "h5", "txt" }));
 
-        ckFlush.setText("Flush");
+        jLabel5.setText("Layout:");
+
+        comboLayout.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "default", "table", "sf" }));
 
         javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
         jPanel2.setLayout(jPanel2Layout);
@@ -1587,13 +1553,15 @@ public class StripChart extends StandardDialog {
                 .addContainerGap()
                 .addComponent(ckPersistence)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(textFileName)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(ckFlush)
+                .addComponent(textFileName, javax.swing.GroupLayout.PREFERRED_SIZE, 243, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jLabel1)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(comboFormat, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(jLabel5)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(comboLayout, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap())
         );
         jPanel2Layout.setVerticalGroup(
@@ -1604,7 +1572,9 @@ public class StripChart extends StandardDialog {
                     .addComponent(textFileName, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jLabel1)
                     .addComponent(comboFormat, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(ckFlush))
+                    .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.CENTER)
+                        .addComponent(jLabel5)
+                        .addComponent(comboLayout, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
                 .addContainerGap())
         );
 
@@ -1779,7 +1749,7 @@ public class StripChart extends StandardDialog {
         pnGraphs.setLayout(pnGraphsLayout);
         pnGraphsLayout.setHorizontalGroup(
             pnGraphsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 600, Short.MAX_VALUE)
+            .addGap(0, 642, Short.MAX_VALUE)
         );
         pnGraphsLayout.setVerticalGroup(
             pnGraphsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -1977,15 +1947,16 @@ public class StripChart extends StandardDialog {
     private javax.swing.JButton buttonSave;
     private javax.swing.JButton buttonStartStop;
     private javax.swing.JButton buttonUp;
-    private javax.swing.JCheckBox ckFlush;
     private javax.swing.JCheckBox ckPersistence;
     private javax.swing.JComboBox<String> comboFormat;
+    private javax.swing.JComboBox<String> comboLayout;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel15;
     private javax.swing.JLabel jLabel17;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
+    private javax.swing.JLabel jLabel5;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel2;
     private javax.swing.JPanel jPanel3;

@@ -37,6 +37,8 @@
 
 ### Changed
 
+* EPICS channels by default now are timestamped and nullify invalid values.
+
 * Convert.flatten and Convert.reshape handling multi-dimensional array shape conversion
   (replacing Convert.toBidimensional, Convert.toUnidimensional).
 

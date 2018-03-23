@@ -398,6 +398,7 @@ def processScanPars(scan, pars):
     scan.before_pass = pars.pop("before_pass",None)
     scan.after_pass =  pars.pop("after_pass",None)
     scan.setPlotTitle(pars.pop("title",None))
+    scan.setHidden(pars.pop("hidden",False))
     get_context().setCommandPars(scan, pars)
 
 def lscan(writables, readables, start, end, steps, latency=0.0, relative=False, passes=1, zigzag=False, **pars):
@@ -416,6 +417,7 @@ def lscan(writables, readables, start, end, steps, latency=0.0, relative=False, 
         zigzag(bool, optional): if true writables invert direction on each pass.
         pars(keyworded variable length arguments, optional): scan optional named arguments:
             - title(str, optional): plotting window name.     
+            - hidden(bool, optional): if true generates no effects on user interface.     
             - before_read (function, optional): callback on each step, before sampling. Arguments: positions, scan
             - after_read (function, optional): callback on each step, after sampling. Arguments: record, scan.
             - before_pass (function, optional): callback before each scan pass execution. Arguments: pass_num, scan.
