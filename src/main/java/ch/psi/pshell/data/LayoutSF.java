@@ -25,6 +25,7 @@ import ch.psi.pshell.scan.RegionScan;
 import ch.psi.pshell.scan.Scan;
 import ch.psi.pshell.scan.ScanRecord;
 import ch.psi.pshell.scan.Search;
+import ch.psi.pshell.scan.StripScan;
 import ch.psi.pshell.scan.TimeScan;
 import ch.psi.pshell.scan.VectorScan;
 import ch.psi.pshell.ui.App;
@@ -96,6 +97,7 @@ public class LayoutSF extends LayoutBase implements Layout {
     public static final String METHOD_CSCAN = "Continuous";
     public static final String METHOD_HSCAN = "OTF";
     public static final String METHOD_BSCAN = "Stream Series";
+    public static final String METHOD_SSCAN = "Strip Series";
     public static final String METHOD_BSEARCH = "Binary Search";
     public static final String METHOD_HSEARCH = "Hill Climbing";
     public static final String METHOD_OPTIMIZATION = "Optimization";
@@ -120,6 +122,8 @@ public class LayoutSF extends LayoutBase implements Layout {
             return METHOD_HSCAN;
         } else if (scan instanceof BsScan) {
             return METHOD_BSCAN;
+        } else if (scan instanceof StripScan) {
+            return METHOD_SSCAN;
         } else if (scan instanceof BinarySearch) {
             return METHOD_BSEARCH;
         } else if (scan instanceof HillClimbingSearch) {
