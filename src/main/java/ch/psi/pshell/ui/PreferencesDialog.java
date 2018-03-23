@@ -987,8 +987,10 @@ public class PreferencesDialog extends StandardDialog {
                 .addComponent(ckScanPlotDisabled)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(ckScanTableDisabled)
-                .addContainerGap(79, Short.MAX_VALUE))
+                .addContainerGap(70, Short.MAX_VALUE))
         );
+
+        jPanel3Layout.linkSize(javax.swing.SwingConstants.VERTICAL, new java.awt.Component[] {checkCachedDataPanel, ckAsyncUpdate, ckScanPlotDisabled, ckScanTableDisabled, comboScriptPopup, jLabel21});
 
         jTabbedPane1.addTab("General", jPanel3);
 

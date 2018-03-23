@@ -1119,18 +1119,18 @@
                       <EmptySpace min="-2" pref="17" max="-2" attributes="0"/>
                       <Group type="103" groupAlignment="0" attributes="0">
                           <Group type="103" alignment="0" groupAlignment="3" attributes="0">
-                              <Component id="comboScriptPopup" alignment="3" min="-2" max="-2" attributes="0"/>
-                              <Component id="jLabel21" alignment="3" min="-2" max="-2" attributes="0"/>
+                              <Component id="comboScriptPopup" linkSize="19" alignment="3" min="-2" max="-2" attributes="0"/>
+                              <Component id="jLabel21" linkSize="19" alignment="3" min="-2" max="-2" attributes="0"/>
                           </Group>
-                          <Component id="ckAsyncUpdate" min="-2" max="-2" attributes="0"/>
+                          <Component id="ckAsyncUpdate" linkSize="19" min="-2" max="-2" attributes="0"/>
                       </Group>
                       <EmptySpace type="unrelated" max="-2" attributes="0"/>
-                      <Component id="checkCachedDataPanel" min="-2" max="-2" attributes="0"/>
+                      <Component id="checkCachedDataPanel" linkSize="19" min="-2" max="-2" attributes="0"/>
                       <EmptySpace type="unrelated" max="-2" attributes="0"/>
-                      <Component id="ckScanPlotDisabled" min="-2" max="-2" attributes="0"/>
+                      <Component id="ckScanPlotDisabled" linkSize="19" min="-2" max="-2" attributes="0"/>
                       <EmptySpace type="unrelated" max="-2" attributes="0"/>
-                      <Component id="ckScanTableDisabled" min="-2" max="-2" attributes="0"/>
-                      <EmptySpace pref="79" max="32767" attributes="0"/>
+                      <Component id="ckScanTableDisabled" linkSize="19" min="-2" max="-2" attributes="0"/>
+                      <EmptySpace pref="70" max="32767" attributes="0"/>
                   </Group>
               </Group>
             </DimensionLayout>
