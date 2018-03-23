@@ -590,7 +590,7 @@ public class ScanEditorPanel extends MonitoredPanel implements Processor {
 
     List<String> getSensors() {
         List<String> ret = new ArrayList<>();
-        for (int i = 0; i < modelSensors.getRowCount(); i++) {
+            for (int i = 0; i < modelSensors.getRowCount(); i++) {
             Type type = (Type) modelSensors.getValueAt(i, 0);
             String sensor = null;
             if (useDeviceDirect(i)) {
@@ -802,8 +802,9 @@ public class ScanEditorPanel extends MonitoredPanel implements Processor {
         Type type = (Type) modelSensors.getValueAt(row, 0);
         String name = null;
         if (!useDeviceDirect(row)) {
-            name = UrlDevice.getUrlPars(getSensorUrl(row)).get("name");
-            ret = (name != null) ? name : ret.split("\\?")[0];
+            String url = getSensorUrl(row);
+            name = UrlDevice.getUrlPars(url).get("name");
+            ret = (name != null) ? name : UrlDevice.getDeviceName(url);
         }
         if (name == null) {
             Integer samples = ((Integer) modelSensors.getValueAt(row, 2));

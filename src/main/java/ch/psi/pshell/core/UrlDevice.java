@@ -48,14 +48,14 @@ public class UrlDevice extends DeviceBase implements Readable, Writable {
     public UrlDevice(String url) {
         this(null, url);
     }
-    
+
     public UrlDevice(String name, String url) {
         this.url = url;
         this.protocol = getUrlProtocol(url);
         this.pars = getUrlPars(url);
         this.id = getUrlId(url);
-        this.name = (name==null) ? getUrlName(url) : name;
-        givenName = (pars.containsKey("name") || (name!=null)) ? this.name : null;
+        this.name = (name == null) ? getUrlName(url) : name;
+        givenName = (pars.containsKey("name") || (name != null)) ? this.name : null;
     }
 
     public static String getUrlProtocol(String url) {
@@ -98,6 +98,19 @@ public class UrlDevice extends DeviceBase implements Readable, Writable {
             path = path.split("\\?")[0].trim();
         }
         return path;
+    }
+
+    public static String getDeviceName(String url) {
+        Map<String, String> pars = getUrlPars(url);
+        if (pars.containsKey("name")) {
+            return pars.get("name");
+        }
+        if (getUrlProtocol(url).equals("cs")) {
+            if (pars.get("channel") != null) {
+                return pars.get("channel");
+            }
+        }
+        return getUrlId(url);
     }
 
     @Override
@@ -174,7 +187,7 @@ public class UrlDevice extends DeviceBase implements Readable, Writable {
         }
         return null;
     }
-    
+
     protected Device resolve() throws IOException, InterruptedException {
         Device ret = null;
         switch (protocol) {
@@ -182,9 +195,9 @@ public class UrlDevice extends DeviceBase implements Readable, Writable {
                 if (Context.getInstance() != null) {
                     try {
                         ret = (Device) Context.getInstance().getDevicePool().getByName(id);
-                        if (ret==null){
+                        if (ret == null) {
                             ret = (Device) Context.getInstance().evalLineBackground(name);
-                        }                        
+                        }
                     } catch (Exception ex) {
                     }
                 }
@@ -195,6 +208,7 @@ public class UrlDevice extends DeviceBase implements Readable, Writable {
                 int precision = -1;
                 int size = -1;
                 Class type = null;
+                InvalidValueAction invalidValueAction = InvalidValueAction.Nullify;
                 try {
                     size = Integer.valueOf(pars.get("size"));
                 } catch (Exception ex) {
@@ -207,8 +221,16 @@ public class UrlDevice extends DeviceBase implements Readable, Writable {
                     type = Epics.getChannelType(pars.get("type"));
                 } catch (Exception ex) {
                 }
+                if (pars.containsKey("invalid")) {
+                    try {
+                        if (Boolean.valueOf(pars.get("invalid"))){
+                            invalidValueAction = InvalidValueAction.None;
+                        }
+                    } catch (Exception ex) {
+                    }
+                }                
 
-                ret = Epics.newChannelDevice(name, id, type, timestamped, precision, size, InvalidValueAction.Nullify);
+                ret = Epics.newChannelDevice(name, id, type, timestamped, precision, size, invalidValueAction);
                 boolean blocking = true;
                 if (pars.containsKey("blocking")) {
                     try {
