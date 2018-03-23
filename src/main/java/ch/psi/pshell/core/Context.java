@@ -1334,7 +1334,8 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
         }
     }
 
-    void createExecutionContext() {
+    @Hidden
+    public void createExecutionContext() {
         synchronized(executionPars){
             executionPars.put(Thread.currentThread(), new ExecutionParameters());
         }
@@ -1346,7 +1347,8 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
 
     }
 
-    void disposeExecutionContext() {
+    @Hidden
+    public void disposeExecutionContext() {
         try {
             getExecutionPars().onExecutionEnded();
         } catch (Exception ex) {

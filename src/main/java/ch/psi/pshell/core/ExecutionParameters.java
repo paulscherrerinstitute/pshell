@@ -39,7 +39,7 @@ public class ExecutionParameters {
 
     Map scriptOptions = new HashMap();
     Map commandOptions = new HashMap();
-    
+
     Map<Thread, Map> childThreadCommandOptions = new HashMap<>();
 
     //Data control variables
@@ -132,14 +132,14 @@ public class ExecutionParameters {
         }
         return null;
     }
-    
-    void onStartChildThread(){
+
+    void onStartChildThread() {
         childThreadCommandOptions.put(Thread.currentThread(), new HashMap());
     }
-    
-    void onFinishedChildThread(){
+
+    void onFinishedChildThread() {
         childThreadCommandOptions.remove(Thread.currentThread());
-    }    
+    }
 
     @Hidden
     public void initializeData() throws IOException {
@@ -209,22 +209,22 @@ public class ExecutionParameters {
     @Hidden
     public boolean isScanPersisted(Scan scan) {
         synchronized (currentScans) {
-            if (currentScans.containsKey(scan)){
+            if (currentScans.containsKey(scan)) {
                 return currentScans.get(scan).persisted;
             }
         }
         return false;
     }
-    
+
     @Hidden
     public int getScanIndex(Scan scan) {
         synchronized (currentScans) {
-            if (currentScans.containsKey(scan)){
+            if (currentScans.containsKey(scan)) {
                 return currentScans.get(scan).index;
             }
         }
         return -1;
-    }    
+    }
 
     @Hidden
     public void addScan(Scan scan) {
@@ -245,22 +245,21 @@ public class ExecutionParameters {
 
     public void setCommandOptions(Object command, Map options) {
         pathName = null;
-        if (childThreadCommandOptions.containsKey(Thread.currentThread())){
+        if (childThreadCommandOptions.containsKey(Thread.currentThread())) {
             childThreadCommandOptions.put(Thread.currentThread(), options);
         } else {
             commandOptions = options;
         }
         checkOptions(options);
     }
-    
+
     public void clearCommandOptions() {
-        if (childThreadCommandOptions.containsKey(Thread.currentThread())){
+        if (childThreadCommandOptions.containsKey(Thread.currentThread())) {
             childThreadCommandOptions.put(Thread.currentThread(), new HashMap());
         } else {
             commandOptions = new HashMap();
         }
-    }    
-    
+    }
 
     void checkOptions(Map options) {
         if (options != null) {
@@ -338,9 +337,9 @@ public class ExecutionParameters {
     }
 
     public Map getCommandOptions() {
-        Map  ret = (childThreadCommandOptions.containsKey(Thread.currentThread())) ?
-            childThreadCommandOptions.get(Thread.currentThread()) : 
-            commandOptions;       
+        Map ret = (childThreadCommandOptions.containsKey(Thread.currentThread()))
+                ? childThreadCommandOptions.get(Thread.currentThread())
+                : commandOptions;
         return (ret == null) ? new HashMap() : ret;
     }
 
@@ -443,11 +442,11 @@ public class ExecutionParameters {
         CommandInfo cmd = getCommand();
         return (cmd != null) ? Context.getInstance().getRunningScriptFile(cmd.script) : null;
     }
-    
+
     public String getStatement() {
         CommandInfo cmd = getCommand();
         return (cmd != null) ? cmd.command : null;
-    }    
+    }
 
     public String getScriptVersion() throws IOException {
         File file = getScriptFile();
@@ -538,7 +537,7 @@ public class ExecutionParameters {
             scanIndex = 0;
         }
     }
-    
+
     void finish() {
         start = -1;
         currentScans.clear();
@@ -579,12 +578,14 @@ public class ExecutionParameters {
         clearCommandOptions();
     }
 
-    void onExecutionStarted() {
+    @Hidden
+    public void onExecutionStarted() {
         Context.getInstance().getDataManager().closeOutput();
         init();
     }
 
-    void onExecutionEnded() {
+    @Hidden
+    public void onExecutionEnded() {
         // Must be called before finish, as calls appendLog, and must do before layourt is reset.  
         Context.getInstance().getDataManager().closeOutput();
         finish();
