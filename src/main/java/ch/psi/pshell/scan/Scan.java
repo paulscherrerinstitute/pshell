@@ -86,6 +86,10 @@ public interface Scan {
     public void setPlotTitle(String plotTitle);
     
     public String getPlotTitle(); 
+    
+    public void setHidden(boolean value);
+    
+    public boolean isHidden();     
 
     public void setUseWritableReadback(boolean value);
 

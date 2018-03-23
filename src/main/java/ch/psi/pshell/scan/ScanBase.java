@@ -56,6 +56,7 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
     long endTimestamp;
     
     String plotTitle;
+    boolean hidden;
     
     int scanIndex = -1;
     String scanPath;
@@ -122,11 +123,11 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
             }
             this.end[i] = start[i] + stepSize[i] * this.numberOfSteps[i];
         }
-        if (Context.getInstance() != null) {
-            for (ScanListener listener : Context.getInstance().getScanListeners()) {
-                addListener(listener);
-            }
-        }
+        //if (Context.getInstance() != null) {
+        //    for (ScanListener listener : Context.getInstance().getScanListeners()) {
+        //        addListener(listener);
+        //    }
+        //}
     }
 
     int settleTimeout = -1;
@@ -166,6 +167,16 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
     @Override
     public String getPlotTitle(){
         return plotTitle;
+    }
+    
+    @Override
+    public void setHidden(boolean value){
+        hidden = value;
+    }
+    
+    @Override
+    public boolean isHidden(){
+        return hidden;
     }
 
     protected boolean isPositiveDirection(int writableIndex) {
@@ -509,8 +520,12 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
         Context context = Context.getInstance();
         if (context != null) {
             removeAllListeners();
-            for (ScanListener listener : context.getScanListeners()) {
-                addListener(listener);
+            if (isHidden()) {
+                addListener(context.getDataManager().getScanListener());
+            } else{ 
+                for (ScanListener listener : context.getScanListeners()) {
+                    addListener(listener);
+                }
             }
             final ExecutionParameters execPars = context.getExecutionPars();
             synchronized (execPars) {

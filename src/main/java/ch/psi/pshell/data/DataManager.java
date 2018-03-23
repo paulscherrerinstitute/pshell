@@ -30,6 +30,7 @@ import java.lang.reflect.Array;
 import java.util.Arrays;
 import ch.psi.pshell.device.Cacheable;
 import ch.psi.pshell.device.Readable.ReadableMatrix;
+import ch.psi.utils.Reflection.Hidden;
 import java.util.List;
 import java.util.Map;
 
@@ -384,6 +385,11 @@ public class DataManager implements AutoCloseable {
             }
         }
     };
+    
+    @Hidden
+    public ScanListener getScanListener(){
+        return scanListener;
+    }
 
     public String getDataFolder() {
         return context.getSetup().getDataPath();
