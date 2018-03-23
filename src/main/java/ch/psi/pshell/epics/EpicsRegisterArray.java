@@ -36,7 +36,7 @@ public abstract class EpicsRegisterArray<T> extends EpicsRegister<T> implements 
     }
 
     protected EpicsRegisterArray(String name, String channelName, int precision, int size) {
-        this(name, channelName, precision, size, false);
+        this(name, channelName, precision, size, true);
     }
 
     protected EpicsRegisterArray(String name, String channelName, int precision, int size, boolean timestamped) {
