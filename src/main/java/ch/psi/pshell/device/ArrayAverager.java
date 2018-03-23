@@ -179,9 +179,6 @@ public class ArrayAverager extends ReadonlyRegisterBase<double[]> implements Rea
                     if (rank > 1) {
                         sample = Convert.flatten(sample);
                     }
-                    if (!sample.getClass().getComponentType().isPrimitive()) {
-                        sample = Convert.toPrimitiveArray(sample);
-                    }
                     sample = (double[]) Convert.toDouble(sample);
                 }
 
