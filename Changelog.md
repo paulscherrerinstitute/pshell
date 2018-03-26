@@ -25,10 +25,11 @@
 
 * ReadonlyProcessVariable (analog inputs with units and calibration).
 
+* RegisterStats to provide URLDevice operations on waveforms (parameter 'op'). 
+  URL syntax is: channel?op=OP, where OP can be mean, min, max, stdev, variance, sum.
+
 * Averaging in URLDevice parameters. Parameters 'samples' and 'interval' to setup
   averaging, and parameter 'op' to retrieve Averager child devices.
-
-* RegisterStats to provide URLDevice operations on waveforms (parameter 'op').
 
 * New data layout: LayoutSF (id "sf") (proposal for SwissFEL common format).
 
