@@ -118,7 +118,11 @@ public class DataManager implements AutoCloseable {
     }
     
     public void setProvider(Provider provider) throws Exception {
-        logger.info("Setting data provider: " + provider.getClass().getName());
+        if (this == context.getDataManager()){
+            logger.info("Setting data provider: " + provider.getClass().getName());
+        } else {
+            logger.fine("Setting data provider in auxiliary data manager: " + provider.getClass().getName());
+        }
         this.provider = provider;
     }
 
@@ -188,7 +192,11 @@ public class DataManager implements AutoCloseable {
     }
 
     public void setLayout(Layout layout) throws Exception {
-        logger.info("Setting data layout: " + layout.getClass().getName());
+        if (this == context.getDataManager()){
+            logger.info("Setting data layout: " + layout.getClass().getName());
+        } else {
+            logger.fine("Setting data layout in auxiliary data manager: " + layout.getClass().getName());
+        }        
         this.layout = layout;
         this.layout.initialize();
     }
