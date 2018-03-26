@@ -54,7 +54,7 @@ public abstract class EpicsRegister<T> extends RegisterBase<T> {
     }
 
     protected EpicsRegister(String name, String channelName, int precision, boolean timestamped) {
-        this(name, channelName, precision, timestamped, timestamped ? InvalidValueAction.Nullify : null); //By default, if not timestamped, request only value data
+        this(name, channelName, precision, timestamped, timestamped ? Epics.getDefaultInvalidValueAction() : null); //By default, if not timestamped, request only value data
     }
       
     protected EpicsRegister(String name, String channelName, int precision, boolean timestamped, InvalidValueAction invalidAction) {

@@ -105,7 +105,7 @@ public class DataManager implements AutoCloseable {
     }
     
     public void setProvider(String name) throws Exception {
-                Class providerClass = getProviderClass(name);
+        Class providerClass = getProviderClass(name);
         if ((provider != null)) {
             if (provider.getClass() == providerClass){
                 return;

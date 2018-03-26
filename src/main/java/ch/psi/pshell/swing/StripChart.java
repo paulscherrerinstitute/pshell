@@ -981,7 +981,7 @@ public class StripChart extends StandardDialog {
                             } catch (Exception ex) {
                             }
                         }
-                        dev = new ChannelDouble(name, name, precision, timestamped, InvalidValueAction.Nullify);
+                        dev = new ChannelDouble(name, name, precision, timestamped);
 
                         synchronized (instantiatedDevices) {
                             instantiatedDevices.add(dev);

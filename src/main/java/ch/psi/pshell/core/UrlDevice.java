@@ -208,7 +208,7 @@ public class UrlDevice extends DeviceBase implements Readable, Writable {
                 int precision = -1;
                 int size = -1;
                 Class type = null;
-                InvalidValueAction invalidValueAction = InvalidValueAction.Nullify;
+                InvalidValueAction invalidValueAction = Epics.getDefaultInvalidValueAction();
                 try {
                     size = Integer.valueOf(pars.get("size"));
                 } catch (Exception ex) {

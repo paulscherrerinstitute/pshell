@@ -22,6 +22,7 @@ public class Epics {
 
     static DefaultChannelService factory;
     static Integer maxArrayBytes;
+    static InvalidValueAction defaultInvalidValueAction = InvalidValueAction.Nullify;
 
     public static final String PROPERTY_JCAE_CONFIG_FILE = "ch.psi.jcae.config.file";
 
@@ -202,7 +203,7 @@ public class Epics {
     }
     
     public static EpicsRegister newChannelDevice(String name, String channelName, Class type, boolean timestamped, int precision, int size) {
-        return newChannelDevice(name, channelName, type, timestamped, -1, -1, timestamped ? InvalidValueAction.Nullify : null); ////By default, if not timestamped, request only value data
+        return newChannelDevice(name, channelName, type, timestamped, -1, -1, timestamped ? getDefaultInvalidValueAction() : null); ////By default, if not timestamped, request only value data
     }
 
     public static EpicsRegister newChannelDevice(String name, String channelName, Class type, boolean timestamped, int precision, int size, InvalidValueAction invalidAction) {
@@ -286,5 +287,13 @@ public class Epics {
         }
         return Class.forName(typeId);
     }
-
+    
+    
+    public static InvalidValueAction getDefaultInvalidValueAction() {
+        return defaultInvalidValueAction;
+    }
+    
+    public static void setDefaultInvalidValueAction(InvalidValueAction value) {
+        defaultInvalidValueAction = value;
+    }
 }
