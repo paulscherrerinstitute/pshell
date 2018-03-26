@@ -285,6 +285,7 @@ The supported protocols are:
     - size: determines the size of a waveform.
     - precision: number of precision digits.
     - blocking: if true (default) writes and waits until processing finishes. Otherwise does not wait.
+    - invalid: if true samples also values with invalid flag set.
 
 
 - bs: Creates a device from a BSREAD channel. 

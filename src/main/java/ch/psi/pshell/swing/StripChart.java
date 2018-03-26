@@ -13,7 +13,6 @@ import ch.psi.pshell.device.DeviceListener;
 import ch.psi.pshell.device.TimestampedValue;
 import ch.psi.pshell.epics.ChannelDouble;
 import ch.psi.pshell.epics.Epics;
-import ch.psi.pshell.epics.InvalidValueAction;
 import ch.psi.pshell.plot.PlotBase;
 import ch.psi.pshell.plot.TimePlotBase;
 import ch.psi.pshell.plot.TimePlotSeries;
@@ -619,6 +618,8 @@ public class StripChart extends StandardDialog {
     }
 
     String getInitLayout() {
+        return "table";
+        /*
         if (Context.getInstance() != null) {
             switch (Context.getInstance().getDataManager().getLayout().getId()) {
                 case ("LayoutTable"):
@@ -628,6 +629,7 @@ public class StripChart extends StandardDialog {
             }
         }
         return "default";
+        */
     }
 
     File file;
@@ -841,7 +843,7 @@ public class StripChart extends StandardDialog {
                 timePlotSeries.add(graph);
                 plot.addSeries(graph);
                 DeviceTask task = new DeviceTask();
-                task.row = i + 1;
+                task.row = i;
                 task.info = info;
                 Boolean localTime = (Boolean) modelCharts.getValueAt(plotIndex, 7);
                 task.localTime = (localTime == null) ? false : localTime;
@@ -853,35 +855,62 @@ public class StripChart extends StandardDialog {
         }
     }
 
-    String[] getNames() {
-        Vector[] rows = (Vector[]) modelSeries.getDataVector().toArray(new Vector[0]);
+    String[] getNames() throws IOException {
         ArrayList<String> names = new ArrayList<>();
-        for (int i = 0; i < rows.length; i++) {
-            Vector info = rows[i];
-            if (info.get(0).equals(true)) {
-                String name = ((String) info.get(1)).trim();
-                Type type = Type.valueOf(info.get(2).toString());
-                name = getId(name, type, i + 1);
-                names.add(name);
+        for (int i = 0; i < modelSeries.getRowCount(); i++) {
+            String id = getId(i);
+            if (id != null) {
+                names.add(id);
             }
         }
         return names.toArray(new String[0]);
     }
 
-    String getId(String name, Type type, int index) {
-        String id = null;
-        id = index + "-" + name;
+    String getBaseId(Vector[] rows, int index) throws IOException {
+        if ((index < 0) || (index >= rows.length)) {
+            throw new IOException("Invalid name index");
+        }
+        Vector info = rows[index];
+        if (info.get(0).equals(false)) {
+            return null;
+        }
+        String id = ((String) info.get(1)).trim();
+        Type type = Type.valueOf(info.get(2).toString());
         if (type == Type.CamServer) {
             if (id.contains("//")) {
                 id = id.substring(id.indexOf("//") + 2); //Remove 'http://' or 'https://'
             }
+            if (id.contains("/")) {
+                id = id.substring(id.lastIndexOf("/")+1);
+            }
+            id = id.replace(" ", ":");
+        } else {
+            if (id.contains(" ")) {
+                id = id.substring(0, id.indexOf(" "));
+            }
         }
-
         if (!Context.getInstance().getDataManager().getProvider().isPacked()) { //Filenames don't support ':'
             id = id.replace(":", "_");
         }
         id = id.replace("/", "_");
+        return id;
+    }
 
+    String getId(int index) throws IOException {
+        Vector[] rows = (Vector[]) modelSeries.getDataVector().toArray(new Vector[0]);
+        String id = getBaseId(rows, index);
+        if (id != null) {
+            int existing = 0;
+            for (int i = 0; i < index; i++) {
+                String otherId = getBaseId(rows, i);
+                if (otherId.equals(id)) {
+                    existing++;
+                }
+            }
+            if (existing>0){
+                id = id + "-" + (existing+1);
+            }            
+        }
         return id;
     }
 
@@ -957,8 +986,6 @@ public class StripChart extends StandardDialog {
             final int seriesIndex = seriesIndexes.get(info);
             final TimePlotBase plot = plots.get(plotIndex);
 
-            id = getId(name, type, row);
-
             Device dev = null;
             final DeviceListener deviceListener = new DeviceAdapter() {
                 @Override
@@ -967,6 +994,7 @@ public class StripChart extends StandardDialog {
                 }
             };
             try {
+                id = getId(row);
                 switch (type) {
                     case Channel:
                         int polling = -1;
@@ -1116,7 +1144,7 @@ public class StripChart extends StandardDialog {
             }
         }
 
-        void saveDataset() {
+        void saveDataset() throws Exception {
             if (!persisting) {
                 String name = ((String) info.get(1)).trim();
                 final Type type = Type.valueOf(info.get(2).toString());
@@ -1124,7 +1152,7 @@ public class StripChart extends StandardDialog {
                 final int axis = (Integer) info.get(4);
                 final int seriesIndex = seriesIndexes.get(info);
                 final TimePlotBase plot = plots.get(plotIndex);
-                id = getId(name, type, row);
+                id = getId(row);
 
                 Double current = null;
                 for (TimestampedValue<Double> item : plot.getSeriestData(seriesIndex)) {
@@ -1544,6 +1572,7 @@ public class StripChart extends StandardDialog {
         jLabel5.setText("Layout:");
 
         comboLayout.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "default", "table", "sf" }));
+        comboLayout.setSelectedIndex(1);
 
         javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
         jPanel2.setLayout(jPanel2Layout);
@@ -1553,12 +1582,12 @@ public class StripChart extends StandardDialog {
                 .addContainerGap()
                 .addComponent(ckPersistence)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(textFileName, javax.swing.GroupLayout.PREFERRED_SIZE, 243, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(textFileName, javax.swing.GroupLayout.DEFAULT_SIZE, 243, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jLabel1)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(comboFormat, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jLabel5)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(comboLayout, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -1572,9 +1601,8 @@ public class StripChart extends StandardDialog {
                     .addComponent(textFileName, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jLabel1)
                     .addComponent(comboFormat, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.CENTER)
-                        .addComponent(jLabel5)
-                        .addComponent(comboLayout, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                    .addComponent(jLabel5)
+                    .addComponent(comboLayout, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addContainerGap())
         );
 

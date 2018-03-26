@@ -38,7 +38,7 @@ public class StripScan extends ManualScan {
         LocalTimespan,
     }
 
-    TimePositionerType timePositionerType = TimePositionerType.DeviceTimespan;
+    TimePositionerType timePositionerType = TimePositionerType.DeviceTimestamp;
 
     public TimePositionerType getTimePositionerType() {
         return timePositionerType;

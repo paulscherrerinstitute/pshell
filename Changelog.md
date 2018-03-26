@@ -30,14 +30,15 @@
 
 * RegisterStats to provide URLDevice operations on waveforms (parameter 'op').
 
-* New data layout: LayoutSF (proposal for SwissFEL common format).
+* New data layout: LayoutSF (id "sf") (proposal for SwissFEL common format).
 
 * Script callbacks for start/end of scan passes: __before_pass__ and __after_pass__.
 
 
 ### Changed
 
-* EPICS channels by default now are timestamped and nullify invalid values.
+* EPICS channels are now by default timestamped and nullify invalid values. 
+  Default behavior for invalid values can be set with Epics.setDefaultInvalidValueAction.
 
 * StripChart persistence based on scan layouts.
 
@@ -50,10 +51,10 @@
 
 * Monitor scan supporting multiple triggers.
 
-* Device polling first event is immediate (timer delay=0) .
+* Device polling first call is immediate (timer delay=0) .
 
-* Move scan common optional arguments to **pars(so signatures don't get too big): 
-  __title__, __before_read__ and __after_read__, __before_pass__ and __after_pass__.
+* Move scan common optional arguments to **pars (so that signatures don't get too big): 
+  __title__, __before_read__,  __after_read__, __before_pass__ and __after_pass__.
  
 * Ability to abort background scans: both server __evalAsync__ command  and  __run__ with async flag
   return command id. It can be aborted with abort/id  in the server.
@@ -73,7 +74,7 @@
 
 * Workaround to bug in JFreeChart when appending very small values to matric plot.
 
-* Fixed return values of simultaneous commands dependent and persistence of simultaneous scans.
+* Fixed return values of simultaneous commands and persistence of simultaneous scans.
 
 
 
