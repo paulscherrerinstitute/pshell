@@ -3,7 +3,7 @@ package ch.psi.pshell.scan;
 import ch.psi.pshell.bs.Scalar;
 import ch.psi.pshell.bs.Stream;
 import ch.psi.pshell.bs.StreamValue;
-import ch.psi.pshell.core.UrlDevice;
+import ch.psi.pshell.core.InlineDevice;
 import ch.psi.pshell.device.Device;
 import ch.psi.pshell.device.DeviceListener;
 import ch.psi.pshell.device.DummyPositioner;
@@ -125,7 +125,7 @@ public class MonitorScan extends LineScan {
             }   
         }
         if ((dev!=null) && (r instanceof Device)){
-            dev = UrlDevice.getSourceDevice(dev);
+            dev = InlineDevice.getSourceDevice(dev);
         }
         return dev;
     }
@@ -224,7 +224,7 @@ public class MonitorScan extends LineScan {
             if (trigger == null) {
                 throw new IOException("No trigger defined");
             }
-            if (trigger instanceof UrlDevice) {
+            if (trigger instanceof InlineDevice) {
                 //TODO: trigger must be equal to readables[0]: add checking
                 trigger = (Device) readables[0];
                 readables[0] = ((Cacheable) readables[0]).getCache();

@@ -16,7 +16,7 @@ importClass(java.io.File)
 CommandSource = Java.type('ch.psi.pshell.core.CommandSource')
 ContextListener = Java.type('ch.psi.pshell.core.ContextAdapter')
 Context = Java.type('ch.psi.pshell.core.Context')
-UrlDevice = Java.type('ch.psi.pshell.core.UrlDevice')
+InlineDevice = Java.type('ch.psi.pshell.core.InlineDevice')
 PlotDescriptor = Java.type('ch.psi.pshell.data.PlotDescriptor')
 Table = Java.type('ch.psi.pshell.data.Table')
 Device = Java.type('ch.psi.pshell.device.Device')
@@ -1735,7 +1735,7 @@ function reinit(dev){
 
 function create_device(url, parent){
     /*
-    Create a device form a definition string(see URLDevice)
+    Create a device form a definition string(see InlineDevice)
 
     Args:                 
         url(str): the device definition string
@@ -1745,7 +1745,7 @@ function create_device(url, parent){
         The created device
     */
     if (!is_defined(parent))    parent = null;
-    return UrlDevice.create(url, parent)
+    return InlineDevice.create(url, parent)
 }
 
 function create_averager(dev, count, interval, name, monitored){
@@ -2021,7 +2021,7 @@ function exec_cpython(script_name, args, python_name){
 function string_to_obj(o) {
     if (typeof o === 'string') {
         if (o.contains("://")){
-            return new UrlDevice(o)   
+            return new InlineDevice(o)   
         }            
         return eval(o)
     } else if (o instanceof Array) {

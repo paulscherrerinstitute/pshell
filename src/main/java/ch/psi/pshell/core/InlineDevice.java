@@ -30,7 +30,7 @@ import java.util.logging.Level;
  * Dynamic resolved devices, according to URL (protocol://name). Can be passed
  * as argument to scans.
  */
-public class UrlDevice extends DeviceBase implements Readable, Writable {
+public class InlineDevice extends DeviceBase implements Readable, Writable {
 
     final String url;
     final String protocol;
@@ -45,11 +45,11 @@ public class UrlDevice extends DeviceBase implements Readable, Writable {
 
     static List<Stream> cameraStreams = new ArrayList<>();
 
-    public UrlDevice(String url) {
+    public InlineDevice(String url) {
         this(null, url);
     }
 
-    public UrlDevice(String name, String url) {
+    public InlineDevice(String name, String url) {
         this.url = url;
         this.protocol = getUrlProtocol(url);
         this.pars = getUrlPars(url);
@@ -512,7 +512,7 @@ public class UrlDevice extends DeviceBase implements Readable, Writable {
     }
 
     public static Device create(String url, DeviceBase parent) throws IOException, InterruptedException {
-        UrlDevice dev = new UrlDevice(url);
+        InlineDevice dev = new InlineDevice(url);
         Stream innerStream = null;
         if (parent == null) {
             if (getUrlProtocol(url).equals("bs")) {

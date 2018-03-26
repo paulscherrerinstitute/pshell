@@ -35,7 +35,7 @@ import ch.psi.utils.Chrono as Chrono
 import ch.psi.pshell.core.CommandSource as CommandSource
 import ch.psi.pshell.core.ContextAdapter as ContextListener
 import ch.psi.pshell.core.Context
-import ch.psi.pshell.core.UrlDevice as UrlDevice
+import ch.psi.pshell.core.InlineDevice as InlineDevice
 import ch.psi.pshell.data.PlotDescriptor as PlotDescriptor
 import ch.psi.pshell.data.Table as Table
 import ch.psi.pshell.device.Device as Device
@@ -1801,7 +1801,7 @@ def reinit(dev = None):
     return to_list(get_context().reinit())
 
 def create_device(url, parent=None):
-    """Create a device form a definition string(see URLDevice)
+    """Create a device form a definition string(see InlineDevice)
 
     Args:                 
         url(str or list of string): the device definition string (or list of strings)
@@ -1810,7 +1810,7 @@ def create_device(url, parent=None):
     Returns:
         The created device (or list of devices)
     """
-    return UrlDevice.create(url, parent)
+    return InlineDevice.create(url, parent)
 
 
 def create_averager(dev, count, interval=0.0, name = None,  monitored = False):
@@ -2243,7 +2243,7 @@ def notify(subject, text, attachments = None, to=None):
 def string_to_obj(o):
     if is_string(o):
         if "://" in o:
-            return UrlDevice(o)
+            return InlineDevice(o)
         return eval(o)
     elif is_list(o):
         ret = []

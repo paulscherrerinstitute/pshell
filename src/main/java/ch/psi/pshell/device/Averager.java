@@ -1,7 +1,7 @@
 package ch.psi.pshell.device;
 
 import ch.psi.pshell.bs.Stream;
-import ch.psi.pshell.core.UrlDevice;
+import ch.psi.pshell.core.InlineDevice;
 import ch.psi.pshell.device.ReadonlyRegister.ReadonlyRegisterNumber;
 import ch.psi.utils.Chrono;
 import ch.psi.utils.Reflection;
@@ -88,16 +88,16 @@ public class Averager extends ReadonlyRegisterBase<DescStatsDouble> implements R
     }
     
     Readable resolveSource(Readable source){
-        if (source instanceof UrlDevice){
+        if (source instanceof InlineDevice){
             try{
-                if (((UrlDevice)source).getProtocol().equals("bs")){
+                if (((InlineDevice)source).getProtocol().equals("bs")){
                     Stream stream = new Stream("Averager inner device stream");
                     stream.initialize();                                                     
-                    ((UrlDevice)source).setParent(stream);
+                    ((InlineDevice)source).setParent(stream);
                     innerDevice = stream;
                 }
-                ((UrlDevice)source).initialize();
-                Device dev = ((UrlDevice)source).getDevice();                
+                ((InlineDevice)source).initialize();
+                Device dev = ((InlineDevice)source).getDevice();                
                 source = (Readable) dev;
                 if (innerDevice == null){
                     innerDevice = dev;
@@ -222,7 +222,7 @@ public class Averager extends ReadonlyRegisterBase<DescStatsDouble> implements R
    
     public interface RegisterStats extends Device{
         default Device getSource(){
-            return UrlDevice.getSourceDevice(this);
+            return InlineDevice.getSourceDevice(this);
         }
     }
 

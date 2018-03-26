@@ -1,6 +1,6 @@
 package ch.psi.pshell.scan;
 
-import ch.psi.pshell.core.UrlDevice;
+import ch.psi.pshell.core.InlineDevice;
 import ch.psi.pshell.bs.Stream;
 import ch.psi.pshell.bs.Waveform;
 import ch.psi.pshell.core.Context;
@@ -744,26 +744,26 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
         startedStreams = new ArrayList<>();
         innerDevices = new ArrayList<>();
         for (int i = 0; i < writables.length; i++) {
-            if (writables[i] instanceof UrlDevice) {
-                ((UrlDevice) writables[i]).initialize();
-                innerDevices.add((UrlDevice) writables[i]);
-                writables[i] = (Writable) ((UrlDevice) writables[i]).getDevice();
+            if (writables[i] instanceof InlineDevice) {
+                ((InlineDevice) writables[i]).initialize();
+                innerDevices.add((InlineDevice) writables[i]);
+                writables[i] = (Writable) ((InlineDevice) writables[i]).getDevice();
             }
         }
         Stream innerStream = null;
         for (int i = 0; i < readables.length; i++) {
-            if (readables[i] instanceof UrlDevice) {
-                if (((UrlDevice) readables[i]).getProtocol().equals("bs")) {
+            if (readables[i] instanceof InlineDevice) {
+                if (((InlineDevice) readables[i]).getProtocol().equals("bs")) {
                     if (innerStream == null) {
                         innerStream = new Stream("Scan devices stream");
                         innerDevices.add(innerStream);
                         innerStream.initialize();
                     }
-                    ((UrlDevice) readables[i]).setParent(innerStream);
+                    ((InlineDevice) readables[i]).setParent(innerStream);
                 }
-                ((UrlDevice) readables[i]).initialize();
-                innerDevices.add((UrlDevice) readables[i]);
-                readables[i] = (Readable) ((UrlDevice) readables[i]).getDevice();
+                ((InlineDevice) readables[i]).initialize();
+                innerDevices.add((InlineDevice) readables[i]);
+                readables[i] = (Readable) ((InlineDevice) readables[i]).getDevice();
             }
         }
         if (innerStream != null) {

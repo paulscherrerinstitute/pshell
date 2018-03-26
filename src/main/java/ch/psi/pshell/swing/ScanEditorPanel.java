@@ -2,7 +2,7 @@ package ch.psi.pshell.swing;
 
 import ch.psi.pshell.core.Context;
 import ch.psi.pshell.core.JsonSerializer;
-import ch.psi.pshell.core.UrlDevice;
+import ch.psi.pshell.core.InlineDevice;
 import ch.psi.pshell.scripting.ScriptType;
 import ch.psi.pshell.swing.StripChart.Type;
 import ch.psi.pshell.ui.Processor;
@@ -803,8 +803,8 @@ public class ScanEditorPanel extends MonitoredPanel implements Processor {
         String name = null;
         if (!useDeviceDirect(row)) {
             String url = getSensorUrl(row);
-            name = UrlDevice.getUrlPars(url).get("name");
-            ret = (name != null) ? name : UrlDevice.getDeviceName(url);
+            name = InlineDevice.getUrlPars(url).get("name");
+            ret = (name != null) ? name : InlineDevice.getDeviceName(url);
         }
         if (name == null) {
             Integer samples = ((Integer) modelSensors.getValueAt(row, 2));

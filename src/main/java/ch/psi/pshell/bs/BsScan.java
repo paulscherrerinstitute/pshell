@@ -1,6 +1,6 @@
 package ch.psi.pshell.bs;
 
-import ch.psi.pshell.core.UrlDevice;
+import ch.psi.pshell.core.InlineDevice;
 import ch.psi.pshell.device.Device;
 import ch.psi.pshell.device.DeviceAdapter;
 import ch.psi.pshell.device.DummyPositioner;
@@ -43,7 +43,7 @@ public class BsScan extends LineScan {
             if (!channels[i].startsWith("bs://")){
                 channels[i] = "bs://" + channels[i];
             }  
-            ret[i] = new UrlDevice(channels[i]);
+            ret[i] = new InlineDevice(channels[i]);
         }
         return ret;
     }
