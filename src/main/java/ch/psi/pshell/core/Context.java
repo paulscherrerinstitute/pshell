@@ -68,7 +68,6 @@ import ch.psi.pshell.security.UsersManagerListener;
 import ch.psi.pshell.security.User;
 import ch.psi.pshell.security.UserAccessException;
 import ch.psi.utils.Chrono;
-import ch.psi.utils.Condition;
 import ch.psi.utils.Sys.OSFamily;
 import java.net.InetAddress;
 import java.net.ServerSocket;
@@ -96,6 +95,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
     final Boolean interpreterEnabled;
     final Boolean serverMode;
     final Boolean simulation;
+    final Boolean forceExtract;
     final Boolean fileLockEnabled;
     final LogManager logManager;
     final PluginManager pluginManager;
@@ -129,6 +129,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
     public static final String PROPERTY_DISABLED = "ch.psi.pshell.disabled";
     public static final String PROPERTY_SERVER_MODE = "ch.psi.pshell.server";
     public static final String PROPERTY_FILE_LOCK = "ch.psi.pshell.file.lock";
+    public static final String PROPERTY_FORCE_EXTRACT = "ch.psi.pshell.force.extract";
     public static final String PROPERTY_SIMULATION = "ch.psi.pshell.simulation";
 
     private static Context instance;
@@ -176,6 +177,12 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
         } else {
             simulation = false;
         }
+        
+        if (System.getProperty(PROPERTY_FORCE_EXTRACT) != null) {
+            forceExtract = Boolean.valueOf(System.getProperty(PROPERTY_FORCE_EXTRACT));
+        } else {
+            forceExtract = false;
+        }        
 
         if (System.getProperty(PROPERTY_FILE_LOCK) != null) {
             fileLockEnabled = Boolean.valueOf(System.getProperty(PROPERTY_FILE_LOCK));
@@ -2665,7 +2672,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
                             logger.log(Level.WARNING, null, ex);
                         }
                     } else {
-                        if (!startupScript.exists() || (startupScript.lastModified() < jarFile.lastModified())) {
+                        if (!startupScript.exists() || (startupScript.lastModified() < jarFile.lastModified()) || forceExtract) {
                             logger.warning("Extracting startup script and utilities");
                             try {
                                 logger.fine("Extracting: " + startupScript.getName());

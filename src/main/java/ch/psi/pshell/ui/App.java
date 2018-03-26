@@ -147,6 +147,7 @@ public class App extends ObservableBase<AppListener> {
         sb.append("\n\t-dspt\tDisable scan plots");
         sb.append("\n\t-dspr\tDisable printing scans to console");
         sb.append("\n\t-sbar\tAppend status bar to detached windows");
+        sb.append("\n\t-extr\tForce extract startup and utility scrips");        
         sb.append("\n\t-strp\tShow strip chart window (can be used together with -f)");
         sb.append("\n\t-strh=<path>\tStrip chart default configuration folder.");
         sb.append("\n\t-mlaf\tUse Metal look and feel (cross platform)");
@@ -577,7 +578,7 @@ public class App extends ObservableBase<AppListener> {
         if (isServerMode()) {
             System.setProperty(Context.PROPERTY_SERVER_MODE, "true");
         }
-
+        
         if (isSimulation()) {
             System.setProperty(Context.PROPERTY_SIMULATION, "true");
         }
@@ -587,6 +588,10 @@ public class App extends ObservableBase<AppListener> {
         
         if (hasArgument("dspr")){
             App.setScanPrintingActive(false);
+        }
+        
+        if (hasArgument("extr")){
+            System.setProperty(Context.PROPERTY_FORCE_EXTRACT, "true");
         }
 
         System.setProperty(Context.PROPERTY_FILE_LOCK, isFileLock() ? "true" : "false");

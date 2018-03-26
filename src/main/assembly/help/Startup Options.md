@@ -146,6 +146,10 @@
     <td>Append status bar to detached windows.</td>
   </tr>
   <tr>
+    <td>-extr</td>
+    <td>Force extract startup and utility scrips (must not be in local mode).</td>
+  </tr>    
+  <tr>
     <td>-strp</td>
     <td>Show strip chart window (can be used together with -f).</td>
   </tr>
