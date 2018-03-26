@@ -80,6 +80,7 @@ public class LayoutSF extends LayoutBase implements Layout {
 
     public static final String ATTR_DATASET_READBACK = "readback";
     public static final String ATTR_DATASET_SETPOINT = "setpoint";
+    public static final String ATTR_DATASET_VALUE = "value";
     public static final String ATTR_DATASET_TIMESTAMP = "timestamp";
     public static final String ATTR_DATASET_PID = "pid";
     public static final String ATTR_DATASET_GLOBAL_TIMESTAMP = "global_timestamp";
@@ -253,7 +254,7 @@ public class LayoutSF extends LayoutBase implements Layout {
             String name = dataManager.getAlias(readable);
             String groupDev = getDataPath(scan, name);
             if (readable instanceof ReadableMatrix) {
-                dataManager.createDataset(groupDev + ATTR_DATASET_READBACK, getDeviceType(readable), dataManager.getReadableMatrixDimension((ReadableMatrix) readable));
+                dataManager.createDataset(groupDev + ATTR_DATASET_VALUE, getDeviceType(readable), dataManager.getReadableMatrixDimension((ReadableMatrix) readable));
                 if (readable instanceof ReadableCalibratedMatrix) {
                     MatrixCalibration cal = ((ReadableCalibratedMatrix) readable).getCalibration();
                     if (cal != null) {
@@ -263,7 +264,7 @@ public class LayoutSF extends LayoutBase implements Layout {
                     }
                 }
             } else if (readable instanceof ReadableArray) {
-                dataManager.createDataset(groupDev + ATTR_DATASET_READBACK, getDeviceType(readable), new int[]{0, ((ReadableArray) readable).getSize()});
+                dataManager.createDataset(groupDev + ATTR_DATASET_VALUE, getDeviceType(readable), new int[]{0, ((ReadableArray) readable).getSize()});
                 if (readable instanceof ReadableCalibratedArray) {
                     ArrayCalibration cal = ((ReadableCalibratedArray) readable).getCalibration();
                     if (cal != null) {
@@ -273,7 +274,7 @@ public class LayoutSF extends LayoutBase implements Layout {
                     }
                 }
             } else {
-                dataManager.createDataset(groupDev + ATTR_DATASET_READBACK, getDeviceType(readable), new int[]{0});
+                dataManager.createDataset(groupDev + ATTR_DATASET_VALUE, getDeviceType(readable), new int[]{0});
                 if (Averager.isAverager(readable)) {
                     dataManager.createDataset(getMetaPath(scan, name) + DEVICE_MIN_DATASET, Double.class, new int[]{0});
                     dataManager.createDataset(getMetaPath(scan, name) + DEVICE_MAX_DATASET, Double.class, new int[]{0});
@@ -322,14 +323,14 @@ public class LayoutSF extends LayoutBase implements Layout {
                     value = Convert.toDouble(value);
                 }
             }
-            dataManager.setItem(path + ATTR_DATASET_READBACK, value, index);
+            dataManager.setItem(path + ATTR_DATASET_VALUE, value, index);
             if (Averager.isAverager(readable)) {
                 DescStatsDouble v = (DescStatsDouble) value;
                 dataManager.setItem(getMetaPath(scan, name) + DEVICE_MIN_DATASET, (v == null) ? null : v.getMin(), index);
                 dataManager.setItem(getMetaPath(scan, name) + DEVICE_MAX_DATASET, (v == null) ? null : v.getMax(), index);
                 dataManager.setItem(getMetaPath(scan, name) + DEVICE_STDEV_DATASET, (v == null) ? null : v.getStdev(), index);
             }
-            dataManager.setItem(path + ATTR_DATASET_READBACK, value, index);
+            dataManager.setItem(path + ATTR_DATASET_VALUE, value, index);
             dataManager.setItem(path + ATTR_DATASET_TIMESTAMP, (timestamp == null) ? 0 : timestamp, index);
         }
         dataManager.setItem(group + ATTR_DATASET_TIMESTAMP, record.getLocalTimestamp(), index);
@@ -343,7 +344,7 @@ public class LayoutSF extends LayoutBase implements Layout {
                     getDataManager().flush();
                     String name = getDataManager().getAlias(readable);
                     double[] stdev = (double[]) getDataManager().getData(getMetaPath(scan, name) + DEVICE_STDEV_DATASET).sliceData;
-                    getDataManager().setAttribute(getDataPath(scan, name) + ATTR_DATASET_READBACK, ATTR_ERROR_VECTOR, stdev);
+                    getDataManager().setAttribute(getDataPath(scan, name) + ATTR_DATASET_VALUE, ATTR_ERROR_VECTOR, stdev);
                 } catch (Exception ex) {
                     Logger.getLogger(LayoutDefault.class.getName()).log(Level.WARNING, null, ex);
                 }
@@ -420,7 +421,7 @@ public class LayoutSF extends LayoutBase implements Layout {
                 }
             } 
             for (String child : children) {
-                List<PlotDescriptor> descriptors = dm.getPlots(root, child + "/" + ATTR_DATASET_READBACK);
+                List<PlotDescriptor> descriptors = dm.getPlots(root, child + "/" + ATTR_DATASET_VALUE);
                 for (PlotDescriptor descriptor : descriptors) {
                     descriptor.name = child.substring(child.lastIndexOf("/") + 1);
                     //1D plot of 2D images 
@@ -490,7 +491,7 @@ public class LayoutSF extends LayoutBase implements Layout {
         }
         try {
             String[] tokens = path.split("/");
-            if (Arr.containsEqual(new String[]{ATTR_DATASET_READBACK, ATTR_DATASET_SETPOINT}, tokens[3])
+            if (Arr.containsEqual(new String[]{ATTR_DATASET_READBACK, ATTR_DATASET_SETPOINT, ATTR_DATASET_VALUE}, tokens[3])
                     && tokens[1].equals(ATTR_GROUP_DATA.substring(0, ATTR_GROUP_DATA.length() - 1))) {
                 return true;
             }
