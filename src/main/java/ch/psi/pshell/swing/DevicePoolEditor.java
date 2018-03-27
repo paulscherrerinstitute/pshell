@@ -253,6 +253,7 @@ public class DevicePoolEditor extends Editor {
                 ch.psi.pshell.epics.Motor.class.getName(),
                 ch.psi.pshell.epics.Positioner.class.getName(),
                 ch.psi.pshell.epics.ProcessVariable.class.getName(),
+                ch.psi.pshell.epics.ReadonlyProcessVariable.class.getName(),
                 ch.psi.pshell.epics.Scaler.class.getName(),
                 ch.psi.pshell.epics.Scienta.class.getName(),
                 ch.psi.pshell.epics.Slit.class.getName(),
