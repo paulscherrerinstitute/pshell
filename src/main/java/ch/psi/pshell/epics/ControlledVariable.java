@@ -21,11 +21,23 @@ public class ControlledVariable extends ControlledVariableBase {
         this(name, channelName, readbackChannelName, null);
     }
 
+    public ControlledVariable(String name, String channelName, String readbackChannelName, boolean timestamped) {
+        this(name, channelName, readbackChannelName, null,timestamped);
+    }
+
     public ControlledVariable(String name, String channelName, String readbackChannelName, ReadonlyRegister<Double> readbackChannel) {
+        this(name, channelName, readbackChannelName, readbackChannel, true);
+    }
+    
+    public ControlledVariable(String name, String channelName, String readbackChannelName, ReadonlyRegister<Double> readbackChannel, boolean timestamped) {
+        this(name, channelName, readbackChannelName, readbackChannel, timestamped, timestamped ? Epics.getDefaultInvalidValueAction() : null);
+    }
+    
+    public ControlledVariable(String name, String channelName, String readbackChannelName, ReadonlyRegister<Double> readbackChannel, boolean timestamped, InvalidValueAction invalidValueAction) {
         super(name, new ProcessVariableConfig());
         this.channelName = channelName;
-        channel = new ChannelDouble(name + " channel", channelName, getConfig().precision);
-        this.readbackChannel = (readbackChannel != null) ? readbackChannel : new ReadbackChannel(name + " readback channel", readbackChannelName);
+        channel = new ChannelDouble(name + " channel", channelName, getConfig().precision, timestamped, invalidValueAction);
+        this.readbackChannel = (readbackChannel != null) ? readbackChannel : new ReadbackChannel(name + " readback channel", readbackChannelName, timestamped, invalidValueAction);
         setChildren(new Device[]{channel, this.readbackChannel});
         setTrackChildren(true);
         setReadback(this.readbackChannel);
@@ -76,8 +88,8 @@ public class ControlledVariable extends ControlledVariableBase {
 
     class ReadbackChannel extends ChannelDouble {
 
-        ReadbackChannel(String name, String channelName) {
-            super(name, channelName, ControlledVariable.this.getPrecision());
+        ReadbackChannel(String name, String channelName, boolean timestamped, InvalidValueAction invalidValueAction) {
+             super(name, channelName, ControlledVariable.this.getPrecision(), timestamped, invalidValueAction);
             setParent(ControlledVariable.this);
             setAccessType(AccessType.Read);
         }

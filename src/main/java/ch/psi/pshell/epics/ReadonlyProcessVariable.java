@@ -17,9 +17,17 @@ public class ReadonlyProcessVariable extends ReadonlyProcessVariableBase {
     final ChannelDouble channel;
 
     public ReadonlyProcessVariable(String name, String channelName) {
+        this(name, channelName, true);
+    }
+    
+    public ReadonlyProcessVariable(String name, String channelName, boolean timestamped) {
+        this(name, channelName, timestamped, timestamped ? Epics.getDefaultInvalidValueAction() : null);
+    }
+    
+    public ReadonlyProcessVariable(String name, String channelName, boolean timestamped, InvalidValueAction invalidValueAction) {
         super(name, new ReadonlyProcessVariableConfig());
         this.channelName = channelName;
-        channel = new ChannelDouble(name + " channel", channelName);
+        channel = new ChannelDouble(name + " channel", channelName, -1, timestamped, invalidValueAction);
         setChildren(new Device[]{channel});
         setTrackChildren(true);
     }

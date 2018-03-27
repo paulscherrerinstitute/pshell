@@ -17,9 +17,17 @@ public class ProcessVariable extends ProcessVariableBase {
     final ChannelDouble channel;
 
     public ProcessVariable(String name, String channelName) {
+        this(name, channelName, true);
+    }
+    
+    public ProcessVariable(String name, String channelName, boolean timestamped) {
+        this(name, channelName, timestamped, timestamped ? Epics.getDefaultInvalidValueAction() : null);
+    }
+    
+    public ProcessVariable(String name, String channelName, boolean timestamped, InvalidValueAction invalidValueAction) {
         super(name, new ProcessVariableConfig());
         this.channelName = channelName;
-        channel = new ChannelDouble(name + " channel", channelName);
+        channel = new ChannelDouble(name + " channel", channelName, -1, timestamped, invalidValueAction);
         setChildren(new Device[]{channel});
         setTrackChildren(true);
     }
