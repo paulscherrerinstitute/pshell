@@ -3,7 +3,7 @@ package ch.psi.pshell.epics;
 import ch.psi.pshell.imaging.RegisterArraySource;
 
 /**
- * Wraps an EPICS PV as a byte register array.
+ * Image source based on an EPICS waveform channel.
  */
 public class ArraySource extends RegisterArraySource {
 
@@ -33,7 +33,7 @@ public class ArraySource extends RegisterArraySource {
     }
 
     protected ArraySource(String name, String channelName, int size, String type, RegisterArraySourceConfig config) {
-        super(name, new GenericArray(name + " data", channelName, size, type), config);
+        super(name, new GenericArray(name + " data", channelName, size, false, null, type), config);
     }
 
 }

@@ -14,27 +14,45 @@ import java.util.logging.Logger;
  */
 public class GenericArray extends RegisterBase implements Register.RegisterArray {
 
-    final String channelName;
+    final String channelName;        
+    final String typeName;    
+    final boolean timestamped;
+    final InvalidValueAction invalidAction;
+    int size = -1;
     RegisterArray register;
     Class type;
-    int size = -1;
-    String typeName;
-    boolean autoResolveType = true;
+    boolean autoResolveType = true;    
+    
+    
 
     public GenericArray(String name, final String channelName) {
-        super(name);
-        this.channelName = channelName;
-        this.setTrackChildren(true);
+         this(name, channelName, -1);
     }
 
     public GenericArray(String name, final String channelName, final int size) {
-        this(name, channelName, size, null);
+        this(name, channelName, size, true);
+    }
+    
+    public GenericArray(String name, final String channelName, final int size, boolean timestamped) {
+        this(name, channelName, size, timestamped, timestamped ? Epics.getDefaultInvalidValueAction(): null);
     }
 
-    public GenericArray(String name, final String channelName, final int size, final String className) {
-        this(name, channelName);
+    public GenericArray(String name, final String channelName, final int size, boolean timestamped, InvalidValueAction invalidAction) {
+        this(name, channelName, size, timestamped, invalidAction, null);
+    }
+    
+    public GenericArray(String name, final String channelName, final int size, boolean timestamped, InvalidValueAction invalidAction, final String className) {
+        super(name);
+        this.channelName = channelName;
+        this.setTrackChildren(true);
         this.typeName = className;
+        this.timestamped = timestamped;
+        this.invalidAction = invalidAction;
         this.size = size;
+    }
+    
+    public String getChannelName() {
+        return channelName;
     }
 
     public boolean getAutoResolveType() {
@@ -50,7 +68,7 @@ public class GenericArray extends RegisterBase implements Register.RegisterArray
             boolean initialized = isInitialized();
             closeRegister();
             String name = getName() + " channel";
-            setRegister((EpicsRegisterArray) Epics.newChannelDevice(name, channelName, type));
+            setRegister((EpicsRegisterArray) Epics.newChannelDevice(name, channelName, type, timestamped, -1, -1, invalidAction));
             if (initialized) {
                 register.initialize();
             }

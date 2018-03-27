@@ -35,12 +35,21 @@ public class GenericMatrix extends ReadonlyRegisterBase implements ReadonlyRegis
     }
 
     public GenericMatrix(String name, String channelName, int width, int height) {
-        this(name, channelName, width, height, null);
+        this(name, channelName, width, height, true);
     }
 
-    public GenericMatrix(String name, String channelName, int width, int height, String type) {
+    public GenericMatrix(String name, String channelName, int width, int height, boolean timestamped) {
+        this(name, channelName, width, height, timestamped, timestamped ? Epics.getDefaultInvalidValueAction(): null);
+    }
+
+    public GenericMatrix(String name, String channelName, int width, int height, boolean timestamped, InvalidValueAction invalidAction) {
+        this(name, channelName, width, height, timestamped, invalidAction, null);
+    }
+
+    
+    public GenericMatrix(String name, String channelName, int width, int height, boolean timestamped, InvalidValueAction invalidAction, String type) {
         super(name, new GenericMatrixConfig());
-        array = new GenericArray(name + " array", channelName, width * height, type);
+        array = new GenericArray(name + " array", channelName, width * height, timestamped, invalidAction, type);
         this.width = width;
         this.height = height;
         array.addListener(new DeviceAdapter() {

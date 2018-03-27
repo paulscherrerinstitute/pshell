@@ -3,7 +3,7 @@ package ch.psi.pshell.epics;
 import ch.psi.pshell.imaging.CameraSource;
 
 /**
- * Wraps an EPICS PV as a byte register array.
+ * Image source based on Area Detector.
  */
 public class AreaDetectorSource extends CameraSource {
 

@@ -3,7 +3,7 @@ package ch.psi.pshell.epics;
 import ch.psi.pshell.imaging.RegisterArraySource;
 
 /**
- * Wraps an EPICS PV as a byte register array.
+ * Image source based on an EPICS byte waveform channel.
  */
 public class ByteArraySource extends RegisterArraySource {
 
