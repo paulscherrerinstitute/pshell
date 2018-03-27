@@ -117,7 +117,7 @@ public class Scienta extends AreaDetector {
     public class ScientaSpectrum extends ChannelDoubleArray implements ReadableCalibratedArray<double[]> {
 
         ScientaSpectrum() {
-            super(Scienta.this.getName() + " spectrum", channelCtrl + ":INT_SPECTRUM", 8, 200);
+            super(Scienta.this.getName() + " spectrum", channelCtrl + ":INT_SPECTRUM", 8, 200, false);
             setAccessType(AccessType.Read);
         }
 
@@ -505,7 +505,7 @@ public class Scienta extends AreaDetector {
         final ChannelInteger uid;
 
         Stats(String name, int index) {
-            super(name, channelCtrl.split(":")[0] + ":Stats" + index + ":Total_RBV", 3);
+            super(name, channelCtrl.split(":")[0] + ":Stats" + index + ":Total_RBV", 3, false);
             this.index = index;
             uid = new ChannelInteger(name + " uid", channelCtrl.split(":")[0] + ":Stats" + index + ":UniqueId_RBV", false);
             //setParent(Scienta.this);

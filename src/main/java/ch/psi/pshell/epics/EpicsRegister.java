@@ -171,7 +171,7 @@ public abstract class EpicsRegister<T> extends RegisterBase<T> {
 
     @Override
     protected void onReadout(Object value) {
-        if (requestMetadata) {
+        if (requestMetadata && !isSimulated()) {
             try {
                 TimestampValue<T> tv = ((TimestampValue<T>) value);
                 T val = tv.getValue();
