@@ -20,7 +20,6 @@ public abstract class EpicsRegister<T> extends RegisterBase<T> {
     int maximumSize = -1;
     final String channelName;
     final protected Boolean timestamped;
-    final protected Boolean status;
     final protected Boolean requestMetadata;
     final protected InvalidValueAction invalidAction;
     volatile Severity severity;

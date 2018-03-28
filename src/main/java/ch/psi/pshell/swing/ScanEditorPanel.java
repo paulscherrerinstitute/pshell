@@ -689,7 +689,7 @@ public class ScanEditorPanel extends MonitoredPanel implements Processor {
         } else {
             ret.add(getParName("latency") + spinnerLatency.getValue());
             if (hasTime()) {
-                ret.add(getParName("time") + spinnerTime.getValue());
+                ret.add(getParName("time") + (((spinnerTime.getValue()==null) || ((Double)spinnerTime.getValue()==0)) ? getNullValue() : spinnerTime.getValue()));
             }
             ret.add(getParName("relative") + getBoolValue(checkRelative.isSelected()));
             ret.add(getParName("passes") + spinnerPasses.getValue());

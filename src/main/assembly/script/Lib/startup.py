@@ -591,13 +591,14 @@ def cscan(writables, readables, start, end, steps, latency=0.0, time=None, relat
     latency_ms=int(latency*1000)
     readables=to_list(string_to_obj(readables))
     writables=to_list(string_to_obj(writables))
+    start=to_list(start)
+    end=to_list(end)  
     #A single Writable with fixed speed
     if time is None:
-        scan = ContinuousScan(writables[0],readables, start, end , steps, relative, latency_ms, int(passes), zigzag)
+        if is_list(steps): steps=steps[0]   
+        scan = ContinuousScan(writables[0],readables, start[0], end[0] , steps, relative, latency_ms, int(passes), zigzag)
     #A set of Writables with speed configurable
-    else:        
-        start=to_list(start)
-        end=to_list(end)    
+    else:          
         if type(steps) is float or is_list(steps):
             steps = to_list(steps)
         scan = ContinuousScan(writables,readables, start, end , steps, time, relative, latency_ms, int(passes), zigzag)
