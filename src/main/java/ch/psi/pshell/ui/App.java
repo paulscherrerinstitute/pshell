@@ -1236,7 +1236,7 @@ public class App extends ObservableBase<AppListener> {
             }
         } catch (Exception ex) {
             logger.log(Level.SEVERE, null, ex);
-            System.err.println(ex);
+            ex.printStackTrace();
             throw ex;
         }
 

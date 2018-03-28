@@ -1195,7 +1195,7 @@ public class View extends MainFrame {
                 CloseButtonTabComponent tabComponent = (CloseButtonTabComponent) tabDoc.getTabComponentAt(index);
                 tabComponent.updateUI();
             } catch (Exception ex) {
-                System.out.println(ex);
+                logger.log(Level.WARNING, null, ex);
             }
         }
     }
@@ -1207,7 +1207,7 @@ public class View extends MainFrame {
                 CloseButtonTabComponent tabComponent = (CloseButtonTabComponent) tabDoc.getTabComponentAt(index);
                 tabComponent.updateUI();
             } catch (Exception ex) {
-                System.out.println(ex);
+                logger.log(Level.WARNING, null, ex);
             }
         }
     }

@@ -33,6 +33,10 @@ public class Positioner extends PositionerBase {
     public Positioner(String name, String channelName, String readbackChannelName, boolean timestamped) {
         this(name, channelName, readbackChannelName, null, timestamped);
     }
+
+    public Positioner(String name, String channelName, String readbackChannelName, boolean timestamped, InvalidValueAction invalidValueAction) {
+        this(name, channelName, readbackChannelName, null, timestamped, invalidValueAction);
+    }
     
     public Positioner(String name, String channelName, String readbackChannelName, ReadonlyRegister<Double> readbackChannel) {
         this(name, channelName, readbackChannelName, readbackChannel, true);

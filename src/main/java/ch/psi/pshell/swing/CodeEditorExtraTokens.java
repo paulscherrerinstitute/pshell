@@ -5,6 +5,8 @@ import ch.psi.pshell.core.ContextAdapter;
 import ch.psi.pshell.core.DevicePoolListener;
 import ch.psi.pshell.device.GenericDevice;
 import ch.psi.utils.State;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.fife.ui.rsyntaxtextarea.TokenMap;
 import org.fife.ui.rsyntaxtextarea.TokenTypes;
 
@@ -90,7 +92,7 @@ public class CodeEditorExtraTokens {
             }
             extraTokens = map;
         } catch (Exception ex) {
-            System.err.println(ex);
+            Logger.getLogger(CodeEditorExtraTokens.class.getName()).log(Level.WARNING, null, ex);
         }
     }
 

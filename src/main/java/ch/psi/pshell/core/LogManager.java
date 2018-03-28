@@ -109,7 +109,7 @@ public class LogManager {
                     try {
                         removeHandler(logFile);
                     } catch (Exception ex) {
-                        System.err.println(ex);
+                        ex.printStackTrace();
                     }
                 }
 
@@ -125,7 +125,7 @@ public class LogManager {
             addHandler(lastLogsHandler);
 
         } catch (Exception ex) {
-            System.err.println(ex);
+            ex.printStackTrace();
         }
     }
 

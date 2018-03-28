@@ -25,6 +25,10 @@ public class ControlledVariable extends ControlledVariableBase {
         this(name, channelName, readbackChannelName, null,timestamped);
     }
 
+    public ControlledVariable(String name, String channelName, String readbackChannelName, boolean timestamped, InvalidValueAction invalidValueAction) {
+        this(name, channelName, readbackChannelName, null,timestamped, invalidValueAction);
+    }
+    
     public ControlledVariable(String name, String channelName, String readbackChannelName, ReadonlyRegister<Double> readbackChannel) {
         this(name, channelName, readbackChannelName, readbackChannel, true);
     }

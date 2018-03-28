@@ -169,7 +169,7 @@ public class PluginManager implements AutoCloseable {
             }
 
         } catch (Throwable ex) {
-            System.out.println(ex);
+            ex.printStackTrace();
             //PyException don't have message set
             logger.warning("Error loading plugin: " + fileName + " - " + ((ex.getMessage() == null) ? ex.toString().trim() : ex.getMessage()));
         }

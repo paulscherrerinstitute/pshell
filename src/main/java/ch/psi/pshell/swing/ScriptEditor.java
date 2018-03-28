@@ -30,6 +30,8 @@ import java.awt.event.ActionEvent;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.JMenuItem;
 import javax.swing.UIManager;
 
@@ -69,7 +71,7 @@ public class ScriptEditor extends MonitoredPanel {
                     try {
                         editor.getEditor().getDocument().insertString(caretPos, getTabStr(), null);
                     } catch (BadLocationException ex) {
-                        System.err.println(ex);
+                        Logger.getLogger(ScriptEditor.class.getName()).log(Level.WARNING, null, ex);
                     }
                 }
             }
@@ -387,7 +389,7 @@ public class ScriptEditor extends MonitoredPanel {
                 }
             }
         } catch (Exception ex) {
-            System.err.println(ex);
+            Logger.getLogger(ScriptEditor.class.getName()).log(Level.WARNING, null, ex);
         }
     }
 
