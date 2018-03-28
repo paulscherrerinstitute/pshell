@@ -237,7 +237,7 @@ public abstract class RegisterBase<T> extends DeviceBase implements Register<T> 
     private volatile boolean trustedMonitor = false;
 
     /**
-     * If false read() returns device cache if device is monitored.
+     * If true then read() returns device cache if device is monitored.
      */
     public boolean isTrustedMonitor() {
         return trustedMonitor;

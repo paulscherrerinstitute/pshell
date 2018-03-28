@@ -168,8 +168,8 @@ public class Sys {
                 Windows.Kernel32 kernel = Windows.Kernel32.INSTANCE;
                 return kernel.GetProcessId((int) handle);
             }
-        } catch (Throwable e) {
-            System.err.println(e);
+        } catch (Throwable ex) {
+            ex.printStackTrace();
         }
         return -1;
     }

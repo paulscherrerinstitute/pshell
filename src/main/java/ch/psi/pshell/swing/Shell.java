@@ -33,6 +33,8 @@ import ch.psi.utils.swing.MainFrame;
 import ch.psi.utils.swing.MonitoredPanel;
 import ch.psi.utils.swing.ScrollPopupMenu;
 import ch.psi.pshell.core.ContextListener;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -454,7 +456,7 @@ public class Shell extends MonitoredPanel {
                 }
             }
         } catch (Exception ex) {
-            System.err.println(ex);
+            Logger.getLogger(Shell.class.getName()).log(Level.WARNING, null, ex);
         }
 
     }//GEN-LAST:event_inputKeyPressed
