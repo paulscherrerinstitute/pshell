@@ -903,8 +903,10 @@ public class StripChart extends StandardDialog {
             int existing = 0;
             for (int i = 0; i < index; i++) {
                 String otherId = getBaseId(rows, i);
-                if (otherId.equals(id)) {
-                    existing++;
+                if (otherId!=null){
+                    if (otherId.equals(id)) {
+                        existing++;
+                    }
                 }
             }
             if (existing>0){

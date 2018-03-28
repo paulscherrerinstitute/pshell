@@ -20,6 +20,9 @@ public class StripScanExecutor {
     
     
     public void start(String path, String[] ids, String provider, String layout, boolean flush) {
+        if (persistenceExecutor != null){
+            persistenceExecutor.shutdown();
+        }
         persistenceExecutor = Executors.newSingleThreadExecutor((Runnable runnable) -> {
             persistenceThread = new Thread(Thread.currentThread().getThreadGroup(), runnable, "StripChart Persistence Thread");
             return persistenceThread;
@@ -57,16 +60,18 @@ public class StripScanExecutor {
     }   
     
     public void append(String id, Double val, long now, long time) {
-        persistenceExecutor.submit(() -> {
-            StripScan scan = scans.get(id);
-            if (scan!=null){
-                scan.append(val, now, time);
-            }
-        });
+        if (persistenceExecutor!=null){
+            persistenceExecutor.submit(() -> {
+                StripScan scan = scans.get(id);
+                if (scan!=null){
+                    scan.append(val, now, time);
+                }
+            });
+        }
     }
 
     public void finish() {
-        if (!scans.isEmpty()) {
+        if (!scans.isEmpty() && (persistenceExecutor!=null)) {
             Future future = persistenceExecutor.submit(() -> {
                     for (StripScan scan : scans.values()) {
                         try {

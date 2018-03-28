@@ -170,7 +170,7 @@ public class LayoutSF extends LayoutBase implements Layout {
         dataManager.setDataset(ATTR_GROUP_EXPERIMENT + "author", new String[]{context.getUser().name});
         dataManager.setDataset(ATTR_GROUP_EXPERIMENT + "command", new String[]{String.valueOf(dataManager.getExecutionPars().getStatement())});
         dataManager.setDataset(ATTR_GROUP_EXPERIMENT + "parameters", new String[]{Str.toString(dataManager.getExecutionPars().getArgs())});
-        dataManager.setDataset(ATTR_GROUP_EXPERIMENT + "script", new String[]{String.valueOf(dataManager.getExecutionPars().getPath())});
+        dataManager.setDataset(ATTR_GROUP_EXPERIMENT + "script", new String[]{String.valueOf(dataManager.getExecutionPars().getScript())});
         dataManager.setDataset(ATTR_GROUP_EXPERIMENT + "type", new String[]{String.valueOf(dataManager.getExecutionPars().getName())});
 
         for (Readable r : getExperimentArguments()) {
