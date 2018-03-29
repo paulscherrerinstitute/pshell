@@ -13,6 +13,8 @@ import ch.psi.utils.Chrono;
 import ch.psi.pshell.device.Cacheable;
 import ch.psi.pshell.device.Cacheable.CacheReadable;
 import ch.psi.pshell.device.DeviceAdapter;
+import ch.psi.pshell.device.RegisterBase;
+import ch.psi.utils.Arr;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -27,6 +29,7 @@ public class MonitorScan extends LineScan {
     final int points;
     final boolean async;
     final boolean takeInitialValue;
+    final Readable[] originalReadables;
     final Object lock = new Object();
 
     Device trigger;
@@ -68,6 +71,7 @@ public class MonitorScan extends LineScan {
         this.points = points;
         this.takeInitialValue = takeInitialValue;
         this.async = async;
+        this.originalReadables = readables == null ? null : Arr.copy(readables);
     }    
 
     public Device getTrigger(){
@@ -79,8 +83,18 @@ public class MonitorScan extends LineScan {
     }            
             
     @Override
-    protected void openDevices() throws IOException, InterruptedException {
+    protected void openDevices() throws IOException, InterruptedException {     
         super.openDevices();
+        //TODO: forcing async update because JCAE freezes when making a read from a monitor callback (on any channel)
+        if (async){
+            for (int i=0; i< originalReadables.length; i++){
+                if (originalReadables[i] instanceof InlineDevice){
+                    if (readables[i] instanceof RegisterBase){
+                        ((RegisterBase)readables[i]).setAsyncUpdate(true);
+                    }
+                }
+            }
+        }
         //If no trigger defined
         if (trigger == null) {
             //Uses the stream if contains a bsread device
@@ -95,7 +109,7 @@ public class MonitorScan extends LineScan {
             }
         }
         if (trigger == null) {
-            //Uses a composite trigger of all readables if not
+            //Uses a composite trigger of all monitored readables if not
             List<Device> triggers = new ArrayList<>();
             for (Readable r : readables) {
                 Device device = getSourceDevice(r);                
@@ -145,8 +159,10 @@ public class MonitorScan extends LineScan {
 
     static Readable[] getReadables(Device trigger, Readable[] readables, boolean async) {
         for (int i = 0; i < readables.length; i++) {
-            if (((readables[i] == trigger) || async) && (readables[i] instanceof Cacheable)) {
-                readables[i] = ((Cacheable) readables[i]).getCache();
+            if (async || (readables[i] == trigger)) {
+                if (readables[i] instanceof Cacheable){
+                    readables[i] = ((Cacheable) readables[i]).getCache();
+                }
             }
         }
         return readables;

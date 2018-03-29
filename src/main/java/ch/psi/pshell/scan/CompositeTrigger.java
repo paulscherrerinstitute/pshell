@@ -23,8 +23,10 @@ public class CompositeTrigger extends DeviceBase {
             @Override
             public void onCacheChanged(Device device, Object value, Object former, long timestamp, boolean valueChange) {
                 Object dev = String.valueOf(device.getName());
-                values.put(dev, value);
-                CompositeTrigger.this.setCache(values);
+                synchronized(triggers){
+                    values.put(dev, value);
+                    CompositeTrigger.this.setCache(values);
+                }
             }
         };
     }

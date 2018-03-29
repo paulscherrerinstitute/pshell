@@ -8,7 +8,6 @@ import ch.psi.utils.State;
 import java.io.IOException;
 import java.lang.reflect.Array;
 import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * Base class for registers (device containing a raw numeric or array value).
@@ -95,13 +94,12 @@ public abstract class RegisterBase<T> extends DeviceBase implements Register<T> 
     @Override
     public T read() throws IOException, InterruptedException {
         assertInitialized();
-        if (updatingCache){
-            return take();
-        }
-        Logger logger = getLogger();
         try {
             assertReadEnabled();
             T cache = take();
+            if (updatingCache || asyncUpdate){
+                return cache;
+            }            
             if (isTrustedMonitor() && isMonitored() && (cache != null)) {
                 return cache;
             }
@@ -113,12 +111,12 @@ public abstract class RegisterBase<T> extends DeviceBase implements Register<T> 
                 setState(State.Ready);
             }
             T ret = take();
-            if (logger.isLoggable(Level.FINEST)) {
-                logger.log(Level.FINEST, "Read: " + LogManager.getLogForValue(ret));
+            if (getLogger().isLoggable(Level.FINEST)) {
+                getLogger().log(Level.FINEST, "Read: " + LogManager.getLogForValue(ret));
             }
             return ret;
         } catch (IOException ex) {
-            logger.log(Level.FINER, null, ex);
+            getLogger().log(Level.FINER, null, ex);
             resetCache();
             if (ex instanceof DeviceTimeoutException) {
                 setState(State.Offline);
@@ -185,7 +183,6 @@ public abstract class RegisterBase<T> extends DeviceBase implements Register<T> 
         assertInitialized();
         assertValidValue(value);
         triggerValueChanging(value);
-        Logger logger = getLogger();
         try {
             assertWriteEnabled();
             value = enforceRange(value);
@@ -204,11 +201,11 @@ public abstract class RegisterBase<T> extends DeviceBase implements Register<T> 
             if (getState() == State.Offline) {
                 setState(State.Ready);
             }
-            if (logger.isLoggable(Level.FINER)) {
-                logger.log(Level.FINER, "Write: " + LogManager.getLogForValue(value));
+            if (getLogger().isLoggable(Level.FINER)) {
+                getLogger().log(Level.FINER, "Write: " + LogManager.getLogForValue(value));
             }            
         } catch (IOException ex) {
-            logger.log(Level.FINE, null, ex);
+            getLogger().log(Level.FINE, null, ex);
             resetCache();
             request();
             if (ex instanceof DeviceTimeoutException) {
@@ -246,6 +243,19 @@ public abstract class RegisterBase<T> extends DeviceBase implements Register<T> 
     public void setTrustedMonitor(boolean value) {
         trustedMonitor = value;
     }
+    
+    private volatile boolean asyncUpdate = false;
+
+    /**
+     * If true then read() returns device cache always
+     */
+    public boolean isAsyncUpdate() {
+        return asyncUpdate;
+    }
+
+    public void setAsyncUpdate(boolean value) {
+        asyncUpdate = value;
+    }    
 
     @Override
     public T take() {

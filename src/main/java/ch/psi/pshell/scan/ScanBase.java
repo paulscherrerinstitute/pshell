@@ -753,17 +753,18 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
         Stream innerStream = null;
         for (int i = 0; i < readables.length; i++) {
             if (readables[i] instanceof InlineDevice) {
-                if (((InlineDevice) readables[i]).getProtocol().equals("bs")) {
+                InlineDevice inlineDevice = (InlineDevice) readables[i]; 
+                if (inlineDevice.getProtocol().equals("bs")) {
                     if (innerStream == null) {
                         innerStream = new Stream("Scan devices stream");
                         innerDevices.add(innerStream);
                         innerStream.initialize();
                     }
-                    ((InlineDevice) readables[i]).setParent(innerStream);
+                    inlineDevice.setParent(innerStream);
                 }
-                ((InlineDevice) readables[i]).initialize();
+                inlineDevice.initialize();
                 innerDevices.add((InlineDevice) readables[i]);
-                readables[i] = (Readable) ((InlineDevice) readables[i]).getDevice();
+                readables[i] = (Readable) inlineDevice.getDevice();
             }
         }
         if (innerStream != null) {
