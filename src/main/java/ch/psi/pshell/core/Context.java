@@ -1440,7 +1440,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
             }
             for (Thread t : executionPars.keySet()) {
                 ExecutionParameters ep = executionPars.get(t);
-                if (ep.childThreadCommandOptions.containsKey(t)){
+                if (ep.childThreadCommandOptions.containsKey(thread)){
                     return ep;
                 }
             }            
