@@ -2527,10 +2527,12 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
     ScanListener scanListener = new ScanListener() {
         @Override
         public void onScanStarted(Scan scan, String plotTitle) {
-            synchronized (runningScans) {
-                runningScans.add(scan);
+            if (!scan.isHidden()){
+                synchronized (runningScans) {
+                    runningScans.add(scan);
+                }
+                getExecutionPars(scan.getThread()).onScanStarted(scan);
             }
-            getExecutionPars(scan.getThread()).onScanStarted(scan);
         }
 
         @Override
@@ -2540,10 +2542,12 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
         @Override
 
         public void onScanEnded(Scan scan, Exception ex) {
-            synchronized (runningScans) {
-                runningScans.remove(scan);
+            if (!scan.isHidden()){
+                synchronized (runningScans) {
+                    runningScans.remove(scan);
+                }
+                getExecutionPars(scan.getThread()).onScanEnded(scan);
             }
-            getExecutionPars(scan.getThread()).onScanEnded(scan);
         }
     };
 

@@ -29,7 +29,7 @@ public abstract class EpicsRegister<T> extends RegisterBase<T> {
         public boolean timestamped;
         public boolean status;
         public InvalidValueAction invalidValueAction;
-    }       
+    }
 
     /**
      * Persisted configuration
@@ -56,7 +56,7 @@ public abstract class EpicsRegister<T> extends RegisterBase<T> {
     protected EpicsRegister(String name, String channelName, int precision, boolean timestamped) {
         this(name, channelName, precision, timestamped, timestamped ? Epics.getDefaultInvalidValueAction() : null); //By default, if not timestamped, request only value data
     }
-      
+
     protected EpicsRegister(String name, String channelName, int precision, boolean timestamped, InvalidValueAction invalidAction) {
         super(name, precision);
         this.channelName = channelName;
@@ -76,7 +76,6 @@ public abstract class EpicsRegister<T> extends RegisterBase<T> {
 
     @Override
     protected T doRead() throws IOException, InterruptedException {
-        assertInitialized();
         try {
             if ((channel == null) || (!channel.isConnected())) {
                 doInitialize();
@@ -207,14 +206,14 @@ public abstract class EpicsRegister<T> extends RegisterBase<T> {
     public Severity getSeverity() {
         return severity;
     }
-    
+
     @Override
     protected void doInitialize() throws IOException, InterruptedException {
         try {
             if (channel != null) {
                 Epics.closeChannel(channel);
                 channel = null;
-            }            
+            }
         } catch (Exception ex) {
             getLogger().log(Level.WARNING, null, ex);
         }
