@@ -7,8 +7,11 @@ import ch.psi.jcae.ChannelService;
 import ch.psi.jcae.DummyChannelDescriptor;
 import ch.psi.jcae.impl.DefaultChannelService;
 import ch.psi.jcae.impl.JcaeProperties;
+import ch.psi.jcae.impl.type.TimestampValue;
 import ch.psi.utils.Convert;
 import java.util.Comparator;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -78,12 +81,8 @@ public class Epics {
     }
 
     public static <T> Channel<T> newChannel(String name, Class<T> type, Integer size) throws ChannelException, InterruptedException, TimeoutException {
-        DefaultChannelService factory = getChannelFactory();
         if (type == null) {
-            try {
-                type = factory.getDefaultType(name);
-            } catch (Exception ex) {
-            }
+            type = getDefaultType(name);
         }
         ChannelDescriptor descriptor = new ChannelDescriptor<>(type, name, false, size);
         return newChannel(descriptor);
@@ -115,6 +114,33 @@ public class Epics {
         Channel<T> channel = newChannel(channelName, type, size);
         try {
             return channel.getValue();
+        } finally {
+            closeChannel(channel);
+        }
+    }
+
+    public static <T> Map<String, Object> getMeta(String channelName, Class<T> type) throws ChannelException, InterruptedException, TimeoutException, ExecutionException {
+        return getMeta(channelName, type, null);
+    }
+
+    public static <T> Map<String, Object> getMeta(String channelName, Class<T> type, Integer size) throws ChannelException, InterruptedException, TimeoutException, ExecutionException {
+        DefaultChannelService factory = getChannelFactory();
+        if (type == null) {
+            type = getDefaultType(channelName);
+        }
+        Channel<T> channel = newChannel(channelName, getMetadataChannelType(type), size);
+        try {
+            TimestampValue val = (TimestampValue) channel.getValue();
+            Map<String, Object> ret = new HashMap<>();
+            ret.put("value", val.getValue());
+            try{
+                ret.put("severity", Severity.values()[val.getSeverity()]);
+            } catch (Exception ex) {
+                ret.put("severity", val.getSeverity());
+            }
+            ret.put("timestamp", val.getTimestampPrimitive());
+            ret.put("nanos", val.getNanosecondOffset());
+            return ret;
         } finally {
             closeChannel(channel);
         }
@@ -190,6 +216,15 @@ public class Epics {
         }
     }
 
+    public static <T> Class<T> getDefaultType(String channelName) {
+        DefaultChannelService factory = getChannelFactory();
+        try {
+            return factory.getDefaultType(channelName);
+        } catch (Exception ex) {
+            return null;
+        }
+    }
+
     public static EpicsRegister newChannelDevice(String name, String channelName, Class type) {
         return newChannelDevice(name, channelName, type, true);
     }
@@ -201,17 +236,15 @@ public class Epics {
     public static EpicsRegister newChannelDevice(String name, String channelName, Class type, boolean timestamped, int precision) {
         return newChannelDevice(name, channelName, type, timestamped, -1, -1);
     }
-    
+
     public static EpicsRegister newChannelDevice(String name, String channelName, Class type, boolean timestamped, int precision, int size) {
         return newChannelDevice(name, channelName, type, timestamped, -1, -1, timestamped ? getDefaultInvalidValueAction() : null); ////By default, if not timestamped, request only value data
     }
 
     public static EpicsRegister newChannelDevice(String name, String channelName, Class type, boolean timestamped, int precision, int size, InvalidValueAction invalidAction) {
-        DefaultChannelService factory = getChannelFactory();
         if (type == null) {
-            try {
-                type = factory.getDefaultType(channelName);
-            } catch (Exception ex) {
+            type = getDefaultType(channelName);
+            if (type == null) {
                 type = Double.class;
             }
         }
@@ -287,12 +320,58 @@ public class Epics {
         }
         return Class.forName(typeId);
     }
-    
-    
+
+    public static Class getChannelType(String typeId, boolean requestMetadata) throws ClassNotFoundException {
+        Class ret = getChannelType(typeId);
+        return requestMetadata ? getMetadataChannelType(ret) : ret;
+    }
+
+    public static Class getMetadataChannelType(Class type) {
+        if (type != null) {
+            if (type == Byte.class) {
+                return ch.psi.jcae.impl.type.ByteTimestamp.class;
+            }
+            if (type == Short.class) {
+                return ch.psi.jcae.impl.type.ShortTimestamp.class;
+            }
+            if (type == Integer.class) {
+                return ch.psi.jcae.impl.type.IntegerTimestamp.class;
+            }
+            if (type == Float.class) {
+                return ch.psi.jcae.impl.type.FloatTimestamp.class;
+            }
+            if (type == Double.class) {
+                return ch.psi.jcae.impl.type.DoubleTimestamp.class;
+            }
+            if (type == String.class) {
+                return ch.psi.jcae.impl.type.StringTimestamp.class;
+            }
+            if (type == byte[].class) {
+                return ch.psi.jcae.impl.type.ByteArrayTimestamp.class;
+            }
+            if (type == short[].class) {
+                return ch.psi.jcae.impl.type.ShortArrayTimestamp.class;
+            }
+            if (type == int[].class) {
+                return ch.psi.jcae.impl.type.IntegerArrayTimestamp.class;
+            }
+            if (type == float[].class) {
+                return ch.psi.jcae.impl.type.FloatArrayTimestamp.class;
+            }
+            if (type == double[].class) {
+                return ch.psi.jcae.impl.type.DoubleArrayTimestamp.class;
+            }
+            if (type == String[].class) {
+                return ch.psi.jcae.impl.type.StringArrayTimestamp.class;
+            }
+        }
+        throw new RuntimeException("Invalid channel type");
+    }
+
     public static InvalidValueAction getDefaultInvalidValueAction() {
         return defaultInvalidValueAction;
     }
-    
+
     public static void setDefaultInvalidValueAction(InvalidValueAction value) {
         defaultInvalidValueAction = value;
     }

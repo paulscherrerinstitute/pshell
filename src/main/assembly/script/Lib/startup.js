@@ -1229,25 +1229,30 @@ function get_exec_pars(){
 // Epics Channels access
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-function caget(name, type, size) {
+function caget(name, type, size, meta) {
     /*
      Reads an Epics PV.
      
-     Args:
+    Args:
         name(str): PV name
         type(str, optional): type of PV. By default gets the PV standard field type.
-        Scalar values: 'b', 'i', 'l', 'd', 's'.
-        Array: values: '[b', '[i,', '[l', '[d', '[s'.
+            Scalar values: 'b', 'i', 'l', 'd', 's'.
+            Array: values: '[b', '[i,', '[l', '[d', '[s'.
         size (int, optional): for arrays, number of elements to be read. Default read all.
-     
-     Returns:
-         PV value
+        meta (bool, optional): if true gets channel value and metadata (timestamp, severity).
+
+    Returns:
+        PV value if meta is false, otherwise a dictionary containing PV value and metadata
      
      */
     if (!is_defined(type))
         type = null;
     if (!is_defined(size))
         size = null;
+    if (!is_defined(meta))
+        meta = false;
+    if (meta)
+        return Epics.getMeta(name, Epics.getChannelType(type), size)
     return Epics.get(name, Epics.getChannelType(type), size)
 }
 

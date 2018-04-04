@@ -1225,7 +1225,7 @@ def _adjust_channel_value(value, var_type=None):
         value=array
     return value
 
-def caget(name, type=None, size=None):    
+def caget(name, type=None, size=None, meta = False ):    
     """Reads an Epics PV.
 
     Args:
@@ -1234,11 +1234,14 @@ def caget(name, type=None, size=None):
             Scalar values: 'b', 'i', 'l', 'd', 's'.
             Array: values: '[b', '[i,', '[l', '[d', '[s'.
         size (int, optional): for arrays, number of elements to be read. Default read all.
+        meta (bool, optional): if true gets channel value and metadata (timestamp, severity).
 
     Returns:
-        PV value
+        PV value if meta is false, otherwise a dictionary containing PV value and metadata
 
-    """          
+    """        
+    if meta:
+        return Epics.getMeta(name, Epics.getChannelType(type), size)
     return Epics.get(name, Epics.getChannelType(type), size)
 
 def cawait(name, value, timeout=None, comparator=None, type=None, size=None):    
