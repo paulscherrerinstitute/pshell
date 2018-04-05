@@ -27,38 +27,18 @@ public class StreamCamera extends ColormapSource {
     }
 
     public StreamCamera(String name, String host, int port) {
-        this(name, host, port, false);
+        this(name, "tcp://" + host + ":" + port);
     }
 
-    public StreamCamera(String name, String host, int port, boolean disableCompression) {
-        this(name, "tcp://" + host + ":" + port, disableCompression);
-    }
 
     public StreamCamera(String name, String streamSocket) {
         this(name, streamSocket, null);
     }
 
-    public StreamCamera(String name, String streamSocket, boolean disableCompression) {
-        this(name, streamSocket, null, disableCompression);
-    }
-
     protected StreamCamera(String name, String streamSocket, ColormapSourceConfig config) {
-        this(name, streamSocket, config, false);
-    }
-
-    protected StreamCamera(String name, String streamSocket, ColormapSourceConfig config, boolean disableCompression) {
         super(name, (config == null) ? new ColormapSourceConfig() : config);
-        ProviderConfig cfg = new ProviderConfig();
-        if (disableCompression) {
-            cfg.disableCompression = true;
-        }
-        cfg.socketType = SocketType.SUB;
-        provider = new Provider(name + " provider", streamSocket, cfg);
+        provider = new Provider(name + " provider", streamSocket, SocketType.SUB);
         stream = new Stream(name + " stream", provider);
-        try {
-        } catch (Exception ex) {
-            Logger.getLogger(StreamCamera.class.getName()).log(Level.SEVERE, null, ex);
-        }
         stream.addListener(streamListener);
     }
 

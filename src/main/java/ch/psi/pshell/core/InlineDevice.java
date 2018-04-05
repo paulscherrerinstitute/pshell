@@ -331,7 +331,7 @@ public class InlineDevice extends DeviceBase implements Readable, Writable {
                         }
                     }
                     if (s == null) {
-                        ch.psi.pshell.bs.Provider p = new ch.psi.pshell.bs.Provider(null, url, false, false);
+                        ch.psi.pshell.bs.Provider p = new ch.psi.pshell.bs.Provider(null, url, false);
                         s = new Stream(null, p);
                         cameraStreams.add(s);
                         instantiatedDevices.add(s);

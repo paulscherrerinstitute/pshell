@@ -19,23 +19,26 @@ public class Provider extends DeviceBase {
 
     //Persisted configuration
     public Provider(String name, String address) {
-        super(name, new ProviderConfig());
+        this(name, address, new ProviderConfig());
+    }
+    
+    public Provider(String name, String address, ProviderConfig config) {
+        super(name, config);
         this.address = address;
         this.volatileConfig = null;
-    }
+    }    
 
     //Dynamic configuration
-    public Provider(String name, String address, boolean pull, boolean disableCompression) {
-        this(name, address, new ProviderConfig());
-        volatileConfig.socketType = pull ? SocketType.PULL : SocketType.SUB;
-        volatileConfig.disableCompression = disableCompression;
+    public Provider(String name, String address, boolean pull) {
+        this(name, address, pull ? SocketType.PULL : SocketType.SUB);
     }
-
-    public Provider(String name, String address, ProviderConfig config) {
+    
+    public Provider(String name, String address, SocketType socketType) {
         super(name);
-        this.volatileConfig = config;
         this.address = address;
-    }
+        volatileConfig = new ProviderConfig();
+        volatileConfig.socketType =  socketType;
+    }    
 
     @Override
     public ProviderConfig getConfig() {

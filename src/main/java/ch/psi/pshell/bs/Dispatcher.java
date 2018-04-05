@@ -29,12 +29,17 @@ public class Dispatcher extends Provider {
     Client client;
 
     public Dispatcher(String name, String address) {
-        super(name, address);
+        super(name, address, new DispatcherConfig());
         ClientConfig config = new ClientConfig().register(JacksonFeature.class);
         //In order to be able to delete an entity
         config.property(ClientProperties.SUPPRESS_HTTP_COMPLIANCE_VALIDATION, true);
         client = ClientBuilder.newClient(config);
     }
+    
+    @Override
+    public DispatcherConfig getConfig() {
+        return (DispatcherConfig) super.getConfig();
+    }    
 
     @Override
     protected void doInitialize() throws IOException, InterruptedException {
@@ -112,9 +117,32 @@ public class Dispatcher extends Provider {
             config.put("compression", "none");
         }
         Map mapping = new HashMap();
-        mapping.put("incomplete", getConfig().dropIncomplete ? "drop" : "fill-null");
+        if (getConfig().mappingIncomplete!=null){
+            mapping.put("incomplete", getConfig().mappingIncomplete.getConfigValue());
+        }
         config.put("mapping", mapping);
+        
+        Map validation = new HashMap();
+        if (getConfig().validationInconsistency != null){
+            validation.put("inconsistency", getConfig().validationInconsistency.getConfigValue());
+        }
+        config.put("channelValidation", validation);
 
+        Map sendBehavior = new HashMap();
+        if (getConfig().sendStrategy != null){
+            sendBehavior.put("strategy", getConfig().sendStrategy.getConfigValue());
+        }
+        if (getConfig().sendBuildChannelConfig != null){
+            sendBehavior.put("buildChannelConfig", getConfig().sendBuildChannelConfig.getConfigValue());
+        }
+        if (getConfig().sendSyncTimeout>0){
+            sendBehavior.put("syncTimeout", getConfig().sendSyncTimeout);
+        }
+        if (getConfig().sendAwaitFirstMessage){
+            sendBehavior.put("awaitFirstMessage", true);
+        }        
+        config.put("sendBehavior", sendBehavior);
+        
         for (Object channel : channels) {
             Map channelDict = new HashMap();
             if (channel instanceof String) {

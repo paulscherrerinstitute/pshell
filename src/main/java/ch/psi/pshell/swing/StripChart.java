@@ -1078,7 +1078,7 @@ public class StripChart extends StandardDialog {
                                 }
                                 if (s == null) {
                                     Logger.getLogger(StripChart.class.getName()).fine("Connecting to cam server stream: " + url);
-                                    ch.psi.pshell.bs.Provider p = new ch.psi.pshell.bs.Provider(null, url, false, false);
+                                    ch.psi.pshell.bs.Provider p = new ch.psi.pshell.bs.Provider(null, url, false);
                                     s = new Stream(null, p);
                                     cameraStreams.add(s);
                                     p.initialize();
