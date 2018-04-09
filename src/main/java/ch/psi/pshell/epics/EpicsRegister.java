@@ -110,7 +110,7 @@ public abstract class EpicsRegister<T> extends RegisterBase<T> {
                 TimestampValue val = (TimestampValue) getType().newInstance();
                 val.setTimestampPrimitive(System.currentTimeMillis());
                 val.setValue(value);
-                value = (T) val;    //value is actually a Number or array, but this "fake" case won't rise exception.
+                value = (T) val;    //value is actually a Number or array, but this "fake" cast won't rise exception.
             }
             if (blockingWrite) {
                 channel.setValue(value);
