@@ -15,6 +15,7 @@ import ch.psi.pshell.device.ReadonlyRegister.ReadonlyRegisterArray;
 import ch.psi.pshell.device.ReadonlyRegister.ReadonlyRegisterMatrix;
 import ch.psi.pshell.device.ArrayRegisterStats;
 import ch.psi.pshell.device.Averager.RegisterStats;
+import ch.psi.pshell.device.Cacheable;
 import ch.psi.pshell.device.Writable;
 import ch.psi.pshell.epics.Epics;
 import ch.psi.pshell.epics.EpicsRegister;
@@ -150,6 +151,28 @@ public class InlineDevice extends DeviceBase implements Readable, Writable {
             device = device.getParent();
         }
         return device;
+    }
+    
+    public static String getChannelName(Object device){
+
+        if ((device!=null) && (device instanceof Cacheable.CacheReadable)) {      
+            Cacheable parent = ((Cacheable.CacheReadable) device).getParent();
+            if ((parent!=null) && (parent instanceof Device)){
+                device = (Device) parent;
+            }   
+        }
+        if ((device!=null) && (device instanceof Device)){
+            device  = getSourceDevice((Device) device);
+            try {
+                return (String)device.getClass().getMethod("getChannelName").invoke(device);
+            } catch (Exception ex) {
+            }     
+            try {
+                return (String)device.getClass().getMethod("getChannelName").invoke(device);
+            } catch (Exception ex) {
+            }                 
+        }
+        return null;        
     }
 
     public Device getDevice() {

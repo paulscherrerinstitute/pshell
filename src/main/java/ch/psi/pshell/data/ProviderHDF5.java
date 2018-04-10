@@ -570,6 +570,12 @@ public class ProviderHDF5 implements Provider {
 
     @Override
     public void setDataset(String path, Object data, Class type, int rank, int[] dims, boolean unsigned) {
+        if (rank>0){
+            if (Number.class.isAssignableFrom(type)){
+                data = Convert.toPrimitiveArray(data, (type == BigInteger.class) ? long.class : Convert.getPrimitiveClass(type));
+            }
+        }
+        
         if (rank == 0) {
             if (type == Double.class) {
                 writer.float64().write(path, (double) data);
@@ -618,9 +624,6 @@ public class ProviderHDF5 implements Provider {
             } else if (type == Float.class) {
                 writer.float32().writeArray(path, (float[]) data);
             } else if ((type == Long.class) || (type == BigInteger.class)) {
-                if (type == BigInteger.class){
-                    data = Convert.toPrimitiveArray(data,long.class);
-                }
                 if (unsigned) {
                     writer.uint64().writeArray(path, (long[]) data);
                 } else {
@@ -661,10 +664,7 @@ public class ProviderHDF5 implements Provider {
                 writer.float64().writeMatrix(path, (double[][]) data);
             } else if (type == Float.class) {
                 writer.float32().writeMatrix(path, (float[][]) data);
-            } else if ((type == Long.class) || (type == BigInteger.class)) {
-                if (type == BigInteger.class){
-                    data = Convert.toPrimitiveArray(data,long.class);
-                }                
+            } else if ((type == Long.class) || (type == BigInteger.class)) {              
                 if (unsigned) {
                     writer.uint64().writeMatrix(path, (long[][]) data);
                 } else {
@@ -716,10 +716,7 @@ public class ProviderHDF5 implements Provider {
                     MDFloatArray array = new MDFloatArray((float[])Convert.flatten(d[i]), getMatrixShape(d[i]));
                     writer.float32().writeMDArrayBlockWithOffset(path, array, getMatrixOffset(i));
                 }
-            } else if ((type == Long.class) || (type == BigInteger.class)) {
-                if (type == BigInteger.class){
-                    data = Convert.toPrimitiveArray(data,long.class);
-                }                
+            } else if ((type == Long.class) || (type == BigInteger.class)) {               
                 long[][][] d = (long[][][]) data;
                 createDataset(path, type, get3dMatrixDims(d), unsigned);
                 for (int i = 0; i < d.length; i++) {
@@ -939,6 +936,13 @@ public class ProviderHDF5 implements Provider {
             }
         }
         
+        if (type.isArray() && (data!=null)){
+            Class cls = Arr.getComponentType(data);
+            if ((cls!=null) && (Number.class.isAssignableFrom(cls))){
+                data = Convert.toPrimitiveArray(data, (cls == BigInteger.class) ? long.class: Convert.getPrimitiveClass(cls));
+            }
+        }        
+        
         if (type == Double.class) {
             writer.float64().writeArrayBlockWithOffset(path, new double[]{(Double) data}, 1, index);
         } else if (type == Float.class) {
@@ -985,10 +989,7 @@ public class ProviderHDF5 implements Provider {
             writer.float64().writeMatrixBlockWithOffset(path, new double[][]{(double[]) data}, index, 0);
         } else if (type == float[].class) {
             writer.float32().writeMatrixBlockWithOffset(path, new float[][]{(float[]) data}, index, 0);
-        } else if ((type == long[].class)||(type==BigInteger[].class)) {
-            if (type == BigInteger[].class) {
-                data = Convert.toPrimitiveArray(data,long.class);
-            }            
+        } else if ((type == long[].class)||(type==BigInteger[].class)) {            
             if (writer.object().getDataSetInformation(path).isSigned()) {
                 writer.int64().writeMatrixBlockWithOffset(path, new long[][]{(long[]) data}, index, 0);
             } else {
@@ -1025,10 +1026,7 @@ public class ProviderHDF5 implements Provider {
             MDFloatArray array = new MDFloatArray((float[])Convert.flatten(data), getMatrixShape(data));
             writer.float32().writeMDArrayBlockWithOffset(path, array, getMatrixOffset(index));            
             
-        } else if ((type == long[][].class) || (type == BigInteger[][].class)) {
-            if (type == BigInteger[][].class) {
-                data = Convert.toPrimitiveArray(data,long.class);
-            }            
+        } else if ((type == long[][].class) || (type == BigInteger[][].class)) {        
             MDLongArray array = new MDLongArray((long[])Convert.flatten(data), getMatrixShape(data));
             if (writer.object().getDataSetInformation(path).isSigned()) {
                 writer.int64().writeMDArrayBlockWithOffset(path, array, getMatrixOffset(index));  

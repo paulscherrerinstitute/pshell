@@ -3,6 +3,7 @@ package ch.psi.pshell.data;
 import ch.psi.pshell.bs.BsScan;
 import ch.psi.pshell.bs.Stream;
 import ch.psi.pshell.core.Context;
+import ch.psi.pshell.core.InlineDevice;
 import ch.psi.pshell.device.ArrayCalibration;
 import ch.psi.pshell.device.Averager;
 import ch.psi.pshell.device.DescStatsDouble;
@@ -53,9 +54,15 @@ public class LayoutSF extends LayoutBase implements Layout {
     public static final String ATTR_GROUP_LOGS = "logs/";
 
     public static final String ATTR_DATASET_CREATED = ATTR_GROUP_GENERAL + "created";
+    public static final String ATTR_DATASET_CLOSED = ATTR_GROUP_GENERAL + "closed";
     public static final String ATTR_DATASET_USER = ATTR_GROUP_GENERAL + "user";
     public static final String ATTR_DATASET_PROCESS = ATTR_GROUP_GENERAL + "process";
     public static final String ATTR_DATASET_INSTRUMENT = ATTR_GROUP_GENERAL + "instrument";
+    public static final String ATTR_DATASET_AUTHOR = ATTR_GROUP_GENERAL + "author";
+    public static final String ATTR_DATASET_COMMAND = ATTR_GROUP_GENERAL + "command";
+    public static final String ATTR_DATASET_PARAMETERS = ATTR_GROUP_GENERAL + "parameters";
+    public static final String ATTR_DATASET_APP_NAME= ATTR_GROUP_GENERAL + "application";
+    public static final String ATTR_DATASET_APP_VERSION = ATTR_GROUP_GENERAL + "version";
 
     public static final String ATTR_DATASET_LOG_DESCRIPTION = ATTR_GROUP_LOGS + "description";
     public static final String ATTR_DATASET_LOG_TIMESTAMP = ATTR_GROUP_LOGS + "timestamp";
@@ -88,6 +95,7 @@ public class LayoutSF extends LayoutBase implements Layout {
     public static final String DEVICE_MIN_DATASET = "min";
     public static final String DEVICE_MAX_DATASET = "max";
     public static final String DEVICE_STDEV_DATASET = "stdev";
+    public static final String DEVICE_CHANNEL = "channel";
 
     public static final String METHOD_LSCAN = "Line Scan";
     public static final String METHOD_ASCAN = "Multidimentional Scan";
@@ -162,16 +170,17 @@ public class LayoutSF extends LayoutBase implements Layout {
         dataManager.createGroup(ATTR_GROUP_LOGS);
         dataManager.setDataset(ATTR_DATASET_CREATED, new String[]{Chrono.getTimeStr(System.currentTimeMillis(), "dd/MM/YY HH:mm:ss.SSS ")});
         dataManager.setDataset(ATTR_DATASET_USER, new String[]{Sys.getUserName()});
-        dataManager.setDataset(ATTR_DATASET_PROCESS, new String[]{"PShell"});
+        dataManager.setDataset(ATTR_DATASET_PROCESS, new String[]{Sys.getProcessName()});
+        dataManager.setDataset(ATTR_DATASET_APP_NAME, new String[]{App.getApplicationName()});
+        dataManager.setDataset(ATTR_DATASET_APP_VERSION, new String[]{App.getApplicationVersion()});
         dataManager.setDataset(ATTR_DATASET_INSTRUMENT, new String[]{(context == null) ? "" : context.getConfig().getName()});
+        dataManager.setDataset(ATTR_DATASET_AUTHOR, new String[]{context.getUser().name});
+        String script = dataManager.getExecutionPars().getScript();
+        dataManager.setDataset(ATTR_DATASET_COMMAND, new String[]{(script==null) ? String.valueOf(dataManager.getExecutionPars().getStatement()): script});
+        dataManager.setDataset(ATTR_DATASET_PARAMETERS, new String[]{Str.toString(dataManager.getExecutionPars().getArgs())});
+         
         dataManager.createDataset(ATTR_DATASET_LOG_DESCRIPTION, String.class);
         dataManager.createDataset(ATTR_DATASET_LOG_TIMESTAMP, Long.class);
-
-        dataManager.setDataset(ATTR_GROUP_EXPERIMENT + "author", new String[]{context.getUser().name});
-        dataManager.setDataset(ATTR_GROUP_EXPERIMENT + "command", new String[]{String.valueOf(dataManager.getExecutionPars().getStatement())});
-        dataManager.setDataset(ATTR_GROUP_EXPERIMENT + "parameters", new String[]{Str.toString(dataManager.getExecutionPars().getArgs())});
-        dataManager.setDataset(ATTR_GROUP_EXPERIMENT + "script", new String[]{String.valueOf(dataManager.getExecutionPars().getScript())});
-        dataManager.setDataset(ATTR_GROUP_EXPERIMENT + "type", new String[]{String.valueOf(dataManager.getExecutionPars().getName())});
 
         for (Readable r : getExperimentArguments()) {
             try {
@@ -187,7 +196,13 @@ public class LayoutSF extends LayoutBase implements Layout {
             }
         }
     }
-
+    
+    @Override
+    public void onClosed(File output) throws IOException {
+         super.onClosed(output);
+         dataManager.setDataset(ATTR_DATASET_CLOSED, new String[]{Chrono.getTimeStr(System.currentTimeMillis(), "dd/MM/YY HH:mm:ss.SSS ")});
+    }
+    
     @Override
     public void appendLog(String log) throws IOException {
         dataManager.appendItem(ATTR_DATASET_LOG_TIMESTAMP, System.currentTimeMillis());
@@ -248,6 +263,10 @@ public class LayoutSF extends LayoutBase implements Layout {
             } else {
                 dataManager.createDataset(groupDev + ATTR_DATASET_SETPOINT, Double.class, new int[]{0});
             }
+            String channel = InlineDevice.getChannelName(writable);
+            if (channel!=null){
+                dataManager.setAttribute(groupDev, DEVICE_CHANNEL, channel);
+            }        
         }
 
         for (ch.psi.pshell.device.Readable readable : scan.getReadables()) {
@@ -281,6 +300,11 @@ public class LayoutSF extends LayoutBase implements Layout {
                     dataManager.createDataset(getMetaPath(scan, name) + DEVICE_STDEV_DATASET, Double.class, new int[]{0});
                 }
             }
+            String channel = InlineDevice.getChannelName(readable);
+            if (channel!=null){
+                dataManager.setAttribute(groupDev, DEVICE_CHANNEL, channel);
+            }   
+            
             dataManager.createDataset(groupDev + ATTR_DATASET_TIMESTAMP, Long.class, new int[]{0});
         }
         dataManager.createDataset(group + ATTR_DATASET_TIMESTAMP, Long.class, new int[]{0});

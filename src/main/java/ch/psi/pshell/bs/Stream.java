@@ -9,10 +9,10 @@ import ch.psi.bsread.ReceiverConfig;
 import ch.psi.bsread.message.ValueImpl;
 import ch.psi.pshell.device.Device;
 import ch.psi.bsread.converter.MatlabByteConverter;
-import ch.psi.bsread.message.Timestamp;
 import ch.psi.pshell.device.Cacheable;
 import ch.psi.pshell.device.ReadonlyAsyncRegisterBase;
 import ch.psi.utils.Arr;
+import ch.psi.utils.Reflection.Hidden;
 import ch.psi.utils.State;
 import ch.psi.utils.Str;
 import ch.psi.utils.Threading;
@@ -290,10 +290,12 @@ public class Stream extends DeviceBase implements Readable<StreamValue>, Cacheab
             thread.setDaemon(true);
             setState(State.Busy);
             thread.start();
+            channelPrefix = ((Provider) getParent()).getAddress();  
         }
     }
 
     public void stop() throws IOException {
+        channelPrefix = null;
         started.set(false);
         closeReceiver();
         if (thread != null) {
@@ -640,4 +642,12 @@ public class Stream extends DeviceBase implements Readable<StreamValue>, Cacheab
         }
         return timestampReader;
     }
+    
+    String channelPrefix;
+    @Hidden
+    public String getChannelPrefix(){
+        return channelPrefix;
+    }
+    
+    
 }

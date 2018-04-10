@@ -381,6 +381,7 @@ public class PipelineServer extends StreamCamera {
         }
         this.shared = shared;
         startReceiver();
+        stream.channelPrefix = pipelineName;        
     }
 
     /**
@@ -389,6 +390,7 @@ public class PipelineServer extends StreamCamera {
     public void stop() throws IOException {
         this.currentPipeline = null;
         this.currentInstance = null;
+        stream.channelPrefix = null;
         stopReceiver();
     }
 

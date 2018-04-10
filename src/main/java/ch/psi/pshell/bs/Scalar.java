@@ -121,6 +121,11 @@ public class Scalar<T> extends ReadonlyAsyncRegisterBase<T> {
             setCache(convertFromRead((T) value), timestamp, nanosOffset);
         }
     }
+    
+    public String getChannelName(){
+        String prefix = getParent().getChannelPrefix();
+        return (prefix==null) ? id : prefix+":"+id;
+    }
 
     @Override
     public BeamSynchronousValue takeTimestamped() {
