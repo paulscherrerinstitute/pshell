@@ -103,9 +103,17 @@ public interface Scan {
 
     public void setAbortOnReadableError(boolean value);
 
-    public boolean getCheckMotorPositions();
+    public boolean getCheckPositions();
 
-    public void setCheckMotorPositions(boolean value);
+    public void setCheckPositions(boolean value);
+    
+    public boolean getInitialMove();
+
+    public void setInitialMove(boolean value);    
+    
+    public boolean getParallelPositioning();
+
+    public void setParallelPositioning(boolean value);     
 
     @Reflection.Hidden
     public default String getHeader(String separator) {

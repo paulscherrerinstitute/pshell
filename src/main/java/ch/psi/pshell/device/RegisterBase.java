@@ -7,6 +7,7 @@ import ch.psi.utils.Reflection.Hidden;
 import ch.psi.utils.State;
 import java.io.IOException;
 import java.lang.reflect.Array;
+import java.util.List;
 import java.util.logging.Level;
 
 /**
@@ -55,27 +56,28 @@ public abstract class RegisterBase<T> extends DeviceBase implements Register<T> 
         super.doUpdate();
         read();
     }
-    
+
     /**
-     * This is called in write(). Derived classes can wait for conditions to validate the write.
+     * This is called in write(). Derived classes can wait for conditions to
+     * validate the write.
      */
     protected void waitSettled() throws IOException, InterruptedException {
-        if (settlingCondition!=null){
+        if (settlingCondition != null) {
             settlingCondition.waitSettled();
         }
-    }   
+    }
 
     SettlingCondition settlingCondition;
-    
-    public void setSettlingCondition(SettlingCondition settlingCondition){
-        this.settlingCondition =  settlingCondition;
+
+    public void setSettlingCondition(SettlingCondition settlingCondition) {
+        this.settlingCondition = settlingCondition;
         settlingCondition.register = this;
-    }    
-    
-    public SettlingCondition getSettlingCondition(){
+    }
+
+    public SettlingCondition getSettlingCondition() {
         return settlingCondition;
-    }    
-    
+    }
+
     @Override
     public int getPrecision() {
         return precision;
@@ -97,9 +99,9 @@ public abstract class RegisterBase<T> extends DeviceBase implements Register<T> 
         try {
             assertReadEnabled();
             T cache = take();
-            if (updatingCache || asyncUpdate){
+            if (updatingCache || asyncUpdate) {
                 return cache;
-            }            
+            }
             if (isTrustedMonitor() && isMonitored() && (cache != null)) {
                 return cache;
             }
@@ -157,6 +159,16 @@ public abstract class RegisterBase<T> extends DeviceBase implements Register<T> 
                     for (int i = 0; i < Array.getLength(value); i++) {
                         Array.setDouble(value, i, adjustDouble(Array.getDouble(value, i), precision));
                     }
+                } else {
+                    if (value instanceof List) {
+                        List list = (List)value;
+                        for (int i = 0; i < list.size(); i++) {
+                            Object val = list.get(i);
+                            if ((val!=null) && (val instanceof Double)) {
+                                list.set(i, adjustDouble((Double) val, precision));
+                            }                             
+                        }
+                    }
                 }
             }
         }
@@ -203,7 +215,7 @@ public abstract class RegisterBase<T> extends DeviceBase implements Register<T> 
             }
             if (getLogger().isLoggable(Level.FINER)) {
                 getLogger().log(Level.FINER, "Write: " + LogManager.getLogForValue(value));
-            }            
+            }
         } catch (IOException ex) {
             getLogger().log(Level.FINE, null, ex);
             resetCache();
@@ -243,7 +255,7 @@ public abstract class RegisterBase<T> extends DeviceBase implements Register<T> 
     public void setTrustedMonitor(boolean value) {
         trustedMonitor = value;
     }
-    
+
     private volatile boolean asyncUpdate = false;
 
     /**
@@ -255,7 +267,7 @@ public abstract class RegisterBase<T> extends DeviceBase implements Register<T> 
 
     public void setAsyncUpdate(boolean value) {
         asyncUpdate = value;
-    }    
+    }
 
     @Override
     public T take() {

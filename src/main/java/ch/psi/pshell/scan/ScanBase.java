@@ -65,10 +65,12 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
     boolean accumulate;
     String name = "Scan";
 
-    boolean useWritableReadback = true;
+    boolean useWritableReadback = getScansUseWritableReadback();
     boolean restorePosition = getRestorePositionOnRelativeScans();
     boolean abortOnReadableError = getAbortScansOnReadableError();
-    boolean checkMotorPositions = getCheckScanMotorPositions();
+    boolean checkPositions = ScanBase.getScansCheckPositions();
+    boolean parallelPositioning = getScansParallelPositioning();
+    boolean initialMove = getScansTriggerInitialMove();
 
     public ScanBase(Writable[] writables, Readable[] readables, double[] start, double[] end, int numberOfSteps[],
             boolean relative, int latency, int passes, boolean zigzag) {
@@ -130,7 +132,7 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
         //}
     }
 
-    int settleTimeout = -1;
+    int settleTimeout = getScansSettleTimeout();
 
     @Override
     public int getSettleTimeout() {
@@ -196,18 +198,25 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
     }
 
     protected void setPosition(double[] position) throws IOException, InterruptedException {
-        for (int i = 0; i < getWritables().length; i++) {
-            getWritables()[i].write(position[i]);
+        if (getParallelPositioning()){
+            for (int i = 0; i < getWritables().length; i++) {
+                getWritables()[i].write(position[i]);
+            }
+            waitSettled(position);
+        } else {
+             for (int i = 0; i < getWritables().length; i++) {
+                getWritables()[i].write(position[i]);
+                waitSettled(getWritables()[i], position[i], stepSize[i]);
+            }     
         }
-        waitSettled(position);
     }
 
-    protected void waitSettled(double[] pos) throws IOException, InterruptedException {
-        if (pos.length < getWritables().length) {
+    protected void waitSettled(double[] position) throws IOException, InterruptedException {
+        if (position.length < getWritables().length) {
             throw new IllegalArgumentException();
         }
         for (int i = 0; i < getWritables().length; i++) {
-            waitSettled(getWritables()[i], pos[i], stepSize[i]);
+            waitSettled(getWritables()[i], position[i], stepSize[i]);
         }
     }
 
@@ -227,7 +236,7 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
             Movable m = (Movable) writable;
             m.waitReady(settleTimeout);
             if (writable instanceof Motor) {
-                if (checkMotorPositions) {
+                if (checkPositions) {
                     m.assertInPosition(pos);
                 }
             } else {
@@ -300,7 +309,9 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
                     readInitialPosition();
                 }            
                 triggerStarted();
-                moveToStart();
+                if(getInitialMove()){
+                    moveToStart();
+                }
                 try {
                     onBeforeScan();
                     try {
@@ -891,14 +902,34 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
     }
 
     @Override
-    public boolean getCheckMotorPositions() {
-        return checkMotorPositions;
+    public boolean getCheckPositions() {
+        return checkPositions;
     }
 
     @Override
-    public void setCheckMotorPositions(boolean value) {
-        checkMotorPositions = value;
+    public void setCheckPositions(boolean value) {
+        checkPositions = value;
     }
+    
+    @Override
+    public boolean getInitialMove(){
+        return initialMove;
+    }
+
+    @Override
+    public void setInitialMove(boolean value){
+        initialMove=value;
+    }   
+    
+    @Override
+    public boolean getParallelPositioning(){
+        return parallelPositioning;
+    }
+
+    @Override
+    public void setParallelPositioning(boolean value){
+        parallelPositioning = value;
+    }       
 
     static boolean restorePositionOnRelativeScans = true;
 
@@ -920,13 +951,53 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
         abortScansOnReadableError = value;
     }
 
-    static boolean checkScanMotorPositions = true;
+    static boolean scansCheckPosition = true;
 
-    public static boolean getCheckScanMotorPositions() {
-        return checkScanMotorPositions;
+    public static boolean getScansCheckPositions() {
+        return scansCheckPosition;
     }
 
-    public static void setCheckScanMotorPositions(boolean value) {
-        checkScanMotorPositions = value;
+    public static void getScansCheckPositions(boolean value) {
+        scansCheckPosition = value;
     }
+    
+    static boolean scansTriggerInitialMove = true;
+
+    public static boolean getScansTriggerInitialMove() {
+        return scansTriggerInitialMove;
+    }
+
+    public static void getScansTriggerInitialMove(boolean value) {
+        scansTriggerInitialMove = value;
+    }   
+    
+    static boolean scansParallelPositioning = true;
+
+    public static boolean getScansParallelPositioning() {
+        return scansParallelPositioning;
+    }
+
+    public static void getScansParallelPositioning(boolean value) {
+        scansParallelPositioning = value;
+    }     
+    
+    static int scansSettleTimeout = -1;
+
+    public static int getScansSettleTimeout() {
+        return scansSettleTimeout;
+    }
+
+    public static void setScansSettleTimeout(int value) {
+        scansSettleTimeout = value;
+    }    
+    
+    static boolean scansUseWritableReadback = true;
+
+    public static boolean getScansUseWritableReadback() {
+        return scansUseWritableReadback;
+    }
+
+    public static void setScansUseWritableReadback(boolean value) {
+        scansUseWritableReadback = value;
+    }       
 }

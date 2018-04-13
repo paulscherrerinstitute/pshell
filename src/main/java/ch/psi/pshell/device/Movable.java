@@ -16,7 +16,9 @@ public interface Movable<T> extends Positionable<T>, Stoppable {
     }
 
     default CompletableFuture moveAsync(T value, int timeout) {
-        return Threading.getFuture(() -> move(value, timeout));
+        return Threading.getFuture(() -> 
+            move(value, timeout)
+        );
     }
 
     default CompletableFuture moveAsync(T value) {

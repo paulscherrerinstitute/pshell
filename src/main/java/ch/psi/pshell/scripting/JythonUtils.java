@@ -72,14 +72,20 @@ public class JythonUtils {
             try {
                 if (f.getType().getClass() == PyType.class) {
                     PyObject code = f.__findattr__("func_code");
-                    int flags;
+                    int flags   ;
                     int named_args;
                     try {
                         name = code.__findattr__("co_name").asString();
                         pars = (List) code.__findattr__("co_varnames");
                         flags = code.__findattr__("co_flags").asInt();
                         named_args = code.__findattr__("co_argcount").asInt();
-                    } catch (Exception ex) {
+                        if (name.equals("wrapper")){
+                            try {
+                              name = f.__findattr__("__name__").asString();
+                            } catch (Exception ex) {
+                            }     
+                        }
+                    } catch (Exception ex) {    
                         return null;
                     }
                     if (pars.size() > 0) {

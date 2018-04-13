@@ -50,6 +50,7 @@ import ch.psi.pshell.device.MotorGroupBase as MotorGroupBase
 import ch.psi.pshell.device.MotorGroupDiscretePositioner as MotorGroupDiscretePositioner
 import ch.psi.pshell.device.ReadonlyRegisterBase as ReadonlyRegisterBase
 import ch.psi.pshell.device.ReadonlyAsyncRegisterBase as ReadonlyAsyncRegisterBase
+import ch.psi.pshell.device.Register as Register
 import ch.psi.pshell.device.RegisterCache as RegisterCache
 import ch.psi.pshell.device.ReadonlyRegister.ReadonlyRegisterArray as ReadonlyRegisterArray
 import ch.psi.pshell.device.ReadonlyRegister.ReadonlyRegisterMatrix as ReadonlyRegisterMatrix
@@ -87,6 +88,7 @@ import ch.psi.pshell.imaging.ImageListener as ImageListener
 import ch.psi.pshell.plot.LinePlotSeries as LinePlotSeries
 import ch.psi.pshell.plot.LinePlotErrorSeries as LinePlotErrorSeries
 import ch.psi.pshell.plot.MatrixPlotSeries as MatrixPlotSeries
+import ch.psi.pshell.scan.ScanBase as ScanBase
 import ch.psi.pshell.scan.LineScan 
 import ch.psi.pshell.scan.ContinuousScan
 import ch.psi.pshell.scan.AreaScan
@@ -372,11 +374,18 @@ class BsScan(ch.psi.pshell.bs.BsScan):
         on_after_scan_pass(self, num_pass)
 
 class ManualScan (ch.psi.pshell.scan.ManualScan):
-    def __init__(self, writables, readables, start = None, end = None, steps = None, relative = False):
+    def __init__(self, writables, readables, start = None, end = None, steps = None, relative = False, dimensions = None):
         ch.psi.pshell.scan.ManualScan.__init__(self, writables, readables, start, end, steps, relative)
+        self._dimensions = dimensions
 
     def append(self,setpoints, positions, values, timestamps=None):
         ch.psi.pshell.scan.ManualScan.append(self, to_array(setpoints), to_array(positions), to_array(values), None if (timestamps is None) else to_array(timestamps))
+
+    def getDimensions(self):
+        if self._dimensions == None:
+            return ch.psi.pshell.scan.ManualScan.getDimensions(self)
+        else:
+            return self._dimensions
 
 class BinarySearch(ch.psi.pshell.scan.BinarySearch):
     def onBeforeReadout(self, pos):
@@ -399,6 +408,15 @@ def processScanPars(scan, pars):
     scan.after_pass =  pars.pop("after_pass",None)
     scan.setPlotTitle(pars.pop("title",None))
     scan.setHidden(pars.pop("hidden",False))
+    scan.setSettleTimeout (pars.pop("settle_timeout",ScanBase.getScansSettleTimeout()))
+    scan.setUseWritableReadback (pars.pop("use_readback",ScanBase.getScansUseWritableReadback()))
+    scan.setInitialMove(pars.pop("initial_move",ScanBase.getScansTriggerInitialMove()))
+    scan.setParallelPositioning(pars.pop("parallel_positioning",ScanBase.getScansParallelPositioning()))
+    scan.setAbortOnReadableError(pars.pop("abort_on_error",ScanBase.getAbortScansOnReadableError()))
+    scan.setRestorePosition (pars.pop("restore_position",ScanBase.getRestorePositionOnRelativeScans()))
+    scan.setCheckPositions(pars.pop("check_positions",ScanBase.getScansCheckPositions()))
+
+
     get_context().setCommandPars(scan, pars)
 
 def lscan(writables, readables, start, end, steps, latency=0.0, relative=False, passes=1, zigzag=False, **pars):
@@ -422,6 +440,12 @@ def lscan(writables, readables, start, end, steps, latency=0.0, relative=False, 
             - after_read (function, optional): callback on each step, after sampling. Arguments: record, scan.
             - before_pass (function, optional): callback before each scan pass execution. Arguments: pass_num, scan.
             - after_pass (function, optional): callback after each scan pass execution. Arguments: pass_num, scan.
+            - settle_timeout(int, optional): timeout for each positioner get to position. Default (-1) waits forever. 
+            - initial_move (bool, optional): if true (default) perform move to initial position prior to scan start. 
+            - parallel_positioning (bool, optional): if true (default) all positioners are set in parallel.
+            - abort_on_error (bool, optional): if true then aborts scan in sensor failures. Default is false.
+            - restore_position (bool, optional): if true (default) then restore initial position after relative scans.
+            - check_positions (bool, optional): if true (default) verifies if in correct positions after move finishes.
             - Aditional arguments defined by set_exec_pars.
 
     Returns:
@@ -459,6 +483,12 @@ def vscan(writables, readables, vector, line = False, latency=0.0, relative=Fals
             - after_read (function, optional): callback on each step, after sampling. Arguments: record, scan.
             - before_pass (function, optional): callback before each scan pass execution. Arguments: pass_num, scan.
             - after_pass (function, optional): callback after each scan pass execution. Arguments: pass_num, scan.
+            - settle_timeout(int, optional): timeout for each positioner get to position. Default (-1) waits forever. 
+            - initial_move (bool, optional): if true (default) perform move to initial position prior to scan start. 
+            - parallel_positioning (bool, optional): if true (default) all positioners are set in parallel.
+            - abort_on_error (bool, optional): if true then aborts scan in sensor failures. Default is false.
+            - restore_position (bool, optional): if true (default) then restore initial position after relative scans.
+            - check_positions (bool, optional): if true (default) verifies if in correct positions after move finishes.
             - Aditional arguments defined by set_exec_pars.
 
     Returns:
@@ -498,6 +528,12 @@ def ascan(writables, readables, start, end, steps, latency=0.0, relative=False, 
             - after_read (function, optional): callback on each step, after sampling. Arguments: record, scan.
             - before_pass (function, optional): callback before each scan pass execution. Arguments: pass_num, scan.
             - after_pass (function, optional): callback after each scan pass execution. Arguments: pass_num, scan.
+            - settle_timeout(int, optional): timeout for each positioner get to position. Default (-1) waits forever. 
+            - initial_move (bool, optional): if true (default) perform move to initial position prior to scan start. 
+            - parallel_positioning (bool, optional): if true (default) all positioners are set in parallel.
+            - abort_on_error (bool, optional): if true then aborts scan in sensor failures. Default is false.
+            - restore_position (bool, optional): if true (default) then restore initial position after relative scans.
+            - check_positions (bool, optional): if true (default) verifies if in correct positions after move finishes.
             - Aditional arguments defined by set_exec_pars.
 
     Returns:
@@ -536,6 +572,12 @@ def rscan(writable, readables, regions, latency=0.0, relative=False, passes=1, z
             - after_read (function, optional): callback on each step, after sampling. Arguments: record, scan.
             - before_pass (function, optional): callback before each scan pass execution. Arguments: pass_num, scan.
             - after_pass (function, optional): callback after each scan pass execution. Arguments: pass_num, scan.
+            - settle_timeout(int, optional): timeout for each positioner get to position. Default (-1) waits forever. 
+            - initial_move (bool, optional): if true (default) perform move to initial position prior to scan start. 
+            - parallel_positioning (bool, optional): if true (default) all positioners are set in parallel.
+            - abort_on_error (bool, optional): if true then aborts scan in sensor failures. Default is false.
+            - restore_position (bool, optional): if true (default) then restore initial position after relative scans.
+            - check_positions (bool, optional): if true (default) verifies if in correct positions after move finishes.
             - Aditional arguments defined by set_exec_pars.
 
     Returns:
@@ -582,6 +624,8 @@ def cscan(writables, readables, start, end, steps, latency=0.0, time=None, relat
             - after_read (function, optional): callback on each step, after sampling. Arguments: record, scan.
             - before_pass (function, optional): callback before each scan pass execution. Arguments: pass_num, scan.
             - after_pass (function, optional): callback after each scan pass execution. Arguments: pass_num, scan.
+            - abort_on_error (bool, optional): if true then aborts scan in sensor failures. Default is false.
+            - restore_position (bool, optional): if true (default) then restore initial position after relative scans.
             - Aditional arguments defined by set_exec_pars.
 
     Returns:
@@ -624,6 +668,7 @@ def hscan(config, writable, readables, start, end, steps, passes=1, zigzag=False
             - after_read (function, optional): callback on each step, after sampling. Arguments: record, scan.
             - before_pass (function, optional): callback before each scan pass execution. Arguments: pass_num, scan.
             - after_pass (function, optional): callback after each scan pass execution. Arguments: pass_num, scan.
+            - abort_on_error (bool, optional): if true then aborts scan in sensor failures. Default is false.
             - Aditional arguments defined by set_exec_pars.
 
     Returns:
@@ -691,6 +736,7 @@ def tscan(readables, points, interval, passes=1, **pars):
             - after_read (function, optional): callback on each step, after sampling. Arguments: record, scan.
             - before_pass (function, optional): callback before each scan pass execution. Arguments: pass_num, scan.
             - after_pass (function, optional): callback after each scan pass execution. Arguments: pass_num, scan.
+            - abort_on_error (bool, optional): if true then aborts scan in sensor failures. Default is false.
             - Aditional arguments defined by set_exec_pars.
 
     Returns:
@@ -727,6 +773,7 @@ def mscan(trigger, readables, points, timeout = None, async=True, take_initial=F
             - after_read (function, optional): callback on each step, after sampling. Arguments: record, scan.
             - before_pass (function, optional): callback before each scan pass execution. Arguments: pass_num, scan.
             - after_pass (function, optional): callback after each scan pass execution. Arguments: pass_num, scan.
+            - abort_on_error (bool, optional): if true then aborts scan in sensor failures. Default is false.
             - Aditional arguments defined by set_exec_pars.
 
     Returns:
@@ -783,6 +830,11 @@ def bsearch(writables, readable, start, end, steps, maximum = True, strategy = "
             - title(str, optional): plotting window name.     
             - before_read (function, optional): callback on each step, before sampling. Arguments: positions, scan
             - after_read (function, optional): callback on each step, after sampling. Arguments: record, scan.
+            - settle_timeout(int, optional): timeout for each positioner get to position. Default (-1) waits forever. 
+            - parallel_positioning (bool, optional): if true (default) all positioners are set in parallel.
+            - abort_on_error (bool, optional): if true then aborts scan in sensor failures. Default is false.
+            - restore_position (bool, optional): if true (default) then restore initial position after relative scans.
+            - check_positions (bool, optional): if true (default) verifies if in correct positions after move finishes.
             - Aditional arguments defined by set_exec_pars.
 
     Returns:
@@ -819,6 +871,11 @@ def hsearch(writables, readable, range_min, range_max, initial_step, resolution,
             - title(str, optional): plotting window name.     
             - before_read (function, optional): callback on each step, before sampling. Arguments: positions, scan
             - after_read (function, optional): callback on each step, after sampling. Arguments: record, scan.
+            - settle_timeout(int, optional): timeout for each positioner get to position. Default (-1) waits forever. 
+            - parallel_positioning (bool, optional): if true (default) all positioners are set in parallel.
+            - abort_on_error (bool, optional): if true then aborts scan in sensor failures. Default is false.
+            - restore_position (bool, optional): if true (default) then restore initial position after relative scans.
+            - check_positions (bool, optional): if true (default) verifies if in correct positions after move finishes.
             - Aditional arguments defined by set_exec_pars.
 
     Returns:

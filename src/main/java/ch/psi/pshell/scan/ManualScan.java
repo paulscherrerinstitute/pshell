@@ -23,6 +23,28 @@ public class ManualScan extends DiscreteScan {
                 end == null ? new double[writables.length] : end,
                 numberOfSteps == null ? new int[writables.length] : numberOfSteps, relative, 0, 1, false);
     }
+    
+    public ManualScan(String[] writables, String[] readables) {
+        this(writables, readables, null, null, null, false);
+    }
+
+    public ManualScan(String[] writables, String[] readables, double[] start, double[] end, int numberOfSteps[], boolean relative) {
+        super(getDummyWritables(writables), getDummyReadables(readables),
+                start == null ? new double[writables.length] : start,
+                end == null ? new double[writables.length] : end,
+                numberOfSteps == null ? new int[writables.length] : numberOfSteps, relative, 0, 1, false);
+    }    
+    
+    public ManualScan(String[] writables, Readable[] readables) {
+        this(writables, readables, null, null, null, false);
+    }
+
+    public ManualScan(String[] writables, Readable[] readables, double[] start, double[] end, int numberOfSteps[], boolean relative) {
+        super(getDummyWritables(writables), readables,
+                start == null ? new double[writables.length] : start,
+                end == null ? new double[writables.length] : end,
+                numberOfSteps == null ? new int[writables.length] : numberOfSteps, relative, 0, 1, false);
+    }        
 
     public static class DummyWritable implements Writable {
 
@@ -107,17 +129,6 @@ public class ManualScan extends DiscreteScan {
         return ret;
     }
 
-    public ManualScan(String[] writables, String[] readables) {
-        this(writables, readables, null, null, null, false);
-    }
-
-    public ManualScan(String[] writables, String[] readables, double[] start, double[] end, int numberOfSteps[], boolean relative) {
-        super(getDummyWritables(writables), getDummyReadables(readables),
-                start == null ? new double[writables.length] : start,
-                end == null ? new double[writables.length] : end,
-                numberOfSteps == null ? new int[writables.length] : numberOfSteps, relative, 0, 1, false);
-    }
-
     @Override
     protected void doScan() throws IOException, InterruptedException {
     }
@@ -163,7 +174,9 @@ public class ManualScan extends DiscreteScan {
         result = newResult();
         openDevices();
         triggerStarted();
-        moveToStart();
+        if(getInitialMove()){
+            moveToStart();
+        }
         onBeforeScan();
     }
 
