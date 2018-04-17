@@ -555,7 +555,9 @@ public class View extends MainFrame {
                     if (plottingActive) {
                         plottingPanel.triggerScanStarted(scan, plotTitle);
                         if (plottingPanel.isDisplayable() && SwingUtils.containsComponent(tabPlots, plottingPanel)) {
-                            tabPlots.setSelectedComponent(plottingPanel);
+                            SwingUtilities.invokeLater(()->{
+                                tabPlots.setSelectedComponent(plottingPanel);
+                            }); 
                         }
                     }
                 }
