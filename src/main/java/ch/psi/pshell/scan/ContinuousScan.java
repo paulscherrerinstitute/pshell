@@ -61,8 +61,8 @@ public abstract class ContinuousScan extends ScanBase {
         Writable[] ret = new Writable[cs.length];
         System.arraycopy(cs, 0, ret, 0, cs.length);
         return ret;
-    }
-
+    } 
+            
     public Speedable getSpeedable(int index) {
         return (Speedable) getWritables()[index];
     }
@@ -127,7 +127,14 @@ public abstract class ContinuousScan extends ScanBase {
             processPosition(pos);
             if (i < (getNumberOfSteps()[0])) {
                 if (!chrono.waitTimeout(stepTimeMs)) {
-                    throw new ContinuousScanFollowingErrorException();
+                    if (getCheckPositions()){
+                        throw new ContinuousScanFollowingErrorException();
+                    }
+                }
+            }
+            if (!getCheckPositions()){
+                if (getSpeedable(0).isReady()){
+                    break;
                 }
             }
         }
