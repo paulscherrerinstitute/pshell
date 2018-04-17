@@ -298,6 +298,9 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
                 TreePath path = treeFile.getSelectionPath();
                 String root = currentFile.getPath();
                 String dataPath = getDataPath(path);
+                if (dataPath==null){
+                    dataPath = "/";
+                }
 
                 if (IO.isSubPath(root, context.getSetup().getDataPath())) {
                     root = IO.getRelativePath(root, context.getSetup().getDataPath());
@@ -410,7 +413,7 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
                                 }
                             }
                         }
-                        menuOpenScript.setVisible(dataPath.equals("/") && (dataManager.getAttribute(currentFile.getPath(),dataPath, Layout.ATTR_FILE) !=null));
+                        menuOpenScript.setVisible((info!=null) && "/".equals(dataPath) && (dataManager.getAttribute(currentFile.getPath(),dataPath, Layout.ATTR_FILE) !=null));
                         menuPlotDataSeparator.setVisible(menuPlotData.isVisible());
                         popupMenu.show(e.getComponent(), e.getX(), e.getY());
                     }
