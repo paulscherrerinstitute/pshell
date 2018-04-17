@@ -236,7 +236,7 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
             Movable m = (Movable) writable;
             m.waitReady(settleTimeout);
             if (writable instanceof Motor) {
-                if (checkPositions) {
+                if (getCheckPositions()) {
                     m.assertInPosition(pos);
                 }
             } else {
@@ -552,7 +552,11 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
         executionThread = Thread.currentThread();
         aborted = false;
         for (ScanListener listener : getListeners()) {
-            listener.onScanStarted(ScanBase.this, plotTitle);
+            try{
+                listener.onScanStarted(ScanBase.this, plotTitle);
+            } catch (Exception ex){
+                logger.log(Level.WARNING, null, ex);
+            }
         }
         //Called later to let DataManager initialize storage before reading the scan path
         if (context != null) {
@@ -575,14 +579,22 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
         }
         currentRecord = record;
         for (ScanListener listener : getListeners()) {
-            listener.onNewRecord(ScanBase.this, record);
+            try{
+                listener.onNewRecord(ScanBase.this, record);
+            } catch (Exception ex){
+                logger.log(Level.WARNING, null, ex);
+            }                
         }
     }
 
     protected void triggerEnded(Exception ex) {
         result.completed = true;
         for (ScanListener listener : getListeners()) {
-            listener.onScanEnded(ScanBase.this, ex);
+            try{
+                listener.onScanEnded(ScanBase.this, ex);
+            } catch (Exception e){
+                logger.log(Level.WARNING, null, e);
+            }
         }
     }
 
