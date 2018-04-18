@@ -525,7 +525,7 @@ public class StripChart extends StandardDialog {
 
     boolean isChartTableRowEditable(int row, int column) {
         boolean editing = !started;
-        return (column > 1) && (editing || (column < 7));
+        return (column > 0) && (editing || (column < 7));
     }
 
     String getDefaultFolder() {
