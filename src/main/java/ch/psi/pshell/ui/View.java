@@ -2560,7 +2560,7 @@ public class View extends MainFrame {
         menuBlock.setText(bundle.getString("View.menuBlock.text_1")); // NOI18N
         menuBlock.setName("menuBlock"); // NOI18N
 
-        menuIndent.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_W, java.awt.event.InputEvent.SHIFT_MASK | java.awt.event.InputEvent.CTRL_MASK));
+        menuIndent.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_PERIOD, java.awt.event.InputEvent.CTRL_MASK));
         menuIndent.setText(bundle.getString("View.menuIndent.text")); // NOI18N
         menuIndent.setName("menuIndent"); // NOI18N
         menuIndent.addActionListener(new java.awt.event.ActionListener() {
@@ -2570,7 +2570,7 @@ public class View extends MainFrame {
         });
         menuBlock.add(menuIndent);
 
-        menuUnindent.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_Q, java.awt.event.InputEvent.SHIFT_MASK | java.awt.event.InputEvent.CTRL_MASK));
+        menuUnindent.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_COMMA, java.awt.event.InputEvent.CTRL_MASK));
         menuUnindent.setText(bundle.getString("View.menuUnindent.text")); // NOI18N
         menuUnindent.setName("menuUnindent"); // NOI18N
         menuUnindent.addActionListener(new java.awt.event.ActionListener() {
@@ -2583,7 +2583,7 @@ public class View extends MainFrame {
         jSeparator21.setName("jSeparator21"); // NOI18N
         menuBlock.add(jSeparator21);
 
-        menuComment.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_R, java.awt.event.InputEvent.SHIFT_MASK | java.awt.event.InputEvent.CTRL_MASK));
+        menuComment.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_PERIOD, java.awt.event.InputEvent.SHIFT_MASK | java.awt.event.InputEvent.CTRL_MASK));
         menuComment.setText(bundle.getString("View.menuComment.text")); // NOI18N
         menuComment.setName("menuComment"); // NOI18N
         menuComment.addActionListener(new java.awt.event.ActionListener() {
@@ -2593,7 +2593,7 @@ public class View extends MainFrame {
         });
         menuBlock.add(menuComment);
 
-        menuUncomment.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_E, java.awt.event.InputEvent.SHIFT_MASK | java.awt.event.InputEvent.CTRL_MASK));
+        menuUncomment.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_COMMA, java.awt.event.InputEvent.SHIFT_MASK | java.awt.event.InputEvent.CTRL_MASK));
         menuUncomment.setText(bundle.getString("View.menuUncomment.text")); // NOI18N
         menuUncomment.setName("menuUncomment"); // NOI18N
         menuUncomment.addActionListener(new java.awt.event.ActionListener() {
