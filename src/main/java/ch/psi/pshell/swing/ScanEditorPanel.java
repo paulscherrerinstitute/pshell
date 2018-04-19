@@ -229,7 +229,7 @@ public class ScanEditorPanel extends MonitoredPanel implements Processor {
         }
         comboDomain.setSelectedItem(String.valueOf(getStateElement(state, 20, null)).trim());
         checkSteps.setSelected((Boolean) getStateElement(state, 21, Boolean.class));
-
+        checkFollowingError.setSelected((Boolean) getStateElement(state, 22, Boolean.class, true));
         setupColumns();
         this.fileName = fileName;
         changed = false;
@@ -239,11 +239,18 @@ public class ScanEditorPanel extends MonitoredPanel implements Processor {
     }
 
     Object getStateElement(List state, int index, Class type) {
+        return getStateElement(state, index, type, null);
+    }
+    
+    Object getStateElement(List state, int index, Class type, Object defaultValue) {
         if (index < state.size()) {
             Object obj = state.get(index);
             if ((type == null) || (type.isAssignableFrom(obj.getClass()))) {
                 return obj;
             }
+        }
+        if (defaultValue != null){
+            return defaultValue;
         }
         if (type == Boolean.class) {
             return Boolean.FALSE;
@@ -302,6 +309,7 @@ public class ScanEditorPanel extends MonitoredPanel implements Processor {
         state.add(radioManual.isSelected() ? spinnerRangeTo.getValue() : null);
         state.add(comboDomain.getSelectedItem());
         state.add(checkSteps.isSelected());
+        state.add(checkFollowingError.isSelected());
         JsonSerializer.encode(state, changed);
         String json = JsonSerializer.encode(state, true);
         Files.write(new File(fileName).toPath(), json.getBytes());
@@ -453,6 +461,8 @@ public class ScanEditorPanel extends MonitoredPanel implements Processor {
         }
         checkSync.setVisible(cmd.equals("mscan"));
         checkSync.setEnabled(enabled);
+        checkFollowingError.setVisible(cmd.equals("cscan"));
+        checkFollowingError.setEnabled(enabled);
         checkSteps.setEnabled(enabled && hasSteps());
 
         if (cmd.equals("vscan")) {
@@ -738,7 +748,10 @@ public class ScanEditorPanel extends MonitoredPanel implements Processor {
             if (radioManual.isSelected()) {
                 ret.add(getParName("manual_range") + "[" + spinnerRangeFrom.getValue() + ", " + spinnerRangeTo.getValue() + "]");
             }
-
+            if (!checkFollowingError.isSelected() && getScanCommand().equals("cscan")) {
+                ret.add(getParName("check_positions") + getBoolValue(false));
+            }
+            
             List<String> sensorNames = new ArrayList<>();
             List<String> enabledPlots = new ArrayList<>();
             List<String> linePlots = new ArrayList<>();
@@ -890,6 +903,7 @@ public class ScanEditorPanel extends MonitoredPanel implements Processor {
         tableVector = new javax.swing.JTable();
         checkSync = new javax.swing.JCheckBox();
         checkSteps = new javax.swing.JCheckBox();
+        checkFollowingError = new javax.swing.JCheckBox();
 
         jCheckBox1.setText("jCheckBox1");
 
@@ -1083,7 +1097,7 @@ public class ScanEditorPanel extends MonitoredPanel implements Processor {
                     .addComponent(jLabel6))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(comboLayout, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(comboLayout, 0, 92, Short.MAX_VALUE)
                     .addComponent(comboProvider, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addComponent(textTag)
                     .addComponent(textFile))
@@ -1184,7 +1198,7 @@ public class ScanEditorPanel extends MonitoredPanel implements Processor {
                                 .addComponent(labelRangeTo)))
                         .addGap(1, 1, 1)
                         .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(spinnerRangeTo)
+                            .addComponent(spinnerRangeTo, javax.swing.GroupLayout.DEFAULT_SIZE, 41, Short.MAX_VALUE)
                             .addComponent(spinnerRangeFrom)))
                     .addGroup(jPanel4Layout.createSequentialGroup()
                         .addGap(65, 65, 65)
@@ -1299,7 +1313,7 @@ public class ScanEditorPanel extends MonitoredPanel implements Processor {
                     .addComponent(labelLatency))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(spinnerPasses)
+                    .addComponent(spinnerPasses, javax.swing.GroupLayout.DEFAULT_SIZE, 141, Short.MAX_VALUE)
                     .addComponent(spinnerTime)
                     .addComponent(textTitle)
                     .addComponent(spinnerLatency))
@@ -1526,6 +1540,9 @@ public class ScanEditorPanel extends MonitoredPanel implements Processor {
             }
         });
 
+        checkFollowingError.setSelected(true);
+        checkFollowingError.setText("Check following error");
+
         javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
         jPanel2.setLayout(jPanel2Layout);
         jPanel2Layout.setHorizontalGroup(
@@ -1541,7 +1558,9 @@ public class ScanEditorPanel extends MonitoredPanel implements Processor {
                         .addComponent(comboType, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(checkSync)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 192, Short.MAX_VALUE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(checkFollowingError)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addComponent(checkSteps))
                     .addComponent(jPanel5, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addContainerGap())
@@ -1554,7 +1573,8 @@ public class ScanEditorPanel extends MonitoredPanel implements Processor {
                     .addComponent(jLabel1)
                     .addComponent(comboType, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(checkSync)
-                    .addComponent(checkSteps))
+                    .addComponent(checkSteps)
+                    .addComponent(checkFollowingError))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jPanel5, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -1789,6 +1809,7 @@ public class ScanEditorPanel extends MonitoredPanel implements Processor {
     private javax.swing.JButton buttonSenInsert;
     private javax.swing.JButton buttonSenUp;
     private javax.swing.JCheckBox checkDisplay;
+    private javax.swing.JCheckBox checkFollowingError;
     private javax.swing.JCheckBox checkRelative;
     private javax.swing.JCheckBox checkSave;
     private javax.swing.JCheckBox checkSteps;

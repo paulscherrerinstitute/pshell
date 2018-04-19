@@ -143,7 +143,9 @@
                           <Component id="comboType" min="-2" max="-2" attributes="0"/>
                           <EmptySpace max="-2" attributes="0"/>
                           <Component id="checkSync" min="-2" max="-2" attributes="0"/>
-                          <EmptySpace pref="192" max="32767" attributes="0"/>
+                          <EmptySpace max="-2" attributes="0"/>
+                          <Component id="checkFollowingError" min="-2" max="-2" attributes="0"/>
+                          <EmptySpace max="32767" attributes="0"/>
                           <Component id="checkSteps" min="-2" max="-2" attributes="0"/>
                       </Group>
                       <Component id="jPanel5" alignment="0" max="32767" attributes="0"/>
@@ -161,6 +163,7 @@
                       <Component id="comboType" alignment="3" min="-2" max="-2" attributes="0"/>
                       <Component id="checkSync" alignment="3" min="-2" max="-2" attributes="0"/>
                       <Component id="checkSteps" alignment="3" min="-2" max="-2" attributes="0"/>
+                      <Component id="checkFollowingError" alignment="3" min="-2" max="-2" attributes="0"/>
                   </Group>
                   <EmptySpace max="-2" attributes="0"/>
                   <Component id="jPanel5" max="32767" attributes="0"/>
@@ -375,7 +378,7 @@
                           </Group>
                           <EmptySpace min="-2" max="-2" attributes="0"/>
                           <Group type="103" groupAlignment="0" attributes="0">
-                              <Component id="comboLayout" alignment="0" max="32767" attributes="0"/>
+                              <Component id="comboLayout" alignment="0" pref="92" max="32767" attributes="0"/>
                               <Component id="comboProvider" alignment="0" max="32767" attributes="0"/>
                               <Component id="textTag" alignment="0" max="32767" attributes="0"/>
                               <Component id="textFile" alignment="0" max="32767" attributes="0"/>
@@ -516,7 +519,7 @@
                                   </Group>
                                   <EmptySpace min="-2" pref="1" max="-2" attributes="0"/>
                                   <Group type="103" groupAlignment="0" attributes="0">
-                                      <Component id="spinnerRangeTo" max="32767" attributes="0"/>
+                                      <Component id="spinnerRangeTo" pref="41" max="32767" attributes="0"/>
                                       <Component id="spinnerRangeFrom" max="32767" attributes="0"/>
                                   </Group>
                               </Group>
@@ -669,7 +672,7 @@
                           </Group>
                           <EmptySpace max="-2" attributes="0"/>
                           <Group type="103" groupAlignment="0" attributes="0">
-                              <Component id="spinnerPasses" alignment="0" max="32767" attributes="0"/>
+                              <Component id="spinnerPasses" alignment="0" pref="141" max="32767" attributes="0"/>
                               <Component id="spinnerTime" alignment="0" max="32767" attributes="0"/>
                               <Component id="textTitle" alignment="0" max="32767" attributes="0"/>
                               <Component id="spinnerLatency" max="32767" attributes="0"/>
@@ -1024,6 +1027,12 @@
           <Events>
             <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="checkStepsActionPerformed"/>
           </Events>
+        </Component>
+        <Component class="javax.swing.JCheckBox" name="checkFollowingError">
+          <Properties>
+            <Property name="selected" type="boolean" value="true"/>
+            <Property name="text" type="java.lang.String" value="Check following error"/>
+          </Properties>
         </Component>
       </SubComponents>
     </Container>
