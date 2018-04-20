@@ -2149,6 +2149,27 @@ def convex_hull(point_list=None, x=None, y=None):
 ###################################################################################################
 #Utilities
 ###################################################################################################
+def get_setting(name=None):
+    """Get a persisted script setting value.
+
+    Args:
+        name (str): name of the setting.
+    Returns:
+        String with setting value or None if setting is undefined.
+        If name is None then returns map with all settings.
+    """
+    return get_context().getSettings() if (name is None) else get_context().getSetting(name)
+
+def set_setting(name, value):
+    """Set a persisted script setting value.
+
+    Args:
+        name (str): name of the setting.
+        value (obj): value for the setting, converted to string (if None then remove the setting).
+    Returns:
+        None.
+    """
+    get_context().setSetting(name, value)
 
 def exec_cmd(cmd):
     """Executes a shell command. If errors happens raises an exception.

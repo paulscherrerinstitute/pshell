@@ -402,6 +402,7 @@ public class Setup extends Config {
         }
         return expandedPathNames.get(wwwPath);
     }
+    
 
     public String getWwwIndexFile() {
         return Paths.get(getWwwPath(), "index.html").toString();
@@ -423,6 +424,10 @@ public class Setup extends Config {
         }
     }
 
+    public String getSettingsFile(){
+        return expandPath("{context}/Settings.properties");
+    } 
+    
     public static String getJarFile() {
         return IO.getExecutingJar(Context.class);
     }

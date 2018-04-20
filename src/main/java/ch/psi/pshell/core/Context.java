@@ -68,13 +68,18 @@ import ch.psi.pshell.security.UsersManagerListener;
 import ch.psi.pshell.security.User;
 import ch.psi.pshell.security.UserAccessException;
 import ch.psi.utils.Chrono;
+import ch.psi.utils.SortedProperties;
 import ch.psi.utils.Sys.OSFamily;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
+import java.util.Properties;
 import java.util.concurrent.TimeoutException;
 import java.util.jar.JarFile;
+import jersey.repackaged.com.google.common.collect.Maps;
 
 /**
  * Global singleton managing creation, disposal and holding the state of the
@@ -2433,6 +2438,40 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
     public List<String> searchHistory(String text) {
         return history.search(text);
     }
+    
+    //Settings (persisted script properties)
+    String getSettingsFile(){
+        return setup.expandPath("{context}/Settings.properties");
+    }    
+    
+    public void setSetting(String name, Object value) throws IOException{
+        Properties properties = new SortedProperties();
+        try (FileInputStream in = new FileInputStream(setup.getSettingsFile())) {
+            properties.load(in);
+        }        
+        if (value == null){
+            properties.remove(name);
+        } else {
+            properties.put(name, String.valueOf(value));
+        }
+        try (FileOutputStream out = new FileOutputStream(setup.getSettingsFile())) {
+            properties.store(out, null);
+        }  
+    }
+    
+    public String getSetting(String name) throws IOException{
+        return  getSettings().get(name);
+    }    
+    
+    public Map<String, String> getSettings() throws IOException{
+        Properties properties = new Properties();
+        try (FileInputStream in = new FileInputStream(setup.getSettingsFile())) {
+            properties.load(in);
+            return Maps.fromProperties(properties);
+        } catch (FileNotFoundException ex){
+            return new HashMap<>();
+        }        
+    }       
 
     //Configuration
     public Setup getSetup() {

@@ -1965,6 +1965,38 @@ function convex_hull(points, fx, fy) {
 // Utilities
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
+function get_setting(name){
+    /*
+    Get a persisted script setting value.
+
+    Args:
+        name (str): name of the setting.
+    Returns:
+        String with setting value or None if setting is undefined.
+        If name is None then returns map with all settings.
+    */
+    if (!is_defined(name))    name = null
+    if (name == null){
+        return get_context().getSettings()
+    } else {
+        return get_context().getSetting(name)
+    }
+}
+
+function set_setting(name, value){
+    /*
+    Set a persisted script setting value.
+
+    Args:
+        name (str): name of the setting.
+        value (obj): value for the setting, converted to string (if None then remove the setting).
+    Returns:
+        None.
+    */
+    if (!is_defined(value))    value = null
+    get_context().setSetting(name, value)
+}
+
 function exec_cmd(cmd){
     /*
     Executes a shell command. If errors happens raises an exception.

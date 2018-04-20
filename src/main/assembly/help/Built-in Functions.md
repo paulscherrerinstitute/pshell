@@ -90,6 +90,8 @@ These functions provide the script API to many aspects of PShell:
     - convex_hull
 
  * Utilities:
+    - get_setting
+    - set_setting
     - exec_cmd
     - exec_cpython
     - bsget

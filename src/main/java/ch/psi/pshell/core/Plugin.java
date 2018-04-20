@@ -9,6 +9,7 @@ import ch.psi.utils.State;
 import ch.psi.pshell.device.GenericDevice;
 import ch.psi.pshell.scripting.ViewPreference;
 import java.io.File;
+import java.util.Map;
 
 /**
  * Interface to be implemented by extension classes. Default methods are used to implement the
@@ -167,6 +168,18 @@ public interface Plugin {
 
     default void setPreference(CommandSource source, ViewPreference name, Object value) {
         getContext().setPreference(CommandSource.plugin, name, value);
+    }
+    
+    default void setSetting(String name, Object value) throws IOException{
+        getContext().setSetting(name, value);
+    }
+    
+    default String getSetting(String name) throws IOException{
+        return getContext().getSetting(name);
+    }
+
+    default Map<String, String> getSettings() throws IOException{    
+        return getContext().getSettings();
     }
 
     default GenericDevice getDevice(String name) {
