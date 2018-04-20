@@ -2448,7 +2448,8 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
         Properties properties = new SortedProperties();
         try (FileInputStream in = new FileInputStream(setup.getSettingsFile())) {
             properties.load(in);
-        }        
+        }  catch (FileNotFoundException ex){
+        }      
         if (value == null){
             properties.remove(name);
         } else {
