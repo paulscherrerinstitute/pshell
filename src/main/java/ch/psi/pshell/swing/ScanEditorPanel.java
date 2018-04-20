@@ -714,12 +714,11 @@ public class ScanEditorPanel extends MonitoredPanel implements Processor {
         }
         if (Context.getInstance().getSetup().getScriptType() == ScriptType.py) {
             if (!checkSave.isSelected()) {
-                ret.add(getParName("persist") + getBoolValue(false));
+                ret.add(getParName("save") + getBoolValue(false));
             }
             if (!checkDisplay.isSelected()) {
-                ret.add(getParName("accumulate") + getBoolValue(false));
-                ret.add(getParName("plot_disabled") + getBoolValue(true));
-                ret.add(getParName("table_disabled") + getBoolValue(true));
+                ret.add(getParName("keep") + getBoolValue(false));
+                ret.add(getParName("display") + getBoolValue(false));
             }
 
             if (!textFile.getText().trim().isEmpty()) {
@@ -1542,6 +1541,11 @@ public class ScanEditorPanel extends MonitoredPanel implements Processor {
 
         checkFollowingError.setSelected(true);
         checkFollowingError.setText("Check following error");
+        checkFollowingError.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                checkFollowingErrorActionPerformed(evt);
+            }
+        });
 
         javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
         jPanel2.setLayout(jPanel2Layout);
@@ -1796,6 +1800,10 @@ public class ScanEditorPanel extends MonitoredPanel implements Processor {
     private void comboProviderActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_comboProviderActionPerformed
         onControlChanged();
     }//GEN-LAST:event_comboProviderActionPerformed
+
+    private void checkFollowingErrorActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_checkFollowingErrorActionPerformed
+        onControlChanged();
+    }//GEN-LAST:event_checkFollowingErrorActionPerformed
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables

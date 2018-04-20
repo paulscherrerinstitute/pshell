@@ -1191,9 +1191,9 @@ def set_exec_pars(**args):
         layout(str, optional): Overrides default data layout.
         provider(str, optional): Overrides default data provider.
         depth_dim(int, optional): dimension of 2d-matrixes in 3d datasets.
-        persist(bool, optional): Overrides the configuration option to auto save scan data.
+        save(bool, optional): Overrides the configuration option to auto save scan data.
         flush(bool, optional): Overrides the configuration option to flush file on each record.
-        accumulate(bool, optional): Overrides the configuration option to release scan records. 
+        keep(bool, optional): Overrides the configuration option to release scan records. 
                                     If false disable accumulation of scan records to scan result.
         preserve(bool, optional): Overrides the configuration option to preserve device types. 
                                   If false all values are converted to double.
@@ -1210,6 +1210,8 @@ def set_exec_pars(**args):
         See set_preference for more information.
         
         Shortcut entries: "line_plots": list of devices with enforced line plots.
+                          "range": "none", "auto", or [min, max]
+                          "display": if false disables scan data plotting and printing.
     """
     get_context().setExecutionPars(args)
 
@@ -1218,13 +1220,13 @@ def get_exec_pars():
     """ Returns script execution parameters.
 
     Returns:
-        ExecutionContext object. Fields: 
+        ExecutionParameters object. Fields: 
             name (str): execution name - {name} tag.
             type (str): execution type - {type} tag.
             path (str): output data root.
             open (bool): true if the output data root has been opened.
             layout (str): data output layout. If None then using the configuration.
-            persist (bool): auto save scan data option. 
+            save (bool): auto save scan data option. 
             flush (bool): flush file on each record.
             index (int): current scan index.
             group (str): data group currently used for scan data storage. 

@@ -35,15 +35,13 @@ public class StripScanExecutor {
             for (String name : ids) {
                 StripScan scan = new StripScan("Value");
                 Map pars = new HashMap();
-                pars.put("plot_disabled", true);
-                pars.put("table_disabled", true);
-                pars.put("print_scan", false);
+                pars.put("display", false);
+                pars.put("save", true);
+                pars.put("keep", false);                
                 pars.put("flush", flush);
                 pars.put("path", Context.getInstance().getSetup().expandPath(path));
                 pars.put("layout", layout);
                 pars.put("provider", provider);
-                pars.put("persist", true);
-                pars.put("accumulate", false);
                 pars.put("preserve", false); //Do not now types beforehand, cannot be true
                 pars.put("reset", true);
                 pars.put("tag", name);

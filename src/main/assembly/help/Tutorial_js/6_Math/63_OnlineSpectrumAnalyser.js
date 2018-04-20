@@ -30,7 +30,7 @@ function plot_spectrum(signal, sampling_freq){
 function get_sample(samples, sampling_freq){
 	return range(0,samples,1).map(function(t) {return Math.sin(200*2*Math.PI*t/sampling_freq) + Math.random()})
     //Simple example sampling a device:
-    //set_exec_pars({"persist":false, "plot_disabled":true, "table_disabled":true})
+    //set_exec_pars({"save":false, "display":false})
     //return tscan(ai1, samples, 1/sampling_freq).getReadable(0)
 }    
 

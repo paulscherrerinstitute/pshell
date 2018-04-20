@@ -429,7 +429,7 @@ public class DataManager implements AutoCloseable {
             getExecutionPars().setDataPath(dataPath);
             getProvider().openOutput(dataPath);
             getLayout().onOpened(getExecutionPars().getOutputFile());
-            if (getExecutionPars().getPersist()) {
+            if (getExecutionPars().getSave()) {
                 appendLog("Open persistence context: " + getExecutionPars().getOutputFile());
             }
         }
@@ -443,7 +443,7 @@ public class DataManager implements AutoCloseable {
         if (isOpen()) {
             try {
                 try {
-                    if (getExecutionPars().getPersist()) {
+                    if (getExecutionPars().getSave()) {
                         appendLog("Close persistence context: " + getExecutionPars().getOutputFile());
                     }
                 } catch (Exception ex) {

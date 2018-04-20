@@ -62,7 +62,7 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
     String scanPath;
     String tag;
     int pass = 1;
-    boolean accumulate;
+    boolean keep;
     String name = "Scan";
 
     boolean useWritableReadback = getScansUseWritableReadback();
@@ -545,7 +545,7 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
                 tag = context.getSetup().expandPath((tag == null) ? Context.getInstance().getScanTag() : tag);
                 name = execPars.toString();
                 scanIndex = execPars.getIndex(this);
-                accumulate = execPars.getAccumulate();
+                keep = execPars.getKeep();
             }
         }
 
@@ -574,7 +574,7 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
     ScanRecord currentRecord;
 
     protected void triggerNewRecord(ScanRecord record) {
-        if (accumulate) {
+        if (keep) {
             result.records.add(record);
         }
         currentRecord = record;
@@ -614,8 +614,8 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
     }
 
     @Override
-    public boolean getAccumulate() {
-        return accumulate;
+    public boolean getKeep() {
+        return keep;
     }
 
     @Override

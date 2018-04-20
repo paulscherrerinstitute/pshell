@@ -28,7 +28,7 @@ def get_sample(samples, sampling_freq):
     return map(lambda t:math.sin(200*2*math.pi*t/sampling_freq) + random.random(), frange(0,samples,1))
     
     #Example sampling a device with a scan: 
-    #return tscan(ai1, samples, 1/sampling_freq, persist=False, plot_disabled = True, table_disabled = True).getReadable(0)
+    #return tscan(ai1, samples, 1/sampling_freq, save=False, display=False).getReadable(0)
     
     #Example sampling a device with an averager
     #av.update()

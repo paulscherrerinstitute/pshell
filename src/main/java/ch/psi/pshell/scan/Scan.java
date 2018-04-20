@@ -79,7 +79,10 @@ public interface Scan {
     
     public String getTag();
     
-    public boolean getAccumulate();
+    /**
+     * If true the scans records are kept in memory.
+     */
+    public boolean getKeep();
     
     public Thread getThread();
     

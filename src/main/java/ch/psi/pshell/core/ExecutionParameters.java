@@ -16,7 +16,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
+import java.util.List;  
 import java.util.Map;
 import java.util.logging.Level;
 
@@ -27,12 +27,12 @@ import java.util.logging.Level;
 public class ExecutionParameters {
 
     final String[] executionOptions = new String[]{"defaults", "group", "open", "reset", "name", "type", "path", "tag",
-        "layout", "provider", "persist", "flush", "preserve", "accumulate", "depth_dim"};
+        "layout", "provider", "save", "persist", "flush", "preserve", "keep", "accumulate", "depth_dim"};
 
     final String[] viewOptions = new String[]{"plot_disabled", "table_disabled", "enabled_plots",
         "plot_types", "print_scan", "auto_range", "manual_range", "domain_axis", "status"};
 
-    final String[] shortcutOptions = new String[]{"line_plots", "plot_list", "range"};
+    final String[] shortcutOptions = new String[]{"display", "line_plots", "plot_list", "range"};
 
     long start;
     int offset;
@@ -230,7 +230,7 @@ public class ExecutionParameters {
     public void addScan(Scan scan) {
         synchronized (currentScans) {
             scanIndex++;
-            currentScans.put(scan, new ScanInfo(scanIndex, getPersist()));
+            currentScans.put(scan, new ScanInfo(scanIndex, getSave()));
         }
     }
 
@@ -304,7 +304,7 @@ public class ExecutionParameters {
                 plotTypes.putAll(types);
             }
         }
-
+        
         if (getOption("plot_list") != null) {
             Object plot_list = getOption("plot_list");
             options.put("enabled_plots", "all".equals(plot_list) ? null : plot_list);
@@ -330,6 +330,13 @@ public class ExecutionParameters {
                 setPlotPreference(ViewPreference.valueOf(key.toString().toUpperCase()), val);
             }
         }
+        
+        Object display = getOption("display");        
+        if (Boolean.FALSE.equals(display)){
+             setPlotPreference(ViewPreference.PLOT_DISABLED, true);
+             setPlotPreference(ViewPreference.TABLE_DISABLED, true);
+             setPlotPreference(ViewPreference.PRINT_SCAN, false);
+        }      
     }
 
     public Map getScriptOptions() {
@@ -400,8 +407,11 @@ public class ExecutionParameters {
         return (option != null) ? option : Context.getInstance().getConfig().dataProvider;
     }
 
-    public Boolean getPersist() {
-        Object option = getOption("persist");
+    public Boolean getSave() {
+        Object option = getOption("save");
+        if (option==null){
+            option = getOption("persist"); //backward compatibility
+        }        
         return (option != null) ? (Boolean) option : Context.getInstance().getConfig().autoSaveScanData;
     }
 
@@ -424,8 +434,11 @@ public class ExecutionParameters {
         return (option != null) ? (Boolean) option : Context.getInstance().getConfig().dataScanPreserveTypes;
     }
 
-    public Boolean getAccumulate() {
-        Object option = getOption("accumulate");
+    public Boolean getKeep() {
+        Object option = getOption("keep");
+        if (option==null){
+            option = getOption("accumulate"); //backward compatibility
+        }
         return (option != null) ? (Boolean) option : !Context.getInstance().getConfig().dataScanReleaseRecords;
     }
 

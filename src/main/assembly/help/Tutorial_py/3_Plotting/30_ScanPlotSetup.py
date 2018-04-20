@@ -32,11 +32,8 @@ set_exec_pars(plot_list = (ai1, wf1))
 #This optional preference displays wf1 as a 1d plot at each scan point, instead of a matrix plot
 set_exec_pars(line_plots = (wf1,)) 
 
-#This optional preference disables printing the scan table
-#set_exec_pars( plot_disabled = True) 
-
-#This optional  disable all scan plotting
-#set_exec_pars( table_disabled = True) 
+#This optional preference disables displaying scan contents (on plot, table and console)
+#set_exec_pars( display = False) 
 
 #Execute the scan: 200 steps, a1 from 0 to 40
 a= lscan(ao1, (ai1,ai2,wf1), 0, 40, 10, 0.01)                    
