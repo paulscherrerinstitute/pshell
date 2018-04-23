@@ -83,7 +83,7 @@ public class PluginManager implements AutoCloseable {
         return null;
     }
 
-    void addDynamicClass(Class cls) {
+    public void addDynamicClass(Class cls) {
         synchronized (dynamicClasses) {
             for (Class c : getDynamicClasses()) {
                 if (c.getName().equals(cls.getName())) {

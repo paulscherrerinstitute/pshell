@@ -234,7 +234,7 @@ public class DevicePool extends ObservableBase<DevicePoolListener> implements Au
 
                 } catch (Exception ex) {
                     orderedDeviceNames.remove(deviceName);
-                    logger.log(Level.SEVERE, "Error instantiating device: " + deviceName + " (" + config + ")");
+                    logger.log(Level.SEVERE, null, new Exception("Error instantiating device: " + deviceName + " (" + config + ")", ex));
                 }
             }
         }
