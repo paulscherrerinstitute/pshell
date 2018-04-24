@@ -35,7 +35,15 @@
 
 * Script callbacks for start/end of scan passes: __before_pass__ and __after_pass__.
 
+* Command line option '-extr to force extraction of startup.py and other scripting utilities.
 
+* ReadonlyProcessVariable class: an analog input with scale,offset and unit.
+
+* Included 'display' option to disable scan data displaying on plots, table and console. 
+
+* Script settings: persisted  inJjava property files, ACCERSSED with __get_setting__ and __set_setting__.
+
+  
 ### Changed
 
 * EPICS channels are now by default timestamped and nullify invalid values. 
@@ -50,7 +58,7 @@
 
 * Token {count} can have  customized format. E.g: {count}%02d.
 
-* Monitor scan supporting multiple triggers.
+* Monitor scan supporting multiple triggers and undefined number of elements.
 
 * Device polling first call is immediate (timer delay=0) .
 
@@ -62,6 +70,16 @@
 
 * Included local timestamp and device timestamps in scan record.
 
+* Included __caget__ option to retrieve also channel metadata (severity, timestamp).
+
+* 'check_positions=False' option is used in ContinuousScan to disable following errors.
+  The dataset may have less point than what was specified.
+
+* Changed comment & indentation shortcuts not to collide with meta+shift+Q on Mac.
+
+* Changed "accumulate" and "persist" keywords into "keep" and "save" (keeping backward compatibility).
+
+* __show_panel__ now works in console mode. Plugin.showPanel work in detached mode.
 
 ### Fixed
 
@@ -77,6 +95,11 @@
 
 * Fixed return values of simultaneous commands and persistence of simultaneous scans.
 
+* Fixed execution context in sub-threads of background commands.
+
+* Fixed EPICS freezing when reading  channel from a monitor callback (Updated to JCAE 2.9.6).
+
+* Improved robustness in HDF5 writing, converting types to match the dataset.
 
 
 ## 1.9-SNAPSHOT
