@@ -87,10 +87,7 @@ public interface Plugin extends ch.psi.pshell.core.Plugin {
     }
 
     default DevicePanel showDevicePanel(Device device) {
-        if (getView() != null) {
-            return (DevicePanel) getView().showPanel(device);
-        }
-        return null;
+        return (DevicePanel) getApp().getDevicePanelManager().showPanel(device, getTopLevel());
     }
 
     default Renderer showRenderer(String name) {
@@ -102,10 +99,7 @@ public interface Plugin extends ch.psi.pshell.core.Plugin {
     }
 
     default Renderer showRenderer(Source source) {
-        if (getView() != null) {
-            return (Renderer) getView().showPanel(source);
-        }
-        return null;
+        return (Renderer) getApp().getDevicePanelManager().showPanel(source, getTopLevel());
     }
 
     /**

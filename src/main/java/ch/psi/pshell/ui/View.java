@@ -297,7 +297,6 @@ public class View extends MainFrame {
                 return false;
             }
         });
-        deviceDialogs = new HashMap<>();
         menuPull.setVisible(false); //Disabling this menu because may be dangerous for users have such easy access
         PlotBase.setImageFileFolder(context.getSetup().getImagesPath());
         RendererMenu.setImageFileFolder(context.getSetup().getImagesPath());
@@ -492,20 +491,7 @@ public class View extends MainFrame {
             }
         }
 
-        for (String windowName : getPersistedWindowNames()) {
-            if (windowName.startsWith(RENDERER_DIALOG_NAME_PREFIX)) {
-                try {
-                    String source = windowName.substring(RENDERER_DIALOG_NAME_PREFIX.length()).trim();
-                    if (isShowingPanel(source)) {
-                        restartRenderer(source);
-                    } else if (preferences.persistRendererWindows && !App.isLocalMode()) {
-                        showPanel(source);
-                    }
-                } catch (Exception ex) {
-                    logger.log(Level.WARNING, null, ex);
-                }
-            }
-        }
+        App.getInstance().getDevicePanelManager().checkWindowRestart();
 
         menuVersioning.setVisible(context.isVersioningEnabled());
         menuPush.setEnabled(context.isVersioningEnabled()
@@ -1643,153 +1629,12 @@ public class View extends MainFrame {
         return menuBar;
     }
 
-    final Map<String, JDialog> deviceDialogs;
-
     public JPanel showPanel(final String name) {
-        return showPanel(context.getDevicePool().getByName(name));
+        return App.getInstance().getDevicePanelManager().showPanel(name);
     }
 
     public JPanel showPanel(final GenericDevice dev) {
-
-        if ((dev == null) || (dev.getName() == null)) {
-            return null;
-        }
-        String name = dev.getName();
-        if (deviceDialogs.containsKey(name)) {
-            JDialog dlg = deviceDialogs.get(name);
-            if (dlg.isDisplayable()) {
-                dlg.requestFocus();
-                Class type = dev instanceof Source ? Renderer.class : DevicePanel.class;
-                Component[] ret = SwingUtils.getComponentsByType(dlg, type);
-                if ((ret.length == 0) || !(type.isAssignableFrom(ret[0].getClass()))) {
-                    return null;
-                }
-                if (dev instanceof Source) {
-                    ((Renderer) ret[0]).setDevice((Source) dev);
-                }
-                return (JPanel) ret[0];
-            }
-        }
-
-        JPanel panel = dev instanceof Source ? newRenderer((Source) dev) : newPanel((Device) dev);
-        return panel;
-    }
-
-    public static final String RENDERER_DIALOG_NAME_PREFIX = "Renderer ";
-
-    Renderer newRenderer(final Source source) {
-        final String name = source.getName();
-        final Renderer renderer = new Renderer() {
-            @Override
-            protected void onHide() {
-                super.onHide();
-                if (!App.isLocalMode()) {
-                    if ((App.getInstance().getState() != State.Closing) || (!preferences.persistRendererWindows)) {
-                        removePersistedWindow(deviceDialogs.get(source.getName()));
-                    }
-                }
-                GenericDevice source = context.getDevicePool().getByName(name);
-                if (source != null) {
-                    source.removeListener(this);
-                }
-            }
-        };
-        renderer.setDevice(source);
-        renderer.setAutoScroll(true);
-        renderer.setShowStatus(preferences.showImageStatusBar);
-        renderer.setBackgroundRendering(preferences.backgroundRendering);
-        JDialog dlg = SwingUtils.showDialog(this, source.getName(), new Dimension(600, 400), renderer);
-        dlg.setName(RENDERER_DIALOG_NAME_PREFIX + source.getName());
-        deviceDialogs.put(source.getName(), dlg);
-        if (!App.isLocalMode()) {
-            addPersistedWindow(dlg);
-        }
-        if (preferences.persistRendererWindows) {
-            Path persistFile = Paths.get(context.getSetup().getContextPath(), "Renderer_" + source.getName() + ".bin");
-            renderer.setPersistenceFile(persistFile);
-        }
-        return renderer;
-    }
-
-    DevicePanel newPanel(Device dev) {
-        for (DefaultPanel entry : preferences.defaultPanels) {
-            try {
-                if (entry.getDeviceClass().isAssignableFrom(dev.getClass())) {
-                    DevicePanel ret = (DevicePanel) entry.getPanelClass().newInstance();
-                    ret.setDevice(dev);
-                    dev.addListener(new DeviceAdapter() {
-                        @Override
-                        public void onStateChanged(Device device, State state, State former) {
-                            if (state == State.Closing) {
-                                String name = device.getName();
-                                if (name != null) {
-                                    if (deviceDialogs.containsKey(name)) {
-                                        deviceDialogs.get(name).setVisible(false);
-                                        deviceDialogs.get(name).dispose();
-                                        deviceDialogs.remove(name);
-                                    }
-                                }
-                            }
-                        }
-                    });
-
-                    JDialog dlg = SwingUtils.showDialog(this, dev.getName(), null, ret);
-                    dlg.setMinimumSize(dlg.getPreferredSize());
-                    deviceDialogs.put(dev.getName(), dlg);
-
-                    return ret;
-                }
-            } catch (Exception ex) {
-                logger.log(Level.INFO, null, ex);
-            }
-        }
-        return null;
-    }
-
-    public boolean hasControlPanel(GenericDevice device) {
-        for (DefaultPanel entry : preferences.defaultPanels) {
-            try {
-                if (entry.getDeviceClass().isAssignableFrom(device.getClass())) {
-                    return true;
-                }
-            } catch (Exception ex) {
-                logger.log(Level.INFO, null, ex);
-            }
-        }
-        return false;
-    }
-
-    public boolean isShowingPanel(final String name) {
-        if (name == null) {
-            return false;
-        }
-        return (deviceDialogs.containsKey(name));
-    }
-
-    public boolean isShowingPanel(final GenericDevice device) {
-        if (device == null) {
-            return false;
-        }
-        return isShowingPanel(device.getName());
-    }
-
-    void restartRenderer(final String name) {
-        if (deviceDialogs.containsKey(name)) {
-            JDialog dlg = deviceDialogs.get(name);
-            if (dlg.isDisplayable()) {
-                for (Component c : SwingUtils.getComponentsByType(dlg.getContentPane(), Renderer.class)) {
-                    if (c instanceof Renderer) {
-                        Renderer renderer = (Renderer) c;
-                        renderer.setBackgroundRendering(preferences.backgroundRendering);
-                        Source source = (Source) context.getDevicePool().getByName(name);
-                        if (source != null) {
-                            source.addListener(renderer);
-                        }
-                        break;
-                    }
-                }
-            }
-        }
+        return App.getInstance().getDevicePanelManager().showPanel(dev);
     }
 
     void openFile(File f) throws Exception {

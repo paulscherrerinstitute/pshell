@@ -689,10 +689,7 @@ public class App extends ObservableBase<AppListener> {
 
                 @Override
                 public Object showPanel(GenericDevice dev) {
-                    if (getMainFrame() == null) {
-                        return null;
-                    }
-                    return ((View) getMainFrame()).showPanel(dev);
+                    return getDevicePanelManager().showPanel(dev);
                 }
             });
 
@@ -788,6 +785,14 @@ public class App extends ObservableBase<AppListener> {
 
     public static void setScanPlottingActive(boolean value) {
         scanPlottingActive = value;
+    }
+    
+    DevicePanelManager devicePanelManager;
+    public DevicePanelManager getDevicePanelManager(){
+        if (devicePanelManager == null){
+            devicePanelManager = new DevicePanelManager(view);
+        }
+        return devicePanelManager;
     }
 
     HashMap<String, PlotPanel> plotPanels = new HashMap<>();

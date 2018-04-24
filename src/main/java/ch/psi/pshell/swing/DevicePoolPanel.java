@@ -219,7 +219,7 @@ public class DevicePoolPanel extends MonitoredPanel implements UpdatablePanel {
                             menuRevisionHistory.setEnabled(menuConfig.isEnabled() && Context.getInstance().isVersioningEnabled());
                             popupMenu.show(e.getComponent(), e.getX(), e.getY());
                             menuHistory.setEnabled(getSelectedDevice() instanceof Device);
-                            menuPanel.setEnabled(((View) App.getInstance().getMainFrame()).hasControlPanel(getSelectedDevice()));
+                            menuPanel.setEnabled(App.getInstance().getDevicePanelManager().hasControlPanel(getSelectedDevice()));
                             menuPanel.setText((getSelectedDevice() instanceof Source) ? "Render" : "Control panel");
                         }
                     }
