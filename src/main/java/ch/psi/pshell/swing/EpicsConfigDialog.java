@@ -24,6 +24,7 @@ public class EpicsConfigDialog extends StandardDialog {
     final static String keyAddressList = "ch.psi.jcae.ContextFactory.addressList";
     final static String keyServerPort = "ch.psi.jcae.ContextFactory.serverPort";
     final static String keyMaxArraySize = "ch.psi.jcae.ContextFactory.maxArrayBytes";
+    final static String keyMaxSendArraySize = "ch.psi.jcae.ContextFactory.maxSendArrayBytes";
     final static String keyAutoAddressList = "ch.psi.jcae.ContextFactory.autoAddressList";
     final static String keyUseShellVariables = "ch.psi.jcae.ContextFactory.useShellVariables";
     final static String keyLocalBroadcastInterfaces = "ch.psi.jcae.ContextFactory.addLocalBroadcastInterfaces";
@@ -46,6 +47,7 @@ public class EpicsConfigDialog extends StandardDialog {
             textAddressList.setText(Str.removeMultipleSpaces(properties.getProperty(keyAddressList, "")).replace(" ", "\n"));
             textServerPort.setText(properties.getProperty(keyServerPort, ""));
             textMaxArraySize.setText(properties.getProperty(keyMaxArraySize, ""));
+            textMaxSendArraySize.setText(properties.getProperty(keyMaxSendArraySize, ""));
             textConenctionRetries.setText(properties.getProperty(keyConenctionRetries, ""));
             textConenctionTimeout.setText(properties.getProperty(keyConenctionTimeout, ""));
             textChannelRetries.setText(properties.getProperty(keyChannelRetries, ""));
@@ -65,6 +67,7 @@ public class EpicsConfigDialog extends StandardDialog {
         properties.setProperty(keyAddressList, textAddressList.getText().replace("\n", " ").trim());
         properties.setProperty(keyServerPort, textServerPort.getText().trim());
         properties.setProperty(keyMaxArraySize, textMaxArraySize.getText().trim());
+        properties.setProperty(keyMaxSendArraySize, textMaxSendArraySize.getText().trim());
         properties.setProperty(keyConenctionRetries, textConenctionRetries.getText().trim());
         properties.setProperty(keyConenctionTimeout, textConenctionTimeout.getText().trim());
         properties.setProperty(keyChannelRetries, textChannelRetries.getText().trim());
@@ -114,6 +117,8 @@ public class EpicsConfigDialog extends StandardDialog {
         checkShellVatiables = new javax.swing.JCheckBox();
         checkAutoAddressList = new javax.swing.JCheckBox();
         checkAddLocalBroadcast = new javax.swing.JCheckBox();
+        jLabel8 = new javax.swing.JLabel();
+        textMaxSendArraySize = new javax.swing.JTextField();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
 
@@ -163,6 +168,9 @@ public class EpicsConfigDialog extends StandardDialog {
 
         checkAddLocalBroadcast.setText("Add local broadcast interfaces");
 
+        jLabel8.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
+        jLabel8.setText("Max send array size:");
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
@@ -210,13 +218,17 @@ public class EpicsConfigDialog extends StandardDialog {
                                     .addComponent(checkAutoAddressList)
                                     .addComponent(checkShellVatiables)
                                     .addComponent(checkAddLocalBroadcast))
-                                .addGap(0, 0, Short.MAX_VALUE)))))
+                                .addGap(0, 0, Short.MAX_VALUE))))
+                    .addGroup(layout.createSequentialGroup()
+                        .addComponent(jLabel8)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(textMaxSendArraySize)))
                 .addContainerGap())
         );
 
         layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {buttonCancel, buttonOk});
 
-        layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {jLabel1, jLabel2, jLabel3, jLabel4, jLabel5, jLabel6});
+        layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {jLabel1, jLabel2, jLabel3, jLabel4, jLabel5, jLabel6, jLabel8});
 
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -227,7 +239,7 @@ public class EpicsConfigDialog extends StandardDialog {
                         .addComponent(jLabel1))
                     .addGroup(layout.createSequentialGroup()
                         .addContainerGap()
-                        .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 73, Short.MAX_VALUE)))
+                        .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 86, Short.MAX_VALUE)))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel7)
@@ -236,6 +248,10 @@ public class EpicsConfigDialog extends StandardDialog {
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel2)
                     .addComponent(textMaxArraySize, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel8)
+                    .addComponent(textMaxSendArraySize, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel3)
@@ -296,6 +312,7 @@ public class EpicsConfigDialog extends StandardDialog {
     private javax.swing.JLabel jLabel5;
     private javax.swing.JLabel jLabel6;
     private javax.swing.JLabel jLabel7;
+    private javax.swing.JLabel jLabel8;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JTextArea textAddressList;
     private javax.swing.JTextField textChannelRetries;
@@ -303,6 +320,7 @@ public class EpicsConfigDialog extends StandardDialog {
     private javax.swing.JTextField textConenctionRetries;
     private javax.swing.JTextField textConenctionTimeout;
     private javax.swing.JTextField textMaxArraySize;
+    private javax.swing.JTextField textMaxSendArraySize;
     private javax.swing.JTextField textServerPort;
     // End of variables declaration//GEN-END:variables
 }
