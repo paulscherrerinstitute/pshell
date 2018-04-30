@@ -683,6 +683,7 @@ public class LinePlotJFree extends LinePlotBase {
                         break;
                 }
             }
+            axis.setInverted(getAxis(axisId).inverted);
             if (getAxis(axisId).isAutoRange()) {
                 axis.setAutoRange(true);
                 ranges.remove(axisId);
