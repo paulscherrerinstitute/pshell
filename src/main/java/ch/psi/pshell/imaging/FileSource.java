@@ -14,8 +14,7 @@ import javax.imageio.ImageIO;
 public class FileSource extends SourceBase {
 
     final String url;
-    File file;
-    long lastModified;
+    volatile long lastModified;
 
     public FileSource(String name, String url) {
         super(name, new SourceConfig());
@@ -25,30 +24,37 @@ public class FileSource extends SourceBase {
     @Override
     public void doInitialize() throws IOException, InterruptedException {
         super.doInitialize();
-        lastModified = 0;
-        doUpdate();
-
+        rescan();
     }
+    
+    public void rescan() throws IOException, InterruptedException {
+        synchronized(url){
+            lastModified = 0;
+            doUpdate();
+        }
+    }    
 
     @Override
     protected void doUpdate() throws IOException, InterruptedException {
         //Try not to rescan unchanged local files
-        try {
-            File file = new File(url);
-            if ((file.exists()) && (file.isFile())) {
-                if (lastModified == file.lastModified()) {
-                    return;
+        synchronized(url){
+            try {
+                File file = new File(url);
+                if ((file.exists()) && (file.isFile())) {
+                    if (lastModified == file.lastModified()) {
+                        return;
+                    }
+                    lastModified = file.lastModified();
                 }
-                lastModified = file.lastModified();
+            } catch (Exception ex) {
             }
-        } catch (Exception ex) {
-        }
 
-        try (InputStream file = new BufferedInputStream(new FileInputStream(url))) {
-            BufferedImage img = ImageIO.read(file);
-            pushImage(img);
-        } catch (IOException ex) {
-            pushError(ex);
+            try (InputStream file = new BufferedInputStream(new FileInputStream(url))) {
+                BufferedImage img = ImageIO.read(file);
+                pushImage(img);
+            } catch (IOException ex) {
+                pushError(ex);
+            }
         }
     }
 
