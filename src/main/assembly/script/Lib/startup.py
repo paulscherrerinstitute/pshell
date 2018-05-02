@@ -10,7 +10,6 @@ import inspect
 import os.path
 from operator import add, mul, sub, truediv
 from time import sleep
-
 from array import array
 import jarray
 
@@ -20,11 +19,11 @@ import java.beans.PropertyChangeListener
 import java.util.concurrent.Callable
 import java.util.List
 import java.lang.reflect.Array
+import java.lang.Thread
 import java.awt.image.BufferedImage as BufferedImage    
 import java.awt.Color as Color
 import java.awt.Dimension as Dimension
 import java.awt.Font as Font
-
 import org.python.core.PyArray as PyArray
 
 import ch.psi.utils.Threading as Threading
@@ -106,14 +105,13 @@ import ch.psi.pshell.bs.Stream as Stream
 import ch.psi.pshell.scripting.ViewPreference as Preference
 import ch.psi.pshell.scripting.ScriptUtils as ScriptUtils
 
-
 def get_context():   
     return ch.psi.pshell.core.Context.getInstance()
+
 
 ###################################################################################################
 #Type conversion and checking
 ###################################################################################################
-
 
 def to_array(obj, type = 'o'):   
     """Convert Python list to Java array.
@@ -201,9 +199,11 @@ def is_list(obj):
 def is_string(obj):
     return (type(obj) is str) or (type(obj) is unicode)
 
+
 ###################################################################################################
 #Standard scan commands
 ###################################################################################################
+
 def on_before_scan_readout(scan, pos):
     try:
         if scan.before_read != None:
@@ -894,6 +894,7 @@ def hsearch(writables, readable, range_min, range_max, initial_step, resolution,
     scan.start()
     return scan.getResult()    
 
+
 ###################################################################################################
 #Data plotting
 ###################################################################################################
@@ -983,6 +984,7 @@ def get_plot_snapshots(title = None, file_type = "png", size = None, temp_path =
         p.saveSnapshot(file_name , file_type, size)
         ret.append(file_name)
     return ret
+
 
 ###################################################################################################
 #Data access functions
@@ -1238,6 +1240,7 @@ def get_exec_pars():
             aborted (bool): True if execution has been aborted
     """
     return get_context().getExecutionPars()
+
 
 ###################################################################################################
 #EPICS channel access
@@ -1519,10 +1522,11 @@ class Channel(java.beans.PropertyChangeListener, Writable, Readable):
     def read(self):        
         return self.get()
 
+
 ###################################################################################################
 #Concurrent execution 
 ###################################################################################################
-import java.lang.Thread
+
 class Callable(java.util.concurrent.Callable):
     def __init__(self, method, *args):
         self.method = method
@@ -1537,8 +1541,6 @@ class Callable(java.util.concurrent.Callable):
         finally:
             get_context().finishedChildThread(self.thread)
             
-
-
 def fork(*functions):
     """Start execution of functions in parallel. 
 
@@ -1586,6 +1588,7 @@ def parallelize(*functions):
 ###################################################################################################
 #Script evaluation and background task control.
 ###################################################################################################
+
 def run(script_name, args = None, locals = None):
     """Run script: can be absolute path, relative, or short name to be search in the path.
     Args:
@@ -1615,9 +1618,7 @@ def run(script_name, args = None, locals = None):
         else:
             execfile(script, globals(), locals)
         return _
-    #print >> sys.stderr, "Invalid script: " + str(script_name)
     raise IOError("Invalid script: " + str(script_name))
-
 
 def abort():
     """Abort the execution of ongoing task. It can be called from the script to quit.
@@ -1630,7 +1631,6 @@ def abort():
     """
     #Cannot be on script execution thread
     fork(get_context().abort)  
-
 
 def start_task(script, delay = 0.0, interval = -1):
     """Start a background task
@@ -1650,7 +1650,6 @@ def start_task(script, delay = 0.0, interval = -1):
     get_context().taskManager.create(script, delay_ms, interval_ms)
     get_context().taskManager.start(script)
 
-
 def stop_task(script, force = False):
     """Stop a background task
 
@@ -1663,7 +1662,6 @@ def stop_task(script, force = False):
     """      
     get_context().taskManager.remove(script, force)
 
-
 def set_return(value):
     """Sets the script return value. This value is returned by the "run" function.
 
@@ -1673,11 +1671,11 @@ def set_return(value):
     Returns:
         None
     """      
-    import java.lang.Thread
-    global __THREAD_EXEC_RESULT__
-    #In Jython, the output of last statement is not returned  when running a file so we have to use a return variable
+    #In Jython, the output of last statement is not returned  when running a file
     if __name__ == "__builtin__":
+        global __THREAD_EXEC_RESULT__
         if is_interpreter_thread():
+            global _
             _=value
         __THREAD_EXEC_RESULT__[java.lang.Thread.currentThread()]=value         #Used when running file
     else:
@@ -1685,11 +1683,20 @@ def set_return(value):
         caller = inspect.currentframe().f_back    
         if is_interpreter_thread():
             caller.f_globals["_"]=value
-        caller.f_globals["__THREAD_EXEC_RESULT__"][java.lang.Thread.currentThread()]=value        
+        if not "__THREAD_EXEC_RESULT__" in caller.f_globals.keys():
+            caller.f_globals["__THREAD_EXEC_RESULT__"] = {}
+        caller.f_globals["__THREAD_EXEC_RESULT__"][java.lang.Thread.currentThread()]=value   
     return value    #Used when parsing file  
 
+def get_return():
+    if __name__ == "__builtin__":
+        global __THREAD_EXEC_RESULT__
+        return __THREAD_EXEC_RESULT__[java.lang.Thread.currentThread()]
+    else:
+        caller = inspect.currentframe().f_back    
+        return caller.f_globals["__THREAD_EXEC_RESULT__"][java.lang.Thread.currentThread()]  
+
 def is_interpreter_thread():
-    import java.lang.Thread
     return java.lang.Thread.currentThread().name == "Interpreter Thread" 
 
 
@@ -1775,6 +1782,7 @@ def cleanup_repository():
 ###################################################################################################
 #Device Pool functions
 ###################################################################################################
+
 def get_device(device_name):
     """Returns a configured device (or imaging source) by its name. 
 
@@ -1900,9 +1908,11 @@ def create_averager(dev, count, interval=0.0, name = None,  monitored = False):
        av.monitored = True 
     return av
 
+
 ###################################################################################################
 #Standard libraries management
 ###################################################################################################
+
 if __name__ == "__builtin__":
     ca_channel_path=os.path.join(get_context().setup.getStandardLibraryPath(), "epics")
     sys.path.append(ca_channel_path)
@@ -1911,6 +1921,7 @@ if __name__ == "__builtin__":
         if sys.modules.has_key("_ca"):
             import _ca
             _ca.initialize()
+
 
 ###################################################################################################
 #Mathematical functions
@@ -2149,6 +2160,7 @@ def convex_hull(point_list=None, x=None, y=None):
 ###################################################################################################
 #Utilities
 ###################################################################################################
+
 def get_setting(name=None):
     """Get a persisted script setting value.
 
@@ -2209,8 +2221,7 @@ def exec_cpython(script_name, args = [], method_name = None, python_name = "pyth
     else:
         #Calling a method
         import json
-        import tempfile
-        import java.lang.Thread    
+        import tempfile  
         script = os.path.abspath(get_context().scriptManager.library.resolveFile(script_name))         
         with open(get_context().setup.getContextPath()+ "/Temp" + str(java.lang.Thread.currentThread().getId())+".py", "wb") as f:        
             f.write(("script = '" +script +"'\n").replace('\\', '\\\\'))
@@ -2400,7 +2411,6 @@ def help(object = None):
             if object.__doc__ != org.python.core.BuiltinDocs.object_doc:
                 print object.__doc__
 
-
 ###################################################################################################
 #UI interaction
 ###################################################################################################
@@ -2518,4 +2528,3 @@ def show_panel(device, title=None):
     if type(device) is str:
         device = get_device(device)
     return get_context().showPanel(device)
-
