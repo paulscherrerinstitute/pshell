@@ -1191,9 +1191,11 @@ public class View extends MainFrame {
     void updateProcessorTabTitle(Processor processor, int index) {
         if (processor.hasChanged()) {
             try {
-                tabDoc.setTitleAt(index, new File(processor.getFileName()).getName() + "*");
-                CloseButtonTabComponent tabComponent = (CloseButtonTabComponent) tabDoc.getTabComponentAt(index);
-                tabComponent.updateUI();
+                if (processor.getFileName()!=null){
+                    tabDoc.setTitleAt(index, new File(processor.getFileName()).getName() + "*");
+                    CloseButtonTabComponent tabComponent = (CloseButtonTabComponent) tabDoc.getTabComponentAt(index);
+                    tabComponent.updateUI();
+                }
             } catch (Exception ex) {
                 logger.log(Level.WARNING, null, ex);
             }
