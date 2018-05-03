@@ -1,7 +1,7 @@
 package ch.psi.pshell.device;
 
 /**
- * Entity class holding the configuration of ProcessVariable devices.
+ * Entity class holding the configuration of ReadonlyProcessVariable devices.
  */
 public class ReadonlyProcessVariableConfig extends RegisterConfig {
 

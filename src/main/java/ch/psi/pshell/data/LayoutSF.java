@@ -7,12 +7,14 @@ import ch.psi.pshell.core.InlineDevice;
 import ch.psi.pshell.device.ArrayCalibration;
 import ch.psi.pshell.device.Averager;
 import ch.psi.pshell.device.DescStatsDouble;
+import ch.psi.pshell.device.Device;
 import ch.psi.pshell.device.MatrixCalibration;
 import ch.psi.pshell.device.Readable;
 import ch.psi.pshell.device.Readable.ReadableArray;
 import ch.psi.pshell.device.Readable.ReadableCalibratedArray;
 import ch.psi.pshell.device.Readable.ReadableMatrix;
 import ch.psi.pshell.device.Readable.ReadableCalibratedMatrix;
+import ch.psi.pshell.device.ReadonlyProcessVariableConfig;
 import ch.psi.pshell.device.Writable;
 import ch.psi.pshell.device.Writable.WritableArray;
 import ch.psi.pshell.scan.AreaScan;
@@ -32,6 +34,7 @@ import ch.psi.pshell.scan.VectorScan;
 import ch.psi.pshell.ui.App;
 import ch.psi.utils.Arr;
 import ch.psi.utils.Chrono;
+import ch.psi.utils.Config;
 import ch.psi.utils.Convert;
 import ch.psi.utils.Sys;
 import ch.psi.utils.Str;
@@ -191,6 +194,13 @@ public class LayoutSF extends LayoutBase implements Layout {
                     val = arr;
                 }
                 dataManager.setDataset(ATTR_GROUP_EXPERIMENT + r.getName(), val);
+                if (r instanceof Device){
+                    Config c = ((Device)r).getConfig();
+                    if ((c!=null) && (c instanceof ReadonlyProcessVariableConfig)){
+                        String unit = String.valueOf(((ReadonlyProcessVariableConfig)c).unit);
+                        dataManager.setAttribute(ATTR_GROUP_EXPERIMENT + r.getName(), "Unit", unit);
+                    }
+                }
             } catch (InterruptedException ex) {
                 Thread.currentThread().interrupt();
             }
