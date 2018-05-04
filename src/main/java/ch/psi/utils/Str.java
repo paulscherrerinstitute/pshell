@@ -20,6 +20,18 @@ public class Str {
     public static String trimRight(String str) {
         return str.replaceAll("\\s+$", "");
     }
+    
+    public static String replaceLast(String str, String token,String replacement) {
+        int index = str.lastIndexOf(token);
+        if (index<0){
+            return str;
+        }
+        StringBuilder sb = new StringBuilder();
+        sb.append(str.substring(0, index));
+        sb.append(replacement);
+        sb.append(str.substring(index + token.length()));
+        return sb.toString();
+    }
 
     public static String removeMultipleSpaces(String str) {
         return str.replaceAll("\\s+", " ");

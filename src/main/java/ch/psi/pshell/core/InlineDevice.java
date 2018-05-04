@@ -20,6 +20,7 @@ import ch.psi.pshell.device.Writable;
 import ch.psi.pshell.epics.Epics;
 import ch.psi.pshell.epics.EpicsRegister;
 import ch.psi.pshell.epics.InvalidValueAction;
+import ch.psi.utils.Str;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -152,27 +153,27 @@ public class InlineDevice extends DeviceBase implements Readable, Writable {
         }
         return device;
     }
-    
-    public static String getChannelName(Object device){
 
-        if ((device!=null) && (device instanceof Cacheable.CacheReadable)) {      
+    public static String getChannelName(Object device) {
+
+        if ((device != null) && (device instanceof Cacheable.CacheReadable)) {
             Cacheable parent = ((Cacheable.CacheReadable) device).getParent();
-            if ((parent!=null) && (parent instanceof Device)){
+            if ((parent != null) && (parent instanceof Device)) {
                 device = (Device) parent;
-            }   
+            }
         }
-        if ((device!=null) && (device instanceof Device)){
-            device  = getSourceDevice((Device) device);
+        if ((device != null) && (device instanceof Device)) {
+            device = getSourceDevice((Device) device);
             try {
-                return (String)device.getClass().getMethod("getChannelName").invoke(device);
+                return (String) device.getClass().getMethod("getChannelName").invoke(device);
             } catch (Exception ex) {
-            }     
+            }
             try {
-                return (String)device.getClass().getMethod("getChannelName").invoke(device);
+                return (String) device.getClass().getMethod("getChannelName").invoke(device);
             } catch (Exception ex) {
-            }                 
+            }
         }
-        return null;        
+        return null;
     }
 
     public Device getDevice() {
@@ -246,12 +247,12 @@ public class InlineDevice extends DeviceBase implements Readable, Writable {
                 }
                 if (pars.containsKey("invalid")) {
                     try {
-                        if (Boolean.valueOf(pars.get("invalid"))){
+                        if (Boolean.valueOf(pars.get("invalid"))) {
                             invalidValueAction = InvalidValueAction.None;
                         }
                     } catch (Exception ex) {
                     }
-                }                
+                }
 
                 ret = Epics.newChannelDevice(name, id, type, timestamped, precision, size, invalidValueAction);
                 boolean blocking = true;
@@ -327,7 +328,12 @@ public class InlineDevice extends DeviceBase implements Readable, Writable {
                 }
                 break;
             case "cs":
-                String url = id;
+                String url = id.trim();
+                //If configured as in stripchart translate it 
+                if ((pars.get("channel") == null) && (url.contains(" "))) {
+                    pars.put("channel",url.substring(url.lastIndexOf(" ") + 1));
+                    url = Str.replaceLast(url, " ", "?channel=");
+                }               
                 if (!url.startsWith("tcp://")) {
                     String instanceName = url.substring(url.lastIndexOf("/") + 1);
                     url = url.substring(0, url.lastIndexOf("/"));
@@ -337,6 +343,10 @@ public class InlineDevice extends DeviceBase implements Readable, Writable {
                         url = server.getStream(instanceName);
                     } finally {
                         server.close();
+                    }
+                } else {
+                    if (url.contains("?")){
+                        url = url.substring(0, url.lastIndexOf("?"));
                     }
                 }
                 String channel = pars.get("channel");
