@@ -346,7 +346,8 @@ public class PluginManager implements AutoCloseable {
             }
             if (compiler.run(null, System.out, System.err, file.getPath()) == 0) {
                 // Load and instantiate compiled class.
-                URLClassLoader classLoader = URLClassLoader.newInstance(new URL[]{file.getParentFile().toURI().toURL()});
+                File location = (file.getParentFile() == null) ? new File(".") : file.getParentFile();
+                URLClassLoader classLoader = URLClassLoader.newInstance(new URL[]{location.toURI().toURL()});
                 cls = Class.forName(IO.getPrefix(file), true, classLoader);
             } else {
                 throw new Exception("Error compiling plugin: " + file);
