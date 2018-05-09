@@ -991,7 +991,6 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
             }
 
             injections.put("run_count", runCount);
-            String[] libraryPath = setup.getLibraryPath();
 
             interpreterExecutor = Executors.newSingleThreadExecutor((Runnable runnable) -> {
                 interpreterThread = new Thread(Thread.currentThread().getThreadGroup(), runnable, "Interpreter Thread");

@@ -188,6 +188,9 @@ public class LayoutSF extends LayoutBase implements Layout {
         for (Readable r : getExperimentArguments()) {
             try {
                 Object val = r.read();
+                if (val == null){
+                    throw new Exception("Null value [" + r.getName()+ "]");
+                }
                 if (!val.getClass().isArray()) {
                     Object arr = Array.newInstance(val.getClass(), 1);
                     Array.set(arr, 0, val);
@@ -203,6 +206,10 @@ public class LayoutSF extends LayoutBase implements Layout {
                 }
             } catch (InterruptedException ex) {
                 Thread.currentThread().interrupt();
+            } catch (Exception ex) {
+                String msg = "Exception reading " + r.getName() + ": " + ex.getMessage();
+                dataManager.appendLog(msg);
+                Logger.getLogger(LayoutSF.class.getName()).log(Level.WARNING, msg, ex);
             }
         }
     }
@@ -380,7 +387,7 @@ public class LayoutSF extends LayoutBase implements Layout {
                     double[] stdev = (double[]) getDataManager().getData(getMetaPath(scan, name) + DEVICE_STDEV_DATASET).sliceData;
                     getDataManager().setAttribute(getDataPath(scan, name) + ATTR_DATASET_VALUE, ATTR_ERROR_VECTOR, stdev);
                 } catch (Exception ex) {
-                    Logger.getLogger(LayoutDefault.class.getName()).log(Level.WARNING, null, ex);
+                    Logger.getLogger(LayoutSF.class.getName()).log(Level.WARNING, null, ex);
                 }
             }
         }
