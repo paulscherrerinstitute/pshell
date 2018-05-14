@@ -580,15 +580,15 @@ public class Stream extends DeviceBase implements Readable<StreamValue>, Cacheab
         return getCurrentValue().getValue(index);
     }
 
-    public static List readChannels(List<String> names) throws IOException, InterruptedException {
+    public static List readChannels(List<String> names, int modulo, int offset, int timeout) throws IOException, InterruptedException {
         Stream stream = new Stream(null);
         try {
             for (String name : names) {
-                stream.addScalar(name, name, 1, 0);
+                stream.addScalar(name, name, modulo, offset);
             }
             stream.initialize();
             stream.start();
-            stream.waitValueNot(null, 5000);
+            stream.waitValueNot(null, timeout);
             return stream.getValues();
         } finally {
             stream.close();

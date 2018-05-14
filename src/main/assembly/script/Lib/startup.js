@@ -2071,17 +2071,23 @@ function string_to_obj(o) {
     return o
 }
 
-function bsget(channel){
+function bsget(channel, modulo, offset, timeout){
     /* Reads an values a bsread stream, using the default provider.
 
     Args:
         channel(str or  list of str): channel name(s)
+        module(int, optional): stream modulo
+        offset(int, optional): stream offset
+        timeout(float, optional): stream timeout in secs
     Returns:
         BS value or list of  values
     
     */
+    if (!is_defined(modulo))    modulo = 1
+    if (!is_defined(offset))    offset = 0
+    if (!is_defined(timeout))    timeout=5.0
     var channels = (typeof channel === 'string')? [channel]: channel
-    var ret = Stream.readChannels(channels)
+    var ret = Stream.readChannels(channels, modulo, offset, timeout*1000)
     if (typeof channel === 'string') {
         return ret[0]
     }

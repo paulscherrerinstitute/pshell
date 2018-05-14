@@ -687,8 +687,6 @@ def hscan(config, writable, readables, start, end, steps, passes=1, zigzag=False
             on_after_scan_pass(self, num_pass)
                
     readables=to_list(string_to_obj(readables))
-    #TODO: Calling through abstract would enForce the constructor signature, but is not working
-    #scan = ch.psi.pshell.scan.HardwareScan.newScan(HardwareScan, config, writable,readables, start, end , steps, passes, zigzag)    
     scan = HardwareScan(config, writable,readables, start, end , steps, int(passes), zigzag)        
     processScanPars(scan, pars)
     scan.start()
@@ -954,7 +952,6 @@ def get_plots(title=None):
         ArrayList of Plot objects.
 
     """
-
     return get_context().getPlots(title)
 
 def get_plot_snapshots(title = None, file_type = "png", size = None, temp_path = get_context().setup.getContextPath()):
@@ -1125,7 +1122,6 @@ def append_table(path, data):
         None
 
     """    
-    #data = to_array(data)
     if is_list(data):
         arr = java.lang.reflect.Array.newInstance(Class.forName("java.lang.Object"),len(data))
         for i in range (len(data)):
@@ -1217,7 +1213,6 @@ def set_exec_pars(**args):
     """
     get_context().setExecutionPars(args)
 
-#TODO: Change return to dictionary
 def get_exec_pars():
     """ Returns script execution parameters.
 
@@ -2244,18 +2239,21 @@ print (json.dumps(function(*args)))
         jsonret = ret[ret.rfind('\n')+1:].strip()  
         return json.loads(jsonret)
     
-def bsget(channel):
+def bsget(channel, modulo=1, offset=0, timeout = 5.0):
     """Reads an values a bsread stream, using the default provider.
 
     Args:
         channel(str or  list of str): channel name(s)
+        module(int, optional): stream modulo
+        offset(int, optional): stream offset
+        timeout(float, optional): stream timeout in secs
     Returns:
         BS value or list of  values
     
     """
     channels = to_list(channel)
-    ret = Stream.readChannels(channels)
-    if type(channel) is str:
+    ret = Stream.readChannels(channels, modulo, offset, int(timeout * 1000))
+    if is_string(channel):
         return ret[0]
     return ret
             
@@ -2275,7 +2273,6 @@ def flatten(data):
     import itertools
     return itertools.chain(*data)
 
-#Float range -> Useful for scanning is a range
 def frange_gen(start, finish, step):
     while ((step >= 0.0) and (start <= finish)) or ((step < 0.0) and (start >= finish)):
       yield start
@@ -2366,7 +2363,7 @@ def _getBuiltinFunctionNames(filter = None):
     return to_array(ret)
 
 def _getFunctionDoc(function):      
-    if type(function) is str:
+    if is_string(function):
         if function not in globals():
             return
         function = globals()[function]
@@ -2525,6 +2522,6 @@ def show_panel(device, title=None):
     if type(device) is BufferedImage:
         device = DirectSource(title, device)
         device.initialize()
-    if type(device) is str:
+    if is_string(device):
         device = get_device(device)
     return get_context().showPanel(device)
