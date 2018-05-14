@@ -155,8 +155,16 @@ public class App extends ObservableBase<AppListener> {
         sb.append("\n\t-nlaf\tUse Nimbus look and feel (cross platform)");
         sb.append("\n\t-dlaf\tUse a dark look and feel (cross platform)");
         sb.append("\n\t-args=...\tProvide arguments to interpreter");
-        sb.append("\n\t-f=<..>\tRuns a file instead of entering interactive shell (together with -c option)");
-        sb.append("\n\t-p=<..>\tLoads a plugin");
+        sb.append("\n\t-f=<..>\tRun a file instead of entering interactive shell (together with -c option)");
+        sb.append("\n\t-p=<..>\tLoad a plugin");
+        
+        if (isStripChart()){
+            sb.append("\n\nStrip Chart arguments:");
+            sb.append("\n\t-f=<..>\tOpen a Strip Chart configuration file (.scd)");
+            sb.append("\n\t-config=<..>\tLoad a JSON configuration string (same format as in .scd file)");
+            sb.append("\n\t-start\tStart the data displaying immediately");
+        } 
+        sb.append("\n");
         return sb.toString();
     }
 
@@ -249,6 +257,10 @@ public class App extends ObservableBase<AppListener> {
 
     static public boolean isAutoClose() {
         return App.hasArgument("a");
+    }
+    
+    static public boolean isStripChart() {
+        return hasArgument("strp");
     }
 
     static public File getFileArg() {
@@ -705,7 +717,7 @@ public class App extends ObservableBase<AppListener> {
             if (isConsole()) {
                 startStandaloneShell();
                 logger.log(Level.INFO, "Create shell");
-            } else if (hasArgument("strp")) {
+            } else if (isStripChart()) {
                 StripChart.create(getFileArg(), getArgumentValue("config"), getStripChartFolderArg(), hasArgument("start"));
             } else {
                 if (isDual()) {
