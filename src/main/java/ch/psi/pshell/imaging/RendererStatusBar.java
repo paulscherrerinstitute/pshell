@@ -1,11 +1,18 @@
 package ch.psi.pshell.imaging;
 
 import ch.psi.utils.swing.MonitoredPanel;
+import ch.psi.utils.swing.SwingUtils;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Point;
 import java.awt.event.ActionEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import javax.swing.JPopupMenu;
+import javax.swing.JRadioButtonMenuItem;
 import javax.swing.Timer;
+import javax.swing.event.PopupMenuEvent;
+import javax.swing.event.PopupMenuListener;
 
 /**
  *
@@ -15,6 +22,7 @@ public class RendererStatusBar extends MonitoredPanel {
     double frameRate;
     Timer timerFrameRate;
     final Renderer renderer;
+    final JPopupMenu popupMenuUnits;
 
     /**
      */
@@ -29,7 +37,73 @@ public class RendererStatusBar extends MonitoredPanel {
         labelDim.setFont(font);
         labelType.setFont(font);
         labelFps.setFont(font);
+        popupMenuUnits = new JPopupMenu();
+        JRadioButtonMenuItem menuPixels = new JRadioButtonMenuItem(Units.Pixels.toString());
+        JRadioButtonMenuItem menuUnits = new JRadioButtonMenuItem(Units.Units.toString());
+        popupMenuUnits.add(menuPixels);
+        popupMenuUnits.add(menuUnits);
+        menuPixels.addActionListener((ev) -> {
+            setUnits(Units.Pixels);
+        });
+        menuUnits.addActionListener((ev) -> {
+            setUnits(Units.Units);
+        });
 
+        popupMenuUnits.addPopupMenuListener(new PopupMenuListener() {
+            @Override
+            public void popupMenuWillBecomeVisible(PopupMenuEvent e) {
+                menuPixels.setSelected(units == Units.Pixels);
+                menuUnits.setSelected(!menuPixels.isSelected());
+            }
+
+            @Override
+            public void popupMenuWillBecomeInvisible(PopupMenuEvent e) {
+            }
+
+            @Override
+            public void popupMenuCanceled(PopupMenuEvent e) {
+            }
+        });
+
+        MouseAdapter mouseAdapter = new MouseAdapter() {
+            @Override
+            public void mousePressed(MouseEvent e) {
+                checkPopup(e);
+            }
+
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                checkPopup(e);
+            }
+
+            void checkPopup(MouseEvent e) {
+                try {
+                    if (e.isPopupTrigger()) {
+                        popupMenuUnits.show(e.getComponent(), e.getX(), e.getY());
+                    }
+                } catch (Exception ex) {
+                    SwingUtils.showException(RendererStatusBar.this, ex);
+                }
+            }
+
+        };
+        labelX.addMouseListener(mouseAdapter);
+        labelY.addMouseListener(mouseAdapter);
+    }
+
+    public enum Units {
+        Pixels,
+        Units
+    }
+
+    Units units = Units.Units;
+
+    public void setUnits(Units units) {
+        this.units = units;
+    }
+
+    public Units getUnits() {
+        return units;
     }
 
     boolean showFrameRate = true;
@@ -77,8 +151,8 @@ public class RendererStatusBar extends MonitoredPanel {
                 x = Math.min(x, size.width - 1);
                 y = Math.min(y, size.height - 1);
                 if ((x >= 0) && (y >= 0)) {
-                    xStr = "x=" + data.getXStr(x, renderer.getCalibration());
-                    yStr = "y=" + data.getYStr(y, renderer.getCalibration());
+                    xStr = "x=" + data.getXStr(x, (getUnits() == Units.Pixels) ? null : renderer.getCalibration());
+                    yStr = "y=" + data.getYStr(y, (getUnits() == Units.Pixels) ? null : renderer.getCalibration());
                     zStr = "z=" + data.getElementStr(y, x, true);
                 }
             }
@@ -118,76 +192,6 @@ public class RendererStatusBar extends MonitoredPanel {
         }
     }
 
-    //Old implementation based on JLabel
-    /* 
-    class StatusBar extends JLabel {
-
-        double frameRate;
-        Timer timerFrameRate;
-
-        StatusBar() {
-            super(" ");
-            setFont(SwingUtils.hasFont("Lucida Console")
-                    ? new Font("Lucida Console", 0, 11)
-                    : new Font(Font.MONOSPACED, 0, 11));
-        }
-
-        boolean showFrameRate = true;
-
-        public void setShowFrameRate(boolean value) {
-            showFrameRate = value;
-        }
-
-        public boolean getShowFrameRate() {
-            return showFrameRate;
-        }
-
-        @Override
-        public void setVisible(boolean value) {
-            super.setVisible(value);
-            if (timerFrameRate != null) {
-                timerFrameRate.stop();
-                timerFrameRate = null;
-            }
-            if (value && showFrameRate) {
-                timerFrameRate = new Timer(1000, (ActionEvent e) -> {
-                    frameRate = getFrameRate();
-                    update();
-                });
-                timerFrameRate.setInitialDelay(0);
-                timerFrameRate.start();
-            }
-        }
-
-        void update() {
-            if (isVisible()) {
-                Data data = getData();
-                if (data == null) {
-                    setText(" ");
-                } else {
-                    int x = (currentMouseLocation == null) ? 0 : currentMouseLocation.x;
-                    int y = (currentMouseLocation == null) ? 0 : currentMouseLocation.y;
-                    Dimension size = data.getSize(true);
-                    x /= getScaleX();
-                    y /= getScaleY();
-                    String xStr = "", yStr = "", zStr = "";
-                    x = Math.min(x, size.width - 1);
-                    y = Math.min(y, size.height - 1);
-                    if ((x >= 0) && (y >= 0)) {
-                        xStr = data.getXStr(x, getCalibration());
-                        yStr = data.getYStr(y, getCalibration());
-                        zStr = data.getElementStr(y, x, true);
-                    }
-                    setText(String.format("  x=%-6.6s y=%-6.6s z=%-18.18s %dx%dx%d (%s%s)%s", xStr, yStr, zStr,
-                            size.width, size.height, data.getDepth(), data.isUnsigned() ? "unsigned " : "",
-                            data.getType().getSimpleName(),
-                            showFrameRate ? String.format("       %1.2ffps", frameRate) : ""));                    
-
-                }
-            }
-        }
-    }
-     */
     /**
      * This method is called from within the constructor to initialize the form. WARNING: Do NOT
      * modify this code. The content of this method is always regenerated by the Form Editor.
