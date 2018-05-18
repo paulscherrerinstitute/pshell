@@ -308,13 +308,12 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
         if (instance == null) {
             instance = new Context();
             instance.pluginManager.loadExtensionsFolder();
-        }
-
-        //To provide services even if context does not initialize all right (and in disabled mode).                
-        try {
-            instance.dataManager.initialize();
-        } catch (Throwable ex) {
-            logger.log(Level.SEVERE, null, ex);
+            //To provide services even if context does not initialize all right (and in disabled mode).                
+            try {
+                instance.dataManager.initialize();
+            } catch (Throwable ex) {
+                logger.log(Level.SEVERE, null, ex);
+            }            
         }
 
         return instance;
