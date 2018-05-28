@@ -1674,8 +1674,7 @@ def set_return(value):
         __THREAD_EXEC_RESULT__[java.lang.Thread.currentThread()]=value         #Used when running file
     else:
         #if startup is imported, cannot set global
-        import inspect
-        caller = inspect.currentframe().f_back
+        caller = _get_caller()
         if is_interpreter_thread():
             caller.f_globals["_"]=value
         if not "__THREAD_EXEC_RESULT__" in caller.f_globals.keys():
@@ -1688,9 +1687,7 @@ def get_return():
         global __THREAD_EXEC_RESULT__
         return __THREAD_EXEC_RESULT__[java.lang.Thread.currentThread()]
     else:
-        import inspect
-        caller = inspect.currentframe().f_back
-        return caller.f_globals["__THREAD_EXEC_RESULT__"][java.lang.Thread.currentThread()]
+        return _get_caller().f_globals["__THREAD_EXEC_RESULT__"][java.lang.Thread.currentThread()]
 
 def is_interpreter_thread():
     return java.lang.Thread.currentThread().name == "Interpreter Thread"
@@ -2303,6 +2300,9 @@ def frange(start, finish, step, enforce_finish = False, inclusive_finish = False
                 ret.append(finish)
     return ret
 
+def _get_caller():
+    return sys._getframe(1).f_back if hasattr(sys, "_getframe") else None
+    
 def inject():
     """Restore initial globals: re-inject devices and startup variables to the interpreter.
 
@@ -2316,9 +2316,7 @@ def inject():
     if __name__ == "__builtin__":
         get_context().injectVars()
     else:
-        import inspect
-        caller = inspect.currentframe().f_back
-        caller.f_globals.update(get_context().scriptManager.injections)
+        _get_caller().f_globals.update(get_context().scriptManager.injections)
 
 def notify(subject, text, attachments = None, to=None):
     """Send email message.
@@ -2370,8 +2368,6 @@ def _getFunctionDoc(function):
             return
         function = globals()[function]
     if type(function) is PyFunction and '__doc__' in dir(function):
-        # TODO: This is more compact but inspect is very slow to load
-        #(args,varargs, keywords, defs) = inspect.getargspec(function)
         ac = function.func_code.co_argcount
         var = function.func_code.co_varnames
         args = list(var)[:ac]
