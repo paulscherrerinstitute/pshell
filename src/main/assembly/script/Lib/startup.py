@@ -107,7 +107,6 @@ import ch.psi.pshell.scripting.ScriptUtils as ScriptUtils
 def get_context():
     return ch.psi.pshell.core.Context.getInstance()
 
-
 ###################################################################################################
 #Type conversion and checking
 ###################################################################################################
@@ -2301,6 +2300,7 @@ def frange(start, finish, step, enforce_finish = False, inclusive_finish = False
     return ret
 
 def _get_caller():
+    #Not doing inspect.currentframe().f_back because inspect is slow to load
     return sys._getframe(1).f_back if hasattr(sys, "_getframe") else None
     
 def inject():
