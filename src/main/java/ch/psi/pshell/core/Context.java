@@ -2902,29 +2902,46 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
         return evalLine(getPublicCommandSource(), line);
     }
 
-    public Object evalLineBackground(String line) throws ScriptException, IOException, ContextStateException, InterruptedException {
-        return evalLineBackground(getPublicCommandSource(), line);
-    }
-
     public CompletableFuture<?> evalLineAsync(final String line) throws ContextStateException {
         return evalLineAsync(getPublicCommandSource(), line);
     }
-
-    public CompletableFuture<?> evalFileAsync(final String fileName) throws ContextStateException {
-        return evalFileAsync(getPublicCommandSource(), fileName);
-    }
-
-    public CompletableFuture<?> evalFileAsync(String fileName, Object args) throws Context.ContextStateException {
-        return evalFileAsync(getPublicCommandSource(), fileName, args);
-    }
-
+    
+    public Object evalLineBackground(String line) throws ScriptException, IOException, ContextStateException, InterruptedException {
+        return evalLineBackground(getPublicCommandSource(), line);
+    }    
+    
     public CompletableFuture<?> evalLineBackgroundAsync(final String line) {
         return evalLineBackgroundAsync(getPublicCommandSource(), line);
-    }
+    }    
 
     public Object evalFile(String fileName, Object args) throws ScriptException, IOException, ContextStateException, InterruptedException {
         return evalFile(getPublicCommandSource(), fileName, args);
     }
+    
+    public CompletableFuture<?> evalFileAsync(final String fileName) throws ContextStateException {
+        return evalFileAsync(getPublicCommandSource(), fileName);
+    }
+
+    
+    public CompletableFuture<?> evalFileAsync(String fileName, Object args) throws Context.ContextStateException {
+        return evalFileAsync(getPublicCommandSource(), fileName, args);
+    }   
+    
+    public Object evalFileBackground(final String fileName) throws ScriptException, IOException, ContextStateException, InterruptedException {
+        return evalFileBackground(getPublicCommandSource(), fileName);
+    }
+
+    public Object evalFileBackground(final String fileName, final Object args) throws ScriptException, IOException, ContextStateException, InterruptedException {
+        return evalFileBackground(getPublicCommandSource(), fileName, args);
+    }
+
+    public CompletableFuture<?> evalFileBackgroundAsync(final String fileName) {
+       return evalFileBackgroundAsync(getPublicCommandSource(), fileName);
+    }
+
+    public CompletableFuture<?> evalFileBackgroundAsync(final String fileName, final Object args) {
+        return evalFileBackgroundAsync(getPublicCommandSource(), fileName, args);
+    }   
 
     public Object evalStatement(Statement statement) throws ScriptException, IOException, ContextStateException, InterruptedException {
         return evalStatement(getPublicCommandSource(), statement);
