@@ -65,7 +65,11 @@ public class JythonUtils {
         }
     }
 
-    static String getFunctionSignature(PyObject f, boolean includeJavaMethods) {
+    public static String getFunctionSignature(PyObject f) {
+        return getFunctionSignature(f, false);
+    }
+    
+    public static String getFunctionSignature(PyObject f, boolean includeJavaMethods) {
         if (f != null) {
             String name = null;
             List<String> pars = new ArrayList();
