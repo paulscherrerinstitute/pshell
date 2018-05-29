@@ -1508,7 +1508,7 @@ public class View extends MainFrame {
         return preferences;
     }
 
-    void restorePreferences() {
+    public void restorePreferences() {
         preferences = Preferences.load(context.getSetup().getContextPath());
         applyPreferences();
         if (App.getInstance().isContextPersisted()) {
@@ -1522,7 +1522,7 @@ public class View extends MainFrame {
         }
     }
 
-    void applyPreferences() {
+    public void applyPreferences() {
         shell.setTextPaneFont(preferences.fontShellPanel);
         shell.setTextInputFont(preferences.fontShellCommand);
         shell.setPropagateVariableEvaluation(!preferences.noVariableEvaluationPropagation);
