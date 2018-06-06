@@ -87,18 +87,18 @@ public class LayoutSF extends LayoutBase implements Layout {
     public static final String ATTR_DATASET_RECORDS = ATTR_GROUP_METHOD + "records";
     public static final String ATTR_DATASET_DIMENSIONS = ATTR_GROUP_METHOD + "dimensions";
     public static final String ATTR_DATASET_BACKGROND = ATTR_GROUP_METHOD + "background";
+    public static final String ATTR_DEVICE_CHANNEL = "channel";    
 
-    public static final String ATTR_DATASET_READBACK = "readback";
-    public static final String ATTR_DATASET_SETPOINT = "setpoint";
-    public static final String ATTR_DATASET_VALUE = "value";
-    public static final String ATTR_DATASET_TIMESTAMP = "timestamp";
-    public static final String ATTR_DATASET_PID = "pid";
-    public static final String ATTR_DATASET_GLOBAL_TIMESTAMP = "global_timestamp";
+    public static final String DATASET_READBACK = "readback";
+    public static final String DATASET_SETPOINT = "setpoint";
+    public static final String DATASET_VALUE = "value";
+    public static final String DATASET_TIMESTAMP = "timestamp";
+    public static final String DATASET_PID = "pid";
+    public static final String DATASET_GLOBAL_TIMESTAMP = "global_timestamp";
+    public static final String DATASET_MIN = "min";
+    public static final String DATASET_MAX = "max";
+    public static final String DATASET_STDEV = "stdev";
 
-    public static final String DEVICE_MIN_DATASET = "min";
-    public static final String DEVICE_MAX_DATASET = "max";
-    public static final String DEVICE_STDEV_DATASET = "stdev";
-    public static final String DEVICE_CHANNEL = "channel";
 
     public static final String METHOD_LSCAN = "Line Scan";
     public static final String METHOD_ASCAN = "Multidimentional Scan";
@@ -265,24 +265,23 @@ public class LayoutSF extends LayoutBase implements Layout {
         dataManager.setDataset(group + ATTR_DATASET_STOP, scan.getEnd());
         dataManager.setDataset(group + ATTR_DATASET_RECORDS, new int[]{scan.getNumberOfRecords()});
         dataManager.setDataset(group + ATTR_DATASET_DIMENSIONS, new int[]{scan.getDimensions()});
-
         for (Writable writable : scan.getWritables()) {
             String name = dataManager.getAlias(writable);
             String groupDev = getDataPath(scan, name);
             dataManager.createGroup(groupDev);
             if (writable instanceof WritableArray) {
-                dataManager.createDataset(groupDev + ATTR_DATASET_READBACK, Double.class, new int[]{0, ((WritableArray) writable).getSize()});
+                dataManager.createDataset(groupDev + DATASET_READBACK, Double.class, new int[]{0, ((WritableArray) writable).getSize()});
             } else {
-                dataManager.createDataset(groupDev + ATTR_DATASET_READBACK, Double.class, new int[]{0});
+                dataManager.createDataset(groupDev + DATASET_READBACK, Double.class, new int[]{0});
             }
             if (writable instanceof WritableArray) {
-                dataManager.createDataset(groupDev + ATTR_DATASET_SETPOINT, Double.class, new int[]{0, ((WritableArray) writable).getSize()});
+                dataManager.createDataset(groupDev + DATASET_SETPOINT, Double.class, new int[]{0, ((WritableArray) writable).getSize()});
             } else {
-                dataManager.createDataset(groupDev + ATTR_DATASET_SETPOINT, Double.class, new int[]{0});
+                dataManager.createDataset(groupDev + DATASET_SETPOINT, Double.class, new int[]{0});
             }
             String channel = InlineDevice.getChannelName(writable);
             if (channel!=null){
-                dataManager.setAttribute(groupDev, DEVICE_CHANNEL, channel);
+                dataManager.setAttribute(groupDev, ATTR_DEVICE_CHANNEL, channel);
             }        
         }
 
@@ -290,7 +289,7 @@ public class LayoutSF extends LayoutBase implements Layout {
             String name = dataManager.getAlias(readable);
             String groupDev = getDataPath(scan, name);
             if (readable instanceof ReadableMatrix) {
-                dataManager.createDataset(groupDev + ATTR_DATASET_VALUE, getDeviceType(readable), dataManager.getReadableMatrixDimension((ReadableMatrix) readable));
+                dataManager.createDataset(groupDev + DATASET_VALUE, getDeviceType(readable), dataManager.getReadableMatrixDimension((ReadableMatrix) readable));
                 if (readable instanceof ReadableCalibratedMatrix) {
                     MatrixCalibration cal = ((ReadableCalibratedMatrix) readable).getCalibration();
                     if (cal != null) {
@@ -300,7 +299,7 @@ public class LayoutSF extends LayoutBase implements Layout {
                     }
                 }
             } else if (readable instanceof ReadableArray) {
-                dataManager.createDataset(groupDev + ATTR_DATASET_VALUE, getDeviceType(readable), new int[]{0, ((ReadableArray) readable).getSize()});
+                dataManager.createDataset(groupDev + DATASET_VALUE, getDeviceType(readable), new int[]{0, ((ReadableArray) readable).getSize()});
                 if (readable instanceof ReadableCalibratedArray) {
                     ArrayCalibration cal = ((ReadableCalibratedArray) readable).getCalibration();
                     if (cal != null) {
@@ -310,24 +309,24 @@ public class LayoutSF extends LayoutBase implements Layout {
                     }
                 }
             } else {
-                dataManager.createDataset(groupDev + ATTR_DATASET_VALUE, getDeviceType(readable), new int[]{0});
+                dataManager.createDataset(groupDev + DATASET_VALUE, getDeviceType(readable), new int[]{0});
                 if (Averager.isAverager(readable)) {
-                    dataManager.createDataset(getMetaPath(scan, name) + DEVICE_MIN_DATASET, Double.class, new int[]{0});
-                    dataManager.createDataset(getMetaPath(scan, name) + DEVICE_MAX_DATASET, Double.class, new int[]{0});
-                    dataManager.createDataset(getMetaPath(scan, name) + DEVICE_STDEV_DATASET, Double.class, new int[]{0});
+                    dataManager.createDataset(groupDev + DATASET_MIN, Double.class, new int[]{0});
+                    dataManager.createDataset(groupDev + DATASET_MAX, Double.class, new int[]{0});
+                    dataManager.createDataset(groupDev + DATASET_STDEV, Double.class, new int[]{0});
                 }
             }
             String channel = InlineDevice.getChannelName(readable);
             if (channel!=null){
-                dataManager.setAttribute(groupDev, DEVICE_CHANNEL, channel);
+                dataManager.setAttribute(groupDev, ATTR_DEVICE_CHANNEL, channel);
             }   
             
-            dataManager.createDataset(groupDev + ATTR_DATASET_TIMESTAMP, Long.class, new int[]{0});
+            dataManager.createDataset(groupDev + DATASET_TIMESTAMP, Long.class, new int[]{0});
         }
-        dataManager.createDataset(group + ATTR_DATASET_TIMESTAMP, Long.class, new int[]{0});
+        dataManager.createDataset(group + DATASET_TIMESTAMP, Long.class, new int[]{0});
         if (stream != null) {
-            dataManager.createDataset(group + ATTR_DATASET_PID, Long.class, new int[]{0});
-            dataManager.createDataset(group + ATTR_DATASET_GLOBAL_TIMESTAMP, Long.class, new int[]{0});
+            dataManager.createDataset(group + DATASET_PID, Long.class, new int[]{0});
+            dataManager.createDataset(group + DATASET_GLOBAL_TIMESTAMP, Long.class, new int[]{0});
         }
 
         setStartTimestampAttibute(scan);
@@ -344,14 +343,14 @@ public class LayoutSF extends LayoutBase implements Layout {
         int deviceIndex = 0;
 
         if (stream != null) {
-            dataManager.setItem(group + ATTR_DATASET_PID, record.getId(), index);
-            dataManager.setItem(group + ATTR_DATASET_GLOBAL_TIMESTAMP, record.getRemoteTimestamp(), index);
+            dataManager.setItem(group + DATASET_PID, record.getId(), index);
+            dataManager.setItem(group + DATASET_GLOBAL_TIMESTAMP, record.getRemoteTimestamp(), index);
         }
 
         for (Writable writable : scan.getWritables()) {
             String path = getDataPath(scan, dataManager.getAlias(writable));
-            dataManager.setItem(path + ATTR_DATASET_SETPOINT, record.getSetpoints()[deviceIndex], index);
-            dataManager.setItem(path + ATTR_DATASET_READBACK, positions[deviceIndex++], index);
+            dataManager.setItem(path + DATASET_SETPOINT, record.getSetpoints()[deviceIndex], index);
+            dataManager.setItem(path + DATASET_READBACK, positions[deviceIndex++], index);
         }
         deviceIndex = 0;
         for (ch.psi.pshell.device.Readable readable : scan.getReadables()) {
@@ -364,17 +363,17 @@ public class LayoutSF extends LayoutBase implements Layout {
                     value = Convert.toDouble(value);
                 }
             }
-            dataManager.setItem(path + ATTR_DATASET_VALUE, value, index);
+            dataManager.setItem(path + DATASET_VALUE, value, index);
             if (Averager.isAverager(readable)) {
                 DescStatsDouble v = (DescStatsDouble) value;
-                dataManager.setItem(getMetaPath(scan, name) + DEVICE_MIN_DATASET, (v == null) ? null : v.getMin(), index);
-                dataManager.setItem(getMetaPath(scan, name) + DEVICE_MAX_DATASET, (v == null) ? null : v.getMax(), index);
-                dataManager.setItem(getMetaPath(scan, name) + DEVICE_STDEV_DATASET, (v == null) ? null : v.getStdev(), index);
+                dataManager.setItem(path + DATASET_MIN, (v == null) ? null : v.getMin(), index);
+                dataManager.setItem(path + DATASET_MAX, (v == null) ? null : v.getMax(), index);
+                dataManager.setItem(path + DATASET_STDEV, (v == null) ? null : v.getStdev(), index);
             }
-            dataManager.setItem(path + ATTR_DATASET_VALUE, value, index);
-            dataManager.setItem(path + ATTR_DATASET_TIMESTAMP, (timestamp == null) ? 0 : timestamp, index);
+            dataManager.setItem(path + DATASET_VALUE, value, index);
+            dataManager.setItem(path + DATASET_TIMESTAMP, (timestamp == null) ? 0 : timestamp, index);
         }
-        dataManager.setItem(group + ATTR_DATASET_TIMESTAMP, record.getLocalTimestamp(), index);
+        dataManager.setItem(group + DATASET_TIMESTAMP, record.getLocalTimestamp(), index);
     }
 
     @Override
@@ -384,8 +383,10 @@ public class LayoutSF extends LayoutBase implements Layout {
                 try {
                     getDataManager().flush();
                     String name = getDataManager().getAlias(readable);
-                    double[] stdev = (double[]) getDataManager().getData(getMetaPath(scan, name) + DEVICE_STDEV_DATASET).sliceData;
-                    getDataManager().setAttribute(getDataPath(scan, name) + ATTR_DATASET_VALUE, ATTR_ERROR_VECTOR, stdev);
+                    String path = getDataPath(scan, name);
+                    double[] stdev = (double[]) getDataManager().getData(path + DATASET_STDEV).sliceData;
+                    //Not using error vector, but stde dataset 
+                    //getDataManager().setAttribute(path + DATASET_VALUE, ATTR_ERROR_VECTOR, stdev);
                 } catch (Exception ex) {
                     Logger.getLogger(LayoutSF.class.getName()).log(Level.WARNING, null, ex);
                 }
@@ -401,14 +402,14 @@ public class LayoutSF extends LayoutBase implements Layout {
             path = path + "/";
         }
         Map<String, Object> info = dm.getInfo(root, path);
-        if ((String.valueOf(info.get(Provider.INFO_TYPE)).equals(Provider.INFO_VAL_TYPE_GROUP))) {
+        if ((String.valueOf(info.get(Provider.INFO_TYPE)).equals(Provider.INFO_VAL_TYPE_GROUP)) && dm.isGroup(root, path + ATTR_GROUP_METHOD)) {
             ArrayList<PlotDescriptor> ret = new ArrayList<>();
             double[] scanDimX = null;
             double[] scanDimY = null;
-            double[] scanDimZ = null;
-
+            double[] scanDimZ = null;   
             String[] readables = null;
             String[] writables = null;
+                
             try {
                 readables = (String[]) dm.getData(root, path + ATTR_DATASET_SENSORS).sliceData;
             } catch (Exception ex) {
@@ -422,9 +423,12 @@ public class LayoutSF extends LayoutBase implements Layout {
                 dims = ((int[]) dm.getData(root, path + ATTR_DATASET_DIMENSIONS).sliceData)[0];
             } catch (Exception ex) {
             }              
-
+            Object steps = null;
+            try {
+                steps = dm.getData(root, path + ATTR_DATASET_STEPS).sliceData;
+            } catch (Exception ex) {
+            }     
             String[] children = dm.getChildren(root, path + ATTR_GROUP_DATA);
-            Object steps = dm.getData(root, path + ATTR_DATASET_STEPS).sliceData;
             
             if (writables != null){
                 for (String child : ch.psi.utils.Arr.copy(children)) {
@@ -438,7 +442,7 @@ public class LayoutSF extends LayoutBase implements Layout {
                     }
                     if (index!=null){
                         int dim = ((dims > 1)&&(index!=null)) ? index+1 : 1;
-                        DataSlice data = dm.getData(root, child + "/" + ATTR_DATASET_READBACK);
+                        DataSlice data = dm.getData(root, child + "/" + DATASET_READBACK);
                         if (data.sliceData instanceof double[]) {
                             switch ((Integer) dim) {
                                 case 1:
@@ -462,7 +466,7 @@ public class LayoutSF extends LayoutBase implements Layout {
                 }
             } 
             for (String child : children) {
-                List<PlotDescriptor> descriptors = dm.getPlots(root, child + "/" + ATTR_DATASET_VALUE);
+                List<PlotDescriptor> descriptors = dm.getPlots(root, child + "/" + DATASET_VALUE);
                 for (PlotDescriptor descriptor : descriptors) {
                     descriptor.name = child.substring(child.lastIndexOf("/") + 1);
                     //1D plot of 2D images 
@@ -491,10 +495,11 @@ public class LayoutSF extends LayoutBase implements Layout {
                     }
 
                     try {
-                        //Getting stdev if available and error not yet set by DeviceManager(if error vector is too big for an attribute)
                         if (descriptor.error == null) {
-                            DataSlice data = dm.getData(root, child.substring(0, child.lastIndexOf("/") + 1) + ATTR_GROUP_META + descriptor.name + DEVICE_STDEV_DATASET);
-                            descriptor.error = (double[]) data.sliceData;
+                            if (dm.isDataset(root, child + "/" + DATASET_STDEV)){
+                                DataSlice data = dm.getData(root, child + "/" + DATASET_STDEV);
+                                descriptor.error = (double[]) data.sliceData;
+                            }
                         }
                     } catch (Exception ex) {
                     }
@@ -532,7 +537,7 @@ public class LayoutSF extends LayoutBase implements Layout {
         }
         try {
             String[] tokens = path.split("/");
-            if (Arr.containsEqual(new String[]{ATTR_DATASET_READBACK, ATTR_DATASET_SETPOINT, ATTR_DATASET_VALUE}, tokens[3])
+            if (Arr.containsEqual(new String[]{DATASET_READBACK, DATASET_SETPOINT, DATASET_VALUE}, tokens[3])
                     && tokens[1].equals(ATTR_GROUP_DATA.substring(0, ATTR_GROUP_DATA.length() - 1))) {
                 return true;
             }
@@ -541,6 +546,11 @@ public class LayoutSF extends LayoutBase implements Layout {
         }
         return false;
     }
+    
+    @Override
+    public String getTimestampsDataset(String scanPath){
+        return scanPath + "/" + DATASET_TIMESTAMP;
+    }    
 
     public String getDataPath(Scan scan) {
         return getScanPath(scan) + ATTR_GROUP_DATA;

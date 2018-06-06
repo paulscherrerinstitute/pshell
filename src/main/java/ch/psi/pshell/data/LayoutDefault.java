@@ -316,5 +316,10 @@ public class LayoutDefault extends LayoutBase implements Layout {
         }
         return getScanPath(scan) + device;
     }
+    
+    @Override
+    public String getTimestampsDataset(String scanPath){
+        return scanPath + "/" + META_GROUP + TIMESTAMPS_DATASET;
+    }
 
 }

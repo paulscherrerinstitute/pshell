@@ -1016,7 +1016,6 @@ public class DataManager implements AutoCloseable {
         String layout = (String) getAttribute(root, "/", Layout.ATTR_LAYOUT);
         if ((layout != null) && (!layout.equals(getLayout().getClass().getName()))){
             DataManager aux = new DataManager(context, getProvider().getClass().getName(), layout);
-            aux.doGetScanPlots(root, path);
             try{ 
                 return aux.doGetScanPlots(root, path);
             } finally{
@@ -1051,13 +1050,16 @@ public class DataManager implements AutoCloseable {
                 if (plotPreferences.domainAxis.equals(ViewPreference.DOMAIN_AXIS_INDEX)) {
                     xdata = Arr.indexesDouble(Array.getLength(plots.get(0).data));
                 } else if (plotPreferences.domainAxis.equals(ViewPreference.DOMAIN_AXIS_TIME)) {
-                    xdata = (double[]) Convert.toDouble(getData(root, path + "/meta/Timestamps").sliceData);
-                    Long start = (Long) getAttribute(root, path, Layout.ATTR_START_TIMESTAMP);
-                    if (start == null) {
-                        start = ((Double) xdata[0]).longValue();
-                    }
-                    for (int i = 0; i < xdata.length; i++) {
-                        xdata[i] = (xdata[i] - start) / 1000.0;
+                    String timestamps = getLayout().getTimestampsDataset(path);
+                    if (timestamps!=null){
+                        xdata = (double[]) Convert.toDouble(getData(root, timestamps).sliceData);
+                        Long start = (Long) getAttribute(root, path, Layout.ATTR_START_TIMESTAMP);
+                        if (start == null) {
+                            start = ((Double) xdata[0]).longValue();
+                        }
+                        for (int i = 0; i < xdata.length; i++) {
+                            xdata[i] = (xdata[i] - start) / 1000.0;
+                        }
                     }
                 } else {
                     for (PlotDescriptor plot : plots) {

@@ -102,4 +102,8 @@ public interface Layout{
     String getScanPath(Scan scan);
     
     void resetScanPath(Scan scan);
+    
+    default public String getTimestampsDataset(String scanPath){
+        return null;
+    }
 }
