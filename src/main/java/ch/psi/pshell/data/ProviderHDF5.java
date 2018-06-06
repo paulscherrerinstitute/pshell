@@ -278,7 +278,12 @@ public class ProviderHDF5 implements Provider {
                             array = reader.readString(path);
                             break;
                         default:
-                            array = reader.readStringArray(path);
+                            try{
+                                array = reader.readStringArray(path);
+                            } catch (NullPointerException ex){
+                                //This is a bug in JHDF5, empty dataset is rising an exception instead of returning empty aray
+                                array = new String[0];
+                            }
                     }
                     break;
                 case FLOAT:
