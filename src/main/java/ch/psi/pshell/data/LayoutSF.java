@@ -87,7 +87,8 @@ public class LayoutSF extends LayoutBase implements Layout {
     public static final String ATTR_DATASET_RECORDS = ATTR_GROUP_METHOD + "records";
     public static final String ATTR_DATASET_DIMENSIONS = ATTR_GROUP_METHOD + "dimensions";
     public static final String ATTR_DATASET_BACKGROND = ATTR_GROUP_METHOD + "background";
-    public static final String ATTR_DEVICE_CHANNEL = "channel";    
+    public static final String ATTR_DEVICE_CHANNEL = "channel";   
+    public static final String ATTR_DEVICE_UNIT= "unit";  
 
     public static final String DATASET_READBACK = "readback";
     public static final String DATASET_SETPOINT = "setpoint";
@@ -196,13 +197,18 @@ public class LayoutSF extends LayoutBase implements Layout {
                     Array.set(arr, 0, val);
                     val = arr;
                 }
-                dataManager.setDataset(ATTR_GROUP_EXPERIMENT + r.getName(), val);
+                String datasetName =ATTR_GROUP_EXPERIMENT + r.getName();
+                dataManager.setDataset(datasetName, val);
                 if (r instanceof Device){
                     Config c = ((Device)r).getConfig();
                     if ((c!=null) && (c instanceof ReadonlyProcessVariableConfig)){
                         String unit = String.valueOf(((ReadonlyProcessVariableConfig)c).unit);
-                        dataManager.setAttribute(ATTR_GROUP_EXPERIMENT + r.getName(), "Unit", unit);
+                        dataManager.setAttribute(datasetName, ATTR_DEVICE_UNIT, unit);
                     }
+                    String channel = InlineDevice.getChannelName((Device)r);
+                    if (channel!=null){
+                        dataManager.setAttribute(datasetName, ATTR_DEVICE_CHANNEL, channel);
+                    }                       
                 }
             } catch (InterruptedException ex) {
                 Thread.currentThread().interrupt();
