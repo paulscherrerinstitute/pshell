@@ -1,27 +1,39 @@
 package ch.psi.pshell.swing;
 
 import ch.psi.pshell.core.Context;
+import ch.psi.pshell.core.Setup;
 import ch.psi.pshell.data.DataManager;
 import ch.psi.pshell.data.Provider;
 import ch.psi.pshell.data.DataSlice;
 import ch.psi.pshell.data.Layout;
+import ch.psi.pshell.data.PlotDescriptor;
+import ch.psi.pshell.epics.Epics;
+import ch.psi.pshell.plot.Plot;
+import ch.psi.pshell.scripting.ViewPreference;
 import ch.psi.utils.Range;
+import ch.psi.utils.swing.TextEditor;
 import ch.psi.pshell.swing.DataPanel.DataPanelListener;
+import static ch.psi.pshell.swing.StripChart.FILE_EXTENSION;
+import static ch.psi.pshell.swing.StripChart.create;
 import ch.psi.pshell.ui.App;
+import ch.psi.pshell.ui.View;
 import ch.psi.utils.Arr;
 import ch.psi.utils.Chrono;
 import ch.psi.utils.Convert;
 import ch.psi.utils.IO;
 import ch.psi.utils.Str;
+import ch.psi.utils.Sys;
 import ch.psi.utils.swing.MainFrame;
 import ch.psi.utils.swing.MonitoredPanel;
 import ch.psi.utils.swing.SwingUtils;
+import ch.psi.utils.swing.TextEditor;
 import java.awt.BorderLayout;
 import java.awt.CardLayout;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Desktop;
 import java.awt.Dimension;
+import java.awt.Frame;
 import java.awt.Toolkit;
 import java.awt.datatransfer.StringSelection;
 import java.awt.event.ActionEvent;
@@ -49,6 +61,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.BorderFactory;
 import javax.swing.ImageIcon;
+import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
@@ -88,7 +101,7 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
         void plotData(Object array, Range range) throws Exception;
 
         void openFile(String fileName) throws Exception;
-        
+
         void openScript(String script, String name) throws Exception;
     }
 
@@ -298,7 +311,7 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
                 TreePath path = treeFile.getSelectionPath();
                 String root = currentFile.getPath();
                 String dataPath = getDataPath(path);
-                if (dataPath==null){
+                if (dataPath == null) {
                     dataPath = "/";
                 }
 
@@ -313,29 +326,29 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
             }
         });
         popupMenu.add(menuCopyLink);
-        
+
         JMenuItem menuOpenScript = new JMenuItem("Open producing script");
         menuOpenScript.addActionListener((ActionEvent e) -> {
             if (listener != null) {
                 try {
 
-                    String fileName = (String) dataManager.getAttribute(currentFile.getPath(),"/", Layout.ATTR_FILE) ;
-                    String revision = (String) dataManager.getAttribute(currentFile.getPath(),"/", Layout.ATTR_VERSION) ;
-                    if (revision!=null){
+                    String fileName = (String) dataManager.getAttribute(currentFile.getPath(), "/", Layout.ATTR_FILE);
+                    String revision = (String) dataManager.getAttribute(currentFile.getPath(), "/", Layout.ATTR_VERSION);
+                    if (revision != null) {
                         try {
                             String script = Context.getInstance().getFileContents(fileName, revision);
-                            listener.openScript(script, new File(fileName).getName() + "_" + revision.substring(0,Math.min(8, revision.length())));     
+                            listener.openScript(script, new File(fileName).getName() + "_" + revision.substring(0, Math.min(8, revision.length())));
                             return;
                         } catch (Exception ex) {
                         }
                     }
-                    listener.openFile(fileName);              
+                    listener.openFile(fileName);
                 } catch (Exception ex) {
                     SwingUtils.showException(DataPanel.this, ex);
                 }
             }
         });
-        popupMenu.add(menuOpenScript);        
+        popupMenu.add(menuOpenScript);
 
         JMenuItem menuAssign = new JMenuItem("Assign to variable");
         menuAssign.addActionListener((ActionEvent e) -> {
@@ -413,7 +426,7 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
                                 }
                             }
                         }
-                        menuOpenScript.setVisible((info!=null) && "/".equals(dataPath) && (dataManager.getAttribute(currentFile.getPath(),dataPath, Layout.ATTR_FILE) !=null));
+                        menuOpenScript.setVisible((info != null) && "/".equals(dataPath) && (dataManager.getAttribute(currentFile.getPath(), dataPath, Layout.ATTR_FILE) != null));
                         menuPlotDataSeparator.setVisible(menuPlotData.isVisible());
                         popupMenu.show(e.getComponent(), e.getX(), e.getY());
                     }
@@ -1343,9 +1356,132 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
         setCurrentPath(file);
     }
 
+    public static void create(File path) {
+        java.awt.EventQueue.invokeLater(() -> {
+            JFrame frame = new JFrame(App.getApplicationTitle());
+            frame.setIconImage(App.getIconSmall());
+            DataPanel panel = new DataPanel();
+            frame.add(panel);
+            //frame.pack();
+            frame.setSize(1000, 800);
+            SwingUtils.centerComponent(null, frame);
+            frame.setVisible(true);
+
+            try {
+                Context.createInstance();
+                if ((path != null) && (path.exists())) {
+                    panel.load(path.getAbsolutePath());
+                    frame.setTitle(path.getCanonicalPath());
+                } else {
+                    panel.initialize();
+                }
+            } catch (Exception ex) {
+                Logger.getLogger(StripChart.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            panel.setListener(new DataPanelListener() {
+                @Override
+                public void plotData(DataManager dataManager, String root, String path) throws Exception {
+                    ViewPreference.PlotPreferences prefs = dataManager.getPlotPreferences(root, path);
+                    plot(frame, dataManager.getFullPath(root, path), dataManager.getScanPlots(root, path).toArray(new PlotDescriptor[0]), prefs);
+
+                }
+
+                @Override
+                public void plotData(Object array, Range range) throws Exception {
+                    Class type = Arr.getComponentType(array);
+                    if (type.isPrimitive()) {
+                        type = Convert.getWrapperClass(type);
+                    }
+                    if ((Arr.getRank(array) == 0) || (type == null) || !(Number.class.isAssignableFrom(type))) {
+                        return;
+                    }
+                    //Maintain the standard of displaying x dimension in the vertical axis (to align with scalar sampling)
+                    if (Arr.getRank(array) == 2) {
+                        array = Convert.transpose(Convert.toDouble(array));
+                    }
+
+                    double[] x = null;
+                    if (range != null) {
+                        if (range.getExtent().intValue() == Array.getLength(array)) {
+                            x = new double[Array.getLength(array)];
+                            for (int i = 0; i < x.length; i++) {
+                                x[i] = i + range.min.intValue();
+                            }
+                        }
+                    }
+                    plot(frame, (range == null) ? "Array" : "Array range: " + range.toString(), new PlotDescriptor[]{new PlotDescriptor("", array, x)}, null);
+                }
+
+                @Override
+                public void openFile(String fileName) throws Exception {
+                    if (IO.getExtension(fileName).equalsIgnoreCase(Context.getInstance().getScriptType().toString())) {
+                        openScript(new String(Files.readAllBytes(Paths.get(fileName))), fileName);
+                    } else {
+                        DataPanel panel = new DataPanel();
+                        panel.load(fileName);
+                        panel.setListener(this);
+                        SwingUtils.showDialog(frame, fileName, new Dimension(800, 600), panel);
+                    }
+                }
+
+                @Override
+                public void openScript(String script, String name) throws Exception {
+                    TextEditor editor = new TextEditor();
+                    editor.setText((script == null) ? "" : script);
+                    editor.setReadOnly(true);
+                    SwingUtils.showDialog(frame, name, new Dimension(800, 600), editor);
+                }
+            });
+            frame.addWindowListener(new java.awt.event.WindowAdapter() {
+                @Override
+                public void windowClosing(java.awt.event.WindowEvent e) {
+                    System.exit(0);
+                }
+            });
+        });
+    }
+
+    static List<Plot> plot(JFrame parent, String title, PlotDescriptor[] plots, ViewPreference.PlotPreferences preferences) throws Exception {
+        ArrayList<Plot> ret = new ArrayList<>();
+        PlotPanel plotPanel = new PlotPanel();
+        plotPanel.initialize();
+        plotPanel.setPlotTitle(title);
+        plotPanel.clear();
+        plotPanel.setPreferences((preferences == null) ? new ViewPreference.PlotPreferences() : preferences);
+        plotPanel.clear();
+
+        if ((plots != null) && (plots.length > 0)) {
+            for (PlotDescriptor plot : plots) {
+                try {
+                    if (plot != null) {
+                        ret.add(plotPanel.addPlot(plot));
+                    } else {
+                        ret.add(null);
+                    }
+                } catch (Exception ex) {
+                    if (plot == null) {
+                    } else {
+                        Logger.getLogger(DataPanel.class.getName()).warning("Error creating plot " + String.valueOf((plot != null) ? plot.name : null) + ": " + ex.getMessage());
+                    }
+                }
+            }
+        }
+        SwingUtils.showDialog(parent, title, null, plotPanel);
+        return ret;
+    }
+
+    public static void main(String args[]) {
+        //args = new String[]{"../config/home"};
+        //args = new String[]{"../config/home", "../config/home/data/2018_06/20180606/20180606_094737_averager.h5"};
+        MainFrame.setLookAndFeel(MainFrame.getNimbusLookAndFeel());
+        System.setProperty(Setup.PROPERTY_HOME_PATH, args[0]);
+        create(args.length > 1 ? new File(args[1]) : null);
+    }
+
     /**
-     * This method is called from within the constructor to initialize the form. WARNING: Do NOT
-     * modify this code. The content of this method is always regenerated by the Form Editor.
+     * This method is called from within the constructor to initialize the form.
+     * WARNING: Do NOT modify this code. The content of this method is always
+     * regenerated by the Form Editor.
      */
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents

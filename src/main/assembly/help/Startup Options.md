@@ -158,6 +158,10 @@
     <td>Strip chart default configuration folder.</td>
   </tr>
   <tr>
+    <td>-dtpn=[path]</td>
+    <td>Show data panel window only (can be used together with -f).</td>
+  </tr>
+  <tr>
     <td>-mlaf</td>
     <td>Use Metal look and feel (cross platform).</td>
   </tr>

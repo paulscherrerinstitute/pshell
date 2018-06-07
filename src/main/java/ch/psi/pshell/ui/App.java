@@ -26,6 +26,7 @@ import ch.psi.pshell.scan.Scan;
 import ch.psi.pshell.scan.ScanListener;
 import ch.psi.pshell.scan.ScanRecord;
 import ch.psi.pshell.scripting.ViewPreference;
+import ch.psi.pshell.swing.DataPanel;
 import ch.psi.pshell.swing.PlotPanel;
 import ch.psi.pshell.swing.ScanEditorPanel;
 import ch.psi.pshell.swing.StripChart;
@@ -150,6 +151,7 @@ public class App extends ObservableBase<AppListener> {
         sb.append("\n\t-extr\tForce extract startup and utility scrips");        
         sb.append("\n\t-strp\tShow strip chart window (can be used together with -f)");
         sb.append("\n\t-strh=<path>\tStrip chart default configuration folder.");
+        sb.append("\n\t-strp\tShow data panel window only (can be used together with -f)");
         sb.append("\n\t-mlaf\tUse Metal look and feel (cross platform)");
         sb.append("\n\t-slaf\tUse System look and feel (or Metal if no System LAF is installed)");
         sb.append("\n\t-nlaf\tUse Nimbus look and feel (cross platform)");
@@ -169,7 +171,7 @@ public class App extends ObservableBase<AppListener> {
     }
 
     static public boolean isLocalMode() {
-        return hasArgument("l") || isPlotOnly() || isHelpOnly();
+        return hasArgument("l") || isPlotOnly() || isHelpOnly() || isDataPanel() || isStripChart();
     }
 
     static public boolean isBareMode() {
@@ -240,7 +242,7 @@ public class App extends ObservableBase<AppListener> {
     }
 
     static public boolean isOffline() {
-        return hasArgument("o");
+        return hasArgument("o") || isDataPanel() ;
     }
 
     static public boolean isSimulation() {
@@ -262,6 +264,10 @@ public class App extends ObservableBase<AppListener> {
     static public boolean isStripChart() {
         return hasArgument("strp");
     }
+    
+    static public boolean isDataPanel() {
+        return hasArgument("dtpn");
+    }    
 
     static public File getFileArg() {
         try {
@@ -719,6 +725,8 @@ public class App extends ObservableBase<AppListener> {
                 logger.log(Level.INFO, "Create shell");
             } else if (isStripChart()) {
                 StripChart.create(getFileArg(), getArgumentValue("config"), getStripChartFolderArg(), hasArgument("start"));
+            } else if (isDataPanel()) {
+                DataPanel.create(getFileArg());
             } else {
                 if (isDual()) {
                     Console c = new Console();

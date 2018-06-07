@@ -575,13 +575,13 @@ public class DataManager implements AutoCloseable {
         return getProvider().isGroup(root, path);
     }
 
-    class DataAddress {
-
+    public static class DataAddress {
         String root;
         String path;
     }
+        
 
-    DataAddress getAddress(String path) {
+    public static DataAddress getAddress(String path) {
         String[] rootDelimitors = new String[]{"|", " /"};
         for (String delimitor : rootDelimitors) {
             if (path.contains(delimitor)) {
@@ -594,6 +594,10 @@ public class DataManager implements AutoCloseable {
         }
         return null;
     }
+    
+    public static String getFullPath(String root, String path){
+        return root + "|" + path;
+    }    
 
     public DataSlice getData(String path) throws IOException {
         return getData(path, 0);

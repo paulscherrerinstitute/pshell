@@ -1420,6 +1420,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
 
     File getRunningScriptFile(String script) {
         if (script != null) {
+            script = scriptManager.getLibrary().resolveFile(script);
             File ret = new File(script);
             if (ret.exists()) {
                 try {
