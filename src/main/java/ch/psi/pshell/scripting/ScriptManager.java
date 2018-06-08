@@ -62,13 +62,19 @@ public class ScriptManager implements AutoCloseable {
 
         if (type == ScriptType.py) {
             setPythonPath(libraryPath);
-            //TODO: This is a workaroung to a bug in Jython 2.7.b3 (http://sourceforge.net/p/jython/mailman/message/32935831/)
+            //TODO: This is a workaround to a bug in Jython 2.7.b3 (http://sourceforge.net/p/jython/mailman/message/32935831/)
+            //TODO: The problem is solved in Jython 2.7.1, but this option makes startup 0.5s faster. Are there consequences?
             org.python.core.Options.importSite = false;
         }
 
         engine = new ScriptEngineManager().getEngineByExtension(type.toString());
         if (engine == null) {
             throw new RuntimeException("Error instantiating script engine");
+        }
+        
+        if (type == ScriptType.py) {
+            //TODO: __name__ is set to '__builtin__' in Jython under Java Scripting API.Setting to __main__. Are there consequences?
+            engine.put("__name__", "__main__");
         }
 
         threaded = ((engine.getFactory().getParameter("THREADING")) != null)

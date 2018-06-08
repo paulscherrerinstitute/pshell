@@ -11,7 +11,7 @@ public interface Nameable {
         if (ret.isEmpty()) {
             ret = cls.getName();
             ret = ret.substring(ret.lastIndexOf(".") + 1);
-        } else if (ret.startsWith("__builtin__")) {
+        } else if (ret.startsWith("__main__")) {
             //Jython class            
             String[] tokens = ret.split("\\$");
             if (tokens.length > 1) {

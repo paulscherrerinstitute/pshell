@@ -1610,7 +1610,7 @@ def run(script_name, args = None, locals = None):
         else:
             execfile(script, globals(), locals)
         return get_return()
-    raise IOError("Invalid script: " + str(script_name)) 
+    raise IOError("Invalid script: " + str(script_name))
 
 def abort():
     """Abort the execution of ongoing task. It can be called from the script to quit.
@@ -1664,7 +1664,7 @@ def set_return(value):
         None
     """
     #In Jython, the output of last statement is not returned  when running a file
-    if __name__ == "__builtin__":
+    if __name__ == "__main__":
         global __THREAD_EXEC_RESULT__
         if is_interpreter_thread():
             global _
@@ -1681,7 +1681,7 @@ def set_return(value):
     return value    #Used when parsing file
 
 def get_return():
-    if __name__ == "__builtin__":
+    if __name__ == "__main__":
         global __THREAD_EXEC_RESULT__
         return __THREAD_EXEC_RESULT__[java.lang.Thread.currentThread()]
     else:
@@ -1904,7 +1904,7 @@ def create_averager(dev, count, interval=0.0, name = None,  monitored = False):
 #Standard libraries management
 ###################################################################################################
 
-if __name__ == "__builtin__":
+if __name__ == "__main__":
     ca_channel_path=os.path.join(get_context().setup.getStandardLibraryPath(), "epics")
     sys.path.append(ca_channel_path)
     #This is to destroy previous context of _ca (it is not shared with PShell)
@@ -2312,7 +2312,7 @@ def inject():
         None
 
     """
-    if __name__ == "__builtin__":
+    if __name__ == "__main__":
         get_context().injectVars()
     else:
         _get_caller().f_globals.update(get_context().scriptManager.injections)
