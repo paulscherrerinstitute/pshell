@@ -1610,7 +1610,7 @@ def run(script_name, args = None, locals = None):
         else:
             execfile(script, globals(), locals)
         return get_return()
-    raise IOError("Invalid script: " + str(script_name))
+    raise IOError("Invalid script: " + str(script_name)) 
 
 def abort():
     """Abort the execution of ongoing task. It can be called from the script to quit.
