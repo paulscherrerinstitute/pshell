@@ -1231,7 +1231,8 @@ public class StripChart extends StandardDialog {
             StripChart dialog = new StripChart(new javax.swing.JFrame(), true, defaultFolder);
             dialog.setIconImage(Toolkit.getDefaultToolkit().getImage(App.getResourceUrl("IconSmall.png")));
             try {
-                if ((file != null) && (file.exists())) {
+                if (file != null) {
+                    IO.assertExistsFile(file);
                     dialog.open(file);
                 }
                 if (config != null) {
@@ -1242,6 +1243,7 @@ public class StripChart extends StandardDialog {
                 }
             } catch (IOException ex) {
                 Logger.getLogger(StripChart.class.getName()).log(Level.SEVERE, null, ex);
+                ex.printStackTrace();
             }
             dialog.addWindowListener(new java.awt.event.WindowAdapter() {
                 @Override

@@ -513,23 +513,32 @@ public class IO {
 
     //Asserting
     public static void assertExists(String path) throws FileNotFoundException {
-        File file = new File(path);
-        if (!file.exists()) {
-            throw new FileNotFoundException(path);
-        }
+        assertExists (new File(path));
     }
 
     public static void assertExistsFolder(String path) throws FileNotFoundException {
-        File file = new File(path);
-        if ((!file.exists()) || (!file.isDirectory())) {
-            throw new FileNotFoundException(path);
-        }
+        assertExistsFolder(new File(path));
     }
 
     public static void assertExistsFile(String path) throws FileNotFoundException {
-        File file = new File(path);
-        if ((!file.exists()) || (file.isDirectory())) {
-            throw new FileNotFoundException(path);
+        assertExistsFile (new File(path));
+    }
+    
+    public static void assertExists(File file) throws FileNotFoundException {
+        if (!file.exists()) {
+            throw new FileNotFoundException(file.getPath());
         }
     }
+
+    public static void assertExistsFolder(File file) throws FileNotFoundException {
+        if ((!file.exists()) || (!file.isDirectory())) {
+            throw new FileNotFoundException(file.getPath());
+        }
+    }
+
+    public static void assertExistsFile(File file) throws FileNotFoundException {
+        if ((!file.exists()) || (file.isDirectory())) {
+            throw new FileNotFoundException(file.getPath());
+        }
+    }    
 }
