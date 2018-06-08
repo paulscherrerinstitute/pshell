@@ -1592,11 +1592,10 @@ def run(script_name, args = None, locals = None):
     Returns:
         The script return value (if set with set_return)
     """
-    global _
     script = get_context().scriptManager.library.resolveFile(script_name)
     if script is not None and os.path.isfile(script):
         get_context().startScriptExecution(args)
-        _ = None
+        set_return(None)
         if args is None:
             pass
         elif isinstance(args,tuple):
@@ -1610,7 +1609,7 @@ def run(script_name, args = None, locals = None):
             execfile(script, globals())
         else:
             execfile(script, globals(), locals)
-        return _
+        return get_return()
     raise IOError("Invalid script: " + str(script_name))
 
 def abort():
