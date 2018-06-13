@@ -37,6 +37,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -629,16 +630,21 @@ public class StripChart extends StandardDialog {
             }
         }
         return "default";
-        */
+         */
     }
 
     File file;
 
     void updateTitle() {
+        String title = "Strip Chart";
+        if (App.isStripChartServer()){
+            int pid = Sys.getPid();
+            title += " [" + pid + "]";
+        }
         if ((file == null) || (!file.exists())) {
-            setTitle("Strip Chart");
+            setTitle(title);
         } else {
-            setTitle("Strip Chart - " + file.getName());
+            setTitle(title +  " - " + file.getName());
         }
     }
 
@@ -881,7 +887,7 @@ public class StripChart extends StandardDialog {
                 id = id.substring(id.indexOf("//") + 2); //Remove 'http://' or 'https://'
             }
             if (id.contains("/")) {
-                id = id.substring(id.lastIndexOf("/")+1);
+                id = id.substring(id.lastIndexOf("/") + 1);
             }
             id = id.replace(" ", ":");
         } else {
@@ -903,15 +909,15 @@ public class StripChart extends StandardDialog {
             int existing = 0;
             for (int i = 0; i < index; i++) {
                 String otherId = getBaseId(rows, i);
-                if (otherId!=null){
+                if (otherId != null) {
                     if (otherId.equals(id)) {
                         existing++;
                     }
                 }
             }
-            if (existing>0){
-                id = id + "-" + (existing+1);
-            }            
+            if (existing > 0) {
+                id = id + "-" + (existing + 1);
+            }
         }
         return id;
     }
@@ -1226,16 +1232,35 @@ public class StripChart extends StandardDialog {
         stop();
     }
 
-    public static void create(File file, String config, File defaultFolder, boolean start) {
+    public static File resolveFile(File file, File defaultFolder) throws FileNotFoundException {
+        
+        file = new File(Context.getInstance().getSetup().expandPath(file.getPath()));
+        if (!file.exists()) {
+            if (defaultFolder != null) {
+                File aux = Paths.get(defaultFolder.getAbsolutePath(), file.getPath()).toFile();
+                if (aux.exists()) {
+                    file = aux;
+                }
+            } else {
+                File aux = Paths.get(Sys.getUserHome(), file.getPath()).toFile();
+                if (aux.exists()) {
+                    file = aux;
+                }
+            }
+        }
+        IO.assertExistsFile(file);
+        return file;
+    }
+
+    public static void create(File file, String config, File defaultFolder, boolean start, boolean modal) {
         java.awt.EventQueue.invokeLater(() -> {
-            StripChart dialog = new StripChart(new javax.swing.JFrame(), true, defaultFolder);
+            StripChart dialog = new StripChart(new javax.swing.JFrame(), modal, defaultFolder);
             dialog.setIconImage(Toolkit.getDefaultToolkit().getImage(App.getResourceUrl("IconSmall.png")));
             try {
                 if (file != null) {
-                    IO.assertExistsFile(file);
-                    dialog.open(file);
-                }
-                if (config != null) {
+                    File f = resolveFile(file, defaultFolder);
+                    dialog.open(f);
+                } else if (config != null) {
                     dialog.open(config);
                 }
                 if (start) {
@@ -1249,11 +1274,19 @@ public class StripChart extends StandardDialog {
                 @Override
                 public void windowClosing(java.awt.event.WindowEvent e) {
                     dialog.onClosed();
-                    System.exit(0);
+                    if (modal) {
+                        System.exit(0);
+                    } else if (App.isStripChart() && App.isAttach()){
+                        if(SwingUtils.getVisibleWindows().length == 1){
+                            System.out.println("Last StripChart window closes: finishing process" + Sys.getProcessName() + "\n");
+                            System.exit(0);
+                        }
+                    }
                 }
             });
             SwingUtils.centerComponent(null, dialog);
             dialog.setVisible(true);
+            dialog.requestFocus();
         });
     }
 
@@ -1966,7 +1999,7 @@ public class StripChart extends StandardDialog {
         String configPath = "./home/config";
         System.setProperty(Epics.PROPERTY_JCAE_CONFIG_FILE, Paths.get(configPath, "jcae.properties").toString());
         Epics.create();
-        create(Paths.get(Sys.getUserHome(), "test." + FILE_EXTENSION).toFile(), null, null, false);
+        create(Paths.get(Sys.getUserHome(), "test." + FILE_EXTENSION).toFile(), null, null, false, true);
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables

@@ -47,7 +47,9 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.File;
 import java.io.FileInputStream;
+import java.net.ConnectException;
 import java.net.URL;
+import java.net.UnknownHostException;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -148,10 +150,10 @@ public class App extends ObservableBase<AppListener> {
         sb.append("\n\t-dspt\tDisable scan plots");
         sb.append("\n\t-dspr\tDisable printing scans to console");
         sb.append("\n\t-sbar\tAppend status bar to detached windows");
-        sb.append("\n\t-extr\tForce extract startup and utility scrips");        
+        sb.append("\n\t-extr\tForce extract startup and utility scrips");
         sb.append("\n\t-strp\tShow strip chart window (can be used together with -f)");
         sb.append("\n\t-strh=<path>\tStrip chart default configuration folder.");
-        sb.append("\n\t-strp\tShow data panel window only (can be used together with -f)");
+        sb.append("\n\t-dtpn\tShow data panel window only (can be used together with -f)");
         sb.append("\n\t-mlaf\tUse Metal look and feel (cross platform)");
         sb.append("\n\t-slaf\tUse System look and feel (or Metal if no System LAF is installed)");
         sb.append("\n\t-nlaf\tUse Nimbus look and feel (cross platform)");
@@ -159,13 +161,15 @@ public class App extends ObservableBase<AppListener> {
         sb.append("\n\t-args=...\tProvide arguments to interpreter");
         sb.append("\n\t-f=<..>\tRun a file instead of entering interactive shell (together with -c option)");
         sb.append("\n\t-p=<..>\tLoad a plugin");
-        
-        if (isStripChart()){
-            sb.append("\n\nStrip Chart arguments:");
-            sb.append("\n\t-f=<..>\tOpen a Strip Chart configuration file (.scd)");
+
+        if (isStripChart()) {
+            sb.append("\n\nStripChart arguments:");
+            sb.append("\n\t-f=<..>\tOpen a StripChart configuration file (.scd)");
             sb.append("\n\t-config=<..>\tLoad a JSON configuration string (same format as in .scd file)");
             sb.append("\n\t-start\tStart the data displaying immediately");
-        } 
+            sb.append("\n\t-v\tCreates a StripChart server");
+            sb.append("\n\t-attach\tShared mode: tries to connect to existing server. If not available, create one.");
+        }
         sb.append("\n");
         return sb.toString();
     }
@@ -209,6 +213,10 @@ public class App extends ObservableBase<AppListener> {
     static public boolean isDual() {
         return isGui() && hasArgument("t");
     }
+    
+    static public boolean isAttach() {
+        return isGui() && hasArgument("attach");
+    }    
 
     static public boolean isConsole() {
         return isGui() && hasArgument("w");
@@ -242,7 +250,7 @@ public class App extends ObservableBase<AppListener> {
     }
 
     static public boolean isOffline() {
-        return hasArgument("o") || isDataPanel() ;
+        return hasArgument("o") || isDataPanel();
     }
 
     static public boolean isSimulation() {
@@ -260,14 +268,18 @@ public class App extends ObservableBase<AppListener> {
     static public boolean isAutoClose() {
         return App.hasArgument("a");
     }
-    
+
     static public boolean isStripChart() {
         return hasArgument("strp");
     }
     
+    static public boolean isStripChartServer() {
+        return isStripChart() && ((isAttach() || (isServerMode())));
+    }    
+
     static public boolean isDataPanel() {
         return hasArgument("dtpn");
-    }    
+    }
 
     static public File getFileArg() {
         try {
@@ -451,6 +463,8 @@ public class App extends ObservableBase<AppListener> {
         public LogLevel consoleLog;
     }
 
+    Object stripChartServer;
+
     protected void startup() {
         if (Setup.getJarFile() != null) {
             try {
@@ -596,19 +610,19 @@ public class App extends ObservableBase<AppListener> {
         if (isServerMode()) {
             System.setProperty(Context.PROPERTY_SERVER_MODE, "true");
         }
-        
+
         if (isSimulation()) {
             System.setProperty(Context.PROPERTY_SIMULATION, "true");
         }
-        if (hasArgument("dspt")){
+        if (hasArgument("dspt")) {
             App.setScanPlottingActive(false);
         }
-        
-        if (hasArgument("dspr")){
+
+        if (hasArgument("dspr")) {
             App.setScanPrintingActive(false);
         }
-        
-        if (hasArgument("extr")){
+
+        if (hasArgument("extr")) {
             System.setProperty(Context.PROPERTY_FORCE_EXTRACT, "true");
         }
 
@@ -724,7 +738,24 @@ public class App extends ObservableBase<AppListener> {
                 startStandaloneShell();
                 logger.log(Level.INFO, "Create shell");
             } else if (isStripChart()) {
-                StripChart.create(getFileArg(), getArgumentValue("config"), getStripChartFolderArg(), hasArgument("start"));
+                if (isAttach()) {
+                    try {
+                        String ret = StripChartServer.create(getFileArg(), getArgumentValue("config"), hasArgument("start"));
+                        System.out.println("Panel handled by server: " + ret);
+                        System.exit(0);
+                    } catch (Exception ex) {
+                        if ((ex.getCause() != null) && (ex.getCause() instanceof ConnectException)) {
+                            System.out.println("Server not found");
+                            StripChart.create(getFileArg(), getArgumentValue("config"), getStripChartFolderArg(), hasArgument("start"), false);
+                            stripChartServer = new StripChartServer();
+                        } else {
+                            ex.printStackTrace();
+                            System.exit(0);
+                        }
+                    }
+                } else {
+                    StripChart.create(getFileArg(), getArgumentValue("config"), getStripChartFolderArg(), hasArgument("start"), true);
+                }
             } else if (isDataPanel()) {
                 DataPanel.create(getFileArg());
             } else {
@@ -753,7 +784,7 @@ public class App extends ObservableBase<AppListener> {
                 //Not running in GUI thread
                 new Thread(() -> {
                     context.start();
-                    if (isPlotOnly() || isConsole() ) {
+                    if (isPlotOnly() || isConsole()) {
                         File file = getFileArg();
                         if (file != null) {
                             runFile(file, false);
@@ -767,31 +798,36 @@ public class App extends ObservableBase<AppListener> {
                 context.disable();
             }
         } else {
-            context.start();
-            File file = getFileArg();
-            if (file != null) {
-                runFile(file, !isServerMode());
-                exit(this);
+            if (isStripChart() && isServerMode()) {
+                stripChartServer = new StripChartServer();
+                context.start();
             } else {
-                setConsolePlotEnvironment(null);
-                if (isCli()) {
-                    logger.log(Level.INFO, "Start console");
-                    try {
-                        console = new ch.psi.pshell.core.Console();            
-                        console.setPrintScan(!isServerMode() && scanPrintingActive);        
-                        setupConsoleScanPlotting();
-                        console.run(System.in, System.out, !isServerMode());
-                    } catch (Exception ex) {
-                        logger.log(Level.WARNING, null, ex);
+                context.start();
+                File file = getFileArg();
+                if (file != null) {
+                    runFile(file, !isServerMode());
+                    exit(this);
+                } else {
+                    setConsolePlotEnvironment(null);
+                    if (isCli()) {
+                        logger.log(Level.INFO, "Start console");
+                        try {
+                            console = new ch.psi.pshell.core.Console();
+                            console.setPrintScan(!isServerMode() && scanPrintingActive);
+                            setupConsoleScanPlotting();
+                            console.run(System.in, System.out, !isServerMode());
+                        } catch (Exception ex) {
+                            logger.log(Level.WARNING, null, ex);
+                        }
+                    } else if (isServerMode()) {
+                        logger.log(Level.INFO, "Start server");
                     }
-                } else if (isServerMode()) {
-                    logger.log(Level.INFO, "Start server");
-                }
-                if (isHeadless()) {
-                    logger.log(Level.WARNING, "Headless mode");
-                }
-                if (isOffscreenPlotting()){
-                    setupConsoleScanPlotting();
+                    if (isHeadless()) {
+                        logger.log(Level.WARNING, "Headless mode");
+                    }
+                    if (isOffscreenPlotting()) {
+                        setupConsoleScanPlotting();
+                    }
                 }
             }
         }
@@ -806,10 +842,11 @@ public class App extends ObservableBase<AppListener> {
     public static void setScanPlottingActive(boolean value) {
         scanPlottingActive = value;
     }
-    
+
     DevicePanelManager devicePanelManager;
-    public DevicePanelManager getDevicePanelManager(){
-        if (devicePanelManager == null){
+
+    public DevicePanelManager getDevicePanelManager() {
+        if (devicePanelManager == null) {
             devicePanelManager = new DevicePanelManager(view);
         }
         return devicePanelManager;
@@ -843,7 +880,7 @@ public class App extends ObservableBase<AppListener> {
 
     void removePlotPanel(String title) {
         title = checkPlotsTitle(title);
-        if (!title.equals(checkPlotsTitle(null))){
+        if (!title.equals(checkPlotsTitle(null))) {
             plotPanels.remove(title);
         }
     }
@@ -951,11 +988,10 @@ public class App extends ObservableBase<AppListener> {
         }
         return title;
     }
-    
-    
+
     ch.psi.pshell.core.Console console;
     Shell shell;
-    
+
     static volatile boolean scanPrintingActive = true;
 
     public static boolean isScanPrintingActive() {
@@ -963,16 +999,16 @@ public class App extends ObservableBase<AppListener> {
     }
 
     public static void setScanPrintingActive(boolean value) {
-        if (value!=scanPrintingActive){
+        if (value != scanPrintingActive) {
             scanPrintingActive = value;
-            if (getInstance().console!=null){
+            if (getInstance().console != null) {
                 getInstance().console.setPrintScan(true);
             }
-            if (getInstance().shell!=null){
+            if (getInstance().shell != null) {
                 getInstance().shell.setPrintScan(true);
-            }            
+            }
         }
-    }    
+    }
 
     @Hidden
     public SwingPropertyChangeSupport getPropertyChangeSupport() {

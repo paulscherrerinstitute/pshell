@@ -154,7 +154,7 @@
     <td>Show strip chart window (can be used together with -f).</td>
   </tr>
   <tr>
-    <td>-strc=[path]</td>
+    <td>-strh=[path]</td>
     <td>Strip chart default configuration folder.</td>
   </tr>
   <tr>

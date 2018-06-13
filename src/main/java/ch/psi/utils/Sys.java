@@ -87,6 +87,14 @@ public class Sys {
             return "Unknown";
         }        
     }
+    
+    public static int getPid(){
+        try {
+            return Integer.valueOf(getProcessName().split("@")[0]);
+        } catch (Exception ex) {
+            return -1;
+        }        
+    }    
 
     public static String getLocalHost() {
         try {
