@@ -61,6 +61,8 @@ import javax.swing.JComboBox;
 import javax.swing.JComponent;
 import javax.swing.JFileChooser;
 import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JTabbedPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
@@ -240,6 +242,19 @@ public class StripChart extends StandardDialog {
             });
         }
     }
+    
+    //Access functions
+    public JTabbedPane getTabbedPane(){
+        return this.tabPane;
+    }
+    
+    public JPanel getPlotPanel(){
+        return panelPlots;
+    }
+    
+    public JPanel getConfigPanel(){
+        return panelConfig;
+    }    
 
     void setButtonPause(boolean paused) {
         buttonPause.setText("");

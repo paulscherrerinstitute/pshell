@@ -1652,7 +1652,7 @@ public class View extends MainFrame {
             openDataFile(fileName);
         } else if (StripChart.FILE_EXTENSION.equals(ext)) {
             StripChart stripChart = new StripChart(View.this, false, App.getStripChartFolderArg());
-            openComponent(f.getName(), SwingUtils.getComponentByName(stripChart, "panelPlots"));// "tabPane"
+            openComponent(f.getName(), stripChart.getPlotPanel());
             stripChart.open(f);
             stripChart.start();
         } else {
