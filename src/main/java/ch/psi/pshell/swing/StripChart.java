@@ -78,6 +78,20 @@ import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
 
 /**
+ *  Time plotting of a set of devices. 
+ *  Can be used in the workbench or opened standalone with '-strp' option. 
+ *  The '-attach'option make standalone panels be handled in the same process.
+ * 
+ *  StripChart plot panel can be included in Panel plugins, for example adding in the 
+ *  plugin constructor:
+ *        stripChart = new StripChart(this.getTopLevel(), false, App.getStripChartFolderArg());            
+ *        panel.add(stripChart.getPlotPanel());  
+ *        try {                        
+ *            stripChart.open(new File("test.scd")));
+ *            stripChart.start();
+ *        } catch (Exception ex) {
+ *            showException(ex);
+ *        }  
  *
  */
 public class StripChart extends StandardDialog {
