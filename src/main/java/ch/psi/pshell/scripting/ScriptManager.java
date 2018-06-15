@@ -383,6 +383,7 @@ public class ScriptManager implements AutoCloseable {
         } catch (ScriptException ex) {
             ret.exception = ex;
         }
+        saveStatement("\n#Eval background:  " + statement + "\n");
         return ret;
     }
 
