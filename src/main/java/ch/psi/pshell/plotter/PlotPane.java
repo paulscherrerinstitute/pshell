@@ -132,13 +132,13 @@ public class PlotPane extends javax.swing.JPanel {
 
             int index = tabPlots.getTabCount() - 1;
             SwingUtils.setTabClosable(tabPlots, index);
-            setTabDettachable(tabPlots, index, null);
+            setTabDetachable(tabPlots, index, null);
             return plotPanel;
         }
         throw new RuntimeException("Invalid plot panel: " + name);
     }
 
-    void setTabDettachable(final JTabbedPane tabbedPane, int index, final HashMap<String, PlotPanel> detachedMap) {
+    void setTabDetachable(final JTabbedPane tabbedPane, int index, final HashMap<String, PlotPanel> detachedMap) {
         Component component = tabbedPane.getComponentAt(index);
         ((SwingUtils.CloseButtonTabComponent) tabbedPane.getTabComponentAt(index)).getLabel().addMouseListener(new MouseAdapter() {
             @Override
@@ -170,7 +170,7 @@ public class PlotPane extends javax.swing.JPanel {
                                 tabbedPane.add(dlg.getTitle(), component);
                                 int index = tabbedPane.getTabCount() - 1;
                                 SwingUtils.setTabClosable(tabbedPane, index, null);
-                                setTabDettachable(tabbedPane, index, detachedMap);
+                                setTabDetachable(tabbedPane, index, detachedMap);
                                 tabbedPane.setSelectedIndex(index);
                             }
                         }

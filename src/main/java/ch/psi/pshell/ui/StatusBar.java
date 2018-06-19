@@ -39,7 +39,7 @@ import javax.swing.SwingWorker.StateValue;
 import javax.swing.Timer;
 
 /**
- * The status bar of Workbench. In dettached mode, it can be added to the executing Panel with the
+ * The status bar of Workbench. In detached mode, it can be added to the executing Panel with the
  * '-sbar'option. Methods to set status label, state iconand progress bar are thread safe (invoke
  * event loop if needed). Icons and some code are taken from Netbeans SAF template.
  */

@@ -811,25 +811,25 @@ public class View extends MainFrame {
 
         int index = tabPlots.getTabCount() - 1;
         SwingUtils.setTabClosable(tabPlots, index);
-        setTabDettachable(tabPlots, index, detachedPlots);
+        setTabDetachable(tabPlots, index, detachedPlots);
         return plotPanel;
     }
     HashMap<String, Component> detachedPlots = new HashMap<>();
     HashMap<String, Component> detachedScripts = new HashMap<>();
 
-    boolean canDettach(Component c) {
+    boolean canDetach(Component c) {
         if (c == currentScriptEditor) {
             return !currentScriptEditor.isExecuting();
         }
         return true;
     }
 
-    void setTabDettachable(final JTabbedPane tabbedPane, int index, final HashMap<String, Component> detachedMap) {
+    void setTabDetachable(final JTabbedPane tabbedPane, int index, final HashMap<String, Component> detachedMap) {
         Component component = tabbedPane.getComponentAt(index);
         ((CloseButtonTabComponent) tabbedPane.getTabComponentAt(index)).getLabel().addMouseListener(new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
-                if ((e.getClickCount() == 2) && (tabbedPane.getSelectedComponent() == component) && canDettach(component)) {
+                if ((e.getClickCount() == 2) && (tabbedPane.getSelectedComponent() == component) && canDetach(component)) {
                     int index = tabbedPane.indexOfComponent(component);
                     if (index < 0) {
                         logger.warning("Error retrieving tab index");
@@ -856,7 +856,7 @@ public class View extends MainFrame {
                                 tabbedPane.add(dlg.getTitle(), component);
                                 int index = tabbedPane.getTabCount() - 1;
                                 SwingUtils.setTabClosable(tabbedPane, index, closableTabListener);
-                                setTabDettachable(tabbedPane, index, detachedMap);
+                                setTabDetachable(tabbedPane, index, detachedMap);
                                 tabbedPane.setSelectedIndex(index);
                                 if (component instanceof ScriptEditor) {
                                     updateScriptEditorTabTitle((ScriptEditor) component, index);
@@ -1252,7 +1252,7 @@ public class View extends MainFrame {
         tabDoc.add(title, c);
         int index = tabDoc.getTabCount() - 1;
         SwingUtils.setTabClosable(tabDoc, index, closableTabListener);
-        setTabDettachable(tabDoc, index, detachedScripts);
+        setTabDetachable(tabDoc, index, detachedScripts);
         tabDoc.setSelectedIndex(index);
     }
 
@@ -3711,7 +3711,7 @@ public class View extends MainFrame {
                 tabStatus.addTab("Search", pn);
                 int index = tabStatus.getTabCount() - 1;
                 SwingUtils.setTabClosable(tabStatus, index);
-                setTabDettachable(tabStatus, index, null);
+                setTabDetachable(tabStatus, index, null);
                 tabStatus.setSelectedComponent(pn);
             }
         } catch (Exception ex) {
