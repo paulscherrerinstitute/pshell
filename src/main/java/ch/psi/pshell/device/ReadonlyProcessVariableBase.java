@@ -32,6 +32,11 @@ public abstract class ReadonlyProcessVariableBase extends ReadonlyRegisterBase<D
         }
         return getConfig().unit;
     }
+    
+    @Override
+    public int getSignBit(){
+        return getConfig().sign_bit;
+    }
 
     @Override
     protected boolean hasChanged(Object value, Object former) {
@@ -49,6 +54,7 @@ public abstract class ReadonlyProcessVariableBase extends ReadonlyRegisterBase<D
     @Override
     protected Double convertFromRead(Double value) {
         if (value != null) {
+            value = getConfig().applySign(value);
             value *= getScale();
             value += getOffset();
         }

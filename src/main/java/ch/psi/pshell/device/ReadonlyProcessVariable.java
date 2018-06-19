@@ -1,8 +1,8 @@
 package ch.psi.pshell.device;
 
 /**
- * A Readonly Register with metadata: units, range, scale and offset. Metadata may be static or
- * persisted in configuration.
+ * A Readonly Register with metadata: units, range, scale and offset. Metadata
+ * may be static or persisted in configuration.
  */
 public interface ReadonlyProcessVariable extends ReadonlyRegister<Double> {
 
@@ -13,6 +13,9 @@ public interface ReadonlyProcessVariable extends ReadonlyRegister<Double> {
 
     public double getScale();
 
+    public int getSignBit();
+
     public String getUnit();
+   
 
 }

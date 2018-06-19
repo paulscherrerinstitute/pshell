@@ -21,4 +21,5 @@ public class ReadonlyProcessVariable extends ReadonlyProcessVariableBase {
     protected Double doRead() throws IOException, InterruptedException {
         return (double) ((ModbusDevice) getParent()).readInputRegister(index + ((ModbusDevice) getParent()).getConfig().offsetReadAnalogInput);
     }
+    
 }

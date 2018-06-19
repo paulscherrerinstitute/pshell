@@ -15,7 +15,7 @@ public abstract class ProcessVariableBase extends RegisterBase<Double> implement
     public ProcessVariableConfig getConfig() {
         return (ProcessVariableConfig) super.getConfig();
     }
-
+    
     @Override
     public double getOffset() {
         return getConfig().offset;
@@ -25,6 +25,11 @@ public abstract class ProcessVariableBase extends RegisterBase<Double> implement
     public double getScale() {
         return getConfig().scale;
     }
+    
+    @Override
+    public int getSignBit(){
+        return getConfig().sign_bit;
+    }    
     
     @Override
     public double getResolution() {
@@ -92,6 +97,7 @@ public abstract class ProcessVariableBase extends RegisterBase<Double> implement
     @Override
     protected Double convertFromRead(Double value) {
         if (value != null) {
+            value = getConfig().applySign(value);
             value *= getScale();
             value += getOffset();
             if (forceReadInRange) {

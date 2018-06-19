@@ -12,6 +12,8 @@ public interface ProcessVariable extends Register<Double>, Resolved {
     public double getOffset();
 
     public double getScale();
+    
+    public int getSignBit();
 
     public String getUnit();
 
