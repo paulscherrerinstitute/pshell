@@ -90,7 +90,7 @@ public class StreamCamera extends ColormapSource {
     public void stopReceiver() {
         try {
             stream.stop();
-        } catch (IOException ex) {
+        } catch (Exception ex) {
             Logger.getLogger(StreamCamera.class.getName()).log(Level.WARNING, null, ex);
         }
     }

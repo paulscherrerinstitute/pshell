@@ -274,11 +274,11 @@ public class Stream extends DeviceBase implements Readable<StreamValue>, Cacheab
         }
     }
 
-    public void start() throws IOException, InterruptedException {
+    public void start() {
         start(null);
     }
 
-    public void start(Boolean async) throws IOException, InterruptedException {
+    public void start(Boolean async) {
         if (async != null) {
             setMonitored(async);
         }
@@ -294,7 +294,7 @@ public class Stream extends DeviceBase implements Readable<StreamValue>, Cacheab
         }
     }
 
-    public void stop() throws IOException {
+    public void stop() {
         channelPrefix = null;
         started.set(false);
         closeReceiver();
@@ -308,6 +308,7 @@ public class Stream extends DeviceBase implements Readable<StreamValue>, Cacheab
                         Threading.stop(thread, true, 2000);
                         break;
                     }
+                    Thread.sleep(10);
                 }
             } catch (InterruptedException ex) {
                 //TODO: Filtering InterruptedException. But stop() should not throw InterruptedException;
