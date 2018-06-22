@@ -17,6 +17,7 @@ import ch.psi.pshell.core.Context
 import ch.psi.pshell.data.PlotDescriptor as PlotDescriptor
 import ch.psi.pshell.device.Device as Device
 import ch.psi.pshell.device.DeviceBase as DeviceBase
+import ch.psi.pshell.device.DeviceConfig as DeviceConfig
 import ch.psi.pshell.device.Interlock as Interlock
 import ch.psi.pshell.device.Readable as Readable
 import ch.psi.pshell.device.Readable.ReadableArray as ReadableArray

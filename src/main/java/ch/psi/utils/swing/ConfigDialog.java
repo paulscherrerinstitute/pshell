@@ -102,9 +102,8 @@ public class ConfigDialog extends PropertiesDialog {
         protected Object getPropertyValue(String key) {
             String value = String.valueOf(super.getPropertyValue(key));
             try {
-                Field f = config.getField(key);
-                if (f != null) {
-                    Class type = f.getType();
+                Class type = config.getFieldType(key);
+                if (type != null) {
                     for (Class c : new Class[]{Boolean.class, Double.class, Float.class, Long.class, Integer.class, Short.class, Byte.class}) {
                         if ((type == c) || (type == Convert.getPrimitiveClass(c))) {
                             return c.getMethod("valueOf", new Class[]{String.class}).invoke(null, new Object[]{value});
@@ -144,8 +143,7 @@ public class ConfigDialog extends PropertiesDialog {
         protected DefaultCellEditor getPropertyEditor(String key) {
             DefaultCellEditor ret = super.getPropertyEditor(key);
             try {
-                Field f = config.getClass().getField(key);
-                Defaults defaults = f.getAnnotation(Defaults.class);
+                Defaults defaults = config.getDefaults(key);
                 if (defaults != null) {
                     Object value = getPropertyValue(key);
                     String[] values = defaults.values();
@@ -167,8 +165,7 @@ public class ConfigDialog extends PropertiesDialog {
         protected Component getPropertyRenderer(String key, Object value, boolean changed, Color backColor, Component defaultComponent) {
             DefaultCellEditor ret = super.getPropertyEditor(key);
             try {
-                Field f = config.getClass().getField(key);
-                Defaults defaults = f.getAnnotation(Defaults.class);
+                Defaults defaults = config.getDefaults(key);
                 if (defaults != null) {
                     String[] values = defaults.values();
                     JPanel panel = new JPanel();

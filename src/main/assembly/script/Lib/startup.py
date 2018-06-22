@@ -38,6 +38,7 @@ import ch.psi.pshell.data.PlotDescriptor as PlotDescriptor
 import ch.psi.pshell.data.Table as Table
 import ch.psi.pshell.device.Device as Device
 import ch.psi.pshell.device.DeviceBase as DeviceBase
+import ch.psi.pshell.device.DeviceConfig as DeviceConfig
 import ch.psi.pshell.device.RegisterBase as RegisterBase
 import ch.psi.pshell.device.ProcessVariableBase as ProcessVariableBase
 import ch.psi.pshell.device.ControlledVariableBase as ControlledVariableBase

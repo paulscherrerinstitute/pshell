@@ -19,8 +19,8 @@ import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
 /**
- * Implements simple persistence to property files of Entity classes. Persists all public fields
- * defined in implementations, if translatable into String.
+ * Implements simple persistence to property files of Entity classes. Persists
+ * all public fields defined in implementations, if translatable into String.
  */
 public class Config extends ObservableBase<Config.ConfigListener> {
 
@@ -44,12 +44,13 @@ public class Config extends ObservableBase<Config.ConfigListener> {
     String fileName;
     boolean fileSync;
 
+    protected Properties _getProperties(){
+        return properties;
+    }
+    
     public Properties getProperties() {
-        ArrayList<String> fieldNames = new ArrayList<>();
-        for (Field f : getFields()) {
-            fieldNames.add(f.getName());
-        }
-        ArrayList<String> removed = new ArrayList<>();
+        List<String> fieldNames = getFieldNames();
+        List<String> removed = new ArrayList<>();
         String[] keys = properties.keySet().toArray(new String[0]);
         for (String key : keys) {
             if (!fieldNames.contains(key)) {
@@ -97,7 +98,6 @@ public class Config extends ObservableBase<Config.ConfigListener> {
             try {
                 String name = f.getName();
                 Object val = f.get(this);
-
                 String curStr = properties.getProperty(name);
 
                 if ((val != null) && (curStr != null) && (Number.class.isAssignableFrom(val.getClass()))) {
@@ -256,8 +256,8 @@ public class Config extends ObservableBase<Config.ConfigListener> {
             } catch (Exception ex) {
 
             }
-            
-            if (type == Boolean.class){
+
+            if (type == Boolean.class) {
                 if (str.equalsIgnoreCase("true")) {
                     return Boolean.TRUE;
                 } else if (str.equalsIgnoreCase("false")) {
@@ -350,13 +350,46 @@ public class Config extends ObservableBase<Config.ConfigListener> {
         }
     }
 
+    public Defaults getDefaults(String key) throws NoSuchFieldException {
+        Field f = this.getClass().getField(key);
+        return f.getAnnotation(Defaults.class);
+    }
+
+    public List<String> getFieldNames() {
+        List<String> ret = new ArrayList<>();
+        for (Field f : getFields()) {
+            ret.add(f.getName());
+        }
+        return ret;
+    }
+
+    public Object getFieldValue(String name) {
+        List<String> ret = new ArrayList<>();
+        for (Field f : getFields()) {
+            if (f.getName().equals(name)) {
+                try {
+                    return f.get(this);
+                } catch (Exception ex) {
+                }
+            }
+        }
+        return null;
+    }
+    
+    public Class getFieldType(String name) {
+        Field f = getField(name);
+        if (f != null) {
+            return f.getType();
+        }
+        return null;
+    }     
+
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        for (Field f : getFields()) {
+        for (String name : getFieldNames()) {
             try {
-                sb.append(f.getName()).append(" = ");
-                sb.append(f.get(this)).append("\n");
+                sb.append(name).append(" = ").append(getFieldValue(name)).append("\n");
             } catch (Exception ex) {
             }
         }
