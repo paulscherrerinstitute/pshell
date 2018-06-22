@@ -1,6 +1,7 @@
 package ch.psi.pshell.ui;
 
 import ch.psi.utils.Convert;
+import ch.psi.utils.IO;
 import ch.psi.utils.swing.MainFrame;
 import ch.psi.utils.swing.MonitoredPanel;
 import ch.psi.utils.swing.SwingUtils;
@@ -86,7 +87,7 @@ public class Panel extends MonitoredPanel implements Plugin {
 
         if (App.isDetached()) {
             if (App.getDetachedPanel() != null) {
-                return App.getDetachedPanel().equals(getTitle());
+                return IO.getPrefix(App.getDetachedPanel()).equals(getTitle());
             }
         }
         return true;
@@ -109,7 +110,11 @@ public class Panel extends MonitoredPanel implements Plugin {
         if (!isLoaded()) {
             String title = getTitle();
             if (App.isDetached()) {
+                boolean fullScreen = (frameCount==0) && App.isFullScreen();
                 JFrame frame = new JFrame(title);
+                if (fullScreen){
+                    SwingUtils.enableFullScreen(frame);
+                }                
                 frame.setIconImage(App.getIconSmall());
                 if (App.isDetachedAppendStatusBar()) {
                     JPanel panel = new JPanel();
@@ -123,9 +128,13 @@ public class Panel extends MonitoredPanel implements Plugin {
                 frame.setName(((getName() == null) ? getClass().getSimpleName() : getName()) + "Frame");
                 frame.pack();
 
-                SwingUtils.centerComponent(null, frame);
-                if (App.isDetachedPersisted()) {
-                    loadWindowState();
+                if (fullScreen){
+                    SwingUtils.setFullScreen(frame, true);
+                } else {                
+                    SwingUtils.centerComponent(null, frame);
+                    if (App.isDetachedPersisted()) {
+                        loadWindowState();
+                    }
                 }
                 frame.setVisible(true);
                 frame.requestFocus();

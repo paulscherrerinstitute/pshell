@@ -154,6 +154,7 @@ public class App extends ObservableBase<AppListener> {
         sb.append("\n\t-strp\tShow strip chart window (can be used together with -f)");
         sb.append("\n\t-strh=<path>\tStrip chart default configuration folder.");
         sb.append("\n\t-dtpn\tShow data panel window only (can be used together with -f)");
+        sb.append("\n\t-full\tStart in full screen mode");
         sb.append("\n\t-mlaf\tUse Metal look and feel (cross platform)");
         sb.append("\n\t-slaf\tUse System look and feel (or Metal if no System LAF is installed)");
         sb.append("\n\t-nlaf\tUse Nimbus look and feel (cross platform)");
@@ -213,10 +214,10 @@ public class App extends ObservableBase<AppListener> {
     static public boolean isDual() {
         return isGui() && hasArgument("t");
     }
-    
+
     static public boolean isAttach() {
         return isGui() && hasArgument("attach");
-    }    
+    }
 
     static public boolean isConsole() {
         return isGui() && hasArgument("w");
@@ -227,11 +228,15 @@ public class App extends ObservableBase<AppListener> {
     }
 
     static public boolean isDetachedPersisted() {
-        return isDetached() && hasArgument("k");
+        return isDetached() && hasArgument("k") && !isFullScreen();
     }
 
     static public boolean isDetachedAppendStatusBar() {
         return isDetached() && hasArgument("sbar");
+    }
+
+    static public boolean isFullScreen() {
+        return isGui() && hasArgument("full");
     }
 
     static public boolean isQuiet() {
@@ -272,10 +277,10 @@ public class App extends ObservableBase<AppListener> {
     static public boolean isStripChart() {
         return hasArgument("strp");
     }
-    
+
     static public boolean isStripChartServer() {
         return isStripChart() && ((isAttach() || (isServerMode())));
-    }    
+    }
 
     static public boolean isDataPanel() {
         return hasArgument("dtpn");
@@ -769,7 +774,9 @@ public class App extends ObservableBase<AppListener> {
                     logger.log(Level.INFO, "Create workbench");
                     Processor.addServiceProvider(ScanEditorPanel.class);
                     view = new View();
-                    if (isContextPersisted()) {
+                    if (isFullScreen()) {
+                        SwingUtils.setFullScreen(view, true);
+                    } else if (isContextPersisted()) {
                         view.restoreState();
                     } else {
                         SwingUtils.centerComponent(null, view);
@@ -1247,13 +1254,17 @@ public class App extends ObservableBase<AppListener> {
 
     public void persistGuiState() {
         if (isContextPersisted()) {
-            try {
-                if (view != null) {
-                    view.saveState();
-                    view.savePersistedWindowsStates();
+            if (isFullScreen()) {
+                logger.fine("Do not persist state in full screen mode");
+            } else {
+                try {
+                    if (view != null) {
+                        view.saveState();
+                        view.savePersistedWindowsStates();
+                    }
+                } catch (Exception ex) {
+                    logger.log(Level.INFO, null, ex);
                 }
-            } catch (Exception ex) {
-                logger.log(Level.INFO, null, ex);
             }
         }
     }

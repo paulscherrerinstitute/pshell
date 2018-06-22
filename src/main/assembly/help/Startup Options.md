@@ -162,6 +162,10 @@
     <td>Show data panel window only (can be used together with -f).</td>
   </tr>
   <tr>
+    <td>-full=[path]</td>
+    <td>Start in full screen mode.</td>
+  </tr>
+  <tr>
     <td>-mlaf</td>
     <td>Use Metal look and feel (cross platform).</td>
   </tr>
