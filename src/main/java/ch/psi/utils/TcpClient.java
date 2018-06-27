@@ -185,6 +185,15 @@ public class TcpClient implements AutoCloseable {
         checkConnected();
         socketWorker.send(tx);
     }
+    
+    public void flush() throws IOException {
+        if (isConnected()){
+            synchronized (messageLock) {
+                socketWorker.flush();
+                receiveBuffer.clear();
+            }
+        }
+    }
 
     public byte[] sendReceive(byte[] cmd, int timeout) throws IOException, InterruptedException, TimeoutException {
         synchronized (messageLock) {
@@ -204,7 +213,8 @@ public class TcpClient implements AutoCloseable {
 
     public byte[] sendReceive(byte[] cmd) throws IOException, InterruptedException, TimeoutException {
         synchronized (messageLock) {
-            receiveBuffer.clear();
+            //receiveBuffer.clear();
+            flush();
             send(cmd);
             return receive();
         }
