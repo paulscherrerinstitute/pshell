@@ -1,11 +1,13 @@
 package ch.psi.pshell.imaging;
 
+
 import java.awt.image.BufferedImage;
 import java.io.BufferedInputStream;
 import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.util.logging.Level;
 
 /**
  * Image source receive frames from a mjpeg server.
@@ -13,10 +15,16 @@ import java.net.URL;
 public class MjpegSource extends SourceBase {
 
     final String url;
+    final boolean flushOnUpdate;
 
     public MjpegSource(String name, String url) {
+        this(name, url, false);
+    }
+
+    public MjpegSource(String name, String url, boolean flushOnUpdate) {
         super(name, new SourceConfig());
         this.url = url;
+        this.flushOnUpdate = flushOnUpdate;
     }
 
     InputStream stream;
@@ -25,9 +33,38 @@ public class MjpegSource extends SourceBase {
     protected void doInitialize() throws IOException, InterruptedException {
         super.doInitialize();
         URL aux = new URL(url);
-        stream = aux.openStream();
-        if (!stream.markSupported()) {
-            stream = new BufferedInputStream(stream);
+        synchronized(url){
+            stream = aux.openStream();
+            if (!stream.markSupported()) {
+                stream = new BufferedInputStream(stream);
+            }
+        }
+    }
+
+    Thread monitoringThread;
+
+    @Override
+    protected void doSetMonitored(boolean value) {
+        if (value && (monitoringThread == null)) {
+            monitoringThread = new Thread(() -> {
+                try {
+                    while (true) {
+                        try {
+                            doUpdate();
+                            Thread.sleep(1);
+                        } catch (IOException ex) {
+                            getLogger().log(Level.FINER, null, ex);
+                        }
+                    }
+                } catch (InterruptedException ex) {
+                    return;
+                }
+            });
+            monitoringThread.setDaemon(true);
+            monitoringThread.start();
+        } else if (!value && (monitoringThread != null)) {
+            monitoringThread.interrupt();
+            monitoringThread = null;
         }
     }
 
@@ -37,10 +74,11 @@ public class MjpegSource extends SourceBase {
 
     @Override
     protected void doUpdate() throws IOException, InterruptedException {
-
         byte[] data = null;
         if (stream != null) {
-            stream.mark(MAX_FRAME_SIZE);
+            if (flushOnUpdate) {
+                flush();
+            }
             try {
                 data = readData();
             } catch (EOFException ex) {
@@ -49,29 +87,28 @@ public class MjpegSource extends SourceBase {
                 data = readData();
             }
         }
-
         if (data == null) {
             pushImage(null);
         } else {
             BufferedImage img = Utils.newImage(data);
             pushImage(img);
         }
-
     }
-
     byte[] readData() throws IOException {
-        if (stream != null) {
-            stream.mark(MAX_FRAME_SIZE);
-            int startOfFrame = waitBytes(START_OF_FRAME) - START_OF_FRAME.length;
-            if (startOfFrame >= 0) {
-                int endOfFrame = waitBytes(END_OF_FRAME);
-                if (endOfFrame >= 0) {
-                    stream.reset();
-                    stream.skip(startOfFrame);
-                    int length = endOfFrame + START_OF_FRAME.length;
-                    byte[] data = new byte[length];
-                    stream.read(data, 0, length);
-                    return data;
+        synchronized(url){
+            if (stream != null) {
+                stream.mark(MAX_FRAME_SIZE);
+                int startOfFrame = waitBytes(START_OF_FRAME) - START_OF_FRAME.length;
+                if (startOfFrame >= 0) {
+                    int endOfFrame = waitBytes(END_OF_FRAME);
+                    if (endOfFrame >= 0) {
+                        stream.reset();
+                        stream.skip(startOfFrame);
+                        int length = endOfFrame;
+                        byte[] data = new byte[length];
+                        stream.read(data, 0, length);
+                        return data;
+                    }
                 }
             }
         }
@@ -98,6 +135,18 @@ public class MjpegSource extends SourceBase {
             index++;
             if (index >= MAX_FRAME_SIZE) {
                 return -1;
+            }
+        }
+    }
+
+    public void flush() throws IOException {
+        //stream.skip(stream.available());           
+        //TODO: Skipping won't make the current image to be displayed
+        synchronized(url){
+            stream.close();
+            stream = new URL(url).openStream();
+            if (!stream.markSupported()) {
+                stream = new BufferedInputStream(stream);
             }
         }
     }
