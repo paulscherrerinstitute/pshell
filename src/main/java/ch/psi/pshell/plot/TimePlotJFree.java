@@ -8,10 +8,12 @@ import ch.psi.utils.Reflection.Hidden;
 import ch.psi.utils.swing.ExtensionFileFilter;
 import ch.psi.utils.swing.SwingUtils;
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.Paint;
 import java.awt.Shape;
 import java.awt.event.ActionEvent;
 import java.awt.geom.Rectangle2D;
+import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -549,6 +551,14 @@ public class TimePlotJFree extends TimePlotBase {
         }
         return data;
     }
+    
+    @Override
+    public BufferedImage getSnapshot(Dimension size) {
+        if (size==null){
+            size = new Dimension(SNAPSHOT_WIDTH, SNAPSHOT_HEIGHT);
+        }
+        return chart.createBufferedImage(size.width, size.height);
+    }     
 
     @Hidden
     public JFreeChart getChart() {
