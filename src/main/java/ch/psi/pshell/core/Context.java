@@ -68,6 +68,7 @@ import ch.psi.pshell.security.UsersManagerListener;
 import ch.psi.pshell.security.User;
 import ch.psi.pshell.security.UserAccessException;
 import ch.psi.utils.Chrono;
+import ch.psi.utils.Condition;
 import ch.psi.utils.SortedProperties;
 import ch.psi.utils.Sys.OSFamily;
 import java.io.FileInputStream;
@@ -412,6 +413,33 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
     public State getState() {
         return state;
     }
+    
+    
+    public void waitState(State state, int timeout) throws IOException, InterruptedException {
+        Chrono chrono = new Chrono();
+        try {
+           chrono.waitCondition(new Condition() {
+               @Override
+               public boolean evaluate() throws InterruptedException {
+                   return getState() == state;
+               }
+           }, timeout);
+       } catch (TimeoutException ex) {
+       }
+    }
+
+    public void waitStateNot(State state, int timeout) throws IOException, InterruptedException {
+        Chrono chrono = new Chrono();
+        try {
+           chrono.waitCondition(new Condition() {
+               @Override
+               public boolean evaluate() throws InterruptedException {
+                   return getState() != state;
+               }
+           }, timeout);
+       } catch (TimeoutException ex) {
+       }
+    }    
 
     public boolean isLocalMode() {
         return localMode;

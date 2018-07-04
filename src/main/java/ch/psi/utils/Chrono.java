@@ -53,11 +53,25 @@ public class Chrono {
         return (getEllapsed() > timeout);
     }
 
+    /**
+     * If timeout negative, then wait forever. 
+     */
     public void checkTimeout(int timeout) throws TimeoutException {
-        if (isTimeout(timeout)) {
-            throw new TimeoutException();
+        if (timeout >=0){
+            if (isTimeout(timeout)) {
+                throw new TimeoutException();
+            }
         }
     }
+    
+    public void checkTimeout(int timeout, String errorMessage) throws TimeoutException {
+        if (timeout >=0){
+            if (isTimeout(timeout)) {
+                throw new TimeoutException(errorMessage);
+            }
+        }
+    }    
+
 
     public boolean waitTimeout(int timeout) throws InterruptedException {
         int sleep = timeout - getEllapsed();
@@ -74,25 +88,31 @@ public class Chrono {
         waitCondition(condition, timeout, 1);
     }
 
+    /**
+     * Negative timeout: wait forever 
+     */
     public void waitCondition(Condition condition, int timeout, int sleepInterval) throws TimeoutException, InterruptedException {
         while (!condition.evaluate()) {
-            if (isTimeout(timeout)) {
-                throw new TimeoutException();
-            }
+            checkTimeout(timeout);
             Thread.sleep(sleepInterval);
         }
     }
 
+    /**
+     * Negative timeout: wait forever 
+     */
     public void waitCondition(Object lock, Condition condition, int timeout) throws TimeoutException, InterruptedException {
         int wait = Math.max(timeout, 0);
         while (!condition.evaluate()) {
             synchronized (lock) {
                 lock.wait(wait);
             }
-            if (wait > 0) {
-                wait = timeout - getEllapsed();
-                if (wait <= 0) {
-                    throw new TimeoutException();
+            if (timeout>=0){
+                if (wait > 0) {
+                    wait = timeout - getEllapsed();
+                    if (wait <= 0) {
+                        throw new TimeoutException();
+                    }
                 }
             }
         }

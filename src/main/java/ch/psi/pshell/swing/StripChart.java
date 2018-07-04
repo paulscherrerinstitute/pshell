@@ -1059,6 +1059,11 @@ public class StripChart extends StandardDialog {
                         break;
                     case Device:
                         if (Context.getInstance() != null) {
+                            if (Context.getInstance().getState() == State.Initializing){
+                                Logger.getLogger(StripChart.class.getName()).fine("Waiting finish context initialization...");
+                                Context.getInstance().waitStateNot(State.Initializing, -1);
+                                Logger.getLogger(StripChart.class.getName()).fine("Waiting done");
+                            }
                             try {
                                 dev = Context.getInstance().getDevicePool().getByName(name, Device.class);
                                 if (dev == null) {

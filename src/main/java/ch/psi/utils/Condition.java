@@ -19,12 +19,8 @@ public interface Condition {
         while (!evaluate()) {
             if (Thread.currentThread().isInterrupted()) {
                 throw new InterruptedException();
-            }            
-            if (timeout >= 0) {
-                if (chrono.isTimeout(timeout)) {
-                    throw new TimeoutException("Timeout waiting ready");
-                }
-            }
+            }       
+            chrono.checkTimeout(timeout, "Timeout waiting ready");
             Thread.sleep(10); //Looping in 10ms because isReady can make HW access
         }
     }    
