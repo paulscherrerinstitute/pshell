@@ -164,6 +164,7 @@ public class Panel extends MonitoredPanel implements Plugin {
                 getView().getDocumentsTab().setTitleAt(index, title);
                 getView().getDocumentsTab().setSelectedIndex(0);
             }
+            onLoaded();
         }
     }
 
@@ -181,6 +182,7 @@ public class Panel extends MonitoredPanel implements Plugin {
             } else {
                 getView().getDocumentsTab().remove(this);
             }
+            onUnloaded();
         }
     }
 
@@ -413,6 +415,14 @@ public class Panel extends MonitoredPanel implements Plugin {
         if (disregardedTimer) {
             onTimer();
         }
+    }
+    
+    protected void onLoaded(){
+        
+    }
+    
+    protected void onUnloaded(){
+        
     }
 
     /**
