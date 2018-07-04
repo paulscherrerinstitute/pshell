@@ -116,9 +116,8 @@ public final class ScientaPanel extends DevicePanel {
         } else {
             getDevice().getCurrentChannel().addListener(progressListener);
             getDevice().getSpectrum().addListener(spectrumListener);
-            cameraPanel.startTimer(3000);
-            startTimer(3000);
-            startBackgroundUpdate();
+            //cameraPanel.startTimer(3000, 0);
+            startTimer(3000, 0);
         }
     }
 

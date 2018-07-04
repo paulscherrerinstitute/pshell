@@ -85,9 +85,8 @@ public class CameraPanel extends DevicePanel {
         if (device == null) {
             stopTimer();
         } else {
-            startTimer(2000);
+            startTimer(2000,0);
         }
-        startBackgroundUpdate();
     }
 
     @Override
