@@ -1,4 +1,4 @@
-package ch.psi.pshell.bs;
+package ch.psi.utils;
 
 import java.util.Arrays;
 import java.util.List;

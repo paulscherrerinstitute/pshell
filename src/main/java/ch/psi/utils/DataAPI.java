@@ -1,4 +1,4 @@
-package ch.psi.pshell.bs;
+package ch.psi.utils;
 
 import ch.psi.pshell.core.JsonSerializer;
 import java.io.IOException;

@@ -125,6 +125,12 @@ public class HistoryChart extends JPanel implements AutoCloseable {
             device.removeListener(deviceListener);
         }
     }
+    
+    public void removeAllDevices() {
+        for (Device d : getDevices()){
+            removeDevice(d);
+        }
+    }
 
     static Color[] COLORS = new Color[]{Color.BLUE, Color.RED, Color.GREEN, Color.ORANGE, Color.MAGENTA, Color.CYAN, Color.BLACK};
     int colorIndex = 0;
