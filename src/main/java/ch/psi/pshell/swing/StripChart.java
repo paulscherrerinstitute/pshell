@@ -5,6 +5,7 @@ import ch.psi.pshell.bs.Scalar;
 import ch.psi.pshell.bs.Stream;
 import ch.psi.pshell.core.Context;
 import ch.psi.pshell.core.ContextAdapter;
+import ch.psi.pshell.core.InlineDevice;
 import ch.psi.pshell.core.JsonSerializer;
 import ch.psi.pshell.data.ProviderText;
 import ch.psi.pshell.device.Device;
@@ -1070,6 +1071,10 @@ public class StripChart extends StandardDialog {
                                     dev = (Device) Context.getInstance().evalLineBackground(name);
                                 }
                             } catch (Exception ex) {
+                                try {
+                                    dev = InlineDevice.create(name, null);
+                                } catch (Exception e) {
+                                }
                             }
                         }
                         break;
