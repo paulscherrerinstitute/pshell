@@ -295,7 +295,7 @@ public class EpicsConfigDialog extends StandardDialog {
             }
             accept();
         } catch (Exception ex) {
-            SwingUtils.showException(EpicsConfigDialog.this, ex);
+            SwingUtils.showException(this, ex);
         }
     }//GEN-LAST:event_buttonOkActionPerformed
 

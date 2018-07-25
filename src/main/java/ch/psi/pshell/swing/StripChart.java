@@ -14,11 +14,13 @@ import ch.psi.pshell.device.DeviceListener;
 import ch.psi.pshell.device.TimestampedValue;
 import ch.psi.pshell.epics.ChannelDouble;
 import ch.psi.pshell.epics.Epics;
+import ch.psi.pshell.plot.LinePlotBase;
 import ch.psi.pshell.plot.PlotBase;
 import ch.psi.pshell.plot.TimePlotBase;
 import ch.psi.pshell.plot.TimePlotSeries;
 import ch.psi.pshell.plotter.Preferences;
 import ch.psi.pshell.scan.StripScanExecutor;
+import ch.psi.pshell.swing.StripChartAlarmEditor.StripChartAlarmConfig;
 import ch.psi.pshell.ui.App;
 import ch.psi.utils.IO;
 import ch.psi.utils.InvokingProducer;
@@ -47,6 +49,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EventObject;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Vector;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -57,9 +61,11 @@ import javax.swing.DefaultComboBoxModel;
 import javax.swing.GroupLayout;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JColorChooser;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
+import javax.swing.JDialog;
 import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -68,6 +74,7 @@ import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
+import javax.swing.Timer;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
@@ -79,20 +86,15 @@ import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
 
 /**
- *  Time plotting of a set of devices. 
- *  Can be used in the workbench or opened standalone with '-strp' option. 
- *  The '-attach'option make standalone panels be handled in the same process.
- * 
- *  StripChart plot panel can be included in Panel plugins, for example adding in the 
- *  plugin constructor:
- *        stripChart = new StripChart(this.getTopLevel(), false, App.getStripChartFolderArg());            
- *        panel.add(stripChart.getPlotPanel());  
- *        try {                        
- *            stripChart.open(new File("test.scd")));
- *            stripChart.start();
- *        } catch (Exception ex) {
- *            showException(ex);
- *        }  
+ * Time plotting of a set of devices. Can be used in the workbench or opened
+ * standalone with '-strp' option. The '-attach'option make standalone panels be
+ * handled in the same process.
+ *
+ * StripChart plot panel can be included in Panel plugins, for example adding in
+ * the plugin constructor: stripChart = new StripChart(this.getTopLevel(),
+ * false, App.getStripChartFolderArg()); panel.add(stripChart.getPlotPanel());
+ * try { stripChart.open(new File("test.scd"))); stripChart.start(); } catch
+ * (Exception ex) { showException(ex); }
  *
  */
 public class StripChart extends StandardDialog {
@@ -257,19 +259,19 @@ public class StripChart extends StandardDialog {
             });
         }
     }
-    
+
     //Access functions
-    public JTabbedPane getTabbedPane(){
+    public JTabbedPane getTabbedPane() {
         return this.tabPane;
     }
-    
-    public JPanel getPlotPanel(){
+
+    public JPanel getPlotPanel() {
         return panelPlots;
     }
-    
-    public JPanel getConfigPanel(){
+
+    public JPanel getConfigPanel() {
         return panelConfig;
-    }    
+    }
 
     void setButtonPause(boolean paused) {
         buttonPause.setText("");
@@ -419,6 +421,50 @@ public class StripChart extends StandardDialog {
             }
         });
 
+        TableColumn colAlarm = tableSeries.getColumnModel().getColumn(6);
+        colAlarm.setPreferredWidth(50);
+        class AlarmEditor extends AbstractCellEditor implements TableCellEditor {
+
+            private final JCheckBox check = new JCheckBox();
+            StripChartAlarmConfig config;
+
+            AlarmEditor() {
+                check.setHorizontalAlignment(SwingConstants.CENTER);
+            }
+
+            @Override
+            public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
+                StripChartAlarmEditor alarmEditor = new StripChartAlarmEditor(SwingUtils.getFrame(tableSeries), true);
+                alarmEditor.config = (StripChartAlarmConfig) value;
+                alarmEditor.setLocationRelativeTo(tableSeries);
+                alarmEditor.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+                alarmEditor.setVisible(true);
+                config = (alarmEditor.getResult()) ? alarmEditor.config : null;
+                check.setSelected(value != null);
+                SwingUtilities.invokeLater(() -> {
+                    stopCellEditing();
+                });
+                return check;
+            }
+
+            @Override
+            public Object getCellEditorValue() {
+                return config;
+            }
+        }
+        colAlarm.setCellEditor(new AlarmEditor());
+
+        colAlarm.setCellRenderer(new DefaultTableCellRenderer() {
+            @Override
+            public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+                Component aux = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+                JCheckBox check = new JCheckBox("", (value != null) && ((StripChartAlarmConfig) value).isEnabled());
+                check.setHorizontalAlignment(SwingConstants.CENTER);
+                check.setBackground(aux.getBackground());
+                return check;
+            }
+        });
+
         update();
 
         tableCharts.getColumnModel().getColumn(0).setPreferredWidth(60);
@@ -466,7 +512,7 @@ public class StripChart extends StandardDialog {
                 try {
                     int index = e.getFirstRow();
                     final Color color = Preferences.getColorFromString((String) modelSeries.getValueAt(index, 5));
-                    timePlotSeries.get(index).setColor(color);
+                    getTimePlotSeries(index).setColor(color);
                 } catch (Exception ex) {
                     SwingUtils.showException(StripChart.this, ex);
                 }
@@ -551,7 +597,7 @@ public class StripChart extends StandardDialog {
 
     boolean isSeriesTableRowEditable(int row, int column) {
         boolean editing = !started;
-        return ((column >= tableSeries.getColumnCount() - 1) || editing);
+        return ((column >= tableSeries.getColumnCount() - 2) || editing);
     }
 
     boolean isChartTableRowEditable(int row, int column) {
@@ -667,14 +713,14 @@ public class StripChart extends StandardDialog {
 
     void updateTitle() {
         String title = "Strip Chart";
-        if (App.isStripChartServer()){
+        if (App.isStripChartServer()) {
             int pid = Sys.getPid();
             title += " [" + pid + "]";
         }
         if ((file == null) || (!file.exists())) {
             setTitle(title);
         } else {
-            setTitle(title +  " - " + file.getName());
+            setTitle(title + " - " + file.getName());
         }
     }
 
@@ -704,6 +750,13 @@ public class StripChart extends StandardDialog {
         if (state.length > 0) {
             modelSeries.setDataVector((Object[][]) state[0], SwingUtils.getTableColumnNames(tableSeries));
         }
+        if (modelSeries.getColumnCount() > 6) {
+            for (int i = 0; i < modelSeries.getRowCount(); i++) {
+                Object value = modelSeries.getValueAt(i, 6);
+                modelSeries.setValueAt((value != null) && (value instanceof Map) ? new StripChartAlarmConfig((Map) value) : null, i, 6);
+            }
+        }
+
         if (state.length > 1) {
             modelCharts.setDataVector((Object[][]) state[1], SwingUtils.getTableColumnNames(tableCharts));
         }
@@ -770,6 +823,19 @@ public class StripChart extends StandardDialog {
     final ArrayList<Device> devices = new ArrayList<>();
     final HashMap<Vector, Integer> seriesIndexes = new HashMap<>();
     final ArrayList<TimePlotSeries> timePlotSeries = new ArrayList<>();
+
+    TimePlotSeries getTimePlotSeries(int row) {
+        int index = 0;
+        for (int i = 0; i < modelSeries.getRowCount(); i++) {
+            if (modelSeries.getValueAt(i, 0).equals(Boolean.TRUE)) {
+                if (row == i) {
+                    return timePlotSeries.get(index);
+                }
+                index++;
+            }
+        }
+        return null;
+    }
 
     public void start() throws Exception {
         stop();
@@ -862,7 +928,7 @@ public class StripChart extends StandardDialog {
             persistenceExecutor = new StripScanExecutor();
             persistenceExecutor.start(path, getNames(), String.valueOf(comboFormat.getSelectedItem()), String.valueOf(comboLayout.getSelectedItem()), true);
         }
-
+        boolean alarming = false;
         Vector[] rows = (Vector[]) vector.toArray(new Vector[0]);
         for (int i = 0; i < rows.length; i++) {
             Vector info = rows[i];
@@ -873,6 +939,7 @@ public class StripChart extends StandardDialog {
                 final int axis = (Integer) info.get(4);
                 final TimePlotBase plot = plots.get(plotIndex);
                 final Color color = Preferences.getColorFromString((String) info.get(5));
+                final StripChartAlarmConfig alarmConfig = (StripChartAlarmConfig) info.get(6);
 
                 TimePlotSeries graph = (color != null) ? new TimePlotSeries(name, color, axis) : new TimePlotSeries(name, axis);
                 seriesIndexes.put(info, plot.getNumberOfSeries());
@@ -887,7 +954,14 @@ public class StripChart extends StandardDialog {
                 t.setDaemon(true);
                 tasks.add(task);
                 t.start();
+                if ((alarmConfig != null) && (alarmConfig.isEnabled())) {
+                    alarming = true;
+                }
             }
+        }
+
+        if (alarming) {
+            startTimer();
         }
     }
 
@@ -952,6 +1026,53 @@ public class StripChart extends StandardDialog {
         return id;
     }
 
+    Timer timer;
+
+    public void startTimer() {
+        stopTimer();
+        timer = new Timer(1000, (ActionEvent e) -> {
+            try {
+                if (isShowing()) {
+                    onAlarmTimer();
+                }
+            } catch (Exception ex) {
+                Logger.getLogger(StripChart.class.getName()).log(Level.FINE, null, ex);
+            }
+        });
+        timer.setInitialDelay(1000);
+        timer.start();
+    }
+
+    public void stopTimer() {
+        if (timer != null) {
+            timer.stop();
+            timer = null;
+        }
+    }
+
+    void onAlarmTimer() {
+        List<Integer> alarmingPlots = new ArrayList<>();
+        boolean alarming = false;
+        for (DeviceTask task : tasks) {
+            if (task.isAlarming()) {
+                alarming = true;
+                alarmingPlots.add(((Integer) task.info.get(3)) - 1);
+            }
+        }
+        if (alarming) {
+            Toolkit.getDefaultToolkit().beep();
+        }
+        boolean pulse = (((System.currentTimeMillis()/1000)%2) == 0);
+        for (int i = 0; i< plots.size(); i++){
+            TimePlotBase p = plots.get(i);
+            if (alarmingPlots.contains(i)){
+                p.setPlotOutlineColor( pulse ?  Color.RED : LinePlotBase.getOutlineColor());
+            } else {
+                p.setPlotOutlineColor(LinePlotBase.getOutlineColor());
+            }
+        }
+    }
+
     final ArrayList<Device> instantiatedDevices = new ArrayList<>();
 
     ch.psi.pshell.bs.Provider dispatcher;
@@ -967,6 +1088,12 @@ public class StripChart extends StandardDialog {
         Double current;
         final Object persistLock = new Object();
         boolean localTime;
+        boolean alarming;
+
+        boolean isAlarming() {
+            final StripChartAlarmConfig alarmConfig = (StripChartAlarmConfig) info.get(6);
+            return (alarmConfig == null) ? false : alarmConfig.isAlarm(current);
+        }
 
         void add(Device device, Object value, Long timestamp, TimePlotBase plot, int seriesIndex) {
             try {
@@ -998,16 +1125,16 @@ public class StripChart extends StandardDialog {
                     //Invoking event thread to prevent https://sourceforge.net/p/jfreechart/bugs/1009/ (JFreeChart is not thread safe)
                     chartElementProducer.post(new ChartElement(plot, seriesIndex, time, d));
 
+                    Double val = (d == null) ? Double.NaN : d;
                     if (persisting) {
-                        Double val = (d == null) ? Double.NaN : d;
                         synchronized (persistLock) {
                             if (!val.equals(current)) {
                                 persistenceExecutor.append(id, val, now, time);
                                 index++;
-                                current = val;
                             }
                         }
                     }
+                    current = val;
                 }
             } catch (Exception ex) {
                 Logger.getLogger(StripChart.class.getName()).log(Level.FINE, null, ex);
@@ -1016,7 +1143,6 @@ public class StripChart extends StandardDialog {
 
         @Override
         public void run() {
-
             String name = ((String) info.get(1)).trim();
             final Type type = Type.valueOf(info.get(2).toString());
             final int plotIndex = ((Integer) info.get(3)) - 1;
@@ -1060,7 +1186,7 @@ public class StripChart extends StandardDialog {
                         break;
                     case Device:
                         if (Context.getInstance() != null) {
-                            if (Context.getInstance().getState() == State.Initializing){
+                            if (Context.getInstance().getState() == State.Initializing) {
                                 Logger.getLogger(StripChart.class.getName()).fine("Waiting finish context initialization...");
                                 Context.getInstance().waitStateNot(State.Initializing, -1);
                                 Logger.getLogger(StripChart.class.getName()).fine("Waiting done");
@@ -1222,6 +1348,7 @@ public class StripChart extends StandardDialog {
 
     void stop() {
         if (started) {
+            stopTimer();
             chartElementProducer.setDispatchTimer(0);
             Logger.getLogger(StripChart.class.getName()).info("Stop");
             started = false;
@@ -1272,8 +1399,9 @@ public class StripChart extends StandardDialog {
     }
 
     public static File resolveFile(File file, File defaultFolder) throws FileNotFoundException {
-        
-        file = new File(Context.getInstance().getSetup().expandPath(file.getPath()));
+        if (Context.getInstance() != null) {
+            file = new File(Context.getInstance().getSetup().expandPath(file.getPath()));
+        }
         if (!file.exists()) {
             if (defaultFolder != null) {
                 File aux = Paths.get(defaultFolder.getAbsolutePath(), file.getPath()).toFile();
@@ -1315,8 +1443,8 @@ public class StripChart extends StandardDialog {
                     dialog.onClosed();
                     if (modal) {
                         System.exit(0);
-                    } else if (App.isStripChart() && App.isAttach()){
-                        if(SwingUtils.getVisibleWindows().length == 1){
+                    } else if (App.isStripChart() && App.isAttach()) {
+                        if (SwingUtils.getVisibleWindows().length == 1) {
                             System.out.println("Last StripChart window closes: finishing process" + Sys.getProcessName() + "\n");
                             System.exit(0);
                         }
@@ -1427,11 +1555,11 @@ public class StripChart extends StandardDialog {
 
             },
             new String [] {
-                "Enabled", "Name", "Type", "Plot", "Y Axis", "Color"
+                "Enabled", "Name", "Type", "Plot", "Y Axis", "Color", "Alarm"
             }
         ) {
             Class[] types = new Class [] {
-                java.lang.Boolean.class, java.lang.String.class, java.lang.Object.class, java.lang.Object.class, java.lang.Object.class, java.lang.Object.class
+                java.lang.Boolean.class, java.lang.String.class, java.lang.Object.class, java.lang.Object.class, java.lang.Object.class, java.lang.Object.class, java.lang.Object.class
             };
 
             public Class getColumnClass(int columnIndex) {
