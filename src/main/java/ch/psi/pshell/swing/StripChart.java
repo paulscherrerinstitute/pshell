@@ -1470,7 +1470,7 @@ public class StripChart extends StandardDialog {
                         Logger.getLogger(StripChart.class.getName()).log(Level.WARNING, null, ex);
                     }
                 }
-                SwingUtils.showMessage(this, "Strip Chart", "Success saving data to: \n" + file);
+                SwingUtils.showMessage(this, "Strip Chart", "Success saving data to: \n" + path);
             } finally {
                 persistenceExecutor.finish();
             }
