@@ -1683,6 +1683,12 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
         return (scriptManager == null) ? null : scriptManager.getVar(name);
     }
 
+    public void setInterpreterVariable(String name, Object value) {
+        if (scriptManager != null) {
+            scriptManager.setVar(name, value);
+        }
+    }
+    
     void injectVars(final CommandSource source) {
         onCommand(Command.injectVars, null, source);
         try {
