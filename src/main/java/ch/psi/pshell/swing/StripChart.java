@@ -431,15 +431,19 @@ public class StripChart extends StandardDialog {
             AlarmEditor() {
                 check.setHorizontalAlignment(SwingConstants.CENTER);
             }
-
             @Override
             public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
-                StripChartAlarmEditor alarmEditor = new StripChartAlarmEditor(SwingUtils.getFrame(tableSeries), true);
-                alarmEditor.config = (StripChartAlarmConfig) value;
+                
+                Type type = Type.valueOf(modelSeries.getValueAt(row, 2).toString());
+                String channel = (type == Type.Channel) ? String.valueOf(modelSeries.getValueAt(row, 1)) : null;
+                StripChartAlarmEditor alarmEditor = new StripChartAlarmEditor(SwingUtils.getFrame(tableSeries), true, (StripChartAlarmConfig) value, channel);
                 alarmEditor.setLocationRelativeTo(tableSeries);
                 alarmEditor.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
                 alarmEditor.setVisible(true);
                 config = (alarmEditor.getResult()) ? alarmEditor.config : null;
+                if (config!=null){
+                    config.updateChannelLimits();
+                }
                 check.setSelected(value != null);
                 SwingUtilities.invokeLater(() -> {
                     stopCellEditing();
@@ -753,7 +757,9 @@ public class StripChart extends StandardDialog {
         if (modelSeries.getColumnCount() > 6) {
             for (int i = 0; i < modelSeries.getRowCount(); i++) {
                 Object value = modelSeries.getValueAt(i, 6);
-                modelSeries.setValueAt((value != null) && (value instanceof Map) ? new StripChartAlarmConfig((Map) value) : null, i, 6);
+                Type type = Type.valueOf(modelSeries.getValueAt(i, 2).toString());
+                String channel = (type == Type.Channel) ? String.valueOf(modelSeries.getValueAt(i, 1)) : null;                
+                modelSeries.setValueAt((value != null) && (value instanceof Map) ? new StripChartAlarmConfig((Map) value, channel) : null, i, 6);
             }
         }
 
