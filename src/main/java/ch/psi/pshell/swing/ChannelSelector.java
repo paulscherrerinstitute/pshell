@@ -126,6 +126,7 @@ public class ChannelSelector extends javax.swing.JPanel {
             if (hasHistory) {
                 combo = new JComboBox();
                 combo.setEditable(true);
+                combo.setEnabled(isEnabled());
                 getEditorComponent().addKeyListener(new java.awt.event.KeyAdapter() {
                     public void keyReleased(java.awt.event.KeyEvent evt) {
                         update();
@@ -163,6 +164,16 @@ public class ChannelSelector extends javax.swing.JPanel {
                 history = null;
             }
 
+        }
+    }
+    
+    @Override
+    public void setEnabled(boolean enabled){
+        super.setEnabled(enabled);
+        list.setEnabled(enabled);
+        text.setEnabled(enabled);
+        if (combo!=null){
+            combo.setEnabled(enabled);
         }
     }
 
