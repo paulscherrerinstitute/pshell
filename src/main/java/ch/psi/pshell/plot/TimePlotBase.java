@@ -4,13 +4,18 @@ import ch.psi.pshell.device.TimestampedValue;
 import ch.psi.utils.swing.SwingUtils;
 import java.awt.Color;
 import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import javax.swing.JMenuItem;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import javax.swing.JCheckBoxMenuItem;
+import javax.swing.JMenu;
 import javax.swing.JPopupMenu;
 import javax.swing.event.PopupMenuEvent;
 import javax.swing.event.PopupMenuListener;
+import org.jfree.chart.renderer.xy.XYItemRenderer;
 
 /**
  *
@@ -32,6 +37,7 @@ public abstract class TimePlotBase extends PlotBase<TimePlotSeries> implements T
     JCheckBoxMenuItem menuLegend;
     JMenuItem menuStopStart;
     JMenuItem menuReset;
+    JMenu menuSeries;
 
     protected void setup() {
         setupMenus();
@@ -62,6 +68,8 @@ public abstract class TimePlotBase extends PlotBase<TimePlotSeries> implements T
         menuReset.addActionListener((ActionEvent e) -> {
             clear();
         });
+        
+        menuSeries = new JMenu("Series Visibility");
 
         JMenuItem menuDisplayDuration = new JMenuItem("Duration...");
         menuDisplayDuration.addActionListener((ActionEvent e) -> {
@@ -81,6 +89,14 @@ public abstract class TimePlotBase extends PlotBase<TimePlotSeries> implements T
             public void popupMenuWillBecomeVisible(PopupMenuEvent e) {
                 menuMarkers.setSelected(isMarkersVisible());
                 menuLegend.setSelected(isLegendVisible());
+                menuSeries.removeAll();
+                for (TimePlotSeries series : getAllSeries()){ 
+                    JCheckBoxMenuItem item = new JCheckBoxMenuItem(series.getName(), !isSeriesHidden(series)); 
+                    item.addActionListener((ActionEvent ae) -> {
+                        setSeriesHidden(series, !item.isSelected());
+                    });
+                    menuSeries.add(item);
+                }
             }
 
             @Override
@@ -97,9 +113,10 @@ public abstract class TimePlotBase extends PlotBase<TimePlotSeries> implements T
         addPopupMenuItem(menuLegend);
         addPopupMenuItem(menuStopStart);
         addPopupMenuItem(menuReset);
+        addPopupMenuItem(menuSeries);
         addPopupMenuItem(null);
         addPopupMenuItem(menuDisplayDuration);
-
+        
     }
 
     abstract protected JPopupMenu getPopupMenu();
@@ -107,6 +124,25 @@ public abstract class TimePlotBase extends PlotBase<TimePlotSeries> implements T
     abstract public void setAxisSize(int size);
 
     abstract public int getAxisSize();
+    
+    
+    public boolean isSeriesHidden(TimePlotSeries series){
+        return getSeriesColor(series).equals(TRANSPARENT);
+    }
+    
+    Color TRANSPARENT =  new Color(1, 0, 0, 0);
+    Map<TimePlotSeries, Color> hiddenPlots = new HashMap<>();
+    public void setSeriesHidden(TimePlotSeries series, boolean hidden){
+        if (hidden != isSeriesHidden(series)){
+            if (hidden){
+                hiddenPlots.put(series, getSeriesColor(series));
+                setSeriesColor(series, TRANSPARENT);
+            } else {
+                setSeriesColor(series, hiddenPlots.get(series));
+            }
+        }
+    }
+  
 
     @Override
     public void clear() {

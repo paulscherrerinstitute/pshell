@@ -7,6 +7,7 @@ import ch.psi.utils.IO;
 import ch.psi.utils.Reflection.Hidden;
 import ch.psi.utils.swing.ExtensionFileFilter;
 import ch.psi.utils.swing.SwingUtils;
+import java.awt.AlphaComposite;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Paint;
@@ -354,7 +355,7 @@ public class TimePlotJFree extends TimePlotBase {
         TimeSeries s = series.get(index);
         return String.valueOf(s.getKey());
     }
-
+    
     @Override
     public void addPopupMenuItem(final JMenuItem item) {
         if (chartPanel != null) {
