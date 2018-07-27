@@ -22,6 +22,7 @@ import ch.psi.pshell.plotter.Preferences;
 import ch.psi.pshell.scan.StripScanExecutor;
 import ch.psi.pshell.swing.StripChartAlarmEditor.StripChartAlarmConfig;
 import ch.psi.pshell.ui.App;
+import ch.psi.utils.Chrono;
 import ch.psi.utils.IO;
 import ch.psi.utils.InvokingProducer;
 import ch.psi.utils.State;
@@ -45,6 +46,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.text.DecimalFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EventObject;
@@ -72,6 +74,7 @@ import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
+import javax.swing.JToggleButton;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.Timer;
@@ -102,6 +105,8 @@ public class StripChart extends StandardDialog {
     public static final String FILE_EXTENSION = "scd";
 
     int dragInterval = 1000;
+    final int disableAlarmTimer = 30/* * 60*/ * 1000; //30 minutes
+    Chrono chronoDisableAlarmSound;
 
     enum Type {
         Channel,
@@ -140,7 +145,8 @@ public class StripChart extends StandardDialog {
     }
     final InvokingProducer<ChartElement> chartElementProducer;
 
-    JButton buttonPause = new JButton();
+    JToggleButton buttonPause = new JToggleButton();
+    JToggleButton buttonSound = new JToggleButton();
 
     boolean persisting;
     StripScanExecutor persistenceExecutor;
@@ -175,7 +181,7 @@ public class StripChart extends StandardDialog {
 
         setLayout(new LayoutManager() {
             @Override
-            public void layoutContainer(Container parent) {
+                public void layoutContainer(Container parent) {
                 Insets insets = parent.getInsets();
                 for (Component component : parent.getComponents()) {
                     if (component == buttonPause) {
@@ -189,6 +195,17 @@ public class StripChart extends StandardDialog {
                             }
                         }
                         component.setBounds(parent.getWidth() - insets.right - 2 - width, insets.top - (MainFrame.isDark() ? 2 : 0), width, height);
+                    } else if (component == buttonSound) {
+                        Dimension ps = component.getPreferredSize();
+                        int width = Math.min(ps.width, 30); //ps.width; //Math.max(ps.width, 60);
+                        int height = Math.min(ps.height, 24);
+                        if (!MainFrame.isDark()) {
+                            try {
+                                height = Math.min(height, pnGraphs.getLocationOnScreen().y - tabPane.getLocationOnScreen().y - 5);
+                            } catch (Exception ex) {
+                            }
+                        }
+                        component.setBounds(parent.getWidth() - insets.right - 2 - 2 * width - 2, insets.top - (MainFrame.isDark() ? 2 : 0), width, height);
                     } else {
                         component.setBounds(insets.left, insets.top, parent.getWidth() - insets.left - insets.right, parent.getHeight() - insets.top - insets.bottom);
                     }
@@ -220,7 +237,7 @@ public class StripChart extends StandardDialog {
         buttonPause.setVerticalTextPosition(SwingConstants.CENTER);
         buttonPause.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                boolean pause = buttonPause.getToolTipText().equals("Pause");
+                boolean pause = buttonPause.isSelected();
                 for (TimePlotBase plot : plots) {
                     if (pause) {
                         plot.stop();
@@ -232,6 +249,22 @@ public class StripChart extends StandardDialog {
             }
         });
         add(buttonPause, 0);
+
+        buttonSound.setText("");
+        buttonSound.setIcon(new ImageIcon(App.getResourceUrl((MainFrame.isDark() ? "dark/" : "") + "Sound.png")));
+        buttonSound.setFocusable(false);
+        buttonSound.setHorizontalTextPosition(SwingConstants.CENTER);
+        buttonSound.setVerticalTextPosition(SwingConstants.CENTER);
+        buttonSound.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                if (buttonSound.isSelected()){
+                    chronoDisableAlarmSound = new Chrono();
+                } else {
+                    chronoDisableAlarmSound = null;
+                }
+            }
+        });
+        add(buttonSound, 0);
 
         if (Context.getInstance() != null) {
             Context.getInstance().addListener(new ContextAdapter() {
@@ -431,9 +464,10 @@ public class StripChart extends StandardDialog {
             AlarmEditor() {
                 check.setHorizontalAlignment(SwingConstants.CENTER);
             }
+
             @Override
             public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
-                
+
                 Type type = Type.valueOf(modelSeries.getValueAt(row, 2).toString());
                 String channel = (type == Type.Channel) ? String.valueOf(modelSeries.getValueAt(row, 1)) : null;
                 StripChartAlarmEditor alarmEditor = new StripChartAlarmEditor(SwingUtils.getFrame(tableSeries), true, (StripChartAlarmConfig) value, channel);
@@ -441,7 +475,7 @@ public class StripChart extends StandardDialog {
                 alarmEditor.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
                 alarmEditor.setVisible(true);
                 config = (alarmEditor.getResult()) ? alarmEditor.config : null;
-                if (config!=null){
+                if (config != null) {
                     config.updateChannelLimits();
                 }
                 check.setSelected(value != null);
@@ -515,8 +549,10 @@ public class StripChart extends StandardDialog {
             if (started) {
                 try {
                     int index = e.getFirstRow();
-                    final Color color = Preferences.getColorFromString((String) modelSeries.getValueAt(index, 5));
-                    getTimePlotSeries(index).setColor(color);
+                    if (e.getColumn()==5){
+                        final Color color = Preferences.getColorFromString((String) modelSeries.getValueAt(index, 5));
+                        getTimePlotSeries(index).setColor(color);
+                    }
                 } catch (Exception ex) {
                     SwingUtils.showException(StripChart.this, ex);
                 }
@@ -758,7 +794,7 @@ public class StripChart extends StandardDialog {
             for (int i = 0; i < modelSeries.getRowCount(); i++) {
                 Object value = modelSeries.getValueAt(i, 6);
                 Type type = Type.valueOf(modelSeries.getValueAt(i, 2).toString());
-                String channel = (type == Type.Channel) ? String.valueOf(modelSeries.getValueAt(i, 1)) : null;                
+                String channel = (type == Type.Channel) ? String.valueOf(modelSeries.getValueAt(i, 1)) : null;
                 modelSeries.setValueAt((value != null) && (value instanceof Map) ? new StripChartAlarmConfig((Map) value, channel) : null, i, 6);
             }
         }
@@ -1066,17 +1102,32 @@ public class StripChart extends StandardDialog {
             }
         }
         if (alarming) {
-            Toolkit.getDefaultToolkit().beep();
+            if ((chronoDisableAlarmSound == null) || (chronoDisableAlarmSound.getEllapsed() > disableAlarmTimer)){
+                Toolkit.getDefaultToolkit().beep();
+                buttonSound.setSelected(false);
+                buttonSound.setToolTipText("Stop sound alarm for 30 minutes");
+            } else if (chronoDisableAlarmSound != null) {
+                buttonSound.setToolTipText("Alarm sound will be restored in " + new SimpleDateFormat("mm:ss").format(disableAlarmTimer - chronoDisableAlarmSound.getEllapsed()));
+            }
         }
-        boolean pulse = (((System.currentTimeMillis()/1000)%2) == 0);
-        for (int i = 0; i< plots.size(); i++){
+        setAlarming(alarming);
+
+        boolean pulse = (((System.currentTimeMillis() / 1000) % 2) == 0);
+        for (int i = 0; i < plots.size(); i++) {
             TimePlotBase p = plots.get(i);
-            if (alarmingPlots.contains(i)){
-                p.setPlotOutlineColor( pulse ?  Color.RED : LinePlotBase.getOutlineColor());
+            if (alarmingPlots.contains(i)) {
+                p.setPlotOutlineColor(pulse ? Color.RED : LinePlotBase.getOutlineColor());
             } else {
                 p.setPlotOutlineColor(LinePlotBase.getOutlineColor());
             }
         }
+    }
+
+    boolean alarming;
+
+    void setAlarming(boolean value) {
+        alarming = value;
+        buttonSound.setVisible(alarming && (tabPane.getSelectedComponent() == panelPlots));
     }
 
     final ArrayList<Device> instantiatedDevices = new ArrayList<>();
@@ -1094,7 +1145,6 @@ public class StripChart extends StandardDialog {
         Double current;
         final Object persistLock = new Object();
         boolean localTime;
-        boolean alarming;
 
         boolean isAlarming() {
             final StripChartAlarmConfig alarmConfig = (StripChartAlarmConfig) info.get(6);
@@ -1358,6 +1408,7 @@ public class StripChart extends StandardDialog {
             chartElementProducer.setDispatchTimer(0);
             Logger.getLogger(StripChart.class.getName()).info("Stop");
             started = false;
+            setAlarming(false);
             tasks.clear();
             setButtonPause(true);
             update();
@@ -2081,9 +2132,11 @@ public class StripChart extends StandardDialog {
                     start();
                 }
                 buttonPause.setVisible(plots.size() > 0);
+                buttonSound.setVisible(alarming);
             } else {
                 //stop();
                 buttonPause.setVisible(false);
+                buttonSound.setVisible(false);
             }
         } catch (Exception ex) {
             SwingUtils.showException(this, ex);
