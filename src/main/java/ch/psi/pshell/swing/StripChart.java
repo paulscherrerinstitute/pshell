@@ -105,7 +105,7 @@ public class StripChart extends StandardDialog {
     public static final String FILE_EXTENSION = "scd";
 
     int dragInterval = 1000;
-    final int disableAlarmTimer = 30/* * 60*/ * 1000; //30 minutes
+    final int disableAlarmTimer = 30 * 60 * 1000; //30 minutes
     Chrono chronoDisableAlarmSound;
 
     enum Type {
