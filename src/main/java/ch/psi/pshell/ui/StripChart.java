@@ -23,6 +23,7 @@ import ch.psi.pshell.scan.StripScanExecutor;
 import ch.psi.pshell.swing.HistoryChart;
 import ch.psi.pshell.swing.PlotPanel;
 import ch.psi.pshell.ui.StripChartAlarmEditor.StripChartAlarmConfig;
+import ch.psi.utils.Audio;
 import ch.psi.utils.Chrono;
 import ch.psi.utils.IO;
 import ch.psi.utils.InvokingProducer;
@@ -89,6 +90,7 @@ import javax.swing.table.TableCellEditor;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
 
+
 /**
  * Time plotting of a set of devices. Can be used in the workbench or opened
  * standalone with '-strp' option. The '-attach'option make standalone panels be
@@ -110,7 +112,10 @@ public class StripChart extends StandardDialog {
     Chrono chronoDisableAlarmSound;
     Color defaultBackgroundColor = null;
     Color defaultGridColor = null;
-
+    int alarmInterval = 1000;
+    File alarmFile = null;
+    boolean pulse;
+            
     enum Type {
         Channel,
         Stream,
@@ -180,7 +185,24 @@ public class StripChart extends StandardDialog {
             } catch (Exception ex){
                 Logger.getLogger(StripChart.class.getName()).log(Level.WARNING, null, ex);
             }
-        }        
+        }    
+        if (App.hasArgument("alarm_interval")){
+            try{
+                alarmInterval = Integer.valueOf(App.getArgumentValue("alarm_interval"));
+            } catch (Exception ex){
+                Logger.getLogger(StripChart.class.getName()).log(Level.WARNING, null, ex);
+            }
+        }   
+        if (App.hasArgument("alarm_file")){
+            try{
+                alarmFile = new File(App.getArgumentValue("alarm_file"));
+                if (!alarmFile.exists()){
+                    throw new FileNotFoundException(App.getArgumentValue("alarm_file"));
+                }
+            } catch (Exception ex){
+                Logger.getLogger(StripChart.class.getName()).log(Level.WARNING, null, ex);
+            }
+        }           
 
         buttonStartStop.setEnabled(false);
         textFileName.setEnabled(false);
@@ -1095,7 +1117,8 @@ public class StripChart extends StandardDialog {
 
     public void startTimer() {
         stopTimer();
-        timer = new Timer(1000, (ActionEvent e) -> {
+        pulse = false;
+        timer = new Timer(alarmInterval, (ActionEvent e) -> {
             try {
                 if (isShowing()) {
                     onAlarmTimer();
@@ -1104,7 +1127,7 @@ public class StripChart extends StandardDialog {
                 Logger.getLogger(StripChart.class.getName()).log(Level.FINE, null, ex);
             }
         });
-        timer.setInitialDelay(1000);
+        timer.setInitialDelay(alarmInterval);
         timer.start();
     }
 
@@ -1125,17 +1148,23 @@ public class StripChart extends StandardDialog {
             }
         }
         if (alarming) {
+            pulse = !pulse;
             if ((chronoDisableAlarmSound == null) || (chronoDisableAlarmSound.getEllapsed() > disableAlarmTimer)){
-                Toolkit.getDefaultToolkit().beep();
+                if (alarmFile == null){
+                    Toolkit.getDefaultToolkit().beep();
+                } else {
+                    Audio.playFile(alarmFile);
+                }
                 buttonSound.setSelected(false);
                 buttonSound.setToolTipText("Stop sound alarm for 30 minutes");
             } else if (chronoDisableAlarmSound != null) {
                 buttonSound.setToolTipText("Alarm sound will be restored in " + new SimpleDateFormat("mm:ss").format(disableAlarmTimer - chronoDisableAlarmSound.getEllapsed()));
             }
+        } else {
+            pulse = false;
         }
         setAlarming(alarming);
 
-        boolean pulse = (((System.currentTimeMillis() / 1000) % 2) == 0);
         for (int i = 0; i < plots.size(); i++) {
             TimePlotBase p = plots.get(i);
             if (alarmingPlots.contains(i)) {
