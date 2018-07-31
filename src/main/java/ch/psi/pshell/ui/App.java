@@ -168,8 +168,10 @@ public class App extends ObservableBase<AppListener> {
             sb.append("\n\t-f=<..>\tOpen a StripChart configuration file (.scd)");
             sb.append("\n\t-config=<..>\tLoad a JSON configuration string (same format as in .scd file)");
             sb.append("\n\t-start\tStart the data displaying immediately");
-            sb.append("\n\t-v\tCreates a StripChart server");
-            sb.append("\n\t-attach\tShared mode: tries to connect to existing server. If not available, create one.");
+            sb.append("\n\t-v\tCreate a StripChart server");
+            sb.append("\n\t-attach\tShared mode: try connecting to existing server, or create one if not available.");
+            sb.append("\n\t-background_color=<..>\tSet default plot background color");
+            sb.append("\n\t-grid_color=<..>\tSet default plot grid color");
         }
         sb.append("\n");
         return sb.toString();
