@@ -1141,10 +1141,13 @@ public class StripChart extends StandardDialog {
     void onAlarmTimer() {
         List<Integer> alarmingPlots = new ArrayList<>();
         boolean alarming = false;
-        for (DeviceTask task : tasks) {
-            if (task.isAlarming()) {
-                alarming = true;
-                alarmingPlots.add(((Integer) task.info.get(3)) - 1);
+        boolean paused = buttonPause.isSelected();
+        if (!paused){
+            for (DeviceTask task : tasks) {
+                if (task.isAlarming()) {
+                    alarming = true;
+                    alarmingPlots.add(((Integer) task.info.get(3)) - 1);
+                }
             }
         }
         if (alarming) {
