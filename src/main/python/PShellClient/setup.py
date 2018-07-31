@@ -3,7 +3,7 @@ from setuptools import setup
 
 setup(
     name='pshell_client',
-    version="1.0.0",
+    version="1.0.1",
     description="pshell_client is Python a client to PShell REST interface",
     author='Paul Scherrer Institute',
     requires=["requests"],

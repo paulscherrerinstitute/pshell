@@ -1,5 +1,9 @@
 import requests
 import json
+try:
+    from urllib import quote  # Python 2
+except ImportError:
+    from urllib.parse import quote  # Python 3
 
 
 class PShellClient:
@@ -53,6 +57,7 @@ class PShellClient:
         requests.get(url=self.url+"/update")             
    
     def eval(self,statement, async=False):
+        statement = quote(statement)
         if async:
             return int(self.get_response(requests.get(url=self.url+"/evalAsync/"+statement), False)) 
         else:
@@ -103,4 +108,4 @@ class PShellClient:
                    
     def print_help(self, input = "<builtins>"):
         for l in self.help(input):
-            print (l)    
+            print (l)      
