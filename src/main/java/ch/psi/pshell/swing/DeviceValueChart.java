@@ -157,7 +157,19 @@ public class DeviceValueChart extends DevicePanel {
             }
         }
     }
-
+    
+    public PlotBase getPlot(){
+        if (chart!=null){
+            if (chart instanceof PlotBase) {
+                return (PlotBase) chart;
+            } else if (chart instanceof HistoryChart){
+                return ((HistoryChart) chart).getPlot();
+            }
+        }
+        return null;
+    }
+    
+    
     @Override
     protected void onDeviceValueChanged(Object value, Object former) {
         if (asyncUpdates) {

@@ -64,6 +64,9 @@ public class HistoryChart extends JPanel implements AutoCloseable {
         chart.addPopupMenuItem(menuAsyncUpdates);
     }
 
+    public TimePlotBase getPlot(){
+        return chart;
+    }
     static Class DEFAULT_PLOT_IMPL_TIME = ch.psi.pshell.plot.TimePlotJFree.class;
 
     public static String getTimePlotImpl() {
