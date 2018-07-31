@@ -107,6 +107,8 @@ public class StripChart extends StandardDialog {
     int dragInterval = 1000;
     final int disableAlarmTimer = 30 * 60 * 1000; //30 minutes
     Chrono chronoDisableAlarmSound;
+    Color defaultBackgroundColor = null;
+    Color defaultGridColor = null;
 
     enum Type {
         Channel,
@@ -160,6 +162,23 @@ public class StripChart extends StandardDialog {
                 element.plot.add(element.seriesIndex, element.time, element.value);
             }
         };
+        
+        if (App.hasArgument("background_color")){
+            try{
+                defaultBackgroundColor = Preferences.getColorFromString(App.getArgumentValue("background_color"));
+                panelColorBackground.setBackground(defaultBackgroundColor);
+            } catch (Exception ex){
+                Logger.getLogger(StripChart.class.getName()).log(Level.WARNING, null, ex);
+            }
+        }
+        if (App.hasArgument("grid_color")){
+            try{
+                defaultGridColor = Preferences.getColorFromString(App.getArgumentValue("grid_color"));
+                panelColorGrid.setBackground(defaultGridColor);
+            } catch (Exception ex){
+                Logger.getLogger(StripChart.class.getName()).log(Level.WARNING, null, ex);
+            }
+        }        
 
         buttonStartStop.setEnabled(false);
         textFileName.setEnabled(false);
@@ -705,9 +724,10 @@ public class StripChart extends StandardDialog {
         textStreamFilter.setText("");
         spinnerDragInterval.setValue(1000);
         spinnerUpdate.setValue(100);
-        backgroundColor = gridColor = null;
-        panelColorBackground.setBackground(null);
-        panelColorGrid.setBackground(null);
+        backgroundColor  = defaultBackgroundColor;
+        gridColor = defaultGridColor;
+        panelColorBackground.setBackground(backgroundColor);
+        panelColorGrid.setBackground(gridColor);
         textFileName.setText((Context.getInstance() != null) ? Context.getInstance().getConfig().dataPath : "");
         comboFormat.setSelectedItem(getInitFormat());
         comboLayout.setSelectedItem(getInitLayout());
@@ -805,9 +825,10 @@ public class StripChart extends StandardDialog {
         textStreamFilter.setText("");
         spinnerDragInterval.setValue(1000);
         spinnerUpdate.setValue(100);
-        backgroundColor = gridColor = null;
-        panelColorBackground.setBackground(null);
-        panelColorGrid.setBackground(null);
+        backgroundColor  = defaultBackgroundColor;
+        gridColor = defaultGridColor;
+        panelColorBackground.setBackground(backgroundColor);
+        panelColorGrid.setBackground(gridColor);
         ckPersistence.setSelected(false);
         textFileName.setText((Context.getInstance() != null) ? Context.getInstance().getConfig().dataPath : "");
         comboFormat.setSelectedItem(getInitFormat());
@@ -2207,9 +2228,10 @@ public class StripChart extends StandardDialog {
     }//GEN-LAST:event_panelColorGridMouseClicked
 
     private void buttonDefaultColorsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonDefaultColorsActionPerformed
-        gridColor = backgroundColor = null;
-        panelColorBackground.setBackground(null);
-        panelColorGrid.setBackground(null);
+        backgroundColor = defaultBackgroundColor;
+        gridColor = defaultGridColor;
+        panelColorBackground.setBackground(backgroundColor);
+        panelColorGrid.setBackground(gridColor);
         if (started) {
             for (TimePlotBase plot : plots) {
                 plot.setPlotGridColor(PlotBase.getGridColor());
