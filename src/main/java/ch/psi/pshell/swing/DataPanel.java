@@ -1369,7 +1369,7 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
                     panel.initialize();
                 }
             } catch (Exception ex) {
-                Logger.getLogger(StripChart.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(DataPanel.class.getName()).log(Level.SEVERE, null, ex);
             }
             panel.setListener(new DataPanelListener() {
                 @Override

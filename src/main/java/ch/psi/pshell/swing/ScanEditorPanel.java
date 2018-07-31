@@ -4,7 +4,6 @@ import ch.psi.pshell.core.Context;
 import ch.psi.pshell.core.JsonSerializer;
 import ch.psi.pshell.core.InlineDevice;
 import ch.psi.pshell.scripting.ScriptType;
-import ch.psi.pshell.swing.StripChart.Type;
 import ch.psi.pshell.ui.Processor;
 import ch.psi.utils.Arr;
 import ch.psi.utils.IO;
@@ -51,6 +50,13 @@ public class ScanEditorPanel extends MonitoredPanel implements Processor {
         Disabled,
         Domain,
         Line
+    }
+    
+    public enum Type {
+        Channel,
+        Stream,
+        Device,
+        CamServer;
     }
 
     boolean updatingDomain;

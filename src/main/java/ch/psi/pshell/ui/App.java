@@ -29,7 +29,6 @@ import ch.psi.pshell.scripting.ViewPreference;
 import ch.psi.pshell.swing.DataPanel;
 import ch.psi.pshell.swing.PlotPanel;
 import ch.psi.pshell.swing.ScanEditorPanel;
-import ch.psi.pshell.swing.StripChart;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import ch.psi.utils.Arr;

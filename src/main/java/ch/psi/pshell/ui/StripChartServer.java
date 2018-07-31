@@ -1,7 +1,6 @@
 package ch.psi.pshell.ui;
 
 import ch.psi.pshell.core.JsonSerializer;
-import ch.psi.pshell.swing.StripChart;
 import ch.psi.utils.Sys;
 import ch.psi.utils.swing.SwingUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;

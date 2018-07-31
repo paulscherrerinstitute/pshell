@@ -1,7 +1,7 @@
 package ch.psi.pshell.scan;
 
 import ch.psi.pshell.core.Context;
-import ch.psi.pshell.swing.StripChart;
+import ch.psi.pshell.ui.StripChart;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;

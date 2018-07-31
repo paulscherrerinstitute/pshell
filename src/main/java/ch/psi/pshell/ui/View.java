@@ -91,7 +91,6 @@ import ch.psi.pshell.swing.PlotPanel;
 import ch.psi.pshell.swing.ScriptEditor;
 import ch.psi.pshell.swing.ScriptsPanel;
 import ch.psi.pshell.swing.SearchPanel;
-import ch.psi.pshell.swing.StripChart;
 import ch.psi.pshell.swing.TasksEditor;
 import ch.psi.pshell.swing.UpdatablePanel;
 import ch.psi.pshell.swing.UsersEditor;

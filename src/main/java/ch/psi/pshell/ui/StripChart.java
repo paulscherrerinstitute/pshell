@@ -1,4 +1,4 @@
-package ch.psi.pshell.swing;
+package ch.psi.pshell.ui;
 
 import ch.psi.pshell.bs.PipelineServer;
 import ch.psi.pshell.bs.Scalar;
@@ -20,8 +20,9 @@ import ch.psi.pshell.plot.TimePlotBase;
 import ch.psi.pshell.plot.TimePlotSeries;
 import ch.psi.pshell.plotter.Preferences;
 import ch.psi.pshell.scan.StripScanExecutor;
-import ch.psi.pshell.swing.StripChartAlarmEditor.StripChartAlarmConfig;
-import ch.psi.pshell.ui.App;
+import ch.psi.pshell.swing.HistoryChart;
+import ch.psi.pshell.swing.PlotPanel;
+import ch.psi.pshell.ui.StripChartAlarmEditor.StripChartAlarmConfig;
 import ch.psi.utils.Chrono;
 import ch.psi.utils.IO;
 import ch.psi.utils.InvokingProducer;
@@ -120,6 +121,7 @@ public class StripChart extends StandardDialog {
             return (this == CamServer) || (this == Stream);
         }
     }
+    
     final DefaultTableModel modelSeries;
     final DefaultTableModel modelCharts;
 

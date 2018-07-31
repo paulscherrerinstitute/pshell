@@ -1,6 +1,6 @@
 package ch.psi.utils;
 
-import ch.psi.pshell.swing.StripChart;
+import ch.psi.pshell.ui.StripChart;
 import java.awt.event.ActionEvent;
 import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
