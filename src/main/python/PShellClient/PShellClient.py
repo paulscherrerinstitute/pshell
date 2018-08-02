@@ -40,12 +40,12 @@ class PShellClient:
                     
     def get_devices(self):
         return self.get_response(requests.get(url=self.url+"/devices"))   
-    
-    def abort(self, command=None):
-        if command is None:
+        
+    def abort(self, command_id=None):
+        if command_id is None:
             requests.get(url=self.url+"/abort") 
         else:
-            return requests.get(url=self.url+"/abort/"+str(command)) 
+            return requests.get(url=self.url+"/abort/"+str(command_id)) 
     
     def reinit(self):
         requests.get(url=self.url+"/reinit") 
@@ -65,6 +65,9 @@ class PShellClient:
 
     def run(self,script, pars=None, background=False, async=False):
         return self.get_response(requests.put(url=self.url+"/run", json={"script":script, "pars":pars, "background":background, "async":async }))  
+
+    def get_result(self, command_id=-1):
+        return self.get_response(requests.get(url=self.url+"/result/"+command_id))  
 
     def help(self, input = "<builtins>"):
         return self.get_response(requests.get(url=self.url+"/autocompletion/" + input))   

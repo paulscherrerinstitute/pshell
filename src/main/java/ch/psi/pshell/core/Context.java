@@ -119,6 +119,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
     TerminalServer terminalServer;
     ScanStreamer scanStreamer;
     DataServer dataStreamer;
+    CommandManager commandManager;
 
     int runCount;
 
@@ -183,12 +184,12 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
         } else {
             simulation = false;
         }
-        
+
         if (System.getProperty(PROPERTY_FORCE_EXTRACT) != null) {
             forceExtract = Boolean.valueOf(System.getProperty(PROPERTY_FORCE_EXTRACT));
         } else {
             forceExtract = false;
-        }        
+        }
 
         if (System.getProperty(PROPERTY_FILE_LOCK) != null) {
             fileLockEnabled = Boolean.valueOf(System.getProperty(PROPERTY_FILE_LOCK));
@@ -271,6 +272,8 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
         dataManager = new DataManager(this);
 
         pluginManager = new PluginManager();
+        
+        commandManager = new CommandManager();
 
         usersManager = new UsersManager(setup);
 
@@ -314,7 +317,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
                 instance.dataManager.initialize();
             } catch (Throwable ex) {
                 logger.log(Level.SEVERE, null, ex);
-            }            
+            }
         }
 
         return instance;
@@ -413,33 +416,32 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
     public State getState() {
         return state;
     }
-    
-    
+
     public void waitState(State state, int timeout) throws IOException, InterruptedException {
         Chrono chrono = new Chrono();
         try {
-           chrono.waitCondition(new Condition() {
-               @Override
-               public boolean evaluate() throws InterruptedException {
-                   return getState() == state;
-               }
-           }, timeout);
-       } catch (TimeoutException ex) {
-       }
+            chrono.waitCondition(new Condition() {
+                @Override
+                public boolean evaluate() throws InterruptedException {
+                    return getState() == state;
+                }
+            }, timeout);
+        } catch (TimeoutException ex) {
+        }
     }
 
     public void waitStateNot(State state, int timeout) throws IOException, InterruptedException {
         Chrono chrono = new Chrono();
         try {
-           chrono.waitCondition(new Condition() {
-               @Override
-               public boolean evaluate() throws InterruptedException {
-                   return getState() != state;
-               }
-           }, timeout);
-       } catch (TimeoutException ex) {
-       }
-    }    
+            chrono.waitCondition(new Condition() {
+                @Override
+                public boolean evaluate() throws InterruptedException {
+                    return getState() != state;
+                }
+            }, timeout);
+        } catch (TimeoutException ex) {
+        }
+    }
 
     public boolean isLocalMode() {
         return localMode;
@@ -789,6 +791,10 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
         return pluginManager;
     }
 
+    public CommandManager getCommandManager() {
+        return commandManager;
+    }    
+            
     public TaskManager getTaskManager() {
         return taskManager;
     }
@@ -974,7 +980,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
             logger.log(Level.INFO, "Loading Device Pool");
             try {
                 devicePool.initialize();
-            } catch (FileNotFoundException| NoSuchFileException ex) {
+            } catch (FileNotFoundException | NoSuchFileException ex) {
                 logger.log(Level.FINE, null, ex);
             }
             devicePool.addListener(new DevicePoolListener() {
@@ -1084,92 +1090,40 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
             getRights().assertDeviceConfigAllowed();
         }
     };
-
-    public static class CommandInfo {
-
-        public final CommandSource source;
-        public final String script;
-        public final String command;
-        public final boolean background;
-        public final Object args;
-        public final Thread thread;
-        public final long id;
-        public final long start;
-        public long end;
-
-        CommandInfo(CommandSource source, String script, String command, Object args, boolean background) {
-            this.source = source;
-            this.script = script;
-            this.command = command;
-            this.background = background;
-            this.args = args;
-            this.thread = Thread.currentThread();
-            this.id = thread.getId();
-            this.start = System.currentTimeMillis();
-        }
-
-        public boolean isRunning() {
-            return Context.getInstance().commandInfo.containsKey(this.thread);
-        }
-
-        public void abort() throws InterruptedException {
-            if (background) {
-                this.thread.interrupt();
-            } else {
-                Context.getInstance().abort();
-            }
-        }
-
-        public void join() throws InterruptedException {
-            while (isRunning()) {
-                synchronized (Context.getInstance().commandInfo) {
-                    Context.getInstance().commandInfo.wait();
-                }
-            }
-        }
-
-        @Override
-        public String toString() {
-            return String.format("%s - %s - %s - %s", background ? String.valueOf(id) : "FG", source.toString(), command, Str.toString(args, 10));
-        }
-    }
-
-    public List<CommandInfo> getCommands() {
-        synchronized (commandInfo) {
-            return new ArrayList(commandInfo.values());
-        }
-    }
-
-    boolean abort(final CommandSource source, int commandId) throws InterruptedException {
+    
+   
+    boolean abort(final CommandSource source, long commandId) throws InterruptedException {
         onCommand(Command.abort, new Object[]{commandId}, source);
-        boolean aborted = false;
-        for (CommandInfo ci : getCommands()) {
-            if (commandId == -1) {
-                if (ci.background) {
-                    ci.abort();
-                    aborted = true;
-                }
-            }
-            if (ci.id == commandId) {
-                ci.abort();
-                aborted = true;
-                break;
-            }
-        }
-        return aborted;
+        return commandManager.abort(source, commandId);
     }
 
-    final HashMap<Thread, CommandInfo> commandInfo = new HashMap<>();
+    boolean join(long commandId) throws InterruptedException {
+        return commandManager.join(commandId);
+    }
+
+    boolean isRunning(long commandId) {
+        return commandManager.isRunning(commandId);
+    }
+
+    Map getResult(long commandId) throws Exception {
+        return commandManager.getResult(commandId);
+    }
+    
+    CommandInfo getNewCommand() throws TimeoutException, InterruptedException {
+        return commandManager.getNewCommand();
+    }    
+    
 
     Object runInInterpreterThread(Callable callable) throws ScriptException, IOException, InterruptedException {
         assertInterpreterEnabled();
+        Object result = null;
         try {
             if (isInterpreterThread()) {
-                return callable.call();
+                result = callable.call();
             } else {
                 try {
                     synchronized (interpreterExecutor) {
-                        return interpreterExecutor.submit(callable).get();
+                        result = interpreterExecutor.submit(callable).get();
                     }
                 } catch (ExecutionException ex) {
                     if (ex.getCause() instanceof ScriptException) {
@@ -1188,20 +1142,15 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
                     }
                 }
             }
+            return result;
         } catch (ScriptException | InterruptedException | IOException ex) {
+            result = ex;
             throw ex;
         } catch (Throwable t) {
             logger.log(Level.SEVERE, null, t); //Should never happen;
             return null;
         } finally {
-            synchronized (commandInfo) {
-                CommandInfo info = commandInfo.get(interpreterThread);
-                if (info != null) {
-                    info.end = System.currentTimeMillis();
-                }
-                commandInfo.remove(interpreterThread);
-                commandInfo.notifyAll();
-            }
+            commandManager.finishCommandInfo(result);
         }
     }
 
@@ -1304,7 +1253,6 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
         if (fileName == null) {
             return null;
         }
-        CommandInfo info = new CommandInfo(source, fileName, null, args, true);
         final String scriptName = getStandardScriptName(fileName);
         final Map<String, Object> argsDict = parseArgs(args);
         ArrayList pars = new ArrayList();
@@ -1317,23 +1265,22 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
         assertStarted();
         assertRunAllowed(source);
         //Command source in statements execution will be CommandSource.script 
-        synchronized (commandInfo) {
-            commandInfo.put(Thread.currentThread(), info);
-        }
+        Object result = null;
+        commandManager.initCommandInfo(new CommandInfo(source, fileName, null, args, true));
         try {
             createExecutionContext();
             //TODO: args passing is not theread safe
             for (String key : argsDict.keySet()) {
                 scriptManager.setVar(key, argsDict.get(key));
             }
-            return scriptManager.evalFileBackground(fileName);
+            result = scriptManager.evalFileBackground(fileName);
+            return result;
+        } catch (Exception ex) {
+            result = ex;
+            throw ex;
         } finally {
             disposeExecutionContext();
-            synchronized (commandInfo) {
-                info.end = System.currentTimeMillis();
-                commandInfo.remove(Thread.currentThread());
-                commandInfo.notifyAll();
-            }
+            commandManager.finishCommandInfo(result);
         }
     }
 
@@ -1348,33 +1295,30 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
     Object evalLineBackground(final CommandSource source, final String line) throws ScriptException, IOException, ContextStateException, InterruptedException {
         assertInterpreterEnabled();
         assertConsoleCommandAllowed(source);
-        CommandInfo info = new CommandInfo(source, null, line, null, true);
-        synchronized (commandInfo) {
-            commandInfo.put(Thread.currentThread(), info);
-        }
+  
+        Object result = null;
+        commandManager.initCommandInfo(new CommandInfo(source, null, line, null, true));       
         try {
             createExecutionContext();
-            InterpreterResult result = scriptManager.evalBackground(line);
-            if (result == null) {
+            InterpreterResult ir = scriptManager.evalBackground(line);
+            if (ir == null) {
                 return null;
             }
-            if (result.exception != null) {
-                throw result.exception;
+            if (ir.exception != null) {
+                result = ir.exception;
+                throw ir.exception;
             }
-            return result.result;
+            result = ir.result;
+            return result;
         } finally {
             disposeExecutionContext();
-            synchronized (commandInfo) {
-                info.end = System.currentTimeMillis();
-                commandInfo.remove(Thread.currentThread());
-                commandInfo.notifyAll();
-            }
+            commandManager.finishCommandInfo(result);
         }
     }
 
     @Hidden
     public void createExecutionContext() {
-        synchronized(executionPars){
+        synchronized (executionPars) {
             executionPars.put(Thread.currentThread(), new ExecutionParameters());
         }
         try {
@@ -1392,44 +1336,23 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
         } catch (Exception ex) {
             logger.log(Level.WARNING, null, ex);
         }
-        synchronized (executionPars) {            
+        synchronized (executionPars) {
             executionPars.remove(Thread.currentThread());
         }
     }
-    
+
     @Hidden
-    public void startedChildThread(Thread parent){
+    public void startedChildThread(Thread parent) {
         getExecutionPars(parent).onStartChildThread();
     }
-    
+
     @Hidden
-    public void finishedChildThread(Thread parent){
+    public void finishedChildThread(Thread parent) {
         getExecutionPars(parent).onFinishedChildThread();
-    }    
+    }
 
     CompletableFuture<?> evalLineBackgroundAsync(final CommandSource source, final String line) {
         return Threading.getFuture(() -> evalLineBackground(source, line));
-    }
-
-    CommandInfo getNewCommand() throws TimeoutException, InterruptedException {
-        Chrono chrono = new Chrono();
-        List<CommandInfo> commands = Context.getInstance().getCommands();
-        CommandInfo ret = null;
-        try {
-            chrono.waitCondition(() -> {
-                List<CommandInfo> cmds = Context.getInstance().getCommands();
-                cmds.removeAll(commands);
-                if (cmds.size() >= 1) {
-                    commands.clear();
-                    commands.addAll(cmds);
-                    return true;
-                }
-                return false;
-            }, 100);
-        } catch (TimeoutException ex) {
-            return null;
-        }
-        return commands.size() > 0 ? commands.get(0) : null;
     }
 
     String runningScript;
@@ -1464,21 +1387,21 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
     public ExecutionParameters getExecutionPars() {
         return getExecutionPars(Thread.currentThread());
     }
-    
+
     ExecutionParameters getExecutionPars(Thread thread) {
-        synchronized(executionPars){
+        synchronized (executionPars) {
             if (executionPars.containsKey(thread)) {
                 return executionPars.get(thread);
             }
             for (Thread t : executionPars.keySet()) {
                 ExecutionParameters ep = executionPars.get(t);
-                if (ep.childThreadCommandOptions.containsKey(thread)){
+                if (ep.childThreadCommandOptions.containsKey(thread)) {
                     return ep;
                 }
-            }            
+            }
             return executionPars.get(null);
         }
-    }    
+    }
 
     public void setExecutionPars(String name) {
         Map pars = new HashMap();
@@ -1688,7 +1611,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
             scriptManager.setVar(name, value);
         }
     }
-    
+
     void injectVars(final CommandSource source) {
         onCommand(Command.injectVars, null, source);
         try {
@@ -1720,6 +1643,10 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
             }
         } else if ((getState() == State.Busy) || (getState() == State.Paused)) {
             aborted = true;
+            CommandInfo cmd = commandManager.getInterpreterThreadCommand();
+            if (cmd!=null){
+                cmd.aborted =true;
+            }
             //TODO: This is also killing background acans. Should not be only foreground?
             for (Scan scan : getRunningScans()) {
                 scan.abort();
@@ -1794,11 +1721,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
     @Hidden
     public void startExecution(final CommandSource source, String fileName, CommandInfo info) throws ContextStateException {
         assertReady();
-        if (info != null) {
-            synchronized (commandInfo) {
-                commandInfo.put(interpreterThread, info);
-            }
-        }
+        commandManager.initCommandInfo(info);
         if (fileName != null) {
             assertRunAllowed(source);
             runningScript = fileName;
@@ -2471,41 +2394,41 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
     public List<String> searchHistory(String text) {
         return history.search(text);
     }
-    
+
     //Settings (persisted script properties)
-    String getSettingsFile(){
+    String getSettingsFile() {
         return setup.expandPath("{context}/Settings.properties");
-    }    
-    
-    public void setSetting(String name, Object value) throws IOException{
+    }
+
+    public void setSetting(String name, Object value) throws IOException {
         Properties properties = new SortedProperties();
         try (FileInputStream in = new FileInputStream(setup.getSettingsFile())) {
             properties.load(in);
-        }  catch (FileNotFoundException ex){
-        }      
-        if (value == null){
+        } catch (FileNotFoundException ex) {
+        }
+        if (value == null) {
             properties.remove(name);
         } else {
             properties.put(name, String.valueOf(value));
         }
         try (FileOutputStream out = new FileOutputStream(setup.getSettingsFile())) {
             properties.store(out, null);
-        }  
+        }
     }
-    
-    public String getSetting(String name) throws IOException{
-        return  getSettings().get(name);
-    }    
-    
-    public Map<String, String> getSettings() throws IOException{
+
+    public String getSetting(String name) throws IOException {
+        return getSettings().get(name);
+    }
+
+    public Map<String, String> getSettings() throws IOException {
         Properties properties = new Properties();
         try (FileInputStream in = new FileInputStream(setup.getSettingsFile())) {
             properties.load(in);
             return Maps.fromProperties(properties);
-        } catch (FileNotFoundException ex){
+        } catch (FileNotFoundException ex) {
             return new HashMap<>();
-        }        
-    }       
+        }
+    }
 
     //Configuration
     public Setup getSetup() {
@@ -2600,7 +2523,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
     ScanListener scanListener = new ScanListener() {
         @Override
         public void onScanStarted(Scan scan, String plotTitle) {
-            if (!scan.isHidden()){
+            if (!scan.isHidden()) {
                 synchronized (runningScans) {
                     runningScans.add(scan);
                 }
@@ -2615,7 +2538,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
         @Override
 
         public void onScanEnded(Scan scan, Exception ex) {
-            if (!scan.isHidden()){
+            if (!scan.isHidden()) {
                 synchronized (runningScans) {
                     runningScans.remove(scan);
                 }
@@ -2869,23 +2792,24 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
 
     //Public command interface    
     CommandSource getPublicCommandSource() {
-        synchronized (commandInfo) {
-            CommandInfo ret = commandInfo.get(Thread.currentThread());
-            return (ret == null) ? CommandSource.ui : ret.source;
-        }
+        CommandInfo ret = commandManager.getCurrentCommand();
+        return (ret == null) ? CommandSource.ui : ret.source;
     }
 
     //For scripts to check permissions when running files
     @Hidden
     public void startScriptExecution(Object args) {
         assertRunAllowed(getPublicCommandSource());
-        synchronized (commandInfo) {
-            CommandInfo info = commandInfo.get(Thread.currentThread());
-            info = new CommandInfo(CommandSource.script, (info == null) ? null : info.script, null, args, (info == null) ? false : info.background);
-            commandInfo.put(Thread.currentThread(), info);
-        }
+        CommandInfo info = commandManager.getCurrentCommand();
+        info = new CommandInfo(CommandSource.script, (info == null) ? null : info.script, null, args, (info == null) ? false : info.background);
+        commandManager.initCommandInfo(info);
     }
 
+    @Hidden
+    public void finishScriptExecution(Object result) {
+        commandManager.finishCommandInfo(result);
+    }
+    
     @Hidden
     public void start() {
         if ((getState() == State.Invalid) || (getState() == State.Fault)) {
@@ -2940,28 +2864,27 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
     public CompletableFuture<?> evalLineAsync(final String line) throws ContextStateException {
         return evalLineAsync(getPublicCommandSource(), line);
     }
-    
+
     public Object evalLineBackground(String line) throws ScriptException, IOException, ContextStateException, InterruptedException {
         return evalLineBackground(getPublicCommandSource(), line);
-    }    
-    
+    }
+
     public CompletableFuture<?> evalLineBackgroundAsync(final String line) {
         return evalLineBackgroundAsync(getPublicCommandSource(), line);
-    }    
+    }
 
     public Object evalFile(String fileName, Object args) throws ScriptException, IOException, ContextStateException, InterruptedException {
         return evalFile(getPublicCommandSource(), fileName, args);
     }
-    
+
     public CompletableFuture<?> evalFileAsync(final String fileName) throws ContextStateException {
         return evalFileAsync(getPublicCommandSource(), fileName);
     }
 
-    
     public CompletableFuture<?> evalFileAsync(String fileName, Object args) throws Context.ContextStateException {
         return evalFileAsync(getPublicCommandSource(), fileName, args);
-    }   
-    
+    }
+
     public Object evalFileBackground(final String fileName) throws ScriptException, IOException, ContextStateException, InterruptedException {
         return evalFileBackground(getPublicCommandSource(), fileName);
     }
@@ -2971,12 +2894,12 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
     }
 
     public CompletableFuture<?> evalFileBackgroundAsync(final String fileName) {
-       return evalFileBackgroundAsync(getPublicCommandSource(), fileName);
+        return evalFileBackgroundAsync(getPublicCommandSource(), fileName);
     }
 
     public CompletableFuture<?> evalFileBackgroundAsync(final String fileName, final Object args) {
         return evalFileBackgroundAsync(getPublicCommandSource(), fileName, args);
-    }   
+    }
 
     public Object evalStatement(Statement statement) throws ScriptException, IOException, ContextStateException, InterruptedException {
         return evalStatement(getPublicCommandSource(), statement);
@@ -2994,7 +2917,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
         abort(getPublicCommandSource());
     }
 
-    public boolean abort(int commandId) throws InterruptedException {
+    public boolean abort(long commandId) throws InterruptedException {
         return abort(getPublicCommandSource(), commandId);
     }
 

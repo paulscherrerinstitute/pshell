@@ -173,8 +173,8 @@ public class ServerService {
         try {
             String cmd = formatIncomingText(statement);
             context.evalLineAsync(CommandSource.server, cmd.equals("\n") ? "" : cmd); //\n is token for empty string
-            Context.CommandInfo commandInfo =  Context.getInstance().getNewCommand();
-            return (commandInfo==null) ? 0 : commandInfo.id;
+            CommandInfo info =  Context.getInstance().getNewCommand();
+            return (info==null) ? 0 : info.id;
         } catch (Exception ex) {
             throw new ExecutionException(ex);
         }
@@ -377,8 +377,8 @@ public class ServerService {
                 } else {
                     Context.getInstance().evalFileAsync(CommandSource.server, script, pars);
                 }
-                Context.CommandInfo cmd =  Context.getInstance().getNewCommand();
-                return (cmd==null) ? 0 : cmd.id;
+                CommandInfo info =  Context.getInstance().getNewCommand();
+                return (info==null) ? 0 : info.id;
             } else {
                 if (background) {
                     ret = Context.getInstance().evalFileBackground(CommandSource.server, script, pars);
@@ -464,6 +464,28 @@ public class ServerService {
             throw new ExecutionException(ex);
         }
     }
+    
+    @GET
+    @Path("result")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Object result() throws ExecutionException {
+        try {
+            return mapper.writeValueAsString(context.getResult(-1));
+        } catch (Exception ex) {
+            throw new ExecutionException(ex);
+        }
+    }
+    
+    @GET
+    @Path("result/{commandId}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Object result(@PathParam("commandId") final Integer commandId) throws ExecutionException {
+        try {
+            return mapper.writeValueAsString(context.getResult(commandId));
+        } catch (Exception ex) {
+            throw new ExecutionException(ex);
+        }
+    }    
      
     @GET
     @Path("reinit")

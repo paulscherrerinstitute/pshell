@@ -3,7 +3,6 @@
  */
 package ch.psi.pshell.core;
 
-import ch.psi.pshell.core.Context.CommandInfo;
 import ch.psi.pshell.core.VersioningManager.Revision;
 import ch.psi.pshell.data.DataManager;
 import ch.psi.pshell.data.Layout;
@@ -502,18 +501,18 @@ public class ExecutionParameters {
 
     //TODO: check multiple parallel calls
     public CommandSource getSource() {
-        Context.CommandInfo ret = Context.getInstance().commandInfo.get(Thread.currentThread());
+        CommandInfo ret = Context.getInstance().getCommandManager().getCurrentCommand();
         return (ret == null) ? null : ret.source;
     }
 
     //TODO: check multiple parallel calls
     public Object getArgs() {
-        Context.CommandInfo ret = Context.getInstance().commandInfo.get(Thread.currentThread());
+        CommandInfo ret = Context.getInstance().getCommandManager().getCurrentCommand();
         return (ret == null) ? null : ret.args;
     }
 
     public List<CommandInfo> getCommands() {
-        return Context.getInstance().getCommands();
+        return Context.getInstance().getCommandManager().getCommands();
     }
 
     public CommandInfo getCommand() {

@@ -94,6 +94,10 @@ public class ScriptManager implements AutoCloseable {
         interpreter = new Interpreter(engine, type, null);
         logger.info("Finished " + getClass().getSimpleName() + " initialization");
     }
+    
+    public Object getResult(Thread thread){
+        return results.get(thread);
+    }  
 
     public void setSessionFilePath(String sessionFilePath) {
         sessionFilePath = sessionFilePath;

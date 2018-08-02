@@ -1596,21 +1596,27 @@ def run(script_name, args = None, locals = None):
     script = get_context().scriptManager.library.resolveFile(script_name)
     if script is not None and os.path.isfile(script):
         get_context().startScriptExecution(args)
-        set_return(None)
-        if args is None:
-            pass
-        elif isinstance(args,tuple):
-            sys.argv =  list(args)
-        elif isinstance(args,list):
-            sys.argv = args
-        else:
-            for arg in args.keys():
-                globals()[arg] = args[arg]
-        if (locals is None):
-            execfile(script, globals())
-        else:
-            execfile(script, globals(), locals)
-        return get_return()
+        try:
+            set_return(None)
+            if args is None:
+                pass
+            elif isinstance(args,tuple):
+                sys.argv =  list(args)
+            elif isinstance(args,list):
+                sys.argv = args
+            else:
+                for arg in args.keys():
+                    globals()[arg] = args[arg]
+            if (locals is None):
+                execfile(script, globals())
+            else:
+                execfile(script, globals(), locals)
+            ret = get_return()
+            get_context().finishScriptExecution(ret)
+            return ret
+        except Exception, ex:
+            get_context().finishScriptExecution(ex)
+            raise ex
     raise IOError("Invalid script: " + str(script_name))
 
 def abort():
