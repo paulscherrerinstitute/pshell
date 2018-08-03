@@ -7,9 +7,9 @@ import ch.psi.utils.IO;
 import ch.psi.utils.Reflection.Hidden;
 import ch.psi.utils.swing.ExtensionFileFilter;
 import ch.psi.utils.swing.SwingUtils;
-import java.awt.AlphaComposite;
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.Font;
 import java.awt.Paint;
 import java.awt.Shape;
 import java.awt.event.ActionEvent;
@@ -52,6 +52,9 @@ public class TimePlotJFree extends TimePlotBase {
     final TimeSeriesCollection data;
     final ChartPanel chartPanel;
     final Shape marker;
+    Font tickLabelFont = LinePlotJFree.TICK_LABEL_FONT;
+    Font labelFont = LinePlotJFree.LABEL_FONT;
+    
 
     public TimePlotJFree() {
         super();
@@ -94,10 +97,10 @@ public class TimePlotJFree extends TimePlotBase {
         plot.getDomainAxis().setLabelPaint(PlotBase.getAxisTextColor());
         plot.getRangeAxis().setLabelPaint(PlotBase.getAxisTextColor());
         plot.getRangeAxis().setTickLabelPaint(PlotBase.getAxisTextColor());
-        plot.getDomainAxis().setLabelFont(LinePlotJFree.LABEL_FONT);
-        plot.getRangeAxis().setLabelFont(LinePlotJFree.LABEL_FONT);
-        plot.getDomainAxis().setTickLabelFont(LinePlotJFree.TICK_LABEL_FONT);
-        plot.getRangeAxis().setTickLabelFont(LinePlotJFree.TICK_LABEL_FONT);
+        plot.getDomainAxis().setLabelFont(labelFont);
+        plot.getRangeAxis().setLabelFont(labelFont);
+        plot.getDomainAxis().setTickLabelFont(tickLabelFont);
+        plot.getRangeAxis().setTickLabelFont(tickLabelFont);
 
         ((NumberAxis) plot.getRangeAxis()).setAutoRangeIncludesZero(false);
         ((NumberAxis) plot.getRangeAxis()).setAutoRangeMinimumSize(LinePlotJFree.AUTO_RANGE_MINIMUM_SIZE);
@@ -134,6 +137,34 @@ public class TimePlotJFree extends TimePlotBase {
         setup();
         //chartPanel.setMouseZoomable(true, true);
     }
+    
+    public void setLabelFont(Font f){
+        labelFont = f;
+        XYPlot plot = (XYPlot) chart.getPlot();
+        plot.getDomainAxis().setLabelFont(f);
+        plot.getRangeAxis().setLabelFont(f);   
+        if (plot.getRangeAxis(1) != null) {
+            plot.getRangeAxis(1).setLabelFont(f);   
+        }
+    }
+    
+    public void setTickLabelFont(Font f){
+        tickLabelFont = f;
+        XYPlot plot = (XYPlot) chart.getPlot();
+        plot.getDomainAxis().setTickLabelFont(f);
+        plot.getRangeAxis().setTickLabelFont(f);  
+        if (plot.getRangeAxis(1) != null) {
+            plot.getRangeAxis(1).setTickLabelFont(f);   
+        }        
+    }    
+
+    public Font getLabelFont(){
+        return labelFont;
+    }
+        
+    public Font getTickLabelFont(){
+        return tickLabelFont;
+    }       
 
     @Override
     protected void setupMenus() {
@@ -205,8 +236,8 @@ public class TimePlotJFree extends TimePlotBase {
             NumberAxis axis2 = new NumberAxis();
             axis2.setAutoRangeIncludesZero(false);
             ((NumberAxis) plot.getRangeAxis()).setAutoRangeMinimumSize(LinePlotJFree.AUTO_RANGE_MINIMUM_SIZE);
-            axis2.setLabelFont(LinePlotJFree.LABEL_FONT);
-            axis2.setTickLabelFont(LinePlotJFree.TICK_LABEL_FONT);
+            axis2.setLabelFont(labelFont);
+            axis2.setTickLabelFont(tickLabelFont);
             plot.setRangeAxis(1, axis2);
             XYLineAndShapeRenderer renderer2 = new XYLineAndShapeRenderer();
             renderer2.setBaseShapesVisible(isMarkersVisible());

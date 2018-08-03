@@ -95,6 +95,9 @@ public class LinePlotJFree extends LinePlotBase {
     AbstractXYDataset dataY1;
     AbstractXYDataset dataY2;
 
+    Font tickLabelFont = TICK_LABEL_FONT;
+    Font labelFont = LABEL_FONT;
+
     //TODO: if smaller there are plot repainting problem in scans in JFreeChart > 1.0.18
     static final double AUTO_RANGE_MINIMUM_SIZE = 1e-12;
     JFreeChart chart;
@@ -174,18 +177,18 @@ public class LinePlotJFree extends LinePlotBase {
             chart.setBackgroundPaint(c);
         }
     }
-    
+
     @Override
     public void setPlotBackgroundColor(Color c) {
         chart.getPlot().setBackgroundPaint(c);
     }
-    
+
     @Override
     public void setPlotGridColor(Color c) {
-        ((XYPlot)chart.getPlot()).setDomainGridlinePaint(c);
-        ((XYPlot)chart.getPlot()).setRangeGridlinePaint(c);
-    }     
-    
+        ((XYPlot) chart.getPlot()).setDomainGridlinePaint(c);
+        ((XYPlot) chart.getPlot()).setRangeGridlinePaint(c);
+    }
+
     @Override
     public void setPlotOutlineColor(Color c) {
         chart.getPlot().setOutlinePaint(c);
@@ -245,8 +248,8 @@ public class LinePlotJFree extends LinePlotBase {
             NumberAxis axis2 = new NumberAxis(getAxis(AxisId.Y2).getLabel());
             axis2.setAutoRangeIncludesZero(false);
             ((NumberAxis) plot.getRangeAxis()).setAutoRangeMinimumSize(AUTO_RANGE_MINIMUM_SIZE);
-            axis2.setLabelFont(LABEL_FONT);
-            axis2.setTickLabelFont(TICK_LABEL_FONT);
+            axis2.setLabelFont(labelFont);
+            axis2.setTickLabelFont(tickLabelFont);
             plot.setRangeAxis(1, axis2);
             XYLineAndShapeRenderer renderer2 = getStyle().isError() ? new XYErrorRenderer() : new XYLineAndShapeRenderer();
             renderer2.setBaseShapesVisible(true);
@@ -340,26 +343,26 @@ public class LinePlotJFree extends LinePlotBase {
     }
 
     @Override
-    public ch.psi.utils.Range getAxisRange(AxisId axisId){
+    public ch.psi.utils.Range getAxisRange(AxisId axisId) {
         Range r = null;
-        switch (axisId){
+        switch (axisId) {
             case X:
                 r = chart.getXYPlot().getDomainAxis().getRange();
                 return new ch.psi.utils.Range(r.getLowerBound(), r.getUpperBound());
             case Y:
                 r = chart.getXYPlot().getRangeAxis().getRange();
-                return new ch.psi.utils.Range(r.getLowerBound(), r.getUpperBound());                
+                return new ch.psi.utils.Range(r.getLowerBound(), r.getUpperBound());
             case Y2:
-                if (dataY2 == null){
+                if (dataY2 == null) {
                     return null;
                 }
                 r = chart.getXYPlot().getRangeAxis(1).getRange();
-                return new ch.psi.utils.Range(r.getLowerBound(), r.getUpperBound());                 
+                return new ch.psi.utils.Range(r.getLowerBound(), r.getUpperBound());
             default:
                 return null;
         }
     }
-    
+
     @Override
     protected void onRemovedSeries(LinePlotSeries series) {
         AbstractXYDataset data = getYData(series.getAxisY());
@@ -471,8 +474,8 @@ public class LinePlotJFree extends LinePlotBase {
     }
 
     /**
-     * Get the chart panel of this plot. The chart panel will be lazily created the first time this
-     * function is called
+     * Get the chart panel of this plot. The chart panel will be lazily created
+     * the first time this function is called
      *
      */
     @Override
@@ -535,13 +538,12 @@ public class LinePlotJFree extends LinePlotBase {
             }
         });
 
-        if (!offscreen){
+        if (!offscreen) {
             //Activate (arrow) keys
             addKeyBindings();
             setLayout(new BorderLayout());
         }
 
-        
         if (chart.getTitle() != null) {
             chart.getTitle().setPaint(getAxisTextColor());
         }
@@ -550,13 +552,41 @@ public class LinePlotJFree extends LinePlotBase {
         plot.getDomainAxis().setLabelPaint(getAxisTextColor());
         plot.getRangeAxis().setLabelPaint(getAxisTextColor());
         plot.getRangeAxis().setTickLabelPaint(getAxisTextColor());
-        plot.getDomainAxis().setLabelFont(LABEL_FONT);
-        plot.getRangeAxis().setLabelFont(LABEL_FONT);
-        plot.getDomainAxis().setTickLabelFont(TICK_LABEL_FONT);
-        plot.getRangeAxis().setTickLabelFont(TICK_LABEL_FONT);
-        if (!offscreen){
+        plot.getDomainAxis().setLabelFont(labelFont);
+        plot.getRangeAxis().setLabelFont(labelFont);
+        plot.getDomainAxis().setTickLabelFont(tickLabelFont);
+        plot.getRangeAxis().setTickLabelFont(tickLabelFont);
+        if (!offscreen) {
             add(chartPanel);
         }
+    }
+
+    public void setLabelFont(Font f) {
+        labelFont = f;
+        XYPlot plot = (XYPlot) chart.getPlot();
+        plot.getDomainAxis().setLabelFont(f);
+        plot.getRangeAxis().setLabelFont(f);
+        if (dataY2 == null) {
+            plot.getRangeAxis(1).setLabelFont(f);
+        }
+    }
+
+    public void setTickLabelFont(Font f) {
+        tickLabelFont = f;
+        XYPlot plot = (XYPlot) chart.getPlot();
+        plot.getDomainAxis().setTickLabelFont(f);
+        plot.getRangeAxis().setTickLabelFont(f);
+        if (dataY2 == null) {
+            plot.getRangeAxis(1).setTickLabelFont(f);
+        }
+    }
+
+    public Font getLabelFont() {
+        return labelFont;
+    }
+
+    public Font getTickLabelFont() {
+        return tickLabelFont;
     }
 
     Style style;
@@ -602,7 +632,7 @@ public class LinePlotJFree extends LinePlotBase {
             if (hasY2) {
                 createY2();
             }
-            if (!offscreen){
+            if (!offscreen) {
                 createPopupMenu();
             }
             getAxis(Plot.AxisId.X).setLabel(labelX);
@@ -667,8 +697,8 @@ public class LinePlotJFree extends LinePlotBase {
             if (isLog != getAxis(axisId).isLogarithmic()) {
                 axis = (getAxis(axisId).isLogarithmic()) ? new LogarithmicAxis(getAxis(axisId).getLabel()) : new NumberAxis(getAxis(axisId).getLabel());
                 XYPlot plot = (XYPlot) chart.getPlot();
-                axis.setLabelFont(LABEL_FONT);
-                axis.setTickLabelFont(TICK_LABEL_FONT);
+                axis.setLabelFont(labelFont);
+                axis.setTickLabelFont(tickLabelFont);
                 axis.setLabelPaint(getAxisTextColor());
                 axis.setTickLabelPaint(getAxisTextColor());
                 switch (getAxis(axisId).id) {
@@ -1100,7 +1130,7 @@ public class LinePlotJFree extends LinePlotBase {
         XYLineAndShapeRenderer renderer = getRenderer(series.getAxisY());
         renderer.setSeriesPaint(getSeriesIndex(series), color);
     }
-    
+
     @Override
     protected void setLinesVisible(LinePlotSeries series, boolean value) {
         XYLineAndShapeRenderer renderer = getRenderer(series.getAxisY());
@@ -1325,10 +1355,10 @@ public class LinePlotJFree extends LinePlotBase {
 
     @Override
     public BufferedImage getSnapshot(Dimension size) {
-        if (size==null){
+        if (size == null) {
             size = new Dimension(SNAPSHOT_WIDTH, SNAPSHOT_HEIGHT);
         }
         return chart.createBufferedImage(size.width, size.height);
-    }    
-    
+    }
+
 }

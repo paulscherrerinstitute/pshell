@@ -17,6 +17,7 @@ import ch.psi.pshell.epics.Epics;
 import ch.psi.pshell.plot.LinePlotBase;
 import ch.psi.pshell.plot.PlotBase;
 import ch.psi.pshell.plot.TimePlotBase;
+import ch.psi.pshell.plot.TimePlotJFree;
 import ch.psi.pshell.plot.TimePlotSeries;
 import ch.psi.pshell.plotter.Preferences;
 import ch.psi.pshell.scan.StripScanExecutor;
@@ -36,6 +37,7 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.Container;
 import java.awt.Dimension;
+import java.awt.Font;
 import java.awt.Insets;
 import java.awt.LayoutManager;
 import java.awt.Toolkit;
@@ -90,7 +92,6 @@ import javax.swing.table.TableCellEditor;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
 
-
 /**
  * Time plotting of a set of devices. Can be used in the workbench or opened
  * standalone with '-strp' option. The '-attach'option make standalone panels be
@@ -112,10 +113,11 @@ public class StripChart extends StandardDialog {
     Chrono chronoDisableAlarmSound;
     Color defaultBackgroundColor = null;
     Color defaultGridColor = null;
+    Font tickLabelFont = null;
     int alarmInterval = 1000;
     File alarmFile = null;
     boolean pulse;
-            
+
     enum Type {
         Channel,
         Stream,
@@ -126,7 +128,7 @@ public class StripChart extends StandardDialog {
             return (this == CamServer) || (this == Stream);
         }
     }
-    
+
     final DefaultTableModel modelSeries;
     final DefaultTableModel modelCharts;
 
@@ -169,40 +171,49 @@ public class StripChart extends StandardDialog {
                 element.plot.add(element.seriesIndex, element.time, element.value);
             }
         };
-        
-        if (App.hasArgument("background_color")){
-            try{
+
+        if (App.hasArgument("background_color")) {
+            try {
                 defaultBackgroundColor = Preferences.getColorFromString(App.getArgumentValue("background_color"));
                 panelColorBackground.setBackground(defaultBackgroundColor);
-            } catch (Exception ex){
+            } catch (Exception ex) {
                 Logger.getLogger(StripChart.class.getName()).log(Level.WARNING, null, ex);
             }
         }
-        if (App.hasArgument("grid_color")){
-            try{
+        if (App.hasArgument("grid_color")) {
+            try {
                 defaultGridColor = Preferences.getColorFromString(App.getArgumentValue("grid_color"));
                 panelColorGrid.setBackground(defaultGridColor);
-            } catch (Exception ex){
+            } catch (Exception ex) {
                 Logger.getLogger(StripChart.class.getName()).log(Level.WARNING, null, ex);
             }
-        }    
-        if (App.hasArgument("alarm_interval")){
-            try{
+        }
+        if (App.hasArgument("tick_label_font")) {
+            try {
+                String[] tokens = App.getArgumentValue("tick_label_font").split(":");
+                tickLabelFont = new Font(tokens[0], Font.PLAIN, Integer.valueOf(tokens[1]));
+            } catch (Exception ex) {
+                Logger.getLogger(StripChart.class.getName()).log(Level.WARNING, null, ex);
+            }
+        }
+
+        if (App.hasArgument("alarm_interval")) {
+            try {
                 alarmInterval = Integer.valueOf(App.getArgumentValue("alarm_interval"));
-            } catch (Exception ex){
+            } catch (Exception ex) {
                 Logger.getLogger(StripChart.class.getName()).log(Level.WARNING, null, ex);
             }
-        }   
-        if (App.hasArgument("alarm_file")){
-            try{
+        }
+        if (App.hasArgument("alarm_file")) {
+            try {
                 alarmFile = new File(App.getArgumentValue("alarm_file"));
-                if (!alarmFile.exists()){
+                if (!alarmFile.exists()) {
                     throw new FileNotFoundException(App.getArgumentValue("alarm_file"));
                 }
-            } catch (Exception ex){
+            } catch (Exception ex) {
                 Logger.getLogger(StripChart.class.getName()).log(Level.WARNING, null, ex);
             }
-        }           
+        }
 
         buttonStartStop.setEnabled(false);
         textFileName.setEnabled(false);
@@ -224,7 +235,7 @@ public class StripChart extends StandardDialog {
 
         setLayout(new LayoutManager() {
             @Override
-                public void layoutContainer(Container parent) {
+            public void layoutContainer(Container parent) {
                 Insets insets = parent.getInsets();
                 for (Component component : parent.getComponents()) {
                     if (component == buttonPause) {
@@ -300,7 +311,7 @@ public class StripChart extends StandardDialog {
         buttonSound.setVerticalTextPosition(SwingConstants.CENTER);
         buttonSound.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                if (buttonSound.isSelected()){
+                if (buttonSound.isSelected()) {
                     chronoDisableAlarmSound = new Chrono();
                 } else {
                     chronoDisableAlarmSound = null;
@@ -592,7 +603,7 @@ public class StripChart extends StandardDialog {
             if (started) {
                 try {
                     int index = e.getFirstRow();
-                    if (e.getColumn()==5){
+                    if (e.getColumn() == 5) {
                         final Color color = Preferences.getColorFromString((String) modelSeries.getValueAt(index, 5));
                         getTimePlotSeries(index).setColor(color);
                     }
@@ -748,7 +759,7 @@ public class StripChart extends StandardDialog {
         textStreamFilter.setText("");
         spinnerDragInterval.setValue(1000);
         spinnerUpdate.setValue(100);
-        backgroundColor  = defaultBackgroundColor;
+        backgroundColor = defaultBackgroundColor;
         gridColor = defaultGridColor;
         panelColorBackground.setBackground(backgroundColor);
         panelColorGrid.setBackground(gridColor);
@@ -849,7 +860,7 @@ public class StripChart extends StandardDialog {
         textStreamFilter.setText("");
         spinnerDragInterval.setValue(1000);
         spinnerUpdate.setValue(100);
-        backgroundColor  = defaultBackgroundColor;
+        backgroundColor = defaultBackgroundColor;
         gridColor = defaultGridColor;
         panelColorBackground.setBackground(backgroundColor);
         panelColorGrid.setBackground(gridColor);
@@ -975,6 +986,10 @@ public class StripChart extends StandardDialog {
             }
             if (gridColor != null) {
                 plot.setPlotGridColor(gridColor);
+            }
+            if ((tickLabelFont != null) && (plot instanceof TimePlotJFree)) {
+                ((TimePlotJFree) plot).setLabelFont(tickLabelFont);
+                ((TimePlotJFree) plot).setTickLabelFont(tickLabelFont);
             }
 
             plots.add(plot);
@@ -1142,7 +1157,7 @@ public class StripChart extends StandardDialog {
         List<Integer> alarmingPlots = new ArrayList<>();
         boolean alarming = false;
         boolean paused = buttonPause.isSelected();
-        if (!paused){
+        if (!paused) {
             for (DeviceTask task : tasks) {
                 if (task.isAlarming()) {
                     alarming = true;
@@ -1152,8 +1167,8 @@ public class StripChart extends StandardDialog {
         }
         if (alarming) {
             pulse = !pulse;
-            if ((chronoDisableAlarmSound == null) || (chronoDisableAlarmSound.getEllapsed() > disableAlarmTimer)){
-                if (alarmFile == null){
+            if ((chronoDisableAlarmSound == null) || (chronoDisableAlarmSound.getEllapsed() > disableAlarmTimer)) {
+                if (alarmFile == null) {
                     Toolkit.getDefaultToolkit().beep();
                 } else {
                     Audio.playFile(alarmFile);

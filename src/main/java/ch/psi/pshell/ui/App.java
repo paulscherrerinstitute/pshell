@@ -171,6 +171,7 @@ public class App extends ObservableBase<AppListener> {
             sb.append("\n\t-attach\tShared mode: try connecting to existing server, or create one if not available.");
             sb.append("\n\t-background_color=<..>\tSet default plot background color");
             sb.append("\n\t-grid_color=<..>\tSet default plot grid color");
+            sb.append("\n\t-tick_label_font=name:size\tSet font for time plot tick labels");
             sb.append("\n\t-alarm_interval=<..>\tSet the alarm timer interval (default 1000ms)");
             sb.append("\n\t-alarm_file=<..>\tSet alarm sound file (default use system beep)");            
         }
