@@ -33,10 +33,12 @@ import ch.psi.pshell.scripting.Statement;
 import ch.psi.pshell.security.User;
 import ch.psi.pshell.security.UsersManagerListener;
 import ch.psi.utils.Str;
+import ch.psi.utils.Threading.VisibleCompletableFuture;
 import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
@@ -172,9 +174,8 @@ public class ServerService {
     public long evalAsync(@PathParam("statement") final String statement) throws ExecutionException {
         try {
             String cmd = formatIncomingText(statement);
-            context.evalLineAsync(CommandSource.server, cmd.equals("\n") ? "" : cmd); //\n is token for empty string
-            CommandInfo info =  Context.getInstance().getNewCommand();
-            return (info==null) ? 0 : info.id;
+            CompletableFuture cf = context.evalLineAsync(CommandSource.server, cmd.equals("\n") ? "" : cmd); //\n is token for empty string
+            return Context.getInstance().waitNewCommand(cf);
         } catch (Exception ex) {
             throw new ExecutionException(ex);
         }
@@ -371,14 +372,15 @@ public class ServerService {
             Boolean background = contents.containsKey("background") ? (Boolean) contents.get("background") : false;
             Boolean async = contents.containsKey("async") ? (Boolean) contents.get("async") : false;
             Object ret = null;
+            CompletableFuture cf = null;
             if (async){
                 if (background) {
-                    Context.getInstance().evalFileBackgroundAsync(CommandSource.server, script, pars);
+                    cf = Context.getInstance().evalFileBackgroundAsync(CommandSource.server, script, pars);
+                    
                 } else {
-                    Context.getInstance().evalFileAsync(CommandSource.server, script, pars);
+                    cf = Context.getInstance().evalFileAsync(CommandSource.server, script, pars);
                 }
-                CommandInfo info =  Context.getInstance().getNewCommand();
-                return (info==null) ? 0 : info.id;
+                return Context.getInstance().waitNewCommand(cf);
             } else {
                 if (background) {
                     ret = Context.getInstance().evalFileBackground(CommandSource.server, script, pars);

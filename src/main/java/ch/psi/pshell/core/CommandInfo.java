@@ -29,6 +29,7 @@ public class CommandInfo {
         synchronized (CommandInfo.class) {
             this.id = commandId++;
         }
+        Context.getInstance().commandManager.onNewCommand(this.id);
         this.start = System.currentTimeMillis();
     }
 

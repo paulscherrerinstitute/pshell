@@ -71,6 +71,7 @@ import ch.psi.utils.Chrono;
 import ch.psi.utils.Condition;
 import ch.psi.utils.SortedProperties;
 import ch.psi.utils.Sys.OSFamily;
+import ch.psi.utils.Threading.VisibleCompletableFuture;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.net.InetAddress;
@@ -1109,8 +1110,25 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
         return commandManager.getResult(commandId);
     }
     
-    CommandInfo getNewCommand() throws TimeoutException, InterruptedException {
-        return commandManager.getNewCommand();
+    
+    long waitNewCommand(CompletableFuture cf) throws InterruptedException {
+        long now = System.currentTimeMillis();
+        if (cf instanceof VisibleCompletableFuture){
+            Thread thread =((VisibleCompletableFuture)cf).waitRunningThread(250);
+            CommandInfo current = commandManager.getThreadCommand(thread);
+            if ((current!=null) && (current.start >= now)){
+                return current.id;
+            }
+            if (thread!=null){
+                 return waitNewCommand(thread, 250);
+            }                
+        }
+        return 0;
+    }    
+    
+    long waitNewCommand(Thread thread, int timeout) throws InterruptedException {
+        long ret =  commandManager.waitNewCommand(thread, timeout);    
+        return ret;
     }    
     
 
@@ -1150,6 +1168,13 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
             logger.log(Level.SEVERE, null, t); //Should never happen;
             return null;
         } finally {
+            if ((result!=null) && (result instanceof InterpreterResult)){
+                if (((InterpreterResult)result).exception != null) {
+                    result = ((InterpreterResult)result).exception;
+                } else if (((InterpreterResult)result).result != null) {
+                    result = ((InterpreterResult)result).result;
+                }                   
+            }
             commandManager.finishCommandInfo(result);
         }
     }

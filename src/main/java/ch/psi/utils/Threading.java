@@ -105,13 +105,13 @@ public class Threading {
                         task.run();
                     } catch (Exception ex) {
                         Logger.getLogger(Threading.class.getName()).fine("Exception in scheduler thead " + Thread.currentThread().getName() + ": " + ex.getMessage());
-                    }   
+                    }
                     if (interval >= 0) {
                         if (!scheduler.isShutdown() && !Thread.currentThread().isInterrupted()) {
                             scheduler.schedule(this, Math.max(0, interval - chrono.getEllapsed()), timeUnit);
                         }
                     }
-                } 
+                }
             }
         };
         scheduler.schedule(timer, delay, timeUnit);
@@ -123,15 +123,46 @@ public class Threading {
         T get() throws Exception;
     }
 
+    public static class VisibleCompletableFuture<T> extends CompletableFuture<T> {
+
+        private Thread runningThread;
+        final Object lock = new Object();
+
+        void setRunningThread() {
+            runningThread = Thread.currentThread();
+
+            synchronized (lock) {
+                lock.notifyAll();
+            }
+        }
+
+        public Thread getRunningThread() {
+            return runningThread;
+        }
+
+        public Thread waitRunningThread(int timeout) throws InterruptedException {
+            synchronized (lock) {
+                if (runningThread == null) {
+                    try {
+                        lock.wait(timeout);
+                    } catch (Exception ex) {
+                    }
+                }
+            }
+            return runningThread;
+        }
+    }
+
     //CompletableFuture generation settting completeExceptionally 
     public static CompletableFuture<?> getFuture(final SupplierWithException<?> supplier) {
         return getFuture(supplier, ForkJoinPool.commonPool());
     }
 
     public static CompletableFuture<?> getFuture(final SupplierWithException<?> supplier, Executor executor) {
-        CompletableFuture<Object> ret = new CompletableFuture<>();
+        VisibleCompletableFuture<Object> ret = new VisibleCompletableFuture<>();
         CompletableFuture.supplyAsync(() -> {
             try {
+                ret.setRunningThread();
                 Object obj = supplier.get();
                 ret.complete(obj);
                 return obj;
@@ -158,9 +189,10 @@ public class Threading {
     }
 
     public static CompletableFuture<?> getFuture(RunnableWithException runnable, Executor executor) {
-        CompletableFuture<Object> ret = new CompletableFuture<>();
+        VisibleCompletableFuture<Object> ret = new VisibleCompletableFuture<>();
         CompletableFuture.runAsync(() -> {
             try {
+                ret.setRunningThread();
                 runnable.run();
                 ret.complete(null);
             } catch (Throwable ex) {

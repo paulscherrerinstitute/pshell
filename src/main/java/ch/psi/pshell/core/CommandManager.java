@@ -5,12 +5,11 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeoutException;
 
 /**
  *
  */
-public class CommandManager implements AutoCloseable{
+public class CommandManager implements AutoCloseable {
 
     final List<CommandInfo> commandInfo = new ArrayList<>();
     //final HashMap<Thread, CommandInfo> commandInfo = new HashMap<>();
@@ -47,9 +46,9 @@ public class CommandManager implements AutoCloseable{
     void cleanupCommands() {
         List old = new ArrayList<>();
         synchronized (commandInfo) {
-            
+
             for (CommandInfo ci : getCommands()) {
-                if ((!ci.isRunning()) && (ci.getAge() > COMMAND_INFO_TIME_TO_LIVE)){ //retains info for 10min 
+                if ((!ci.isRunning()) && (ci.getAge() > COMMAND_INFO_TIME_TO_LIVE)) { //retains info for 10min 
                     old.add(ci);
                 }
             }
@@ -62,7 +61,7 @@ public class CommandManager implements AutoCloseable{
                 }
             }
             commandInfo.keySet().removeAll(old);
-            */
+             */
         }
     }
 
@@ -79,9 +78,9 @@ public class CommandManager implements AutoCloseable{
     }
 
     public CommandInfo getThreadCommand(Thread thread) {
-        
-        for (CommandInfo info: getCommands()){
-            if ((info.thread == thread)){
+
+        for (CommandInfo info : getCommands()) {
+            if ((info.thread == thread)) {
                 return info;
             }
         }
@@ -90,7 +89,7 @@ public class CommandManager implements AutoCloseable{
         synchronized (commandInfo) {
             return commandInfo.get(thread);
         }
-        */
+         */
     }
 
     public CommandInfo getInterpreterThreadCommand() {
@@ -163,11 +162,11 @@ public class CommandManager implements AutoCloseable{
     public Map getResult(long id) throws Exception {
         CommandInfo cmd;
         if (id < 0) {
-            cmd =  getInterpreterThreadCommand();
-            if (cmd!=null){
+            cmd = getInterpreterThreadCommand();
+            if (cmd != null) {
                 id = cmd.id;
             }
-        } else {   
+        } else {
             cmd = getCommand(id);
         }
         Map ret = new HashMap();
@@ -198,25 +197,38 @@ public class CommandManager implements AutoCloseable{
         return ret;
     }
 
-    CommandInfo getNewCommand() throws TimeoutException, InterruptedException {
-        Chrono chrono = new Chrono();
-        List<CommandInfo> commands = getCommands();
-        CommandInfo ret = null;
-        try {
-            chrono.waitCondition(() -> {
-                List<CommandInfo> cmds = getCommands();
-                cmds.removeAll(commands);
-                if (cmds.size() >= 1) {
-                    commands.clear();
-                    commands.addAll(cmds);
-                    return true;
-                }
-                return false;
-            }, 100);
-        } catch (TimeoutException ex) {
-            return null;
+    final Object newCommandLock = new Object();
+    private long newCommandId;
+    private Thread newCommandThread;
+
+    void onNewCommand(long id) {
+        synchronized (newCommandLock) {
+            newCommandId = id;
+            newCommandThread = Thread.currentThread();
+            newCommandLock.notifyAll();
         }
-        return commands.size() > 0 ? commands.get(0) : null;
+    }
+
+    public long waitNewCommand(Thread thread, int timeout) throws InterruptedException {
+        while (true) {
+
+            try {
+                Chrono chrono = new Chrono();
+                synchronized (newCommandLock) {
+                    newCommandLock.wait(timeout);
+                }
+                if ((thread == null) || (newCommandThread == thread)) {
+                    return newCommandId;
+                }
+                timeout = timeout - chrono.getEllapsed();
+                if (timeout < 0) {
+                    break;
+                }
+            } catch (Exception ex) {
+                break;
+            }
+        }
+        return 0;
     }
 
     @Override
