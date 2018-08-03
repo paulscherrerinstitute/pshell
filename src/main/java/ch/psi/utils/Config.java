@@ -1,5 +1,6 @@
 package ch.psi.utils;
 
+import java.beans.Transient;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -48,6 +49,7 @@ public class Config extends ObservableBase<Config.ConfigListener> {
         return properties;
     }
     
+    @Transient
     public Properties getProperties() {
         List<String> fieldNames = getFieldNames();
         List<String> removed = new ArrayList<>();
@@ -133,6 +135,7 @@ public class Config extends ObservableBase<Config.ConfigListener> {
         return false;
     }
 
+    @Transient
     public List<Field> getFields() {
         ArrayList<Field> ret = new ArrayList<>();
         for (Field f : getClass().getFields()) {
@@ -210,6 +213,7 @@ public class Config extends ObservableBase<Config.ConfigListener> {
         save();
     }
 
+    @Transient
     public String[] getKeys() {
         return properties.keySet().toArray(new String[0]);
     }
@@ -355,6 +359,7 @@ public class Config extends ObservableBase<Config.ConfigListener> {
         return f.getAnnotation(Defaults.class);
     }
 
+    @Transient
     public List<String> getFieldNames() {
         List<String> ret = new ArrayList<>();
         for (Field f : getFields()) {

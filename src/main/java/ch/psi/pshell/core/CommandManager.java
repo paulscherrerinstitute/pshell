@@ -171,6 +171,8 @@ public class CommandManager implements AutoCloseable {
         }
         Map ret = new HashMap();
         ret.put("id", id);
+        ret.put("exception", null);
+        ret.put("return", null);
         String status;
         if (cmd == null) {
             if (id == 0) {
