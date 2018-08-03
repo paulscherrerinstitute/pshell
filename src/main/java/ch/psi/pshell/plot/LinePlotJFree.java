@@ -481,7 +481,8 @@ public class LinePlotJFree extends LinePlotBase {
     @Override
     protected void createChart() {
         super.createChart();
-
+        tickLabelFont = TICK_LABEL_FONT;
+        labelFont = LABEL_FONT;
         legendVisible = false;
         dataY1 = new XYSeriesCollection();
         // Create chart
