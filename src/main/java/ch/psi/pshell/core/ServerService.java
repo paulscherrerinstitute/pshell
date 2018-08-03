@@ -33,7 +33,6 @@ import ch.psi.pshell.scripting.Statement;
 import ch.psi.pshell.security.User;
 import ch.psi.pshell.security.UsersManagerListener;
 import ch.psi.utils.Str;
-import ch.psi.utils.Threading.VisibleCompletableFuture;
 import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.Collections;
@@ -185,12 +184,12 @@ public class ServerService {
     @Path("history/{index}")
     @Consumes(MediaType.TEXT_PLAIN)
     @Produces(MediaType.TEXT_PLAIN)
-    public String history(@PathParam("index") final Integer index) {
+    public String history(@PathParam("index") final Integer index) throws ExecutionException{
         List<String> history = context.getHistory();
         if ((index >= 0) && (index < history.size())) {
             return (history.get(history.size() - index - 1));
         }
-        throw new IllegalArgumentException("Wrong history index");
+        throw new ExecutionException(new IllegalArgumentException("Wrong history index"));
     }
 
     @GET
@@ -431,14 +430,18 @@ public class ServerService {
                     }
                     break;
                 default:
-                    List<String> signatures = null;
-                    if (input.endsWith(".")) {
-                        signatures = Console.getSignatures(input, input.length() - 1, true);
+                    if (Arr.containsEqual(Context.getInstance().getBuiltinFunctionsNames(), input)){
+                        ret.add(Context.getInstance().getBuiltinFunctionDoc(input));
                     } else {
-                        signatures = Console.getSignatures(input, input.length(), true);
-                    }
-                    if (signatures != null) {
-                        ret.addAll(signatures);
+                        List<String> signatures = null;
+                        if (input.endsWith(".")) {
+                            signatures = Console.getSignatures(input, input.length() - 1, true);
+                        } else {
+                            signatures = Console.getSignatures(input, input.length(), true);
+                        }
+                        if (signatures != null) {
+                            ret.addAll(signatures);
+                        }
                     }
             }
             return ret;
