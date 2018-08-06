@@ -17,6 +17,7 @@ public abstract class ColormapSource extends SourceBase {
         public double colormapMin = Double.NaN;
         public double colormapMax = Double.NaN;
         public Colormap colormap = Colormap.Grayscale;
+        public boolean colormapLogarithmic = false;
 
         public boolean isDefaultColormap() {
             return (Double.isNaN(colormapMin) || Double.isNaN(colormapMax)) && (colormapAutomatic == false);
@@ -94,8 +95,8 @@ public abstract class ColormapSource extends SourceBase {
 
         image = super.applyTransformations(image, data);
 
-        if ((getConfig().colormap != Colormap.Grayscale) && Utils.isGrayscale(image)) {
-            image = Utils.newImage(image, getConfig().colormap);
+        if (((getConfig().colormap != Colormap.Grayscale) && Utils.isGrayscale(image)) ||( getConfig().colormapLogarithmic)) {
+            image = Utils.newImage(image, getConfig().colormap, getConfig().colormapLogarithmic);
         }
         return image;
     }

@@ -189,6 +189,22 @@ public class RendererMenu extends JPopupMenu {
             });
             menuColormap.add(item);
         }
+        menuColormap.addSeparator();
+        JCheckBoxMenuItem menuLogarithmic = new JCheckBoxMenuItem("Logarithmic");
+        menuLogarithmic.addActionListener((ActionEvent e) -> {
+           try {
+               Object origin = renderer.getOrigin();
+               if ((origin != null) && (origin instanceof ColormapSource)) {
+                   ColormapSource source = (ColormapSource) origin;
+                   source.getConfig().colormapLogarithmic = menuLogarithmic.isSelected();
+                   source.getConfig().save();
+                   source.refresh();
+               }
+           } catch (IOException ex) {
+               Logger.getLogger(RendererMenu.class.getName()).log(Level.SEVERE, null, ex);
+           }
+       });       
+        menuColormap.add(menuLogarithmic);
 
         JMenuItem menuPlot = new JMenuItem("Detach Plot");
         menuPlot.addActionListener((ActionEvent e) -> {
@@ -392,10 +408,13 @@ public class RendererMenu extends JPopupMenu {
                 if (hasColormap) {
                     ColormapSource source = (ColormapSource) origin;
                     for (Component c : menuColormap.getMenuComponents()) {
-                        if (c instanceof JMenuItem) {
-                            ((JMenuItem) c).setSelected(source.getConfig().colormap == Colormap.valueOf(((JMenuItem) c).getText()));
-                        }
+                        if (c instanceof JRadioButtonMenuItem) {
+                            ((JRadioButtonMenuItem) c).setSelected(source.getConfig().colormap == Colormap.valueOf(((JMenuItem) c).getText()));
+                        } else if (c instanceof JCheckBoxMenuItem) {
+                            ((JCheckBoxMenuItem) c).setSelected(source.getConfig().colormapLogarithmic);
+                        }                        
                     }
+                    
                 }
 
                 menuStatus.setSelected(renderer.getShowStatus());

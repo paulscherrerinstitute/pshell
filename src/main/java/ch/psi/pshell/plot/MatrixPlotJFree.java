@@ -277,13 +277,12 @@ public class MatrixPlotJFree extends MatrixPlotBase {
             chartPanel.getPopupMenu().remove(index);
         }
 
-        // Update colormap
+        // Colormap configuration
         JRadioButtonMenuItem popupMenuAutoScale = new JRadioButtonMenuItem("Automatic");
         popupMenuAutoScale.addActionListener((ActionEvent e) -> {
             setAutoScale();
         });
 
-        // Set color colormap
         JRadioButtonMenuItem popupMenuManualScale = new JRadioButtonMenuItem("Manual");
         popupMenuManualScale.addActionListener((ActionEvent e) -> {
             ManualScaleDialog d = new ManualScaleDialog();
@@ -298,7 +297,6 @@ public class MatrixPlotJFree extends MatrixPlotBase {
             }
         });
 
-        // Set gray scale colormap
         JMenu popupMenuChooseColormap = new JMenu("Colormap");
         for (Colormap c : Colormap.values()) {
             JRadioButtonMenuItem item = new JRadioButtonMenuItem(c.toString());
@@ -307,6 +305,12 @@ public class MatrixPlotJFree extends MatrixPlotBase {
             });
             popupMenuChooseColormap.add(item);
         }
+        popupMenuChooseColormap.addSeparator();
+        JCheckBoxMenuItem menuLogarithmic = new JCheckBoxMenuItem("Logarithmic");
+        menuLogarithmic.addActionListener((ActionEvent e) -> {
+           setColormapLogarithmic(menuLogarithmic.isSelected());
+        });          
+        popupMenuChooseColormap.add(menuLogarithmic);
 
         JMenu popupMenuChooseScale = new JMenu("Scale");
         popupMenuChooseScale.add(popupMenuAutoScale);
@@ -338,9 +342,11 @@ public class MatrixPlotJFree extends MatrixPlotBase {
                 popupMenuManualScale.setSelected(!isAutoScale());
                 popupMenuAutoScale.setSelected(isAutoScale());
                 for (Component c : popupMenuChooseColormap.getMenuComponents()) {
-                    if (c instanceof JMenuItem) {
-                        ((JMenuItem) c).setSelected(getColormap() == Colormap.valueOf(((JMenuItem) c).getText()));
-                    }
+                    if (c instanceof JRadioButtonMenuItem) {
+                        ((JRadioButtonMenuItem) c).setSelected(getColormap() == Colormap.valueOf(((JMenuItem) c).getText()));
+                    } else if (c instanceof JCheckBoxMenuItem) {
+                        ((JCheckBoxMenuItem) c).setSelected(isColormapLogarithmic());
+                    }                       
                 }
                 popupMenuItemToolTip.setSelected(getShowTooltips());
             }
@@ -428,6 +434,18 @@ public class MatrixPlotJFree extends MatrixPlotBase {
             }
         }
     }
+    
+    @Override
+    public void setColormapLogarithmic(boolean value){
+        if (value != isColormapLogarithmic()) {
+            super.setColormapLogarithmic(value);
+            if (isAutoScale()) {
+                setAutoScale();
+            } else {
+                setScale(scaleMin, scaleMax);
+            }
+        }        
+    }
 
     public void setShowTooltips(boolean value) {
         if (value != showTooltips) {
@@ -498,8 +516,13 @@ public class MatrixPlotJFree extends MatrixPlotBase {
         LookupPaintScale rendererScale = new LookupPaintScale(Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY, Color.GRAY);
         setScaleColors(rendererScale, scaleMin, scaleMax);
         // Make the paint scale range from - to + infinity
-        rendererScale.add(Double.NEGATIVE_INFINITY, getColormap().getColor(scaleMin, scaleMin, scaleMax));
-        rendererScale.add(Double.POSITIVE_INFINITY, getColormap().getColor(scaleMax, scaleMin, scaleMax));
+        if (isColormapLogarithmic()){
+            rendererScale.add(Double.NEGATIVE_INFINITY, getColormap().getColorLogarithmic(scaleMin, scaleMin, scaleMax));
+            rendererScale.add(Double.POSITIVE_INFINITY, getColormap().getColorLogarithmic(scaleMax, scaleMin, scaleMax));            
+        } else {
+            rendererScale.add(Double.NEGATIVE_INFINITY, getColormap().getColor(scaleMin, scaleMin, scaleMax));
+            rendererScale.add(Double.POSITIVE_INFINITY, getColormap().getColor(scaleMax, scaleMin, scaleMax));
+        }
         ((XYBlockRenderer) chart.getXYPlot().getRenderer()).setPaintScale(rendererScale);
     }
 
@@ -511,9 +534,16 @@ public class MatrixPlotJFree extends MatrixPlotBase {
      * @param scaleMax
      */
     private void setScaleColors(PaintScale paintScale, double scaleMin, double scaleMax) {
-        for (int i = 0; i < 256; i++) {
-            double value = scaleMin + (i / 255.0) * (scaleMax - scaleMin);
-            ((LookupPaintScale) paintScale).add(value, getColormap().getColor(value, scaleMin, scaleMax));
+        if (isColormapLogarithmic()){
+             for (int i = 0; i < 256; i++) {
+                double value = scaleMin + (i / 255.0) * (scaleMax - scaleMin);
+                ((LookupPaintScale) paintScale).add(value, getColormap().getColorLogarithmic(value, scaleMin, scaleMax));
+            }           
+        } else {
+            for (int i = 0; i < 256; i++) {
+                double value = scaleMin + (i / 255.0) * (scaleMax - scaleMin);
+                ((LookupPaintScale) paintScale).add(value, getColormap().getColor(value, scaleMin, scaleMax));
+            }
         }
     }
 

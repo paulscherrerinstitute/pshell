@@ -80,6 +80,16 @@ public enum Colormap {
         return null;
     }
 
+    Color getColorLogarithmic(int value) {
+        final double c = 255.0 / Math.log10(256.0);
+        double lv = Math.log10(value + 1.0) * c;
+        return getColor(lv, 0.0, 255.0);
+    }
+
+    public Color getColorLogarithmic(double val, double min, double max) {
+        return getColorLogarithmic((int) (255 * (val - min) / (max - min)));
+    }
+
     static HashMap<Colormap, LookupTable> lut;
 
     public LookupTable getLookupTable() {
@@ -101,6 +111,28 @@ public enum Colormap {
         }
         return lut.get(this);
     }
+    
+    static HashMap<Colormap, LookupTable> lutLog;
+
+    public LookupTable getLookupTableLogarithmic() {
+        if (lutLog == null) {
+            lutLog = new HashMap<>();
+        }
+        if (!lutLog.containsKey(this)) {
+            int size = 256;
+            byte[] r = new byte[size];
+            byte[] g = new byte[size];
+            byte[] b = new byte[size];
+            for (int i = 0; i < size; i++) {
+                Color c = getColorLogarithmic(i);
+                r[i] = (byte) c.getRed();
+                g[i] = (byte) c.getGreen();
+                b[i] = (byte) c.getBlue();
+            }
+            lutLog.put(this, new ByteLookupTable(0, new byte[][]{r, g, b}));
+        }
+        return lutLog.get(this);
+    }    
 
     //From http://www.kennethmoreland.com/color-maps/
     int[][] coolWarmColormapTable = new int[][]{

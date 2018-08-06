@@ -25,6 +25,7 @@ import javax.swing.border.EmptyBorder;
 abstract public class MatrixPlotBase extends PlotBase<MatrixPlotSeries> implements MatrixPlot {
 
     private Colormap colormap;
+    private boolean colormapLogarithmic;
 
     protected MatrixPlotBase() {
         this(null);
@@ -325,6 +326,14 @@ abstract public class MatrixPlotBase extends PlotBase<MatrixPlotSeries> implemen
         }
         return colormap;
     }
+    
+    public void setColormapLogarithmic(boolean value) {
+        colormapLogarithmic = value;
+    }
+
+    public boolean isColormapLogarithmic() {
+        return colormapLogarithmic;
+    }    
 
     //abstract protected Object onSetSeries(MatrixPlotSeries series);
     abstract protected void onAppendData(MatrixPlotSeries series, int indexX, int indexY, double x, double y, double z);

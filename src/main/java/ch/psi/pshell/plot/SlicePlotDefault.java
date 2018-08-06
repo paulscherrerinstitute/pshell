@@ -75,7 +75,21 @@ public class SlicePlotDefault extends SlicePlotBase {
         }
         return getDefaultColormap();
     }
-
+    
+    public void setColormapLogarithmic(boolean value) {
+        if (matrixPlot != null) {
+            matrixPlot.setColormapLogarithmic(value);
+        }
+    }
+    
+    public boolean isColormapLogarithmic() {
+        if (matrixPlot != null) {
+            return matrixPlot.isColormapLogarithmic();
+        }
+        return false;
+    }    
+    
+    
     @Override
     public void setTitleFont(Font font) {
         super.setTitleFont(font);

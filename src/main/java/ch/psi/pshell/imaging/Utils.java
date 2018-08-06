@@ -109,10 +109,14 @@ public class Utils {
     }
 
     public static final BufferedImage newImage(BufferedImage ref, Colormap colormap) {
-        BufferedImage aux = copy(ref, BufferedImage.TYPE_INT_RGB, null);
-        return execLookup(aux, colormap.getLookupTable(), true);
+        return newImage(ref, colormap, false);
     }
-
+    
+     public static final BufferedImage newImage(BufferedImage ref, Colormap colormap, boolean logarithmic) {
+        BufferedImage aux = copy(ref, BufferedImage.TYPE_INT_RGB, null);
+        return execLookup(aux, logarithmic ? colormap.getLookupTableLogarithmic(): colormap.getLookupTable(), true);
+    }
+     
     // Operations and transformations 
     public static BufferedImage copy(BufferedImage image, Integer type, Rectangle bounds) {
         if (image == null) {
