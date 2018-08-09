@@ -102,16 +102,32 @@ public interface Plugin {
     }
 
     default Object run(String scriptName, Object args) throws ScriptException, IOException, Context.ContextStateException, InterruptedException {
-        return getContext().evalFile(CommandSource.plugin, scriptName, args);
+        return run(scriptName, args, false);
     }
+    
+    default Object run(String scriptName, Object args, boolean background) throws ScriptException, IOException, Context.ContextStateException, InterruptedException {
+        if (background){
+            return getContext().evalFileBackground(CommandSource.plugin, scriptName, args);
+        } else {
+            return getContext().evalFile(CommandSource.plugin, scriptName, args);
+        }
+    }    
 
     default CompletableFuture<?> runAsync(String scriptName) throws ScriptException, IOException, Context.ContextStateException, InterruptedException {
         return runAsync(scriptName, null);
     }
 
     default CompletableFuture<?> runAsync(String scriptName, Object args) throws Context.ContextStateException {
-        return getContext().evalFileAsync(CommandSource.plugin, scriptName, args);
+        return runAsync(scriptName, args, false);
     }
+    
+    default CompletableFuture<?> runAsync(String scriptName, Object args, boolean background) throws Context.ContextStateException {
+        if (background){
+            return getContext().evalFileBackgroundAsync(CommandSource.plugin, scriptName, args);
+        } else {
+            return getContext().evalFileAsync(CommandSource.plugin, scriptName, args);
+        }
+    }    
 
     default CompletableFuture<?> runBackground(String scriptName) throws Context.ContextStateException {
         return getContext().evalFileBackgroundAsync(CommandSource.plugin, scriptName);

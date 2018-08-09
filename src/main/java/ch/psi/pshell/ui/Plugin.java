@@ -145,6 +145,10 @@ public interface Plugin extends ch.psi.pshell.core.Plugin {
     default void showException(Exception ex) {
         SwingUtils.showException(getTopLevel(), ex);
     }
+    
+    default void showMessage(String title, String message) {
+        SwingUtils.showMessage(getTopLevel(), title, message);
+    }    
 
     default void sendOutput(String str) {
         getApp().sendOutput(str);
