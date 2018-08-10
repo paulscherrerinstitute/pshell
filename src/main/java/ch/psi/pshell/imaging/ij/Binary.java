@@ -23,8 +23,9 @@ public class Binary implements PlugInFilter /*ExtendedPlugInFilter, DialogListen
     //static final String[] operations = {NO_OPERATION, "Erode", "Dilate", "Open", "Close", "Outline", "Fill Holes", "Skeletonize"};
 
     //parameters / options
-    public static int iterations = 1;      //iterations for erode, dilate, open, close
-    public static int count = 1;           //nearest neighbor count for erode, dilate, open, close
+    int iterations = 1;      //iterations for erode, dilate, open, close
+    int count = 1;           //nearest neighbor count for erode, dilate, open, close
+    boolean blackBackground;
     //String operation = NO_OPERATION;  //for dialog; will be copied to 'arg' for actual previewing
 
     String arg;
@@ -36,7 +37,19 @@ public class Binary implements PlugInFilter /*ExtendedPlugInFilter, DialogListen
     int foreground, background;
     int flags = DOES_8G | DOES_8C | SUPPORTS_MASKING | PARALLELIZE_STACKS | /*KEEP_PREVIEW |*/ KEEP_THRESHOLD;
     int nPasses;
-
+    
+    public Binary(){
+        super();
+    }
+    
+    public Binary(int count, int iterations, boolean blackBackground ){
+        this();
+        this.count = count;
+        this.iterations = iterations;
+        this.blackBackground = blackBackground;
+    }
+    
+    
     public int setup(String arg, ImagePlus imp) {
         this.arg = arg;
         IJ.register(Binary.class);
@@ -120,7 +133,8 @@ public class Binary implements PlugInFilter /*ExtendedPlugInFilter, DialogListen
     }
 
     public void run(ImageProcessor ip) {
-        int fg = Prefs.blackBackground ? 255 : 0;
+        //int fg = Prefs.blackBackground ? 255 : 0;
+        int fg = blackBackground ? 255 : 0;
         foreground = ip.isInvertedLut() ? 255 - fg : fg;
         background = 255 - foreground;
         ip.setSnapshotCopyMode(true);
@@ -165,7 +179,7 @@ public class Binary implements PlugInFilter /*ExtendedPlugInFilter, DialogListen
             } else {
                 ((ByteProcessor) ip).dilate(count, background);
             }
-        }
+        }       
     }
 
     void outline(ImageProcessor ip) {

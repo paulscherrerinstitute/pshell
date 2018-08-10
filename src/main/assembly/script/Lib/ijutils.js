@@ -283,10 +283,7 @@ function binary_op(ip, op, dark_background, iterations, count, in_place){
     if (!is_defined(count))    count = 1
     if (!is_defined(in_place))    in_place = true
     ip = in_place ? ip : ip.duplicate()
-    binary = new Binary()    
-    Binary.count = count
-    Binary.iterations = iterations
-    Prefs.blackBackground=dark_background      
+    binary = new Binary(count, iterations, dark_background )        
     binary.setup(op, ip)
     binary.run(ip.getProcessor())
     return ip

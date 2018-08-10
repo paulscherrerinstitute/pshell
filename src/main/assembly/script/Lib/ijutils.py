@@ -239,10 +239,7 @@ def binary_op(ip, op, dark_background=False, iterations=1, count=1, in_place=Tru
     op = "erode","dilate", "open","close", "outline", "fill holes", "skeletonize"
     """
     ip = ip if in_place else ip.duplicate()
-    binary = Binary()    
-    Binary.count = count
-    Binary.iterations = iterations
-    Prefs.blackBackground=dark_background      
+    binary = Binary(count, iterations, dark_background )        
     binary.setup(op, ip)
     binary.run(ip.getProcessor())
     return ip
