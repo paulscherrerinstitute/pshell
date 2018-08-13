@@ -48,6 +48,7 @@ public class Binary implements PlugInFilter /*ExtendedPlugInFilter, DialogListen
         this.iterations = iterations;
         this.blackBackground = blackBackground;
     }
+
     
     
     public int setup(String arg, ImagePlus imp) {
@@ -77,8 +78,8 @@ public class Binary implements PlugInFilter /*ExtendedPlugInFilter, DialogListen
             GenericDialog gd = new GenericDialog("Binary Options");
             gd.addNumericField("Iterations (1-"+MAX_ITERATIONS+"):", iterations, 0, 3, "");
             gd.addNumericField("Count (1-8):", count, 0, 3, "");
-            gd.addCheckbox("Black background", Prefs.blackBackground);
-            gd.addCheckbox("Pad edges when eroding", Prefs.padEdges);
+            gd.addCheckbox("Black background", blackBackground);
+            gd.addCheckbox("Pad edges when eroding", padEdges);
             gd.addChoice("EDM output:", outputTypes, outputTypes[EDM.getOutputType()]);
             if (imp != null) {
                 gd.addChoice("Do:", operations, operation);
@@ -106,11 +107,11 @@ public class Binary implements PlugInFilter /*ExtendedPlugInFilter, DialogListen
     public boolean dialogItemChanged (GenericDialog gd, AWTEvent e) {
         iterations = (int)gd.getNextNumber();
         count = (int)gd.getNextNumber();
-        boolean bb = Prefs.blackBackground;
-        Prefs.blackBackground = gd.getNextBoolean();
-        if ( Prefs.blackBackground!=bb)
+        boolean bb = blackBackground;
+        blackBackground = gd.getNextBoolean();
+        if ( blackBackground!=bb)
         	ThresholdAdjuster.update();
-        Prefs.padEdges = gd.getNextBoolean();
+        padEdges = gd.getNextBoolean();
         gd.setSmartRecording(EDM.getOutputType()==0);
         EDM.setOutputType(gd.getNextChoiceIndex());
         gd.setSmartRecording(false);
@@ -133,7 +134,6 @@ public class Binary implements PlugInFilter /*ExtendedPlugInFilter, DialogListen
     }
 
     public void run(ImageProcessor ip) {
-        //int fg = Prefs.blackBackground ? 255 : 0;
         int fg = blackBackground ? 255 : 0;
         foreground = ip.isInvertedLut() ? 255 - fg : fg;
         background = 255 - foreground;
@@ -183,24 +183,24 @@ public class Binary implements PlugInFilter /*ExtendedPlugInFilter, DialogListen
     }
 
     void outline(ImageProcessor ip) {
-        if (Prefs.blackBackground) {
+        if (blackBackground) {
             ip.invert();
         }
         ((ByteProcessor) ip).outline();
-        if (Prefs.blackBackground) {
+        if (blackBackground) {
             ip.invert();
         }
     }
 
     void skeletonize(ImageProcessor ip) {
-        if (Prefs.blackBackground) {
+        if (blackBackground) {
             ip.invert();
         }
         boolean edgePixels = hasEdgePixels(ip);
         ImageProcessor ip2 = expand(ip, edgePixels);
         ((ByteProcessor) ip2).skeletonize();
         ip = shrink(ip, ip2, edgePixels);
-        if (Prefs.blackBackground) {
+        if (blackBackground) {
             ip.invert();
         }
     }
