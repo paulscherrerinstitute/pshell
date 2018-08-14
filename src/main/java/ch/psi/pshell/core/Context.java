@@ -2421,7 +2421,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
     }
 
     //Settings (persisted script properties)
-    String getSettingsFile() {
+    public String getSettingsFile() {
         return setup.expandPath("{context}/Settings.properties");
     }
 

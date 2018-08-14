@@ -5,15 +5,20 @@ import ch.psi.pshell.device.Device;
 import ch.psi.pshell.imaging.Renderer;
 import ch.psi.pshell.imaging.Source;
 import ch.psi.pshell.swing.DevicePanel;
+import ch.psi.utils.Config;
 import ch.psi.utils.swing.ConfigDialog;
+import ch.psi.utils.swing.PropertiesDialog;
 import ch.psi.utils.swing.StandardDialog;
 import ch.psi.utils.swing.SwingUtils;
 import java.awt.Frame;
 import java.awt.Window;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Properties;
 import javax.swing.WindowConstants;
 
 /**
@@ -101,6 +106,61 @@ public interface Plugin extends ch.psi.pshell.core.Plugin {
     default Renderer showRenderer(Source source) {
         return (Renderer) getApp().getDevicePanelManager().showPanel(source, getTopLevel());
     }
+    default void showSettingsEditor(boolean modal) {
+        showPropertiesEditor(getContext().getSettingsFile(), modal);
+    }
+    
+    default void showPropertiesEditor(String fileName, boolean modal) {
+        try {
+            final PropertiesDialog dlg = new PropertiesDialog(getTopLevel(), modal);
+            dlg.setTitle(fileName);
+            Properties props = new Properties();
+            try (FileInputStream in = new FileInputStream(fileName)) {
+                props.load(in);
+            } 
+            dlg.setProperties(props);
+            dlg.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+            dlg.setListener((StandardDialog sd, boolean accepted) -> {
+                if (sd.getResult()) {
+                    try (FileOutputStream out = new FileOutputStream(fileName);) {
+                        props.store(out, null);
+                    } catch (IOException ex) {
+                        SwingUtils.showException(dlg, ex);
+                    }
+                }
+            });
+            dlg.setLocationRelativeTo(getTopLevel());
+            dlg.setVisible(true);
+            dlg.requestFocus();
+
+        } catch (Exception ex) {
+            SwingUtils.showException(getTopLevel(), ex);
+        }   
+    }
+    
+    default void showConfigEditor(Config cfg, boolean modal) {
+        try {
+            final ConfigDialog dlg = new ConfigDialog(getTopLevel(), modal);
+            dlg.setTitle(cfg.getFileName());
+            dlg.setConfig(cfg);
+            dlg.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+            dlg.setListener((StandardDialog sd, boolean accepted) -> {
+                if (sd.getResult()) {
+                    try {
+                        cfg.save();
+                    } catch (IOException ex) {
+                        SwingUtils.showException(dlg, ex);
+                    }
+                }
+            });
+            dlg.setLocationRelativeTo(getTopLevel());
+            dlg.setVisible(true);
+            dlg.requestFocus();
+
+        } catch (Exception ex) {
+            SwingUtils.showException(getTopLevel(), ex);
+        }   
+    }    
 
     /**
      * Shows a Frame or Dialog having the Mainframe as parent. Window is close when the plugin is
@@ -157,5 +217,5 @@ public interface Plugin extends ch.psi.pshell.core.Plugin {
     default void sendError(String str) {
         getApp().sendError(str);
     }
-
+    
 }
