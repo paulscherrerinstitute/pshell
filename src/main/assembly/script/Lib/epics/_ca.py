@@ -136,9 +136,10 @@ class MonitorListener(gov.aps.jca.event.MonitorListener):
         self.callback = callback
     def monitorChanged(self, monitor_ev):        
         status = monitor_ev.getStatus() 
-        dbr = monitor_ev.getDBR()   
-        self.callback(formatCbArgs(status, dbr))
-        #print dbr.getValue()
+        if status == gov.aps.jca.CAStatus.NORMAL:
+            dbr = monitor_ev.getDBR()   
+            self.callback(formatCbArgs(status, dbr))
+            #print dbr.getValue()
 
 def search(name, callback): #returns channel
     ch= context.createChannel(name)
