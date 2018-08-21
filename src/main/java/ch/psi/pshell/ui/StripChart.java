@@ -52,6 +52,7 @@ import java.nio.file.Paths;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.EventObject;
 import java.util.HashMap;
@@ -1220,6 +1221,8 @@ public class StripChart extends StandardDialog {
             final StripChartAlarmConfig alarmConfig = (StripChartAlarmConfig) info.get(6);
             return (alarmConfig == null) ? false : alarmConfig.isAlarm(current);
         }
+        
+        
 
         void add(Device device, Object value, Long timestamp, TimePlotBase plot, int seriesIndex) {
             try {
@@ -1242,26 +1245,43 @@ public class StripChart extends StandardDialog {
                         }
                     }
                 }
-                if ((value == null) || (value instanceof Number)) {
-                    Double d = (value == null) ? Double.NaN : ((Number) value).doubleValue();
-                    long time = (timestamp == null) ? now : timestamp;
-                    appendTimestamps.put(device, now);
+                
+                long time = (timestamp == null) ? now : timestamp;
+                Double doubleValue;
+                if (value == null){
+                    doubleValue = Double.NaN;
+                } else if (value instanceof Number){
+                    doubleValue = ((Number) value).doubleValue();
+                    doubleValue = (doubleValue == null) ? Double.NaN : doubleValue;  
+                } else if (value instanceof Boolean){
+                    doubleValue = Boolean.TRUE.equals(value) ? 1.0 : 0;
+                    if (current!=null){
+                        chartElementProducer.post(new ChartElement(plot, seriesIndex, time-1, current));
+                    }
+                } else if (value.getClass().isEnum()){
+                    doubleValue = (double)Arrays.asList(value.getClass().getEnumConstants()).indexOf(value);
+                    if (current!=null){
+                        chartElementProducer.post(new ChartElement(plot, seriesIndex, time-1, current));
+                    }
+                } else {
+                    return;
+                }
 
-                    //plot.add(seriesIndex, time, d);
-                    //Invoking event thread to prevent https://sourceforge.net/p/jfreechart/bugs/1009/ (JFreeChart is not thread safe)
-                    chartElementProducer.post(new ChartElement(plot, seriesIndex, time, d));
+                appendTimestamps.put(device, now);
 
-                    Double val = (d == null) ? Double.NaN : d;
-                    if (persisting) {
-                        synchronized (persistLock) {
-                            if (!val.equals(current)) {
-                                persistenceExecutor.append(id, val, now, time);
-                                index++;
-                            }
+                //plot.add(seriesIndex, time, doubleValue);
+                //Invoking event thread to prevent https://sourceforge.net/p/jfreechart/bugs/1009/ (JFreeChart is not thread safe)
+                chartElementProducer.post(new ChartElement(plot, seriesIndex, time, doubleValue));
+
+                if (persisting) {
+                    synchronized (persistLock) {
+                        if (!doubleValue.equals(current)) {
+                            persistenceExecutor.append(id, doubleValue, now, time);
+                            index++;
                         }
                     }
-                    current = val;
                 }
+                current = doubleValue;
             } catch (Exception ex) {
                 Logger.getLogger(StripChart.class.getName()).log(Level.FINE, null, ex);
             }
