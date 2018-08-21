@@ -483,11 +483,15 @@ public class PluginManager implements AutoCloseable {
 
     public Plugin loadInitializePlugin(File file) {
         Plugin p = loadPlugin(file);
+        initializePlugin(p);
+        return p;
+    }
+    
+    public void initializePlugin(Plugin p){
         if (p != null) {
             startPlugin(p);
             p.onInitialize(Context.getInstance().runCount);
-        }
-        return p;
+        }        
     }
 
     public boolean isLoaded(String fileName) {

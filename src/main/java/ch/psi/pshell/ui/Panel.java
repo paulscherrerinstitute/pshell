@@ -11,6 +11,7 @@ import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Frame;
+import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
@@ -32,16 +33,49 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
+import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 import javax.swing.Timer;
 
 /**
- * Plugin implementation and JPanel extension, consisting of a panel to be loaded to the Workbench
- * as a tab ins the documents - or else to be executed stand alone (detached mode).
+ * Plugin implementation and JPanel extension, consisting of a panel to be
+ * loaded to the Workbench as a tab ins the documents - or else to be executed
+ * stand alone (detached mode).
  */
 public class Panel extends MonitoredPanel implements Plugin {
+
+    boolean detached = App.isDetached();
+    boolean nested;
+    Frame parent;
+
+    public void setDetached(boolean detached) {
+        setDetached(detached, null);
+    }
+    public void setDetached(boolean detached, Frame parent) {
+        if (this.isStarted()) {
+            throw new RuntimeException("Plugin is already started");
+        }
+        if (!detached && App.isDetached()) {
+            throw new RuntimeException("Plugin must be detached");
+        }
+        this.detached = detached;
+        this.parent = parent;
+        nested = detached;
+    }
+
+    public boolean isDetached() {
+        return detached;
+    }
+
+    public boolean isNested() {
+        return nested;
+    }
+    
+    public boolean isDetachedDialog() {
+        return detached && (parent!=null);
+    }
 
     @Override
     public void onStart() {
@@ -67,7 +101,7 @@ public class Panel extends MonitoredPanel implements Plugin {
     }
 
     boolean isLoaded() {
-        if (App.isDetached()) {
+        if (isDetached()) {
             return isShowing();
         }
         return (getTabIndex() >= 0);
@@ -109,55 +143,81 @@ public class Panel extends MonitoredPanel implements Plugin {
         }
         if (!isLoaded()) {
             String title = getTitle();
-            if (App.isDetached()) {
-                boolean fullScreen = (frameCount==0) && App.isFullScreen();
-                JFrame frame = new JFrame(title);
-                if (fullScreen){
-                    SwingUtils.enableFullScreen(frame);
-                }                
-                frame.setIconImage(App.getIconSmall());
-                if (App.isDetachedAppendStatusBar()) {
-                    JPanel panel = new JPanel();
-                    panel.setLayout(new BorderLayout());
-                    panel.add(this, BorderLayout.CENTER);
-                    panel.add(new StatusBar(), BorderLayout.SOUTH);
-                    frame.setContentPane(panel);
+            if (isDetached()) {
+                if (isDetachedDialog()) {
+                    JDialog dlg = new JDialog(getTopLevel(), title, false);
+                    dlg.setIconImage(App.getIconSmall());
+                    dlg.setContentPane(this);
+                    dlg.setName(((getName() == null) ? getClass().getSimpleName() : getName()) + "Dialog");
+                    dlg.pack();
+                    SwingUtils.centerComponent(getTopLevel(), dlg);
+                    dlg.setVisible(true);
+                    dlg.requestFocus();
+                    dlg.addWindowListener(new WindowAdapter() {
+                        @Override
+                        public void windowClosing(WindowEvent e) {
+                            unload();
+                        }
+                    });                    
                 } else {
-                    frame.setContentPane(this);
-                }
-                frame.setName(((getName() == null) ? getClass().getSimpleName() : getName()) + "Frame");
-                frame.pack();
-
-                if (fullScreen){
-                    SwingUtils.setFullScreen(frame, true);
-                } else {                
-                    SwingUtils.centerComponent(null, frame);
-                    if (App.isDetachedPersisted()) {
-                        loadWindowState();
+                    boolean fullScreen = (frameCount == 0) && App.isFullScreen();
+                    JFrame frame = new JFrame(title);
+                    if (fullScreen) {
+                        SwingUtils.enableFullScreen(frame);
                     }
-                }
-                frame.setVisible(true);
-                frame.requestFocus();
-                frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
-                frame.addWindowListener(new WindowAdapter() {
-                    @Override
-                    public void windowClosing(WindowEvent e) {
-                        String msg = "Do you want to close the panel";
-                        msg += (frameCount == 1) ? " and finish the application?" : "?";
-                        if ((App.isQuiet())
-                                || (SwingUtils.showOption(frame, "Close", msg, OptionType.YesNo) == OptionResult.Yes)) {
-                            if (App.isDetachedPersisted()) {
-                                saveWindowState();
-                            }
-                            frame.setVisible(false);
-                            frameCount--;
-                            if (frameCount == 0) {
-                                App.getInstance().exit(this);
-                            }
+                    frame.setIconImage(App.getIconSmall());
+                    if (App.isDetachedAppendStatusBar()) {
+                        JPanel panel = new JPanel();
+                        panel.setLayout(new BorderLayout());
+                        panel.add(this, BorderLayout.CENTER);
+                        panel.add(new StatusBar(), BorderLayout.SOUTH);
+                        frame.setContentPane(panel);
+                    } else {
+                        frame.setContentPane(this);
+                    }
+                    frame.setName(((getName() == null) ? getClass().getSimpleName() : getName()) + "Frame");
+                    frame.pack();
+
+                    if (fullScreen) {
+                        SwingUtils.setFullScreen(frame, true);
+                    } else {
+                        SwingUtils.centerComponent(null, frame);
+                        if (App.isDetachedPersisted()) {
+                            loadWindowState();
                         }
                     }
-                });
-                frameCount++;
+                    frame.setVisible(true);
+                    frame.requestFocus();
+                    frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+                    frame.addWindowListener(new WindowAdapter() {
+                        @Override
+                        public void windowClosing(WindowEvent e) {
+                            if (isNested()) {
+                                if (App.isDetachedPersisted()) {
+                                    saveWindowState();
+                                }       
+                                unload();
+                            } else {
+                                String msg = "Do you want to close the panel";
+                                msg += (frameCount == 1) ? " and finish the application?" : "?";
+                                if ((App.isQuiet())
+                                        || (SwingUtils.showOption(frame, "Close", msg, OptionType.YesNo) == OptionResult.Yes)) {
+                                    if (App.isDetachedPersisted()) {
+                                        saveWindowState();
+                                    }
+                                    unload();
+                                    frameCount--;
+                                    if (frameCount == 0) {
+                                        App.getInstance().exit(this);
+                                    }
+                                }
+                            }
+                        }
+                    });
+                    if (!isNested()) {
+                        frameCount++;
+                    }
+                }
             } else {
                 int index = 0;
                 getView().getDocumentsTab().add(this, index);
@@ -174,10 +234,11 @@ public class Panel extends MonitoredPanel implements Plugin {
         }
         closeWindows();
         if (isLoaded()) {
-            if (App.isDetached()) {
-                Frame frame = SwingUtils.getFrame(this);
-                if (frame != null) {
-                    frame.setVisible(false);
+            if (isDetached()) {
+
+                Window window = SwingUtils.getWindow(this);
+                if (window != null) {
+                    window.setVisible(false);
                 }
             } else {
                 getView().getDocumentsTab().remove(this);
@@ -273,9 +334,9 @@ public class Panel extends MonitoredPanel implements Plugin {
 
     protected void saveWindowState() {
         try {
-            if (App.isDetached()) {
-                if (SwingUtils.getFrame(this) != null) {
-                    MainFrame.save(SwingUtils.getFrame(this), getWindowStatePath());
+            if (isDetached()) {
+                if (SwingUtils.getWindow(this) != null) {
+                    MainFrame.save(SwingUtils.getWindow(this), getWindowStatePath());
                 }
             }
         } catch (Exception ex) {
@@ -285,9 +346,9 @@ public class Panel extends MonitoredPanel implements Plugin {
 
     protected void loadWindowState() {
         try {
-            if (App.isDetached()) {
-                if (SwingUtils.getFrame(this) != null) {
-                    MainFrame.restore(SwingUtils.getFrame(this), getWindowStatePath());
+            if (isDetached()) {
+                if (SwingUtils.getWindow(this) != null) {
+                    MainFrame.restore(SwingUtils.getWindow(this), getWindowStatePath());
                 }
             }
         } catch (Exception ex) {
@@ -374,8 +435,8 @@ public class Panel extends MonitoredPanel implements Plugin {
     }
 
     /**
-     * Requests doUpdate to be called in event loop, filtering multiple calls coming before
-     * execution.
+     * Requests doUpdate to be called in event loop, filtering multiple calls
+     * coming before execution.
      */
     private final AtomicBoolean updating = new AtomicBoolean(false);
     boolean disregardedUpdateRequest;
@@ -416,13 +477,13 @@ public class Panel extends MonitoredPanel implements Plugin {
             onTimer();
         }
     }
-    
-    protected void onLoaded(){
-        
+
+    protected void onLoaded() {
+
     }
-    
-    protected void onUnloaded(){
-        
+
+    protected void onUnloaded() {
+
     }
 
     /**
@@ -433,6 +494,9 @@ public class Panel extends MonitoredPanel implements Plugin {
 
     @Override
     public Frame getTopLevel() {
+        if (parent!=null){
+            return parent;
+        }
         if (getView() != null) {
             return getView();
         }
