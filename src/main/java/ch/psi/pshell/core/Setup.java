@@ -123,6 +123,7 @@ public class Setup extends Config {
         if (fileName == null) {
             fileName = Paths.get(homePath, "config", "setup.properties").toString();
         } else {
+            fileName = fileName.replace(TOKEN_CONFIG, Paths.get(homePath, "config").toString());
             if (IO.getExtension(fileName).isEmpty()) {
                 fileName += ".properties";
             }                        
