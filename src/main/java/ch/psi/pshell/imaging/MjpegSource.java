@@ -16,6 +16,7 @@ public class MjpegSource extends SourceBase {
 
     final String url;
     final boolean flushOnUpdate;
+    final String flushStrategy;
 
     public MjpegSource(String name, String url) {
         this(name, url, false);
@@ -25,6 +26,15 @@ public class MjpegSource extends SourceBase {
         super(name, new SourceConfig());
         this.url = url;
         this.flushOnUpdate = flushOnUpdate;
+        this.flushStrategy = "last";
+    }
+    
+    //flushStrategy = reopen, reset or last
+    public MjpegSource(String name, String url, String flushStrategy) {
+        super(name, new SourceConfig());
+        this.url = url;
+        this.flushOnUpdate = true;
+        this.flushStrategy = flushStrategy;
     }
 
     InputStream stream;
@@ -71,6 +81,7 @@ public class MjpegSource extends SourceBase {
     final byte[] START_OF_FRAME = {(byte) 0xFF, (byte) 0xD8};
     final byte[] END_OF_FRAME = {(byte) 0xFF, (byte) 0xD9};
     final int MAX_FRAME_SIZE = 512 * 1024;
+    int frameSize = MAX_FRAME_SIZE;
 
     @Override
     protected void doUpdate() throws IOException, InterruptedException {
@@ -104,9 +115,9 @@ public class MjpegSource extends SourceBase {
                     if (endOfFrame >= 0) {
                         stream.reset();
                         stream.skip(startOfFrame);
-                        int length = endOfFrame;
-                        byte[] data = new byte[length];
-                        stream.read(data, 0, length);
+                        frameSize = endOfFrame;
+                        byte[] data = new byte[frameSize];
+                        stream.read(data, 0, frameSize);
                         return data;
                     }
                 }
@@ -140,13 +151,22 @@ public class MjpegSource extends SourceBase {
     }
 
     public void flush() throws IOException {
-        //stream.skip(stream.available());           
-        //TODO: Skipping won't make the current image to be displayed
         synchronized(url){
-            stream.close();
-            stream = new URL(url).openStream();
-            if (!stream.markSupported()) {
-                stream = new BufferedInputStream(stream);
+            if (flushStrategy.equals("reopen")){
+                stream.close();
+                stream = new URL(url).openStream();
+                if (!stream.markSupported()) {
+                    stream = new BufferedInputStream(stream);
+                }                
+            } else {
+                int keep =  flushStrategy.equals("reset") ? 0 : (int)(frameSize * 1.5); 
+                int skipping = stream.available() - keep; 
+                if (skipping>0){
+                    int skipped = 0;
+                    while (skipped<skipping){
+                        skipped += stream.skip(skipping - skipped);  
+                    }
+                }
             }
         }
     }
