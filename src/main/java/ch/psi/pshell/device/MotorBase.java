@@ -352,7 +352,6 @@ public abstract class MotorBase extends PositionerBase implements Motor {
     //Simulation        
     Register<Double> simulatedVelocity;
     volatile double simulatedPosition;
-    Double simulatedSpeed = 1.0;
 
     @Override
     protected void doSetSimulated() {
@@ -363,7 +362,7 @@ public abstract class MotorBase extends PositionerBase implements Motor {
             simulatedVelocity = new DummyRegister(null, getPrecision());
             try {
                 simulatedVelocity.initialize();
-                simulatedVelocity.write(1.0);
+                simulatedVelocity.write(getDefaultSpeed());
             } catch (Exception ex) {
                 getLogger().log(Level.WARNING, null, ex);
             }
