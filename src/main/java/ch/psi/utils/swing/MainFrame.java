@@ -969,7 +969,11 @@ public abstract class MainFrame extends JFrame {
             return new WindowState(frameBounds, gcBounds, GraphicsEnvironment.getLocalGraphicsEnvironment().getScreenDevices().length, frameState, fullScreen);
         } else if (c instanceof JTabbedPane) {
             JTabbedPane p = (JTabbedPane) c;
-            return new TabbedPaneState(p.getTitleAt(p.getSelectedIndex()), p.getSelectedIndex(), p.getTabCount());
+            int index = p.getSelectedIndex();
+            if (index < 0){
+                return null;
+            }
+            return new TabbedPaneState(p.getTitleAt(index), index, p.getTabCount()); 
         } else if (c instanceof JSplitPane) {
             JSplitPane p = (JSplitPane) c;
             return new SplitPaneState(p.getUI().getDividerLocation(p), p.getOrientation());
