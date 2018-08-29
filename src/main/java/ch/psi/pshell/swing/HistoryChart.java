@@ -173,13 +173,21 @@ public class HistoryChart extends JPanel implements AutoCloseable {
                 timestamp = tValue.getTimestamp();
             }
         }
-        if ((value == null) || (value instanceof Number)) {
-            Double d = (value == null) ? Double.NaN : ((Number) value).doubleValue();
-            Device[] devices = getDevices();
-            for (int i = 0; i < devices.length; i++) {
-                if (devices[i] == device) {
-                    chart.add(i, (timestamp == null) ? System.currentTimeMillis() : timestamp, d);
-                }
+        Double doubleValue;
+        if (value == null){
+            doubleValue = Double.NaN;
+        } else if (value instanceof Number){
+            doubleValue = ((Number) value).doubleValue();
+            doubleValue = (doubleValue == null) ? Double.NaN : doubleValue;  
+        } else if (value instanceof Boolean){
+            doubleValue = Boolean.TRUE.equals(value) ? 1.0 : 0;
+        } else {
+            return;
+        }
+        Device[] devices = getDevices();
+        for (int i = 0; i < devices.length; i++) {
+            if (devices[i] == device) {
+                chart.add(i, (timestamp == null) ? System.currentTimeMillis() : timestamp, doubleValue);
             }
         }
     }

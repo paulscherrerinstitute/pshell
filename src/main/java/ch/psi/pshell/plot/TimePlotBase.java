@@ -4,7 +4,6 @@ import ch.psi.pshell.device.TimestampedValue;
 import ch.psi.utils.swing.SwingUtils;
 import java.awt.Color;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import javax.swing.JMenuItem;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -15,7 +14,6 @@ import javax.swing.JMenu;
 import javax.swing.JPopupMenu;
 import javax.swing.event.PopupMenuEvent;
 import javax.swing.event.PopupMenuListener;
-import org.jfree.chart.renderer.xy.XYItemRenderer;
 
 /**
  *
@@ -69,6 +67,21 @@ public abstract class TimePlotBase extends PlotBase<TimePlotSeries> implements T
             clear();
         });
         
+        JMenu menuScales= new JMenu("Logarithmic Scale");
+        
+        JCheckBoxMenuItem menuLogarithmicY1 = new JCheckBoxMenuItem("Y1");
+        menuLogarithmicY1.addActionListener((ActionEvent e) -> {
+            setY1Logarithmic(menuLogarithmicY1.isSelected());
+        });  
+        
+        JCheckBoxMenuItem menuLogarithmicY2 = new JCheckBoxMenuItem("Y2");
+        menuLogarithmicY2.addActionListener((ActionEvent e) -> {
+            setY2Logarithmic(menuLogarithmicY2.isSelected());
+        });   
+
+        menuScales.add(menuLogarithmicY1);
+        menuScales.add(menuLogarithmicY2);
+
         menuSeries = new JMenu("Series Visibility");
 
         JMenuItem menuDisplayDuration = new JMenuItem("Duration...");
@@ -90,13 +103,16 @@ public abstract class TimePlotBase extends PlotBase<TimePlotSeries> implements T
                 menuMarkers.setSelected(isMarkersVisible());
                 menuLegend.setSelected(isLegendVisible());
                 menuSeries.removeAll();
-                for (TimePlotSeries series : getAllSeries()){ 
-                    JCheckBoxMenuItem item = new JCheckBoxMenuItem(series.getName(), !isSeriesHidden(series)); 
+                for (TimePlotSeries series : getAllSeries()) {
+                    JCheckBoxMenuItem item = new JCheckBoxMenuItem(series.getName(), !isSeriesHidden(series));
                     item.addActionListener((ActionEvent ae) -> {
                         setSeriesHidden(series, !item.isSelected());
                     });
                     menuSeries.add(item);
                 }
+                menuLogarithmicY1.setSelected(isY1Logarithmic());
+                menuLogarithmicY2.setSelected(isY2Logarithmic());
+                menuLogarithmicY1.setVisible(started);
             }
 
             @Override
@@ -109,6 +125,7 @@ public abstract class TimePlotBase extends PlotBase<TimePlotSeries> implements T
         });
 
         addPopupMenuItem(null);
+        addPopupMenuItem(menuScales);    
         addPopupMenuItem(menuMarkers);
         addPopupMenuItem(menuLegend);
         addPopupMenuItem(menuStopStart);
@@ -116,7 +133,7 @@ public abstract class TimePlotBase extends PlotBase<TimePlotSeries> implements T
         addPopupMenuItem(menuSeries);
         addPopupMenuItem(null);
         addPopupMenuItem(menuDisplayDuration);
-        
+
     }
 
     abstract protected JPopupMenu getPopupMenu();
@@ -124,17 +141,17 @@ public abstract class TimePlotBase extends PlotBase<TimePlotSeries> implements T
     abstract public void setAxisSize(int size);
 
     abstract public int getAxisSize();
-    
-    
-    public boolean isSeriesHidden(TimePlotSeries series){
+
+    public boolean isSeriesHidden(TimePlotSeries series) {
         return getSeriesColor(series).equals(TRANSPARENT);
     }
-    
-    Color TRANSPARENT =  new Color(1, 0, 0, 0);
+
+    Color TRANSPARENT = new Color(1, 0, 0, 0);
     Map<TimePlotSeries, Color> hiddenPlots = new HashMap<>();
-    public void setSeriesHidden(TimePlotSeries series, boolean hidden){
-        if (hidden != isSeriesHidden(series)){
-            if (hidden){
+
+    public void setSeriesHidden(TimePlotSeries series, boolean hidden) {
+        if (hidden != isSeriesHidden(series)) {
+            if (hidden) {
                 hiddenPlots.put(series, getSeriesColor(series));
                 setSeriesColor(series, TRANSPARENT);
             } else {
@@ -142,7 +159,6 @@ public abstract class TimePlotBase extends PlotBase<TimePlotSeries> implements T
             }
         }
     }
-  
 
     @Override
     public void clear() {
@@ -202,16 +218,16 @@ public abstract class TimePlotBase extends PlotBase<TimePlotSeries> implements T
     @Override
     public void addTerminator(int index) {
         Long timestamp = getLastTimestamp(index);
-        addTerminator(index, (timestamp==null)? System.currentTimeMillis() : timestamp+1);
+        addTerminator(index, (timestamp == null) ? System.currentTimeMillis() : timestamp + 1);
     }
 
     @Override
     public void addTerminators() {
-        for (int i=0; i< getNumberOfSeries(); i++){
+        for (int i = 0; i < getNumberOfSeries(); i++) {
             addTerminator(i);
         }
     }
-    
+
     @Override
     public void addTerminator(int index, long time) {
         add(index, time, Double.NaN);
@@ -222,7 +238,7 @@ public abstract class TimePlotBase extends PlotBase<TimePlotSeries> implements T
         double[] terminators = new double[getNumberOfSeries()];
         Arrays.fill(terminators, Double.NaN);
         add(time, terminators);
-    }    
+    }
 
     @Override
     public void add(double value) {
@@ -262,21 +278,22 @@ public abstract class TimePlotBase extends PlotBase<TimePlotSeries> implements T
     abstract public List<TimestampedValue<Double>> getSeriestData(int index);
 
     abstract public String getSeriesName(int index);
-    
-    abstract public TimestampedValue<Double> getItem(int index, int itemIndex) ;
+
+    abstract public TimestampedValue<Double> getItem(int index, int itemIndex);
 
     public TimestampedValue<Double> getLastItem(int index) {
         return getItem(index, -1);
-    }    
-    
+    }
+
     public Double getLastValue(int index) {
         TimestampedValue<Double> ret = getLastItem(index);
-        return (ret==null) ? null : ret.getValue();
-    }      
+        return (ret == null) ? null : ret.getValue();
+    }
+
     public Long getLastTimestamp(int index) {
         TimestampedValue<Double> ret = getLastItem(index);
-        return (ret==null) ? null : ret.getTimestamp();
-    }     
+        return (ret == null) ? null : ret.getTimestamp();
+    }
 
     //Configuration
     @Override
@@ -355,5 +372,23 @@ public abstract class TimePlotBase extends PlotBase<TimePlotSeries> implements T
     public double[][] getSeriesData(TimePlotSeries series) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
+    
+    @Override
+    public boolean isY1Logarithmic(){
+        return false;
+    }
+    
+    @Override
+    public void setY1Logarithmic(boolean value){
+    }    
+    
+    @Override
+    public boolean isY2Logarithmic(){
+        return false;
+    }
+    
+    @Override
+    public void setY2Logarithmic(boolean value){
+    }        
 
 }

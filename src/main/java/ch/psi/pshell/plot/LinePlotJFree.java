@@ -6,6 +6,7 @@ import ch.psi.utils.swing.SwingUtils;
 import java.awt.BasicStroke;
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Frame;
@@ -33,7 +34,9 @@ import javax.swing.JComponent;
 import javax.swing.JDialog;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
+import javax.swing.JRadioButtonMenuItem;
 import javax.swing.KeyStroke;
+import javax.swing.SwingUtilities;
 import javax.swing.event.PopupMenuEvent;
 import javax.swing.event.PopupMenuListener;
 import org.jfree.chart.ChartFactory;
@@ -613,7 +616,7 @@ public class LinePlotJFree extends LinePlotBase {
             LinePlotSeries[] allSeries = getAllSeries();
             String labelX = getAxis(Plot.AxisId.X).getLabel();
             String labelY = getAxis(Plot.AxisId.Y).getLabel();
-            String labelY2 = getAxis(Plot.AxisId.Y2).getLabel();
+            String labelY2 = hasY2 ? getAxis(Plot.AxisId.Y2).getLabel() : "";
             SeriesInfo[] existing = new SeriesInfo[allSeries.length];
             for (int i = 0; i < allSeries.length; i++) {
                 SeriesInfo info = new SeriesInfo();
@@ -638,7 +641,9 @@ public class LinePlotJFree extends LinePlotBase {
             }
             getAxis(Plot.AxisId.X).setLabel(labelX);
             getAxis(Plot.AxisId.Y).setLabel(labelY);
-            getAxis(Plot.AxisId.Y2).setLabel(labelY2);
+            if(hasY2){
+                getAxis(Plot.AxisId.Y2).setLabel(labelY2);
+            }
             onTitleChanged();
             for (SeriesInfo info : existing) {
                 if (!getStyle().isError()) {
@@ -646,6 +651,7 @@ public class LinePlotJFree extends LinePlotBase {
                     info.series.setData(info.x, info.y);
                 }
             }
+            updateUI();
         }
     }
 
@@ -1008,6 +1014,38 @@ public class LinePlotJFree extends LinePlotBase {
         });
         toolsMenu.add(integralMenuItem);
 
+        //Select plot style
+        JMenu menuStyle = new JMenu("Style");
+        for (Style style : new Style[]{Style.Normal, Style.Spline, Style.Step}){
+            JRadioButtonMenuItem popupMenuStyle = new JRadioButtonMenuItem(style.toString());
+            popupMenuStyle.addActionListener((ActionEvent e) -> {
+                setStyle(style);
+
+            });
+            menuStyle.add(popupMenuStyle);
+        }
+        chartPanel.getPopupMenu().add(menuStyle);
+        
+        
+        //Logarithmic axis
+        JMenu menuScales= new JMenu("Logarithmic Scale");
+        JCheckBoxMenuItem menuScaleLogX= new JCheckBoxMenuItem("X");
+        JCheckBoxMenuItem menuScaleLogY1= new JCheckBoxMenuItem("Y1");
+        JCheckBoxMenuItem menuScaleLogY2= new JCheckBoxMenuItem("Y2");
+        menuScaleLogX.addActionListener((ActionEvent e) -> {
+            getAxis(AxisId.X).setLogarithmic(menuScaleLogX.isSelected());
+        });
+        menuScaleLogY1.addActionListener((ActionEvent e) -> {
+            getAxis(AxisId.Y).setLogarithmic(menuScaleLogY1.isSelected());
+        });
+        menuScaleLogY2.addActionListener((ActionEvent e) -> {
+            getAxis(AxisId.Y2).setLogarithmic(menuScaleLogY2.isSelected());
+        });          
+        menuScales.add(menuScaleLogX);
+        menuScales.add(menuScaleLogY1);
+        menuScales.add(menuScaleLogY2);
+        chartPanel.getPopupMenu().add(menuScales);    
+        
         //Show hide legend
         JCheckBoxMenuItem contextMenuItemColorLegendVisible = new JCheckBoxMenuItem("Show Legend");
         contextMenuItemColorLegendVisible.addActionListener((ActionEvent e) -> {
@@ -1035,6 +1073,14 @@ public class LinePlotJFree extends LinePlotBase {
             public void popupMenuWillBecomeVisible(PopupMenuEvent e) {
                 contextMenuItemColorLegendVisible.setSelected(isLegendVisible());
                 contextMenuItemToolTip.setSelected(getShowTooltips());
+                menuStyle.setEnabled(!getStyle().isError());
+                for (Component c : menuStyle.getMenuComponents()) {
+                    ((JRadioButtonMenuItem) c).setSelected(getStyle() == Style.valueOf(((JMenuItem) c).getText()));                
+                }               
+                menuScaleLogX.setSelected(getAxis(AxisId.X).isLogarithmic());
+                menuScaleLogY1.setSelected(getAxis(AxisId.Y).isLogarithmic());
+                menuScaleLogY2.setVisible(dataY2 != null);
+                menuScaleLogY2.setSelected(getAxis(AxisId.Y2).isLogarithmic());
             }
 
             @Override
@@ -1048,6 +1094,7 @@ public class LinePlotJFree extends LinePlotBase {
 
         super.createPopupMenu();
     }
+    
 
     // http://www.jfree.org/phpBB2/viewtopic.php?t=12788&highlight=redraw+speed+performance+problem
     void showTooltips() {

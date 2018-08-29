@@ -23,6 +23,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JFileChooser;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
@@ -31,6 +32,7 @@ import javax.swing.SwingUtilities;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
+import org.jfree.chart.axis.LogarithmicAxis;
 import org.jfree.chart.axis.NumberAxis;
 import org.jfree.chart.axis.ValueAxis;
 import org.jfree.chart.plot.XYPlot;
@@ -434,6 +436,50 @@ public class TimePlotJFree extends TimePlotBase {
         axis.setFixedAutoRange(duration);
         checkSeriesDuration();
     }
+    @Override
+    public boolean isY1Logarithmic(){
+        return isLogarithmic(0);
+    }
+        
+    @Override
+    public void setY1Logarithmic(boolean value){
+        setLogarithmic(0, value);
+    }   
+    
+    @Override
+    public boolean isY2Logarithmic(){
+        return isLogarithmic(1);
+    }
+        
+    @Override
+    public void setY2Logarithmic(boolean value){
+        setLogarithmic(1, value);
+    }      
+    
+    public boolean isLogarithmic(int axisIndex){
+        ValueAxis axis = chart.getXYPlot().getRangeAxis(axisIndex);
+        if (axis != null) {
+            return axis instanceof LogarithmicAxis;
+        }
+        return false;
+    }
+        
+    public void setLogarithmic(int axisIndex, boolean value){
+        ValueAxis cur = chart.getXYPlot().getRangeAxis(axisIndex);
+        if (cur != null){
+            if (value != isLogarithmic(axisIndex)){
+                XYPlot plot = (XYPlot) chart.getPlot();
+                NumberAxis axis = value ? new LogarithmicAxis(cur.getLabel()) : new NumberAxis(cur.getLabel());
+                axis.setAutoRangeIncludesZero(false);
+                axis.setLabelFont(labelFont);
+                axis.setTickLabelFont(tickLabelFont);
+                plot.setRangeAxis(axisIndex, axis);
+                axis.setLabelPaint(PlotBase.getAxisTextColor());
+                axis.setTickLabelPaint(PlotBase.getAxisTextColor());
+                setAxisSize(axisSize);            
+            }
+        }
+    }       
 
     @Override
     public void start() {

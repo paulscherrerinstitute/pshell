@@ -25,17 +25,25 @@ public interface TimePlot extends Plot<TimePlotSeries> {
 
     boolean isLegendVisible();
 
-    void setY1AxisAutoScale();
-
     void setTimeAxisLabel(String label);
 
     String getTimeAxisLabel();
-
+    
+    void setY1AxisAutoScale();   
+     
     void setY1AxisScale(double min, double max);
 
     void setY2AxisAutoScale();
 
     void setY2AxisScale(double min, double max);
+    
+    boolean isY1Logarithmic();
+    
+    void setY1Logarithmic(boolean value);
+    
+    boolean isY2Logarithmic();
+    
+    void setY2Logarithmic(boolean value);
 
     void start();
 
