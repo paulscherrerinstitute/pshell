@@ -181,8 +181,13 @@ def clear_monitor(event_id):
     flush()
 
 def ch_info(channel):
+    #if channel.getConnectionState() != channel.CONNECTED then getHostName fails
+    try:
+        host_name = channel.getHostName()
+    except:
+        host_name = "Unknown"
     return (channel.getFieldType().getValue(), channel.getElementCount() ,
-         None, channel.getConnectionState().getValue(), channel.getHostName(), 
+         None, channel.getConnectionState().getValue(), host_name, 
          channel.getReadAccess() , channel.getWriteAccess())
 
 
