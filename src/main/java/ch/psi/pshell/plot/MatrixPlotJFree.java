@@ -287,13 +287,22 @@ public class MatrixPlotJFree extends MatrixPlotBase {
         popupMenuManualScale.addActionListener((ActionEvent e) -> {
             ManualScaleDialog d = new ManualScaleDialog();
             SwingUtils.centerComponent(chartPanel,d);
-            d.setLow(((PaintScaleLegend) chart.getSubtitles().get(0)).getScale().getLowerBound());
-            d.setHigh(((PaintScaleLegend) chart.getSubtitles().get(0)).getScale().getUpperBound());
-            d.setMatrixPlot(MatrixPlotJFree.this);
+            Double low = ((PaintScaleLegend) chart.getSubtitles().get(0)).getScale().getLowerBound();
+            Double high =((PaintScaleLegend) chart.getSubtitles().get(0)).getScale().getUpperBound();
+            Boolean auto =isAutoScale();
+            d.setLow(low);
+            d.setHigh(high);
+            d.setScaleChangeListener(MatrixPlotJFree.this);
 
             d.showDialog();
             if (d.getSelectedOption() == JOptionPane.OK_OPTION) {
                 setScale(d.getLow(), d.getHigh());
+            } else { 
+                if (auto){
+                    setAutoScale();
+                } else {
+                    setScale(low, high);
+                }
             }
         });
 
@@ -305,20 +314,21 @@ public class MatrixPlotJFree extends MatrixPlotBase {
             });
             popupMenuChooseColormap.add(item);
         }
-        popupMenuChooseColormap.addSeparator();
         JCheckBoxMenuItem menuLogarithmic = new JCheckBoxMenuItem("Logarithmic");
         menuLogarithmic.addActionListener((ActionEvent e) -> {
            setColormapLogarithmic(menuLogarithmic.isSelected());
         });          
-        popupMenuChooseColormap.add(menuLogarithmic);
 
         JMenu popupMenuChooseScale = new JMenu("Scale");
         popupMenuChooseScale.add(popupMenuAutoScale);
         popupMenuChooseScale.add(popupMenuManualScale);
+        
+        popupMenuChooseColormap.addSeparator();
+        popupMenuChooseColormap.add(popupMenuChooseScale);
+        popupMenuChooseColormap.add(menuLogarithmic);
 
         // Group colormap related menu items
         chartPanel.getPopupMenu().add(popupMenuChooseColormap);
-        chartPanel.getPopupMenu().add(popupMenuChooseScale);
 
         //Show hide legend
         JCheckBoxMenuItem popupMenuItemColorLegendVisible = new JCheckBoxMenuItem("Show Legend");

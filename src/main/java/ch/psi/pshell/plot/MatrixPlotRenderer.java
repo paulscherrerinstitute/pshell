@@ -63,14 +63,23 @@ public class MatrixPlotRenderer extends MatrixPlotBase {
         // Set color colormap
         JRadioButtonMenuItem popupMenuManualScale = new JRadioButtonMenuItem("Manual");
         popupMenuManualScale.addActionListener((ActionEvent e) -> {
-            MatrixPlotJFree.ManualScaleDialog d = new MatrixPlotJFree.ManualScaleDialog();
+            ManualScaleDialog d = new ManualScaleDialog();
+            Double low = Double.isNaN(scaleMin) ? 0.0 : scaleMin;
+            Double high =Double.isNaN(scaleMax) ? 1.0 : scaleMax;
+            Boolean auto =isAutoScale();            
             SwingUtils.centerComponent(renderer, d);  
-            d.setLow(Double.isNaN(scaleMin) ? 0.0 : scaleMin);
-            d.setHigh(Double.isNaN(scaleMax) ? 1.0 : scaleMax);
-            d.setMatrixPlot(this);
+            d.setLow(low);
+            d.setHigh(high);
+            d.setScaleChangeListener(this);
             d.showDialog();
             if (d.getSelectedOption() == JOptionPane.OK_OPTION) {
                 setScale(d.getLow(), d.getHigh());
+            } else { 
+                if (auto){
+                    setAutoScale();
+                } else {
+                    setScale(low, high);
+                }
             }
         });
 

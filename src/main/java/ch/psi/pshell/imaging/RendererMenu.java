@@ -14,6 +14,8 @@ import javax.swing.event.PopupMenuListener;
 import ch.psi.pshell.plot.LinePlotBase;
 import ch.psi.pshell.plot.LinePlotSeries;
 import ch.psi.pshell.plot.MatrixPlotBase;
+import ch.psi.pshell.plot.ManualScaleDialog;
+import ch.psi.pshell.plot.ManualScaleDialog.ScaleChangeListener;
 import ch.psi.pshell.plot.MatrixPlotSeries;
 import ch.psi.pshell.plot.MatrixPlotJFree;
 import ch.psi.pshell.plot.Plot;
@@ -42,6 +44,7 @@ import java.io.IOException;
 import javax.swing.JCheckBox;
 import javax.swing.JDialog;
 import javax.swing.JFileChooser;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JRadioButtonMenuItem;
 import javax.swing.WindowConstants;
@@ -192,20 +195,80 @@ public class RendererMenu extends JPopupMenu {
         menuColormap.addSeparator();
         JCheckBoxMenuItem menuLogarithmic = new JCheckBoxMenuItem("Logarithmic");
         menuLogarithmic.addActionListener((ActionEvent e) -> {
-           try {
-               Object origin = renderer.getOrigin();
-               if ((origin != null) && (origin instanceof ColormapSource)) {
-                   ColormapSource source = (ColormapSource) origin;
-                   source.getConfig().colormapLogarithmic = menuLogarithmic.isSelected();
-                   source.getConfig().save();
-                   source.refresh();
-               }
-           } catch (IOException ex) {
-               Logger.getLogger(RendererMenu.class.getName()).log(Level.SEVERE, null, ex);
-           }
-       });       
-        menuColormap.add(menuLogarithmic);
+            try {
+                Object origin = renderer.getOrigin();
+                if ((origin != null) && (origin instanceof ColormapSource)) {
+                    ColormapSource source = (ColormapSource) origin;
+                    source.getConfig().colormapLogarithmic = menuLogarithmic.isSelected();
+                    source.getConfig().save();
+                    source.refresh();
+                }
+            } catch (IOException ex) {
+                Logger.getLogger(RendererMenu.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        });
 
+        JRadioButtonMenuItem menuAutoScale = new JRadioButtonMenuItem("Automatic");
+        menuAutoScale.addActionListener((ActionEvent e) -> {
+            try {
+                Object origin = renderer.getOrigin();
+                if ((origin != null) && (origin instanceof ColormapSource)) {
+                    ColormapSource source = (ColormapSource) origin;
+                    source.getConfig().colormapAutomatic = true;
+                    source.getConfig().save();
+                    source.refresh();
+                }
+            } catch (IOException ex) {
+                Logger.getLogger(RendererMenu.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        });
+
+        JRadioButtonMenuItem menuManualScale = new JRadioButtonMenuItem("Manual");
+        menuManualScale.addActionListener((ActionEvent e) -> {
+            try {
+                Object origin = renderer.getOrigin();
+                if ((origin != null) && (origin instanceof ColormapSource)) {
+                    ColormapSource source = (ColormapSource) origin;
+                    ManualScaleDialog d = new ManualScaleDialog();
+                    SwingUtils.centerComponent(this, d);
+                    Double low = source.getConfig().colormapMin;
+                    Double high = source.getConfig().colormapMax;
+                    Boolean auto = source.getConfig().colormapAutomatic;
+                    d.setLow(low);
+                    d.setHigh(high);
+                    d.setScaleChangeListener(new ScaleChangeListener() {
+                        @Override
+                        public void setScale(double scaleMin, double scaleMax) {
+                            source.getConfig().colormapAutomatic = false;
+                            source.getConfig().colormapMin = d.getLow();
+                            source.getConfig().colormapMax = d.getHigh();
+                            source.refresh();
+                        }
+                    });
+                    d.showDialog();
+                    if (d.getSelectedOption() == JOptionPane.OK_OPTION) {
+                        source.getConfig().colormapAutomatic = false;
+                        source.getConfig().colormapMin = d.getLow();
+                        source.getConfig().colormapMax = d.getHigh();
+                        source.getConfig().save();
+                        source.refresh();
+                    } else {
+                        source.getConfig().colormapAutomatic = auto;
+                        source.getConfig().colormapMin = low;
+                        source.getConfig().colormapMax = high;
+                        source.refresh();
+                    }
+                }
+            } catch (IOException ex) {
+                Logger.getLogger(RendererMenu.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        });
+        JMenu menuScale = new JMenu("Scale");
+        menuScale.add(menuAutoScale);
+        menuScale.add(menuManualScale);
+        menuColormap.add(menuScale);
+        menuColormap.add(menuLogarithmic);
+        
         JMenuItem menuPlot = new JMenuItem("Detach Plot");
         menuPlot.addActionListener((ActionEvent e) -> {
             Data data = renderer.getData();
@@ -407,14 +470,17 @@ public class RendererMenu extends JPopupMenu {
                 menuColormap.setVisible(hasColormap);
                 if (hasColormap) {
                     ColormapSource source = (ColormapSource) origin;
+                    boolean autoColormap = source.getConfig().colormapAutomatic;
+                    menuAutoScale.setSelected(autoColormap);
+                    menuManualScale.setSelected(!autoColormap);
                     for (Component c : menuColormap.getMenuComponents()) {
                         if (c instanceof JRadioButtonMenuItem) {
                             ((JRadioButtonMenuItem) c).setSelected(source.getConfig().colormap == Colormap.valueOf(((JMenuItem) c).getText()));
                         } else if (c instanceof JCheckBoxMenuItem) {
                             ((JCheckBoxMenuItem) c).setSelected(source.getConfig().colormapLogarithmic);
-                        }                        
+                        }
                     }
-                    
+
                 }
 
                 menuStatus.setSelected(renderer.getShowStatus());
