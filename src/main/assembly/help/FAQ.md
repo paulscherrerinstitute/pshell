@@ -50,10 +50,10 @@
       in memory. Possible solutions:
         1. Increase java heap size, using the java -Xmx option in the startup command.
            E.g. use "java -Xmx6G -jar pshell*.jar" to set the heap size to 6G.
-        2. The default behaviour is to accumulate in memory all scan records, which are returned
+        2. The default behaviour is to keep in memory all scan records, which are returned
            in the end of the scan. This can be disabled, for the running script, with:
         ```
-        set_exec_pars(accumulate = False)
+        set_exec_pars(keep = False)
         ```
         3. In the workbench the scan data is sent to the plot window and also to the table in the 
            "Scripts" tab, consuming memory. Plotting and table displaying can be disabled for the
@@ -65,7 +65,7 @@
     - Optionally the options above may be provided inline in the scan command. In this case they are
       valid only for the running scan, and not for the following. For example: 
         ```
-        lscan (pos, sensor, start, end, steps, accumulate = False, plot_disabled = True, table_disabled = True)
+        lscan (pos, sensor, start, end, steps, keep = False, plot_disabled = True, table_disabled = True)
         ```
         
 
