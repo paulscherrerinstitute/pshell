@@ -703,6 +703,9 @@ public class LinePlotJFree extends LinePlotBase {
             boolean isLog = axis instanceof LogarithmicAxis;
             if (isLog != getAxis(axisId).isLogarithmic()) {
                 axis = (getAxis(axisId).isLogarithmic()) ? new LogarithmicAxis(getAxis(axisId).getLabel()) : new NumberAxis(getAxis(axisId).getLabel());
+                if (getAxis(axisId).isLogarithmic()){
+                    ((LogarithmicAxis)axis).setAllowNegativesFlag(true);
+                }                
                 XYPlot plot = (XYPlot) chart.getPlot();
                 axis.setLabelFont(labelFont);
                 axis.setTickLabelFont(tickLabelFont);

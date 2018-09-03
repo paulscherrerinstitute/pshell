@@ -470,6 +470,9 @@ public class TimePlotJFree extends TimePlotBase {
             if (value != isLogarithmic(axisIndex)){
                 XYPlot plot = (XYPlot) chart.getPlot();
                 NumberAxis axis = value ? new LogarithmicAxis(cur.getLabel()) : new NumberAxis(cur.getLabel());
+                if (value){
+                    ((LogarithmicAxis)axis).setAllowNegativesFlag(true);
+                }
                 axis.setAutoRangeIncludesZero(false);
                 axis.setLabelFont(labelFont);
                 axis.setTickLabelFont(tickLabelFont);
