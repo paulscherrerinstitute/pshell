@@ -44,9 +44,9 @@ public class Arr {
         return ret;
     }
 
-    public static <T> T[] remove(T[] array, Object[] objects) {
+    public static <T> T[] remove(T[] array, T[] objects) {
         for (Object object : objects) {
-            array = remove(array, (Object) objects);
+            array = remove(array, (Object) object);
         }
         return array;
     }
