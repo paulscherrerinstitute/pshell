@@ -199,7 +199,7 @@ public abstract class DeviceBase extends GenericDeviceBase<DeviceListener> imple
     }
 
     final protected void setCache(DeviceBase child, Object value) {
-        setCache(value, System.currentTimeMillis());
+        setCache(child, value, System.currentTimeMillis());
     }
 
     protected void setCache(DeviceBase child, Object value, Long timestamp) {
