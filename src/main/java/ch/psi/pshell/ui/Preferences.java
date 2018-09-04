@@ -135,7 +135,8 @@ public class Preferences {
         } catch (Exception ex) {
             Logger.getLogger(Preferences.class.getName()).log(Level.FINE, null, ex);
         }
-
+        //Not removing invalid device and panel classes, otherwise dynamic classes won't work
+        /*
         DefaultPanel[] invalid = new DefaultPanel[0];
         for (DefaultPanel defaultPanel : preferences.defaultPanels) {
             try {
@@ -147,6 +148,7 @@ public class Preferences {
             }
         }
         preferences.defaultPanels = Arr.remove(preferences.defaultPanels, invalid);
+        */
         return preferences;
     }
 
