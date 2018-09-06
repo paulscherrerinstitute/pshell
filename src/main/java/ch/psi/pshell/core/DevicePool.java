@@ -541,19 +541,26 @@ public class DevicePool extends ObservableBase<DevicePoolListener> implements Au
     }
 
     public boolean addDevice(GenericDevice device) {
+        return addDevice(device, true);
+    }
+    
+    public boolean addDevice(GenericDevice device, boolean initialize) {
         if (contains(device)) {
             return false;
         }
         logger.log(Level.INFO, "Adding device: " + device.getName());
         add(device);
-        if (!device.isInitialized()) {
-            try {
-                if (Context.getInstance().isSimulation()) {
-                    device.setSimulated();
+        
+        if (initialize){
+            if (!device.isInitialized()) {
+                try {
+                    if (Context.getInstance().isSimulation()) {
+                        device.setSimulated();
+                    }
+                    device.initialize();
+                } catch (Exception ex) {
+                    logger.log(Level.WARNING, "Error initializing device: " + ex.getMessage());
                 }
-                device.initialize();
-            } catch (Exception ex) {
-                logger.log(Level.WARNING, "Error initializing device: " + ex.getMessage());
             }
         }
 
@@ -568,6 +575,10 @@ public class DevicePool extends ObservableBase<DevicePoolListener> implements Au
     }
 
     public boolean removeDevice(GenericDevice device) {
+        return removeDevice(device, true);
+    }
+    
+    public boolean removeDevice(GenericDevice device, boolean close) {
         if (getByName(device.getName()) == null) {
             return false;
         }
@@ -585,15 +596,16 @@ public class DevicePool extends ObservableBase<DevicePoolListener> implements Au
                 logger.log(Level.WARNING, null, ex);
             }
         }
-
-        if (device.getState() != State.Closing) {
-            try {
-                device.close();
-            } catch (Exception ex) {
-                logger.log(Level.WARNING, "Error closing device: " + ex.getMessage());
+        if (close){
+            if (device.getState() != State.Closing) {
+                try {
+                    device.close();
+                } catch (Exception ex) {
+                    logger.log(Level.WARNING, "Error closing device: " + ex.getMessage());
+                }
             }
         }
-        return true;
+        return true;        
     }
 
     @Override

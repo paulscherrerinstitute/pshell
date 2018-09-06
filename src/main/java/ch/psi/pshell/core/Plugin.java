@@ -213,11 +213,27 @@ public interface Plugin {
         }
         return false;
     }
+    
+    default boolean addDevice(GenericDevice device, boolean initialize) {
+        DevicePool pool = getContext().getDevicePool();
+        if (pool != null) {
+            return pool.addDevice(device, initialize);
+        }
+        return false;
+    }    
 
     default boolean removeDevice(GenericDevice device) {
         DevicePool pool = getContext().getDevicePool();
         if (pool != null) {
             return pool.removeDevice(device);
+        }
+        return false;
+    }
+    
+    default boolean removeDevice(GenericDevice device, boolean close) {
+        DevicePool pool = getContext().getDevicePool();
+        if (pool != null) {
+            return pool.removeDevice(device, close);
         }
         return false;
     }
