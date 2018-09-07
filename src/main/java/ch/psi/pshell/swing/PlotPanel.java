@@ -125,8 +125,14 @@ public class PlotPanel extends MonitoredPanel {
         }
     }
 
-    static public PlotLayout getPlotLayout() {
+    public PlotLayout getPlotLayout() {
         try {
+            try{
+                if (prefs.plotLayout!=null){
+                    return prefs.plotLayout;
+                }
+            } catch (Exception ex){
+            }
             return PlotLayout.valueOf(System.getProperty(PROPERTY_PLOT_LAYOUT));
         } catch (Exception ex) {
             return DEFAULT_PLOT_LAYOUT;

@@ -744,7 +744,7 @@ def set_exec_pars(Map args){
         defaults(bool, optional): If true restore the original execution parameters.
 
         Graphical preferences can also be set. Keys are equal to lowercase of Preference enum:
-        "plot_disabled", "table_disabled", "enabled_plots", "plot_types", "print_scan", "auto_range", 
+        "plot_disabled", "plot_layout", "table_disabled", "enabled_plots", "plot_types", "print_scan", "auto_range", 
         "manual_range","domain_axis", "status".
         See set_preference for more information.    
         

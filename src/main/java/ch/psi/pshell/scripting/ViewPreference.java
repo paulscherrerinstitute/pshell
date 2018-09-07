@@ -2,6 +2,7 @@ package ch.psi.pshell.scripting;
 
 import ch.psi.pshell.core.Context;
 import ch.psi.pshell.core.Nameable;
+import ch.psi.pshell.plotter.PlotLayout;
 import ch.psi.utils.Range;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -14,6 +15,7 @@ import java.util.Map;
 public enum ViewPreference {
 
     PLOT_DISABLED, //enable/disable scan plot (True/False)
+    PLOT_LAYOUT, //  "Horizontal", "Vertical" or "Grid"
     TABLE_DISABLED, //enable/disable scan table (True/False)
     ENABLED_PLOTS, //select Readables to be plotted (list of Readable or String (Readable names))
     PLOT_TYPES, //dictionary or (Readable or String):(String or int) pairs where the key is a plot name and the value is the desired plot type
@@ -34,6 +36,7 @@ public enum ViewPreference {
         public Boolean autoRange;
         public Range range;
         public String domainAxis;
+        public PlotLayout plotLayout;
 
         public void init() {
             enabledPlots = null;
@@ -41,6 +44,7 @@ public enum ViewPreference {
             autoRange = null;
             range = null;
             domainAxis = null;
+            plotLayout = null;
         }
 
         public void setFixedRange() {
@@ -85,6 +89,10 @@ public enum ViewPreference {
         public void setEnabledPlots(ArrayList<String> plots) {
             enabledPlots = plots;
         }
+        
+        public void setPlotLayout(PlotLayout layout){
+            plotLayout = layout;
+        }
 
         public PlotPreferences clone() {
             PlotPreferences ret = new PlotPreferences();
@@ -93,6 +101,7 @@ public enum ViewPreference {
             ret.enabledPlots = enabledPlots;
             ret.plotTypes = plotTypes;
             ret.range = range;
+            ret.plotLayout = plotLayout;
             return ret;
         }
     }

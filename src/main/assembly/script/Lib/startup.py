@@ -1202,7 +1202,7 @@ def set_exec_pars(**args):
         defaults(bool, optional): If true restore the original execution parameters.
 
         Graphical preferences can also be set. Keys are equal to lowercase of Preference enum:
-        "plot_disabled", "table_disabled", "enabled_plots", "plot_types", "print_scan", "auto_range",
+        "plot_disabled", "plot_layout", "table_disabled", "enabled_plots", "plot_types", "print_scan", "auto_range",
         "manual_range","domain_axis", "status".
         See set_preference for more information.
 
@@ -2460,6 +2460,7 @@ def set_preference(preference, value):
     Args:
         preference(Preference): Preference name
             Preference.PLOT_DISABLED  #enable/disable scan plot (True/False)
+            Preference.PLOT_LAYOUT    #  "Horizontal", "Vertical" or "Grid"
             Preference.TABLE_DISABLED  #enable/disable scan table (True/False)
             Preference.ENABLED_PLOTS #select Readables to be plotted (list of Readable or
                 String (Readable names))

@@ -7,6 +7,7 @@ import ch.psi.pshell.core.VersioningManager.Revision;
 import ch.psi.pshell.data.DataManager;
 import ch.psi.pshell.data.Layout;
 import ch.psi.pshell.data.Provider;
+import ch.psi.pshell.plotter.PlotLayout;
 import ch.psi.pshell.scan.Scan;
 import ch.psi.pshell.scripting.ViewPreference;
 import ch.psi.utils.Arr;
@@ -28,7 +29,7 @@ public class ExecutionParameters {
     final String[] executionOptions = new String[]{"defaults", "group", "open", "reset", "name", "type", "path", "tag",
         "layout", "provider", "save", "persist", "flush", "preserve", "keep", "accumulate", "depth_dim"};
 
-    final String[] viewOptions = new String[]{"plot_disabled", "table_disabled", "enabled_plots",
+    final String[] viewOptions = new String[]{"plot_disabled", "table_disabled", "enabled_plots","plot_layout",
         "plot_types", "print_scan", "auto_range", "manual_range", "domain_axis", "status"};
 
     final String[] shortcutOptions = new String[]{"display", "line_plots", "plot_list", "range"};
@@ -625,7 +626,9 @@ public class ExecutionParameters {
                     plotPreferences.setEnabledPlots(plots);
                 }
                 break;
-
+            case PLOT_LAYOUT:
+                plotPreferences.setPlotLayout((value==null) ? null :PlotLayout.valueOf(value.toString()));
+                break;
             case PLOT_TYPES:
                 if (value == null) {
                     plotPreferences.resetPlotTypes();
