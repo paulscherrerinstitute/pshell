@@ -191,4 +191,16 @@ public class GenericArray extends RegisterBase implements Register.RegisterArray
             register.setSize(size);
         }
     }
+    
+    public void setSizeToValidElements() throws IOException, InterruptedException{
+        setSize(getValidElemets());
+    }
+    
+    
+    public int getValidElemets() throws IOException, InterruptedException{
+        if ((register != null) && (register instanceof EpicsRegisterArray)){
+            return ((EpicsRegisterArray)register).getValidElemets();
+        }
+        return -1;
+    }    
 }

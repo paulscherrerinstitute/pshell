@@ -1,8 +1,12 @@
 package ch.psi.pshell.epics;
 
+import ch.psi.jcae.ChannelException;
 import ch.psi.pshell.device.Register.RegisterArray;
 import java.io.IOException;
 import java.lang.reflect.Array;
+import java.util.concurrent.ExecutionException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Base for all EPICS array register classes.
@@ -92,6 +96,18 @@ public abstract class EpicsRegisterArray<T> extends EpicsRegister<T> implements 
                 throw new DeviceException(ex);
             }
         }
+    }
+
+    public void setSizeToValidElements() throws IOException, InterruptedException {
+        setSize(getValidElemets());
+    }
+
+    public int getValidElemets() throws IOException, InterruptedException {
+        try {
+            return Epics.get(channelName + ".NORD", Integer.class);
+            } catch (ChannelException | java.util.concurrent.TimeoutException | ExecutionException ex) {
+                throw new DeviceException(ex);
+            }
     }
 
     @Override
