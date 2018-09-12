@@ -53,7 +53,7 @@
 
 * Improved load time (removed inspect and ctypes from startup.py).
 
-* __name__ set to '__main__' instead of '__builtin__' (as Jython does under Java Scripting API).
+* \_\_name\_\_ set to '\_\_main\_\_' instead of '\_\_builtin\_\_' (as Jython does under Java Scripting API).
 
 * StripChart plot panel made public - so can be added to plugins.
 
