@@ -1169,10 +1169,14 @@ public class StripChart extends StandardDialog {
         if (alarming) {
             pulse = !pulse;
             if ((chronoDisableAlarmSound == null) || (chronoDisableAlarmSound.getEllapsed() > disableAlarmTimer)) {
-                if (alarmFile == null) {
-                    Toolkit.getDefaultToolkit().beep();
-                } else {
-                    Audio.playFile(alarmFile);
+                try{
+                    if (alarmFile == null) {
+                        Toolkit.getDefaultToolkit().beep();
+                    } else {
+                        Audio.playFile(alarmFile);
+                    }
+                } catch (Throwable t){  
+                    Logger.getLogger(StripChart.class.getName()).log(Level.FINEST, null, t);
                 }
                 buttonSound.setSelected(false);
                 buttonSound.setToolTipText("Stop sound alarm for 30 minutes");
