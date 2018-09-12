@@ -1,5 +1,109 @@
 # Changelog
 
+## 1.10.0
+
+### Added
+
+* Logarithmic colormap for renderer and matrix plot.
+
+* Logarithmic scales on LinePlot and TimePlot.
+
+* Configuration of colormap scale through the popup menu for renderer and MatrixPlot.
+
+* Ability to set the plot layout for a particular scan with the 'plot_layout parameter.'
+
+* EpicsRegisterArray.setSizeToValidElements for setting array size to value given by .NORD field.
+
+* Configuration of Channel range and alarms in StripChart.
+
+* Ability to force rescan of FileSource (source.rescan()).
+
+* Configuring CamServer entries in Scan Editor with same syntax as StripChart.
+
+* Selection of coordinate system in renderer status bar.
+
+* Context.evalFileBackgroundAsync.
+
+* Command line option to start Data Panel only (-dtpn).
+
+* -attach option for StripChart: running multiple charts in single process.
+
+* Command line option to start in full screen mode (-full).
+
+* Callbacks to Panel load & unload events.
+
+* ChannelSelector control, searching matching channel names in DataAPI, EpicsBootInfo or Pipeline server.
+
+* Context.setInterpreterVariable.
+
+* Series visibility menu item on TimePlot.
+
+* Command-line option to set default plot background and grid color.
+
+* StripChart configuration of tick label font.
+
+  
+### Changed
+
+* StripChart type 'Device' can be set with InlineDevice configuration string.
+
+* Builtin 'run' function returns value set by 'set_return' (if called by the script).
+
+* bsget include module, offset and timeout as parameters.
+
+* Improved load time (removed inspect and ctypes from startup.py).
+
+* __name__ set to '__main__' instead of '__builtin__' (as Jython does under Java Scripting API).
+
+* StripChart plot panel made public - so can be added to plugins.
+
+* Configuration of sign bit for process variables.
+
+* DeviceConfig handles Jython classes and dictionary based config - 
+  so Config classes can be declared in scripts.
+
+* MjpegSource can be monitored.
+
+* Improvements to Plugin interface.
+
+* 'keep' replaced 'accumulate' keyword.
+
+* Possibility to add/remove devices to the pool without initializing/closing them.
+
+
+### Fixed
+
+* Bug compiling plugins in current folder.
+
+* SFLayout.
+
+* TcpDevice.flush() flushes the socket in addition to clearing the buffer.
+
+* Improved flushing sub-sampled MJPEG streams.
+
+* Message of StripChart saved data file name.
+
+* TimePlotJFree considers size parameter in getSnapshot.
+
+* PShell Python client.
+
+* Correctly returning command IDs for async commands.
+
+* StripChart and history plots supporting boolean devices.
+
+* Only triggers monitor callbacks in PyEPICS wrapper if status is CAStatus.NORMAL.
+
+* Stdout messages when PyEPICS channel is disconnected.
+
+* Error messages persisting state of JTabbedPane
+
+* Initialize speed of simulated motors is set to default.
+
+* Device.setCache(child, value)
+
+* Arr.remove.
+
+
 
 ## 1.9.0
 
