@@ -42,6 +42,10 @@
 
 * StripChart configuration of tick label font.
 
+* Ability to set handlers for command execution events (on_command_started/on_command_finished), 
+  so that script setup/cleanup can be factorized, and script flow can be simplified, 
+  avoiding try/finally blocks in order to restore defaults.
+
   
 ### Changed
 
