@@ -108,6 +108,12 @@ import ch.psi.pshell.scripting.ScriptUtils as ScriptUtils
 def get_context():
     return ch.psi.pshell.core.Context.getInstance()
 
+def on_command_started(info):
+    pass
+
+def on_command_finished(info):
+    pass
+
 ###################################################################################################
 #Type conversion and checking
 ###################################################################################################

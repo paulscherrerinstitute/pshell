@@ -29,6 +29,7 @@ public class Configuration extends Config {
     public boolean dataScanFlushRecords = false;
     public boolean dataScanReleaseRecords = false;
     public boolean dataScanPreserveTypes = false;
+    public boolean commandExecutionEvents = false;
     public String hostName;
     public String logPath = TOKEN_LOGS + "/" + TOKEN_DATE + "_" + TOKEN_TIME;
     public int logDaysToLive = -1;

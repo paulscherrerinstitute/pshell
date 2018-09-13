@@ -41,6 +41,20 @@
         get_context().serverEnabled
         ```
 
+ * How to define script setup / cleanup callbacks? This can simplify script flow, so that try/finally
+   blocks are not always needed to restore initial state.
+
+    - Enable "Command Execution Events" in the configuration dialog.
+    - Define in local.py the handlers for command execution start and/or finish:
+        ```
+        def on_command_started(info):
+            ...
+
+        def on_command_finished(info):
+            ...
+        ```
+      The 'info' parameter is a CommandInfo object (see section "Utility Classes").
+
 ---
 ## Scans
 

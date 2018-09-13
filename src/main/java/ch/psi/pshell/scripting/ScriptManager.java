@@ -95,6 +95,10 @@ public class ScriptManager implements AutoCloseable {
         logger.info("Finished " + getClass().getSimpleName() + " initialization");
     }
     
+    public ScriptEngine getEngine(){
+        return engine;
+    }
+    
     public Object getResult(Thread thread){
         return results.get(thread);
     }  
@@ -372,6 +376,10 @@ public class ScriptManager implements AutoCloseable {
         } finally {
             evalThread = null;
         }
+    }
+    
+    public boolean isThreaded(){
+        return threaded;
     }
 
     public InterpreterResult evalBackground(String statement) {

@@ -5,6 +5,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -21,6 +23,7 @@ public class CommandManager implements AutoCloseable {
             synchronized (commandInfo) {
                 commandInfo.add(0, info);
                 //commandInfo.put(Thread.currentThread(), info);
+                onCommandStarted(info);
             }
         }
     }
@@ -36,6 +39,7 @@ public class CommandManager implements AutoCloseable {
                 //commandInfo.remove(Thread.currentThread());
                 //commandInfo.remove(info);
                 commandInfo.notifyAll();
+                onCommandFinished(info);
             }
         }
         if (commandInfo.size() > COMMAND_INFO_SIZE) {
@@ -232,6 +236,32 @@ public class CommandManager implements AutoCloseable {
         }
         return 0;
     }
+    
+    
+    //Callbacks for triggering script handlers to command start/finish
+    void onCommandStarted(CommandInfo info){  
+        if (Context.getInstance().config.commandExecutionEvents){
+            try {
+                String var_name =  "_command_info_" + Thread.currentThread().getId();
+                Context.getInstance().scriptManager.getEngine().put(var_name, info);
+                Context.getInstance().scriptManager.getEngine().eval("on_command_started(" + var_name + ")");
+            } catch (Exception ex) {
+                Logger.getLogger(CommandManager.class.getName()).log(Level.WARNING, null, ex);
+            }
+        }
+    }
+    
+    void onCommandFinished(CommandInfo info){
+        if (Context.getInstance().config.commandExecutionEvents){
+            try {
+                String var_name = "_command_info_" + Thread.currentThread().getId();
+                Context.getInstance().scriptManager.getEngine().put(var_name, info);
+                Context.getInstance().scriptManager.getEngine().eval("on_command_finished(" + var_name + ")");
+            } catch (Exception ex) {
+                Logger.getLogger(CommandManager.class.getName()).log(Level.WARNING, null, ex);
+            }                     
+        }
+    }     
 
     @Override
     public void close() throws Exception {

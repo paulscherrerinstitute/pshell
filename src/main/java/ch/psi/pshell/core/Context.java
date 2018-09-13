@@ -2836,7 +2836,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
     public void finishScriptExecution(Object result) {
         commandManager.finishCommandInfo(result);
     }
-    
+       
     @Hidden
     public void start() {
         if ((getState() == State.Invalid) || (getState() == State.Fault)) {

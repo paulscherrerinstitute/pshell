@@ -44,6 +44,10 @@ public class CommandInfo {
     public Object getResult() {
         return result;
     }
+    
+    public boolean isError() {
+        return (result != null ) && (result instanceof Throwable);
+    }    
 
     public void abort() throws InterruptedException {
         aborted = true;
