@@ -318,6 +318,11 @@ public abstract class MainFrame extends JFrame {
             return;
         }
         try {
+            if ((Sys.getOSFamily() == Sys.OSFamily.Linux) && (className.equals(getDarculaLookAndFeel()))){
+                //TODO: workaround to https://github.com/bulenkov/Darcula/issues/29
+                //Not needed with netbeans darcula
+                UIManager.getFont("Label.font");
+            }
             UIManager.setLookAndFeel(className);
             SwingUtils.updateAllFrames();
         } catch (Exception ex) {
