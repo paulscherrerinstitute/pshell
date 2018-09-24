@@ -25,7 +25,7 @@ public class CommandInfo {
         this.command = command;
         this.background = background;
         this.args = args;
-        this.thread = Thread.currentThread();
+        this.thread = background ? Thread.currentThread() : Context.getInstance().interpreterThread;
         synchronized (CommandInfo.class) {
             this.id = commandId++;
         }
