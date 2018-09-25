@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import jersey.repackaged.com.google.common.collect.Lists;
 
 /**
  * Entity class storing the persisted device configuration. 
@@ -51,7 +50,9 @@ public class DeviceConfig extends Config {
             Map<String, Object> fields = getJythonFieldDict();
             return fields == null ? new ArrayList<>() : new ArrayList<>(fields.keySet());
         } else if (mapProperties != null) {
-            return Lists.newArrayList(mapProperties.keySet());
+            List<String> ret = new ArrayList<>();
+            ret.addAll(mapProperties.keySet());            
+            return ret;
         }
         return super.getFieldNames();
     }

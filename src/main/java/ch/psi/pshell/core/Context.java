@@ -78,10 +78,10 @@ import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
+import java.util.Enumeration;
 import java.util.Properties;
 import java.util.concurrent.TimeoutException;
 import java.util.jar.JarFile;
-import jersey.repackaged.com.google.common.collect.Maps;
 
 /**
  * Global singleton managing creation, disposal and holding the state of the
@@ -2451,7 +2451,13 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
         Properties properties = new Properties();
         try (FileInputStream in = new FileInputStream(setup.getSettingsFile())) {
             properties.load(in);
-            return Maps.fromProperties(properties);
+            //return Maps.fromProperties(properties);
+            Map<String, String> ret = new HashMap<>();
+            for (Enumeration<?> e = properties.propertyNames(); e.hasMoreElements(); ) {
+                String key = (String) e.nextElement();
+                ret.put(key, properties.getProperty(key));
+            }            
+            return ret;
         } catch (FileNotFoundException ex) {
             return new HashMap<>();
         }

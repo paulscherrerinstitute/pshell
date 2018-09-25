@@ -26,7 +26,6 @@ import javax.swing.JFrame;
 import javax.swing.JList;
 import javax.swing.JScrollPane;
 import javax.swing.text.JTextComponent;
-import jersey.repackaged.com.google.common.collect.Lists;
 
 /**
  *
@@ -149,7 +148,9 @@ public class ChannelSelector extends javax.swing.JPanel {
                         if (!sel.equals(selection)) {
                             selection = sel.toString();
                             history.put(selection);
-                            combo.setModel(new DefaultComboBoxModel(Lists.reverse(history.get()).toArray()));
+                            List entries = history.get();
+                            Collections.reverse(entries);
+                            combo.setModel(new DefaultComboBoxModel(entries.toArray()));
                         }
                     }
                 });
@@ -157,7 +158,9 @@ public class ChannelSelector extends javax.swing.JPanel {
                 layout.replace(text, combo);
                 String path = (Context.getInstance() != null) ? Context.getInstance().getSetup().expandPath("{context}") : Sys.getUserHome();
                 history = new History(path + "/ChannelSelector" + getName() + ".dat", historySize, true);
-                combo.setModel(new DefaultComboBoxModel(Lists.reverse(history.get()).toArray()));
+                List entries = history.get();
+                Collections.reverse(entries);                
+                combo.setModel(new DefaultComboBoxModel(entries.toArray()));
             } else {
                 layout.replace(combo, text);
                 combo = null;
