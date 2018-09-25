@@ -26,8 +26,7 @@ if (!hasProperty('runArgs')) {
 repositories {
     mavenCentral()
     jcenter()
-    maven { url "http://maven.imagej.net/content/repositories/public/" }    
-    maven { url "https://dl.bintray.com/paulscherrerinstitute/hltools" }    
+    maven { url "http://maven.imagej.net/content/repositories/public/" }     
 }
 
 configurations {
@@ -78,9 +77,10 @@ def urlFile = { url, name ->
 
 dependencies {
     compile 'ch.psi:jcae:2.9.7'   
-    compile 'org.glassfish.jersey.media:jersey-media-json-jackson:2.25'
-    compile 'org.glassfish.jersey.containers:jersey-container-grizzly2-http:2.25'
-    compile 'org.glassfish.jersey.media:jersey-media-sse:2.25'
+    compile 'org.glassfish.jersey.media:jersey-media-json-jackson:2.27'
+    compile 'org.glassfish.jersey.containers:jersey-container-grizzly2-http:2.27'
+    compile 'org.glassfish.jersey.media:jersey-media-sse:2.27'
+    compile 'org.glassfish.jersey.inject:jersey-hk2:2.27'
     compile 'cisd:jhdf5:14.12.6'  
     compile 'org.jfree:jfreechart:1.0.19'
     compile 'org.eclipse.jgit:org.eclipse.jgit:4.6.1.201703071140-r'
@@ -93,7 +93,7 @@ dependencies {
     compile 'net.java.dev.jna:jna:4.4.0'
     compile 'com.fifesoft:rsyntaxtextarea:2.6.1'
     compile 'jline:jline:2.14.3'
-    compile 'ch.psi:bsread:3.4.4'
+    compile 'ch.psi:bsread_java:3.5.5'
     compile 'net.imagej:ij:1.51j'    
     compile 'javax.mail:javax.mail-api:1.6.0'
     compile 'com.sun.mail:javax.mail:1.6.0'

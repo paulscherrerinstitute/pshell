@@ -1,6 +1,6 @@
 package ch.psi.pshell.core;
 
-import org.glassfish.hk2.utilities.binding.AbstractBinder;
+import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.media.sse.SseBroadcaster;
 
 /**
