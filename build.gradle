@@ -152,12 +152,12 @@ uploadArchives {
     repositories {
         mavenDeployer {
             setUniqueVersion(true)
-            repository(url: "https://artifacts.psi.ch/artifactory/releases"){
-            	authentication(userName: "upload", password: "{DESede}eWKHxAtQ2Dc=")
+            repository(url: artifactoryUrlRel){
+            	authentication(userName: artifactoryUser, password: artifactoryPwd)
             }
-            snapshotRepository(url: "https://artifacts.psi.ch/artifactory/releases"){
-            	authentication(userName: "upload", password: "{DESede}eWKHxAtQ2Dc=")
-            }        
+            snapshotRepository(url: artifactoryUrlRel){
+            	authentication(userName: artifactoryUser, password: artifactoryPwd)
+            }
             pom.groupId = project.group
             pom.artifactId =  project.name
             pom.version = version
