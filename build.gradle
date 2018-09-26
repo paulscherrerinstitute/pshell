@@ -1,6 +1,16 @@
 apply plugin: 'java'
 apply plugin: 'eclipse'
 apply plugin: 'maven'
+buildscript {
+    repositories {
+        jcenter()
+    }
+    dependencies {
+        classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.4'
+    }
+}
+apply plugin: 'com.jfrog.bintray'
+apply plugin: 'maven-publish'
 
 version = '1.10.0' 
 group = 'ch.psi'
@@ -104,7 +114,6 @@ dependencies {
     testCompile group: 'junit', name: 'junit', version: '4.10'
 }
 
-/*
 task sourcesJar(type: Jar, dependsOn: classes) {
 classifier = 'sources'
 from sourceSets.main.allSource
@@ -114,7 +123,6 @@ task javadocJar(type: Jar, dependsOn: javadoc) {
 classifier = 'javadoc'
 from javadoc.destinationDir
 }
- */
 
 task fatJar(type: Jar, dependsOn: jar) {
     classifier 'fat'
@@ -201,4 +209,32 @@ task(run, dependsOn: 'classes', type: JavaExec) {
     args arguments 
     ignoreExitValue = true
     debug false
+}
+
+publishing {
+    publications {
+        MyPublication(MavenPublication) {
+            from components.java
+            artifact sourcesJar
+            groupId group
+            artifactId project.name
+            version version
+        }
+    }
+}
+    
+bintray {
+    user = project.hasProperty('bintrayUser') ? project.property('bintrayUser') : System.getenv('BINTRAY_USER')
+    key = project.hasProperty('bintrayApiKey') ? project.property('bintrayApiKey') : System.getenv('BINTRAY_API_KEY')
+    publications = ['MyPublication']     
+    pkg {
+        repo = 'hltools'
+        name = project.name
+        userOrg = 'paulscherrerinstitute'
+        licenses = ['GPL-3.0']
+        vcsUrl = 'https://github.com/paulscherrerinstitute/pshell'
+        version {
+            name = project.version
+        }         
+    }
 }
