@@ -130,9 +130,21 @@ public class PluginManager implements AutoCloseable {
         }
         return null;
     }
-
+    
+    File resolveFile(String fileName) {
+        File file = new File(fileName);
+        if (!file.exists()){
+            File file2 = new File(Context.getInstance().getSetup().expandPath("{plugins}/"+fileName));
+            if (file2.exists()){
+                return file2;
+            }
+        }
+        return file;
+    }
+    
     public Plugin loadPlugin(String fileName) {
-        return loadPlugin(new File(fileName));
+        File file = resolveFile(fileName);
+        return loadPlugin(file);
     }
 
     public Plugin loadPlugin(File file) {
@@ -478,7 +490,8 @@ public class PluginManager implements AutoCloseable {
     }
 
     public Plugin loadInitializePlugin(String fileName) {
-        return loadInitializePlugin(new File(fileName));
+        File file = resolveFile(fileName);        
+        return loadInitializePlugin(file);
     }
 
     public Plugin loadInitializePlugin(File file) {
