@@ -1,14 +1,26 @@
+import threading
+import time
+import sys
 import requests
 import json
+
 try:
     from urllib import quote  # Python 2
 except ImportError:
     from urllib.parse import quote  # Python 3
 
+try:
+    from sseclient import SSEClient
+except:
+    SSEClient = None 
+    
 
 class PShellClient:
     def __init__(self, url):
         self.url = url
+        self.sse_event_loop_thread = None
+        self.subscribed_events = None
+        self.event_callback = None
     
     def _get_response(self, response, is_json=True):
         if response.status_code != 200: 
@@ -298,3 +310,60 @@ class PShellClient:
     def print_help(self, input = "<builtins>"):
         for l in self.help(input):
             print (l)  
+
+    #Events       
+    def _sse_event_loop_task(self):  
+        try:
+            while True:
+                try:
+                    messages = SSEClient(self.url+"/events")
+                    for msg in messages:
+                        if (self.subscribed_events is None) or (msg.event in self.subscribed_events):
+                            try:
+                                value = json.loads(msg.data)
+                            except:
+                                value = str(msg.data)
+                            self.event_callback(msg.event, value)
+                except IOError as e:
+                    #print(e)
+                    pass
+                except:
+                    print("Error:", sys.exc_info()[1])
+                    #raise
+        finally:
+            print ("Exit SSE loop task")
+            self.sse_event_loop_thread = None
+
+
+    def start_sse_event_loop_task(self, subscribed_events = None, event_callback = None):
+        """
+        Initializes server event loop task.
+        Args:    
+            subscribed_events: list of event names to substribe to. If None subscribes to all.
+            event_callback: callback function. If None, self.on_event is called instead.
+
+        Usage example:
+            def on_event(name, value):
+                if name == "state":
+                    print ("State changed: ",  value)
+                elif name == "record":
+                    print ("Received scan record: ", value) 
+
+            pc.start_sse_event_loop_task(["state", "record"], on_event)    
+           
+        """
+        self.event_callback = event_callback if event_callback is not None else self.on_event
+        self.subscribed_events = subscribed_events
+        if SSEClient is not None:
+            if self.sse_event_loop_thread is None:
+                self.sse_event_loop_thread = threading.Thread(target=self._sse_event_loop_task, \
+                                                     args = (), \
+                                                     kwargs={}, \
+                                                     daemon=True)
+                self.sse_event_loop_thread.start()
+        else:
+            raise Exception ("sseclient library is not instlled: server events are not available")
+
+    def on_event(self, name, value):
+        pass
+        

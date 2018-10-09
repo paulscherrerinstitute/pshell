@@ -521,18 +521,30 @@ public class ServerService {
             throw new ExecutionException(ex);
         }
     }
+    
+    public void sendEvent(String name, Object value){
+        sendEvent(name, value, MediaType.APPLICATION_JSON_TYPE);
+    }
+   
+    public void sendEventAsText(String name, String value){
+        sendEvent(name, value, MediaType.TEXT_PLAIN_TYPE);
+    }
+    
+    void sendEvent(String name, Object value, MediaType mediaType){
+        if (broadcaster != null) {
+            OutboundEvent.Builder eventBuilder = new OutboundEvent.Builder();
+            OutboundEvent event = eventBuilder.name(name)
+                    .mediaType(mediaType)
+                    .data(value)
+                    .build();
+            broadcaster.broadcast(event);
+        }        
+    } 
 
     final ContextListener contextListener = new ContextAdapter() {
         @Override
         public void onContextStateChanged(State state, State former) {
-            if (broadcaster != null) {
-                OutboundEvent.Builder eventBuilder = new OutboundEvent.Builder();
-                OutboundEvent event = eventBuilder.name("state")
-                        .mediaType(MediaType.APPLICATION_JSON_TYPE)
-                        .data(context.getState())
-                        .build();
-                broadcaster.broadcast(event);
-            }
+            sendEvent("state",context.getState());
         }
 
         @Override
@@ -587,50 +599,26 @@ public class ServerService {
         line = line.replace("&", "&amp;");
         line = line.replace("<", "&lt;");
         line = line.replace(">", "&gt;");
-        if (broadcaster != null) {
-            OutboundEvent.Builder eventBuilder = new OutboundEvent.Builder();
-            OutboundEvent event = eventBuilder.name("shell")
-                    .mediaType(MediaType.TEXT_PLAIN_TYPE)
-                    .data(line)
-                    .build();
-            broadcaster.broadcast(event);
-        }
+        sendEventAsText("shell", line);
     }
+    
+    final EventListener eventListener = (String name, Object value) -> {
+        ServerService.this.sendEvent(name, value);
+    };
 
     final ScanListener scanListener = new ScanListener() {
 
         void sendScanStart(Scan scan) {
-            if (broadcaster != null) {
-                OutboundEvent.Builder eventBuilder = new OutboundEvent.Builder();
-                OutboundEvent event = eventBuilder.name("scan")
-                        .mediaType(MediaType.APPLICATION_JSON_TYPE)
-                        .data(scan.getReadableNames())
-                        .build();
-                broadcaster.broadcast(event);
-            }
+            sendEvent("scan", scan.getReadableNames());
         }
 
         void sendScanRecord(Scan scan, ScanRecord record) {
-            if (broadcaster != null) {
-                OutboundEvent.Builder eventBuilder = new OutboundEvent.Builder();
-                OutboundEvent event = eventBuilder.name("record")
-                        .mediaType(MediaType.APPLICATION_JSON_TYPE)
-                        .data(record)
-                        .build();
-                broadcaster.broadcast(event);
-            }
+            sendEvent("record", record);
         }
 
         void sendProgress(Double progress) {
             this.progress = progress;
-            if (broadcaster != null) {
-                OutboundEvent.Builder eventBuilder = new OutboundEvent.Builder();
-                OutboundEvent event = eventBuilder.name("progress")
-                        .mediaType(MediaType.APPLICATION_JSON_TYPE)
-                        .data(progress)
-                        .build();
-                broadcaster.broadcast(event);
-            }
+            sendEvent("progress", progress);
         }
         double progress;
         double step;
@@ -683,14 +671,11 @@ public class ServerService {
         if (!initialized) {
             initialized = true;
             context.addListener(contextListener); //If already a listener does nothing
-            context.addScanListener(scanListener); //If already a listener does nothing            
+            context.addScanListener(scanListener); //If already a listener does nothing
+            context.addEventListener(eventListener);
             context.getUsersManager().addListener(userListener);
             context.remoteUserInterface = remoteUserInterface;
-            //if (context.serverMode) {
-            //    context.setPlotListener(plotListener);
-            //} else {
             context.serverPlotListener = plotListener;
-            //}
         }
         EventOutput eventOutput = new EventOutput();
         broadcaster.add(eventOutput);
@@ -717,26 +702,12 @@ public class ServerService {
     };
 
     ArrayList sendPlot(String context, PlotDescriptor[] plots) {
-        if (broadcaster != null) {
-            OutboundEvent.Builder eventBuilder = new OutboundEvent.Builder();
-            OutboundEvent event = eventBuilder.name("plot")
-                    .mediaType(MediaType.APPLICATION_JSON_TYPE)
-                    .data(plots)
-                    .build();
-            broadcaster.broadcast(event);
-        }
+        sendEvent("plot", plots);
         return null;
     }
 
     void sendUser() {
-        if (broadcaster != null) {
-            OutboundEvent.Builder eventBuilder = new OutboundEvent.Builder();
-            OutboundEvent event = eventBuilder.name("user")
-                    .mediaType(MediaType.APPLICATION_JSON_TYPE)
-                    .data(getUserInfo())
-                    .build();
-            broadcaster.broadcast(event);
-        }
+        sendEvent("user", getUserInfo());
     }
 
     ArrayList getUserInfo() {
@@ -767,14 +738,7 @@ public class ServerService {
         data.add(type);
         data.addAll(Arrays.asList(pars));
         uiReturn = null;
-        if (broadcaster != null) {
-            OutboundEvent.Builder eventBuilder = new OutboundEvent.Builder();
-            OutboundEvent event = eventBuilder.name("ui")
-                    .mediaType(MediaType.APPLICATION_JSON_TYPE)
-                    .data(data)
-                    .build();
-            broadcaster.broadcast(event);
-        }
+        sendEvent("ui", data);
         synchronized (uiWait) {
             uiWait.wait();
         }

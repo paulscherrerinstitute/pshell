@@ -273,7 +273,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
         dataManager = new DataManager(this);
 
         pluginManager = new PluginManager();
-        
+
         commandManager = new CommandManager();
 
         usersManager = new UsersManager(setup);
@@ -794,8 +794,8 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
 
     public CommandManager getCommandManager() {
         return commandManager;
-    }    
-            
+    }
+
     public TaskManager getTaskManager() {
         return taskManager;
     }
@@ -1091,8 +1091,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
             getRights().assertDeviceConfigAllowed();
         }
     };
-    
-   
+
     boolean abort(final CommandSource source, long commandId) throws InterruptedException {
         onCommand(Command.abort, new Object[]{commandId}, source);
         return commandManager.abort(source, commandId);
@@ -1109,28 +1108,26 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
     Map getResult(long commandId) throws Exception {
         return commandManager.getResult(commandId);
     }
-    
-    
+
     long waitNewCommand(CompletableFuture cf) throws InterruptedException {
         long now = System.currentTimeMillis();
-        if (cf instanceof VisibleCompletableFuture){
-            Thread thread =((VisibleCompletableFuture)cf).waitRunningThread(250);
+        if (cf instanceof VisibleCompletableFuture) {
+            Thread thread = ((VisibleCompletableFuture) cf).waitRunningThread(250);
             CommandInfo current = commandManager.getThreadCommand(thread);
-            if ((current!=null) && (current.start >= now)){
+            if ((current != null) && (current.start >= now)) {
                 return current.id;
             }
-            if (thread!=null){
-                 return waitNewCommand(thread, 250);
-            }                
+            if (thread != null) {
+                return waitNewCommand(thread, 250);
+            }
         }
         return 0;
-    }    
-    
+    }
+
     long waitNewCommand(Thread thread, int timeout) throws InterruptedException {
-        long ret =  commandManager.waitNewCommand(thread, timeout);    
+        long ret = commandManager.waitNewCommand(thread, timeout);
         return ret;
-    }    
-    
+    }
 
     Object runInInterpreterThread(Callable callable) throws ScriptException, IOException, InterruptedException {
         assertInterpreterEnabled();
@@ -1168,12 +1165,12 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
             logger.log(Level.SEVERE, null, t); //Should never happen;
             return null;
         } finally {
-            if ((result!=null) && (result instanceof InterpreterResult)){
-                if (((InterpreterResult)result).exception != null) {
-                    result = ((InterpreterResult)result).exception;
-                } else if (((InterpreterResult)result).result != null) {
-                    result = ((InterpreterResult)result).result;
-                }                   
+            if ((result != null) && (result instanceof InterpreterResult)) {
+                if (((InterpreterResult) result).exception != null) {
+                    result = ((InterpreterResult) result).exception;
+                } else if (((InterpreterResult) result).result != null) {
+                    result = ((InterpreterResult) result).result;
+                }
             }
             commandManager.finishCommandInfo(result);
         }
@@ -1320,9 +1317,9 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
     Object evalLineBackground(final CommandSource source, final String line) throws ScriptException, IOException, ContextStateException, InterruptedException {
         assertInterpreterEnabled();
         assertConsoleCommandAllowed(source);
-  
+
         Object result = null;
-        commandManager.initCommandInfo(new CommandInfo(source, null, line, null, true));       
+        commandManager.initCommandInfo(new CommandInfo(source, null, line, null, true));
         try {
             createExecutionContext();
             InterpreterResult ir = scriptManager.evalBackground(line);
@@ -1396,7 +1393,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
 
     File getRunningScriptFile(String script) {
         if (script != null) {
-            script = scriptManager.getLibrary().resolveFile(script);        
+            script = scriptManager.getLibrary().resolveFile(script);
             if (script != null) {
                 File ret = new File(script);
                 if (ret.exists()) {
@@ -1406,7 +1403,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
                     }
                     return ret;
                 }
-             }
+            }
         }
         return null;
     }
@@ -1671,8 +1668,8 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
         } else if ((getState() == State.Busy) || (getState() == State.Paused)) {
             aborted = true;
             CommandInfo cmd = commandManager.getInterpreterThreadCommand();
-            if (cmd!=null){
-                cmd.aborted =true;
+            if (cmd != null) {
+                cmd.aborted = true;
             }
             //TODO: This is also killing background acans. Should not be only foreground?
             for (Scan scan : getRunningScans()) {
@@ -2453,10 +2450,10 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
             properties.load(in);
             //return Maps.fromProperties(properties);
             Map<String, String> ret = new HashMap<>();
-            for (Enumeration<?> e = properties.propertyNames(); e.hasMoreElements(); ) {
+            for (Enumeration<?> e = properties.propertyNames(); e.hasMoreElements();) {
                 String key = (String) e.nextElement();
                 ret.put(key, properties.getProperty(key));
-            }            
+            }
             return ret;
         } catch (FileNotFoundException ex) {
             return new HashMap<>();
@@ -2842,7 +2839,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
     public void finishScriptExecution(Object result) {
         commandManager.finishCommandInfo(result);
     }
-       
+
     @Hidden
     public void start() {
         if ((getState() == State.Invalid) || (getState() == State.Fault)) {
@@ -3087,6 +3084,40 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
         }
     }
 
+    //Server events
+    final List<EventListener> eventListeners = new ArrayList<>();
+
+    @Hidden
+    public final void addEventListener(EventListener listener) {
+        synchronized (eventListeners) {
+            if (!eventListeners.contains(listener)) {
+                eventListeners.add(listener);
+            }
+        }
+    }
+    
+    @Hidden
+    public final void removeEventListener(EventListener listener) {
+        synchronized (eventListeners) {
+            eventListeners.remove(listener);
+        }
+    }
+
+    @Hidden
+    public final List<EventListener> getEventListeners() {
+        synchronized (eventListeners) {
+            List<EventListener> ret = new ArrayList<>();
+            ret.addAll(eventListeners);
+            return ret;
+        }
+    }   
+
+    public void sendEvent(String name, Object value) {
+        for (EventListener listener : getEventListeners()) {
+            listener.sendEvent(name, value);
+        }
+    }
+
     //Disposing
     @Override
     public void close() {
@@ -3103,6 +3134,10 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
             scanListeners.clear();
         }
 
+        synchronized (eventListeners) {
+            eventListeners.clear();
+        }
+        
         logger.info("Close");
 
         for (AutoCloseable ac : new AutoCloseable[]{scanStreamer, taskManager, scriptManager, devicePool, versioningManager, pluginManager, dataManager, usersManager, server}) {
