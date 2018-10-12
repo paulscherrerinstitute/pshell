@@ -1,5 +1,6 @@
 package ch.psi.pshell.scripting;
 
+import ch.psi.utils.Str;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -180,9 +181,12 @@ public class JythonUtils {
         List<String> pythonMethods = (List) obj.__dir__();
         for (String s : pythonMethods) {
             if (!s.startsWith("_")) {
-                String signature = getPyMethodSignature(obj, s, includeJavaMethods);
-                if (signature != null) {
-                    ret.add(signature);
+                if ((!pythonMethods.contains("get" + Str.capitalizeFirst(s))) &&
+                    (!pythonMethods.contains("is" + Str.capitalizeFirst(s)))) {   
+                    String signature = getPyMethodSignature(obj, s, includeJavaMethods);
+                    if (signature != null) {
+                        ret.add(signature);
+                    }
                 }
             }
         }
