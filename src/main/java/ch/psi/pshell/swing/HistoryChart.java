@@ -29,6 +29,15 @@ public class HistoryChart extends JPanel implements AutoCloseable {
     int interval;
     ScheduledExecutorService scheduler;
     final JCheckBoxMenuItem menuAsyncUpdates;
+    static boolean defaultAsync;
+
+    public static void setDefaultAsync(boolean value) {
+        defaultAsync = value;
+    }
+
+    public static boolean setDefaultAsync() {
+        return defaultAsync;
+    }
 
     public HistoryChart() throws ClassNotFoundException, InstantiationException, IllegalAccessException {
         super();
@@ -64,7 +73,7 @@ public class HistoryChart extends JPanel implements AutoCloseable {
         chart.addPopupMenuItem(menuAsyncUpdates);
     }
 
-    public TimePlotBase getPlot(){
+    public TimePlotBase getPlot() {
         return chart;
     }
     static Class DEFAULT_PLOT_IMPL_TIME = ch.psi.pshell.plot.TimePlotJFree.class;
@@ -128,9 +137,9 @@ public class HistoryChart extends JPanel implements AutoCloseable {
             device.removeListener(deviceListener);
         }
     }
-    
+
     public void removeAllDevices() {
-        for (Device d : getDevices()){
+        for (Device d : getDevices()) {
             removeDevice(d);
         }
     }
@@ -174,12 +183,12 @@ public class HistoryChart extends JPanel implements AutoCloseable {
             }
         }
         Double doubleValue;
-        if (value == null){
+        if (value == null) {
             doubleValue = Double.NaN;
-        } else if (value instanceof Number){
+        } else if (value instanceof Number) {
             doubleValue = ((Number) value).doubleValue();
-            doubleValue = (doubleValue == null) ? Double.NaN : doubleValue;  
-        } else if (value instanceof Boolean){
+            doubleValue = (doubleValue == null) ? Double.NaN : doubleValue;
+        } else if (value instanceof Boolean) {
             doubleValue = Boolean.TRUE.equals(value) ? 1.0 : 0;
         } else {
             return;
@@ -231,7 +240,7 @@ public class HistoryChart extends JPanel implements AutoCloseable {
 
     public static HistoryChart create(Device dev) throws ClassNotFoundException, InstantiationException, IllegalAccessException {
         HistoryChart chart = new HistoryChart();
-        //((HistoryChart)component).setAsyncUpdates(asyncUpdate);
+        chart.setAsyncUpdates(defaultAsync);
         chart.addDevice(dev.getName(), dev);
         if (dev instanceof ReadbackDevice) {
             Device readback = ((ReadbackDevice) dev).getReadback();

@@ -118,6 +118,7 @@ import ch.psi.pshell.core.LogManager;
 import ch.psi.pshell.imaging.FileSource;
 import ch.psi.pshell.scripting.ViewPreference.PlotPreferences;
 import ch.psi.pshell.swing.DataPanel;
+import ch.psi.pshell.swing.HistoryChart;
 import ch.psi.pshell.swing.RepositoryChangesDialog;
 import ch.psi.utils.Sys;
 import ch.psi.utils.Sys.OSFamily;
@@ -1537,6 +1538,7 @@ public class View extends MainFrame {
         PlotBase.setPlotBackground(preferences.plotBackground);
         PlotBase.setGridColor(preferences.gridColor);
         PlotBase.setOutlineColor(preferences.outlineColor);
+        HistoryChart.setDefaultAsync(preferences.asyncViewersUpdate);
 
         if (preferences.linePlot != null) {
             System.setProperty(PlotPanel.PROPERTY_PLOT_IMPL_LINE, preferences.linePlot);
