@@ -1162,17 +1162,20 @@ def set_attribute(path, name, value, unsigned = False):
         value = Convert.toStringArray(to_array(value))
     get_context().dataManager.setAttribute(path, name, value, unsigned)
 
-def log(log, data_file=True):
+def log(log, data_file=None):
     """Writes a log to the system log and data context - if there is an ongoing scan or script execution.
 
     Args:
          log(str): Log string.
-         data_file(bool, optional): if true logs to the data file, in addiction to the system logger
+         data_file(bool, optional): if true logs to the data file, in addiction to the system logger.
+                                    If None(default) appends to data file only if it has been created.
 
     Returns:
         None
     """
     get_context().scriptingLog(str(log))
+    if data_file is None:
+        data_file = get_exec_pars().open
     if data_file:
         try:
             get_context().dataManager.appendLog(str(log))

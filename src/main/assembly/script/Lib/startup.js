@@ -1155,12 +1155,13 @@ function log(log, data_file){
     Args:        
          log(str): Log string.
          data_file(bool, optional): if true logs to the data file, in addiction to the system logger
+                                    If None(default) appends to data file only if it has been created.
 
     Returns:
         None
     */  
     if (!is_defined(data_file))
-        data_file = true;
+        data_file = get_exec_pars().open
     get_context().scriptingLog(String(log))
     if (data_file){
        try{
