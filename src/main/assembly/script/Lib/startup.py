@@ -1026,7 +1026,7 @@ def get_attributes(path):
     """
     return get_context().dataManager.getAttributes(path)
 
-def save_dataset(path, data, type='d'):
+def save_dataset(path, data, type='d', unsigned=False, features=None):
     """Save data into a dataset within the current persistence context.
 
     Args:
@@ -1035,12 +1035,15 @@ def save_dataset(path, data, type='d'):
                               'd' = double, 'c' = char, 's' = String,  'o' = Object
                    default: 'd' (convert data to array of doubles)
         data (array or list): data to be saved
+        unsigned(boolean, optional): create a dataset of unsigned type.
+        features(dictionary, optional): See create_dataset.
+                               
     Returns:
         Dictionary
 
     """
     data = to_array(data, type)
-    get_context().dataManager.setDataset(path,data)
+    get_context().dataManager.setDataset(path, data, unsigned, features)
 
 def create_group(path):
     """Create an empty dataset within the current persistence context.
@@ -1053,7 +1056,7 @@ def create_group(path):
     """
     get_context().dataManager.createGroup(path)
 
-def create_dataset(path, type, unsigned=False, dimensions=None):
+def create_dataset(path, type, unsigned=False, dimensions=None, features = None):
     """Create an empty dataset within the current persistence context.
 
     Args:
@@ -1062,13 +1065,18 @@ def create_dataset(path, type, unsigned=False, dimensions=None):
                               'd' = double, 'c' = char, 's' = String,  'o' = Object
         unsigned(boolean, optional): create a dataset of unsigned type.
         dimensions(tuple of int, optional): a 0 value means variable length in that dimension.
+        features(dictionary, optional): the storage features for the dataset, provider specific.
+                               Keys for HDF5: "layout": "compact", "contiguous" or "chunked"
+                                               "compression": "default" or "max" (deflation on default of max levels)
+                                               "deflation": level from 1 to 9
+                                Default: No compression, contiguous for fixed size arrays, chunked for variable size, compact for scalars.
     Returns:
         None
 
     """
-    get_context().dataManager.createDataset(path, ScriptUtils.getType(type), unsigned, dimensions)
+    get_context().dataManager.createDataset(path, ScriptUtils.getType(type), unsigned, dimensions, features)
 
-def create_table(path, names, types=None, lengths=None):
+def create_table(path, names, types=None, lengths=None, features = None):
     """Create an empty table (dataset of compound type) within the current persistence context.
 
     Args:
@@ -1078,6 +1086,7 @@ def create_table(path, names, types=None, lengths=None):
                               'd' = double, 'c' = char, 's' = String,  'o' = Object
                               Note:A '[' prefix on type name indicates an array type.
         lengths(list of int): the array length for each columns(0 for scalar types).
+        features(dictionary, optional): See create_dataset.
     Returns:
         None
 
@@ -1086,7 +1095,7 @@ def create_table(path, names, types=None, lengths=None):
     if (types is not None):
         for i in range (len(types)):
             type_classes.append(ScriptUtils.getType(types[i]))
-    get_context().dataManager.createDataset(path, names, type_classes, lengths)
+    get_context().dataManager.createDataset(path, names, type_classes, lengths, features)
 
 def append_dataset(path, data, index=None, type='d', shape=None):
     """Append data to dataset.

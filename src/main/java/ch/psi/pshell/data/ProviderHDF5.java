@@ -4,7 +4,9 @@ import ch.psi.utils.Arr;
 import ch.psi.utils.Chrono;
 import ch.psi.utils.Convert;
 import ch.psi.utils.IO;
+import ch.psi.utils.Str;
 import ch.systemsx.cisd.base.mdarray.MDAbstractArray;
+import ch.systemsx.cisd.base.mdarray.MDArray;
 import ch.systemsx.cisd.base.mdarray.MDByteArray;
 import ch.systemsx.cisd.base.mdarray.MDDoubleArray;
 import ch.systemsx.cisd.base.mdarray.MDFloatArray;
@@ -16,6 +18,10 @@ import ch.systemsx.cisd.hdf5.HDF5DataClass;
 import ch.systemsx.cisd.hdf5.HDF5DataSetInformation;
 import ch.systemsx.cisd.hdf5.HDF5DataTypeInformation;
 import ch.systemsx.cisd.hdf5.HDF5Factory;
+import ch.systemsx.cisd.hdf5.HDF5FloatStorageFeatures;
+import ch.systemsx.cisd.hdf5.HDF5GenericStorageFeatures;
+import ch.systemsx.cisd.hdf5.HDF5GenericStorageFeatures.HDF5GenericStorageFeatureBuilder;
+import ch.systemsx.cisd.hdf5.HDF5IntStorageFeatures;
 import ch.systemsx.cisd.hdf5.HDF5LinkInformation;
 import ch.systemsx.cisd.hdf5.HDF5ObjectInformation;
 import ch.systemsx.cisd.hdf5.HDF5ObjectType;
@@ -442,6 +448,10 @@ public class ProviderHDF5 implements Provider {
                 ret.put("Layout", dsinfo.getStorageLayout().name());
                 ret.put("Data Type", dsinfo.getTypeInformation().getDataClass().toString());
                 ret.put("Signed", dsinfo.getTypeInformation().isSigned());
+                int[] chunk_sizes = dsinfo.tryGetChunkSizes();
+                if ((chunk_sizes!=null) && (chunk_sizes.length>0)){
+                    ret.put("Chunk Sizes", chunk_sizes);
+                }
 
                 if (dsinfo.getTypeInformation().getDataClass() == HDF5DataClass.COMPOUND) {
                     for (String compoundDataInfo : COMPOUND_DATA_INFO) {
@@ -574,7 +584,8 @@ public class ProviderHDF5 implements Provider {
     }
 
     @Override
-    public void setDataset(String path, Object data, Class type, int rank, int[] dims, boolean unsigned) {
+    public void setDataset(String path, Object data, Class type, int rank, int[] dims, boolean unsigned, Map features) {
+        HDF5GenericStorageFeatures sf = getStorageFeatures(features, dims);
         if (rank>0){
             if (Number.class.isAssignableFrom(type)){
                 data = Convert.toPrimitiveArray(data, (type == BigInteger.class) ? long.class : Convert.getPrimitiveClass(type));
@@ -617,7 +628,7 @@ public class ProviderHDF5 implements Provider {
                     writer.int8().write(path, (byte) data);
                 }
             } else if (type == String.class) {
-                writer.string().write(path, (String) data);
+                writer.string().write(path, (String) data, sf);
             } else if (type == Boolean.class) {
                 writer.bool().write(path, (Boolean) data);
             } else {
@@ -625,73 +636,73 @@ public class ProviderHDF5 implements Provider {
             }
         } else if (rank == 1) {
             if (type == Double.class) {
-                writer.float64().writeArray(path, (double[]) data);
+                writer.float64().writeArray(path, (double[]) data, HDF5FloatStorageFeatures.createFromGeneric(sf));
             } else if (type == Float.class) {
-                writer.float32().writeArray(path, (float[]) data);
+                writer.float32().writeArray(path, (float[]) data, HDF5FloatStorageFeatures.createFromGeneric(sf));
             } else if ((type == Long.class) || (type == BigInteger.class)) {
                 if (unsigned) {
-                    writer.uint64().writeArray(path, (long[]) data);
+                    writer.uint64().writeArray(path, (long[]) data, HDF5IntStorageFeatures.createFromGeneric(sf));
                 } else {
-                    writer.int64().writeArray(path, (long[]) data);
+                    writer.int64().writeArray(path, (long[]) data, HDF5IntStorageFeatures.createFromGeneric(sf));
                 }
             } else if (type == Integer.class) {
                 if (unsigned) {
-                    writer.uint32().writeArray(path, (int[]) data);
+                    writer.uint32().writeArray(path, (int[]) data, HDF5IntStorageFeatures.createFromGeneric(sf));
                 } else {
-                    writer.int32().writeArray(path, (int[]) data);
+                    writer.int32().writeArray(path, (int[]) data, HDF5IntStorageFeatures.createFromGeneric(sf));
                 }
             } else if (type == Short.class) {
                 if (unsigned) {
-                    writer.uint16().writeArray(path, (short[]) data);
+                    writer.uint16().writeArray(path, (short[]) data, HDF5IntStorageFeatures.createFromGeneric(sf));
                 } else {
-                    writer.int16().writeArray(path, (short[]) data);
+                    writer.int16().writeArray(path, (short[]) data, HDF5IntStorageFeatures.createFromGeneric(sf));
                 }
             } else if (type == Byte.class) {
                 if (unsigned) {
-                    writer.uint8().writeArray(path, (byte[]) data);
+                    writer.uint8().writeArray(path, (byte[]) data, HDF5IntStorageFeatures.createFromGeneric(sf));
                 } else {
-                    writer.int8().writeArray(path, (byte[]) data);
+                    writer.int8().writeArray(path, (byte[]) data, HDF5IntStorageFeatures.createFromGeneric(sf));
                 }
             } else if (type == String.class) {
-                writer.string().writeArray(path, (String[]) data);
+                writer.string().writeArray(path, (String[]) data, sf);
             } else if (type == Boolean.class) {
                 BitSet[] bs = new BitSet[Array.getLength(data)];
                 for (int i = 0; i < Array.getLength(data); i++) {
                     bs[i] = new BitSet(1);
                     bs[i].set(0, ((boolean[]) data)[i]);
                 }
-                writer.bool().writeBitFieldArray(path, bs);
+                writer.bool().writeBitFieldArray(path, bs, HDF5IntStorageFeatures.createFromGeneric(sf));
             } else {
                 throw new UnsupportedOperationException("Not supported type = " + type);
             }
         } else if (rank == 2) {
             if (type == Double.class) {
-                writer.float64().writeMatrix(path, (double[][]) data);
+                writer.float64().writeMatrix(path, (double[][]) data, HDF5FloatStorageFeatures.createFromGeneric(sf));
             } else if (type == Float.class) {
-                writer.float32().writeMatrix(path, (float[][]) data);
+                writer.float32().writeMatrix(path, (float[][]) data, HDF5FloatStorageFeatures.createFromGeneric(sf));
             } else if ((type == Long.class) || (type == BigInteger.class)) {              
                 if (unsigned) {
-                    writer.uint64().writeMatrix(path, (long[][]) data);
+                    writer.uint64().writeMatrix(path, (long[][]) data, HDF5IntStorageFeatures.createFromGeneric(sf));
                 } else {
-                    writer.int64().writeMatrix(path, (long[][]) data);
+                    writer.int64().writeMatrix(path, (long[][]) data, HDF5IntStorageFeatures.createFromGeneric(sf));
                 }
             } else if (type == Integer.class) {
                 if (unsigned) {
-                    writer.uint32().writeMatrix(path, (int[][]) data);
+                    writer.uint32().writeMatrix(path, (int[][]) data, HDF5IntStorageFeatures.createFromGeneric(sf));
                 } else {
-                    writer.int32().writeMatrix(path, (int[][]) data);
+                    writer.int32().writeMatrix(path, (int[][]) data, HDF5IntStorageFeatures.createFromGeneric(sf));
                 }
             } else if (type == Short.class) {
                 if (unsigned) {
-                    writer.uint16().writeMatrix(path, (short[][]) data);
+                    writer.uint16().writeMatrix(path, (short[][]) data, HDF5IntStorageFeatures.createFromGeneric(sf));
                 } else {
-                    writer.int16().writeMatrix(path, (short[][]) data);
+                    writer.int16().writeMatrix(path, (short[][]) data, HDF5IntStorageFeatures.createFromGeneric(sf));
                 }
             } else if (type == Byte.class) {
                 if (unsigned) {
-                    writer.uint8().writeMatrix(path, (byte[][]) data);
+                    writer.uint8().writeMatrix(path, (byte[][]) data, HDF5IntStorageFeatures.createFromGeneric(sf));
                 } else {
-                    writer.int8().writeMatrix(path, (byte[][]) data);
+                    writer.int8().writeMatrix(path, (byte[][]) data, HDF5IntStorageFeatures.createFromGeneric(sf));
                 }
             } else if (type == Boolean.class) {
                 BitSet[] bs = new BitSet[Array.getLength(data)];
@@ -701,14 +712,14 @@ public class ProviderHDF5 implements Provider {
                         bs[i].set(j, ((boolean[][]) data)[i][j]);
                     }
                 }
-                writer.bool().writeBitFieldArray(path, bs);
+                writer.bool().writeBitFieldArray(path, bs, HDF5IntStorageFeatures.createFromGeneric(sf));
             } else {
                 throw new UnsupportedOperationException("Not supported type = " + type);
             }
         } else if (rank == 3) {
             if (type == Double.class) {
                 double[][][] d = (double[][][]) data;
-                createDataset(path, type, get3dMatrixDims(d), unsigned);
+                createDataset(path, type, get3dMatrixDims(d), unsigned, features);
                 for (int i = 0; i < d.length; i++) {                    
                     MDDoubleArray array = new MDDoubleArray((double[])Convert.flatten(d[i]), getMatrixShape(d[i]));
                     writer.float64().writeMDArrayBlockWithOffset(path, array, getMatrixOffset(i));
@@ -716,14 +727,14 @@ public class ProviderHDF5 implements Provider {
                 
             } else if (type == Float.class) {
                 float[][][] d = (float[][][]) data;
-                createDataset(path, type, get3dMatrixDims(d), unsigned);
+                createDataset(path, type, get3dMatrixDims(d), unsigned, features);
                 for (int i = 0; i < d.length; i++) {
                     MDFloatArray array = new MDFloatArray((float[])Convert.flatten(d[i]), getMatrixShape(d[i]));
                     writer.float32().writeMDArrayBlockWithOffset(path, array, getMatrixOffset(i));
                 }
             } else if ((type == Long.class) || (type == BigInteger.class)) {               
                 long[][][] d = (long[][][]) data;
-                createDataset(path, type, get3dMatrixDims(d), unsigned);
+                createDataset(path, type, get3dMatrixDims(d), unsigned, features);
                 for (int i = 0; i < d.length; i++) {
                     MDLongArray array = new MDLongArray((long[])Convert.flatten(d[i]), getMatrixShape(d[i]));
                     if (unsigned) {
@@ -734,7 +745,7 @@ public class ProviderHDF5 implements Provider {
                 }
             } else if (type == Integer.class) {
                 int[][][] d = (int[][][]) data;
-                createDataset(path, type, get3dMatrixDims(d), unsigned);
+                createDataset(path, type, get3dMatrixDims(d), unsigned, features);
                 for (int i = 0; i < d.length; i++) {
                     MDIntArray array = new MDIntArray((int[])Convert.flatten(d[i]), getMatrixShape(d[i]));
                     if (unsigned) {
@@ -745,7 +756,7 @@ public class ProviderHDF5 implements Provider {
                 }
             } else if (type == Short.class) {
                 short[][][] d = (short[][][]) data;
-                createDataset(path, type, get3dMatrixDims(d), unsigned);
+                createDataset(path, type, get3dMatrixDims(d), unsigned, features);
                 for (int i = 0; i < d.length; i++) {
                     MDShortArray array = new MDShortArray((short[])Convert.flatten(d[i]), getMatrixShape(d[i]));
                     if (unsigned) {
@@ -756,7 +767,7 @@ public class ProviderHDF5 implements Provider {
                 }
             } else if (type == Byte.class) {
                 byte[][][] d = (byte[][][]) data;
-                createDataset(path, type, get3dMatrixDims(d), unsigned);
+                createDataset(path, type, get3dMatrixDims(d), unsigned, features);
                 for (int i = 0; i < d.length; i++) {
                     MDByteArray array = new MDByteArray((byte[])Convert.flatten(d[i]), getMatrixShape(d[i]));
                     if (unsigned) {
@@ -774,42 +785,159 @@ public class ProviderHDF5 implements Provider {
     }
 
     @Override
-    public void createDataset(String path, Class type, int[] dimensions, boolean unsigned) {
-        if (type == Double.class) {
-            writer.float64().createMDArray(path, dimensions);
-        } else if (type == Float.class) {
-            writer.float32().createMDArray(path, dimensions);
-        } else if ((type == Long.class) || (type==BigInteger.class)) {
-            if (unsigned) {
-                writer.uint64().createMDArray(path, dimensions);
+    public void createDataset(String path, Class type, int[] dimensions, boolean unsigned, Map features) {
+        HDF5GenericStorageFeatures sf = getStorageFeatures(features, dimensions);
+        int[] cs = getChunkSize(features, dimensions);
+        if(cs == null) {
+            if (type == Double.class) {
+                writer.float64().createMDArray(path, dimensions, HDF5FloatStorageFeatures.createFromGeneric(sf));
+            } else if (type == Float.class) {
+                writer.float32().createMDArray(path, dimensions, HDF5FloatStorageFeatures.createFromGeneric(sf));
+            } else if ((type == Long.class) || (type==BigInteger.class)) {
+                if (unsigned) {
+                    writer.uint64().createMDArray(path, dimensions, HDF5IntStorageFeatures.createFromGeneric(sf));
+                } else {
+                    writer.int64().createMDArray(path, dimensions, HDF5IntStorageFeatures.createFromGeneric(sf));
+                }
+            } else if (type == Integer.class) {
+                if (unsigned) {
+                    writer.uint32().createMDArray(path, dimensions, HDF5IntStorageFeatures.createFromGeneric(sf));
+                } else {
+                    writer.int32().createMDArray(path, dimensions, HDF5IntStorageFeatures.createFromGeneric(sf));
+                }
+            } else if (type == Short.class) {
+                if (unsigned) {
+                    writer.uint16().createMDArray(path, dimensions, HDF5IntStorageFeatures.createFromGeneric(sf));
+                } else {
+                    writer.int16().createMDArray(path, dimensions, HDF5IntStorageFeatures.createFromGeneric(sf));
+                }
+            } else if (type == Byte.class) {
+                if (unsigned) {
+                    writer.uint8().createMDArray(path, dimensions, HDF5IntStorageFeatures.createFromGeneric(sf));
+                } else {
+                    writer.int8().createMDArray(path, dimensions, HDF5IntStorageFeatures.createFromGeneric(sf));
+                }
+            } else if ((type == String.class) && (dimensions.length == 1)) {
+                writer.string().createArrayVL(path, 0, 0, sf);
+            } else if ((type == Boolean.class) && (dimensions.length <= 2)) {
+                writer.bool().createBitFieldArray(path, 1, dimensions[0], HDF5IntStorageFeatures.createFromGeneric(sf));
             } else {
-                writer.int64().createMDArray(path, dimensions);
+                throw new UnsupportedOperationException("Not supported type: " + type);
             }
-        } else if (type == Integer.class) {
-            if (unsigned) {
-                writer.uint32().createMDArray(path, dimensions);
-            } else {
-                writer.int32().createMDArray(path, dimensions);
-            }
-        } else if (type == Short.class) {
-            if (unsigned) {
-                writer.uint16().createMDArray(path, dimensions);
-            } else {
-                writer.int16().createMDArray(path, dimensions);
-            }
-        } else if (type == Byte.class) {
-            if (unsigned) {
-                writer.uint8().createMDArray(path, dimensions);
-            } else {
-                writer.int8().createMDArray(path, dimensions);
-            }
-        } else if ((type == String.class) && (dimensions.length == 1)) {
-            writer.string().createArrayVL(path, 0, 0);
-        } else if ((type == Boolean.class) && (dimensions.length <= 2)) {
-            writer.bool().createBitFieldArray(path, 1, dimensions[0]);
         } else {
-            throw new UnsupportedOperationException("Not supported type: " + type);
+            if (type == Double.class) {
+                writer.float64().createMDArray(path, MDArray.toLong(dimensions), cs, HDF5FloatStorageFeatures.createFromGeneric(sf));
+            } else if (type == Float.class) {
+                writer.float32().createMDArray(path, MDArray.toLong(dimensions), cs,HDF5FloatStorageFeatures.createFromGeneric(sf));
+            } else if ((type == Long.class) || (type==BigInteger.class)) {
+                if (unsigned) {
+                    writer.uint64().createMDArray(path, MDArray.toLong(dimensions), cs, HDF5IntStorageFeatures.createFromGeneric(sf));
+                } else {
+                    writer.int64().createMDArray(path, MDArray.toLong(dimensions), cs, HDF5IntStorageFeatures.createFromGeneric(sf));
+                }
+            } else if (type == Integer.class) {
+                if (unsigned) {
+                    writer.uint32().createMDArray(path, MDArray.toLong(dimensions), cs, HDF5IntStorageFeatures.createFromGeneric(sf));
+                } else {
+                    writer.int32().createMDArray(path, MDArray.toLong(dimensions), cs, HDF5IntStorageFeatures.createFromGeneric(sf));
+                }
+            } else if (type == Short.class) {
+                if (unsigned) {
+                    writer.uint16().createMDArray(path, MDArray.toLong(dimensions), cs, HDF5IntStorageFeatures.createFromGeneric(sf));
+                } else {
+                    writer.int16().createMDArray(path, MDArray.toLong(dimensions), cs, HDF5IntStorageFeatures.createFromGeneric(sf));
+                }
+            } else if (type == Byte.class) {
+                if (unsigned) {
+                    writer.uint8().createMDArray(path, MDArray.toLong(dimensions), cs, HDF5IntStorageFeatures.createFromGeneric(sf));
+                } else {
+                    writer.int8().createMDArray(path, MDArray.toLong(dimensions), cs, HDF5IntStorageFeatures.createFromGeneric(sf));
+                }
+            } else {
+                throw new UnsupportedOperationException("Not supported type: " + type + " - chunk size:" + Str.toString(cs));
+            }
+            
         }
+    }
+    
+    HDF5GenericStorageFeatures getStorageFeatures(Map features, int[] dimensions){
+        if(features!=null){
+            
+            Object layout = features.get("layout");
+            Object deflation = features.get("deflation");
+            Boolean shuffle = "true".equalsIgnoreCase(String.valueOf(features.get("shuffle")).toString());
+            Object compression = features.get("compression");
+            
+            if (layout != null){
+                layout = String.valueOf(layout);
+            }
+            if (compression != null){
+                compression = String.valueOf(compression);
+                switch ((String)compression){
+                    case "deflation":
+                    case "true":
+                    case "on":    
+                    case "default":                         
+                    case "True":
+                    case "1":
+                        deflation = HDF5GenericStorageFeatures.DEFAULT_DEFLATION_LEVEL;
+                        break;
+                    case "max":
+                    case "deflation_max":
+                        deflation = HDF5GenericStorageFeatures.MAX_DEFLATION_LEVEL;
+                        break;
+                }
+            }            
+            if ((deflation!=null)&& (deflation instanceof Number)){
+                deflation = ((Number)deflation).byteValue();
+            } else {
+                deflation = null;
+            }
+        
+            if (deflation!=null){
+                if (shuffle){
+                    HDF5GenericStorageFeatureBuilder builder = new HDF5GenericStorageFeatureBuilder();
+                    return (HDF5GenericStorageFeatures) builder.deflateLevel((Byte)deflation).shuffleBeforeDeflate().features();                    
+                }else {
+                    return HDF5GenericStorageFeatures.createDeflation((Byte)deflation);
+                }
+            }
+            
+            if (layout != null){
+                switch ((String)layout){
+                    case "compact":
+                        return HDF5GenericStorageFeatures.GENERIC_COMPACT; 
+                    case "contiguous":
+                        return HDF5GenericStorageFeatures.GENERIC_CONTIGUOUS;        
+                    case "chunked":
+                        return HDF5GenericStorageFeatures.GENERIC_NO_COMPRESSION;
+                }
+            }            
+        }
+        
+        if ((dimensions!=null) && (dimensions.length>0)){
+            boolean fixedSize = true;
+            for (int x : dimensions){
+                if (x==0){
+                    fixedSize = false;
+                }
+            }
+            if (fixedSize){
+                return HDF5GenericStorageFeatures.GENERIC_CONTIGUOUS;
+            }
+        }
+        return HDF5GenericStorageFeatures.GENERIC_NO_COMPRESSION;
+    }
+
+    int[] getChunkSize(Map features, int[] dimensions){
+        if ((features!=null) && (features.containsKey("chunk_size"))){
+            try{
+                List l = (List) features.get("chunk_size");
+                return (int[])Convert.doubleToInt((double[]) Convert.toDouble(Convert.toArray((List)l.get(0))));
+            } catch (Exception ex) {
+            }
+        }   
+        return null;
     }
 
     //TODO: find way to read compound descriptor directly from the file and not through these attributes.
@@ -863,13 +991,14 @@ public class ProviderHDF5 implements Provider {
     }
 
     @Override
-    public void createDataset(String path, String[] names, Class[] types, int[] lengths) throws IOException {
+    public void createDataset(String path, String[] names, Class[] types, int[] lengths, Map features) throws IOException {
         Object[] template = createCompoundTemplate(path, types, lengths);
+        HDF5GenericStorageFeatures sf = getStorageFeatures(features, null);
         synchronized (compoundTypes) {
             try {
                 HDF5CompoundType<Object[]> compoundType = writer.compound().getInferredType(path, names, template);
                 compoundTypes.put(path, compoundType);
-                writer.compound().createArray(path, compoundType, 0);
+                writer.compound().createArray(path, compoundType, 0, sf);
             } catch (Exception ex) {
                 throw new IOException("Invalid types in table dataset: " + Convert.arrayToString(types, ", "));
             }

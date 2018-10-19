@@ -68,14 +68,14 @@ public interface Provider {
 
     void setAttribute(String path, String name, Object value, Class type, boolean unsigned) throws IOException;
 
-    void setDataset(String path, Object data, Class type, int rank, int[] dimensions, boolean unsigned) throws IOException;
+    void setDataset(String path, Object data, Class type, int rank, int[] dimensions, boolean unsigned, Map features) throws IOException;
 
-    void createDataset(String path, Class type, int[] dimensions, boolean unsigned) throws IOException;
+    void createDataset(String path, Class type, int[] dimensions, boolean unsigned, Map features) throws IOException;
 
     /**
      * A composite dataset (heterogeneous table)
      */
-    void createDataset(String path, String[] names, Class[] types, int[] lengths) throws IOException;
+    void createDataset(String path, String[] names, Class[] types, int[] lengths, Map features) throws IOException;
 
     void setItem(String path, Object data, Class type, int index) throws IOException;
     

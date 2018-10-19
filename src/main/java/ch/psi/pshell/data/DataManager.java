@@ -757,8 +757,12 @@ public class DataManager implements AutoCloseable {
     public void setDataset(String path, Object data) throws IOException {
         setDataset(path, data, false);
     }
-
+    
     public void setDataset(String path, Object data, boolean unsigned) throws IOException {
+        setDataset(path, data, unsigned, null);
+    }
+
+    public void setDataset(String path, Object data, boolean unsigned, Map features) throws IOException {
         if ((data == null) || (path == null) || (!path.contains("/"))) {
             throw new IllegalArgumentException();
         }
@@ -778,7 +782,7 @@ public class DataManager implements AutoCloseable {
 
         logger.finer(String.format("Set \"%s\" type = %s dims = %s", path, type.getSimpleName(), rank, Str.toString(shape, 10)));
         createGroup(group);
-        getProvider().setDataset(path, data, type, rank, shape, unsigned);
+        getProvider().setDataset(path, data, type, rank, shape, unsigned, features);
         flush();
     }
 
@@ -797,8 +801,12 @@ public class DataManager implements AutoCloseable {
         }
         createDataset(path, type, unsigned, dimensions);
     }
-
+    
     public void createDataset(String path, Class type, boolean unsigned, int[] dimensions) throws IOException {
+        createDataset(path, type, unsigned, dimensions, null);
+    }
+
+    public void createDataset(String path, Class type, boolean unsigned, int[] dimensions, Map features) throws IOException {
         if ((type == null) || (path == null) || (!path.contains("/"))) {
             throw new IllegalArgumentException();
         }
@@ -814,11 +822,14 @@ public class DataManager implements AutoCloseable {
         createGroup(group);
 
         logger.finer(String.format("Create \"%s\" type = %s dims = %s", path, type.getSimpleName(), Str.toString(dimensions, 10)));
-        getProvider().createDataset(path, type, dimensions, unsigned);
+        getProvider().createDataset(path, type, dimensions, unsigned, features);
         ProviderData pd = getProviderData();
     }
 
     public void createDataset(String path, String[] names, Class[] types, int[] lengths) throws IOException {
+        createDataset(path, names, types, lengths, null);
+    }
+    public void createDataset(String path, String[] names, Class[] types, int[] lengths, Map features) throws IOException {
         if ((names == null) || (path == null) || (!path.contains("/"))) {
             throw new IllegalArgumentException();
         }
@@ -845,7 +856,7 @@ public class DataManager implements AutoCloseable {
         createGroup(group);
 
         logger.finer(String.format("Create \"%s\"", path));
-        getProvider().createDataset(path, names, types, lengths);
+        getProvider().createDataset(path, names, types, lengths, features);
         flush();
     }
 

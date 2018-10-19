@@ -671,8 +671,8 @@ public class ProviderText implements Provider {
     }
 
     @Override
-    public void setDataset(String path, Object data, Class type, int rank, int[] dimensions, boolean unsigned) throws IOException {
-        createDataset(path, type, dimensions, unsigned);
+    public void setDataset(String path, Object data, Class type, int rank, int[] dimensions, boolean unsigned, Map features) throws IOException {
+        createDataset(path, type, dimensions, unsigned, features);
         if (rank == 0) {
             setItem(path, data, type, 0);
         } else {
@@ -684,7 +684,7 @@ public class ProviderText implements Provider {
     }
 
     @Override
-    public void createDataset(String path, Class type, int[] dimensions, boolean unsigned) throws IOException {
+    public void createDataset(String path, Class type, int[] dimensions, boolean unsigned, Map features) throws IOException {
         Path filePath = getFilePath(path);
         PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(filePath.toString(), true)));
         OutputFile of;
@@ -704,7 +704,7 @@ public class ProviderText implements Provider {
     }
 
     @Override
-    public void createDataset(String path, String[] names, Class[] types, int[] lengths) throws IOException {
+    public void createDataset(String path, String[] names, Class[] types, int[] lengths, Map features) throws IOException {
         Path filePath = getFilePath(path);
         PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(filePath.toString(), true)));
         OutputFile of;
