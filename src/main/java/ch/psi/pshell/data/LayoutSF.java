@@ -271,31 +271,49 @@ public class LayoutSF extends LayoutBase implements Layout {
         dataManager.setDataset(group + ATTR_DATASET_STOP, scan.getEnd());
         dataManager.setDataset(group + ATTR_DATASET_RECORDS, new int[]{scan.getNumberOfRecords()});
         dataManager.setDataset(group + ATTR_DATASET_DIMENSIONS, new int[]{scan.getDimensions()});
+        
+        Map features = dataManager.getStorageFeatures(null);
+        boolean contiguous = (features!=null) && (Boolean.TRUE.equals(features.get("contiguous")));
+        int samples = contiguous ? scan.getNumberOfRecords() : 0;
+        
         for (Writable writable : scan.getWritables()) {
             String name = dataManager.getAlias(writable);
             String groupDev = getDataPath(scan, name);
             dataManager.createGroup(groupDev);
             if (writable instanceof WritableArray) {
-                dataManager.createDataset(groupDev + DATASET_READBACK, Double.class, new int[]{0, ((WritableArray) writable).getSize()});
+                dataManager.createDataset(groupDev + DATASET_READBACK, Double.class, new int[]{samples, ((WritableArray) writable).getSize()});
             } else {
-                dataManager.createDataset(groupDev + DATASET_READBACK, Double.class, new int[]{0});
+                dataManager.createDataset(groupDev + DATASET_READBACK, Double.class, new int[]{samples});
             }
             if (writable instanceof WritableArray) {
-                dataManager.createDataset(groupDev + DATASET_SETPOINT, Double.class, new int[]{0, ((WritableArray) writable).getSize()});
+                dataManager.createDataset(groupDev + DATASET_SETPOINT, Double.class, new int[]{samples, ((WritableArray) writable).getSize()});
             } else {
-                dataManager.createDataset(groupDev + DATASET_SETPOINT, Double.class, new int[]{0});
+                dataManager.createDataset(groupDev + DATASET_SETPOINT, Double.class, new int[]{samples});
             }
             String channel = InlineDevice.getChannelName(writable);
             if (channel!=null){
                 dataManager.setAttribute(groupDev, ATTR_DEVICE_CHANNEL, channel);
             }        
         }
+        
+        dataManager.createDataset(group + DATASET_TIMESTAMP, Long.class, new int[]{samples});
+        if (stream != null) {
+            dataManager.createDataset(group + DATASET_PID, Long.class, new int[]{samples});
+            dataManager.createDataset(group + DATASET_GLOBAL_TIMESTAMP, Long.class, new int[]{samples});
+        }        
 
         for (ch.psi.pshell.device.Readable readable : scan.getReadables()) {
             String name = dataManager.getAlias(readable);
             String groupDev = getDataPath(scan, name);
+            features = dataManager.getStorageFeatures(readable); 
+            contiguous = (features!=null) && (Boolean.TRUE.equals(features.get("contiguous")));
+            samples = contiguous ? scan.getNumberOfRecords() : 0;
             if (readable instanceof ReadableMatrix) {
-                dataManager.createDataset(groupDev + DATASET_VALUE, getDeviceType(readable), dataManager.getReadableMatrixDimension((ReadableMatrix) readable));
+                int[] dims = dataManager.getReadableMatrixDimension((ReadableMatrix) readable);
+                if (contiguous){
+                    dims[dataManager.getDepthDimension()] = scan.getNumberOfRecords();
+                }                
+                dataManager.createDataset(groupDev + DATASET_VALUE, getDeviceType(readable), dims, features);
                 if (readable instanceof ReadableCalibratedMatrix) {
                     MatrixCalibration cal = ((ReadableCalibratedMatrix) readable).getCalibration();
                     if (cal != null) {
@@ -305,7 +323,7 @@ public class LayoutSF extends LayoutBase implements Layout {
                     }
                 }
             } else if (readable instanceof ReadableArray) {
-                dataManager.createDataset(groupDev + DATASET_VALUE, getDeviceType(readable), new int[]{0, ((ReadableArray) readable).getSize()});
+                dataManager.createDataset(groupDev + DATASET_VALUE, getDeviceType(readable), new int[]{samples, ((ReadableArray) readable).getSize()}, features);
                 if (readable instanceof ReadableCalibratedArray) {
                     ArrayCalibration cal = ((ReadableCalibratedArray) readable).getCalibration();
                     if (cal != null) {
@@ -315,11 +333,11 @@ public class LayoutSF extends LayoutBase implements Layout {
                     }
                 }
             } else {
-                dataManager.createDataset(groupDev + DATASET_VALUE, getDeviceType(readable), new int[]{0});
+                dataManager.createDataset(groupDev + DATASET_VALUE, getDeviceType(readable), new int[]{samples});
                 if (Averager.isAverager(readable)) {
-                    dataManager.createDataset(groupDev + DATASET_MIN, Double.class, new int[]{0});
-                    dataManager.createDataset(groupDev + DATASET_MAX, Double.class, new int[]{0});
-                    dataManager.createDataset(groupDev + DATASET_STDEV, Double.class, new int[]{0});
+                    dataManager.createDataset(groupDev + DATASET_MIN, Double.class, new int[]{samples});
+                    dataManager.createDataset(groupDev + DATASET_MAX, Double.class, new int[]{samples});
+                    dataManager.createDataset(groupDev + DATASET_STDEV, Double.class, new int[]{samples});
                 }
             }
             String channel = InlineDevice.getChannelName(readable);
@@ -327,12 +345,7 @@ public class LayoutSF extends LayoutBase implements Layout {
                 dataManager.setAttribute(groupDev, ATTR_DEVICE_CHANNEL, channel);
             }   
             
-            dataManager.createDataset(groupDev + DATASET_TIMESTAMP, Long.class, new int[]{0});
-        }
-        dataManager.createDataset(group + DATASET_TIMESTAMP, Long.class, new int[]{0});
-        if (stream != null) {
-            dataManager.createDataset(group + DATASET_PID, Long.class, new int[]{0});
-            dataManager.createDataset(group + DATASET_GLOBAL_TIMESTAMP, Long.class, new int[]{0});
+            dataManager.createDataset(groupDev + DATASET_TIMESTAMP, Long.class, new int[]{samples});
         }
 
         setStartTimestampAttibute(scan);

@@ -63,21 +63,25 @@ public class LayoutDefault extends LayoutBase implements Layout {
         String group = getScanPath(scan);
         dataManager.createGroup(group);
 
+        Map features = dataManager.getStorageFeatures(null);
+        boolean contiguous = (features!=null) && (Boolean.TRUE.equals(features.get("contiguous")));
+        int samples = contiguous ? scan.getNumberOfRecords() : 0;
+            
         int dimension = 1;
         int index = 0;
         for (Writable writable : scan.getWritables()) {
             String name = dataManager.getAlias(writable);
             //Positioners are always saved as double
             if (writable instanceof WritableArray) {
-                dataManager.createDataset(getPath(scan, name), Double.class, new int[]{0, ((WritableArray) writable).getSize()});
+                dataManager.createDataset(getPath(scan, name), Double.class, new int[]{samples, ((WritableArray) writable).getSize()});
             } else {
-                dataManager.createDataset(getPath(scan, name), Double.class, new int[]{0});
+                dataManager.createDataset(getPath(scan, name), Double.class, new int[]{samples});
             }
             if (persistSetpoints) {
                 if (writable instanceof WritableArray) {
-                    dataManager.createDataset(getPath(scan, name) + SETPOINTS_DATASET_SUFFIX, Double.class, new int[]{0, ((WritableArray) writable).getSize()});
+                    dataManager.createDataset(getPath(scan, name) + SETPOINTS_DATASET_SUFFIX, Double.class, new int[]{samples, ((WritableArray) writable).getSize()});
                 } else {
-                    dataManager.createDataset(getPath(scan, name) + SETPOINTS_DATASET_SUFFIX, Double.class, new int[]{0});
+                    dataManager.createDataset(getPath(scan, name) + SETPOINTS_DATASET_SUFFIX, Double.class, new int[]{samples});
                 }
             }
 
@@ -89,13 +93,20 @@ public class LayoutDefault extends LayoutBase implements Layout {
                 dimension++;
             }
         }
+        dataManager.createDataset(getPath(scan, META_GROUP + TIMESTAMPS_DATASET), Long.class, new int[]{samples});
 
         index = 0;
         for (ch.psi.pshell.device.Readable readable : scan.getReadables()) {
             String name = dataManager.getAlias(readable);
-            Map features = dataManager.getStorageFeatures(readable); //Compression array storage
+            features = dataManager.getStorageFeatures(readable);
+            contiguous = (features!=null) && (Boolean.TRUE.equals(features.get("contiguous")));
+            samples = contiguous ? scan.getNumberOfRecords() : 0;
             if (readable instanceof ReadableMatrix) {   
-                dataManager.createDataset(getPath(scan, name), getDeviceType(readable), dataManager.getReadableMatrixDimension((ReadableMatrix) readable), features);
+                int[] dims = dataManager.getReadableMatrixDimension((ReadableMatrix) readable);
+                if (contiguous){
+                    dims[dataManager.getDepthDimension()] = scan.getNumberOfRecords();
+                }
+                dataManager.createDataset(getPath(scan, name), getDeviceType(readable), dims, features);
                 if (readable instanceof ReadableCalibratedMatrix) {
                     MatrixCalibration cal = ((ReadableCalibratedMatrix) readable).getCalibration();
                     if (cal != null) {
@@ -105,7 +116,7 @@ public class LayoutDefault extends LayoutBase implements Layout {
                     }
                 }
             } else if (readable instanceof ReadableArray) {
-                dataManager.createDataset(getPath(scan, name), getDeviceType(readable), new int[]{0, ((ReadableArray) readable).getSize()},features);
+                dataManager.createDataset(getPath(scan, name), getDeviceType(readable), new int[]{samples, ((ReadableArray) readable).getSize()},features);
                 if (readable instanceof ReadableCalibratedArray) {
                     ArrayCalibration cal = ((ReadableCalibratedArray) readable).getCalibration();
                     if (cal != null) {
@@ -115,16 +126,15 @@ public class LayoutDefault extends LayoutBase implements Layout {
                     }
                 }
             } else {
-                dataManager.createDataset(getPath(scan, name), getDeviceType(readable), new int[]{0});
+                dataManager.createDataset(getPath(scan, name), getDeviceType(readable), new int[]{samples});
                 if (Averager.isAverager(readable)) {
-                    dataManager.createDataset(getPath(scan, META_GROUP + name + DEVICE_MIN_DATASET), Double.class, new int[]{0});
-                    dataManager.createDataset(getPath(scan, META_GROUP + name + DEVICE_MAX_DATASET), Double.class, new int[]{0});
-                    dataManager.createDataset(getPath(scan, META_GROUP + name + DEVICE_STDEV_DATASET), Double.class, new int[]{0});
+                    dataManager.createDataset(getPath(scan, META_GROUP + name + DEVICE_MIN_DATASET), Double.class, new int[]{samples});
+                    dataManager.createDataset(getPath(scan, META_GROUP + name + DEVICE_MAX_DATASET), Double.class, new int[]{samples});
+                    dataManager.createDataset(getPath(scan, META_GROUP + name + DEVICE_STDEV_DATASET), Double.class, new int[]{samples});
                 }
             }
             dataManager.setAttribute(getPath(scan, name), ATTR_READABLE_INDEX, index++);
         }
-        dataManager.createDataset(getPath(scan, META_GROUP + TIMESTAMPS_DATASET), Long.class, new int[]{0});
         dataManager.setAttribute(group, ATTR_SCAN_DIMENSION, scan.getDimensions());
         dataManager.setAttribute(group, ATTR_SCAN_STEPS, (scan.getNumberOfSteps().length > 0) ? scan.getNumberOfSteps() : new int[]{-1});
         dataManager.setAttribute(group, ATTR_SCAN_PASSES, scan.getNumberOfPasses());

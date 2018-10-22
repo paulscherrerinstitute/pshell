@@ -16,7 +16,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;  
+import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 
@@ -27,9 +27,10 @@ import java.util.logging.Level;
 public class ExecutionParameters {
 
     final String[] executionOptions = new String[]{"defaults", "group", "open", "reset", "name", "type", "path", "tag",
-        "layout", "provider", "save", "persist", "flush", "preserve", "keep", "accumulate", "depth_dim", "compression", "contiguous"};
+        "layout", "provider", "save", "persist", "flush", "preserve", "keep", "accumulate", "depth_dim", "compression",
+        "contiguous"    };
 
-    final String[] viewOptions = new String[]{"plot_disabled", "table_disabled", "enabled_plots","plot_layout",
+    final String[] viewOptions = new String[]{"plot_disabled", "table_disabled", "enabled_plots", "plot_layout",
         "plot_types", "print_scan", "auto_range", "manual_range", "domain_axis", "status"};
 
     final String[] shortcutOptions = new String[]{"display", "line_plots", "plot_list", "range"};
@@ -304,7 +305,7 @@ public class ExecutionParameters {
                 plotTypes.putAll(types);
             }
         }
-        
+
         if (getOption("plot_list") != null) {
             Object plot_list = getOption("plot_list");
             options.put("enabled_plots", "all".equals(plot_list) ? null : plot_list);
@@ -330,13 +331,13 @@ public class ExecutionParameters {
                 setPlotPreference(ViewPreference.valueOf(key.toString().toUpperCase()), val);
             }
         }
-        
-        Object display = getOption("display");        
-        if (Boolean.FALSE.equals(display)){
-             setPlotPreference(ViewPreference.PLOT_DISABLED, true);
-             setPlotPreference(ViewPreference.TABLE_DISABLED, true);
-             setPlotPreference(ViewPreference.PRINT_SCAN, false);
-        }      
+
+        Object display = getOption("display");
+        if (Boolean.FALSE.equals(display)) {
+            setPlotPreference(ViewPreference.PLOT_DISABLED, true);
+            setPlotPreference(ViewPreference.TABLE_DISABLED, true);
+            setPlotPreference(ViewPreference.PRINT_SCAN, false);
+        }
     }
 
     public Map getScriptOptions() {
@@ -409,9 +410,9 @@ public class ExecutionParameters {
 
     public Boolean getSave() {
         Object option = getOption("save");
-        if (option==null){
+        if (option == null) {
             option = getOption("persist"); //backward compatibility
-        }        
+        }
         return (option != null) ? (Boolean) option : Context.getInstance().getConfig().autoSaveScanData;
     }
 
@@ -436,27 +437,55 @@ public class ExecutionParameters {
 
     public Boolean getKeep() {
         Object option = getOption("keep");
-        if (option==null){
+        if (option == null) {
             option = getOption("accumulate"); //backward compatibility
         }
         return (option != null) ? (Boolean) option : !Context.getInstance().getConfig().dataScanReleaseRecords;
     }
-    
 
-    public Map getStorageFeatures(Nameable device){
+    boolean isOptionForDevice(Object option, Nameable device) {
+        if ((option != null) && (device!=null)){
+            if (option == device) {
+                return true;
+            }
+            String name = Context.getInstance().getDataManager().getAlias(device);
+            if (option.equals(name)) {
+                return true;
+            }
+            if (option instanceof List) {
+                List l = (List) option;
+                if ((l.contains(device)) | (l.contains(name))) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    public Map getStorageFeatures(Nameable device) {
         Map ret = new HashMap();
         Object compression = getOption("compression");
-        if (compression!=null){
-            if (compression instanceof Number){ 
+        if (compression != null) {
+            if (compression instanceof Number) {
                 ret.put("deflation", compression);
-            } else if (compression instanceof String){ 
+                return ret;
+            } else if ((compression instanceof Boolean) || (compression instanceof String)){
                 ret.put("compression", compression);
+                return ret;
+            } else if (isOptionForDevice(compression, device)){
+                 ret.put("compression", true);
+                return ret;               
             }
-            return ret;
         }
         Object contiguous = getOption("contiguous");
-        if (contiguous!=null){
-            ret.put("contiguous", true);
+        if (contiguous != null) {
+            if (contiguous instanceof Boolean){
+                ret.put("contiguous", contiguous);
+                return ret;       
+            } else if (isOptionForDevice(contiguous, device)){
+                ret.put("contiguous", true);
+                return ret;
+            }
         }
         return null;
     }
@@ -646,7 +675,7 @@ public class ExecutionParameters {
                 }
                 break;
             case PLOT_LAYOUT:
-                plotPreferences.setPlotLayout((value==null) ? null :PlotLayout.valueOf(value.toString()));
+                plotPreferences.setPlotLayout((value == null) ? null : PlotLayout.valueOf(value.toString()));
                 break;
             case PLOT_TYPES:
                 if (value == null) {

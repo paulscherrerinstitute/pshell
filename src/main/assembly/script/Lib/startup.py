@@ -1037,7 +1037,7 @@ def save_dataset(path, data, type='d', unsigned=False, features=None):
         data (array or list): data to be saved
         unsigned(boolean, optional): create a dataset of unsigned type.
         features(dictionary, optional): See create_dataset.
-                               
+
     Returns:
         Dictionary
 
@@ -1197,8 +1197,7 @@ def set_exec_pars(**args):
 
     Args:
       args(dictionary). Keys:
-        name(str, optional): value of the {name} tag. Default is the running script name
-                             (or "scan" in the case of  a command line scan command.)
+        name(str, optional): value of the {name} tag. Default is the running script name.
         type(str, optional): value of the {type} tag. Default is empty.
                              This field can be used to store data in  sub-folders of standard location.
         path(str, optional):  If defined provides the full path name for data output root (overriding config))
@@ -1212,6 +1211,10 @@ def set_exec_pars(**args):
                                     If false disable accumulation of scan records to scan result.
         preserve(bool, optional): Overrides the configuration option to preserve device types.
                                   If false all values are converted to double.
+        compression(obj, optional): True for enabling default compression, int for specifying deflation level.
+                                    Device or list of devices for specifying devices to be compressed.
+        contiguous(obj, optional): True for setting contiguous datasets for all devices.
+                                   Device or list of devices for specifying device datasets to be contiguous.
         open(bool, optional): If true opens data output root (instead of only doing in the first data access call)
                               If false closes output root, if open.
         reset(bool, optional): If true reset the scan counter - the {count} tag and set the timestamp to now.
@@ -1221,8 +1224,7 @@ def set_exec_pars(**args):
 
         Graphical preferences can also be set. Keys are equal to lowercase of Preference enum:
         "plot_disabled", "plot_layout", "table_disabled", "enabled_plots", "plot_types", "print_scan", "auto_range",
-        "manual_range","domain_axis", "status".
-        See set_preference for more information.
+        "manual_range","domain_axis", "status". See set_preference for more information.
 
         Shortcut entries: "line_plots": list of devices with enforced line plots.
                           "range": "none", "auto", or [min, max]
@@ -1879,7 +1881,7 @@ def reinit(dev = None):
     """Re-initialize devices.
 
     Args:
-        dev(Device, optional): the device to be re-initialized.
+        dev(Device, optional): Device to be re-initialized.
                                If  None re-initialize all devices not yet initialized.
 
     Returns:
@@ -1948,8 +1950,8 @@ def arrmul(a, b):
 
     Args:
 
-        a(list, tuple, array ...): subscriptable object containing numbers
-        b(list, tuple, array ...): subscriptable object containing numbers
+        a(subscriptable : list, tuple, array...)
+        b(subscriptable : list, tuple, array...)
 
     Returns:
         List
@@ -1962,8 +1964,8 @@ def arrdiv(a, b):
 
     Args:
 
-        a(list, tuple, array ...): subscriptable object containing numbers
-        b(list, tuple, array ...): subscriptable object containing numbers
+        a(subscriptable : list, tuple, array...)
+        b(subscriptable : list, tuple, array...)
 
     Returns:
         List
@@ -1976,8 +1978,8 @@ def arradd(a, b):
 
     Args:
 
-        a(list, tuple, array ...): subscriptable object containing numbers
-        b(list, tuple, array ...): subscriptable object containing numbers
+        a(subscriptable : list, tuple, array...)
+        b(subscriptable : list, tuple, array...)
 
     Returns:
         List
@@ -1990,8 +1992,8 @@ def arrsub(a, b):
 
     Args:
 
-        a(list, tuple, array ...): subscriptable object containing numbers
-        b(list, tuple, array ...): subscriptable object containing numbers
+        a(subscriptable : list, tuple, array...)
+        b(subscriptable : list, tuple, array...)
 
     Returns:
         List
@@ -2004,7 +2006,7 @@ def arrabs(a):
 
     Args:
 
-        a(list, tuple, array ...): subscriptable object containing numbers
+        a(subscriptable : list, tuple, array...)
 
     Returns:
         List
@@ -2017,7 +2019,7 @@ def arroff(a, value = "mean"):
 
     Args:
 
-        a(list, tuple, array ...): subscriptable object containing numbers
+        a(subscriptable : list, tuple, array...)
         type(int or str, optional): value to subtract from the array, or "mean" or "min".
 
     Returns:
@@ -2034,7 +2036,7 @@ def mean(data):
     """Calculate the mean of a sequence.
 
     Args:
-        data(list, tuple, array ...): subscriptable object containing numbers
+        data(subscriptable : list, tuple, array...)
 
     Returns:
         Mean of the elements in the object.
@@ -2046,7 +2048,7 @@ def variance(data):
     """Calculate the variance of a sequence.
 
     Args:
-        data(list, tuple, array ...): subscriptable object containing numbers
+        data(subscriptable : list, tuple, array...)
 
     Returns:
         Variance of the elements in the object.
@@ -2060,7 +2062,7 @@ def stdev(data):
     """Calculate the standard deviation of a sequence.
 
     Args:
-        data(list, tuple, array ...): subscriptable object containing numbers
+        data(subscriptable : list, tuple, array...)
 
     Returns:
         Standard deviation of the elements in the object.
@@ -2074,7 +2076,7 @@ def center_of_mass(data, x = None):
 
     Args:
 
-        data(list, tuple, array ...): subscriptable object containing numbers
+        data(subscriptable : list, tuple, array...)
         x(list, tuple, array ..., optional): x coordinates
 
     Returns:
@@ -2326,7 +2328,7 @@ def frange(start, finish, step, enforce_finish = False, inclusive_finish = False
 def _get_caller():
     #Not doing inspect.currentframe().f_back because inspect is slow to load
     return sys._getframe(1).f_back if hasattr(sys, "_getframe") else None
-    
+
 def inject():
     """Restore initial globals: re-inject devices and startup variables to the interpreter.
 
@@ -2476,21 +2478,19 @@ def set_preference(preference, value):
     """Hints to graphical layer:
 
     Args:
-        preference(Preference): Preference name
-            Preference.PLOT_DISABLED  #enable/disable scan plot (True/False)
-            Preference.PLOT_LAYOUT    #  "Horizontal", "Vertical" or "Grid"
-            Preference.TABLE_DISABLED  #enable/disable scan table (True/False)
-            Preference.ENABLED_PLOTS #select Readables to be plotted (list of Readable or
-                String (Readable names))
-            Preference.PLOT_TYPES #Dictionary or (Readable or String):(String or int) pairs
+        preference(Preference): Enum of preference types:
+            PLOT_DISABLED: enable/disable scan plot (True/False)
+            PLOT_LAYOUT: "Horizontal", "Vertical" or "Grid"
+            TABLE_DISABLED: enable/disable scan table (True/False)
+            ENABLED_PLOTS: select Readables to be plotted (list of Readable or String (names))
+            PLOT_TYPES: Dictionary or (Readable or String):(String or int) pairs
                 where the key is a plot name and the value is the desired plot type
-            Preference.PRINT_SCAN  #Print scan records to console
-            Preference.AUTO_RANGE # Automatic range scan plots x-axis
-            Preference.MANUAL_RANGE # Manually set scan plots x-axis
-            Preference.DOMAIN_AXIS #Set the domain axis source: "Time", "Index", or a readable name.
-                                    Default(None): first positioner
-            Preference.STATUS # set application status
-
+            PRINT_SCAN: Print scan records to console
+            AUTO_RANGE: Automatic range scan plots x-axis
+            MANUAL_RANGE: Manually set scan plots x-axis
+            DOMAIN_AXIS: Set the domain axis source: "Time", "Index", or a readable name.
+                Default(None): first positioner
+            STATUS: set application status
         value(object): preference value
 
     Returns:

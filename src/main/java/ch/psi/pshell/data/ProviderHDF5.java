@@ -863,7 +863,7 @@ public class ProviderHDF5 implements Provider {
     byte getDeflation(Map features){
         Object deflation = features.get("deflation");
         if ((deflation!=null)&& (deflation instanceof Number)){
-            byte ret = ((Number)deflation).byteValue();
+            return ((Number)deflation).byteValue();
         }
         Object compression = features.get("compression");
         if (compression != null){

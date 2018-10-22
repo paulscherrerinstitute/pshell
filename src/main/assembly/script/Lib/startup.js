@@ -1178,8 +1178,7 @@ function set_exec_pars(args){
     
     Args: 
       args(dictionary). Keys:
-        name(str, optional): value of the {name} tag. Default is the running script name 
-                             (or "scan" in the case of  a command line scan command.)
+        name(str, optional): value of the {name} tag. Default is the running script name .
         type(str, optional): value of the {type} tag. Default is empty.
                              This field can be used to store data in  sub-folders of standard location.
         path(str, optional):  If defined provides the full path name for data output root (overriding config))
@@ -1193,6 +1192,10 @@ function set_exec_pars(args){
                                     If false disable accumulation of scan records to scan result.
         preserve(bool, optional): Overrides the configuration option to preserve device types. 
                                   If false all values are converted to double.
+        compression(obj, optional): True for enabling default compression, int for specifying deflation level.
+                                    Device or list of devices for specifying devices to be compressed.
+        contiguous(obj, optional): True for setting contiguous datasets for all devices.
+                                   Device or list of devices for specifying device datasets to be contiguous.
         open(bool, optional): If true opens data output root (instead of only doing in the first data access call)
                               If false closes output root, if open.
         reset(bool, optional): If true reset the scan counter - the {count} tag and set the timestamp to now.
@@ -2275,19 +2278,19 @@ function set_preference(preference, value){
     Hints to graphical layer:    
 
     Args:
-        preference(ViewPreference): Preference name
-            Preference.SCAN_PLOT_DISABLED  #enable/disable scan plot (True/False)
-            Preference.SCAN_TABLE_DISABLED  #enable/disable scan table (True/False)
-            Preference.ENABLED_PLOTS #select Readables to be plotted (list of Readable or 
-                String (Readable names))
-            Preference.PLOT_TYPES #Dictionary or (Readable or String):(String or int) pairs 
+        preference(Preference): Enum of preference types:
+            PLOT_DISABLED: enable/disable scan plot (True/False)
+            PLOT_LAYOUT: "Horizontal", "Vertical" or "Grid"
+            TABLE_DISABLED: enable/disable scan table (True/False)
+            ENABLED_PLOTS: select Readables to be plotted (list of Readable or String (names))
+            PLOT_TYPES: Dictionary or (Readable or String):(String or int) pairs
                 where the key is a plot name and the value is the desired plot type
-            Preference.PRINT_SCAN  #Print scan records to console                       
-            Preference.AUTO_RANGE # Automatic range scan plots x-axis
-            Preference.MANUAL_RANGE # Manually set scan plots x-axis
-            Preference.DOMAIN_AXIS #Set the domain axis source: "Time", "Index", or a readable name. 
-                                    Default(None): first positioner
-            Preference.STATUS # set application status
+            PRINT_SCAN: Print scan records to console
+            AUTO_RANGE: Automatic range scan plots x-axis
+            MANUAL_RANGE: Manually set scan plots x-axis
+            DOMAIN_AXIS: Set the domain axis source: "Time", "Index", or a readable name.
+                Default(None): first positioner
+            STATUS: set application status
         value(object): preference value
 
     Returns:
