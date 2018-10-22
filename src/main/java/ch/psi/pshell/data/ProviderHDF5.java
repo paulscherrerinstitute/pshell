@@ -860,51 +860,47 @@ public class ProviderHDF5 implements Provider {
         }
     }
     
+    byte getDeflation(Map features){
+        Object deflation = features.get("deflation");
+        if ((deflation!=null)&& (deflation instanceof Number)){
+            byte ret = ((Number)deflation).byteValue();
+        }
+        Object compression = features.get("compression");
+        if (compression != null){
+            switch (String.valueOf(compression)){
+                case "deflation":
+                case "true":
+                case "on":    
+                case "default":                         
+                case "True":
+                case "1":
+                    return HDF5GenericStorageFeatures.DEFAULT_DEFLATION_LEVEL;
+                case "max":
+                case "deflation_max":
+                    return HDF5GenericStorageFeatures.MAX_DEFLATION_LEVEL;
+            }
+        }            
+        return 0;
+    }
+    
     HDF5GenericStorageFeatures getStorageFeatures(Map features, int[] dimensions){
         if(features!=null){
             
             Object layout = features.get("layout");
-            Object deflation = features.get("deflation");
+            Byte deflation = getDeflation(features);
             Boolean shuffle = "true".equalsIgnoreCase(String.valueOf(features.get("shuffle")).toString());
-            Object compression = features.get("compression");
             
-            if (layout != null){
-                layout = String.valueOf(layout);
-            }
-            if (compression != null){
-                compression = String.valueOf(compression);
-                switch ((String)compression){
-                    case "deflation":
-                    case "true":
-                    case "on":    
-                    case "default":                         
-                    case "True":
-                    case "1":
-                        deflation = HDF5GenericStorageFeatures.DEFAULT_DEFLATION_LEVEL;
-                        break;
-                    case "max":
-                    case "deflation_max":
-                        deflation = HDF5GenericStorageFeatures.MAX_DEFLATION_LEVEL;
-                        break;
-                }
-            }            
-            if ((deflation!=null)&& (deflation instanceof Number)){
-                deflation = ((Number)deflation).byteValue();
-            } else {
-                deflation = null;
-            }
-        
-            if (deflation!=null){
+            if (deflation>0){
                 if (shuffle){
                     HDF5GenericStorageFeatureBuilder builder = new HDF5GenericStorageFeatureBuilder();
-                    return (HDF5GenericStorageFeatures) builder.deflateLevel((Byte)deflation).shuffleBeforeDeflate().features();                    
+                    return (HDF5GenericStorageFeatures) builder.deflateLevel(deflation).shuffleBeforeDeflate().features();                    
                 }else {
-                    return HDF5GenericStorageFeatures.createDeflation((Byte)deflation);
+                    return HDF5GenericStorageFeatures.createDeflation(deflation);
                 }
             }
             
             if (layout != null){
-                switch ((String)layout){
+                switch (String.valueOf(layout)){
                     case "compact":
                         return HDF5GenericStorageFeatures.GENERIC_COMPACT; 
                     case "contiguous":
@@ -930,13 +926,23 @@ public class ProviderHDF5 implements Provider {
     }
 
     int[] getChunkSize(Map features, int[] dimensions){
-        if ((features!=null) && (features.containsKey("chunk_size"))){
-            try{
-                List l = (List) features.get("chunk_size");
-                return (int[])Convert.doubleToInt((double[]) Convert.toDouble(Convert.toArray((List)l.get(0))));
-            } catch (Exception ex) {
-            }
-        }   
+        if (features!=null){
+            if (features.containsKey("chunk_size")){
+                try{
+                    List l = (List) features.get("chunk_size");
+                    return (int[])Convert.doubleToInt((double[]) Convert.toDouble(Convert.toArray(l)));
+                } catch (Exception ex) {
+                }
+            }  
+            //Fix to JHDF5 setting chunk size to [1,1,1] for variable size datasets
+            if ((getDeflation(features) > 0) && (dimensions!=null)){
+                int[] ret = new int[dimensions.length];
+                for(int i=0; i<dimensions.length; i++){
+                    ret[i] = (dimensions[i]==0) ? 1 :dimensions[i];
+                }
+                return ret;
+            } 
+        }
         return null;
     }
 

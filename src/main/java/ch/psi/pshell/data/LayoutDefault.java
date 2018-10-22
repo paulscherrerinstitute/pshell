@@ -93,10 +93,9 @@ public class LayoutDefault extends LayoutBase implements Layout {
         index = 0;
         for (ch.psi.pshell.device.Readable readable : scan.getReadables()) {
             String name = dataManager.getAlias(readable);
-            if (readable instanceof ReadableMatrix) {
-                //This is very slow
-                //dataManager.createDataset(getPath(name), getDeviceType(readable), new int[]{0, 0, 0});                    
-                dataManager.createDataset(getPath(scan, name), getDeviceType(readable), dataManager.getReadableMatrixDimension((ReadableMatrix) readable));
+            Map features = dataManager.getStorageFeatures(readable); //Compression array storage
+            if (readable instanceof ReadableMatrix) {   
+                dataManager.createDataset(getPath(scan, name), getDeviceType(readable), dataManager.getReadableMatrixDimension((ReadableMatrix) readable), features);
                 if (readable instanceof ReadableCalibratedMatrix) {
                     MatrixCalibration cal = ((ReadableCalibratedMatrix) readable).getCalibration();
                     if (cal != null) {
@@ -106,8 +105,7 @@ public class LayoutDefault extends LayoutBase implements Layout {
                     }
                 }
             } else if (readable instanceof ReadableArray) {
-                //dataManager.createDataset(getPath(name), getDeviceType(readable), new int[]{0, 0});
-                dataManager.createDataset(getPath(scan, name), getDeviceType(readable), new int[]{0, ((ReadableArray) readable).getSize()});
+                dataManager.createDataset(getPath(scan, name), getDeviceType(readable), new int[]{0, ((ReadableArray) readable).getSize()},features);
                 if (readable instanceof ReadableCalibratedArray) {
                     ArrayCalibration cal = ((ReadableCalibratedArray) readable).getCalibration();
                     if (cal != null) {

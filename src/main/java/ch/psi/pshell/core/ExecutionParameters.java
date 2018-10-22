@@ -27,7 +27,7 @@ import java.util.logging.Level;
 public class ExecutionParameters {
 
     final String[] executionOptions = new String[]{"defaults", "group", "open", "reset", "name", "type", "path", "tag",
-        "layout", "provider", "save", "persist", "flush", "preserve", "keep", "accumulate", "depth_dim"};
+        "layout", "provider", "save", "persist", "flush", "preserve", "keep", "accumulate", "depth_dim", "compression", "contiguous"};
 
     final String[] viewOptions = new String[]{"plot_disabled", "table_disabled", "enabled_plots","plot_layout",
         "plot_types", "print_scan", "auto_range", "manual_range", "domain_axis", "status"};
@@ -440,6 +440,25 @@ public class ExecutionParameters {
             option = getOption("accumulate"); //backward compatibility
         }
         return (option != null) ? (Boolean) option : !Context.getInstance().getConfig().dataScanReleaseRecords;
+    }
+    
+
+    public Map getStorageFeatures(Nameable device){
+        Map ret = new HashMap();
+        Object compression = getOption("compression");
+        if (compression!=null){
+            if (compression instanceof Number){ 
+                ret.put("deflation", compression);
+            } else if (compression instanceof String){ 
+                ret.put("compression", compression);
+            }
+            return ret;
+        }
+        Object contiguous = getOption("contiguous");
+        if (contiguous!=null){
+            ret.put("contiguous", true);
+        }
+        return null;
     }
 
     public String getTag() {

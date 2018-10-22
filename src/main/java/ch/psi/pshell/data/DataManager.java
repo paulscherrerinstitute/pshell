@@ -221,6 +221,10 @@ public class DataManager implements AutoCloseable {
     public boolean getPreserveTypes() {
         return getExecutionPars().getPreserve();
     }
+    
+    public Map getStorageFeatures(Nameable device) {
+        return getExecutionPars().getStorageFeatures(device);
+    }    
 
     public int getDepthDimension() {
         Context context = Context.getInstance();
@@ -801,6 +805,18 @@ public class DataManager implements AutoCloseable {
         }
         createDataset(path, type, unsigned, dimensions);
     }
+    
+    public void createDataset(String path, Class type, int[] dimensions, Map features) throws IOException {
+        boolean unsigned = false;
+        //Byte and short default is unsigned
+        if (type.isPrimitive()) {
+            type = Convert.getWrapperClass(type);
+        }
+        if ((type == Byte.class) || (type == Short.class)) {
+            unsigned = true;
+        }
+        createDataset(path, type, unsigned, dimensions, features);
+    }    
     
     public void createDataset(String path, Class type, boolean unsigned, int[] dimensions) throws IOException {
         createDataset(path, type, unsigned, dimensions, null);
