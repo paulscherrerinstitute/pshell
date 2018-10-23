@@ -28,7 +28,7 @@ public class ExecutionParameters {
 
     final String[] executionOptions = new String[]{"defaults", "group", "open", "reset", "name", "type", "path", "tag",
         "layout", "provider", "save", "persist", "flush", "preserve", "keep", "accumulate", "depth_dim", "compression",
-        "contiguous"    };
+        "shuffle", "contiguous"};
 
     final String[] viewOptions = new String[]{"plot_disabled", "table_disabled", "enabled_plots", "plot_layout",
         "plot_types", "print_scan", "auto_range", "manual_range", "domain_axis", "status"};
@@ -444,7 +444,7 @@ public class ExecutionParameters {
     }
 
     boolean isOptionForDevice(Object option, Nameable device) {
-        if ((option != null) && (device!=null)){
+        if ((option != null) && (device != null)) {
             if (option == device) {
                 return true;
             }
@@ -463,23 +463,32 @@ public class ExecutionParameters {
     }
 
     public Map getStorageFeatures(Nameable device) {
-        Map ret = new HashMap();
+        Map ret = null;
         Object compression = getOption("compression");
         if (compression != null) {
-            if ((compression instanceof Number) || (compression instanceof Boolean) || (compression instanceof String)){
+            if ((compression instanceof Number) || Boolean.TRUE.equals(compression) || (compression instanceof String)) {
+                ret = new HashMap();
                 ret.put("compression", compression);
-                return ret;
-            } else if (isOptionForDevice(compression, device)){
-                 ret.put("compression", true);
-                return ret;               
+            } else if (isOptionForDevice(compression, device)) {
+                ret = new HashMap();
+                ret.put("compression", true);
             }
+            if (ret != null) {
+                Object shuffle = getOption("shuffle");
+                if (shuffle != null) {
+                    if ((Boolean.TRUE.equals(shuffle)) || isOptionForDevice(shuffle, device)) {
+                        ret.put("shuffle", true);
+                    }
+                }
+                return ret;
+            }
+
         }
+
         Object contiguous = getOption("contiguous");
         if (contiguous != null) {
-            if (Boolean.TRUE.equals(contiguous)){
-                ret.put("layout", "contiguous");
-                return ret;       
-            } else if (isOptionForDevice(contiguous, device)){
+            if ((Boolean.TRUE.equals(contiguous)) || isOptionForDevice(contiguous, device)) {
+                ret = new HashMap();
                 ret.put("layout", "contiguous");
                 return ret;
             }
