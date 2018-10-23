@@ -4,6 +4,8 @@
 
 ### Added
 
+* Option for setting HDF5 compression, shuffling nd layout, on data and scan builtin functions.
+
 * Logarithmic colormap for renderer and matrix plot.
 
 * Logarithmic scales on LinePlot and TimePlot.
