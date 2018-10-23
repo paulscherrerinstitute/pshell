@@ -1207,6 +1207,8 @@ function set_exec_pars(args){
                                   If false all values are converted to double.
         compression(obj, optional): True for enabling default compression, int for specifying deflation level.
                                     Device or list of devices for specifying devices to be compressed.
+        shuffle(obj, optional): True for enabling shuffling before compression. 
+                                Device or list of devices for specifying devices to be shuffled.
         contiguous(obj, optional): True for setting contiguous datasets for all devices.
                                    Device or list of devices for specifying device datasets to be contiguous.
         open(bool, optional): If true opens data output root (instead of only doing in the first data access call)
