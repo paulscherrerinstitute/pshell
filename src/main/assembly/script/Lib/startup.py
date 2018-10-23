@@ -1056,7 +1056,7 @@ def create_group(path):
     """
     get_context().dataManager.createGroup(path)
 
-def create_dataset(path, type, unsigned=False, dimensions=None, features = None):
+def create_dataset(path, type, unsigned=False, dimensions=None, features=None):
     """Create an empty dataset within the current persistence context.
 
     Args:
@@ -1065,18 +1065,19 @@ def create_dataset(path, type, unsigned=False, dimensions=None, features = None)
                               'd' = double, 'c' = char, 's' = String,  'o' = Object
         unsigned(boolean, optional): create a dataset of unsigned type.
         dimensions(tuple of int, optional): a 0 value means variable length in that dimension.
-        features(dictionary, optional): the storage features for the dataset, provider specific.
-                               Keys for HDF5: "layout": "compact", "contiguous" or "chunked"
-                                               "compression": "default" or "max" (deflation on default of max levels)
-                                               "deflation": level from 1 to 9
-                                Default: No compression, contiguous for fixed size arrays, chunked for variable size, compact for scalars.
+        features(dictionary, optional): storage features for the dataset, provider specific.
+            Keys for HDF5: "layout": "compact", "contiguous" or "chunked"
+                           "compression": True, "max" or deflation level from 1 to 9
+                           "shuffle": Byte shuffle before compressing.
+                           "chunk": tuple, setting the chunk size
+            Default: No compression, contiguous for fixed size arrays, chunked for variable size, compact for scalars.
     Returns:
         None
 
     """
     get_context().dataManager.createDataset(path, ScriptUtils.getType(type), unsigned, dimensions, features)
 
-def create_table(path, names, types=None, lengths=None, features = None):
+def create_table(path, names, types=None, lengths=None, features=None):
     """Create an empty table (dataset of compound type) within the current persistence context.
 
     Args:

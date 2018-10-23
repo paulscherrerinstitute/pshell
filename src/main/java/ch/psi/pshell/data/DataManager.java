@@ -45,6 +45,7 @@ public class DataManager implements AutoCloseable {
     Provider provider;
 
     class ProviderData {
+
         final HashMap<String, Integer> tableIndex = new HashMap<>();
         volatile DirectoryStream.Filter fileFilter;
     }
@@ -89,7 +90,6 @@ public class DataManager implements AutoCloseable {
         return initialized;
     }
 
-    
     public static Class getProviderClass(String name) throws ClassNotFoundException {
         Class providerClass;
         String providerName = (name == null) ? null : name.toLowerCase();
@@ -103,22 +103,22 @@ public class DataManager implements AutoCloseable {
         }
         return providerClass;
     }
-    
+
     public void setProvider(String name) throws Exception {
         Class providerClass = getProviderClass(name);
         if ((provider != null)) {
-            if (provider.getClass() == providerClass){
+            if (provider.getClass() == providerClass) {
                 return;
             }
-            synchronized(providerData){
+            synchronized (providerData) {
                 providerData.remove(provider);
             }
         }
         setProvider((Provider) providerClass.newInstance());
     }
-    
+
     public void setProvider(Provider provider) throws Exception {
-        if (this == context.getDataManager()){
+        if (this == context.getDataManager()) {
             logger.info("Setting data provider: " + provider.getClass().getName());
         } else {
             logger.fine("Setting data provider in auxiliary data manager: " + provider.getClass().getName());
@@ -140,31 +140,31 @@ public class DataManager implements AutoCloseable {
         Provider ret = getExecutionPars().getDataProvider();
         return (ret == null) ? provider : ret;
     }
-    
-    ProviderData getProviderData(){
+
+    ProviderData getProviderData() {
         Provider provider = getProvider();
-        synchronized(providerData){
+        synchronized (providerData) {
             ProviderData ret = providerData.get(provider);
-            if (ret == null){
+            if (ret == null) {
                 ret = new ProviderData();
-                providerData.put(provider, ret );
+                providerData.put(provider, ret);
             }
             return ret;
         }
     }
-    
-    void clearProviderData(){
+
+    void clearProviderData() {
         Provider provider = getProvider();
-        synchronized(providerData){
+        synchronized (providerData) {
             //Keeps general provider data
-            if (provider == this.provider){
+            if (provider == this.provider) {
                 ProviderData pd = providerData.get(provider);
                 pd.tableIndex.clear();
             } else {
                 providerData.remove(provider);
             }
         }
-    }   
+    }
 
     public static Class getLayoutClass(String name) throws ClassNotFoundException {
         Class layoutClass;
@@ -192,11 +192,11 @@ public class DataManager implements AutoCloseable {
     }
 
     public void setLayout(Layout layout) throws Exception {
-        if (this == context.getDataManager()){
+        if (this == context.getDataManager()) {
             logger.info("Setting data layout: " + layout.getClass().getName());
         } else {
             logger.fine("Setting data layout in auxiliary data manager: " + layout.getClass().getName());
-        }        
+        }
         this.layout = layout;
         this.layout.initialize();
     }
@@ -221,10 +221,19 @@ public class DataManager implements AutoCloseable {
     public boolean getPreserveTypes() {
         return getExecutionPars().getPreserve();
     }
-    
+
     public Map getStorageFeatures(Nameable device) {
         return getExecutionPars().getStorageFeatures(device);
-    }    
+    }
+
+    public boolean isStorageFeaturesContiguous(Map features) {
+        return (features != null) && ("contiguous".equals(features.get("layout")));
+    }
+
+    public boolean isStorageFeaturesCompressed(Map features) {
+        return (features != null) && (features.get("compression") != null)
+                && (!"false".equalsIgnoreCase(String.valueOf(features.get("compression"))));
+    }
 
     public int getDepthDimension() {
         Context context = Context.getInstance();
@@ -275,7 +284,7 @@ public class DataManager implements AutoCloseable {
 
     public DirectoryStream.Filter getFileFilter() {
         ProviderData pd = getProviderData();
-        if (pd==null){
+        if (pd == null) {
             return null;
         }
         if (pd.fileFilter == null) {
@@ -397,9 +406,9 @@ public class DataManager implements AutoCloseable {
             }
         }
     };
-    
+
     @Hidden
-    public ScanListener getScanListener(){
+    public ScanListener getScanListener() {
         return scanListener;
     }
 
@@ -462,7 +471,7 @@ public class DataManager implements AutoCloseable {
                     clearProviderData();
                 } catch (Exception ex) {
                     logger.log(Level.WARNING, null, ex);
-                }               
+                }
                 try {
                     getProvider().closeOutput();
                 } catch (Exception ex) {
@@ -483,7 +492,7 @@ public class DataManager implements AutoCloseable {
             layout.onFinish(scan);
             scan.setRecordIndexOffset(scan.getRecordIndex() - 1);
             getExecutionPars().addScan(scan);
-            layout.onStart(scan);   
+            layout.onStart(scan);
             appendLog(String.format("Scan %s data was splitted with new index %s in: %s", index, getScanIndex(scan), getScanPath(scan)));
         }
     }
@@ -580,10 +589,10 @@ public class DataManager implements AutoCloseable {
     }
 
     public static class DataAddress {
+
         String root;
         String path;
     }
-        
 
     public static DataAddress getAddress(String path) {
         String[] rootDelimitors = new String[]{"|", " /"};
@@ -598,10 +607,10 @@ public class DataManager implements AutoCloseable {
         }
         return null;
     }
-    
-    public static String getFullPath(String root, String path){
+
+    public static String getFullPath(String root, String path) {
         return root + "|" + path;
-    }    
+    }
 
     public DataSlice getData(String path) throws IOException {
         return getData(path, 0);
@@ -721,8 +730,8 @@ public class DataManager implements AutoCloseable {
     public Object getAttribute(String root, String path, String name) {
         Map<String, Object> attrs = getAttributes(root, path);
         return attrs.get(name);
-    } 
-    
+    }
+
     public boolean exists(String path) {
         DataAddress address = getAddress(path);
         if (address != null) {
@@ -731,28 +740,29 @@ public class DataManager implements AutoCloseable {
         return exists(getOutput(), path);
     }
 
-     public boolean exists(String root, String path) {
+    public boolean exists(String root, String path) {
         root = adjustRoot(root);
         try {
             Map<String, Object> info = getProvider().getInfo(root, path);
-            if ((info == null) || (String.valueOf(info.get(Provider.INFO_TYPE)).equals(Provider.INFO_VAL_TYPE_UNDEFINED))){
+            if ((info == null) || (String.valueOf(info.get(Provider.INFO_TYPE)).equals(Provider.INFO_VAL_TYPE_UNDEFINED))) {
                 return false;
             }
             return true;
         } catch (Exception ex) {
             return false;
-        }      
-    }    
+        }
+    }
+
     public void appendLog(String log) throws IOException {
         openOutput();
         if (isOpen()) {
-            getLayout().appendLog(log);            
+            getLayout().appendLog(log);
             flush();  //Logs are always immediatelly flushed
         }
     }
 
     public void createGroup(String path) throws IOException {
-        synchronized(providerData){
+        synchronized (providerData) {
             openOutput();
             getProvider().createGroup(path);
         }
@@ -761,7 +771,7 @@ public class DataManager implements AutoCloseable {
     public void setDataset(String path, Object data) throws IOException {
         setDataset(path, data, false);
     }
-    
+
     public void setDataset(String path, Object data, boolean unsigned) throws IOException {
         setDataset(path, data, unsigned, null);
     }
@@ -805,7 +815,7 @@ public class DataManager implements AutoCloseable {
         }
         createDataset(path, type, unsigned, dimensions);
     }
-    
+
     public void createDataset(String path, Class type, int[] dimensions, Map features) throws IOException {
         boolean unsigned = false;
         //Byte and short default is unsigned
@@ -816,8 +826,8 @@ public class DataManager implements AutoCloseable {
             unsigned = true;
         }
         createDataset(path, type, unsigned, dimensions, features);
-    }    
-    
+    }
+
     public void createDataset(String path, Class type, boolean unsigned, int[] dimensions) throws IOException {
         createDataset(path, type, unsigned, dimensions, null);
     }
@@ -845,6 +855,7 @@ public class DataManager implements AutoCloseable {
     public void createDataset(String path, String[] names, Class[] types, int[] lengths) throws IOException {
         createDataset(path, names, types, lengths, null);
     }
+
     public void createDataset(String path, String[] names, Class[] types, int[] lengths, Map features) throws IOException {
         if ((names == null) || (path == null) || (!path.contains("/"))) {
             throw new IllegalArgumentException();
@@ -1045,19 +1056,19 @@ public class DataManager implements AutoCloseable {
 
     public List<PlotDescriptor> getScanPlots(String root, String path) throws Exception {
         String layout = (String) getAttribute(root, "/", Layout.ATTR_LAYOUT);
-        if ((layout != null) && (!layout.equals(getLayout().getClass().getName()))){
+        if ((layout != null) && (!layout.equals(getLayout().getClass().getName()))) {
             DataManager aux = new DataManager(context, getProvider().getClass().getName(), layout);
-            try{ 
+            try {
                 return aux.doGetScanPlots(root, path);
-            } finally{
+            } finally {
                 aux.close();
             }
         }
         return doGetScanPlots(root, path);
     }
-    
+
     List<PlotDescriptor> doGetScanPlots(String root, String path) throws Exception {
-        
+
         PlotPreferences plotPreferences = getPlotPreferences(root, path);
         List<PlotDescriptor> plots = getLayout().getScanPlots(root, path, this);
         if (plots == null) {
@@ -1082,7 +1093,7 @@ public class DataManager implements AutoCloseable {
                     xdata = Arr.indexesDouble(Array.getLength(plots.get(0).data));
                 } else if (plotPreferences.domainAxis.equals(ViewPreference.DOMAIN_AXIS_TIME)) {
                     String timestamps = getLayout().getTimestampsDataset(path);
-                    if (timestamps!=null){
+                    if (timestamps != null) {
                         xdata = (double[]) Convert.toDouble(getData(root, timestamps).sliceData);
                         Long start = (Long) getAttribute(root, path, Layout.ATTR_START_TIMESTAMP);
                         if (start == null) {
@@ -1194,9 +1205,9 @@ public class DataManager implements AutoCloseable {
     @Override
     public void close() throws Exception {
         closeOutput();
-        synchronized(providerData){
+        synchronized (providerData) {
             providerData.clear();
-        } 
+        }
         context.removeScanListener(scanListener);
     }
 

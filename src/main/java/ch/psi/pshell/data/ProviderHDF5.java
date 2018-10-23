@@ -861,24 +861,18 @@ public class ProviderHDF5 implements Provider {
     }
     
     byte getDeflation(Map features){
-        Object deflation = features.get("deflation");
-        if ((deflation!=null)&& (deflation instanceof Number)){
-            return ((Number)deflation).byteValue();
-        }
         Object compression = features.get("compression");
         if (compression != null){
-            switch (String.valueOf(compression)){
-                case "deflation":
-                case "true":
-                case "on":    
-                case "default":                         
-                case "True":
-                case "1":
-                    return HDF5GenericStorageFeatures.DEFAULT_DEFLATION_LEVEL;
-                case "max":
-                case "deflation_max":
-                    return HDF5GenericStorageFeatures.MAX_DEFLATION_LEVEL;
+            if (compression instanceof Number){
+                return ((Number)compression).byteValue();
             }
+            
+            if ("true".equalsIgnoreCase(String.valueOf(compression)) || "default".equalsIgnoreCase(String.valueOf(compression))){
+                return HDF5GenericStorageFeatures.DEFAULT_DEFLATION_LEVEL;
+            }
+            if ("max".equalsIgnoreCase(String.valueOf(compression))){
+                return HDF5GenericStorageFeatures.MAX_DEFLATION_LEVEL;
+            }            
         }            
         return 0;
     }
@@ -888,7 +882,7 @@ public class ProviderHDF5 implements Provider {
             
             Object layout = features.get("layout");
             Byte deflation = getDeflation(features);
-            Boolean shuffle = "true".equalsIgnoreCase(String.valueOf(features.get("shuffle")).toString());
+            Boolean shuffle = "true".equalsIgnoreCase(String.valueOf(features.get("shuffle")));
             
             if (deflation>0){
                 if (shuffle){
@@ -927,9 +921,9 @@ public class ProviderHDF5 implements Provider {
 
     int[] getChunkSize(Map features, int[] dimensions){
         if (features!=null){
-            if (features.containsKey("chunk_size")){
+            if (features.containsKey("chunk")){
                 try{
-                    List l = (List) features.get("chunk_size");
+                    List l = (List) features.get("chunk");
                     return (int[])Convert.doubleToInt((double[]) Convert.toDouble(Convert.toArray(l)));
                 } catch (Exception ex) {
                 }

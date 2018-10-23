@@ -466,10 +466,7 @@ public class ExecutionParameters {
         Map ret = new HashMap();
         Object compression = getOption("compression");
         if (compression != null) {
-            if (compression instanceof Number) {
-                ret.put("deflation", compression);
-                return ret;
-            } else if ((compression instanceof Boolean) || (compression instanceof String)){
+            if ((compression instanceof Number) || (compression instanceof Boolean) || (compression instanceof String)){
                 ret.put("compression", compression);
                 return ret;
             } else if (isOptionForDevice(compression, device)){
@@ -479,11 +476,11 @@ public class ExecutionParameters {
         }
         Object contiguous = getOption("contiguous");
         if (contiguous != null) {
-            if (contiguous instanceof Boolean){
-                ret.put("contiguous", contiguous);
+            if (Boolean.TRUE.equals(contiguous)){
+                ret.put("layout", "contiguous");
                 return ret;       
             } else if (isOptionForDevice(contiguous, device)){
-                ret.put("contiguous", true);
+                ret.put("layout", "contiguous");
                 return ret;
             }
         }

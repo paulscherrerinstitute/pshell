@@ -969,7 +969,7 @@ function get_attributes(path) {
     return get_context().dataManager.getAttributes(path)
 }
 
-function save_dataset(path, data, type) {
+function save_dataset(path, data, type, features) {
     /*
      Save data into a dataset within the current persistence context.
      
@@ -979,16 +979,18 @@ function save_dataset(path, data, type) {
                               'd' = double, 'c' = char, 's' = String,  'o' = Object 
                    default: 'd' (convert data to array of doubles)
         data (array or list): data to be saved
+        features(dictionary, optional): See create_dataset.
      Returns:
         Dictionary
      
      */
     if (!is_defined(type))
-        type = 'd';
-    if (is_array(data)){
+        type = 'd'
+    if (is_array(data))
         data = to_array(data, type)    
-    }
-    get_context().dataManager.setDataset(path, data)
+    if (!is_defined(features))
+        features = null;
+    get_context().dataManager.setDataset(path, data, features)
 }
 
 function create_group(path) {
@@ -1005,16 +1007,22 @@ function create_group(path) {
 }
 
 
-function create_dataset(path, type, unsigned, dimensions) {
+function create_dataset(path, type, unsigned, dimensions, features) {
     /*
     Create an empty dataset within the current persistence context.
 
     Args:
         path(str): Path to dataset relative to the current persistence context root.
-        type(str): array type 'b' = byte, 'h' = short, 'i' = int, 'l' = long,  'f' = float, 
-        'd' = double, 'c' = char, 's' = String,  'o' = Object 
+        type(str): array type 'b' = byte, 'h' = short, 'i' = int, 'l' = long,  'f' = float,
+                              'd' = double, 'c' = char, 's' = String,  'o' = Object
         unsigned(boolean, optional): create a dataset of unsigned type.
         dimensions(tuple of int, optional): a 0 value means variable length in that dimension.
+        features(dictionary, optional): storage features for the dataset, provider specific.
+            Keys for HDF5: "layout": "compact", "contiguous" or "chunked"
+                           "compression": True, "max" or deflation level from 1 to 9
+                           "shuffle": Byte shuffle before compressing.
+                           "chunk": tuple, setting the chunk size
+            Default: No compression, contiguous for fixed size arrays, chunked for variable size, compact for scalars.
      Returns:
          null
      
@@ -1025,10 +1033,12 @@ function create_dataset(path, type, unsigned, dimensions) {
         dimensions = null;
     if (!is_defined(type))
         type = null;    
-    get_context().dataManager.createDataset(path, ScriptingUtils.getType(type), unsigned, dimensions)
+    if (!is_defined(features))
+        features = null;
+    get_context().dataManager.createDataset(path, ScriptingUtils.getType(type), unsigned, dimensions, features)
 }
 
-function create_table(path, names, types, lengths) {
+function create_table(path, names, types, lengths, features) {
     /*
      Create an empty table (dataset of compound type) within the current persistence context.
 
@@ -1039,6 +1049,7 @@ function create_table(path, names, types, lengths) {
         'd' = double, 'c' = char, 's' = String,  'o' = Object 
         Note:A '[' prefix on type name indicates an array type.
         lengths(list of int): the array length for each columns(0 for scalar types).
+        features(dictionary, optional): See create_dataset.
      Returns:
          null
      
@@ -1047,6 +1058,8 @@ function create_table(path, names, types, lengths) {
         types = null;
     if (!is_defined(lengths))
         lengths = null;
+    if (!is_defined(features))
+        features = null;
     var new_types = null
     if (types != null) {
         new_types = []
@@ -1054,7 +1067,7 @@ function create_table(path, names, types, lengths) {
             new_types.push(ScriptingUtils.getType(types[i]))
         }
     }
-    get_context().dataManager.createDataset(path, names, new_types, lengths)
+    get_context().dataManager.createDataset(path, names, new_types, lengths, features)
 }
 
 function append_dataset(path, data, index, type, shape) {

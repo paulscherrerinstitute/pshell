@@ -64,7 +64,7 @@ public class LayoutDefault extends LayoutBase implements Layout {
         dataManager.createGroup(group);
 
         Map features = dataManager.getStorageFeatures(null);
-        boolean contiguous = (features!=null) && (Boolean.TRUE.equals(features.get("contiguous")));
+        boolean contiguous = dataManager.isStorageFeaturesContiguous(features);
         int samples = contiguous ? scan.getNumberOfRecords() : 0;
             
         int dimension = 1;
@@ -99,7 +99,7 @@ public class LayoutDefault extends LayoutBase implements Layout {
         for (ch.psi.pshell.device.Readable readable : scan.getReadables()) {
             String name = dataManager.getAlias(readable);
             features = dataManager.getStorageFeatures(readable);
-            contiguous = (features!=null) && (Boolean.TRUE.equals(features.get("contiguous")));
+            contiguous = dataManager.isStorageFeaturesContiguous(features);
             samples = contiguous ? scan.getNumberOfRecords() : 0;
             if (readable instanceof ReadableMatrix) {   
                 int[] dims = dataManager.getReadableMatrixDimension((ReadableMatrix) readable);

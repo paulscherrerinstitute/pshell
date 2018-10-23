@@ -273,7 +273,7 @@ public class LayoutSF extends LayoutBase implements Layout {
         dataManager.setDataset(group + ATTR_DATASET_DIMENSIONS, new int[]{scan.getDimensions()});
         
         Map features = dataManager.getStorageFeatures(null);
-        boolean contiguous = (features!=null) && (Boolean.TRUE.equals(features.get("contiguous")));
+        boolean contiguous = dataManager.isStorageFeaturesContiguous(features);
         int samples = contiguous ? scan.getNumberOfRecords() : 0;
         
         for (Writable writable : scan.getWritables()) {
@@ -306,7 +306,7 @@ public class LayoutSF extends LayoutBase implements Layout {
             String name = dataManager.getAlias(readable);
             String groupDev = getDataPath(scan, name);
             features = dataManager.getStorageFeatures(readable); 
-            contiguous = (features!=null) && (Boolean.TRUE.equals(features.get("contiguous")));
+            contiguous = dataManager.isStorageFeaturesContiguous(features);
             samples = contiguous ? scan.getNumberOfRecords() : 0;
             if (readable instanceof ReadableMatrix) {
                 int[] dims = dataManager.getReadableMatrixDimension((ReadableMatrix) readable);
