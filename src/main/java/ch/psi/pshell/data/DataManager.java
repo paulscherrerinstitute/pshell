@@ -901,6 +901,7 @@ public class DataManager implements AutoCloseable {
         if (logger.isLoggable(Level.FINEST)) {
             logger.finest(String.format("Append  \"%s:%d\" = %s", path, index, LogManager.getLogForValue(val)));
         }
+        assertOpen(); //Avoid NullPointerException if don't have rights to data folder
         getProvider().setItem(path, val, type, index);
     }
 
@@ -921,6 +922,7 @@ public class DataManager implements AutoCloseable {
         if (logger.isLoggable(Level.FINEST)) {
             logger.finest(String.format("Append  \"%s:%s\" = %s", path, Convert.arrayToString(index, "."), LogManager.getLogForValue(val)));
         }
+        assertOpen(); //Avoid NullPointerException if don't have rights to data folder
         getProvider().setItem(path, val, type, index, shape);
     }
 
