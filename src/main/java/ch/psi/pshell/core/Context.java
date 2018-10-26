@@ -1036,16 +1036,24 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
                     scriptManager = new ScriptManager(getScriptType(), setup.getLibraryPath(), injections);
                     scriptManager.setSessionFilePath((getConfig().createSessionFiles && !isLocalMode()) ? setup.getSessionsPath() : null);
                     setStdioListener(scriptStdioListener);
-                    Object ret = scriptManager.evalFile(getStartupScript());
+                    String script = getStartupScript();
+                    if (script == null){
+                        throw new RuntimeException("Cannot locate startup script");
+                    }                    
+                    Object ret = scriptManager.evalFile(script);
                     logger.info("Executed startup script");
                     if (!isGenericMode()) {
                         try {
                             scriptManager.evalFile(getSetup().getLocalStartupScript());
                             logger.info("Executed local startup script");
-                            scriptManager.resetLineNumber(); //So first comment will be number 1
-                        } catch (Exception ex) {
-                            ex.printStackTrace();
-                            logger.log(Level.SEVERE, null, ex);
+                            scriptManager.resetLineNumber(); //So first statement will be number 1
+                        }  catch (Exception ex) {
+                            if ((ex instanceof FileNotFoundException) && ex.getMessage().equals(getSetup().getLocalStartupScript())){
+                                logger.warning("Local initialization script is not present");
+                            } else {
+                                ex.printStackTrace();
+                                logger.log(Level.SEVERE, null, ex);
+                            }
                         }
                     }
                     return null;
@@ -2687,11 +2695,12 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
             String jar = setup.getJarFile();
             if (jar != null) {              //If not in IDE
                 File jarFile = new File(jar);
-                File startupScript = new File(getStartupScript());
+                File startupScript = new File(setup.getDefaultStartupScript());
 
                 boolean defaultLibPathConfig = (startupScript != null) && (IO.isSubPath(startupScript.getParent(), setup.getScriptPath()))
-                        && (IO.isSubPath(setup.getScriptPath(), setup.getHomePath()));
-                //Only extracts binary files if using default configuration
+                        //&& (IO.isSubPath(setup.getScriptPath(), setup.getHomePath()))
+                        ;
+                //Only extracts binary files if startup script is inside script path
                 if (defaultLibPathConfig) {
                     //Only extracts the full library contents in the first run
                     if ((new File(setup.getScriptPath())).listFiles().length == 0) {

@@ -32,6 +32,7 @@ public class Setup extends Config {
     public static transient final String PROPERTY_HOME_PATH = "ch.psi.pshell.home";
     public static transient final String PROPERTY_OUTPUT_PATH = "ch.psi.pshell.output";
     public static transient final String PROPERTY_DATA_PATH = "ch.psi.pshell.data";
+    public static transient final String PROPERTY_SCRIPT_PATH = "ch.psi.pshell.script";
     public static transient final String PROPERTY_CONFIG_FILE = "ch.psi.pshell.config.file";
     public static transient final String PROPERTY_DEVICES_FILE = "ch.psi.pshell.devices.file";
     public static transient final String PROPERTY_PLUGINS_FILE = "ch.psi.pshell.plugins.file";
@@ -138,7 +139,12 @@ public class Setup extends Config {
         if (System.getProperty(PROPERTY_DATA_PATH) != null) {
             dataPath = System.getProperty(PROPERTY_DATA_PATH);
         }
+        
+        if (System.getProperty(PROPERTY_SCRIPT_PATH) != null) {
+            scriptPath = System.getProperty(PROPERTY_SCRIPT_PATH);
+        }        
 
+        
         expansionTokens = new HashMap<>();
         expansionTokens.put(TOKEN_HOME, homePath);
         expansionTokens.put(TOKEN_HOMEDATA, outputPath);
@@ -517,11 +523,23 @@ public class Setup extends Config {
     public String[] getLibraryPath() {
         String[] ret = libraryPath.split(";");
         for (int i = 0; i < ret.length; i++) {
-            ret[i] = expandPath(ret[i]);
+            ret[i] = expandPath(ret[i].trim());
         }
         String standard = getStandardLibraryPath();
-        if (!Arr.contains(ret, standard)) {
+        if (!Arr.containsEqual(ret, standard)) {
             ret = Arr.append(ret, standard);
+        }
+        //If default path exists and not in path, included it - so Lib can be shared
+        if (!isRunningInIde()) {        
+            String file = "startup." + getScriptType().toString();
+            if (!Paths.get(standard, file).toFile().exists()){
+                String defaultLib =  Paths.get(getHomePath(),"script", "Lib").toString();
+                if (!Arr.containsEqual(ret, defaultLib)  &&  (new File(defaultLib).exists())){
+                    if (Paths.get(getHomePath(),"script", "Lib", file).toFile().exists()){
+                        ret = Arr.append(ret, defaultLib);
+                    }
+                }
+            }
         }
         return ret;
     }
@@ -532,10 +550,25 @@ public class Setup extends Config {
         }
         return Paths.get(getScriptPath(), "Lib").toString();
     }
+    
+    public String getDefaultStartupScript(){
+        String file = "startup." + getScriptType().toString();
+        return  Paths.get(getStandardLibraryPath(), file).toString();
+    }
 
     public String getStartupScript() {
         String file = "startup." + getScriptType().toString();
-        return Paths.get(getStandardLibraryPath(), file).toString();
+        Path ret = Paths.get(getStandardLibraryPath(), file);
+        if (ret.toFile().exists()){
+            return ret.toString();
+        }   
+        for (String path : getLibraryPath()){
+            ret = Paths.get(path, file);
+             if (ret.toFile().exists()){
+                return ret.toString();
+            }
+        }
+        return null;
     }
 
     public String getLocalStartupScript() {

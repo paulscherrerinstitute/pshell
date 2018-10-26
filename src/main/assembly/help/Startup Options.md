@@ -102,6 +102,10 @@
     <td>Set the data folder (default is {home}/data).<br>The token '~', is replaced by the system home folder.</td>
   </tr>
   <tr>
+    <td>-scpt=[path]</td>
+    <td>Set the script folder (default is {home}/script).<br>The token '~', is replaced by the system home folder.</td>
+  </tr>
+  <tr>
     <td>-setp=[path]</td>
     <td>Override the setup file, which contains all path definitions (default is {config}/setup.properties).</td>
   </tr>

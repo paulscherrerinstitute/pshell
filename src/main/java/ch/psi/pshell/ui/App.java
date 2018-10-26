@@ -138,6 +138,7 @@ public class App extends ObservableBase<AppListener> {
         sb.append("\n\t-home=<path>\tSet the home folder (default is ./home)");
         sb.append("\n\t-outp=<path>\tSet the output folder (default is {home})");
         sb.append("\n\t-data=<path>\tSet the data folder (default is {home}/data)");
+        sb.append("\n\t-scpt=<path>\tSet the script folder (default is {home}/script)");
         sb.append("\n\t-setp=<path>\tOverride the setup file(default is {config}/setup.properties)");
         sb.append("\n\t-conf=<path>\tOverride the config file(default is {config}/config.properties)");
         sb.append("\n\t-pool=<path>\tOverride the device pool configuration file");
@@ -462,6 +463,7 @@ public class App extends ObservableBase<AppListener> {
 
         public String home;
         public String outp;
+        public String scpt;
         public String data;
         public String user;
         public String setp;
@@ -568,6 +570,12 @@ public class App extends ObservableBase<AppListener> {
         } else if (Config.isStringDefined(pshellProperties.data)) {
             System.setProperty(Setup.PROPERTY_DATA_PATH, pshellProperties.data);
         }
+        
+        if (isArgumentDefined("scpt")) {
+            System.setProperty(Setup.PROPERTY_SCRIPT_PATH, getArgumentValue("scpt"));
+        } else if (Config.isStringDefined(pshellProperties.scpt)) {
+            System.setProperty(Setup.PROPERTY_SCRIPT_PATH, pshellProperties.scpt);
+        }        
 
         if (isArgumentDefined("pool")) {
             System.setProperty(Setup.PROPERTY_DEVICES_FILE, getArgumentValue("pool"));
