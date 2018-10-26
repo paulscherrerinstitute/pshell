@@ -967,7 +967,7 @@ public class ScanEditorPanel extends MonitoredPanel implements Processor {
 
             },
             new String [] {
-                "Type", "Name", "Samples", "Interval", "Plot"
+                "Type", "Name", "Samples", "Interval (s)", "Plot"
             }
         ) {
             Class[] types = new Class [] {
