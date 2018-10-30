@@ -122,7 +122,53 @@ public interface Cacheable<T> extends Readable<T>, Timestamped {
             };
         }
     }
+    
+    public interface CacheableBoolean extends Cacheable<Boolean> {
 
+        @Override
+        default public ReadableBoolean getCache() {
+            return new CacheReadableBoolean() {
+                @Override
+                public Boolean read() throws IOException, InterruptedException {
+                    return take();
+                }
+                
+                @Override
+                public String getName() {
+                    return CacheableBoolean.this.getName();
+                }
+
+                @Override
+                public Cacheable getParent() {
+                    return CacheableBoolean.this;
+                }
+            };
+        }
+    }
+
+    public interface CacheableString extends Cacheable<String> {
+
+        @Override
+        default public ReadableString getCache() {
+            return new CacheReadableString() {
+                @Override
+                public String read() throws IOException, InterruptedException {
+                    return take();
+                }
+                
+                @Override
+                public String getName() {
+                    return CacheableString.this.getName();
+                }
+
+                @Override
+                public Cacheable getParent() {
+                    return CacheableString.this;
+                }
+            };
+        }
+    }
+    
     /**
      * Returns a Readable on the cache value;
      */
@@ -167,4 +213,10 @@ public interface Cacheable<T> extends Readable<T>, Timestamped {
 
     public interface CacheReadableMatrix<T> extends CacheReadable<T>, ReadableMatrix<T> {
     }
+    
+    public interface CacheReadableBoolean extends CacheReadable<Boolean>, ReadableBoolean {
+    }
+
+    public interface CacheReadableString extends CacheReadable<String>, ReadableString {
+    }    
 }

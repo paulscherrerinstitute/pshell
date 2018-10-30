@@ -2,11 +2,12 @@ package ch.psi.pshell.modbus;
 
 import ch.psi.pshell.device.RegisterBase;
 import java.io.IOException;
+import ch.psi.pshell.device.Readable.IntegerType;
 
 /**
  *
  */
-public class Register extends RegisterBase<Integer> implements ch.psi.pshell.device.Register.RegisterNumber<Integer> {
+public class Register extends RegisterBase<Integer> implements ch.psi.pshell.device.Register.RegisterNumber<Integer>, IntegerType {
 
     final int index;
 

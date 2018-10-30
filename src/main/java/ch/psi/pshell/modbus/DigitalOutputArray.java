@@ -1,5 +1,6 @@
 package ch.psi.pshell.modbus;
 
+import ch.psi.pshell.device.Readable.BooleanType;
 import ch.psi.pshell.device.Register.RegisterArray;
 import ch.psi.pshell.device.RegisterBase;
 import java.io.IOException;
@@ -7,7 +8,7 @@ import java.io.IOException;
 /**
  * Array register classes wrapping sequence of DOs in a master.
  */
-public class DigitalOutputArray extends RegisterBase<boolean[]> implements RegisterArray<boolean[]> {
+public class DigitalOutputArray extends RegisterBase<boolean[]> implements RegisterArray<boolean[]>, BooleanType {
 
     final int index;
     int size;

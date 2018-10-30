@@ -1,9 +1,11 @@
 package ch.psi.pshell.epics;
 
+import ch.psi.pshell.device.Readable.ShortType;
+
 /**
  * Wraps an EPICS PV as a short register array.
  */
-public class ChannelShortArray extends EpicsRegisterArray<short[]> {
+public class ChannelShortArray extends EpicsRegisterArray<short[]> implements ShortType{
 
     public ChannelShortArray(String name, String channelName) {
         super(name, channelName);

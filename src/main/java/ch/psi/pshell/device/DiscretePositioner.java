@@ -1,5 +1,6 @@
 package ch.psi.pshell.device;
 
+import ch.psi.pshell.device.Register.RegisterString;
 import ch.psi.utils.Arr;
 import ch.psi.utils.Reflection.Hidden;
 
@@ -7,7 +8,7 @@ import ch.psi.utils.Reflection.Hidden;
  * Movable device which position is defined by a string in a predefined set. The position is
  * "Unknown" if the device is not in a predefined position.
  */
-public interface DiscretePositioner extends Register<String>, ReadbackDevice<String>, Movable<String> {
+public interface DiscretePositioner extends RegisterString, ReadbackDevice<String>, Movable<String> {
 
     final static String UNKNOWN_POSITION = "Unknown";
 

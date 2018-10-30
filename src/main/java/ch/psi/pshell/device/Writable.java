@@ -24,6 +24,13 @@ public interface Writable<T> extends Nameable {
         public int getSize();
     }
     
+    public interface WritableBoolean extends Writable<Boolean>{
+        
+    }
+    
+    public interface WritableString extends Writable<String>{
+        
+    }    
     
     public abstract static class WritableNumberDevice extends DeviceBase implements WritableNumber{
          protected WritableNumberDevice(String name){

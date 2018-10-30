@@ -3,11 +3,12 @@ package ch.psi.pshell.modbus;
 import ch.psi.pshell.device.ReadonlyRegister.ReadonlyRegisterNumber;
 import ch.psi.pshell.device.ReadonlyRegisterBase;
 import java.io.IOException;
+import ch.psi.pshell.device.Readable.IntegerType;
 
 /**
  * Scalar register classes wrapping single AI in a master.
  */
-public class AnalogInput extends ReadonlyRegisterBase<Integer> implements ReadonlyRegisterNumber<Integer> {
+public class AnalogInput extends ReadonlyRegisterBase<Integer> implements ReadonlyRegisterNumber<Integer>, IntegerType{
 
     final int index;
 

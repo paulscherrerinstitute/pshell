@@ -1,9 +1,11 @@
 package ch.psi.pshell.epics;
 
+import ch.psi.pshell.device.Readable.IntegerType;
+
 /**
  * Wraps an EPICS PV as an integer register array.
  */
-public class ChannelIntegerArray extends EpicsRegisterArray<int[]> {
+public class ChannelIntegerArray extends EpicsRegisterArray<int[]> implements IntegerType{
 
     public ChannelIntegerArray(String name, String channelName) {
         super(name, channelName);

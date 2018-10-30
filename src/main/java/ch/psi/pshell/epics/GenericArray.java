@@ -108,7 +108,11 @@ public class GenericArray extends RegisterBase implements Register.RegisterArray
                 setType(DataType.valueOf(typeName).getArrayType());
             } catch (Exception ex) {
                 try {
-                    setType(Class.forName(typeName));
+                    Class cls = Epics.getChannelType(typeName);
+                    if (cls==null){
+                        throw new Exception("Invalid array type: " + typeName);
+                    }
+                    setType(cls);
                 } catch (Exception e) {
                     throw new IOException(e.getMessage());
                 }

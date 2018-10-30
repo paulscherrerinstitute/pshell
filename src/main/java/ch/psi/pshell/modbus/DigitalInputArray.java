@@ -1,5 +1,6 @@
 package ch.psi.pshell.modbus;
 
+import ch.psi.pshell.device.Readable.BooleanType;
 import ch.psi.pshell.device.ReadonlyRegister.ReadonlyRegisterArray;
 import ch.psi.pshell.device.ReadonlyRegisterBase;
 import java.io.IOException;
@@ -7,7 +8,7 @@ import java.io.IOException;
 /**
  * Array register classes wrapping sequence of DIs in a master.
  */
-public class DigitalInputArray extends ReadonlyRegisterBase<boolean[]> implements ReadonlyRegisterArray<boolean[]> {
+public class DigitalInputArray extends ReadonlyRegisterBase<boolean[]> implements ReadonlyRegisterArray<boolean[]>, BooleanType {
 
     final int index;
     int size;

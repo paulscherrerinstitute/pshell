@@ -1,5 +1,7 @@
 package ch.psi.pshell.device;
 
+import ch.psi.pshell.device.Readable.BooleanType;
+import ch.psi.pshell.device.Readable.StringType;
 import java.io.IOException;
 import java.lang.reflect.Array;
 
@@ -29,6 +31,12 @@ public interface ReadonlyRegister<T> extends Device, Readable<T>, Cacheable<T> {
     public interface ReadonlyRegisterMatrix<T> extends ReadonlyRegister<T>, Readable.ReadableMatrix<T>, Cacheable.CacheableMatrix<T> {
 
     }
+    
+    public interface ReadonlyRegisterBoolean extends ReadonlyRegister<Boolean>, BooleanType, Cacheable.CacheableBoolean {
+    }
+
+    public interface ReadonlyRegisterString extends ReadonlyRegister<String>, StringType, Cacheable.CacheableString {
+    }    
 
     //TODO: Not implemented in ReadonlyRegisterArray so Jython classes can override getSize in ReadonlyRegisterArray (http://bugs.jython.org/issue2403)
     public interface DefaultReadonlyRegisterArray<T> extends ReadonlyRegisterArray<T> {

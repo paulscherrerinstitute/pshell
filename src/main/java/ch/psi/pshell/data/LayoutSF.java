@@ -377,11 +377,6 @@ public class LayoutSF extends LayoutBase implements Layout {
             String path = getDataPath(scan, name);
             Long timestamp = deviceTimestamps[deviceIndex];
             Object value = values[deviceIndex++];
-            if (!getPreserveTypes()) {
-                if ((value instanceof Boolean) || (value instanceof boolean[])) {
-                    value = Convert.toDouble(value);
-                }
-            }
             dataManager.setItem(path + DATASET_VALUE, value, index);
             if (Averager.isAverager(readable)) {
                 DescStatsDouble v = (DescStatsDouble) value;

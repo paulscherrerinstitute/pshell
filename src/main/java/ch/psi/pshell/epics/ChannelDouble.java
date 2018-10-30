@@ -1,9 +1,11 @@
 package ch.psi.pshell.epics;
 
+import ch.psi.pshell.device.Readable.DoubleType;
+
 /**
  * Wraps an EPICS PV as a double register.
  */
-public class ChannelDouble extends EpicsRegisterNumber<Double> {
+public class ChannelDouble extends EpicsRegisterNumber<Double> implements DoubleType{
 
     public ChannelDouble(String name, String channelName) {
         super(name, channelName);

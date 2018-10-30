@@ -3,11 +3,12 @@ package ch.psi.pshell.modbus;
 import ch.psi.pshell.device.Register.RegisterNumber;
 import ch.psi.pshell.device.RegisterBase;
 import java.io.IOException;
+import ch.psi.pshell.device.Readable.IntegerType;
 
 /**
  * Scalar register classes wrapping single AO in a master.
  */
-public class AnalogOutput extends RegisterBase<Integer> implements RegisterNumber<Integer> {
+public class AnalogOutput extends RegisterBase<Integer> implements RegisterNumber<Integer>, IntegerType {
 
     final int index;
 

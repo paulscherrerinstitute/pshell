@@ -1,9 +1,11 @@
 package ch.psi.pshell.epics;
 
+import ch.psi.pshell.device.Readable.FloatType;
+
 /**
  * Wraps an EPICS PV as a float register array.
  */
-public class ChannelFloatArray extends EpicsRegisterArray<float[]> {
+public class ChannelFloatArray extends EpicsRegisterArray<float[]> implements FloatType{
 
     public ChannelFloatArray(String name, String channelName) {
         super(name, channelName);

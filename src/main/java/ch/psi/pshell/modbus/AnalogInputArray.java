@@ -3,11 +3,12 @@ package ch.psi.pshell.modbus;
 import ch.psi.pshell.device.ReadonlyRegister.ReadonlyRegisterArray;
 import ch.psi.pshell.device.ReadonlyRegisterBase;
 import java.io.IOException;
+import ch.psi.pshell.device.Readable.IntegerType;
 
 /**
  * Array register classes wrapping sequence of AIs in a master.
  */
-public class AnalogInputArray extends ReadonlyRegisterBase<int[]> implements ReadonlyRegisterArray<int[]> {
+public class AnalogInputArray extends ReadonlyRegisterBase<int[]> implements ReadonlyRegisterArray<int[]> , IntegerType{
 
     final int index;
     int size;

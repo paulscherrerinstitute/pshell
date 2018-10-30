@@ -163,12 +163,6 @@ public class LayoutDefault extends LayoutBase implements Layout {
             String name = dataManager.getAlias(readable);
             String path = getPath(scan, name);
             Object value = values[deviceIndex++];
-            if (!getPreserveTypes()) {
-                //TODO: These conversions are not automativally managed by h5 provider. Should be managed there?
-                if ((value instanceof Boolean) || (value instanceof boolean[])) {
-                    value = Convert.toDouble(value);
-                }
-            }
             dataManager.setItem(path, value, index);
             if (Averager.isAverager(readable)) {
                 DescStatsDouble v = (DescStatsDouble) value;

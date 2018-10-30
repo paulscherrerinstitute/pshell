@@ -3,11 +3,12 @@ package ch.psi.pshell.modbus;
 import ch.psi.pshell.device.Register.RegisterArray;
 import ch.psi.pshell.device.RegisterBase;
 import java.io.IOException;
+import ch.psi.pshell.device.Readable.IntegerType;
 
 /**
  * Array register classes wrapping sequence of AOs in a master.
  */
-public class AnalogOutputArray extends RegisterBase<int[]> implements RegisterArray<int[]> {
+public class AnalogOutputArray extends RegisterBase<int[]> implements RegisterArray<int[]> , IntegerType{
 
     final int index;
     int size;

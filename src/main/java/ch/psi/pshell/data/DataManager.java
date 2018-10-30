@@ -30,6 +30,7 @@ import java.lang.reflect.Array;
 import java.util.Arrays;
 import ch.psi.pshell.device.Cacheable;
 import ch.psi.pshell.device.Readable.ReadableMatrix;
+import ch.psi.pshell.device.ReadableType;
 import ch.psi.utils.Reflection.Hidden;
 import java.util.List;
 import java.util.Map;
@@ -260,10 +261,18 @@ public class DataManager implements AutoCloseable {
     }
 
     Class getScanDeviceDatasetType(Object device) throws IOException {
-        Class type = Double.class;
+        //Check if device has interface if enforces type (ReadableType)
+        if (device instanceof ch.psi.pshell.device.Readable.ReadableType){
+            Class type = ((ch.psi.pshell.device.Readable.ReadableType) device).getElementType();
+            if ((type!=null) && (type != Object.class)){
+                return type;
+            }            
+        }
+        //If preserve type option, indentify types by reading cache
         if (getPreserveTypes()) {
+            Class type = Double.class;
             try {
-                //Unfortunately we cannot get generic type on the fly...
+               
                 if (device instanceof Cacheable) {
                     type = Arr.getComponentType(((Cacheable) device).take(Integer.MAX_VALUE));
                 } else if (device instanceof ch.psi.pshell.device.Readable) {
@@ -279,6 +288,7 @@ public class DataManager implements AutoCloseable {
                 Thread.currentThread().interrupt();
             }
         }
+        //Else force double
         return Double.class;
     }
 

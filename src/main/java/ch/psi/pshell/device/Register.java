@@ -13,4 +13,9 @@ public interface Register<T> extends ReadonlyRegister<T>, Writable<T> {
     public interface RegisterArray<T> extends Register<T>, ReadonlyRegisterArray<T>, WritableArray<T> {
     }
 
-}
+    public interface RegisterBoolean extends Register<Boolean>, ReadonlyRegisterBoolean, WritableBoolean {
+    }
+
+    public interface RegisterString extends Register<String>, ReadonlyRegisterString, WritableString {
+    }    
+}    

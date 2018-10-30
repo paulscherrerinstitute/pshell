@@ -101,7 +101,7 @@ public class ScanPanel extends MonitoredPanel {
                             values.add(Convert.arrayToString(shape, " x "));
                         }
 
-                    } else if (value instanceof Number) {
+                    } else if ((value instanceof Number) || (value instanceof Boolean) || (value instanceof String)){
                         values.add(value);
                     } else {
                         values.add(null);

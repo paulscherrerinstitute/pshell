@@ -1,9 +1,11 @@
 package ch.psi.pshell.epics;
 
+import ch.psi.pshell.device.Register.RegisterString;
+
 /**
  * Wraps an EPICS PV as a string register.
  */
-public class ChannelString extends EpicsRegister<String> {
+public class ChannelString extends EpicsRegister<String> implements RegisterString{
 
     public ChannelString(String name, String channelName) {
         super(name, channelName);

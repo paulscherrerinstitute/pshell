@@ -1134,9 +1134,15 @@ public class ProviderHDF5 implements Provider {
         } else if (Number.class.isAssignableFrom(type)) {
             writer.float64().writeArrayBlockWithOffset(path, new double[]{((Number) data).doubleValue()}, 1, index);
         } else if (type == Boolean.class) {
-            BitSet bs = new BitSet(1);
-            bs.set(0, (Boolean) data);
-            writer.bool().writeBitFieldArrayBlockWithOffset(path, new BitSet[]{bs}, 1, index);
+            HDF5DataSetInformation info = writer.object().getDataSetInformation(path);
+            if (info.getTypeInformation().getDataClass() == HDF5DataClass.FLOAT){
+                data = Convert.toDouble(data);
+                writer.float64().writeArrayBlockWithOffset(path, new double[]{(Double) data}, 1, index);
+            } else {
+                BitSet bs = new BitSet(1);
+                bs.set(0, (Boolean) data);
+                writer.bool().writeBitFieldArrayBlockWithOffset(path, new BitSet[]{bs}, 1, index);
+            }
         } else if (type == String.class) {
             writer.string().writeArrayBlock(path, new String[]{(String) data}, index);
         } else if (type == double[].class) {
@@ -1168,11 +1174,17 @@ public class ProviderHDF5 implements Provider {
                 writer.uint8().writeMatrixBlockWithOffset(path, new byte[][]{(byte[]) data}, index, 0);
             }
         } else if (type == boolean[].class) {
-            BitSet bs = new BitSet(Array.getLength(data));
-            for (int i = 0; i < Array.getLength(data); i++) {
-                bs.set(i, ((boolean[]) data)[i]);
-            }
-            writer.bool().writeBitFieldArrayBlockWithOffset(path, new BitSet[]{bs}, index, 0);
+            HDF5DataSetInformation info = writer.object().getDataSetInformation(path);
+            if (info.getTypeInformation().getDataClass() == HDF5DataClass.FLOAT){
+                data = Convert.toDouble(data);
+                writer.float64().writeMatrixBlockWithOffset(path, new double[][]{(double[]) data}, index, 0);
+            } else {
+                BitSet bs = new BitSet(Array.getLength(data));
+                for (int i = 0; i < Array.getLength(data); i++) {
+                    bs.set(i, ((boolean[]) data)[i]);
+                }
+                writer.bool().writeBitFieldArrayBlockWithOffset(path, new BitSet[]{bs}, index, 0);                
+            }            
         } else if (type == double[][].class) {
             MDDoubleArray array = new MDDoubleArray((double[])Convert.flatten(data), getMatrixShape(data));
             writer.float64().writeMDArrayBlockWithOffset(path, array, getMatrixOffset(index));  

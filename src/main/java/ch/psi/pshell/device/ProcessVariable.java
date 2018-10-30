@@ -1,10 +1,12 @@
 package ch.psi.pshell.device;
 
+import ch.psi.pshell.device.Readable.DoubleType;
+
 /**
  * A Register with metadata: units, range, resolution, scale and offset.
  * Metadata may be static or persisted in configuration.
  */
-public interface ProcessVariable extends Register<Double>, Resolved {
+public interface ProcessVariable extends Register<Double>, Resolved, DoubleType {
 
     @Override
     public ProcessVariableConfig getConfig();

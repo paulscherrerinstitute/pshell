@@ -1,9 +1,11 @@
 package ch.psi.pshell.epics;
 
+import ch.psi.pshell.device.Readable.ByteType;
+
 /**
  * Wraps an EPICS PV as a byte register.
  */
-public class ChannelByte extends EpicsRegisterNumber<Byte> {
+public class ChannelByte extends EpicsRegisterNumber<Byte> implements ByteType{
 
     public ChannelByte(String name, String channelName) {
         super(name, channelName);
