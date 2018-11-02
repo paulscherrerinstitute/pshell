@@ -1,11 +1,11 @@
 package ch.psi.pshell.epics;
 
-import ch.psi.pshell.device.Readable.IntegerType;
+import ch.psi.pshell.device.Readable.UnsignedByteType;
 
 /**
  * Wraps an EPICS PV as an integer register matrix.
  */
-public class ChannelByteMatrix extends GenericMatrix implements IntegerType{
+public class ChannelByteMatrix extends GenericMatrix implements UnsignedByteType{
 
     public ChannelByteMatrix(String name, String channelName, int width, int height) {
         this(name, channelName, width, height, true);

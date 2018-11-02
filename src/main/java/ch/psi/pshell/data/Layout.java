@@ -84,7 +84,7 @@ public interface Layout{
         return getDataManager().getPreserveTypes();
     }
 
-    default Class getDeviceType(Object device) throws IOException {
+    default Class getDeviceDatasetType(Object device) throws IOException {
         return getDataManager().getScanDeviceDatasetType(device);
     }
 

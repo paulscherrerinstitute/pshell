@@ -13,7 +13,6 @@ import ch.psi.pshell.device.Writable.WritableArray;
 import ch.psi.pshell.scan.Scan;
 import ch.psi.pshell.scan.ScanRecord;
 import ch.psi.utils.Arr;
-import ch.psi.utils.Convert;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -94,19 +93,13 @@ public class LayoutDefault extends LayoutBase implements Layout {
             }
         }
         dataManager.createDataset(getPath(scan, META_GROUP + TIMESTAMPS_DATASET), Long.class, new int[]{samples});
-
+ReadableArray a;
         index = 0;
         for (ch.psi.pshell.device.Readable readable : scan.getReadables()) {
             String name = dataManager.getAlias(readable);
-            features = dataManager.getStorageFeatures(readable);
-            contiguous = dataManager.isStorageFeaturesContiguous(features);
-            samples = contiguous ? scan.getNumberOfRecords() : 0;
+            dataManager.createDataset(getPath(scan, name), scan, readable);
+            
             if (readable instanceof ReadableMatrix) {   
-                int[] dims = dataManager.getReadableMatrixDimension((ReadableMatrix) readable);
-                if (contiguous){
-                    dims[dataManager.getDepthDimension()] = scan.getNumberOfRecords();
-                }
-                dataManager.createDataset(getPath(scan, name), getDeviceType(readable), dims, features);
                 if (readable instanceof ReadableCalibratedMatrix) {
                     MatrixCalibration cal = ((ReadableCalibratedMatrix) readable).getCalibration();
                     if (cal != null) {
@@ -116,7 +109,6 @@ public class LayoutDefault extends LayoutBase implements Layout {
                     }
                 }
             } else if (readable instanceof ReadableArray) {
-                dataManager.createDataset(getPath(scan, name), getDeviceType(readable), new int[]{samples, ((ReadableArray) readable).getSize()},features);
                 if (readable instanceof ReadableCalibratedArray) {
                     ArrayCalibration cal = ((ReadableCalibratedArray) readable).getCalibration();
                     if (cal != null) {
@@ -126,7 +118,6 @@ public class LayoutDefault extends LayoutBase implements Layout {
                     }
                 }
             } else {
-                dataManager.createDataset(getPath(scan, name), getDeviceType(readable), new int[]{samples});
                 if (Averager.isAverager(readable)) {
                     dataManager.createDataset(getPath(scan, META_GROUP + name + DEVICE_MIN_DATASET), Double.class, new int[]{samples});
                     dataManager.createDataset(getPath(scan, META_GROUP + name + DEVICE_MAX_DATASET), Double.class, new int[]{samples});

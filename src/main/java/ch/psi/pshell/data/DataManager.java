@@ -29,8 +29,8 @@ import ch.psi.utils.Range;
 import java.lang.reflect.Array;
 import java.util.Arrays;
 import ch.psi.pshell.device.Cacheable;
+import ch.psi.pshell.device.Readable;
 import ch.psi.pshell.device.Readable.ReadableMatrix;
-import ch.psi.pshell.device.ReadableType;
 import ch.psi.utils.Reflection.Hidden;
 import java.util.List;
 import java.util.Map;
@@ -262,17 +262,17 @@ public class DataManager implements AutoCloseable {
 
     Class getScanDeviceDatasetType(Object device) throws IOException {
         //Check if device has interface if enforces type (ReadableType)
-        if (device instanceof ch.psi.pshell.device.Readable.ReadableType){
-            Class type = ((ch.psi.pshell.device.Readable.ReadableType) device).getElementType();
-            if ((type!=null) && (type != Object.class)){
+        if (device instanceof Readable) {
+            Class type = ((Readable) device).getElementType();
+            if ((type != null) && (type != Object.class)) {
                 return type;
-            }            
+            }
         }
         //If preserve type option, indentify types by reading cache
         if (getPreserveTypes()) {
             Class type = Double.class;
             try {
-               
+
                 if (device instanceof Cacheable) {
                     type = Arr.getComponentType(((Cacheable) device).take(Integer.MAX_VALUE));
                 } else if (device instanceof ch.psi.pshell.device.Readable) {
@@ -814,39 +814,46 @@ public class DataManager implements AutoCloseable {
         createDataset(path, type, null);
     }
 
+    public void createDataset(String path, Readable readable, int[] dimensions, Map features) throws IOException {
+        createDataset(path, getScanDeviceDatasetType(readable), readable.isElementUnsigned(), dimensions, features);
+    }
+
+    public void createDataset(String path, Scan scan, Readable readable) throws IOException {
+        Map features = getStorageFeatures(readable);
+        boolean contiguous = isStorageFeaturesContiguous(features);
+        int samples = contiguous ? scan.getNumberOfRecords() : 0;
+        if (readable instanceof Readable.ReadableMatrix) {
+            int[] dims = getReadableMatrixDimension((Readable.ReadableMatrix) readable);
+            if (contiguous) {
+                dims[getDepthDimension()] = scan.getNumberOfRecords();
+            }
+            createDataset(path, readable, dims, features);
+        } else if (readable instanceof Readable.ReadableArray) {
+            createDataset(path, readable, new int[]{samples, ((Readable.ReadableArray) readable).getSize()}, features);
+        } else {
+            createDataset(path, readable, new int[]{samples}, features);
+        }
+    }
+
     public void createDataset(String path, Class type, int[] dimensions) throws IOException {
-        boolean unsigned = false;
-        //Byte and short default is unsigned
-        if (type.isPrimitive()) {
-            type = Convert.getWrapperClass(type);
-        }
-        if ((type == Byte.class) || (type == Short.class)) {
-            unsigned = true;
-        }
-        createDataset(path, type, unsigned, dimensions);
+        createDataset(path, type, null, dimensions);
     }
 
     public void createDataset(String path, Class type, int[] dimensions, Map features) throws IOException {
-        boolean unsigned = false;
-        //Byte and short default is unsigned
-        if (type.isPrimitive()) {
-            type = Convert.getWrapperClass(type);
-        }
-        if ((type == Byte.class) || (type == Short.class)) {
-            unsigned = true;
-        }
-        createDataset(path, type, unsigned, dimensions, features);
+        createDataset(path, type, null, dimensions, features);
     }
 
-    public void createDataset(String path, Class type, boolean unsigned, int[] dimensions) throws IOException {
+    public void createDataset(String path, Class type, Boolean unsigned, int[] dimensions) throws IOException {
         createDataset(path, type, unsigned, dimensions, null);
     }
 
-    public void createDataset(String path, Class type, boolean unsigned, int[] dimensions, Map features) throws IOException {
+    public void createDataset(String path, Class type, Boolean unsigned, int[] dimensions, Map features) throws IOException {
         if ((type == null) || (path == null) || (!path.contains("/"))) {
             throw new IllegalArgumentException();
         }
-        openOutput();
+        if (unsigned == null) {
+            unsigned = ((type == Byte.class) || (type == Short.class)); //Default unsigned for byte and shortt
+        }
         if (type.isPrimitive()) {
             type = Convert.getWrapperClass(type);
         }
@@ -854,6 +861,7 @@ public class DataManager implements AutoCloseable {
             dimensions = new int[]{0};
         }
 
+        openOutput();
         String group = path.substring(0, path.lastIndexOf("/") + 1);
         createGroup(group);
 

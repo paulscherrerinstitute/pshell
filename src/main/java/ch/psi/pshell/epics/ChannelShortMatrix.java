@@ -1,11 +1,11 @@
 package ch.psi.pshell.epics;
 
-import ch.psi.pshell.device.Readable.ShortType;
+import ch.psi.pshell.device.Readable.UnsignedShortType;
 
 /**
  * Wraps an EPICS PV as an short register matrix.
  */
-public class ChannelShortMatrix extends GenericMatrix implements ShortType{
+public class ChannelShortMatrix extends GenericMatrix implements UnsignedShortType{
 
     public ChannelShortMatrix(String name, String channelName, int width, int height) {
         this(name, channelName, width, height, true);

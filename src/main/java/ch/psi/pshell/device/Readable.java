@@ -1,6 +1,7 @@
 package ch.psi.pshell.device;
 
 import ch.psi.pshell.core.Nameable;
+import ch.psi.utils.Reflection.Hidden;
 import ch.psi.utils.Threading;
 import java.io.IOException;
 import java.util.concurrent.CompletableFuture;
@@ -16,6 +17,20 @@ public interface Readable<T> extends Nameable {
         return (CompletableFuture<T>) Threading.getFuture(() -> read());
     }
 
+    default Class getElementType() {
+        if (this instanceof ReadableType) {
+            return ((ReadableType) this)._getElementType();
+        }
+        return Object.class;
+    }
+
+    default Boolean isElementUnsigned() {
+        if (this instanceof ReadableType) {
+            return ((ReadableType) this)._isElementUnsigned();
+        }
+        return null;
+    }
+
     public interface ReadableNumber<T extends Number> extends Readable<T> {
     }
 
@@ -23,6 +38,36 @@ public interface Readable<T> extends Nameable {
     }
 
     public interface ReadableString extends Readable<String> {
+    }
+
+    public interface ReadableByte extends ReadableNumber<Byte>, ByteType {
+    }
+    
+    public interface ReadableUnsignedByte extends ReadableNumber<Byte>, UnsignedByteType {
+    }    
+    
+    public interface ReadableShort extends ReadableNumber<Short>, ShortType {
+    }
+    
+    public interface ReadableUnsignedShort extends ReadableNumber<Short>, UnsignedShortType {
+    }       
+    
+    public interface ReadableInteger extends ReadableNumber<Integer>, IntegerType {
+    }
+    
+    public interface ReadableIntegerShort extends ReadableNumber<Integer>, UnsignedIntegerType {
+    }   
+
+    public interface ReadableLong extends ReadableNumber<Long>, LongType {
+    }
+    
+    public interface ReadableUnsignedLong extends ReadableNumber<Long>, UnsignedLongType {
+    }       
+    
+    public interface ReadableFloat extends ReadableNumber<Float>, FloatType {
+    }
+    
+    public interface ReadableDouble extends ReadableNumber<Double>, DoubleType {
     }
 
     public interface ReadableArray<T> extends Readable<T> {
@@ -82,23 +127,26 @@ public interface Readable<T> extends Nameable {
         }
     }
 
-
-
     /**
      * Tags for anticipating types in scans.
      */
-    
     public interface ReadableType {
-
-        default Class getElementType() {
+        @Hidden
+        default Class _getElementType() {
             return Object.class;
+        }
+        
+        @Hidden
+        default Boolean _isElementUnsigned() {
+            return false;
         }
 
     }
+
     public interface BooleanType extends ReadableType {
 
         @Override
-        default Class getElementType() {
+        default Class _getElementType() {
             return Boolean.class;
         }
     }
@@ -106,7 +154,7 @@ public interface Readable<T> extends Nameable {
     public interface StringType extends ReadableType {
 
         @Override
-        default Class getElementType() {
+        default Class _getElementType() {
             return String.class;
         }
     }
@@ -114,55 +162,87 @@ public interface Readable<T> extends Nameable {
     public interface NumberType extends ReadableType {
 
         @Override
-        default Class getElementType() {
+        default Class _getElementType() {
             return Number.class;
         }
     }
 
-    public interface IntegerType extends ReadableType {
+    public interface ByteType extends NumberType {
 
         @Override
-        default Class getElementType() {
-            return Integer.class;
-        }
-    }
-
-    public interface ByteType extends ReadableType {
-
-        @Override
-        default Class getElementType() {
+        default Class _getElementType() {
             return Byte.class;
         }
     }
 
-    public interface ShortType extends ReadableType {
+    public interface ShortType extends NumberType {
 
         @Override
-        default Class getElementType() {
+        default Class _getElementType() {
             return Short.class;
         }
     }
 
-    public interface LongType extends ReadableType {
+    public interface IntegerType extends NumberType {
 
         @Override
-        default Class getElementType() {
+        default Class _getElementType() {
+            return Integer.class;
+        }
+    }
+
+    public interface LongType extends NumberType {
+
+        @Override
+        default Class _getElementType() {
             return Long.class;
         }
     }
 
-    public interface FloatType extends ReadableType {
+    public interface UnsignedByteType extends ByteType {
 
         @Override
-        default Class getElementType() {
+        default Boolean _isElementUnsigned() {
+            return true;
+        }
+    }
+
+    public interface UnsignedShortType extends ShortType {
+
+        @Override
+        default Boolean _isElementUnsigned() {
+            return true;
+        }
+    }
+
+    public interface UnsignedIntegerType extends IntegerType {
+
+        @Override
+        default Boolean _isElementUnsigned() {
+            return true;
+        }
+    }
+
+    public interface UnsignedLongType extends LongType {
+
+        @Override
+        default Boolean _isElementUnsigned() {
+            return true;
+        }
+    }
+
+    public interface FloatType extends NumberType {
+
+        @Override
+        default Class _getElementType() {
             return Float.class;
         }
     }
 
-    public interface DoubleType extends ReadableType {
+    public interface DoubleType extends NumberType {
 
         @Override
-        default Class getElementType() {
+        default Class _getElementType() {
             return Double.class;
         }
     }

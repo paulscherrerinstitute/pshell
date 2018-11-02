@@ -27,6 +27,31 @@ public abstract class RegisterBase<T> extends DeviceBase implements Register<T> 
         }
     }
 
+    @Override
+    public Class getElementType() {
+        if (elementType!=null) {
+            return elementType;
+        }
+        return Register.super.getElementType();
+    }
+
+    Class elementType;
+    public void setElementType(Class type) {
+        elementType = type;
+    }    
+    
+    @Override
+    public Boolean isElementUnsigned() {
+        if (elementUnsigned!=null) {
+            return elementUnsigned;
+        }
+        return Register.super.isElementUnsigned();
+    }    
+    
+    Boolean elementUnsigned;
+    public void setElementUnsigned(Boolean value) {
+        elementUnsigned = value;
+    }    
     /*
      * Volatile configuration
      */

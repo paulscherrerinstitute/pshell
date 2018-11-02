@@ -35,7 +35,6 @@ import ch.psi.pshell.ui.App;
 import ch.psi.utils.Arr;
 import ch.psi.utils.Chrono;
 import ch.psi.utils.Config;
-import ch.psi.utils.Convert;
 import ch.psi.utils.Sys;
 import ch.psi.utils.Str;
 import java.io.File;
@@ -305,15 +304,8 @@ public class LayoutSF extends LayoutBase implements Layout {
         for (ch.psi.pshell.device.Readable readable : scan.getReadables()) {
             String name = dataManager.getAlias(readable);
             String groupDev = getDataPath(scan, name);
-            features = dataManager.getStorageFeatures(readable); 
-            contiguous = dataManager.isStorageFeaturesContiguous(features);
-            samples = contiguous ? scan.getNumberOfRecords() : 0;
-            if (readable instanceof ReadableMatrix) {
-                int[] dims = dataManager.getReadableMatrixDimension((ReadableMatrix) readable);
-                if (contiguous){
-                    dims[dataManager.getDepthDimension()] = scan.getNumberOfRecords();
-                }                
-                dataManager.createDataset(groupDev + DATASET_VALUE, getDeviceType(readable), dims, features);
+            dataManager.createDataset(groupDev + DATASET_VALUE, scan, readable);
+            if (readable instanceof ReadableMatrix) {                             
                 if (readable instanceof ReadableCalibratedMatrix) {
                     MatrixCalibration cal = ((ReadableCalibratedMatrix) readable).getCalibration();
                     if (cal != null) {
@@ -323,7 +315,6 @@ public class LayoutSF extends LayoutBase implements Layout {
                     }
                 }
             } else if (readable instanceof ReadableArray) {
-                dataManager.createDataset(groupDev + DATASET_VALUE, getDeviceType(readable), new int[]{samples, ((ReadableArray) readable).getSize()}, features);
                 if (readable instanceof ReadableCalibratedArray) {
                     ArrayCalibration cal = ((ReadableCalibratedArray) readable).getCalibration();
                     if (cal != null) {
@@ -333,7 +324,6 @@ public class LayoutSF extends LayoutBase implements Layout {
                     }
                 }
             } else {
-                dataManager.createDataset(groupDev + DATASET_VALUE, getDeviceType(readable), new int[]{samples});
                 if (Averager.isAverager(readable)) {
                     dataManager.createDataset(groupDev + DATASET_MIN, Double.class, new int[]{samples});
                     dataManager.createDataset(groupDev + DATASET_MAX, Double.class, new int[]{samples});

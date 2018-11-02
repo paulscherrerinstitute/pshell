@@ -1,11 +1,11 @@
 package ch.psi.pshell.epics;
 
-import ch.psi.pshell.device.Readable.ByteType;
+import ch.psi.pshell.device.Readable.UnsignedByteType;
 
 /**
  * Wraps an EPICS PV as a byte register array.
  */
-public class ChannelByteArray extends EpicsRegisterArray<byte[]> implements ByteType{
+public class ChannelByteArray extends EpicsRegisterArray<byte[]> implements UnsignedByteType{
 
     public ChannelByteArray(String name, String channelName) {
         super(name, channelName);
