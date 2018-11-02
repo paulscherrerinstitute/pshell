@@ -243,7 +243,7 @@ public class View extends MainFrame {
             @Override
             public void onUserChange(User user, User former) {
                 closeSearchPanels();
-                setConsoleLocation(preferences.consoleLocation);//User may have no rights
+                setConsoleLocation(consoleLocation);//User may have no rights
                 setStatusTabVisible(devicesPanel, !context.getRights().hideDevices);
                 setStatusTabVisible(imagingPanel, !context.getRights().hideDevices);
                 setStatusTabVisible(scriptsPanel, !context.getRights().hideScripts);
@@ -1415,11 +1415,13 @@ public class View extends MainFrame {
         return PanelLocation.Detached;
     }
 
+    PanelLocation consoleLocation = Preferences.DEFAULT_CONSOLE_LOCATION;
     void setConsoleLocation(PanelLocation location) {
         if (App.isPlotOnly()) {
             return;
         }
-
+        consoleLocation = location;
+        
         if (context.getRights().hideConsole) {
             location = PanelLocation.Hidden;
         }
@@ -1563,11 +1565,12 @@ public class View extends MainFrame {
         }
         System.setProperty(PlotBase.PROPERTY_PLOT_MARKER_SIZE, String.valueOf(preferences.markerSize));
 
-        setScanPlotDetached(preferences.plotsDetached);
-        setConsoleLocation(preferences.consoleLocation);
-
-        for (Component item : menuConsoleLocation.getMenuComponents()) {
-            ((JRadioButtonMenuItem) item).setSelected(((JRadioButtonMenuItem) item).getText().equals(preferences.consoleLocation.toString()));
+        if (!App.isLocalMode()) {
+            setScanPlotDetached(preferences.plotsDetached);
+            setConsoleLocation(preferences.consoleLocation);
+            for (Component item : menuConsoleLocation.getMenuComponents()) {
+                ((JRadioButtonMenuItem) item).setSelected(((JRadioButtonMenuItem) item).getText().equals(preferences.consoleLocation.toString()));
+            }            
         }
 
         statusBar.setShowDataFileName(!preferences.hideFileName);

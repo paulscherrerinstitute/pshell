@@ -45,6 +45,8 @@ public class Preferences {
     static final long serialVersionUID = 1;
 
     static final String PREFERENCES_FILENAME = "Preferences.dat";
+    
+    static final PanelLocation DEFAULT_CONSOLE_LOCATION = PanelLocation.Document;
 
     public enum PanelLocation {
 
@@ -115,7 +117,7 @@ public class Preferences {
         preferences.fontOutput = fonts[2];
         preferences.fontShellCommand = fonts[3];
         preferences.defaultPanels = getDefaultPanels();
-        preferences.consoleLocation = PanelLocation.Document;
+        preferences.consoleLocation = DEFAULT_CONSOLE_LOCATION;
         //preferences.propagateVariableEvaluation = true;
         preferences.defaultPlotColormap = Colormap.Temperature;
         preferences.defaultRendererColormap = Colormap.Grayscale;
