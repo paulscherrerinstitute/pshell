@@ -84,8 +84,8 @@ public interface Layout{
         return getDataManager().getPreserveTypes();
     }
 
-    default Class getDeviceDatasetType(Object device) throws IOException {
-        return getDataManager().getScanDeviceDatasetType(device);
+    default Class getDatasetType(ch.psi.pshell.device.Readable device) throws IOException {
+        return getDataManager().getScanDatasetType(device);
     }
 
     default int getIndex(Scan scan, ScanRecord record) throws IOException {

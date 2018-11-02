@@ -1,6 +1,8 @@
 package ch.psi.pshell.device;
 
 import ch.psi.pshell.core.Nameable;
+import ch.psi.utils.Arr;
+import ch.psi.utils.Convert;
 import ch.psi.utils.Reflection.Hidden;
 import ch.psi.utils.Threading;
 import java.io.IOException;
@@ -30,6 +32,21 @@ public interface Readable<T> extends Nameable {
         }
         return null;
     }
+    
+    @Hidden
+    default Class resolveElementType() throws IOException, InterruptedException {
+        Class type = null;
+        if (this instanceof Cacheable) {
+            type = Arr.getComponentType(((Cacheable) this).take(Integer.MAX_VALUE));
+        } else {
+            type = Arr.getComponentType(read());
+        }
+        if ((type!=null) && (type.isPrimitive())) {
+            type = Convert.getWrapperClass(type);
+        }
+        return type;
+    }
+    
 
     public interface ReadableNumber<T extends Number> extends Readable<T> {
     }

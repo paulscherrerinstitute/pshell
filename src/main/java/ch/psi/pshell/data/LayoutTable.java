@@ -71,7 +71,7 @@ public class LayoutTable extends LayoutBase implements Layout {
             fieldNames[index++] = getDataManager().getAlias(writable);
         }
         for (ch.psi.pshell.device.Readable readable : scan.getReadables()) {
-            Class type = getDeviceDatasetType(readable);
+            Class type = getDatasetType(readable);
             if (readable instanceof ReadableMatrix) {
                 fieldTypes[index] = Array.newInstance(Convert.getPrimitiveClass(type), new int[]{0, 0}).getClass();
                 fieldLength[index] = ((ReadableMatrix) readable).getHeight();

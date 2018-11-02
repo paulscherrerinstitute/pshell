@@ -28,7 +28,6 @@ import ch.psi.pshell.scripting.ViewPreference.PlotPreferences;
 import ch.psi.utils.Range;
 import java.lang.reflect.Array;
 import java.util.Arrays;
-import ch.psi.pshell.device.Cacheable;
 import ch.psi.pshell.device.Readable;
 import ch.psi.pshell.device.Readable.ReadableMatrix;
 import ch.psi.utils.Reflection.Hidden;
@@ -260,33 +259,21 @@ public class DataManager implements AutoCloseable {
         return dimensions;
     }
 
-    Class getScanDeviceDatasetType(Object device) throws IOException {
+    Class getScanDatasetType(Readable device) throws IOException {
         //Check if device has interface if enforces type (ReadableType)
-        if (device instanceof Readable) {
-            Class type = ((Readable) device).getElementType();
-            if ((type != null) && (type != Object.class)) {
-                return type;
+        Class type = ((Readable) device).getElementType();
+        if ((type == null) || (type == Object.class)) {
+            //If preserve type option, indentify types by reading cache
+            if (getPreserveTypes()) {
+                try {
+                    type = device.resolveElementType();
+                } catch (InterruptedException ex) {
+                    Thread.currentThread().interrupt();
+                }
             }
         }
-        //If preserve type option, indentify types by reading cache
-        if (getPreserveTypes()) {
-            Class type = Double.class;
-            try {
-
-                if (device instanceof Cacheable) {
-                    type = Arr.getComponentType(((Cacheable) device).take(Integer.MAX_VALUE));
-                } else if (device instanceof ch.psi.pshell.device.Readable) {
-                    type = Arr.getComponentType(((ch.psi.pshell.device.Readable) device).read());
-                }
-                if (type.isPrimitive()) {
-                    type = Convert.getWrapperClass(type);
-                }
-                if (Convert.isWrapperClass(type) || (type == String.class)) {
-                    return type;
-                }
-            } catch (InterruptedException ex) {
-                Thread.currentThread().interrupt();
-            }
+        if (Number.class.isAssignableFrom(type) || (type == String.class) || (type == Boolean.class)) {
+            return type;
         }
         //Else force double
         return Double.class;
@@ -815,7 +802,7 @@ public class DataManager implements AutoCloseable {
     }
 
     public void createDataset(String path, Readable readable, int[] dimensions, Map features) throws IOException {
-        createDataset(path, getScanDeviceDatasetType(readable), readable.isElementUnsigned(), dimensions, features);
+        createDataset(path, getScanDatasetType(readable), readable.isElementUnsigned(), dimensions, features);
     }
 
     public void createDataset(String path, Scan scan, Readable readable) throws IOException {
