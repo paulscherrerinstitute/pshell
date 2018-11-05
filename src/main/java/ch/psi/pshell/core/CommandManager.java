@@ -1,5 +1,6 @@
 package ch.psi.pshell.core;
 
+import ch.psi.pshell.scripting.InterpreterResult;
 import ch.psi.utils.Chrono;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -190,9 +191,20 @@ public class CommandManager implements AutoCloseable {
             } else {
                 if (cmd.isAborted()) {
                     status = "aborted";
-                } else if ((cmd != null) && (cmd.result instanceof Exception)) {
+                } else if ((cmd.result != null) && (cmd.result instanceof Exception)) {
                     status = "failed";
                     ret.put("exception", ((Exception) cmd.result).toString());
+                } else if ((cmd.result != null) &&  (cmd.result instanceof InterpreterResult)){
+                    InterpreterResult res = (InterpreterResult)cmd.result;
+                    if (res.complete == false){
+                        status = "aborted";
+                    } else if (res.exception != null){
+                        status = "failed";
+                        ret.put("exception", res.exception.toString());                        
+                    } else {
+                        status = "completed";
+                        ret.put("return", res.result);                        
+                    }
                 } else {
                     status = "completed";
                     ret.put("return", cmd.result);
