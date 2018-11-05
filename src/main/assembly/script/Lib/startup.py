@@ -1609,7 +1609,7 @@ def parallelize(*functions):
 def run(script_name, args = None, locals = None):
     """Run script: can be absolute path, relative, or short name to be search in the path.
     Args:
-        args(Dict ot List): Sets Sys.argv (if list) or gobal variables(if dict) to the script.
+        args(Dict ot List): Sets sys.argv (if list) or gobal variables(if dict) to the script.
         locals(Dict): If not none sets the locals()for the runing script.
                       If locals is used then script definitions will not go to global namespace.
 
@@ -1621,15 +1621,13 @@ def run(script_name, args = None, locals = None):
         get_context().startScriptExecution(args)
         try:
             set_return(None)
-            if args is None:
-                pass
-            elif isinstance(args,tuple):
-                sys.argv =  list(args)
-            elif isinstance(args,list):
-                sys.argv = args
-            else:
-                for arg in args.keys():
-                    globals()[arg] = args[arg]
+            if args is not None:
+                if isinstance(args,list) or isinstance(args,tuple):
+                    sys.argv =  list(args)
+                    globals()["args"] = sys.argv
+                else:
+                    for arg in args.keys():
+                        globals()[arg] = args[arg]
             if (locals is None):
                 execfile(script, globals())
             else:
