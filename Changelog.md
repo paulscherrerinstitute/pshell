@@ -51,6 +51,8 @@
   
 ### Changed
 
+* Scans save by default original date types in HDF5 (behavior was converting to double by default).
+
 * StripChart type 'Device' can be set with InlineDevice configuration string.
 
 * Builtin 'run' function returns value set by 'set_return' (if called by the script).
