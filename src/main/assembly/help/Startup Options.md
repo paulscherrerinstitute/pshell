@@ -6,12 +6,8 @@
     <th align="left">Description</th>
   </tr>
   <tr>
-    <td>-?</td>
-    <td>Print the help message.</td>
-  </tr>
-  <tr>
     <td>-h</td>
-    <td>Start the GUI help window.</td>
+    <td>Print the help message.</td>
   </tr>
   <tr>
     <td>-c</td>
@@ -164,6 +160,10 @@
   <tr>
     <td>-dtpn=[path]</td>
     <td>Show data panel window only (can be used together with -f).</td>
+  </tr>
+  <tr>
+    <td>-help=[path]</td>
+    <td>Start the GUI help window.</td>
   </tr>
   <tr>
     <td>-full=[path]</td>

@@ -114,8 +114,7 @@ public class App extends ObservableBase<AppListener> {
     static String getHelpMessage() {
         StringBuilder sb = new StringBuilder();
         sb.append("Arguments:");
-        sb.append("\n\t-?\tPrint this help message");
-        sb.append("\n\t-h\tStart the GUI help window");
+        sb.append("\n\t-h\tPrint this help message");
         sb.append("\n\t-c\tStart command line interface");
         sb.append("\n\t-x\tStart GUI with plots only");
         sb.append("\n\t-v\tStart in server mode");
@@ -154,6 +153,7 @@ public class App extends ObservableBase<AppListener> {
         sb.append("\n\t-strp\tShow strip chart window (can be used together with -f)");
         sb.append("\n\t-strh=<path>\tStrip chart default configuration folder.");
         sb.append("\n\t-dtpn\tShow data panel window only (can be used together with -f)");
+        sb.append("\n\t-help\tStart the GUI help window");
         sb.append("\n\t-full\tStart in full screen mode");
         sb.append("\n\t-mlaf\tUse Metal look and feel (cross platform)");
         sb.append("\n\t-slaf\tUse System look and feel (or Metal if no System LAF is installed)");
@@ -272,7 +272,7 @@ public class App extends ObservableBase<AppListener> {
     }
 
     static public boolean isHelpOnly() {
-        return (hasArgument("h") && !isHeadless());
+        return (hasArgument("help") && !isHeadless());
     }
 
     static public boolean isAutoClose() {
@@ -498,7 +498,7 @@ public class App extends ObservableBase<AppListener> {
         }
         System.out.println("Version " + getApplicationBuildInfo());
 
-        if (hasArgument("?")) {
+        if (hasArgument("h")) {
             System.out.println(getHelpMessage());
             return;
         }
