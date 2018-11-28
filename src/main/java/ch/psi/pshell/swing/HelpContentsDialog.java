@@ -215,6 +215,9 @@ public class HelpContentsDialog extends StandardDialog {
     }
 
     DefaultMutableTreeNode addNode(DefaultMutableTreeNode parent, String content) {
+        if ((content==null) || (content.trim().isEmpty())){
+            return null;
+        }
         DefaultMutableTreeNode node = null;
         for (int i = 0; i < parent.getChildCount(); i++) {
             TreeNode child = parent.getChildAt(i);
