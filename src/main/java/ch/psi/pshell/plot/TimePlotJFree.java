@@ -113,19 +113,15 @@ public class TimePlotJFree extends TimePlotBase {
         chartPanel = new ChartPanel(chart) {
 
             @Override
-            public void restoreAutoDomainBounds() {
-                super.restoreAutoDomainBounds();
+            public void restoreAutoRangeBounds() {
+                super.restoreAutoRangeBounds();
                 if (rangeY1 != null) {
-                    SwingUtilities.invokeLater(() -> {
-                        ValueAxis axis = chart.getXYPlot().getRangeAxis();
-                        axis.setRange(rangeY1);
-                    });
+                    ValueAxis axis = chart.getXYPlot().getRangeAxis();
+                    axis.setRange(rangeY1);
                 }
                 if (rangeY2 != null) {
-                    SwingUtilities.invokeLater(() -> {
-                        ValueAxis axis = chart.getXYPlot().getRangeAxis(1);
-                        axis.setRange(rangeY2, true, true);
-                    });
+                    ValueAxis axis = chart.getXYPlot().getRangeAxis(1);
+                    axis.setRange(rangeY2, true, true);
                 }
             }
         };

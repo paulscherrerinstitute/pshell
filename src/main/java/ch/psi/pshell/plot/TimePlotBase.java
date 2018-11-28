@@ -316,18 +316,18 @@ public abstract class TimePlotBase extends PlotBase<TimePlotSeries> implements T
 
     @Override
     public void setLegendVisible(boolean visible) {
-        labelsVisible = visible;
+        legendVisible = visible;
         doSetLegendVisible(visible);
         if (isShowing()) {
             repaint();
         }
     }
 
-    boolean labelsVisible = true;
+    boolean legendVisible = true;
 
     @Override
     public boolean isLegendVisible() {
-        return labelsVisible;
+        return legendVisible;
     }
 
     abstract protected void doSetLegendVisible(boolean visible);

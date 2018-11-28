@@ -741,14 +741,12 @@ public class LinePlotJFree extends LinePlotBase {
             //JFreeChart is then performin an auto range which is unexpected.
             //http://www.jfree.org/phpBB2/viewtopic.php?t=23763
             @Override
-            public void restoreAutoDomainBounds() {
-                super.restoreAutoDomainBounds();
+            public void restoreAutoRangeBounds() {
+                super.restoreAutoRangeBounds();
                 for (AxisId axisId : ranges.keySet()) {
                     final ValueAxis axis = getValueAxis(axisId);
                     final Range range = ranges.get(axisId);
-                    invokeLater(() -> {
-                        axis.setRange(range);
-                    });
+                    axis.setRange(range);
                 }
             }
         };
