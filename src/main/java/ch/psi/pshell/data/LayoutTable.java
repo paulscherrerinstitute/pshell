@@ -138,68 +138,51 @@ public class LayoutTable extends LayoutBase implements Layout {
                         sensors = fields - positioners;
                     }
                 }
-
+                int[] size = null;
                 if (dimensions == 2) {
-                    ArrayList<Double> xarr = new ArrayList<>();
-                    ArrayList<Double> yarr = new ArrayList<>();
+                    size = new int[]{0, 0};
                     for (int i = 0; i < records; i++) {
                         if (!sliceData[0][0].equals(sliceData[i][0])) {
                             break;
                         }
-                        yarr.add((Double) sliceData[i][1]);
+                        size[1]++;
                     }
-                    for (int j = 0; j < records; j += yarr.size()) {
-                        xarr.add((Double) sliceData[j][0]);
-                    }
-                    double[] xdata = (double[]) Convert.toPrimitiveArray(xarr.toArray(new Double[0]));
-                    double[] ydata = (double[]) Convert.toPrimitiveArray(yarr.toArray(new Double[0]));
-
-                    for (int k = 0; k < sensors; k++) {
-                        String name = names[k + positioners];
-                        if (sliceData[0][k + positioners].getClass().isArray()) {
-                            int size = Array.getLength(sliceData[0][k + positioners]);
-                            double[][][] array = new double[size][ydata.length][xdata.length];
-                            //TODO: FIXME, plot 2s scan of waveform in the same way as LayoutDefault
-                            for (int i = 0; i < xdata.length; i++) {
-                                for (int j = 0; j < ydata.length; j++) {
-                                    for (int l = 0; l < size; l++) {
-                                        array[l][j][i] = ((double[]) sliceData[i * ydata.length + j][k + positioners])[l];
-                                    }
-                                }
-                            }
-                            ret.add(new PlotDescriptor(name, root, path + "/" + name, array, xdata, ydata));
-                        } else {
-                            double[][] array = new double[xdata.length][ydata.length];
-                            for (int i = 0; i < xdata.length; i++) {
-                                for (int j = 0; j < ydata.length; j++) {
-                                    array[i][j] = (Double) sliceData[i * ydata.length + j][k + positioners];
-                                }
-                            }
-                            ret.add(new PlotDescriptor(name, root, path + "/" + name, array, xdata, ydata));
-                        }
-                    }
-                } else {
-                    double[] xdata = null;
-                    if (positioners > 0) {
-                        xdata = new double[records];
-                        for (int i = 0; i < records; i++) {
-                            xdata[i] = (Double) sliceData[i][0];
-                        }
-                    }
-                    Object[][] data = new Object[sensors][records];
-                    for (int i = 0; i < records; i++) {
-                        for (int j = 0; j < sensors; j++) {
-                            data[j][i] = (sliceData[i][j + positioners]);
-                        }
-                    }
-                    for (int j = 0; j < sensors; j++) {
-                        String name = names[j + positioners];
-                        ret.add(new PlotDescriptor(name, root, path + "/" + name, data[j], xdata));
+                    for (int j = 0; j < records; j += size[1]) {
+                        size[0]++;
                     }
                 }
+                int[] steps = (size == null) || (size[0] == 0) || (size[1] == 0) ? null : new int[]{size[0] - 1, size[1] - 1};
+
+                double[] xdata = null;
+                double[] ydata = null;
+
+                if (positioners > 0) {
+                    xdata = new double[records];
+                    for (int i = 0; i < records; i++) {
+                        xdata[i] = (Double) sliceData[i][0];
+                    }
+                    if (dimensions > 1) {
+                        ydata = new double[records];
+                        for (int i = 0; i < records; i++) {
+                            ydata[i] = (Double) sliceData[i][1];
+                        }
+                    }
+                }
+                Object[][] data = new Object[sensors][records];
+                for (int i = 0; i < records; i++) {
+                    for (int j = 0; j < sensors; j++) {
+                        data[j][i] = (sliceData[i][j + positioners]);
+                    }
+                }
+                for (int j = 0; j < sensors; j++) {
+                    String name = names[j + positioners];
+                    ret.add(new PlotDescriptor(name, root, path + "/" + name, data[j], xdata, ydata));
+                }
+
                 String label = ((positioners > 0) && (names.length > 0)) ? names[0] : null;
                 for (PlotDescriptor plot : ret) {
                     plot.labelX = label;
+                    plot.steps = steps;
                 }
                 return ret;
             }
