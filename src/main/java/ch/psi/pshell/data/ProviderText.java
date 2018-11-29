@@ -56,10 +56,47 @@ public class ProviderText implements Provider {
     public static final String ATTR_FILE = "attrs";
     public static final String ATTR_CLASS_MARKER = " # ";
     public static final String ATTR_VALUE_MARKER = " = ";
+    
+    static String ITEM_SEPARATOR;
+    static String ARRAY_SEPARATOR;
+    static String LINE_SEPARATOR;
+    
+    public static void setDefaultItemSeparator(String str) {
+        ITEM_SEPARATOR = str;
+    }
 
-    String mItemSeparator = "; ";
-    String mArraySeparator = " ";
-    String mLineSeparator = "\n";
+    public static String getDefaultItemSeparator() {
+        if (ITEM_SEPARATOR==null){
+            ITEM_SEPARATOR = "; ";
+        }
+        return ITEM_SEPARATOR;
+    }
+
+    public static void setDefaultArraySeparator(String str) {
+        ARRAY_SEPARATOR = str;
+    }
+
+    public static String getDefaultArraySeparator() {
+        if (ARRAY_SEPARATOR==null){
+            ARRAY_SEPARATOR = " ";
+        }        
+        return ARRAY_SEPARATOR;
+    }
+
+    public static void setDefaultLineSeparator(String str) {
+        LINE_SEPARATOR = str;
+    }
+
+    public static String getDefaultLineSeparator() {
+        if (LINE_SEPARATOR==null){
+            LINE_SEPARATOR = "\n";
+        }         
+        return LINE_SEPARATOR;
+    }    
+
+    String itemSeparator = getDefaultItemSeparator();
+    String arraySeparator = getDefaultArraySeparator();
+    String lineSeparator = getDefaultLineSeparator();
 
     boolean embeddedAtributes = true;
 
@@ -82,27 +119,27 @@ public class ProviderText implements Provider {
     }
 
     public void setItemSeparator(String str) {
-        mItemSeparator = str;
+        itemSeparator = str;
     }
 
     public String getItemSeparator() {
-        return mItemSeparator;
+        return itemSeparator;
     }
 
     public void setArraySeparator(String str) {
-        mArraySeparator = str;
+        arraySeparator = str;
     }
 
     public String getArraySeparator() {
-        return mArraySeparator;
+        return arraySeparator;
     }
 
     public void setLineSeparator(String str) {
-        mLineSeparator = str;
+        lineSeparator = str;
     }
 
     public String getLineSeparator() {
-        return mLineSeparator;
+        return lineSeparator;
     }
 
     @Override
@@ -131,8 +168,8 @@ public class ProviderText implements Provider {
 
     public Path getFilePath(String root, String path) {
         //Filenames don't support ':'
-        path = path.replace(":", "_");  
-        
+        path = path.replace(":", "_");
+
         Path ret = Paths.get(root, path);
         if (!ret.toFile().isDirectory()) {
             String extension = IO.getExtension(path);
@@ -272,7 +309,7 @@ public class ProviderText implements Provider {
         HashMap<String, Object> ret = new HashMap<>();
         Path filePath = getFilePath(root, path);
         File file = filePath.toFile();
-        if (!file.exists()){
+        if (!file.exists()) {
             ret.put(INFO_TYPE, INFO_VAL_TYPE_UNDEFINED);
         } else if (filePath.toFile().isFile()) {
             ret.put(INFO_TYPE, INFO_VAL_TYPE_DATASET);
@@ -714,7 +751,7 @@ public class ProviderText implements Provider {
                 of = new OutputFile(out);
                 openFiles.put(path, of);
             }
-          }
+        }
         synchronized (of) {
             out.print(COMMENT_MARKER);
             out.print(String.join(getItemSeparator(), names));
@@ -789,5 +826,5 @@ public class ProviderText implements Provider {
             }
             out.print(getLineSeparator());
         }
-    }    
+    }
 }

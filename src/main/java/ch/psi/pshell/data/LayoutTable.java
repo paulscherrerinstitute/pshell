@@ -22,10 +22,6 @@ public class LayoutTable extends LayoutBase implements Layout {
 
     @Override
     public void initialize() {
-        if (getDataManager().getProvider() instanceof ProviderText) {
-            ((ProviderText) getDataManager().getProvider()).setItemSeparator("\t");
-            ((ProviderText) getDataManager().getProvider()).setArraySeparator(" ");
-        }
     }
 
     @Override
