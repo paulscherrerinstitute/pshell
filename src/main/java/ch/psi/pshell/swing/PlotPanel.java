@@ -963,10 +963,14 @@ public class PlotPanel extends MonitoredPanel {
                         end[0] = shape[1] - 1;
                         steps[0] = shape[1] - 1;
                     } else {
-                        //TODO:Do not support multipass scans(overlapping samples) Should create a 3d plot
+                        //TODO:Should create a 3d plot to support multipass scans(overlapping samples)?
+                        int length = x.length;
+                        if (descriptor.passes>1){
+                            length/=descriptor.passes;
+                        }
                         start[0] = x[0];
-                        end[0] = x[x.length - 1];
-                        steps[0] = x.length - 1;
+                        end[0] = x[length - 1];
+                        steps[0] = length - 1;
                     }
                     if ((y == null) || (y.length == 0)) {
                         start[1] = 0;

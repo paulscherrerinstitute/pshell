@@ -260,15 +260,11 @@ public class LayoutDefault extends LayoutBase implements Layout {
 
                     if ((steps != null) && (steps instanceof int[])) {
                         descriptor.steps = (int[]) steps;
-                       /* 
-                        //TODO: support multiple passes
-                         Object passes = dm.getAttribute(root, path, ATTR_SCAN_PASSES);
-                        if ((passes != null) && (passes instanceof Number)) {
-                            descriptor.steps =  ArrayUtils.insert(0, descriptor.steps, ((Number)passes).intValue());
-                        }  
-                        */
                     }
-                   
+                    Object passes = dm.getAttribute(root, path, ATTR_SCAN_PASSES);
+                    if ((passes != null) && (passes instanceof Number)) {
+                        descriptor.passes = ((Number)passes).intValue();
+                    }                     
                     try {
                         //Getting stdev if available and error not yet set by DeviceManager(if error vector is too big for an attribute)
                         if (descriptor.error == null) {

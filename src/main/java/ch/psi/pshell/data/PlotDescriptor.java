@@ -102,6 +102,7 @@ public class PlotDescriptor {
     public Object data;
     public int rank;
     public int[] steps; //Set for multidimentional data linearized in 1d array
+    public int passes;
 
     public double[] x;
     public double[] y;
