@@ -28,7 +28,7 @@ public class ExecutionParameters {
 
     final String[] executionOptions = new String[]{"defaults", "group", "open", "reset", "name", "type", "path", "tag",
         "layout", "provider", "save", "persist", "flush", "preserve", "keep", "accumulate", "depth_dim", "compression",
-        "shuffle", "contiguous"};
+        "shuffle", "contiguous", "then"};
 
     final String[] viewOptions = new String[]{"plot_disabled", "table_disabled", "enabled_plots", "plot_layout",
         "plot_types", "print_scan", "auto_range", "manual_range", "domain_axis", "status"};
@@ -350,6 +350,11 @@ public class ExecutionParameters {
                 : commandOptions;
         return (ret == null) ? new HashMap() : ret;
     }
+    
+    void clearOption(String option){
+        scriptOptions.remove(option);
+        commandOptions.remove(option) ;      
+    }
 
     public Object getOption(String option) {
         if (getCommandOptions().containsKey(option)) {
@@ -434,6 +439,11 @@ public class ExecutionParameters {
         Object option = getOption("preserve");
         return (option != null) ? (Boolean) option : Context.getInstance().getConfig().dataScanPreserveTypes;
     }
+    
+    public String getThen() {
+        Object option = getOption("then");
+        return (option != null) ? String.valueOf(option) : null;
+    }    
 
     public Boolean getKeep() {
         Object option = getOption("keep");
@@ -610,6 +620,7 @@ public class ExecutionParameters {
         currentScans.clear();
         dataLayout = null;
         dataProvider = null;
+        clearOption("then");
     }
 
     boolean isInitialized() {
@@ -653,7 +664,7 @@ public class ExecutionParameters {
 
     @Hidden
     public void onExecutionEnded() {
-        // Must be called before finish, as calls appendLog, and must do before layourt is reset.  
+        // Must be called before finish, as calls appendLog, and must do before layourt is reset.
         Context.getInstance().getDataManager().closeOutput();
         finish();
     }

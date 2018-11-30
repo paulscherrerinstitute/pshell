@@ -6,6 +6,7 @@ import ch.psi.utils.Str;
  *
  */
 public class CommandInfo {
+
     public final CommandSource source;
     public final String script;
     public final String command;
@@ -20,6 +21,25 @@ public class CommandInfo {
     static long commandId = 1;
 
     CommandInfo(CommandSource source, String script, String command, Object args, boolean background) {
+        //run command sets script name and arguments so standard name 
+        if ((script == null) && (command != null)) {
+            String aux = command.trim();
+            if (aux.startsWith("run(")) {
+                aux = aux.substring(4);
+                if (aux.contains(")")) {
+                    aux = aux.substring(0, aux.indexOf(")"));
+                    if (aux.contains(",")) {
+                        script = aux.substring(0, aux.indexOf(",")).trim();
+                        args = aux.substring(aux.indexOf(",")+1).trim();
+
+                    } else {
+                        script = aux.trim();
+                    }
+                    script = Str.removeQuotes(script);
+                }
+            }
+        }
+
         this.source = source;
         this.script = script;
         this.command = command;
@@ -36,18 +56,18 @@ public class CommandInfo {
     public boolean isRunning() {
         return end == 0;
     }
-    
+
     public boolean isAborted() {
         return aborted;
     }
-    
+
     public Object getResult() {
         return result;
     }
-    
+
     public boolean isError() {
-        return (result != null ) && (result instanceof Throwable);
-    }    
+        return (result != null) && (result instanceof Throwable);
+    }
 
     public void abort() throws InterruptedException {
         aborted = true;
@@ -77,5 +97,5 @@ public class CommandInfo {
     public String toString() {
         return String.format("%s - %s - %s - %s", background ? String.valueOf(id) : "FG", source.toString(), command, Str.toString(args, 10));
     }
-    
+
 }

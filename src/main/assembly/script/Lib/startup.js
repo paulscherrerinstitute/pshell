@@ -1190,33 +1190,34 @@ function set_exec_pars(args){
        Configures the script execution parameters, overriding the system configuration.
     
     Args: 
-      args(dictionary). Keys:
-        name(str, optional): value of the {name} tag. Default is the running script name .
-        type(str, optional): value of the {type} tag. Default is empty.
+      args(optional arguments):
+        name(str): value of the {name} tag. Default is the running script name.
+        type(str): value of the {type} tag. Default is empty.
                              This field can be used to store data in  sub-folders of standard location.
-        path(str, optional):  If defined provides the full path name for data output root (overriding config))
+        path(str):  If defined provides the full path name for data output root (overriding config))
                              The tag {data} can be used to enter a path relative to the standard data folder.
-        layout(str, optional): Overrides default data layout.
-        provider(str, optional): Overrides default data provider.
-        depth_dim(int, optional): dimension of the depth for 2d-matrixes in 3d datasets.
-        save(bool, optional): Overrides the configuration option to auto save scan data.
-        flush(bool, optional): Overrides the configuration option to flush file on each record.
-        keep(bool, optional): Overrides the configuration option to release scan records. 
+        layout(str): Overrides default data layout.
+        provider(str): Overrides default data provider.
+        depth_dim(int): dimension of 2d-matrixes in 3d datasets.
+        save(bool): Overrides the configuration option to auto save scan data.
+        flush(bool): Overrides the configuration option to flush file on each record.
+        keep(bool): Overrides the configuration option to release scan records.
                                     If false disable accumulation of scan records to scan result.
-        preserve(bool, optional): Overrides the configuration option to preserve device types. 
+        preserve(bool): Overrides the configuration option to preserve device types.
                                   If false all values are converted to double.
-        compression(obj, optional): True for enabling default compression, int for specifying deflation level.
+        compression(obj): True for enabling default compression, int for specifying deflation level.                                    
                                     Device or list of devices for specifying devices to be compressed.
-        shuffle(obj, optional): True for enabling shuffling before compression. 
+        shuffle(obj): True for enabling shuffling before compression. 
                                 Device or list of devices for specifying devices to be shuffled.
-        contiguous(obj, optional): True for setting contiguous datasets for all devices.
+        contiguous(obj): True for setting contiguous datasets for all devices.
                                    Device or list of devices for specifying device datasets to be contiguous.
-        open(bool, optional): If true opens data output root (instead of only doing in the first data access call)
+        open(bool): If true opens data output root (instead of only doing in the first data access call)
                               If false closes output root, if open.
-        reset(bool, optional): If true reset the scan counter - the {count} tag and set the timestamp to now.
-        group(str, optional): Overrides default layout group name for scans
-        tag(str, optional): Overrides default tag for scan names (affecting group or dataset name, according to layout)
-        defaults(bool, optional): If true restore the original execution parameters.
+        reset(bool): If true reset the scan counter - the {count} tag and set the timestamp to now.
+        group(str): Overrides default layout group name for scans
+        tag(str): Overrides default tag for scan names (affecting group or dataset name, according to layout)
+        then(str): Sets statement to be executed on the completion of current.
+        defaults(bool): If true restore the original execution parameters.
 
         Graphical preferences can also be set. Keys are equal to lowercase of Preference enum:
         "plot_disabled", "plot_layout", "table_disabled", "enabled_plots", "plot_types", "print_scan", "auto_range", 

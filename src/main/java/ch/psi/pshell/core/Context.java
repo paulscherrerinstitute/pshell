@@ -831,6 +831,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
         eval,
         run,
         debug,
+        then,
         abort,
         updateAll,
         stopAll,
@@ -1241,7 +1242,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
                 triggerShellResult(source, result.result);
                 return result.result;
             } finally {
-                endExecution();
+                endExecution(info);
             }
         } catch (Throwable t) {
             triggerShellResult(source, t);
@@ -1505,12 +1506,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
             pars.add(key + "=" + argsDict.get(key));
         }
         onCommand(Command.run, pars.toArray(), source);
-
-        if (args == null) {
-            triggerShellCommand(source, "Run: " + scriptName);
-        } else {
-            triggerShellCommand(source, "Run: " + scriptName + "(" + Str.toString(args, 20) + ")");
-        }
+        triggerShellCommand(source, "Run: " + scriptName + ((args==null) ? "" : "(" + Str.toString(args, 20) + ")"));
 
         try {
             CommandInfo info = new CommandInfo(source, fileName, null, args, false);
@@ -1539,7 +1535,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
                 result = t;
                 throw t;
             } finally {
-                endExecution();
+                endExecution(info);
                 triggerExecutedFile(fileName, result);
             }
         } catch (Throwable t) {
@@ -1572,11 +1568,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
         Object result = null;
 
         onCommand(Command.debug, new Object[]{scriptName}, source);
-        if (args == null) {
-            triggerShellCommand(source, "Debug: " + scriptName);
-        } else {
-            triggerShellCommand(source, "Debug: " + scriptName + "(" + Str.toString(args, 20) + ")");
-        }
+        triggerShellCommand(source, "Debug: " + scriptName + ((args==null) ? "" : "(" + Str.toString(args, 20) + ")"));
 
         try {
             CommandInfo info = new CommandInfo(source, scriptName, null, args, false);
@@ -1621,7 +1613,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
                 result = ex;
                 throw ex;
             } finally {
-                endExecution();
+                endExecution(info);
                 triggerExecutedFile(fileName, result);
             }
         } catch (Throwable t) {
@@ -1765,12 +1757,47 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
         getExecutionPars().onExecutionStarted();
     }
 
+    Object evalNextStage(CommandInfo currentInfo, final String command) throws ScriptException, IOException, ContextStateException, InterruptedException {
+         onCommand(Command.then, new Object[]{command}, currentInfo.source);
+         triggerShellCommand(currentInfo.source, "Then: " + command);
+         CommandInfo info = new CommandInfo(currentInfo.source, null, command, null, false);
+         commandManager.initCommandInfo(info);
+         aborted = false;   
+         getExecutionPars().onExecutionStarted();       
+            try {
+                InterpreterResult result = (InterpreterResult) runInInterpreterThread((Callable<InterpreterResult>) () -> scriptManager.eval(command));
+                if (result == null) {
+                    return null;
+                }
+                if (result.exception != null) {
+                    throw result.exception;
+                }
+                triggerShellResult(info.source, result.result);
+                return result.result;
+            } finally {
+                endExecution(info);
+            }        
+    }
+    
     @Hidden
-    public void endExecution() throws ContextStateException {
-        if ((state == State.Busy) || (state == State.Paused)) {
-            setState(State.Ready);                  //If state has changed during execution, keep it
-        }
+    public void endExecution(CommandInfo info) throws ContextStateException {
+        String nextStage = getExecutionPars().getThen();
         getExecutionPars().onExecutionEnded();
+        //TODO: should add a future stage for  completing exceptionally?
+        if ((!info.isError()) && (!info.isAborted())  && (nextStage!=null) && (!nextStage.trim().isEmpty())){
+            new Thread(() -> {
+                try {
+                    evalNextStage(info, nextStage);
+                } catch (Exception ex) {
+                    Logger.getLogger(Context.class.getName()).log(Level.SEVERE, null, ex); 
+               }
+            }, "Update all notification thread").start();            
+            
+        } else {
+            if ((state == State.Busy) || (state == State.Paused)) {
+                setState(State.Ready);                  //If state has changed during execution, keep it
+            }
+        }
     }
 
     void updateAll(final CommandSource source) {

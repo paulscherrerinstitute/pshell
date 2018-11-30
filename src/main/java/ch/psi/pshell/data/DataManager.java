@@ -514,9 +514,14 @@ public class DataManager implements AutoCloseable {
         return path;
     }
 
+    public static class DataOutputClosed extends IllegalStateException{
+        DataOutputClosed(){
+            super("Data output not instantiated");
+        }
+    }
     public void assertOpen() {
         if (!isOpen()) {
-            throw new IllegalStateException("Data output not instantiated");
+            throw new DataOutputClosed();
         }
     }
 

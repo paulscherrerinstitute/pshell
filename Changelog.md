@@ -4,6 +4,9 @@
 
 ### Added
 
+* Included 'then' execution parameter: sets statement to be executed on the 
+  completion of current keeping application state Busy.
+
 * Option for setting HDF5 compression, shuffling nd layout, on data and scan builtin functions.
 
 * Logarithmic colormap for renderer and matrix plot.
@@ -80,6 +83,8 @@
 
 
 ### Fixed
+
+* Errors plotting data from zigzag scans.
 
 * Bug compiling plugins in current folder.
 
