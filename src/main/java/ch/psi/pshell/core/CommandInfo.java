@@ -66,7 +66,7 @@ public class CommandInfo {
     }
 
     public boolean isError() {
-        return (result != null) && (result instanceof Throwable);
+        return (result != null) && (result instanceof Throwable) ;
     }
 
     public void abort() throws InterruptedException {

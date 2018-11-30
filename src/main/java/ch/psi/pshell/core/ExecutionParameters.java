@@ -440,9 +440,40 @@ public class ExecutionParameters {
         return (option != null) ? (Boolean) option : Context.getInstance().getConfig().dataScanPreserveTypes;
     }
     
-    public String getThen() {
+    public class ExecutionStage{
+        final String command;
+        final boolean onSuccess;
+        final boolean onException;
+        ExecutionStage(String command, boolean onSuccess, boolean onException){
+            this.command = command;
+            this.onSuccess = onSuccess;
+            this.onException = onException;
+        }
+    }
+        
+    public ExecutionStage getThen() {
         Object option = getOption("then");
-        return (option != null) ? String.valueOf(option) : null;
+        String then = (option == null) ? null : String.valueOf(option);
+        if ((then==null) || (then.trim().isEmpty())){
+            return null;
+        }
+        
+        //Command prefixes:
+        //  !       Execute always
+        //  ?       Execute only if completed with exception 
+        //  default Execute only if completed succeffully
+        
+        boolean onSuccess = true;
+        boolean onException = false;
+        if (then.startsWith("!")){
+            onException = true;
+            then = then.substring(1);
+        } else if (then.startsWith("?")){
+            onException = true;
+            onSuccess = false;
+            then = then.substring(1);
+        }    
+        return new ExecutionStage(then, onSuccess, onException);
     }    
 
     public Boolean getKeep() {
@@ -564,16 +595,14 @@ public class ExecutionParameters {
         return Context.getInstance().aborted;
     }
 
-    //TODO: check multiple parallel calls
     public CommandSource getSource() {
-        CommandInfo ret = Context.getInstance().getCommandManager().getCurrentCommand();
-        return (ret == null) ? null : ret.source;
+        CommandInfo cmd = getCommand();
+        return (cmd == null) ? null : cmd.source;
     }
 
-    //TODO: check multiple parallel calls
     public Object getArgs() {
-        CommandInfo ret = Context.getInstance().getCommandManager().getCurrentCommand();
-        return (ret == null) ? null : ret.args;
+        CommandInfo cmd = getCommand();
+        return (cmd == null) ? null : cmd.args;
     }
 
     public List<CommandInfo> getCommands() {

@@ -35,6 +35,7 @@ import ch.psi.utils.Str;
 import ch.psi.utils.Sys;
 import ch.psi.utils.Threading;
 import ch.psi.pshell.core.Configuration.NotificationLevel;
+import ch.psi.pshell.core.ExecutionParameters.ExecutionStage;
 import ch.psi.pshell.core.VersioningManager.Revision;
 import ch.psi.pshell.data.DataServer;
 import ch.psi.pshell.data.PlotDescriptor;
@@ -1038,9 +1039,9 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
                     scriptManager.setSessionFilePath((getConfig().createSessionFiles && !isLocalMode()) ? setup.getSessionsPath() : null);
                     setStdioListener(scriptStdioListener);
                     String script = getStartupScript();
-                    if (script == null){
+                    if (script == null) {
                         throw new RuntimeException("Cannot locate startup script");
-                    }                    
+                    }
                     Object ret = scriptManager.evalFile(script);
                     logger.info("Executed startup script");
                     if (!isGenericMode()) {
@@ -1048,8 +1049,8 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
                             scriptManager.evalFile(getSetup().getLocalStartupScript());
                             logger.info("Executed local startup script");
                             scriptManager.resetLineNumber(); //So first statement will be number 1
-                        }  catch (Exception ex) {
-                            if ((ex instanceof FileNotFoundException) && ex.getMessage().equals(getSetup().getLocalStartupScript())){
+                        } catch (Exception ex) {
+                            if ((ex instanceof FileNotFoundException) && ex.getMessage().equals(getSetup().getLocalStartupScript())) {
                                 logger.warning("Local initialization script is not present");
                             } else {
                                 ex.printStackTrace();
@@ -1362,6 +1363,8 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
 
     @Hidden
     public void disposeExecutionContext() {
+        String then = getThen(getExecutionPars().getCommand());
+        CommandSource source = getExecutionPars().getSource();
         try {
             getExecutionPars().onExecutionEnded();
         } catch (Exception ex) {
@@ -1370,6 +1373,17 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
         synchronized (executionPars) {
             executionPars.remove(Thread.currentThread());
         }
+        if (then != null) {
+            onCommand(Command.then, new Object[]{then}, source);
+            new Thread(() -> {
+                try {
+                    evalLineBackground(source, then);
+                } catch (Exception ex) {
+                    Logger.getLogger(Context.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }, "Background command continuation task").start();
+            return;
+        }        
     }
 
     @Hidden
@@ -1506,7 +1520,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
             pars.add(key + "=" + argsDict.get(key));
         }
         onCommand(Command.run, pars.toArray(), source);
-        triggerShellCommand(source, "Run: " + scriptName + ((args==null) ? "" : "(" + Str.toString(args, 20) + ")"));
+        triggerShellCommand(source, "Run: " + scriptName + ((args == null) ? "" : "(" + Str.toString(args, 20) + ")"));
 
         try {
             CommandInfo info = new CommandInfo(source, fileName, null, args, false);
@@ -1568,7 +1582,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
         Object result = null;
 
         onCommand(Command.debug, new Object[]{scriptName}, source);
-        triggerShellCommand(source, "Debug: " + scriptName + ((args==null) ? "" : "(" + Str.toString(args, 20) + ")"));
+        triggerShellCommand(source, "Debug: " + scriptName + ((args == null) ? "" : "(" + Str.toString(args, 20) + ")"));
 
         try {
             CommandInfo info = new CommandInfo(source, scriptName, null, args, false);
@@ -1758,48 +1772,59 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
     }
 
     Object evalNextStage(CommandInfo currentInfo, final String command) throws ScriptException, IOException, ContextStateException, InterruptedException {
-         onCommand(Command.then, new Object[]{command}, currentInfo.source);
-         triggerShellCommand(currentInfo.source, "Then: " + command);
-         CommandInfo info = new CommandInfo(currentInfo.source, null, command, null, false);
-         commandManager.initCommandInfo(info);
-         aborted = false;   
-         getExecutionPars().onExecutionStarted();       
-            try {
-                InterpreterResult result = (InterpreterResult) runInInterpreterThread((Callable<InterpreterResult>) () -> scriptManager.eval(command));
-                if (result == null) {
-                    return null;
-                }
-                if (result.exception != null) {
-                    throw result.exception;
-                }
-                triggerShellResult(info.source, result.result);
-                return result.result;
-            } finally {
-                endExecution(info);
-            }        
-    }
-    
-    @Hidden
-    public void endExecution(CommandInfo info) throws ContextStateException {
-        String nextStage = getExecutionPars().getThen();
-        getExecutionPars().onExecutionEnded();
-        //TODO: should add a future stage for  completing exceptionally?
-        if ((!info.isError()) && (!info.isAborted())  && (nextStage!=null) && (!nextStage.trim().isEmpty())){
-            new Thread(() -> {
-                try {
-                    evalNextStage(info, nextStage);
-                } catch (Exception ex) {
-                    Logger.getLogger(Context.class.getName()).log(Level.SEVERE, null, ex); 
-               }
-            }, "Update all notification thread").start();            
-            
-        } else {
-            if ((state == State.Busy) || (state == State.Paused)) {
-                setState(State.Ready);                  //If state has changed during execution, keep it
+        onCommand(Command.then, new Object[]{command}, currentInfo.source);
+        triggerShellCommand(currentInfo.source, "Then: " + command);
+        CommandInfo info = new CommandInfo(currentInfo.source, null, command, null, false);
+        commandManager.initCommandInfo(info);
+        aborted = false;
+        getExecutionPars().onExecutionStarted();
+        try {
+            InterpreterResult result = (InterpreterResult) runInInterpreterThread((Callable<InterpreterResult>) () -> scriptManager.eval(command));
+            if (result == null) {
+                return null;
             }
+            if (result.exception != null) {
+                throw result.exception;
+            }
+            triggerShellResult(info.source, result.result);
+            return result.result;
+        } finally {
+            endExecution(info);
         }
     }
 
+    @Hidden
+    public void endExecution(CommandInfo info) throws ContextStateException {
+        String then = getThen(info);
+        getExecutionPars().onExecutionEnded();
+        if (then != null) {
+            new Thread(() -> {
+                try {
+                    evalNextStage(info, then);
+                } catch (Exception ex) {
+                    Logger.getLogger(Context.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }, "Foreground command continuation task").start();
+            return;
+        }
+
+        if ((state == State.Busy) || (state == State.Paused)) {
+            setState(State.Ready);                  //If state has changed during execution, keep it
+        }
+    }
+
+    
+    public String getThen(CommandInfo info) {
+        ExecutionStage then = getExecutionPars().getThen();
+        if (then!=null){
+            boolean success = (!info.isError()) && (!info.isAborted());
+            if ((success && then.onSuccess) || (!success && then.onException)){
+                return then.command;
+            }
+        }       
+        return null;
+    }
+    
     void updateAll(final CommandSource source) {
         onCommand(Command.updateAll, null, source);
         if (getState().isInitialized()) {
@@ -2724,8 +2749,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
                 File jarFile = new File(jar);
                 File startupScript = new File(setup.getDefaultStartupScript());
 
-                boolean defaultLibPathConfig = (startupScript != null) && (IO.isSubPath(startupScript.getParent(), setup.getScriptPath()))
-                        //&& (IO.isSubPath(setup.getScriptPath(), setup.getHomePath()))
+                boolean defaultLibPathConfig = (startupScript != null) && (IO.isSubPath(startupScript.getParent(), setup.getScriptPath())) //&& (IO.isSubPath(setup.getScriptPath(), setup.getHomePath()))
                         ;
                 //Only extracts binary files if startup script is inside script path
                 if (defaultLibPathConfig) {
@@ -3131,7 +3155,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
             }
         }
     }
-    
+
     @Hidden
     public final void removeEventListener(EventListener listener) {
         synchronized (eventListeners) {
@@ -3146,7 +3170,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
             ret.addAll(eventListeners);
             return ret;
         }
-    }   
+    }
 
     public void sendEvent(String name, Object value) {
         for (EventListener listener : getEventListeners()) {
@@ -3173,7 +3197,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
         synchronized (eventListeners) {
             eventListeners.clear();
         }
-        
+
         logger.info("Close");
 
         for (AutoCloseable ac : new AutoCloseable[]{scanStreamer, taskManager, scriptManager, devicePool, versioningManager, pluginManager, dataManager, usersManager, server}) {

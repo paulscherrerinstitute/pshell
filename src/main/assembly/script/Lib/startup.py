@@ -1223,7 +1223,7 @@ def set_exec_pars(**args):
         reset(bool): If true reset the scan counter - the {count} tag and set the timestamp to now.
         group(str): Overrides default layout group name for scans
         tag(str): Overrides default tag for scan names (affecting group or dataset name, according to layout)
-        then(str): Sets statement to be executed on the completion of current.
+        then(str): Sets statement to be executed on the completion of current. 
         defaults(bool): If true restore the original execution parameters.
 
         Graphical preferences can also be set. Keys are equal to lowercase of Preference enum:

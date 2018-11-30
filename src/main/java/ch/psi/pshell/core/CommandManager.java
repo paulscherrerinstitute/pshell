@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.python.core.PyBaseException;
 
 /**
  *
@@ -35,6 +36,9 @@ public class CommandManager implements AutoCloseable {
         synchronized (commandInfo) {
             CommandInfo info = getCurrentCommand();
             if (info != null) {
+                if ((result!=null) && (result instanceof PyBaseException)){
+                    result = new Exception(result.toString());
+                }
                 info.result = result;
                 info.end = System.currentTimeMillis();
                 //commandInfo.remove(Thread.currentThread());
