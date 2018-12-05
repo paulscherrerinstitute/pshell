@@ -42,11 +42,14 @@ public class ProviderText implements Provider {
         }
         PrintWriter out;
         boolean header;
+        boolean composite;
     }
 
     String root;
     final HashMap<String, OutputFile> openFiles = new HashMap();
 
+    public static final String INFO_ITEM_SEPARATOR = "Item Separator";
+    
     public static final String COMMENT_MARKER = "#";
     public static final String PAGE_MARKER = "page: ";
     public static final String TYPE_MARKER = "type ";
@@ -56,17 +59,19 @@ public class ProviderText implements Provider {
     public static final String ATTR_FILE = "attrs";
     public static final String ATTR_CLASS_MARKER = " # ";
     public static final String ATTR_VALUE_MARKER = " = ";
-    
+
     static String ITEM_SEPARATOR;
     static String ARRAY_SEPARATOR;
     static String LINE_SEPARATOR;
     
+    static boolean IDENTIFY_SEPARATOR = true;
+
     public static void setDefaultItemSeparator(String str) {
         ITEM_SEPARATOR = str;
     }
 
     public static String getDefaultItemSeparator() {
-        if (ITEM_SEPARATOR==null){
+        if (ITEM_SEPARATOR == null) {
             ITEM_SEPARATOR = "; ";
         }
         return ITEM_SEPARATOR;
@@ -77,9 +82,9 @@ public class ProviderText implements Provider {
     }
 
     public static String getDefaultArraySeparator() {
-        if (ARRAY_SEPARATOR==null){
+        if (ARRAY_SEPARATOR == null) {
             ARRAY_SEPARATOR = " ";
-        }        
+        }
         return ARRAY_SEPARATOR;
     }
 
@@ -88,10 +93,18 @@ public class ProviderText implements Provider {
     }
 
     public static String getDefaultLineSeparator() {
-        if (LINE_SEPARATOR==null){
+        if (LINE_SEPARATOR == null) {
             LINE_SEPARATOR = "\n";
-        }         
+        }
         return LINE_SEPARATOR;
+    }
+    
+    public static void setIdentifySeparator(boolean str) {
+        IDENTIFY_SEPARATOR = str;
+    }
+
+    public static boolean getIdentifySeparator() {
+        return IDENTIFY_SEPARATOR;
     }    
 
     String itemSeparator = getDefaultItemSeparator();
@@ -303,6 +316,18 @@ public class ProviderText implements Provider {
             ret.put(INFO_ELEMENT_SIZE, size);
         }
     }
+    
+    String getItemSeparator(String line){
+        try{
+            String[] tokens = line.split("[A-Za-z0-9.:$\\-_]");
+            String sep = tokens[tokens.length-1];
+            if (!sep.isEmpty()){
+                return sep;
+            }
+        } catch (Exception ex){ 
+        }   
+        return null;
+    }
 
     @Override
     public Map<String, Object> getInfo(String root, String path) throws IOException {
@@ -316,11 +341,12 @@ public class ProviderText implements Provider {
             String line;
             try (BufferedReader br = new BufferedReader(new FileReader(filePath.toFile()))) {
                 int index = 0;
+                boolean composite = false;
                 while ((line = br.readLine()) != null) {
                     //line = line.trim();
                     if (!line.isEmpty()) {
                         if (!line.startsWith(COMMENT_MARKER)) {
-                            if (!ret.containsKey(INFO_CLASS)) {
+                                if (!ret.containsKey(INFO_CLASS)) {
                                 //If no type record assumes Double
                                 ret.put(INFO_CLASS, Double.class.getName());
                                 addClassInfo(Double.class, ret);
@@ -334,16 +360,48 @@ public class ProviderText implements Provider {
                             }
 
                         } else {
+                            
+                            String separator = getItemSeparator();
                             line = line.substring(1);
                             //In a table dataset first line is the column names
-                            if ((index == 0) && line.contains(getItemSeparator())) {
-                                String[] tokens = line.split(getItemSeparator());
-                                ret.put(INFO_FIELD_NAMES, tokens);
-                                ret.put(INFO_FIELDS, tokens.length);
-                            }
+                            
+                            if (index == 0) {
+                                if (line.startsWith(TYPE_MARKER)) {
+                                    composite = false;
+                                    String dataType = line.substring(TYPE_MARKER.length());
+                                    ret.put(INFO_CLASS, dataType);
+                                    try {
+                                        addClassInfo(Class.forName(dataType), ret);
+                                    } catch (Exception ex) {
+                                    }                                    
+                                } else {
+                                    composite = true;
+                                    if (getIdentifySeparator()){
+                                        String sep = getItemSeparator(line);
+                                        if (sep!=null){
+                                            separator = sep;
+                                        }
+                                    }
+                                    
+                                    ret.put(INFO_ITEM_SEPARATOR, separator);
+                                    String[] tokens = line.split(separator);
+                                    
+                                    //for (int i=0; i<tokens.length; i++){
+                                    //    tokens[i] = tokens[i].trim();
+                                        //If separator has extra space then gets aditional token.
+                                        //if ((i==tokens.length-1) && (tokens[i].isEmpty())){
+                                        //    tokens = Arr.remove(tokens, i);
+                                        //    break;
+                                        //}
+                                    //}
+                                    
+                                    ret.put(INFO_FIELD_NAMES, tokens);
+                                    ret.put(INFO_FIELDS, tokens.length);
+                                }
+                            } 
                             //In a table dataset second line is the column types
-                            if ((index == 1) && line.contains(getItemSeparator())) {
-                                String[] tokens = line.split(getItemSeparator());
+                            if ((index == 1) && composite) {
+                                String[] tokens = line.split(separator);
                                 ret.put(INFO_DIMENSIONS, new int[]{0});
                                 ret.put(INFO_RANK, 1);
                                 ret.put(INFO_CLASS, Object.class.getName());
@@ -360,13 +418,6 @@ public class ProviderText implements Provider {
                                 ret.put(INFO_FIELD_TYPES, tokens);
                                 ret.put(INFO_DATA_TYPE, INFO_VAL_DATA_TYPE_COMPOUND);
                                 ret.put(INFO_FIELD_LENGTHS, lengths);
-                            } else if (line.startsWith(TYPE_MARKER)) {
-                                String dataType = line.substring(TYPE_MARKER.length());
-                                ret.put(INFO_CLASS, dataType);
-                                try {
-                                    addClassInfo(Class.forName(dataType), ret);
-                                } catch (Exception ex) {
-                                }
                             } else if (line.startsWith(DIMS_MARKER)) {
                                 String aux = line.substring(line.indexOf("[") + 1, line.indexOf("]"));
                                 int[] dimensions = new int[0];
@@ -526,8 +577,9 @@ public class ProviderText implements Provider {
         int[] dimensions = (int[]) info.get(INFO_DIMENSIONS);
         //If not null assumes is heterogeneous table (compound type)       
         Integer fields = (Integer) info.get(INFO_FIELDS);
+        boolean composite = fields != null ;
         Class[] fieldTypes = null;
-        if (fields != null) {
+        if (composite) {
             fieldTypes = new Class[fields];
             String[] typeNames = (String[]) info.get(INFO_FIELD_TYPES);
             for (int i = 0; i < fieldTypes.length; i++) {
@@ -548,17 +600,20 @@ public class ProviderText implements Provider {
                 pageDim = new int[]{dimensions[1], dimensions[2]};
                 started = false;
             }
-            boolean scalarRecords = true;
-
             ArrayList data = new ArrayList();
-
             String line;
             while ((line = br.readLine()) != null) {
                 if (!line.isEmpty()) {
                     if (!line.startsWith(COMMENT_MARKER)) {
                         if (started) {
-                            String[] vals = line.split(getItemSeparator());
-                            if (fields != null) {
+                            if (composite) {
+                                String separator = getItemSeparator();
+                                Object sep =  info.get(INFO_ITEM_SEPARATOR);
+                                if ((sep!= null) && (sep instanceof String ) && !((String)sep).trim().isEmpty()){
+                                    separator = (String)sep;
+                                }
+                                
+                                String[] vals = line.split(separator);
                                 Object[] record = new Object[vals.length];
                                 for (int i = 0; i < vals.length; i++) {
                                     Class fieldType = fieldTypes[i];
@@ -591,21 +646,23 @@ public class ProviderText implements Provider {
                                     }
                                 }
                                 data.add(record);
-                            } else if (rank == 0) {
-                                Object array = (Number.class.isAssignableFrom(type)) ? Convert.stringToNumber(vals[0], type) : vals[0];
-                                return new DataSlice(root, path, dimensions, array, 0, false);
-                            } else if (rank == 1) {
-                                if (Number.class.isAssignableFrom(type)) {
-                                    data.add(Convert.stringToNumber(vals[0], type));
-                                } else {
-                                    data.add(vals[0]);
-                                }
                             } else {
-                                Class arrayType = Convert.getPrimitiveClass(type);
-                                Object array = (arrayType != null)
-                                        ? Convert.toPrimitiveArray(vals, arrayType)
-                                        : vals;
-                                data.add(array);
+                                switch (rank) {
+                                    case 0:
+                                        Object array = (Number.class.isAssignableFrom(type)) ? Convert.stringToNumber(line, type) : line;
+                                        return new DataSlice(root, path, dimensions, array, 0, false);
+                                    case 1:
+                                        data.add(Number.class.isAssignableFrom(type) ? Convert.stringToNumber(line, type) : line);
+                                        break;
+                                    default:
+                                        String[] vals = line.split(getArraySeparator());
+                                        Class arrayType = Convert.getPrimitiveClass(type);
+                                        data.add((arrayType != null)
+                                                ? Convert.toPrimitiveArray(vals, arrayType)
+                                                : vals);
+                                        break;
+
+                                }
                             }
                         }
                         //}
@@ -733,6 +790,7 @@ public class ProviderText implements Provider {
             }
         }
         synchronized (of) {
+            of.composite = false;
             out.print(COMMENT_MARKER + TYPE_MARKER + type.getName());
             out.print(getLineSeparator());
             out.print(COMMENT_MARKER + DIMS_MARKER + Arrays.toString(dimensions));
@@ -753,8 +811,12 @@ public class ProviderText implements Provider {
             }
         }
         synchronized (of) {
+            of.composite = true;
             out.print(COMMENT_MARKER);
             out.print(String.join(getItemSeparator(), names));
+            if (names.length > 0){
+                out.append(getItemSeparator());
+            }
             out.append(getLineSeparator());
 
             StringJoiner sj = new StringJoiner(getItemSeparator(), COMMENT_MARKER, getLineSeparator());
@@ -803,6 +865,7 @@ public class ProviderText implements Provider {
         synchronized (of) {
             PrintWriter out = of.out;
             of.header = false;
+            String separator = of.composite ? getItemSeparator() : getArraySeparator();
             int[] shape = Arr.getShape(data);
             int rank = shape.length;
             if (rank == 0) {
@@ -810,7 +873,7 @@ public class ProviderText implements Provider {
             } else if (rank == 1) {
                 for (int i = 0; i < shape[0]; i++) {
                     writeElement(out, Array.get(data, i));
-                    out.print(getItemSeparator());
+                    out.print(separator);
                 }
             } else if (rank == 2) {
                 out.print(COMMENT_MARKER + PAGE_MARKER + index);
@@ -819,7 +882,7 @@ public class ProviderText implements Provider {
                     Object item = Array.get(data, i);
                     for (int j = 0; j < shape[1]; j++) {
                         writeElement(out, Array.get(item, j));
-                        out.print(getItemSeparator());
+                        out.print(separator);
                     }
                     out.print(getLineSeparator());
                 }
@@ -827,4 +890,12 @@ public class ProviderText implements Provider {
             out.print(getLineSeparator());
         }
     }
+    public static void main(String[] args) {
+     for (String s : ("aakjhkla".split("^[-a-zA-Z0-9.:$_]+"))){
+         System.out.println("- " + s);
+     }
+    }
 }
+
+
+
