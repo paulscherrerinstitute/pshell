@@ -97,6 +97,8 @@ public class DataManager implements AutoCloseable {
             providerClass = ProviderHDF5.class;
         } else if (providerName.equals("txt")) {
             providerClass = ProviderText.class;
+        } else if (providerName.equals("csv")) {
+            providerClass = ProviderCSV.class;
         } else {
             //Class name
             providerClass = Context.getInstance().getClassByName(name);

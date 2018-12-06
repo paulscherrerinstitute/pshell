@@ -21,7 +21,7 @@ public class Configuration extends Config {
     public boolean createSessionFiles;
 
     public String dataPath = TOKEN_DATA + "/" + TOKEN_YEAR + "_" + TOKEN_MONTH + "/" + TOKEN_DATE + "/" + TOKEN_DATE + "_" + TOKEN_TIME + "_" + TOKEN_EXEC_NAME;
-    @Defaults(values = {"h5", "txt"})
+    @Defaults(values = {"h5", "txt", "csv"})
     public String dataProvider = "h5";
     @Defaults(values = {"default", "table", "sf"})
     public String dataLayout = "default";

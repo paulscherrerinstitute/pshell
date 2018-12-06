@@ -49,7 +49,7 @@ public class ProviderText implements Provider {
     final HashMap<String, OutputFile> openFiles = new HashMap();
 
     public static final String INFO_ITEM_SEPARATOR = "Item Separator";
-    
+
     public static final String COMMENT_MARKER = "#";
     public static final String PAGE_MARKER = "page: ";
     public static final String TYPE_MARKER = "type ";
@@ -63,7 +63,7 @@ public class ProviderText implements Provider {
     static String ITEM_SEPARATOR;
     static String ARRAY_SEPARATOR;
     static String LINE_SEPARATOR;
-    
+
     static boolean IDENTIFY_SEPARATOR = true;
 
     public static void setDefaultItemSeparator(String str) {
@@ -98,14 +98,14 @@ public class ProviderText implements Provider {
         }
         return LINE_SEPARATOR;
     }
-    
+
     public static void setIdentifySeparator(boolean str) {
         IDENTIFY_SEPARATOR = str;
     }
 
     public static boolean getIdentifySeparator() {
         return IDENTIFY_SEPARATOR;
-    }    
+    }
 
     String itemSeparator = getDefaultItemSeparator();
     String arraySeparator = getDefaultArraySeparator();
@@ -316,17 +316,18 @@ public class ProviderText implements Provider {
             ret.put(INFO_ELEMENT_SIZE, size);
         }
     }
-    
-    String getItemSeparator(String line){
-        try{
+
+    protected String getItemSeparator(String line) {
+        String separator = getItemSeparator();
+        try {
             String[] tokens = line.split("[A-Za-z0-9.:$\\-_]");
-            String sep = tokens[tokens.length-1];
-            if (!sep.isEmpty()){
-                return sep;
+            String sep = tokens[tokens.length - 1];
+            if (!sep.isEmpty()) {
+                separator = sep;
             }
-        } catch (Exception ex){ 
-        }   
-        return null;
+        } catch (Exception ex) {
+        }
+        return separator;
     }
 
     @Override
@@ -342,11 +343,12 @@ public class ProviderText implements Provider {
             try (BufferedReader br = new BufferedReader(new FileReader(filePath.toFile()))) {
                 int index = 0;
                 boolean composite = false;
+                String separator = getItemSeparator();
                 while ((line = br.readLine()) != null) {
                     //line = line.trim();
                     if (!line.isEmpty()) {
                         if (!line.startsWith(COMMENT_MARKER)) {
-                                if (!ret.containsKey(INFO_CLASS)) {
+                            if (!ret.containsKey(INFO_CLASS)) {
                                 //If no type record assumes Double
                                 ret.put(INFO_CLASS, Double.class.getName());
                                 addClassInfo(Double.class, ret);
@@ -360,11 +362,8 @@ public class ProviderText implements Provider {
                             }
 
                         } else {
-                            
-                            String separator = getItemSeparator();
                             line = line.substring(1);
-                            //In a table dataset first line is the column names
-                            
+                            //In a table dataset first line is the column names                        
                             if (index == 0) {
                                 if (line.startsWith(TYPE_MARKER)) {
                                     composite = false;
@@ -373,50 +372,27 @@ public class ProviderText implements Provider {
                                     try {
                                         addClassInfo(Class.forName(dataType), ret);
                                     } catch (Exception ex) {
-                                    }                                    
+                                    }
                                 } else {
                                     composite = true;
-                                    if (getIdentifySeparator()){
-                                        String sep = getItemSeparator(line);
-                                        if (sep!=null){
-                                            separator = sep;
-                                        }
-                                    }
-                                    
+                                    separator = getItemSeparator(line);
                                     ret.put(INFO_ITEM_SEPARATOR, separator);
                                     String[] tokens = line.split(separator);
-                                    
-                                    //for (int i=0; i<tokens.length; i++){
-                                    //    tokens[i] = tokens[i].trim();
-                                        //If separator has extra space then gets aditional token.
-                                        //if ((i==tokens.length-1) && (tokens[i].isEmpty())){
-                                        //    tokens = Arr.remove(tokens, i);
-                                        //    break;
-                                        //}
-                                    //}
-                                    
                                     ret.put(INFO_FIELD_NAMES, tokens);
                                     ret.put(INFO_FIELDS, tokens.length);
                                 }
-                            } 
+                            }
                             //In a table dataset second line is the column types
                             if ((index == 1) && composite) {
-                                String[] tokens = line.split(separator);
+                                
                                 ret.put(INFO_DIMENSIONS, new int[]{0});
                                 ret.put(INFO_RANK, 1);
                                 ret.put(INFO_CLASS, Object.class.getName());
-                                int[] lengths = new int[tokens.length];
-                                for (int i = 0; i < tokens.length; i++) {
-                                    if (tokens[i].contains(LENGTH_SEPARATOR)) {
-                                        //String[] aux = tokens[i].split(" \\* ");
-                                        String[] aux = tokens[i].split(Pattern.quote(LENGTH_SEPARATOR));
-                                        tokens[i] = aux[0];
-                                        lengths[i] = Integer.valueOf(aux[1].trim());
-                                    }
-                                    tokens[i] = tokens[i].trim();
-                                }
-                                ret.put(INFO_FIELD_TYPES, tokens);
                                 ret.put(INFO_DATA_TYPE, INFO_VAL_DATA_TYPE_COMPOUND);
+                                String[] types = line.split(separator);
+                                int[] lengths = new int[types.length];
+                                parseFieldTypes(types, lengths);
+                                ret.put(INFO_FIELD_TYPES, types);
                                 ret.put(INFO_FIELD_LENGTHS, lengths);
                             } else if (line.startsWith(DIMS_MARKER)) {
                                 String aux = line.substring(line.indexOf("[") + 1, line.indexOf("]"));
@@ -577,19 +553,8 @@ public class ProviderText implements Provider {
         int[] dimensions = (int[]) info.get(INFO_DIMENSIONS);
         //If not null assumes is heterogeneous table (compound type)       
         Integer fields = (Integer) info.get(INFO_FIELDS);
-        boolean composite = fields != null ;
-        Class[] fieldTypes = null;
-        if (composite) {
-            fieldTypes = new Class[fields];
-            String[] typeNames = (String[]) info.get(INFO_FIELD_TYPES);
-            for (int i = 0; i < fieldTypes.length; i++) {
-                if ((typeNames == null) || (typeNames.length <= i)) {
-                    fieldTypes[i] = String.class;
-                } else {
-                    fieldTypes[i] = getClass(typeNames[i]);
-                }
-            }
-        }
+        boolean composite = fields != null;
+        Class[] fieldTypes = composite ? getFieldTypes((String[]) info.get(INFO_FIELD_TYPES)) : null;
         Path filePath = getFilePath(root, path);
 
         try (BufferedReader br = new BufferedReader(new FileReader(filePath.toFile()))) {
@@ -608,43 +573,11 @@ public class ProviderText implements Provider {
                         if (started) {
                             if (composite) {
                                 String separator = getItemSeparator();
-                                Object sep =  info.get(INFO_ITEM_SEPARATOR);
-                                if ((sep!= null) && (sep instanceof String ) && !((String)sep).trim().isEmpty()){
-                                    separator = (String)sep;
+                                Object sep = info.get(INFO_ITEM_SEPARATOR);
+                                if ((sep != null) && (sep instanceof String) && !((String) sep).trim().isEmpty()) {
+                                    separator = (String) sep;
                                 }
-                                
-                                String[] vals = line.split(separator);
-                                Object[] record = new Object[vals.length];
-                                for (int i = 0; i < vals.length; i++) {
-                                    Class fieldType = fieldTypes[i];
-                                    if (fieldType.isArray()) {
-                                        Class compType = fieldType.getComponentType();
-                                        //Do not support rank>1 in tables
-                                        if (compType.isArray() || vals[i].isEmpty()) {
-                                            record[i] = null;
-                                        } else {
-                                            record[i] = compType.isPrimitive()
-                                                    ? Convert.toPrimitiveArray(vals[i], getArraySeparator(), compType)
-                                                    : vals[i];
-                                        }
-                                    } else {
-                                        if (vals[i].isEmpty()) {
-                                            if (fieldType == Double.class) {
-                                                record[i] = Double.NaN;
-                                            } else if (fieldType == Float.class) {
-                                                record[i] = Float.NaN;
-                                            } else if (Number.class.isAssignableFrom(fieldType)) {
-                                                record[i] = Convert.stringToNumber("0", fieldType);
-                                            } else {
-                                                record[i] = vals[i];
-                                            }
-                                        } else {
-                                            record[i] = Number.class.isAssignableFrom(fieldType)
-                                                    ? Convert.stringToNumber(vals[i], fieldType)
-                                                    : vals[i];
-                                        }
-                                    }
-                                }
+                                Object[] record = getRecord(line, separator, fieldTypes);
                                 data.add(record);
                             } else {
                                 switch (rank) {
@@ -680,7 +613,7 @@ public class ProviderText implements Provider {
                 }
             }
             Object array = null;
-            if (fields != null) {
+            if (composite) {
                 array = data.toArray(new Object[0][0]);
             } else if ((rank == 1) && (Number.class.isAssignableFrom(type))) {
                 array = Convert.toPrimitiveArray(data.toArray(), type);
@@ -697,6 +630,71 @@ public class ProviderText implements Provider {
         }
         return ret;
     }
+
+    protected Object[] getRecord(String line, String separator, Class[] fieldTypes) {
+        String[] vals = line.split(separator);
+        Object[] record = new Object[vals.length];
+        for (int i = 0; i < vals.length; i++) {
+            Class fieldType = fieldTypes[i];
+            if (fieldType.isArray()) {
+                Class compType = fieldType.getComponentType();
+                //Do not support rank>1 in tables
+                if (compType.isArray() || vals[i].isEmpty()) {
+                    record[i] = null;
+                } else {
+                    record[i] = compType.isPrimitive()
+                            ? Convert.toPrimitiveArray(vals[i], getArraySeparator(), compType)
+                            : vals[i];
+                }
+            } else {
+                if (vals[i].isEmpty()) {
+                    if (fieldType == Double.class) {
+                        record[i] = Double.NaN;
+                    } else if (fieldType == Float.class) {
+                        record[i] = Float.NaN;
+                    } else if (Number.class.isAssignableFrom(fieldType)) {
+                        record[i] = Convert.stringToNumber("0", fieldType);
+                    } else {
+                        record[i] = vals[i];
+                    }
+                } else {
+                    record[i] = Number.class.isAssignableFrom(fieldType)
+                            ? Convert.stringToNumber(vals[i], fieldType)
+                            : vals[i];
+                }
+            }
+        }
+        return record;
+    }
+
+    protected Class[] getFieldTypes(String[] typeNames) {
+        Class[] fieldTypes = new Class[typeNames.length];
+        for (int i = 0; i < fieldTypes.length; i++) {
+            if ((typeNames == null) || (typeNames.length <= i)) {
+                fieldTypes[i] = String.class;
+            } else {
+                try {
+                    fieldTypes[i] = getClass(typeNames[i]);
+                } catch (IOException ex) {
+                    Logger.getLogger(ProviderText.class.getName()).log(Level.WARNING, null, ex);
+                    fieldTypes[i] = Object.class;
+                }
+            }
+        }
+        return fieldTypes;
+    }
+    
+    protected void parseFieldTypes(String[] types, int[] lengths) {      
+        for (int i = 0; i < types.length; i++) {
+            if (types[i].contains(LENGTH_SEPARATOR)) {
+                String[] aux = types[i].split(Pattern.quote(LENGTH_SEPARATOR));
+                types[i] = aux[0];
+                lengths[i] = Integer.valueOf(aux[1].trim());
+            }
+            types[i] = types[i].trim();
+        }    
+    }    
+    
 
     @Override
     public boolean isDataset(String root, String path) throws IOException {
@@ -814,7 +812,7 @@ public class ProviderText implements Provider {
             of.composite = true;
             out.print(COMMENT_MARKER);
             out.print(String.join(getItemSeparator(), names));
-            if (names.length > 0){
+            if (names.length > 0) {
                 out.append(getItemSeparator());
             }
             out.append(getLineSeparator());
@@ -890,12 +888,4 @@ public class ProviderText implements Provider {
             out.print(getLineSeparator());
         }
     }
-    public static void main(String[] args) {
-     for (String s : ("aakjhkla".split("^[-a-zA-Z0-9.:$_]+"))){
-         System.out.println("- " + s);
-     }
-    }
 }
-
-
-

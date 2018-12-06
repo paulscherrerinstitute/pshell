@@ -7,6 +7,7 @@ import ch.psi.pshell.core.Context;
 import ch.psi.pshell.core.ContextAdapter;
 import ch.psi.pshell.core.InlineDevice;
 import ch.psi.pshell.core.JsonSerializer;
+import ch.psi.pshell.data.ProviderCSV;
 import ch.psi.pshell.data.ProviderText;
 import ch.psi.pshell.device.Device;
 import ch.psi.pshell.device.DeviceAdapter;
@@ -783,6 +784,9 @@ public class StripChart extends StandardDialog {
 
     String getInitFormat() {
         if (Context.getInstance() != null) {
+            if (Context.getInstance().getDataManager().getProvider() instanceof ProviderCSV) {
+                return "csv";
+            }            
             if (Context.getInstance().getDataManager().getProvider() instanceof ProviderText) {
                 return "txt";
             }
@@ -880,8 +884,12 @@ public class StripChart extends StandardDialog {
                     ckPersistence.setSelected(true);
                     textFileName.setText(fileName);
                 }
-                if ((persistPars.length > 1) && (((String) persistPars[1]).equalsIgnoreCase("txt"))) {
-                    comboFormat.setSelectedIndex(1);
+                if (persistPars.length > 1) {
+                    if ((((String) persistPars[1]).equalsIgnoreCase("txt"))){
+                        comboFormat.setSelectedIndex(1);
+                    } else if ((((String) persistPars[1]).equalsIgnoreCase("csv"))){
+                        comboFormat.setSelectedIndex(2);
+                    }
                 }
                 if (persistPars.length > 3) {
                     comboLayout.setSelectedItem((String) persistPars[3]);
@@ -1922,7 +1930,7 @@ public class StripChart extends StandardDialog {
 
         jLabel1.setText("Format:");
 
-        comboFormat.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "h5", "txt" }));
+        comboFormat.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "h5", "txt", "csv" }));
 
         jLabel5.setText("Layout:");
 
@@ -1937,7 +1945,7 @@ public class StripChart extends StandardDialog {
                 .addContainerGap()
                 .addComponent(ckPersistence)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(textFileName, javax.swing.GroupLayout.DEFAULT_SIZE, 243, Short.MAX_VALUE)
+                .addComponent(textFileName, javax.swing.GroupLayout.DEFAULT_SIZE, 240, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jLabel1)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
