@@ -1076,7 +1076,7 @@ public class ScanEditorPanel extends MonitoredPanel implements Processor {
         });
 
         comboProvider.setEditable(true);
-        comboProvider.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { " ", "h5", "txt" }));
+        comboProvider.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "", "h5", "txt", "csv" }));
         comboProvider.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 comboProviderActionPerformed(evt);

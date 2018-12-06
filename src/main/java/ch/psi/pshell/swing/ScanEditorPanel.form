@@ -451,10 +451,11 @@
                   <Properties>
                     <Property name="editable" type="boolean" value="true"/>
                     <Property name="model" type="javax.swing.ComboBoxModel" editor="org.netbeans.modules.form.editors2.ComboBoxModelEditor">
-                      <StringArray count="3">
-                        <StringItem index="0" value=" "/>
+                      <StringArray count="4">
+                        <StringItem index="0" value=""/>
                         <StringItem index="1" value="h5"/>
                         <StringItem index="2" value="txt"/>
+                        <StringItem index="3" value="csv"/>
                       </StringArray>
                     </Property>
                   </Properties>

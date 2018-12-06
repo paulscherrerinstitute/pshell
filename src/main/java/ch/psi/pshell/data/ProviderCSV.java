@@ -21,7 +21,13 @@ public class ProviderCSV extends ProviderText {
     
     public ProviderCSV() {
         super.setEmbeddedAtributes(false);
+        setItemSeparator(";");
     }
+    
+    @Override
+    public String getFileType() {
+        return "csv";
+    }    
 
     @Override
     public void setEmbeddedAtributes(boolean value) {

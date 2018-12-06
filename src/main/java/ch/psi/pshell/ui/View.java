@@ -153,7 +153,7 @@ public class View extends MainFrame {
     final CloseableTabListener closableTabListener;
 
     String[] imageFileExtensions = new String[]{"png", "bmp", "gif", "tif", "tiff", "jpg", "jpeg"};
-    String[] textFileExtensions = new String[]{"txt", "log"};
+    String[] textFileExtensions = new String[]{"txt", "csv", "log"};
     String[] dataFileExtensions = new String[]{"h5", "hdf5"};
 
     public View() {
@@ -2921,7 +2921,7 @@ public class View extends MainFrame {
             chooser.addChoosableFileFilter(new ExtensionFileFilter("Script files (*." + context.getScriptType() + ")", new String[]{String.valueOf(context.getScriptType())}));
             //chooser.addChoosableFileFilter(new ExtensionFileFilter("Script files (*.py, *.groovy, *.js)", new String[]{"py", "groovy", "js"}));
             chooser.addChoosableFileFilter(new ExtensionFileFilter("Java files (*.java)", new String[]{"java"}));
-            chooser.addChoosableFileFilter(new ExtensionFileFilter("Text files (*.txt, *.log)", textFileExtensions));
+            chooser.addChoosableFileFilter(new ExtensionFileFilter("Text files (*.txt, *.csv, *.log)", textFileExtensions));
             chooser.addChoosableFileFilter(new ExtensionFileFilter("Data files (*.h5)", dataFileExtensions));
             chooser.addChoosableFileFilter(new ExtensionFileFilter("Strip Chart definition file (*." + StripChart.FILE_EXTENSION + ")", StripChart.FILE_EXTENSION));
             chooser.addChoosableFileFilter(new ExtensionFileFilter("Image files (*.png, *.bmp, *.gif, *.jpg)", imageFileExtensions));
