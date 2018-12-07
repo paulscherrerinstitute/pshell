@@ -4,6 +4,10 @@
 
 ### Added
 
+* Added CSV file format.
+
+* Option -dplt for creating plots for detached windows.
+
 * Included 'then' execution parameter: sets statement to be executed on the 
   completion of current keeping application state Busy.
 
