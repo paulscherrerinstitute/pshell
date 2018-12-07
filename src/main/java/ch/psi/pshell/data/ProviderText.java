@@ -130,6 +130,16 @@ public class ProviderText implements Provider {
     public void setOrderedAtributes(boolean value) {
         orderedAtributes = value;
     }
+    
+    boolean finalSeparator = true;
+
+    public boolean getFinalSeparator() {
+        return finalSeparator;
+    }
+
+    public void setFinalSeparator(boolean value) {
+        finalSeparator = value;
+    }    
 
     public void setItemSeparator(String str) {
         itemSeparator = str;
@@ -812,7 +822,7 @@ public class ProviderText implements Provider {
             of.composite = true;
             out.print(COMMENT_MARKER);
             out.print(String.join(getItemSeparator(), names));
-            if (names.length > 0) {
+            if (getFinalSeparator() &&  (names.length > 0)) {
                 out.append(getItemSeparator());
             }
             out.append(getLineSeparator());
@@ -838,9 +848,12 @@ public class ProviderText implements Provider {
             if (rank > 1) {
                 out.append("");
             } else {
-                for (int i = 0; i < Array.getLength(value); i++) {
+                int length = Array.getLength(value);
+                for (int i = 0; i < length; i++) {
                     out.append(String.valueOf(Array.get(value, i)));
-                    out.append(getArraySeparator());
+                    if (getFinalSeparator() ||  (i<length-1)) {
+                        out.append(getArraySeparator());
+                    }                                
                 }
             }
         } else {
@@ -871,7 +884,9 @@ public class ProviderText implements Provider {
             } else if (rank == 1) {
                 for (int i = 0; i < shape[0]; i++) {
                     writeElement(out, Array.get(data, i));
-                    out.print(separator);
+                    if (getFinalSeparator() ||  (i<shape[0]-1)) {
+                        out.print(separator);
+                    }
                 }
             } else if (rank == 2) {
                 out.print(COMMENT_MARKER + PAGE_MARKER + index);
@@ -880,7 +895,9 @@ public class ProviderText implements Provider {
                     Object item = Array.get(data, i);
                     for (int j = 0; j < shape[1]; j++) {
                         writeElement(out, Array.get(item, j));
-                        out.print(separator);
+                        if (getFinalSeparator() ||  (j<shape[1]-1)) {
+                            out.print(separator);
+                        }                        
                     }
                     out.print(getLineSeparator());
                 }

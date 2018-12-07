@@ -22,6 +22,7 @@ public class ProviderCSV extends ProviderText {
     public ProviderCSV() {
         super.setEmbeddedAtributes(false);
         setItemSeparator(";");
+        setFinalSeparator(false); //By default don't use final separator
     }
     
     @Override
@@ -139,7 +140,7 @@ public class ProviderCSV extends ProviderText {
         synchronized (of) {
             of.composite = true;
             out.print(String.join(getItemSeparator(), names));
-            if (names.length > 0) {
+            if (getFinalSeparator() &&  (names.length > 0)) {
                 out.append(getItemSeparator());
             }
             out.append(getLineSeparator());
