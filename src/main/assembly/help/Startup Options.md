@@ -146,6 +146,10 @@
     <td>Append status bar to detached windows.</td>
   </tr>
   <tr>
+    <td>-dplt</td>
+    <td>Create plots for detached windows.</td>
+  </tr>
+  <tr>
     <td>-extr</td>
     <td>Force extract startup and utility scrips (must not be in local mode).</td>
   </tr>    

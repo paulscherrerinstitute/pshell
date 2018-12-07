@@ -149,6 +149,7 @@ public class App extends ObservableBase<AppListener> {
         sb.append("\n\t-dspt\tDisable scan plots");
         sb.append("\n\t-dspr\tDisable printing scans to console");
         sb.append("\n\t-sbar\tAppend status bar to detached windows");
+        sb.append("\n\t-dplt\tCreate plots for detached windows");
         sb.append("\n\t-extr\tForce extract startup and utility scrips");
         sb.append("\n\t-strp\tShow strip chart window (can be used together with -f)");
         sb.append("\n\t-strh=<path>\tStrip chart default configuration folder.");
@@ -267,10 +268,14 @@ public class App extends ObservableBase<AppListener> {
         return hasArgument("s");
     }
 
+    static public boolean isDetachedPlots() {
+        return App.hasArgument("dplt");
+    }
+    
     static public boolean isPlotOnly() {
         return App.hasArgument("x");
     }
-
+    
     static public boolean isHelpOnly() {
         return (hasArgument("help") && !isHeadless());
     }
@@ -782,6 +787,10 @@ public class App extends ObservableBase<AppListener> {
                 }
                 if (isDetached()) {
                     logger.log(Level.INFO, "Create panels");
+                    if (isDetachedPlots()){
+                        setConsolePlotEnvironment(null);
+                        setupConsoleScanPlotting();   
+                    }
                 } else {
                     logger.log(Level.INFO, "Create workbench");
                     Processor.addServiceProvider(ScanEditorPanel.class);
