@@ -548,7 +548,7 @@ public class ExecutionParameters {
 
     public File getScriptFile() {
         CommandInfo cmd = getCommand();
-        return (cmd != null) ? Context.getInstance().getRunningScriptFile(cmd.script) : null;
+        return (cmd != null) ? Context.getInstance().getScriptFile(cmd.script) : null;
     }
 
     public String getStatement() {

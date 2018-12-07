@@ -48,7 +48,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.net.ConnectException;
 import java.net.URL;
-import java.net.UnknownHostException;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -175,7 +174,7 @@ public class App extends ObservableBase<AppListener> {
             sb.append("\n\t-grid_color=<..>\tSet default plot grid color");
             sb.append("\n\t-tick_label_font=name:size\tSet font for time plot tick labels");
             sb.append("\n\t-alarm_interval=<..>\tSet the alarm timer interval (default 1000ms)");
-            sb.append("\n\t-alarm_file=<..>\tSet alarm sound file (default use system beep)");            
+            sb.append("\n\t-alarm_file=<..>\tSet alarm sound file (default use system beep)");
         }
         sb.append("\n");
         return sb.toString();
@@ -271,11 +270,11 @@ public class App extends ObservableBase<AppListener> {
     static public boolean isDetachedPlots() {
         return App.hasArgument("dplt");
     }
-    
+
     static public boolean isPlotOnly() {
         return App.hasArgument("x");
     }
-    
+
     static public boolean isHelpOnly() {
         return (hasArgument("help") && !isHeadless());
     }
@@ -313,16 +312,21 @@ public class App extends ObservableBase<AppListener> {
 
     static public List<File> getFileArgs() {
         ArrayList<File> ret = new ArrayList<File>();
-        try {
-            if (hasArgument("f")) {
-                for (String fileName : getArgumentValues("f")) {
-                    if (Context.getInstance() != null) {
-                        fileName = Context.getInstance().getSetup().expandPath(fileName);
+        for (String fileName : getArgumentValues("f")) {
+            try {
+                File file = new File(fileName);
+                if (Context.getInstance() != null) {
+                    fileName = Context.getInstance().getSetup().expandPath(fileName);
+                    file = new File(fileName);
+                    if (!file.exists()) {
+                        File f = Context.getInstance().getScriptFile(fileName);
+                        file = (f != null) ? f : file;
                     }
-                    ret.add(new File(fileName));
                 }
+                ret.add(file);
+            } catch (Exception ex) {
+                logger.log(Level.WARNING, null, ex);
             }
-        } catch (Exception ex) {
         }
         return ret;
     }
@@ -575,12 +579,12 @@ public class App extends ObservableBase<AppListener> {
         } else if (Config.isStringDefined(pshellProperties.data)) {
             System.setProperty(Setup.PROPERTY_DATA_PATH, pshellProperties.data);
         }
-        
+
         if (isArgumentDefined("scpt")) {
             System.setProperty(Setup.PROPERTY_SCRIPT_PATH, getArgumentValue("scpt"));
         } else if (Config.isStringDefined(pshellProperties.scpt)) {
             System.setProperty(Setup.PROPERTY_SCRIPT_PATH, pshellProperties.scpt);
-        }        
+        }
 
         if (isArgumentDefined("pool")) {
             System.setProperty(Setup.PROPERTY_DEVICES_FILE, getArgumentValue("pool"));
@@ -787,9 +791,9 @@ public class App extends ObservableBase<AppListener> {
                 }
                 if (isDetached()) {
                     logger.log(Level.INFO, "Create panels");
-                    if (isDetachedPlots()){
+                    if (isDetachedPlots()) {
                         setConsolePlotEnvironment(null);
-                        setupConsoleScanPlotting();   
+                        setupConsoleScanPlotting();
                     }
                 } else {
                     logger.log(Level.INFO, "Create workbench");

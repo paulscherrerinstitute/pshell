@@ -1407,24 +1407,26 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
     }
 
     public File getRunningScriptFile() {
-        return getRunningScriptFile(runningScript);
+        return getScriptFile(runningScript);
     }
 
     String getRunningScriptName(String script) {
         return (script == null) ? null : IO.getPrefix(script);
     }
 
-    File getRunningScriptFile(String script) {
-        if (script != null) {
-            script = scriptManager.getLibrary().resolveFile(script);
-            if (script != null) {
-                File ret = new File(script);
-                if (ret.exists()) {
-                    try {
-                        ret = ret.getCanonicalFile();
-                    } catch (Exception ex) {
+    public File getScriptFile(String script) {
+        if ((script != null)  && (scriptManager!=null)){
+            if (scriptManager.getLibrary()!=null){
+                script = scriptManager.getLibrary().resolveFile(script);
+                if (script != null) {
+                    File ret = new File(script);
+                    if (ret.exists()) {
+                        try {
+                            ret = ret.getCanonicalFile();
+                        } catch (Exception ex) {
+                        }
+                        return ret;
                     }
-                    return ret;
                 }
             }
         }

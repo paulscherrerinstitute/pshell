@@ -449,6 +449,8 @@ public class View extends MainFrame {
         if (context.getConfig().getName().length() > 0) {
             setTitle(App.getApplicationTitle() + " [" + context.getConfig().getName() + "]");
         }
+        //In case openCmdLineFiles() in onStart didn't open because context was not instantiated
+        openCmdLineFiles(true);
     }
 
     void onStart() {
@@ -593,33 +595,33 @@ public class View extends MainFrame {
         dataPanel.initialize();
         dataPanel.setListener(dataPanelListener);
 
-        if (App.isPlotOnly()) {
-            File file = App.getFileArg();
-            if (file != null) {
-                
-            }
-        } else {
-            for (File file : App.getFileArgs()) {
-                try {
-                    if (file != null) {
-                        openScriptOrProcessor(file.getPath());
-                    }
-                } catch (Exception ex) {
-                    showException(ex);
-                }
-            }
-        }
-
         menuFullScreen.setSelected(isFullScreen());
 
         if (App.isOutputRedirected()) {
             //TODO: This is an issue in Jython 2.7. If not setting get this error when redirect stdout:
             //    console: Failed to install '': java.nio.charset.UnsupportedCharsetException: cp0
             System.setProperty("python.console.encoding", "UTF-8");
-
             System.setOut(new PrintStream(new ConsoleStream(false)));
             System.setErr(new PrintStream(new ConsoleStream(true)));
         }
+        
+        openCmdLineFiles(false);
+    }
+    
+    void openCmdLineFiles(boolean showExceptions){
+        if (!App.isPlotOnly()) {
+            for (File file : App.getFileArgs()) {
+                try {
+                    if (file != null) {
+                        openScriptOrProcessor(file.getPath());
+                    }
+                } catch (Exception ex) {
+                    if (showExceptions) {
+                        showException(ex);
+                    }
+                }
+            }
+        }        
     }
 
     final DataPanelListener dataPanelListener = new DataPanelListener() {
