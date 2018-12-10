@@ -1345,8 +1345,8 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
         scrollFolder.setVisible(false);
         splitFolder.setDividerSize(0);
         initialize();
-        String textProvider = Context.getInstance().getConfig().dataProvider.equalsIgnoreCase("csv") ? "csv" : "txt";
-        dataManager = new DataManager(Context.getInstance(), file.isDirectory() ? textProvider : IO.getExtension(file), Context.getInstance().getConfig().dataLayout);
+        String textProvider = Context.getInstance().getConfig().getDataProvider().equalsIgnoreCase("csv") ? "csv" : "txt";
+        dataManager = new DataManager(Context.getInstance(), file.isDirectory() ? textProvider : IO.getExtension(file), Context.getInstance().getConfig().getDataLayout());
         setCurrentPath(file);
     }
 
