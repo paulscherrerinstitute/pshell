@@ -70,12 +70,12 @@ public class ExecutionParameters {
 
     public boolean getChangedLayout() {
         Object layout = getLayout();
-        return (layout != null) && (!layout.equals(Context.getInstance().getConfig().dataLayout));
+        return (layout != null) && (!layout.equals(Context.getInstance().getConfig().getDataLayout()));
     }
 
     public boolean getChangedProvider() {
         Object provider = getProvider();
-        return (provider != null) && (!provider.equals(Context.getInstance().getConfig().dataProvider));
+        return (provider != null) && (!provider.equals(Context.getInstance().getConfig().getDataProvider()));
     }
 
     public String getOutput() {
@@ -405,12 +405,12 @@ public class ExecutionParameters {
 
     public Object getLayout() {
         Object option = getOption("layout");
-        return (option != null) ? option : Context.getInstance().getConfig().dataLayout;
+        return (option != null) ? option : Context.getInstance().getConfig().getDataLayout();
     }
 
     public Object getProvider() {
         Object option = getOption("provider");
-        return (option != null) ? option : Context.getInstance().getConfig().dataProvider;
+        return (option != null) ? option : Context.getInstance().getConfig().getDataProvider();
     }
 
     public Boolean getSave() {

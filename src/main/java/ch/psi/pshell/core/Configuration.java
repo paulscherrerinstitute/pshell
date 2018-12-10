@@ -16,6 +16,8 @@ import java.util.logging.Level;
 public class Configuration extends Config {
 
     public static transient final String PROPERTY_CONSOLE_LOG = "ch.psi.pshell.console.log";
+    public static transient final String PROPERTY_DATA_PROVIDER= "ch.psi.pshell.data.provider";
+    public static transient final String PROPERTY_DATA_LAYOUT= "ch.psi.pshell.data.layout";
 
     public boolean autoSaveScanData = true;
     public boolean createSessionFiles;
@@ -78,6 +80,17 @@ public class Configuration extends Config {
                 ? consoleLogLevel.toUpperCase()
                 : logLevelConsole.toString().toUpperCase());
     }
+    
+    
+    public String getDataProvider() {
+        String provider = System.getProperty(PROPERTY_DATA_PROVIDER);
+        return provider == null ? dataProvider : provider;
+    }    
+    
+    public String getDataLayout() {
+        String layout = System.getProperty(PROPERTY_DATA_LAYOUT);
+        return layout == null ? dataLayout : layout;
+    }      
 
     NotificationLevel getNotificationLevel() {
         if (notificationLevel == null) {

@@ -76,8 +76,8 @@ public class DataManager implements AutoCloseable {
         initialized = false;
         logger.info("Initializing " + getClass().getSimpleName());
         closeOutput();
-        setProvider(context.getConfig().dataProvider);
-        setLayout(context.getConfig().dataLayout);
+        setProvider(context.getConfig().getDataProvider());
+        setLayout(context.getConfig().getDataLayout());
         aliases.clear();
         dataRootDepth = Paths.get(IO.getRelativePath(getExecutionPars().getPath(), getDataFolder())).getNameCount();
         logger.info("Finished " + getClass().getSimpleName() + " initialization");

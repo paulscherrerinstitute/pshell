@@ -134,6 +134,14 @@
     <td>Set the script type, overriding the setup. Allowed values:  py, js or groovy.</td>
   </tr>
   <tr>
+    <td>-dfmt=[format]</td>
+    <td>Set the data format, overriding the configuration: h5, txt or csv.</td>
+  </tr>
+  <tr>
+    <td>-dlay=[format]</td>
+    <td>Set the data layout, overriding the configuration: default, table ot sf.</td>
+  </tr>
+  <tr>
     <td>-dspt</td>
     <td>Disable scan plots.</td>
   </tr>

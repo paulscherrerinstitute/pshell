@@ -1,7 +1,3 @@
-/*
- * Copyright (c) 2014-2018 Paul Scherrer Institute. All rights reserved.
- */
-
 import ch.psi.pshell.ui.Plugin;
 import ch.psi.utils.State;
 
