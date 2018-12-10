@@ -1182,7 +1182,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
                     result = ((InterpreterResult) result).result;
                 }
             }
-            commandManager.finishCommandInfo(result);
+            commandManager.finishCommandInfo(commandManager.getInterpreterThreadCommand(), result);
         }
     }
 
@@ -1820,8 +1820,10 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
         ExecutionStage then = getExecutionPars().getThen();
         if (then!=null){
             boolean success = (!info.isError()) && (!info.isAborted());
-            if ((success && then.onSuccess) || (!success && then.onException)){
-                return then.command;
+            if (success && (then.onSuccess!=null)){
+                return then.onSuccess;
+            } if (!success && (then.onException!=null)){
+                return then.onException;
             }
         }       
         return null;

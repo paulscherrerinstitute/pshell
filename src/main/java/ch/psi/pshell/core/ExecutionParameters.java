@@ -28,7 +28,7 @@ public class ExecutionParameters {
 
     final String[] executionOptions = new String[]{"defaults", "group", "open", "reset", "name", "type", "path", "tag",
         "layout", "provider", "save", "persist", "flush", "preserve", "keep", "accumulate", "depth_dim", "compression",
-        "shuffle", "contiguous", "then"};
+        "shuffle", "contiguous", "then", "then_exception", "then_success"};
 
     final String[] viewOptions = new String[]{"plot_disabled", "table_disabled", "enabled_plots", "plot_layout",
         "plot_types", "print_scan", "auto_range", "manual_range", "domain_axis", "status"};
@@ -365,6 +365,12 @@ public class ExecutionParameters {
         }
         return null;
     }
+    
+    public String getOptionAsString(String option){
+        Object value = getOption(option);
+        return (value == null) ? null : String.valueOf(value);
+    }
+    
 
     public String getName() {
         Object option = getOption("name");
@@ -441,39 +447,37 @@ public class ExecutionParameters {
     }
     
     public class ExecutionStage{
-        final String command;
-        final boolean onSuccess;
-        final boolean onException;
-        ExecutionStage(String command, boolean onSuccess, boolean onException){
-            this.command = command;
-            this.onSuccess = onSuccess;
-            this.onException = onException;
+        final String onSuccess;
+        final String onException;
+        ExecutionStage(String commandOnSuccess, String commandOnException){
+            this.onSuccess = commandOnSuccess;
+            this.onException = commandOnException;
         }
     }
         
     public ExecutionStage getThen() {
-        Object option = getOption("then");
-        String then = (option == null) ? null : String.valueOf(option);
-        if ((then==null) || (then.trim().isEmpty())){
-            return null;
+        String onSuccess = null;
+        String onException = null;        
+        
+        String then =  getOptionAsString("then");
+        if ((then!=null) &&(!then.trim().isEmpty())){
+            onSuccess = then;
+            onException = then;
         }
         
-        //Command prefixes:
-        //  !       Execute always
-        //  ?       Execute only if completed with exception 
-        //  default Execute only if completed succeffully
+        then =  getOptionAsString("then_exception");
+        if ((then!=null) &&(!then.trim().isEmpty())){
+            onException = then;
+        }        
         
-        boolean onSuccess = true;
-        boolean onException = false;
-        if (then.startsWith("!")){
-            onException = true;
-            then = then.substring(1);
-        } else if (then.startsWith("?")){
-            onException = true;
-            onSuccess = false;
-            then = then.substring(1);
-        }    
-        return new ExecutionStage(then, onSuccess, onException);
+        then =  getOptionAsString("then_success");
+        if ((then!=null) &&(!then.trim().isEmpty())){
+            onSuccess = then;
+        }          
+        if ((onException == null) && (onSuccess == null)){
+            return null;
+        }
+        return new ExecutionStage(onSuccess, onException);
     }    
 
     public Boolean getKeep() {
@@ -649,7 +653,10 @@ public class ExecutionParameters {
         currentScans.clear();
         dataLayout = null;
         dataProvider = null;
-        clearOption("then");
+        for (String option: new String[]{"then", "then_exception", "then_success"}){
+            clearOption(option);
+        }   
+
     }
 
     boolean isInitialized() {

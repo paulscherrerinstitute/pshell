@@ -32,9 +32,8 @@ public class CommandManager implements AutoCloseable {
 
     boolean requestedCleanup;
 
-    void finishCommandInfo(Object result) {
+    void finishCommandInfo(CommandInfo info, Object result) {
         synchronized (commandInfo) {
-            CommandInfo info = getCurrentCommand();
             if (info != null) {
                 if ((result!=null) && (result instanceof PyBaseException)){
                     result = new Exception(result.toString());
@@ -49,7 +48,11 @@ public class CommandManager implements AutoCloseable {
         }
         if (commandInfo.size() > COMMAND_INFO_SIZE) {
             cleanupCommands();
-        }
+        } 
+    }
+    
+    void finishCommandInfo(Object result) {
+        finishCommandInfo(getCurrentCommand(), result);
     }
 
     void cleanupCommands() {
