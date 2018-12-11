@@ -86,6 +86,10 @@
     <td>tAuto close after executing file.</td>
   </tr>
   <tr>
+    <td>-z</td>
+    <td>.</td>
+  </tr>
+  <tr>
     <td>-home=[path]</td>
     <td>Set the home folder (default is ./home).<br>The token '~', is replaced by the system home folder.</td>
   </tr>

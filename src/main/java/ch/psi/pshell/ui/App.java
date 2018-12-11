@@ -46,8 +46,11 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.net.ConnectException;
 import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -64,6 +67,7 @@ import javax.swing.WindowConstants;
 import javax.swing.event.SwingPropertyChangeSupport;
 import java.util.List;
 import java.util.Map;
+import org.apache.commons.io.FileUtils;
 
 /**
  * The application singleton object.
@@ -133,6 +137,7 @@ public class App extends ObservableBase<AppListener> {
         sb.append("\n\t-n\tInterpreter is not started");
         sb.append("\n\t-q\tQuiet mode");
         sb.append("\n\t-a\tAuto close after executing file");
+        sb.append("\n\t-z\tHome folder is volatile (created in tmp folder)");
         sb.append("\n\t-home=<path>\tSet the home folder (default is ./home)");
         sb.append("\n\t-outp=<path>\tSet the output folder (default is {home})");
         sb.append("\n\t-data=<path>\tSet the data folder (default is {home}/data)");
@@ -250,6 +255,10 @@ public class App extends ObservableBase<AppListener> {
         return hasArgument("q");
     }
 
+    static public boolean isVolatile() {
+        return hasArgument("z");
+    }    
+    
     static public String getDetachedPanel() {
         return getArgumentValue("d");
     }
@@ -616,11 +625,22 @@ public class App extends ObservableBase<AppListener> {
         } else if (pshellProperties.consoleLog != null) {
             System.setProperty(Configuration.PROPERTY_CONSOLE_LOG, pshellProperties.consoleLog.toString());
         }
-
+        
         //Only used if View is not instantiated
         if (isArgumentDefined("quality")) {
             System.setProperty(PlotPanel.PROPERTY_PLOT_QUALITY, Plot.Quality.valueOf(getArgumentValue("quality")).toString());
         }
+        
+        if (isVolatile()){
+            try {
+                Path tempDir = Files.createTempDirectory("pshell_home");
+                IO.deleteFolderOnExit(tempDir.toFile());             
+                System.setProperty(Setup.PROPERTY_HOME_PATH, tempDir.toString());
+            } catch (IOException ex) {
+                ex.printStackTrace();
+                System.exit(0);
+            }
+        }        
 
         if (isLocalMode()) {
             setContextPersisted(false);

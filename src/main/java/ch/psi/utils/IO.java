@@ -23,6 +23,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
+import org.apache.commons.io.FileUtils;
 
 /**
  * File system operations.
@@ -496,15 +497,15 @@ public class IO {
     public static String getRelativePath(String fileName, String referencePath) {
         try {
             File file = new File(fileName);
-            try{
+            try {
                 file = file.getCanonicalFile();
             } catch (Exception ex) {
-            }   
+            }
             File referenceFile = new File(referencePath);
-            try{
+            try {
                 referenceFile = referenceFile.getCanonicalFile();
             } catch (Exception ex) {
-            }        
+            }
             return referenceFile.toURI().relativize(file.toURI()).getPath();
         } catch (Exception ex) {
         }
@@ -513,7 +514,7 @@ public class IO {
 
     //Asserting
     public static void assertExists(String path) throws FileNotFoundException {
-        assertExists (new File(path));
+        assertExists(new File(path));
     }
 
     public static void assertExistsFolder(String path) throws FileNotFoundException {
@@ -521,9 +522,9 @@ public class IO {
     }
 
     public static void assertExistsFile(String path) throws FileNotFoundException {
-        assertExistsFile (new File(path));
+        assertExistsFile(new File(path));
     }
-    
+
     public static void assertExists(File file) throws FileNotFoundException {
         if (!file.exists()) {
             throw new FileNotFoundException(file.getPath());
@@ -540,5 +541,22 @@ public class IO {
         if ((!file.exists()) || (file.isDirectory())) {
             throw new FileNotFoundException(file.getPath());
         }
-    }    
+    }
+
+    /**
+     * File.deleteOnExit does not work for non-empty folders
+     */
+    public static void deleteFolderOnExit(File folder) {
+        Runtime.getRuntime().addShutdownHook(new Thread() {
+            @Override
+            public void run() {
+                try {
+                    FileUtils.deleteDirectory(folder);
+                } catch (IOException ex) {
+                    ex.printStackTrace();
+                }
+            }
+        });
+    }
+
 }
