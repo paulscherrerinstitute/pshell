@@ -24,6 +24,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.script.CompiledScript;
 import javax.script.ScriptEngine;
+import javax.script.ScriptEngineFactory;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
 
@@ -77,11 +78,17 @@ public class ScriptManager implements AutoCloseable {
             engine.put("__name__", "__main__");
         }
 
-        threaded = ((engine.getFactory().getParameter("THREADING")) != null)
-                || // TODO: Nashorn is returning null. Even if it is not explicitly thread safe, 
-                // blocking background calls will remove much functionality. Didn't found an issue so far.
-                (type == ScriptType.js);
-
+        boolean threaded = false;
+        try{
+            threaded = ((engine.getFactory().getParameter("THREADING")) != null) || (type == ScriptType.js);
+            // TODO: Nashorn is returning null. Even if it is not explicitly thread safe, 
+            // blocking background calls will remove much functionality. Didn't found an issue so far.               
+        } catch (Exception ex){
+            //graaljs raises excerption and don't accept threaded
+            threaded = false;
+        }
+        
+        this.threaded = threaded;
         lib = new Library(engine);
         lib.setPath(libraryPath);
         injections.put("lib", lib);

@@ -1154,8 +1154,9 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
                     if (ex.getCause() instanceof ScriptException) {
                         throw (ScriptException) ex.getCause();
                     }
-                    if ((ex.getCause() instanceof RuntimeException) && (getScriptType() == ScriptType.js)) { //On JS exceptions are RuntimeException
-                        throw new ScriptException((Exception) ((RuntimeException) ex.getCause()).getCause());
+                    if ((ex.getCause() instanceof RuntimeException) && (getScriptType() == ScriptType.js)) { 
+                        //On JS exceptions are RuntimeException
+                        throw new ScriptException((RuntimeException) ex.getCause());
                     }
                     if (ex.getCause() instanceof InterruptedException) {
                         throw (InterruptedException) ex.getCause();
