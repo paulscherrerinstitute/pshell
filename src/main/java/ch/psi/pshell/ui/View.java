@@ -3602,6 +3602,7 @@ public class View extends MainFrame {
                 {"Help path", setup.getHelpPath()},
                 {"Startup script", setup.getStartupScript()},
                 {"Config file", setup.getConfigFile()},
+                {"Settings file", setup.getSettingsFile()},
                 {"Device pool", setup.getDevicePoolFile()},
                 {"Server URL", server == null ? "" : server.getInterfaceURL()},};
 

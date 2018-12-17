@@ -25,7 +25,8 @@ import java.util.regex.Pattern;
 import javax.imageio.ImageIO;
 
 /**
- * Entity class holding the application folder structure and providing file name expansion.
+ * Entity class holding the application folder structure and providing file name
+ * expansion.
  */
 public class Setup extends Config {
 
@@ -36,7 +37,8 @@ public class Setup extends Config {
     public static transient final String PROPERTY_CONFIG_FILE = "ch.psi.pshell.config.file";
     public static transient final String PROPERTY_DEVICES_FILE = "ch.psi.pshell.devices.file";
     public static transient final String PROPERTY_PLUGINS_FILE = "ch.psi.pshell.plugins.file";
-    public static transient final String PROPERTY_TASKS_FILE = "ch.psi.pshell.tasks.file";    
+    public static transient final String PROPERTY_TASKS_FILE = "ch.psi.pshell.tasks.file";
+    public static transient final String PROPERTY_SETTINGS_FILE = "ch.psi.pshell.settings.file";
     public static transient final String PROPERTY_SCRIPT_TYPE = "ch.psi.pshell.type";
 
     //Fixed tokens
@@ -90,6 +92,7 @@ public class Setup extends Config {
     public String configFilePlugins = TOKEN_CONFIG + "/plugins.properties";
     public String configFileDevices = TOKEN_CONFIG + "/devices.properties";
     public String configFileTasks = TOKEN_CONFIG + "/tasks.properties";
+    public String configFileSettings = TOKEN_CONFIG + "/settings.properties";
 
     public ScriptType scriptType = ScriptType.getDefault();
 
@@ -106,20 +109,20 @@ public class Setup extends Config {
             return type;
         }
         return scriptType;
-    }   
+    }
 
     @Override
     public void load(String fileName) throws IOException {
         if (System.getProperty(PROPERTY_HOME_PATH) == null) {
             System.setProperty(PROPERTY_HOME_PATH, "./home");
-        }                
+        }
         homePath = System.getProperty(PROPERTY_HOME_PATH);
-        
+
         if (System.getProperty(PROPERTY_OUTPUT_PATH) == null) {
             System.setProperty(PROPERTY_OUTPUT_PATH, homePath);
-        }                
+        }
         outputPath = System.getProperty(PROPERTY_OUTPUT_PATH);
-        
+
         //Config folder can be redirected, but setup is always located in home/config
         if (fileName == null) {
             fileName = Paths.get(homePath, "config", "setup.properties").toString();
@@ -127,7 +130,7 @@ public class Setup extends Config {
             fileName = fileName.replace(TOKEN_CONFIG, Paths.get(homePath, "config").toString());
             if (IO.getExtension(fileName).isEmpty()) {
                 fileName += ".properties";
-            }                        
+            }
         }
         if (fileName.trim().startsWith("~")) {
             fileName = TOKEN_SYS_HOME + Str.trimLeft(fileName).substring(1);
@@ -135,16 +138,21 @@ public class Setup extends Config {
         fileName = fileName.replace(TOKEN_SYS_HOME, Sys.getUserHome());
         fileName = fileName.replace(TOKEN_SYS_USER, Sys.getUserName());
         super.load(fileName);
-        
+
+        //Backward compatibility
+        if ((configFileSettings == null) || (configFileSettings.equals(String.valueOf((Object) null)))) {
+            configFileSettings = TOKEN_CONFIG + "/settings.properties";
+            save();
+        }
+
         if (System.getProperty(PROPERTY_DATA_PATH) != null) {
             dataPath = System.getProperty(PROPERTY_DATA_PATH);
         }
-        
+
         if (System.getProperty(PROPERTY_SCRIPT_PATH) != null) {
             scriptPath = System.getProperty(PROPERTY_SCRIPT_PATH);
-        }        
+        }
 
-        
         expansionTokens = new HashMap<>();
         expansionTokens.put(TOKEN_HOME, homePath);
         expansionTokens.put(TOKEN_HOMEDATA, outputPath);
@@ -161,37 +169,45 @@ public class Setup extends Config {
         expansionTokens.put(TOKEN_WWW, wwwPath);
 
         initPaths();
-        
+
         if (System.getProperty(PROPERTY_CONFIG_FILE) != null) {
             configFile = System.getProperty(PROPERTY_CONFIG_FILE);
             if (IO.getExtension(configFile).isEmpty()) {
                 configFile += ".properties";
-            }            
+            }
         }
         if (System.getProperty(PROPERTY_DEVICES_FILE) != null) {
             configFileDevices = System.getProperty(PROPERTY_DEVICES_FILE);
             if (IO.getExtension(configFileDevices).isEmpty()) {
                 configFileDevices += ".properties";
-            }            
+            }
         }
-        
+
         if (System.getProperty(PROPERTY_PLUGINS_FILE) != null) {
             configFilePlugins = System.getProperty(PROPERTY_PLUGINS_FILE);
             if (IO.getExtension(configFilePlugins).isEmpty()) {
                 configFilePlugins += ".properties";
-            }            
+            }
         }
 
         if (System.getProperty(PROPERTY_TASKS_FILE) != null) {
             configFileTasks = System.getProperty(PROPERTY_TASKS_FILE);
             if (IO.getExtension(configFileTasks).isEmpty()) {
                 configFileTasks += ".properties";
-            }            
+            }
         }
-        
+
+        if (System.getProperty(PROPERTY_SETTINGS_FILE) != null) {
+            configFileSettings = System.getProperty(PROPERTY_SETTINGS_FILE);
+            if (IO.getExtension(configFileSettings).isEmpty()) {
+                configFileSettings += ".properties";
+            }
+        }
+
         if (System.getProperty(PROPERTY_SCRIPT_TYPE) != null) {
             setScriptType(ScriptType.valueOf(System.getProperty(PROPERTY_SCRIPT_TYPE)));
-        }        
+        }
+
     }
 
     String user = User.DEFAULT_USER_NAME;
@@ -302,26 +318,26 @@ public class Setup extends Config {
             path = path.replace(TOKEN_EXEC_NAME, name);
             path = path.replace("{exec}", name); //TODO: Remove, this is for backward compatibility
             path = path.replace(TOKEN_EXEC_TYPE, type);
-            while (path.contains(TOKEN_EXEC_COUNT)){
+            while (path.contains(TOKEN_EXEC_COUNT)) {
                 int count = executionContext.getCount();
                 int i = path.indexOf(TOKEN_EXEC_COUNT) + TOKEN_EXEC_COUNT.length();
-                if ((i<path.length()) && path.substring(i,i+1).equals("%")){
+                if ((i < path.length()) && path.substring(i, i + 1).equals("%")) {
                     String format = path.substring(i).split(" ")[0];
-                    path = path.replaceFirst(Pattern.quote(TOKEN_EXEC_COUNT)+format, String.format(format, count));
+                    path = path.replaceFirst(Pattern.quote(TOKEN_EXEC_COUNT) + format, String.format(format, count));
                 } else {
                     path = path.replaceFirst(Pattern.quote(TOKEN_EXEC_COUNT), String.format("%04d", count));
                 }
             }
-            while (path.contains(TOKEN_EXEC_INDEX)){
+            while (path.contains(TOKEN_EXEC_INDEX)) {
                 int index = executionContext.getIndex();
                 int i = path.indexOf(TOKEN_EXEC_INDEX) + TOKEN_EXEC_INDEX.length();
-                if ((i<path.length()) && path.substring(i,i+1).equals("%")){
+                if ((i < path.length()) && path.substring(i, i + 1).equals("%")) {
                     String format = path.substring(i).split(" ")[0];
-                    path = path.replaceFirst(Pattern.quote(TOKEN_EXEC_INDEX)+format, String.format(format, index));
+                    path = path.replaceFirst(Pattern.quote(TOKEN_EXEC_INDEX) + format, String.format(format, index));
                 } else {
                     path = path.replaceFirst(Pattern.quote(TOKEN_EXEC_INDEX), String.format("%04d", index));
                 }
-            }            
+            }
         }
         if (timestamp <= 0) {
             timestamp = System.currentTimeMillis();
@@ -409,7 +425,6 @@ public class Setup extends Config {
         }
         return expandedPathNames.get(wwwPath);
     }
-    
 
     public String getWwwIndexFile() {
         return Paths.get(getWwwPath(), "index.html").toString();
@@ -431,10 +446,6 @@ public class Setup extends Config {
         }
     }
 
-    public String getSettingsFile(){
-        return expandPath("{context}/Settings.properties");
-    } 
-    
     public static String getJarFile() {
         return IO.getExecutingJar(Context.class);
     }
@@ -530,12 +541,12 @@ public class Setup extends Config {
             ret = Arr.append(ret, standard);
         }
         //If default path exists and not in path, included it - so Lib can be shared
-        if (!isRunningInIde()) {        
+        if (!isRunningInIde()) {
             String file = "startup." + getScriptType().toString();
-            if (!Paths.get(standard, file).toFile().exists()){
-                String defaultLib =  Paths.get(getHomePath(),"script", "Lib").toString();
-                if (!Arr.containsEqual(ret, defaultLib)  &&  (new File(defaultLib).exists())){
-                    if (Paths.get(getHomePath(),"script", "Lib", file).toFile().exists()){
+            if (!Paths.get(standard, file).toFile().exists()) {
+                String defaultLib = Paths.get(getHomePath(), "script", "Lib").toString();
+                if (!Arr.containsEqual(ret, defaultLib) && (new File(defaultLib).exists())) {
+                    if (Paths.get(getHomePath(), "script", "Lib", file).toFile().exists()) {
                         ret = Arr.append(ret, defaultLib);
                     }
                 }
@@ -550,21 +561,21 @@ public class Setup extends Config {
         }
         return Paths.get(getScriptPath(), "Lib").toString();
     }
-    
-    public String getDefaultStartupScript(){
+
+    public String getDefaultStartupScript() {
         String file = "startup." + getScriptType().toString();
-        return  Paths.get(getStandardLibraryPath(), file).toString();
+        return Paths.get(getStandardLibraryPath(), file).toString();
     }
 
     public String getStartupScript() {
         String file = "startup." + getScriptType().toString();
         Path ret = Paths.get(getStandardLibraryPath(), file);
-        if (ret.toFile().exists()){
+        if (ret.toFile().exists()) {
             return ret.toString();
-        }   
-        for (String path : getLibraryPath()){
+        }
+        for (String path : getLibraryPath()) {
             ret = Paths.get(path, file);
-             if (ret.toFile().exists()){
+            if (ret.toFile().exists()) {
                 return ret.toString();
             }
         }
@@ -595,14 +606,19 @@ public class Setup extends Config {
         return expandPath(configFileTasks);
     }
 
+    public String getSettingsFile() {
+        return expandPath(configFileSettings);
+    }
+
     public static String getSourceAssemblyFolder() {
         return Paths.get("src", "main", "assembly").toString();
     }
 
     /**
-     * This does not exactly mean the process was started by the IDE, but that it is running in the
-     * project source folder, and there get resources from the src folder and not the jar itself. In
-     * order to know if the project is running from the jar, check if getJarFile()!=null.
+     * This does not exactly mean the process was started by the IDE, but that
+     * it is running in the project source folder, and there get resources from
+     * the src folder and not the jar itself. In order to know if the project is
+     * running from the jar, check if getJarFile()!=null.
      */
     public static boolean isRunningInIde() {
         return Paths.get(getSourceAssemblyFolder()).toFile().isDirectory();

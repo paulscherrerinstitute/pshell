@@ -126,6 +126,10 @@
     <td>Override the task definition file,  which lists tasks loaded at startup (default is {config}/tasks.properties).</td>
   </tr>
   <tr>
+    <td>-sets=[path]</td>
+    <td>Override the settings file - persisted script properties (default is {config}/settings.properties).</td>
+  </tr>
+  <tr>
     <td>-user=[name]</td>
     <td>Set the startup user.</td>
   </tr>

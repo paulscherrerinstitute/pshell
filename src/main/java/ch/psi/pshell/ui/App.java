@@ -15,6 +15,7 @@ import ch.psi.utils.Sys;
 import ch.psi.utils.Sys.OSFamily;
 import ch.psi.pshell.core.PlotListener;
 import ch.psi.pshell.core.Setup;
+import static ch.psi.pshell.core.Setup.PROPERTY_SETTINGS_FILE;
 import ch.psi.pshell.core.UserInterface;
 import ch.psi.pshell.data.PlotDescriptor;
 import ch.psi.pshell.device.GenericDevice;
@@ -147,6 +148,7 @@ public class App extends ObservableBase<AppListener> {
         sb.append("\n\t-pool=<path>\tOverride the device pool configuration file");
         sb.append("\n\t-plug=<path>\tOverride the plugin definition file (default is {config}/plugins.properties)");
         sb.append("\n\t-task=<path>\tOverride the task definition file (default is {config}/tasks.properties)");
+        sb.append("\n\t-sets=<path>\tOverride the settings file (default is {config}/settings.properties)");
         sb.append("\n\t-clog=<level>\tSet the console logging level");
         sb.append("\n\t-user=<name>\tSet the startup user");
         sb.append("\n\t-type=<ext>\tSet the script type, overriding the setup");
@@ -491,6 +493,7 @@ public class App extends ObservableBase<AppListener> {
         public String plug;
         public String task;
         public String pool;
+        public String sets;
         public LogLevel consoleLog;
     }
 
@@ -578,7 +581,13 @@ public class App extends ObservableBase<AppListener> {
         } else if (Config.isStringDefined(pshellProperties.task)) {
             System.setProperty(Setup.PROPERTY_TASKS_FILE, pshellProperties.task);
         }
-
+        
+        if (isArgumentDefined("sets")) {
+            System.setProperty(Setup.PROPERTY_SETTINGS_FILE, getArgumentValue("sets"));
+        } else if (Config.isStringDefined(pshellProperties.sets)) {
+            System.setProperty(Setup.PROPERTY_SETTINGS_FILE, pshellProperties.sets);
+        }        
+        
         if (isArgumentDefined("outp")) {
             System.setProperty(Setup.PROPERTY_OUTPUT_PATH, getArgumentValue("outp"));
         } else if (Config.isStringDefined(pshellProperties.outp)) {
