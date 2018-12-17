@@ -1,5 +1,6 @@
 package ch.psi.pshell.scan;
 
+import ch.psi.pshell.scripting.Subscriptable.SubscriptableArray;
 import ch.psi.utils.Arr;
 import ch.psi.utils.Chrono;
 import ch.psi.utils.Convert;
@@ -14,7 +15,7 @@ import java.util.ArrayList;
  * readback for each positioner. - values (array of Objects): the readout of each sensor in the
  * scan, which can be a scalar or an array).
  */
-public class ScanRecord {
+public class ScanRecord implements SubscriptableArray<Object>{
 
     int index;   
     int dimensions;
@@ -172,12 +173,10 @@ public class ScanRecord {
         canceled = true;
     }
 
-    public Object __getitem__(int index) {
-        return values[index];
-    }
-
-    public Object __len__() {
-        return values.length;
+    @Override
+    @Hidden
+    public Object[] getItemsArray() {
+        return values;
     }
 
 }

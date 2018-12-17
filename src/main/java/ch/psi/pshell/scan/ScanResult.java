@@ -3,7 +3,9 @@ package ch.psi.pshell.scan;
 import ch.psi.pshell.core.Nameable;
 import ch.psi.pshell.device.Writable;
 import ch.psi.pshell.device.Readable;
+import ch.psi.pshell.scripting.Subscriptable.SubscriptableList;
 import ch.psi.utils.Convert;
+import ch.psi.utils.Reflection.Hidden;
 import java.beans.Transient;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
@@ -14,7 +16,7 @@ import org.apache.commons.math3.util.MultidimensionalCounter;
 /**
  * ScanResult objects package all the acquired data during a scan.
  */
-public class ScanResult {
+public class ScanResult implements SubscriptableList{
 
     final ArrayList<ScanRecord> records;
     final Scan scan;
@@ -109,8 +111,8 @@ public class ScanResult {
     }
 
     /**
-     * Returns a table of the scan results: the column names are "Time", "Index", positioners' names
-     * and sensors' names.
+     * Returns a table of the scan results: the column names are "Time",
+     * "Index", positioners' names and sensors' names.
      */
     public String print(String separator) {
         String lineSeparator = "\n";
@@ -133,55 +135,54 @@ public class ScanResult {
     public long getTimeElapsed() {
         return records.get(records.size() - 1).getTimestamp() - records.get(0).getTimestamp();
     }
-    
+
     @Transient
-    public Scan getScan(){
+    public Scan getScan() {
         return scan;
     }
-    
+
     /**
-     * Return a multidimensional array holding the scan data for the readable given by index,
-     * with same type as readable and dimensions = passes x [scan dimensions].
-     * Do not manage zigzag.
+     * Return a multidimensional array holding the scan data for the readable
+     * given by index, with same type as readable and dimensions = passes x
+     * [scan dimensions]. Do not manage zigzag.
      */
-    public Object getData(int index){        
+    public Object getData(int index) {
         int[] steps = scan.getNumberOfSteps();
-        int numDimensions = steps.length+1;
+        int numDimensions = steps.length + 1;
         int[] dimensions = new int[numDimensions];
-                
+
         dimensions[0] = scan.getNumberOfPasses();
-        for (int  i=0; i< steps.length; i++){
-            dimensions[i+1] = steps[i] + 1;
+        for (int i = 0; i < steps.length; i++) {
+            dimensions[i + 1] = steps[i] + 1;
         }
-        
+
         MultidimensionalCounter mc = new MultidimensionalCounter(dimensions);
-        
+
         //ArrayList ret = new ArrayList(); 
-        if (records.size()==0){
+        if (records.size() == 0) {
             return null;
         }
-            
+
         Class type = records.get(0).values[index].getClass();
-        if (Convert.isWrapperClass(type)){
+        if (Convert.isWrapperClass(type)) {
             type = Convert.getPrimitiveClass(type);
         }
-        Object ret = Array.newInstance(type, dimensions);        
+        Object ret = Array.newInstance(type, dimensions);
 
-        for (ScanRecord rec : records){
+        for (ScanRecord rec : records) {
             int[] pos = mc.getCounts(rec.index);
             Object val = rec.values[index];
-            
+
             //TODO: Optimize me
             Object lowerDim = ret;
-            int i=0;
-            for (; i< numDimensions-1; i++){
+            int i = 0;
+            for (; i < numDimensions - 1; i++) {
                 lowerDim = Array.get(lowerDim, pos[i]);
-            }            
-            Array.set(lowerDim,  pos[i], val);
+            }
+            Array.set(lowerDim, pos[i], val);
         }
         return ret;
     }
-
 
     @Override
     public String toString() {
@@ -203,12 +204,10 @@ public class ScanResult {
         return sb.toString();
     }
 
-    public Object __getitem__(int key) {
-        return records.get(key);
-    }
-
-    public Object __len__() {
-        return records.size();
+    @Hidden
+    @Override
+    public List getItemsList() {
+        return records;
     }
 
 }

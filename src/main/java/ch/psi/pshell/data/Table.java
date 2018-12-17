@@ -1,5 +1,6 @@
 package ch.psi.pshell.data;
 
+import ch.psi.pshell.scripting.Subscriptable;
 import ch.psi.utils.Convert;
 import ch.psi.utils.IO;
 import java.io.File;
@@ -11,7 +12,7 @@ import java.util.ArrayList;
 /**
  * This class loads data from a text file into a double[][] array.
  */
-public class Table {
+public class Table implements Subscriptable.MappedSequence{
 
     String[] header;
     double[][] data;
@@ -150,16 +151,20 @@ public class Table {
         return sb.toString();
     }
 
-    public Object __getitem__(int index) {
+    @Override
+    public Object getItemValue(int index) {
         return getCol(index);
     }
 
-    public Object __getitem__(String key) {
-        return getCol(key);
-    }
-
-    public Object __len__() {
+    @Override
+    public int getItemsLenght() {
         return getCols();
     }
 
+    @Override
+    public int toItemIndex(String itemKey) {
+        return getColIndex(itemKey);
+    }
+
 }
+

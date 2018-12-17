@@ -1,5 +1,6 @@
 package ch.psi.pshell.bs;
 
+import ch.psi.pshell.scripting.Subscriptable;
 import ch.psi.utils.Reflection.Hidden;
 import java.util.List;
 
@@ -7,7 +8,7 @@ import java.util.List;
  * Entity containing the current value for a stream, including a list of identifiers, their values,
  * a pulse id and a timestamp.
  */
-public class StreamValue extends Number {
+public class StreamValue extends Number implements Subscriptable.MappedList{
 
     final long pulseId;
     final long timestamp;
@@ -88,20 +89,20 @@ public class StreamValue extends Number {
         return pulseId;
     }
 
-    public Object __getitem__(int index) {
-        return values.get(index);
-    }
-
-    public Object __getitem__(String key) {
+    @Override
+    @Hidden
+    public int toItemIndex(String itemKey){
         for (int i = 0; i < identifiers.size(); i++) {
-            if (identifiers.get(i).equals(key)) {
-                return values.get(i);
+            if (identifiers.get(i).equals(itemKey)) {
+                return i;
             }
         }
-        return null;
+        return -1;
     }
-
-    public Object __len__() {
-        return values.size();
-    }
+    
+    @Override
+    @Hidden
+    public List getItemsList() {
+        return values;
+    }    
 }
