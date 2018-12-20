@@ -233,7 +233,8 @@ public class ScriptsPanel extends MonitoredPanel implements UpdatablePanel {
                     }
 
                 }
-                String file = (String) table.getModel().getValueAt(row, 0);
+                int index = table.convertRowIndexToModel(row);
+                String file = (String) table.getModel().getValueAt(index, 0);
                 if (file.equals("..") || file.endsWith("/")) {
                     comp.setForeground(folderColor);
                 } else {
