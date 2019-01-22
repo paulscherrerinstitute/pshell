@@ -24,6 +24,7 @@ import java.awt.Dimension as Dimension
 import java.awt.Font as Font
 import org.python.core.PyArray as PyArray
 import org.python.core.PyFunction as PyFunction
+import org.python.core.PyGenerator as PyGenerator
 
 import ch.psi.utils.Threading as Threading
 import ch.psi.utils.State as State
@@ -475,13 +476,13 @@ def vscan(writables, readables, vector, line = False, latency=0.0, relative=Fals
     Args:
         writables(list of Writable): Positioners set on each step.
         readables(list of Readable): Sensors to be sampled on each step.
-        vector(list of list of float): table of positioner values.
+        vector (generator (floats or lists of float)  or list of list of float): positioner values.
         line (bool, optional): if true, processs as line scan (1d)
         relative (bool, optional): if true, start and end positions are relative to current at
             start of the scan
         latency(float, optional): settling time for each step before readout, defaults to 0.0.
-        passes(int, optional): number of passes
-        zigzag(bool, optional): if true writables invert direction on each pass.
+        passes(int, optional): number of passes (disregarded if vector is a generator).
+        zigzag(bool, optional): if true writables invert direction on each pass (disregarded if vector is a generator).
         pars(keyworded variable length arguments, optional): scan optional named arguments:
             - title(str, optional): plotting window name.
             - before_read (function, optional): callback on each step, before sampling. Arguments: positions, scan
@@ -503,12 +504,15 @@ def vscan(writables, readables, vector, line = False, latency=0.0, relative=Fals
     latency_ms=int(latency*1000)
     writables=to_list(string_to_obj(writables))
     readables=to_list(string_to_obj(readables))
-    if len(vector) == 0:
-        vector.append([])
-    elif (not is_list(vector[0])) and (not isinstance(vector[0],PyArray)):
-        vector = [[x,] for x in vector]
-    vector = to_array(vector, 'd')
-    scan = VectorScan(writables,readables, vector, line, relative, latency_ms, int(passes), zigzag)
+    if type (vector) == PyGenerator:
+        scan = VectorScan(writables,readables, vector, line, relative, latency_ms)
+    else:
+        if len(vector) == 0:
+            vector.append([])
+        elif (not is_list(vector[0])) and (not isinstance(vector[0],PyArray)):
+            vector = [[x,] for x in vector]
+        vector = to_array(vector, 'd')
+        scan = VectorScan(writables,readables, vector, line, relative, latency_ms, int(passes), zigzag)
     processScanPars(scan, pars)
     scan.start()
     return scan.getResult()
@@ -1228,10 +1232,10 @@ def set_exec_pars(**args):
 
         Graphical preferences can also be set. Keys are equal to lowercase of Preference enum:
         "plot_disabled", "plot_layout", "table_disabled", "enabled_plots", "plot_types", "print_scan", "auto_range",
-        "manual_range","domain_axis", "status". See set_preference for more information.
+        "manual_range","manual_range_y", "domain_axis", "status". See set_preference for more information.
 
         Shortcut entries: "line_plots": list of devices with enforced line plots.
-                          "range": "none", "auto", or [min, max]
+                          "range": "none", "auto", [min_x, max_x]  or [min_x, max_x, min_y, max_y] 
                           "display": if false disables scan data plotting and printing.
     """
     get_context().setExecutionPars(args)
@@ -1952,8 +1956,8 @@ def arrmul(a, b):
 
     Args:
 
-        a(subscriptable : list, tuple, array...)
-        b(subscriptable : list, tuple, array...)
+        a(subscriptable)
+        b(subscriptable)
 
     Returns:
         List
@@ -1966,8 +1970,8 @@ def arrdiv(a, b):
 
     Args:
 
-        a(subscriptable : list, tuple, array...)
-        b(subscriptable : list, tuple, array...)
+        a(subscriptable)
+        b(subscriptable)
 
     Returns:
         List
@@ -1980,8 +1984,8 @@ def arradd(a, b):
 
     Args:
 
-        a(subscriptable : list, tuple, array...)
-        b(subscriptable : list, tuple, array...)
+        a(subscriptable)
+        b(subscriptable)
 
     Returns:
         List
@@ -1994,8 +1998,8 @@ def arrsub(a, b):
 
     Args:
 
-        a(subscriptable : list, tuple, array...)
-        b(subscriptable : list, tuple, array...)
+        a(subscriptable)
+        b(subscriptable)
 
     Returns:
         List
@@ -2008,7 +2012,7 @@ def arrabs(a):
 
     Args:
 
-        a(subscriptable : list, tuple, array...)
+        a(subscriptable)
 
     Returns:
         List
@@ -2021,7 +2025,7 @@ def arroff(a, value = "mean"):
 
     Args:
 
-        a(subscriptable : list, tuple, array...)
+        a(subscriptable)
         type(int or str, optional): value to subtract from the array, or "mean" or "min".
 
     Returns:
@@ -2038,7 +2042,7 @@ def mean(data):
     """Calculate the mean of a sequence.
 
     Args:
-        data(subscriptable : list, tuple, array...)
+        data(subscriptable)
 
     Returns:
         Mean of the elements in the object.
@@ -2050,7 +2054,7 @@ def variance(data):
     """Calculate the variance of a sequence.
 
     Args:
-        data(subscriptable : list, tuple, array...)
+        data(subscriptable)
 
     Returns:
         Variance of the elements in the object.
@@ -2064,7 +2068,7 @@ def stdev(data):
     """Calculate the standard deviation of a sequence.
 
     Args:
-        data(subscriptable : list, tuple, array...)
+        data(subscriptable)
 
     Returns:
         Standard deviation of the elements in the object.
@@ -2078,7 +2082,7 @@ def center_of_mass(data, x = None):
 
     Args:
 
-        data(subscriptable : list, tuple, array...)
+        data(subscriptable)
         x(list, tuple, array ..., optional): x coordinates
 
     Returns:
@@ -2490,6 +2494,7 @@ def set_preference(preference, value):
             PRINT_SCAN: Print scan records to console
             AUTO_RANGE: Automatic range scan plots x-axis
             MANUAL_RANGE: Manually set scan plots x-axis
+            MANUAL_RANGE_Y: Manually set scan plots y-axis
             DOMAIN_AXIS: Set the domain axis source: "Time", "Index", or a readable name.
                 Default(None): first positioner
             STATUS: set application status

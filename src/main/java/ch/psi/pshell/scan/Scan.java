@@ -7,8 +7,6 @@ import ch.psi.pshell.device.Readable;
 import ch.psi.utils.Reflection;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Map;
-
 /**
  *
  */

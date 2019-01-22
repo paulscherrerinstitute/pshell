@@ -75,6 +75,7 @@ public class PlotPanel extends MonitoredPanel {
     static public PlotLayout DEFAULT_PLOT_LAYOUT = PlotLayout.Vertical;
 
     public static final Font TITLE_FONT = new Font(Font.SANS_SERIF, Font.BOLD, 13);
+    public static final int DEFAULT_RANGE_STEPS = 200;
     
     public static final boolean offscreen = App.isOffscreenPlotting();
     String plotTitle;
@@ -755,7 +756,8 @@ public class PlotPanel extends MonitoredPanel {
                     //TODO: should be start[2] /end[2] in some cases?
                     double y_start = (start.length > 2) ? start[1] : 0;
                     double y_end = (end.length > 2) ? end[1] : (ySize - 1);
-                    MatrixPlotSeries series = new MatrixPlotSeries(name, (prefs.range != null) ? prefs.range.min : start[0], (prefs.range != null) ? prefs.range.max : end[0], steps[0] + 1, y_start, y_end, ySize);
+                    MatrixPlotSeries series = new MatrixPlotSeries(name, (prefs.range != null)  ? prefs.range.min : start[0], (prefs.range != null)  ? prefs.range.max : end[0], steps[0] + 1, 
+                                                                         (prefs.rangeY != null) ? prefs.rangeY.min : y_start,  (prefs.rangeY != null) ? prefs.rangeY.max : y_end,  ySize);
                     plot.addSeries(series);
                 }
             } else {
@@ -766,6 +768,9 @@ public class PlotPanel extends MonitoredPanel {
                             plot.getAxis(Plot.AxisId.X).setRange(prefs.range.min, prefs.range.max);
                         } else if ((prefs.autoRange == null) || (!prefs.autoRange)) {
                             plot.getAxis(Plot.AxisId.X).setRange(Math.min(start[0], end[0]), Math.max(start[0], end[0]));
+                        }
+                        if (prefs.rangeY != null) {
+                            plot.getAxis(Plot.AxisId.Y).setRange(prefs.rangeY.min, prefs.rangeY.max);
                         }
                     }
                     plot.getAxis(Plot.AxisId.X).setLabel(labelX);
@@ -781,13 +786,19 @@ public class PlotPanel extends MonitoredPanel {
                     //if (isScan){
                     //    series =series = new MatrixPlotSeries(name, (prefs.range != null) ? prefs.range.min : start[0], (prefs.range != null) ? prefs.range.max : end[0], steps[0] + 1, start[1], end[1], steps[1] + 1);
                     //} else {
-                    series = new MatrixPlotSeries(name, start[0], end[0], steps[0] + 1, start[1], end[1], steps[1] + 1);
+                    series = new MatrixPlotSeries(name, start[0], end[0], (steps[0]<0) ? DEFAULT_RANGE_STEPS : (steps[0] + 1), start[1], end[1], (steps[1]<0) ? DEFAULT_RANGE_STEPS : (steps[1] + 1));
                     if (prefs.range != null) {
                         plot.getAxis(Plot.AxisId.X).setRange(prefs.range.min, prefs.range.max);
-                        if (changedScaleX) {
+                        if (changedScaleX || ( (steps[0]<0))) {
                             series.setRangeX(prefs.range.min, prefs.range.max);
                         }
                     }
+                    if (prefs.rangeY != null) {
+                        plot.getAxis(Plot.AxisId.Y).setRange(prefs.rangeY.min, prefs.rangeY.max);
+                        if ( (steps[1]<0)){
+                            series.setRangeY(prefs.rangeY.min, prefs.rangeY.max);
+                        }
+                    }                    
                     //}
                     plot.addSeries(series);
                 }
@@ -829,8 +840,10 @@ public class PlotPanel extends MonitoredPanel {
                         if (changedScaleX) {
                             series.setRangeX(prefs.range.min, prefs.range.max);
                         }
-
                     }
+                    if (prefs.rangeY != null) {
+                        plot.getAxis(Plot.AxisId.Y).setRange(prefs.rangeY.min, prefs.rangeY.max);
+                    }                    
                     //}
                     plot.addSeries(series);
                 }
@@ -849,6 +862,9 @@ public class PlotPanel extends MonitoredPanel {
                         plot.getAxis(Plot.AxisId.X).setRange(Math.min(start[0], end[0]), Math.max(start[0], end[0]));
                     }
                 }
+                if (prefs.rangeY != null) {
+                    plot.getAxis(Plot.AxisId.Y).setRange(prefs.rangeY.min, prefs.rangeY.max);
+                }                 
                 plot.getAxis(Plot.AxisId.X).setLabel(labelX);
                 plot.getAxis(Plot.AxisId.Y).setLabel(null);
             }

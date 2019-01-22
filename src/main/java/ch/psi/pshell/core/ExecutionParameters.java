@@ -31,7 +31,7 @@ public class ExecutionParameters {
         "shuffle", "contiguous", "then", "then_exception", "then_success"};
 
     final String[] viewOptions = new String[]{"plot_disabled", "table_disabled", "enabled_plots", "plot_layout",
-        "plot_types", "print_scan", "auto_range", "manual_range", "domain_axis", "status"};
+        "plot_types", "print_scan", "auto_range", "manual_range", "manual_range_y", "domain_axis", "status"};
 
     final String[] shortcutOptions = new String[]{"display", "line_plots", "plot_list", "range"};
 
@@ -747,10 +747,23 @@ public class ExecutionParameters {
             case MANUAL_RANGE:
                 if (value == null) {
                     plotPreferences.setFixedRange();
-                } else {
-                    plotPreferences.setManualRange((Object[]) value);
+                } else if (value instanceof Object[]){
+                    Object[] arr = ((Object[]) ((Object[])value));
+                    if (arr.length==2){
+                        plotPreferences.setManualRange(arr);
+                    } else if (arr.length==4){
+                        plotPreferences.setManualRange(Arr.getSubArray(arr, 0, 2));
+                        plotPreferences.setManualRangeY(Arr.getSubArray(arr, 2, 2));
+                    }
                 }
                 break;
+            case MANUAL_RANGE_Y:
+                if (value == null) {
+                    plotPreferences.setFixedRangeY();
+                } else {
+                    plotPreferences.setManualRangeY((Object[]) value);
+                }
+                break;                
             case DOMAIN_AXIS:
                 plotPreferences.setDomainAxis((String) value);
                 break;

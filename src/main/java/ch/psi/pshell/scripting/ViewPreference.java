@@ -22,6 +22,7 @@ public enum ViewPreference {
     PRINT_SCAN, //print scan records to console    
     AUTO_RANGE, //Automatic range scan plots x-axis
     MANUAL_RANGE, //Manually set scan plots x-axis
+    MANUAL_RANGE_Y, //Manually set scan plots y-axis
     DOMAIN_AXIS, //set the domain axis source: "Time", "Index", or a readable name. Default(None): first positioner
     DEFAULTS, //Restore defaults preferences
     STATUS; //set application status        
@@ -35,6 +36,8 @@ public enum ViewPreference {
         public Map<String, Object> plotTypes;
         public Boolean autoRange;
         public Range range;
+        public Range rangeY;
+        public Integer steps;
         public String domainAxis;
         public PlotLayout plotLayout;
 
@@ -43,6 +46,7 @@ public enum ViewPreference {
             plotTypes = null;
             autoRange = null;
             range = null;
+            rangeY = null;
             domainAxis = null;
             plotLayout = null;
         }
@@ -53,15 +57,37 @@ public enum ViewPreference {
         }
 
         public void setManualRange(Object[] range) {
-            double min = Math.min(((Number) range[0]).doubleValue(), ((Number) range[1]).doubleValue());
-            double max = Math.max(((Number) range[0]).doubleValue(), ((Number) range[1]).doubleValue());
-            autoRange = null;
-            this.range = new Range(min, max);
+            if (range==null){
+                setFixedRange();
+            } else {
+                if (!(Double.isNaN(((Number) range[0]).doubleValue())) && !(Double.isNaN(((Number) range[1]).doubleValue()))){
+                    double min = Math.min(((Number) range[0]).doubleValue(), ((Number) range[1]).doubleValue());
+                    double max = Math.max(((Number) range[0]).doubleValue(), ((Number) range[1]).doubleValue());
+                    autoRange = null;
+                    this.range = new Range(min, max);
+                }
+            }
         }
 
         public void setAutoRange(boolean value) {
             autoRange = value;
             range = null;
+        }
+        
+        public void setFixedRangeY() {
+            rangeY = null;
+        }
+
+        public void setManualRangeY(Object[] range) {
+            if (range==null){
+                setFixedRangeY();
+            } else {            
+                if (!(Double.isNaN(((Number) range[0]).doubleValue())) && !(Double.isNaN(((Number) range[1]).doubleValue()))){
+                    double min = Math.min(((Number) range[0]).doubleValue(), ((Number) range[1]).doubleValue());
+                    double max = Math.max(((Number) range[0]).doubleValue(), ((Number) range[1]).doubleValue());
+                    this.rangeY = new Range(min, max);
+                }
+            }
         }
 
         public void resetPlotTypes() {
@@ -101,6 +127,7 @@ public enum ViewPreference {
             ret.enabledPlots = enabledPlots;
             ret.plotTypes = plotTypes;
             ret.range = range;
+            ret.rangeY = rangeY;
             ret.plotLayout = plotLayout;
             return ret;
         }
