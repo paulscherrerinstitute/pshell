@@ -1174,15 +1174,16 @@ public class View extends MainFrame {
     };
 
     void updateScriptEditorTabTitle(ScriptEditor editor, int index) {
-        if (editor.getDocument().hasChanged()) {
             try {
-                tabDoc.setTitleAt(index, editor.getScriptName() + "*");
-                CloseButtonTabComponent tabComponent = (CloseButtonTabComponent) tabDoc.getTabComponentAt(index);
-                tabComponent.updateUI();
+                String title = editor.getScriptName() + (editor.getDocument().hasChanged() ? "*" : "");
+                if (!title.equals(tabDoc.getTitleAt(index))){
+                    tabDoc.setTitleAt(index, title);
+                    CloseButtonTabComponent tabComponent = (CloseButtonTabComponent) tabDoc.getTabComponentAt(index);
+                    tabComponent.updateUI();
+                }
             } catch (Exception ex) {
                 logger.log(Level.WARNING, null, ex);
             }
-        }
     }
 
     void updateProcessorTabTitle(Processor processor, int index) {

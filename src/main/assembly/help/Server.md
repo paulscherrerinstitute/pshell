@@ -11,6 +11,11 @@ After change in configuration the application must be restarted.
     ```
         http://[HOST]:[PORT]
     ```
+    A Python client for the REST interface is available at:
+
+    __https://github.com/paulscherrerinstitute/pshell/blob/master/src/main/python/PShellClient/PShellClient.py__
+
+
 
  2. A standard web client in included, which provides a user web interface to PShell through the REST interface.
 
