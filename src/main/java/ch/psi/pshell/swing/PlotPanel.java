@@ -75,8 +75,8 @@ public class PlotPanel extends MonitoredPanel {
     static public PlotLayout DEFAULT_PLOT_LAYOUT = PlotLayout.Vertical;
 
     public static final Font TITLE_FONT = new Font(Font.SANS_SERIF, Font.BOLD, 13);
-    public static final int DEFAULT_RANGE_STEPS = 200;
-    
+    public static final int DEFAULT_RANGE_STEPS = 199;
+
     public static final boolean offscreen = App.isOffscreenPlotting();
     String plotTitle;
 
@@ -128,11 +128,11 @@ public class PlotPanel extends MonitoredPanel {
 
     public PlotLayout getPlotLayout() {
         try {
-            try{
-                if (prefs.plotLayout!=null){
+            try {
+                if (prefs.plotLayout != null) {
                     return prefs.plotLayout;
                 }
-            } catch (Exception ex){
+            } catch (Exception ex) {
             }
             return PlotLayout.valueOf(System.getProperty(PROPERTY_PLOT_LAYOUT));
         } catch (Exception ex) {
@@ -181,7 +181,7 @@ public class PlotPanel extends MonitoredPanel {
 
     public void clear() {
         plots.clear();
-        if (!offscreen){
+        if (!offscreen) {
             pnGraphs.removeAll();
             panelIndexY = 0;
             panelIndexX = 0;
@@ -198,8 +198,8 @@ public class PlotPanel extends MonitoredPanel {
         plot.setTitleFont(TITLE_FONT);
         plot.setQuality(getQuality());
         plots.add(plot);
-        
-        if (!offscreen){
+
+        if (!offscreen) {
             GridBagConstraints c = new GridBagConstraints();
             c.fill = GridBagConstraints.HORIZONTAL;
             c.fill = GridBagConstraints.BOTH;
@@ -360,8 +360,8 @@ public class PlotPanel extends MonitoredPanel {
                             }
                         }
                         Class type = r.getClass();
-                        if (Averager.isAverager(r)){
-                            type  = Averager.class;
+                        if (Averager.isAverager(r)) {
+                            type = Averager.class;
                         }
                         addPlot(name, true, labelX, scan.getDimensions(), recordSize, start, end, scan.getNumberOfSteps(), type);
                         readableIndexes.add(i);
@@ -371,7 +371,7 @@ public class PlotPanel extends MonitoredPanel {
             } catch (Exception ex) {
                 Logger.getLogger(PlotPanel.class.getName()).log(Level.SEVERE, null, ex);
             }
-            if (!offscreen){
+            if (!offscreen) {
                 validate();
                 repaint();
             }
@@ -401,7 +401,7 @@ public class PlotPanel extends MonitoredPanel {
                 synchronized (scanRecordBuffer) {
                     scanRecordBuffer.add(record);
                     if (updating.compareAndSet(false, true)) {
-                        if (offscreen){
+                        if (offscreen) {
                             addRecords(scan);
                         } else {
                             SwingUtilities.invokeLater(() -> {
@@ -583,18 +583,18 @@ public class PlotPanel extends MonitoredPanel {
                                                 x.setRange(min, max);
                                             }
                                             double[][] data = series.getData();
-                                            
+
                                             for (int y = 0; y < Array.getLength(val); y++) {
                                                 Object o = Array.get(val, y);
-                                                if (data[y].length <= record.getIndex()){    
-                                                    double[] aux = new double[record.getIndex()+1];
-                                                    System.arraycopy(data[y], 0, aux, 0, data[y].length );
+                                                if (data[y].length <= record.getIndex()) {
+                                                    double[] aux = new double[record.getIndex() + 1];
+                                                    System.arraycopy(data[y], 0, aux, 0, data[y].length);
                                                     data[y] = aux;
                                                 }
                                                 data[y][record.getIndex()] = (Double) o;
                                             }
                                             series.setNumberOfBinsX(data[0].length);
-                                            series.setNumberOfBinsY(data.length);                                            
+                                            series.setNumberOfBinsY(data.length);
                                             series.setData(data);
                                         } else {
                                             for (int y = 0; y < Array.getLength(val); y++) {
@@ -675,15 +675,15 @@ public class PlotPanel extends MonitoredPanel {
                 Class type = getPlotClass(prefs.plotTypes.get(name));
                 //If device name matches a Cacheable cache name, use the rule for the parent  
                 if (type != null) {
-                    requestedPlot =  (Plot) type.newInstance();
+                    requestedPlot = (Plot) type.newInstance();
                 }
             }
         } catch (Exception ex) {
             Logger.getLogger(PlotPanel.class.getName()).log(Level.WARNING, null, ex);
         }
-        
+
         if (dim == 3) {
-            return  Plot.newPlot(getSlicePlotImpl());
+            return Plot.newPlot(getSlicePlotImpl());
         }
 
         if (dim == 2) {
@@ -724,7 +724,7 @@ public class PlotPanel extends MonitoredPanel {
                 plot.addSeries(series);
             } else {
                 if ((recordSize == null) || (recordSize[0] == 1)) {
-                    
+
                     plot = newPlot(name, isScan, 3, false);
                     SlicePlotSeries series = new SlicePlotSeries(name, start[1], end[1], steps[1] + 1, start[2], end[2], steps[2] + 1, start[0], end[0], steps[0] + 1);
                     plot.addSeries(series);
@@ -756,8 +756,9 @@ public class PlotPanel extends MonitoredPanel {
                     //TODO: should be start[2] /end[2] in some cases?
                     double y_start = (start.length > 2) ? start[1] : 0;
                     double y_end = (end.length > 2) ? end[1] : (ySize - 1);
-                    MatrixPlotSeries series = new MatrixPlotSeries(name, (prefs.range != null)  ? prefs.range.min : start[0], (prefs.range != null)  ? prefs.range.max : end[0], steps[0] + 1, 
-                                                                         y_start,  y_end,  ySize);
+                    int nX = (steps[0] < 0) ? DEFAULT_RANGE_STEPS : steps[0] + 1;
+                    MatrixPlotSeries series = new MatrixPlotSeries(name, (prefs.range != null) ? prefs.range.min : start[0], (prefs.range != null) ? prefs.range.max : end[0], nX,
+                            y_start, y_end, ySize);
                     plot.addSeries(series);
                 }
             } else {
@@ -783,19 +784,21 @@ public class PlotPanel extends MonitoredPanel {
                     //if (isScan){
                     //    series =series = new MatrixPlotSeries(name, (prefs.range != null) ? prefs.range.min : start[0], (prefs.range != null) ? prefs.range.max : end[0], steps[0] + 1, start[1], end[1], steps[1] + 1);
                     //} else {
-                    series = new MatrixPlotSeries(name, start[0], end[0], (steps[0]<0) ? DEFAULT_RANGE_STEPS : (steps[0] + 1), start[1], end[1], (steps[1]<0) ? DEFAULT_RANGE_STEPS : (steps[1] + 1));
+                    int nX = (steps[0] < 0) ? DEFAULT_RANGE_STEPS : (steps[0] + 1);
+                    int nY = (steps[1] < 0) ? DEFAULT_RANGE_STEPS : (steps[1] + 1);
+                    series = new MatrixPlotSeries(name, start[0], end[0], nX, start[1], end[1], nY);
                     if (prefs.range != null) {
                         plot.getAxis(Plot.AxisId.X).setRange(prefs.range.min, prefs.range.max);
-                        if (changedScaleX || ( (steps[0]<0))) {
+                        if (changedScaleX || ((steps[0] < 0))) {
                             series.setRangeX(prefs.range.min, prefs.range.max);
                         }
                     }
                     if (prefs.rangeY != null) {
                         plot.getAxis(Plot.AxisId.Y).setRange(prefs.rangeY.min, prefs.rangeY.max);
-                        if ( (steps[1]<0)){
+                        if ((steps[1] < 0)) {
                             series.setRangeY(prefs.rangeY.min, prefs.rangeY.max);
                         }
-                    }                    
+                    }
                     //}
                     plot.addSeries(series);
                 }
@@ -831,13 +834,14 @@ public class PlotPanel extends MonitoredPanel {
                     //if (isScan){
                     //    series = new MatrixPlotSeries(name, (prefs.range != null) ? prefs.range.min : start[0], (prefs.range != null) ? prefs.range.max : end[0], steps[0] + 1, y_start, y_end, ySize);
                     //} else {
-                    series = new MatrixPlotSeries(name, start[0], end[0], steps[0] + 1, y_start, y_end, ySize);
+                    int nX = (steps[0] < 0) ? DEFAULT_RANGE_STEPS : steps[0] + 1;
+                    series = new MatrixPlotSeries(name, start[0], end[0], nX, y_start, y_end, ySize);
                     if (prefs.range != null) {
                         plot.getAxis(Plot.AxisId.X).setRange(prefs.range.min, prefs.range.max);
                         if (changedScaleX) {
                             series.setRangeX(prefs.range.min, prefs.range.max);
                         }
-                    }                 
+                    }
                     //}
                     plot.addSeries(series);
                 }
@@ -855,7 +859,7 @@ public class PlotPanel extends MonitoredPanel {
                     if ((start != null) && (start.length > 0) && (end != null) && (end.length > 0)) {
                         plot.getAxis(Plot.AxisId.X).setRange(Math.min(start[0], end[0]), Math.max(start[0], end[0]));
                     }
-                }               
+                }
                 plot.getAxis(Plot.AxisId.X).setLabel(labelX);
                 plot.getAxis(Plot.AxisId.Y).setLabel(null);
             }
@@ -868,7 +872,7 @@ public class PlotPanel extends MonitoredPanel {
                 addSurfacePlotMenu(((SlicePlotDefault) plot).getMatrixPlot());
             }
             plot.setTitle(name);
-            addPlot((PlotBase)plot);
+            addPlot((PlotBase) plot);
             plot.setUpdatesEnabled(false);
         }
         return plot;
@@ -913,6 +917,7 @@ public class PlotPanel extends MonitoredPanel {
         double[] z = descriptor.z;
         int[] numberSteps = descriptor.steps;
         boolean multidimentional1dDataset = descriptor.isMultidimentional1dArray();
+        boolean sparseArrayData = false;
 
         if (rank < 0) {
             rank = dimensions;
@@ -950,17 +955,27 @@ public class PlotPanel extends MonitoredPanel {
                     steps[2] = y.length - 1;
                 }
             } else {
-                //2D-scan with 1d datasets of arrays
+                //2D-scan with 1d datasets of arrays 
                 if (multidimentional1dDataset) {
-                    start = new double[]{(Double) Arr.getMin(x), (Double) Arr.getMin(y), 0};
-                    end = new double[]{(Double) Arr.getMax(x), (Double) Arr.getMax(y), shape[1] - 1};
-                    steps = new int[]{numberSteps[0], numberSteps[1], shape[1] - 1};
-                    if ((z != null) && (z.length > 0)) {
-                        start[2] = z[0];
-                        end[2] = z[z.length - 1];
-                        steps[2] = z.length - 1;
+                    sparseArrayData = (dimensions==2) && (numberSteps[0] < 0) && (numberSteps[1] < 0);
+                    // Sparse table: don't try to make 3d plots of array data
+                    if (sparseArrayData){
+                        //data = Convert.transpose(data);
+                        start = new double[]{(Double) Arr.getMin(x), 0};
+                        end = new double[]{(Double) Arr.getMax(x), shape[1] - 1};
+                        steps = new int[]{-1, shape[1] - 1};
+                        rank = 2;
+                    } else {
+                        start = new double[]{(Double) Arr.getMin(x), (Double) Arr.getMin(y), 0};
+                        end = new double[]{(Double) Arr.getMax(x), (Double) Arr.getMax(y), shape[1] - 1};
+                        steps = new int[]{numberSteps[0], numberSteps[1], shape[1] - 1};
+                        if ((z != null) && (z.length > 0)) {
+                            start[2] = z[0];
+                            end[2] = z[z.length - 1];
+                            steps[2] = z.length - 1;
+                        }
+                        rank = 3;
                     }
-                    rank = 3;
                 } else {
                     start = new double[2];
                     end = new double[2];
@@ -972,8 +987,8 @@ public class PlotPanel extends MonitoredPanel {
                     } else {
                         //TODO:Should create a 3d plot to support multipass scans(overlapping samples)?
                         int length = x.length;
-                        if (descriptor.passes>1){
-                            length/=descriptor.passes;
+                        if (descriptor.passes > 1) {
+                            length /= descriptor.passes;
                         }
                         start[0] = x[0];
                         end[0] = x[length - 1];
@@ -1034,11 +1049,21 @@ public class PlotPanel extends MonitoredPanel {
                 }
             } else if (plot instanceof MatrixPlot) {
                 MatrixPlotSeries series = ((MatrixPlotSeries) plot.getSeries(0));
-                if (multidimentional1dDataset) {
-                    double[] array = (double[]) data;
-                    //Already checked array sizes                   
-                    for (int i = 0; i < array.length; i++) {
-                        series.appendData(x[i], y[i], array[i]);
+                if (multidimentional1dDataset){
+                    if (sparseArrayData){
+                        double[][] array = (double[][]) data;
+                        //Already checked array sizes                   
+                        for (int i = 0; i < array.length; i++) {
+                            for (int j = 0; j < array[i].length; j++) {
+                                series.appendData(x[i], j, array[i][j]);
+                            }
+                        }                        
+                    } else {
+                        double[] array = (double[]) data;
+                        //Already checked array sizes                   
+                        for (int i = 0; i < array.length; i++) {
+                            series.appendData(x[i], y[i], array[i]);
+                        }
                     }
                 } else {
                     series.setData((double[][]) data);
@@ -1061,10 +1086,10 @@ public class PlotPanel extends MonitoredPanel {
                             Logger.getLogger(PlotPanel.class.getName()).log(Level.WARNING, null, ex);
                         }
                     });
-                } else if (dimensions == 3) {                    
+                } else if (dimensions == 3) {
                     double[][][] array = (double[][][]) data;
                     series.setListener((SlicePlotSeries series1, int page) -> {
-                        try {                            
+                        try {
                             series1.setData(array[page]);
                         } catch (Exception ex) {
                             Logger.getLogger(PlotPanel.class.getName()).log(Level.WARNING, null, ex);
@@ -1088,7 +1113,7 @@ public class PlotPanel extends MonitoredPanel {
             }
 
             plot.update(true);
-            if (!offscreen){
+            if (!offscreen) {
                 plot.setUpdatesEnabled(true);//This plot is user general-purpose so disable scan optimization
                 validate();
                 repaint();
@@ -1098,8 +1123,9 @@ public class PlotPanel extends MonitoredPanel {
     }
 
     /**
-     * This method is called from within the constructor to initialize the form. WARNING: Do NOT
-     * modify this code. The content of this method is always regenerated by the Form Editor.
+     * This method is called from within the constructor to initialize the form.
+     * WARNING: Do NOT modify this code. The content of this method is always
+     * regenerated by the Form Editor.
      */
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
