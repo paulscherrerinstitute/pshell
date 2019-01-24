@@ -23,7 +23,7 @@ The edition starts by selecting the type of scan in the "Scan Type" combo box:
     - If no trigger is defined,  and sensors does not contains stream devices, set all sensors as triggers.
     - If "Synchronous sampling" is not set, only cached values are sampled (no blocking read).  
 
-Linear, Multidimentional and Continuous scans have the notion of scan range 
+Linear, Multidimensional and Continuous scans have the notion of scan range 
 for each positioner (start, stop, steps). 
 For the other scan types these fields are disregarded.
 If scan ranges are used, the check box "Use number of steps" toggles the Positioners table
