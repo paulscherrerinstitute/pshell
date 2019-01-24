@@ -366,4 +366,10 @@ class PShellClient:
 
     def on_event(self, name, value):
         pass
-        
+
+
+if __name__ == "__main__":
+    import socket
+    ps = PShellClient( "http://" + socket.gethostname() + ":8080")
+    print (ps.get_state())
+
