@@ -174,7 +174,7 @@ public class View extends MainFrame {
                 ((JButton) b).setIcon(new ImageIcon(App.getResourceUrl("dark/" + new File(((JButton) b).getIcon().toString()).getName())));
             }
         }
-
+        tabLeft.setVisible(false);
         loggerPanel.setOutputLength(1000);
         //loggerPanel.setInverted(true);
         loggerPanel.start();
@@ -1355,7 +1355,7 @@ public class View extends MainFrame {
 
     void setScanPlotVisible(boolean value) {
         if (isPlotsVisible() != value) {
-            tabPlots.setVisible(value);
+            setTabPlotVisible(value);
             if (plotsDetached) {
                 plotFrame.setVisible(value);
             } else if (value) {
@@ -1364,6 +1364,11 @@ public class View extends MainFrame {
                 }
             }
         }
+    }
+    
+    void setTabPlotVisible(boolean value){
+        tabPlots.setVisible(value);
+        splitterHoriz.setDividerSize(value ? splitterVert.getDividerSize() : 0);
     }
 
     JFrame plotFrame;
@@ -1387,7 +1392,7 @@ public class View extends MainFrame {
                 plotFrame.setVisible(visible);
             } else {
                 plotFrame.setVisible(false);
-                tabPlots.setVisible(visible);
+                setTabPlotVisible(visible);
                 plotFrame.remove(tabPlots);
                 splitterHoriz.setRightComponent(tabPlots);
                 removePersistedWindow(plotFrame);
@@ -1415,6 +1420,9 @@ public class View extends MainFrame {
         if (parent == tabPlots) {
             return PanelLocation.Plot;
         }
+        if (parent == tabLeft) {
+            return PanelLocation.Left;
+        }        
         return PanelLocation.Detached;
     }
 
@@ -1442,6 +1450,12 @@ public class View extends MainFrame {
                     ((Window) topLevel).dispose();
                 }
             }
+            boolean tabLeftVisible = location==PanelLocation.Left;
+            tabLeft.setVisible(tabLeftVisible);
+            splitterDoc.setDividerSize(tabLeftVisible ? splitterVert.getDividerSize() : 0);    
+            if (tabLeftVisible && (splitterDoc.getDividerLocation()<0.1)){
+                splitterDoc.setDividerLocation(0.40);
+            }
 
             java.util.ResourceBundle bundle = java.util.ResourceBundle.getBundle("ch/psi/pshell/ui/View");
             String title = bundle.getString("View.shell.TabConstraints.tabTitle");
@@ -1461,6 +1475,10 @@ public class View extends MainFrame {
                     tabStatus.add(shell, 0);
                     tabStatus.setTitleAt(0, title);
                     break;
+                case Left:
+                    tabLeft.add(shell, 0);
+                    tabLeft.setTitleAt(0, title);
+                    break;                    
                 case Plot:
                     tabPlots.add(shell, 0);
                     tabPlots.setTitleAt(0, title);
@@ -1797,6 +1815,8 @@ public class View extends MainFrame {
         outputPanel = new ch.psi.pshell.swing.OutputPanel();
         scriptsPanel = new ch.psi.pshell.swing.ScriptsPanel();
         dataPanel = new ch.psi.pshell.swing.DataPanel();
+        splitterDoc = new javax.swing.JSplitPane();
+        tabLeft = new javax.swing.JTabbedPane();
         tabDoc =
         new javax.swing.JTabbedPane() {
             @Override
@@ -1933,6 +1953,7 @@ public class View extends MainFrame {
         splitterHoriz.setResizeWeight(1.0);
         splitterHoriz.setName("splitterHoriz"); // NOI18N
 
+        splitterVert.setBorder(null);
         splitterVert.setDividerLocation(420);
         splitterVert.setOrientation(javax.swing.JSplitPane.VERTICAL_SPLIT);
         splitterVert.setResizeWeight(1.0);
@@ -1970,6 +1991,13 @@ public class View extends MainFrame {
 
         splitterVert.setBottomComponent(tabStatus);
 
+        splitterDoc.setBorder(null);
+        splitterDoc.setDividerSize(0);
+        splitterDoc.setName("splitterDoc"); // NOI18N
+
+        tabLeft.setName("tabLeft"); // NOI18N
+        splitterDoc.setLeftComponent(tabLeft);
+
         tabDoc.setName("tabDoc"); // NOI18N
         tabDoc.addChangeListener(new javax.swing.event.ChangeListener() {
             public void stateChanged(javax.swing.event.ChangeEvent evt) {
@@ -1980,7 +2008,9 @@ public class View extends MainFrame {
         shell.setName("shell"); // NOI18N
         tabDoc.addTab(bundle.getString("View.shell.TabConstraints.tabTitle"), shell); // NOI18N
 
-        splitterVert.setLeftComponent(tabDoc);
+        splitterDoc.setRightComponent(tabDoc);
+
+        splitterVert.setLeftComponent(splitterDoc);
 
         splitterHoriz.setLeftComponent(splitterVert);
 
@@ -4138,10 +4168,12 @@ public class View extends MainFrame {
     private ch.psi.pshell.swing.ScriptsPanel scriptsPanel;
     private javax.swing.JToolBar.Separator separatorInfo;
     private ch.psi.pshell.swing.Shell shell;
+    private javax.swing.JSplitPane splitterDoc;
     private javax.swing.JSplitPane splitterHoriz;
     private javax.swing.JSplitPane splitterVert;
     private ch.psi.pshell.ui.StatusBar statusBar;
     private javax.swing.JTabbedPane tabDoc;
+    private javax.swing.JTabbedPane tabLeft;
     private javax.swing.JTabbedPane tabPlots;
     private javax.swing.JTabbedPane tabStatus;
     private javax.swing.JToolBar toolBar;

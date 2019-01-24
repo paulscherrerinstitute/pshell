@@ -54,7 +54,9 @@ public class Preferences {
         Plot,
         Status,
         Detached,
-        Hidden
+        Hidden,
+        Left
+        
     }
 
     public enum ScriptPopupDialog {

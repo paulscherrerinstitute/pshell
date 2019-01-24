@@ -178,15 +178,15 @@
     <td>Strip chart default configuration folder.</td>
   </tr>
   <tr>
-    <td>-dtpn=[path]</td>
+    <td>-dtpn</td>
     <td>Show data panel window only (can be used together with -f).</td>
   </tr>
   <tr>
-    <td>-help=[path]</td>
+    <td>-help</td>
     <td>Start the GUI help window.</td>
   </tr>
   <tr>
-    <td>-full=[path]</td>
+    <td>-full</td>
     <td>Start in full screen mode.</td>
   </tr>
   <tr>
