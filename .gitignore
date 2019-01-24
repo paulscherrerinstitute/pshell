@@ -11,3 +11,4 @@
 .nb-gradle-properties
 nbactions.xml
 **/*.class
+/src/main/python/PShellClient/.idea/
