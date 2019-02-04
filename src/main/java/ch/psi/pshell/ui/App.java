@@ -822,7 +822,7 @@ public class App extends ObservableBase<AppListener> {
                     StripChart.create(getFileArg(), getArgumentValue("config"), getStripChartFolderArg(), hasArgument("start"), true);
                 }
             } else if (isDataPanel()) {
-                DataPanel.create(getFileArg());
+                DataPanel.createPanel(getFileArg());
             } else {
                 if (isDual()) {
                     Console c = new Console();

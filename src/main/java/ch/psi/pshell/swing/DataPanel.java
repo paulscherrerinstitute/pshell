@@ -28,6 +28,7 @@ import java.awt.Component;
 import java.awt.Desktop;
 import java.awt.Dimension;
 import java.awt.Toolkit;
+import java.awt.Window;
 import java.awt.datatransfer.StringSelection;
 import java.awt.event.ActionEvent;
 import java.awt.event.MouseAdapter;
@@ -1350,7 +1351,88 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
         setCurrentPath(file);
     }
 
-    public static void create(File path) {
+    class DefaultDataPanelListener implements DataPanelListener {
+
+        Window getParent() {
+            return SwingUtils.getWindow(DataPanel.this);
+        }
+
+        @Override
+        public void plotData(DataManager dataManager, String root, String path) throws Exception {
+            ViewPreference.PlotPreferences prefs = dataManager.getPlotPreferences(root, path);
+            plot(getParent(), dataManager.getFullPath(root, path), dataManager.getScanPlots(root, path).toArray(new PlotDescriptor[0]), prefs);
+
+        }
+
+        @Override
+        public void plotData(Object array, Range range) throws Exception {
+            Class type = Arr.getComponentType(array);
+            if (type.isPrimitive()) {
+                type = Convert.getWrapperClass(type);
+            }
+            if ((Arr.getRank(array) == 0) || (type == null) || !(Number.class.isAssignableFrom(type))) {
+                return;
+            }
+            //Maintain the standard of displaying x dimension in the vertical axis (to align with scalar sampling)
+            if (Arr.getRank(array) == 2) {
+                array = Convert.transpose(Convert.toDouble(array));
+            }
+
+            double[] x = null;
+            if (range != null) {
+                if (range.getExtent().intValue() == Array.getLength(array)) {
+                    x = new double[Array.getLength(array)];
+                    for (int i = 0; i < x.length; i++) {
+                        x[i] = i + range.min.intValue();
+                    }
+                }
+            }
+            plot(getParent(), (range == null) ? "Array" : "Array range: " + range.toString(), new PlotDescriptor[]{new PlotDescriptor("", array, x)}, null);
+        }
+
+        @Override
+        public void openFile(String fileName) throws Exception {
+            if (IO.getExtension(fileName).equalsIgnoreCase(Context.getInstance().getScriptType().toString())) {
+                openScript(new String(Files.readAllBytes(Paths.get(fileName))), fileName);
+            } else {
+                DataPanel panel = new DataPanel();
+                panel.load(fileName);
+                panel.setListener(this);
+                SwingUtils.showDialog(getParent(), fileName, new Dimension(800, 600), panel);
+            }
+        }
+
+        @Override
+        public void openScript(String script, String name) throws Exception {
+            TextEditor editor = new TextEditor();
+            editor.setText((script == null) ? "" : script);
+            editor.setReadOnly(true);
+            SwingUtils.showDialog(getParent(), name, new Dimension(800, 600), editor);
+        }
+
+    }
+
+    void setDefaultDataPanelListener() {
+        setListener(new DefaultDataPanelListener());
+    }
+
+    public static DataPanel create(File path) {
+        DataPanel panel = new DataPanel();
+        try {
+            Context.createInstance();
+            if ((path != null) && (path.exists())) {
+                panel.load(path.getAbsolutePath());
+            } else {
+                panel.initialize();
+            }
+        } catch (Exception ex) {
+            Logger.getLogger(DataPanel.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        panel.setDefaultDataPanelListener();
+        return panel;
+    }
+
+    public static void createPanel(File path) {
         java.awt.EventQueue.invokeLater(() -> {
             JFrame frame = new JFrame(App.getApplicationTitle());
             frame.setIconImage(App.getIconSmall());
@@ -1372,60 +1454,7 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
             } catch (Exception ex) {
                 Logger.getLogger(DataPanel.class.getName()).log(Level.SEVERE, null, ex);
             }
-            panel.setListener(new DataPanelListener() {
-                @Override
-                public void plotData(DataManager dataManager, String root, String path) throws Exception {
-                    ViewPreference.PlotPreferences prefs = dataManager.getPlotPreferences(root, path);
-                    plot(frame, dataManager.getFullPath(root, path), dataManager.getScanPlots(root, path).toArray(new PlotDescriptor[0]), prefs);
-
-                }
-
-                @Override
-                public void plotData(Object array, Range range) throws Exception {
-                    Class type = Arr.getComponentType(array);
-                    if (type.isPrimitive()) {
-                        type = Convert.getWrapperClass(type);
-                    }
-                    if ((Arr.getRank(array) == 0) || (type == null) || !(Number.class.isAssignableFrom(type))) {
-                        return;
-                    }
-                    //Maintain the standard of displaying x dimension in the vertical axis (to align with scalar sampling)
-                    if (Arr.getRank(array) == 2) {
-                        array = Convert.transpose(Convert.toDouble(array));
-                    }
-
-                    double[] x = null;
-                    if (range != null) {
-                        if (range.getExtent().intValue() == Array.getLength(array)) {
-                            x = new double[Array.getLength(array)];
-                            for (int i = 0; i < x.length; i++) {
-                                x[i] = i + range.min.intValue();
-                            }
-                        }
-                    }
-                    plot(frame, (range == null) ? "Array" : "Array range: " + range.toString(), new PlotDescriptor[]{new PlotDescriptor("", array, x)}, null);
-                }
-
-                @Override
-                public void openFile(String fileName) throws Exception {
-                    if (IO.getExtension(fileName).equalsIgnoreCase(Context.getInstance().getScriptType().toString())) {
-                        openScript(new String(Files.readAllBytes(Paths.get(fileName))), fileName);
-                    } else {
-                        DataPanel panel = new DataPanel();
-                        panel.load(fileName);
-                        panel.setListener(this);
-                        SwingUtils.showDialog(frame, fileName, new Dimension(800, 600), panel);
-                    }
-                }
-
-                @Override
-                public void openScript(String script, String name) throws Exception {
-                    TextEditor editor = new TextEditor();
-                    editor.setText((script == null) ? "" : script);
-                    editor.setReadOnly(true);
-                    SwingUtils.showDialog(frame, name, new Dimension(800, 600), editor);
-                }
-            });
+            panel.setDefaultDataPanelListener();
             frame.addWindowListener(new java.awt.event.WindowAdapter() {
                 @Override
                 public void windowClosing(java.awt.event.WindowEvent e) {
@@ -1435,7 +1464,7 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
         });
     }
 
-    static List<Plot> plot(JFrame parent, String title, PlotDescriptor[] plots, ViewPreference.PlotPreferences preferences) throws Exception {
+    static List<Plot> plot(Window parent, String title, PlotDescriptor[] plots, ViewPreference.PlotPreferences preferences) throws Exception {
         ArrayList<Plot> ret = new ArrayList<>();
         PlotPanel plotPanel = new PlotPanel();
         plotPanel.initialize();
@@ -1469,7 +1498,7 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
         //args = new String[]{"../config/home", "../config/home/data/2018_06/20180606/20180606_094737_averager.h5"};
         MainFrame.setLookAndFeel(MainFrame.getNimbusLookAndFeel());
         System.setProperty(Setup.PROPERTY_HOME_PATH, args[0]);
-        create(args.length > 1 ? new File(args[1]) : null);
+        createPanel(args.length > 1 ? new File(args[1]) : null);
     }
 
     /**

@@ -4,6 +4,7 @@ import ch.psi.pshell.core.Context;
 import ch.psi.pshell.scan.Scan;
 import ch.psi.pshell.scan.ScanListener;
 import ch.psi.pshell.scan.ScanRecord;
+import ch.psi.pshell.swing.DataPanel;
 import ch.psi.pshell.swing.OutputPanel;
 import ch.psi.pshell.swing.Shell;
 import ch.psi.utils.Chrono;
@@ -50,6 +51,7 @@ public class StatusBar extends MonitoredPanel implements PropertyChangeListener 
     private Icon[] iconsBusy = new Icon[15];
     private int busyIconIndex = 0;
 
+    DataPanel dataPanel;
     /**
      */
     public StatusBar() {
@@ -135,6 +137,22 @@ public class StatusBar extends MonitoredPanel implements PropertyChangeListener 
                 System.setErr(new PrintStream(new ConsoleStream(true)));
             }
 
+            JMenuItem showData = new JMenuItem("Browse data");
+
+            dataPanel = null;
+            showData.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    try {
+                        if ((dataPanel == null) || (!dataPanel.isDisplayable())) {
+                            dataPanel = DataPanel.create(null);
+                            SwingUtils.showDialog((Frame) getTopLevelAncestor(), "Data Panel", new Dimension(800, 400), dataPanel);
+                        }
+                    } catch (Exception ex) {
+                    }
+                }
+            });
+            
             JMenuItem showOutput = new JMenuItem("Show output");
 
             showOutput.addActionListener(new ActionListener() {
@@ -166,6 +184,7 @@ public class StatusBar extends MonitoredPanel implements PropertyChangeListener 
 
             popupMenu.add(openLogs);
             popupMenu.addSeparator();
+            popupMenu.add(showData);
             popupMenu.add(showOutput);
             popupMenu.add(showConsole);
 
