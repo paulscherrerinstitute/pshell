@@ -1797,8 +1797,13 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
     }
 
     @Hidden
+    public void endExecution() throws ContextStateException {  
+        endExecution(null);
+    }  
+    
+    @Hidden
     public void endExecution(CommandInfo info) throws ContextStateException {
-        String then = getThen(info);
+        String then = (info == null) ? null : getThen(info);
         getExecutionPars().onExecutionEnded();
         if (then != null) {
             new Thread(() -> {
