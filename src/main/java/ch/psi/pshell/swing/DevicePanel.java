@@ -21,6 +21,13 @@ import javax.swing.SwingUtilities;
 import javax.swing.Timer;
 import javax.swing.border.TitledBorder;
 import ch.psi.pshell.core.ContextListener;
+import ch.psi.pshell.device.GenericDevice;
+import ch.psi.utils.Config;
+import ch.psi.utils.swing.ConfigDialog;
+import ch.psi.utils.swing.StandardDialog;
+import java.awt.Component;
+import java.awt.Window;
+import javax.swing.WindowConstants;
 
 /**
  * Device panels should only read cached values (take) or execute direct device access in private
@@ -368,4 +375,17 @@ public class DevicePanel extends MonitoredPanel {
     protected void showMessage(String title, String message) {
         SwingUtils.showMessage(this, title, message);
     }
+    
+    public static ConfigDialog showConfigEditor(Component parent, GenericDevice device, boolean modal, boolean readOnly) {
+        if (device==null){
+            SwingUtils.showMessage(parent, "Error", "Device not set");
+            return null;
+        }
+        return ConfigDialog.showConfigEditor(parent , device.getConfig(), modal, readOnly);
+    }  
+    
+    public ConfigDialog showConfigEditor(boolean modal, boolean readOnly) {
+        return showConfigEditor(this, getDevice(), modal, readOnly);
+    }        
+    
 }

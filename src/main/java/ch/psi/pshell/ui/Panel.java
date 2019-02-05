@@ -82,7 +82,7 @@ public class Panel extends MonitoredPanel implements Plugin {
         if (isActive()) {
             Plugin.super.onStart();
             load();
-            if (!getContext().isLocalMode() || App.isDetachedPersisted()) {
+            if (!getContext().isLocalMode() || App.isDetachedPanelsPersisted()) {
                 loadComponentsState();
             }
         }
@@ -93,7 +93,7 @@ public class Panel extends MonitoredPanel implements Plugin {
         if (isActive()) {
             stopTimer();
             Plugin.super.onStop();
-            if (!getContext().isLocalMode() || App.isDetachedPersisted()) {
+            if (!getContext().isLocalMode() || App.isDetachedPanelsPersisted()) {
                 saveComponentsState();
             }
             unload();
@@ -182,7 +182,7 @@ public class Panel extends MonitoredPanel implements Plugin {
                         SwingUtils.setFullScreen(frame, true);
                     } else {
                         SwingUtils.centerComponent(null, frame);
-                        if (App.isDetachedPersisted()) {
+                        if (App.isDetachedPanelsPersisted()) {
                             loadWindowState();
                         }
                     }
@@ -193,7 +193,7 @@ public class Panel extends MonitoredPanel implements Plugin {
                         @Override
                         public void windowClosing(WindowEvent e) {
                             if (isNested()) {
-                                if (App.isDetachedPersisted()) {
+                                if (App.isDetachedPanelsPersisted()) {
                                     saveWindowState();
                                 }       
                                 unload();
@@ -202,7 +202,7 @@ public class Panel extends MonitoredPanel implements Plugin {
                                 msg += (frameCount == 1) ? " and finish the application?" : "?";
                                 if ((App.isQuiet())
                                         || (SwingUtils.showOption(frame, "Close", msg, OptionType.YesNo) == OptionResult.Yes)) {
-                                    if (App.isDetachedPersisted()) {
+                                    if (App.isDetachedPanelsPersisted()) {
                                         saveWindowState();
                                     }
                                     unload();
@@ -352,7 +352,7 @@ public class Panel extends MonitoredPanel implements Plugin {
                 }
             }
         } catch (Exception ex) {
-            getLogger().log(Level.WARNING, null, ex);
+            getLogger().log(Level.INFO, null, ex);
         }
     }
 

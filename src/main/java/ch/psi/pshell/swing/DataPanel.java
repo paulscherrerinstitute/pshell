@@ -1432,19 +1432,30 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
         return panel;
     }
 
-    public static void createPanel(File path) {
+    static Path getWindowStatePath(){
+         return Paths.get(Context.getInstance().getSetup().getContextPath(), DataPanel.class.getSimpleName() + "_" + "WindowState.xml");
+    }
+    
+    public static void createPanel(File path) { 
         java.awt.EventQueue.invokeLater(() -> {
+            Context.createInstance();
             JFrame frame = new JFrame(App.getApplicationTitle());
             frame.setIconImage(App.getIconSmall());
             DataPanel panel = new DataPanel();
             frame.add(panel);
-            //frame.pack();
             frame.setSize(1000, 800);
-            SwingUtils.centerComponent(null, frame);
+            SwingUtils.centerComponent(null, frame);            
+            //frame.pack();
+            if (App.isDetachedPersisted()) {
+                try {
+                    MainFrame.restore(frame, getWindowStatePath());
+                } catch (Exception ex) {
+                    Logger.getLogger(DataPanel.class.getName()).log(Level.INFO, null, ex);
+                }                 
+            } 
             frame.setVisible(true);
 
             try {
-                Context.createInstance();
                 if ((path != null) && (path.exists())) {
                     panel.load(path.getAbsolutePath());
                     frame.setTitle(path.getCanonicalPath());
@@ -1458,6 +1469,13 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
             frame.addWindowListener(new java.awt.event.WindowAdapter() {
                 @Override
                 public void windowClosing(java.awt.event.WindowEvent e) {
+                    if (App.isDetachedPersisted()) {
+                        try {
+                            MainFrame.save(frame, getWindowStatePath());
+                        } catch (Exception ex) {
+                            Logger.getLogger(DataPanel.class.getName()).log(Level.WARNING, null, ex);
+                        }                            
+                    }                    
                     System.exit(0);
                 }
             });

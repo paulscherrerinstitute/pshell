@@ -15,7 +15,6 @@ import ch.psi.utils.Sys;
 import ch.psi.utils.Sys.OSFamily;
 import ch.psi.pshell.core.PlotListener;
 import ch.psi.pshell.core.Setup;
-import static ch.psi.pshell.core.Setup.PROPERTY_SETTINGS_FILE;
 import ch.psi.pshell.core.UserInterface;
 import ch.psi.pshell.data.PlotDescriptor;
 import ch.psi.pshell.device.GenericDevice;
@@ -36,8 +35,10 @@ import ch.psi.utils.Arr;
 import ch.psi.utils.IO;
 import ch.psi.utils.ObservableBase;
 import ch.psi.utils.Reflection.Hidden;
+import ch.psi.utils.swing.ConfigDialog;
 import ch.psi.utils.swing.MainFrame;
 import java.awt.BorderLayout;
+import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.GraphicsEnvironment;
 import java.awt.Image;
@@ -236,13 +237,17 @@ public class App extends ObservableBase<AppListener> {
     static public boolean isConsole() {
         return isGui() && hasArgument("w");
     }
+    
+    static public boolean isDetachedPersisted() {
+        return hasArgument("k");
+    }    
 
     static public boolean isDetached() {
         return isGui() && hasArgument("d");
     }
 
-    static public boolean isDetachedPersisted() {
-        return isDetached() && hasArgument("k") && !isFullScreen();
+    static public boolean isDetachedPanelsPersisted() {
+        return isDetached() && isDetachedPersisted() && !isFullScreen();
     }
 
     static public boolean isDetachedAppendStatusBar() {
@@ -788,6 +793,11 @@ public class App extends ObservableBase<AppListener> {
                 public Object showPanel(GenericDevice dev) {
                     return getDevicePanelManager().showPanel(dev);
                 }
+
+                @Override
+                public Object showPanel(Config config) throws InterruptedException {
+                    return ConfigDialog.showConfigEditor(getMainFrame(), config, false, false);
+                }
             });
 
         }
@@ -843,7 +853,15 @@ public class App extends ObservableBase<AppListener> {
                     } else if (isContextPersisted()) {
                         view.restoreState();
                     } else {
-                        SwingUtils.centerComponent(null, view);
+                        if (isPlotOnly() && isDetachedPersisted()) {
+                            try {
+                                MainFrame.restore(view, getPlotWindowStatePath());
+                            } catch (Exception ex) {
+                                Logger.getLogger(DataPanel.class.getName()).log(Level.INFO, null, ex);
+                            }                 
+                        } else {                     
+                            SwingUtils.centerComponent(null, view);
+                        }
                     }
                     view.setVisible(!hasArgument("u"));
                     outputPanel = (OutputPanel) SwingUtils.getComponentByName(getMainFrame(), "outputPanel");
@@ -904,6 +922,10 @@ public class App extends ObservableBase<AppListener> {
         }
     }
 
+    Path getPlotWindowStatePath(){
+         return Paths.get(context.getSetup().getContextPath(), "PlotWindow_WindowState.xml");
+    }
+    
     static volatile boolean scanPlottingActive = true;
 
     public static boolean isScanPlottingActive() {
@@ -1330,7 +1352,18 @@ public class App extends ObservableBase<AppListener> {
                     logger.log(Level.INFO, null, ex);
                 }
             }
+        } else {
+            if (App.isPlotOnly()) {
+                if (App.isDetachedPersisted()) {
+                    try {
+                        MainFrame.save(view, getPlotWindowStatePath());
+                    } catch (Exception ex) {
+                        Logger.getLogger(DataPanel.class.getName()).log(Level.WARNING, null, ex);
+                    }                  
+                } 
+            }            
         }
+        
     }
 
     static public App getInstance() {
