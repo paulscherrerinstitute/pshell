@@ -734,7 +734,7 @@ def set_exec_pars(Map args){
         path(str):  If defined provides the full path name for data output root (overriding config))
                              The tag {data} can be used to enter a path relative to the standard data folder.
         layout(str): Overrides default data layout.
-        provider(str): Overrides default data provider.
+        format(str): Overrides default data format.
         depth_dim(int): dimension of 2d-matrixes in 3d datasets.
         save(bool): Overrides the configuration option to auto save scan data.
         flush(bool): Overrides the configuration option to flush file on each record.

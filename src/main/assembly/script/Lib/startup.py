@@ -1069,7 +1069,7 @@ def create_dataset(path, type, unsigned=False, dimensions=None, features=None):
                               'd' = double, 'c' = char, 's' = String,  'o' = Object
         unsigned(boolean, optional): create a dataset of unsigned type.
         dimensions(tuple of int, optional): a 0 value means variable length in that dimension.
-        features(dictionary, optional): storage features for the dataset, provider specific.
+        features(dictionary, optional): storage features for the dataset, format specific.
             Keys for HDF5: "layout": "compact", "contiguous" or "chunked"
                            "compression": True, "max" or deflation level from 1 to 9
                            "shuffle": Byte shuffle before compressing.
@@ -1208,7 +1208,7 @@ def set_exec_pars(**args):
         path(str):  If defined provides the full path name for data output root (overriding config))
                              The tag {data} can be used to enter a path relative to the standard data folder.
         layout(str): Overrides default data layout.
-        provider(str): Overrides default data provider.
+        format(str): Overrides default data format.
         depth_dim(int): dimension of 2d-matrixes in 3d datasets.
         save(bool): Overrides the configuration option to auto save scan data.
         flush(bool): Overrides the configuration option to flush file on each record.

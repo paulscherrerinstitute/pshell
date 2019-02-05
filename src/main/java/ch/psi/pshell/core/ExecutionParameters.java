@@ -27,7 +27,7 @@ import java.util.logging.Level;
 public class ExecutionParameters {
 
     final String[] executionOptions = new String[]{"defaults", "group", "open", "reset", "name", "type", "path", "tag",
-        "layout", "provider", "save", "persist", "flush", "preserve", "keep", "accumulate", "depth_dim", "compression",
+        "layout", "provider", "format", "save", "persist", "flush", "preserve", "keep", "accumulate", "depth_dim", "compression",
         "shuffle", "contiguous", "then", "then_exception", "then_success"};
 
     final String[] viewOptions = new String[]{"plot_disabled", "table_disabled", "enabled_plots", "plot_layout",
@@ -415,7 +415,11 @@ public class ExecutionParameters {
     }
 
     public Object getProvider() {
-        Object option = getOption("provider");
+        Object option = getOption("format");
+        if (option == null){
+             //backward compatibility
+             option = getOption("provider");
+        }
         return (option != null) ? option : Context.getInstance().getConfig().getDataProvider();
     }
 
