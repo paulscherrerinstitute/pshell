@@ -32,6 +32,7 @@ import ch.psi.pshell.scripting.ViewPreference;
 import ch.psi.pshell.scripting.Statement;
 import ch.psi.pshell.security.User;
 import ch.psi.pshell.security.UsersManagerListener;
+import ch.psi.utils.Config;
 import ch.psi.utils.Str;
 import java.nio.file.Files;
 import java.util.Arrays;
@@ -773,6 +774,11 @@ public class ServerService {
 
         @Override
         public Object showPanel(GenericDevice dev) throws InterruptedException {
+            throw new java.lang.UnsupportedOperationException();
+        }
+
+        @Override
+        public Object showPanel(Config config) throws InterruptedException {
             throw new java.lang.UnsupportedOperationException();
         }
     };

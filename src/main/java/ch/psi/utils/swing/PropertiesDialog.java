@@ -36,6 +36,7 @@ public class PropertiesDialog extends StandardDialog {
 
     PropertiesPanel propertiesPanel;
     Properties properties;
+    boolean readOnly;
 
     public PropertiesDialog(java.awt.Frame parent, boolean modal) {
         super(parent, modal);
@@ -61,15 +62,20 @@ public class PropertiesDialog extends StandardDialog {
     }
 
     public void setReadOnly(boolean readOnly) {
-        propertiesPanel.setReadOnly(readOnly);
+        this.readOnly = readOnly;
+        if (propertiesPanel!=null){
+            propertiesPanel.setReadOnly(readOnly);
+        }
     }
 
     public boolean isReadOnly() {
-        return propertiesPanel.isReadOnly();
+        return readOnly;
     }
 
     protected PropertiesPanel newPropertiesPanel() {
-        return new PropertiesPanel();
+        PropertiesPanel ret = new PropertiesPanel();
+        ret.setReadOnly(readOnly);
+        return ret;
     }
 
     void updateButtons() {

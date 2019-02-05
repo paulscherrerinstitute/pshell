@@ -2127,6 +2127,12 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
         assertDefinedUI(ui);
         return ui.showPanel(dev);
     }
+    
+    public Object showPanel(Config config) throws InterruptedException {
+        UserInterface ui = getUI();
+        assertDefinedUI(ui);
+        return ui.showPanel(config);
+    }    
 
     UserInterface getUI() {
         return currentUserInterface;

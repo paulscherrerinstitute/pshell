@@ -20,6 +20,7 @@ import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
+import javax.swing.WindowConstants;
 
 /**
  * A dialog for editing ch.psi.utils.Config structures.
@@ -63,6 +64,7 @@ public class ConfigDialog extends PropertiesDialog {
         ConfigPanel panel = new ConfigPanel();
         panel.config = config;
         panel.setDefaultDisplayNames();
+        panel.setReadOnly(readOnly);
         return panel;
     }
 
@@ -220,4 +222,36 @@ public class ConfigDialog extends PropertiesDialog {
         }
         super.accept();
     }
+    
+    
+    public static ConfigDialog showConfigEditor(Component parent, Config config, boolean modal, boolean readOnly) {
+        try {
+            if (config==null){
+                SwingUtils.showMessage(parent, "Error", "Configuration is not set");
+                return null;
+            }            
+            final ConfigDialog dlg = new ConfigDialog((parent==null) ? null : SwingUtils.getFrame(parent), modal);
+            dlg.setTitle(config.getFileName());
+            dlg.setConfig(config);
+            dlg.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+            dlg.setListener((StandardDialog sd, boolean accepted) -> {
+                if (sd.getResult()) {
+                    try {
+                        config.save();
+                    } catch (Exception ex) {
+                        SwingUtils.showException(dlg, ex);
+                    }
+                }
+            });
+            dlg.setLocationRelativeTo(parent);
+            dlg.setVisible(true);
+            dlg.setReadOnly(readOnly);
+            dlg.requestFocus();
+            return dlg;
+
+        } catch (Exception ex) {
+            SwingUtils.showException(parent, ex);
+        }   
+        return null;
+    }      
 }

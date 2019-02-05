@@ -1,6 +1,7 @@
 package ch.psi.pshell.core;
 
 import ch.psi.pshell.device.GenericDevice;
+import ch.psi.utils.Config;
 
 /**
  * Interface for receiving user interaction events from the scripts.
@@ -24,4 +25,6 @@ public interface UserInterface {
     public void showMessage(String message, String title, boolean blocking) throws InterruptedException;
 
     public Object showPanel(GenericDevice dev) throws InterruptedException;
+    
+    public Object showPanel(Config config) throws InterruptedException;
 }

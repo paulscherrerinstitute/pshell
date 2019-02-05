@@ -58,29 +58,11 @@ public interface Plugin extends ch.psi.pshell.core.Plugin {
     }
 
     default ConfigDialog showDeviceConfigDialog(GenericDevice device, boolean readOnly) {
-        try {
-            final ConfigDialog dlg = new ConfigDialog(getTopLevel(), false);
+        ConfigDialog dlg = DevicePanel.showConfigEditor(getTopLevel(), device, false, readOnly);
+        if (dlg !=null){
             dlg.setTitle("Device Configuration: " + device.getName());
-            dlg.setConfig(device.getConfig());
-            dlg.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
-            dlg.setListener((StandardDialog sd, boolean accepted) -> {
-                if (sd.getResult()) {
-                    try {
-                        device.getConfig().save();
-                    } catch (IOException ex) {
-                        showException(ex);
-                    }
-                }
-            });
-            SwingUtils.centerComponent(getTopLevel(), dlg);
-            dlg.setVisible(true);         
-            dlg.requestFocus();
-            return dlg;
-
-        } catch (Exception ex) {
-            showException(ex);
         }
-        return null;
+        return dlg;
     }
 
     default DevicePanel showDevicePanel(String name) {
