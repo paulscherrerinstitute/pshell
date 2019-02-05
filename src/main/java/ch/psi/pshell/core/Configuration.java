@@ -52,6 +52,7 @@ public class Configuration extends Config {
     public boolean userManagement;
     public String userAuthenticator = "";
     public String instanceName = "";
+    public boolean saveCommandStatistics;
 
     public enum LogLevel {
 
