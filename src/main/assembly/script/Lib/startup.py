@@ -1623,7 +1623,7 @@ def run(script_name, args = None, locals = None):
     """
     script = get_context().scriptManager.library.resolveFile(script_name)
     if script is not None and os.path.isfile(script):
-        get_context().startScriptExecution(args)
+        info = get_context().startScriptExecution(script_name, args)
         try:
             set_return(None)
             if args is not None:
@@ -1638,10 +1638,10 @@ def run(script_name, args = None, locals = None):
             else:
                 execfile(script, globals(), locals)
             ret = get_return()
-            get_context().finishScriptExecution(ret)
+            get_context().finishScriptExecution(info, ret)
             return ret
         except Exception, ex:
-            get_context().finishScriptExecution(ex)
+            get_context().finishScriptExecution(info, ex)
             raise ex
     raise IOError("Invalid script: " + str(script_name))
 

@@ -1463,7 +1463,7 @@ function run(script_name, args) {
     var script = get_context().scriptManager.library.resolveFile(script_name)
     var file = script!=null ? new File(script) : null
     if ((file == null) ||  ( ! file.exists())) throw "Invalid script: " + script_name
-    get_context().startScriptExecution(args)
+    var info = get_context().startScriptExecution(script_name, args)
 
     if (is_defined(args) &&  (args!=null)){
         if (is_array(args)){
@@ -1477,6 +1477,13 @@ function run(script_name, args) {
     //eval(new String(Files.readAllBytes(file.toPath())))
     //get_context().scriptManager.interpreter.evalFile(script);
     load(script)
+    
+    try{
+        var ret = load(script)
+        get_context().finishScriptExecution(info, ret) 
+    } catch(err){    
+        get_context().finishScriptExecution(info, err) 
+    }
 }
 
 

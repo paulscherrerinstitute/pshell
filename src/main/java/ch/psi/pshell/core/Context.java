@@ -1034,7 +1034,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
             });
 
             if (isInterpreterEnabled()) {
-                runInInterpreterThread((Callable<InterpreterResult>) () -> {
+                runInInterpreterThread(null, (Callable<InterpreterResult>) () -> {
                     scriptManager = new ScriptManager(getScriptType(), setup.getLibraryPath(), injections);
                     scriptManager.setSessionFilePath((getConfig().createSessionFiles && !isLocalMode()) ? setup.getSessionsPath() : null);
                     setStdioListener(scriptStdioListener);
@@ -1123,7 +1123,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
         long now = System.currentTimeMillis();
         if (cf instanceof VisibleCompletableFuture) {
             Thread thread = ((VisibleCompletableFuture) cf).waitRunningThread(250);
-            CommandInfo current = commandManager.getThreadCommand(thread);
+            CommandInfo current = commandManager.getThreadCommand(thread, false);
             if ((current != null) && (current.start >= now)) {
                 return current.id;
             }
@@ -1139,7 +1139,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
         return ret;
     }
 
-    Object runInInterpreterThread(Callable callable) throws ScriptException, IOException, InterruptedException {
+    Object runInInterpreterThread(CommandInfo info, Callable callable) throws ScriptException, IOException, InterruptedException {
         assertInterpreterEnabled();
         Object result = null;
         try {
@@ -1183,7 +1183,9 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
                     result = ((InterpreterResult) result).result;
                 }
             }
-            commandManager.finishCommandInfo(commandManager.getInterpreterThreadCommand(), result);
+            if (info != null){
+                commandManager.finishCommandInfo( info, result);
+            }
         }
     }
 
@@ -1234,7 +1236,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
             startExecution(source, null, info);
             setSourceUI(source);
             try {
-                InterpreterResult result = (InterpreterResult) runInInterpreterThread((Callable<InterpreterResult>) () -> scriptManager.eval(line));
+                InterpreterResult result = (InterpreterResult) runInInterpreterThread(info, (Callable<InterpreterResult>) () -> scriptManager.eval(line));
                 if (result == null) {
                     return null;
                 }
@@ -1299,7 +1301,8 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
         assertRunAllowed(source);
         //Command source in statements execution will be CommandSource.script 
         Object result = null;
-        commandManager.initCommandInfo(new CommandInfo(source, fileName, null, args, true));
+        CommandInfo info = new CommandInfo(source, fileName, null, args, true);
+        commandManager.initCommandInfo(info);
         try {
             createExecutionContext();
             //TODO: args passing is not theread safe
@@ -1313,7 +1316,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
             throw ex;
         } finally {
             disposeExecutionContext();
-            commandManager.finishCommandInfo(result);
+            commandManager.finishCommandInfo(info, result);
         }
     }
 
@@ -1330,7 +1333,8 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
         assertConsoleCommandAllowed(source);
 
         Object result = null;
-        commandManager.initCommandInfo(new CommandInfo(source, null, line, null, true));
+        CommandInfo info = new CommandInfo(source, null, line, null, true);
+        commandManager.initCommandInfo(info);
         try {
             createExecutionContext();
             InterpreterResult ir = scriptManager.evalBackground(line);
@@ -1345,7 +1349,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
             return result;
         } finally {
             disposeExecutionContext();
-            commandManager.finishCommandInfo(result);
+            commandManager.finishCommandInfo(info, result);
         }
     }
 
@@ -1531,7 +1535,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
             setSourceUI(source);
             triggerExecutingFile(fileName);
             try {
-                result = runInInterpreterThread((Callable) () -> {
+                result = runInInterpreterThread(info, (Callable) () -> {
                     Object ret = null;
                     for (String key : argsDict.keySet()) {
                         scriptManager.setVar(key, argsDict.get(key));
@@ -1620,7 +1624,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
             };
 
             try {
-                result = runInInterpreterThread((Callable) () -> {
+                result = runInInterpreterThread(info, (Callable) () -> {
                     Object ret = scriptManager.eval(statements, listener);
                     triggerShellResult(source, ret);
                     return ret;
@@ -1656,7 +1660,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
     void injectVars(final CommandSource source) {
         onCommand(Command.injectVars, null, source);
         try {
-            runInInterpreterThread(new Callable() {
+            runInInterpreterThread(null, new Callable() {
                 @Override
                 public Object call() throws Exception {
                     scriptManager.injectVars();
@@ -1684,9 +1688,9 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
             }
         } else if ((getState() == State.Busy) || (getState() == State.Paused)) {
             aborted = true;
-            CommandInfo cmd = commandManager.getInterpreterThreadCommand();
+            CommandInfo cmd = commandManager.getInterpreterThreadCommand(false);
             if (cmd != null) {
-                cmd.aborted = true;
+                cmd.setAborted();
             }
             //TODO: This is also killing background acans. Should not be only foreground?
             for (Scan scan : getRunningScans()) {
@@ -1782,7 +1786,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
         aborted = false;
         getExecutionPars().onExecutionStarted();
         try {
-            InterpreterResult result = (InterpreterResult) runInInterpreterThread((Callable<InterpreterResult>) () -> scriptManager.eval(command));
+            InterpreterResult result = (InterpreterResult) runInInterpreterThread(info, (Callable<InterpreterResult>) () -> scriptManager.eval(command));
             if (result == null) {
                 return null;
             }
@@ -2898,22 +2902,23 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
 
     //Public command interface    
     CommandSource getPublicCommandSource() {
-        CommandInfo ret = commandManager.getCurrentCommand();
+        CommandInfo ret = commandManager.getCurrentCommand(false);
         return (ret == null) ? CommandSource.ui : ret.source;
     }
 
     //For scripts to check permissions when running files
     @Hidden
-    public void startScriptExecution(Object args) {
+    public CommandInfo startScriptExecution(String script, Object args) {
         assertRunAllowed(getPublicCommandSource());
-        CommandInfo info = commandManager.getCurrentCommand();
-        info = new CommandInfo(CommandSource.script, (info == null) ? null : info.script, null, args, (info == null) ? false : info.background);
+        CommandInfo parent = commandManager.getCurrentCommand(false);
+        CommandInfo info = new CommandInfo(parent,  script,  args);
         commandManager.initCommandInfo(info);
+        return info;
     }
 
     @Hidden
-    public void finishScriptExecution(Object result) {
-        commandManager.finishCommandInfo(result);
+    public void finishScriptExecution(CommandInfo info, Object result) {
+        commandManager.finishCommandInfo(info, result);
     }
 
     @Hidden

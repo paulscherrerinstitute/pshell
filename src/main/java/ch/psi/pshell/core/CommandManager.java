@@ -56,10 +56,9 @@ public class CommandManager implements AutoCloseable {
         }
     }
 
-    void finishCommandInfo(Object result) {
-        finishCommandInfo(getCurrentCommand(), result);
-    }
-
+    //void finishCommandInfo(Object result) {
+    //    finishCommandInfo(getCurrentCommand(), result);
+    //}
     void cleanupCommands() {
         List old = new ArrayList<>();
         synchronized (commandInfo) {
@@ -82,35 +81,41 @@ public class CommandManager implements AutoCloseable {
         }
     }
 
-    public CommandInfo getCurrentCommand() {
-        return getCurrentCommand(Thread.currentThread());
+    public CommandInfo getCurrentCommand(boolean parent) {
+        return getCurrentCommand(Thread.currentThread(), parent);
     }
 
-    public CommandInfo getCurrentCommand(Thread thread) {
-        CommandInfo threadCommand = getThreadCommand(thread);
-        if ((threadCommand != null) && (threadCommand.isRunning())) {
-            return threadCommand;
+    public CommandInfo getCurrentCommand(Thread thread, boolean parent) {
+        CommandInfo threadCommand = getThreadCommand(thread, parent);
+        if (threadCommand != null) {
+            do {
+                if (threadCommand.isRunning()) {
+                    return threadCommand;
+                }
+                threadCommand = threadCommand.parent;
+            } while (threadCommand != null);
         }
         return null;
     }
 
-    public CommandInfo getThreadCommand(Thread thread) {
+    public CommandInfo getThreadCommand(Thread thread, boolean parent) {
 
         for (CommandInfo info : getCommands()) {
             if ((info.thread == thread)) {
-                return info;
+                CommandInfo ret = info;
+                if (parent) {
+                    while (ret.parent != null) {
+                        ret = ret.parent;
+                    }
+                }
+                return ret;
             }
         }
         return null;
-        /*
-        synchronized (commandInfo) {
-            return commandInfo.get(thread);
-        }
-         */
     }
 
-    public CommandInfo getInterpreterThreadCommand() {
-        return getThreadCommand(Context.getInstance().interpreterThread);
+    public CommandInfo getInterpreterThreadCommand(boolean parent) {
+        return getThreadCommand(Context.getInstance().interpreterThread, parent);
     }
 
     public List<CommandInfo> getCommands() {
@@ -122,7 +127,7 @@ public class CommandManager implements AutoCloseable {
 
     public CommandInfo getCommand(long id) {
         if (id < 0) {
-            return getInterpreterThreadCommand();
+            return getInterpreterThreadCommand(true);
         }
         for (CommandInfo ci : getCommands()) {
             if (ci.id == id) {
@@ -179,7 +184,7 @@ public class CommandManager implements AutoCloseable {
     public Map getResult(long id) throws Exception {
         CommandInfo cmd;
         if (id < 0) {
-            cmd = getInterpreterThreadCommand();
+            cmd = getInterpreterThreadCommand(true);
             if (cmd != null) {
                 id = cmd.id;
             }
@@ -286,7 +291,7 @@ public class CommandManager implements AutoCloseable {
         }
         if (Context.getInstance().config.saveCommandStatistics) {
             //Only save script executions 
-            if (info.script != null) {
+            if ((info.script != null) && (info.command == null)) {
                 try {
                     String result = (info.result instanceof Throwable) ? Console.getPrintableMessage((Throwable) info.result) : String.valueOf(info.result);
                     result = result.split("\n")[0] + "\n";
@@ -300,11 +305,10 @@ public class CommandManager implements AutoCloseable {
                         Chrono.getTimeStr(info.end, "dd/MM/YY HH:mm:ss.SSS"),
                         String.valueOf(info.background),
                         info.isAborted() ? "abort" : (info.isError() ? "error" : "success"),
-                        result,
-                    };
+                        result,};
                     Path path = Paths.get(Context.getInstance().setup.getContextPath(), "commands", Chrono.getTimeStr(info.start, "YYYY_MM") + ".csv");
                     path.toFile().getParentFile().mkdirs();
-                    
+
                     if (!path.toFile().exists()) {
                         //Header
                         final String[] header = new String[]{
@@ -315,8 +319,7 @@ public class CommandManager implements AutoCloseable {
                             "End",
                             "Background",
                             "Result",
-                            "Return\n",
-                        };
+                            "Return\n",};
                         Files.write(path, String.join(";", header).getBytes());
                     }
                     Files.write(path, String.join(";", data).getBytes(), StandardOpenOption.APPEND);

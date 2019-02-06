@@ -6,7 +6,7 @@ import ch.psi.utils.Str;
  *
  */
 public class CommandInfo {
-
+    public final CommandInfo parent;
     public final CommandSource source;
     public final String script;
     public final String command;
@@ -17,10 +17,11 @@ public class CommandInfo {
     public final long start;
     public long end;
     Object result;
-    boolean aborted;
+    
     static long commandId = 1;
+    private boolean aborted;
 
-    CommandInfo(CommandSource source, String script, String command, Object args, boolean background) {
+    private CommandInfo(CommandSource source, String script, String command, Object args, boolean background, CommandInfo parent) {
         //run command sets script name and arguments so standard name 
         if ((script == null) && (command != null)) {
             String aux = command.trim();
@@ -39,7 +40,7 @@ public class CommandInfo {
                 }
             }
         }
-
+        this.parent = parent;
         this.source = source;
         this.script = script;
         this.command = command;
@@ -52,6 +53,15 @@ public class CommandInfo {
         Context.getInstance().commandManager.onNewCommand(this.id);
         this.start = System.currentTimeMillis();
     }
+    
+    CommandInfo(CommandSource source, String script, String command, Object args, boolean background) {
+        this(source, script, command, args, background, null);
+    }
+    
+    //Nested command ("run")
+    CommandInfo(CommandInfo parent, String script,Object args) {
+        this(CommandSource.script, script, null, args, (parent == null) ? false : parent.background, parent);
+    }
 
     public boolean isRunning() {
         return end == 0;
@@ -60,6 +70,14 @@ public class CommandInfo {
     public boolean isAborted() {
         return aborted;
     }
+    
+    void setAborted(){
+        aborted = true;
+        CommandInfo parent = this.parent;
+        if (parent != null){
+            parent.setAborted();
+        }        
+    }      
 
     public Object getResult() {
         return result;
@@ -92,7 +110,7 @@ public class CommandInfo {
         }
         return System.currentTimeMillis() - end;
     }
-
+    
     @Override
     public String toString() {
         return String.format("%s - %s - %s - %s", background ? String.valueOf(id) : "FG", source.toString(), command, Str.toString(args, 10));
