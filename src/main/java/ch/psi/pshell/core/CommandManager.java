@@ -2,7 +2,9 @@ package ch.psi.pshell.core;
 
 import ch.psi.pshell.scripting.InterpreterResult;
 import ch.psi.utils.Chrono;
+import ch.psi.utils.Config;
 import ch.psi.utils.Str;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -290,43 +292,142 @@ public class CommandManager implements AutoCloseable {
             }
         }
         if (Context.getInstance().config.saveCommandStatistics) {
-            //Only save script executions 
-            if ((info.script != null) && (info.command == null)) {
-                try {
-                    String result = (info.result instanceof Throwable) ? Console.getPrintableMessage((Throwable) info.result) : String.valueOf(info.result);
-                    result = result.split("\n")[0] + "\n";
-                    String args = Str.toString(info.args, 10);
-                    args = args.split("\n")[0];
-                    String[] data = new String[]{
-                        info.script,
-                        args,
-                        String.valueOf(info.source),
-                        Chrono.getTimeStr(info.start, "dd/MM/YY HH:mm:ss.SSS"),
-                        Chrono.getTimeStr(info.end, "dd/MM/YY HH:mm:ss.SSS"),
-                        String.valueOf(info.background),
-                        info.isAborted() ? "abort" : (info.isError() ? "error" : "success"),
-                        result,};
-                    Path path = Paths.get(Context.getInstance().setup.getContextPath(), "commands", Chrono.getTimeStr(info.start, "YYYY_MM") + ".csv");
+            try {
+                if (commandStatisticsConfig == null) {
+                    commandStatisticsConfig = new CommandStatisticsConfig();
+                    Path path = Paths.get(Context.getInstance().setup.getOutputPath(), "statistics", "config.properties");
                     path.toFile().getParentFile().mkdirs();
+                    commandStatisticsConfig.load(path.toString());
+                }
+                saveCommandStatistics(info);
+            } catch (Exception ex) {
+                Logger.getLogger(CommandManager.class.getName()).log(Level.WARNING, null, ex);
+            }
+        }
+    }
 
-                    if (!path.toFile().exists()) {
-                        //Header
-                        final String[] header = new String[]{
-                            "Script",
-                            "Args",
-                            "Source",
-                            "Start",
-                            "End",
-                            "Background",
-                            "Result",
-                            "Return\n",};
-                        Files.write(path, String.join(";", header).getBytes());
+    public enum CommandStatisticsFileRange {
+        Daily,
+        Monthly,
+        Yearly
+    }
+
+    public class CommandStatisticsConfig extends Config {
+
+        public boolean saveAllScripts = true;
+        public boolean saveAllConsoleCommands = false;
+        public String savedScripts = "";
+        public String savedConsoleCommands = "";
+        public CommandStatisticsFileRange fileRange = CommandStatisticsFileRange.Monthly;
+        List<String> scripts = new ArrayList<>();
+        List<String> commands = new ArrayList<>();
+
+        public boolean isSaved(CommandInfo info) {
+            boolean isScript = (info.script != null) && (info.command == null);
+            if (isScript) {
+                if (saveAllScripts) {
+                    return true;
+                }
+                for (String str : scripts) {
+                    if (info.script.trim().startsWith(str)) {
+                        return true;
                     }
-                    Files.write(path, String.join(";", data).getBytes(), StandardOpenOption.APPEND);
-                } catch (Exception ex) {
-                    Logger.getLogger(CommandManager.class.getName()).log(Level.WARNING, null, ex);
                 }
             }
+            if (!isScript) {
+                if (saveAllConsoleCommands) {
+                    return true;
+                }
+                for (String str : commands) {
+                    if (info.command.trim().startsWith(str)) {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
+        public void save() throws IOException {
+            super.save();
+            for (String token : savedScripts.split("\\|")) {
+                token = token.trim();
+                if (!token.isEmpty()) {
+                    scripts.add(token);
+                }
+            }
+            for (String token : savedConsoleCommands.split("\\|")) {
+                token = token.trim();
+                if (!token.isEmpty()) {
+                    commands.add(token);
+                }
+            }
+        }
+    }
+
+    CommandStatisticsConfig commandStatisticsConfig;
+
+    public CommandStatisticsConfig getCommandStatisticsConfig() {
+        return commandStatisticsConfig;
+    }
+
+    void saveCommandStatistics(CommandInfo info) throws IOException {
+        if (commandStatisticsConfig.isSaved(info)) {
+            boolean isScript = (info.script != null) && (info.command == null);
+            String result = null;
+
+            if (info.result instanceof InterpreterResult) {
+                InterpreterResult res = (InterpreterResult) info.result;
+                if (res.exception != null) {
+                    result = Console.getPrintableMessage(res.exception);
+                } else {
+                    result = String.valueOf(res.result);
+                }
+            } else if (info.result instanceof Throwable) {
+                result = Console.getPrintableMessage((Throwable) info.result);
+            } else {
+                result = String.valueOf(info.result);
+            }
+            result = result.split("\n")[0] + "\n";
+            String args = Str.toString(info.args, 10);
+            args = args.split("\n")[0];
+            String[] data = new String[]{
+                isScript ? info.script : info.command,
+                args,
+                String.valueOf(info.source),
+                Chrono.getTimeStr(info.start, "dd/MM/YY HH:mm:ss.SSS"),
+                Chrono.getTimeStr(info.end, "dd/MM/YY HH:mm:ss.SSS"),
+                String.valueOf(info.background),
+                info.isAborted() ? "abort" : (info.isError() ? "error" : "success"),
+                result,};
+            String prefix = null;
+            switch (commandStatisticsConfig.fileRange) {
+                case Daily:
+                    prefix = "YYYY_MM_dd";
+                    break;
+                case Monthly:
+                    prefix = "YYYY_MM";
+                    break;
+                case Yearly:
+                    prefix = "YYYY";
+                    break;
+            }
+            Path path = Paths.get(Context.getInstance().setup.getOutputPath(), "statistics", Chrono.getTimeStr(info.start, prefix) + ".csv");
+            path.toFile().getParentFile().mkdirs();
+
+            if (!path.toFile().exists()) {
+                //Header
+                final String[] header = new String[]{
+                    "Command",
+                    "Args",
+                    "Source",
+                    "Start",
+                    "End",
+                    "Background",
+                    "Result",
+                    "Return\n",};
+                Files.write(path, String.join(";", header).getBytes());
+            }
+            Files.write(path, String.join(";", data).getBytes(), StandardOpenOption.APPEND);
         }
     }
 
