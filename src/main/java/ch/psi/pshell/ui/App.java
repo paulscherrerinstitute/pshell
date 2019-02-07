@@ -946,7 +946,11 @@ public class App extends ObservableBase<AppListener> {
     }
 
     HashMap<String, PlotPanel> plotPanels = new HashMap<>();
-
+    
+    public PlotPanel getPlotPanel(String title, Window parent) {
+        return getPlotPanel(title, parent, true);
+    }
+    
     PlotPanel getPlotPanel(String title, Window parent, boolean create) {
         title = checkPlotsTitle(title);
         PlotPanel plotPanel = plotPanels.get(title);

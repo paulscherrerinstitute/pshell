@@ -1,5 +1,6 @@
     package ch.psi.pshell.ui;
 
+import ch.psi.pshell.data.DataManager;
 import ch.psi.utils.swing.SwingUtils;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -7,11 +8,13 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.ServiceLoader;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JPanel;
+import javax.swing.filechooser.FileNameExtensionFilter;
 
 /**
  * File-based process executor - and alternative to script execution, in order to provide extensions
@@ -112,6 +115,18 @@ public interface Processor {
 
     }
 
+    public static boolean checkProcessorsPlotting(String root, String path, DataManager dm){
+        HashMap<FileNameExtensionFilter, Processor> processors = new HashMap<>();
+        for (Processor processor : Processor.getServiceProviders()) {
+            try {
+                processor.plotDataFile(Paths.get(root, path + "." + dm.getProvider().getFileType()).toFile());
+                return true;
+            } catch (Exception e) {
+            }
+        }
+        return false;    
+    }
+    
     default void plotDataFile(File file) throws Exception {
         throw new Exception("Not implemented");
     }

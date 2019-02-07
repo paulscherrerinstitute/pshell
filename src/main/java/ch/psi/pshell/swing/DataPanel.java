@@ -12,6 +12,7 @@ import ch.psi.pshell.scripting.ViewPreference;
 import ch.psi.utils.Range;
 import ch.psi.pshell.swing.DataPanel.DataPanelListener;
 import ch.psi.pshell.ui.App;
+import ch.psi.pshell.ui.Processor;
 import ch.psi.utils.Arr;
 import ch.psi.utils.Chrono;
 import ch.psi.utils.Convert;
@@ -1360,8 +1361,14 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
         @Override
         public void plotData(DataManager dataManager, String root, String path) throws Exception {
             ViewPreference.PlotPreferences prefs = dataManager.getPlotPreferences(root, path);
-            plot(getParent(), dataManager.getFullPath(root, path), dataManager.getScanPlots(root, path).toArray(new PlotDescriptor[0]), prefs);
-
+            try{
+                plot(getParent(), dataManager.getFullPath(root, path), dataManager.getScanPlots(root, path).toArray(new PlotDescriptor[0]), prefs);
+            } catch (IOException ex) {
+                //If cannot open file, try with external processors
+                if (!Processor.checkProcessorsPlotting(root, path, dataManager)){
+                    throw ex;
+                }
+            }
         }
 
         @Override

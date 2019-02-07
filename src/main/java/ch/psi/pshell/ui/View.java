@@ -969,15 +969,9 @@ public class View extends MainFrame {
             plotData(contextName, dm.getScanPlots(root, path).toArray(new PlotDescriptor[0]), preferences);
         } catch (IOException ex) {
             //If cannot open file, try with external processors
-            HashMap<FileNameExtensionFilter, Processor> processors = new HashMap<>();
-            for (Processor processor : Processor.getServiceProviders()) {
-                try {
-                    processor.plotDataFile(Paths.get(root, path + "." + dm.getProvider().getFileType()).toFile());
-                    return;
-                } catch (Exception e) {
-                }
+            if (!Processor.checkProcessorsPlotting(root, path, dm)){
+                throw ex;
             }
-            throw ex;
         }
     }
 
