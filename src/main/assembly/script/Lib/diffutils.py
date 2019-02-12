@@ -91,6 +91,7 @@ class PositionerScannableGroup(ScannableGroup):
             if len(motors)   == 6: diffcalc_axis_names = _get_diffcalc_axis_names()
             elif len(motors) == 5: diffcalc_axis_names = ("delta", "gam", "eta", "chi", " phi")
             elif len(motors) == 4: diffcalc_axis_names = ("delta", "eta", "chi", " phi")
+        self.diffcalc_axis_names = diffcalc_axis_names
         for i in range(len(motors)):
             _difcalc_names[motors[i]] = diffcalc_axis_names[i]
             exec('self.' + diffcalc_axis_names[i] + ' = PositionerScannable(' + motors[i].name  + ', "' +diffcalc_axis_names[i] + '")')
@@ -130,6 +131,54 @@ class ScannableAdapter(HardwareAdapter):
         if energy is None:
             raise DiffcalcException("Energy has not been set")
         return energy
+
+    def get_motor(self,name):
+        global _motor_group
+        global _difcalc_names
+        for m in _difcalc_names.keys():
+            if _difcalc_names[m] == name:
+                return m
+        for m in _motor_group.motors:
+            if m.name == name:
+                return m
+        raise Exception("Invalid axis name: " + str(name))
+            
+
+    def get_lower_limit(self, name):
+        '''returns lower limits by axis name. Limit may be None if not set
+        '''
+        m = self.get_motor(name)
+        ret = m.getMinValue()
+        if ret == float("NaN"): ret = None
+        return ret
+
+    def get_upper_limit(self, name):
+        '''returns upper limit by axis name. Limit may be None if not set
+        '''
+        m = self.get_motor(name)
+        ret = m.getMaxValue()
+        if ret == float("NaN"): ret = None
+        return ret
+
+    def set_lower_limit(self, name, value):
+        """value may be None to remove limit"""
+        if value is None: value = float("NaN")
+        m = self.get_motor(name)
+        m.config.minValue =value
+        
+    def set_upper_limit(self, name, value):
+        """value may be None to remove limit"""
+        if value is None: value = float("NaN")
+        m = self.get_motor(name)
+        m.config.maxValue =value
+
+    def is_axis_value_within_limits(self, axis_name, value):
+        m = self.get_motor(axis_name)   
+        upper = self.get_upper_limit(axis_name)  
+        lower = self.get_lower_limit(axis_name)  
+        if upper is None: upper = sys.float_info.max
+        if lower is None: lower = sys.float_info.min
+        return lower <= value <= upper 
 
     @property
     def name(self):
@@ -252,9 +301,12 @@ def setup_diff(diffractometer, energy, diffcalc_axis_names = None, geometry=None
                 for axis in self.all_axis_names:
                     pos.append(physical_angle_tuple[index] if (axis in self.my_axis_names) else 0)
                     index = index+1
+                pos.append("DEG")#units
                 return YouPosition(*pos)               
             def internal_position_to_physical_angles(self, internal_position):
-                pos = internal_position.totuple()
+                pos = internal_position.clone()
+                pos.changeToDegrees()
+                pos = pos.totuple()
                 ret = []
                 for i in range (len(self.all_axis_names)):                                    
                     if self.all_axis_names[i] in self.my_axis_names:                       

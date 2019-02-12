@@ -8,6 +8,10 @@
 
 * Option -dplt for creating plots for detached windows.
 
+* vscan supports also generators to provide positioner positions.
+
+* Console location on left.
+
 * Included 'then' execution parameter: sets statement to be executed on the 
   completion of current keeping application state Busy.
 
@@ -26,6 +30,8 @@
 * Configuration of Channel range and alarms in StripChart.
 
 * Ability to force rescan of FileSource (source.rescan()).
+
+* Command statistics.
 
 * Configuring CamServer entries in Scan Editor with same syntax as StripChart.
 
@@ -56,8 +62,12 @@
   avoiding try/finally blocks in order to restore defaults.
 * Setting data format and layout from command line (-dfmt, -dlay options).
 
+* "format" keyword can be used instead of "provider".
+
   
 ### Changed
+
+* Undo can restore file state to unchanged (and remove '*' from file tab title).
 
 * Scans save by default original date types in HDF5 (behavior was converting to double by default).
 
@@ -85,6 +95,8 @@
 * 'keep' replaced 'accumulate' keyword.
 
 * Possibility to add/remove devices to the pool without initializing/closing them.
+
+* show_panel supports a Config parameter - opening a config window.
 
 
 ### Fixed
