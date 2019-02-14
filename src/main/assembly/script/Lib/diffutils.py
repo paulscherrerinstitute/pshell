@@ -11,7 +11,7 @@
 #3- Download http://central.maven.org/maven2/gov/nist/math/jama/1.0.3/jama-1.0.3.jar 
 #   to the extensions folder.
 #4- On {script}/Lib/diffcalc/diffcalc/gdasupport/you.py, the line " wl.asynchronousMoveTo(1)"
-#   must be commented for the evergy not to move when the library is loaded.  
+#   must be commented for the energy not to move when the library is loaded.  
 
 ###################################################################################################\
 # Library loading and Hardware setup
