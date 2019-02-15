@@ -47,10 +47,12 @@ if not diffcalc_path in sys.path:
 
 import diffcalc
 import math
+import os
 from diffcalc import settings
 from diffcalc.hkl.you.geometry import YouGeometry,SixCircle, FiveCircle, FourCircle, YouPosition
 from diffcalc.hardware import HardwareAdapter
-from diffcalc.ub.persistence import UbCalculationNonPersister
+from diffcalc.ub.persistence import UBCalculationJSONPersister, UbCalculationNonPersister
+from diffcalc.ub.calcstate import UBCalcStateEncoder
 from diffcalc.gdasupport.minigda.scannable import ScannableBase, ScannableGroup
 #from diffcalc.gdasupport.minigda import command
 from diffcalc.hardware import HardwareAdapter
@@ -283,7 +285,7 @@ class HklGroup(RegisterBase, Register.RegisterArray):
 you = None
 dc, ub, hardware, hkl = None, None, None, None
 _motor_group = None
-def setup_diff(diffractometer= None, energy= None, diffcalc_axis_names = None, geometry=None):
+def setup_diff(diffractometer= None, energy= None, diffcalc_axis_names = None, geometry=None, persist_ub=True):
     """
         configure diffractometer. Display configuration if no parameter is given
         diffractometer: Diffraction motor group 
@@ -337,7 +339,16 @@ def setup_diff(diffractometer= None, energy= None, diffcalc_axis_names = None, g
         else:    
             raise Exception("Invalid motor group")
         settings.hardware = MotorGroupAdapter(diffractometer, energy, diffcalc_axis_names = diffcalc_axis_names)
-        settings.ubcalc_persister = UbCalculationNonPersister()
+        
+        if persist_ub:
+            settings.persistence_path = os.path.abspath(get_context().setup.expandPath("{config}/diffcalc"))
+            if not os.path.exists(settings.persistence_path):
+                os.makedirs(settings.persistence_path) 
+            print "UB calculations persistence path: " + settings.persistence_path
+            settings.ubcalc_persister = UBCalculationJSONPersister(settings.persistence_path, UBCalcStateEncoder)
+        else:
+            print "UB calculations are not persisteds"
+            settings.ubcalc_persister = UbCalculationNonPersister()
         settings.axes_scannable_group = settings.hardware.diffractometer
         settings.energy_scannable = settings.hardware.energy
         settings.ubcalc_strategy = diffcalc.hkl.you.calc.YouUbCalcStrategy()
@@ -419,6 +430,10 @@ def newub(name):
     """
     start a new ub calculation name
     """
+    try:
+        rmub(name)
+    except:
+        pass
     return ub.newub(name)
 
 def loadub(name_or_num):
