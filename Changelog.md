@@ -4,7 +4,9 @@
 
 ### Added
 
-* Added CSV file format.
+* Colormap scale panel on renderer
+
+* CSV file format.
 
 * Option -dplt for creating plots for detached windows.
 

@@ -38,6 +38,14 @@ public abstract class ColormapSource extends SourceBase {
         }
         return new Range(getConfig().colormapMin, getConfig().colormapMax);
     }
+    
+    Range getCurrentColormapRange(){
+        Range scale = getColormapRange();
+        if (scale == null) {
+            scale = getData().getProperties();
+        }        
+        return scale;
+    }    
 
     protected ColormapSource(String name, ColormapSourceConfig config) {
         super(name, config);

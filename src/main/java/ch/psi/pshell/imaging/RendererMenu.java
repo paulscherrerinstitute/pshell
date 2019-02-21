@@ -263,11 +263,24 @@ public class RendererMenu extends JPopupMenu {
                 Logger.getLogger(RendererMenu.class.getName()).log(Level.SEVERE, null, ex);
             }
         });
+        
+        JCheckBoxMenuItem menuShowScale = new JCheckBoxMenuItem("Show Scale");
+        
+        menuShowScale.addActionListener((e)->{
+            try {
+                renderer.setShowColormapScale(menuShowScale.isSelected());
+            } catch (Exception ex) {
+                Logger.getLogger(RendererMenu.class.getName()).log(Level.SEVERE, null, ex);
+            }            
+        });          
+        
         JMenu menuScale = new JMenu("Scale");
         menuScale.add(menuAutoScale);
         menuScale.add(menuManualScale);
         menuColormap.add(menuScale);
         menuColormap.add(menuLogarithmic);
+        menuColormap.addSeparator();
+        menuColormap.add(menuShowScale);      
         
         JMenuItem menuPlot = new JMenuItem("Detach Plot");
         menuPlot.addActionListener((ActionEvent e) -> {
@@ -476,8 +489,10 @@ public class RendererMenu extends JPopupMenu {
                     for (Component c : menuColormap.getMenuComponents()) {
                         if (c instanceof JRadioButtonMenuItem) {
                             ((JRadioButtonMenuItem) c).setSelected(source.getConfig().colormap == Colormap.valueOf(((JMenuItem) c).getText()));
-                        } else if (c instanceof JCheckBoxMenuItem) {
+                        } else if (c==menuLogarithmic) {
                             ((JCheckBoxMenuItem) c).setSelected(source.getConfig().colormapLogarithmic);
+                        } else if (c==menuShowScale) {
+                            ((JCheckBoxMenuItem) c).setSelected(renderer.getShowColormapScale());
                         }
                     }
 

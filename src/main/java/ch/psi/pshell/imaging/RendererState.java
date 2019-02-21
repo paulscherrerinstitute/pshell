@@ -10,6 +10,7 @@ public class RendererState implements Serializable {
 
     private static final long serialVersionUID = 1L;
     public boolean status;
+    public boolean scale;
     public boolean reticle;
     public double zoom;
     public double scaleX;

@@ -205,9 +205,9 @@ public class MatrixPlotJFree extends MatrixPlotBase {
         //x Value is column, y value is row
         //Aviod JFreeChart bug: https://github.com/jfree/jfreechart/issues/67
         //Freeze event thread for value = 4.393590014e-315  
-        if ( Math.abs(z) < 1e-100){
+        if (Math.abs(z) < 1e-100) {
             z = 0;
-        }        
+        }
         xvalues[index] = x;
         yvalues[index] = y;
         zvalues[index] = z;
@@ -286,10 +286,10 @@ public class MatrixPlotJFree extends MatrixPlotBase {
         JRadioButtonMenuItem popupMenuManualScale = new JRadioButtonMenuItem("Manual");
         popupMenuManualScale.addActionListener((ActionEvent e) -> {
             ManualScaleDialog d = new ManualScaleDialog();
-            SwingUtils.centerComponent(chartPanel,d);
+            SwingUtils.centerComponent(chartPanel, d);
             Double low = ((PaintScaleLegend) chart.getSubtitles().get(0)).getScale().getLowerBound();
-            Double high =((PaintScaleLegend) chart.getSubtitles().get(0)).getScale().getUpperBound();
-            Boolean auto =isAutoScale();
+            Double high = ((PaintScaleLegend) chart.getSubtitles().get(0)).getScale().getUpperBound();
+            Boolean auto = isAutoScale();
             d.setLow(low);
             d.setHigh(high);
             d.setScaleChangeListener(MatrixPlotJFree.this);
@@ -297,8 +297,8 @@ public class MatrixPlotJFree extends MatrixPlotBase {
             d.showDialog();
             if (d.getSelectedOption() == JOptionPane.OK_OPTION) {
                 setScale(d.getLow(), d.getHigh());
-            } else { 
-                if (auto){
+            } else {
+                if (auto) {
                     setAutoScale();
                 } else {
                     setScale(low, high);
@@ -316,13 +316,13 @@ public class MatrixPlotJFree extends MatrixPlotBase {
         }
         JCheckBoxMenuItem menuLogarithmic = new JCheckBoxMenuItem("Logarithmic");
         menuLogarithmic.addActionListener((ActionEvent e) -> {
-           setColormapLogarithmic(menuLogarithmic.isSelected());
-        });          
+            setColormapLogarithmic(menuLogarithmic.isSelected());
+        });
 
         JMenu popupMenuChooseScale = new JMenu("Scale");
         popupMenuChooseScale.add(popupMenuAutoScale);
         popupMenuChooseScale.add(popupMenuManualScale);
-        
+
         popupMenuChooseColormap.addSeparator();
         popupMenuChooseColormap.add(popupMenuChooseScale);
         popupMenuChooseColormap.add(menuLogarithmic);
@@ -356,7 +356,7 @@ public class MatrixPlotJFree extends MatrixPlotBase {
                         ((JRadioButtonMenuItem) c).setSelected(getColormap() == Colormap.valueOf(((JMenuItem) c).getText()));
                     } else if (c instanceof JCheckBoxMenuItem) {
                         ((JCheckBoxMenuItem) c).setSelected(isColormapLogarithmic());
-                    }                       
+                    }
                 }
                 popupMenuItemToolTip.setSelected(getShowTooltips());
             }
@@ -373,7 +373,8 @@ public class MatrixPlotJFree extends MatrixPlotBase {
     }
 
     /**
-     * Show Tooltips. This is not done per default since it makes the app slow for datasize >= 1M
+     * Show Tooltips. This is not done per default since it makes the app slow
+     * for datasize >= 1M
      */
     private void showTooltips() {
         //Tooltips are quit expensive
@@ -419,8 +420,9 @@ public class MatrixPlotJFree extends MatrixPlotBase {
     }
 
     /**
-     * Adapt the lower and upper color map scale to the min and max data values of the currently
-     * selected region Need to be called AFTER the chart panel is created
+     * Adapt the lower and upper color map scale to the min and max data values
+     * of the currently selected region Need to be called AFTER the chart panel
+     * is created
      */
     public void setLegendVisible(boolean value) {
         if (value != legendVisible) {
@@ -444,9 +446,9 @@ public class MatrixPlotJFree extends MatrixPlotBase {
             }
         }
     }
-    
+
     @Override
-    public void setColormapLogarithmic(boolean value){
+    public void setColormapLogarithmic(boolean value) {
         if (value != isColormapLogarithmic()) {
             super.setColormapLogarithmic(value);
             if (isAutoScale()) {
@@ -454,7 +456,7 @@ public class MatrixPlotJFree extends MatrixPlotBase {
             } else {
                 setScale(scaleMin, scaleMax);
             }
-        }        
+        }
     }
 
     public void setShowTooltips(boolean value) {
@@ -526,9 +528,9 @@ public class MatrixPlotJFree extends MatrixPlotBase {
         LookupPaintScale rendererScale = new LookupPaintScale(Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY, Color.GRAY);
         setScaleColors(rendererScale, scaleMin, scaleMax);
         // Make the paint scale range from - to + infinity
-        if (isColormapLogarithmic()){
+        if (isColormapLogarithmic()) {
             rendererScale.add(Double.NEGATIVE_INFINITY, getColormap().getColorLogarithmic(scaleMin, scaleMin, scaleMax));
-            rendererScale.add(Double.POSITIVE_INFINITY, getColormap().getColorLogarithmic(scaleMax, scaleMin, scaleMax));            
+            rendererScale.add(Double.POSITIVE_INFINITY, getColormap().getColorLogarithmic(scaleMax, scaleMin, scaleMax));
         } else {
             rendererScale.add(Double.NEGATIVE_INFINITY, getColormap().getColor(scaleMin, scaleMin, scaleMax));
             rendererScale.add(Double.POSITIVE_INFINITY, getColormap().getColor(scaleMax, scaleMin, scaleMax));
@@ -537,18 +539,19 @@ public class MatrixPlotJFree extends MatrixPlotBase {
     }
 
     /**
-     * Set the colors for the colored Paint Scale (either single color or temperature color)
+     * Set the colors for the colored Paint Scale (either single color or
+     * temperature color)
      *
      * @param paintScale
      * @param scaleMin
      * @param scaleMax
      */
     private void setScaleColors(PaintScale paintScale, double scaleMin, double scaleMax) {
-        if (isColormapLogarithmic()){
-             for (int i = 0; i < 256; i++) {
+        if (isColormapLogarithmic()) {
+            for (int i = 0; i < 256; i++) {
                 double value = scaleMin + (i / 255.0) * (scaleMax - scaleMin);
                 ((LookupPaintScale) paintScale).add(value, getColormap().getColorLogarithmic(value, scaleMin, scaleMax));
-            }           
+            }
         } else {
             for (int i = 0; i < 256; i++) {
                 double value = scaleMin + (i / 255.0) * (scaleMax - scaleMin);
@@ -771,12 +774,12 @@ public class MatrixPlotJFree extends MatrixPlotBase {
     public JFreeChart getChart() {
         return chart;
     }
-    
+
     @Override
     public BufferedImage getSnapshot(Dimension size) {
-        if (size==null){
+        if (size == null) {
             size = new Dimension(SNAPSHOT_WIDTH, SNAPSHOT_HEIGHT);
         }
         return chart.createBufferedImage(size.width, size.width);
-    }   
+    }
 }

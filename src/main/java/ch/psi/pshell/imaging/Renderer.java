@@ -51,6 +51,10 @@ import javax.swing.SwingUtilities;
 import ch.psi.pshell.core.ContextListener;
 import ch.psi.pshell.imaging.Overlays.Arrow;
 import ch.psi.pshell.imaging.Overlays.Text;
+import ch.psi.pshell.plot.ColormapPanel;
+import ch.psi.utils.Config;
+import ch.psi.utils.Config.ConfigListener;
+import ch.psi.utils.Range;
 import ch.psi.utils.Sys;
 import ch.psi.utils.Sys.OSFamily;
 
@@ -467,7 +471,7 @@ public class Renderer extends MonitoredPanel implements ImageListener, ImageBuff
                 }
             }
             refresh();  //To redefine the viewport area
-            if ((mode == RendererMode.Fit) || (mode == RendererMode.Stretch)){
+            if ((mode == RendererMode.Fit) || (mode == RendererMode.Stretch)) {
                 formerMode = null;
             }
             checkPersistence();
@@ -500,6 +504,85 @@ public class Renderer extends MonitoredPanel implements ImageListener, ImageBuff
         statusBar.update();
         checkPersistence();
     }
+
+    public ColormapPanel getColormapPanel(){
+        return colormapPanel;
+    }
+    
+    ColormapPanel colormapPanel;
+    ColormapSource colormapSource;
+    final ConfigListener colormapSourceListener = new ConfigListener() {
+        @Override
+        public void onSave(Config config) {
+            updateColormapScale();
+        }
+    };
+
+    public boolean getShowColormapScale() {
+        return colormapPanel != null;
+    }
+
+    public void setShowColormapScale(boolean value) {
+        boolean current = colormapPanel != null;
+        if (current != value) {
+            if (value) {
+                Object origin = getOrigin();
+                if ((origin == null) || (origin instanceof ColormapSource)) {
+                    colormapPanel = new ColormapPanel();
+                    setColormapSource((ColormapSource) origin);
+                    add(colormapPanel, BorderLayout.EAST);
+                }
+            } else {
+                setColormapSource(null);
+                if (colormapPanel != null) {
+                    remove(colormapPanel);
+                    colormapPanel = null;
+                }
+            }
+            updateUI();
+            checkPersistence();
+        }
+    }
+
+    void setColormapSource(ColormapSource source) {
+        if (colormapSource != null) {
+            colormapSource.getConfig().removeListener(colormapSourceListener);
+        }
+        colormapSource = source;
+        if (colormapSource != null) {
+            updateColormapScale();
+            colormapSource.getConfig().addListener(colormapSourceListener);
+        } else {
+            updateColormapScale(Colormap.Grayscale, new Range(0,1), false);
+        }
+    }
+
+    void updateColormapScale() {
+        Object origin = getOrigin();
+        if (((origin != null) && (origin instanceof ColormapSource))) {
+            ColormapSource source = (ColormapSource) origin;
+            updateColormapScale(source.getConfig().colormap, source.getCurrentColormapRange(), source.getConfig().colormapLogarithmic);
+        }
+    }
+
+    void updateColormapScale(Colormap colormap, Range range, Boolean log) {
+        if (colormapPanel != null) {
+            colormapPanel.update(colormap, range, log);
+        }
+    }
+    
+    volatile boolean updatingColormapScale;
+    void requestColormapScaleUpdate(){
+        if (updatingColormapScale==false){
+            updatingColormapScale = true;
+            SwingUtilities.invokeLater(()->{
+                if (colormapSource!=null){
+                    updatingColormapScale = false;
+                    updateColormapScale(null, colormapSource.getCurrentColormapRange(), null);
+                }
+            });
+        }
+    }    
 
     Overlays.Reticle reticle;
 
@@ -664,11 +747,11 @@ public class Renderer extends MonitoredPanel implements ImageListener, ImageBuff
     }
 
     RendererMode formerMode;
-    
+
     public void zoomTo(Rectangle zoomImage) {
-        if ((mode == RendererMode.Fit) || (mode == RendererMode.Stretch)){
+        if ((mode == RendererMode.Fit) || (mode == RendererMode.Stretch)) {
             formerMode = mode;
-        }        
+        }
         BufferedImage image = getImage();
         if ((image != null)) {
             Rectangle2D zoomImageClipped = zoomImage.createIntersection(new Rectangle(image.getWidth(), image.getHeight()));
@@ -700,9 +783,9 @@ public class Renderer extends MonitoredPanel implements ImageListener, ImageBuff
 
     public void resetZoom() {
         if (zoom != defaultZoom) {
-            if (formerMode != null){
+            if (formerMode != null) {
                 setMode(formerMode);
-            } else {        
+            } else {
                 setZoom(defaultZoom);
                 setViewPosition(new Point(0, 0));
             }
@@ -925,6 +1008,18 @@ public class Renderer extends MonitoredPanel implements ImageListener, ImageBuff
             frameCount++;
             synchronized (waitLock) {
                 waitLock.notifyAll();
+            }
+        }
+        if (getShowColormapScale() && (origin != null) && (origin != this)) {
+            if ((origin instanceof ColormapSource)) {
+                if (origin != colormapSource) {
+                    setColormapSource((ColormapSource)origin);
+                }
+                if (colormapSource.getConfig().colormapAutomatic){
+                    requestColormapScaleUpdate();
+                }                
+            } else {
+                setShowColormapScale(false);
             }
         }
         checkProfile();
@@ -1635,7 +1730,7 @@ public class Renderer extends MonitoredPanel implements ImageListener, ImageBuff
         int key = e.getKeyCode();
         try {
             boolean is_mac = (Sys.getOSFamily() == OSFamily.Mac);
-            if ((!is_mac && (key == KeyEvent.VK_CONTROL)) || (is_mac && (key == KeyEvent.VK_SHIFT))) {            
+            if ((!is_mac && (key == KeyEvent.VK_CONTROL)) || (is_mac && (key == KeyEvent.VK_SHIFT))) {
                 controlKey = false;
                 if ((mouseSelectionOverlay != null) && (mouseSelectionOverlay == zoomToSelection)) {
                     abortSelection();
@@ -1646,7 +1741,7 @@ public class Renderer extends MonitoredPanel implements ImageListener, ImageBuff
     }
 
     Overlays.Rect zoomToSelection;
-   
+
     protected void onZoomTo() {
         zoomToSelection = new Overlays.Rect(new Pen(penSelectedOverlay.getColor(), 1, Pen.LineStyle.dotted));
         addListener(new RendererListener() {
@@ -1655,7 +1750,7 @@ public class Renderer extends MonitoredPanel implements ImageListener, ImageBuff
                 if (overlay == zoomToSelection) {
                     try {
                         if ((overlay.getUtmost().x < overlay.getPosition().x) && (overlay.getUtmost().y < overlay.getPosition().y)) {
-                            resetZoom();  
+                            resetZoom();
                         } else {
                             zoomTo(overlay.isFixed() ? toImageCoord(overlay.getBounds()) : overlay.getBounds());
                         }
@@ -2048,6 +2143,7 @@ public class Renderer extends MonitoredPanel implements ImageListener, ImageBuff
     public void persistState(Path file) {
         RendererState state = new RendererState();
         state.mode = getMode();
+        state.scale = getShowColormapScale();
         state.zoom = getZoom();
         state.scaleX = getScaleX();
         state.scaleY = getScaleY();
@@ -2071,13 +2167,14 @@ public class Renderer extends MonitoredPanel implements ImageListener, ImageBuff
             restoringState = true;
             RendererState state = (RendererState) Serializer.decode(Files.readAllBytes(file));
             setShowStatus(state.status);
+            setShowColormapScale(state.scale);
             setCalibration(state.calibration);
             setMode(state.mode);
             setZoom(state.zoom);
             formerMode = state.formerMode;
             if (state.marker != null) {
                 setMarker(state.marker);
-                
+
             }
             if (state.profile != null) {
                 setProfile(state.profile);
@@ -2088,7 +2185,7 @@ public class Renderer extends MonitoredPanel implements ImageListener, ImageBuff
                     SwingUtils.invokeDelayed(() -> {
                         setViewPosition(state.imagePosition);
                         //If state had no reticule, but a reticule has been enabled, do nothing.
-                        if (state.reticle){
+                        if (state.reticle) {
                             setShowReticle(true);
                         }
                     }, 100);
