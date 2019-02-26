@@ -1621,7 +1621,6 @@ public class View extends MainFrame {
 
     void saveContext() {
         if (App.getInstance().isContextPersisted()) {
-            App.getInstance().persistGuiState();
             saveOpenedFiles();
         }
     }
