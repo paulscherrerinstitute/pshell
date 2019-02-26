@@ -1498,12 +1498,12 @@
             <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="buttonAbortActionPerformed"/>
           </Events>
         </Component>
-        <Component class="javax.swing.JToolBar$Separator" name="jSeparator7">
+        <Component class="javax.swing.JToolBar$Separator" name="separatorStopAll">
           <Properties>
             <Property name="maximumSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor">
               <Dimension value="[20, 32767]"/>
             </Property>
-            <Property name="name" type="java.lang.String" value="jSeparator7" noResource="true"/>
+            <Property name="name" type="java.lang.String" value="separatorStopAll" noResource="true"/>
             <Property name="preferredSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor">
               <Dimension value="[20, 0]"/>
             </Property>

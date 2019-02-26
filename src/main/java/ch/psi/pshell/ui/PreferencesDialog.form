@@ -1098,8 +1098,9 @@
                                   <Component id="ckScanPlotDisabled" alignment="0" min="-2" max="-2" attributes="0"/>
                                   <Component id="ckScanTableDisabled" alignment="0" min="-2" max="-2" attributes="0"/>
                                   <Component id="checkCachedDataPanel" alignment="0" min="-2" max="-2" attributes="0"/>
+                                  <Component id="checkShowEmergencyStop" alignment="0" min="-2" max="-2" attributes="0"/>
                               </Group>
-                              <EmptySpace pref="374" max="32767" attributes="0"/>
+                              <EmptySpace pref="426" max="32767" attributes="0"/>
                           </Group>
                           <Group type="102" alignment="0" attributes="0">
                               <Component id="ckAsyncUpdate" min="-2" max="-2" attributes="0"/>
@@ -1127,10 +1128,12 @@
                       <EmptySpace type="unrelated" max="-2" attributes="0"/>
                       <Component id="checkCachedDataPanel" linkSize="19" min="-2" max="-2" attributes="0"/>
                       <EmptySpace type="unrelated" max="-2" attributes="0"/>
+                      <Component id="checkShowEmergencyStop" min="-2" max="-2" attributes="0"/>
+                      <EmptySpace type="unrelated" max="-2" attributes="0"/>
                       <Component id="ckScanPlotDisabled" linkSize="19" min="-2" max="-2" attributes="0"/>
                       <EmptySpace type="unrelated" max="-2" attributes="0"/>
                       <Component id="ckScanTableDisabled" linkSize="19" min="-2" max="-2" attributes="0"/>
-                      <EmptySpace pref="70" max="32767" attributes="0"/>
+                      <EmptySpace pref="35" max="32767" attributes="0"/>
                   </Group>
               </Group>
             </DimensionLayout>
@@ -1167,6 +1170,11 @@
                 <Property name="model" type="javax.swing.ComboBoxModel" editor="org.netbeans.modules.form.editors2.ComboBoxModelEditor">
                   <StringArray count="0"/>
                 </Property>
+              </Properties>
+            </Component>
+            <Component class="javax.swing.JCheckBox" name="checkShowEmergencyStop">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="Show emergency stop"/>
               </Properties>
             </Component>
           </SubComponents>

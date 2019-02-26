@@ -146,6 +146,7 @@ public class PreferencesDialog extends StandardDialog {
         ckScanPlotDisabled.setSelected(preferences.scanPlotDisabled);
         ckScanTableDisabled.setSelected(preferences.scanTableDisabled);
         checkCachedDataPanel.setSelected(preferences.cachedDataPanel);
+        checkShowEmergencyStop.setSelected(preferences.showEmergencyStop);
         comboLinePlot.setSelectedItem(preferences.linePlot);
         comboMatrixPlot.setSelectedItem(preferences.matrixPlot);
         comboSurfacePlot.setSelectedItem(preferences.surfacePlot);
@@ -276,6 +277,7 @@ public class PreferencesDialog extends StandardDialog {
         checkCachedDataPanel = new javax.swing.JCheckBox();
         jLabel21 = new javax.swing.JLabel();
         comboScriptPopup = new javax.swing.JComboBox();
+        checkShowEmergencyStop = new javax.swing.JCheckBox();
         buttonOk = new javax.swing.JButton();
         buttonCancel = new javax.swing.JButton();
 
@@ -951,6 +953,8 @@ public class PreferencesDialog extends StandardDialog {
         jLabel21.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
         jLabel21.setText("Script popup dialog:");
 
+        checkShowEmergencyStop.setText("Show emergency stop");
+
         javax.swing.GroupLayout jPanel3Layout = new javax.swing.GroupLayout(jPanel3);
         jPanel3.setLayout(jPanel3Layout);
         jPanel3Layout.setHorizontalGroup(
@@ -962,8 +966,9 @@ public class PreferencesDialog extends StandardDialog {
                         .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(ckScanPlotDisabled)
                             .addComponent(ckScanTableDisabled)
-                            .addComponent(checkCachedDataPanel))
-                        .addContainerGap(374, Short.MAX_VALUE))
+                            .addComponent(checkCachedDataPanel)
+                            .addComponent(checkShowEmergencyStop))
+                        .addContainerGap(426, Short.MAX_VALUE))
                     .addGroup(jPanel3Layout.createSequentialGroup()
                         .addComponent(ckAsyncUpdate)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
@@ -984,10 +989,12 @@ public class PreferencesDialog extends StandardDialog {
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(checkCachedDataPanel)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(checkShowEmergencyStop)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(ckScanPlotDisabled)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(ckScanTableDisabled)
-                .addContainerGap(70, Short.MAX_VALUE))
+                .addContainerGap(35, Short.MAX_VALUE))
         );
 
         jPanel3Layout.linkSize(javax.swing.SwingConstants.VERTICAL, new java.awt.Component[] {checkCachedDataPanel, ckAsyncUpdate, ckScanPlotDisabled, ckScanTableDisabled, comboScriptPopup, jLabel21});
@@ -1070,6 +1077,7 @@ public class PreferencesDialog extends StandardDialog {
                 preferences.scanPlotDisabled = ckScanPlotDisabled.isSelected();
                 preferences.scanTableDisabled = ckScanTableDisabled.isSelected();
                 preferences.cachedDataPanel = checkCachedDataPanel.isSelected();
+                preferences.showEmergencyStop = checkShowEmergencyStop.isSelected();
                 preferences.linePlot = String.valueOf(comboLinePlot.getSelectedItem());
                 preferences.matrixPlot = String.valueOf(comboMatrixPlot.getSelectedItem());
                 preferences.surfacePlot = String.valueOf(comboSurfacePlot.getSelectedItem());
@@ -1231,6 +1239,7 @@ public class PreferencesDialog extends StandardDialog {
     private javax.swing.JCheckBox checkCachedDataPanel;
     private javax.swing.JCheckBox checkEditorContextMenu;
     private javax.swing.JCheckBox checkPersistRendererWindows;
+    private javax.swing.JCheckBox checkShowEmergencyStop;
     private javax.swing.JCheckBox checkShowRowNumbers;
     private javax.swing.JCheckBox checkStatusBar;
     private javax.swing.JCheckBox checkSyntaxHighlight;

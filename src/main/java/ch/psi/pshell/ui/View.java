@@ -1551,7 +1551,7 @@ public class View extends MainFrame {
                 editor.setEditorBackground(preferences.getEditorBackground());
             }
         }
-
+        showEmergencyStop(preferences.showEmergencyStop);
         PlotBase.setPlotBackground(preferences.plotBackground);
         PlotBase.setGridColor(preferences.gridColor);
         PlotBase.setOutlineColor(preferences.outlineColor);
@@ -1611,6 +1611,12 @@ public class View extends MainFrame {
         } catch (Exception ex) {
             logger.log(Level.FINE, null, ex);
         }
+    }
+    
+    void showEmergencyStop(boolean value){
+        separatorStopAll.setVisible(value);
+        buttonStopAll.setVisible(value);
+        menuStopAll.setVisible(value);
     }
 
     void saveContext() {
@@ -1839,7 +1845,7 @@ public class View extends MainFrame {
         buttonStep = new javax.swing.JButton();
         buttonPause = new javax.swing.JButton();
         buttonAbort = new javax.swing.JButton();
-        jSeparator7 = new javax.swing.JToolBar.Separator();
+        separatorStopAll = new javax.swing.JToolBar.Separator();
         buttonStopAll = new javax.swing.JButton();
         separatorInfo = new javax.swing.JToolBar.Separator();
         buttonAbout = new javax.swing.JButton();
@@ -2180,10 +2186,10 @@ public class View extends MainFrame {
         });
         toolBar.add(buttonAbort);
 
-        jSeparator7.setMaximumSize(new java.awt.Dimension(20, 32767));
-        jSeparator7.setName("jSeparator7"); // NOI18N
-        jSeparator7.setPreferredSize(new java.awt.Dimension(20, 0));
-        toolBar.add(jSeparator7);
+        separatorStopAll.setMaximumSize(new java.awt.Dimension(20, 32767));
+        separatorStopAll.setName("separatorStopAll"); // NOI18N
+        separatorStopAll.setPreferredSize(new java.awt.Dimension(20, 0));
+        toolBar.add(separatorStopAll);
 
         buttonStopAll.setIcon(new javax.swing.ImageIcon(getClass().getResource("/ch/psi/pshell/ui/Abort.png"))); // NOI18N
         buttonStopAll.setText(bundle.getString("View.buttonStopAll.text")); // NOI18N
@@ -4082,7 +4088,6 @@ public class View extends MainFrame {
     private javax.swing.JPopupMenu.Separator jSeparator4;
     private javax.swing.JToolBar.Separator jSeparator5;
     private javax.swing.JToolBar.Separator jSeparator6;
-    private javax.swing.JToolBar.Separator jSeparator7;
     private javax.swing.JPopupMenu.Separator jSeparator8;
     private javax.swing.JPopupMenu.Separator jSeparator9;
     private javax.swing.JLabel labelUser;
@@ -4161,6 +4166,7 @@ public class View extends MainFrame {
     private ch.psi.pshell.swing.PlotPanel scanPlot;
     private ch.psi.pshell.swing.ScriptsPanel scriptsPanel;
     private javax.swing.JToolBar.Separator separatorInfo;
+    private javax.swing.JToolBar.Separator separatorStopAll;
     private ch.psi.pshell.swing.Shell shell;
     private javax.swing.JSplitPane splitterDoc;
     private javax.swing.JSplitPane splitterHoriz;
