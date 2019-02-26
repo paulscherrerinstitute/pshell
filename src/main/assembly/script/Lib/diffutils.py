@@ -67,6 +67,8 @@ _difcalc_names = {}
 #
 # Disable error handling designed for interactive use
 #diffcalc.util.DEBUG = True
+# Disable console bold charcters
+diffcalc.util.COLOURISE_TERMINAL_OUTPUT = False
 
 ###################################################################################################
 # Device mapping to difcalc
@@ -360,8 +362,8 @@ def setup_diff(diffractometer= None, energy= None, diffcalc_axis_names = None, g
         from diffcalc.dc import dcyou as dc
         from diffcalc.ub import ub
         from diffcalc import hardware
-        from diffcalc.hkl.you import hkl   
-        
+        from diffcalc.hkl.you import hkl
+
         add_device(HklGroup("hkl_group"), True)
         add_device(Wavelength("wavelength", 6), True)
         hkl_group.polling = 250
