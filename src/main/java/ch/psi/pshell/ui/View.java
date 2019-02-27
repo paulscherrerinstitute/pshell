@@ -347,7 +347,11 @@ public class View extends MainFrame {
             }
         });
         restorePreferences();
-
+        if (!App.isFullScreen()  && App.getInstance().isContextPersisted()) {
+            //restoring again (also in App.startup) to take into avcount hidden panels displayed by restorePreferences
+            restoreState();
+        }
+        
         if (tabDoc.getTabCount() > 0) {
             tabDoc.setSelectedIndex(0);
         }

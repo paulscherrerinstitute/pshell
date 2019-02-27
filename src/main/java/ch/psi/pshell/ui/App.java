@@ -69,7 +69,6 @@ import javax.swing.WindowConstants;
 import javax.swing.event.SwingPropertyChangeSupport;
 import java.util.List;
 import java.util.Map;
-import org.apache.commons.io.FileUtils;
 
 /**
  * The application singleton object.
