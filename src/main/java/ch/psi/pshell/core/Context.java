@@ -1759,8 +1759,9 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
     //These methods are made public in order to plugins control state
     //Start execution in interpreter thread (foreground task)
     @Hidden
-    public void startExecution(final CommandSource source, String fileName) throws ContextStateException {
-        startExecution(source, fileName, null);
+    public void startExecution(final CommandSource source, String fileName,  Object args, boolean background) throws ContextStateException {
+        CommandInfo info = new CommandInfo(source, fileName, null, args, background);
+        startExecution(source, fileName, info);
     }
 
     @Hidden

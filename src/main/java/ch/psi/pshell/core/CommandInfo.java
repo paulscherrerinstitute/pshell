@@ -54,12 +54,12 @@ public class CommandInfo {
         this.start = System.currentTimeMillis();
     }
     
-    CommandInfo(CommandSource source, String script, String command, Object args, boolean background) {
+    public CommandInfo(CommandSource source, String script, String command, Object args, boolean background) {
         this(source, script, command, args, background, null);
     }
     
     //Nested command ("run")
-    CommandInfo(CommandInfo parent, String script,Object args) {
+    public CommandInfo(CommandInfo parent, String script,Object args) {
         this(CommandSource.script, script, null, args, (parent == null) ? false : parent.background, parent);
     }
 
