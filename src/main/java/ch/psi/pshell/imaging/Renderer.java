@@ -527,11 +527,9 @@ public class Renderer extends MonitoredPanel implements ImageListener, ImageBuff
         if (current != value) {
             if (value) {
                 Object origin = getOrigin();
-                if ((origin == null) || (origin instanceof ColormapSource)) {
-                    colormapPanel = new ColormapPanel();
-                    setColormapSource((ColormapSource) origin);
-                    add(colormapPanel, BorderLayout.EAST);
-                }
+                colormapPanel = new ColormapPanel();
+                setColormapSource(((origin == null) || (origin instanceof ColormapSource)) ? (ColormapSource) origin : null);
+                add(colormapPanel, BorderLayout.EAST);
             } else {
                 setColormapSource(null);
                 if (colormapPanel != null) {
