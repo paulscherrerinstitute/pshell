@@ -5,20 +5,10 @@ import ch.psi.pshell.plot.ManualScaleDialog.ScaleChangeListener;
 import javax.swing.JPanel;
 import ch.psi.utils.swing.SwingUtils;
 import ch.psi.pshell.plot.MatrixPlotSeries.MatrixPlotSeriesListener;
-import static ch.psi.pshell.plot.PlotBase.getDefaultColormap;
 import ch.psi.utils.Reflection.Hidden;
-import java.awt.BorderLayout;
 import java.awt.Dimension;
-import java.awt.FlowLayout;
-import java.awt.Font;
 import java.awt.Frame;
-import java.awt.event.ActionEvent;
-import javax.swing.JButton;
 import javax.swing.JDialog;
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
-import javax.swing.JTextField;
-import javax.swing.border.EmptyBorder;
 
 /**
  *
@@ -201,7 +191,7 @@ abstract public class MatrixPlotBase extends PlotBase<MatrixPlotSeries> implemen
 
     public Colormap getColormap() {
         if (colormap == null) {
-            colormap = getDefaultColormap();
+            colormap = PlotBase.getDefaultColormap();
         }
         return colormap;
     }

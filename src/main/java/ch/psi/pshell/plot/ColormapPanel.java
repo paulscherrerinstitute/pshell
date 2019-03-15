@@ -1,6 +1,7 @@
 package ch.psi.pshell.plot;
 
 import ch.psi.pshell.imaging.Colormap;
+import static ch.psi.pshell.plot.LinePlotJFree.AUTO_RANGE_MINIMUM_SIZE;
 import ch.psi.utils.Range;
 import ch.psi.utils.swing.MonitoredPanel;
 import ch.psi.utils.swing.SwingUtils;
@@ -12,6 +13,8 @@ import java.awt.Graphics2D;
 import java.awt.geom.Rectangle2D;
 import javax.swing.JPanel;
 import org.jfree.chart.axis.NumberAxis;
+import org.jfree.chart.axis.NumberTickUnitSource;
+import org.jfree.chart.axis.TickUnit;
 import org.jfree.chart.renderer.LookupPaintScale;
 import org.jfree.chart.title.PaintScaleLegend;
 import org.jfree.ui.RectangleEdge;
@@ -155,9 +158,9 @@ public class ColormapPanel extends MonitoredPanel {
         if (isShowing()) {
             double min = Math.min(this.scaleMin, this.scaleMax);
             double max = Math.max(this.scaleMin, this.scaleMax);
-            if (max == min) {
-                max = min + 1e-12;
-            }
+            if (min >= max) {
+                max = min + 0.01;
+            }            
             LookupPaintScale legendScale = new LookupPaintScale(min, max, Color.GRAY);
             if (isLogarithmic()) {
                 for (int i = 0; i < 256; i++) {
@@ -172,6 +175,17 @@ public class ColormapPanel extends MonitoredPanel {
             }
             if (legend == null) {
                 axis = new NumberAxis();
+                axis.setAutoRangeMinimumSize(AUTO_RANGE_MINIMUM_SIZE);
+                //Fix https://stackoverflow.com/questions/24210665/jfreechart-large-values
+                axis.setStandardTickUnits(new NumberTickUnitSource() {
+                    @Override
+                    public TickUnit getCeilingTickUnit(double size) {
+                        if (Double.isInfinite(size)) {
+                            return super.getCeilingTickUnit(AUTO_RANGE_MINIMUM_SIZE);
+                        }
+                        return super.getCeilingTickUnit(size);
+                    }
+                });
                 legend = new PaintScaleLegend(legendScale, axis);
                 legend.setPadding(new RectangleInsets(5, 5, 5, 5));
                 legend.setStripWidth(getStripWidth());
