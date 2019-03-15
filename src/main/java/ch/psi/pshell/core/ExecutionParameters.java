@@ -613,25 +613,18 @@ public class ExecutionParameters {
         return (cmd == null) ? null : cmd.args;
     }
 
-    public List<CommandInfo> getCommands() {
-        return Context.getInstance().getCommandManager().getCommands();
+    public CommandInfo getCommand() {
+        return getCommand(true);
     }
 
-    public CommandInfo getCommand() {
-        List<CommandInfo> commands = getCommands();
-        for (CommandInfo cmd : commands) {
-            if (cmd.thread == Thread.currentThread()) {
-                return cmd;
-            }
-        }
+    public CommandInfo getCommand(boolean parent) {
+        CommandInfo ret = Context.getInstance().getCommandManager().getCurrentCommand(parent);
         //If not in background command, return foreground command
-        //TODO: Not considering threads created by background command
-        for (CommandInfo cmd : commands) {
-            if (cmd.background == false) {
-                return cmd;
-            }
+        if (ret==null){
+            ret = Context.getInstance().getCommandManager().getInterpreterThreadCommand(parent);
         }
-        return null;
+        return ret;
+
     }
 
     public boolean isBackground() {
