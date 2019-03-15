@@ -230,7 +230,8 @@ public class RendererMenu extends JPopupMenu {
                 if ((origin != null) && (origin instanceof ColormapSource)) {
                     ColormapSource source = (ColormapSource) origin;
                     ManualScaleDialog d = new ManualScaleDialog();
-                    SwingUtils.centerComponent(this, d);
+                    d.setLocationRelativeTo(d);
+                    SwingUtils.centerComponent(renderer.getTopLevelAncestor(), d);
                     Double low = source.getConfig().colormapMin;
                     Double high = source.getConfig().colormapMax;
                     Boolean auto = source.getConfig().colormapAutomatic;
