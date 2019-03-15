@@ -22,7 +22,7 @@ public class ArrayProperties extends Range {
         int minIndex = -1;
         int maxIndex = -1;
         double min = Double.MAX_VALUE;
-        double max = Double.MIN_VALUE;
+        double max = -Double.MAX_VALUE;
         
         if (Arr.getComponentType(array).isPrimitive()) {
             array = Convert.toWrapperArray(array);

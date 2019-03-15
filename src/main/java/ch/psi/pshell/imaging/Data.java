@@ -151,8 +151,8 @@ public class Data implements Serializable {
     }
 
     Calibration calibration;
-    
-    public Data getRoi(Rectangle roi){
+
+    public Data getRoi(Rectangle roi) {
         return new Data(this, roi, false);
     }
 
@@ -185,7 +185,7 @@ public class Data implements Serializable {
         int minIndex = -1;
         int maxIndex = -1;
         double min = Double.MAX_VALUE;
-        double max = Double.MIN_VALUE;
+        double max = -Double.MAX_VALUE;
 
         if (array instanceof byte[]) {
             byte[] data = (byte[]) array;

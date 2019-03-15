@@ -138,7 +138,7 @@ public class MatrixPlotRenderer extends MatrixPlotBase {
         @Override
         public float[] toRGB(float[] colorvalue) {
             float val = (colorvalue[0] - (float) scaleMin) / (float) scaleRange;
-            return new float[]{(val < 0.0f ? 0.0f : (val > 1.0f ? 1.0f : val))};
+            return new float[]{((Float.isNaN(val) || (val < 0.0f)) ? 0.0f : (val > 1.0f ? 1.0f : val))};
         }
 
         @Override
@@ -178,7 +178,7 @@ public class MatrixPlotRenderer extends MatrixPlotBase {
             WritableRaster wr = WritableRaster.createWritableRaster(sm, dataBuffer, null);
             image = new BufferedImage(cmGray, wr, true, new Hashtable<Object, Object>());
             if (autoScale) {
-                updateScale(Double.MAX_VALUE, Double.MIN_VALUE);
+                updateScale(Double.MAX_VALUE, -Double.MAX_VALUE);
             }
             requestSeriesUpdate(series);
         }
@@ -204,7 +204,7 @@ public class MatrixPlotRenderer extends MatrixPlotBase {
 
         if (autoScale) {
             double min = Double.MAX_VALUE;
-            double max = Double.MIN_VALUE;
+            double max = -Double.MAX_VALUE;
             for (double[] row : data) {
                 for (double v : row) {
                     if (v < min) {
