@@ -283,6 +283,13 @@ public class ExecutionParameters {
             }
         } else if ((Boolean.FALSE.equals(open)) && (Context.getInstance().dataManager.isOpen())) {
             Context.getInstance().dataManager.closeOutput();
+            scanIndex = 0;      
+            lastOutputFile = null;
+            pathName = null;
+            dataLayout = null;
+            dataProvider = isBackground() ? Context.getInstance().getDataManager().cloneProvider() : null;            
+            start = System.currentTimeMillis();
+            offset = 0;      
         }
 
         Object reset = getOption("reset");
