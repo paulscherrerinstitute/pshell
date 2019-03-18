@@ -33,6 +33,7 @@ public class Configuration extends Config {
     public boolean dataScanPreserveTypes = false;
     public boolean commandExecutionEvents = false;
     public String hostName;
+    public boolean hideServerMessages = false;
     public String logPath = TOKEN_LOGS + "/" + TOKEN_DATE + "_" + TOKEN_TIME;
     public int logDaysToLive = -1;
     public LogLevel logLevel = LogLevel.Info;

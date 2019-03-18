@@ -87,16 +87,20 @@ public class Shell extends MonitoredPanel {
     final ContextListener contextListener = new ContextAdapter() {
         @Override
         public void onShellCommand(CommandSource source, String command) {
-            output.append(Context.getInstance().getCursor(command) + command + "\n", (source == CommandSource.ui) ? INPUT_COLOR : REMOTE_COLOR);
+            if (source.isDisplayable()){
+                output.append(Context.getInstance().getCursor(command) + command + "\n", (source == CommandSource.ui) ? INPUT_COLOR : REMOTE_COLOR);
+            }
         }
 
         @Override
         public void onShellResult(CommandSource source, Object result) {
             if (result != null) {
-                if (result instanceof Throwable) {
-                    output.append(Console.getPrintableMessage((Throwable) result) + "\n", ERROR_COLOR);
-                } else {
-                    output.append(String.valueOf(result) + "\n", OUTPUT_COLOR);
+                if (source.isDisplayable()){               
+                    if (result instanceof Throwable) {
+                        output.append(Console.getPrintableMessage((Throwable) result) + "\n", ERROR_COLOR);
+                    } else {
+                        output.append(String.valueOf(result) + "\n", (source == CommandSource.ui) ? OUTPUT_COLOR : REMOTE_COLOR);
+                    }
                 }
             }
         }

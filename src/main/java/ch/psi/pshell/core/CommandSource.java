@@ -25,4 +25,8 @@ public enum CommandSource {
     public boolean isRemote() {
         return (this == terminal) || (this == server);
     }
+    
+    public boolean isDisplayable(){
+     return !this.isRemote() || !Context.getInstance().getConfig().hideServerMessages;
+    }
 }

@@ -1254,7 +1254,9 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
         } finally {
             try {
                 if (!command.trim().isEmpty()) {
-                    history.put(command);
+                    if (source.isDisplayable()){      
+                        history.put(command);
+                    }
                 }
             } catch (Exception ex) {
             }
