@@ -1,5 +1,21 @@
 # Changelog
 
+## 1.11.0
+
+### Added
+
+* Utilities script for generating reports from command statistics files (statsutils.py)
+
+  
+### Changed
+
+* 
+
+
+### Fixed
+
+* 
+
 ## 1.10.0
 
 ### Added
