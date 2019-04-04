@@ -68,4 +68,37 @@ public class DataAPI {
         List<Map<String, Object>> ret = queryNames(regex, (backend == null) ? null : new String[]{backend}, ordering, reload);
         return (List<String>) ret.get(0).get("channels");
     }
+    
+
+    
+    public List<Map<String, Object>> queryData(String[] channels, Object start, Object end) throws IOException {
+        Map<String, Object> data = new HashMap<>();
+        
+        data.put("channels", channels);
+        data.put("ordering", Ordering.none.toString());
+        
+        Map<String, Object> range = new HashMap<>();
+        if (start instanceof Number){
+            range.put("startPulseId", ((Number) start).longValue());
+        } else if (start instanceof String){
+            range.put("startDate", start);
+        }
+        if (end instanceof Number){
+            range.put("endPulseId", ((Number) end).longValue());
+        } else if (end instanceof String){
+            range.put("endDate", end);
+        }
+        data.put("range", range);
+        
+        data.put("configFields", new String[]{"globalDate",  "type", "shape"});
+        data.put("eventFields", new String[]{"pulseId", "globalDate",  "value"});
+        
+        String json = JsonSerializer.encode(data);
+        WebTarget resource = client.target(url + "/query");
+        Response r = resource.request().accept(MediaType.APPLICATION_JSON).post(Entity.json(json));
+        json = r.readEntity(String.class);
+        List<Map<String, Object>> ret = (List) JsonSerializer.decode(json, List.class);
+        return ret;
+    }
+    
 }
