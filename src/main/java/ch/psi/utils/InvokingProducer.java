@@ -1,6 +1,5 @@
 package ch.psi.utils;
 
-import ch.psi.pshell.ui.StripChart;
 import java.awt.event.ActionEvent;
 import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -86,7 +85,7 @@ public abstract class InvokingProducer<T>  implements AutoCloseable{
                 consume(element);
             }
         } catch (Exception ex) {
-            Logger.getLogger(StripChart.class.getName()).log(Level.FINE, null, ex);
+            Logger.getLogger(InvokingProducer.class.getName()).log(Level.FINE, null, ex);
         }
     }
 
