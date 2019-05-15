@@ -129,6 +129,35 @@ public class Table implements Subscriptable.MappedSequence{
         }
         return new Table(header, data);
     }
+    
+    /**
+     * File with no table header
+     */
+   
+    public static Table loadRaw(String fileName, String[] header) throws IOException {
+        return loadRaw(fileName, "\\s+", "#", header);
+    }
+
+    public static Table loadRaw(String fileName, String separator, String comment, String[] header) throws IOException {
+        String[][] lines = IO.parse(fileName, separator, comment);
+
+        if ((lines.length == 0) || (lines[0].length == 0)) {
+            return new Table(null, null);
+        }
+        
+        double[][] data = new double[lines.length][header.length];
+        
+        for (int row = 0; row < data.length; row++) {
+            for (int col = 0; col < header.length; col++) {
+                try {
+                    data[row][col] = Double.valueOf(lines[row][col]);
+                } catch (Exception ex) {
+                    data[row][col] = Double.NaN;
+                }
+            }
+        }
+        return new Table(header, data);
+    }
 
     @Override
     public String toString() {
