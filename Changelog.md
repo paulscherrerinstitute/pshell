@@ -5,6 +5,7 @@
 ### Added
 
 * Utilities script for generating reports from command statistics files (statsutils.py)
+* Data queries at DataAPI (access to DataBuffer)
 
   
 ### Changed

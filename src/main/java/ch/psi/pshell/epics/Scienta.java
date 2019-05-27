@@ -336,7 +336,7 @@ public class Scienta extends AreaDetector {
     }
 
     public void zeroSupplies() throws IOException, InterruptedException {
-        writeCtrl("ZERO_SUPPLIES.PROC", 1);
+        writeCtrl("ZERO_SUPPLIES", 1);
     }
 
     //Progress    
