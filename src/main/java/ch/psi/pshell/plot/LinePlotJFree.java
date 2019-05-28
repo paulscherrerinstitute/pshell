@@ -97,6 +97,7 @@ public class LinePlotJFree extends LinePlotBase {
 
     AbstractXYDataset dataY1;
     AbstractXYDataset dataY2;
+    NumberAxis axisX2;
 
     Font tickLabelFont = TICK_LABEL_FONT;
     Font labelFont = LABEL_FONT;
@@ -263,6 +264,32 @@ public class LinePlotJFree extends LinePlotBase {
             axis2.setTickLabelPaint(getAxisTextColor());
         }
     }
+    
+    void createX2() {
+        if (!hasX2()) {
+            boolean log = getAxis(AxisId.X2).isLogarithmic();
+            ValueAxis axis = log ? new LogarithmicAxis(getAxis(AxisId.X2).getLabel()) : new NumberAxis(getAxis(AxisId.X2).getLabel());
+            if (log){
+                ((LogarithmicAxis)axis).setAllowNegativesFlag(true);
+            }                
+            XYPlot plot = (XYPlot) chart.getPlot();
+            axis.setLabelFont(labelFont);
+            axis.setTickLabelFont(tickLabelFont);
+            axis.setLabelPaint(getAxisTextColor());
+            axis.setTickLabelPaint(getAxisTextColor());
+            plot.setDomainAxis(1, axis);
+            
+            axis.setInverted(getAxis(AxisId.X2).inverted);
+            if (getAxis(AxisId.X2).isAutoRange()) {
+                axis.setAutoRange(true);
+                ranges.remove(AxisId.X2);
+            } else {
+                Range range = new Range(getAxis(AxisId.X2).getMin(), getAxis(AxisId.X2).getMax());
+                axis.setRange(range, true, true);
+                ranges.put(AxisId.X2, range);
+            }
+        }
+    }
 
     AbstractXYDataset getYData(int axis) {
         //Axis2  is only created if a series on Y2 is added
@@ -352,6 +379,9 @@ public class LinePlotJFree extends LinePlotBase {
             case X:
                 r = chart.getXYPlot().getDomainAxis().getRange();
                 return new ch.psi.utils.Range(r.getLowerBound(), r.getUpperBound());
+            case X2:
+                r = chart.getXYPlot().getDomainAxis(1).getRange();
+                return new ch.psi.utils.Range(r.getLowerBound(), r.getUpperBound());                
             case Y:
                 r = chart.getXYPlot().getRangeAxis().getRange();
                 return new ch.psi.utils.Range(r.getLowerBound(), r.getUpperBound());
@@ -484,6 +514,8 @@ public class LinePlotJFree extends LinePlotBase {
     @Override
     protected void createChart() {
         super.createChart();
+        createAxis(AxisId.X2, ""); //JFree supportes second domain too
+        
         tickLabelFont = TICK_LABEL_FONT;
         labelFont = LABEL_FONT;
         legendVisible = false;
@@ -592,6 +624,14 @@ public class LinePlotJFree extends LinePlotBase {
     public Font getTickLabelFont() {
         return tickLabelFont;
     }
+    
+    boolean hasY2(){
+        return (dataY2 != null);
+    }
+    
+    boolean hasX2(){
+        return (chart!=null) && chart.getXYPlot().getDomainAxis(1) != null;
+    }    
 
     Style style;
 
@@ -612,11 +652,10 @@ public class LinePlotJFree extends LinePlotBase {
             double[] y;
         }
         if (style != getStyle()) {
-            boolean hasY2 = (dataY2 != null);
+            boolean hasX2 = hasX2();
+            boolean hasY2 = hasY2();
+            HashMap<AxisId, Axis> formerAxisList = (HashMap<AxisId, Axis>) axisList.clone();
             LinePlotSeries[] allSeries = getAllSeries();
-            String labelX = getAxis(Plot.AxisId.X).getLabel();
-            String labelY = getAxis(Plot.AxisId.Y).getLabel();
-            String labelY2 = hasY2 ? getAxis(Plot.AxisId.Y2).getLabel() : "";
             SeriesInfo[] existing = new SeriesInfo[allSeries.length];
             for (int i = 0; i < allSeries.length; i++) {
                 SeriesInfo info = new SeriesInfo();
@@ -635,16 +674,28 @@ public class LinePlotJFree extends LinePlotBase {
             createChart();
             if (hasY2) {
                 createY2();
-            }
+            }       
+            if (hasX2) {
+                createX2();
+            }              
             if (!offscreen) {
                 createPopupMenu();
             }
-            getAxis(Plot.AxisId.X).setLabel(labelX);
-            getAxis(Plot.AxisId.Y).setLabel(labelY);
-            if(hasY2){
-                getAxis(Plot.AxisId.Y2).setLabel(labelY2);
-            }
             onTitleChanged();
+            axisList.clear();
+            axisList.putAll(formerAxisList);
+            onAxisLabelChanged(Plot.AxisId.X);
+            onAxisRangeChanged(Plot.AxisId.X);            
+            onAxisLabelChanged(Plot.AxisId.Y);
+            onAxisRangeChanged(Plot.AxisId.Y);    
+            if(hasX2){
+                onAxisLabelChanged(Plot.AxisId.X2);
+                onAxisRangeChanged(Plot.AxisId.X2);
+            }            
+            if(hasY2){
+                onAxisLabelChanged(Plot.AxisId.Y2);
+                onAxisRangeChanged(Plot.AxisId.Y2);
+            }            
             for (SeriesInfo info : existing) {
                 if (!getStyle().isError()) {
                     addSeries(info.series);
@@ -670,6 +721,10 @@ public class LinePlotJFree extends LinePlotBase {
             case X:
                 chart.getXYPlot().getDomainAxis().setLabel(getAxis(AxisId.X).getLabel());
                 break;
+            case X2:
+                createX2();
+                chart.getXYPlot().getDomainAxis(1).setLabel(getAxis(AxisId.X2).getLabel());      
+                break;
             case Y:
                 chart.getXYPlot().getRangeAxis().setLabel(getAxis(AxisId.Y).getLabel());
                 break;
@@ -684,6 +739,9 @@ public class LinePlotJFree extends LinePlotBase {
         switch (axisId) {
             case X:
                 return chart.getXYPlot().getDomainAxis();
+            case X2:
+                createX2();
+                return chart.getXYPlot().getDomainAxis(1);                
             case Y:
                 return chart.getXYPlot().getRangeAxis();
             case Y2:
@@ -715,6 +773,9 @@ public class LinePlotJFree extends LinePlotBase {
                     case X:
                         plot.setDomainAxis(0, axis);
                         break;
+                    case X2:
+                        plot.setDomainAxis(1, axis);
+                        break;                        
                     case Y:
                         plot.setRangeAxis(0, axis);
                         break;
@@ -769,7 +830,7 @@ public class LinePlotJFree extends LinePlotBase {
                 if (tooltips) {
                     renderer.setBaseToolTipGenerator(new StandardXYToolTipGenerator());
                 }
-                ret = new JFreeChart(title, JFreeChart.DEFAULT_TITLE_FONT, plot, true);
+                ret = new JFreeChart(title, JFreeChart.DEFAULT_TITLE_FONT, plot, true);               
                 ChartFactory.getChartTheme().apply(ret);
             }
             break;
@@ -1031,11 +1092,15 @@ public class LinePlotJFree extends LinePlotBase {
         //Logarithmic axis
         JMenu menuScales= new JMenu("Logarithmic Scale");
         JCheckBoxMenuItem menuScaleLogX= new JCheckBoxMenuItem("X");
+        JCheckBoxMenuItem menuScaleLogX2= new JCheckBoxMenuItem("X2");
         JCheckBoxMenuItem menuScaleLogY1= new JCheckBoxMenuItem("Y1");
         JCheckBoxMenuItem menuScaleLogY2= new JCheckBoxMenuItem("Y2");
         menuScaleLogX.addActionListener((ActionEvent e) -> {
             getAxis(AxisId.X).setLogarithmic(menuScaleLogX.isSelected());
         });
+        menuScaleLogX2.addActionListener((ActionEvent e) -> {
+            getAxis(AxisId.X2).setLogarithmic(menuScaleLogX2.isSelected());
+        });        
         menuScaleLogY1.addActionListener((ActionEvent e) -> {
             getAxis(AxisId.Y).setLogarithmic(menuScaleLogY1.isSelected());
         });
@@ -1043,6 +1108,7 @@ public class LinePlotJFree extends LinePlotBase {
             getAxis(AxisId.Y2).setLogarithmic(menuScaleLogY2.isSelected());
         });          
         menuScales.add(menuScaleLogX);
+        menuScales.add(menuScaleLogX2);
         menuScales.add(menuScaleLogY1);
         menuScales.add(menuScaleLogY2);
         chartPanel.getPopupMenu().add(menuScales);    
@@ -1082,6 +1148,8 @@ public class LinePlotJFree extends LinePlotBase {
                 menuScaleLogY1.setSelected(getAxis(AxisId.Y).isLogarithmic());
                 menuScaleLogY2.setVisible(dataY2 != null);
                 menuScaleLogY2.setSelected(getAxis(AxisId.Y2).isLogarithmic());
+                menuScaleLogX2.setVisible(hasX2());
+                menuScaleLogX2.setSelected(hasX2() && getAxis(AxisId.X2).isLogarithmic());                
             }
 
             @Override
@@ -1221,6 +1289,10 @@ public class LinePlotJFree extends LinePlotBase {
         invokeLater(() -> {
             if ((axis == null) || (axis == AxisId.X)) {
                 chart.getXYPlot().addDomainMarker(marker, Layer.FOREGROUND);
+            } else if (axis == AxisId.X2) {
+                chart.getXYPlot().addDomainMarker(1, marker, Layer.FOREGROUND);
+            } else if (axis == AxisId.Y2) {
+                chart.getXYPlot().addRangeMarker(1, marker, Layer.FOREGROUND);   
             } else {
                 chart.getXYPlot().addRangeMarker(marker, Layer.FOREGROUND);
             }
@@ -1236,7 +1308,7 @@ public class LinePlotJFree extends LinePlotBase {
 
         Color outlineColor = MainFrame.isDark() ? color.brighter().brighter() : color.darker().darker();
 
-        final IntervalMarker marker = new IntervalMarker(start, end, color);
+            final IntervalMarker marker = new IntervalMarker(start, end, color);
 
         if (label != null) {
             marker.setLabel(label);
@@ -1251,6 +1323,10 @@ public class LinePlotJFree extends LinePlotBase {
         invokeLater(() -> {
             if ((axis == null) || (axis == AxisId.X)) {
                 chart.getXYPlot().addDomainMarker(marker, Layer.FOREGROUND);
+            } else if (axis == AxisId.X2) {
+                chart.getXYPlot().addDomainMarker(1, marker, Layer.FOREGROUND);
+            } else if (axis == AxisId.Y2) {
+                chart.getXYPlot().addRangeMarker(1, marker, Layer.FOREGROUND);
             } else {
                 chart.getXYPlot().addRangeMarker(marker, Layer.FOREGROUND);
             }
@@ -1262,23 +1338,25 @@ public class LinePlotJFree extends LinePlotBase {
     public void removeMarker(final Object marker) {
         invokeLater(() -> {
             if (marker == null) {
-                Collection<?> c = chart.getXYPlot().getRangeMarkers(Layer.FOREGROUND);
-                if (c != null) {
-                    Marker[] markers = c.toArray(new Marker[0]);
-                    for (Marker m : markers) {
-                        chart.getXYPlot().removeRangeMarker((Marker) m);
+                for (int axis =0; axis<=1; axis++){
+                    Collection<?> markers = chart.getXYPlot().getRangeMarkers(axis,Layer.FOREGROUND);
+                    if (markers != null) {
+                        for (Marker m : markers.toArray(new Marker[0])) {
+                            chart.getXYPlot().removeRangeMarker((Marker) m);
+                        }
                     }
-                }
-                c = chart.getXYPlot().getDomainMarkers(Layer.FOREGROUND);
-                if (c != null) {
-                    Marker[] markers = c.toArray(new Marker[0]);
-                    for (Marker m : markers) {
-                        chart.getXYPlot().removeDomainMarker((Marker) m);
-                    }
+                    markers = chart.getXYPlot().getDomainMarkers(axis, Layer.FOREGROUND);
+                    if (markers != null) {
+                        for (Marker m : markers.toArray(new Marker[0])) {
+                            chart.getXYPlot().removeDomainMarker((Marker) m);
+                        }
+                    }                    
                 }
             } else {
                 chart.getXYPlot().removeDomainMarker((Marker) marker, Layer.FOREGROUND);
                 chart.getXYPlot().removeRangeMarker((Marker) marker, Layer.FOREGROUND);
+                chart.getXYPlot().removeDomainMarker(1, (Marker) marker, Layer.FOREGROUND);
+                chart.getXYPlot().removeRangeMarker(1, (Marker) marker, Layer.FOREGROUND);                
             }
         });
     }
@@ -1286,13 +1364,15 @@ public class LinePlotJFree extends LinePlotBase {
     @Override
     public List getMarkers() {
         List ret = new ArrayList();
-        Collection dm = chart.getXYPlot().getDomainMarkers(Layer.FOREGROUND);
-        Collection rm = chart.getXYPlot().getRangeMarkers(Layer.FOREGROUND);
-        if (dm != null) {
-            ret.addAll(dm);
-        }
-        if (rm != null) {
-            ret.addAll(rm);
+        for (int axis =0; axis<=1; axis++){
+            Collection dm = chart.getXYPlot().getDomainMarkers(axis, Layer.FOREGROUND);
+            Collection rm = chart.getXYPlot().getRangeMarkers(axis, Layer.FOREGROUND);
+            if (dm != null) {
+                ret.addAll(dm);
+            }
+            if (rm != null) {
+                ret.addAll(rm);
+            }
         }
         return ret;
     }

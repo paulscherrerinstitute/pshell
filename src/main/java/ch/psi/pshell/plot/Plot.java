@@ -88,7 +88,7 @@ public interface Plot<T extends PlotSeries> {
     //Axis
     public enum AxisId {
 
-        X, Y, Y2, Z;
+        X, X2, Y, Y2, Z;
     };
 
     public Axis getAxis(AxisId id);
