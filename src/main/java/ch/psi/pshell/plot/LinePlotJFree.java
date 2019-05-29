@@ -226,7 +226,8 @@ public class LinePlotJFree extends LinePlotBase {
         //});
     }
 
-    protected ChartPanel getChartPanel() {
+    @Reflection.Hidden
+    public ChartPanel getChartPanel() {
         return chartPanel;
     }
 
@@ -1475,6 +1476,10 @@ public class LinePlotJFree extends LinePlotBase {
 
     public boolean isPointerVisible() {
         return mouseListener != null;
+    }
+    
+    public void resetZoom(){
+        chartPanel.restoreAutoBounds();
     }
 
     @Reflection.Hidden
