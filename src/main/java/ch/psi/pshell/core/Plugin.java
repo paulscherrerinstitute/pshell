@@ -198,6 +198,14 @@ public interface Plugin {
         return getContext().getSettings();
     }
 
+    default void waitState(State state, int timeout) throws IOException, InterruptedException{    
+        getContext().waitState(state, timeout);
+    }   
+    
+    default void waitStateNot(State state, int timeout) throws IOException, InterruptedException{    
+        getContext().waitStateNot(state, timeout);
+    }  
+    
     default GenericDevice getDevice(String name) {
         DevicePool pool = getContext().getDevicePool();
         if (pool != null) {
