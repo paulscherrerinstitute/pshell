@@ -6,13 +6,18 @@ import ch.psi.utils.Chrono;
 import ch.psi.utils.IO;
 import ch.psi.utils.Reflection.Hidden;
 import ch.psi.utils.swing.ExtensionFileFilter;
+import ch.psi.utils.swing.ImageTransferHandler;
 import ch.psi.utils.swing.SwingUtils;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Paint;
 import java.awt.Shape;
+import java.awt.Toolkit;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.Transferable;
 import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
@@ -185,6 +190,26 @@ public class TimePlotJFree extends TimePlotBase {
             }
 
         });
+        try {
+            JMenuItem menuCopy = (JMenuItem) chartPanel.getPopupMenu().getComponent(2);
+            for (ActionListener al : menuCopy.getActionListeners()){
+                menuCopy.removeActionListener(al);
+            }
+            menuCopy.addActionListener((ActionEvent e) -> {
+                String data = getDataAsString();
+                if (data != null) {
+                    BufferedImage img = getSnapshot(null);
+                    if (img != null) {
+                        ImageTransferHandler imageSelection = new ImageTransferHandler(img, data);
+                        Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+                        clipboard.setContents(imageSelection, (Clipboard clipboard1, Transferable contents) -> {
+                        });
+                    }
+                }
+            });
+        } catch (Exception ex) {
+            Logger.getLogger(TimePlotJFree.class.getName()).log(Level.INFO, null, ex);
+        }        
         try {
             JMenu menuSave = (JMenu) chartPanel.getPopupMenu().getComponent(3);
             menuSave.add(menuSaveTxt);
