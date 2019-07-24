@@ -10,7 +10,7 @@ import java.io.IOException;
  */
 public class Scalar<T> extends ReadonlyAsyncRegisterBase<T> {
 
-    public static final int DEFAULT_MODULO = 10;
+    public static final int DEFAULT_MODULO = 1;
     public static final int DEFAULT_OFFSET = 0;
 
     private String id;

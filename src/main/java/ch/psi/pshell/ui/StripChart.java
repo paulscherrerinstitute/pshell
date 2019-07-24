@@ -381,7 +381,7 @@ public class StripChart extends StandardDialog {
                         tooltip = "Format: DeviceName";
                         break;
                     case Stream:
-                        tooltip = "Format: Identifier [Modulo=10 Offset=0 GlobalTime=true]";
+                        tooltip = "Format: Identifier [Modulo=" + Scalar.DEFAULT_MODULO + " Offset=" + Scalar.DEFAULT_OFFSET + " GlobalTime=true]";
                         break;
                     case CamServer:
                         tooltip = "Format: URL Identifier";
@@ -953,6 +953,7 @@ public class StripChart extends StandardDialog {
         if (modelSeries.getRowCount() == 0) {
             return;
         }
+        streamDevices = 0;
         int numPlots = 1;
         Vector vector = modelSeries.getDataVector();
         for (Vector info : (Vector[]) vector.toArray(new Vector[0])) {
@@ -1009,7 +1010,7 @@ public class StripChart extends StandardDialog {
         update();
         if (streamDevices > 0) {
             if (dispatcher == null) {
-                dispatcher = ch.psi.pshell.bs.Provider.getOrCreateDefault();
+                    dispatcher = ch.psi.pshell.bs.Provider.getOrCreateDefault();
                 if (dispatcher != ch.psi.pshell.bs.Provider.getDefault()) {
                     synchronized (instantiatedDevices) {
                         instantiatedDevices.add(dispatcher);
