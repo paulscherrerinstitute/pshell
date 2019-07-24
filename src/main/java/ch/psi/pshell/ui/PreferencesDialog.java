@@ -147,6 +147,8 @@ public class PreferencesDialog extends StandardDialog {
         ckScanTableDisabled.setSelected(preferences.scanTableDisabled);
         checkCachedDataPanel.setSelected(preferences.cachedDataPanel);
         checkShowEmergencyStop.setSelected(preferences.showEmergencyStop);
+        checkShowHomingButtons.setSelected(preferences.showHomingButtons);
+        checkShowJogButtons.setSelected(preferences.showJogButtons);      
         comboLinePlot.setSelectedItem(preferences.linePlot);
         comboMatrixPlot.setSelectedItem(preferences.matrixPlot);
         comboSurfacePlot.setSelectedItem(preferences.surfacePlot);
@@ -278,6 +280,8 @@ public class PreferencesDialog extends StandardDialog {
         jLabel21 = new javax.swing.JLabel();
         comboScriptPopup = new javax.swing.JComboBox();
         checkShowEmergencyStop = new javax.swing.JCheckBox();
+        checkShowJogButtons = new javax.swing.JCheckBox();
+        checkShowHomingButtons = new javax.swing.JCheckBox();
         buttonOk = new javax.swing.JButton();
         buttonCancel = new javax.swing.JButton();
 
@@ -664,7 +668,7 @@ public class PreferencesDialog extends StandardDialog {
                 .addGroup(jPanel9Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(comboPlotsLocation, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jLabel20))
-                .addContainerGap(148, Short.MAX_VALUE))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
         jTabbedPane1.addTab("Layout", jPanel9);
@@ -931,13 +935,13 @@ public class PreferencesDialog extends StandardDialog {
             jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel6Layout.createSequentialGroup()
                 .addGap(18, 18, 18)
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 161, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 161, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addGroup(jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(buttonDelete)
                     .addComponent(buttonInsert)
                     .addComponent(buttonDefaultPanels))
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addGap(12, 12, 12))
         );
 
         jTabbedPane1.addTab("Panels", jPanel6);
@@ -955,6 +959,10 @@ public class PreferencesDialog extends StandardDialog {
 
         checkShowEmergencyStop.setText("Show emergency stop");
 
+        checkShowJogButtons.setText("Show jog buttons");
+
+        checkShowHomingButtons.setText("Show  homing buttons");
+
         javax.swing.GroupLayout jPanel3Layout = new javax.swing.GroupLayout(jPanel3);
         jPanel3.setLayout(jPanel3Layout);
         jPanel3Layout.setHorizontalGroup(
@@ -963,20 +971,29 @@ public class PreferencesDialog extends StandardDialog {
                 .addGap(24, 24, 24)
                 .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(jPanel3Layout.createSequentialGroup()
+                        .addComponent(checkCachedDataPanel)
+                        .addContainerGap(448, Short.MAX_VALUE))
+                    .addGroup(jPanel3Layout.createSequentialGroup()
                         .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(checkShowEmergencyStop)
                             .addComponent(ckScanPlotDisabled)
-                            .addComponent(ckScanTableDisabled)
-                            .addComponent(checkCachedDataPanel)
-                            .addComponent(checkShowEmergencyStop))
-                        .addContainerGap(426, Short.MAX_VALUE))
+                            .addComponent(ckScanTableDisabled))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(checkShowHomingButtons)
+                            .addComponent(checkShowJogButtons))
+                        .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                     .addGroup(jPanel3Layout.createSequentialGroup()
                         .addComponent(ckAsyncUpdate)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addComponent(jLabel21)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(comboScriptPopup, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
+                        .addGap(121, 121, 121))))
         );
+
+        jPanel3Layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {checkShowHomingButtons, checkShowJogButtons});
+
         jPanel3Layout.setVerticalGroup(
             jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel3Layout.createSequentialGroup()
@@ -991,9 +1008,13 @@ public class PreferencesDialog extends StandardDialog {
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(checkShowEmergencyStop)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(ckScanPlotDisabled)
+                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(ckScanPlotDisabled)
+                    .addComponent(checkShowHomingButtons))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(ckScanTableDisabled)
+                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(ckScanTableDisabled)
+                    .addComponent(checkShowJogButtons))
                 .addContainerGap(35, Short.MAX_VALUE))
         );
 
@@ -1033,7 +1054,7 @@ public class PreferencesDialog extends StandardDialog {
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
-                .addComponent(jTabbedPane1)
+                .addComponent(jTabbedPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 278, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(buttonOk)
@@ -1078,6 +1099,8 @@ public class PreferencesDialog extends StandardDialog {
                 preferences.scanTableDisabled = ckScanTableDisabled.isSelected();
                 preferences.cachedDataPanel = checkCachedDataPanel.isSelected();
                 preferences.showEmergencyStop = checkShowEmergencyStop.isSelected();
+                preferences.showHomingButtons = checkShowHomingButtons.isSelected();
+                preferences.showJogButtons = checkShowJogButtons.isSelected();
                 preferences.linePlot = String.valueOf(comboLinePlot.getSelectedItem());
                 preferences.matrixPlot = String.valueOf(comboMatrixPlot.getSelectedItem());
                 preferences.surfacePlot = String.valueOf(comboSurfacePlot.getSelectedItem());
@@ -1240,6 +1263,8 @@ public class PreferencesDialog extends StandardDialog {
     private javax.swing.JCheckBox checkEditorContextMenu;
     private javax.swing.JCheckBox checkPersistRendererWindows;
     private javax.swing.JCheckBox checkShowEmergencyStop;
+    private javax.swing.JCheckBox checkShowHomingButtons;
+    private javax.swing.JCheckBox checkShowJogButtons;
     private javax.swing.JCheckBox checkShowRowNumbers;
     private javax.swing.JCheckBox checkStatusBar;
     private javax.swing.JCheckBox checkSyntaxHighlight;

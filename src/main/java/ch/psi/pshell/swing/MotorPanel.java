@@ -31,10 +31,35 @@ public class MotorPanel extends DevicePanel {
         };
         buttonJogPos.addFocusListener(jogFocusListener);
         buttonJogNeg.addFocusListener(jogFocusListener);
-
+        if (!defaultShowHoming){
+            setShowHoming(false);
+        }
+        if (!defaultShowJog){
+            setShowJog(false);
+        }        
         //textState.setBackground(TEXT_READONLY_BACKGROUND_COLOR);        
     }
 
+    private static boolean defaultShowHoming = true;
+    
+    public static void setDefaultShowHoming(boolean value){
+        defaultShowHoming = value;
+    }
+
+    public static boolean getDefaultShowHoming(){
+        return defaultShowHoming;
+    }    
+    
+    private static boolean defaultShowJog = true;
+    
+    public static void setDefaultShowJog(boolean value){
+        defaultShowJog = value;
+    }
+
+    public static boolean getDefaultShowJog(){
+        return defaultShowJog;
+    }       
+    
     public boolean getShowButtons() {
         return valueSelection.isVisible();
     }

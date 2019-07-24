@@ -119,6 +119,7 @@ import ch.psi.pshell.imaging.FileSource;
 import ch.psi.pshell.scripting.ViewPreference.PlotPreferences;
 import ch.psi.pshell.swing.DataPanel;
 import ch.psi.pshell.swing.HistoryChart;
+import ch.psi.pshell.swing.MotorPanel;
 import ch.psi.pshell.swing.RepositoryChangesDialog;
 import ch.psi.utils.Sys;
 import ch.psi.utils.Sys.OSFamily;
@@ -1546,6 +1547,8 @@ public class View extends MainFrame {
         outputPanel.setTextPaneFont(preferences.fontOutput);
         devicesPanel.setAsyncUpdate(preferences.asyncViewersUpdate);
         dataPanel.setCached(preferences.cachedDataPanel);
+        MotorPanel.setDefaultShowHoming(preferences.showHomingButtons);
+        MotorPanel.setDefaultShowJog(preferences.showJogButtons);
         for (int i = 0; i < tabDoc.getTabCount(); i++) {
             if (tabDoc.getComponentAt(i) instanceof ScriptEditor) {
                 ScriptEditor editor = ((ScriptEditor) tabDoc.getComponentAt(i));

@@ -86,6 +86,8 @@ public class Preferences {
     public boolean cachedDataPanel;
     public boolean hideFileName;
     public boolean showEmergencyStop;
+    public boolean showHomingButtons;
+    public boolean showJogButtons;
 
     public boolean backgroundRendering;
     public boolean showImageStatusBar;
