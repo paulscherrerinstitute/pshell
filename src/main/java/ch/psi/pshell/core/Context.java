@@ -2543,6 +2543,44 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
         }
     }
 
+    Map<String, Object> globals = new HashMap<>();
+    //A global map for plugins to communicate to each other
+    public void setGlobal(String name, Object value) throws IOException {
+        synchronized(globals){
+            globals.put(name, value);
+        }
+    }
+    
+    public Object getGlobal(String name) throws IOException {
+        synchronized(globals){
+            return globals.get(name);
+        }
+    }
+    
+    public boolean hasGlobal(String name) throws IOException {
+        synchronized(globals){
+            return globals.containsKey(name);
+        }
+    }
+    
+    public void removeGlobal(String name) throws IOException {
+        synchronized(globals){
+            globals.remove(name);
+        }
+    }
+    
+    public Map<String, Object> getGlobals() throws IOException {
+        synchronized(globals){
+            return (Map<String, Object>) ((HashMap)globals).clone();
+        }
+    }
+    
+    public void clearGlobals() throws IOException {
+        synchronized(globals){
+            globals.clear();
+        }
+    }
+    
     //Configuration
     public Setup getSetup() {
         return setup;
@@ -2858,7 +2896,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
     }
 
     void reloadPlugins(CommandSource source) {
-        onCommand(Command.stopAll, null, source);
+        onCommand(Command.reloadPlugins, null, source);
         if (pluginManager != null) {
             if (isBareMode()) {
                 for (Plugin p : pluginManager.getLoadedPlugins()) {
