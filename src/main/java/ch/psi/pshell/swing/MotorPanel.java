@@ -92,6 +92,15 @@ public class MotorPanel extends DevicePanel {
         buttonJogNeg.setVisible(value);
         buttonJogPos.setVisible(value);
     }
+    
+    public boolean getShowTweak() {
+        return buttonBack.isVisible();
+    }
+
+    public void setShowTweak(boolean value) {
+        buttonBack.setVisible(value);
+        buttonFor.setVisible(value);
+    }    
 
     public boolean getShowHoming() {
         return buttonReset.isVisible();
@@ -109,6 +118,9 @@ public class MotorPanel extends DevicePanel {
 
     public void setStepSize(double value) {
         stepSize = value;
+        if (device != null) {
+            updateSpinnerStep();
+        }
     }
 
     double stepIncrement = Double.NaN;
@@ -135,6 +147,28 @@ public class MotorPanel extends DevicePanel {
     public Motor getDevice() {
         return (Motor) super.getDevice();
     }
+    
+    void updateSpinnerStep(){
+        SpinnerNumberModel model = (SpinnerNumberModel) spinnerStep.getModel();
+        if (!Double.isNaN(stepSize)) {
+            model.setValue(stepSize);
+        } else {
+            double min = getDevice().getMinSpeed();
+            double max = getDevice().getMaxSpeed();            
+            min = getDevice().getMinValue();
+            max = getDevice().getMaxValue();
+            Double step = ProcessVariablePanel.getIdealStep(min, max);
+            if (step != null) {
+                step = Math.max(step, (Double) model.getMinimum());
+                step = Math.min(step, (Double) model.getMaximum());
+                model.setValue(step);
+                model.setStepSize(ProcessVariablePanel.getIdealStepIncrement(step));
+            }
+        }
+        if (!Double.isNaN(stepIncrement)) {
+            model.setStepSize(stepIncrement);
+        }
+    }
 
     @Override
     public void setDevice(Device device) {
@@ -150,24 +184,8 @@ public class MotorPanel extends DevicePanel {
             def = Math.min(max, def);
             spinnerSpeed.setModel(new SpinnerNumberModel(def, min, max, 1.0));
 
-            SpinnerNumberModel model = (SpinnerNumberModel) spinnerStep.getModel();
-            if (!Double.isNaN(stepSize)) {
-                model.setValue(stepSize);
-            } else {
-                min = getDevice().getMinValue();
-                max = getDevice().getMaxValue();
-                Double step = ProcessVariablePanel.getIdealStep(min, max);
-                if (step != null) {
-                    step = Math.max(step, (Double) model.getMinimum());
-                    step = Math.min(step, (Double) model.getMaximum());
-                    model.setValue(step);
-                    model.setStepSize(ProcessVariablePanel.getIdealStepIncrement(step));
-                }
-            }
-            if (!Double.isNaN(stepIncrement)) {
-                model.setStepSize(stepIncrement);
-            }
 
+            updateSpinnerStep();
             updateSpinners();
             //In a different thread because can be blocking
             new Thread(() -> {
