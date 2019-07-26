@@ -63,5 +63,10 @@ public class TimePlotSeries extends PlotSeries<TimePlot> {
     public void appendData(long time, double value) {
         ((TimePlotBase) getPlot()).add(getIndex(), time, value);
     }
+    
+    @Override
+    public void clear() {
+        ((TimePlotBase) getPlot()).clear(getIndex());
+    }    
 
 }

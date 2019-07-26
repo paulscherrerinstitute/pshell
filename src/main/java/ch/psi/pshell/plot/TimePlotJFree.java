@@ -45,6 +45,7 @@ import org.jfree.chart.renderer.xy.XYItemRenderer;
 import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
 import org.jfree.data.Range;
 import org.jfree.data.time.FixedMillisecond;
+import org.jfree.data.time.RegularTimePeriod;
 import org.jfree.data.time.TimeSeries;
 import org.jfree.data.time.TimeSeriesCollection;
 import org.jfree.data.time.TimeSeriesDataItem;
@@ -232,18 +233,14 @@ public class TimePlotJFree extends TimePlotBase {
         for (int i = 0; i < series.size(); i++) {
             List<TimestampedValue<Double>> values = getSeriestData(i);
             str.append("#Series: ").append(getSeriesName(i)).append(PlotBase.LINE_SEPARATOR);
-            Double last = null;
             for (TimestampedValue<Double> item : values) {
                 Double val = item.getValue();
                 if (val == null) {
                     val = Double.NaN;
                 }
-                if (!val.equals(last)) {
-                    last = val;
-                    str.append(Chrono.getTimeStr(item.getTimestamp(), "dd/MM/YY HH:mm:ss.SSS "));
-                    str.append(String.valueOf(val));
-                    str.append(PlotBase.LINE_SEPARATOR);
-                }
+                str.append(Chrono.getTimeStr(item.getTimestamp(), "dd/MM/YY HH:mm:ss.SSS "));
+                str.append(String.valueOf(val));
+                str.append(PlotBase.LINE_SEPARATOR);
             }
             str.append(PlotBase.LINE_SEPARATOR);
         }
@@ -313,13 +310,11 @@ public class TimePlotJFree extends TimePlotBase {
     public void setPlotOutlineColor(Color c) {
         chart.getXYPlot().setOutlinePaint(c);
     }
-
+    
     @Override
-    protected void doClear() {
-        for (TimeSeries ts : series) {
-            ts.clear();
-        }
-    }
+    protected void doClear(int graphIndex) {
+        series.get(graphIndex).clear();
+    }    
 
     @Override
     protected Object onAddedSeries(TimePlotSeries series) {
@@ -366,25 +361,39 @@ public class TimePlotJFree extends TimePlotBase {
     }
 
     @Override
-    protected void addDataPoint(int graphIndex, long time, double value) {
-        series.get(graphIndex).addOrUpdate(new FixedMillisecond(new Date(time)), (Double.isNaN(value)) ? null : value);
+    protected void addDataPoint(int graphIndex, long time, double value, boolean drag) { 
+        if (drag){
+            series.get(graphIndex).addOrUpdate(new DragTimeSeriesDataItem(new FixedMillisecond(new Date(time)), (Double.isNaN(value)) ? null : value) );
+        } else {
+            series.get(graphIndex).addOrUpdate(new TimeSeriesDataItem(new FixedMillisecond(new Date(time)), (Double.isNaN(value)) ? null : value));
+        }
     }
+    
+    class DragTimeSeriesDataItem extends TimeSeriesDataItem{
+        public DragTimeSeriesDataItem(RegularTimePeriod period, Number value) {
+            super(period, value);
+        } 
+    }    
+    
+    @Override
+    protected void removeDataPoint(int graphIndex, int index, boolean update) { 
+        series.get(graphIndex).delete(index, index, update); 
+    }  
 
     @Override
     public List<TimestampedValue<Double>> getSeriestData(int index) {
         TimeSeries s = series.get(index);
         List<TimestampedValue<Double>> ret = new ArrayList<>();
-        Number last = null;
         for (TimeSeriesDataItem item : (List<TimeSeriesDataItem>) s.getItems()) {
-            Double val;
-            if (item.getValue() != null) {
-                val = item.getValue().doubleValue();
-            } else {
-                val = Double.NaN;
-            }
+            //Filter points added for dragging
+            if (!(item instanceof DragTimeSeriesDataItem) || ret.isEmpty()){
+                Double val;
+                if (item.getValue() != null) {
+                    val = item.getValue().doubleValue();
+                } else {
+                    val = Double.NaN;
+                }
 
-            if (!val.equals(last)) {
-                last = val;
                 ret.add(new TimestampedValue<Double>(val, item.getPeriod().getMiddleMillisecond()));
             }
         }
@@ -403,6 +412,12 @@ public class TimePlotJFree extends TimePlotBase {
         TimeSeriesDataItem item = s.getDataItem(itemIndex);
         return new TimestampedValue<Double>((item.getValue() != null) ? item.getValue().doubleValue() : Double.NaN, item.getPeriod().getMiddleMillisecond());
     }
+    
+    @Override
+    public int getItemCount(int index) {
+       TimeSeries s = series.get(index);
+       return s.getItemCount();
+    }    
 
     @Override
     public String getSeriesName(int index) {

@@ -57,4 +57,25 @@ public class TimestampedValue<T> {
     public String toString() {
         return value.toString();
     }
+    
+    @Override
+    public boolean equals(Object obj){
+        if ((obj==null) || (!(obj instanceof TimestampedValue))){
+            return false;
+        }
+        TimestampedValue other = (TimestampedValue)obj;
+        if (value==null){
+            if (other.value!=null){
+                return false;
+            }
+        } else {
+            if (!value.equals(other.value)){
+                return false;
+            }
+        }
+        if ((timestamp != other.timestamp) || (nanosOffset != other.nanosOffset)){
+            return false;
+        }
+        return true;
+    }
 }

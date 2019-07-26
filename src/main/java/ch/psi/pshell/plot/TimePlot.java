@@ -8,6 +8,8 @@ import javax.swing.JMenuItem;
 public interface TimePlot extends Plot<TimePlotSeries> {
 
     void clear();
+    
+    void clear(int graphIndex);
 
     int getDurationMillis();
 
@@ -58,6 +60,8 @@ public interface TimePlot extends Plot<TimePlotSeries> {
     void add(double[] values);
 
     void add(long time, double[] values);
+    
+    void drag(int index, long time, Double value);
 
     void addTerminator(int index);
 
@@ -66,5 +70,7 @@ public interface TimePlot extends Plot<TimePlotSeries> {
     void addTerminator(int index, long time);
 
     void addTerminators(long time);    
+    
+    int getItemCount(int index);
         
 }

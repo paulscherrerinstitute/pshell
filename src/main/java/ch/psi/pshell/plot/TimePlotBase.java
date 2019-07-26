@@ -12,6 +12,7 @@ import java.util.Map;
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JMenu;
 import javax.swing.JPopupMenu;
+import javax.swing.SwingUtilities;
 import javax.swing.event.PopupMenuEvent;
 import javax.swing.event.PopupMenuListener;
 
@@ -36,6 +37,7 @@ public abstract class TimePlotBase extends PlotBase<TimePlotSeries> implements T
     JMenuItem menuStopStart;
     JMenuItem menuReset;
     JMenu menuSeries;
+    Map<Integer, Boolean> empty = new HashMap<>();
 
     protected void setup() {
         setupMenus();
@@ -162,13 +164,26 @@ public abstract class TimePlotBase extends PlotBase<TimePlotSeries> implements T
 
     @Override
     public void clear() {
-        doClear();
+        for (int i=0; i< getNumberOfSeries(); i++) {
+            doClear(i);
+        }
         if (isShowing()) {
             repaint();
         }
     }
 
-    abstract protected void doClear();
+    @Override
+    public void clear(int graphIndex) {
+        doClear(graphIndex);
+        if (isShowing()) {
+            repaint();
+        }
+    }
+
+    abstract protected void doClear(int graphIndex);
+    
+    
+    
 
     //State
     private boolean started = true;
@@ -253,7 +268,7 @@ public abstract class TimePlotBase extends PlotBase<TimePlotSeries> implements T
     @Override
     public void add(int index, long time, double value) {
         if (isStarted()) {
-            addDataPoint(index, time, value);
+            addDataPoint(index, time, value, false);
         }
     }
 
@@ -267,13 +282,40 @@ public abstract class TimePlotBase extends PlotBase<TimePlotSeries> implements T
         if (isStarted()) {
             if ((values != null) && (getNumberOfSeries() == values.length)) {
                 for (int i = 0; i < values.length; i++) {
-                    addDataPoint(i, time, values[i]);
+                    addDataPoint(i, time, values[i], false);
                 }
             }
         }
     }
+    
+    public void delete(int index, int pointIndex) {
+        if (isStarted()) {
+            removeDataPoint(index, pointIndex, true);
+        }
+    }    
 
-    abstract protected void addDataPoint(int graphIndex, long time, double value);
+    @Override
+    public void drag(int index, long time, Double value) {
+        if (isStarted()) {
+            if (getItemCount(index)>0){
+                if (value==null){
+                   value = getLastValue(index);
+                }
+                addDataPoint(index, time, (value==null) ? Double.NaN : value, true);
+            } else {
+                addDataPoint(index, time,Double.NaN , true);
+                removeDataPoint(index, 0, false);
+            }
+        }
+    }
+    
+    public boolean isEmpty(int index){
+        return Boolean.TRUE.equals(empty.get(index));
+    }
+    
+    abstract protected void addDataPoint(int graphIndex, long time, double value, boolean drag);
+    
+    abstract protected void removeDataPoint(int graphIndex, int index, boolean update);
 
     abstract public List<TimestampedValue<Double>> getSeriestData(int index);
 
@@ -357,6 +399,11 @@ public abstract class TimePlotBase extends PlotBase<TimePlotSeries> implements T
         }
         return -1;
     }
+    
+    @Override
+    public int getItemCount(int index) {
+       return getSeriestData(index).size();
+    }      
 
     @Override
     public String toString() {

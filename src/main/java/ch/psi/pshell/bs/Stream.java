@@ -172,14 +172,17 @@ public class Stream extends DeviceBase implements Readable<StreamValue>, Cacheab
         debug = value;
     }
 
+    final Object lock = new Object();
     public Scalar addScalar(String name, String id, int modulo, int offset) throws IOException, InterruptedException {
-        assertStateNot(State.Busy);
-        Scalar scalar = new Scalar(name, this, id, modulo, offset);
-        addChild(scalar);
-        if (isInitialized()) {
-            doInitialize();
+        synchronized(lock){
+            assertStateNot(State.Busy);
+            Scalar scalar = new Scalar(name, this, id, modulo, offset);
+            addChild(scalar);
+            if (isInitialized()) {
+                doInitialize();
+            }
+            return scalar;
         }
-        return scalar;
     }
 
     public Waveform addWaveform(String name, String id, int modulo, int offset) throws IOException, InterruptedException {
@@ -187,23 +190,27 @@ public class Stream extends DeviceBase implements Readable<StreamValue>, Cacheab
     }
 
     public Waveform addWaveform(String name, String id, int modulo, int offset, int size) throws IOException, InterruptedException {
-        assertStateNot(State.Busy);
-        Waveform waveform = new Waveform(name, this, id, modulo, offset, size);
-        addChild(waveform);
-        if (isInitialized()) {
-            doInitialize();
+        synchronized(lock){
+            assertStateNot(State.Busy);
+            Waveform waveform = new Waveform(name, this, id, modulo, offset, size);
+            addChild(waveform);
+            if (isInitialized()) {
+                doInitialize();
+            }
+            return waveform;
         }
-        return waveform;
     }
 
     public Matrix addMatrix(String name, String id, int modulo, int offset, int width, int height) throws IOException, InterruptedException {
-        assertStateNot(State.Busy);
-        Matrix matrix = new Matrix(name, this, id, modulo, offset, width, height);
-        addChild(matrix);
-        if (isInitialized()) {
-            doInitialize();
+        synchronized(lock){
+            assertStateNot(State.Busy);
+            Matrix matrix = new Matrix(name, this, id, modulo, offset, width, height);
+            addChild(matrix);
+            if (isInitialized()) {
+                doInitialize();
+            }
+            return matrix;
         }
-        return matrix;
     }
 
     void receiverTask() {

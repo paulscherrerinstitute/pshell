@@ -145,15 +145,17 @@ public class StripChart extends StandardDialog {
 
     class ChartElement {
 
-        ChartElement(TimePlotBase plot, int seriesIndex, long time, double value) {
+        ChartElement(TimePlotBase plot, int seriesIndex, long time, double value, boolean drag) {
             this.plot = plot;
             this.seriesIndex = seriesIndex;
             this.time = time;
             this.value = value;
+            this.drag = drag;
         }
         int seriesIndex;
         long time;
         double value;
+        boolean drag;
         TimePlotBase plot;
     }
     final InvokingProducer<ChartElement> chartElementProducer;
@@ -170,7 +172,11 @@ public class StripChart extends StandardDialog {
         chartElementProducer = new InvokingProducer<ChartElement>() {
             @Override
             protected void consume(ChartElement element) {
-                element.plot.add(element.seriesIndex, element.time, element.value);
+                if (element.drag){
+                    element.plot.drag(element.seriesIndex, element.time, element.value);
+                } else {
+                    element.plot.add(element.seriesIndex, element.time, element.value);
+                }
             }
         };
 
@@ -1226,18 +1232,19 @@ public class StripChart extends StandardDialog {
         String id;
         int row;
         int index;
-        Double current;
+        double currentValue = Double.NaN;
+        long currentTimestamp = -1;
         final Object persistLock = new Object();
         boolean localTime;
 
         boolean isAlarming() {
             final StripChartAlarmConfig alarmConfig = (StripChartAlarmConfig) info.get(6);
-            return (alarmConfig == null) ? false : alarmConfig.isAlarm(current);
+            return (alarmConfig == null) ? false : alarmConfig.isAlarm(currentValue);
         }
         
         
 
-        void add(Device device, Object value, Long timestamp, TimePlotBase plot, int seriesIndex) {
+        void add(Device device, Object value, Long timestamp, TimePlotBase plot, int seriesIndex, boolean dragging) {
             try {
                 long now = System.currentTimeMillis();
                 if (localTime) {
@@ -1252,7 +1259,7 @@ public class StripChart extends StandardDialog {
                             timestamp = tValue.getTimestamp();
                         } else {
                             if (timestamp <= tValue.getTimestamp()) {
-                                //Won't plot dragging values lower than current
+                                //Won't plot dragging values lower than currentValue
                                 return;
                             }
                         }
@@ -1260,46 +1267,69 @@ public class StripChart extends StandardDialog {
                 }
                 
                 long time = (timestamp == null) ? now : timestamp;
-                Double doubleValue;
+                double doubleValue;
+                boolean repeatCurrent = false;
                 if (value == null){
                     doubleValue = Double.NaN;
                 } else if (value instanceof Number){
                     doubleValue = ((Number) value).doubleValue();
-                    doubleValue = (doubleValue == null) ? Double.NaN : doubleValue;  
                 } else if (value instanceof Boolean){
                     doubleValue = Boolean.TRUE.equals(value) ? 1.0 : 0;
-                    if (current!=null){
-                        chartElementProducer.post(new ChartElement(plot, seriesIndex, time-1, current));
-                    }
+                    repeatCurrent = true;
                 } else if (value.getClass().isEnum()){
                     doubleValue = (double)Arrays.asList(value.getClass().getEnumConstants()).indexOf(value);
-                    if (current!=null){
-                        chartElementProducer.post(new ChartElement(plot, seriesIndex, time-1, current));
-                    }
+                    repeatCurrent = true;
                 } else {
                     return;
                 }
+                
+                if ((time == currentTimestamp) && (currentValue == doubleValue)){
+                    return;
+                }
+                
+                if (repeatCurrent){
+                    if (!Double.isNaN(currentValue)){
+                        chartElementProducer.post(new ChartElement(plot, seriesIndex, time-1, currentValue, true)); //Don't store
+                    }
+                }
 
-                appendTimestamps.put(device, now);
-
+                    
                 //plot.add(seriesIndex, time, doubleValue);
-                //Invoking event thread to prevent https://sourceforge.net/p/jfreechart/bugs/1009/ (JFreeChart is not thread safe)
-                chartElementProducer.post(new ChartElement(plot, seriesIndex, time, doubleValue));
+                //Invoking event thread to prevent https://sourceforge.net/p/jfreechart/bugs/1009/ (JFreeChart is not thread safe)                
+                chartElementProducer.post(new ChartElement(plot, seriesIndex, time, doubleValue, dragging));
 
-                if (persisting) {
-                    synchronized (persistLock) {
-                        if (!doubleValue.equals(current)) {
+                if (! dragging){
+                    appendTimestamps.put(device, now);
+                    if (persisting) {
+                        synchronized (persistLock) {
                             persistenceExecutor.append(id, doubleValue, now, time);
                             index++;
                         }
-                    }
+                    }                    
+                    currentValue = doubleValue;
+                    currentTimestamp = time;
                 }
-                current = doubleValue;
             } catch (Exception ex) {
                 Logger.getLogger(StripChart.class.getName()).log(Level.FINE, null, ex);
             }
         }
 
+        int sleep_ms;
+        
+        void checkDrag(TimePlotBase plot, int seriesIndex, Device dev){
+            long now = System.currentTimeMillis();
+            Long appendTimestamp = appendTimestamps.get(dev);
+            Long age = (appendTimestamp == null) ? null : now - appendTimestamp;
+            if ((age == null) || (age >= sleep_ms)) {
+                Long devTimestamp = dev.getTimestamp();
+                if (devTimestamp != null)  {
+                    now = devTimestamp + age;
+                }
+                //System.out.println(seriesIndex + " | " + value + Chrono.getTimeStr(time, "dd/MM/YY HH:mm:ss.SSS"));
+                add(dev, dev.take(), now, plot, seriesIndex, true);
+            }
+        }        
+        
         @Override
         public void run() {
             String name = ((String) info.get(1)).trim();
@@ -1311,11 +1341,16 @@ public class StripChart extends StandardDialog {
 
             Device dev = null;
             final DeviceListener deviceListener = new DeviceAdapter() {
+                //@Override
+                //public void onValueChanged(Device device, Object value, Object former) {
+                //    add(device, value, null, plot, seriesIndex);
+                //}
                 @Override
-                public void onValueChanged(Device device, Object value, Object former) {
-                    add(device, value, null, plot, seriesIndex);
+                public void onCacheChanged(Device device, Object value, Object former, long timestamp, boolean valueChange) {
+                    add(device, value, null, plot, seriesIndex, false);
                 }
             };
+            Logger.getLogger(StripChart.class.getName()).finer("Starting device monitoring task: " + name);
             try {
                 id = getId(row);
                 switch (type) {
@@ -1378,6 +1413,7 @@ public class StripChart extends StandardDialog {
                             }
                         }
                         dev = stream.addScalar(name, name, modulo, offset);
+                        Logger.getLogger(StripChart.class.getName()).finer("Adding channel to stream: " + name);
                         ((Scalar) dev).setUseLocalTimestamp(!useGlobalTimestamp);
                         streamDevices--;
                         break;
@@ -1433,6 +1469,7 @@ public class StripChart extends StandardDialog {
                 }
                 if ((type == Type.Stream) && (streamDevices == 0)) {
                     try {
+                        Logger.getLogger(StripChart.class.getName()).fine("Starting stream");
                         stream.start(true);
                     } catch (Exception ex) {
                         Logger.getLogger(StripChart.class.getName()).log(Level.WARNING, null, ex);
@@ -1443,33 +1480,22 @@ public class StripChart extends StandardDialog {
 
                 dragInterval = (Integer) spinnerDragInterval.getValue();
                 while (started) {
-                    int sleep_ms = (dragInterval > 0)
+                    sleep_ms = (dragInterval > 0)
                             ? dragInterval
                             : //((dev.isPolled() && !dev.isMonitored()) ? dev.getPolling() + dragInterval: dragInterval):
                             0;
                     synchronized (lock) {
                         lock.wait(sleep_ms);
                     }
-                    if (sleep_ms > 0) {
-                        //Device time may not be the same as PC time
-                        //long age = dev.getAge();
-                        long now = System.currentTimeMillis();
-                        Long appendTimestamp = appendTimestamps.get(dev);
-                        Long age = (appendTimestamp == null) ? null : now - appendTimestamp;
-                        if (((age == null) || (age >= sleep_ms))) {
-                            Long devTimestamp = dev.getTimestamp();
-                            Integer devAge = dev.getAge();
-                            if ((devTimestamp != null) && (devAge != null)) {
-                                now = devTimestamp + devAge;
-                            }
-                            add(dev, dev.take(), now, plot, seriesIndex);
-                        }
+                    if ((started) && (sleep_ms > 0)) {
+                        checkDrag(plot, seriesIndex, dev);
                     }
                 }
             } catch (InterruptedException ex) {
             } catch (Exception ex) {
                 Logger.getLogger(StripChart.class.getName()).log(Level.FINE, null, ex);
             } finally {
+                Logger.getLogger(StripChart.class.getName()).finer("Exiting device monitoring task: " + name);
                 if (dev != null) {
                     dev.removeListener(deviceListener);
                 }
@@ -1485,17 +1511,18 @@ public class StripChart extends StandardDialog {
                 final int seriesIndex = seriesIndexes.get(info);
                 final TimePlotBase plot = plots.get(plotIndex);
                 id = getId(row);
-
+                
+                //TimestampedValue current = null;
                 Double current = null;
                 for (TimestampedValue<Double> item : plot.getSeriestData(seriesIndex)) {
                     Double value = item.getValue();
                     if (value == null) {
                         value = Double.NaN;
                     }
-                    if (!value.equals(current)) {
-                        persistenceExecutor.append(id, value, item.getTimestamp(), item.getTimestamp());
-                        current = value;
-                    }
+                    //Todo: Find better way to filter dragging, this don't match continuous persistence 
+                    persistenceExecutor.append(id, value, item.getTimestamp(), item.getTimestamp());
+                    //current = item;
+                    current = value;
                 }
 
             }
