@@ -38,8 +38,10 @@ public class MotorGroupPanel extends DevicePanel {
     }      
     
     void updateStep(){
-        for (MotorPanel motorPanel : motorPanels){
-            motorPanel.setStepSize((Double)spinnerStep.getValue());
+        if (showTweak){
+            for (MotorPanel motorPanel : motorPanels){
+                motorPanel.setStepSize((Double)spinnerStep.getValue());
+            }
         }
     }
 
@@ -213,6 +215,7 @@ public class MotorGroupPanel extends DevicePanel {
             } catch (Exception ex) {
                 showException(ex);
             }
+            updateStep();
 
             if (isVisible()) {
                 paintAll(getGraphics());
