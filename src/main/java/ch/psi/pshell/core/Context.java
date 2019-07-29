@@ -36,6 +36,8 @@ import ch.psi.utils.Sys;
 import ch.psi.utils.Threading;
 import ch.psi.pshell.core.Configuration.NotificationLevel;
 import ch.psi.pshell.core.ExecutionParameters.ExecutionStage;
+import static ch.psi.pshell.core.Setup.PROPERTY_DATA_PATH;
+import static ch.psi.pshell.core.Setup.TOKEN_HOMEDATA;
 import ch.psi.pshell.core.VersioningManager.Revision;
 import ch.psi.pshell.data.DataServer;
 import ch.psi.pshell.data.PlotDescriptor;
@@ -291,12 +293,26 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
                     if (setup.logPath.contains(Setup.TOKEN_USER)) {
                         logger.log(Level.INFO, "New user: restarting logger");
                         restartLogger();
+                        triggerPathChange(Setup.TOKEN_LOGS);
                     }
                     if (setup.sessionsPath.contains(Setup.TOKEN_USER)) {
                         if (getConfig().createSessionFiles && !isLocalMode()) {
                             scriptManager.setSessionFilePath(setup.getSessionsPath());
                         }
+                        triggerPathChange(Setup.TOKEN_SESSIONS);
                     }
+                    if (setup.dataPath.contains(Setup.TOKEN_USER)) {
+                        triggerPathChange(Setup.TOKEN_DATA);
+                    }   
+                    if (setup.imagesPath.contains(Setup.TOKEN_USER)) {
+                        triggerPathChange(Setup.TOKEN_IMAGES);
+                    }    
+                    if (setup.scriptPath.contains(Setup.TOKEN_USER)) {
+                        triggerPathChange(Setup.TOKEN_SCRIPT);
+                    }  
+                    if (setup.contextPath.contains(Setup.TOKEN_USER)) {
+                        triggerPathChange(Setup.TOKEN_CONTEXT);
+                    }                      
                 }
                 logger.log(Level.INFO, "User: " + user.toString());
             }
@@ -343,6 +359,17 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
         return logFileName;
     }
 
+    public void setDataPath(String path){
+        if (setup.redefineDataPath(path)){
+            triggerPathChange(Setup.TOKEN_DATA);
+        }
+    }
+    
+    public void setScriptPath(String path){   
+        if (setup.redefineScriptPath(path)){
+            triggerPathChange(Setup.TOKEN_SCRIPT);
+        }
+    } 
     //State
     public class ContextStateException extends Exception {
 
@@ -690,6 +717,16 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
             }
         }
     }
+    
+    protected void triggerPathChange(final String pathId) {
+        for (ContextListener listener : getListeners()) {
+            try {
+                listener.onPathChange(pathId);
+            } catch (Throwable ex) {
+                logger.log(Level.WARNING, null, ex);
+            }
+        }
+    }    
 
     protected void triggerPreferenceChange(final ViewPreference preference, final Object value) {
         for (ContextListener listener : getListeners()) {

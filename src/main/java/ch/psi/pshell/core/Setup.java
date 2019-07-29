@@ -1,5 +1,6 @@
 package ch.psi.pshell.core;
 
+import ch.psi.pshell.bs.StreamConfig;
 import ch.psi.pshell.scripting.ScriptType;
 import ch.psi.pshell.security.User;
 import ch.psi.utils.Arr;
@@ -21,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.jar.JarFile;
+import java.util.logging.Logger;
 import java.util.regex.Pattern;
 import javax.imageio.ImageIO;
 
@@ -94,6 +96,9 @@ public class Setup extends Config {
     public String configFileTasks = TOKEN_CONFIG + "/tasks.properties";
     public String configFileSettings = TOKEN_CONFIG + "/settings.properties";
 
+    String originalScriptPath;
+    String originalDataPath;
+
     public ScriptType scriptType = ScriptType.getDefault();
 
     ScriptType type;
@@ -153,21 +158,6 @@ public class Setup extends Config {
             scriptPath = System.getProperty(PROPERTY_SCRIPT_PATH);
         }
 
-        expansionTokens = new HashMap<>();
-        expansionTokens.put(TOKEN_HOME, homePath);
-        expansionTokens.put(TOKEN_HOMEDATA, outputPath);
-        expansionTokens.put(TOKEN_SCRIPT, scriptPath);
-        expansionTokens.put(TOKEN_DEVICES, devicesPath);
-        expansionTokens.put(TOKEN_DATA, dataPath);
-        expansionTokens.put(TOKEN_CONFIG, configPath);
-        expansionTokens.put(TOKEN_CONTEXT, contextPath);
-        expansionTokens.put(TOKEN_SESSIONS, sessionsPath);
-        expansionTokens.put(TOKEN_IMAGES, imagesPath);
-        expansionTokens.put(TOKEN_LOGS, logPath);
-        expansionTokens.put(TOKEN_PLUGINS, pluginsPath);
-        expansionTokens.put(TOKEN_EXTENSIONS, extensionsPath);
-        expansionTokens.put(TOKEN_WWW, wwwPath);
-
         initPaths();
 
         if (System.getProperty(PROPERTY_CONFIG_FILE) != null) {
@@ -207,22 +197,40 @@ public class Setup extends Config {
         if (System.getProperty(PROPERTY_SCRIPT_TYPE) != null) {
             setScriptType(ScriptType.valueOf(System.getProperty(PROPERTY_SCRIPT_TYPE)));
         }
-
+        originalScriptPath = scriptPath;
+        originalDataPath = dataPath;
     }
 
     String user = User.DEFAULT_USER_NAME;
 
-    void setUser(User user) {
+    boolean setUser(User user) {
         if (!user.name.equals(this.user)) {
             this.user = user.name;
             initPaths();
+            return true;
         }
+        return false;
     }
 
     HashMap<String, String> expansionTokens;
     HashMap<String, String> expandedPathNames;
 
     void initPaths() {
+        expansionTokens = new HashMap<>();
+        expansionTokens.put(TOKEN_HOME, homePath);
+        expansionTokens.put(TOKEN_HOMEDATA, outputPath);
+        expansionTokens.put(TOKEN_SCRIPT, scriptPath);
+        expansionTokens.put(TOKEN_DEVICES, devicesPath);
+        expansionTokens.put(TOKEN_DATA, dataPath);
+        expansionTokens.put(TOKEN_CONFIG, configPath);
+        expansionTokens.put(TOKEN_CONTEXT, contextPath);
+        expansionTokens.put(TOKEN_SESSIONS, sessionsPath);
+        expansionTokens.put(TOKEN_IMAGES, imagesPath);
+        expansionTokens.put(TOKEN_LOGS, logPath);
+        expansionTokens.put(TOKEN_PLUGINS, pluginsPath);
+        expansionTokens.put(TOKEN_EXTENSIONS, extensionsPath);
+        expansionTokens.put(TOKEN_WWW, wwwPath);
+
         expandedPathNames = new HashMap<>();
         String expandedHomePath = expandPath(homePath);
         expandedPathNames.put(homePath, expandedHomePath);
@@ -361,6 +369,30 @@ public class Setup extends Config {
         } catch (Exception ex) {
         }
         return path;
+    }
+
+    boolean redefineDataPath(String path) {
+        if (path == null) {
+            path = originalDataPath;
+        }
+        if (!path.equals(dataPath)) {
+            dataPath = path;
+            initPaths();
+            return true;
+        }
+        return false;
+    }
+
+    boolean redefineScriptPath(String path) {
+        if (path == null) {
+            scriptPath = originalScriptPath;
+        }
+        if (!path.equals(scriptPath)) {
+            scriptPath = path;
+            initPaths();
+            return true;
+        }
+        return false;
     }
 
     public String getHomePath() {
@@ -533,9 +565,9 @@ public class Setup extends Config {
 
     public String[] getLibraryPath() {
         String[] ret = libraryPath.split(";");
-        for (int i = 0; i < ret.length; i++) {
+        for (int i = 0; i < ret.length; i++) {         
             ret[i] = expandPath(ret[i].trim());
-        }
+        } 
         String standard = getStandardLibraryPath();
         if (!Arr.containsEqual(ret, standard)) {
             ret = Arr.append(ret, standard);
@@ -552,6 +584,12 @@ public class Setup extends Config {
                 }
             }
         }
+        
+        
+        if (!scriptPath.equals(originalScriptPath)){
+            Logger.getLogger(Setup.class.getName()).info("Adding original script folder to library path");
+            ret = Arr.append(ret, expandPath(originalScriptPath));
+        }        
         return ret;
     }
 

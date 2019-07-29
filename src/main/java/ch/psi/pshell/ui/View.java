@@ -252,9 +252,7 @@ public class View extends MainFrame {
                 toolBar.setVisible(!context.getRights().hideToolbar);
 
                 labelUser.setText((context.isSecurityEnabled() && !User.DEFAULT_USER_NAME.equals(user.name)) ? user.name : "");
-                if (context.getSetup().dataPath.contains(Setup.TOKEN_USER)) {
-                    dataPanel.initialize();
-                }
+
                 updateButtons();
 
                 for (Window window : JDialog.getWindows()) {
@@ -346,6 +344,14 @@ public class View extends MainFrame {
                 }
                 updateButtons();
             }
+            @Override
+            public void onPathChange(String pathId){
+                 if (Setup.TOKEN_DATA.equals(pathId)){
+                     dataPanel.initialize();
+                 } else if (Setup.TOKEN_SCRIPT.equals(pathId)){
+                     scriptsPanel.initialize();
+                 }
+            }            
         });
         restorePreferences();
         if (!App.isFullScreen()  && App.getInstance().isContextPersisted()) {

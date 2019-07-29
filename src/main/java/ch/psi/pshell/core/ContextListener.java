@@ -37,6 +37,8 @@ public interface ContextListener {
     void onConfigurationChange(Configurable obj);
 
     void onBranchChange(String branch);
+    
+    void onPathChange(String pathId);
 
     /**
      * Triggered by scripts to configure displaying options

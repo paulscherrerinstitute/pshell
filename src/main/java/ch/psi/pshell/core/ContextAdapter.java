@@ -76,4 +76,9 @@ public abstract class ContextAdapter implements ContextListener {
     public void onPreferenceChange(ViewPreference preference, Object value) {
 
     }
+    
+    @Override
+    public void onPathChange(String pathId){
+        
+    }
 }
