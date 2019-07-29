@@ -797,6 +797,11 @@ public class App extends ObservableBase<AppListener> {
                 public Object showPanel(Config config) throws InterruptedException {
                     return ConfigDialog.showConfigEditor(getMainFrame(), config, false, false);
                 }
+
+                @Override
+                public int waitKey(int timeout) throws InterruptedException {
+                    return Shell.waitKey(timeout);
+                }
             });
 
         }

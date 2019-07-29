@@ -234,8 +234,7 @@ function lscan(writables, readables, start, end, steps, latency, relative, passe
         start(list of float): start positions of writables.
         end(list of float): final positions of writables.
         steps(int or float or list of float): number of scan steps (int) or step size (float).
-        relative (bool, optional): if true, start and end positions are relative to 
-        current at start of the scan
+        relative (bool, optional): if true, start and end positions are relative to current.
         latency(float, optional): sleep time in each step before readout, defaults to 0.0.     
         passes(int, optional): number of passes
         zigzag(bool, optional): if true writables invert direction on each pass.    
@@ -287,8 +286,7 @@ function vscan(writables, readables, vector, line, latency, relative, passes, zi
         readables(list of Readable): Sensors to be sampled on each step.
         vector(list of list of float): table of positioner values.
         line (bool, optional): if true, processs as line scan (1d)
-        relative (bool, optional): if true, start and end positions are relative to current at 
-        start of the scan
+        relative (bool, optional): if true, start and end positions are relative to current.
         latency(float, optional): sleep time in each step before readout, defaults to 0.0.        
         passes(int, optional): number of passes
         zigzag(bool, optional): if true writables invert direction on each pass.
@@ -347,8 +345,7 @@ function ascan(writables, readables, start, end, steps, latency, relative, passe
         start(list of float): start positions of writables.
         end(list of float): final positions of writables.
         steps(list of int or list of float): number of scan steps (int) or step size (float).
-        relative (bool, optional): if true, start and end positions are relative to current at 
-        start of the scan
+        relative (bool, optional): if true, start and end positions are relative to current.
         latency(float, optional): sleep time in each step before readout, defaults to 0.0.
         passes(int, optional): number of passes
         zigzag (bool, optional): if true writables invert direction on each row.
@@ -396,8 +393,7 @@ function  rscan(writable, readables, regions, latency, relative, passes, zigzag,
         readables(list of Readable): Sensors to be sampled on each step.
         regions (list of tuples (float,float, int)   or (float,float, float)): each tuple define a scan region
                                 (start, stop, steps) or (start, stop, step_size)                                  
-        relative (bool, optional): if true, start and end positions are relative to 
-            current at start of the scan
+        relative (bool, optional): if true, start and end positions are relative to current.
         latency(float, optional): settling time for each step before readout, defaults to 0.0.
         passes(int, optional): number of passes
         zigzag(bool, optional): if true writable invert direction on each pass.
@@ -467,8 +463,7 @@ function  cscan(writables, readables, start, end, steps, latency, time, relative
         time = null
         time (float, seconds): if not null then writables is Motor array and speeds are 
         set according to time.
-        relative (bool, optional): if true, start and end positions are relative to 
-        current at start of the scan
+        relative (bool, optional): if true, start and end positions are relative to current.
         latency(float, optional): sleep time in each step before readout, defaults to 0.0.
         before_read (function, optional): callback on each step, before each readout. 
         Callback may have as optional parameters list of positions.
@@ -733,8 +728,7 @@ function bsearch(writables, readable, start, end, steps, maximum, strategy, late
                                    "FullNeighborhood": Uses complete neighborhood (8-neighborhood for 2d)
         
         latency(float, optional): settling time for each step before readout, defaults to 0.0.
-        relative (bool, optional): if true, start and end positions are relative to current at 
-            start of the scan
+        relative (bool, optional): if true, start and end positions are relative to current.
         before_read (function, optional): callback on each step, before each readout.
         after_read (function, optional): callback on each step, after each readout.
         title(str, optional): plotting window name.
@@ -785,8 +779,7 @@ function hsearch(writables, readable, range_min,  range_max, initial_step, resol
         noise_filtering_steps(int): number of aditional steps to filter noise
         maximum (bool , optional): if True (default) search maximum, otherwise minimum.
         latency(float, optional): settling time for each step before readout, defaults to 0.0.
-        relative (bool, optional): if true, range_min and range_max positions are relative to current at 
-            start of the scan
+        relative (bool, optional): if true, start and end positions are relative to current.
         before_read (function, optional): callback on each step, before each readout.
         after_read (function, optional): callback on each step, after each readout.
         title(str, optional): plotting window name.

@@ -160,8 +160,7 @@ def lscan(writables, readables, start, end, steps, latency=0.0, relative=false, 
     start(list of float): start positions of writables.
     end(list of float): final positions of writables.
     steps(int or float or list of float): number of scan steps (int) or step size (float).
-    relative (bool, optional): if true, start and end positions are relative to 
-    current at start of the scan
+    relative (bool, optional): if true, start and end positions are relative to current.
     latency(float, optional): sleep time in each step before readout, defaults to 0.0.
     passes(int, optional): number of passes
     zigzag(bool, optional): if true writables invert direction on each pass.    
@@ -202,8 +201,7 @@ def vscan(writables, readables, vector, line, latency=0.0, relative=false, passe
     readables(list of Readable): Sensors to be sampled on each step.
     vector(list of list of float): table of positioner values.
     line (bool, optional): if true, processs as line scan (1d)
-    relative (bool, optional): if true, start and end positions are relative to current at 
-    start of the scan
+    relative (bool, optional): if true, start and end positions are relative to current.
     latency(float, optional): sleep time in each step before readout, defaults to 0.0.        
     passes(int, optional): number of passes
     zigzag(bool, optional): if true writables invert direction on each pass.
@@ -243,8 +241,7 @@ def ascan(writables, readables, start, end, steps, latency=0.0, relative=false, 
     start(list of float): start positions of writables.
     end(list of float): final positions of writables.
     steps(list of int or list of float): number of scan steps (int) or step size (float).
-    relative (bool, optional): if true, start and end positions are relative to current at 
-    start of the scan
+    relative (bool, optional): if true, start and end positions are relative to current.
     latency(float, optional): sleep time in each step before readout, defaults to 0.0.
     passes(int, optional): number of passes
     zigzag (bool, optional): if true writables invert direction on each row.
@@ -286,8 +283,7 @@ def rscan(writable, readables, regions, latency=0.0, relative=false, passes=1, z
         readables(list of Readable): Sensors to be sampled on each step.
         regions (list of tuples (float,floar, int)   or (float,floar, float)): each tuple define a scan region
                                 (start, stop, steps) or (start, stop, step_size)                                  
-        relative (bool, optional): if true, start and end positions are relative to 
-            current at start of the scan
+        relative (bool, optional): if true, start and end positions are relative to current.
         latency(float, optional): settling time for each step before readout, defaults to 0.0.
         passes(int, optional): number of passes
         zigzag(bool, optional): if true writable invert direction on each pass.
@@ -344,8 +340,7 @@ def cscan(writables, readables, start, end, steps,latency=0.0, time=null, relati
     time = null
     time (float, seconds): if not null then writables is Motor array and speeds are 
     set according to time.
-    relative (bool, optional): if true, start and end positions are relative to 
-    current at start of the scan
+    relative (bool, optional): if true, start and end positions are relative to current.
     latency(float, optional): sleep time in each step before readout, defaults to 0.0.
     before_read (function): callback on each step, before each readout. 
     Callback may have as optional parameters list of positions.

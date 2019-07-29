@@ -434,18 +434,17 @@ def lscan(writables, readables, start, end, steps, latency=0.0, relative=False, 
         start(list of float): start positions of writables.
         end(list of float): final positions of writables.
         steps(int or float or list of float): number of scan steps (int) or step size (float).
-        relative (bool, optional): if true, start and end positions are relative to
-            current at start of the scan
+        relative (bool, optional): if true, start and end positions are relative to current.
         latency(float, optional): settling time for each step before readout, defaults to 0.0.
         passes(int, optional): number of passes
         zigzag(bool, optional): if true writables invert direction on each pass.
         pars(keyworded variable length arguments, optional): scan optional named arguments:
             - title(str, optional): plotting window name.
             - hidden(bool, optional): if true generates no effects on user interface.
-            - before_read (function, optional): callback on each step, before sampling. Arguments: positions, scan
-            - after_read (function, optional): callback on each step, after sampling. Arguments: record, scan.
-            - before_pass (function, optional): callback before each scan pass execution. Arguments: pass_num, scan.
-            - after_pass (function, optional): callback after each scan pass execution. Arguments: pass_num, scan.
+            - before_read (function(positions, scan), optional): callback on each step, before sampling.
+            - after_read (function(record, scan), optional): callback on each step, after sampling.
+            - before_pass (function(pass_num, scan), optional): callback before each scan pass execution.
+            - after_pass (function(pass_num, scan), optional): callback after each scan pass execution.
             - settle_timeout(int, optional): timeout for each positioner get to position. Default (-1) waits forever.
             - initial_move (bool, optional): if true (default) perform move to initial position prior to scan start.
             - parallel_positioning (bool, optional): if true (default) all positioners are set in parallel.
@@ -478,17 +477,16 @@ def vscan(writables, readables, vector, line = False, latency=0.0, relative=Fals
         readables(list of Readable): Sensors to be sampled on each step.
         vector (generator (floats or lists of float)  or list of list of float): positioner values.
         line (bool, optional): if true, processs as line scan (1d)
-        relative (bool, optional): if true, start and end positions are relative to current at
-            start of the scan
+        relative (bool, optional): if true, start and end positions are relative to current.
         latency(float, optional): settling time for each step before readout, defaults to 0.0.
         passes(int, optional): number of passes (disregarded if vector is a generator).
         zigzag(bool, optional): if true writables invert direction on each pass (disregarded if vector is a generator).
         pars(keyworded variable length arguments, optional): scan optional named arguments:
             - title(str, optional): plotting window name.
-            - before_read (function, optional): callback on each step, before sampling. Arguments: positions, scan
-            - after_read (function, optional): callback on each step, after sampling. Arguments: record, scan.
-            - before_pass (function, optional): callback before each scan pass execution. Arguments: pass_num, scan.
-            - after_pass (function, optional): callback after each scan pass execution. Arguments: pass_num, scan.
+            - before_read (function(positions, scan), optional): callback on each step, before sampling.
+            - after_read (function(record, scan), optional): callback on each step, after sampling.
+            - before_pass (function(pass_num, scan), optional): callback before each scan pass execution.
+            - after_pass (function(pass_num, scan), optional): callback after each scan pass execution.
             - settle_timeout(int, optional): timeout for each positioner get to position. Default (-1) waits forever.
             - initial_move (bool, optional): if true (default) perform move to initial position prior to scan start.
             - parallel_positioning (bool, optional): if true (default) all positioners are set in parallel.
@@ -527,16 +525,15 @@ def ascan(writables, readables, start, end, steps, latency=0.0, relative=False, 
         end(list of float): final positions of writables.
         steps(list of int or list of float): number of scan steps (int) or step size (float).
         latency(float, optional): settling time for each step before readout, defaults to 0.0.
-        relative (bool, optional): if true, start and end positions are relative to current at
-            start of the scan
+        relative (bool, optional): if true, start and end positions are relative to current.
         passes(int, optional): number of passes
         zigzag (bool, optional): if true writables invert direction on each row.
         pars(keyworded variable length arguments, optional): scan optional named arguments:
             - title(str, optional): plotting window name.
-            - before_read (function, optional): callback on each step, before sampling. Arguments: positions, scan
-            - after_read (function, optional): callback on each step, after sampling. Arguments: record, scan.
-            - before_pass (function, optional): callback before each scan pass execution. Arguments: pass_num, scan.
-            - after_pass (function, optional): callback after each scan pass execution. Arguments: pass_num, scan.
+            - before_read (function(positions, scan), optional): callback on each step, before sampling.
+            - after_read (function(record, scan), optional): callback on each step, after sampling.
+            - before_pass (function(pass_num, scan), optional): callback before each scan pass execution.
+            - after_pass (function(pass_num, scan), optional): callback after each scan pass execution.
             - settle_timeout(int, optional): timeout for each positioner get to position. Default (-1) waits forever.
             - initial_move (bool, optional): if true (default) perform move to initial position prior to scan start.
             - parallel_positioning (bool, optional): if true (default) all positioners are set in parallel.
@@ -570,17 +567,16 @@ def rscan(writable, readables, regions, latency=0.0, relative=False, passes=1, z
         readables(list of Readable): Sensors to be sampled on each step.
         regions (list of tuples (float,float, int)   or (float,float, float)): each tuple define a scan region
                                 (start, stop, steps) or (start, stop, step_size)
-        relative (bool, optional): if true, start and end positions are relative to
-            current at start of the scan
+        relative (bool, optional): if true, start and end positions are relative to current.
         latency(float, optional): settling time for each step before readout, defaults to 0.0.
         passes(int, optional): number of passes
         zigzag(bool, optional): if true writable invert direction on each pass.
         pars(keyworded variable length arguments, optional): scan optional named arguments:
             - title(str, optional): plotting window name.
-            - before_read (function, optional): callback on each step, before sampling. Arguments: positions, scan
-            - after_read (function, optional): callback on each step, after sampling. Arguments: record, scan.
-            - before_pass (function, optional): callback before each scan pass execution. Arguments: pass_num, scan.
-            - after_pass (function, optional): callback after each scan pass execution. Arguments: pass_num, scan.
+            - before_read (function(positions, scan), optional): callback on each step, before sampling.
+            - after_read (function(record, scan), optional): callback on each step, after sampling.
+            - before_pass (function(pass_num, scan), optional): callback before each scan pass execution.
+            - after_pass (function(pass_num, scan), optional): callback after each scan pass execution.
             - settle_timeout(int, optional): timeout for each positioner get to position. Default (-1) waits forever.
             - initial_move (bool, optional): if true (default) perform move to initial position prior to scan start.
             - parallel_positioning (bool, optional): if true (default) all positioners are set in parallel.
@@ -624,15 +620,14 @@ def cscan(writables, readables, start, end, steps, latency=0.0, time=None, relat
         latency(float, optional): sleep time in each step before readout, defaults to 0.0.
         time (float, seconds): if not None then writables is Motor array and speeds are
                     set according to time.
-        relative (bool, optional): if true, start and end positions are relative to
-            current at start of the scan
+        relative (bool, optional): if true, start and end positions are relative to current.
         passes(int, optional): number of passes
         pars(keyworded variable length arguments, optional): scan optional named arguments:
             - title(str, optional): plotting window name.
-            - before_read (function, optional): callback on each step, before sampling. Arguments: positions, scan
-            - after_read (function, optional): callback on each step, after sampling. Arguments: record, scan.
-            - before_pass (function, optional): callback before each scan pass execution. Arguments: pass_num, scan.
-            - after_pass (function, optional): callback after each scan pass execution. Arguments: pass_num, scan.
+            - before_read (function(positions, scan), optional): callback on each step, before sampling.
+            - after_read (function(record, scan), optional): callback on each step, after sampling.
+            - before_pass (function(pass_num, scan), optional): callback before each scan pass execution.
+            - after_pass (function(pass_num, scan), optional): callback after each scan pass execution.
             - abort_on_error (bool, optional): if true then aborts scan in sensor failures. Default is false.
             - restore_position (bool, optional): if true (default) then restore initial position after relative scans.
             - Aditional arguments defined by set_exec_pars.
@@ -674,9 +669,9 @@ def hscan(config, writable, readables, start, end, steps, passes=1, zigzag=False
         passes(int, optional): number of passes
         pars(keyworded variable length arguments, optional): scan optional named arguments:
             - title(str, optional): plotting window name.
-            - after_read (function, optional): callback on each step, after sampling. Arguments: record, scan.
-            - before_pass (function, optional): callback before each scan pass execution. Arguments: pass_num, scan.
-            - after_pass (function, optional): callback after each scan pass execution. Arguments: pass_num, scan.
+            - after_read (function(record, scan), optional): callback on each step, after sampling.
+            - before_pass (function(pass_num, scan), optional): callback before each scan pass execution.
+            - after_pass (function(pass_num, scan), optional): callback after each scan pass execution.
             - abort_on_error (bool, optional): if true then aborts scan in sensor failures. Default is false.
             - Aditional arguments defined by set_exec_pars.
 
@@ -711,10 +706,10 @@ def bscan(stream, records, timeout = None, passes=1, **pars):
         passes(int, optional): number of passes
         pars(keyworded variable length arguments, optional): scan optional named arguments:
             - title(str, optional): plotting window name.
-            - before_read (function, optional): callback on each step, before sampling. Arguments: positions, scan
-            - after_read (function, optional): callback on each step, after sampling. Arguments: record, scan.
-            - before_pass (function, optional): callback before each scan pass execution. Arguments: pass_num, scan.
-            - after_pass (function, optional): callback after each scan pass execution. Arguments: pass_num, scan.
+            - before_read (function(positions, scan), optional): callback on each step, before sampling.
+            - after_read (function(record, scan), optional): callback on each step, after sampling.
+            - before_pass (function(pass_num, scan), optional): callback before each scan pass execution.
+            - after_pass (function(pass_num, scan), optional): callback after each scan pass execution.
             - Aditional arguments defined by set_exec_pars.
 
     Returns:
@@ -739,10 +734,10 @@ def tscan(readables, points, interval, passes=1, **pars):
         passes(int, optional): number of passes
         pars(keyworded variable length arguments, optional): scan optional named arguments:
             - title(str, optional): plotting window name.
-            - before_read (function, optional): callback on each step, before sampling. Arguments: positions, scan
-            - after_read (function, optional): callback on each step, after sampling. Arguments: record, scan.
-            - before_pass (function, optional): callback before each scan pass execution. Arguments: pass_num, scan.
-            - after_pass (function, optional): callback after each scan pass execution. Arguments: pass_num, scan.
+            - before_read (function(positions, scan), optional): callback on each step, before sampling.
+            - after_read (function(record, scan), optional): callback on each step, after sampling.
+            - before_pass (function(pass_num, scan), optional): callback before each scan pass execution.
+            - after_pass (function(pass_num, scan), optional): callback after each scan pass execution.
             - abort_on_error (bool, optional): if true then aborts scan in sensor failures. Default is false.
             - Aditional arguments defined by set_exec_pars.
 
@@ -776,10 +771,10 @@ def mscan(trigger, readables, points, timeout = None, async=True, take_initial=F
         passes(int, optional): number of passes
         pars(keyworded variable length arguments, optional): scan optional named arguments:
             - title(str, optional): plotting window name.
-            - before_read (function, optional): callback on each step, before sampling. Arguments: positions, scan
-            - after_read (function, optional): callback on each step, after sampling. Arguments: record, scan.
-            - before_pass (function, optional): callback before each scan pass execution. Arguments: pass_num, scan.
-            - after_pass (function, optional): callback after each scan pass execution. Arguments: pass_num, scan.
+            - before_read (function(positions, scan), optional): callback on each step, before sampling.
+            - after_read (function(record, scan), optional): callback on each step, after sampling.
+            - before_pass (function(pass_num, scan), optional): callback before each scan pass execution.
+            - after_pass (function(pass_num, scan), optional): callback after each scan pass execution.
             - abort_on_error (bool, optional): if true then aborts scan in sensor failures. Default is false.
             - Aditional arguments defined by set_exec_pars.
 
@@ -831,12 +826,11 @@ def bsearch(writables, readable, start, end, steps, maximum = True, strategy = "
                                    "FullNeighborhood": Uses complete neighborhood (8-neighborhood for 2d)
 
         latency(float, optional): settling time for each step before readout, defaults to 0.0.
-        relative (bool, optional): if true, start and end positions are relative to current at
-            start of the scan
+        relative (bool, optional): if true, start and end positions are relative to current.
         pars(keyworded variable length arguments, optional): scan optional named arguments:
             - title(str, optional): plotting window name.
-            - before_read (function, optional): callback on each step, before sampling. Arguments: positions, scan
-            - after_read (function, optional): callback on each step, after sampling. Arguments: record, scan.
+            - before_read (function(positions, scan), optional): callback on each step, before sampling.
+            - after_read (function(record, scan), optional): callback on each step, after sampling.
             - settle_timeout(int, optional): timeout for each positioner get to position. Default (-1) waits forever.
             - parallel_positioning (bool, optional): if true (default) all positioners are set in parallel.
             - abort_on_error (bool, optional): if true then aborts scan in sensor failures. Default is false.
@@ -872,12 +866,11 @@ def hsearch(writables, readable, range_min, range_max, initial_step, resolution,
         filter(int): number of aditional steps to filter noise
         maximum (bool , optional): if True (default) search maximum, otherwise minimum.
         latency(float, optional): settling time for each step before readout, defaults to 0.0.
-        relative (bool, optional): if true, range_min and range_max positions are relative to current at
-            start of the scan
+        relative (bool, optional): if true, start and end positions are relative to current.
         pars(keyworded variable length arguments, optional): scan optional named arguments:
             - title(str, optional): plotting window name.
-            - before_read (function, optional): callback on each step, before sampling. Arguments: positions, scan
-            - after_read (function, optional): callback on each step, after sampling. Arguments: record, scan.
+            - before_read (function(positions, scan), optional): callback on each step, before sampling.
+            - after_read (function(record, scan), optional): callback on each step, after sampling.
             - settle_timeout(int, optional): timeout for each positioner get to position. Default (-1) waits forever.
             - parallel_positioning (bool, optional): if true (default) all positioners are set in parallel.
             - abort_on_error (bool, optional): if true then aborts scan in sensor failures. Default is false.
@@ -910,10 +903,10 @@ def plot(data, name = None, xdata = None, ydata=None, title=None):
     """Request one or multiple plots of user data (1d, 2d or 3d).
 
     Args:
-        data: array or list of values. For multiple plots, array of arrays or lists of values.
-        name(str or list of str, optional): plot name or list of names (if multiple plots).
-        xdata: array or list of values. For multiple plots, array of arrays or lists of values.
-        ydata: array or list of values. For multiple plots, array of arrays or lists of values.
+        data: array or list of values. For multiple plots, list of arrays.
+        name(str or list of str, optional): plot name. For multiple plots, list of names.
+        xdata: array or list of values. For multiple plots, list of arrays.
+        ydata: array or list of values. For multiple plots, list of arrays.
         title(str, optional): plotting window name.
 
     Returns:
@@ -1216,9 +1209,9 @@ def set_exec_pars(**args):
                                     If false disable accumulation of scan records to scan result.
         preserve(bool): Overrides the configuration option to preserve device types.
                                   If false all values are converted to double.
-        compression(obj): True for enabling default compression, int for specifying deflation level.                                    
+        compression(obj): True for enabling default compression, int for specifying deflation level.
                                     Device or list of devices for specifying devices to be compressed.
-        shuffle(obj): True for enabling shuffling before compression. 
+        shuffle(obj): True for enabling shuffling before compression.
                                 Device or list of devices for specifying devices to be shuffled.
         contiguous(obj): True for setting contiguous datasets for all devices.
                                    Device or list of devices for specifying device datasets to be contiguous.
@@ -1227,7 +1220,7 @@ def set_exec_pars(**args):
         reset(bool): If true reset the scan counter - the {count} tag and set the timestamp to now.
         group(str): Overrides default layout group name for scans
         tag(str): Overrides default tag for scan names (affecting group or dataset name, according to layout)
-        then, then_success, then_exception(str): Sets statement to be executed on the completion of current. 
+        then, then_success, then_exception(str): Sets statement to be executed on the completion of current.
         defaults(bool): If true restore the original execution parameters.
 
         Graphical preferences can also be set. Keys are equal to lowercase of Preference enum:
@@ -1235,7 +1228,7 @@ def set_exec_pars(**args):
         "manual_range","manual_range_y", "domain_axis", "status". See set_preference for more information.
 
         Shortcut entries: "line_plots": list of devices with enforced line plots.
-                          "range": "none", "auto", [min_x, max_x]  or [min_x, max_x, min_y, max_y] 
+                          "range": "none", "auto", [min_x, max_x]  or [min_x, max_x, min_y, max_y]
                           "display": if false disables scan data plotting and printing.
     """
     get_context().setExecutionPars(args)
@@ -1824,7 +1817,7 @@ def add_device(device, force = False):
     Args:
         device(Device or Source): device object.
         force(boolean, optional): if true then dispose existing device with same name.
-                    Otherwise will fail in case of name clash.
+             Otherwise will fail in case of name clash.
 
     Returns:
         True if device was added, false if was already in the pool, or exception in case of name clash.
@@ -1887,8 +1880,7 @@ def reinit(dev = None):
     """Re-initialize devices.
 
     Args:
-        dev(Device, optional): Device to be re-initialized.
-                               If  None re-initialize all devices not yet initialized.
+        dev(Device, optional): Device to be re-initialized (if None, all devices not yet initialized)
 
     Returns:
         List with devices not initialized.
@@ -1931,6 +1923,23 @@ def create_averager(dev, count, interval=0.0, name = None,  monitored = False):
     if (monitored):
        av.monitored = True
     return av
+
+def tweak(dev, step):
+    """Move one or more positioners in steps using the arrow keys.
+
+    Args:
+        dev(Positioner or List): the device or list of devices to move.
+        step(float or List): step size or list of step sizes
+    """
+    if (get_exec_pars().isBackground()): return
+    dev,step = to_list(string_to_obj(dev)),to_list(step)
+    while (True):
+        key=get_context().waitKey(0)
+        for i in range(len(dev)):
+            if key == 0x25 : #Left
+                dev[i].moveRel(-step[i])
+            elif key == 0x27 : #Right
+                dev[i].moveRel(step[i])
 
 
 ###################################################################################################

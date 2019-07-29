@@ -27,4 +27,6 @@ public interface UserInterface {
     public Object showPanel(GenericDevice dev) throws InterruptedException;
     
     public Object showPanel(Config config) throws InterruptedException;
+    
+    public int waitKey(int timeout) throws InterruptedException;
 }

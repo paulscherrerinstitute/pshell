@@ -781,5 +781,10 @@ public class ServerService {
         public Object showPanel(Config config) throws InterruptedException {
             throw new java.lang.UnsupportedOperationException();
         }
+
+        @Override
+        public int waitKey(int timeout) throws InterruptedException {
+            throw new UnsupportedOperationException("Not supported yet."); 
+        }
     };
 }
