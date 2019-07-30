@@ -16,5 +16,7 @@ public interface Motor extends ControlledVariable, ControlledSpeedable, Position
     MotorStatus readStatus() throws IOException, InterruptedException;
 
     void startJog(boolean positive) throws IOException, InterruptedException;
+    
+    void setCurrentPosition(double value) throws IOException, InterruptedException;
 
 }

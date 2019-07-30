@@ -418,6 +418,15 @@ public abstract class MotorBase extends PositionerBase implements Motor {
             }
         }
     }
+    
+    
+    @Override
+    /**
+     * Set the current motor position to a given value changing the home offset. 
+     */
+    public void setCurrentPosition(double value) throws IOException, InterruptedException{
+        throw new UnsupportedOperationException("Not supported.");
+    }
 
     //Abstracts
     abstract protected Double doReadDestination() throws IOException, InterruptedException;

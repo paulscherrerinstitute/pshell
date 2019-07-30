@@ -11,6 +11,7 @@ import ch.psi.pshell.device.DeviceListener;
 import ch.psi.utils.BitMask;
 import java.io.IOException;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Wraps EPICS motor records.
@@ -248,7 +249,30 @@ public class Motor extends MotorBase {
             throw new DeviceException(ex.getMessage());
         }
     }
-
+    
+    @Override
+    public void setCurrentPosition(double value) throws IOException, InterruptedException {
+        assertWriteEnabled();
+        if (!isSimulated()) {
+            try {
+                Epics.put(channelName + ".SET" , 1);
+                Epics.put(channelName + ".FOFF" , "Variable");
+                setpoint.write(value);
+            } catch (InterruptedException ex) {
+                throw ex;
+            } catch (Exception ex) {
+                throw new DeviceException(ex.getMessage());
+            } finally {
+                try {
+                    Epics.put(channelName + ".SET" , 0);
+                } catch (Exception ex) {
+                    getLogger().log(Level.SEVERE, null, ex);
+                    Logger.getLogger(Motor.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+        }
+    }
+    
     @Override
     protected void doStartReferencing() throws IOException, InterruptedException {
         switch (getConfig().homingType) {
