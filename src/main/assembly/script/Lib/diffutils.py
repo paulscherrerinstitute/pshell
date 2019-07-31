@@ -283,7 +283,7 @@ class HklGroup(RegisterBase, Register.RegisterArray):
         return self._readback 
 
     def doWrite(self, pos):
-        self._setpoint = None if (pos is None) else [float(v) for v in pos]
+        self._setpoint = None if (pos is None) else [(None if v is None else float(v)) for v in pos]
         #print "Moving to: " + str(pos)
         self.hkl.asynchronousMoveTo(pos) 
 
@@ -898,6 +898,3 @@ def test_diffcalc():
     ascan([k,l], [sin], [1.0, 1.0], [1.2, 1.3], [0.1, 0.1], zigzag=True, parallel_positioning = False) 
     vector = [[1.0,1.0,1.0], [1.0,1.0,1.1], [1.0,1.0,1.2], [1.0,1.0,1.4]]
     hklscan(vector, [sin, arr], 0.9)
-    
-
-    
