@@ -115,12 +115,22 @@ class PositionerScannableGroup(ScannableGroup):
         #for m in motors: 
         #    exec('self.' + m.name + ' = PositionerScannable(' + m.name + ', "' + m.name + '")')
         #    exec('positioners.append(self.' + m.name + ')' ) 
-        ScannableGroup.__init__(self, self.name, positioners)
+        ScannableGroup.__init__(self, self.name, positioners)        
              
 class MotorGroupScannable(PositionerScannableGroup):        
-    def __init__(self, motor_group, diffcalc_axis_names=None):
+    def __init__(self, motor_group, diffcalc_axis_names=None, simultaneous_move=False):        
+        self.simultaneous_move = simultaneous_move
         self.motor_group = motor_group
         PositionerScannableGroup.__init__(self, motor_group.name, motor_group.motors, diffcalc_axis_names)
+        self.motor_group.restoreSpeedAfterMove = self.simultaneous_move
+
+    #Make sync moves (default implementation trigger each motor individually)
+    def asynchronousMoveTo(self, position):
+        if self.simultaneous_move:
+            position = [(float('nan') if v is None else v) for v in position]
+            self.motor_group.write(position)
+        else:
+            PositionerScannableGroup.asynchronousMoveTo(self, position)        
       
 
 class ScannableAdapter(HardwareAdapter):
@@ -201,8 +211,8 @@ class ScannableAdapter(HardwareAdapter):
         return self.diffractometer.getName()
 
 class MotorGroupAdapter(ScannableAdapter):
-    def __init__(self, diffractometer, energy, energy_multiplier_to_kev=1, diffcalc_axis_names=None):
-        self.diffractometer = MotorGroupScannable(diffractometer, diffcalc_axis_names)
+    def __init__(self, diffractometer, energy, energy_multiplier_to_kev=1, diffcalc_axis_names=None, simultaneous_move=False):
+        self.diffractometer = MotorGroupScannable(diffractometer, diffcalc_axis_names, simultaneous_move)
         self.energy = PositionerScannable(energy)
         self.energy.level = 3    
         ScannableAdapter.__init__(self, self.diffractometer, self.energy, energy_multiplier_to_kev)
@@ -286,7 +296,7 @@ class HklGroup(RegisterBase, Register.RegisterArray):
 you = None
 dc, ub, hardware, hkl = None, None, None, None
 _motor_group = None
-def setup_diff(diffractometer= None, energy= None, diffcalc_axis_names = None, geometry=None, persist_ub=True):
+def setup_diff(diffractometer= None, energy= None, diffcalc_axis_names = None, geometry=None, persist_ub=True, simultaneous_move=False):
     """
         configure diffractometer. Display configuration if no parameter is given
         diffractometer: Diffraction motor group 
@@ -339,7 +349,7 @@ def setup_diff(diffractometer= None, energy= None, diffcalc_axis_names = None, g
             settings.geometry = FourCircle()
         else:    
             raise Exception("Invalid motor group")
-        settings.hardware = MotorGroupAdapter(diffractometer, energy, diffcalc_axis_names = diffcalc_axis_names)
+        settings.hardware = MotorGroupAdapter(diffractometer, energy, 1, diffcalc_axis_names, simultaneous_move)
         
         if persist_ub:
             settings.persistence_path = os.path.abspath(get_context().setup.expandPath("{config}/diffcalc"))
@@ -521,9 +531,9 @@ def showref():
 def addref(*args):
     """
     Add reflection
-    addref	--  add reflection interactively
-    addref [h k l] {'tag'}	--  add reflection with current position and energy
-    addref [h k l] (p1, .., pN) energy {'tag'}	--  add arbitrary reflection
+    addref    --  add reflection interactively
+    addref [h k l] {'tag'}    --  add reflection with current position and energy
+    addref [h k l] (p1, .., pN) energy {'tag'}    --  add arbitrary reflection
     """
     return ub.addref(*args)       
 
