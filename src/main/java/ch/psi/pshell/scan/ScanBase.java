@@ -572,6 +572,10 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
     }
 
     ScanRecord currentRecord;
+    
+    public ScanRecord getCurrentRecord(){
+        return currentRecord;
+    }
 
     protected void triggerNewRecord(ScanRecord record) {
         if (keep) {

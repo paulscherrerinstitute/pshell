@@ -6,7 +6,7 @@
 # Installing  
 ###################################################################################################
 
-#1- Download from: https://github.com/DiamondLightSource/diffcalc/archive/master.zip
+#1- Download from: https://github.com/DiamondLightSource/diffcalc/archive/v2.1.zip
 #2- Extract the contents to {script}/Lib/diffcalc
 #3- Download http://central.maven.org/maven2/gov/nist/math/jama/1.0.3/jama-1.0.3.jar 
 #   to the extensions folder.
@@ -52,7 +52,6 @@ from diffcalc import settings
 from diffcalc.hkl.you.geometry import YouGeometry,SixCircle, FiveCircle, FourCircle, YouPosition
 from diffcalc.hardware import HardwareAdapter
 from diffcalc.ub.persistence import UBCalculationJSONPersister, UbCalculationNonPersister
-from diffcalc.ub.calcstate import UBCalcStateEncoder
 from diffcalc.gdasupport.minigda.scannable import ScannableBase, ScannableGroup
 #from diffcalc.gdasupport.minigda import command
 from diffcalc.hardware import HardwareAdapter
@@ -347,7 +346,7 @@ def setup_diff(diffractometer= None, energy= None, diffcalc_axis_names = None, g
             if not os.path.exists(settings.persistence_path):
                 os.makedirs(settings.persistence_path) 
             print "UB calculations persistence path: " + settings.persistence_path
-            settings.ubcalc_persister = UBCalculationJSONPersister(settings.persistence_path, UBCalcStateEncoder)
+            settings.ubcalc_persister = UBCalculationJSONPersister(settings.persistence_path)
         else:
             print "UB calculations are not persisteds"
             settings.ubcalc_persister = UbCalculationNonPersister()
@@ -823,7 +822,9 @@ def hklscan(vector, readables,latency = 0.0,  passes = 1, **pars):
             get_motor_group().waitReady(-1)
             time.sleep(latency)
             hkl_group.update()
+            if scan.before_read: scan.before_read(pos,scan)
             scan.append ([h.take(), k.take(), l.take()], [h.getPosition(), k.getPosition(), l.getPosition()], [readable.read() for readable in readables ])
+            if scan.after_read: scan.after_read(scan.currentRecord,scan)
     finally:
         scan.end()    
     return scan.result
