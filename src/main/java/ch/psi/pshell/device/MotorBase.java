@@ -169,6 +169,39 @@ public abstract class MotorBase extends PositionerBase implements Motor {
             doStop();
         }
     }
+    
+    @Override
+    public void move(Double destination, int timeout) throws IOException, InterruptedException {
+        assertWriteEnabled();
+        try{
+            super.move(destination, timeout);
+        } finally {
+            if (restoreSpeedAfterMove){
+                try{
+                    restoreSpeed();
+                } catch (Exception ex){
+                    getLogger().log(Level.WARNING, null, ex);
+                }
+            }
+        }
+    } 
+    
+    boolean restoreSpeedAfterMove = false;
+            
+    @Override
+    public void setRestoreSpeedAfterMove(boolean value){
+        restoreSpeedAfterMove = value;
+    }
+    
+    @Override
+    public boolean getRestoreSpeedAfterMove(){
+        return restoreSpeedAfterMove;
+    }
+    
+    @Override
+    public void restoreSpeed() throws IOException, InterruptedException{
+        setSpeed(getDefaultSpeed());
+    }    
 
     @Override
     public Double getPosition() throws IOException, InterruptedException {

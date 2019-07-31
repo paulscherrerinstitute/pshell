@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.concurrent.CompletableFuture;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Implementation of MotorGroup controlling a set of motors in simultaneous move. The simultaneity
@@ -62,6 +63,25 @@ public class MotorGroupBase extends DeviceBase implements MotorGroup {
 
     public MotorGroupBase(String name, Motor m1, Motor m2, Motor m3, Motor m4, Motor m5, Motor m6) {
         this(name, new Motor[]{m1, m2, m3, m4, m5, m6});
+    }
+    
+    boolean restoreSpeedAfterMove = false;
+            
+    @Override
+    public void setRestoreSpeedAfterMove(boolean value){
+        restoreSpeedAfterMove = value;
+    }
+    
+    @Override
+    public boolean getRestoreSpeedAfterMove(){
+        return restoreSpeedAfterMove;
+    }
+    
+    @Override
+    public void restoreSpeed() throws IOException, InterruptedException{
+        for (Motor m : getMotors()) {
+            m.restoreSpeed();
+        }
     }
 
     @Override
@@ -128,13 +148,23 @@ public class MotorGroupBase extends DeviceBase implements MotorGroup {
         ArrayList<Motor> movingMotors = new ArrayList();
         for (int i = 0; i < motors.length; i++) {
             try {
+                Motor m = motors[i];
                 if (!Double.isNaN(move_speed[i])) {
-                    movingMotors.add(motors[i]);
+                    movingMotors.add(m);
                     //Unchanged if < 0
                     if (move_speed[i] > 0) {
-                        motors[i].setSpeed(move_speed[i]);
+                        m.setSpeed(move_speed[i]);
                     }
-                    motors[i].moveAsync(destinations[i]);
+                    m.moveAsync(destinations[i]).handle((ret,ex)->{
+                        if (restoreSpeedAfterMove){
+                            try {
+                                m.restoreSpeed();
+                            } catch (Exception e) {
+                                Logger.getLogger(MotorGroupBase.class.getName()).log(Level.WARNING, null, e);
+                            }
+                        }
+                        return ret;
+                    });
                 }
             } catch (IOException | InterruptedException ex) {
                 stop();

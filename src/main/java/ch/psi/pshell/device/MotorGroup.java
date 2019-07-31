@@ -61,4 +61,10 @@ public interface MotorGroup extends Device, Readable<double[]>, Writable<double[
     boolean isInPosition(double[] position, double resolution) throws IOException, InterruptedException;
 
     Motor[] getMotors();
+    
+    void setRestoreSpeedAfterMove(boolean value);
+    
+    boolean getRestoreSpeedAfterMove();
+    
+    void restoreSpeed() throws IOException, InterruptedException;
 }
