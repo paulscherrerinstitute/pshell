@@ -385,7 +385,7 @@ public class Setup extends Config {
 
     boolean redefineScriptPath(String path) {
         if (path == null) {
-            scriptPath = originalScriptPath;
+            path = originalScriptPath;
         }
         if (!path.equals(scriptPath)) {
             scriptPath = path;
