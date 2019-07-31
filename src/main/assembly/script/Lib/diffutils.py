@@ -273,7 +273,7 @@ class HklGroup(RegisterBase, Register.RegisterArray):
         return self._readback 
 
     def doWrite(self, pos):
-        self._setpoint = pos
+        self._setpoint = None if (pos is None) else [float(v) for v in pos]
         #print "Moving to: " + str(pos)
         self.hkl.asynchronousMoveTo(pos) 
 
