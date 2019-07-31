@@ -294,6 +294,7 @@ public class DevicePoolEditor extends Editor {
                 ch.psi.pshell.bs.CameraServer.class.getName(),
                 ch.psi.pshell.bs.PipelineServer.class.getName(),
                 ch.psi.pshell.imaging.CameraSource.class.getName(),
+                ch.psi.pshell.imaging.ColormapAdapter.class.getName(),
                 ch.psi.pshell.imaging.DirectSource.class.getName(),
                 ch.psi.pshell.imaging.FileSource.class.getName(),
                 ch.psi.pshell.imaging.MjpegSource.class.getName(),

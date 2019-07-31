@@ -2,6 +2,7 @@ package ch.psi.pshell.imaging;
 
 import ch.psi.pshell.device.Device;
 import ch.psi.pshell.device.DeviceAdapter;
+import ch.psi.pshell.device.DeviceListener;
 import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -12,6 +13,7 @@ import java.util.logging.Logger;
 public abstract class DeviceSource extends ColormapSource {
 
     final Device device;
+    final DeviceListener deviceListener;
 
     public Device getDevice() {
         return device;
@@ -27,7 +29,7 @@ public abstract class DeviceSource extends ColormapSource {
         if (device == null) {
             throw new java.lang.IllegalArgumentException("Device is not defined");
         }
-        device.addListener(new DeviceAdapter() {
+        deviceListener = new DeviceAdapter() {
             @Override
             public void onValueChanged(Device device, Object value, Object former) {
                 try {
@@ -41,7 +43,8 @@ public abstract class DeviceSource extends ColormapSource {
                     pushError(ex);
                 }
             }
-        });
+        };
+        device.addListener(deviceListener);
     }
 
     @Override
@@ -105,6 +108,7 @@ public abstract class DeviceSource extends ColormapSource {
 
     @Override
     protected void doClose() throws IOException {
+        device.removeListener(deviceListener);
         removeAllListeners();
         undoDeviceMonitorAction();
         super.doClose();
