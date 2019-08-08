@@ -594,6 +594,26 @@ public class PipelineServer extends StreamCamera {
         setSlicing(gr);
     }
         
+    public Map<String, Object> getRotation() throws IOException {
+        Map<String, Object> pars = getInstanceConfig();
+        Object ret = pars.get("rotation");
+        return ((ret != null) && (ret instanceof Map)) ? (Map) ret : null;
+    }
+
+    public void setRotation(Map<String, Object> value) throws IOException {
+        Map<String, Object> pars = new HashMap();
+        pars.put("rotation", value);
+        setInstanceConfig(pars);    
+    }
+    
+     public void setRotation(double angle, int order, String mode) throws IOException {
+        Map<String, Object> gr = new HashMap<>();
+        gr.put("angle", angle);
+        gr.put("order", order);
+        gr.put("mode", mode);
+        setRotation(gr);
+    }   
+    
     /**
      * Return if the current instance is a shared connection.
      */
