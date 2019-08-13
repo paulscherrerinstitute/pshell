@@ -4,18 +4,54 @@
 
 ### Added
 
-* Utilities script for generating reports from command statistics files (statsutils.py)
-* Data queries at DataAPI (access to DataBuffer)
+* Utilities script for generating reports from command statistics files (statsutils.py).
+
+* Data queries at DataAPI (access to DataBuffer).
+
+* Included secondary domain axis in plot API.
+
+* Preference to display jog and homing buttons.
+
+* Global map in Context to exchange data between plugins.
+
+* waitState added to Plugin interface.
+
+* Tweak buttons on MotorGroupPanel
+
+* 'tweak'function.
+
+* TimePlot copies text in addition to images.
+
+* Ability to set data and script folders programmatically.
+
+* Motor.setCurrentPosition set the current motor position to a given value.
+
+* Option to restore default speed after Motor or MotorGroup move.
+
+* HKL moves on diffractometer can perform simultaneous motor move 
+  (proportional speed).
+
+* ColormapAdapter: convert RGB images into luminance arrays.
 
   
 ### Changed
 
-* 
+* BSREAD default modulo set to 1.
+
+* Strip chart saves repeated points with different timestamps.
+
+* Adapted to Diffcalc release 2.1
 
 
 ### Fixed
 
-* 
+* Stream chanel creation failures with addScalar.
+
+* Strip chart dragging issues.
+
+* Scienta zero supplies
+
+
 
 ## 1.10.0
 
