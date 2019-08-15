@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -18,6 +19,9 @@ import java.util.logging.Logger;
 public class MotorGroupBase extends DeviceBase implements MotorGroup {
 
     boolean dynamicChangeDestination = true; //TODO: should configure it?
+    volatile boolean executingSimultaneousMove = false;
+    final ArrayList<Motor> simultaneousMoveStartingMotors = new  ArrayList<>();
+    AtomicInteger simultaneousMoveCount = new AtomicInteger(0);
 
     public MotorGroupBase(String name) {
         super(name);
@@ -26,6 +30,11 @@ public class MotorGroupBase extends DeviceBase implements MotorGroup {
     public MotorGroupBase(String name, Motor... motors) {
         super(name);
         setComponents(motors);
+    }
+    
+    protected void doInitialize() throws IOException, InterruptedException {
+        super.doInitialize();
+        simultaneousMoveCount.set(0);
     }
 
     @Override
@@ -126,6 +135,8 @@ public class MotorGroupBase extends DeviceBase implements MotorGroup {
                 assertState(State.Ready);
             }
         }
+        executingSimultaneousMove = true;
+        
         triggerValueChanging(destinations);
 
         for (int i = 0; i < motors.length; i++) {
@@ -145,17 +156,30 @@ public class MotorGroupBase extends DeviceBase implements MotorGroup {
 
         double[] move_speed = getMoveSpeeds(motors, destinations, mode, time);
 
+        synchronized(simultaneousMoveStartingMotors){
+            simultaneousMoveStartingMotors.clear();
+        }
+                            
         ArrayList<Motor> movingMotors = new ArrayList();
         for (int i = 0; i < motors.length; i++) {
             try {
                 Motor m = motors[i];
                 if (!Double.isNaN(move_speed[i])) {
                     movingMotors.add(m);
+                    simultaneousMoveStartingMotors.add(m);
                     //Unchanged if < 0
                     if (move_speed[i] > 0) {
                         m.setSpeed(move_speed[i]);
                     }
+                    simultaneousMoveCount.incrementAndGet();
                     m.moveAsync(destinations[i]).handle((ret,ex)->{
+                        int count = simultaneousMoveCount.decrementAndGet();
+                        if (count<=0) {
+                            executingSimultaneousMove = false;
+                            if (count<0){
+                                simultaneousMoveCount.set(0);
+                            }
+                        }
                         if (restoreSpeedAfterMove){
                             try {
                                 m.restoreSpeed();
@@ -197,13 +221,20 @@ public class MotorGroupBase extends DeviceBase implements MotorGroup {
 
     void updateState() {
         Motor[] motors = getMotors();
-        for (Motor m : getMotors()) {
+        synchronized(simultaneousMoveStartingMotors){
+            for (Motor m: simultaneousMoveStartingMotors.toArray(new Motor[0])){
+                if (m.getState() != State.Ready){      
+                    simultaneousMoveStartingMotors.remove(m);
+                }
+            }    
+        }
+        for (Motor m : motors) {
             if (!m.getState().isNormal()) {
                 setState(State.Invalid);
                 return;
             }
         }
-        for (Motor m : getMotors()) {
+        for (Motor m : motors) {
             if (m.getState().isProcessing()) {
                 setState(State.Busy);
                 return;
@@ -303,6 +334,30 @@ public class MotorGroupBase extends DeviceBase implements MotorGroup {
         setCache(ret);
         return ret;
     }
+    
+    @Override
+    public boolean isExecutingSimultaneousMove(){
+        return executingSimultaneousMove;
+    }    
+    
+    @Override
+    public boolean isStartingSimultaneousMove(){
+        if (executingSimultaneousMove){
+            //If in startMoce or didn't start all motor moves
+            if ((getState()==State.Ready) || (simultaneousMoveStartingMotors.size()>0)){
+                return true;
+            }
+        }
+        return false;
+    }        
+    
+    public boolean getDynamicChangeDestination () {
+        return dynamicChangeDestination;
+    }
+    
+    public void setDynamicChangeDestination (boolean value) {
+        dynamicChangeDestination = value;
+    }    
 
     final DeviceListener changeListener = new ReadbackDeviceAdapter() {
         @Override

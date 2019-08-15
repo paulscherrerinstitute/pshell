@@ -67,4 +67,9 @@ public interface MotorGroup extends Device, Readable<double[]>, Writable<double[
     boolean getRestoreSpeedAfterMove();
     
     void restoreSpeed() throws IOException, InterruptedException;
+    
+    boolean isExecutingSimultaneousMove();
+    
+    boolean isStartingSimultaneousMove();
+
 }
