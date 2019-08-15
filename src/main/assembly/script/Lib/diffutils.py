@@ -445,19 +445,27 @@ def newub(name):
         rmub(name)
     except:
         pass
-    return ub.newub(name)
-
+    try:        
+        return ub.newub(name)
+    finally:
+        save_exp_context()
 def loadub(name_or_num):
     """
     load an existing ub calculation
     """
-    return ub.loadub(name_or_num)
-
+    try:
+        return ub.loadub(name_or_num)
+    finally:
+        save_exp_context()
+        
 def lastub():
     """
     load the last used ub calculation
     """
-    return ub.lastub()
+    try:
+        return ub.lastub()
+    finally:
+        save_exp_context()        
     
 def listub():
     """
@@ -475,8 +483,10 @@ def saveubas(name):
     """
     save the ub calculation with a new name
     """
-    return ub.saveubas(name)
-
+    try:    
+        return ub.saveubas(name)
+    finally:
+        save_exp_context()    
 
 # Lattice
 
@@ -704,13 +714,21 @@ def con(*args):
     con <name> {val} -- constrains and optionally sets one constraint
     con <name> {val} <name> {val} <name> {val} -- clears and then fully constrains    
     """
-    return hkl.con(*args)
+    try:
+        ret = hkl.con(*args)
+    finally:
+        save_exp_context()
+    return ret
 
 def uncon(name):
     """
     remove constraint
     """
-    return hkl.uncon(name)
+    try:
+        ret = hkl.uncon(name)
+    finally:
+        save_exp_context()
+    return ret
 
 
 # HKL
@@ -728,25 +746,31 @@ def setmin(axis, val=None):
     set lower limits used by auto sector code (nan to clear)
     """
     name = get_axis_name(axis)
-    return hardware.setmin(name, val)
+    try:
+        hardware.setmin(name, val)
+    finally:
+        save_exp_context()
 
 def setmax(axis, val=None):
     """
     set upper limits used by auto sector code (nan to clear)
     """
     name = get_axis_name(axis)
-    return hardware.setmax(name, val)
+    try:
+        return hardware.setmax(name, val)
+    finally:
+        save_exp_context()
 
 def setcut(axis, val):
     """
     sets cut angle
     """
     name = get_axis_name(axis)
-    return hardware.setcut(name, val)        
-
-
-
-
+    try:
+        return hardware.setcut(name, val)        
+    finally:
+        save_exp_context()
+        
 ###################################################################################################
 # Motion commands: not standard Diffcalc names
 ###################################################################################################
@@ -838,6 +862,114 @@ def hklscan(vector, readables,latency = 0.0,  passes = 1, **pars):
     finally:
         scan.end()    
     return scan.result
+
+def get_constraints():
+    constraints={}
+    from diffcalc.hkl.you.constraints import valueless_constraints
+    all_constraints=hkl.hklcalc.constraints.all
+    for name in all_constraints:
+        if not hkl.hklcalc.constraints.is_constraint_fixed(name):    
+            value = hkl.hklcalc.constraints.get_constraint(name)    
+            if name in valueless_constraints:
+                constraints[name] = None
+            elif value is not None:      
+                constraints[name] = value
+    return constraints
+
+    
+def set_constraints(constraints):
+    for name in constraints.keys(): 
+        try:
+            value = constraints[name]
+            if value is None:
+                con(name)
+            else:
+                con(name, value)
+        except:
+            print sys.exc_info()[1]    
+                
+def get_limits():
+    limits={}
+    for name in settings.hardware.get_axes_names():
+        axis = {}
+        axis["lower_limit"] = settings.hardware.get_lower_limit(name)
+        axis["upper_limit"] = settings.hardware.get_upper_limit(name)
+        axis["cut"] = settings.hardware.get_cuts()[name]
+        limits[name]=axis
+    return limits
+
+def set_limits(limits):
+    for name in limits.keys():
+        try:
+            axis = limits[name]
+            if axis.get("lower_limit") is not None: setmin (name, axis["lower_limit"])
+            if axis.get("upper_limit") is not None: setmax (name, axis["upper_limit"])
+            if axis.get("cut") is not None: setcut (name, axis["cut"])
+        except:
+            print sys.exc_info()[1]   
+
+def get_exp_context():
+    context = {}
+    try:       
+        context["limits"] = get_limits()
+    except:
+        context["limits"] = None
+    try:       
+        context["constraints"] = get_constraints()     
+    except:
+        context["constraints"] = None
+    try:       
+        context["ub"] = ub.ubcalc._state.name       
+    except:
+        context["ub"] = None
+    return context    
+
+def set_exp_context(context):
+    try:       
+        if context.get("limits") is not None:
+            set_limits(context["limits"])
+    except:
+        print sys.exc_info()[1]
+    try:       
+        if context.get("constraints") is not None:
+            set_constraints(context["constraints"])
+    except:
+        print sys.exc_info()[1]
+    try:       
+        if context.get("ub") is not None:
+           loadub(str(context["ub"]))
+    except:
+        print sys.exc_info()[1]  
+
+
+EXPERIMENT_CONTEXT_FILE = get_context().setup.expandPath("{context}/diff_exp_context.json")
+def save_exp_context():
+    """
+    Saves experiment context (constraints, ub and hw limits)
+    """
+    try:
+        c = get_exp_context()
+        with open(EXPERIMENT_CONTEXT_FILE, 'w') as json_file:
+            json.dump(c, json_file)
+    except:
+        print "Cannot save experiment context: ", sys.exc_info()[1]
+
+def load_exp_context():
+    """
+    Loads experiment context (constraints, ub and hw limits)
+    """
+    try:
+        with open(EXPERIMENT_CONTEXT_FILE) as json_file:
+            c = json.load(json_file)     
+        set_exp_context(c) 
+    except:
+        print "Cannot load experiment context: ", sys.exc_info()[1]
+
+
+
+###################################################################################################
+# Experiment context
+###################################################################################################
 
 
 def test_diffcalc():
