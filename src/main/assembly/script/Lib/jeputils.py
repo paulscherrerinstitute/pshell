@@ -96,7 +96,7 @@ def get_jep(var):
     j=__get_jep()  
     return j.getValue(var)
 
-def call_jep(module, function, args = []):
+def call_jep(module, function, args = [], reload=False):
     j=__get_jep()
     if "/" in module: 
         script = get_context().scriptManager.library.resolveFile(module)       
@@ -115,6 +115,9 @@ def call_jep(module, function, args = []):
     
     f = module+"_" + function+"_"+str(j.hashCode())
     try:
+        if reload:
+            eval_jep("import " + module)
+            eval_jep("reload(" + module+")")
         eval_jep("from " + module + " import " + function + " as " + f)    
         ret = j.invoke(f, args)
     finally:
