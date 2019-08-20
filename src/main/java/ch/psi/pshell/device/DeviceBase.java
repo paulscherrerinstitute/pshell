@@ -23,6 +23,7 @@ public abstract class DeviceBase extends GenericDeviceBase<DeviceListener> imple
     static ScheduledExecutorService schedulerSimulation;
     final protected Object valueWaitLock = new Object();
     final protected Object cacheUpdateLock = new Object();
+    private Boolean isIsReadyDefault;
 
     //Construction 
     /**
@@ -65,13 +66,14 @@ public abstract class DeviceBase extends GenericDeviceBase<DeviceListener> imple
     public void waitReady(int timeout) throws IOException, InterruptedException {
         //For devices with default isReady implementation, waitStateNotProcessing() is preferable
         //because avoid the for-sleep loop.
-        boolean isReadyDefault = false;
-        try {
-            isReadyDefault = (getClass().getMethod("isReady").getDeclaringClass() == DeviceBase.class);
-        } catch (Exception ex) {
+        if (isIsReadyDefault==null){
+            try {
+                isIsReadyDefault = (getClass().getMethod("isReady").getDeclaringClass() == DeviceBase.class);
+            } catch (Exception ex) {
+                isIsReadyDefault = false;
+            }
         }
-
-        if (isReadyDefault) {
+        if (isIsReadyDefault) {
             waitConditionOnState(() -> !getState().isProcessing(), timeout, "Timeout waiting ready");
         } else {
             waitCondition(() -> {
