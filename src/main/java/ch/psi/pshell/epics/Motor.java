@@ -271,6 +271,7 @@ public class Motor extends MotorBase {
                 }
             }
         }
+        updateAsync();
     }
     
     @Override
@@ -373,7 +374,7 @@ public class Motor extends MotorBase {
         return ret;
     }
 
-    Mode readMode() throws IOException, InterruptedException {
+    public Mode readMode() throws IOException, InterruptedException {
         String str = mode.getValue(); //take if monitored
         try {
             return Mode.valueOf(str);
@@ -382,16 +383,27 @@ public class Motor extends MotorBase {
         }
     }
 
-    void writeMode(Mode mode) throws IOException, InterruptedException {
+    public void writeMode(Mode mode) throws IOException, InterruptedException {
         this.mode.write(mode.toString());
     }
 
     public enum Mode {
-
         Go,
         Move,
         Pause,
         Stop
+    }
+    
+    //Goes through STOP PAUSE MOVE GO sequence
+    public void kickstart() throws IOException, InterruptedException{
+        int sleep = 500;
+        writeMode(Mode.Stop);
+        Thread.sleep(sleep);
+        writeMode(Mode.Pause);
+        Thread.sleep(sleep);
+        writeMode(Mode.Move);
+        Thread.sleep(sleep);
+        writeMode(Mode.Go);
     }
 
     @Override
