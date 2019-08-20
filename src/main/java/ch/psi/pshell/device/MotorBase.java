@@ -10,6 +10,8 @@ import java.util.logging.Level;
  * Base class for motor devices.
  */
 public abstract class MotorBase extends PositionerBase implements Motor {
+    
+    final int CHRONO_MOVE_START_TIMEOUT = 1000;
 
     protected MotorBase(String name, MotorConfig config) {
         super(name, config);
@@ -169,39 +171,39 @@ public abstract class MotorBase extends PositionerBase implements Motor {
             doStop();
         }
     }
-    
+
     @Override
     public void move(Double destination, int timeout) throws IOException, InterruptedException {
         assertWriteEnabled();
-        try{
+        try {
             super.move(destination, timeout);
         } finally {
-            if (restoreSpeedAfterMove){
-                try{
+            if (restoreSpeedAfterMove) {
+                try {
                     restoreSpeed();
-                } catch (Exception ex){
+                } catch (Exception ex) {
                     getLogger().log(Level.WARNING, null, ex);
                 }
             }
         }
-    } 
-    
+    }
+
     boolean restoreSpeedAfterMove = false;
-            
+
     @Override
-    public void setRestoreSpeedAfterMove(boolean value){
+    public void setRestoreSpeedAfterMove(boolean value) {
         restoreSpeedAfterMove = value;
     }
-    
+
     @Override
-    public boolean getRestoreSpeedAfterMove(){
+    public boolean getRestoreSpeedAfterMove() {
         return restoreSpeedAfterMove;
     }
-    
+
     @Override
-    public void restoreSpeed() throws IOException, InterruptedException{
+    public void restoreSpeed() throws IOException, InterruptedException {
         setSpeed(getDefaultSpeed());
-    }    
+    }
 
     @Override
     public Double getPosition() throws IOException, InterruptedException {
@@ -282,7 +284,6 @@ public abstract class MotorBase extends PositionerBase implements Motor {
     @Override
     public MotorStatus readStatus() throws IOException, InterruptedException {
         assertInitialized();
-        boolean moving = (getState() == State.Busy);
         try {
             MotorStatus ret;
             if (isSimulated()) {
@@ -298,30 +299,39 @@ public abstract class MotorBase extends PositionerBase implements Motor {
                 ret.enabled = true;
             } else {
                 ret = doReadStatus();
+                if (getConfig().monitorByPosition) {
+                    ret.stopped = isInPosition(take());
+                }
+                
                 // Some motors need some time to clear the stopped flag after start of move
                 if (chronoMoveStart != null) {
-                    if (!ret.stopped) {
+                    chronoMoveStop = null;
+                    if (!ret.stopped || chronoMoveStart.isTimeout(CHRONO_MOVE_START_TIMEOUT) || isInPosition(take())) {
                         chronoMoveStart = null;//Now monitor based on flag only
                     } else {
-                        //Protect overshoot in the end
-                        if (chronoMoveStop != null) {
+                        ret.stopped = false; //Assumes beggining of move
+                    }
+                }
+                
+                //If estbilizationDelay is set, protects again oscilation in the end that
+                //may make the stopped flag to bounce.
+                if (getState() == State.Busy){
+                    if (ret.stopped){                  
+                        if (chronoMoveStop == null) {
+                            if ((getConfig().estbilizationDelay >= 0)) {
+                                chronoMoveStop = new Chrono();
+                                ret.stopped = false;
+                            }                        
+                        } else {
                             if (chronoMoveStop.isTimeout(getConfig().estbilizationDelay)) {
                                 chronoMoveStop = null;
                             } else {
                                 ret.stopped = false;
                             }
-                        } else {
-                            if ((moving) && (getConfig().estbilizationDelay >= 0)) {
-                                chronoMoveStop = new Chrono();
-                            }
-                        }
-                        Double pos = getReadback().take();
-                        Double dest = take();
-                        //Reached the destination without clearing stopped flag: consider end of move
-                        if ((pos != null) && (dest != null) && (Math.abs(dest - pos) <= Math.abs(getResolution()))) {
-                            chronoMoveStart = null;
-                        } else {
-                            ret.stopped = false; //Assumes beggining of move
+                        } 
+                    } else {
+                        if (chronoMoveStop != null) {
+                            chronoMoveStop = new Chrono();
                         }
                     }
                 }
@@ -451,13 +461,12 @@ public abstract class MotorBase extends PositionerBase implements Motor {
             }
         }
     }
-    
-    
+
     @Override
     /**
-     * Set the current motor position to a given value changing the home offset. 
+     * Set the current motor position to a given value changing the home offset.
      */
-    public void setCurrentPosition(double value) throws IOException, InterruptedException{
+    public void setCurrentPosition(double value) throws IOException, InterruptedException {
         throw new UnsupportedOperationException("Not supported.");
     }
 
