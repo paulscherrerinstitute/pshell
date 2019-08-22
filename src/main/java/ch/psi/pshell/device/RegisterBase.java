@@ -334,7 +334,7 @@ public abstract class RegisterBase<T> extends DeviceBase implements Register<T> 
                     throw new DeviceTimeoutException("Timeout waiting value: " + value);
                 }
             }
-            Thread.sleep(10);
+            Thread.sleep(getWaitSleep());
         }
 
     }

@@ -106,7 +106,7 @@ public abstract class PositionerBase extends ControlledVariableBase implements P
                     if ((timeout >= 0) && (chrono.isTimeout(timeout))) {
                         throw new DeviceTimeoutException("Timeout waiting value: " + pos);
                     }
-                    Thread.sleep(10);
+                    Thread.sleep(getWaitSleep());
                 }
             } catch (IOException ex) {
                 throw new PositionException(pos);

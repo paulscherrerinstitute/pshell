@@ -31,6 +31,8 @@ public abstract class GenericDeviceBase<T> extends ObservableBase<T> implements 
     final AtomicBoolean requesting;
     final AtomicBoolean updating;
     final AtomicBoolean closed;
+    
+    int waitSleep = 5;
 
     //Construction 
     /**
@@ -121,7 +123,7 @@ public abstract class GenericDeviceBase<T> extends ObservableBase<T> implements 
                     throw new TimeoutException(timeoutMsg, this);
                 }
             }
-            Thread.sleep(10); 
+            Thread.sleep(waitSleep); 
         }
     }
 
@@ -249,6 +251,14 @@ public abstract class GenericDeviceBase<T> extends ObservableBase<T> implements 
         }
     }
 
+    public void setWaitSleep(int value){
+        waitSleep = value;
+    }
+    
+    public int getWaitSleep(){
+        return waitSleep;
+    }
+    
     //Updating
     @Override
     final public void update() throws IOException, InterruptedException {

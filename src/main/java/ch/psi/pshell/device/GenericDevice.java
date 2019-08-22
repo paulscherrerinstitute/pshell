@@ -83,6 +83,10 @@ public interface GenericDevice<T> extends Observable<T>, Timestamped, AutoClosea
     Object request();
 
     void update() throws IOException, InterruptedException;
+    
+    void setWaitSleep(int value);
+    
+    int getWaitSleep();    
 
     default CompletableFuture updateAsync() {
         return (CompletableFuture) Threading.getFuture(() -> update());

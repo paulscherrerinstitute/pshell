@@ -241,7 +241,7 @@ public class ArrayAverager extends ReadonlyRegisterBase<double[]> implements Rea
                 if (config.interval > 0) {
                     chrono.waitTimeout(config.interval);
                 } else if (config.interval < 0) {
-                    Thread.sleep(5);
+                    Thread.sleep(getWaitSleep());
                 }
             }
         }
