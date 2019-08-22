@@ -22,8 +22,10 @@ public class ColormapAdapter extends ColormapSource {
             @Override
             public void onImage(Object origin, BufferedImage image, Data data) {
                 try {
-                    data = (data==null) ? new Data(image) : data;
-                    pushData(data.getRectSelection(null, false));
+                    if ((data!=null) || (image!=null)){
+                        data = (data==null) ? new Data(image) : data;
+                        pushData(data.getRectSelection(null, false));
+                    }
                 } catch (IOException ex) {
                     pushError(ex);
                 }
