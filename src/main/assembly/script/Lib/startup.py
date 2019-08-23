@@ -1060,7 +1060,7 @@ def create_dataset(path, type, unsigned=False, dimensions=None, features=None):
         path(str): Path to dataset relative to the current persistence context root.
         type(str): array type 'b' = byte, 'h' = short, 'i' = int, 'l' = long,  'f' = float,
                               'd' = double, 'c' = char, 's' = String,  'o' = Object
-        unsigned(boolean, optional): create a dataset of unsigned type.
+        unsigned(boolean, optional)
         dimensions(tuple of int, optional): a 0 value means variable length in that dimension.
         features(dictionary, optional): storage features for the dataset, format specific.
             Keys for HDF5: "layout": "compact", "contiguous" or "chunked"
@@ -1129,7 +1129,7 @@ def append_table(path, data):
 
     Args:
         path(str): Path to dataset relative to the current persistence context root.
-        data(list): List of valus for each column of the table. Array types can be expressed as lists.
+        data(list): List of valus for each column of the table. 
     Returns:
         None
 
@@ -1175,7 +1175,7 @@ def log(log, data_file=None):
     Args:
          log(str): Log string.
          data_file(bool, optional): if true logs to the data file, in addiction to the system logger.
-                                    If None(default) appends to data file only if it has been created.
+                                    If None(default) appends to data file only if it exists.
 
     Returns:
         None
@@ -1203,20 +1203,17 @@ def set_exec_pars(**args):
         layout(str): Overrides default data layout.
         format(str): Overrides default data format.
         depth_dim(int): dimension of 2d-matrixes in 3d datasets.
-        save(bool): Overrides the configuration option to auto save scan data.
-        flush(bool): Overrides the configuration option to flush file on each record.
-        keep(bool): Overrides the configuration option to release scan records.
-                                    If false disable accumulation of scan records to scan result.
-        preserve(bool): Overrides the configuration option to preserve device types.
-                                  If false all values are converted to double.
+        save(bool): Overrides the config option to auto save scan data.
+        flush(bool): Overrides the config option to flush file on each record.
+        keep(bool): Overrides the config option keep scan records in memory. If false do not add records to scan result.
+        preserve(bool): Overrides the config option to preserve device types. If false all values are converted to double.
         compression(obj): True for enabling default compression, int for specifying deflation level.
-                                    Device or list of devices for specifying devices to be compressed.
+                          Device or list of devices for specifying devices to be compressed.
         shuffle(obj): True for enabling shuffling before compression.
-                                Device or list of devices for specifying devices to be shuffled.
+                      Device or list of devices for specifying devices to be shuffled.
         contiguous(obj): True for setting contiguous datasets for all devices.
-                                   Device or list of devices for specifying device datasets to be contiguous.
-        open(bool): If true opens data output root (instead of only doing in the first data access call)
-                              If false closes output root, if open.
+                         Device or list of devices for specifying device datasets to be contiguous.
+        open(bool): If true create data output path immediately. If false closes output root, if open.
         reset(bool): If true reset the scan counter - the {count} tag and set the timestamp to now.
         group(str): Overrides default layout group name for scans
         tag(str): Overrides default tag for scan names (affecting group or dataset name, according to layout)
@@ -1924,22 +1921,29 @@ def create_averager(dev, count, interval=0.0, name = None,  monitored = False):
        av.monitored = True
     return av
 
-def tweak(dev, step):
-    """Move one or more positioners in steps using the arrow keys.
+def tweak(dev, step, is2d=False):
+    """Move one or more positioners in steps using the arrow keys. 
+       Steps are increased/decreased using the shift and control keys. 
 
     Args:
         dev(Positioner or List): the device or list of devices to move.
         step(float or List): step size or list of step sizes
+        is2d(bool, optional): if true moves second motor with up/down arrows.
     """
     if (get_exec_pars().isBackground()): return
     dev,step = to_list(string_to_obj(dev)),to_list(step)
     while (True):
         key=get_context().waitKey(0)
         for i in range(len(dev)):
-            if key == 0x25 : #Left
-                dev[i].moveRel(-step[i])
-            elif key == 0x27 : #Right
-                dev[i].moveRel(step[i])
+            if not is2d or i==0:
+                if key == 0x25: dev[i].moveRel(-step[i]) #Left
+                elif key == 0x27: dev[i].moveRel(step[i]) #Right
+            if key in (0x10, 0x11): 
+                step[i] = step[i]*2 if key == 0x10 else step[i]/2
+                print "Tweak step for " + dev[i].name + " set to: "+str(step[i])
+        if is2d and len(dev)>1: 
+            if key == 0x26: dev[1].moveRel(step[1]) #Top
+            elif key == 0x28: dev[1].moveRel(-step[1]) #Bottom  
 
 
 ###################################################################################################

@@ -56,8 +56,9 @@ public class Shell extends MonitoredPanel {
     boolean truncateMenuContents;
     final ExecutorService commandExecutor;
     Future foregroundTask;
-    public static char keyChar;
-    public static int keyCode;
+    public static volatile char keyChar;
+    public static volatile int keyCode;
+    public static volatile boolean waitingKey;
 
     public Shell() {
         initComponents();
@@ -300,8 +301,13 @@ public class Shell extends MonitoredPanel {
         timeout = Math.max(timeout, 0);
         keyChar = 0;
         keyCode = 0;
-        synchronized (keyWaitLock) {
-            keyWaitLock.wait(timeout);
+        waitingKey = true;        
+        try{
+            synchronized (keyWaitLock) {
+                keyWaitLock.wait(timeout);
+            }
+        } finally {
+            waitingKey = false;
         }
         return keyCode;
     }
@@ -377,12 +383,14 @@ public class Shell extends MonitoredPanel {
                     int currentIndex = getPopupAutoCompIndex();
                     setPopupAutoCompIndex(currentIndex - 1);
                 } else {
-                    if (historyIndex < (history.size() - 1)) {
-                        historyIndex++;
-                    }
-                    if ((historyIndex >= 0) && (historyIndex < history.size())) {
-                        input.setText(history.get(history.size() - historyIndex - 1));
-                        input.setCaretPosition(input.getText().length());
+                    if (!waitingKey){
+                        if (historyIndex < (history.size() - 1)) {
+                            historyIndex++;
+                        }
+                        if ((historyIndex >= 0) && (historyIndex < history.size())) {
+                            input.setText(history.get(history.size() - historyIndex - 1));
+                            input.setCaretPosition(input.getText().length());
+                        }
                     }
                 }
                 evt.consume();
@@ -391,12 +399,14 @@ public class Shell extends MonitoredPanel {
                     int currentIndex = getPopupAutoCompIndex();
                     setPopupAutoCompIndex(currentIndex + 1);
                 } else {
-                    if (historyIndex > 0) {
-                        historyIndex--;
-                    }
-                    if ((historyIndex >= 0) && (historyIndex < history.size())) {
-                        input.setText(history.get(history.size() - historyIndex - 1));
-                        input.setCaretPosition(input.getText().length());
+                    if (!waitingKey){
+                        if (historyIndex > 0) {
+                            historyIndex--;
+                        }
+                        if ((historyIndex >= 0) && (historyIndex < history.size())) {
+                            input.setText(history.get(history.size() - historyIndex - 1));
+                            input.setCaretPosition(input.getText().length());
+                        }
                     }
                 }
                 evt.consume();
