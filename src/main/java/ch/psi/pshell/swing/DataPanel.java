@@ -1419,7 +1419,7 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
 
     }
 
-    void setDefaultDataPanelListener() {
+    public void setDefaultDataPanelListener() {
         setListener(new DefaultDataPanelListener());
     }
 

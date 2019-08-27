@@ -1502,6 +1502,12 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
         setExecutionPars(pars);
     }
 
+    public void setExecutionPar(String name, Object value) {
+        Map pars = new HashMap();
+        pars.put(name, value);
+        setExecutionPars(pars);
+    }
+
     public void setExecutionPars(Map pars) {
         getExecutionPars().setScriptOptions(pars);
     }
@@ -1798,6 +1804,12 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
     //These methods are made public in order to plugins control state
     //Start execution in interpreter thread (foreground task)
     @Hidden
+    public void startExecution(final CommandSource source, String fileName,  String command, Object args, boolean background) throws ContextStateException {
+        CommandInfo info = new CommandInfo(source, fileName, command, args, background);
+        startExecution(source, fileName, info);
+    }    
+    
+    @Hidden
     public void startExecution(final CommandSource source, String fileName,  Object args, boolean background) throws ContextStateException {
         CommandInfo info = new CommandInfo(source, fileName, null, args, background);
         startExecution(source, fileName, info);
@@ -1816,7 +1828,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
         aborted = false;
         setState(State.Busy);
         getExecutionPars().onExecutionStarted();
-    }
+    }    
 
     Object evalNextStage(CommandInfo currentInfo, final String command) throws ScriptException, IOException, ContextStateException, InterruptedException {
         onCommand(Command.then, new Object[]{command}, currentInfo.source);
