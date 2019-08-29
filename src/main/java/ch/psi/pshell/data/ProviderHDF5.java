@@ -95,6 +95,12 @@ public class ProviderHDF5 implements Provider {
         }
 
     }
+    
+    void assertOpenOutput() throws IllegalStateException {
+        if (writer == null) {
+            throw new IllegalStateException("HDF5 writer not opened");
+        }
+    }
 
     @Override
     public void flush() {
@@ -579,6 +585,7 @@ public class ProviderHDF5 implements Provider {
     //Data writing
     @Override
     public void createGroup(String path) {
+        assertOpenOutput();
         try{
             writer.object().createGroup(path);
         } catch (Exception ex){            
@@ -587,6 +594,7 @@ public class ProviderHDF5 implements Provider {
 
     @Override
     public void setDataset(String path, Object data, Class type, int rank, int[] dims, boolean unsigned, Map features) {
+        assertOpenOutput();
         HDF5GenericStorageFeatures sf = getStorageFeatures(features, dims);
         if (rank>0){
             if (Number.class.isAssignableFrom(type)){
@@ -788,6 +796,7 @@ public class ProviderHDF5 implements Provider {
 
     @Override
     public void createDataset(String path, Class type, int[] dimensions, boolean unsigned, Map features) {
+        assertOpenOutput();
         HDF5GenericStorageFeatures sf = getStorageFeatures(features, dimensions);
         int[] cs = getChunkSize(features, dimensions);
         if(cs == null) {
@@ -1012,6 +1021,7 @@ public class ProviderHDF5 implements Provider {
 
     @Override
     public void createDataset(String path, String[] names, Class[] types, int[] lengths, Map features) throws IOException {
+        assertOpenOutput();
         Object[] template = createCompoundTemplate(path, types, lengths);
         HDF5GenericStorageFeatures sf = getStorageFeatures(features, null);
         synchronized (compoundTypes) {
@@ -1036,6 +1046,7 @@ public class ProviderHDF5 implements Provider {
 
     @Override
     public void setItem(String path, Object data, Class type, int index) {       
+        assertOpenOutput();
         if (type == null) {
             //For float types don't leave default '0' when writing null: set NaN instead.
             HDF5DataSetInformation info = writer.object().getDataSetInformation(path);
@@ -1273,6 +1284,7 @@ public class ProviderHDF5 implements Provider {
     
     @Override
     public void setItem(String path, Object data, Class type,long[] index,  int[] shape) throws IOException{                
+        assertOpenOutput();
         if (type == double[].class) {
             MDDoubleArray array = new MDDoubleArray((double[])data, shape);
             writer.float64().writeMDArrayBlockWithOffset(path, array, index);  
@@ -1316,6 +1328,7 @@ public class ProviderHDF5 implements Provider {
 
     @Override
     public void setAttribute(String path, String name, Object value, Class type, boolean unsigned) {         
+        assertOpenOutput();
         if (type.isArray()) {
             Class componentType = type.getComponentType();
             if (componentType == double.class) {
