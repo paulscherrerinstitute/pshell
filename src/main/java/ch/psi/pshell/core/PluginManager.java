@@ -236,7 +236,7 @@ public class PluginManager implements AutoCloseable {
             String jar = Context.getInstance().getSetup().getJarFile();
             if (jar != null) {
                 try {
-                    Sys.addToLibraryPath(new File(jar).getCanonicalPath());
+                    Sys.addToLibraryPath(new File(jar).getParentFile().getCanonicalPath());
                 } catch (Exception ex) {
                     logger.log(Level.SEVERE, null, ex);
                 }

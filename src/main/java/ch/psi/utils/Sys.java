@@ -10,7 +10,9 @@ import java.lang.reflect.Method;
 import java.net.InetAddress;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 /**
  * System utilities.
@@ -43,18 +45,18 @@ public class Sys {
         }
         return OSFamily.Unknown;
     }
-    
-    public static boolean isMac(){
+
+    public static boolean isMac() {
         return getOSFamily() == OSFamily.Mac;
     }
-    
-    public static boolean isWindows(){
+
+    public static boolean isWindows() {
         return getOSFamily() == OSFamily.Windows;
     }
 
-    public static boolean isLinux(){
+    public static boolean isLinux() {
         return getOSFamily() == OSFamily.Linux;
-    }    
+    }
 
     public static double getJavaVersion() {
         try {
@@ -80,21 +82,21 @@ public class Sys {
         return String.valueOf(System.getProperty("sun.java.command"));
     }
 
-    public static String getProcessName(){
+    public static String getProcessName() {
         try {
             return String.valueOf(ManagementFactory.getRuntimeMXBean().getName());
         } catch (Exception ex) {
             return "Unknown";
-        }        
+        }
     }
-    
-    public static int getPid(){
+
+    public static int getPid() {
         try {
             return Integer.valueOf(getProcessName().split("@")[0]);
         } catch (Exception ex) {
             return -1;
-        }        
-    }    
+        }
+    }
 
     public static String getLocalHost() {
         try {
@@ -123,28 +125,83 @@ public class Sys {
         return System.getProperty("os.arch").contains("64");
     }
 
-    public static void addToClassPath(String s) throws Exception {
-        File f = new File(s);
-        URL u = f.toURL();
-        URLClassLoader urlClassLoader = (URLClassLoader) ClassLoader.getSystemClassLoader();
-        Class urlClass = URLClassLoader.class;
-        Method method = urlClass.getDeclaredMethod("addURL", new Class[]{URL.class});
-        method.setAccessible(true);
-        method.invoke(urlClassLoader, new Object[]{u});
-    }
+    public static String[] getClassPath(){
+        try{
+            if (Sys.getJavaVersion()>=10){
+                return System.getProperty("java.class.path").split(File.pathSeparator);
+            } else {
+                URLClassLoader urlClassLoader = (URLClassLoader) ClassLoader.getSystemClassLoader();
+                List<String> ret = new ArrayList<>();
+                for (URL url :urlClassLoader.getURLs()){
+                    ret.add(url.toString());
+                }
+                return ret.toArray(new String[0]);
+            }
+        } catch (Exception ex){
+            return new String[0];
+        }
+    }    
+ 
 
-    public static void addToLibraryPath(String pathToAdd) throws Exception {
-        final Field usrPathsField = ClassLoader.class.getDeclaredField("usr_paths");
-        usrPathsField.setAccessible(true);
-        final String[] paths = (String[]) usrPathsField.get(null);
-        for (String path : paths) {
-            if (path.equals(pathToAdd)) {
-                return;
+    public static void addToClassPath(String path) throws Exception {        
+        String[] classPath = getClassPath();
+        if (!Arr.containsEqual(classPath, path)){  
+            File f = new File(path);
+            URL u = f.toURI().toURL();
+            if (Sys.getJavaVersion()>=10){                
+                try{
+                    Field field = ClassLoader.getSystemClassLoader().getClass().getDeclaredField("ucp");
+                    field.setAccessible(true);
+                    final Object ucp = field.get(ClassLoader.getSystemClassLoader());
+                    Method method = ucp.getClass().getDeclaredMethod("addFile", new Class[]{String.class});
+                    method.setAccessible(true);
+                    method.invoke(ucp, new Object[]{path});        
+                    
+                     //Just to keep track, java.class.path is not parsed again by classloader.
+                    System.setProperty("java.class.path", String.join(File.pathSeparator, Arr.append(classPath, path)));
+                } catch (RuntimeException ex){
+                    System.err.println("Java>=10 requires the option '--add-opens java.base/jdk.internal.loader=ALL-UNNAMED'to add to classpath: " + path);
+                }
+            } else {      
+                URLClassLoader urlClassLoader = (URLClassLoader) ClassLoader.getSystemClassLoader();
+                Class urlClass = URLClassLoader.class;
+                Method method = urlClass.getDeclaredMethod("addURL", new Class[]{URL.class});
+                method.setAccessible(true);
+                method.invoke(urlClassLoader, new Object[]{u});         
             }
         }
-        final String[] newPaths = Arrays.copyOf(paths, paths.length + 1);
-        newPaths[newPaths.length - 1] = pathToAdd;
-        usrPathsField.set(null, newPaths);
+    }
+    
+    public static String[] getLibraryPath(){
+        try{
+            if (Sys.getJavaVersion()>=10){
+                return System.getProperty("java.library.path").split(File.pathSeparator);
+            } else {
+                final Field usrPathsField = ClassLoader.class.getDeclaredField("usr_paths");
+                usrPathsField.setAccessible(true);
+                return (String[]) usrPathsField.get(null);               
+            }
+        } catch (Exception ex){
+            return new String[0];
+        }
+    }
+
+    public static final List<ClassLoader> childClassLoaders = new ArrayList<>();
+    public static void addToLibraryPath(String path) throws Exception {
+        String[] libraryPath =  getLibraryPath();
+        if (!Arr.containsEqual(libraryPath, path)){     
+            if (Sys.getJavaVersion()>=10){
+                 //Only work in Java>=10 if called before usr_paths is initialized (first loadLibrary call): " + path);
+                 //java.library.path is not parsed again by classloader.
+                 System.setProperty("java.library.path", String.join(File.pathSeparator, Arr.append(libraryPath, path)));
+            } else {                
+                final Field usrPathsField = ClassLoader.class.getDeclaredField("usr_paths");
+                usrPathsField.setAccessible(true);
+                final String[] newLibraryPath = Arrays.copyOf(libraryPath, libraryPath.length + 1);
+                newLibraryPath[newLibraryPath.length - 1] = path;
+                usrPathsField.set(null, newLibraryPath);
+            }
+        }
     }
 
     public static void loadJarLibrary(Class cls, String resourceName) throws IOException {
