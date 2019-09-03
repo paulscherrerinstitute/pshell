@@ -41,6 +41,11 @@ public class CommandManager implements AutoCloseable {
 
     void finishCommandInfo(CommandInfo info, Object result) {
         synchronized (commandInfo) {
+            if (Context.getInstance().getDebug()){
+                if ((result!=null) && (result instanceof Throwable)){
+                    ((Throwable)result).printStackTrace();
+                }                
+            }                            
             if (info != null) {
                 if ((result != null) && (result instanceof PyBaseException)) {
                     result = new Exception(result.toString());

@@ -511,6 +511,18 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
     public boolean isSimulation() {
         return config.simulation || simulation;
     }
+    
+    boolean debug;
+
+    @Hidden
+    public boolean getDebug() {
+        return debug;
+    }
+
+    @Hidden
+    public void setDebug(boolean value) {
+        debug = value;
+    }    
 
     @Hidden
     public void assertInterpreterEnabled() throws IOException {
