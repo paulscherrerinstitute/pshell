@@ -6,7 +6,8 @@ import javax.script.ScriptException;
  *
  */
 public class StatementException extends ScriptException {
-
+    ScriptException se;
+    
     StatementException(ScriptException ex, Statement statement) {
         this(ex, statement.fileName, statement.lineNumber);
     }
@@ -16,6 +17,7 @@ public class StatementException extends ScriptException {
                 filename,
                 getStatementExceptionLine(ex.getLineNumber(), statementLineNumber),
                 ex.getColumnNumber());
+        se = ex;
     }
 
     //Unfoetunatelly cannot get the original message directly, need this hack
@@ -38,5 +40,10 @@ public class StatementException extends ScriptException {
         } else {
             return scriptLine;
         }
+    }
+    
+    @Override
+    public Throwable getCause(){
+        return se.getCause();
     }
 }
