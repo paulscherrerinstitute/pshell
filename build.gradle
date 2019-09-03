@@ -1,16 +1,10 @@
-apply plugin: 'java'
-apply plugin: 'eclipse'
-apply plugin: 'maven'
-buildscript {
-    repositories {
-        jcenter()
-    }
-    dependencies {
-        classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.4'
-    }
+plugins {
+    id "java"
+    id "eclipse"
+    id "maven"
+    id "maven-publish"
+    id "com.jfrog.bintray" version "1.8.4"
 }
-apply plugin: 'com.jfrog.bintray'
-apply plugin: 'maven-publish'
 
 version = '1.12.0' 
 group = 'ch.psi'
@@ -18,6 +12,8 @@ ext.timestamp = new Date().format("yyMMddHHmm")
 
 //py, groovy, js or all
 ext.type = 'py'
+
+ext.addopens = 'java.base/sun.nio.ch java.base/java.io java.desktop/sun.awt java.desktop/javax.swing.text.html java.desktop/sun.swing java.base/jdk.internal.loader'
 
 sourceCompatibility = '1.8'
 [compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
@@ -141,14 +137,15 @@ task fatJar(type: Jar, dependsOn: jar) {
             'Main-Class': mainClass,
             'Implementation-Version': version,
             'Build-Time': timestamp,
-            'Build-Type': type
+            'Build-Type': type,
+            'Add-Opens': addopens
             //,'Class-Path': configurations.compile.collect { it.getName() }.join(' ')
         )
     }    
     doFirst {
         from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } } 
     }
-    exclude 'META-INF/*.RSA', 'META-INF/*.SF','META-INF/*.DSA'     
+    exclude 'META-INF/*.RSA', 'META-INF/*.SF','META-INF/*.DSA', 'MANIFEST.MF', '*.INFO' , 'LICENSE'   
         
     with jar
 }
@@ -194,7 +191,8 @@ jar {
         attributes (
             'Main-Class': mainClass, 
             'Implementation-Version': version,
-            'Build-Time': timestamp
+            'Build-Time': timestamp,
+            'Add-Opens': addopens
         )
     }       
 }
