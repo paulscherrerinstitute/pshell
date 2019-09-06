@@ -26,7 +26,7 @@ import java.util.logging.Level;
  */
 public class ExecutionParameters {
 
-    final String[] executionOptions = new String[]{"defaults", "group", "open", "reset", "name", "type", "path", "tag",
+    final String[] executionOptions = new String[]{"defaults", "group", "open", "reset", "name", "type", "path", "tag", "seq",
         "layout", "provider", "format", "save", "persist", "flush", "preserve", "keep", "accumulate", "depth_dim", "compression",
         "shuffle", "contiguous", "then", "then_exception", "then_success"};
 
@@ -103,6 +103,15 @@ public class ExecutionParameters {
     public void setIndex(int index) {
         scanIndex = index;
     }
+    
+    public int getSeq() {
+        if (Context.getInstance().dataManager.isOpen()){
+            return Context.getInstance().getDataManager().getCurrentFileSequentialNumber();
+        } else {
+            return Context.getInstance().getFileSequentialNumber();
+        }    
+    }
+     
 
     public int getCount() {
         return scanIndex - offset;
@@ -273,7 +282,17 @@ public class ExecutionParameters {
                     }
                 }
             }
+        }        
+        if (getOption("seq") != null) {
+            try {
+                Number seq = (Number)getOption("seq");
+                Context.getInstance().setFileSequentialNumber(seq.intValue());
+            } catch (Exception ex) {
+                Context.getInstance().logger.log(Level.WARNING, null, ex);
+            }            
+            
         }
+        
         Object open = getOption("open");
         if ((Boolean.TRUE.equals(open)) && (!Context.getInstance().dataManager.isOpen())) {
             try {

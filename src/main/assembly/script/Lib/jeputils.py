@@ -10,6 +10,19 @@
 #matplotlib.use('TkAgg') 
 
 
+#In principle just add JEP jar and library to the extensions folder.
+#
+#Alternatively on Linux:
+#   Python 2:
+#       - Add <python home>/lib/python3.X/site-packages/jep to LD_LIBRARY_PATH
+#       - Add <python home>/lib/python3.X/site-packages/jep/jep-X.X.X.jar to the class path
+#
+#Python3:
+#       - Add JEP library folder to LD_LIBRARY_PATH
+#       - If using OpenJDK, add also python <python home>/lib folder to LD_LIBRARY_PATH			
+#	- Set LD_PRELOAD=<python home>/lib/libpython3.5m.so
+
+
 import sys
 import os
 import jep.Jep

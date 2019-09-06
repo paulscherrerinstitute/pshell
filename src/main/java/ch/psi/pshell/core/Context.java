@@ -2569,14 +2569,11 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
         return history.search(text);
     }
 
-    //Settings (persisted script properties)
-    public String getSettingsFile() {
-        return setup.getSettingsFile();
-    }
-
-    public void setSetting(String name, Object value) throws IOException {
+    //Settings (persisted user properties) and variables (persisted system properties)
+    
+    void setProperty(String filename, String name, Object value) throws IOException {
         Properties properties = new SortedProperties();
-        try (FileInputStream in = new FileInputStream(setup.getSettingsFile())) {
+        try (FileInputStream in = new FileInputStream(filename)) {
             properties.load(in);
         } catch (FileNotFoundException ex) {
         }
@@ -2585,18 +2582,18 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
         } else {
             properties.put(name, String.valueOf(value));
         }
-        try (FileOutputStream out = new FileOutputStream(setup.getSettingsFile())) {
+        try (FileOutputStream out = new FileOutputStream(filename)) {
             properties.store(out, null);
         }
     }
 
-    public String getSetting(String name) throws IOException {
-        return getSettings().get(name);
+    String getProperty(String filename, String name) throws IOException {
+        return getProperties(filename).get(name);
     }
 
-    public Map<String, String> getSettings() throws IOException {
+    Map<String, String> getProperties(String filename) throws IOException {
         Properties properties = new Properties();
-        try (FileInputStream in = new FileInputStream(setup.getSettingsFile())) {
+        try (FileInputStream in = new FileInputStream(filename)) {
             properties.load(in);
             //return Maps.fromProperties(properties);
             Map<String, String> ret = new HashMap<>();
@@ -2608,6 +2605,56 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
         } catch (FileNotFoundException ex) {
             return new HashMap<>();
         }
+    }
+        
+    public String getSettingsFile() {
+        return setup.getSettingsFile();
+    }
+    
+    public void setSetting(String name, Object value) throws IOException {
+        setProperty(getSettingsFile(), name, value);
+    }
+
+    public String getSetting(String name) throws IOException {
+        return getProperty(getSettingsFile(), name);
+    }
+
+    public Map<String, String> getSettings() throws IOException {
+        return getProperties(getSettingsFile());
+    }    
+
+    String getVariablesFile() {
+        return setup.getVariablesFile();
+    }
+    
+    void setVariable(String name, Object value) throws IOException {
+        setProperty(getVariablesFile(), name, value);
+    }
+
+    String getVariable(String name) throws IOException {
+        return getProperty(getVariablesFile(), name);
+    }
+
+    Map<String, String> getVariables() throws IOException {
+        return getProperties(getVariablesFile());
+    }        
+
+    final static String FILE_SEQUENTIAL_NUMBER = "FileSequentialNumber";
+    public int getFileSequentialNumber(){
+        try{
+            return Integer.valueOf(getVariable(FILE_SEQUENTIAL_NUMBER));
+        } catch (Exception ex){
+            return 0;
+        }
+    }
+    
+    public void setFileSequentialNumber(int seq )  throws IOException {
+        setVariable(FILE_SEQUENTIAL_NUMBER, seq);
+    }    
+    
+    public void incrementFileSequentialNumber() throws IOException{
+        int current = getFileSequentialNumber();
+        setFileSequentialNumber(current + 1);   
     }
 
     Map<String, Object> globals = new HashMap<>();

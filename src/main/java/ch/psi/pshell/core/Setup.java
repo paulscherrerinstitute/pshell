@@ -71,6 +71,7 @@ public class Setup extends Config {
     public static transient final String TOKEN_EXEC_TYPE = "{type}";
     public static transient final String TOKEN_EXEC_COUNT = "{count}";
     public static transient final String TOKEN_EXEC_INDEX = "{index}";
+    public static transient final String TOKEN_FILE_SEQUENTIAL_NUMBER= "{seq}";
     public static transient final String TOKEN_SYS_HOME = "{syshome}";
     public static transient final String TOKEN_SYS_USER = "{sysuser}";
 
@@ -95,6 +96,7 @@ public class Setup extends Config {
     public String configFileDevices = TOKEN_CONFIG + "/devices.properties";
     public String configFileTasks = TOKEN_CONFIG + "/tasks.properties";
     public String configFileSettings = TOKEN_CONFIG + "/settings.properties";
+    public String configFileVariables= TOKEN_CONFIG + "/variables.properties";
 
     String originalScriptPath;
     String originalDataPath;
@@ -149,7 +151,11 @@ public class Setup extends Config {
             configFileSettings = TOKEN_CONFIG + "/settings.properties";
             save();
         }
-
+        if ((configFileVariables == null) || (configFileVariables.equals(String.valueOf((Object) null)))) {
+            configFileVariables = TOKEN_CONFIG + "/variables.properties";
+            save();
+        }
+        
         if (System.getProperty(PROPERTY_DATA_PATH) != null) {
             dataPath = System.getProperty(PROPERTY_DATA_PATH);
         }
@@ -346,6 +352,16 @@ public class Setup extends Config {
                     path = path.replaceFirst(Pattern.quote(TOKEN_EXEC_INDEX), String.format("%04d", index));
                 }
             }
+            while (path.contains(TOKEN_FILE_SEQUENTIAL_NUMBER)) {
+                int index = executionContext.getSeq();
+                int i = path.indexOf(TOKEN_FILE_SEQUENTIAL_NUMBER) + TOKEN_FILE_SEQUENTIAL_NUMBER.length();
+                if ((i < path.length()) && path.substring(i, i + 1).equals("%")) {
+                    String format = path.substring(i).split(" ")[0];
+                    path = path.replaceFirst(Pattern.quote(TOKEN_FILE_SEQUENTIAL_NUMBER) + format, String.format(format, index));
+                } else {
+                    path = path.replaceFirst(Pattern.quote(TOKEN_FILE_SEQUENTIAL_NUMBER), String.format("%04d", index));
+                }
+            }            
         }
         if (timestamp <= 0) {
             timestamp = System.currentTimeMillis();
@@ -647,6 +663,10 @@ public class Setup extends Config {
     public String getSettingsFile() {
         return expandPath(configFileSettings);
     }
+    
+    public String getVariablesFile() {
+        return expandPath(configFileVariables);
+    }    
 
     public static String getSourceAssemblyFolder() {
         return Paths.get("src", "main", "assembly").toString();

@@ -929,7 +929,7 @@ function load_data(path, index, shape) {
      Args:
         path(str): Path to group or dataset relative to the persistence context root.
                    If in the format 'root|path' then read from path given by 'root'.
-        index(int or listr, optional): 
+        index(int or list, optional): 
                 if integer, data depth (used for 3D datasets returning a 2d matrix)
                 If a list, specifies the full coordinate for multidimensional datasets.
      Returns:
@@ -1258,7 +1258,7 @@ function caget(name, type, size, meta) {
         name(str): PV name
         type(str, optional): type of PV. By default gets the PV standard field type.
             Scalar values: 'b', 'i', 'l', 'd', 's'.
-            Array: values: '[b', '[i,', '[l', '[d', '[s'.
+            Array values: '[b', '[i,', '[l', '[d', '[s'.
         size (int, optional): for arrays, number of elements to be read. Default read all.
         meta (bool, optional): if true gets channel value and metadata (timestamp, severity).
 
@@ -1289,7 +1289,7 @@ function cawait(name, value, timeout, comparator, type, size) {
             If a numeric value is provided, waits for channel to be in range.
         type(str, optional): type of PV. By default gets the PV standard field type.
         Scalar values: 'b', 'i', 'l', 'd', 's'.
-        Array: values: '[b', '[i,', '[l', '[d', '[s'.
+        Array values: '[b', '[i,', '[l', '[d', '[s'.
         size (int, optional): for arrays, number of elements to be read. Default read all.
      
      Returns:

@@ -797,7 +797,7 @@ def caget(name, type=null, size = null) {
         name(str): PV name
         type(str, optional): type of PV. By default gets the PV standard field type.
         Scalar values: 'b', 'i', 'l', 'd', 's'.
-        Array: values: '[b', '[i,', '[l', '[d', '[s'.
+        Array values: '[b', '[i,', '[l', '[d', '[s'.
         size (int, optional): for arrays, number of elements to be read. Default read all.
      
      Returns:
@@ -819,7 +819,7 @@ def cawait(name, value, timeout=null, comparator = null,  type=null, size = null
             If a numeric value is provided, waits for channel to be in range.
         type(str, optional): type of PV. By default gets the PV standard field type.
         Scalar values: 'b', 'i', 'l', 'd', 's'.
-        Array: values: '[b', '[i,', '[l', '[d', '[s'.
+        Array values: '[b', '[i,', '[l', '[d', '[s'.
         size (int, optional): for arrays, number of elements to be read. Default read all.
      
      Returns:
@@ -877,7 +877,7 @@ class Channel implements java.beans.PropertyChangeListener, Writable, Readable{
             name(str): value to be written
             type(str, optional): type of PV. By default gets the PV standard field type.
                 Scalar values: 'b', 'i', 'l', 'd', 's'.
-                Array: values: '[b', '[i,', '[l', '[d', '[s'.
+                Array values: '[b', '[i,', '[l', '[d', '[s'.
             size(int, optional): the size of the channel
             callback(function, optional): The monitor callback.
         */  

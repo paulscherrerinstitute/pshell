@@ -618,8 +618,7 @@ def cscan(writables, readables, start, end, steps, latency=0.0, time=None, relat
         end(float or list of float): final positions of writabless.
         steps(int or float or list of float): number of scan steps (int) or step size (float).
         latency(float, optional): sleep time in each step before readout, defaults to 0.0.
-        time (float, seconds): if not None then writables is Motor array and speeds are
-                    set according to time.
+        time (float, seconds): if not None then speeds are set according to time.
         relative (bool, optional): if true, start and end positions are relative to current.
         passes(int, optional): number of passes
         pars(keyworded variable length arguments, optional): scan optional named arguments:
@@ -995,7 +994,7 @@ def load_data(path, index=0, shape=None):
     Args:
         path(str): Path to group or dataset relative to the persistence context root.
                    If in the format 'root|path' then read from path given by 'root'.
-        index(int or listr, optional):
+        index(int or list, optional):
                 if integer, data depth (used for 3D datasets returning a 2d matrix)
                 If a list, specifies the full coordinate for multidimensional datasets.
         shape(list, optional): only valid if index is a list, provides the shape of the data array.
@@ -1028,9 +1027,8 @@ def save_dataset(path, data, type='d', unsigned=False, features=None):
 
     Args:
         path(str): Path to dataset relative to the current persistence context root.
-        type(str, optional): array type 'b' = byte, 'h' = short, 'i' = int, 'l' = long,  'f' = float,
-                              'd' = double, 'c' = char, 's' = String,  'o' = Object
-                   default: 'd' (convert data to array of doubles)
+        type(str, optional): array type - 'd'=double (default), 'b'=byte, 'h'=short, 'i'=int, 
+                             'l'=long, 'f'=float, 'c'=char, 's'=String, 'o'=Object
         data (array or list): data to be saved
         unsigned(boolean, optional): create a dataset of unsigned type.
         features(dictionary, optional): See create_dataset.
@@ -1213,6 +1211,7 @@ def set_exec_pars(**args):
                       Device or list of devices for specifying devices to be shuffled.
         contiguous(obj): True for setting contiguous datasets for all devices.
                          Device or list of devices for specifying device datasets to be contiguous.
+        seq(int): Set next data file sequence number. 
         open(bool): If true create data output path immediately. If false closes output root, if open.
         reset(bool): If true reset the scan counter - the {count} tag and set the timestamp to now.
         group(str): Overrides default layout group name for scans
@@ -1238,6 +1237,7 @@ def get_exec_pars():
             name (str): execution name - {name} tag.
             type (str): execution type - {type} tag.
             path (str): output data root.
+            seq(int): data file sequence number. 
             open (bool): true if the output data root has been opened.
             layout (str): data output layout. If None then using the configuration.
             save (bool): auto save scan data option.
@@ -1306,7 +1306,7 @@ def caget(name, type=None, size=None, meta = False ):
         name(str): PV name
         type(str, optional): type of PV. By default gets the PV standard field type.
             Scalar values: 'b', 'i', 'l', 'd', 's'.
-            Array: values: '[b', '[i,', '[l', '[d', '[s'.
+            Array values: '[b', '[i,', '[l', '[d', '[s'.
         size (int, optional): for arrays, number of elements to be read. Default read all.
         meta (bool, optional): if true gets channel value and metadata (timestamp, severity).
 
@@ -1329,7 +1329,7 @@ def cawait(name, value, timeout=None, comparator=None, type=None, size=None):
             If a numeric value is provided, waits for channel to be in range.
         type(str, optional): type of PV. By default gets the PV standard field type.
             Scalar values: 'b', 'i', 'l', 'd', 's'.
-            Array: values: '[b', '[i,', '[l', '[d', '[s'.
+            Array values: '[b', '[i,', '[l', '[d', '[s'.
          size (int, optional): for arrays, number of elements to be read. Default read all.
 
     Returns:
@@ -1376,7 +1376,7 @@ def camon(name, type=None, size=None, wait = sys.maxint):
         name(str): PV name
         type(str, optional): type of PV. By default gets the PV standard field type.
             Scalar values: 'b', 'i', 'l', 'd', 's'.
-            Array: values: '[b', '[i,', '[l', '[d', '[s'.
+            Array values: '[b', '[i,', '[l', '[d', '[s'.
         size (int, optional): for arrays, number of elements to be read. Default read all.
         wait (int, optional): blocking time for this function. By default blocks forever.
     Returns:
@@ -1406,7 +1406,7 @@ def create_channel_device(channel_name, type=None, size=None, device_name=None):
         channel_name(str): PV name
         type(str, optional): type of PV. By default gets the PV standard field type.
             Scalar values: 'b', 'i', 'l', 'd', 's'.
-            Array: values: '[b', '[i,', '[l', '[d', '[s'.
+            Array values: '[b', '[i,', '[l', '[d', '[s'.
         size (int, optional): for arrays, number of elements to be read. Default read all.
         device_name (str, optional): device name (if  different from hannel_name.
     Returns:
@@ -1431,7 +1431,7 @@ class Channel(java.beans.PropertyChangeListener, Writable, Readable):
             channel_name(str):name of the channel
             type(str, optional): type of PV. By default gets the PV standard field type.
                 Scalar values: 'b', 'i', 'l', 'd', 's'.
-                Array: values: '[b', '[i,', '[l', '[d', '[s'.
+                Array values: '[b', '[i,', '[l', '[d', '[s'.
             size(int, optional): the size of the channel
             callback(function, optional): The monitor callback.
             alias(str): name to be used on scans.
