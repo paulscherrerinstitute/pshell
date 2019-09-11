@@ -1,7 +1,9 @@
 package ch.psi.pshell.bs;
 
 import ch.psi.pshell.core.JsonSerializer;
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -613,6 +615,37 @@ public class PipelineServer extends StreamCamera {
         gr.put("mode", mode);
         setRotation(gr);
     }   
+     
+    public String getFunction() throws IOException {
+        Map<String, Object> pars = getInstanceConfig();
+        Object ret = pars.get("function");
+        return ((ret != null) && (ret instanceof String)) ? (String) ret : null;
+    }
+
+    public void setFunction(String function) throws IOException {
+        Map<String, Object> pars = new HashMap();
+        pars.put("function", function);
+        pars.put("reload", true);
+        setInstanceConfig(pars);
+    }     
+    
+    
+    public void sendFuncionScript(String fileName) throws IOException {
+        File file = new File(fileName);
+        String function = new String(Files.readAllBytes(file.toPath()));
+        String name = file.getName();
+        
+        WebTarget resource = client.target(prefix + "/script/" + name + "/script_bytes");
+        Response r = resource.request().accept(MediaType.TEXT_HTML).put(Entity.text(function));
+        String json = r.readEntity(String.class);
+        Map<String, Object> map = (Map) JsonSerializer.decode(json, Map.class);
+        checkReturn(map);                       
+    }     
+    
+    public void setFuncionScript(String fileName) throws IOException {
+        sendFuncionScript(fileName);
+        setFunction(new File(fileName).getName());
+    }
     
     /**
      * Return if the current instance is a shared connection.
