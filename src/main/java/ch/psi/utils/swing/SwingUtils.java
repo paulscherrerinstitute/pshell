@@ -257,10 +257,13 @@ public class SwingUtils {
         try {
             switch (Sys.getOSFamily()) {
                 case Mac:
-                    Class util = Class.forName("com.apple.eawt.FullScreenUtilities");
-                    Class params[] = new Class[]{Window.class, Boolean.TYPE};
-                    Method method = util.getMethod("setWindowCanFullScreen", params);
-                    method.invoke(util, window, true);
+                    //On Java>=11 it is windows can be full screen by default 
+                    if (Sys.getJavaVersion() < 11.0){
+                        Class util = Class.forName("com.apple.eawt.FullScreenUtilities");
+                        Class params[] = new Class[]{Window.class, Boolean.TYPE};
+                        Method method = util.getMethod("setWindowCanFullScreen", params);
+                        method.invoke(util, window, true);
+                    }
                     break;
             }
         } catch (ClassNotFoundException e1) {
