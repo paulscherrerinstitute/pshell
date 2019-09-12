@@ -287,8 +287,8 @@ public class View extends MainFrame {
      * @param args the command line arguments
      */
     public static void main(String args[]) throws Exception {
-        Sys.addToLibraryPath(new File("./home/extensions").getCanonicalPath());
-        Sys.addToClassPath("./home/extensions/jzy3d-1.4.0-jar-with-dependencies.jar");
+        Sys.addToLibraryPath(new File("../config/home/extensions").getCanonicalPath());
+        Sys.addToClassPath("../config/home/extensions/jzy3d-1.9.0-jar-with-dependencies.jar");
         if (Arr.containsEqual(args, "-debug")){
             PlotServer.debug = true;
         }
@@ -308,7 +308,7 @@ public class View extends MainFrame {
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
-                new View().setVisible(true);
+               new View().setVisible(true);
             }
         });
     }

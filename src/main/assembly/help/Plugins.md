@@ -53,6 +53,24 @@ In order to properly edit Panel plugins within Netbeans:
 <br>
 
 
+#Debugging Plugins
+
+ * Dynamic plugins are debugged by adding them to a project with PShell as dependency and including a main method:
+
+```
+    public static void main(String args[]) throws Exception {
+        ch.psi.pshell.ui.App.main(new String[]{  
+                "-home=&#x3C;pshell home folder&#x3E;", "-p=&#x3C;full plugin class name&#x3E;" 
+                // For debugging detached Panel Plugins include :  "-d"
+            });  
+    }
+```
+
+ * Static plugins projects are debugged by setting the main class to 'ch.psi.pshell.ui.App' and  
+   the arguments: -home=&#x3C;pshell home folder&#x3E; -p=&#x3C;full plugin class name&#x3E; [-d for detached Panel Plugins]
+   
+<br>
+
 
 # Plugin API
  * Properties and access methods
