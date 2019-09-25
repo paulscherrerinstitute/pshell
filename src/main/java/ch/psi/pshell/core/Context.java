@@ -3028,6 +3028,13 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
         }
         return new Plugin[0];
     }
+    
+    public File[] getExtensions() {
+        if (pluginManager != null) {
+            return pluginManager.getExtensions().toArray(new File[0]);
+        }
+        return new File[0];
+    }    
 
     /**
      * Browse dynamically loaded classes in add ition to forName on current

@@ -136,6 +136,7 @@ import java.awt.dnd.DropTargetDragEvent;
 import java.awt.dnd.DropTargetDropEvent;
 import java.awt.dnd.DropTargetEvent;
 import java.awt.event.WindowAdapter;
+import javax.swing.DefaultCellEditor;
 import javax.swing.JComboBox;
 import javax.swing.JOptionPane;
 import javax.swing.KeyStroke;
@@ -3615,19 +3616,27 @@ public class View extends MainFrame {
 
     private void menuSetupActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuSetupActionPerformed
         try {
-            StringBuilder plugins = new StringBuilder();
+            ArrayList<String> plugins = new ArrayList<>();
             for (ch.psi.pshell.core.Plugin p : context.getPlugins()) {
-                plugins.append(p.getPluginName()).append("; ");
+                plugins.add(p.getPluginName());
             }
+            
+            ArrayList<String> extensions = new ArrayList<>();
+            for (File f : context.getExtensions()) {
+                extensions.add(f.getName());
+            }            
 
             Setup setup = context.getSetup();
             Server server = context.getServer();
             String[][] entries = new String[][]{
                 {"Process", Sys.getProcessName()},
                 {"Version", App.getApplicationBuildInfo()},
+                {"Java", /*System.getProperty("java.vendor") + " " + */
+                          System.getProperty("java.vm.name") + " (" + System.getProperty("java.version") + ")"},
                 {"Jar file", String.valueOf(context.getSetup().getJarFile())},
                 {"Arguments", String.join(" ", App.getArguments())},
-                {"Plugins", plugins.toString()},
+                {"Plugins", String.join("; " , plugins)},
+                {"Extensions", String.join("; " , extensions)},
                 {"Current folder", new File(".").getCanonicalPath()},
                 {"Home path", setup.getHomePath()},
                 {"Output path", setup.getOutputPath()},
@@ -3663,13 +3672,17 @@ public class View extends MainFrame {
 
                 @Override
                 public boolean isCellEditable(int rowIndex, int columnIndex) {
-                    return false;
+                    return (columnIndex==1);
                 }
             });
             //table.setPreferredSize(new Dimension(400,200));
             table.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_INTERVAL_SELECTION);
             table.getColumnModel().getColumn(0).setPreferredWidth(150);
             table.getColumnModel().getColumn(1).setPreferredWidth(450);
+            JTextField textField = new JTextField() ;
+            textField.setEditable(false);
+            DefaultCellEditor editor = new DefaultCellEditor( textField );
+            table.getColumnModel().getColumn(1).setCellEditor(editor);
             StandardDialog dlg = new StandardDialog(this, "Setup", true);
             dlg.setContentPane(table);
             dlg.pack();
