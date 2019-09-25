@@ -160,7 +160,7 @@ public class Sys {
                      //Just to keep track, java.class.path is not parsed again by classloader.
                     System.setProperty("java.class.path", String.join(File.pathSeparator, Arr.append(classPath, path)));
                 } catch (RuntimeException ex){
-                    System.err.println("Java>=10 requires the option '--add-opens java.base/jdk.internal.loader=ALL-UNNAMED'to add to classpath: " + path);
+                    System.err.println("Java>=10 requires the option '--add-opens java.base/jdk.internal.loader=ALL-UNNAMED' to add to classpath: " + path);
                 }
             } else {      
                 URLClassLoader urlClassLoader = (URLClassLoader) ClassLoader.getSystemClassLoader();

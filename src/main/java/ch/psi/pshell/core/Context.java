@@ -2659,37 +2659,37 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
 
     Map<String, Object> globals = new HashMap<>();
     //A global map for plugins to communicate to each other
-    public void setGlobal(String name, Object value) throws IOException {
+    public void setGlobal(String name, Object value) {
         synchronized(globals){
             globals.put(name, value);
         }
     }
     
-    public Object getGlobal(String name) throws IOException {
+    public Object getGlobal(String name) {
         synchronized(globals){
             return globals.get(name);
         }
     }
     
-    public boolean hasGlobal(String name) throws IOException {
+    public boolean hasGlobal(String name) {
         synchronized(globals){
             return globals.containsKey(name);
         }
     }
     
-    public void removeGlobal(String name) throws IOException {
+    public void removeGlobal(String name) {
         synchronized(globals){
             globals.remove(name);
         }
     }
     
-    public Map<String, Object> getGlobals() throws IOException {
+    public Map<String, Object> getGlobals() {
         synchronized(globals){
             return (Map<String, Object>) ((HashMap)globals).clone();
         }
     }
     
-    public void clearGlobals() throws IOException {
+    public void clearGlobals() {
         synchronized(globals){
             globals.clear();
         }
