@@ -105,6 +105,7 @@ import ch.psi.pshell.bs.BsScan
 import ch.psi.pshell.bs.Stream as Stream
 import ch.psi.pshell.scripting.ViewPreference as Preference
 import ch.psi.pshell.scripting.ScriptUtils as ScriptUtils
+from javax.swing.SwingUtilities import invokeLater, invokeAndWait
 
 def get_context():
     return ch.psi.pshell.core.Context.getInstance()
@@ -128,7 +129,6 @@ def to_array(obj, type = 'o'):
                               'c' = char, 'z' = boolean, 's' = String,  'o' = Object
     Returns:
         Java array.
-
     """
     if type[0] == '[':
         type = type[1:]
@@ -185,9 +185,9 @@ def to_list(obj):
 
     Args:
         obj(tuple or array or ArrayList): Original data.
+    
     Returns:
         List.
-
     """
     if obj is None:
         return None
@@ -455,7 +455,6 @@ def lscan(writables, readables, start, end, steps, latency=0.0, relative=False, 
 
     Returns:
         ScanResult object.
-
     """
     latency_ms=int(latency*1000)
     writables=to_list(string_to_obj(writables))
@@ -497,7 +496,6 @@ def vscan(writables, readables, vector, line = False, latency=0.0, relative=Fals
 
     Returns:
         ScanResult object.
-
     """
     latency_ms=int(latency*1000)
     writables=to_list(string_to_obj(writables))
@@ -544,7 +542,6 @@ def ascan(writables, readables, start, end, steps, latency=0.0, relative=False, 
 
     Returns:
         ScanResult object.
-
     """
     latency_ms=int(latency*1000)
     writables=to_list(string_to_obj(writables))
@@ -587,7 +584,6 @@ def rscan(writable, readables, regions, latency=0.0, relative=False, passes=1, z
 
     Returns:
         ScanResult object.
-
     """
     start=[]
     end=[]
@@ -633,7 +629,6 @@ def cscan(writables, readables, start, end, steps, latency=0.0, time=None, relat
 
     Returns:
         ScanResult object.
-
     """
     latency_ms=int(latency*1000)
     readables=to_list(string_to_obj(readables))
@@ -676,7 +671,6 @@ def hscan(config, writable, readables, start, end, steps, passes=1, zigzag=False
 
     Returns:
         ScanResult object.
-
     """
     cls = Class.forName(config["class"])
     class HardwareScan(cls):
@@ -713,7 +707,6 @@ def bscan(stream, records, timeout = None, passes=1, **pars):
 
     Returns:
         ScanResult object.
-
     """
     timeout_ms=int(timeout*1000) if ((timeout is not None) and (timeout>=0)) else -1
     if not is_list(stream):
@@ -742,7 +735,6 @@ def tscan(readables, points, interval, passes=1, **pars):
 
     Returns:
         ScanResult object.
-
     """
     interval= max(interval, 0.001)   #Minimum temporization is 1ms
     interval_ms=int(interval*1000)
@@ -779,7 +771,6 @@ def mscan(trigger, readables, points, timeout = None, async=True, take_initial=F
 
     Returns:
         ScanResult object.
-
     """
     timeout_ms=int(timeout*1000) if ((timeout is not None) and (timeout>=0)) else -1
     trigger = string_to_obj(trigger)
@@ -801,7 +792,6 @@ def escan(name, **pars):
 
     Returns:
         ScanResult object.
-
     """
     scan = EpicsScan(name)
     processScanPars(scan, pars)
@@ -839,7 +829,6 @@ def bsearch(writables, readable, start, end, steps, maximum = True, strategy = "
 
     Returns:
         SearchResult object.
-
     """
     latency_ms=int(latency*1000)
     writables=to_list(string_to_obj(writables))
@@ -879,7 +868,6 @@ def hsearch(writables, readable, range_min, range_max, initial_step, resolution,
 
     Returns:
         SearchResult object.
-
     """
     latency_ms=int(latency*1000)
     writables=to_list(string_to_obj(writables))
@@ -910,7 +898,6 @@ def plot(data, name = None, xdata = None, ydata=None, title=None):
 
     Returns:
         ArrayList of Plot objects.
-
     """
     if isinstance(data, ch.psi.pshell.data.Table):
         if is_list(xdata):
@@ -951,7 +938,6 @@ def get_plots(title=None):
 
     Returns:
         ArrayList of Plot objects.
-
     """
     return get_context().getPlots(title)
 
@@ -966,7 +952,6 @@ def get_plot_snapshots(title = None, file_type = "png", size = None, temp_path =
 
     Returns:
         list of strings
-
     """
     time.sleep(0.1) #Give some time to plot to be finished - it is not sync  with acquisition
     ret = []
@@ -1002,7 +987,6 @@ def load_data(path, index=0, shape=None):
 
     Returns:
         Data array
-
     """
     if index is not None and is_list(index):
         slice = get_context().dataManager.getData(path, index, shape)
@@ -1018,7 +1002,6 @@ def get_attributes(path):
                    If in the format 'root|path' then read from path given by 'root'.
     Returns:
         Dictionary
-
     """
     return get_context().dataManager.getAttributes(path)
 
@@ -1035,7 +1018,6 @@ def save_dataset(path, data, type='d', unsigned=False, features=None):
 
     Returns:
         Dictionary
-
     """
     data = to_array(data, type)
     get_context().dataManager.setDataset(path, data, unsigned, features)
@@ -1047,7 +1029,6 @@ def create_group(path):
         path(str): Path to group relative to the current persistence context root.
     Returns:
         None
-
     """
     get_context().dataManager.createGroup(path)
 
@@ -1068,7 +1049,6 @@ def create_dataset(path, type, unsigned=False, dimensions=None, features=None):
             Default: No compression, contiguous for fixed size arrays, chunked for variable size, compact for scalars.
     Returns:
         None
-
     """
     get_context().dataManager.createDataset(path, ScriptUtils.getType(type), unsigned, dimensions, features)
 
@@ -1085,7 +1065,6 @@ def create_table(path, names, types=None, lengths=None, features=None):
         features(dictionary, optional): See create_dataset.
     Returns:
         None
-
     """
     type_classes = []
     if (types is not None):
@@ -1109,7 +1088,6 @@ def append_dataset(path, data, index=None, type='d', shape=None):
                 In this case data must be a flattened one-dimensional array.
     Returns:
         None
-
     """
     data = to_array(data, type)
     if index is None:
@@ -1130,7 +1108,6 @@ def append_table(path, data):
         data(list): List of valus for each column of the table. 
     Returns:
         None
-
     """
     if is_list(data):
         arr = java.lang.reflect.Array.newInstance(Class.forName("java.lang.Object"),len(data))
@@ -1312,7 +1289,6 @@ def caget(name, type=None, size=None, meta = False ):
 
     Returns:
         PV value if meta is false, otherwise a dictionary containing PV value and metadata
-
     """
     if meta:
         return Epics.getMeta(name, Epics.getChannelType(type), size)
@@ -1381,7 +1357,6 @@ def camon(name, type=None, size=None, wait = sys.maxint):
         wait (int, optional): blocking time for this function. By default blocks forever.
     Returns:
         None
-
     """
     val = lambda x: x.tolist() if isinstance(x,PyArray) else x
 
@@ -1411,7 +1386,6 @@ def create_channel_device(channel_name, type=None, size=None, device_name=None):
         device_name (str, optional): device name (if  different from hannel_name.
     Returns:
         None
-
     """
     dev = Epics.newChannelDevice(channel_name if (device_name is None) else device_name , channel_name, Epics.getChannelType(type))
     if get_context().isSimulation():
@@ -1526,11 +1500,9 @@ class Channel(java.beans.PropertyChangeListener, Writable, Readable):
         """
         self.channel.destroy()
 
-    #Writable interface
     def write(self, value):
         self.put(value)
 
-    #Readable interface
     def read(self):
         return self.get()
 
@@ -1548,8 +1520,6 @@ class Callable(java.util.concurrent.Callable):
         try:
             get_context().startedChildThread(self.thread)
             return self.method(*self.args)
-        #except:
-        #    traceback.print_exc(file=sys.stderr)
         finally:
             get_context().finishedChildThread(self.thread)
 
@@ -1595,6 +1565,16 @@ def parallelize(*functions):
     """
     futures = fork(*functions)
     return join(futures)
+
+def invoke(f, wait = False):
+    """ Execute in event thread.
+
+    Args:
+        f(function reference)
+        wait (boolean, optional)
+    """
+    if is_list(f): [m, a] = f; f = lambda: m(*a)  
+    invokeAndWait(f) if wait else invokeLater(f)
 
 
 ###################################################################################################
@@ -1835,7 +1815,6 @@ def remove_device(device):
 
     Returns:
         bool: true if device was removed.
-
     """
     return get_context().devicePool.removeDevice(device)
 
@@ -1947,20 +1926,6 @@ def tweak(dev, step, is2d=False):
 
 
 ###################################################################################################
-#Standard libraries management
-###################################################################################################
-
-if __name__ == "__main__":
-    ca_channel_path=os.path.join(get_context().setup.getStandardLibraryPath(), "epics")
-    sys.path.append(ca_channel_path)
-    #This is to destroy previous context of _ca (it is not shared with PShell)
-    if run_count > 0:
-        if sys.modules.has_key("_ca"):
-            import _ca
-            _ca.initialize()
-
-
-###################################################################################################
 #Mathematical functions
 ###################################################################################################
 
@@ -1974,7 +1939,6 @@ def arrmul(a, b):
 
     Returns:
         List
-
     """
     return map(mul, a, b)
 
@@ -1988,7 +1952,6 @@ def arrdiv(a, b):
 
     Returns:
         List
-
     """
     return map(truediv, a, b)
 
@@ -2002,7 +1965,6 @@ def arradd(a, b):
 
     Returns:
         List
-
     """
     return map(add, a, b)
 
@@ -2016,7 +1978,6 @@ def arrsub(a, b):
 
     Returns:
         List
-
     """
     return map(sub, a, b)
 
@@ -2029,7 +1990,6 @@ def arrabs(a):
 
     Returns:
         List
-
     """
     return map(abs, a)
 
@@ -2043,7 +2003,6 @@ def arroff(a, value = "mean"):
 
     Returns:
         List
-
     """
     if value=="mean":
         value = mean(a)
@@ -2059,7 +2018,6 @@ def mean(data):
 
     Returns:
         Mean of the elements in the object.
-
     """
     return reduce(lambda x, y: x + y, data) / len(data)
 
@@ -2071,7 +2029,6 @@ def variance(data):
 
     Returns:
         Variance of the elements in the object.
-
     """
     c = mean(data)
     ss = sum((x-c)**2 for x in data)
@@ -2085,7 +2042,6 @@ def stdev(data):
 
     Returns:
         Standard deviation of the elements in the object.
-
     """
     return variance(data)**0.5
 
@@ -2100,7 +2056,6 @@ def center_of_mass(data, x = None):
 
     Returns:
         Tuple (com, rms)
-
     """
     if x is None:
         x = Arr.indexesDouble(len(data))
@@ -2122,7 +2077,6 @@ def poly(val, coefs):
         coefs (list of loats): polinomial coefficients
     Returns:
         Evaluated function for val
-
     """
     r = 0
     p = 0
@@ -2141,7 +2095,6 @@ def histogram(data, range_min = None, range_max = None, bin = 1.0):
         bin(int or float, optional): if int means number of bins. If float means bin size. Default = 1.0.
     Returns:
         tuple: (ydata, xdata)
-
     """
     if range_min is None: range_min = math.floor(min(flatten(data)))
     if range_max is None: range_max = math.ceil(max(flatten(data)))
@@ -2176,7 +2129,6 @@ def convex_hull(point_list=None, x=None, y=None):
         y (array of float, optional): array with y coords of points
     Returns:
         Array of points or (x,y)
-
     """
     is_point_list = point_list is not None
     if not point_list:
@@ -2291,7 +2243,6 @@ def bsget(channel, modulo=1, offset=0, timeout = 5.0):
         timeout(float, optional): stream timeout in secs
     Returns:
         BS value or list of  values
-
     """
     channels = to_list(channel)
     ret = Stream.readChannels(channels, modulo, offset, int(timeout * 1000))
@@ -2306,7 +2257,6 @@ def flatten(data):
         data (tuple, array, ArrayList or Array): input data
     Returns:
         Iterator on the flattened data.
-
     """
     if isinstance(data,PyArray):
         if not data.typecode.startswith('['):
@@ -2332,7 +2282,6 @@ def frange(start, finish, step, enforce_finish = False, inclusive_finish = False
 
     Returns:
         list
-
     """
     step = float(step)
     ret = list(frange_gen(start, finish, step))
@@ -2356,7 +2305,6 @@ def inject():
 
     Returns:
         None
-
     """
     if __name__ == "__main__":
         get_context().injectVars()
@@ -2373,7 +2321,6 @@ def notify(subject, text, attachments = None, to=None):
         to (list ofd str, optional): recipients. If None uses the recipients defined in mail.properties.
     Returns:
         None
-
     """
     get_context().notify(subject, text, to_list(attachments), to_list(to))
 
@@ -2440,7 +2387,6 @@ def help(object = None):
 
     Returns:
         None
-
     """
     if object is None:
         print "Built-in functions:"
@@ -2470,7 +2416,7 @@ def set_status(status):
     """
     set_preference(Preference.STATUS, status)
 
-def setup_plotting( enable_plots=None, enable_table=None,plot_list = None, line_plots = None, range = None, domain=None, defaults=None):
+def setup_plotting( enable_plots=None, enable_table=None,plot_list=None, line_plots=None, range=None, domain=None, defaults=None):
     if defaults == True: set_preference(Preference.DEFAULTS, True)
     if enable_plots is not None: set_preference(Preference.PLOT_DISABLED, not enable_plots)
     if enable_table is not None: set_preference(Preference.TABLE_DISABLED, not enable_table)
@@ -2479,19 +2425,13 @@ def setup_plotting( enable_plots=None, enable_table=None,plot_list = None, line_
         plots = None
         if line_plots != "none":
             plots = {}
-            for plot in line_plots:
-                plots[plot]=1
+            for p in line_plots: plots[p]=1
         set_preference(Preference.PLOT_TYPES, plots)
     if range is not None:
-         if range == "none":
-            set_preference(Preference.AUTO_RANGE, None)
-         elif range == "auto":
-            set_preference(Preference.AUTO_RANGE, True)
-         else:
-            set_preference(Preference.MANUAL_RANGE, range)
-    if domain is not None:
-        set_preference(Preference.DOMAIN_AXIS, domain)
-
+         if range == "none": set_preference(Preference.AUTO_RANGE, None)
+         elif range == "auto": set_preference(Preference.AUTO_RANGE, True)
+         else: set_preference(Preference.MANUAL_RANGE, range)
+    if domain is not None: set_preference(Preference.DOMAIN_AXIS, domain)
 
 def set_preference(preference, value):
     """Hints to graphical layer:
@@ -2544,7 +2484,6 @@ def get_option(msg, type = "YesNoCancel"):
 
     Returns:
         'Yes', 'No', 'Cancel'
-
     """
     return get_context().getOption(msg, type)
 
@@ -2572,3 +2511,16 @@ def show_panel(device, title=None):
     if is_string(device):
         device = get_device(device)
     return get_context().showPanel(device)
+
+
+
+
+if __name__ == "__main__":
+    ca_channel_path=os.path.join(get_context().setup.getStandardLibraryPath(), "epics")
+    sys.path.append(ca_channel_path)
+    #This is to destroy previous context of _ca (it is not shared with PShell)
+    if run_count > 0:
+        if sys.modules.has_key("_ca"):
+            print
+            import _ca
+            _ca.initialize()

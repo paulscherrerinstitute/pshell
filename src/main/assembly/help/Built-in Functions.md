@@ -51,6 +51,7 @@ These functions provide the script API to many aspects of PShell:
     - fork
     - join
     - parallelize
+    - invoke
 
  * Script evaluation and background task control.
     - run
