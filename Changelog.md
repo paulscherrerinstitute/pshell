@@ -1,5 +1,47 @@
 # Changelog
 
+## 1.12.0
+
+### Added
+
+* 'invoke' method to execute script functions on the event thread.
+
+* {seq} tag for a sequential identifier for naming data files.
+
+* Context.Debug option - displaying stack trace of exceptions in scripts
+
+* 2d tweak command.
+
+* Configurable device wait interval.
+
+* monitorByPosition option to motor config.
+
+* EPICS Motor kickstart utility cycling modes to GO.
+
+* Ability to reload CPython modules with JEP.
+
+* Persistence of experiment state to diffutils (limits, restrictions, ub)
+
+* MotorGroup.isStartingSimultaneousMove for interlocks differ synchronized and sequential moves.
+
+  
+### Changed
+
+* BSREAD version 0.4.0 
+
+* ZMQ version 0.5.1
+
+* Removed reflection call from waitReady.
+
+
+
+### Fixed
+
+* Compatibility with JDK > 10 
+
+* Bug pushing null image.
+
+
 ## 1.11.0
 
 ### Added
