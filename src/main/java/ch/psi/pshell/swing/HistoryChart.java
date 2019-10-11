@@ -9,7 +9,6 @@ import ch.psi.pshell.device.TimestampedValue;
 import ch.psi.pshell.plot.TimePlotSeries;
 import ch.psi.utils.NamedThreadFactory;
 import ch.psi.utils.swing.SwingUtils;
-import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -144,17 +143,12 @@ public class HistoryChart extends JPanel implements AutoCloseable {
         }
     }
 
-    static Color[] COLORS = new Color[]{Color.BLUE, Color.RED, Color.GREEN, Color.ORANGE, Color.MAGENTA, Color.CYAN, Color.BLACK};
-    int colorIndex = 0;
-
     public void addDevice(String name, Device device) {
-        Color color = COLORS[colorIndex];
-        colorIndex = (colorIndex + 1) % COLORS.length;
         if (device != null) {
             if (name == null) {
                 name = device.getName();
             }
-            TimePlotSeries graph = new TimePlotSeries(name, color);
+            TimePlotSeries graph = new TimePlotSeries(name);
             chart.addSeries(graph);
             graphs.put(device, graph);
             if (graphs.size() == 1) {
