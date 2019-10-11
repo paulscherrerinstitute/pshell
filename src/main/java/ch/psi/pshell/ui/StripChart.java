@@ -184,6 +184,7 @@ public class StripChart extends StandardDialog {
             try {
                 defaultBackgroundColor = Preferences.getColorFromString(App.getArgumentValue("background_color"));
                 panelColorBackground.setBackground(defaultBackgroundColor);
+                backgroundColor = defaultBackgroundColor;
             } catch (Exception ex) {
                 Logger.getLogger(StripChart.class.getName()).log(Level.WARNING, null, ex);
             }
@@ -192,6 +193,7 @@ public class StripChart extends StandardDialog {
             try {
                 defaultGridColor = Preferences.getColorFromString(App.getArgumentValue("grid_color"));
                 panelColorGrid.setBackground(defaultGridColor);
+                gridColor = defaultGridColor;
             } catch (Exception ex) {
                 Logger.getLogger(StripChart.class.getName()).log(Level.WARNING, null, ex);
             }
