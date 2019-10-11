@@ -10,6 +10,7 @@ import ch.psi.bsread.message.ValueImpl;
 import ch.psi.pshell.device.Device;
 import ch.psi.bsread.converter.MatlabByteConverter;
 import ch.psi.pshell.device.Cacheable;
+import ch.psi.pshell.device.Readable.ReadableType;
 import ch.psi.pshell.device.ReadonlyAsyncRegisterBase;
 import ch.psi.utils.Arr;
 import ch.psi.utils.Reflection.Hidden;
@@ -28,7 +29,7 @@ import java.util.logging.Level;
  * A device implementing a beam synchronous string, having, for each identifier,
  * a corresponding Scalar or Waveform child.
  */
-public class Stream extends DeviceBase implements Readable<StreamValue>, Cacheable<StreamValue> {
+public class Stream extends DeviceBase implements Readable<StreamValue>, Cacheable<StreamValue>, ReadableType{
 
     public static final int TIMEOUT_START_STREAMING = 10000;
 
@@ -61,6 +62,11 @@ public class Stream extends DeviceBase implements Readable<StreamValue>, Cacheab
         this(name, null, persisted);
     }
 
+    
+    @Override
+    public Class getElementType() {
+        return Long.class;
+    }    
     /**
      * If provider is null then uses default provider.
      */
