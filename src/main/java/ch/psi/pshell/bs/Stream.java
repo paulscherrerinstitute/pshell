@@ -269,13 +269,13 @@ public class Stream extends DeviceBase implements Readable<StreamValue>, Cacheab
                     }
                 }
             }
-            if (started.get() == false) {
-                getLogger().finer("Receiver was closed");
+            if (started.get()) {
+                getLogger().finer("Receiver thread was interrupted");                
             } else {
-                getLogger().finer("Receiver thread was interrupted");
+                getLogger().finer("Receiver was closed");
             }
             onStop(null);
-        } catch (Exception ex) {
+        } catch (Throwable ex) {
             getLogger().log(Level.FINE, null, ex);
             onStop(ex);
         } finally {
@@ -308,6 +308,7 @@ public class Stream extends DeviceBase implements Readable<StreamValue>, Cacheab
     }
 
     public void stop() {
+        getLogger().fine("Stopping");
         channelPrefix = null;
         started.set(false);
         closeReceiver();
@@ -360,7 +361,7 @@ public class Stream extends DeviceBase implements Readable<StreamValue>, Cacheab
     protected void onStart() {
     }
 
-    protected void onStop(Exception ex) {
+    protected void onStop(Throwable ex) {
     }
 
     @Override
