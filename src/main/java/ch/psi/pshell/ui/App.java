@@ -83,13 +83,21 @@ public class App extends ObservableBase<AppListener> {
     static public void main(String[] args) {
         try {
             System.out.println(getHeaderMessage());
-            //Up to context instantiation only displays warnings and error in console. 
-            LogManager.setConsoleLoggerLevel(Level.WARNING);
-            arguments = args;
+            init(args);
             createInstance().start();
         } catch (Exception ex) {
             logger.log(Level.SEVERE, null, ex);
         }
+    }
+    
+    static public void init(String[] args) {
+        arguments = args;
+        Level consoleLogLevel = Level.WARNING;
+        try{
+            consoleLogLevel = Level.parse(getArgumentValue("clog"));
+        } catch (Exception ex){            
+        }
+        LogManager.setConsoleLoggerLevel(consoleLogLevel);        
     }
 
     public State getState() {
