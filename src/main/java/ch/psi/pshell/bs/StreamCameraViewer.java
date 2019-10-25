@@ -13,6 +13,7 @@ import ch.psi.pshell.device.Readable.ReadableArray;
 import ch.psi.pshell.device.Readable.ReadableNumber;
 import ch.psi.pshell.device.ReadableRegister.ReadableRegisterArray;
 import ch.psi.pshell.device.ReadableRegister.ReadableRegisterNumber;
+import ch.psi.pshell.imaging.Colormap;
 import ch.psi.pshell.imaging.ColormapSource;
 import ch.psi.pshell.ui.App;
 import ch.psi.pshell.imaging.Data;
@@ -36,6 +37,7 @@ import ch.psi.utils.Chrono;
 import ch.psi.utils.Convert;
 import ch.psi.utils.Str;
 import ch.psi.utils.Sys;
+import ch.psi.utils.swing.MainFrame;
 import ch.psi.utils.swing.MonitoredPanel;
 import ch.psi.utils.swing.StandardDialog;
 import ch.psi.utils.swing.SwingUtils.OptionResult;
@@ -47,6 +49,7 @@ import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.awt.Image;
 import java.awt.Point;
 import java.awt.Toolkit;
 import java.awt.Window;
@@ -75,7 +78,6 @@ import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JDialog;
-import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
@@ -119,6 +121,7 @@ public class StreamCameraViewer extends MonitoredPanel {
     String instanceName;
     Overlay titleOv = null;
     int integration = 0;
+    PipelineServer server;
 
     Timer timer;
 
@@ -268,7 +271,10 @@ public class StreamCameraViewer extends MonitoredPanel {
     public StreamCameraViewer() {
         try {
             initComponents();
+            setSidePanelVisible(false);
+            setServer(null);
             textStream.setBackground(panelStream.getBackground());
+            SwingUtils.setEnumCombo(comboColormap, Colormap.class);
 
             renderer.setPersistenceFile(Paths.get(Sys.getTempFolder(), "ImageViewer.bin"));
             if (App.hasArgument("poll")) {
@@ -445,9 +451,26 @@ public class StreamCameraViewer extends MonitoredPanel {
         }
         updateButtons();
     }
-
+    
+    public PipelineServer getServer(){
+        return server;
+    }
+    
+    public void setServer(PipelineServer server){
+        this.server = server;
+        panelPipeline.setVisible(server != null);
+    }
+    
     public void setToolbarVisible(boolean value) {
         topPanel.setVisible(value);
+    }
+
+    public boolean isSidePanelVisible() {
+        return sidePanel.isVisible();
+    }
+    
+    public void setSidePanelVisible(boolean value) {
+        sidePanel.setVisible(value);
     }
 
     public boolean isToolbarVisible() {
@@ -540,6 +563,22 @@ public class StreamCameraViewer extends MonitoredPanel {
             userOv = fo;
         }
     }
+    
+    void manageTitleOverlay() {
+        Overlay to = null;
+        String name = getDisplayName();
+        if ((buttonTitle.isSelected()) && (name != null)) {
+            Font font = new Font("Arial", Font.PLAIN, 28);
+            to = new Text(renderer.getPenErrorText(), name, font, new Point(-SwingUtils.getTextSize(name, renderer.getGraphics().getFontMetrics(font)).width - 14, 26));
+            to.setFixed(true);
+            to.setAnchor(Overlay.ANCHOR_VIEWPORT_OR_IMAGE_TOP_RIGHT);
+        }
+
+        synchronized (lockOverlays) {
+            renderer.updateOverlays(to, titleOv);
+            titleOv = to;
+        }
+    }    
 
     Thread devicesInitTask;
 
@@ -593,6 +632,9 @@ public class StreamCameraViewer extends MonitoredPanel {
         if (stream == null) {
             return;
         }
+        
+        manageTitleOverlay();
+        
 
         System.out.println("Setting stream: " + stream);
         try {
@@ -842,6 +884,34 @@ public class StreamCameraViewer extends MonitoredPanel {
         marker = null;
         renderer.setMarker(marker);
     }
+    
+    void setGoodRegionOptionsVisible(boolean visible) {
+        spinnerGrThreshold.setVisible(visible);
+        labelGrThreshold.setVisible(visible);
+        spinnerGrScale.setVisible(visible);
+        labelGrScale.setVisible(visible);
+        panelSlicing.setVisible(visible);
+    }
+
+    void setSlicingOptionsVisible(boolean visible) {
+        spinnerSlNumber.setVisible(visible);
+        labelSlNumber.setVisible(visible);
+        spinnerSlScale.setVisible(visible);
+        labelSlScale.setVisible(visible);
+        spinnerSlOrientation.setVisible(visible);
+        labelSlOrientation.setVisible(visible);
+    }
+    
+    void setRotationOptionsVisible(boolean visible) {
+        labelAngle.setVisible(visible);
+        labelOrder.setVisible(visible);
+        labelMode.setVisible(visible);
+        labelConstant.setVisible(visible);
+        spinnerRotationAngle.setVisible(visible);
+        spinnerRotationOrder.setVisible(visible);
+        spinnerRotationMode.setVisible(visible);
+        spinnerRotationConstant.setVisible(visible);
+    }    
 
     public boolean isCameraStopped() {
         return ((camera == null) || camera.isClosed());
@@ -1631,8 +1701,11 @@ public class StreamCameraViewer extends MonitoredPanel {
                 List<String> ids = (value == null) ? new ArrayList<>() : new ArrayList(value.getIdentifiers());
                 if (ids.size() + 4 != dataTableModel.getRowCount()) {
                     dataTableModel.setNumRows(0);
+                                  
                     try {
-                        dataTableModel.addRow(new Object[]{"Locator", ""});
+                        String locator = (server==null) ? ""  :
+                                server.getUrl() + "/" + ((value == null) ? instanceName : server.getCurrentInstance());
+                        dataTableModel.addRow(new Object[]{"Locator", locator});
                     } catch (Exception ex) {
                         dataTableModel.addRow(new Object[]{"Locator", ex.getMessage()});
                     }
@@ -1679,18 +1752,123 @@ public class StreamCameraViewer extends MonitoredPanel {
             }
         });
     }
+    
+    
+    void updateZoom() {
+        try {
+            buttonZoomStretch.setSelected(renderer.getMode() == RendererMode.Stretch);
+            buttonZoomFit.setSelected(renderer.getMode() == RendererMode.Fit);
+            if (renderer.getMode() == RendererMode.Fixed) {
+                buttonZoomNormal.setSelected(true);
+            } else if (renderer.getMode() == RendererMode.Zoom) {
+                if (renderer.getZoom() == 1) {
+                    buttonZoomNormal.setSelected(true);
+                } else if (renderer.getZoom() == 0.5) {
+                    buttonZoom05.setSelected(true);
+                } else if (renderer.getZoom() == 0.25) {
+                    buttonZoom025.setSelected(true);
+                } else if (renderer.getZoom() == 2.0) {
+                    buttonZoom2.setSelected(true);
+                } else {
+                    buttonGroup1.clearSelection();
+                }
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+    }
 
-    public static ImageIcon getIcon(String name) {
+    boolean updatingColormap;
+
+    void updateColormap() {
+        updatingColormap = true;
+        try {
+            if ((camera != null) && (camera instanceof ColormapSource)) {
+                ColormapSource.ColormapSourceConfig config = ((ColormapSource) camera).getConfig();
+                comboColormap.setSelectedItem(config.colormap);
+                if (config.isDefaultColormap()) {
+                    buttonFullRange.setSelected(true);
+                } else if (config.colormapAutomatic) {
+                    buttonAutomatic.setSelected(true);
+                } else {
+                    buttonManual.setSelected(true);
+                }
+                btFixColormapRange.setVisible(buttonAutomatic.isSelected());
+                spinnerMin.setEnabled(buttonManual.isSelected());
+                spinnerMax.setEnabled(buttonManual.isSelected());
+                if (!Double.isNaN(config.colormapMin)) {
+                    spinnerMin.setValue(Math.min(Math.max((int) config.colormapMin, 0), 65535));
+                }
+                if (!Double.isNaN(config.colormapMax)) {
+                    spinnerMax.setValue(Math.min(Math.max((int) config.colormapMax, 0), 65535));
+                }
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        updatingColormap = false;
+    }
+    
+    boolean updatingServerControls;
+
+    void updatePipelineControls() {
+        if (server != null) {
+            updatingServerControls = true;
+            if (server.isStarted()) {
+                try {
+                    checkBackground.setSelected(server.getBackgroundSubtraction());
+                    Double threshold = (server.getThreshold());
+                    checkThreshold.setSelected(threshold != null);
+                    spinnerThreshold.setValue((threshold == null) ? 0 : threshold);
+                    Map<String, Object> gr = (server.getGoodRegion());
+                    checkGoodRegion.setSelected(gr != null);
+                    if (gr != null) {
+                        spinnerGrThreshold.setValue(((Number) gr.get("threshold")).doubleValue());
+                        spinnerGrScale.setValue(((Number) gr.get("gfscale")).doubleValue());
+                    }
+                    Map rotation = server.getRotation();
+                    checkRotation.setSelected(rotation != null);
+                    if (rotation!=null){
+                        spinnerRotationAngle.setValue(((Number) rotation.get("angle")).doubleValue());
+                        spinnerRotationOrder.setValue(((Number) rotation.get("order")).intValue());
+                        String mode = (String) rotation.get("mode");
+                        try{
+                            spinnerRotationConstant.setValue(Double.valueOf(mode));
+                            spinnerRotationMode.setValue("constant");
+                        } catch (Exception ex){
+                            spinnerRotationConstant.setValue(0);
+                            spinnerRotationMode.setValue(mode);
+                        }
+                    }
+                    
+                    Map<String, Object> slicing = (server.getSlicing());
+                    checkSlicing.setSelected(slicing != null);
+                    if (slicing != null) {
+                        spinnerSlNumber.setValue(((Number) slicing.get("number_of_slices")).intValue());
+                        spinnerSlScale.setValue(((Number) slicing.get("scale")).doubleValue());
+                        spinnerSlOrientation.setValue((String) slicing.get("orientation"));
+                    }
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+            }
+        }
+    }    
+
+    public ImageIcon getIcon(String name) {
         ImageIcon ret = null;
         try {
-            String dir = StreamCameraViewer.class.getProtectionDomain().getCodeSource().getLocation().getPath() + "resources/";
-            try {
-                ret = new ImageIcon(App.getResourceImage(name + ".png"));
-                if (ret == null) {
-                    ret = new ImageIcon(App.getResourceImage("Details.png"));
+            String dir = getClass().getProtectionDomain().getCodeSource().getLocation().getPath() + "resosurces/";
+            if (new File(dir + name + ".png").exists()) {
+                ret = new javax.swing.ImageIcon(dir + name + ".png");
+            } else {
+                ret = new ImageIcon(ch.psi.pshell.ui.App.class.getResource("/ch/psi/pshell/ui/" + name + ".png"));
+                if (MainFrame.isDark()) {
+                    try {
+                        ret = new ImageIcon(ch.psi.pshell.ui.App.class.getResource("/ch/psi/pshell/ui/dark/" + name + ".png"));
+                    } catch (Exception e) {
+                    }
                 }
-            } catch (Exception ex) {
-                ret = new ImageIcon(App.getResourceImage("Details.png"));
             }
         } catch (Exception ex) {
             ex.printStackTrace();
@@ -1772,7 +1950,7 @@ public class StreamCameraViewer extends MonitoredPanel {
                 }
                 ArrayList<Frame> frames = new ArrayList<>();
                 frames.add(frame);
-                snapshotFile = this.saveFrames(stream + "_snapshot", frames, null);
+                snapshotFile = this.saveFrames(getDisplayName() + "_snapshot", frames, null);
                 if (snapshotFile != null) {
                     //renderer.saveSnapshot(snapshotFile, "png", true);
                     ImageBuffer.saveImage(SwingUtils.createImage(renderer), snapshotFile + ".png", "png");
@@ -1791,7 +1969,7 @@ public class StreamCameraViewer extends MonitoredPanel {
     public void saveStack() throws Exception {
         String snapshotFile = null;
         synchronized (imageBuffer) {
-            snapshotFile = saveFrames(stream + "_camera_stack", imageBuffer, null);
+            snapshotFile = saveFrames(getDisplayName() + "_camera_stack", imageBuffer, null);
         }
         if (snapshotFile != null) {
             SwingUtils.showMessage(getTopLevel(), "Success", "Created data file:\n" + snapshotFile);
@@ -1903,7 +2081,28 @@ public class StreamCameraViewer extends MonitoredPanel {
 
         return dm.getRootFileName();
     }
+    
+    
+    public String getDisplayName(){
+        try{
+            return (String)getProcessingParameters(camera.getValue()).get("camera_name");
+        } catch (Exception ex){
+            return stream;
+        }
+    }
 
+    public void grabBackground() throws Exception{
+            if (camera != null) {
+                    System.out.println("Grabbing background for: " + getDisplayName());
+                    if (server != null) {
+                        server.captureBackground(5);
+                    } else {
+                        camera.captureBackground(5, 0);
+                }
+                SwingUtils.showMessage(getTopLevel(), "Success", "Success capturing background", 5000);
+            }            
+    }
+    
     public boolean isPaused() {
         return renderer.isPaused();
     }
@@ -1933,10 +2132,14 @@ public class StreamCameraViewer extends MonitoredPanel {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
+        buttonGroup1 = new javax.swing.ButtonGroup();
+        buttonGroup2 = new javax.swing.ButtonGroup();
         topPanel = new javax.swing.JPanel();
         toolBar = new javax.swing.JToolBar();
+        buttonSidePanel = new javax.swing.JToggleButton();
         buttonStreamData = new javax.swing.JButton();
         buttonSave = new javax.swing.JButton();
+        buttonGrabBackground = new javax.swing.JButton();
         buttonPause = new javax.swing.JToggleButton();
         jSeparator6 = new javax.swing.JToolBar.Separator();
         buttonMarker = new javax.swing.JToggleButton();
@@ -1944,15 +2147,75 @@ public class StreamCameraViewer extends MonitoredPanel {
         buttonFit = new javax.swing.JToggleButton();
         buttonReticle = new javax.swing.JToggleButton();
         buttonScale = new javax.swing.JToggleButton();
+        buttonTitle = new javax.swing.JToggleButton();
         pauseSelection = new ch.psi.pshell.swing.ValueSelection();
         panelStream = new javax.swing.JPanel();
         textStream = new javax.swing.JTextField();
         renderer = new ch.psi.pshell.imaging.Renderer();
+        sidePanel = new javax.swing.JPanel();
+        panelPipeline = new javax.swing.JPanel();
+        checkThreshold = new javax.swing.JCheckBox();
+        spinnerThreshold = new javax.swing.JSpinner();
+        checkBackground = new javax.swing.JCheckBox();
+        checkGoodRegion = new javax.swing.JCheckBox();
+        spinnerGrScale = new javax.swing.JSpinner();
+        spinnerGrThreshold = new javax.swing.JSpinner();
+        labelGrThreshold = new javax.swing.JLabel();
+        labelGrScale = new javax.swing.JLabel();
+        panelSlicing = new javax.swing.JPanel();
+        checkSlicing = new javax.swing.JCheckBox();
+        labelSlScale = new javax.swing.JLabel();
+        spinnerSlScale = new javax.swing.JSpinner();
+        labelSlNumber = new javax.swing.JLabel();
+        spinnerSlNumber = new javax.swing.JSpinner();
+        labelSlOrientation = new javax.swing.JLabel();
+        spinnerSlOrientation = new javax.swing.JSpinner();
+        checkRotation = new javax.swing.JCheckBox();
+        spinnerRotationAngle = new javax.swing.JSpinner();
+        spinnerRotationOrder = new javax.swing.JSpinner();
+        labelOrder = new javax.swing.JLabel();
+        labelMode = new javax.swing.JLabel();
+        spinnerRotationMode = new javax.swing.JSpinner();
+        labelAngle = new javax.swing.JLabel();
+        labelConstant = new javax.swing.JLabel();
+        spinnerRotationConstant = new javax.swing.JSpinner();
+        panelZoom = new javax.swing.JPanel();
+        buttonZoomFit = new javax.swing.JRadioButton();
+        buttonZoomStretch = new javax.swing.JRadioButton();
+        buttonZoomNormal = new javax.swing.JRadioButton();
+        buttonZoom025 = new javax.swing.JRadioButton();
+        buttonZoom05 = new javax.swing.JRadioButton();
+        buttonZoom2 = new javax.swing.JRadioButton();
+        panelColormap = new javax.swing.JPanel();
+        checkHistogram = new javax.swing.JCheckBox();
+        comboColormap = new javax.swing.JComboBox();
+        jLabel3 = new javax.swing.JLabel();
+        jLabel4 = new javax.swing.JLabel();
+        buttonFullRange = new javax.swing.JRadioButton();
+        buttonManual = new javax.swing.JRadioButton();
+        buttonAutomatic = new javax.swing.JRadioButton();
+        labelMin = new javax.swing.JLabel();
+        spinnerMin = new javax.swing.JSpinner();
+        spinnerMax = new javax.swing.JSpinner();
+        labelMax = new javax.swing.JLabel();
+        btFixColormapRange = new javax.swing.JButton();
 
         setPreferredSize(new java.awt.Dimension(873, 600));
 
         toolBar.setFloatable(false);
         toolBar.setRollover(true);
+
+        buttonSidePanel.setIcon(getIcon("List"));
+        buttonSidePanel.setText(" ");
+        buttonSidePanel.setToolTipText("Show Side Panel");
+        buttonSidePanel.setFocusable(false);
+        buttonSidePanel.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+        buttonSidePanel.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                buttonSidePanelActionPerformed(evt);
+            }
+        });
+        toolBar.add(buttonSidePanel);
 
         buttonStreamData.setIcon(getIcon("Details"));
         buttonStreamData.setText(" ");
@@ -1977,6 +2240,18 @@ public class StreamCameraViewer extends MonitoredPanel {
             }
         });
         toolBar.add(buttonSave);
+
+        buttonGrabBackground.setIcon(getIcon("Background"));
+        buttonGrabBackground.setText(" ");
+        buttonGrabBackground.setToolTipText("Grab Background");
+        buttonGrabBackground.setFocusable(false);
+        buttonGrabBackground.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+        buttonGrabBackground.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                buttonGrabBackgroundActionPerformed(evt);
+            }
+        });
+        toolBar.add(buttonGrabBackground);
 
         buttonPause.setIcon(getIcon("Pause"));
         buttonPause.setText(" ");
@@ -2055,6 +2330,18 @@ public class StreamCameraViewer extends MonitoredPanel {
     });
     toolBar.add(buttonScale);
 
+    buttonTitle.setIcon(getIcon("Title"));
+    buttonTitle.setText(" ");
+    buttonTitle.setToolTipText("Show Camera Name");
+    buttonTitle.setFocusable(false);
+    buttonTitle.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+    buttonTitle.addActionListener(new java.awt.event.ActionListener() {
+        public void actionPerformed(java.awt.event.ActionEvent evt) {
+            buttonTitleActionPerformed(evt);
+        }
+    });
+    toolBar.add(buttonTitle);
+
     pauseSelection.setDecimals(0);
 
     textStream.setHorizontalAlignment(javax.swing.JTextField.CENTER);
@@ -2064,7 +2351,7 @@ public class StreamCameraViewer extends MonitoredPanel {
     panelStreamLayout.setHorizontalGroup(
         panelStreamLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
         .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, panelStreamLayout.createSequentialGroup()
-            .addComponent(textStream)
+            .addComponent(textStream, javax.swing.GroupLayout.DEFAULT_SIZE, 238, Short.MAX_VALUE)
             .addContainerGap())
     );
     panelStreamLayout.setVerticalGroup(
@@ -2097,23 +2384,542 @@ public class StreamCameraViewer extends MonitoredPanel {
                 .addComponent(panelStream, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
     );
 
+    panelPipeline.setBorder(javax.swing.BorderFactory.createTitledBorder("Pipeline"));
+
+    checkThreshold.setText("Threshold");
+    checkThreshold.addActionListener(new java.awt.event.ActionListener() {
+        public void actionPerformed(java.awt.event.ActionEvent evt) {
+            checkThresholdActionPerformed(evt);
+        }
+    });
+
+    spinnerThreshold.setModel(new javax.swing.SpinnerNumberModel(0.0d, 0.0d, 99999.0d, 1.0d));
+    spinnerThreshold.addChangeListener(new javax.swing.event.ChangeListener() {
+        public void stateChanged(javax.swing.event.ChangeEvent evt) {
+            spinnerThresholdonChange(evt);
+        }
+    });
+
+    checkBackground.setText("Subtract Background");
+    checkBackground.addActionListener(new java.awt.event.ActionListener() {
+        public void actionPerformed(java.awt.event.ActionEvent evt) {
+            checkBackgroundActionPerformed(evt);
+        }
+    });
+
+    checkGoodRegion.setText("Good Region");
+    checkGoodRegion.addActionListener(new java.awt.event.ActionListener() {
+        public void actionPerformed(java.awt.event.ActionEvent evt) {
+            checkGoodRegionActionPerformed(evt);
+        }
+    });
+
+    spinnerGrScale.setModel(new javax.swing.SpinnerNumberModel(3.0d, 0.01d, 99999.0d, 1.0d));
+    spinnerGrScale.addChangeListener(new javax.swing.event.ChangeListener() {
+        public void stateChanged(javax.swing.event.ChangeEvent evt) {
+            spinnerGrScalespinnerGrThresholdonChange(evt);
+        }
+    });
+
+    spinnerGrThreshold.setModel(new javax.swing.SpinnerNumberModel(0.5d, 0.04d, 1.0d, 0.1d));
+    spinnerGrThreshold.setPreferredSize(new java.awt.Dimension(92, 20));
+    spinnerGrThreshold.addChangeListener(new javax.swing.event.ChangeListener() {
+        public void stateChanged(javax.swing.event.ChangeEvent evt) {
+            spinnerGrThresholdonChange(evt);
+        }
+    });
+
+    labelGrThreshold.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
+    labelGrThreshold.setText("Threshold:");
+
+    labelGrScale.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
+    labelGrScale.setText("Scale:");
+
+    checkSlicing.setText("Slicing");
+    checkSlicing.addActionListener(new java.awt.event.ActionListener() {
+        public void actionPerformed(java.awt.event.ActionEvent evt) {
+            checkSlicingActionPerformed(evt);
+        }
+    });
+
+    labelSlScale.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
+    labelSlScale.setText("Scale:");
+
+    spinnerSlScale.setModel(new javax.swing.SpinnerNumberModel(3.0d, 0.01d, 99999.0d, 1.0d));
+    spinnerSlScale.addChangeListener(new javax.swing.event.ChangeListener() {
+        public void stateChanged(javax.swing.event.ChangeEvent evt) {
+            spinnerSlScalespinnerSlicingChange(evt);
+        }
+    });
+
+    labelSlNumber.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
+    labelSlNumber.setText("Slices:");
+
+    spinnerSlNumber.setModel(new javax.swing.SpinnerNumberModel(2, 0, 1000, 1));
+    spinnerSlNumber.setPreferredSize(new java.awt.Dimension(92, 20));
+    spinnerSlNumber.addChangeListener(new javax.swing.event.ChangeListener() {
+        public void stateChanged(javax.swing.event.ChangeEvent evt) {
+            spinnerSlNumberspinnerSlicingChange(evt);
+        }
+    });
+
+    labelSlOrientation.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
+    labelSlOrientation.setText("Orientation:");
+
+    spinnerSlOrientation.setModel(new javax.swing.SpinnerListModel(new String[] {"vertical", "horizontal"}));
+    spinnerSlOrientation.setPreferredSize(new java.awt.Dimension(92, 20));
+    spinnerSlOrientation.addChangeListener(new javax.swing.event.ChangeListener() {
+        public void stateChanged(javax.swing.event.ChangeEvent evt) {
+            spinnerSlOrientationspinnerSlicingChange(evt);
+        }
+    });
+
+    javax.swing.GroupLayout panelSlicingLayout = new javax.swing.GroupLayout(panelSlicing);
+    panelSlicing.setLayout(panelSlicingLayout);
+    panelSlicingLayout.setHorizontalGroup(
+        panelSlicingLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+        .addGroup(panelSlicingLayout.createSequentialGroup()
+            .addContainerGap()
+            .addGroup(panelSlicingLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addGroup(panelSlicingLayout.createSequentialGroup()
+                    .addComponent(checkSlicing)
+                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addGroup(panelSlicingLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, panelSlicingLayout.createSequentialGroup()
+                            .addComponent(labelSlNumber)
+                            .addGap(2, 2, 2)
+                            .addComponent(spinnerSlNumber, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, panelSlicingLayout.createSequentialGroup()
+                            .addComponent(labelSlScale)
+                            .addGap(2, 2, 2)
+                            .addComponent(spinnerSlScale, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))))
+                .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, panelSlicingLayout.createSequentialGroup()
+                    .addGap(0, 0, Short.MAX_VALUE)
+                    .addComponent(labelSlOrientation)
+                    .addGap(2, 2, 2)
+                    .addComponent(spinnerSlOrientation, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
+            .addContainerGap())
+    );
+
+    panelSlicingLayout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {spinnerSlNumber, spinnerSlOrientation, spinnerSlScale});
+
+    panelSlicingLayout.setVerticalGroup(
+        panelSlicingLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+        .addGroup(panelSlicingLayout.createSequentialGroup()
+            .addGroup(panelSlicingLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addComponent(checkSlicing)
+                .addGroup(panelSlicingLayout.createSequentialGroup()
+                    .addGroup(panelSlicingLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                        .addComponent(spinnerSlNumber, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(labelSlNumber))
+                    .addGap(0, 0, 0)
+                    .addGroup(panelSlicingLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                        .addComponent(spinnerSlScale, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(labelSlScale))))
+            .addGap(0, 0, 0)
+            .addGroup(panelSlicingLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                .addComponent(spinnerSlOrientation, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(labelSlOrientation)))
+    );
+
+    checkRotation.setText("Rotation");
+    checkRotation.addActionListener(new java.awt.event.ActionListener() {
+        public void actionPerformed(java.awt.event.ActionEvent evt) {
+            checkRotationActionPerformed(evt);
+        }
+    });
+
+    spinnerRotationAngle.setModel(new javax.swing.SpinnerNumberModel(0.0d, -360.0d, 360.0d, 1.0d));
+    spinnerRotationAngle.addChangeListener(new javax.swing.event.ChangeListener() {
+        public void stateChanged(javax.swing.event.ChangeEvent evt) {
+            spinnerRotationAngleStateChanged(evt);
+        }
+    });
+
+    spinnerRotationOrder.setModel(new javax.swing.SpinnerNumberModel(1, 1, 5, 1));
+    spinnerRotationOrder.addChangeListener(new javax.swing.event.ChangeListener() {
+        public void stateChanged(javax.swing.event.ChangeEvent evt) {
+            spinnerRotationOrderspinnerRotationAngleStateChanged(evt);
+        }
+    });
+
+    labelOrder.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
+    labelOrder.setText("Order:");
+
+    labelMode.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
+    labelMode.setText("Mode:");
+
+    spinnerRotationMode.setModel(new javax.swing.SpinnerListModel(new String[] {"constant", "reflect", "nearest", "mirror", "wrap"}));
+    spinnerRotationMode.addChangeListener(new javax.swing.event.ChangeListener() {
+        public void stateChanged(javax.swing.event.ChangeEvent evt) {
+            spinnerRotationModespinnerRotationAngleStateChanged(evt);
+        }
+    });
+
+    labelAngle.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
+    labelAngle.setText("Angle:");
+
+    labelConstant.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
+    labelConstant.setText("Constant:");
+
+    spinnerRotationConstant.setModel(new javax.swing.SpinnerNumberModel(0, 0, 99999, 1));
+    spinnerRotationConstant.addChangeListener(new javax.swing.event.ChangeListener() {
+        public void stateChanged(javax.swing.event.ChangeEvent evt) {
+            spinnerRotationConstantspinnerRotationAngleStateChanged(evt);
+        }
+    });
+
+    javax.swing.GroupLayout panelPipelineLayout = new javax.swing.GroupLayout(panelPipeline);
+    panelPipeline.setLayout(panelPipelineLayout);
+    panelPipelineLayout.setHorizontalGroup(
+        panelPipelineLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+        .addGroup(panelPipelineLayout.createSequentialGroup()
+            .addContainerGap()
+            .addGroup(panelPipelineLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, panelPipelineLayout.createSequentialGroup()
+                    .addComponent(checkGoodRegion)
+                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addGroup(panelPipelineLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addComponent(labelOrder)
+                        .addComponent(labelGrScale)
+                        .addComponent(labelMode)))
+                .addGroup(panelPipelineLayout.createSequentialGroup()
+                    .addComponent(checkThreshold)
+                    .addGap(0, 0, Short.MAX_VALUE))
+                .addGroup(panelPipelineLayout.createSequentialGroup()
+                    .addComponent(checkRotation)
+                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(labelAngle))
+                .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, panelPipelineLayout.createSequentialGroup()
+                    .addGap(0, 0, Short.MAX_VALUE)
+                    .addGroup(panelPipelineLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addComponent(labelGrThreshold, javax.swing.GroupLayout.Alignment.TRAILING)
+                        .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, panelPipelineLayout.createSequentialGroup()
+                            .addComponent(labelConstant)
+                            .addGap(3, 3, 3)))))
+            .addGap(2, 2, 2)
+            .addGroup(panelPipelineLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                .addComponent(spinnerGrThreshold, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(spinnerGrScale)
+                .addComponent(spinnerThreshold)
+                .addComponent(spinnerRotationOrder)
+                .addComponent(spinnerRotationMode)
+                .addComponent(spinnerRotationAngle)
+                .addComponent(spinnerRotationConstant))
+            .addContainerGap())
+        .addComponent(panelSlicing, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+        .addGroup(panelPipelineLayout.createSequentialGroup()
+            .addGap(6, 6, 6)
+            .addComponent(checkBackground)
+            .addGap(106, 106, 106))
+    );
+
+    panelPipelineLayout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {spinnerGrScale, spinnerGrThreshold});
+
+    panelPipelineLayout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {spinnerRotationAngle, spinnerRotationConstant, spinnerRotationMode, spinnerRotationOrder});
+
+    panelPipelineLayout.setVerticalGroup(
+        panelPipelineLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+        .addGroup(panelPipelineLayout.createSequentialGroup()
+            .addContainerGap()
+            .addComponent(checkBackground)
+            .addGap(2, 2, 2)
+            .addGroup(panelPipelineLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                .addComponent(checkThreshold)
+                .addComponent(spinnerThreshold, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+            .addGap(2, 2, 2)
+            .addGroup(panelPipelineLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                .addComponent(checkRotation)
+                .addComponent(spinnerRotationAngle, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(labelAngle))
+            .addGap(0, 0, 0)
+            .addGroup(panelPipelineLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                .addComponent(spinnerRotationOrder, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(labelOrder))
+            .addGap(0, 0, 0)
+            .addGroup(panelPipelineLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                .addComponent(spinnerRotationMode, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(labelMode))
+            .addGap(0, 0, 0)
+            .addGroup(panelPipelineLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                .addComponent(spinnerRotationConstant, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(labelConstant))
+            .addGap(2, 2, 2)
+            .addGroup(panelPipelineLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                .addComponent(checkGoodRegion)
+                .addComponent(spinnerGrScale, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(labelGrScale))
+            .addGap(0, 0, 0)
+            .addGroup(panelPipelineLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                .addComponent(spinnerGrThreshold, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(labelGrThreshold))
+            .addGap(2, 2, 2)
+            .addComponent(panelSlicing, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+            .addContainerGap())
+    );
+
+    panelZoom.setBorder(javax.swing.BorderFactory.createTitledBorder("Zoom"));
+
+    buttonGroup1.add(buttonZoomFit);
+    buttonZoomFit.setText("Fit");
+    buttonZoomFit.addActionListener(new java.awt.event.ActionListener() {
+        public void actionPerformed(java.awt.event.ActionEvent evt) {
+            buttonZoomFitActionPerformed(evt);
+        }
+    });
+
+    buttonGroup1.add(buttonZoomStretch);
+    buttonZoomStretch.setText("Stretch");
+    buttonZoomStretch.addActionListener(new java.awt.event.ActionListener() {
+        public void actionPerformed(java.awt.event.ActionEvent evt) {
+            buttonZoomStretchActionPerformed(evt);
+        }
+    });
+
+    buttonGroup1.add(buttonZoomNormal);
+    buttonZoomNormal.setText("Normal");
+    buttonZoomNormal.addActionListener(new java.awt.event.ActionListener() {
+        public void actionPerformed(java.awt.event.ActionEvent evt) {
+            buttonZoomNormalActionPerformed(evt);
+        }
+    });
+
+    buttonGroup1.add(buttonZoom025);
+    buttonZoom025.setText("1/4");
+    buttonZoom025.addActionListener(new java.awt.event.ActionListener() {
+        public void actionPerformed(java.awt.event.ActionEvent evt) {
+            buttonZoom025ActionPerformed(evt);
+        }
+    });
+
+    buttonGroup1.add(buttonZoom05);
+    buttonZoom05.setText("1/2");
+    buttonZoom05.addActionListener(new java.awt.event.ActionListener() {
+        public void actionPerformed(java.awt.event.ActionEvent evt) {
+            buttonZoom05ActionPerformed(evt);
+        }
+    });
+
+    buttonGroup1.add(buttonZoom2);
+    buttonZoom2.setText("2");
+    buttonZoom2.addActionListener(new java.awt.event.ActionListener() {
+        public void actionPerformed(java.awt.event.ActionEvent evt) {
+            buttonZoom2ActionPerformed(evt);
+        }
+    });
+
+    javax.swing.GroupLayout panelZoomLayout = new javax.swing.GroupLayout(panelZoom);
+    panelZoom.setLayout(panelZoomLayout);
+    panelZoomLayout.setHorizontalGroup(
+        panelZoomLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+        .addGroup(panelZoomLayout.createSequentialGroup()
+            .addContainerGap()
+            .addGroup(panelZoomLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addComponent(buttonZoomFit)
+                .addComponent(buttonZoomNormal)
+                .addComponent(buttonZoomStretch))
+            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+            .addGroup(panelZoomLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addComponent(buttonZoom025)
+                .addComponent(buttonZoom05)
+                .addComponent(buttonZoom2))
+            .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+    );
+    panelZoomLayout.setVerticalGroup(
+        panelZoomLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+        .addGroup(panelZoomLayout.createSequentialGroup()
+            .addGap(4, 4, 4)
+            .addGroup(panelZoomLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.CENTER)
+                .addComponent(buttonZoomNormal)
+                .addComponent(buttonZoom025))
+            .addGap(0, 0, 0)
+            .addGroup(panelZoomLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.CENTER)
+                .addComponent(buttonZoomFit)
+                .addComponent(buttonZoom05))
+            .addGap(0, 0, 0)
+            .addGroup(panelZoomLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.CENTER)
+                .addComponent(buttonZoomStretch)
+                .addComponent(buttonZoom2))
+            .addContainerGap())
+    );
+
+    panelColormap.setBorder(javax.swing.BorderFactory.createTitledBorder("Colormap"));
+
+    checkHistogram.setText("Histogram");
+    checkHistogram.addActionListener(new java.awt.event.ActionListener() {
+        public void actionPerformed(java.awt.event.ActionEvent evt) {
+            checkHistogramActionPerformed(evt);
+        }
+    });
+
+    comboColormap.addActionListener(new java.awt.event.ActionListener() {
+        public void actionPerformed(java.awt.event.ActionEvent evt) {
+            onChangeColormap(evt);
+        }
+    });
+
+    jLabel3.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
+    jLabel3.setText("Type:");
+
+    jLabel4.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
+    jLabel4.setText("Range:");
+
+    buttonGroup2.add(buttonFullRange);
+    buttonFullRange.setText("Full");
+    buttonFullRange.addActionListener(new java.awt.event.ActionListener() {
+        public void actionPerformed(java.awt.event.ActionEvent evt) {
+            buttonFullRangeonChangeColormap(evt);
+        }
+    });
+
+    buttonGroup2.add(buttonManual);
+    buttonManual.setText("Manual");
+    buttonManual.addActionListener(new java.awt.event.ActionListener() {
+        public void actionPerformed(java.awt.event.ActionEvent evt) {
+            buttonManualonChangeColormap(evt);
+        }
+    });
+
+    buttonGroup2.add(buttonAutomatic);
+    buttonAutomatic.setText("Automatic");
+    buttonAutomatic.addActionListener(new java.awt.event.ActionListener() {
+        public void actionPerformed(java.awt.event.ActionEvent evt) {
+            buttonAutomaticonChangeColormap(evt);
+        }
+    });
+
+    labelMin.setText("Min:");
+
+    spinnerMin.setModel(new javax.swing.SpinnerNumberModel(0, 0, 65535, 1));
+    spinnerMin.setEnabled(false);
+    spinnerMin.setPreferredSize(new java.awt.Dimension(77, 20));
+    spinnerMin.addChangeListener(new javax.swing.event.ChangeListener() {
+        public void stateChanged(javax.swing.event.ChangeEvent evt) {
+            spinnerMinonChangeColormapRange(evt);
+        }
+    });
+
+    spinnerMax.setModel(new javax.swing.SpinnerNumberModel(255, 0, 65535, 1));
+    spinnerMax.setEnabled(false);
+    spinnerMax.setPreferredSize(new java.awt.Dimension(77, 20));
+    spinnerMax.addChangeListener(new javax.swing.event.ChangeListener() {
+        public void stateChanged(javax.swing.event.ChangeEvent evt) {
+            spinnerMaxonChangeColormapRange(evt);
+        }
+    });
+
+    labelMax.setText("Max:");
+
+    btFixColormapRange.setText("Fix");
+    btFixColormapRange.addActionListener(new java.awt.event.ActionListener() {
+        public void actionPerformed(java.awt.event.ActionEvent evt) {
+            btFixColormapRangeActionPerformed(evt);
+        }
+    });
+
+    javax.swing.GroupLayout panelColormapLayout = new javax.swing.GroupLayout(panelColormap);
+    panelColormap.setLayout(panelColormapLayout);
+    panelColormapLayout.setHorizontalGroup(
+        panelColormapLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+        .addGroup(panelColormapLayout.createSequentialGroup()
+            .addGap(4, 4, 4)
+            .addGroup(panelColormapLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addComponent(jLabel3)
+                .addComponent(jLabel4))
+            .addGap(4, 4, 4)
+            .addGroup(panelColormapLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addComponent(buttonAutomatic)
+                .addComponent(buttonFullRange)
+                .addComponent(buttonManual)
+                .addComponent(comboColormap, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+            .addGroup(panelColormapLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, panelColormapLayout.createSequentialGroup()
+                    .addComponent(labelMax)
+                    .addGap(2, 2, 2)
+                    .addComponent(spinnerMax, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addComponent(checkHistogram, javax.swing.GroupLayout.Alignment.TRAILING)
+                .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, panelColormapLayout.createSequentialGroup()
+                    .addComponent(labelMin)
+                    .addGap(2, 2, 2)
+                    .addGroup(panelColormapLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                        .addComponent(btFixColormapRange, javax.swing.GroupLayout.Alignment.TRAILING)
+                        .addComponent(spinnerMin, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 97, Short.MAX_VALUE))))
+            .addContainerGap())
+    );
+
+    panelColormapLayout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {spinnerMax, spinnerMin});
+
+    panelColormapLayout.setVerticalGroup(
+        panelColormapLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+        .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, panelColormapLayout.createSequentialGroup()
+            .addGap(4, 4, 4)
+            .addGroup(panelColormapLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                .addComponent(comboColormap, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(jLabel3)
+                .addComponent(checkHistogram))
+            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+            .addGroup(panelColormapLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                .addComponent(buttonAutomatic)
+                .addComponent(jLabel4)
+                .addComponent(btFixColormapRange, javax.swing.GroupLayout.PREFERRED_SIZE, 26, javax.swing.GroupLayout.PREFERRED_SIZE))
+            .addGap(0, 0, 0)
+            .addGroup(panelColormapLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.CENTER)
+                .addComponent(labelMin)
+                .addComponent(spinnerMin, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(buttonFullRange))
+            .addGroup(panelColormapLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.CENTER)
+                .addComponent(buttonManual)
+                .addComponent(labelMax)
+                .addComponent(spinnerMax, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+            .addContainerGap())
+    );
+
+    javax.swing.GroupLayout sidePanelLayout = new javax.swing.GroupLayout(sidePanel);
+    sidePanel.setLayout(sidePanelLayout);
+    sidePanelLayout.setHorizontalGroup(
+        sidePanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+        .addGroup(sidePanelLayout.createSequentialGroup()
+            .addContainerGap()
+            .addGroup(sidePanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
+                .addComponent(panelZoom, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(panelColormap, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(panelPipeline, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+            .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+    );
+    sidePanelLayout.setVerticalGroup(
+        sidePanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+        .addGroup(sidePanelLayout.createSequentialGroup()
+            .addGap(0, 0, 0)
+            .addComponent(panelPipeline, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+            .addComponent(panelZoom, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+            .addComponent(panelColormap, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+            .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+    );
+
     javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
     this.setLayout(layout);
     layout.setHorizontalGroup(
         layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
         .addGroup(layout.createSequentialGroup()
-            .addContainerGap()
-            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                .addComponent(renderer, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 773, Short.MAX_VALUE)
-                .addComponent(topPanel, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+            .addGap(0, 0, 0)
+            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addComponent(topPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addGroup(layout.createSequentialGroup()
+                    .addComponent(sidePanel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addGap(0, 0, 0)
+                    .addComponent(renderer, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
             .addContainerGap())
     );
     layout.setVerticalGroup(
         layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
         .addGroup(layout.createSequentialGroup()
             .addComponent(topPanel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-            .addGap(0, 0, 0)
-            .addComponent(renderer, javax.swing.GroupLayout.DEFAULT_SIZE, 567, Short.MAX_VALUE))
+            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addComponent(renderer, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(sidePanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
     );
     }// </editor-fold>//GEN-END:initComponents
 
@@ -2182,20 +2988,573 @@ public class StreamCameraViewer extends MonitoredPanel {
         }
     }//GEN-LAST:event_buttonSaveActionPerformed
 
+    private void checkThresholdActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_checkThresholdActionPerformed
+        if (!updatingServerControls) {
+            try {
+                if ((server != null) && (server.isStarted())) {
+                    spinnerThreshold.setVisible(checkThreshold.isSelected());
+                    server.setThreshold(checkThreshold.isSelected() ? (Double) spinnerThreshold.getValue() : null);
+                }
+            } catch (Exception ex) {
+                SwingUtils.showException(this, ex);
+                updatePipelineControls();
+            }
+        }
+    }//GEN-LAST:event_checkThresholdActionPerformed
+
+    private void spinnerThresholdonChange(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_spinnerThresholdonChange
+        if (!updatingServerControls) {
+            try {
+                if ((server != null) && (server.isStarted())) {
+                    server.setThreshold((Double) spinnerThreshold.getValue());
+                }
+            } catch (Exception ex) {
+                SwingUtils.showException(this, ex);
+                updatePipelineControls();
+            }
+        }
+    }//GEN-LAST:event_spinnerThresholdonChange
+
+    private void checkBackgroundActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_checkBackgroundActionPerformed
+        if (server != null) {
+            if (!updatingServerControls) {
+                try {
+                    if (server.isStarted()) {
+                        server.setBackgroundSubtraction(checkBackground.isSelected());
+                    }
+                } catch (Exception ex) {
+                    SwingUtils.showException(this, ex);
+                    updatePipelineControls();
+                    updatingServerControls = true;
+                    checkBackground.setSelected(false);
+                    updatingServerControls = false;
+
+                }
+            }
+        } else {
+            camera.setBackgroundEnabled(checkBackground.isSelected());
+        }
+    }//GEN-LAST:event_checkBackgroundActionPerformed
+
+    private void checkGoodRegionActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_checkGoodRegionActionPerformed
+        if (!updatingServerControls) {
+            try {
+                if ((server != null) && (server.isStarted())) {
+                    boolean goodRegion = checkGoodRegion.isSelected();
+                    setGoodRegionOptionsVisible(goodRegion);
+                    if (goodRegion) {
+                        server.setGoodRegion(((Number) spinnerGrThreshold.getValue()).doubleValue(), ((Number) spinnerGrScale.getValue()).doubleValue());
+                    } else {
+                        server.setGoodRegion(null);
+                    }
+                }
+            } catch (Exception ex) {
+                SwingUtils.showException(this, ex);
+                updatePipelineControls();
+            }
+        }
+    }//GEN-LAST:event_checkGoodRegionActionPerformed
+
+    private void spinnerGrScalespinnerGrThresholdonChange(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_spinnerGrScalespinnerGrThresholdonChange
+        if (!updatingServerControls) {
+            try {
+                if ((server != null) && (server.isStarted())) {
+                    server.setGoodRegion((Double) spinnerGrThreshold.getValue(), (Double) spinnerGrScale.getValue());
+                }
+            } catch (Exception ex) {
+                SwingUtils.showException(this, ex);
+                updatePipelineControls();
+            }
+        }
+    }//GEN-LAST:event_spinnerGrScalespinnerGrThresholdonChange
+
+    private void spinnerGrThresholdonChange(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_spinnerGrThresholdonChange
+        if (!updatingServerControls) {
+            try {
+                if ((server != null) && (server.isStarted())) {
+                    server.setGoodRegion((Double) spinnerGrThreshold.getValue(), (Double) spinnerGrScale.getValue());
+                }
+            } catch (Exception ex) {
+                SwingUtils.showException(this, ex);
+                updatePipelineControls();
+            }
+        }
+    }//GEN-LAST:event_spinnerGrThresholdonChange
+
+    private void checkSlicingActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_checkSlicingActionPerformed
+        if (!updatingServerControls) {
+            try {
+                if ((server != null) && (server.isStarted())) {
+                    boolean slicing = checkSlicing.isSelected();
+                    setSlicingOptionsVisible(slicing);
+                    if (slicing) {
+                        server.setSlicing((Integer) spinnerSlNumber.getValue(), (Double) spinnerSlScale.getValue(), spinnerSlOrientation.getValue().toString());
+                    } else {
+                        server.setSlicing(null);
+                    }
+                }
+            } catch (Exception ex) {
+                SwingUtils.showException(this, ex);
+                updatePipelineControls();
+            }
+        }
+    }//GEN-LAST:event_checkSlicingActionPerformed
+
+    private void spinnerSlScalespinnerSlicingChange(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_spinnerSlScalespinnerSlicingChange
+        if (!updatingServerControls) {
+            try {
+                if ((server != null) && (server.isStarted())) {
+                    server.setSlicing((Integer) spinnerSlNumber.getValue(), (Double) spinnerSlScale.getValue(), spinnerSlOrientation.getValue().toString());
+                }
+            } catch (Exception ex) {
+                SwingUtils.showException(this, ex);
+                updatePipelineControls();
+            }
+        }
+    }//GEN-LAST:event_spinnerSlScalespinnerSlicingChange
+
+    private void spinnerSlNumberspinnerSlicingChange(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_spinnerSlNumberspinnerSlicingChange
+        if (!updatingServerControls) {
+            try {
+                if ((server != null) && (server.isStarted())) {
+                    server.setSlicing((Integer) spinnerSlNumber.getValue(), (Double) spinnerSlScale.getValue(), spinnerSlOrientation.getValue().toString());
+                }
+            } catch (Exception ex) {
+                SwingUtils.showException(this, ex);
+                updatePipelineControls();
+            }
+        }
+    }//GEN-LAST:event_spinnerSlNumberspinnerSlicingChange
+
+    private void spinnerSlOrientationspinnerSlicingChange(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_spinnerSlOrientationspinnerSlicingChange
+        if (!updatingServerControls) {
+            try {
+                if ((server != null) && (server.isStarted())) {
+                    server.setSlicing((Integer) spinnerSlNumber.getValue(), (Double) spinnerSlScale.getValue(), spinnerSlOrientation.getValue().toString());
+                }
+            } catch (Exception ex) {
+                SwingUtils.showException(this, ex);
+                updatePipelineControls();
+            }
+        }
+    }//GEN-LAST:event_spinnerSlOrientationspinnerSlicingChange
+
+    private void checkRotationActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_checkRotationActionPerformed
+        if (!updatingServerControls) {
+            try {
+                if ((server != null) && (server.isStarted())) {
+                    boolean rotation = checkRotation.isSelected();
+                    setRotationOptionsVisible(rotation);
+                    if (rotation) {
+                        spinnerRotationAngleStateChanged(null);
+                    } else {
+                        server.setRotation(null);
+                    }
+                }
+            } catch (Exception ex) {
+                SwingUtils.showException(this, ex);
+                updatePipelineControls();
+            }
+        }
+    }//GEN-LAST:event_checkRotationActionPerformed
+
+    private void spinnerRotationAngleStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_spinnerRotationAngleStateChanged
+        try {
+            String mode = String.valueOf(spinnerRotationMode.getValue());
+            server.setRotation(((Number) spinnerRotationAngle.getValue()).doubleValue(),
+                ((Number) spinnerRotationOrder.getValue()).intValue(),
+                mode.equals("constant") ? String.valueOf(spinnerRotationConstant.getValue()): mode);
+        } catch (Exception ex) {
+            SwingUtils.showException(this, ex);
+            updatePipelineControls();
+        }
+    }//GEN-LAST:event_spinnerRotationAngleStateChanged
+
+    private void spinnerRotationOrderspinnerRotationAngleStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_spinnerRotationOrderspinnerRotationAngleStateChanged
+        try {
+            String mode = String.valueOf(spinnerRotationMode.getValue());
+            server.setRotation(((Number) spinnerRotationAngle.getValue()).doubleValue(),
+                ((Number) spinnerRotationOrder.getValue()).intValue(),
+                mode.equals("constant") ? String.valueOf(spinnerRotationConstant.getValue()): mode);
+        } catch (Exception ex) {
+            SwingUtils.showException(this, ex);
+            updatePipelineControls();
+        }
+    }//GEN-LAST:event_spinnerRotationOrderspinnerRotationAngleStateChanged
+
+    private void spinnerRotationModespinnerRotationAngleStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_spinnerRotationModespinnerRotationAngleStateChanged
+        try {
+            String mode = String.valueOf(spinnerRotationMode.getValue());
+            server.setRotation(((Number) spinnerRotationAngle.getValue()).doubleValue(),
+                ((Number) spinnerRotationOrder.getValue()).intValue(),
+                mode.equals("constant") ? String.valueOf(spinnerRotationConstant.getValue()): mode);
+        } catch (Exception ex) {
+            SwingUtils.showException(this, ex);
+            updatePipelineControls();
+        }
+    }//GEN-LAST:event_spinnerRotationModespinnerRotationAngleStateChanged
+
+    private void spinnerRotationConstantspinnerRotationAngleStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_spinnerRotationConstantspinnerRotationAngleStateChanged
+        try {
+            String mode = String.valueOf(spinnerRotationMode.getValue());
+            server.setRotation(((Number) spinnerRotationAngle.getValue()).doubleValue(),
+                ((Number) spinnerRotationOrder.getValue()).intValue(),
+                mode.equals("constant") ? String.valueOf(spinnerRotationConstant.getValue()): mode);
+        } catch (Exception ex) {
+            SwingUtils.showException(this, ex);
+            updatePipelineControls();
+        }
+    }//GEN-LAST:event_spinnerRotationConstantspinnerRotationAngleStateChanged
+
+    private void buttonZoomFitActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonZoomFitActionPerformed
+        try {
+            renderer.setMode(RendererMode.Fit);
+        } catch (Exception ex) {
+            SwingUtils.showException(this, ex);
+        }
+    }//GEN-LAST:event_buttonZoomFitActionPerformed
+
+    private void buttonZoomStretchActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonZoomStretchActionPerformed
+        try {
+            renderer.setMode(RendererMode.Stretch);
+        } catch (Exception ex) {
+            SwingUtils.showException(this, ex);
+        }
+    }//GEN-LAST:event_buttonZoomStretchActionPerformed
+
+    private void buttonZoomNormalActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonZoomNormalActionPerformed
+        try {
+            renderer.setMode(RendererMode.Fixed);
+            centralizeRenderer();
+        } catch (Exception ex) {
+            SwingUtils.showException(this, ex);
+        }
+    }//GEN-LAST:event_buttonZoomNormalActionPerformed
+
+    private void buttonZoom025ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonZoom025ActionPerformed
+        renderer.setZoom(0.25);
+        renderer.setMode(RendererMode.Zoom);
+        centralizeRenderer();
+    }//GEN-LAST:event_buttonZoom025ActionPerformed
+
+    private void buttonZoom05ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonZoom05ActionPerformed
+        renderer.setZoom(0.5);
+        renderer.setMode(RendererMode.Zoom);
+        centralizeRenderer();
+    }//GEN-LAST:event_buttonZoom05ActionPerformed
+
+    private void buttonZoom2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonZoom2ActionPerformed
+        renderer.setZoom(2.0);
+        renderer.setMode(RendererMode.Zoom);
+        centralizeRenderer();
+    }//GEN-LAST:event_buttonZoom2ActionPerformed
+
+    private void checkHistogramActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_checkHistogramActionPerformed
+        try {
+            setHistogramVisible(checkHistogram.isSelected());
+        } catch (Exception ex) {
+            SwingUtils.showException(this, ex);
+        }
+    }//GEN-LAST:event_checkHistogramActionPerformed
+
+    private void onChangeColormap(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_onChangeColormap
+        try {
+            if ((camera != null) && (camera instanceof ColormapSource) && !updatingColormap) {
+                ColormapSource source = (ColormapSource) camera;
+                Color colorReticule = new Color(16, 16, 16);
+                Color colorMarker = new Color(128, 128, 128);
+                Colormap colormap = (Colormap) comboColormap.getSelectedItem();
+                source.getConfig().colormap = (colormap == null) ? Colormap.Flame : colormap;
+                switch (source.getConfig().colormap) {
+                    case Grayscale:
+                    case Inverted:
+                    case Red:
+                    case Green:
+                    case Blue:
+                    colorReticule = new Color(0, 192, 0);
+                    colorMarker = new Color(64, 255, 64);
+                    break;
+                    case Flame:
+                    colorReticule = new Color(0, 192, 0);
+                    colorMarker = new Color(64, 255, 64);
+                    break;
+                }
+
+                renderer.setPenReticle(new Pen(colorReticule));
+                renderer.setPenProfile(new Pen(colorReticule, 0));
+                renderer.setPenMarker(new Pen(colorMarker, 2));
+                renderer.setShowReticle(false);
+                checkReticle();
+                source.getConfig().colormapAutomatic = buttonAutomatic.isSelected();
+                source.getConfig().colormapMin = buttonFullRange.isSelected() ? Double.NaN : (Integer) spinnerMin.getValue();
+                source.getConfig().colormapMax = buttonFullRange.isSelected() ? Double.NaN : (Integer) spinnerMax.getValue();
+                try {
+                    source.getConfig().save();
+                } catch (Exception ex) {
+                    Logger.getLogger(getClass().getName()).log(Level.WARNING, null, ex);
+                }
+                source.refresh();
+                if (buttonPause.isSelected()) {
+                    updatePause();
+                }
+                updateColormap();
+            }
+        } catch (Exception ex) {
+            SwingUtils.showException(this, ex);
+        }
+    }//GEN-LAST:event_onChangeColormap
+
+    private void buttonFullRangeonChangeColormap(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonFullRangeonChangeColormap
+        try {
+            if ((camera != null) && (camera instanceof ColormapSource) && !updatingColormap) {
+                ColormapSource source = (ColormapSource) camera;
+                Color colorReticule = new Color(16, 16, 16);
+                Color colorMarker = new Color(128, 128, 128);
+                Colormap colormap = (Colormap) comboColormap.getSelectedItem();
+                source.getConfig().colormap = (colormap == null) ? Colormap.Flame : colormap;
+                switch (source.getConfig().colormap) {
+                    case Grayscale:
+                    case Inverted:
+                    case Red:
+                    case Green:
+                    case Blue:
+                    colorReticule = new Color(0, 192, 0);
+                    colorMarker = new Color(64, 255, 64);
+                    break;
+                    case Flame:
+                    colorReticule = new Color(0, 192, 0);
+                    colorMarker = new Color(64, 255, 64);
+                    break;
+                }
+
+                renderer.setPenReticle(new Pen(colorReticule));
+                renderer.setPenProfile(new Pen(colorReticule, 0));
+                renderer.setPenMarker(new Pen(colorMarker, 2));
+                renderer.setShowReticle(false);
+                checkReticle();
+                source.getConfig().colormapAutomatic = buttonAutomatic.isSelected();
+                source.getConfig().colormapMin = buttonFullRange.isSelected() ? Double.NaN : (Integer) spinnerMin.getValue();
+                source.getConfig().colormapMax = buttonFullRange.isSelected() ? Double.NaN : (Integer) spinnerMax.getValue();
+                try {
+                    source.getConfig().save();
+                } catch (Exception ex) {
+                    Logger.getLogger(getClass().getName()).log(Level.WARNING, null, ex);
+                }
+                source.refresh();
+                if (buttonPause.isSelected()) {
+                    updatePause();
+                }
+                updateColormap();
+            }
+        } catch (Exception ex) {
+            SwingUtils.showException(this, ex);
+        }
+    }//GEN-LAST:event_buttonFullRangeonChangeColormap
+
+    private void buttonManualonChangeColormap(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonManualonChangeColormap
+        try {
+            if ((camera != null) && (camera instanceof ColormapSource) && !updatingColormap) {
+                ColormapSource source = (ColormapSource) camera;
+                Color colorReticule = new Color(16, 16, 16);
+                Color colorMarker = new Color(128, 128, 128);
+                Colormap colormap = (Colormap) comboColormap.getSelectedItem();
+                source.getConfig().colormap = (colormap == null) ? Colormap.Flame : colormap;
+                switch (source.getConfig().colormap) {
+                    case Grayscale:
+                    case Inverted:
+                    case Red:
+                    case Green:
+                    case Blue:
+                    colorReticule = new Color(0, 192, 0);
+                    colorMarker = new Color(64, 255, 64);
+                    break;
+                    case Flame:
+                    colorReticule = new Color(0, 192, 0);
+                    colorMarker = new Color(64, 255, 64);
+                    break;
+                }
+
+                renderer.setPenReticle(new Pen(colorReticule));
+                renderer.setPenProfile(new Pen(colorReticule, 0));
+                renderer.setPenMarker(new Pen(colorMarker, 2));
+                renderer.setShowReticle(false);
+                checkReticle();
+                source.getConfig().colormapAutomatic = buttonAutomatic.isSelected();
+                source.getConfig().colormapMin = buttonFullRange.isSelected() ? Double.NaN : (Integer) spinnerMin.getValue();
+                source.getConfig().colormapMax = buttonFullRange.isSelected() ? Double.NaN : (Integer) spinnerMax.getValue();
+                try {
+                    source.getConfig().save();
+                } catch (Exception ex) {
+                    Logger.getLogger(getClass().getName()).log(Level.WARNING, null, ex);
+                }
+                source.refresh();
+                if (buttonPause.isSelected()) {
+                    updatePause();
+                }
+                updateColormap();
+            }
+        } catch (Exception ex) {
+            SwingUtils.showException(this, ex);
+        }
+    }//GEN-LAST:event_buttonManualonChangeColormap
+
+    private void buttonAutomaticonChangeColormap(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonAutomaticonChangeColormap
+        try {
+            if ((camera != null) && (camera instanceof ColormapSource) && !updatingColormap) {
+                ColormapSource source = (ColormapSource) camera;
+                Color colorReticule = new Color(16, 16, 16);
+                Color colorMarker = new Color(128, 128, 128);
+                Colormap colormap = (Colormap) comboColormap.getSelectedItem();
+                source.getConfig().colormap = (colormap == null) ? Colormap.Flame : colormap;
+                switch (source.getConfig().colormap) {
+                    case Grayscale:
+                    case Inverted:
+                    case Red:
+                    case Green:
+                    case Blue:
+                    colorReticule = new Color(0, 192, 0);
+                    colorMarker = new Color(64, 255, 64);
+                    break;
+                    case Flame:
+                    colorReticule = new Color(0, 192, 0);
+                    colorMarker = new Color(64, 255, 64);
+                    break;
+                }
+
+                renderer.setPenReticle(new Pen(colorReticule));
+                renderer.setPenProfile(new Pen(colorReticule, 0));
+                renderer.setPenMarker(new Pen(colorMarker, 2));
+                renderer.setShowReticle(false);
+                checkReticle();
+                source.getConfig().colormapAutomatic = buttonAutomatic.isSelected();
+                source.getConfig().colormapMin = buttonFullRange.isSelected() ? Double.NaN : (Integer) spinnerMin.getValue();
+                source.getConfig().colormapMax = buttonFullRange.isSelected() ? Double.NaN : (Integer) spinnerMax.getValue();
+                try {
+                    source.getConfig().save();
+                } catch (Exception ex) {
+                    Logger.getLogger(getClass().getName()).log(Level.WARNING, null, ex);
+                }
+                source.refresh();
+                if (buttonPause.isSelected()) {
+                    updatePause();
+                }
+                updateColormap();
+            }
+        } catch (Exception ex) {
+            SwingUtils.showException(this, ex);
+        }
+    }//GEN-LAST:event_buttonAutomaticonChangeColormap
+
+    private void spinnerMinonChangeColormapRange(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_spinnerMinonChangeColormapRange
+        onChangeColormap(null);
+    }//GEN-LAST:event_spinnerMinonChangeColormapRange
+
+    private void spinnerMaxonChangeColormapRange(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_spinnerMaxonChangeColormapRange
+        onChangeColormap(null);
+    }//GEN-LAST:event_spinnerMaxonChangeColormapRange
+
+    private void btFixColormapRangeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btFixColormapRangeActionPerformed
+        try {
+            updatingColormap = true;
+            ArrayProperties properties = currentFrame.data.getProperties();
+            spinnerMax.setValue(properties.max.intValue());
+            spinnerMin.setValue(properties.min.intValue());
+            buttonManual.setSelected(true);
+        } catch (Exception ex) {
+            SwingUtils.showException(this, ex);
+        } finally {
+            updatingColormap = false;
+            onChangeColormap(null);
+        }
+    }//GEN-LAST:event_btFixColormapRangeActionPerformed
+
+    private void buttonSidePanelActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonSidePanelActionPerformed
+        sidePanel.setVisible(buttonSidePanel.isSelected());
+    }//GEN-LAST:event_buttonSidePanelActionPerformed
+
+    private void buttonGrabBackgroundActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonGrabBackgroundActionPerformed
+        try {
+            grabBackground();
+        } catch (Exception ex) {
+            SwingUtils.showException(this, ex);
+        }
+    }//GEN-LAST:event_buttonGrabBackgroundActionPerformed
+
+    private void buttonTitleActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonTitleActionPerformed
+        try {
+            manageTitleOverlay();
+        } catch (Exception ex) {
+            SwingUtils.showException(this, ex);
+        } finally {
+        }
+    }//GEN-LAST:event_buttonTitleActionPerformed
+
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JButton btFixColormapRange;
+    private javax.swing.JRadioButton buttonAutomatic;
     private javax.swing.JToggleButton buttonFit;
+    private javax.swing.JRadioButton buttonFullRange;
+    private javax.swing.JButton buttonGrabBackground;
+    private javax.swing.ButtonGroup buttonGroup1;
+    private javax.swing.ButtonGroup buttonGroup2;
+    private javax.swing.JRadioButton buttonManual;
     private javax.swing.JToggleButton buttonMarker;
     private javax.swing.JToggleButton buttonPause;
     private javax.swing.JToggleButton buttonProfile;
     private javax.swing.JToggleButton buttonReticle;
     private javax.swing.JButton buttonSave;
     private javax.swing.JToggleButton buttonScale;
+    private javax.swing.JToggleButton buttonSidePanel;
     private javax.swing.JButton buttonStreamData;
+    private javax.swing.JToggleButton buttonTitle;
+    private javax.swing.JRadioButton buttonZoom025;
+    private javax.swing.JRadioButton buttonZoom05;
+    private javax.swing.JRadioButton buttonZoom2;
+    private javax.swing.JRadioButton buttonZoomFit;
+    private javax.swing.JRadioButton buttonZoomNormal;
+    private javax.swing.JRadioButton buttonZoomStretch;
+    private javax.swing.JCheckBox checkBackground;
+    private javax.swing.JCheckBox checkGoodRegion;
+    private javax.swing.JCheckBox checkHistogram;
+    private javax.swing.JCheckBox checkRotation;
+    private javax.swing.JCheckBox checkSlicing;
+    private javax.swing.JCheckBox checkThreshold;
+    private javax.swing.JComboBox comboColormap;
+    private javax.swing.JLabel jLabel3;
+    private javax.swing.JLabel jLabel4;
     private javax.swing.JToolBar.Separator jSeparator6;
+    private javax.swing.JLabel labelAngle;
+    private javax.swing.JLabel labelConstant;
+    private javax.swing.JLabel labelGrScale;
+    private javax.swing.JLabel labelGrThreshold;
+    private javax.swing.JLabel labelMax;
+    private javax.swing.JLabel labelMin;
+    private javax.swing.JLabel labelMode;
+    private javax.swing.JLabel labelOrder;
+    private javax.swing.JLabel labelSlNumber;
+    private javax.swing.JLabel labelSlOrientation;
+    private javax.swing.JLabel labelSlScale;
+    private javax.swing.JPanel panelColormap;
+    private javax.swing.JPanel panelPipeline;
+    private javax.swing.JPanel panelSlicing;
     private javax.swing.JPanel panelStream;
+    private javax.swing.JPanel panelZoom;
     private ch.psi.pshell.swing.ValueSelection pauseSelection;
     protected ch.psi.pshell.imaging.Renderer renderer;
+    private javax.swing.JPanel sidePanel;
+    private javax.swing.JSpinner spinnerGrScale;
+    private javax.swing.JSpinner spinnerGrThreshold;
+    private javax.swing.JSpinner spinnerMax;
+    private javax.swing.JSpinner spinnerMin;
+    private javax.swing.JSpinner spinnerRotationAngle;
+    private javax.swing.JSpinner spinnerRotationConstant;
+    private javax.swing.JSpinner spinnerRotationMode;
+    private javax.swing.JSpinner spinnerRotationOrder;
+    private javax.swing.JSpinner spinnerSlNumber;
+    private javax.swing.JSpinner spinnerSlOrientation;
+    private javax.swing.JSpinner spinnerSlScale;
+    private javax.swing.JSpinner spinnerThreshold;
     private javax.swing.JTextField textStream;
     private javax.swing.JToolBar toolBar;
     private javax.swing.JPanel topPanel;
