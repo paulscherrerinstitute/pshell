@@ -1933,12 +1933,6 @@ public class StreamCameraViewer extends MonitoredPanel {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
-        buttonGroup1 = new javax.swing.ButtonGroup();
-        buttonGroup2 = new javax.swing.ButtonGroup();
-        buttonGroup3 = new javax.swing.ButtonGroup();
-        buttonGroup4 = new javax.swing.ButtonGroup();
-        jProgressBar1 = new javax.swing.JProgressBar();
-        jLabel1 = new javax.swing.JLabel();
         topPanel = new javax.swing.JPanel();
         toolBar = new javax.swing.JToolBar();
         buttonStreamData = new javax.swing.JButton();
@@ -1954,8 +1948,6 @@ public class StreamCameraViewer extends MonitoredPanel {
         panelStream = new javax.swing.JPanel();
         textStream = new javax.swing.JTextField();
         renderer = new ch.psi.pshell.imaging.Renderer();
-
-        jLabel1.setText("jLabel1");
 
         setPreferredSize(new java.awt.Dimension(873, 600));
 
@@ -2193,10 +2185,6 @@ public class StreamCameraViewer extends MonitoredPanel {
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JToggleButton buttonFit;
-    private javax.swing.ButtonGroup buttonGroup1;
-    private javax.swing.ButtonGroup buttonGroup2;
-    private javax.swing.ButtonGroup buttonGroup3;
-    private javax.swing.ButtonGroup buttonGroup4;
     private javax.swing.JToggleButton buttonMarker;
     private javax.swing.JToggleButton buttonPause;
     private javax.swing.JToggleButton buttonProfile;
@@ -2204,8 +2192,6 @@ public class StreamCameraViewer extends MonitoredPanel {
     private javax.swing.JButton buttonSave;
     private javax.swing.JToggleButton buttonScale;
     private javax.swing.JButton buttonStreamData;
-    private javax.swing.JLabel jLabel1;
-    private javax.swing.JProgressBar jProgressBar1;
     private javax.swing.JToolBar.Separator jSeparator6;
     private javax.swing.JPanel panelStream;
     private ch.psi.pshell.swing.ValueSelection pauseSelection;
