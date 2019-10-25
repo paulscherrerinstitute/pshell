@@ -93,6 +93,7 @@ import org.apache.commons.math3.analysis.function.Gaussian;
 import org.apache.commons.math3.fitting.GaussianCurveFitter;
 import org.apache.commons.math3.fitting.PolynomialCurveFitter;
 import org.apache.commons.math3.fitting.WeightedObservedPoint;
+import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 
 /**
  *
@@ -109,6 +110,7 @@ public class StreamCameraViewer extends MonitoredPanel {
     JDialog histogramDialog;
     boolean showFit;
     boolean showProfile;
+    boolean localFit;
     Overlay[] userOv;
     Overlay[] fitOv;
     Overlay[] profileOv;
@@ -298,6 +300,10 @@ public class StreamCameraViewer extends MonitoredPanel {
                 } catch (Exception ex) {
                     ex.printStackTrace();
                 }
+            }
+            
+            if (App.hasArgument("local_fit")) {
+               localFit = true;
             }
 
             if (App.hasArgument("integration")) {
@@ -510,7 +516,7 @@ public class StreamCameraViewer extends MonitoredPanel {
         Overlay[][] fo = null;
         if ((showFit || showProfile)) {
             try {
-                fo = getFitOverlays(data);
+                fo = getFitOverlays(data, localFit);
             } catch (Exception ex) {
                 System.err.println(ex);
             }
@@ -918,7 +924,7 @@ public class StreamCameraViewer extends MonitoredPanel {
 
     }
 
-    protected Overlay[][] getFitOverlays(Data data) {
+    protected Overlay[][] getFitOverlays(Data data, boolean localFit) {
         Overlays.Polyline hgaussian = null;
         Overlays.Polyline vgaussian = null;
         Overlays.Polyline hprofile = null;
@@ -932,100 +938,210 @@ public class StreamCameraViewer extends MonitoredPanel {
             int width = data.getWidth();
             int profileSize = renderer.getProfileSize();
             ImageData id = null;
+            if (!localFit)  {
+                try {
+                    id = getFrame(data);
+                    if (id == null) {
+                        return null;
+                    }
+                    xMean = id.x_fit_mean;
+                    xSigma = id.x_fit_standard_deviation;
+                    yMean = id.y_fit_mean;
+                    ySigma = id.y_fit_standard_deviation;
+                    gX = id.x_fit_gauss_function;
+                    gY = id.y_fit_gauss_function;
+                    pX = id.x_profile;
+                    pY = id.y_profile;
+                    xCom = id.x_center_of_mass;
+                    xRms = id.x_rms;
+                    yCom = id.y_center_of_mass;
+                    yRms = id.y_rms;
+                    sliceCenters = id.sliceCenters;
 
-            try {
-                id = getFrame(data);
-                if (id == null) {
+                    profileSize /= 4;
+                    if (pX != null) {
+                        int[] xp = Arr.indexesInt(pX.length);
+                        int[] xg = xp;
+                        int[] yp = new int[pX.length];
+                        int[] yg = new int[pX.length];
+
+                        List<Double> l = Arrays.asList((Double[]) Convert.toWrapperArray(pX));
+                        double minProfile = Collections.min(l);
+                        double maxProfile = Collections.max(l);
+                        double rangeProfile = maxProfile - minProfile;
+                        double minGauss = minProfile;
+                        double rangeGauss = rangeProfile;
+                        //If not good region, range of profile and fit  are similar so save this calcultion
+                        if (id.goodRegion && id.gr_size_x > 0) {
+                            l = Arrays.asList((Double[]) Convert.toWrapperArray(Arrays.copyOfRange(gX, id.gr_pos_x, id.gr_pos_x + id.gr_size_x)));
+                            minGauss = Collections.min(l);
+                            rangeGauss = Collections.max(l) - minGauss;
+                        }
+
+                        for (int i = 0; i < xp.length; i++) {
+                            if (gX != null) {
+                                yg[i] = (int) (height - 1 - (((gX[i] - minGauss) / rangeGauss) * profileSize));
+                            }
+                            yp[i] = (int) (height - 1 - (((pX[i] - minProfile) / rangeProfile) * profileSize));
+                        }
+
+                        if (id.goodRegion && id.gr_size_x > 0) {
+                            xg = Arrays.copyOfRange(xg, id.gr_pos_x, id.gr_pos_x + id.gr_size_x);
+                            yg = Arrays.copyOfRange(yg, id.gr_pos_x, id.gr_pos_x + id.gr_size_x);
+                        }
+
+                        vgaussian = new Overlays.Polyline(penFit, xg, yg);
+                        vprofile = new Overlays.Polyline(renderer.getPenProfile(), xp, yp);
+                    }
+
+                    if (pY != null) {
+                        int[] xp = new int[pY.length];
+                        int[] xg = new int[pY.length];
+                        int[] yp = Arr.indexesInt(pY.length);
+                        int[] yg = yp;
+
+                        List<Double> l = Arrays.asList((Double[]) Convert.toWrapperArray(pY));
+                        double minProfile = Collections.min(l);
+                        double maxProfile = Collections.max(l);
+                        double rangeProfile = maxProfile - minProfile;
+                        double minGauss = minProfile;
+                        double rangeGauss = rangeProfile;
+                        //If not good region, range of profile and fit  are similar so save this calcultion
+                        if (id.goodRegion && id.gr_size_y > 0) {
+                            l = Arrays.asList((Double[]) Convert.toWrapperArray(Arrays.copyOfRange(gY, id.gr_pos_y, id.gr_pos_y + id.gr_size_y)));
+                            minGauss = Collections.min(l);
+                            rangeGauss = Collections.max(l) - minGauss;
+                        }
+
+                        for (int i = 0; i < xp.length; i++) {
+                            if (gY != null) {
+                                xg[i] = (int) (((gY[i] - minGauss) / rangeGauss) * profileSize);
+                            }
+                            xp[i] = (int) (((pY[i] - minProfile) / rangeProfile) * profileSize);
+                        }
+
+                        if (id.goodRegion && id.gr_size_y > 0) {
+                            xg = Arrays.copyOfRange(xg, id.gr_pos_y, id.gr_pos_y + id.gr_size_y);
+                            yg = Arrays.copyOfRange(yg, id.gr_pos_y, id.gr_pos_y + id.gr_size_y);
+                        }
+                        hgaussian = new Overlays.Polyline(penFit, xg, yg);
+                        hprofile = new Overlays.Polyline(renderer.getPenProfile(), xp, yp);
+                    }
+                } catch (Exception ex) {
+                    System.err.println(ex.getMessage());
                     return null;
                 }
-                xMean = id.x_fit_mean;
-                xSigma = id.x_fit_standard_deviation;
-                yMean = id.y_fit_mean;
-                ySigma = id.y_fit_standard_deviation;
-                gX = id.x_fit_gauss_function;
-                gY = id.y_fit_gauss_function;
-                pX = id.x_profile;
-                pY = id.y_profile;
-                xCom = id.x_center_of_mass;
-                xRms = id.x_rms;
-                yCom = id.y_center_of_mass;
-                yRms = id.y_rms;
-                sliceCenters = id.sliceCenters;
+            } else {
+                ArrayProperties properties = data.getProperties();
+                double maxPlot = properties.max;
+                double minPlot = properties.min;
+                double rangePlot = maxPlot - minPlot;
 
-                profileSize /= 4;
-                if (pX != null) {
-                    int[] xp = Arr.indexesInt(pX.length);
-                    int[] xg = xp;
-                    int[] yp = new int[pX.length];
-                    int[] yg = new int[pX.length];
-
-                    List<Double> l = Arrays.asList((Double[]) Convert.toWrapperArray(pX));
-                    double minProfile = Collections.min(l);
-                    double maxProfile = Collections.max(l);
-                    double rangeProfile = maxProfile - minProfile;
-                    double minGauss = minProfile;
-                    double rangeGauss = rangeProfile;
-                    //If not good region, range of profile and fit  are similar so save this calcultion
-                    if (id.goodRegion && id.gr_size_x > 0) {
-                        l = Arrays.asList((Double[]) Convert.toWrapperArray(Arrays.copyOfRange(gX, id.gr_pos_x, id.gr_pos_x + id.gr_size_x)));
-                        minGauss = Collections.min(l);
-                        rangeGauss = Collections.max(l) - minGauss;
-                    }
-
-                    for (int i = 0; i < xp.length; i++) {
-                        if (gX != null) {
-                            yg[i] = (int) (height - 1 - (((gX[i] - minGauss) / rangeGauss) * profileSize));
-                        }
-                        yp[i] = (int) (height - 1 - (((pX[i] - minProfile) / rangeProfile) * profileSize));
-                    }
-
-                    if (id.goodRegion && id.gr_size_x > 0) {
-                        xg = Arrays.copyOfRange(xg, id.gr_pos_x, id.gr_pos_x + id.gr_size_x);
-                        yg = Arrays.copyOfRange(yg, id.gr_pos_x, id.gr_pos_x + id.gr_size_x);
-                    }
-
-                    vgaussian = new Overlays.Polyline(penFit, xg, yg);
-                    vprofile = new Overlays.Polyline(renderer.getPenProfile(), xp, yp);
+                if (rangePlot <= 0) {
+                    return null;
                 }
-
-                if (pY != null) {
-                    int[] xp = new int[pY.length];
-                    int[] xg = new int[pY.length];
-                    int[] yp = Arr.indexesInt(pY.length);
-                    int[] yg = yp;
-
-                    List<Double> l = Arrays.asList((Double[]) Convert.toWrapperArray(pY));
-                    double minProfile = Collections.min(l);
-                    double maxProfile = Collections.max(l);
-                    double rangeProfile = maxProfile - minProfile;
-                    double minGauss = minProfile;
-                    double rangeGauss = rangeProfile;
-                    //If not good region, range of profile and fit  are similar so save this calcultion
-                    if (id.goodRegion && id.gr_size_y > 0) {
-                        l = Arrays.asList((Double[]) Convert.toWrapperArray(Arrays.copyOfRange(gY, id.gr_pos_y, id.gr_pos_y + id.gr_size_y)));
-                        minGauss = Collections.min(l);
-                        rangeGauss = Collections.max(l) - minGauss;
-                    }
-
-                    for (int i = 0; i < xp.length; i++) {
-                        if (gY != null) {
-                            xg[i] = (int) (((gY[i] - minGauss) / rangeGauss) * profileSize);
+                if (renderer.getCalibration() != null) {
+                    try {
+                        double[] sum = data.integrateVertically(true);
+                        double[] saux = new double[sum.length];
+                        int[] p = new int[sum.length];
+                        double[] x_egu = renderer.getCalibration().getAxisX(sum.length);
+                        double[] comRms = getComRms(sum, x_egu);
+                        xCom = comRms[0];
+                        xRms = comRms[1];
+                        int[] x = Arr.indexesInt(sum.length);
+                        DescriptiveStatistics stats = new DescriptiveStatistics(sum);
+                        double min = stats.getMin();
+                        for (int i = 0; i < sum.length; i++) {
+                            saux[i] = sum[i] - min;
                         }
-                        xp[i] = (int) (((pY[i] - minProfile) / rangeProfile) * profileSize);
+                        if (showFit) {
+                            double[] gaussian = fitGaussian(saux, x);
+                            if (gaussian != null) {
+                                if ((gaussian[2] < sum.length * 0.45)
+                                        && (gaussian[2] > 2)
+                                        && (gaussian[0] > min * 0.03)) {
+                                    xNorm = gaussian[0];
+                                    xMean = gaussian[1];
+                                    xSigma = gaussian[2];
+                                    double[] fit = getFitFunction(gaussian, x);
+                                    int[] y = new int[x.length];
+                                    for (int i = 0; i < x.length; i++) {
+                                        y[i] = (int) (height - 1 - ((((fit[i] + min) / height - minPlot) / rangePlot) * profileSize));
+                                    }
+                                    vgaussian = new Overlays.Polyline(penFit, x, y);
+                                }
+                            }
+                        }
+                        if (showProfile) {
+                            for (int i = 0; i < x.length; i++) {
+                                p[i] = (int) (height - 1 - (((sum[i] / height - minPlot) / rangePlot) * profileSize));
+                            }
+                            vprofile = new Overlays.Polyline(renderer.getPenProfile(), x, p);
+                        }
+                    } catch (Exception ex) {
+                        ex.printStackTrace();
                     }
 
-                    if (id.goodRegion && id.gr_size_y > 0) {
-                        xg = Arrays.copyOfRange(xg, id.gr_pos_y, id.gr_pos_y + id.gr_size_y);
-                        yg = Arrays.copyOfRange(yg, id.gr_pos_y, id.gr_pos_y + id.gr_size_y);
+                    try {
+                        double[] sum = data.integrateHorizontally(true);
+                        double[] saux = new double[sum.length];
+                        int[] p = new int[sum.length];
+                        double[] y_egu = renderer.getCalibration().getAxisY(sum.length);
+                        double[] comRms = getComRms(sum, y_egu);
+                        yCom = comRms[0];
+                        yRms = comRms[1];
+                        int[] x = Arr.indexesInt(sum.length);
+                        DescriptiveStatistics stats = new DescriptiveStatistics(sum);
+                        double min = stats.getMin();
+                        for (int i = 0; i < sum.length; i++) {
+                            saux[i] = sum[i] - min;
+                        }
+
+                        if (showFit) {
+                            double[] gaussian = fitGaussian(saux, x);
+                            if (gaussian != null) {
+                                //Only aknowledge beam fully inside the image and peak over 3% of min
+                                if ((gaussian[2] < sum.length * 0.45)
+                                        && (gaussian[2] > 2)
+                                        && (gaussian[0] > min * 0.03)) {
+                                    yNorm = gaussian[0];
+                                    yMean = gaussian[1];
+                                    ySigma = gaussian[2];
+                                    double[] fit = getFitFunction(gaussian, x);
+
+                                    int[] y = new int[x.length];
+                                    for (int i = 0; i < x.length; i++) {
+                                        y[i] = (int) ((((fit[i] + min) / width - minPlot) / rangePlot) * profileSize);
+                                    }
+                                    hgaussian = new Overlays.Polyline(penFit, y, x);
+                                }
+                            }
+                        }
+                        if (showProfile) {
+                            for (int i = 0; i < x.length; i++) {
+                                p[i] = (int) (((sum[i] / width - minPlot) / rangePlot) * profileSize);
+                            }
+                            hprofile = new Overlays.Polyline(renderer.getPenProfile(), p, x);
+                        }
+
+                    } catch (Exception ex) {
+                        ex.printStackTrace();
                     }
-                    hgaussian = new Overlays.Polyline(penFit, xg, yg);
-                    hprofile = new Overlays.Polyline(renderer.getPenProfile(), xp, yp);
+                    if (xSigma != null) {
+                        xSigma *= renderer.getCalibration().getScaleX();
+                    }
+                    if (ySigma != null) {
+                        ySigma *= renderer.getCalibration().getScaleY();
+                    }
+                    if (xMean != null) {
+                        xMean = data.getX((int) Math.round(xMean));
+                    }
+                    if (yMean != null) {
+                        yMean = data.getY((int) Math.round(yMean));
+                    }
                 }
-            } catch (Exception ex) {
-                System.err.println(ex.getMessage());
-                return null;
             }
-
             final String units = (renderer.getCalibration() != null) ? "\u00B5m" : "px";
             final String fmt = "%7.1f" + units;
             Overlays.Text textCom = null;
@@ -1062,9 +1178,9 @@ public class StreamCameraViewer extends MonitoredPanel {
                 fOv = new Overlay[]{hgaussian, vgaussian, cross, textFit};
 
                 if ((id != null) && (id.goodRegion)) {
-                    try {
+                    try {                  
                         double[] x = id.gr_x_axis;
-                        double[] y = id.gr_y_axis;
+                        double[] y = id.gr_y_axis;                       
                         Overlays.Rect goodRegionOv = new Overlays.Rect(new Pen(penFit.getColor(), 0, Pen.LineStyle.dotted));
                         goodRegionOv.setCalibration(renderer.getCalibration());
                         goodRegionOv.setPosition(new Point(id.gr_pos_x, id.gr_pos_y));
