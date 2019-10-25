@@ -318,8 +318,15 @@ public class Setup extends Config {
     String expandStaticTokens(String path) {
         return expandStaticTokens(path, -1);
     }
-
+    
     String expandStaticTokens(String path, long timestamp) {
+        return expand(path, timestamp, user);
+    }
+
+    public static String expand(String path) {
+        return expand(path, -1, null);
+    }
+    public static String expand(String path, long timestamp, String user) {
         if (user != null) {
             path = path.replace(TOKEN_USER, user);
         }

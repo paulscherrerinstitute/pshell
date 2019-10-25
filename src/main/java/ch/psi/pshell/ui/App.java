@@ -97,7 +97,9 @@ public class App extends ObservableBase<AppListener> {
             consoleLogLevel = Level.parse(getArgumentValue("clog"));
         } catch (Exception ex){            
         }
-        LogManager.setConsoleLoggerLevel(consoleLogLevel);        
+        LogManager.setConsoleLoggerLevel(consoleLogLevel);  
+        appendClassPath();
+        applyLookAndFeel();        
     }
 
     public State getState() {
@@ -1387,25 +1389,7 @@ public class App extends ObservableBase<AppListener> {
     }
 
     private static App createInstance() {
-        if (Sys.getOSFamily() == OSFamily.Mac) {
-            try {
-                SwingUtils.setMacScreenMenuBar(getApplicationTitle());
-            } catch (Exception ex) {
-            }
-        }
-
         instance = new App();
-
-        if (hasArgument("cp")) {
-            for (String path : getArgumentValue("cp").split(";")) {
-                try {
-                    Sys.addToClassPath(new File(path).getCanonicalPath());
-                } catch (Exception ex) {
-                    logger.log(Level.WARNING, null, ex);
-                }
-            }
-        }
-        applyLookAndFeel();
         logger.info("Created");
         return instance;
     }
@@ -1431,6 +1415,12 @@ public class App extends ObservableBase<AppListener> {
         if (isHeadless()) {
             return;
         }
+        if (Sys.getOSFamily() == OSFamily.Mac) {
+            try {
+                SwingUtils.setMacScreenMenuBar(getApplicationTitle());
+            } catch (Exception ex) {
+            }
+        }        
         //Look and feel: default is system
         String laf = getArgumentValue("laf");
         if (laf != null) {
@@ -1451,6 +1441,18 @@ public class App extends ObservableBase<AppListener> {
             }
         }
         MainFrame.setLookAndFeel(laf);
+    }
+    
+    static void appendClassPath(){
+        if (hasArgument("cp")) {
+            for (String path : getArgumentValue("cp").split(";")) {
+                try {
+                    Sys.addToClassPath(new File(path).getCanonicalPath());
+                } catch (Exception ex) {
+                    logger.log(Level.WARNING, null, ex);
+                }
+            }
+        } 
     }
 
     //Exit

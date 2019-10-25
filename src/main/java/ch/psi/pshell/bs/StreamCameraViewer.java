@@ -1,10 +1,13 @@
 package ch.psi.pshell.bs;
 
+import ch.psi.pshell.core.Context;
 import java.io.IOException;
 import java.nio.file.Paths;
 import ch.psi.pshell.imaging.ImageListener;
 import ch.psi.utils.swing.SwingUtils;
 import ch.psi.pshell.core.JsonSerializer;
+import ch.psi.pshell.core.Setup;
+import ch.psi.pshell.data.DataManager;
 import ch.psi.pshell.device.Device;
 import ch.psi.pshell.device.Readable.ReadableArray;
 import ch.psi.pshell.device.Readable.ReadableNumber;
@@ -15,6 +18,7 @@ import ch.psi.pshell.ui.App;
 import ch.psi.pshell.imaging.Data;
 import ch.psi.pshell.imaging.DimensionDouble;
 import ch.psi.pshell.imaging.Histogram;
+import ch.psi.pshell.imaging.ImageBuffer;
 import ch.psi.pshell.imaging.Overlay;
 import ch.psi.pshell.imaging.Overlays;
 import ch.psi.pshell.imaging.Overlays.Text;
@@ -28,6 +32,7 @@ import ch.psi.pshell.swing.ValueSelection;
 import ch.psi.pshell.swing.ValueSelection.ValueSelectionListener;
 import ch.psi.utils.Arr;
 import ch.psi.utils.ArrayProperties;
+import ch.psi.utils.Chrono;
 import ch.psi.utils.Convert;
 import ch.psi.utils.Str;
 import ch.psi.utils.Sys;
@@ -54,6 +59,7 @@ import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.image.BufferedImage;
+import java.io.File;
 import java.io.FileInputStream;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
@@ -69,6 +75,7 @@ import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JDialog;
+import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
@@ -91,6 +98,7 @@ import org.apache.commons.math3.fitting.WeightedObservedPoint;
  *
  */
 public class StreamCameraViewer extends MonitoredPanel {
+
     final String CAMERA_DEVICE_NAME = "CurrentCamera";
     boolean useServerStats = true;
     String userOverlaysConfigFile;
@@ -111,7 +119,6 @@ public class StreamCameraViewer extends MonitoredPanel {
     int integration = 0;
 
     Timer timer;
-
 
     public static class ImageData {
 
@@ -331,6 +338,15 @@ public class StreamCameraViewer extends MonitoredPanel {
                 }
             });
 
+            JMenuItem menuSaveStack = new JMenuItem("Save Stack");
+            menuSaveStack.addActionListener((ActionEvent e) -> {
+                try {
+                    saveStack();
+                } catch (Exception ex) {
+                    SwingUtils.showException(this, ex);
+                }
+            });
+
             JCheckBoxMenuItem menuFrameIntegration = new JCheckBoxMenuItem("Multi-Frame", (integration != 0));
             menuFrameIntegration.addActionListener((ActionEvent e) -> {
                 if (integration == 0) {
@@ -384,6 +400,7 @@ public class StreamCameraViewer extends MonitoredPanel {
             renderer.getPopupMenu().addSeparator();
             renderer.getPopupMenu().add(menuRendererConfig);
             renderer.getPopupMenu().add(menuSetImageBufferSize);
+            renderer.getPopupMenu().add(menuSaveStack);
             renderer.getPopupMenu().addPopupMenuListener(new PopupMenuListener() {
                 @Override
                 public void popupMenuWillBecomeVisible(PopupMenuEvent e) {
@@ -508,10 +525,10 @@ public class StreamCameraViewer extends MonitoredPanel {
     }
 
     protected void manageUserOverlays(BufferedImage bi, Data data) {
-            
-        Overlay[] fo = (bi == null) 
-                ? null 
-                : getUserOverlays(userOverlayConfig, renderer, ((camera == null)? null : getFrame(data)));
+
+        Overlay[] fo = (bi == null)
+                ? null
+                : getUserOverlays(userOverlayConfig, renderer, ((camera == null) ? null : getFrame(data)));
         synchronized (lockOverlays) {
             renderer.updateOverlays(fo, userOv);
             userOv = fo;
@@ -778,6 +795,30 @@ public class StreamCameraViewer extends MonitoredPanel {
         }
     }
 
+    protected void checkProfile() {
+        if (!updatingButtons) {
+            setShowProfile(buttonProfile.isSelected());
+        }
+    }
+
+    protected void checkFit() {
+        if (!updatingButtons) {
+            setShowFit(buttonFit.isSelected());
+        }
+    }
+
+    protected void checkPause() {
+        if (!updatingButtons) {
+            setPaused(buttonPause.isSelected());
+        }
+    }
+
+    protected void checkColormap() {
+        if (!updatingButtons) {
+            renderer.setShowColormapScale(buttonScale.isSelected());
+        }
+    }
+
     public Point getStreamMarkerPos() throws IOException {
         //System.out.println(server.getInstanceConfig().get("Marker"));
         Map<String, Object> pars = getProcessingParameters(camera.getValue());
@@ -824,6 +865,8 @@ public class StreamCameraViewer extends MonitoredPanel {
             if ((renderer.getMarker() == null) && buttonMarker.isSelected()) {
                 buttonMarker.setSelected(false);
             }
+            buttonProfile.setSelected(showProfile);
+            buttonFit.setSelected(showFit);
             buttonSave.setSelected(renderer.isSnapshotDialogVisible());
 
         } finally {
@@ -1137,10 +1180,10 @@ public class StreamCameraViewer extends MonitoredPanel {
         }
     }
 
-    protected static Overlay[] getUserOverlays(ArrayList<UserOverlay> userOverlayConfig,  Renderer renderer, ImageData id) {
+    protected static Overlay[] getUserOverlays(ArrayList<UserOverlay> userOverlayConfig, Renderer renderer, ImageData id) {
         ArrayList<Overlay> ret = new ArrayList<>();
         if (id != null) {
-  
+
             for (UserOverlay uo : userOverlayConfig) {
                 try {
                     Overlay ov = uo.obj;
@@ -1577,6 +1620,174 @@ public class StreamCameraViewer extends MonitoredPanel {
         }
     }
 
+    public void setShowProfile(boolean value) {
+        showProfile = value;
+        if (value) {
+            renderer.setProfile(Renderer.Profile.None);
+        } else {
+            renderer.removeOverlays(profileOv);
+            profileOv = null;
+        }
+        updateButtons();
+    }
+
+    public void setShowFit(boolean value) {
+        showFit = value;
+        if (showFit) {
+            renderer.setProfile(Renderer.Profile.None);
+        } else {
+            renderer.removeOverlays(fitOv);
+            fitOv = null;
+        }
+        updateButtons();
+    }
+
+    public void saveSnapshot() throws Exception {
+        boolean paused = isPaused();
+        try {
+            if (!paused) {
+                setPaused(true);
+            }
+            String snapshotFile = null;
+            synchronized (imageBuffer) {
+                Frame frame = getCurrentFrame();
+                if (frame == null) {
+                    throw new Exception("No current image");
+                }
+                ArrayList<Frame> frames = new ArrayList<>();
+                frames.add(frame);
+                snapshotFile = this.saveFrames(stream + "_snapshot", frames, null);
+                if (snapshotFile != null) {
+                    //renderer.saveSnapshot(snapshotFile, "png", true);
+                    ImageBuffer.saveImage(SwingUtils.createImage(renderer), snapshotFile + ".png", "png");
+                    SwingUtils.showMessage(getTopLevel(), "Success", "Created data file:\n" + snapshotFile);
+                }
+            }
+
+        } finally {
+            if (!paused) {
+                setPaused(false);
+            }
+        }
+
+    }
+
+    public void saveStack() throws Exception {
+        String snapshotFile = null;
+        synchronized (imageBuffer) {
+            snapshotFile = saveFrames(stream + "_camera_stack", imageBuffer, null);
+        }
+        if (snapshotFile != null) {
+            SwingUtils.showMessage(getTopLevel(), "Success", "Created data file:\n" + snapshotFile);
+        }
+    }
+
+    protected String saveFrames(String name, ArrayList<Frame> frames, Map<String, Object> attributes) throws Exception {
+        ArrayList<StreamValue> values = new ArrayList<>();
+        for (Frame frame : frames) {
+            values.add(frame.cache);
+        }
+        return saveImages(name, values, attributes);
+    }
+
+    protected String saveImages(String name, ArrayList<StreamValue> images, Map<String, Object> attributes) throws Exception {
+        name = name.replaceAll("/", "");
+        int depth = images.size();
+        if (depth == 0) {
+            return null;
+        }
+        StreamValue first = images.get(0);
+        String pathRoot = "/camera1/";
+        String pathImage = pathRoot + "image";
+        String pathPid = pathRoot + "pulse_id";
+        String pathTimestampStr = pathRoot + "timestamp_str";
+        Map<String, Object> processingPars = getProcessingParameters(first);
+        String camera = (String) processingPars.get("camera_name");
+
+        int width = ((Number) first.getValue("width")).intValue();
+        int height = ((Number) first.getValue("height")).intValue();
+        Class dataType = first.getValue("image").getClass().getComponentType();
+
+        DataManager dm;
+        if (Context.getInstance() != null) {
+            Context.getInstance().setExecutionPars(name);
+            dm = Context.getInstance().getDataManager();
+        } else {
+            String fileName = Setup.expand("{date}_{time}_") + name + ".h5";
+            String path = App.getArgumentValue("data");
+            if (path == null) {
+                path = Sys.getUserHome();
+            }
+            dm = new DataManager(Paths.get(path, fileName).toFile(), "h5");
+        }
+
+        //Create tables            
+        dm.createDataset(pathImage, dataType, new int[]{depth, height, width});
+        dm.createDataset(pathPid, Long.class, new int[]{depth});
+        dm.createDataset(pathTimestampStr, String.class, new int[]{depth});
+        for (String id : first.getIdentifiers()) {
+            Object val = first.getValue(id);
+            if (id.equals("image")) {
+            } else if (id.equals("processing_parameters")) {
+                Map<String, Object> pars = getProcessingParameters(first);
+                for (String key : pars.keySet()) {
+                    if ((pars.get(key) != null) && (pars.get(key) instanceof Map)) {
+                        for (Object k : ((Map) pars.get(key)).keySet()) {
+                            Object v = ((Map) pars.get(key)).get(k);
+                            dm.setAttribute(pathImage, key + " " + k, (v == null) ? "" : v);
+                        }
+                    } else {
+                        Object value = pars.get(key);
+                        if (value == null) {
+                            value = "";
+                        } else if (value instanceof List) {
+                            Class cls = (((List) value).size() > 0) ? ((List) value).get(0).getClass() : double.class;
+                            value = Convert.toPrimitiveArray(value, cls);
+                            //value = Convert.toDouble(value);
+                        }
+                        dm.setAttribute(pathImage, key, value);
+                    }
+                }
+            } else if (val.getClass().isArray()) {
+                dm.createDataset(pathRoot + id, Double.class, new int[]{depth, Array.getLength(val)});
+            } else {
+                dm.createDataset(pathRoot + id, val.getClass(), new int[]{depth});
+            }
+        }
+
+        //Add metadata
+        dm.setAttribute(pathRoot, "Camera", camera);
+        dm.setAttribute(pathRoot, "Images", depth);
+        dm.setAttribute(pathRoot, "Interval", -1);
+        if (attributes != null) {
+            for (String key : attributes.keySet()) {
+                dm.setAttribute(pathRoot, key, String.valueOf(attributes.get(key)));
+            }
+        }
+
+        //Save data
+        for (int index = 0; index < depth; index++) {
+            StreamValue streamValue = images.get(index);
+            dm.setItem(pathImage, streamValue.getValue("image"), new long[]{index, 0, 0}, new int[]{1, height, width});
+            dm.setItem(pathPid, streamValue.getPulseId(), index);
+            dm.setItem(pathTimestampStr, Chrono.getTimeStr(streamValue.getTimestamp(), "YYYY-MM-dd HH:mm:ss.SSS"), index);
+
+            for (String id : streamValue.getIdentifiers()) {
+                Object val = streamValue.getValue(id);
+                if (id.equals("image")) {
+                } else if (id.equals("processing_parameters")) {
+                } else if (val.getClass().isArray()) {
+                    dm.setItem(pathRoot + id, val, index);
+                } else {
+                    dm.setItem(pathRoot + id, val, index);
+                }
+            }
+        }
+        dm.closeOutput();
+
+        return dm.getRootFileName();
+    }
+
     public boolean isPaused() {
         return renderer.isPaused();
     }
@@ -1591,7 +1802,8 @@ public class StreamCameraViewer extends MonitoredPanel {
             try {
                 StreamCameraViewer iv = new StreamCameraViewer();
                 iv.setStream(App.getArgumentValue("stream"));
-                SwingUtils.showDialog(null, "Stream Camera Viewer", new Dimension(800, 600), iv);
+                Window window = SwingUtils.showFrame(null, "Stream Camera Viewer", new Dimension(800, 600), iv);
+                window.setIconImage(Toolkit.getDefaultToolkit().getImage(App.getResourceUrl("IconSmall.png")));
             } catch (Exception ex) {
                 Logger.getLogger(StreamCameraViewer.class.getName()).log(Level.SEVERE, null, ex);
             }
@@ -1614,7 +1826,7 @@ public class StreamCameraViewer extends MonitoredPanel {
         topPanel = new javax.swing.JPanel();
         toolBar = new javax.swing.JToolBar();
         buttonStreamData = new javax.swing.JButton();
-        buttonSave = new javax.swing.JToggleButton();
+        buttonSave = new javax.swing.JButton();
         buttonPause = new javax.swing.JToggleButton();
         jSeparator6 = new javax.swing.JToolBar.Separator();
         buttonMarker = new javax.swing.JToggleButton();
@@ -1648,7 +1860,8 @@ public class StreamCameraViewer extends MonitoredPanel {
 
         buttonSave.setIcon(getIcon("Save"));
         buttonSave.setText(" ");
-        buttonSave.setToolTipText("Save Snapshot");
+        buttonSave.setToolTipText("Show Data Window");
+        buttonSave.setFocusable(false);
         buttonSave.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
         buttonSave.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -1806,13 +2019,7 @@ public class StreamCameraViewer extends MonitoredPanel {
 
     private void buttonFitActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonFitActionPerformed
         try {
-            showFit = buttonFit.isSelected();
-            if (showFit) {
-                renderer.setProfile(Renderer.Profile.None);
-            } else {
-                renderer.removeOverlays(fitOv);
-                fitOv = null;
-            }
+            checkFit();
         } catch (Exception ex) {
             SwingUtils.showException(this, ex);
         }
@@ -1820,13 +2027,7 @@ public class StreamCameraViewer extends MonitoredPanel {
 
     private void buttonProfileActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonProfileActionPerformed
         try {
-            showProfile = buttonProfile.isSelected();
-            if (showProfile) {
-                renderer.setProfile(Renderer.Profile.None);
-            } else {
-                renderer.removeOverlays(profileOv);
-                profileOv = null;
-            }
+            checkProfile();
         } catch (Exception ex) {
             SwingUtils.showException(this, ex);
         }
@@ -1842,22 +2043,11 @@ public class StreamCameraViewer extends MonitoredPanel {
 
     private void buttonPauseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonPauseActionPerformed
         try {
-            if (!updatingButtons) {
-                setPaused(buttonPause.isSelected());
-            }
+            checkPause();
         } catch (Exception ex) {
             SwingUtils.showException(this, ex);
         }
     }//GEN-LAST:event_buttonPauseActionPerformed
-
-    private void buttonSaveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonSaveActionPerformed
-        try {
-            //TODO
-        } catch (Exception ex) {
-            Logger.getLogger(getClass().getName()).log(Level.WARNING, null, ex);
-            SwingUtils.showException(this, ex);
-        }
-    }//GEN-LAST:event_buttonSaveActionPerformed
 
     private void buttonStreamDataActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonStreamDataActionPerformed
         try {
@@ -1869,11 +2059,20 @@ public class StreamCameraViewer extends MonitoredPanel {
 
     private void buttonScaleActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonScaleActionPerformed
         try {
-            renderer.setShowColormapScale(buttonScale.isSelected());
+            checkColormap();
         } catch (Exception ex) {
             SwingUtils.showException(this, ex);
         }
     }//GEN-LAST:event_buttonScaleActionPerformed
+
+    private void buttonSaveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonSaveActionPerformed
+        try {
+            saveSnapshot();
+        } catch (Exception ex) {
+            Logger.getLogger(getClass().getName()).log(Level.WARNING, null, ex);
+            SwingUtils.showException(this, ex);
+        }
+    }//GEN-LAST:event_buttonSaveActionPerformed
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
@@ -1886,7 +2085,7 @@ public class StreamCameraViewer extends MonitoredPanel {
     private javax.swing.JToggleButton buttonPause;
     private javax.swing.JToggleButton buttonProfile;
     private javax.swing.JToggleButton buttonReticle;
-    private javax.swing.JToggleButton buttonSave;
+    private javax.swing.JButton buttonSave;
     private javax.swing.JToggleButton buttonScale;
     private javax.swing.JButton buttonStreamData;
     private javax.swing.JLabel jLabel1;
@@ -1894,7 +2093,7 @@ public class StreamCameraViewer extends MonitoredPanel {
     private javax.swing.JToolBar.Separator jSeparator6;
     private javax.swing.JPanel panelStream;
     private ch.psi.pshell.swing.ValueSelection pauseSelection;
-    private ch.psi.pshell.imaging.Renderer renderer;
+    protected ch.psi.pshell.imaging.Renderer renderer;
     private javax.swing.JTextField textStream;
     private javax.swing.JToolBar toolBar;
     private javax.swing.JPanel topPanel;

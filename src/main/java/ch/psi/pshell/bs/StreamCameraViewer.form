@@ -110,13 +110,14 @@
                 <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="buttonStreamDataActionPerformed"/>
               </Events>
             </Component>
-            <Component class="javax.swing.JToggleButton" name="buttonSave">
+            <Component class="javax.swing.JButton" name="buttonSave">
               <Properties>
                 <Property name="icon" type="javax.swing.Icon" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
                   <Connection code="getIcon(&quot;Save&quot;)" type="code"/>
                 </Property>
                 <Property name="text" type="java.lang.String" value=" "/>
-                <Property name="toolTipText" type="java.lang.String" value="Save Snapshot"/>
+                <Property name="toolTipText" type="java.lang.String" value="Show Data Window"/>
+                <Property name="focusable" type="boolean" value="false"/>
                 <Property name="horizontalTextPosition" type="int" value="0"/>
               </Properties>
               <Events>
@@ -256,6 +257,9 @@
       </SubComponents>
     </Container>
     <Component class="ch.psi.pshell.imaging.Renderer" name="renderer">
+      <AuxValues>
+        <AuxValue name="JavaCodeGenerator_VariableModifier" type="java.lang.Integer" value="4"/>
+      </AuxValues>
     </Component>
   </SubComponents>
 </Form>

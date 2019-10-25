@@ -44,6 +44,7 @@ public class DataManager implements AutoCloseable {
     Layout layout;
     Provider provider;
     int fileSequentialNumber = -1;
+    final File outputFile;
 
     class ProviderData {
 
@@ -59,13 +60,26 @@ public class DataManager implements AutoCloseable {
     public DataManager(Context context) {
         this.context = context;
         context.addScanListener(scanListener);
+        outputFile = null;
     }
+    
+    /**
+     * Constructor for single file dump
+     */
+    public DataManager(File file, String provider) throws Exception {
+        this.context = null;
+        outputFile = file;
+        setProvider(provider);
+        outputFile.mkdirs();
+        getProvider().openOutput(outputFile);     
+    }    
 
     /**
      * Constructor for offline data access
      */
     public DataManager(Context context, String provider, String layout) throws Exception {
         this.context = context;
+        outputFile = null;
         setProvider(provider);
         setLayout(layout);
         dataRootDepth = Paths.get(IO.getRelativePath(getExecutionPars().getPath(), getDataFolder())).getNameCount();
@@ -121,10 +135,12 @@ public class DataManager implements AutoCloseable {
     }
 
     public void setProvider(Provider provider) throws Exception {
-        if (this == context.getDataManager()) {
-            logger.info("Setting data provider: " + provider.getClass().getName());
-        } else {
-            logger.fine("Setting data provider in auxiliary data manager: " + provider.getClass().getName());
+        if (context != null){
+            if (this == context.getDataManager()) {
+                logger.info("Setting data provider: " + provider.getClass().getName());
+            } else {
+                logger.fine("Setting data provider in auxiliary data manager: " + provider.getClass().getName());
+            }
         }
         this.provider = provider;
     }
@@ -140,7 +156,7 @@ public class DataManager implements AutoCloseable {
     }
 
     public Provider getProvider() {
-        Provider ret = getExecutionPars().getDataProvider();
+        Provider ret = (context !=null)  ? (getExecutionPars().getDataProvider()) : null;
         return (ret == null) ? provider : ret;
     }
 
@@ -415,11 +431,20 @@ public class DataManager implements AutoCloseable {
     public String getDataFolder() {
         return context.getSetup().getDataPath();
     }
+    
 
+    public String getRootFileName() {
+        if (outputFile != null){
+            return outputFile.getPath();
+        } else {
+            return getExecutionPars().getPath();
+        }
+    }
+    
     public String getRootFileName(String root) {
         return getProvider().getRootFileName(root);
     }
-
+    
     File getDataRootPath() {
         try {
             File ret = Paths.get(getRootFileName(getExecutionPars().getPath())).toFile();
@@ -459,6 +484,14 @@ public class DataManager implements AutoCloseable {
     }
 
     public void closeOutput() {
+        if (outputFile!=null) { 
+                try {
+                    getProvider().closeOutput();
+                } catch (Exception ex) {
+                    logger.log(Level.WARNING, null, ex);
+                } 
+                return;
+        }
         if (isOpen()) {
             try {
                 try {
@@ -504,6 +537,9 @@ public class DataManager implements AutoCloseable {
     }
 
     public boolean isOpen() {
+        if (outputFile != null){
+            return true;
+        }
         return getExecutionPars().isOpen();
     }
 
@@ -1229,7 +1265,8 @@ public class DataManager implements AutoCloseable {
         synchronized (providerData) {
             providerData.clear();
         }
-        context.removeScanListener(scanListener);
+        if (context!=null) {            
+            context.removeScanListener(scanListener);
+        }
     }
-
 }
