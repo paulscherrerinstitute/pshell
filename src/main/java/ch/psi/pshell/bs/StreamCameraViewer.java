@@ -34,6 +34,7 @@ import ch.psi.pshell.swing.ValueSelection.ValueSelectionListener;
 import ch.psi.utils.Arr;
 import ch.psi.utils.ArrayProperties;
 import ch.psi.utils.Chrono;
+import ch.psi.utils.Config;
 import ch.psi.utils.Convert;
 import ch.psi.utils.Str;
 import ch.psi.utils.Sys;
@@ -77,12 +78,14 @@ import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JCheckBoxMenuItem;
+import javax.swing.JComponent;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.JSpinner;
 import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
@@ -121,7 +124,103 @@ public class StreamCameraViewer extends MonitoredPanel {
     String instanceName;
     Overlay titleOv = null;
     int integration = 0;
+    boolean persistCameraState;
+        
+    String serverUrl;
     PipelineServer server;
+    String[] instances;
+    String[] pipelines;
+    String[] cameras;
+    
+    public class CameraState extends Config {
+
+        public boolean valid;
+        public boolean showSidePanel;
+        //public boolean showMarker; Saved in the stream instance config
+        public boolean showProfile;
+        public boolean showFit;
+        public boolean showReticle;
+        public boolean showScale;
+        public boolean showTitle;
+        public double zoom;
+        public RendererMode mode;
+        public boolean colormapAutomatic;
+        public double colormapMin;
+        public double colormapMax;
+        public Colormap colormap;
+        public boolean colormapLogarithmic;
+        
+        String getFile() throws IOException {
+            if (camera == null) {
+                return null;
+            }
+            return Context.getInstance().getSetup().expandPath("{context}/screen_panel/" + getCameraName() + ".properties");
+        }        
+    }
+
+    void loadCameraState() {
+        if (persistCameraState) {
+            try {
+                CameraState state = new CameraState();
+                state.load(state.getFile());
+                if (state.valid) {
+                    buttonSidePanel.setSelected(state.showSidePanel);
+                    buttonSidePanelActionPerformed(null);
+                    buttonProfile.setSelected(state.showProfile);
+                    buttonProfileActionPerformed(null);
+                    buttonFit.setSelected(state.showFit);
+                    buttonFitActionPerformed(null);
+                    buttonReticle.setSelected(state.showReticle);
+                    buttonReticleActionPerformed(null);
+                    buttonScale.setSelected(state.showScale);
+                    buttonScaleActionPerformed(null);
+                    buttonTitle.setSelected(state.showTitle);
+                    buttonTitleActionPerformed(null);
+                    renderer.setMode(state.mode);
+                    renderer.setZoom(state.zoom);
+                    if (camera instanceof ColormapSource) {
+                        camera.getConfig().colormap = state.colormap;
+                        camera.getConfig().colormapAutomatic = state.colormapAutomatic;
+                        camera.getConfig().colormapLogarithmic = state.colormapLogarithmic;
+                        camera.getConfig().colormapMax = state.colormapMax;
+                        camera.getConfig().colormapMin = state.colormapMin;
+                        updateColormap();
+                    }
+                }
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+        }
+    }
+
+    void saveCameraState() {
+        if (persistCameraState) {
+            try {
+                CameraState state = new CameraState();
+                state.valid = true;
+                if (camera instanceof ColormapSource) {
+                    state.colormap = camera.getConfig().colormap;
+                    state.colormapAutomatic = camera.getConfig().colormapAutomatic;
+                    state.colormapLogarithmic = camera.getConfig().colormapLogarithmic;
+                    state.colormapMax = camera.getConfig().colormapMax;
+                    state.colormapMin = camera.getConfig().colormapMin;
+                }
+                state.mode = renderer.getMode();
+                state.zoom = renderer.getZoom();
+
+                state.showSidePanel = buttonSidePanel.isSelected();
+                state.showProfile = buttonProfile.isSelected();
+                state.showFit = buttonFit.isSelected();
+                state.showReticle = buttonReticle.isSelected();
+                state.showScale = buttonScale.isSelected();
+                state.showTitle = buttonTitle.isSelected();
+
+                state.save(state.getFile());
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+        }
+    }    
 
     Timer timer;
 
@@ -272,10 +371,19 @@ public class StreamCameraViewer extends MonitoredPanel {
         try {
             initComponents();
             setSidePanelVisible(false);
-            setServer(null);
+            panelPipeline.setVisible(false);
             textStream.setBackground(panelStream.getBackground());
             SwingUtils.setEnumCombo(comboColormap, Colormap.class);
-
+            
+            spinnerThreshold.setVisible(false);
+            btFixColormapRange.setVisible(false);
+            setGoodRegionOptionsVisible(false);
+            setSlicingOptionsVisible(false);
+            setRotationOptionsVisible(false);
+            JComponent editor = spinnerSlOrientation.getEditor();
+            if (editor instanceof JSpinner.DefaultEditor) {
+                ((JSpinner.DefaultEditor) editor).getTextField().setHorizontalAlignment(JTextField.RIGHT);
+            }
             renderer.setPersistenceFile(Paths.get(Sys.getTempFolder(), "ImageViewer.bin"));
             if (App.hasArgument("poll")) {
                 try {
@@ -311,6 +419,12 @@ public class StreamCameraViewer extends MonitoredPanel {
             if (App.hasArgument("local_fit")) {
                localFit = true;
             }
+            
+            if (App.hasArgument("persist")) {
+                if (Context.getInstance() != null){
+                    persistCameraState = true;
+                }
+            }            
 
             if (App.hasArgument("integration")) {
                 try {
@@ -452,15 +566,15 @@ public class StreamCameraViewer extends MonitoredPanel {
         updateButtons();
     }
     
-    public PipelineServer getServer(){
-        return server;
+    public String getServer(){
+        return serverUrl;
     }
     
-    public void setServer(PipelineServer server){
-        this.server = server;
-        panelPipeline.setVisible(server != null);
+    public void setServer(String server){
+        this.serverUrl = server;
+        panelPipeline.setVisible(serverUrl != null);
     }
-    
+
     public void setToolbarVisible(boolean value) {
         topPanel.setVisible(value);
     }
@@ -596,9 +710,11 @@ public class StreamCameraViewer extends MonitoredPanel {
         }
         dataTableModel = null;
 
-        if (camera != null) {;
+        if (camera != null) {
+            saveCameraState();
             camera.close();
             camera = null;
+            server = null;
         }
         updateButtons();
         instanceName = null;
@@ -638,7 +754,16 @@ public class StreamCameraViewer extends MonitoredPanel {
 
         System.out.println("Setting stream: " + stream);
         try {
-            camera = new StreamCamera(CAMERA_DEVICE_NAME, stream);
+            if (serverUrl != null){
+                server = new PipelineServer(CAMERA_DEVICE_NAME, serverUrl);
+                instances = server.getInstances().toArray(new String[0]);
+                pipelines = server.getPipelines().toArray(new String[0]);
+                cameras = server.getCameras().toArray(new String[0]);
+                camera = server;
+            } else {
+                server = null;
+                camera = new StreamCamera(CAMERA_DEVICE_NAME, stream);
+            }
 
             camera.getConfig().flipHorizontally = false;
             camera.getConfig().flipVertically = false;
@@ -650,8 +775,24 @@ public class StreamCameraViewer extends MonitoredPanel {
             camera.setMonitored(true);
             camera.initialize();
             camera.assertInitialized();
+            
             System.out.println("Camera initialization OK");
-
+            loadCameraState();
+            
+            if (server != null){
+                if (Arr.containsEqual(instances, stream)){
+                    instanceName  = stream;
+                    server.start(stream, true);
+                } else if (Arr.containsEqual(pipelines, stream)){
+                    instanceName  = stream+"1";
+                    server.start(stream, instanceName);
+                } else if (Arr.containsEqual(cameras, stream)){
+                    stream = stream + "_sp"; 
+                    instanceName  = stream+"1";
+                    server.start(stream, instanceName);
+                }
+            }        
+                           
             updateButtons();
             camera.getConfig().save();
             if (Math.abs(integration) > 1) {
@@ -1664,7 +1805,7 @@ public class StreamCameraViewer extends MonitoredPanel {
                                         }
                                         dev.setPolling(1000);
                                         chart.setDevice(dev);
-                                        JDialog dlg = SwingUtils.showDialog(dataTableDialog, stream + " " + id, null, chart);
+                                        JDialog dlg = SwingUtils.showDialog(dataTableDialog, getDisplayName() + " " + id, null, chart);
                                         //TODO:
                                         //PlotBase plot = chart.getPlot();
                                         //if (plot!=null){
@@ -2082,10 +2223,13 @@ public class StreamCameraViewer extends MonitoredPanel {
         return dm.getRootFileName();
     }
     
+    public String getCameraName() throws IOException{
+        return (String)getProcessingParameters(camera.getValue()).get("camera_name");
+    }
     
     public String getDisplayName(){
         try{
-            return (String)getProcessingParameters(camera.getValue()).get("camera_name");
+            return getCameraName();
         } catch (Exception ex){
             return stream;
         }
@@ -2116,7 +2260,12 @@ public class StreamCameraViewer extends MonitoredPanel {
         SwingUtilities.invokeLater(() -> {
             try {
                 StreamCameraViewer iv = new StreamCameraViewer();
-                iv.setStream(App.getArgumentValue("stream"));
+                if (App.hasArgument("server")){
+                    iv.setServer(App.getArgumentValue("server"));
+                }          
+                if (App.hasArgument("stream")){
+                    iv.setStream(App.getArgumentValue("stream"));
+                }                
                 Window window = SwingUtils.showFrame(null, "Stream Camera Viewer", new Dimension(800, 600), iv);
                 window.setIconImage(Toolkit.getDefaultToolkit().getImage(App.getResourceUrl("IconSmall.png")));
             } catch (Exception ex) {
@@ -2345,6 +2494,11 @@ public class StreamCameraViewer extends MonitoredPanel {
     pauseSelection.setDecimals(0);
 
     textStream.setHorizontalAlignment(javax.swing.JTextField.CENTER);
+    textStream.addActionListener(new java.awt.event.ActionListener() {
+        public void actionPerformed(java.awt.event.ActionEvent evt) {
+            textStreamActionPerformed(evt);
+        }
+    });
 
     javax.swing.GroupLayout panelStreamLayout = new javax.swing.GroupLayout(panelStream);
     panelStream.setLayout(panelStreamLayout);
@@ -3488,6 +3642,10 @@ public class StreamCameraViewer extends MonitoredPanel {
         } finally {
         }
     }//GEN-LAST:event_buttonTitleActionPerformed
+
+    private void textStreamActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_textStreamActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_textStreamActionPerformed
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
