@@ -26,6 +26,7 @@ import ch.psi.pshell.imaging.Overlays.Text;
 import ch.psi.pshell.imaging.Pen;
 import ch.psi.pshell.imaging.PointDouble;
 import ch.psi.pshell.imaging.Renderer;
+import ch.psi.pshell.imaging.RendererListener;
 import ch.psi.pshell.imaging.RendererMode;
 import ch.psi.pshell.swing.DevicePanel;
 import ch.psi.pshell.swing.DeviceValueChart;
@@ -69,6 +70,7 @@ import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -102,7 +104,6 @@ import org.apache.commons.math3.fitting.GaussianCurveFitter;
 import org.apache.commons.math3.fitting.PolynomialCurveFitter;
 import org.apache.commons.math3.fitting.WeightedObservedPoint;
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
-import org.python.google.common.collect.Lists;
 
 /**
  *
@@ -231,43 +232,44 @@ public class StreamCameraViewer extends MonitoredPanel {
                 }
             });
 
-            for (Component cmp : SwingUtils.getComponentsByType(renderer.getPopupMenu(), JMenu.class)) {
-                JMenu menu = (JMenu) cmp;
-                if (menu.getText().equals("Integration")) {
-                    menu.addSeparator();
-                    menu.add(menuFrameIntegration);
+            SwingUtilities.invokeLater(()->{
+                for (Component cmp : SwingUtils.getComponentsByType(renderer.getPopupMenu(), JMenu.class)) {
+                    JMenu menu = (JMenu) cmp;
+                    if (menu.getText().equals("Integration")) {
+                        menu.addSeparator();
+                        menu.add(menuFrameIntegration);
+                    }
                 }
-            }
+                JMenuItem menuHistogram = new JMenuItem("Show Histogram");
+                menuHistogram.addActionListener((ActionEvent e) -> {
+                    try {
+                        setHistogramVisible(true);
+                    } catch (Exception ex) {
+                        SwingUtils.showException(this, ex);
+                    }
+                });
+                renderer.getPopupMenu().add(menuHistogram);
+                renderer.getPopupMenu().addSeparator();
+                renderer.getPopupMenu().add(menuRendererConfig);
+                renderer.getPopupMenu().add(menuSetImageBufferSize);
+                renderer.getPopupMenu().add(menuSaveStack);
+                renderer.getPopupMenu().addPopupMenuListener(new PopupMenuListener() {
+                    @Override
+                    public void popupMenuWillBecomeVisible(PopupMenuEvent e) {
+                        menuSetImageBufferSize.setEnabled(!renderer.isPaused());
+                        menuFrameIntegration.setSelected(integration != 0);
+                    }
 
-            JMenuItem menuHistogram = new JMenuItem("Show Histogram");
-            menuHistogram.addActionListener((ActionEvent e) -> {
-                try {
-                    setHistogramVisible(true);
-                } catch (Exception ex) {
-                    SwingUtils.showException(this, ex);
-                }
+                    @Override
+                    public void popupMenuWillBecomeInvisible(PopupMenuEvent e) {
+                    }
+
+                    @Override
+                    public void popupMenuCanceled(PopupMenuEvent e) {
+                    }
+                });
+                renderer.getPopupMenu().setVisible(false);
             });
-            renderer.getPopupMenu().add(menuHistogram);
-            renderer.getPopupMenu().addSeparator();
-            renderer.getPopupMenu().add(menuRendererConfig);
-            renderer.getPopupMenu().add(menuSetImageBufferSize);
-            renderer.getPopupMenu().add(menuSaveStack);
-            renderer.getPopupMenu().addPopupMenuListener(new PopupMenuListener() {
-                @Override
-                public void popupMenuWillBecomeVisible(PopupMenuEvent e) {
-                    menuSetImageBufferSize.setEnabled(!renderer.isPaused());
-                    menuFrameIntegration.setSelected(integration != 0);
-                }
-
-                @Override
-                public void popupMenuWillBecomeInvisible(PopupMenuEvent e) {
-                }
-
-                @Override
-                public void popupMenuCanceled(PopupMenuEvent e) {
-                }
-            });
-            renderer.getPopupMenu().setVisible(false);
             buttonScale.setSelected(renderer.getShowColormapScale());
             clearMarker();
 
@@ -284,6 +286,15 @@ public class StreamCameraViewer extends MonitoredPanel {
                     }
                 }
             });
+            
+            renderer.addListener(new RendererListener() {
+                @Override
+                public void onMoveFinished(Renderer renderer, Overlay overlay) {
+                    if (overlay == marker) {
+                        onMarkerChanged();
+                    }
+                }
+            });            
 
             if (App.hasArgument("persistence_file")) {
                 setPersistenceFile(App.getArgumentValue("persistence_file"));
@@ -350,7 +361,7 @@ public class StreamCameraViewer extends MonitoredPanel {
             }
             if (App.hasArgument("stream")) {
                 setStream(App.getArgumentValue("stream"));
-            }
+            }           
 
         } catch (Exception ex) {
             ex.printStackTrace();
@@ -358,6 +369,20 @@ public class StreamCameraViewer extends MonitoredPanel {
         updateButtons();
     }
 
+    public interface StreamCameraViewerListener{
+        void onStream(String name);
+    }
+    
+    StreamCameraViewerListener listener;
+    
+    public StreamCameraViewerListener getListener(){
+        return listener;
+    }
+    
+    public void setListener(StreamCameraViewerListener listener){
+        this.listener = listener;
+    }
+    
     public String getServer() {
         return serverUrl;
     }
@@ -904,9 +929,12 @@ public class StreamCameraViewer extends MonitoredPanel {
         }
     }
 
-    Thread devicesInitTask;
+    public String setStream(Map<String, Object> stream) throws IOException, InterruptedException {
+        String json = JsonSerializer.encode(stream);        
+        return setStream(json);
+    }
 
-    public void setStream(String stream) throws IOException, InterruptedException {
+    public String setStream(String stream) throws IOException, InterruptedException {
         System.out.println("Initializing: " + stream);
         textStream.setText((stream == null) ? "" : stream);
         parseUserOverlays();
@@ -954,10 +982,7 @@ public class StreamCameraViewer extends MonitoredPanel {
             currentFrame = null;
             imageBuffer.clear();
         }
-        if (changed) {
-            if ((devicesInitTask != null) && (devicesInitTask.isAlive())) {
-                devicesInitTask.interrupt();
-            }
+        if (changed) {            
             if (renderer.isPaused()) {
                 renderer.resume();
                 removePauseOverlay();
@@ -967,8 +992,9 @@ public class StreamCameraViewer extends MonitoredPanel {
         }
 
         if (stream == null) {
-            return;
+            return null;
         }
+        stream = stream.trim();
 
         manageTitleOverlay();
 
@@ -997,34 +1023,53 @@ public class StreamCameraViewer extends MonitoredPanel {
             loadCameraState();
 
             if (server != null) {
-                switch (getSourceSelecionMode()) {
-                    case Instances:
-                        instanceName = stream;
-                        server.start(stream, true);
-                        break;
-                    case Pipelines:
-                        instanceName = stream;
-                        pipelineName = stream;
-                        server.start(stream, true);
-                        break;
-                    case Cameras:
-                        pipelineName = String.format(pipelineNameFormat, stream);
-                        instanceName = String.format(instanceNameFormat, pipelineName);
-                        server.start(pipelineName, instanceName);
-                        break;
-                    case Single:
-                        if (server.getInstances().contains(stream)) {
+                if (stream.startsWith("{") && stream.endsWith("}")){
+                    Map<String, Object> cfg =  (Map<String, Object>) JsonSerializer.decode(stream, Map.class);        
+                    String cameraName = (String) cfg.get("camera_name");
+                    textStream.setText(cameraName);
+                    if (cfg.get("name") != null){
+                        pipelineName = String.valueOf(cfg.get("name"));
+                    } else {
+                        pipelineName = String.format(pipelineNameFormat, cameraName);
+                    }
+                    instanceName = String.format(instanceNameFormat, pipelineName);   
+                    if (server.getInstances().contains(instanceName)) {
+                        server.start(instanceName, true);
+                    } else {                                    
+                        List<String> ret = server.createFromConfig(cfg, instanceName);
+                        String instance_id = ret.get(0);
+                        server.start(instance_id, true);
+                    }
+                } else {
+                    switch (getSourceSelecionMode()) {
+                        case Instances:
                             instanceName = stream;
                             server.start(stream, true);
-                        } else if (server.getPipelines().contains(stream)) {
-                            instanceName = String.format(instanceNameFormat, stream);
-                            server.start(stream, instanceName);
-                        } else if (server.getCameras().contains(stream)) {
+                            break;
+                        case Pipelines:
+                            instanceName = stream;
+                            pipelineName = stream;
+                            server.start(stream, true);
+                            break;
+                        case Cameras:
                             pipelineName = String.format(pipelineNameFormat, stream);
                             instanceName = String.format(instanceNameFormat, pipelineName);
                             server.start(pipelineName, instanceName);
-                        }
-                        break;
+                            break;
+                        case Single:
+                            if (server.getInstances().contains(stream)) {
+                                instanceName = stream;
+                                server.start(stream, true);
+                            } else if (server.getPipelines().contains(stream)) {
+                                instanceName = String.format(instanceNameFormat, stream);
+                                server.start(stream, instanceName);
+                            } else if (server.getCameras().contains(stream)) {
+                                pipelineName = String.format(pipelineNameFormat, stream);
+                                instanceName = String.format(instanceNameFormat, pipelineName);
+                                server.start(pipelineName, instanceName);
+                            }
+                            break;
+                    }
                 }
                 updatePipelineControls();
                 checkBackground.setEnabled(true);
@@ -1084,6 +1129,7 @@ public class StreamCameraViewer extends MonitoredPanel {
                                 if (!renderer.isPaused()) {
                                     updateStreamData();
                                 }
+                                updateMarker();
                             }
                         }
                         //
@@ -1117,6 +1163,45 @@ public class StreamCameraViewer extends MonitoredPanel {
             //checkReticle();
             onTimer();
         }
+        if (listener != null){
+            listener.onStream((serverUrl != null) ? instanceName : stream);
+        }
+        return (serverUrl != null) ? instanceName : stream;
+    }
+    
+    public Map<String,Object> getConfig(String instanceName) throws IOException, InterruptedException {
+        if (server==null){
+            return null;
+        }
+        return server.getInstanceConfig(instanceName);
+    }
+    
+    public void setConfig(String instanceName, Map<String,Object> config) throws IOException, InterruptedException {
+        if (server!=null){
+            Map<String,Object> cfg= getConfig();
+            cfg.putAll(config);
+            server.setInstanceConfig(instanceName, config);
+        }
+    }
+
+    public void setConfig(String instanceName, String key, Object value) throws IOException, InterruptedException {
+        if (server!=null){
+            Map<String,Object> config= new HashMap<>();
+            config.put(key, value);
+            server.setInstanceConfig(instanceName, config);           
+        }
+    }
+   
+    public Map<String,Object> getConfig() throws IOException, InterruptedException {
+        return getConfig(instanceName);
+    }
+    
+    public void setConfig(Map<String,Object> config) throws IOException, InterruptedException {
+        setConfig(instanceName, config);
+    }
+
+    public void setConfig(String key, Object value) throws IOException, InterruptedException {
+        setConfig(instanceName, key, value);
     }
 
     public static class ImageIntegrator extends ColormapSource {
@@ -1221,8 +1306,68 @@ public class StreamCameraViewer extends MonitoredPanel {
                 marker = null;
             }
             renderer.setMarker(marker);
+            onMarkerChanged();
         }
     }
+    
+    Point lastMarkerPos;
+
+    protected void onMarkerChanged() {
+        try {
+            lastMarkerPos = getStreamMarkerPos();
+            if (marker == null) {
+                setConfig("Marker", null);
+            } else {
+                setConfig("Marker", new int[]{marker.getPosition().x, marker.getPosition().y});
+            }
+        } catch (Exception ex) {
+            Logger.getLogger(getClass().getName()).log(Level.FINE, null, ex);
+        }        
+    }    
+    
+    protected void updateMarker() {
+        try {
+            if (server != null) {
+                Point p = getStreamMarkerPos();
+                if (p != null) {
+                    //To prevent a local change being overriden by a message having the old settings.
+                    //TODO: This is not bullet-proof, as one can have 2 changes between 2 frames...
+                    if (!p.equals(lastMarkerPos)) {
+                        if (p.x == Integer.MIN_VALUE) {
+                            if (buttonMarker.isSelected()) {
+                                buttonMarker.setSelected(false);
+                                checkMarker(null);
+                            }
+                        } else {
+                            if (!buttonMarker.isSelected()) {
+                                buttonMarker.setSelected(true);
+                                checkMarker(p);
+                            } else {
+                                if (!p.equals(marker.getPosition())) {
+                                    marker.setPosition(p);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+    }
+
+    protected Point getStreamMarkerPos() throws IOException {
+        //System.out.println(server.getInstanceConfig().get("Marker"));
+        Map<String, Object> pars = server.getProcessingParameters();
+        if (pars != null) {
+            List markerPosition = (List) pars.get("Marker");
+            if (markerPosition != null) {
+                return new Point((Integer) markerPosition.get(0), (Integer) markerPosition.get(1));
+            }
+            return new Point(Integer.MIN_VALUE, Integer.MIN_VALUE);
+        }
+        return null;
+    }    
 
     protected void checkProfile() {
         if (!updatingButtons) {
@@ -1246,19 +1391,6 @@ public class StreamCameraViewer extends MonitoredPanel {
         if (!updatingButtons) {
             renderer.setShowColormapScale(buttonScale.isSelected());
         }
-    }
-
-    public Point getStreamMarkerPos() throws IOException {
-        //System.out.println(server.getInstanceConfig().get("Marker"));
-        Map<String, Object> pars = getProcessingParameters(camera.getValue());
-        if (pars != null) {
-            List markerPosition = (List) pars.get("Marker");
-            if (markerPosition != null) {
-                return new Point((Integer) markerPosition.get(0), (Integer) markerPosition.get(1));
-            }
-            return new Point(Integer.MIN_VALUE, Integer.MIN_VALUE);
-        }
-        return null;
     }
 
     public void clearMarker() {
@@ -2500,7 +2632,7 @@ public class StreamCameraViewer extends MonitoredPanel {
             try {
                 StreamCameraViewer iv = new StreamCameraViewer();
                 Window window = SwingUtils.showFrame(null, "Stream Camera Viewer", new Dimension(800, 600), iv);
-                window.setIconImage(Toolkit.getDefaultToolkit().getImage(App.getResourceUrl("IconSmall.png")));
+                window.setIconImage(Toolkit.getDefaultToolkit().getImage(App.getResourceUrl("IconSmall.png")));                
             } catch (Exception ex) {
                 Logger.getLogger(StreamCameraViewer.class.getName()).log(Level.SEVERE, null, ex);
             }
