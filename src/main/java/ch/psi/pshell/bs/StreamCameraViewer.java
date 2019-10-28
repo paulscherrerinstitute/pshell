@@ -627,6 +627,7 @@ public class StreamCameraViewer extends MonitoredPanel {
                     Logger.getLogger(getClass().getName()).log(Level.FINE, null, ex);
                 }
             });
+            timer.start();
         } catch (Exception ex) {
             ex.printStackTrace();
         }
@@ -1075,7 +1076,7 @@ public class StreamCameraViewer extends MonitoredPanel {
                 checkBackground.setEnabled(true);
                 checkThreshold.setEnabled(true);
                 checkRotation.setEnabled(true);
-                checkGoodRegion.setEnabled(true);
+                checkGoodRegion.setEnabled(true);                
             }
 
             updateButtons();
@@ -1153,6 +1154,7 @@ public class StreamCameraViewer extends MonitoredPanel {
         } catch (Exception ex) {
             SwingUtils.showException(this, ex);
             renderer.clearOverlays();
+            updatePipelineControls();
             if (renderer.getDevice() == null) {
                 errorOverlay = new Text(renderer.getPenErrorText(), ex.toString(), new Font("Verdana", Font.PLAIN, 12), new Point(20, 20));
                 errorOverlay.setFixed(true);
@@ -1161,8 +1163,9 @@ public class StreamCameraViewer extends MonitoredPanel {
             }
         } finally {
             //checkReticle();
-            onTimer();
+            onTimer();            
         }
+        onChangeColormap(null);            
         if (listener != null){
             listener.onStream((serverUrl != null) ? instanceName : stream);
         }
@@ -1467,9 +1470,30 @@ public class StreamCameraViewer extends MonitoredPanel {
     Map lastPipelinePars = null;
 
     protected void onTimer() {
-        updateButtons();
-        buttonScale.setSelected(renderer.getShowColormapScale());
-    }
+        try {
+            updateButtons();
+            buttonScale.setSelected(renderer.getShowColormapScale());
+            updateZoom();
+            updateColormap();
+            updateButtons();
+            checkHistogram.setSelected((histogramDialog != null) && (histogramDialog.isShowing()));
+            buttonScale.setSelected(renderer.getShowColormapScale());        
+            
+            Frame frame = getCurrentFrame();
+            if (frame != lastFrame) {
+                lastFrame = frame;
+                if (frame != null) {
+                    Map<String, Object> pars = getProcessingParameters(frame.cache);
+                    if ((lastPipelinePars == null) || !lastPipelinePars.equals(pars)) {
+                        lastPipelinePars = pars;
+                        updatePipelineControls();
+                    }
+                }
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }        
+    }   
 
     protected Pen penFit = new Pen(new Color(192, 105, 0), 0);
     protected Pen penCross = new Pen(new Color(192, 105, 0), 0);
@@ -2321,12 +2345,13 @@ public class StreamCameraViewer extends MonitoredPanel {
         updatingColormap = false;
     }
 
+    
     boolean updatingServerControls;
 
     void updatePipelineControls() {
-        if (server != null) {
-            updatingServerControls = true;
+        if (server != null) {            
             if (server.isStarted()) {
+                updatingServerControls = true;
                 try {
                     checkBackground.setSelected(server.getBackgroundSubtraction());
                     Double threshold = (server.getThreshold());
@@ -2360,9 +2385,17 @@ public class StreamCameraViewer extends MonitoredPanel {
                         spinnerSlScale.setValue(((Number) slicing.get("scale")).doubleValue());
                         spinnerSlOrientation.setValue((String) slicing.get("orientation"));
                     }
+                    
+                    spinnerThreshold.setVisible(checkThreshold.isSelected());
+                    setGoodRegionOptionsVisible(gr != null);
+                    setSlicingOptionsVisible(slicing != null);
+                    setRotationOptionsVisible(rotation != null);
+                    
                 } catch (Exception ex) {
                     ex.printStackTrace();
                 }
+                               
+                updatingServerControls = false;
             }
         }
     }
