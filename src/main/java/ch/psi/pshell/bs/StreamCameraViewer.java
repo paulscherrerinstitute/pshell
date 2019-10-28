@@ -113,7 +113,6 @@ public class StreamCameraViewer extends MonitoredPanel {
     String userOverlaysConfigFile;
     StreamCamera camera;
     String stream;
-    int polling = 1000;
     Overlay marker = null;
     JDialog histogramDialog;
     boolean showFit;
@@ -125,15 +124,489 @@ public class StreamCameraViewer extends MonitoredPanel {
     Overlay errorOverlay;
     boolean requestCameraListUpdate;
     String instanceName;
+    String pipelineName;
     Overlay titleOv = null;
     int integration = 0;
     boolean persistCameraState;
 
     String serverUrl;
     PipelineServer server;
-    String[] instances;
-    String[] pipelines;
-    String[] cameras;
+    String pipelineNameFormat = "%s_sp";
+    String instanceNameFormat = "%s1";
+
+    final ArrayList<Frame> imageBuffer = new ArrayList();
+    Frame currentFrame;
+    int imageBufferLength = 1;
+    Text imagePauseOverlay;
+
+    public StreamCameraViewer() {
+        try {
+            initComponents();
+            setSidePanelVisible(false);
+            panelPipeline.setVisible(false);
+            textStream.setBackground(panelStream.getBackground());
+            SwingUtils.setEnumCombo(comboColormap, Colormap.class);
+
+            spinnerThreshold.setVisible(false);
+            btFixColormapRange.setVisible(false);
+            checkBackground.setEnabled(false);
+            checkThreshold.setEnabled(false);
+            checkRotation.setEnabled(false);
+            checkGoodRegion.setEnabled(false);
+            setGoodRegionOptionsVisible(false);
+            setSlicingOptionsVisible(false);
+            setRotationOptionsVisible(false);
+            JComponent editor = spinnerSlOrientation.getEditor();
+            if (editor instanceof JSpinner.DefaultEditor) {
+                ((JSpinner.DefaultEditor) editor).getTextField().setHorizontalAlignment(JTextField.RIGHT);
+            }
+
+            renderer.setProfileNormalized(true);
+            renderer.setShowProfileLimits(false);
+
+            JMenuItem menuRendererConfig = new JMenuItem("Renderer Parameters");
+            menuRendererConfig.addActionListener((ActionEvent e) -> {
+                try {
+                    if (camera != null) {
+                        DevicePanel.showConfigEditor(getTopLevel(), camera, false, false);
+                    }
+                } catch (Exception ex) {
+                    SwingUtils.showException(this, ex);
+                }
+            });
+
+            JMenuItem menuSetImageBufferSize = new JMenuItem("Set Stack Size...");
+            menuSetImageBufferSize.addActionListener((ActionEvent e) -> {
+                try {
+                    String ret = SwingUtils.getString(getTopLevel(), "Enter size of image buffer: ", String.valueOf(imageBufferLength));
+                    if (ret != null) {
+                        this.setImageBufferSize(Integer.valueOf(ret));
+                    }
+                } catch (Exception ex) {
+                    SwingUtils.showException(this, ex);
+                }
+            });
+
+            JMenuItem menuSaveStack = new JMenuItem("Save Stack");
+            menuSaveStack.addActionListener((ActionEvent e) -> {
+                try {
+                    saveStack();
+                } catch (Exception ex) {
+                    SwingUtils.showException(this, ex);
+                }
+            });
+
+            JCheckBoxMenuItem menuFrameIntegration = new JCheckBoxMenuItem("Multi-Frame", (integration != 0));
+            menuFrameIntegration.addActionListener((ActionEvent e) -> {
+                if (integration == 0) {
+                    JPanel panel = new JPanel();
+                    GridBagLayout layout = new GridBagLayout();
+                    layout.columnWidths = new int[]{150, 50};   //Minimum width
+                    layout.rowHeights = new int[]{30, 30};   //Minimum height
+                    panel.setLayout(layout);
+                    JCheckBox checkContinuous = new JCheckBox("");
+                    checkContinuous.setSelected(true);
+                    JTextField textFrames = new JTextField();
+                    GridBagConstraints c = new GridBagConstraints();
+                    c.gridx = 0;
+                    c.gridy = 0;
+                    panel.add(new JLabel("Number of frames:"), c);
+                    c.gridy = 1;
+                    panel.add(new JLabel("Continuous:"), c);
+                    c.fill = GridBagConstraints.HORIZONTAL;
+                    c.gridx = 1;
+                    panel.add(checkContinuous, c);
+                    c.gridy = 0;
+                    panel.add(textFrames, c);
+                    if (SwingUtils.showOption(getTopLevel(), "Multi-Frame Integration", panel, OptionType.OkCancel) == OptionResult.Yes) {
+                        setIntegration(checkContinuous.isSelected() ? -(Integer.valueOf(textFrames.getText())) : (Integer.valueOf(textFrames.getText())));
+                    }
+                } else {
+                    if (SwingUtils.showOption(getTopLevel(), "Multi-Frame Integration",
+                            "Do you want to disable " + ((integration < 0) ? "continuous " : "") + "multi-frame integration (" + Math.abs(integration) + ")?", OptionType.YesNo) == OptionResult.Yes) {
+                        setIntegration(0);
+                    }
+                }
+            });
+
+            for (Component cmp : SwingUtils.getComponentsByType(renderer.getPopupMenu(), JMenu.class)) {
+                JMenu menu = (JMenu) cmp;
+                if (menu.getText().equals("Integration")) {
+                    menu.addSeparator();
+                    menu.add(menuFrameIntegration);
+                }
+            }
+
+            JMenuItem menuHistogram = new JMenuItem("Show Histogram");
+            menuHistogram.addActionListener((ActionEvent e) -> {
+                try {
+                    setHistogramVisible(true);
+                } catch (Exception ex) {
+                    SwingUtils.showException(this, ex);
+                }
+            });
+            renderer.getPopupMenu().add(menuHistogram);
+            renderer.getPopupMenu().addSeparator();
+            renderer.getPopupMenu().add(menuRendererConfig);
+            renderer.getPopupMenu().add(menuSetImageBufferSize);
+            renderer.getPopupMenu().add(menuSaveStack);
+            renderer.getPopupMenu().addPopupMenuListener(new PopupMenuListener() {
+                @Override
+                public void popupMenuWillBecomeVisible(PopupMenuEvent e) {
+                    menuSetImageBufferSize.setEnabled(!renderer.isPaused());
+                    menuFrameIntegration.setSelected(integration != 0);
+                }
+
+                @Override
+                public void popupMenuWillBecomeInvisible(PopupMenuEvent e) {
+                }
+
+                @Override
+                public void popupMenuCanceled(PopupMenuEvent e) {
+                }
+            });
+            renderer.getPopupMenu().setVisible(false);
+            buttonScale.setSelected(renderer.getShowColormapScale());
+            clearMarker();
+
+            showFit = buttonFit.isSelected();
+            showProfile = buttonProfile.isSelected();
+
+            pauseSelection.setVisible(false);
+            pauseSelection.setMinValue(1);
+            pauseSelection.addListener(new ValueSelectionListener() {
+                @Override
+                public void onValueChanged(ValueSelection origin, double value, boolean editing) {
+                    if (editing && (value >= 1) && (value <= imageBuffer.size())) {
+                        updatePause();
+                    }
+                }
+            });
+
+            if (App.hasArgument("persistence_file")) {
+                setPersistenceFile(App.getArgumentValue("persistence_file"));
+            } else {
+                setPersistenceFile(Paths.get(Sys.getTempFolder(), "StreamCameraViewer.bin").toString());
+            }
+
+            if (App.hasArgument("zoom")) {
+                try {
+                    setZoom(Double.valueOf(App.getArgumentValue("zoom")));
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+            }
+            if (App.hasArgument("buffer_size")) {
+                try {
+                    setBufferLength(Integer.valueOf(App.getArgumentValue("buf")));
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+            }
+
+            if (App.hasArgument("user_overlays")) {
+                try {
+                    setUserOverlaysConfigFile(App.getArgumentValue("usr_ov"));
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+            }
+
+            if (App.hasArgument("local_fit")) {
+                setLocalFit(true);
+            }
+
+            if (App.hasArgument("persist_camera")) {
+                setPersist(true);
+            }
+
+            if (App.hasArgument("integration")) {
+                try {
+                    setIntegration(Integer.valueOf(App.getArgumentValue("integration")));
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+            }
+
+            if (App.hasArgument("pipeline_format")) {
+                setPipelineNameFormat(App.getArgumentValue("pipeline_format"));
+            }
+
+            if (App.hasArgument("instance_format")) {
+                setInstanceNameFormat(App.getArgumentValue("instance_format"));
+            }
+
+            if (App.hasArgument("pipeline_server")) {
+                setServer(App.getArgumentValue("pipeline_server"));
+                if (App.hasArgument("selection_mode")) {
+                    setSourceSelecionMode(SourceSelecionMode.valueOf(App.getArgumentValue("selection_mode")));
+                }
+            }
+            if (App.hasArgument("stream")) {
+                setStream(App.getArgumentValue("stream"));
+            }
+
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        updateButtons();
+    }
+
+    public String getServer() {
+        return serverUrl;
+    }
+
+    public void setServer(String server) {
+        this.serverUrl = server;
+        panelPipeline.setVisible(serverUrl != null);
+    }
+
+    public enum SourceSelecionMode {
+        Single,
+        Instances,
+        Pipelines,
+        Cameras
+
+    }
+    JComboBox comboStream;
+
+    SourceSelecionMode sourceSelecionMode = SourceSelecionMode.Single;
+
+    public void setSourceSelecionMode(SourceSelecionMode mode) {
+        if (sourceSelecionMode == mode) {
+            return;
+        }
+        GroupLayout layout = (GroupLayout) panelStream.getLayout();
+        if ((getServer() == null) && (mode != SourceSelecionMode.Single)) {
+            throw new RuntimeException("Invalid selection mode: Pipeline Server URL is not configured.");
+        }
+        if ((sourceSelecionMode == SourceSelecionMode.Single) && (mode != SourceSelecionMode.Single)) {
+            comboStream = new JComboBox();
+            comboStream.setModel(getStreamList(mode));
+            comboStream.addActionListener((e) -> {
+                try {
+                    if (!comboStream.isEnabled()) {
+                        throw new Exception("Invalid state");
+                    }
+                    comboStream.setEnabled(false);
+                    final String stream = (String) comboStream.getSelectedItem();
+                    new Thread(new Runnable() {
+                        @Override
+                        public void run() {
+                            try {
+                                setStream(stream.trim().isEmpty() ? null : stream);
+                            } catch (Exception ex) {
+                                ex.printStackTrace();
+                            } finally {
+                                updateButtons();
+                                comboStream.setEnabled(true);
+                            }
+                        }
+                    }).start();
+                } catch (Exception ex) {
+                    SwingUtils.showException(this, ex);
+                }
+
+            });
+            layout.replace(textStream, comboStream);
+        }
+        if ((mode == SourceSelecionMode.Single) && (sourceSelecionMode != SourceSelecionMode.Single)) {
+            layout.replace(comboStream, textStream);
+        }
+        sourceSelecionMode = mode;
+    }
+
+    public SourceSelecionMode getSourceSelecionMode() {
+        return sourceSelecionMode;
+    }
+
+    DefaultComboBoxModel getStreamList(SourceSelecionMode mode) {
+        DefaultComboBoxModel model = new DefaultComboBoxModel();
+        List<String> streams = new ArrayList<>();
+        try (PipelineServer srv = new PipelineServer(CAMERA_DEVICE_NAME, serverUrl);) {
+            switch (mode) {
+                case Instances:
+                    streams = srv.getInstances();
+                    break;
+                case Pipelines:
+                    streams = srv.getPipelines();
+                    break;
+                case Cameras:
+                    streams = srv.getCameras();
+                    break;
+            }
+            Collections.sort(streams);
+
+            for (String stream : streams) {
+                model.addElement(stream);
+            }
+
+            if (App.hasArgument("stream")) {
+                String camera = App.getArgumentValue("stream");
+                if (model.getIndexOf(camera) < 0) {
+                    model.addElement(camera);
+                }
+            }
+            model.addElement("");
+            if (App.hasArgument("stream")) {
+                model.setSelectedItem(App.getArgumentValue("stream"));
+            } else {
+                model.setSelectedItem("");
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return model;
+    }
+
+    public void setToolbarVisible(boolean value) {
+        topPanel.setVisible(value);
+    }
+
+    public boolean isSidePanelVisible() {
+        return sidePanel.isVisible();
+    }
+
+    public void setSidePanelVisible(boolean value) {
+        sidePanel.setVisible(value);
+    }
+
+    public boolean isToolbarVisible() {
+        return topPanel.isVisible();
+    }
+
+    public String getPipelineNameFormat() {
+        return pipelineNameFormat;
+    }
+
+    public void setPipelineNameFormat(String value) {
+        pipelineNameFormat = value;
+    }
+
+    public String getInstanceNameFormat() {
+        return instanceNameFormat;
+    }
+
+    public void setInstanceNameFormat(String value) {
+        instanceNameFormat = value;
+    }
+
+    public Double getZoom() {
+        return renderer.getDefaultZoom();
+    }
+
+    public void setZoom(Double value) {
+        renderer.setDefaultZoom(value);
+        renderer.resetZoom();
+    }
+
+    public Integer getBufferLength() {
+        return imageBufferLength;
+    }
+
+    public void setBufferLength(Integer value) {
+        imageBufferLength = value;
+    }
+
+    public Integer getIntegration() {
+        return integration;
+    }
+
+    public void setIntegration(Integer frames) {
+        try {
+            if (integration != frames) {
+                integration = frames;
+                if (camera != null) {
+                    if (Math.abs(integration) > 1) {
+                        renderer.setDevice(new ImageIntegrator(camera, integration));
+                    } else {
+                        renderer.setDevice(camera);
+                    }
+                    synchronized (imageBuffer) {
+                        currentFrame = null;
+                        imageBuffer.clear();
+                    }
+                }
+                if (integration != 0) {
+                    buttonFit.setSelected(false);
+                    buttonProfile.setSelected(false);
+                }
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+    }
+
+    public Boolean getLocalFit() {
+        return localFit;
+    }
+
+    public void setLocalFit(Boolean value) {
+        localFit = value;
+    }
+
+    public Boolean getPersist() {
+        return persistCameraState;
+    }
+
+    public void setPersist(Boolean value) {
+        persistCameraState = value && (Context.getInstance() != null);
+    }
+
+    public String getUserOverlaysConfigFile() {
+        return userOverlaysConfigFile;
+    }
+
+    public void setUserOverlaysConfigFile(String value) {
+        userOverlaysConfigFile = value;
+    }
+
+    public String getPersistenceFile() {
+        return renderer.getPersistenceFile().toString();
+    }
+
+    public void setPersistenceFile(String value) {
+        try {
+            renderer.setPersistenceFile(Paths.get(value));
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+    }
+
+    @Override
+    protected void onShow() {
+        try {
+            timer = new Timer(1000, (ActionEvent e) -> {
+                try {
+                    onTimer();
+                } catch (Exception ex) {
+                    Logger.getLogger(getClass().getName()).log(Level.FINE, null, ex);
+                }
+            });
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+    }
+
+    @Override
+    protected void onHide() {
+        try {
+            if (timer != null) {
+                timer.stop();
+                timer = null;
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        try {
+            if (camera != null) {
+                camera.close();
+                camera = null;
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+    }
 
     public class CameraState extends Config {
 
@@ -365,393 +838,6 @@ public class StreamCameraViewer extends MonitoredPanel {
         Data data;
     }
 
-    final ArrayList<Frame> imageBuffer = new ArrayList();
-    Frame currentFrame;
-    int imageBufferLenght = 1;
-    Text imagePauseOverlay;
-
-    public StreamCameraViewer() {
-        try {
-            initComponents();
-            setSidePanelVisible(false);
-            panelPipeline.setVisible(false);
-            textStream.setBackground(panelStream.getBackground());
-            SwingUtils.setEnumCombo(comboColormap, Colormap.class);
-
-            spinnerThreshold.setVisible(false);
-            btFixColormapRange.setVisible(false);
-            checkBackground.setEnabled(false);
-            checkThreshold.setEnabled(false);
-            checkRotation.setEnabled(false);
-            checkGoodRegion.setEnabled(false);
-            setGoodRegionOptionsVisible(false);
-            setSlicingOptionsVisible(false);
-            setRotationOptionsVisible(false);
-            JComponent editor = spinnerSlOrientation.getEditor();
-            if (editor instanceof JSpinner.DefaultEditor) {
-                ((JSpinner.DefaultEditor) editor).getTextField().setHorizontalAlignment(JTextField.RIGHT);
-            }
-            renderer.setPersistenceFile(Paths.get(Sys.getTempFolder(), "ImageViewer.bin"));
-            if (App.hasArgument("poll")) {
-                try {
-                    polling = Integer.valueOf(App.getArgumentValue("poll"));
-                } catch (Exception ex) {
-                    ex.printStackTrace();
-                }
-            }
-            if (App.hasArgument("zoom")) {
-                try {
-                    renderer.setDefaultZoom(Double.valueOf(App.getArgumentValue("zoom")));
-                    renderer.resetZoom();
-                } catch (Exception ex) {
-                    ex.printStackTrace();
-                }
-            }
-            if (App.hasArgument("buf")) {
-                try {
-                    imageBufferLenght = Integer.valueOf(App.getArgumentValue("buf"));
-                } catch (Exception ex) {
-                    ex.printStackTrace();
-                }
-            }
-
-            if (App.hasArgument("usr_ov")) {
-                try {
-                    userOverlaysConfigFile = App.getArgumentValue("usr_ov");
-                } catch (Exception ex) {
-                    ex.printStackTrace();
-                }
-            }
-
-            if (App.hasArgument("local_fit")) {
-                localFit = true;
-            }
-
-            if (App.hasArgument("persist")) {
-                if (Context.getInstance() != null) {
-                    persistCameraState = true;
-                }
-            }
-
-            if (App.hasArgument("integration")) {
-                try {
-                    setIntegration(Integer.valueOf(App.getArgumentValue("integration")));
-                    if (integration != 0) {
-                        buttonFit.setSelected(false);
-                        buttonProfile.setSelected(false);
-                    }
-                } catch (Exception ex) {
-                    ex.printStackTrace();
-                }
-            }
-
-            renderer.setProfileNormalized(true);
-            renderer.setShowProfileLimits(false);
-
-            JMenuItem menuRendererConfig = new JMenuItem("Renderer Parameters");
-            menuRendererConfig.addActionListener((ActionEvent e) -> {
-                try {
-                    if (camera != null) {
-                        DevicePanel.showConfigEditor(getTopLevel(), camera, false, false);
-                    }
-                } catch (Exception ex) {
-                    SwingUtils.showException(this, ex);
-                }
-            });
-
-            JMenuItem menuSetImageBufferSize = new JMenuItem("Set Stack Size...");
-            menuSetImageBufferSize.addActionListener((ActionEvent e) -> {
-                try {
-                    String ret = SwingUtils.getString(getTopLevel(), "Enter size of image buffer: ", String.valueOf(imageBufferLenght));
-                    if (ret != null) {
-                        this.setImageBufferSize(Integer.valueOf(ret));
-                    }
-                } catch (Exception ex) {
-                    SwingUtils.showException(this, ex);
-                }
-            });
-
-            JMenuItem menuSaveStack = new JMenuItem("Save Stack");
-            menuSaveStack.addActionListener((ActionEvent e) -> {
-                try {
-                    saveStack();
-                } catch (Exception ex) {
-                    SwingUtils.showException(this, ex);
-                }
-            });
-
-            JCheckBoxMenuItem menuFrameIntegration = new JCheckBoxMenuItem("Multi-Frame", (integration != 0));
-            menuFrameIntegration.addActionListener((ActionEvent e) -> {
-                if (integration == 0) {
-                    JPanel panel = new JPanel();
-                    GridBagLayout layout = new GridBagLayout();
-                    layout.columnWidths = new int[]{150, 50};   //Minimum width
-                    layout.rowHeights = new int[]{30, 30};   //Minimum height
-                    panel.setLayout(layout);
-                    JCheckBox checkContinuous = new JCheckBox("");
-                    checkContinuous.setSelected(true);
-                    JTextField textFrames = new JTextField();
-                    GridBagConstraints c = new GridBagConstraints();
-                    c.gridx = 0;
-                    c.gridy = 0;
-                    panel.add(new JLabel("Number of frames:"), c);
-                    c.gridy = 1;
-                    panel.add(new JLabel("Continuous:"), c);
-                    c.fill = GridBagConstraints.HORIZONTAL;
-                    c.gridx = 1;
-                    panel.add(checkContinuous, c);
-                    c.gridy = 0;
-                    panel.add(textFrames, c);
-                    if (SwingUtils.showOption(getTopLevel(), "Multi-Frame Integration", panel, OptionType.OkCancel) == OptionResult.Yes) {
-                        setIntegration(checkContinuous.isSelected() ? -(Integer.valueOf(textFrames.getText())) : (Integer.valueOf(textFrames.getText())));
-                    }
-                } else {
-                    if (SwingUtils.showOption(getTopLevel(), "Multi-Frame Integration",
-                            "Do you want to disable " + ((integration < 0) ? "continuous " : "") + "multi-frame integration (" + Math.abs(integration) + ")?", OptionType.YesNo) == OptionResult.Yes) {
-                        setIntegration(0);
-                    }
-                }
-            });
-
-            for (Component cmp : SwingUtils.getComponentsByType(renderer.getPopupMenu(), JMenu.class)) {
-                JMenu menu = (JMenu) cmp;
-                if (menu.getText().equals("Integration")) {
-                    menu.addSeparator();
-                    menu.add(menuFrameIntegration);
-                }
-            }
-
-            JMenuItem menuHistogram = new JMenuItem("Show Histogram");
-            menuHistogram.addActionListener((ActionEvent e) -> {
-                try {
-                    setHistogramVisible(true);
-                } catch (Exception ex) {
-                    SwingUtils.showException(this, ex);
-                }
-            });
-            renderer.getPopupMenu().add(menuHistogram);
-            renderer.getPopupMenu().addSeparator();
-            renderer.getPopupMenu().add(menuRendererConfig);
-            renderer.getPopupMenu().add(menuSetImageBufferSize);
-            renderer.getPopupMenu().add(menuSaveStack);
-            renderer.getPopupMenu().addPopupMenuListener(new PopupMenuListener() {
-                @Override
-                public void popupMenuWillBecomeVisible(PopupMenuEvent e) {
-                    menuSetImageBufferSize.setEnabled(!renderer.isPaused());
-                    menuFrameIntegration.setSelected(integration != 0);
-                }
-
-                @Override
-                public void popupMenuWillBecomeInvisible(PopupMenuEvent e) {
-                }
-
-                @Override
-                public void popupMenuCanceled(PopupMenuEvent e) {
-                }
-            });
-            renderer.getPopupMenu().setVisible(false);
-            buttonScale.setSelected(renderer.getShowColormapScale());
-            clearMarker();
-
-            showFit = buttonFit.isSelected();
-            showProfile = buttonProfile.isSelected();
-
-            pauseSelection.setVisible(false);
-            pauseSelection.setMinValue(1);
-            pauseSelection.addListener(new ValueSelectionListener() {
-                @Override
-                public void onValueChanged(ValueSelection origin, double value, boolean editing) {
-                    if (editing && (value >= 1) && (value <= imageBuffer.size())) {
-                        updatePause();
-                    }
-                }
-            });
-
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
-        updateButtons();
-    }
-
-    public String getServer() {
-        return serverUrl;
-    }
-
-    public void setServer(String server) {
-        this.serverUrl = server;
-        panelPipeline.setVisible(serverUrl != null);
-    }
-
-    public enum SourceSelecionMode {
-        Single,
-        Instances,
-        Pipelines,
-        Cameras
-
-    }
-    JComboBox comboStream;
-
-    SourceSelecionMode sourceSelecionMode = SourceSelecionMode.Single;
-
-    public void setSourceSelecionMode(SourceSelecionMode mode) {
-        if (sourceSelecionMode == mode) {
-            return;
-        }
-        GroupLayout layout = (GroupLayout) panelStream.getLayout();
-        if ((getServer() == null) && (mode != SourceSelecionMode.Single)) {
-            throw new RuntimeException("Invalid selection mode: Pipeline Server URL is not configured.");
-        }
-        if ((sourceSelecionMode == SourceSelecionMode.Single) && (mode != SourceSelecionMode.Single)) {
-            comboStream = new JComboBox();
-            comboStream.setModel(getStreamList(mode));
-            comboStream.addActionListener((e) -> {
-                try {
-                        if (!comboStream.isEnabled()) {
-                            throw new Exception("Invalid state");
-                        }
-                        comboStream.setEnabled(false);
-                        final String stream = (String) comboStream.getSelectedItem();
-                        new Thread(new Runnable() {
-                            @Override
-                            public void run() {
-                                try {
-                                    setStream(stream.trim().isEmpty() ? null : stream);
-                                } catch (Exception ex) {
-                                    ex.printStackTrace();
-                                } finally {
-                                    updateButtons();
-                                    comboStream.setEnabled(true);
-                                }
-                            }
-                        }).start();
-                } catch (Exception ex) {
-                    SwingUtils.showException(this, ex);
-                }
-
-            });
-            layout.replace(textStream, comboStream);
-        }
-        if ((mode == SourceSelecionMode.Single) && (sourceSelecionMode != SourceSelecionMode.Single)) {
-            layout.replace(comboStream, textStream);
-        }
-        sourceSelecionMode = mode;
-    }
-
-    public SourceSelecionMode getSourceSelecionMode() {
-        return sourceSelecionMode;
-    }
-
-    DefaultComboBoxModel getStreamList(SourceSelecionMode mode) {
-        DefaultComboBoxModel model = new DefaultComboBoxModel();
-        List<String> streams = new ArrayList<>();
-        try (PipelineServer srv =  new PipelineServer(CAMERA_DEVICE_NAME, serverUrl);) {
-            switch (mode) {
-                case Instances:
-                    streams = srv.getInstances();
-                    break;
-                case Pipelines:
-                    streams = srv.getPipelines();
-                    break;
-                case Cameras:
-                    streams = srv.getCameras();
-                    break;
-            }
-            Collections.sort(streams);
-
-            for (String stream : streams) {
-                model.addElement(stream);
-            }
-
-            if (App.hasArgument("stream")) {
-                String camera = App.getArgumentValue("stream");
-                if (model.getIndexOf(camera) < 0) {
-                    model.addElement(camera);
-                }
-            }
-            model.addElement("");
-            if (App.hasArgument("stream")) {
-                 model.setSelectedItem(App.getArgumentValue("stream")); 
-            } else {
-                model.setSelectedItem("");
-            }
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
-        return model;
-    }
-
-    public void setToolbarVisible(boolean value) {
-        topPanel.setVisible(value);
-    }
-
-    public boolean isSidePanelVisible() {
-        return sidePanel.isVisible();
-    }
-
-    public void setSidePanelVisible(boolean value) {
-        sidePanel.setVisible(value);
-    }
-
-    public boolean isToolbarVisible() {
-        return topPanel.isVisible();
-    }
-
-    public void setIntegration(int frames) {
-        try {
-            if (integration != frames) {
-                integration = frames;
-                if (camera != null) {
-                    if (Math.abs(integration) > 1) {
-                        renderer.setDevice(new ImageIntegrator(camera, integration));
-                    } else {
-                        renderer.setDevice(camera);
-                    }
-                    synchronized (imageBuffer) {
-                        currentFrame = null;
-                        imageBuffer.clear();
-                    }
-                }
-            }
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
-    }
-
-    @Override
-    protected void onShow() {
-        try {
-            timer = new Timer(1000, (ActionEvent e) -> {
-                try {
-                    onTimer();
-                } catch (Exception ex) {
-                    Logger.getLogger(getClass().getName()).log(Level.FINE, null, ex);
-                }
-            });
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
-    }
-
-    @Override
-    protected void onHide() {
-        try {
-            if (timer != null) {
-                timer.stop();
-                timer = null;
-            }
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
-        try {
-            if (camera != null) {
-                camera.close();
-                camera = null;
-            }
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
-    }
-
     final Object lockOverlays = new Object();
 
     protected void manageFit(BufferedImage bi, Data data) {
@@ -823,6 +909,7 @@ public class StreamCameraViewer extends MonitoredPanel {
         }
         updateButtons();
         instanceName = null;
+        pipelineName = null;
         renderer.setDevice(null);
         renderer.setShowReticle(false);
         renderer.removeOverlays(fitOv);
@@ -870,9 +957,6 @@ public class StreamCameraViewer extends MonitoredPanel {
         try {
             if (serverUrl != null) {
                 server = new PipelineServer(CAMERA_DEVICE_NAME, serverUrl);
-                instances = server.getInstances().toArray(new String[0]);
-                pipelines = server.getPipelines().toArray(new String[0]);
-                cameras = server.getCameras().toArray(new String[0]);
                 camera = server;
             } else {
                 server = null;
@@ -894,16 +978,34 @@ public class StreamCameraViewer extends MonitoredPanel {
             loadCameraState();
 
             if (server != null) {
-                if (Arr.containsEqual(instances, stream)) {
-                    instanceName = stream;
-                    server.start(stream, true);
-                } else if (Arr.containsEqual(pipelines, stream)) {
-                    instanceName = stream + "1";
-                    server.start(stream, instanceName);
-                } else if (Arr.containsEqual(cameras, stream)) {
-                    stream = stream + "_sp";
-                    instanceName = stream + "1";
-                    server.start(stream, instanceName);
+                switch (getSourceSelecionMode()) {
+                    case Instances:
+                        instanceName = stream;
+                        server.start(stream, true);
+                        break;
+                    case Pipelines:
+                        instanceName = stream;
+                        pipelineName = stream;
+                        server.start(stream, true);
+                        break;
+                    case Cameras:
+                        pipelineName = String.format(pipelineNameFormat, stream);
+                        instanceName = String.format(instanceNameFormat, pipelineName);
+                        server.start(pipelineName, instanceName);
+                        break;
+                    case Single:
+                        if (server.getInstances().contains(stream)) {
+                            instanceName = stream;
+                            server.start(stream, true);
+                        } else if (server.getPipelines().contains(stream)) {
+                            instanceName = String.format(instanceNameFormat, stream);
+                            server.start(stream, instanceName);
+                        } else if (server.getCameras().contains(stream)) {
+                            pipelineName = String.format(pipelineNameFormat, stream);
+                            instanceName = String.format(instanceNameFormat, pipelineName);
+                            server.start(pipelineName, instanceName);
+                        }
+                        break;
                 }
                 updatePipelineControls();
                 checkBackground.setEnabled(true);
@@ -948,9 +1050,9 @@ public class StreamCameraViewer extends MonitoredPanel {
                             synchronized (imageBuffer) {
 
                                 currentFrame = new Frame((camera == null) ? null : camera.getStream(), renderer, data);
-                                if (imageBufferLenght >= 1) {
+                                if (imageBufferLength >= 1) {
                                     imageBuffer.add(currentFrame);
-                                    if (imageBuffer.size() > imageBufferLenght) {
+                                    if (imageBuffer.size() > imageBufferLength) {
                                         imageBuffer.remove(0);
                                         setBufferFull(true);
                                     } else {
@@ -1223,7 +1325,7 @@ public class StreamCameraViewer extends MonitoredPanel {
     protected Pen penSlices = new Pen(Color.CYAN.darker(), 1);
 
     public Frame getCurrentFrame() {
-        if ((imageBufferLenght > 1) && (renderer.isPaused())) {
+        if ((imageBufferLength > 1) && (renderer.isPaused())) {
             int index = ((int) pauseSelection.getValue()) - 1;
             synchronized (imageBuffer) {
                 return (index < imageBuffer.size()) ? imageBuffer.get(index) : null;
@@ -1248,7 +1350,7 @@ public class StreamCameraViewer extends MonitoredPanel {
             throw new RuntimeException("Cannot change buffer size whn paused");
         }
         synchronized (imageBuffer) {
-            imageBufferLenght = size;
+            imageBufferLength = size;
             imageBuffer.clear();
         }
 
@@ -1970,7 +2072,7 @@ public class StreamCameraViewer extends MonitoredPanel {
                         dataTableModel.addRow(new Object[]{"Locator", ex.getMessage()});
                     }
                     try {
-                        dataTableModel.addRow(new Object[]{"Stream", stream});
+                        dataTableModel.addRow(new Object[]{"Stream", (server != null) ? server.getStreamAddress() : stream});
                     } catch (Exception ex) {
                         dataTableModel.addRow(new Object[]{"Stream", ex.getMessage()});
                     }
@@ -2378,16 +2480,7 @@ public class StreamCameraViewer extends MonitoredPanel {
         SwingUtilities.invokeLater(() -> {
             try {
                 StreamCameraViewer iv = new StreamCameraViewer();
-                if (App.hasArgument("server")) {
-                    iv.setServer(App.getArgumentValue("server"));
-                    if (App.hasArgument("mode")){
-                       iv.setSourceSelecionMode(SourceSelecionMode.valueOf(App.getArgumentValue("mode")));
-                    }                                       
-                }
-                if (App.hasArgument("stream")) {
-                    iv.setStream(App.getArgumentValue("stream"));
-                } 
-                Window window = SwingUtils.showFrame(null, "Stream Camera Viewer", new Dimension(800, 600), iv);                             
+                Window window = SwingUtils.showFrame(null, "Stream Camera Viewer", new Dimension(800, 600), iv);
                 window.setIconImage(Toolkit.getDefaultToolkit().getImage(App.getResourceUrl("IconSmall.png")));
             } catch (Exception ex) {
                 Logger.getLogger(StreamCameraViewer.class.getName()).log(Level.SEVERE, null, ex);
