@@ -102,6 +102,7 @@ import org.apache.commons.math3.fitting.GaussianCurveFitter;
 import org.apache.commons.math3.fitting.PolynomialCurveFitter;
 import org.apache.commons.math3.fitting.WeightedObservedPoint;
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
+import org.python.google.common.collect.Lists;
 
 /**
  *
@@ -128,6 +129,7 @@ public class StreamCameraViewer extends MonitoredPanel {
     Overlay titleOv = null;
     int integration = 0;
     boolean persistCameraState;
+    List<String> streamList;
 
     String serverUrl;
     PipelineServer server;
@@ -328,6 +330,10 @@ public class StreamCameraViewer extends MonitoredPanel {
                 }
             }
 
+            if (App.hasArgument("stream_list")) {
+                setStreamList(Arrays.asList(App.getArgumentValue("stream_list").split("|")));
+            }
+
             if (App.hasArgument("pipeline_format")) {
                 setPipelineNameFormat(App.getArgumentValue("pipeline_format"));
             }
@@ -424,16 +430,20 @@ public class StreamCameraViewer extends MonitoredPanel {
         DefaultComboBoxModel model = new DefaultComboBoxModel();
         List<String> streams = new ArrayList<>();
         try (PipelineServer srv = new PipelineServer(CAMERA_DEVICE_NAME, serverUrl);) {
-            switch (mode) {
-                case Instances:
-                    streams = srv.getInstances();
-                    break;
-                case Pipelines:
-                    streams = srv.getPipelines();
-                    break;
-                case Cameras:
-                    streams = srv.getCameras();
-                    break;
+            if (streamList != null){     
+                streams = streamList;
+            } else {
+                switch (mode) {
+                    case Instances:
+                        streams = srv.getInstances();
+                        break;
+                    case Pipelines:
+                        streams = srv.getPipelines();
+                        break;
+                    case Cameras:
+                        streams = srv.getCameras();
+                        break;
+                }
             }
             Collections.sort(streams);
 
@@ -536,6 +546,15 @@ public class StreamCameraViewer extends MonitoredPanel {
             ex.printStackTrace();
         }
     }
+    
+    public void setStreamList(List<String> value) {
+        streamList = value;
+    }
+
+    public List<String> getStreamList() {
+        return streamList;
+    }
+    
 
     public Boolean getLocalFit() {
         return localFit;
