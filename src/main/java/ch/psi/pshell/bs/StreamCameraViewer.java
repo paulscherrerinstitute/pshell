@@ -53,6 +53,7 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Image;
 import java.awt.Point;
+import java.awt.Rectangle;
 import java.awt.Toolkit;
 import java.awt.Window;
 import java.awt.datatransfer.Clipboard;
@@ -197,7 +198,53 @@ public class StreamCameraViewer extends MonitoredPanel {
                 } catch (Exception ex) {
                     SwingUtils.showException(this, ex);
                 }
+            });           
+            
+            JMenuItem menuSetROI = new JMenuItem("Set ROI...");
+            menuSetROI.addActionListener((ActionEvent e) -> {
+                renderer.abortSelection();
+                if (server != null) {
+                    final Overlays.Rect selection = new Overlays.Rect(renderer.getPenMovingOverlay());
+                    renderer.addListener(new RendererListener() {
+                        @Override
+                        public void onSelectionFinished(Renderer renderer, Overlay overlay) {
+                            try {
+                                renderer.setShowReticle(false);
+                                Rectangle roi = overlay.isFixed() ? renderer.toImageCoord(overlay.getBounds()) : overlay.getBounds();
+                                if (server.isRoiEnabled()) {
+                                    int[] cur = server.getRoi();
+                                    server.setRoi(new int[]{roi.x + cur[0], roi.y + cur[1], roi.width, roi.height});
+                                } else {
+                                    server.setRoi(new int[]{roi.x, roi.y, roi.width, roi.height});
+                                }
+                            } catch (Exception ex) {
+                            } finally {
+                                renderer.removeListener(this);
+                            }
+                        }
+
+                        @Override
+                        public void onSelectionAborted(Renderer renderer, Overlay overlay) {
+                            renderer.removeListener(this);
+                        }
+                    });
+                    selection.setFixed(true);
+                    renderer.startSelection(selection);
+                }
             });
+
+            JMenuItem menuResetROI = new JMenuItem("Reset ROI");
+            menuResetROI.addActionListener((ActionEvent e) -> {
+                renderer.abortSelection();
+                if (server != null) {
+                    try {
+                        renderer.setShowReticle(false);
+                        server.resetRoi();
+                    } catch (IOException ex) {
+                        SwingUtils.showException(this, ex);
+                    }
+                }
+            });            
 
             JCheckBoxMenuItem menuFrameIntegration = new JCheckBoxMenuItem("Multi-Frame", (integration != 0));
             menuFrameIntegration.addActionListener((ActionEvent e) -> {
@@ -253,11 +300,16 @@ public class StreamCameraViewer extends MonitoredPanel {
                 renderer.getPopupMenu().add(menuRendererConfig);
                 renderer.getPopupMenu().add(menuSetImageBufferSize);
                 renderer.getPopupMenu().add(menuSaveStack);
+                renderer.getPopupMenu().addSeparator();
+                renderer.getPopupMenu().add(menuSetROI);
+                renderer.getPopupMenu().add(menuResetROI);                
                 renderer.getPopupMenu().addPopupMenuListener(new PopupMenuListener() {
                     @Override
                     public void popupMenuWillBecomeVisible(PopupMenuEvent e) {
                         menuSetImageBufferSize.setEnabled(!renderer.isPaused());
-                        menuFrameIntegration.setSelected(integration != 0);
+                        menuFrameIntegration.setSelected(integration != 0);                      
+                        menuSetROI.setEnabled(server!=null);
+                        menuResetROI.setEnabled(server!=null);
                     }
 
                     @Override
@@ -2096,7 +2148,7 @@ public class StreamCameraViewer extends MonitoredPanel {
 
     public static Map<String, Object> getProcessingParameters(StreamValue value) throws IOException {
         return (Map) JsonSerializer.decode(value.getValue("processing_parameters").toString(), Map.class);
-    }
+    } 
 
     StandardDialog dataTableDialog;
     DefaultTableModel dataTableModel;
