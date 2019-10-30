@@ -19,9 +19,22 @@ import java.util.StringJoiner;
  */
 public class ProviderCSV extends ProviderText {
     
+    static String ITEM_SEPARATOR;
+
+    public static void setDefaultItemSeparator(String str) {
+        ITEM_SEPARATOR = str;
+    }
+
+    public static String getDefaultItemSeparator() {
+        if (ITEM_SEPARATOR == null) {
+            ITEM_SEPARATOR = "; ";
+        }
+        return ITEM_SEPARATOR;
+    }
+    
     public ProviderCSV() {
         super.setEmbeddedAtributes(false);
-        setItemSeparator(";");
+        setItemSeparator(getDefaultItemSeparator());
         setFinalSeparator(false); //By default don't use final separator
     }
     
