@@ -39,11 +39,13 @@ import ch.psi.utils.Config;
 import ch.psi.utils.Convert;
 import ch.psi.utils.Str;
 import ch.psi.utils.Sys;
+import ch.psi.utils.swing.Editor;
 import ch.psi.utils.swing.MainFrame;
 import ch.psi.utils.swing.MonitoredPanel;
 import ch.psi.utils.swing.StandardDialog;
 import ch.psi.utils.swing.SwingUtils.OptionResult;
 import ch.psi.utils.swing.SwingUtils.OptionType;
+import ch.psi.utils.swing.TextEditor;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dialog;
@@ -68,6 +70,8 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileInputStream;
 import java.lang.reflect.Array;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -178,6 +182,31 @@ public class StreamCameraViewer extends MonitoredPanel {
                     SwingUtils.showException(this, ex);
                 }
             });
+            
+            JMenuItem menuCameraConfig = new JMenuItem("Camera Configurarion");
+            menuCameraConfig.addActionListener((ActionEvent e) -> {
+                try {
+                    if (camera != null) {
+                        String cameraName = getCameraName();
+                        String cameraConfigJson = null;
+                        try (CameraServer srv = new CameraServer("CamServer", App.getArgumentValue("camera_server"))) {
+                            srv.initialize();
+                            //TODO: replace into encodeMultiline
+                            cameraConfigJson = JsonSerializer.encode(srv.getConfig(cameraName), true);
+                        }
+                        TextEditor configEditor = new TextEditor();
+                        configEditor.setText(cameraConfigJson);
+                        configEditor.setReadOnly(true);
+                        configEditor.setTitle(cameraName);
+                        Editor.EditorDialog dlg = configEditor.getDialog(SwingUtils.getFrame(this), false);
+                        dlg.setSize(480, 640);
+                        dlg.setVisible(true);
+                        SwingUtils.centerComponent(getTopLevel(), dlg);
+                    }
+                } catch (Exception ex) {
+                    SwingUtils.showException(this, ex);
+                }
+            });            
 
             JMenuItem menuSetImageBufferSize = new JMenuItem("Set Stack Size...");
             menuSetImageBufferSize.addActionListener((ActionEvent e) -> {
@@ -198,7 +227,16 @@ public class StreamCameraViewer extends MonitoredPanel {
                 } catch (Exception ex) {
                     SwingUtils.showException(this, ex);
                 }
-            });           
+            });
+            
+            JMenuItem menuCalibrate = new JMenuItem("Calibrate...");
+            menuCalibrate.addActionListener((ActionEvent e) -> {
+                try {
+                    calibrate();
+                } catch (Exception ex) {
+                    SwingUtils.showException(this, ex);
+                }
+            });            
             
             JMenuItem menuSetROI = new JMenuItem("Set ROI...");
             menuSetROI.addActionListener((ActionEvent e) -> {
@@ -297,17 +335,25 @@ public class StreamCameraViewer extends MonitoredPanel {
                 });
                 renderer.getPopupMenu().add(menuHistogram);
                 renderer.getPopupMenu().addSeparator();
-                renderer.getPopupMenu().add(menuRendererConfig);
+                renderer.getPopupMenu().add(menuRendererConfig);                
                 renderer.getPopupMenu().add(menuSetImageBufferSize);
                 renderer.getPopupMenu().add(menuSaveStack);
                 renderer.getPopupMenu().addSeparator();
+                if (App.hasArgument("camera_server")){
+                    renderer.getPopupMenu().add(menuCalibrate);
+                    renderer.getPopupMenu().add(menuCameraConfig);
+                    renderer.getPopupMenu().addSeparator();
+                }
+                                        
                 renderer.getPopupMenu().add(menuSetROI);
                 renderer.getPopupMenu().add(menuResetROI);                
                 renderer.getPopupMenu().addPopupMenuListener(new PopupMenuListener() {
                     @Override
                     public void popupMenuWillBecomeVisible(PopupMenuEvent e) {
                         menuSetImageBufferSize.setEnabled(!renderer.isPaused());
-                        menuFrameIntegration.setSelected(integration != 0);                      
+                        menuFrameIntegration.setSelected(integration != 0);
+                        menuCalibrate.setVisible(server != null);
+                        menuCalibrate.setEnabled((calibrationDialolg == null) || (!calibrationDialolg.isShowing()));                        
                         menuSetROI.setEnabled(server!=null);
                         menuResetROI.setEnabled(server!=null);
                     }
@@ -2148,7 +2194,30 @@ public class StreamCameraViewer extends MonitoredPanel {
 
     public static Map<String, Object> getProcessingParameters(StreamValue value) throws IOException {
         return (Map) JsonSerializer.decode(value.getValue("processing_parameters").toString(), Map.class);
-    } 
+    }
+    
+    
+    StandardDialog calibrationDialolg;
+
+    void calibrate() throws Exception {
+        if (server != null) {
+            server.resetRoi();
+            calibrationDialolg = new CameraCalibrationDialog( SwingUtils.getFrame(this),  App.getArgumentValue("camera_server"), server.getCurrentCamera(), renderer);
+            SwingUtils.centerComponent(getTopLevel(), calibrationDialolg);
+            calibrationDialolg.setVisible(true);
+            calibrationDialolg.setListener(new StandardDialog.StandardDialogListener() {
+                @Override
+                public void onWindowOpened(StandardDialog dlg) {
+                }
+
+                @Override
+                public void onWindowClosed(StandardDialog dlg, boolean accepted) {
+                    if (accepted) {
+                    }
+                }
+            });
+        }
+    }    
 
     StandardDialog dataTableDialog;
     DefaultTableModel dataTableModel;
