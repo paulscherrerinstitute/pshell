@@ -102,7 +102,7 @@ dependencies {
     compile 'com.fifesoft:rsyntaxtextarea:2.6.1'
     compile 'jline:jline:2.14.3'
     compile 'ch.psi:bsread:4.0.0'
-    compile 'net.imagej:ij:1.51j'    
+    compile 'net.imagej:ij:1.52q'    
     compile 'javax.mail:javax.mail-api:1.6.0'
     compile 'com.sun.mail:javax.mail:1.6.0'
     compile 'com.github.sarxos:webcam-capture:0.3.11'
