@@ -99,7 +99,7 @@ dependencies {
     compile group: 'com.neuronrobotics', name: 'nrjavaserial_java11', version: '3.15.0'    
     compile 'net.wimpi:jamod:1.2'
     compile 'net.java.dev.jna:jna:4.4.0'
-    compile 'com.fifesoft:rsyntaxtextarea:2.6.1'
+    compile 'com.fifesoft:rsyntaxtextarea:3.0.4'
     compile 'jline:jline:2.14.3'
     compile 'ch.psi:bsread:4.0.0'
     compile 'net.imagej:ij:1.52q'    
