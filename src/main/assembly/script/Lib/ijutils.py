@@ -19,6 +19,7 @@ import ij.WindowManager as WindowManager
 import ij.ImagePlus as ImagePlus
 import ij.Prefs as Prefs
 import ij.io.FileSaver as FileSaver
+import ij.io.Opener as Opener
 
 import ij.process.ImageProcessor as ImageProcessor
 import ij.process.ByteProcessor as ByteProcessor
@@ -130,6 +131,18 @@ def save_image(ip, path=None, format = None):
         elif format == "tiff": fs.saveAsTiff(path)
         elif format == "zip": fs.saveAsZip(path)   
 
+
+def open_image(path):
+    """
+    Open file using ij.io,Opener
+    """
+    try:
+        path = get_context().setup.expandPath(path)
+    except:
+        pass  
+    opener = Opener()
+    return opener.openImage(path)
+
 def new_image(width, height, image_type="byte", title = "img", fill_color = None):
     """
     type = "byte", "short", "color" or "float"
@@ -145,6 +158,16 @@ def new_image(width, height, image_type="byte", title = "img", fill_color = None
         p.resetRoi()
         p.fill()
     return ret    
+
+def get_ip_array(ip):
+    """
+    Returns data array of ImagePlus
+    """
+    if type(ip.getProcessor()) == FloatProcessor:
+        return ip.getProcessor().getFloatArray()
+    else:
+        return ip.getProcessor().getIntArray()
+
 
 def sub_image(ip, x, y, width, height):
     """
@@ -702,3 +725,26 @@ def reslice(stack, start_at = "Top", vertically = True, flip = True, output_pixe
     
     
  
+###############################################################################
+# ImagePlus list operations
+###############################################################################
+
+def integrate_ips(ips, as_float=True):    
+    """
+    Integrate list if ImagePlus with the same size.
+    """ 
+    aux = None
+    for i in range(len(ips)):
+        if i==0:        
+            img_type = "float" if as_float else "short"
+            aux = new_image(ips[i].width, ips[i].height, image_type=img_type, title = "sum", fill_color = None)
+        op_image(aux, ips[i], "add", float_result=as_float, in_place=True)    
+    return aux
+
+def average_ips (ips, roi=None, as_float=True):   
+    """
+    Average list if ImagePlus with the same size.
+    """ 
+    aux = integrate_ips(ips, as_float)     
+    op_const(aux, "divide", float(len(ips)), in_place=True)    
+    return aux

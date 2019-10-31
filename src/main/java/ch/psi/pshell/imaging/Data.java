@@ -831,6 +831,16 @@ public class Data implements Serializable {
         }
         return ret;
     }
+    
+    
+    public double integrate(boolean transformed) {
+        double ret = 0;
+        double[] arr = integrateHorizontally(transformed);
+        for (double d : arr) {
+            ret += d;
+        }
+        return ret;
+    }    
 
     void checkValidOpertator(Data op) {
         if ((length != op.length) || (getType() != op.getType()) || (unsigned != op.unsigned)) {
