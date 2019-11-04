@@ -76,6 +76,9 @@ public class DeviceValueChart extends DevicePanel {
             asyncUpdates = value;
             menuAsyncUpdates.setSelected(asyncUpdates);
         }
+        if (chart instanceof  HistoryChart){
+            ((HistoryChart) chart).setAsyncUpdates(value);
+        }
     }
 
     public boolean getAsyncUpdates() {
@@ -141,7 +144,8 @@ public class DeviceValueChart extends DevicePanel {
                     }
 
                 } else {
-                    chart = HistoryChart.create(device);
+                    chart = HistoryChart.create(device);    
+                    ((HistoryChart) chart).setAsyncUpdates(getAsyncUpdates());
                 }
                 if (chart instanceof PlotBase) {
                     ((PlotBase) chart).setTitle(null);
