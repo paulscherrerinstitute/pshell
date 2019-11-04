@@ -21,13 +21,15 @@ public interface Readable<T> extends Nameable {
     }
 
     default Class getElementType() {
-        Object obj = this;
+        if (this instanceof ReadableType) {
+            return ((ReadableType) this)._getElementType();
+        }
         if (this instanceof CacheReadable) {
-            obj = ((CacheReadable)this).getParent();
-        }
-        if (obj instanceof ReadableType) {
-            return ((ReadableType) obj)._getElementType();
-        }
+            Object obj = ((CacheReadable)this).getParent();
+            if ((obj!=null) && (obj instanceof ReadableType)) {
+                return ((ReadableType) obj)._getElementType();
+            }
+        }        
         return Object.class;
     }
 
