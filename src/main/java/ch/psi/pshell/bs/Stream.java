@@ -64,7 +64,7 @@ public class Stream extends DeviceBase implements Readable<StreamValue>, Cacheab
 
     
     @Override
-    public Class getElementType() {
+    public Class _getElementType() {
         return Long.class;
     }    
     /**

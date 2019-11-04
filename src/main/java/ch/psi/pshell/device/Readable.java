@@ -1,6 +1,7 @@
 package ch.psi.pshell.device;
 
 import ch.psi.pshell.core.Nameable;
+import ch.psi.pshell.device.Cacheable.CacheReadable;
 import ch.psi.utils.Arr;
 import ch.psi.utils.Convert;
 import ch.psi.utils.Reflection.Hidden;
@@ -20,8 +21,12 @@ public interface Readable<T> extends Nameable {
     }
 
     default Class getElementType() {
-        if (this instanceof ReadableType) {
-            return ((ReadableType) this)._getElementType();
+        Object obj = this;
+        if (this instanceof CacheReadable) {
+            obj = ((CacheReadable)this).getParent();
+        }
+        if (obj instanceof ReadableType) {
+            return ((ReadableType) obj)._getElementType();
         }
         return Object.class;
     }
