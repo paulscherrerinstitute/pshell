@@ -481,8 +481,16 @@ public class StreamCameraViewer extends MonitoredPanel {
         this.listener = listener;
     }
     
-    public String getServer() {
+    public String getServerUrl() {
         return serverUrl;
+    }
+    
+    public PipelineServer getServer() {
+        return server;
+    }    
+    
+    public StreamCamera getCamera(){
+        return camera;
     }
 
     public void setServer(String server) {
@@ -506,7 +514,7 @@ public class StreamCameraViewer extends MonitoredPanel {
             return;
         }
         GroupLayout layout = (GroupLayout) panelStream.getLayout();
-        if ((getServer() == null) && (mode != SourceSelecionMode.Single)) {
+        if ((getServerUrl() == null) && (mode != SourceSelecionMode.Single)) {
             throw new RuntimeException("Invalid selection mode: Pipeline Server URL is not configured.");
         }
         if ((sourceSelecionMode == SourceSelecionMode.Single) && (mode != SourceSelecionMode.Single)) {
@@ -1032,10 +1040,11 @@ public class StreamCameraViewer extends MonitoredPanel {
         String json = JsonSerializer.encode(stream);        
         return setStream(json);
     }
+    
 
     public String setStream(String stream) throws IOException, InterruptedException {
         System.out.println("Initializing: " + stream);
-        textStream.setText((stream == null) ? "" : stream);
+        
         parseUserOverlays();
         errorOverlay = null;
         lastFrame = null;
@@ -1063,6 +1072,14 @@ public class StreamCameraViewer extends MonitoredPanel {
         renderer.removeOverlays(userOv);
         renderer.clear();
         renderer.resetZoom();
+        
+        Map<String, Object> cfg = null;
+        if ((stream!=null) && (stream.startsWith("{") && stream.endsWith("}"))){
+            cfg =  (Map<String, Object>) JsonSerializer.decode(stream, Map.class);        
+            textStream.setText((String) cfg.get("camera_name"));            
+        } else {
+            textStream.setText((stream == null) ? "" : stream);
+        }        
 
         boolean changed = !String.valueOf(stream).equals(this.stream);
         this.stream = stream;
@@ -1122,10 +1139,8 @@ public class StreamCameraViewer extends MonitoredPanel {
             loadCameraState();
 
             if (server != null) {
-                if (stream.startsWith("{") && stream.endsWith("}")){
-                    Map<String, Object> cfg =  (Map<String, Object>) JsonSerializer.decode(stream, Map.class);        
+                if (cfg!=null){
                     String cameraName = (String) cfg.get("camera_name");
-                    textStream.setText(cameraName);
                     if (cfg.get("name") != null){
                         pipelineName = String.valueOf(cfg.get("name"));
                     } else {
@@ -2786,7 +2801,7 @@ public class StreamCameraViewer extends MonitoredPanel {
             try {
                 StreamCameraViewer iv = new StreamCameraViewer();
                 Window window = SwingUtils.showFrame(null, "Stream Camera Viewer", new Dimension(800, 600), iv);
-                window.setIconImage(Toolkit.getDefaultToolkit().getImage(App.getResourceUrl("IconSmall.png")));                
+                window.setIconImage(Toolkit.getDefaultToolkit().getImage(App.getResourceUrl("IconSmall.png"))); 
             } catch (Exception ex) {
                 Logger.getLogger(StreamCameraViewer.class.getName()).log(Level.SEVERE, null, ex);
             }

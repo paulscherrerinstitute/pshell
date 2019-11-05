@@ -31,6 +31,9 @@ public class PipelineServer extends StreamCamera {
     String currentInstance;
     Boolean shared;
 
+    public interface PipelineServerListener{
+        void onConfigChanged(Map<String, Object> config);
+    }
     /**
      * Optional persisted configuration of CameraServer objects.
      */
@@ -116,6 +119,16 @@ public class PipelineServer extends StreamCamera {
         if (!isStarted()) {
             throw new IOException("Pipeline not started");
         }
+    }
+    
+    PipelineServerListener pipelineServerListener;
+    
+    public void setPipelineServerListener(PipelineServerListener listener){
+        pipelineServerListener = listener;
+    }
+
+    public PipelineServerListener getPipelineServerListener(){
+        return pipelineServerListener;
     }
 
     /**
@@ -219,6 +232,11 @@ public class PipelineServer extends StreamCamera {
         json = r.readEntity(String.class);
         Map<String, Object> map = (Map) JsonSerializer.decode(json, Map.class);
         checkReturn(map);
+        if (pipelineServerListener!=null){
+            if (instanceId.equals(currentInstance)){        
+                pipelineServerListener.onConfigChanged(config);
+            }
+        }
     }
 
     /**
@@ -630,7 +648,7 @@ public class PipelineServer extends StreamCamera {
     }     
     
     
-    public void sendFuncionScript(String fileName) throws IOException {
+    public void sendFunctionScript(String fileName) throws IOException {
         File file = new File(fileName);
         String function = new String(Files.readAllBytes(file.toPath()));
         String name = file.getName();
@@ -642,8 +660,8 @@ public class PipelineServer extends StreamCamera {
         checkReturn(map);                       
     }     
     
-    public void setFuncionScript(String fileName) throws IOException {
-        sendFuncionScript(fileName);
+    public void setFunctionScript(String fileName) throws IOException {
+        sendFunctionScript(fileName);
         setFunction(new File(fileName).getName());
     }
     
@@ -658,5 +676,11 @@ public class PipelineServer extends StreamCamera {
     public boolean isStarted() {
         return (currentInstance != null);
     }
+    
+    @Override
+    protected void doClose() throws IOException {
+        pipelineServerListener = null;
+        super.doClose();
+    }    
 
 }

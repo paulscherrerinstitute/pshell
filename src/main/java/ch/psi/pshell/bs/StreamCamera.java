@@ -162,5 +162,6 @@ public class StreamCamera extends ColormapSource {
     protected void doClose() throws IOException {
         provider.close();
         stream.close();
+        super.doClose();
     }
 }
