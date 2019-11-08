@@ -1,5 +1,6 @@
 package ch.psi.pshell.swing;
 
+import ch.psi.pshell.ui.App;
 import ch.psi.utils.IO;
 import ch.psi.utils.swing.MainFrame;
 import ch.psi.utils.swing.TextEditor;
@@ -305,6 +306,7 @@ public class CodeEditor extends TextEditor {
     // Variables declaration - do not modify//GEN-BEGIN:variables
     // End of variables declaration//GEN-END:variables
     public static void main(String[] args) throws InterruptedException, IOException {
+        App.init(args);
         CodeEditor editor = new CodeEditor();
         if (args.length > 0) {
             editor.load(args[0]);

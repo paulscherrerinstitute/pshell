@@ -2,6 +2,7 @@ package ch.psi.pshell.scan;
 
 import ch.psi.pshell.core.Context;
 import ch.psi.pshell.core.Publisher;
+import ch.psi.pshell.ui.App;
 import java.util.ArrayList;
 
 /**
@@ -45,9 +46,10 @@ public class ScanStreamer extends Publisher {
     }
 
     public static void main(String[] args) throws Exception {
+        App.init(args);
         String server = "localhost:5563";
-        if (args.length > 0) {
-            server = args[0];
+        if (App.hasArgument("url")) {
+            server = App.getArgumentValue("url");
         }
         org.zeromq.ZMQ.Context context = org.zeromq.ZMQ.context(1);
         org.zeromq.ZMQ.Socket subscriber = context.socket(org.zeromq.ZMQ.SUB);

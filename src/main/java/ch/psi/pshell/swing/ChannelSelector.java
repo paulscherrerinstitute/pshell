@@ -4,6 +4,7 @@ import ch.psi.pshell.bs.PipelineServer;
 import ch.psi.utils.DataAPI;
 import ch.psi.utils.DispatcherAPI;
 import ch.psi.pshell.core.Context;
+import ch.psi.pshell.ui.App;
 import ch.psi.utils.EpicsBootInfoAPI;
 import ch.psi.utils.Arr;
 import ch.psi.utils.History;
@@ -397,6 +398,7 @@ public class ChannelSelector extends javax.swing.JPanel {
     }
 
     public static void main(String[] args) {
+        App.init(args);
         //java.awt.EventQueue.invokeLater(() -> {
         //sf-imagebuffer, sf-databuffer, sf-archiverappliance
         ChannelSelector cs = new ChannelSelector();

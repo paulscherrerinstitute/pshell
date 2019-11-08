@@ -6,6 +6,7 @@ import ch.psi.pshell.scan.ScanRecord;
 import ch.psi.pshell.scripting.JythonUtils;
 import ch.psi.pshell.scripting.ScriptType;
 import ch.psi.pshell.scripting.ViewPreference;
+import ch.psi.pshell.ui.App;
 import ch.psi.utils.Arr;
 import ch.psi.utils.Convert;
 import ch.psi.utils.Observable;
@@ -243,6 +244,7 @@ public class Console {
     }
 
     public static void main(String args[]) throws IOException {
+        App.init(args);
         Context context = Context.createInstance();
         context.start();
         new Console().run(System.in, System.out, true);
