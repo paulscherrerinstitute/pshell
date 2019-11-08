@@ -7,6 +7,7 @@ import ch.psi.pshell.core.Context;
 import ch.psi.pshell.core.ContextAdapter;
 import ch.psi.pshell.core.InlineDevice;
 import ch.psi.pshell.core.JsonSerializer;
+import ch.psi.pshell.core.Setup;
 import ch.psi.pshell.data.ProviderCSV;
 import ch.psi.pshell.data.ProviderText;
 import ch.psi.pshell.device.Device;
@@ -25,6 +26,7 @@ import ch.psi.pshell.scan.StripScanExecutor;
 import ch.psi.pshell.swing.HistoryChart;
 import ch.psi.pshell.swing.PlotPanel;
 import ch.psi.pshell.ui.StripChartAlarmEditor.StripChartAlarmConfig;
+import ch.psi.utils.Arr;
 import ch.psi.utils.Audio;
 import ch.psi.utils.Chrono;
 import ch.psi.utils.IO;
@@ -672,17 +674,18 @@ public class StripChart extends StandardDialog {
 
         //tableSeries.setEnabled(editing);
         //tableCharts.setEnabled(editing);
-        ckPersistence.setEnabled(editing);
+        ckPersistence.setEnabled(editing && (Context.getInstance()!=null));
         textFileName.setEnabled((ckPersistence.isSelected() && editing) || !ckPersistence.isSelected());
         comboFormat.setEnabled(textFileName.isEnabled());
         comboLayout.setEnabled(textFileName.isEnabled());
         textStreamFilter.setEnabled(editing);
         spinnerDragInterval.setEnabled(editing);
         spinnerUpdate.setEnabled(editing);
-
+        
         boolean saveButtonVisible = started && !ckPersistence.isSelected();
         if (saveButtonVisible && (saveButton == null)) {
             saveButton = new JButton("Save");
+            saveButton.setEnabled(Context.getInstance()!=null);
             saveButton.addActionListener((ActionEvent e) -> {
                 try {
                     saveData();
@@ -1043,10 +1046,12 @@ public class StripChart extends StandardDialog {
             }
         }
 
-        if (ckPersistence.isSelected()) {
-            String path = Context.getInstance().getSetup().expandPath(textFileName.getText().trim().replace("{name}", "StripChart"));
-            persistenceExecutor = new StripScanExecutor();
-            persistenceExecutor.start(path, getNames(), String.valueOf(comboFormat.getSelectedItem()), String.valueOf(comboLayout.getSelectedItem()), true);
+        if(Context.getInstance()!=null){
+            if (ckPersistence.isSelected()) {
+                String path = Context.getInstance().getSetup().expandPath(textFileName.getText().trim().replace("{name}", "StripChart"));
+                persistenceExecutor = new StripScanExecutor();
+                persistenceExecutor.start(path, getNames(), String.valueOf(comboFormat.getSelectedItem()), String.valueOf(comboLayout.getSelectedItem()), true);
+            }
         }
         boolean alarming = false;
         Vector[] rows = (Vector[]) vector.toArray(new Vector[0]);
@@ -1119,8 +1124,10 @@ public class StripChart extends StandardDialog {
                 id = id.substring(0, id.indexOf(" "));
             }
         }
-        if (!Context.getInstance().getDataManager().getProvider().isPacked()) { //Filenames don't support ':'
-            id = id.replace(":", "_");
+        if (Context.getInstance()!=null){
+            if (!Context.getInstance().getDataManager().getProvider().isPacked()) { //Filenames don't support ':'
+                id = id.replace(":", "_");
+            }
         }
         id = id.replace("/", "_");
         return id;
@@ -2354,10 +2361,12 @@ public class StripChart extends StandardDialog {
     /**
      */
     public static void main(String args[]) {
-        MainFrame.setLookAndFeel(MainFrame.getNimbusLookAndFeel());
-        String configPath = "./home/config";
-        Epics.create(Paths.get(configPath, "jcae.properties").toString());
-        create(Paths.get(Sys.getUserHome(), "test." + FILE_EXTENSION).toFile(), null, null, false, true);
+        App.init(args);
+        String prop = System.getProperty(Setup.PROPERTY_PARALLEL_INIT);
+        boolean parallel = ((prop != null) && (prop.length()>0)) ? Boolean.valueOf(prop) : false;
+        String path = System.getProperty(Setup.PROPERTY_HOME_PATH);
+        Epics.create(Paths.get((path==null) ? "." : path, "jcae.properties").toString(), parallel);
+        create(App.getFileArg(), null, null, false, true);
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables

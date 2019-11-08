@@ -1,6 +1,7 @@
 package ch.psi.pshell.device;
 
 import ch.psi.pshell.core.Nameable;
+import ch.psi.pshell.core.Setup;
 import java.io.IOException;
 import java.nio.file.Paths;
 import ch.psi.utils.Configurable;
@@ -97,7 +98,7 @@ public interface GenericDevice<T> extends Observable<T>, Timestamped, AutoClosea
     public static String getConfigPath() {
         String path = System.getProperty(PROPERTY_CONFIG_PATH);
         if (path == null) {
-            return "./home/devices";
+            return Setup.DEFAULT_HOME_FOLDER + "/devices";
         }
         return path;
     }

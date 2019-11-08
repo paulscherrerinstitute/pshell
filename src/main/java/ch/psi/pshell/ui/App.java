@@ -404,6 +404,10 @@ public class App extends ObservableBase<AppListener> {
         return hasArgument("c");
     }
 
+    static public boolean isDebug() {
+        return hasArgument("debug");
+    }
+
     static public boolean isServerMode() {
         return hasArgument("v");
     }

@@ -1518,11 +1518,8 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
         return ret;
     }
 
-    public static void main(String args[]) {
-        //args = new String[]{"../config/home"};
-        //args = new String[]{"../config/home", "../config/home/data/2018_06/20180606/20180606_094737_averager.h5"};
-        MainFrame.setLookAndFeel(MainFrame.getNimbusLookAndFeel());
-        System.setProperty(Setup.PROPERTY_HOME_PATH, args[0]);
+    public static void main(String args[]) {      
+        App.init(args);
         createPanel(args.length > 1 ? new File(args[1]) : null);
     }
 

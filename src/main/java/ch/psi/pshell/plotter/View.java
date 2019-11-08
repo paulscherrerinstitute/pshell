@@ -1,7 +1,9 @@
 package ch.psi.pshell.plotter;
 
 import ch.psi.pshell.core.LogManager;
+import ch.psi.pshell.core.Setup;
 import ch.psi.pshell.ui.AboutDialog;
+import ch.psi.pshell.ui.App;
 import ch.psi.utils.Arr;
 import ch.psi.utils.State;
 import ch.psi.utils.Sys;
@@ -9,9 +11,9 @@ import ch.psi.utils.swing.ConfigDialog;
 import ch.psi.utils.swing.MainFrame;
 import java.awt.Window;
 import java.io.File;
+import java.nio.file.Paths;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.swing.UIManager;
 
 /**
  *
@@ -287,24 +289,14 @@ public class View extends MainFrame {
      * @param args the command line arguments
      */
     public static void main(String args[]) throws Exception {
-        Sys.addToLibraryPath(new File("../config/home/extensions").getCanonicalPath());
-        Sys.addToClassPath("../config/home/extensions/jzy3d-1.9.0-jar-with-dependencies.jar");
-        if (Arr.containsEqual(args, "-debug")){
+        App.init(args);
+        String home = Setup.expand(System.getProperty(Setup.PROPERTY_HOME_PATH, Setup.DEFAULT_HOME_FOLDER));
+        Sys.addToLibraryPath(Paths.get(home, "extensions").toFile().getCanonicalPath());
+        Sys.addToClassPath(Paths.get(home, "extensions", "jzy3d-1.9.0-jar-with-dependencies.jar").toString());
+        
+        if (App.isDebug()){
             PlotServer.debug = true;
         }
-        /* Set the look and feel */
-        //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
-        if (Arr.containsEqual(args, "-mlaf")) {
-            setLookAndFeel(UIManager.getCrossPlatformLookAndFeelClassName());
-        } else if (Arr.containsEqual(args, "-slaf")) {
-            setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-        } else if (Arr.containsEqual(args, "-dlaf")) {
-            setLookAndFeel(MainFrame.getDarculaLookAndFeel());
-        } else {
-            setLookAndFeel(Sys.getOSFamily()==Sys.getOSFamily().Mac ? UIManager.getSystemLookAndFeelClassName() : MainFrame.getNimbusLookAndFeel());
-        }
-        //</editor-fold>
-
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {

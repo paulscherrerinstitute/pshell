@@ -75,6 +75,8 @@ public class Setup extends Config {
     public static transient final String TOKEN_FILE_SEQUENTIAL_NUMBER= "{seq}";
     public static transient final String TOKEN_SYS_HOME = "{syshome}";
     public static transient final String TOKEN_SYS_USER = "{sysuser}";
+    
+    public static transient final String DEFAULT_HOME_FOLDER = "./home";
 
     String homePath;
     String outputPath;
@@ -122,7 +124,7 @@ public class Setup extends Config {
     @Override
     public void load(String fileName) throws IOException {
         if (System.getProperty(PROPERTY_HOME_PATH) == null) {
-            System.setProperty(PROPERTY_HOME_PATH, "./home");
+            System.setProperty(PROPERTY_HOME_PATH, DEFAULT_HOME_FOLDER);
         }
         homePath = System.getProperty(PROPERTY_HOME_PATH);
 
