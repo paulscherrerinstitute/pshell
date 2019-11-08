@@ -793,10 +793,14 @@ public class SwingUtils {
 
     //JComboBox
     public static void setEnumCombo(JComboBox combo, Class cls) {
+        setEnumCombo(combo, cls, false);
+    }
+    
+    public static void setEnumCombo(JComboBox combo, Class cls, boolean asString) {
         if ((combo != null) & (cls != null) & (cls.isEnum())) {
             DefaultComboBoxModel model = new DefaultComboBoxModel();
             for (Object object : cls.getEnumConstants()) {
-                model.addElement(object);
+                model.addElement(asString ? String.valueOf(object): object);
             }
             combo.setModel(model);
         }
