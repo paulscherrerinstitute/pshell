@@ -168,6 +168,12 @@ public abstract class GenericDeviceBase<T> extends ObservableBase<T> implements 
     public void waitStateNot(State state, int timeout) throws IOException, InterruptedException {
         waitConditionOnState(() -> getState() != state, timeout, "Timeout waiting state not: " + state);
     }
+    
+    @Override
+    public void waitInitialized(int timeout) throws IOException, InterruptedException{
+        waitConditionOnState(() -> { if (getState()==State.Closing){ throw new RuntimeException("Device is closed");}; 
+                                     return getState().isInitialized();}, timeout, "Timeout waiting initialized");
+    }
 
     //Initialization
     //Real device access can be done here

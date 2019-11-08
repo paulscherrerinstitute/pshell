@@ -26,6 +26,8 @@ public interface GenericDevice<T> extends Observable<T>, Timestamped, AutoClosea
     void initialize() throws IOException, InterruptedException;
 
     boolean isInitialized();
+    
+    void waitInitialized(int timeout) throws IOException, InterruptedException;
 
     //General attributes
     /**

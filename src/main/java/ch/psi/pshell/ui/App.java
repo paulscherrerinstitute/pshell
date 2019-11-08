@@ -159,6 +159,7 @@ public class App extends ObservableBase<AppListener> {
         sb.append("\n\t-plug=<path>\tOverride the plugin definition file (default is {config}/plugins.properties)");
         sb.append("\n\t-task=<path>\tOverride the task definition file (default is {config}/tasks.properties)");
         sb.append("\n\t-sets=<path>\tOverride the settings file (default is {config}/settings.properties)");
+        sb.append("\n\t-pini=<value>\tOverride config flag for parallel initialization (values: true or false)");        
         sb.append("\n\t-clog=<level>\tSet the console logging level");
         sb.append("\n\t-user=<name>\tSet the startup user");
         sb.append("\n\t-type=<ext>\tSet the script type, overriding the setup");
@@ -508,6 +509,7 @@ public class App extends ObservableBase<AppListener> {
         public String task;
         public String pool;
         public String sets;
+        public String pini;
         public LogLevel consoleLog;
     }
 
@@ -600,7 +602,13 @@ public class App extends ObservableBase<AppListener> {
             System.setProperty(Setup.PROPERTY_SETTINGS_FILE, getArgumentValue("sets"));
         } else if (Config.isStringDefined(pshellProperties.sets)) {
             System.setProperty(Setup.PROPERTY_SETTINGS_FILE, pshellProperties.sets);
-        }        
+        } 
+        
+        if (isArgumentDefined("pini")) {
+            System.setProperty(Setup.PROPERTY_PARALLEL_INIT, getArgumentValue("pini"));
+        } else if (Config.isStringDefined(pshellProperties.pini)) {
+            System.setProperty(Setup.PROPERTY_PARALLEL_INIT, pshellProperties.pini);
+        }         
         
         if (isArgumentDefined("outp")) {
             System.setProperty(Setup.PROPERTY_OUTPUT_PATH, getArgumentValue("outp"));

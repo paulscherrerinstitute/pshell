@@ -130,6 +130,10 @@
     <td>Override the settings file - persisted script properties (default is {config}/settings.properties).</td>
   </tr>
   <tr>
+    <td>pini=[true or false]</td>
+    <td>Override config flag for parallel initialization.</td>
+  </tr>
+  <tr>
     <td>-user=[name]</td>
     <td>Set the startup user.</td>
   </tr>

@@ -42,6 +42,7 @@ public class Setup extends Config {
     public static transient final String PROPERTY_TASKS_FILE = "ch.psi.pshell.tasks.file";
     public static transient final String PROPERTY_SETTINGS_FILE = "ch.psi.pshell.settings.file";
     public static transient final String PROPERTY_SCRIPT_TYPE = "ch.psi.pshell.type";
+    public static transient final String PROPERTY_PARALLEL_INIT = "ch.psi.pshell.parallel.init";
 
     //Fixed tokens
     public static transient final String TOKEN_HOME = "{home}";

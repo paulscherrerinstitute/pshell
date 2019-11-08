@@ -19,13 +19,21 @@ import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import ch.psi.pshell.device.GenericDevice;
+import ch.psi.pshell.device.GenericDeviceBase;
 import ch.psi.pshell.device.Readable;
 import ch.psi.pshell.device.Writable;
 import ch.psi.pshell.epics.Epics;
+import ch.psi.utils.Chrono;
+import ch.psi.utils.Condition;
 import ch.psi.utils.Convert;
 import ch.psi.utils.Str;
+import ch.psi.utils.Threading;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Parameter;
+import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 
 /**
  * Class that manages the instantiation and disposal of the global device list.
@@ -34,11 +42,14 @@ public class DevicePool extends ObservableBase<DevicePoolListener> implements Au
 
     final static Logger logger = Logger.getLogger(DevicePool.class.getName());
     static final HashMap<String, GenericDevice> deviceList = new HashMap<>();
+    static final HashMap<GenericDevice, GenericDevice[]> dependencies = new HashMap<>();
+    boolean parallelInitialization;
 
     public static final String SIMULATED_FLAG = "$";
 
     public void initialize() throws FileNotFoundException, IOException, InterruptedException {
         logger.info("Initializing " + getClass().getSimpleName());
+        parallelInitialization = Context.getInstance().config.isParallelInitialization();
         load();
         initializeDevices();
         applyDeviceAttributes();
@@ -48,7 +59,8 @@ public class DevicePool extends ObservableBase<DevicePoolListener> implements Au
     final Collection<String> orderedDeviceNames = new ArrayList<>();
 
     /**
-     * Entity class holding the configuration attributes of a device in the global device pool.
+     * Entity class holding the configuration attributes of a device in the
+     * global device pool.
      */
     public static class DeviceAttributes {
 
@@ -188,8 +200,7 @@ public class DevicePool extends ObservableBase<DevicePoolListener> implements Au
         String fileName = Context.getInstance().setup.getDevicePoolFile();
         String configPath = Context.getInstance().setup.getConfigPath();
         close();
-        System.setProperty(Epics.PROPERTY_JCAE_CONFIG_FILE, Paths.get(configPath, "jcae.properties").toString());
-        Epics.create();
+        Epics.create(Paths.get(configPath, "jcae.properties").toString(), parallelInitialization);
         if (Context.getInstance().isSimulation()) {
             Epics.getChannelFactory().setDryrun(true);
         }
@@ -205,6 +216,7 @@ public class DevicePool extends ObservableBase<DevicePoolListener> implements Au
             synchronized (deviceList) {
                 deviceList.clear();
                 orderedDeviceNames.clear();
+                dependencies.clear();
             }
 
             for (String deviceName : IO.getOrderedPropertyKeys(fileName)) {
@@ -221,6 +233,10 @@ public class DevicePool extends ObservableBase<DevicePoolListener> implements Au
                     AdjustedConstructor adjustedConstructor = getAdjustedConstructor(cls, arguments);
                     if (adjustedConstructor != null) {
                         device = (GenericDevice) adjustedConstructor.constructor.newInstance(adjustedConstructor.arguments);
+                        GenericDevice[] dependencies = Arr.getSubArray(adjustedConstructor.arguments, GenericDevice.class);
+                        if (dependencies.length > 0) {
+                            this.dependencies.put(device, dependencies);
+                        }
                         add(device);
                     } else {
                         throw new IOException("Invalid constructor parameters for device: " + deviceName);
@@ -466,6 +482,16 @@ public class DevicePool extends ObservableBase<DevicePoolListener> implements Au
         return ret.toArray((T[]) Array.newInstance(type, 0));
     }
 
+    public GenericDevice[] getAllDevicesWithState(State state) {
+        ArrayList<GenericDevice> ret = new ArrayList<>();
+        for (GenericDevice dev : getAllDevices()) {
+            if (dev.getState() == state) {
+                ret.add(dev);
+            }
+        }
+        return ret.toArray(new GenericDevice[0]);
+    }
+
     public String[] getAllNamesOrderedByName() {
         return getAllDeviceNames(null);
     }
@@ -502,17 +528,111 @@ public class DevicePool extends ObservableBase<DevicePoolListener> implements Au
         return getAllDevices(type).length;
     }
 
+    void initializeDevice(GenericDevice dev) throws InterruptedException {
+        try {
+            logger.log(Level.INFO, "Initializing " + dev.getName());
+            dev.initialize();
+        } catch (InterruptedException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            logger.log(Level.SEVERE, "Error initializing " + dev.getName() + ": " + ex.getMessage());
+        }
+    }
+
     public void initializeDevices() throws InterruptedException {
-        for (GenericDevice dev : getAllDevices()) {
+        if (parallelInitialization) {
+            ArrayList<GenericDevice> processed = new ArrayList<>();
+            ArrayList<Callable> callables = new ArrayList();
+            for (GenericDevice dev : getAllDevices()) {
+                callables.add((Callable) () -> {
+                    try {
+                        waitDependenciesInit(dev, processed);
+                        initializeDevice(dev);
+                        return true;
+                    } catch (InterruptedException ex) {
+                        logger.log(Level.SEVERE, "Error initializing " + dev.getName() + ": interrupted");
+                    } catch (Exception ex) {
+                        logger.log(Level.SEVERE, "Error initializing " + dev.getName() + ": " + ex.getMessage());
+                    } finally{
+                        synchronized(processed){
+                            processed.add(dev);
+                        }
+                    }
+                    return false;
+                });
+            }
             try {
-                logger.log(Level.INFO, "Initializing: " + dev.getName());
-                dev.initialize();
-            } catch (InterruptedException ex) {
-                throw ex;
-            } catch (Exception ex) {
-                logger.log(Level.SEVERE, "Error initializing: " + dev.getName());
+                Threading.parallelize(callables.toArray(new Callable[0]), "Device Initialization");
+            } catch (ExecutionException ex) {
+                logger.log(Level.SEVERE, null, ex);
+            }
+        } else {
+            for (GenericDevice dev : getAllDevices()) {
+                initializeDevice(dev);
             }
         }
+    }
+
+    public ArrayList<GenericDevice> retryInitializeDevices(){
+        ArrayList<GenericDevice> ret = new ArrayList<>();
+        if (parallelInitialization) {
+            ArrayList<Callable> callables = new ArrayList();
+            ArrayList<GenericDevice> processed = new ArrayList<>();
+            for (GenericDevice dev : getAllDevicesWithState(State.Invalid)) {
+                callables.add((Callable) () -> {
+                    try {
+                        waitDependenciesInit(dev, processed);
+                        retryInitializeDevice(dev);
+                        return true;
+                    } catch (Exception ex) {
+                        synchronized(ret){
+                            ret.add(dev);
+                        }
+                    } finally{
+                        synchronized(processed){
+                            processed.add(dev);
+                        }
+                    }
+                    return false;
+                });
+            }
+            try {
+                Threading.parallelize(callables.toArray(new Callable[0]), "Device Reinit");
+            } catch (Exception ex) {                
+            }
+
+        } else {
+            for (GenericDevice dev : getAllDevicesWithState(State.Invalid)) {
+                try {
+                    retryInitializeDevice(dev);
+                } catch (Exception ex) {
+                    ret.add(dev);
+                }
+            }
+        }
+        return ret;
+    }
+
+    void waitDependenciesInit(GenericDevice device, final ArrayList<GenericDevice> processed) throws IOException, InterruptedException{
+        GenericDevice[] deps = dependencies.get(device);
+        if (deps != null) {
+            for (GenericDevice dep : deps) {
+                //dep.waitInitialized(-1);            
+                while (true) {
+                    synchronized (processed) {                        
+                        if (processed.contains(dep)){
+                            break;
+                        }                        
+                    }
+                    Thread.sleep(device.getWaitSleep());
+                }
+            }
+        }        
+    }
+    
+    void retryInitializeDevice(GenericDevice device) throws IOException, InterruptedException {
+        device.initialize();
+        applyDeviceAttributes(device);
     }
 
     public void applyDeviceAttributes() throws FileNotFoundException, IOException, InterruptedException {
@@ -543,15 +663,15 @@ public class DevicePool extends ObservableBase<DevicePoolListener> implements Au
     public boolean addDevice(GenericDevice device) {
         return addDevice(device, true);
     }
-    
+
     public boolean addDevice(GenericDevice device, boolean initialize) {
         if (contains(device)) {
             return false;
         }
         logger.log(Level.INFO, "Adding device: " + device.getName());
         add(device);
-        
-        if (initialize){
+
+        if (initialize) {
             if (!device.isInitialized()) {
                 try {
                     if (Context.getInstance().isSimulation()) {
@@ -577,7 +697,7 @@ public class DevicePool extends ObservableBase<DevicePoolListener> implements Au
     public boolean removeDevice(GenericDevice device) {
         return removeDevice(device, true);
     }
-    
+
     public boolean removeDevice(GenericDevice device, boolean close) {
         if (getByName(device.getName()) == null) {
             return false;
@@ -596,7 +716,7 @@ public class DevicePool extends ObservableBase<DevicePoolListener> implements Au
                 logger.log(Level.WARNING, null, ex);
             }
         }
-        if (close){
+        if (close) {
             if (device.getState() != State.Closing) {
                 try {
                     device.close();
@@ -605,7 +725,7 @@ public class DevicePool extends ObservableBase<DevicePoolListener> implements Au
                 }
             }
         }
-        return true;        
+        return true;
     }
 
     @Override

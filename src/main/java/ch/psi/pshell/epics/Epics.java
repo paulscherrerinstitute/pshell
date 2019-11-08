@@ -28,12 +28,23 @@ public class Epics {
     static InvalidValueAction defaultInvalidValueAction = InvalidValueAction.Nullify;
 
     public static final String PROPERTY_JCAE_CONFIG_FILE = "ch.psi.jcae.config.file";
+    public static boolean parallelCreation;
 
     public static void create() {
+        create(false);
+    }
+    
+    public static void create(String configFile) {
+        create(configFile, false);
+    }    
+    
+    public static void create(boolean parallelCreation) {
+        create("jcae.properties", parallelCreation);
+    }
+        
+    public static void create(String configFile, boolean parallelCreation) {        
         destroy();
-        if (System.getProperty(PROPERTY_JCAE_CONFIG_FILE) == null) {
-            System.setProperty(PROPERTY_JCAE_CONFIG_FILE, "jcae.properties");
-        }
+        System.setProperty(PROPERTY_JCAE_CONFIG_FILE, configFile);
         try {
             factory = new DefaultChannelService();
         } catch (Exception ex) {
@@ -43,6 +54,7 @@ public class Epics {
             maxArrayBytes = Integer.valueOf(JcaeProperties.getInstance().getMaxArrayBytes());
         } catch (Exception ex) {
         }
+        Epics.parallelCreation = parallelCreation;    
     }
 
     public static void destroy() {
@@ -72,11 +84,18 @@ public class Epics {
 
     public static Channel newChannel(ChannelDescriptor descriptor) throws ChannelException, InterruptedException, TimeoutException {
         ChannelService factory = getChannelFactory();
-        synchronized (creationLock) {
+        if (parallelCreation){
             if (factory.isDryrun()) {
                 return getChannelFactory().createChannel(new DummyChannelDescriptor(descriptor.getType(), descriptor.getName(), descriptor.getMonitored(), descriptor.getSize()));
             }
-            return getChannelFactory().createChannel(descriptor);
+            return getChannelFactory().createChannel(descriptor);            
+        } else {
+            synchronized (creationLock) {
+                if (factory.isDryrun()) {
+                    return getChannelFactory().createChannel(new DummyChannelDescriptor(descriptor.getType(), descriptor.getName(), descriptor.getMonitored(), descriptor.getSize()));
+                }
+                return getChannelFactory().createChannel(descriptor);
+            }
         }
     }
 
@@ -92,15 +111,19 @@ public class Epics {
         return newChannel(name, type, null);
     }
 
-    public static void closeChannel(Channel channel) {
-        synchronized (creationLock) {
-            try {
+    public static void closeChannel(Channel channel) {                
+        try {
+            if (parallelCreation){
                 channel.destroy();
-            } catch (Exception ex) {
-                Logger.getLogger(Epics.class.getName()).log(Level.FINER, null, ex);
-            }
+            } else {
+                synchronized (creationLock) {
+                    channel.destroy();
+                }
+            }                
+        } catch (Exception ex) {
+            Logger.getLogger(Epics.class.getName()).log(Level.FINER, null, ex);
         }
-    }
+}
 
     public static Integer getMaxArrayBytes() {
         return maxArrayBytes;

@@ -2356,8 +2356,7 @@ public class StripChart extends StandardDialog {
     public static void main(String args[]) {
         MainFrame.setLookAndFeel(MainFrame.getNimbusLookAndFeel());
         String configPath = "./home/config";
-        System.setProperty(Epics.PROPERTY_JCAE_CONFIG_FILE, Paths.get(configPath, "jcae.properties").toString());
-        Epics.create();
+        Epics.create(Paths.get(configPath, "jcae.properties").toString());
         create(Paths.get(Sys.getUserHome(), "test." + FILE_EXTENSION).toFile(), null, null, false, true);
     }
 

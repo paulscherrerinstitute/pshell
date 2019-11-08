@@ -1948,29 +1948,17 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
     }
 
     ArrayList<GenericDevice> reinit(final CommandSource source) {
-        ArrayList<GenericDevice> ret = new ArrayList<>();
         onCommand(Command.reinit, new Object[0], source);
         if (getState().isInitialized()) {
-            for (GenericDevice dev : getDevicePool().getAllDevices(Device.class)) {
-                if (dev.getState() == State.Invalid) {
-                    try {
-                        dev.initialize();
-                        devicePool.applyDeviceAttributes(dev);
-                    } catch (Exception ex) {
-                        ret.add(dev);
-                    }
-                }
-            }
+            return devicePool.retryInitializeDevices();
         }
-        return ret;
+        return new ArrayList<>();
     }
 
     void reinit(final CommandSource source, GenericDevice device) throws IOException, InterruptedException {
-        ArrayList<GenericDevice> ret = new ArrayList<>();
         onCommand(Command.reinit, new Object[]{device}, source);
         if (getState().isInitialized()) {
-            device.initialize();
-            devicePool.applyDeviceAttributes(device);
+            devicePool.retryInitializeDevice(device);
         }
     }
 

@@ -54,6 +54,7 @@ public class Configuration extends Config {
     public String userAuthenticator = "";
     public String instanceName = "";
     public boolean saveCommandStatistics;
+    public boolean parallelInitialization;
 
     public enum LogLevel {
 
@@ -103,6 +104,14 @@ public class Configuration extends Config {
 
     public int getDepthDim() {
         return (((depthDimension < 0) || (depthDimension > 2)) ? 0 : depthDimension);
+    }
+    
+    public boolean isParallelInitialization(){        
+        String prop = System.getProperty(Setup.PROPERTY_PARALLEL_INIT);
+        if ((prop != null) && (prop.length()>0)){
+            return Boolean.valueOf(prop);
+        }    
+        return parallelInitialization;
     }
 
     public String getName() {

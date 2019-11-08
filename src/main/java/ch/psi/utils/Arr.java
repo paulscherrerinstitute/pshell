@@ -189,6 +189,23 @@ public class Arr {
         System.arraycopy(array, index, ret, 0, size);
         return ret;
     }
+    
+    public static <T> T[] getSubArray(Object[] array, Class<T> type) {
+        if (array == null) {
+            return null;
+        }
+        T[] aux = (T[]) Array.newInstance(type, array.length);
+        int index = 0;
+        for (Object item : array) {
+            if ((item != null) && (type.isAssignableFrom(item.getClass()))) {
+                aux[index] = (T) item;
+                index++;
+            }
+        }
+        T[] ret = (T[]) Array.newInstance(type, index);
+        System.arraycopy(aux, 0, ret, 0, index);
+        return ret;
+    }    
 
     public static <T> T[] copy(T[] array) {
         if (array == null) {

@@ -25,13 +25,22 @@ public class Threading {
     }
 
     public static List<Future> fork(Callable[] callables, boolean limitPoolSize) {
+        return fork(callables, limitPoolSize, null);
+    }
+
+    public static List<Future> fork(Callable[] callables,String poolName) {
+        return fork(callables, false, poolName);
+    }
+
+    public static List<Future> fork(Callable[] callables, boolean limitPoolSize, String poolName) {
         int threads = callables.length;
         if (limitPoolSize) {
             int processors = Runtime.getRuntime().availableProcessors();
             threads = (threads > processors) ? processors : threads;
         }
-
-        ExecutorService executor = Executors.newFixedThreadPool(threads);
+        ExecutorService executor = (poolName != null)
+                ? Executors.newFixedThreadPool(threads, new NamedThreadFactory(poolName))
+                : Executors.newFixedThreadPool(threads);
 
         List<Future> futures = new ArrayList<>();
 
@@ -61,7 +70,19 @@ public class Threading {
     }
 
     public static List parallelize(Callable[] callables) throws InterruptedException, ExecutionException {
-        List<Future> futures = fork(callables);
+        return parallelize(callables, false);
+    }
+
+    public static List<Future> parallelize(Callable[] callables, boolean limitPoolSize) throws InterruptedException, ExecutionException {
+        return parallelize(callables, limitPoolSize, null);
+    }
+    
+    public static List<Future> parallelize(Callable[] callables,String poolName) throws InterruptedException, ExecutionException {
+        return parallelize(callables, false, poolName);
+    }    
+
+    public static List<Future> parallelize(Callable[] callables, boolean limitPoolSize, String poolName) throws InterruptedException, ExecutionException {
+        List<Future> futures = fork(callables, limitPoolSize, poolName);
         return join(futures);
     }
 
