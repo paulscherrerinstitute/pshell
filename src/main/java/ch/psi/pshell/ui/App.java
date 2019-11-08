@@ -99,7 +99,187 @@ public class App extends ObservableBase<AppListener> {
         }
         LogManager.setConsoleLoggerLevel(consoleLogLevel);  
         appendClassPath();
-        applyLookAndFeel();        
+        applyLookAndFeel();   
+        
+        
+        //Parse arguments to set system properties
+        if (Setup.getJarFile() != null) {
+            try {
+                //URL url = App.class.getClassLoader().getResource("META-INF/MANIFEST.MF");
+                //Manifest manifest = new Manifest(url.openStream());              
+                JarInputStream jarStream = new JarInputStream(new FileInputStream(new File(Setup.getJarFile())));
+                Manifest manifest = jarStream.getManifest();
+                Attributes attr = manifest.getMainAttributes();
+                String buildTime = attr.getValue("Build-Time");
+                if (buildTime != null) {
+                    System.setProperty("pshell.build.time", buildTime);
+                }
+                String buildType = attr.getValue("Build-Type");
+                if (buildType != null) {
+                    System.setProperty("pshell.build.type", buildType);
+                }
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+        }        
+        
+        PshellProperties pshellProperties = new PshellProperties();
+        File propertiesFile = new File("pshell.properties");
+        if (propertiesFile.exists()) {
+            try {
+                pshellProperties.load(propertiesFile.getPath());
+            } catch (Exception ex) {
+                throw new RuntimeException(ex);
+            }
+        }
+
+        if (isArgumentDefined("setp")) {
+            System.setProperty(Context.PROPERTY_SETUP_FILE, getArgumentValue("setp"));
+        } else if (Config.isStringDefined(pshellProperties.setp)) {
+            System.setProperty(Context.PROPERTY_SETUP_FILE, pshellProperties.setp);
+        }
+
+        if (isArgumentDefined("home")) {
+            System.setProperty(Setup.PROPERTY_HOME_PATH, getArgumentValue("home"));
+        } else if (Config.isStringDefined(pshellProperties.home)) {
+            System.setProperty(Setup.PROPERTY_HOME_PATH, pshellProperties.home);
+        }
+
+        if (isArgumentDefined("conf")) {
+            System.setProperty(Setup.PROPERTY_CONFIG_FILE, getArgumentValue("conf"));
+        } else if (Config.isStringDefined(pshellProperties.conf)) {
+            System.setProperty(Setup.PROPERTY_CONFIG_FILE, pshellProperties.conf);
+        }
+
+        if (isArgumentDefined("plug")) {
+            System.setProperty(Setup.PROPERTY_PLUGINS_FILE, getArgumentValue("plug"));
+        } else if (Config.isStringDefined(pshellProperties.plug)) {
+            System.setProperty(Setup.PROPERTY_PLUGINS_FILE, pshellProperties.plug);
+        }
+
+        if (isArgumentDefined("task")) {
+            System.setProperty(Setup.PROPERTY_TASKS_FILE, getArgumentValue("task"));
+        } else if (Config.isStringDefined(pshellProperties.task)) {
+            System.setProperty(Setup.PROPERTY_TASKS_FILE, pshellProperties.task);
+        }
+        
+        if (isArgumentDefined("sets")) {
+            System.setProperty(Setup.PROPERTY_SETTINGS_FILE, getArgumentValue("sets"));
+        } else if (Config.isStringDefined(pshellProperties.sets)) {
+            System.setProperty(Setup.PROPERTY_SETTINGS_FILE, pshellProperties.sets);
+        } 
+        
+        if (isArgumentDefined("pini")) {
+            System.setProperty(Setup.PROPERTY_PARALLEL_INIT, getArgumentValue("pini"));
+        } else if (Config.isStringDefined(pshellProperties.pini)) {
+            System.setProperty(Setup.PROPERTY_PARALLEL_INIT, pshellProperties.pini);
+        }         
+        
+        if (isArgumentDefined("outp")) {
+            System.setProperty(Setup.PROPERTY_OUTPUT_PATH, getArgumentValue("outp"));
+        } else if (Config.isStringDefined(pshellProperties.outp)) {
+            System.setProperty(Setup.PROPERTY_OUTPUT_PATH, pshellProperties.outp);
+        }
+
+        if (isArgumentDefined("data")) {
+            System.setProperty(Setup.PROPERTY_DATA_PATH, getArgumentValue("data"));
+        } else if (Config.isStringDefined(pshellProperties.data)) {
+            System.setProperty(Setup.PROPERTY_DATA_PATH, pshellProperties.data);
+        }
+
+        if (isArgumentDefined("scpt")) {
+            System.setProperty(Setup.PROPERTY_SCRIPT_PATH, getArgumentValue("scpt"));
+        } else if (Config.isStringDefined(pshellProperties.scpt)) {
+            System.setProperty(Setup.PROPERTY_SCRIPT_PATH, pshellProperties.scpt);
+        }
+
+        if (isArgumentDefined("pool")) {
+            System.setProperty(Setup.PROPERTY_DEVICES_FILE, getArgumentValue("pool"));
+        } else if (pshellProperties.pool != null) {
+            System.setProperty(Setup.PROPERTY_DEVICES_FILE, pshellProperties.pool.toString());
+        }
+
+        if (isArgumentDefined("type")) {
+            System.setProperty(Setup.PROPERTY_SCRIPT_TYPE, getArgumentValue("type"));
+        }
+     
+        if (isArgumentDefined("dfmt")) {
+            System.setProperty(Configuration.PROPERTY_DATA_PROVIDER, getArgumentValue("dfmt"));
+        }        
+        
+        if (isArgumentDefined("dlay")) {
+            System.setProperty(Configuration.PROPERTY_DATA_LAYOUT, getArgumentValue("dlay"));
+        }      
+        
+        if (isArgumentDefined("user")) {
+            System.setProperty(Context.PROPERTY_USER, getArgumentValue("user"));
+        } else if (Config.isStringDefined(pshellProperties.user)) {
+            System.setProperty(Context.PROPERTY_USER, pshellProperties.user);
+        }
+        if (isArgumentDefined("clog")) {
+            System.setProperty(Configuration.PROPERTY_CONSOLE_LOG, getArgumentValue("clog"));
+        } else if (pshellProperties.consoleLog != null) {
+            System.setProperty(Configuration.PROPERTY_CONSOLE_LOG, pshellProperties.consoleLog.toString());
+        }
+        
+        //Only used if View is not instantiated
+        if (isArgumentDefined("quality")) {
+            System.setProperty(PlotPanel.PROPERTY_PLOT_QUALITY, Plot.Quality.valueOf(getArgumentValue("quality")).toString());
+        }
+        
+        if (isLocalMode()) {
+            System.setProperty(Context.PROPERTY_LOCAL_MODE, "true");
+        }
+
+        if (isBareMode()) {
+            System.setProperty(Context.PROPERTY_BARE_MODE, "true");
+        }
+
+        if (isEmptyMode()) {
+            System.setProperty(Context.PROPERTY_EMPTY_MODE, "true");
+        }
+
+        if (isGenericMode()) {
+            System.setProperty(Context.PROPERTY_GENERIC_MODE, "true");
+        }
+
+        if (isDisabled()) {
+            System.setProperty(Context.PROPERTY_DISABLED, "true");
+        }
+
+        if (isServerMode()) {
+            System.setProperty(Context.PROPERTY_SERVER_MODE, "true");
+        }
+
+        if (isSimulation()) {
+            System.setProperty(Context.PROPERTY_SIMULATION, "true");
+        }        
+        
+        if (hasArgument("dspt")) {
+            App.setScanPlottingActive(false);
+        }
+
+        if (hasArgument("dspr")) {
+            App.setScanPrintingActive(false);
+        }
+
+        if (hasArgument("extr")) {
+            System.setProperty(Context.PROPERTY_FORCE_EXTRACT, "true");
+        }
+
+        System.setProperty(Context.PROPERTY_FILE_LOCK, isFileLock() ? "true" : "false");   
+        
+        if (isVolatile()){
+            try {
+                Path tempDir = Files.createTempDirectory("pshell_home");
+                IO.deleteFolderOnExit(tempDir.toFile());             
+                System.setProperty(Setup.PROPERTY_HOME_PATH, tempDir.toString());
+            } catch (IOException ex) {
+                ex.printStackTrace();
+                System.exit(0);
+            }
+        }      
+        
     }
 
     public State getState() {
@@ -516,25 +696,6 @@ public class App extends ObservableBase<AppListener> {
     Object stripChartServer;
 
     protected void startup() {
-        if (Setup.getJarFile() != null) {
-            try {
-                //URL url = App.class.getClassLoader().getResource("META-INF/MANIFEST.MF");
-                //Manifest manifest = new Manifest(url.openStream());              
-                JarInputStream jarStream = new JarInputStream(new FileInputStream(new File(Setup.getJarFile())));
-                Manifest manifest = jarStream.getManifest();
-                Attributes attr = manifest.getMainAttributes();
-                String buildTime = attr.getValue("Build-Time");
-                if (buildTime != null) {
-                    System.setProperty("pshell.build.time", buildTime);
-                }
-                String buildType = attr.getValue("Build-Type");
-                if (buildType != null) {
-                    System.setProperty("pshell.build.type", buildType);
-                }
-            } catch (Exception ex) {
-                ex.printStackTrace();
-            }
-        }
         System.out.println("Version " + getApplicationBuildInfo());
 
         if (hasArgument("h")) {
@@ -556,164 +717,11 @@ public class App extends ObservableBase<AppListener> {
             SwingUtils.centerComponent(null, dialog);
             dialog.setVisible(true);
             return;
-        }
-
-        PshellProperties pshellProperties = new PshellProperties();
-        File propertiesFile = new File("pshell.properties");
-        if (propertiesFile.exists()) {
-            try {
-                pshellProperties.load(propertiesFile.getPath());
-            } catch (Exception ex) {
-                throw new RuntimeException(ex);
-            }
-        }
-
-        if (isArgumentDefined("setp")) {
-            System.setProperty(Context.PROPERTY_SETUP_FILE, getArgumentValue("setp"));
-        } else if (Config.isStringDefined(pshellProperties.setp)) {
-            System.setProperty(Context.PROPERTY_SETUP_FILE, pshellProperties.setp);
-        }
-
-        if (isArgumentDefined("home")) {
-            System.setProperty(Setup.PROPERTY_HOME_PATH, getArgumentValue("home"));
-        } else if (Config.isStringDefined(pshellProperties.home)) {
-            System.setProperty(Setup.PROPERTY_HOME_PATH, pshellProperties.home);
-        }
-
-        if (isArgumentDefined("conf")) {
-            System.setProperty(Setup.PROPERTY_CONFIG_FILE, getArgumentValue("conf"));
-        } else if (Config.isStringDefined(pshellProperties.conf)) {
-            System.setProperty(Setup.PROPERTY_CONFIG_FILE, pshellProperties.conf);
-        }
-
-        if (isArgumentDefined("plug")) {
-            System.setProperty(Setup.PROPERTY_PLUGINS_FILE, getArgumentValue("plug"));
-        } else if (Config.isStringDefined(pshellProperties.plug)) {
-            System.setProperty(Setup.PROPERTY_PLUGINS_FILE, pshellProperties.plug);
-        }
-
-        if (isArgumentDefined("task")) {
-            System.setProperty(Setup.PROPERTY_TASKS_FILE, getArgumentValue("task"));
-        } else if (Config.isStringDefined(pshellProperties.task)) {
-            System.setProperty(Setup.PROPERTY_TASKS_FILE, pshellProperties.task);
-        }
-        
-        if (isArgumentDefined("sets")) {
-            System.setProperty(Setup.PROPERTY_SETTINGS_FILE, getArgumentValue("sets"));
-        } else if (Config.isStringDefined(pshellProperties.sets)) {
-            System.setProperty(Setup.PROPERTY_SETTINGS_FILE, pshellProperties.sets);
-        } 
-        
-        if (isArgumentDefined("pini")) {
-            System.setProperty(Setup.PROPERTY_PARALLEL_INIT, getArgumentValue("pini"));
-        } else if (Config.isStringDefined(pshellProperties.pini)) {
-            System.setProperty(Setup.PROPERTY_PARALLEL_INIT, pshellProperties.pini);
-        }         
-        
-        if (isArgumentDefined("outp")) {
-            System.setProperty(Setup.PROPERTY_OUTPUT_PATH, getArgumentValue("outp"));
-        } else if (Config.isStringDefined(pshellProperties.outp)) {
-            System.setProperty(Setup.PROPERTY_OUTPUT_PATH, pshellProperties.outp);
-        }
-
-        if (isArgumentDefined("data")) {
-            System.setProperty(Setup.PROPERTY_DATA_PATH, getArgumentValue("data"));
-        } else if (Config.isStringDefined(pshellProperties.data)) {
-            System.setProperty(Setup.PROPERTY_DATA_PATH, pshellProperties.data);
-        }
-
-        if (isArgumentDefined("scpt")) {
-            System.setProperty(Setup.PROPERTY_SCRIPT_PATH, getArgumentValue("scpt"));
-        } else if (Config.isStringDefined(pshellProperties.scpt)) {
-            System.setProperty(Setup.PROPERTY_SCRIPT_PATH, pshellProperties.scpt);
-        }
-
-        if (isArgumentDefined("pool")) {
-            System.setProperty(Setup.PROPERTY_DEVICES_FILE, getArgumentValue("pool"));
-        } else if (pshellProperties.pool != null) {
-            System.setProperty(Setup.PROPERTY_DEVICES_FILE, pshellProperties.pool.toString());
-        }
-
-        if (isArgumentDefined("type")) {
-            System.setProperty(Setup.PROPERTY_SCRIPT_TYPE, getArgumentValue("type"));
-        }
-     
-        if (isArgumentDefined("dfmt")) {
-            System.setProperty(Configuration.PROPERTY_DATA_PROVIDER, getArgumentValue("dfmt"));
-        }        
-        
-        if (isArgumentDefined("dlay")) {
-            System.setProperty(Configuration.PROPERTY_DATA_LAYOUT, getArgumentValue("dlay"));
-        }      
-        
-        if (isArgumentDefined("user")) {
-            System.setProperty(Context.PROPERTY_USER, getArgumentValue("user"));
-        } else if (Config.isStringDefined(pshellProperties.user)) {
-            System.setProperty(Context.PROPERTY_USER, pshellProperties.user);
-        }
-        if (isArgumentDefined("clog")) {
-            System.setProperty(Configuration.PROPERTY_CONSOLE_LOG, getArgumentValue("clog"));
-        } else if (pshellProperties.consoleLog != null) {
-            System.setProperty(Configuration.PROPERTY_CONSOLE_LOG, pshellProperties.consoleLog.toString());
-        }
-        
-        //Only used if View is not instantiated
-        if (isArgumentDefined("quality")) {
-            System.setProperty(PlotPanel.PROPERTY_PLOT_QUALITY, Plot.Quality.valueOf(getArgumentValue("quality")).toString());
-        }
-        
-        if (isVolatile()){
-            try {
-                Path tempDir = Files.createTempDirectory("pshell_home");
-                IO.deleteFolderOnExit(tempDir.toFile());             
-                System.setProperty(Setup.PROPERTY_HOME_PATH, tempDir.toString());
-            } catch (IOException ex) {
-                ex.printStackTrace();
-                System.exit(0);
-            }
-        }        
+        }  
 
         if (isLocalMode()) {
             setContextPersisted(false);
-            System.setProperty(Context.PROPERTY_LOCAL_MODE, "true");
         }
-
-        if (isBareMode()) {
-            System.setProperty(Context.PROPERTY_BARE_MODE, "true");
-        }
-
-        if (isEmptyMode()) {
-            System.setProperty(Context.PROPERTY_EMPTY_MODE, "true");
-        }
-
-        if (isGenericMode()) {
-            System.setProperty(Context.PROPERTY_GENERIC_MODE, "true");
-        }
-
-        if (isDisabled()) {
-            System.setProperty(Context.PROPERTY_DISABLED, "true");
-        }
-
-        if (isServerMode()) {
-            System.setProperty(Context.PROPERTY_SERVER_MODE, "true");
-        }
-
-        if (isSimulation()) {
-            System.setProperty(Context.PROPERTY_SIMULATION, "true");
-        }
-        if (hasArgument("dspt")) {
-            App.setScanPlottingActive(false);
-        }
-
-        if (hasArgument("dspr")) {
-            App.setScanPrintingActive(false);
-        }
-
-        if (hasArgument("extr")) {
-            System.setProperty(Context.PROPERTY_FORCE_EXTRACT, "true");
-        }
-
-        System.setProperty(Context.PROPERTY_FILE_LOCK, isFileLock() ? "true" : "false");
 
         Context.createInstance();
         logger.log(Level.INFO, "Version: " + getApplicationBuildInfo());
