@@ -1033,8 +1033,15 @@ public class Renderer extends MonitoredPanel implements ImageListener, ImageBuff
     public void clearImage() {
         onImage(this, null, null);
     }
-
-    public void refresh() {
+    
+    public void refresh() {      
+        try{
+            if ((selectedOverlayMarker != null) && (selectedOverlay!=null)){
+                selectedOverlayMarker.setPosition(selectedOverlay.getPosition());
+                selectedOverlayMarker.setSize(selectedOverlay.getSize());
+            }           
+        } catch (Exception ex){            
+        }
         synchronized (imageLock) {
             setImage(getOrigin(), getImage(), getData());
         }
@@ -1524,6 +1531,10 @@ public class Renderer extends MonitoredPanel implements ImageListener, ImageBuff
             }
         } catch (Exception ex) {
         }
+    }
+    
+    public Overlay getSelectedOverlay(){
+        return selectedOverlay;
     }
 
     //Mouse operations: Overlay mouse definition, selections & movement
