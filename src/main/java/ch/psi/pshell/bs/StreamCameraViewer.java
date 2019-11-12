@@ -452,7 +452,7 @@ public class StreamCameraViewer extends MonitoredPanel {
             }
 
             if (App.hasArgument("pipeline_server")) {
-                setServer(App.getArgumentValue("pipeline_server"));
+                setServerUrl(App.getArgumentValue("pipeline_server"));
                 if (App.hasArgument("selection_mode")) {
                     setSourceSelecionMode(SourceSelecionMode.valueOf(App.getArgumentValue("selection_mode")));
                 }
@@ -493,7 +493,7 @@ public class StreamCameraViewer extends MonitoredPanel {
         return camera;
     }
 
-    public void setServer(String server) {
+    public void setServerUrl(String server) {
         this.serverUrl = server;
         panelPipeline.setVisible(serverUrl != null);
     }
