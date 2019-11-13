@@ -2536,25 +2536,8 @@ public class StreamCameraViewer extends MonitoredPanel {
         }
     }
 
-    public ImageIcon getIcon(String name) {
-        ImageIcon ret = null;
-        try {
-            String dir = getClass().getProtectionDomain().getCodeSource().getLocation().getPath() + "resosurces/";
-            if (new File(dir + name + ".png").exists()) {
-                ret = new javax.swing.ImageIcon(dir + name + ".png");
-            } else {
-                ret = new ImageIcon(ch.psi.pshell.ui.App.class.getResource("/ch/psi/pshell/ui/" + name + ".png"));
-                if (MainFrame.isDark()) {
-                    try {
-                        ret = new ImageIcon(ch.psi.pshell.ui.App.class.getResource("/ch/psi/pshell/ui/dark/" + name + ".png"));
-                    } catch (Exception e) {
-                    }
-                }
-            }
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
-        return ret;
+    public static ImageIcon getIcon(String name) {
+        return MainFrame.searchIcon(name);
     }
 
     public static String getIconName(JButton button) {

@@ -1,6 +1,7 @@
 package ch.psi.utils.swing;
 
 import ch.psi.pshell.ui.App;
+import ch.psi.utils.Arr;
 import ch.psi.utils.Serializer;
 import ch.psi.utils.Sys;
 import java.awt.Component;
@@ -220,6 +221,52 @@ public abstract class MainFrame extends JFrame {
         return iconURL;
     }
 
+    public static ImageIcon searchIcon(String name) {
+        try {
+            //First look for icons in current folder and resource folder
+            for (String path : new String[]{"./", "./resources/"}) {
+                try {
+                    if (new File(path + name + ".png").exists()) {
+                        return new javax.swing.ImageIcon("./" + name + ".png");
+                    }
+                } catch (Exception ex) {
+                }
+            }
+            Class[] classes = new Class[]{App.class};
+            try {
+                Class cls = Class.forName(Thread.currentThread().getStackTrace()[2].getClassName());
+                classes = Arr.insert(classes, cls, 0);
+
+            } catch (Exception ex) {
+            }
+
+            //Look for icons in resource folder under the caller jar file 
+            for (Class cls : classes) {
+                try {
+                    String dir = cls.getProtectionDomain().getCodeSource().getLocation().getPath();
+                    for (String path : new String[]{dir, dir + "resources/"}) {
+                        if (new File(path + name + ".png").exists()) {
+                            return new ImageIcon(path + name + ".png");
+                        }
+                    }
+                } catch (Exception ex) {
+                }
+            }
+            //Look at internal icons, checking if a dark version exists            
+            if (isDark()) {
+                try {
+                    return new ImageIcon(App.class.getResource("/ch/psi/pshell/ui/dark/" + name + ".png"));
+                } catch (Exception e) {
+                }
+            }
+            return new ImageIcon(App.class.getResource("/ch/psi/pshell/ui/" + name + ".png"));
+
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return null;
+    }
+
     //GUI utils
     public void showChildWindow(Window window) {
         window.setIconImage(Toolkit.getDefaultToolkit().getImage(getIcon()));
@@ -318,7 +365,7 @@ public abstract class MainFrame extends JFrame {
             return;
         }
         try {
-            if ((Sys.getOSFamily() == Sys.OSFamily.Linux) && (className.equals(getDarculaLookAndFeel()))){
+            if ((Sys.getOSFamily() == Sys.OSFamily.Linux) && (className.equals(getDarculaLookAndFeel()))) {
                 //TODO: workaround to https://github.com/bulenkov/Darcula/issues/29
                 //Not needed with netbeans darcula
                 UIManager.getFont("Label.font");
@@ -975,10 +1022,10 @@ public abstract class MainFrame extends JFrame {
         } else if (c instanceof JTabbedPane) {
             JTabbedPane p = (JTabbedPane) c;
             int index = p.getSelectedIndex();
-            if (index < 0){
+            if (index < 0) {
                 return null;
             }
-            return new TabbedPaneState(p.getTitleAt(index), index, p.getTabCount()); 
+            return new TabbedPaneState(p.getTitleAt(index), index, p.getTabCount());
         } else if (c instanceof JSplitPane) {
             JSplitPane p = (JSplitPane) c;
             return new SplitPaneState(p.getUI().getDividerLocation(p), p.getOrientation());
