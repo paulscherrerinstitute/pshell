@@ -135,6 +135,41 @@ public class Arr {
         return getIndexClass(array, cls) >= 0;
     }
     
+    public static <T> boolean containsAll(T[] array, Object[] items) {
+        for (Object item : items){
+            if (!contains(array, item)){
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public static <T> boolean containsAllEqual(T[] array, Object[] items) {
+        for (Object item : items){
+            if (!containsEqual(array, item)){
+                return false;
+            }
+        }
+        return true;
+    }        
+
+    public static <T> boolean containsAny(T[] array, Object[] items) {
+        for (Object item : items){
+            if (contains(array, item)){
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public static <T> boolean containsAnyEqual(T[] array, Object[] items) {
+        for (Object item : items){
+            if (containsEqual(array, item)){
+                return true;
+            }
+        }
+        return false;
+    }        
 
     public static <T> int getIndex(T[] array, Object item) {
         if ((array == null) || (item == null)) {
