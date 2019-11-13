@@ -220,6 +220,11 @@ public class PipelineServer extends StreamCamera {
         checkReturn(map);
         return (Map<String, Object>) map.get("config");
     }
+    
+    public Object getInstanceConfigValue(String instanceId, String value) throws IOException {
+        Map<String, Object> pars = getInstanceConfig(instanceId);
+        return (String) pars.get(value);
+    }    
 
     /**
      * Set instance configuration.
@@ -239,6 +244,12 @@ public class PipelineServer extends StreamCamera {
         }
     }
 
+    public void setInstanceConfigValue(String instanceId, String name, Object value) throws IOException {
+        Map<String, Object> pars = new HashMap();
+        pars.put(name, value);
+        setInstanceConfig(instanceId, pars);
+    }    
+        
     /**
      * Return the instance info.
      */
@@ -477,6 +488,10 @@ public class PipelineServer extends StreamCamera {
         assertStarted();
         setInstanceConfig(currentInstance, config);
     }
+    
+    public void setInstanceConfigValue(String name, Object value) throws IOException {;
+        setInstanceConfigValue(currentInstance, name, value);
+    }        
 
     /**
      * Return the current instance info.
@@ -485,23 +500,22 @@ public class PipelineServer extends StreamCamera {
         assertStarted();
         return getInstanceConfig(currentInstance);
     }
+    
+    public Object getInstanceConfigValue(String value) throws IOException {       
+        return getInstanceConfigValue(currentInstance, value);
+    }        
 
     public boolean isRoiEnabled() throws IOException {
-        Map<String, Object> pars = getInstanceConfig();
-        List roi = (List) pars.get("image_region_of_interest");
+        List roi = (List) getInstanceConfigValue("image_region_of_interest");
         return (roi != null) && (roi.size() == 4);
     }
 
     public void resetRoi() throws IOException {
-        Map<String, Object> pars = new HashMap();
-        pars.put("image_region_of_interest", null);
-        setInstanceConfig(pars);
+        setInstanceConfigValue("image_region_of_interest", null);
     }
 
     public void setRoi(int x, int y, int width, int height) throws IOException {
-        Map<String, Object> pars = new HashMap();
-        pars.put("image_region_of_interest", new int[]{x, width, y, height});
-        setInstanceConfig(pars);
+        setInstanceConfigValue("image_region_of_interest", new int[]{x, width, y, height});
     }
 
     public void setRoi(int[] roi) throws IOException {
@@ -509,8 +523,7 @@ public class PipelineServer extends StreamCamera {
     }
 
     public int[] getRoi() throws IOException {
-        Map<String, Object> pars = getInstanceConfig();
-        List roi = (List) pars.get("image_region_of_interest");
+        List roi = (List) getInstanceConfigValue("image_region_of_interest");
         if ((roi != null) && (roi instanceof List)) {
             List<Integer> l = (List<Integer>) roi;
             if (l.size() >= 4) {
@@ -521,14 +534,11 @@ public class PipelineServer extends StreamCamera {
     }
 
     public String getBackground() throws IOException {
-        Map<String, Object> pars = getInstanceConfig();
-        return (String) pars.get("image_background");
+        return (String) getInstanceConfigValue("image_background");
     }
 
     public void setBackground(String id) throws IOException {
-        Map<String, Object> pars = new HashMap();
-        pars.put("image_background", id);
-        setInstanceConfig(pars);
+        setInstanceConfigValue("image_background", id);
     }
 
     public String getLastBackground() throws IOException {
@@ -547,44 +557,35 @@ public class PipelineServer extends StreamCamera {
     }
 
     public boolean getBackgroundSubtraction() throws IOException {
-        Map<String, Object> pars = getInstanceConfig();
-        return Boolean.TRUE.equals(pars.get("image_background_enable"));
+        return Boolean.TRUE.equals(getInstanceConfigValue("image_background_enable"));
     }
 
     public void setBackgroundSubtraction(boolean value) throws IOException {
-        Map<String, Object> pars = new HashMap();
         if (value) {
             String id = getBackground();
             if (id == null) {
                 setBackground(getLastBackground());
             }
         }
-        pars.put("image_background_enable", value);
-        setInstanceConfig(pars);
+        setInstanceConfigValue("image_background_enable", value);
     }
 
     public Double getThreshold() throws IOException {
-        Map<String, Object> pars = getInstanceConfig();
-        Object ret = pars.get("image_threshold");
+        Object ret = getInstanceConfigValue("image_threshold");
         return ((ret != null) && (ret instanceof Number)) ? ((Number) ret).doubleValue() : null;
     }
 
     public void setThreshold(Double value) throws IOException {
-        Map<String, Object> pars = new HashMap();
-        pars.put("image_threshold", value);
-        setInstanceConfig(pars);
+        setInstanceConfigValue("image_threshold", value);
     }
 
     public Map<String, Object> getGoodRegion() throws IOException {
-        Map<String, Object> pars = getInstanceConfig();
-        Object ret = pars.get("image_good_region");
+        Object ret = getInstanceConfigValue("image_good_region");
         return ((ret != null) && (ret instanceof Map)) ? (Map) ret : null;
     }
 
     public void setGoodRegion(Map<String, Object> value) throws IOException {
-        Map<String, Object> pars = new HashMap();
-        pars.put("image_good_region", value);
-        setInstanceConfig(pars);
+        setInstanceConfigValue("image_good_region", value);
     }
 
     public void setGoodRegion(double threshold, double scale) throws IOException {
@@ -595,15 +596,12 @@ public class PipelineServer extends StreamCamera {
     }
 
     public Map<String, Object> getSlicing() throws IOException {
-        Map<String, Object> pars = getInstanceConfig();
-        Object ret = pars.get("image_slices");
+        Object ret = getInstanceConfigValue("image_slices");
         return ((ret != null) && (ret instanceof Map)) ? (Map) ret : null;
     }
 
     public void setSlicing(Map<String, Object> value) throws IOException {
-        Map<String, Object> pars = new HashMap();
-        pars.put("image_slices", value);
-        setInstanceConfig(pars);
+        setInstanceConfigValue("image_slices", value);
     }
 
     public void setSlicing(int slices, double scale, String orientation) throws IOException {
@@ -615,15 +613,12 @@ public class PipelineServer extends StreamCamera {
     }
         
     public Map<String, Object> getRotation() throws IOException {
-        Map<String, Object> pars = getInstanceConfig();
-        Object ret = pars.get("rotation");
+        Object ret = getInstanceConfigValue("rotation");
         return ((ret != null) && (ret instanceof Map)) ? (Map) ret : null;
     }
 
     public void setRotation(Map<String, Object> value) throws IOException {
-        Map<String, Object> pars = new HashMap();
-        pars.put("rotation", value);
-        setInstanceConfig(pars);    
+        setInstanceConfigValue("rotation", value);    
     }
     
      public void setRotation(double angle, int order, String mode) throws IOException {
@@ -635,8 +630,7 @@ public class PipelineServer extends StreamCamera {
     }   
      
     public String getFunction() throws IOException {
-        Map<String, Object> pars = getInstanceConfig();
-        Object ret = pars.get("function");
+        Object ret = getInstanceConfigValue("function");
         return ((ret != null) && (ret instanceof String)) ? (String) ret : null;
     }
 
