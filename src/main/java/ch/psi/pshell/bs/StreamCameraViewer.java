@@ -440,7 +440,7 @@ public class StreamCameraViewer extends MonitoredPanel {
             }
 
             if (App.hasArgument("stream_list")) {
-                setStreamList(Arrays.asList(App.getArgumentValue("stream_list").split("|")));
+                setStreamList(Arrays.asList(App.getArgumentValue("stream_list").split("\\|")));
             }
 
             if (App.hasArgument("pipeline_format")) {
