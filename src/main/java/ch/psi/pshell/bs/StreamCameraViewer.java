@@ -2777,6 +2777,10 @@ public class StreamCameraViewer extends MonitoredPanel {
     protected Window getTopLevel() {
         return (Window) this.getTopLevelAncestor();
     }
+    
+    public JPanel getCustomPanel(){
+        return panelCustom;
+    }
 
     public static void main(String[] args) throws Exception {
         App.init(args);
@@ -2800,6 +2804,7 @@ public class StreamCameraViewer extends MonitoredPanel {
 
         buttonGroup1 = new javax.swing.ButtonGroup();
         buttonGroup2 = new javax.swing.ButtonGroup();
+        jPanel1 = new javax.swing.JPanel();
         topPanel = new javax.swing.JPanel();
         toolBar = new javax.swing.JToolBar();
         buttonSidePanel = new javax.swing.JToggleButton();
@@ -2865,6 +2870,18 @@ public class StreamCameraViewer extends MonitoredPanel {
         spinnerMax = new javax.swing.JSpinner();
         labelMax = new javax.swing.JLabel();
         btFixColormapRange = new javax.swing.JButton();
+        panelCustom = new javax.swing.JPanel();
+
+        javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
+        jPanel1.setLayout(jPanel1Layout);
+        jPanel1Layout.setHorizontalGroup(
+            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 100, Short.MAX_VALUE)
+        );
+        jPanel1Layout.setVerticalGroup(
+            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 100, Short.MAX_VALUE)
+        );
 
         setPreferredSize(new java.awt.Dimension(873, 600));
 
@@ -3546,6 +3563,8 @@ public class StreamCameraViewer extends MonitoredPanel {
             .addContainerGap())
     );
 
+    panelCustom.setLayout(new java.awt.BorderLayout());
+
     javax.swing.GroupLayout sidePanelLayout = new javax.swing.GroupLayout(sidePanel);
     sidePanel.setLayout(sidePanelLayout);
     sidePanelLayout.setHorizontalGroup(
@@ -3555,7 +3574,8 @@ public class StreamCameraViewer extends MonitoredPanel {
             .addGroup(sidePanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
                 .addComponent(panelZoom, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addComponent(panelColormap, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addComponent(panelPipeline, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addComponent(panelPipeline, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(panelCustom, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
             .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
     );
     sidePanelLayout.setVerticalGroup(
@@ -3567,7 +3587,9 @@ public class StreamCameraViewer extends MonitoredPanel {
             .addComponent(panelZoom, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
             .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
             .addComponent(panelColormap, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-            .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+            .addComponent(panelCustom, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+            .addContainerGap())
     );
 
     javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
@@ -4198,6 +4220,7 @@ public class StreamCameraViewer extends MonitoredPanel {
     private javax.swing.JComboBox comboColormap;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
+    private javax.swing.JPanel jPanel1;
     private javax.swing.JToolBar.Separator jSeparator6;
     private javax.swing.JLabel labelAngle;
     private javax.swing.JLabel labelConstant;
@@ -4211,6 +4234,7 @@ public class StreamCameraViewer extends MonitoredPanel {
     private javax.swing.JLabel labelSlOrientation;
     private javax.swing.JLabel labelSlScale;
     private javax.swing.JPanel panelColormap;
+    private javax.swing.JPanel panelCustom;
     private javax.swing.JPanel panelPipeline;
     private javax.swing.JPanel panelSlicing;
     private javax.swing.JPanel panelStream;
