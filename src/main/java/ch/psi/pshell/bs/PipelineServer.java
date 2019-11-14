@@ -223,7 +223,7 @@ public class PipelineServer extends StreamCamera {
     
     public Object getInstanceConfigValue(String instanceId, String value) throws IOException {
         Map<String, Object> pars = getInstanceConfig(instanceId);
-        return (String) pars.get(value);
+        return pars.get(value);
     }    
 
     /**
