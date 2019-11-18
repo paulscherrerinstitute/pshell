@@ -453,10 +453,10 @@ public class StreamCameraViewer extends MonitoredPanel {
 
             if (App.hasArgument("pipeline_server")) {
                 setServerUrl(App.getArgumentValue("pipeline_server"));
-                if (App.hasArgument("selection_mode")) {
-                    setSourceSelecionMode(SourceSelecionMode.valueOf(App.getArgumentValue("selection_mode")));
-                }
             }
+            if (App.hasArgument("selection_mode")) {
+                setSourceSelecionMode(SourceSelecionMode.valueOf(App.getArgumentValue("selection_mode")));
+            }            
             if (App.hasArgument("stream")) {
                 setStream(App.getArgumentValue("stream"));
             }           
@@ -2965,7 +2965,6 @@ public class StreamCameraViewer extends MonitoredPanel {
 
         buttonProfile.setIcon(getIcon("Profile"
             + ""));
-    buttonProfile.setSelected(true);
     buttonProfile.setText(" ");
     buttonProfile.setToolTipText("Show Image Profile");
     buttonProfile.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
@@ -2977,7 +2976,6 @@ public class StreamCameraViewer extends MonitoredPanel {
     toolBar.add(buttonProfile);
 
     buttonFit.setIcon(getIcon("Fit"));
-    buttonFit.setSelected(true);
     buttonFit.setText(" ");
     buttonFit.setToolTipText("Show Fit");
     buttonFit.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
@@ -2989,7 +2987,6 @@ public class StreamCameraViewer extends MonitoredPanel {
     toolBar.add(buttonFit);
 
     buttonReticle.setIcon(getIcon("Reticule"));
-    buttonReticle.setSelected(true);
     buttonReticle.setText(" ");
     buttonReticle.setToolTipText("Show Reticle");
     buttonReticle.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
@@ -3001,7 +2998,6 @@ public class StreamCameraViewer extends MonitoredPanel {
     toolBar.add(buttonReticle);
 
     buttonScale.setIcon(getIcon("Scale"));
-    buttonScale.setSelected(true);
     buttonScale.setText(" ");
     buttonScale.setToolTipText("Show Colormap Scale");
     buttonScale.setFocusable(false);
