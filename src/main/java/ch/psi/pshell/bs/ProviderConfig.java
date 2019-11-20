@@ -16,4 +16,5 @@ public class ProviderConfig extends DeviceConfig {
     public SocketType socketType = SocketType.DEFAULT;
     public boolean keepListeningOnStop = false;
     public boolean parallelHandlerProcessing = true;
+    public boolean byteBufferAllocator = false;
 }
