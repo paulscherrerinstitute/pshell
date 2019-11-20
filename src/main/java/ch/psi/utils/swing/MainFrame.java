@@ -351,9 +351,34 @@ public abstract class MainFrame extends JFrame {
     public static String getDarculaLookAndFeel() {
         return "com.bulenkov.darcula.DarculaLaf";
     }
+    
+    public enum FlatLookAndFeelType{
+        Light,
+        IntelliJ,
+        Darcula,
+        Dark
+    }
+            
+    public static String getFlatLookAndFeel(FlatLookAndFeelType type) {
+        switch (type){
+            case IntelliJ: return "com.formdev.flatlaf.FlatIntelliJLaf";
+            case Darcula: return "com.formdev.flatlaf.FlatDarculaLaf";
+            case Dark: return "com.formdev.flatlaf.FlatDarkLaf";
+            default: return "com.formdev.flatlaf.FlatLightLaf";
+        }
+    }
 
+    static Boolean dark; 
     public static boolean isDark() {
-        return UIManager.getLookAndFeel().getClass().getName().equals(getDarculaLookAndFeel());
+        if (dark==null){
+            dark = Arr.containsEqual(new String[]{
+                        getDarculaLookAndFeel(),
+                        getFlatLookAndFeel(FlatLookAndFeelType.Dark),
+                        getFlatLookAndFeel(FlatLookAndFeelType.Darcula),
+                    },
+                    UIManager.getLookAndFeel().getClass().getName() );            
+        }
+        return dark;
     }
 
     public static boolean isNimbus() {

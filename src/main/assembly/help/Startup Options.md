@@ -130,7 +130,7 @@
     <td>Override the settings file - persisted script properties (default is {config}/settings.properties).</td>
   </tr>
   <tr>
-    <td>pini=[true or false]</td>
+    <td>-pini=[true or false]</td>
     <td>Override config flag for parallel initialization.</td>
   </tr>
   <tr>
@@ -208,6 +208,14 @@
   <tr>
     <td>-dlaf</td>
     <td>Use a dark look and feel (cross platform).</td>
+  </tr>
+  <tr>
+    <td>-flaf</td>
+    <td>Use a flat look and feel (cross platform, can be used together with -dark).</td>
+  </tr>
+  <tr>
+    <td>-ilaf</td>
+    <td>Use a look and feel similar to IntelliJ (cross platform, can be used together with -dark).</td>
   </tr>
   <tr>
     <td>-args=id:val,...</td>

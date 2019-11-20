@@ -37,6 +37,7 @@ import ch.psi.utils.ObservableBase;
 import ch.psi.utils.Reflection.Hidden;
 import ch.psi.utils.swing.ConfigDialog;
 import ch.psi.utils.swing.MainFrame;
+import ch.psi.utils.swing.MainFrame.FlatLookAndFeelType;
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Dimension;
@@ -359,6 +360,8 @@ public class App extends ObservableBase<AppListener> {
         sb.append("\n\t-slaf\tUse System look and feel (or Metal if no System LAF is installed)");
         sb.append("\n\t-nlaf\tUse Nimbus look and feel (cross platform)");
         sb.append("\n\t-dlaf\tUse a dark look and feel (cross platform)");
+        sb.append("\n\t-flaf\tUse a flat look and feel (cross platform, can be used together with -dark)");
+        sb.append("\n\t-ilaf\tUse a look and feel similar to IntelliJ (cross platform, can be used together with -dark)");
         sb.append("\n\t-args=...\tProvide arguments to interpreter");
         sb.append("\n\t-f=<..>\tRun a file instead of entering interactive shell (together with -c option)");
         sb.append("\n\t-p=<..>\tLoad a plugin");
@@ -1450,9 +1453,21 @@ public class App extends ObservableBase<AppListener> {
             laf = UIManager.getSystemLookAndFeelClassName();
         } else if (hasArgument("nlaf")) {
             laf = MainFrame.getNimbusLookAndFeel();
+        } else if (hasArgument("ilaf")) {
+            if (hasArgument("dlaf")){
+                laf = MainFrame.getFlatLookAndFeel(FlatLookAndFeelType.Darcula);  
+            } else {
+                laf = MainFrame.getFlatLookAndFeel(FlatLookAndFeelType.IntelliJ);  
+            }
+        } else if (hasArgument("flaf")) {
+            if (hasArgument("dlaf")){
+                laf = MainFrame.getFlatLookAndFeel(FlatLookAndFeelType.Dark);  
+            } else {
+                laf = MainFrame.getFlatLookAndFeel(FlatLookAndFeelType.Light);  
+            }
         } else if (hasArgument("dlaf")) {
             laf = MainFrame.getDarculaLookAndFeel();
-        } else {
+        }  else {
             // Default is system laf (or Metal, if no system installed).
             // However prefer Nimbus on Windows & Linux
             laf = MainFrame.getNimbusLookAndFeel();
