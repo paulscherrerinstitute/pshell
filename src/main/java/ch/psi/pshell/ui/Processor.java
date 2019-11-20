@@ -46,9 +46,12 @@ public interface Processor {
     default public String resolveFile(String fileName) throws IOException{
         String home = getHomePath();
         if ((home!=null) && !home.isEmpty()){
-            Path p = Paths.get(home,fileName);
-            if (p.toFile().exists()){
-                return p.toString();
+            try{
+                Path p = Paths.get(home,fileName);
+                if (p.toFile().exists()){
+                    return p.toString();
+                }
+            } catch (Exception ex){
             }
         }
         File f = new File(fileName);
