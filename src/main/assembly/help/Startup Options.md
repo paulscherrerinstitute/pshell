@@ -207,15 +207,13 @@
   </tr>
   <tr>
     <td>-dlaf</td>
-    <td>Use a dark look and feel (cross platform).</td>
+    <td>Use a dark look and feel (cross p'latform).</td>
   </tr>
   <tr>
-    <td>-flaf</td>
-    <td>Use a flat look and feel (cross platform, can be used together with -dark).</td>
-  </tr>
-  <tr>
-    <td>-ilaf</td>
-    <td>Use a look and feel similar to IntelliJ (cross platform, can be used together with -dark).</td>
+    <td>-flaf&lt;=type&gt</td>
+    <td>Use a flat look and feel (cross platform, can be used together with -dark). 
+        Optional type parameter can be: Light, Dark, IntelliJ(default), Darcula (default if -dark is set).
+    </td>
   </tr>
   <tr>
     <td>-args=id:val,...</td>

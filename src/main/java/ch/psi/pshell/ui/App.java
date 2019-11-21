@@ -32,6 +32,7 @@ import ch.psi.pshell.swing.ScanEditorPanel;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import ch.psi.utils.Arr;
+import ch.psi.utils.Convert;
 import ch.psi.utils.IO;
 import ch.psi.utils.ObservableBase;
 import ch.psi.utils.Reflection.Hidden;
@@ -361,7 +362,6 @@ public class App extends ObservableBase<AppListener> {
         sb.append("\n\t-nlaf\tUse Nimbus look and feel (cross platform)");
         sb.append("\n\t-dlaf\tUse a dark look and feel (cross platform)");
         sb.append("\n\t-flaf\tUse a flat look and feel (cross platform, can be used together with -dark)");
-        sb.append("\n\t-ilaf\tUse a look and feel similar to IntelliJ (cross platform, can be used together with -dark)");
         sb.append("\n\t-args=...\tProvide arguments to interpreter");
         sb.append("\n\t-f=<..>\tRun a file instead of entering interactive shell (together with -c option)");
         sb.append("\n\t-p=<..>\tLoad a plugin");
@@ -1453,17 +1453,16 @@ public class App extends ObservableBase<AppListener> {
             laf = UIManager.getSystemLookAndFeelClassName();
         } else if (hasArgument("nlaf")) {
             laf = MainFrame.getNimbusLookAndFeel();
-        } else if (hasArgument("ilaf")) {
-            if (hasArgument("dlaf")){
-                laf = MainFrame.getFlatLookAndFeel(FlatLookAndFeelType.Darcula);  
-            } else {
-                laf = MainFrame.getFlatLookAndFeel(FlatLookAndFeelType.IntelliJ);  
-            }
         } else if (hasArgument("flaf")) {
-            if (hasArgument("dlaf")){
-                laf = MainFrame.getFlatLookAndFeel(FlatLookAndFeelType.Dark);  
-            } else {
-                laf = MainFrame.getFlatLookAndFeel(FlatLookAndFeelType.Light);  
+            String type=getArgumentValue("flaf");                        
+            if (Arr.containsEqual(Convert.toStringArray(FlatLookAndFeelType.values()), type)){
+                laf = MainFrame.getFlatLookAndFeel(FlatLookAndFeelType.valueOf(type));  
+            } else {                    
+                if (hasArgument("dlaf")){
+                    laf = MainFrame.getFlatLookAndFeel(FlatLookAndFeelType.Darcula);  
+                } else {
+                    laf = MainFrame.getFlatLookAndFeel(FlatLookAndFeelType.IntelliJ);  
+                }
             }
         } else if (hasArgument("dlaf")) {
             laf = MainFrame.getDarculaLookAndFeel();
