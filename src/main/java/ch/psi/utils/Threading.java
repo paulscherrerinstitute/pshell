@@ -38,16 +38,18 @@ public class Threading {
             int processors = Runtime.getRuntime().availableProcessors();
             threads = (threads > processors) ? processors : threads;
         }
-        ExecutorService executor = (poolName != null)
-                ? Executors.newFixedThreadPool(threads, new NamedThreadFactory(poolName))
-                : Executors.newFixedThreadPool(threads);
-
         List<Future> futures = new ArrayList<>();
+        if (threads>0){
+            ExecutorService executor = (poolName != null)
+                    ? Executors.newFixedThreadPool(threads, new NamedThreadFactory(poolName))
+                    : Executors.newFixedThreadPool(threads);
 
-        for (Callable callable : callables) {
-            futures.add(executor.submit(callable));
-        }
-        executor.shutdown();    //Will remove threads after execution
+
+            for (Callable callable : callables) {
+                futures.add(executor.submit(callable));
+            }
+            executor.shutdown();    //Will remove threads after execution
+        }        
         return futures;
 
     }
