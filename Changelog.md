@@ -1,5 +1,45 @@
 # Changelog
 
+## 1.13.0
+
+### Added
+
+* Parallel device initialization (-pini option).
+
+* StreamCameraViewer.
+
+* Camera calibration dialog.
+
+* Configuration of default separator on CSV format.
+
+* MainFrame.searchIcon method.
+
+* FlatLaf look and feel.
+
+* Possibility to creatte streams using HeaderReservingMsgAllocator. 
+
+  
+### Changed
+
+* Streams save Pulse ID as long, not double.
+
+* Defulat colors on HistoryChart defined by JFreeChart.
+
+* PipelineServer listener to track config changes.
+
+* BSREAD 4.0.1, using JeroMQ 0.5.1-PSI: compatible again with HeaderReservingMsgAllocator.
+
+
+### Fixed
+
+* Bug not applying default colors on StripChart.
+
+* Opening FDA files pon Windows.
+
+* Bug forking empty Callable list (parallelize and fork built-ins).
+
+
+
 ## 1.12.0
 
 ### Added
@@ -40,6 +80,7 @@
 * Compatibility with JDK > 10 
 
 * Bug pushing null image.
+
 
 
 ## 1.11.0
