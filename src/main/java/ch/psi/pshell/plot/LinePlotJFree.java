@@ -819,7 +819,9 @@ public class LinePlotJFree extends LinePlotBase {
         switch (getStyle()) {
             case Step:
                 ret = ChartFactory.createXYStepChart(getTitle(), getAxis(AxisId.X).getLabel(), getAxis(AxisId.Y).getLabel(), dataY1, PlotOrientation.VERTICAL, true, tooltips, false);
-                ret.getXYPlot().setDomainAxis(new NumberAxis());
+                NumberAxis axis = new NumberAxis();
+                axis.setAutoRangeIncludesZero(false);
+                ret.getXYPlot().setDomainAxis(axis);
                 break;
             case Spline: {
                 NumberAxis xAxis = new NumberAxis(getAxis(AxisId.X).getLabel());
