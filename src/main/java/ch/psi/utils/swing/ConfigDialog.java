@@ -10,7 +10,6 @@ import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Frame;
-import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -34,7 +33,7 @@ public class ConfigDialog extends PropertiesDialog {
         super(parent, modal);
     }
 
-    public void setConfig(Config config) {
+    public void setConfig(Config config) {        
         try {
             this.config = config.copy();
             this.original = config;
@@ -43,7 +42,7 @@ public class ConfigDialog extends PropertiesDialog {
             this.config = config;
             this.original = null;
             Logger.getLogger(ConfigDialog.class.getName()).log(Level.WARNING, "Editing config in place: " + config.getClass().getSimpleName());
-        }
+        }                
         super.setProperties(this.config.getProperties());
     }
 

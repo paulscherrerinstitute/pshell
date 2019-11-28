@@ -325,6 +325,9 @@ public class Config extends ObservableBase<Config.ConfigListener> {
     public Config copy() throws InstantiationException, IllegalAccessException {
         Config ret = getClass().newInstance();
         ret.fileName = this.fileName;
+        if (fileName== null){
+            updateProperties();
+        }                        
         ret.properties.putAll(this.properties);
         ret.fileSync = false;
         return ret;

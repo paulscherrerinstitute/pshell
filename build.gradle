@@ -6,7 +6,7 @@ plugins {
     id "com.jfrog.bintray" version "1.8.1"
 }
 
-version = '1.13.0' 
+version = '1.14.0' 
 group = 'ch.psi'
 ext.timestamp = new Date().format("yyMMddHHmm")
 
@@ -99,7 +99,7 @@ dependencies {
     compile 'net.wimpi:jamod:1.2'
     compile 'net.java.dev.jna:jna:4.4.0'
     compile 'com.fifesoft:rsyntaxtextarea:3.0.4'
-    compile 'jline:jline:2.14.3'    
+    compile 'jline:jline:2.14.3'
     //compile 'org.zeromq:jeromq:0.5.1-PSI' #On BSREAD 4.0.1
     compile 'ch.psi:bsread:4.0.1'
     compile 'net.imagej:ij:1.52q'    

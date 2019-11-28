@@ -7,6 +7,7 @@ import java.nio.file.Paths;
 import ch.psi.utils.Serializer;
 import ch.psi.pshell.device.Camera;
 import ch.psi.pshell.device.DiscretePositioner;
+import ch.psi.pshell.device.HistogramGenerator;
 import ch.psi.pshell.device.Motor;
 import ch.psi.pshell.device.MotorGroup;
 import ch.psi.pshell.device.ProcessVariable;
@@ -28,8 +29,8 @@ import ch.psi.pshell.epics.Scaler;
 import ch.psi.pshell.imaging.Colormap;
 import ch.psi.pshell.swing.CodeEditor;
 import ch.psi.pshell.swing.DeviceValueChart;
+import ch.psi.pshell.swing.HistogramGeneratorPanel;
 import ch.psi.pshell.swing.ScalerPanel;
-import ch.psi.utils.Arr;
 import java.awt.Color;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
@@ -169,8 +170,10 @@ public class Preferences {
             new DefaultPanel(DiscretePositioner.class.getName(), DiscretePositionerPanel.class.getName()),
             new DefaultPanel(Camera.class.getName(), CameraPanel.class.getName()),
             new DefaultPanel(Slit.class.getName(), SlitPanel.class.getName()),
+            new DefaultPanel(HistogramGenerator.class.getName(), HistogramGeneratorPanel.class.getName()),
             new DefaultPanel(ReadonlyRegister.ReadonlyRegisterArray.class.getName(), DeviceValueChart.class.getName()),
-            new DefaultPanel(ReadonlyRegister.ReadonlyRegisterMatrix.class.getName(), DeviceValueChart.class.getName()),};
+            new DefaultPanel(ReadonlyRegister.ReadonlyRegisterMatrix.class.getName(), DeviceValueChart.class.getName()),            
+        };
     }
 
     public static Font[] getDefaultFonts() {
