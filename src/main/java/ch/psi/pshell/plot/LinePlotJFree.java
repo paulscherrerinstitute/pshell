@@ -104,6 +104,7 @@ public class LinePlotJFree extends LinePlotBase {
 
     //TODO: if smaller there are plot repainting problem in scans in JFreeChart > 1.0.18
     static final double AUTO_RANGE_MINIMUM_SIZE = 1e-12;
+    static final double AUTO_RANGE_LOG_MINIMUM_SIZE = 1e-32;
     JFreeChart chart;
 
     boolean tooltips = false;
@@ -271,7 +272,10 @@ public class LinePlotJFree extends LinePlotBase {
             boolean log = getAxis(AxisId.X2).isLogarithmic();
             ValueAxis axis = log ? new LogarithmicAxis(getAxis(AxisId.X2).getLabel()) : new NumberAxis(getAxis(AxisId.X2).getLabel());
             if (log){
-                ((LogarithmicAxis)axis).setAllowNegativesFlag(true);
+                ((LogarithmicAxis)axis).setAllowNegativesFlag(false);
+                ((LogarithmicAxis)axis).setStrictValuesFlag(false);
+                ((LogarithmicAxis)axis).setLog10TickLabelsFlag(true);
+                ((LogarithmicAxis)axis).setAutoRangeMinimumSize(AUTO_RANGE_LOG_MINIMUM_SIZE);                
             }                
             XYPlot plot = (XYPlot) chart.getPlot();
             axis.setLabelFont(labelFont);
@@ -763,7 +767,10 @@ public class LinePlotJFree extends LinePlotBase {
             if (isLog != getAxis(axisId).isLogarithmic()) {
                 axis = (getAxis(axisId).isLogarithmic()) ? new LogarithmicAxis(getAxis(axisId).getLabel()) : new NumberAxis(getAxis(axisId).getLabel());
                 if (getAxis(axisId).isLogarithmic()){
-                    ((LogarithmicAxis)axis).setAllowNegativesFlag(true);
+                    ((LogarithmicAxis)axis).setAllowNegativesFlag(false);
+                    ((LogarithmicAxis)axis).setStrictValuesFlag(false);
+                    ((LogarithmicAxis)axis).setLog10TickLabelsFlag(true); //TODO: only used to axis Y
+                    ((LogarithmicAxis)axis).setAutoRangeMinimumSize(AUTO_RANGE_LOG_MINIMUM_SIZE);
                 }                
                 XYPlot plot = (XYPlot) chart.getPlot();
                 axis.setLabelFont(labelFont);
