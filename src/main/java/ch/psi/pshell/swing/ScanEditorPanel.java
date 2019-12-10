@@ -719,11 +719,11 @@ public class ScanEditorPanel extends MonitoredPanel implements Processor {
             ret.add(getParName("title") + "'" + textTitle.getText() + "'");
         }
         if (Context.getInstance().getSetup().getScriptType() == ScriptType.py) {
+            ret.add(getParName("keep") + getBoolValue(false));
             if (!checkSave.isSelected()) {
                 ret.add(getParName("save") + getBoolValue(false));
             }
-            if (!checkDisplay.isSelected()) {
-                ret.add(getParName("keep") + getBoolValue(false));
+            if (!checkDisplay.isSelected()) {                
                 ret.add(getParName("display") + getBoolValue(false));
             }
 
