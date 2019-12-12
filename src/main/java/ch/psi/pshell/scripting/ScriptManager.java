@@ -27,6 +27,10 @@ import javax.script.ScriptEngine;
 import javax.script.ScriptEngineFactory;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
+import org.python.core.Py;
+import org.python.core.PyModule;
+import org.python.core.PyObject;
+import org.python.core.PySystemState;
 
 /**
  *
@@ -74,7 +78,11 @@ public class ScriptManager implements AutoCloseable {
         }
         
         if (type == ScriptType.py) {
-            //TODO: __name__ is set to '__builtin__' in Jython under Java Scripting API.Setting to __main__. Are there consequences?
+            //TODO: __name__ is set to '__builtin__' in Jython under Java Scripting API.Setting to __main__. Are there consequences?            
+            PyObject globals = Py.newStringMap();
+            PyModule module = new PyModule("__main__", globals);        
+            PySystemState systemState= Py.getSystemState();
+            systemState.modules.__setitem__("__main__", module);
             engine.put("__name__", "__main__");
         }
 
