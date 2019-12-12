@@ -194,6 +194,18 @@
     <td>Start in full screen mode.</td>
   </tr>
   <tr>
+    <td>-libp</td>
+    <td>Add to library path.</td>
+  </tr>
+  <tr>
+    <td>-clsp</td>
+    <td>Add to class path.</td>
+  </tr>
+  <tr>
+    <td>-scrp</td>
+    <td>Add to script path.</td>
+  </tr>
+  <tr>
     <td>-mlaf</td>
     <td>Use Metal look and feel (cross platform).</td>
   </tr>

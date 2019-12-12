@@ -101,9 +101,10 @@ public class App extends ObservableBase<AppListener> {
         } catch (Exception ex){            
         }
         LogManager.setConsoleLoggerLevel(consoleLogLevel);  
-        appendClassPath();
-        applyLookAndFeel();   
         
+        appendLibraryPath();
+        appendClassPath();
+        applyLookAndFeel();           
         
         //Parse arguments to set system properties
         if (Setup.getJarFile() != null) {
@@ -229,22 +230,7 @@ public class App extends ObservableBase<AppListener> {
         if (isArgumentDefined("quality")) {
             System.setProperty(PlotPanel.PROPERTY_PLOT_QUALITY, Plot.Quality.valueOf(getArgumentValue("quality")).toString());
         }
-        
-        if (isArgumentDefined("libp")) {
-            for (String path : getArgumentValues("libp")){
-                PluginManager.addToLibraryPath(new File(path));
-            }
-        }
-        
-        if (isArgumentDefined("clsp")) {
-            for (String path : getArgumentValues("clsp")){
-                try {
-                    PluginManager.addToClassPath(new File(path));
-                } catch (Exception ex) {
-                    logger.log(Level.SEVERE, null, ex);
-                }          
-            }
-        }        
+                
         if (isArgumentDefined("scrp")) {
             System.setProperty(Setup.PROPERTY_EXT_SCRIPT_PATH, String.join(";",getArgumentValues("scrp")));
         }        
@@ -1500,6 +1486,14 @@ public class App extends ObservableBase<AppListener> {
         MainFrame.setLookAndFeel(laf);
     }
     
+    static void appendLibraryPath(){
+        if (isArgumentDefined("libp")) {
+            for (String path : getArgumentValues("libp")){
+                PluginManager.addToLibraryPath(new File(path));
+            }
+        }
+    }
+    
     static void appendClassPath(){
         if (hasArgument("cp")) {
             for (String path : getArgumentValue("cp").split(";")) {
@@ -1510,8 +1504,17 @@ public class App extends ObservableBase<AppListener> {
                 }
             }
         } 
+        if (isArgumentDefined("clsp")) {
+            for (String path : getArgumentValues("clsp")){
+                try {
+                    PluginManager.addToClassPath(new File(path));
+                } catch (Exception ex) {
+                    logger.log(Level.SEVERE, null, ex);
+                }          
+            }
+        }                
     }
-
+    
     //Exit
     protected void requestExit(Object origin) {
         for (AppListener listener : getListeners()) {
