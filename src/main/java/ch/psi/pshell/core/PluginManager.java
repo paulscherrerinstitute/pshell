@@ -188,7 +188,7 @@ public class PluginManager implements AutoCloseable {
         return null;
     }
 
-    public File[] getFolderContents(File folder, String[] formats) {
+    public static File[] getFolderContents(File folder, String[] formats) {
         if ((folder.exists()) && (folder.isDirectory())) {
             ArrayList<File> ret = new ArrayList<>();
             File[] files = folder.listFiles();
@@ -204,17 +204,21 @@ public class PluginManager implements AutoCloseable {
         return new File[0];
     }
 
-    public File[] getFolderJarContents(File folder) {
+    public static File[] getFolderJarContents(File folder) {
         return getFolderContents(folder, new String[]{"jar"});
     }
 
-    public File[] getPluginFolderContents() {
+    public static File[] getPluginFolderContents() {
         File pluginFolder = Paths.get(Context.getInstance().getSetup().getPluginsPath()).toFile();
         return getFolderContents(pluginFolder, new String[]{"jar", "py", "groovy", "java"});
     }
 
-    public File[] getExtensionsFolderContents() {
-        File pluginFolder = Paths.get(Context.getInstance().getSetup().getExtensionsPath()).toFile();
+    public static File[] getExtensionsFolderContents() {
+        return getExtensionsFolderContents(Context.getInstance().getSetup().getExtensionsPath());
+    }
+
+    public static File[] getExtensionsFolderContents(String path) {
+        File pluginFolder = Paths.get(path).toFile();
         return getFolderJarContents(pluginFolder);
     }
 
@@ -223,37 +227,29 @@ public class PluginManager implements AutoCloseable {
     static public List<File> getExtensions() {
         return (List<File>) extensions.clone();
     }
-
+        
+    
     void loadExtensionsFolder() {
-        logger.info("Loading extensions folder");
+        loadExtensionsFolder(Context.getInstance().getSetup().getExtensionsPath());
+    }
+
+    public void loadExtensionsFolder(String folder) {
+        logger.info("Loading extensions folder: " + folder);
         try {
-            try {
-                Sys.addToLibraryPath(new File(Context.getInstance().getSetup().getExtensionsPath()).getCanonicalPath());
-            } catch (Exception ex) {
-                logger.log(Level.SEVERE, null, ex);
-            }
+            addToLibraryPath(new File(folder));
 
             String jar = Context.getInstance().getSetup().getJarFile();
             if (jar != null) {
-                try {
-                    Sys.addToLibraryPath(new File(jar).getParentFile().getCanonicalPath());
-                } catch (Exception ex) {
-                    logger.log(Level.SEVERE, null, ex);
-                }
+                addToLibraryPath(new File(jar).getParentFile());
             }
 
-            File[] extensionFolderContents = getExtensionsFolderContents();
+            File[] extensionFolderContents = getExtensionsFolderContents(folder);
             ArrayList<File> files = new ArrayList<>(Arrays.asList(extensionFolderContents));
 
             if (jar != null) {
                 Path path = Paths.get(IO.getFolder(jar), JAR_EXTENSIONS_FOLDER);
                 if (path.toFile().exists()) {
-                    try {
-                        Sys.addToLibraryPath(path.toFile().getCanonicalPath());
-                    } catch (Exception ex) {
-                        logger.log(Level.SEVERE, null, ex);
-                    }
-
+                    addToLibraryPath(path.toFile());
                     for (File file : getFolderJarContents(path.toFile())) {
                         boolean add = true;
                         for (File f : files) {
@@ -262,25 +258,47 @@ public class PluginManager implements AutoCloseable {
                                 break;
                             }
                         }
-                        files.add(file);
+                        if (add){
+                            files.add(file);
+                        }
                     }
                 }
             }
-
-            for (File file : files) {
-                try {
-                    String path = file.getCanonicalPath();
-                    Sys.addToClassPath(path);
-                    if (!extensions.contains(path)) {
-                        extensions.add(file);
-                    }
-                } catch (Exception ex) {
-                    logger.log(Level.SEVERE, null, ex);
-                }
-            }
+            addToClassPath(files);
         } catch (Exception ex) {
             logger.log(Level.SEVERE, null, ex);
         }
+    }
+    
+    public void addToClassPath(List<File> files){
+        for (File file : files) {
+            addToClassPath(file);
+        }
+    }
+    
+    public static void addToClassPath(File file){
+        try {
+            String path =  file.getCanonicalPath();
+            Sys.addToClassPath(path);
+            if (!extensions.contains(file)) {
+                extensions.add(file);
+            }
+            if (file.isDirectory()){
+                for (File f : getFolderJarContents(file)) {
+                    addToClassPath(f);
+                }
+            }            
+        } catch (Exception ex) {
+            logger.log(Level.SEVERE, null, ex);
+        }        
+    }
+    
+    public static void addToLibraryPath(File file){
+        try {
+            Sys.addToLibraryPath(file.getCanonicalPath());
+        } catch (Exception ex) {
+            logger.log(Level.SEVERE, null, ex);
+        }    
     }
 
     //Respecting the order defined in plugins.properties

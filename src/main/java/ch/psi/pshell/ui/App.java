@@ -14,6 +14,7 @@ import ch.psi.utils.State;
 import ch.psi.utils.Sys;
 import ch.psi.utils.Sys.OSFamily;
 import ch.psi.pshell.core.PlotListener;
+import ch.psi.pshell.core.PluginManager;
 import ch.psi.pshell.core.Setup;
 import ch.psi.pshell.core.UserInterface;
 import ch.psi.pshell.data.PlotDescriptor;
@@ -134,7 +135,7 @@ public class App extends ObservableBase<AppListener> {
                 throw new RuntimeException(ex);
             }
         }
-
+        
         if (isArgumentDefined("setp")) {
             System.setProperty(Context.PROPERTY_SETUP_FILE, getArgumentValue("setp"));
         } else if (Config.isStringDefined(pshellProperties.setp)) {
@@ -194,7 +195,7 @@ public class App extends ObservableBase<AppListener> {
         } else if (Config.isStringDefined(pshellProperties.scpt)) {
             System.setProperty(Setup.PROPERTY_SCRIPT_PATH, pshellProperties.scpt);
         }
-
+        
         if (isArgumentDefined("pool")) {
             System.setProperty(Setup.PROPERTY_DEVICES_FILE, getArgumentValue("pool"));
         } else if (pshellProperties.pool != null) {
@@ -222,12 +223,31 @@ public class App extends ObservableBase<AppListener> {
             System.setProperty(Configuration.PROPERTY_CONSOLE_LOG, getArgumentValue("clog"));
         } else if (pshellProperties.consoleLog != null) {
             System.setProperty(Configuration.PROPERTY_CONSOLE_LOG, pshellProperties.consoleLog.toString());
-        }
+        }                
         
         //Only used if View is not instantiated
         if (isArgumentDefined("quality")) {
             System.setProperty(PlotPanel.PROPERTY_PLOT_QUALITY, Plot.Quality.valueOf(getArgumentValue("quality")).toString());
         }
+        
+        if (isArgumentDefined("libp")) {
+            for (String path : getArgumentValues("libp")){
+                PluginManager.addToLibraryPath(new File(path));
+            }
+        }
+        
+        if (isArgumentDefined("clsp")) {
+            for (String path : getArgumentValues("clsp")){
+                try {
+                    PluginManager.addToClassPath(new File(path));
+                } catch (Exception ex) {
+                    logger.log(Level.SEVERE, null, ex);
+                }          
+            }
+        }        
+        if (isArgumentDefined("scrp")) {
+            System.setProperty(Setup.PROPERTY_EXT_SCRIPT_PATH, String.join(";",getArgumentValues("scrp")));
+        }        
         
         if (isLocalMode()) {
             System.setProperty(Context.PROPERTY_LOCAL_MODE, "true");
@@ -357,6 +377,9 @@ public class App extends ObservableBase<AppListener> {
         sb.append("\n\t-dtpn\tShow data panel window only (can be used together with -f)");
         sb.append("\n\t-help\tStart the GUI help window");
         sb.append("\n\t-full\tStart in full screen mode");
+        sb.append("\n\t-libp=<path>\tAdd to library path");
+        sb.append("\n\t-clsp=<path>\tAdd to class path");        
+        sb.append("\n\t-scrp=<path>\tAdd to script path");                
         sb.append("\n\t-mlaf\tUse Metal look and feel (cross platform)");
         sb.append("\n\t-slaf\tUse System look and feel (or Metal if no System LAF is installed)");
         sb.append("\n\t-nlaf\tUse Nimbus look and feel (cross platform)");

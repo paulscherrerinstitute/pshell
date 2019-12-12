@@ -1,6 +1,5 @@
 package ch.psi.pshell.core;
 
-import ch.psi.pshell.bs.StreamConfig;
 import ch.psi.pshell.scripting.ScriptType;
 import ch.psi.pshell.security.User;
 import ch.psi.utils.Arr;
@@ -43,6 +42,7 @@ public class Setup extends Config {
     public static transient final String PROPERTY_SETTINGS_FILE = "ch.psi.pshell.settings.file";
     public static transient final String PROPERTY_SCRIPT_TYPE = "ch.psi.pshell.type";
     public static transient final String PROPERTY_PARALLEL_INIT = "ch.psi.pshell.parallel.init";
+    public static transient final String PROPERTY_EXT_SCRIPT_PATH = "ch.psi.pshell.ext_script";
 
     //Fixed tokens
     public static transient final String TOKEN_HOME = "{home}";
@@ -598,6 +598,14 @@ public class Setup extends Config {
         if (!Arr.containsEqual(ret, standard)) {
             ret = Arr.append(ret, standard);
         }
+        
+        if (System.getProperty(PROPERTY_EXT_SCRIPT_PATH) != null) {
+            String[] ext = System.getProperty(PROPERTY_EXT_SCRIPT_PATH).split(";");
+            for (int i = 0; i < ext.length; i++) {    
+                ret = Arr.append(ret, expandPath(ext[i].trim()));
+            }  
+        }                
+                
         //If default path exists and not in path, included it - so Lib can be shared
         if (!isRunningInIde()) {
             String file = "startup." + getScriptType().toString();
