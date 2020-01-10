@@ -1479,11 +1479,15 @@ public class Data implements Serializable {
             }
         } else if (array instanceof int[]) {
             int[] data = (int[]) array;
-            int val = op.intValue();
+                int val = op.intValue();
             for (int i = 0; i < length; i++) {
                 data[i] = Math.max(data[i], val);
             }
         }
+    }
+    
+    public Data copy(){
+        return new Data(this);
     }
 
 }
