@@ -54,6 +54,10 @@ public class GenericArray extends RegisterBase implements Register.RegisterArray
     public String getChannelName() {
         return channelName;
     }
+    
+    public RegisterArray getRegister(){
+        return register;
+    } 
 
     public boolean getAutoResolveType() {
         return autoResolveType;

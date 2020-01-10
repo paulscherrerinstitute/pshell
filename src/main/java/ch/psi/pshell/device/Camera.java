@@ -99,6 +99,27 @@ public interface Camera extends Device {
             }
             return null;
         }
+        
+        public Class getElementType() {
+            switch (this) {
+                case Int8:
+                case UInt8:
+                    return byte.class;
+                case Int16:
+                case UInt16:
+                    return short.class;
+                case Int24:
+                case UInt24:
+                case Int32:
+                case UInt32:
+                    return int.class;
+                case Float32:
+                    return float.class;
+                case Float64:
+                    return double.class;
+            }
+            return null;
+        }        
 
         public boolean isUnsigned() {
             switch (this) {

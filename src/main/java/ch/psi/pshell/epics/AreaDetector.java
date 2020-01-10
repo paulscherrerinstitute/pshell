@@ -7,7 +7,9 @@ import ch.psi.pshell.device.DeviceAdapter;
 import ch.psi.pshell.device.DeviceListener;
 import ch.psi.pshell.device.Register.RegisterArray;
 import ch.psi.pshell.device.AccessType;
+import ch.psi.utils.Convert;
 import java.io.IOException;
+import java.lang.reflect.Array;
 import java.util.logging.Level;
 
 /**
@@ -72,7 +74,12 @@ public class AreaDetector extends CameraBase {
                 try {
                     CameraImageDescriptor desc = readImageDescriptor();
                     if (device == dataType) {
-                        data.setType(DataType.valueOf((String) value).getArrayType());
+                        DataType type = DataType.valueOf((String) value);
+                        if (isSimulated()){
+                            setSimulationData(type);
+                        } else {
+                            data.setType(type.getArrayType());
+                        }
                     }
                     data.setSize(desc.getTotalSize());
                 } catch (Exception ex) {
@@ -117,14 +124,21 @@ public class AreaDetector extends CameraBase {
         setSimulatedValue("NumImages", 0);
         setSimulatedValue("Manufacturer_RBV", "AreaDetector");
         setSimulatedValue("Model_RBV", "Simulation");
-
-        try {
-            data.setType(byte[].class);
+        setSimulationData(DataType.UInt8); 
+    }
+    
+    void setSimulationData(DataType type){
+        try {        
+            int width = sizeX.take();
+            int height = sizeY.take();
+            
+            data.setType(type.getArrayType());
             data.setSize(width * height);
-            byte[] array = new byte[data.getSize()];
+            Object array = Array.newInstance(type.getElementType(), data.getSize());
             for (int i = 0; i < width; i++) {
-                for (int j = 0; j < height; j++) {
-                    array[j * width + i] = (byte) (i / 2 + j / 2);
+                for (int j = 0; j < height; j++) { 
+                    Object val = Convert.toType((i / 2 + j / 2), type.getElementType());
+                    Array.set(array, j * width + i, val);
                 }
             }
             this.setCache(data, array);

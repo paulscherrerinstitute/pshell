@@ -15,6 +15,10 @@ public class CameraSource extends DeviceSource {
         super(name, device.getDataArray());
         this.camera = device;
     }
+    
+    public Camera getCamera(){
+        return camera;
+    }
 
     @Override
     protected void onDataReceived(Object value) throws Exception {
