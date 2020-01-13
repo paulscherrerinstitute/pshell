@@ -1110,6 +1110,13 @@ public class DataManager implements AutoCloseable {
         }
         return ret;
     }
+    
+    void checkLogFile(String logFile) throws IOException {
+        if (!exists(logFile)) {
+            createDataset(logFile, String.class);
+        } 
+        getProvider().checkLogFile(logFile);
+    }
 
     public List<PlotDescriptor> getScanPlots(String root, String path) throws Exception {
         String layout = (String) getAttribute(root, "/", Layout.ATTR_LAYOUT);

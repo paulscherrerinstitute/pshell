@@ -202,7 +202,7 @@ public class ProviderText implements Provider {
             ret = Paths.get(root, path);
         }
         return ret;
-    }
+    }   
 
     @Override
     public void openOutput(File root) throws IOException {
@@ -233,6 +233,23 @@ public class ProviderText implements Provider {
         root = null;
     }
 
+    @Override
+    public void checkLogFile(String path) throws IOException {
+        if (!openFiles.containsKey(path)) {
+            OutputFile of;
+            synchronized (openFiles) {
+                of = openFiles.get(path);
+                if (of == null) {                    
+                    Logger.getLogger(ProviderText.class.getName()).info("Reopening log file: " + path);
+                    Path filePath = getFilePath(path);                    
+                    PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(filePath.toString(), true)));
+                    of = new OutputFile(out);                    
+                    openFiles.put(path, of);
+                }
+            }
+        }
+    }  
+     
     @Override
     public void flush() {
         synchronized (openFiles) {

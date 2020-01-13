@@ -45,9 +45,7 @@ public abstract class LayoutBase implements Layout {
         DataManager dataManager = getDataManager();
         String logFile = getLogFilePath();
         if (logFile != null) {
-            if (!dataManager.exists(logFile)) {
-                dataManager.createDataset(logFile, String.class);
-            }
+            dataManager.checkLogFile(logFile);
             String time = Chrono.getTimeStr(System.currentTimeMillis(), "dd/MM/YY HH:mm:ss.SSS - ");
             dataManager.appendItem(logFile, time + log);
         }

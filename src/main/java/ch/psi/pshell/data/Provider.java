@@ -103,4 +103,8 @@ public interface Provider {
     default int getDepthDimension(){
         return Context.getInstance().getDataManager().getDepthDimension();
     }    
+    
+    default public void checkLogFile(String logFile) throws IOException{
+    }    
+        
 }
