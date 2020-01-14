@@ -117,7 +117,7 @@ public class Data implements Serializable {
         if (transformed) {
             roi = getInverseRect(roi);
         }
-        array = Array.newInstance(data.array.getClass().getComponentType(), roi.width * roi.height);
+        array = Array.newInstance(data.array.getClass().getComponentType(), Array.getLength(data.array));
         length = Array.getLength(array);
         width = roi.width;
         height = roi.height;
@@ -972,12 +972,14 @@ public class Data implements Serializable {
             byte[] data = (byte[]) array;
             byte[] opdata = (byte[]) (op.array);
             if (unsigned) {
+                byte zeroDix=Byte.MAX_VALUE;
                 for (int i = 0; i < length; i++) {
-                    data[i] = (byte) Math.max(Math.min(Convert.toUnsigned(data[i]) / Convert.toUnsigned(opdata[i]), 0xFF), 0);
+                    short d = Convert.toUnsigned(opdata[i]);
+                    data[i] = (d==0) ? (byte)0xFF :(byte) Math.max(Math.min(Convert.toUnsigned(data[i]) / d, 0xFF), 0);
                 }
             } else {
                 for (int i = 0; i < length; i++) {
-                    data[i] = (byte) Math.max(Math.min(data[i] / opdata[i], 0x7F), -0x80);
+                    data[i] = (opdata[i] == 0) ? Byte.MAX_VALUE :  (byte) Math.max(Math.min(data[i] / opdata[i], 0x7F), -0x80);
                 }
             }
         } else if (array instanceof short[]) {
@@ -985,41 +987,43 @@ public class Data implements Serializable {
             short[] opdata = (short[]) (op.array);
             if (unsigned) {
                 for (int i = 0; i < length; i++) {
-                    data[i] = (short) Math.max(Math.min(Convert.toUnsigned(data[i]) / Convert.toUnsigned(opdata[i]), 0xFFFF), 0);
+                    int d = Convert.toUnsigned(opdata[i]);
+                    data[i] = (d==0) ? (short)0xFFFF : (short) Math.max(Math.min(Convert.toUnsigned(data[i]) / d, 0xFFFF), 0);
                 }
             } else {
                 for (int i = 0; i < length; i++) {
-                    data[i] = (short) Math.max(Math.min(data[i] / opdata[i], 0x7FFF), -0x8000);
+                    data[i] = (opdata[i]==0) ? Short.MAX_VALUE : (short) Math.max(Math.min(data[i] / opdata[i], 0x7FFF), -0x8000);
                 }
             }
         } else if (array instanceof double[]) {
             double[] data = (double[]) array;
             double[] opdata = (double[]) (op.array);
             for (int i = 0; i < length; i++) {
-                data[i] = (double) (data[i] / opdata[i]);
+                data[i] = (opdata[i]==0) ? Double.NaN : (double) (data[i] / opdata[i]);
             }
         } else if (array instanceof float[]) {
             float[] data = (float[]) array;
             float[] opdata = (float[]) (op.array);
             for (int i = 0; i < length; i++) {
-                data[i] = (float) (data[i] / opdata[i]);
+                data[i] = (opdata[i]==0) ? Float.NaN :(float) (data[i] / opdata[i]);
             }
         } else if (array instanceof long[]) {
             long[] data = (long[]) array;
             long[] opdata = (long[]) (op.array);
             for (int i = 0; i < length; i++) {
-                data[i] = (long) (data[i] / opdata[i]);
+                data[i] = (opdata[i]==0) ? Long.MAX_VALUE :(long) (data[i] / opdata[i]);
             }
         } else if (array instanceof int[]) {
             int[] data = (int[]) array;
             int[] opdata = (int[]) (op.array);
             if (unsigned) {
                 for (int i = 0; i < length; i++) {
-                    data[i] = (int) Math.max(Math.min(Convert.toUnsigned(data[i]) / Convert.toUnsigned(opdata[i]), 0xFFFFFFFF), 0);
+                    Long d = Convert.toUnsigned(opdata[i]);
+                    data[i] = (d==0) ? (int)0xFFFFFFFF : (int) Math.max(Math.min(Convert.toUnsigned(data[i]) / d, 0xFFFFFFFF), 0);
                 }
             } else {
                 for (int i = 0; i < length; i++) {
-                    data[i] = (int) Math.max(Math.min(data[i] / opdata[i], 0x7FFFFFFF), -0x80000000);
+                    data[i] = (opdata[i]==0) ? Integer.MAX_VALUE : (int) Math.max(Math.min(data[i] / opdata[i], 0x7FFFFFFF), -0x80000000);
                 }
             }
         }
@@ -1294,12 +1298,12 @@ public class Data implements Serializable {
             if (unsigned) {
                 short val = Convert.toUnsigned(op.byteValue());
                 for (int i = 0; i < length; i++) {
-                    data[i] = (byte) Math.max(Math.min(Convert.toUnsigned(data[i]) / val, 0xFF), 0);
+                    data[i] = (val==0) ? (byte)0xFF : (byte) Math.max(Math.min(Convert.toUnsigned(data[i]) / val, 0xFF), 0);
                 }
             } else {
                 byte val = op.byteValue();
                 for (int i = 0; i < length; i++) {
-                    data[i] = (byte) Math.max(Math.min(data[i] / val, 0x7F), -0x80);
+                    data[i] = (val==0) ? Byte.MAX_VALUE : (byte) Math.max(Math.min(data[i] / val, 0x7F), -0x80);
                 }
             }
         } else if (array instanceof short[]) {
@@ -1307,43 +1311,43 @@ public class Data implements Serializable {
             if (unsigned) {
                 int val = Convert.toUnsigned(op.shortValue());
                 for (int i = 0; i < length; i++) {
-                    data[i] = (short) Math.max(Math.min(Convert.toUnsigned(data[i]) / val, 0xFFFF), 0);
+                    data[i] = (val==0) ? (short)0xFFFF :(short) Math.max(Math.min(Convert.toUnsigned(data[i]) / val, 0xFFFF), 0);
                 }
             } else {
                 short val = op.shortValue();
                 for (int i = 0; i < length; i++) {
-                    data[i] = (short) Math.max(Math.min(data[i] / val, 0x7FFF), -0x8000);
+                    data[i] = (val==0) ? Short.MAX_VALUE :(short) Math.max(Math.min(data[i] / val, 0x7FFF), -0x8000);
                 }
             }
         } else if (array instanceof double[]) {
             double val = op.doubleValue();
             double[] data = (double[]) array;
             for (int i = 0; i < length; i++) {
-                data[i] = (double) (data[i] / val);
+                data[i] = (val==0) ? Double.NaN :(double) (data[i] / val);
             }
         } else if (array instanceof float[]) {
             float[] data = (float[]) array;
             float val = op.floatValue();
             for (int i = 0; i < length; i++) {
-                data[i] = (float) (data[i] / val);
+                data[i] = (val==0) ? Float.NaN :(float) (data[i] / val);
             }
         } else if (array instanceof long[]) {
             long[] data = (long[]) array;
             long val = op.longValue();
             for (int i = 0; i < length; i++) {
-                data[i] = (long) (data[i] / val);
+                data[i] = (val==0) ? Long.MAX_VALUE : (long) (data[i] / val);
             }
         } else if (array instanceof int[]) {
             int[] data = (int[]) array;
             if (unsigned) {
                 long val = Convert.toUnsigned(op.intValue());
                 for (int i = 0; i < length; i++) {
-                    data[i] = (int) Math.max(Math.min(Convert.toUnsigned(data[i]) / val, 0xFFFFFFFF), 0);
+                    data[i] = (val==0) ? (int)0xFFFFFFFF :(int) Math.max(Math.min(Convert.toUnsigned(data[i]) / val, 0xFFFFFFFF), 0);
                 }
             } else {
                 int val = op.intValue();
                 for (int i = 0; i < length; i++) {
-                    data[i] = (int) Math.max(Math.min(data[i] / val, 0x7FFFFFFF), -0x80000000);
+                    data[i] = (val==0) ? Integer.MAX_VALUE :(int) Math.max(Math.min(data[i] / val, 0x7FFFFFFF), -0x80000000);
                 }
             }
         }
