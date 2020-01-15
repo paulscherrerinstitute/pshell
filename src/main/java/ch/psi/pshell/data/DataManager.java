@@ -114,6 +114,8 @@ public class DataManager implements AutoCloseable {
             providerClass = ProviderText.class;
         } else if (providerName.equals("csv")) {
             providerClass = ProviderCSV.class;
+        } else if (providerName.equals("fda")) {
+            providerClass = ProviderFDA.class;
         } else {
             //Class name
             providerClass = Context.getInstance().getClassByName(name);
@@ -195,6 +197,8 @@ public class DataManager implements AutoCloseable {
             layoutClass = LayoutTable.class;
         } else if (layoutName.equals("sf")) {
             layoutClass = LayoutSF.class;
+        } else if (layoutName.equals("fda")) {
+            layoutClass = LayoutFDA.class;            
         } else {
             //Class name
             layoutClass = Context.getInstance().getClassByName(name);
