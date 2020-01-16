@@ -295,8 +295,10 @@ public class DataManager implements AutoCloseable {
                 }
             }
         }
-        if (Number.class.isAssignableFrom(type) || (type == String.class) || (type == Boolean.class)) {
-            return type;
+        if (type!=null){
+            if (Number.class.isAssignableFrom(type) || (type == String.class) || (type == Boolean.class)) {
+               return type;
+            }
         }
         //Else force double
         return Double.class;
