@@ -244,15 +244,15 @@ public class AreaDetector extends CameraBase {
         }
     }
 
-    protected Object readCtrlEnum(String field, Class cls) throws IOException, InterruptedException {
+    protected <T extends Enum<T>> T readCtrlEnum(String field, Class<T> cls) throws IOException, InterruptedException {
         String val = (String) readCtrl(field, String.class);
         return convertCtrlEnum(val, cls);
     }
 
-    protected Object convertCtrlEnum(String val, Class cls) throws IOException, InterruptedException {
+    protected <T extends Enum<T>> T convertCtrlEnum(String val, Class<T> cls) throws IOException, InterruptedException {
         if ((val == null) || (cls == null) || (!cls.isEnum())) {
             if ((cls != null) && isSimulated()) {
-                Object[] vals = cls.getEnumConstants();
+                T[] vals = cls.getEnumConstants();
                 if ((vals != null) && (vals.length > 0)) {
                     return vals[0];
                 }

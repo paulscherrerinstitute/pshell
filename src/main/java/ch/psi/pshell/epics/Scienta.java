@@ -458,23 +458,27 @@ public class Scienta extends AreaDetector {
     public List<Double> getSliceRange() throws IOException, InterruptedException {
         ArrayList<Double> ret = new ArrayList<>();
         //ret.add(sliceBegin.getValue());
-        //ret.add(sliceEnd.getValue());        
+        //ret.add(sliceEnd.getValue()); 
+        try{
+            switch (getLensMode()) {
+                case Angular45:
+                    ret.add(-28.148);
+                    ret.add(27.649);
+                    break;
+                case Angular60:
+                    ret.add(-34.736);
+                    ret.add(34.119);
+                    break;
+                case Transmission:
+                default:
+                    ret.add(-2.332);
+                    ret.add(2.291);
+                    break;
 
-        switch (getLensMode()) {
-            case Angular45:
-                ret.add(-28.148);
-                ret.add(27.649);
-                break;
-            case Angular60:
-                ret.add(-34.736);
-                ret.add(34.119);
-                break;
-            case Transmission:
-            default:
-                ret.add(-2.332);
-                ret.add(2.291);
-                break;
-
+            }
+        } catch (Exception ex){
+            ret.add(Double.NaN);
+            ret.add(Double.NaN);
         }
         return ret;
     }
