@@ -289,8 +289,9 @@ public class PlotPanel extends MonitoredPanel {
                     }
                 }
                 if (labelX == null) {
-                    String name = Context.getInstance().getDataManager().getAlias(scan.getWritables()[0]);
-                    labelX = (scan.getWritables().length == 1) ? name : null;
+                    labelX = (scan.getWritables().length >= 1) ? 
+                            Context.getInstance().getDataManager().getAlias(scan.getWritables()[0]) : 
+                            null;
                 } else {
                     prefs.autoRange = (prefs.range == null) ? true : false;
                 }
