@@ -34,6 +34,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JMenuItem;
 import javax.swing.UIManager;
+import org.fife.ui.rsyntaxtextarea.RSyntaxTextAreaEditorKit;
 
 /**
  *
@@ -43,10 +44,11 @@ public class ScriptEditor extends MonitoredPanel {
     static final Color STATEMENT_HIGHLIGHT = MainFrame.isDark() ? new Color(84, 84, 84) : new Color(200, 200, 200);
     static final Color STATEMENT_HIGHLIGHT_MAC = new Color(208, 208, 208);
     boolean isScript = true;
+    final boolean syntaxHighlight;
 
     public ScriptEditor(boolean syntaxHighlight, boolean showLineNumbers, boolean showContextMenu) {
         initComponents();
-
+        this.syntaxHighlight = syntaxHighlight;
         if (syntaxHighlight) {
             CodeEditor codeEditor = new CodeEditor();
             codeEditor.setShowLineNumbers(showLineNumbers);
@@ -91,6 +93,10 @@ public class ScriptEditor extends MonitoredPanel {
                 }
             });
         }
+    }
+    
+    public boolean hasSyntaxHighlight(){
+        return syntaxHighlight;
     }
 
     //When changing parent the disabled color is reset (seen in Nimbus)
@@ -494,6 +500,46 @@ public class ScriptEditor extends MonitoredPanel {
             editor.getEditor().paint(editor.getEditor().getGraphics());
         }
     }
+    
+    public void indent(){ 
+        if (hasSyntaxHighlight()){
+            new RSyntaxTextAreaEditorKit.InsertTabAction().actionPerformed(null);
+        } else {
+
+            String tab = "";
+            for (int i = 0; i < getTabSize(); i++) {
+                tab += " ";
+            }
+            getTextEditor().addPrefixToSelection(tab);
+        }    
+    }
+    
+    public void unindent(){ 
+        if (hasSyntaxHighlight()){
+            new RSyntaxTextAreaEditorKit.DecreaseIndentAction().actionPerformed(null);
+        } else {
+
+            for (int i = 0; i < getTabSize(); i++) {
+                getTextEditor().removePrefixFromSelection(" ");
+            }
+            getTextEditor().removePrefixFromSelection("\t");
+        }       
+    }    
+    
+    public void comment(){ 
+        getTextEditor().addPrefixToSelection(Context.getInstance().getScriptType().getLineCommentMarker());   
+    }    
+    
+    public void uncomment(){ 
+        getTextEditor().removePrefixFromSelection(Context.getInstance().getScriptType().getLineCommentMarker());
+    }        
+    
+    public void toggleComment(){ 
+        if (hasSyntaxHighlight()){
+            new RSyntaxTextAreaEditorKit.ToggleCommentAction().actionPerformed(null);
+        }                   
+    }          
+
 
     /**
      * This method is called from within the constructor to initialize the form. WARNING: Do NOT

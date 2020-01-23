@@ -1898,6 +1898,7 @@ public class View extends MainFrame {
         jSeparator21 = new javax.swing.JPopupMenu.Separator();
         menuComment = new javax.swing.JMenuItem();
         menuUncomment = new javax.swing.JMenuItem();
+        menuToggleComment = new javax.swing.JMenuItem();
         jSeparator18 = new javax.swing.JPopupMenu.Separator();
         menuFind = new javax.swing.JMenuItem();
         menuFindNext = new javax.swing.JMenuItem();
@@ -2494,6 +2495,16 @@ public class View extends MainFrame {
             }
         });
         menuBlock.add(menuUncomment);
+
+        menuToggleComment.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_SLASH, java.awt.event.InputEvent.CTRL_MASK));
+        menuToggleComment.setText(bundle.getString("View.menuToggleComment.text")); // NOI18N
+        menuToggleComment.setName("menuToggleComment"); // NOI18N
+        menuToggleComment.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                menuToggleCommentActionPerformed(evt);
+            }
+        });
+        menuBlock.add(menuToggleComment);
 
         menuEdit.add(menuBlock);
 
@@ -3870,17 +3881,16 @@ public class View extends MainFrame {
         menuBlock.setEnabled(menuCopy.isEnabled());
         menuFind.setEnabled(editing);
         menuFindNext.setEnabled(editing && editor.getTextEditor().canFindNext());
+        menuComment.setVisible(!editor.hasSyntaxHighlight());
+        menuUncomment.setVisible(!editor.hasSyntaxHighlight());
+        menuToggleComment.setVisible(editor.hasSyntaxHighlight());
     }//GEN-LAST:event_menuEditStateChanged
 
     private void menuIndentActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuIndentActionPerformed
         try {
-            ScriptEditor editor;
-            if ((editor = getSelectedEditor()) != null) {
-                String tab = "";
-                for (int i = 0; i < preferences.tabSize; i++) {
-                    tab += " ";
-                }
-                editor.getTextEditor().addPrefixToSelection(tab);
+            ScriptEditor editor= getSelectedEditor();
+            if (editor != null) {
+                editor.indent();
             }
         } catch (Exception ex) {
             showException(ex);
@@ -3889,12 +3899,9 @@ public class View extends MainFrame {
 
     private void menuUnindentActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuUnindentActionPerformed
         try {
-            ScriptEditor editor;
-            if ((editor = getSelectedEditor()) != null) {
-                for (int i = 0; i < preferences.tabSize; i++) {
-                    editor.getTextEditor().removePrefixFromSelection(" ");
-                }
-                editor.getTextEditor().removePrefixFromSelection("\t");
+            ScriptEditor editor= getSelectedEditor();
+            if (editor != null) {
+                editor.unindent();
             }
         } catch (Exception ex) {
             showException(ex);
@@ -3903,9 +3910,9 @@ public class View extends MainFrame {
 
     private void menuCommentActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuCommentActionPerformed
         try {
-            ScriptEditor editor;
-            if ((editor = getSelectedEditor()) != null) {
-                editor.getTextEditor().addPrefixToSelection(context.getScriptType().getLineCommentMarker());
+            ScriptEditor editor= getSelectedEditor();
+            if (editor != null) {
+                editor.comment();
             }
         } catch (Exception ex) {
             showException(ex);
@@ -3914,9 +3921,9 @@ public class View extends MainFrame {
 
     private void menuUncommentActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuUncommentActionPerformed
         try {
-            ScriptEditor editor;
-            if ((editor = getSelectedEditor()) != null) {
-                editor.getTextEditor().removePrefixFromSelection(context.getScriptType().getLineCommentMarker());
+            ScriptEditor editor= getSelectedEditor();
+            if (editor != null) {
+                editor.uncomment();
             }
         } catch (Exception ex) {
             showException(ex);
@@ -4076,6 +4083,17 @@ public class View extends MainFrame {
         }
     }//GEN-LAST:event_menuCheckSyntaxbuttonRunActionPerformed
 
+    private void menuToggleCommentActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuToggleCommentActionPerformed
+        try {
+            ScriptEditor editor= getSelectedEditor();
+            if (editor != null) {
+                editor.toggleComment();
+            }
+        } catch (Exception ex) {
+            showException(ex);
+        }
+    }//GEN-LAST:event_menuToggleCommentActionPerformed
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton buttonAbort;
     private javax.swing.JButton buttonAbout;
@@ -4177,6 +4195,7 @@ public class View extends MainFrame {
     private javax.swing.JMenuItem menuStopAll;
     private javax.swing.JMenuItem menuStripChart;
     private javax.swing.JMenuItem menuTasks;
+    private javax.swing.JMenuItem menuToggleComment;
     private javax.swing.JMenuItem menuUncomment;
     private javax.swing.JMenuItem menuUndo;
     private javax.swing.JMenuItem menuUnindent;
