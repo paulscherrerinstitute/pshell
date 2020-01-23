@@ -54,28 +54,31 @@ public class ScriptEditor extends MonitoredPanel {
             javax.swing.GroupLayout layout = (javax.swing.GroupLayout) getLayout();
             layout.replace(editor, codeEditor);
             editor = codeEditor;
+        } else {
+            editor.getEditor().addKeyListener(new java.awt.event.KeyAdapter() {
+                @Override
+                public void keyPressed(java.awt.event.KeyEvent evt) {
+                    char c = evt.getKeyChar();
+                    if (c == KeyEvent.VK_TAB) {
+                        evt.consume();
+                        int caretPos = editor.getEditor().getCaretPosition();
+                        try {
+                            editor.getEditor().getDocument().insertString(caretPos, getTabStr(), null);
+                        } catch (BadLocationException ex) {
+                            Logger.getLogger(ScriptEditor.class.getName()).log(Level.WARNING, null, ex);
+                        }
+                    }
+                }
+            });            
         }
-        editor.setFileChooserFolder(Context.getInstance().getSetup().getScriptPath());
         editor.getEditor().addCaretListener((CaretEvent e) -> {
             int row = getRow(e.getDot(), (JTextComponent) e.getSource());
             int col = getColumn(e.getDot(), (JTextComponent) e.getSource());
             setPosition(row, col);
         });
-        editor.getEditor().addKeyListener(new java.awt.event.KeyAdapter() {
-            @Override
-            public void keyPressed(java.awt.event.KeyEvent evt) {
-                char c = evt.getKeyChar();
-                if (c == KeyEvent.VK_TAB) {
-                    evt.consume();
-                    int caretPos = editor.getEditor().getCaretPosition();
-                    try {
-                        editor.getEditor().getDocument().insertString(caretPos, getTabStr(), null);
-                    } catch (BadLocationException ex) {
-                        Logger.getLogger(ScriptEditor.class.getName()).log(Level.WARNING, null, ex);
-                    }
-                }
-            }
-        });
+        
+        editor.setFileChooserFolder(Context.getInstance().getSetup().getScriptPath());
+        
 
         if (showContextMenu) {
             editor.getEditor().setFocusTraversalKeys(KeyboardFocusManager.FORWARD_TRAVERSAL_KEYS, Collections.EMPTY_SET);

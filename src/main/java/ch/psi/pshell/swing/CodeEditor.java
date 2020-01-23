@@ -48,6 +48,7 @@ public class CodeEditor extends TextEditor {
         editorPane.setMatchedBracketBorderColor(null);
         editorPane.setMatchedBracketBGColor(new Color(243, 255, 15));
         editorPane.setBracketMatchingEnabled(true);
+        editorPane.setTabsEmulated(true);
 
         AbstractTokenMakerFactory atmf = (AbstractTokenMakerFactory) TokenMakerFactory.getDefaultInstance();
         atmf.putMapping("text/custom_python", "ch.psi.pshell.swing.CodeEditorPythonMarker");
@@ -309,10 +310,13 @@ public class CodeEditor extends TextEditor {
         App.init(args);
         CodeEditor editor = new CodeEditor();
         if (args.length > 0) {
-            editor.load(args[0]);
+            try{
+                editor.load(args[0]);
+            } catch (Exception ex){                
+            }
         }
         javax.swing.JFrame frame = editor.getFrame();
         frame.setSize(600, 400);
         frame.setVisible(true);
-    }
+    }        
 }

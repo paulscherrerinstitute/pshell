@@ -761,7 +761,7 @@ public class TextEditor extends Editor {
         try {
             selectBlockFully();
             StringBuilder output = new StringBuilder();
-            PlainDocument doc = (PlainDocument) editorPane.getDocument();
+            PlainDocument doc = (PlainDocument) editorPane.getDocument();            
             Element root = doc.getDefaultRootElement();
             int start = editorPane.getSelectionStart();
             int end = editorPane.getSelectionEnd();
