@@ -2,19 +2,24 @@ package ch.psi.pshell.swing;
 
 import ch.psi.pshell.ui.App;
 import ch.psi.utils.IO;
+import ch.psi.utils.Sys;
 import ch.psi.utils.swing.MainFrame;
 import ch.psi.utils.swing.TextEditor;
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Insets;
 import java.awt.Rectangle;
+import static java.awt.event.InputEvent.CTRL_DOWN_MASK;
+import java.awt.event.KeyEvent;
 import java.io.IOException;
+import javax.swing.KeyStroke;
 import javax.swing.UIManager;
 import javax.swing.text.DefaultHighlighter.DefaultHighlightPainter;
 import javax.swing.text.Highlighter;
 import javax.swing.text.JTextComponent;
 import org.fife.ui.rsyntaxtextarea.AbstractTokenMakerFactory;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
+import org.fife.ui.rsyntaxtextarea.RSyntaxTextAreaEditorKit;
 import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextAreaHighlighter;
 import org.fife.ui.rsyntaxtextarea.SyntaxScheme;
@@ -34,8 +39,8 @@ public class CodeEditor extends TextEditor {
     public final static Color TEXT_DISABLED_BACKGROUND_COLOR_MAC = new Color(232,232,232);
     public final static Color TEXT_SELECTION_BACKGROUND_COLOR = MainFrame.isDark() ? new Color(66, 70, 80) : new Color(184, 207, 229);
 
-    RTextScrollPane scrollPane;
-    RSyntaxTextArea editorPane;
+    final RTextScrollPane scrollPane;
+    final RSyntaxTextArea editorPane;
 
     public CodeEditor() {
         super();
@@ -49,6 +54,24 @@ public class CodeEditor extends TextEditor {
         editorPane.setMatchedBracketBGColor(new Color(243, 255, 15));
         editorPane.setBracketMatchingEnabled(true);
         editorPane.setTabsEmulated(true);
+                
+        if (Sys.isLinux()){
+            //Comment toggle is disabled in RSyntaxTextArea by default on Linux because it is triggered not only KEY_PRESSED but also KEY_TYPED.
+            //This workaround filters the KEY_TYPED event.
+            //https://github.com/bobbylight/RSyntaxTextArea/blob/master/RSyntaxTextArea/src/main/java/org/fife/ui/rsyntaxtextarea/RSyntaxTextAreaDefaultInputMap.java
+            editorPane.addKeyListener(new java.awt.event.KeyAdapter() {              
+                @Override
+                public void keyTyped(KeyEvent evt) {
+                    char c = evt.getKeyChar();
+                    if (c == KeyEvent.VK_SLASH) {
+                        if (evt.isControlDown() ){
+                            evt.consume();
+                        }
+                    }
+                }                
+            });
+            editorPane.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_SLASH, CTRL_DOWN_MASK),RSyntaxTextAreaEditorKit.rstaToggleCommentAction);
+        }        
 
         AbstractTokenMakerFactory atmf = (AbstractTokenMakerFactory) TokenMakerFactory.getDefaultInstance();
         atmf.putMapping("text/custom_python", "ch.psi.pshell.swing.CodeEditorPythonMarker");
@@ -135,7 +158,7 @@ public class CodeEditor extends TextEditor {
         scheme.getStyle(Token.LITERAL_NUMBER_HEXADECIMAL).font = null;
         scheme.getStyle(Token.VARIABLE).font = null;
         scheme.getStyle(Token.FUNCTION).font = null;
-        scheme.getStyle(Token.DATA_TYPE).font = null;
+        scheme.getStyle(Token.DATA_TYPE).font = null;        
 
         scrollPane = new RTextScrollPane(editorPane);
 
@@ -242,7 +265,9 @@ public class CodeEditor extends TextEditor {
     @Override
     protected void doSetEditorBackground(Color color) {
         super.doSetEditorBackground(color);
-        scrollPane.getGutter().setBackground(color);
+        if ((scrollPane!=null) && (scrollPane.getGutter()!=null)){
+            scrollPane.getGutter().setBackground(color);
+        }
     }
 
     @Override

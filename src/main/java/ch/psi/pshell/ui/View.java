@@ -3881,9 +3881,7 @@ public class View extends MainFrame {
         menuBlock.setEnabled(menuCopy.isEnabled());
         menuFind.setEnabled(editing);
         menuFindNext.setEnabled(editing && editor.getTextEditor().canFindNext());
-        menuComment.setVisible(!editor.hasSyntaxHighlight());
-        menuUncomment.setVisible(!editor.hasSyntaxHighlight());
-        menuToggleComment.setVisible(editor.hasSyntaxHighlight());
+        menuToggleComment.setVisible(editing && editor.hasSyntaxHighlight());
     }//GEN-LAST:event_menuEditStateChanged
 
     private void menuIndentActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuIndentActionPerformed
