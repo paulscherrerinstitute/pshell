@@ -212,6 +212,9 @@ public class CodeEditor extends TextEditor {
                 case "properties":
                     type = SyntaxConstants.SYNTAX_STYLE_PROPERTIES_FILE;
                     break;
+                case "vb":
+                    type = SyntaxConstants.SYNTAX_STYLE_VISUAL_BASIC;
+                    break;
                 case "m":
                     type = "text/matlab";
                     break;

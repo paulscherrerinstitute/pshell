@@ -61,7 +61,7 @@ import javax.swing.undo.UndoManager;
  */
 public class TextEditor extends Editor {
 
-    //Umndo manager knows when document returns to a saved state, so title can be updated
+    //Undo manager knows when document returns to a saved state, so title can be updated
     class MyUndoManager extends UndoManager {
 
         Object unchangedLastEdit;
