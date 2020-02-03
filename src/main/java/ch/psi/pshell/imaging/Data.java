@@ -342,6 +342,11 @@ public class Data implements Serializable {
         return null;
     }
 
+    public void setElement(int row, int col, Number number) {
+        int index = row * width + col;
+        setElement(index, number);
+    }
+    
     public void setElement(int index, Number number) {
         if ((index < 0) || (index > length)) {
             throw new IllegalArgumentException();
@@ -1489,6 +1494,113 @@ public class Data implements Serializable {
             }
         }
     }
+    
+    public void threshold(Number threshold, boolean less, Number replacement) {
+        if (array instanceof byte[]) {
+            byte[] data = (byte[]) array;
+            byte val = threshold.byteValue();
+            byte rep = (replacement==null) ? 0 : replacement.byteValue();
+            if (less){
+                for (int i = 0; i < length; i++) {
+                    if ((data[i] < val)){
+                        data[i] = rep;
+                    }
+                }
+            } else {
+                for (int i = 0; i < length; i++) {
+                    if ((data[i] > val)){
+                        data[i] = rep;
+                    }
+                } 
+            }
+        } else if (array instanceof short[]) {
+            short[] data = (short[]) array;
+            short val = threshold.shortValue();
+            short rep = (replacement==null) ? 0 : replacement.shortValue();
+            if (less){
+                for (int i = 0; i < length; i++) {
+                    if ((data[i] < val)){
+                        data[i] = rep;
+                    }
+                }
+            } else {
+                for (int i = 0; i < length; i++) {
+                    if ((data[i] > val)){
+                        data[i] = rep;
+                    }
+                } 
+            }
+        } else if (array instanceof double[]) {
+            double[] data = (double[]) array;
+            double rep = (replacement==null) ? Double.NaN : replacement.doubleValue();
+            double val = threshold.doubleValue();
+            if (less){
+                for (int i = 0; i < length; i++) {
+                    if ((data[i] < val)){
+                        data[i] = rep;
+                    }
+                }
+            } else {
+                for (int i = 0; i < length; i++) {
+                    if ((data[i] > val)){
+                        data[i] = rep;
+                    }
+                } 
+            }
+        } else if (array instanceof float[]) {
+            float[] data = (float[]) array;
+            float rep = (replacement==null) ? Float.NaN : replacement.floatValue();
+            float val = threshold.floatValue();
+            if (less){
+                for (int i = 0; i < length; i++) {
+                    if ((data[i] < val)){
+                        data[i] = rep;
+                    }
+                }
+            } else {
+                for (int i = 0; i < length; i++) {
+                    if ((data[i] > val)){
+                        data[i] = rep;
+                    }
+                } 
+            }
+        } else if (array instanceof long[]) {
+            long[] data = (long[]) array;
+            long rep = (replacement==null) ? 0 : replacement.longValue();
+            long val = threshold.longValue();
+            if (less){
+                for (int i = 0; i < length; i++) {
+                    if ((data[i] < val)){
+                        data[i] = rep;
+                    }
+                }
+            } else {
+                for (int i = 0; i < length; i++) {
+                    if ((data[i] > val)){
+                        data[i] = rep;
+                    }
+                } 
+            }
+        } else if (array instanceof int[]) {
+            int[] data = (int[]) array;
+            int rep = (replacement==null) ? 0 : replacement.intValue();
+            int val = threshold.intValue();
+            if (less){
+                for (int i = 0; i < length; i++) {
+                    if ((data[i] < val)){
+                        data[i] = rep;
+                    }
+                }
+            } else {
+                for (int i = 0; i < length; i++) {
+                    if ((data[i] > val)){
+                        data[i] = rep;
+                    }
+                } 
+            }
+        }
+    }
+    
     
     public Data copy(){
         return new Data(this);
