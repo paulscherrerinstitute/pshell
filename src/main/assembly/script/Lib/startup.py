@@ -1626,6 +1626,7 @@ def abort():
     """
     #Cannot be on script execution thread
     fork(get_context().abort)
+    while True: sleep(10.0)
 
 def start_task(script, delay = 0.0, interval = -1):
     """Start a background task
