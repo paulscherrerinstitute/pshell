@@ -699,7 +699,7 @@ public class DevicePool extends ObservableBase<DevicePoolListener> implements Au
     }
 
     public boolean removeDevice(GenericDevice device, boolean close) {
-        if (getByName(device.getName()) == null) {
+        if ((device==null) || (getByName(device.getName()) == null)) {
             return false;
         }
         logger.log(Level.WARNING, "Removing device: " + device.getName());
