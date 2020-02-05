@@ -40,7 +40,7 @@ public class DevicePanelManager {
             preferences = view.getPreferences();
         }
     }
-
+    
     public JPanel showPanel(final String name) {
         return showPanel(name, view);
     }
@@ -167,6 +167,14 @@ public class DevicePanelManager {
         }
         return (deviceDialogs.containsKey(name));
     }
+    
+    public JDialog getPanelDialog(final String name) {
+        if (name == null) {
+            return null;
+        }
+        return (deviceDialogs.get(name));
+    }
+    
 
     public boolean isShowingPanel(final GenericDevice device) {
         if (device == null) {
