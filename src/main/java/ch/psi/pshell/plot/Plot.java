@@ -83,6 +83,8 @@ public interface Plot<T extends PlotSeries> {
 
     public T[] getAllSeries();
 
+    public String[] getSeriesNames();
+    
     public void clear();    //remove all series
 
     //Axis

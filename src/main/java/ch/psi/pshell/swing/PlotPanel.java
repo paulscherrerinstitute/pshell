@@ -775,10 +775,14 @@ public class PlotPanel extends MonitoredPanel {
                     }
                     plot.getAxis(Plot.AxisId.X).setLabel(labelX);
                     plot.getAxis(Plot.AxisId.Y).setLabel(null);
-                    double step = (end[1] - start[1]) / (steps[1]);
+                    double step_size = (steps[1]!=0) ? ((end[1] - start[1]) / (steps[1])) : 0;
                     for (int i = 0; i <= steps[1]; i++) {
-                        double y = start[1] + (i * step);
-                        LinePlotSeries series = new LinePlotSeries(String.valueOf(Convert.roundDouble(y, 8)));
+                        double y = start[1] + (i * step_size);
+                        String seriesName = String.valueOf(Convert.roundDouble(y, 8));
+                        while (Arr.containsEqual(plot.getSeriesNames(), seriesName)){
+                            seriesName = seriesName + "'";
+                        }                
+                        LinePlotSeries series = new LinePlotSeries(seriesName);
                         plot.addSeries(series);
                     }
                 } else {

@@ -62,9 +62,9 @@ abstract public class PlotBase<T extends PlotSeries> extends MonitoredPanel impl
 
     protected static final int DETACHED_WIDTH = 600;
     protected static final int DETACHED_HEIGHT = 400;
-    
+
     protected static int SNAPSHOT_WIDTH = 1200;
-    protected static int SNAPSHOT_HEIGHT = 1000;    
+    protected static int SNAPSHOT_HEIGHT = 1000;
 
     final Class seriesType;
 
@@ -85,7 +85,7 @@ abstract public class PlotBase<T extends PlotSeries> extends MonitoredPanel impl
         this.seriesType = seriesType;
         try {
             createChart();
-            if (!offscreen){
+            if (!offscreen) {
                 createPopupMenu();
             }
         } catch (Exception ex) {
@@ -93,7 +93,7 @@ abstract public class PlotBase<T extends PlotSeries> extends MonitoredPanel impl
         }
         updating = new AtomicBoolean(false);
         instantiated = true;
-        executor = offscreen ? Executors.newSingleThreadExecutor(new NamedThreadFactory("Offscreen plot update task")) :null;
+        executor = offscreen ? Executors.newSingleThreadExecutor(new NamedThreadFactory("Offscreen plot update task")) : null;
     }
 
     static String imagesFolderName;
@@ -105,7 +105,6 @@ abstract public class PlotBase<T extends PlotSeries> extends MonitoredPanel impl
     public static String getImageFileFolder() {
         return imagesFolderName;
     }
-     
 
     String title;
 
@@ -196,13 +195,13 @@ abstract public class PlotBase<T extends PlotSeries> extends MonitoredPanel impl
     }
 
     /**
-     * Should be improved in implementations to make it independent of the window state
-     * (and to consider the size parameter);
+     * Should be improved in implementations to make it independent of the
+     * window state (and to consider the size parameter);
      */
     @Override
     public BufferedImage getSnapshot(Dimension size) {
-        if (!offscreen){
-            if (!SwingUtilities.isEventDispatchThread()){
+        if (!offscreen) {
+            if (!SwingUtilities.isEventDispatchThread()) {
                 try {
                     SwingUtilities.invokeAndWait(() -> {
                         //So plot will be updated with data set in other threads.
@@ -458,6 +457,16 @@ abstract public class PlotBase<T extends PlotSeries> extends MonitoredPanel impl
     }
 
     @Override
+    public String[] getSeriesNames() {
+        T[] series = getAllSeries();
+        ArrayList<String> ret = new ArrayList<>();
+        for (T s : series) {
+            ret.add(s.name);
+        }
+        return ret.toArray(new String[0]);
+    }
+
+    @Override
     public int getNumberOfSeries() {
         return seriesList.size();
     }
@@ -495,9 +504,9 @@ abstract public class PlotBase<T extends PlotSeries> extends MonitoredPanel impl
             });
         }
     }
-    
-    protected void invokeLater(Runnable r){
-        if (offscreen){
+
+    protected void invokeLater(Runnable r) {
+        if (offscreen) {
             executor.submit(r);
         } else {
             SwingUtilities.invokeLater(r);
@@ -547,13 +556,13 @@ abstract public class PlotBase<T extends PlotSeries> extends MonitoredPanel impl
     public Axis getAxis(AxisId id) {
         return axisList.get(id);
     }
-    
+
     /**
-     * Implementations should override and return axis actually displayed (if auto-range, this will return 0,0).
+     * Implementations should override and return axis actually displayed (if
+     * auto-range, this will return 0,0).
      */
-    
     @Override
-    public Range getAxisRange(AxisId axis){
+    public Range getAxisRange(AxisId axis) {
         return new Range(getAxis(axis).min, getAxis(axis).max);
     }
 
