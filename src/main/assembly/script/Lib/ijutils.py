@@ -105,12 +105,18 @@ def load_array(array, width=None, height=None, title = "img"):
         else: raise Exception("Invalid array type")   
     return ImagePlus(title, proc)
 
-def save_image(ip, path=None, format = None):
+def save_image(ip, path=None, format = None, metadata={}):
     """
     Saves image or stack
     If parameters omitted, saves image again in same location, with same format.
     """
     fs = FileSaver(ip)
+
+    info = ""
+    for key,val in metadata.items():
+        info = info + ("\n" if len(info)>0 else "") + str(key) + ": " + str(val)        
+    ip.setProperty("Info", info)
+
     if path == None: fs.save()
     else:
         try:
