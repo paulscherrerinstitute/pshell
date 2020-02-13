@@ -1258,11 +1258,15 @@ public class View extends MainFrame {
      * Non-script files go to the document tab but is not added file to history
      */
     public void openComponent(String title, Component c) {
-        tabDoc.add(title, c);
-        int index = tabDoc.getTabCount() - 1;
-        SwingUtils.setTabClosable(tabDoc, index, closableTabListener);
-        setTabDetachable(tabDoc, index, detachedScripts);
-        tabDoc.setSelectedIndex(index);
+        openComponent(title, c, tabDoc);
+    }
+    
+    public void openComponent(String title, Component c, JTabbedPane pane) {
+        pane.add(title, c);
+        int index = pane.getTabCount() - 1;
+        SwingUtils.setTabClosable(pane, index, closableTabListener);
+        setTabDetachable(pane, index, detachedScripts);
+        pane.setSelectedIndex(index);
     }
 
     public Editor openTextFile(String file) throws IOException {
@@ -1482,6 +1486,7 @@ public class View extends MainFrame {
                     tabStatus.setTitleAt(0, title);
                     break;
                 case Left:
+                    tabLeft.removeAll();
                     tabLeft.add(shell, 0);
                     tabLeft.setTitleAt(0, title);
                     break;                    
@@ -1651,7 +1656,11 @@ public class View extends MainFrame {
     public JTabbedPane getStatusTab() {
         return tabStatus;
     }
-
+    
+    public JTabbedPane getLeftTab() {
+        return tabLeft;
+    }
+    
     public StatusBar getStatusBar() {
         return statusBar;
     }

@@ -210,15 +210,19 @@ public class SwingUtils {
         }
     }
 
+    public static void adjustMacMenuBarAccelerator(JMenuItem item) {
+        if (Sys.getOSFamily() == OSFamily.Mac) {
+            if ((item.getAccelerator() != null) && (item.getAccelerator().getModifiers() & InputEvent.CTRL_MASK) != 0) {
+                int modifiers = (item.getAccelerator().getModifiers() & ~InputEvent.CTRL_MASK & ~InputEvent.CTRL_DOWN_MASK) | InputEvent.META_MASK;
+                item.setAccelerator(KeyStroke.getKeyStroke(item.getAccelerator().getKeyCode(), modifiers));
+            }
+        }
+    }        
+        
     public static void adjustMacMenuBarAccelerators(JMenuBar menuBar) {
         if (Sys.getOSFamily() == OSFamily.Mac) {
             for (Component c : SwingUtils.getComponentsByType(menuBar, JMenuItem.class)) {
-                JMenuItem item = (JMenuItem) c;
-                if ((item.getAccelerator() != null) && (item.getAccelerator().getModifiers() & InputEvent.CTRL_MASK) != 0) {
-                    int modifiers = (item.getAccelerator().getModifiers() & ~InputEvent.CTRL_MASK & ~InputEvent.CTRL_DOWN_MASK) | InputEvent.META_MASK;
-                    item.setAccelerator(KeyStroke.getKeyStroke(item.getAccelerator().getKeyCode(), modifiers));
-                }
-
+                adjustMacMenuBarAccelerator((JMenuItem) c);
             }
         }
     }
