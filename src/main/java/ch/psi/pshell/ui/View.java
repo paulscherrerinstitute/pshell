@@ -6,6 +6,7 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Toolkit;
 import java.awt.Window;
+import java.awt.event.ContainerListener;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
@@ -135,6 +136,7 @@ import java.awt.dnd.DropTarget;
 import java.awt.dnd.DropTargetDragEvent;
 import java.awt.dnd.DropTargetDropEvent;
 import java.awt.dnd.DropTargetEvent;
+import java.awt.event.ContainerEvent;
 import java.awt.event.WindowAdapter;
 import javax.swing.DefaultCellEditor;
 import javax.swing.JComboBox;
@@ -177,6 +179,17 @@ public class View extends MainFrame {
             }
         }
         tabLeft.setVisible(false);
+        tabLeft.addContainerListener(new ContainerListener() {
+            @Override
+            public void componentAdded(ContainerEvent e) {
+                checkTabLeftVisibility();
+            }
+
+            @Override
+            public void componentRemoved(ContainerEvent e) {
+                checkTabLeftVisibility();
+            }
+        });
         loggerPanel.setOutputLength(1000);
         //loggerPanel.setInverted(true);
         loggerPanel.start();
@@ -1460,24 +1473,17 @@ public class View extends MainFrame {
                     ((Window) topLevel).dispose();
                 }
             }
-            boolean tabLeftVisible = location==PanelLocation.Left;
-            tabLeft.setVisible(tabLeftVisible);
-            splitterDoc.setDividerSize(tabLeftVisible ? splitterVert.getDividerSize() : 0);    
-            if (tabLeftVisible && (splitterDoc.getDividerLocation()<0.1)){
-                splitterDoc.setDividerLocation(0.40);
-            }
 
             java.util.ResourceBundle bundle = java.util.ResourceBundle.getBundle("ch/psi/pshell/ui/View");
             String title = bundle.getString("View.shell.TabConstraints.tabTitle");
             switch (location) {
                 case Document:
                     int index = 0;
-                    for (index = tabDoc.getTabCount(); index > 0; index--) {
-                        Component c = tabDoc.getComponentAt(index - 1);
-                        if (!(c instanceof ScriptEditor)) {
+                    for (index = 0; index<tabDoc.getTabCount(); index++) {
+                        if (!(tabDoc.getComponentAt(index) instanceof Panel)) {
                             break;
                         }
-                    }
+                    }    
                     tabDoc.add(shell, index);
                     tabDoc.setTitleAt(index, title);
                     break;
@@ -1485,8 +1491,7 @@ public class View extends MainFrame {
                     tabStatus.add(shell, 0);
                     tabStatus.setTitleAt(0, title);
                     break;
-                case Left:
-                    tabLeft.removeAll();
+                case Left:                    
                     tabLeft.add(shell, 0);
                     tabLeft.setTitleAt(0, title);
                     break;                    
@@ -1503,6 +1508,18 @@ public class View extends MainFrame {
                     dlg.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
                     addPersistedWindow(dlg);
                     break;
+            }
+            checkTabLeftVisibility();
+        }        
+    }
+    
+    void checkTabLeftVisibility(){
+        boolean tabLeftVisible = tabLeft.getTabCount()>0;
+        if (tabLeftVisible!=tabLeft.isVisible()){
+            tabLeft.setVisible(tabLeftVisible);
+            splitterDoc.setDividerSize(tabLeftVisible ? splitterVert.getDividerSize() : 0);    
+            if (tabLeftVisible && (splitterDoc.getDividerLocation()<0.1)){
+                splitterDoc.setDividerLocation(0.40);
             }
         }
     }
