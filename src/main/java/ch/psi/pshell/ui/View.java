@@ -2404,6 +2404,7 @@ public class View extends MainFrame {
         jSeparator11.setName("jSeparator11"); // NOI18N
         menuFile.add(jSeparator11);
 
+        menuExit.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_Q, java.awt.event.InputEvent.CTRL_MASK));
         menuExit.setText(bundle.getString("View.menuExit.text")); // NOI18N
         menuExit.setName("menuExit"); // NOI18N
         menuExit.addActionListener(new java.awt.event.ActionListener() {
