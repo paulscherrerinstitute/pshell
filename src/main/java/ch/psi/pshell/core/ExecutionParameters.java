@@ -26,7 +26,7 @@ import java.util.logging.Level;
  */
 public class ExecutionParameters {
 
-    final String[] executionOptions = new String[]{"defaults", "group", "open", "reset", "name", "type", "path", "tag", "seq",
+    final String[] executionOptions = new String[]{"defaults", "group", "open", "reset", "name", "type", "path", "tag", "seq", "split",
         "layout", "provider", "format", "save", "persist", "flush", "preserve", "keep", "accumulate", "depth_dim", "compression",
         "shuffle", "contiguous", "then", "then_exception", "then_success"};
 
@@ -34,6 +34,8 @@ public class ExecutionParameters {
         "plot_types", "print_scan", "auto_range", "manual_range", "manual_range_y", "domain_axis", "status"};
 
     final String[] shortcutOptions = new String[]{"display", "line_plots", "plot_list", "range"};
+    
+    final String CMD_OPTION = "_command";
 
     long start;
     int offset;
@@ -252,6 +254,10 @@ public class ExecutionParameters {
         this.scriptOptions.putAll(options);
         checkOptions(options);
     }
+    
+    public Object getCommand(){
+        return getCommandOptions().get(CMD_OPTION);
+    } 
 
     public void setCommandOptions(Object command, Map options) {
         pathName = null;
@@ -260,6 +266,7 @@ public class ExecutionParameters {
         } else {
             commandOptions = options;
         }
+        options.put(CMD_OPTION, command);
         checkOptions(options);
     }
 
@@ -277,7 +284,9 @@ public class ExecutionParameters {
                 if (!Arr.containsEqual(executionOptions, key)) {
                     if (!Arr.containsEqual(viewOptions, key)) {
                         if (!Arr.containsEqual(shortcutOptions, key)) {
-                            throw new RuntimeException("Invalid option: " + key);
+                            if (!key.equals(CMD_OPTION)){
+                                throw new RuntimeException("Invalid option: " + key);
+                            }
                         }
                     }
                 }
@@ -290,32 +299,50 @@ public class ExecutionParameters {
             } catch (Exception ex) {
                 Context.getInstance().logger.log(Level.WARNING, null, ex);
             }            
-            
+            clearOption("seq");
         }
         
         Object open = getOption("open");
-        if ((Boolean.TRUE.equals(open)) && (!Context.getInstance().dataManager.isOpen())) {
-            try {
-                Context.getInstance().dataManager.openOutput();
-            } catch (IOException ex) {
-                Context.getInstance().logger.log(Level.WARNING, null, ex);
+        if (getOption("open")!=null) {
+            if ((Boolean.TRUE.equals(open)) && (!Context.getInstance().dataManager.isOpen())) {
+                try {
+                    Context.getInstance().dataManager.openOutput();
+                } catch (IOException ex) {
+                    Context.getInstance().logger.log(Level.WARNING, null, ex);
+                }
+            } else if ((Boolean.FALSE.equals(open)) && (Context.getInstance().dataManager.isOpen())) {
+                Context.getInstance().dataManager.closeOutput();
+                scanIndex = 0;      
+                lastOutputFile = null;
+                pathName = null;
+                dataLayout = null;
+                dataProvider = isBackground() ? Context.getInstance().getDataManager().cloneProvider() : null;            
+                start = System.currentTimeMillis();
+                offset = 0;      
             }
-        } else if ((Boolean.FALSE.equals(open)) && (Context.getInstance().dataManager.isOpen())) {
-            Context.getInstance().dataManager.closeOutput();
-            scanIndex = 0;      
-            lastOutputFile = null;
-            pathName = null;
-            dataLayout = null;
-            dataProvider = isBackground() ? Context.getInstance().getDataManager().cloneProvider() : null;            
-            start = System.currentTimeMillis();
-            offset = 0;      
+            clearOption("open");
         }
 
         Object reset = getOption("reset");
         if (Boolean.TRUE.equals(reset)) {
             offset = Context.getInstance().dataManager.isOpen() ? Context.getInstance().dataManager.getScanIndex() : 0;
             start = System.currentTimeMillis();
+            clearOption("reset");
         }
+        
+        if (Boolean.TRUE.equals(getCommandOptions().get("split")!=null)) {
+            if ( getCommand() instanceof Scan){
+                ((Scan) getCommand()).setSplitPasses(true);
+            }
+        }          
+        if ((getScriptOptions().get("split")!=null) && (getScriptOptions().get("split") instanceof Scan)) {
+            try {
+                Context.getInstance().dataManager.splitScanData((Scan) getOption("split"));
+            } catch (IOException ex) {
+                Context.getInstance().logger.log(Level.WARNING, null, ex);
+            }
+            clearOption("split");
+        }        
 
         //Process shortcuts
         if (getOption("line_plots") != null) {
@@ -576,17 +603,17 @@ public class ExecutionParameters {
     }
 
     public String getScript() {
-        CommandInfo cmd = getCommand();
+        CommandInfo cmd = getCommandInfo();
         return (cmd != null) ? Context.getInstance().getRunningScriptName(cmd.script) : null;
     }
 
     public File getScriptFile() {
-        CommandInfo cmd = getCommand();
+        CommandInfo cmd = getCommandInfo();
         return (cmd != null) ? Context.getInstance().getScriptFile(cmd.script) : null;
     }
 
     public String getStatement() {
-        CommandInfo cmd = getCommand();
+        CommandInfo cmd = getCommandInfo();
         return (cmd != null) ? cmd.command : null;
     }
 
@@ -630,16 +657,16 @@ public class ExecutionParameters {
     }
 
     public CommandSource getSource() {
-        CommandInfo cmd = getCommand();
+        CommandInfo cmd = getCommandInfo();
         return (cmd == null) ? null : cmd.source;
     }
 
     public Object getArgs() {
-        CommandInfo cmd = getCommand();
+        CommandInfo cmd = getCommandInfo();
         return (cmd == null) ? null : cmd.args;
     }
 
-    public CommandInfo getCommand() {
+    public CommandInfo getCommandInfo() {
         return getCommand(true);
     }
 
@@ -654,7 +681,7 @@ public class ExecutionParameters {
     }
 
     public boolean isBackground() {
-        CommandInfo cmd = getCommand();
+        CommandInfo cmd = getCommandInfo();
         return (cmd != null) ? cmd.background : !Context.getInstance().isInterpreterThread();
     }
 

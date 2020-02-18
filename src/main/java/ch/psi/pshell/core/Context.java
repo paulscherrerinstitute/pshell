@@ -1419,7 +1419,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
 
     @Hidden
     public void disposeExecutionContext() {
-        String then = getThen(getExecutionPars().getCommand());
+        String then = getThen(getExecutionPars().getCommandInfo());
         CommandSource source = getExecutionPars().getSource();
         try {
             getExecutionPars().onExecutionEnded();

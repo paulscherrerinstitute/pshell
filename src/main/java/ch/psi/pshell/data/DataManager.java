@@ -534,10 +534,10 @@ public class DataManager implements AutoCloseable {
         }
         if (isOpen() && (getExecutionPars().isScanPersisted(scan))) {
             int index = getScanIndex(scan);
-            layout.onFinish(scan);
-            scan.setRecordIndexOffset(scan.getRecordIndex() - 1);
+            getLayout().onFinish(scan);            
             getExecutionPars().addScan(scan);
-            layout.onStart(scan);
+            scan.setRecordIndexOffset(scan.getCurrentRecord().getIndex()+1);
+            getLayout().onStart(scan);
             appendLog(String.format("Scan %s data was splitted with new index %s in: %s", index, getScanIndex(scan), getScanPath(scan)));
         }
     }

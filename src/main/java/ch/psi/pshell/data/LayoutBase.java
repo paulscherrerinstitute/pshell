@@ -166,6 +166,7 @@ public abstract class LayoutBase implements Layout {
     //Storing scan file names
     HashMap<Scan, String> scanFiles = new HashMap<>();
     
+    @Override
     public void resetScanPath(Scan scan){
         synchronized(scanFiles){
             scanFiles.remove(scan);

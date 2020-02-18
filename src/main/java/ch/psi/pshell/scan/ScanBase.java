@@ -57,6 +57,7 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
     
     String plotTitle;
     boolean hidden;
+    boolean splitPasses;
     
     int scanIndex = -1;
     String scanPath;
@@ -181,6 +182,17 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
         return hidden;
     }
 
+    @Override
+    public void setSplitPasses(boolean value){
+        splitPasses = value;
+    }
+    
+    @Override
+    public boolean getSplitPasses(){
+        return splitPasses;
+    }
+
+    
     protected boolean isPositiveDirection(int writableIndex) {
         return (start[writableIndex] <= end[writableIndex]);
     }
@@ -320,6 +332,12 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
                             onBeforePass(pass);
                             doScan();
                             onAfterPass(pass);
+                            if (getSplitPasses()){
+                                if(pass < getNumberOfPasses()){
+                                    Context.getInstance().getDataManager().splitScanData(this);    
+                                    setRecordIndexOffset(getRecordIndex());
+                                }
+                            }
                         }
                     } finally {
                         onAfterScan();
@@ -525,6 +543,12 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
     }    
 
     abstract protected void doScan() throws IOException, InterruptedException;
+    
+    void updateTag(){
+        String val = Context.getInstance().getExecutionPars().getTag();
+        val = Context.getInstance().getSetup().expandPath((val == null) ? Context.getInstance().getScanTag() : val);
+        tag = val;
+    }
 
     protected void triggerStarted() {
         startTimestamp = System.currentTimeMillis();
@@ -541,8 +565,7 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
             final ExecutionParameters execPars = context.getExecutionPars();
             synchronized (execPars) {
                 execPars.addScan(this);
-                tag = execPars.getTag();
-                tag = context.getSetup().expandPath((tag == null) ? Context.getInstance().getScanTag() : tag);
+                updateTag();
                 name = execPars.toString();
                 scanIndex = execPars.getIndex(this);
                 keep = execPars.getKeep();
@@ -573,10 +596,11 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
 
     ScanRecord currentRecord;
     
+    @Override
     public ScanRecord getCurrentRecord(){
         return currentRecord;
     }
-
+        
     protected void triggerNewRecord(ScanRecord record) {
         if (keep) {
             result.records.add(record);
@@ -589,6 +613,7 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
                 logger.log(Level.WARNING, null, ex);
             }                
         }
+        currentRecord.sent = true;
     }
 
     protected void triggerEnded(Exception ex) {
@@ -869,6 +894,7 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
     @Override
     public void setRecordIndexOffset(int value) {
         recordIndexOffset = Math.max(value, 0);
+        updateTag(); //This is called to split the scan data, must update scan tag
     }
 
     @Override

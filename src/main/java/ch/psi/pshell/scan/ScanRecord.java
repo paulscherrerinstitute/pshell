@@ -28,6 +28,7 @@ public class ScanRecord implements SubscriptableArray<Object>{
     Long[] deviceTimestamps;
     int pass;
     long id;
+    boolean sent;   
 
     public int getIndex() {
         return index;
@@ -82,6 +83,10 @@ public class ScanRecord implements SubscriptableArray<Object>{
         id = value;
     }   
     
+    public boolean isSent() {
+        return sent;
+    }    
+    
     @Hidden
     public ScanRecord copy() {
         ScanRecord ret = new ScanRecord();
@@ -96,6 +101,7 @@ public class ScanRecord implements SubscriptableArray<Object>{
         ret.timestamp = timestamp;
         ret.localTimestamp = localTimestamp;
         ret.deviceTimestamps = Arr.copy(deviceTimestamps);
+        ret.sent = sent;
         return ret;
     }
 

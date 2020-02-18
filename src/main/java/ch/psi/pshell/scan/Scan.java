@@ -62,6 +62,8 @@ public interface Scan {
     
     public int getRecordIndexInPass();
     
+    public ScanRecord getCurrentRecord();
+        
     /**
      * Allows splitting records in multiple tables
      */
@@ -91,6 +93,10 @@ public interface Scan {
     public void setHidden(boolean value);
     
     public boolean isHidden();     
+    
+    public void setSplitPasses(boolean value);
+    
+    public boolean getSplitPasses();            
 
     public void setUseWritableReadback(boolean value);
 
