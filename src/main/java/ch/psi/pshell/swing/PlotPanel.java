@@ -758,7 +758,7 @@ public class PlotPanel extends MonitoredPanel {
                     //TODO: should be start[2] /end[2] in some cases?
                     double y_start = (start.length > 2) ? start[1] : 0;
                     double y_end = (end.length > 2) ? end[1] : (ySize - 1);
-                    int nX = (steps[0] < 0) ? DEFAULT_RANGE_STEPS : steps[0] + 1;
+                    int nX = ((steps[0] < 0)||(steps[0] == Integer.MAX_VALUE)) ? DEFAULT_RANGE_STEPS : steps[0] + 1;
                     MatrixPlotSeries series = new MatrixPlotSeries(name, (prefs.range != null) ? prefs.range.min : start[0], (prefs.range != null) ? prefs.range.max : end[0], nX,
                             y_start, y_end, ySize);
                     plot.addSeries(series);
@@ -790,8 +790,8 @@ public class PlotPanel extends MonitoredPanel {
                     //if (isScan){
                     //    series =series = new MatrixPlotSeries(name, (prefs.range != null) ? prefs.range.min : start[0], (prefs.range != null) ? prefs.range.max : end[0], steps[0] + 1, start[1], end[1], steps[1] + 1);
                     //} else {
-                    int nX = (steps[0] < 0) ? DEFAULT_RANGE_STEPS : (steps[0] + 1);
-                    int nY = (steps[1] < 0) ? DEFAULT_RANGE_STEPS : (steps[1] + 1);
+                    int nX = ((steps[0] < 0)|| (steps[0] == Integer.MAX_VALUE)) ? DEFAULT_RANGE_STEPS : (steps[0] + 1);
+                    int nY = ((steps[1] < 0)|| (steps[1] == Integer.MAX_VALUE)) ? DEFAULT_RANGE_STEPS : (steps[1] + 1);
                     series = new MatrixPlotSeries(name, start[0], end[0], nX, start[1], end[1], nY);
                     if (prefs.range != null) {
                         plot.getAxis(Plot.AxisId.X).setRange(prefs.range.min, prefs.range.max);
@@ -840,7 +840,7 @@ public class PlotPanel extends MonitoredPanel {
                     //if (isScan){
                     //    series = new MatrixPlotSeries(name, (prefs.range != null) ? prefs.range.min : start[0], (prefs.range != null) ? prefs.range.max : end[0], steps[0] + 1, y_start, y_end, ySize);
                     //} else {
-                    int nX = (steps[0] < 0) ? DEFAULT_RANGE_STEPS : steps[0] + 1;
+                    int nX = ((steps[0] < 0)||(steps[0] == Integer.MAX_VALUE)) ? DEFAULT_RANGE_STEPS : steps[0] + 1;
                     series = new MatrixPlotSeries(name, start[0], end[0], nX, y_start, y_end, ySize);
                     if (prefs.range != null) {
                         plot.getAxis(Plot.AxisId.X).setRange(prefs.range.min, prefs.range.max);
@@ -852,6 +852,7 @@ public class PlotPanel extends MonitoredPanel {
                     plot.addSeries(series);
                 }
             } else {
+                
                 plot = newPlot(name, isScan, 1, true);
                 if ((type == Averager.class) && (plot instanceof LinePlotJFree)) {
                     ((LinePlotJFree) plot).setStyle(Style.ErrorY);
