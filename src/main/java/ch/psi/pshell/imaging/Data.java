@@ -848,7 +848,7 @@ public class Data implements Serializable {
     }    
 
     void checkValidOpertator(Data op) {
-        if ((length != op.length) || (getType() != op.getType()) || (unsigned != op.unsigned)) {
+        if ((width != op.width) || (height != op.height) ||(getType() != op.getType()) || (unsigned != op.unsigned)) {
             throw new IllegalArgumentException();
         }
     }
@@ -856,6 +856,7 @@ public class Data implements Serializable {
     public void sub(Data op) {
         checkValidOpertator(op);
         if (array instanceof byte[]) {
+            int length = Math.min(this.length, op.length);
             byte[] data = (byte[]) array;
             byte[] opdata = (byte[]) (op.array);
             if (unsigned) {
@@ -914,6 +915,7 @@ public class Data implements Serializable {
 
     public void sum(Data op) {
         checkValidOpertator(op);
+        int length = Math.min(this.length, op.length);
         if (array instanceof byte[]) {
             byte[] data = (byte[]) array;
             byte[] opdata = (byte[]) (op.array);
@@ -973,6 +975,7 @@ public class Data implements Serializable {
 
     public void div(Data op) {
         checkValidOpertator(op);
+        int length = Math.min(this.length, op.length);
         if (array instanceof byte[]) {
             byte[] data = (byte[]) array;
             byte[] opdata = (byte[]) (op.array);
@@ -1036,6 +1039,7 @@ public class Data implements Serializable {
 
     public void mult(Data op) {
         checkValidOpertator(op);
+        int length = Math.min(this.length, op.length);
         if (array instanceof byte[]) {
             byte[] data = (byte[]) array;
             byte[] opdata = (byte[]) (op.array);
@@ -1095,6 +1099,7 @@ public class Data implements Serializable {
 
     public void min(Data op) {
         checkValidOpertator(op);
+        int length = Math.min(this.length, op.length);
         if (array instanceof byte[]) {
             byte[] data = (byte[]) array;
             byte[] opdata = (byte[]) (op.array);
@@ -1136,6 +1141,7 @@ public class Data implements Serializable {
 
     public void max(Data op) {
         checkValidOpertator(op);
+        int length = Math.min(this.length, op.length);
         if (array instanceof byte[]) {
             byte[] data = (byte[]) array;
             byte[] opdata = (byte[]) (op.array);
@@ -1606,4 +1612,7 @@ public class Data implements Serializable {
         return new Data(this);
     }
 
+    public Data copy(Class type, boolean unsigned){
+        return new Data(this, type, unsigned);
+    }
 }
