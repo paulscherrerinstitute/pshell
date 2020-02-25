@@ -1,9 +1,9 @@
 plugins {
-    id "java"
+    id 'java-library'
     id "eclipse"
-    id "maven"
     id "maven-publish"
     id "com.jfrog.bintray" version "1.8.1"
+    id "nebula.ospackage" version "8.1.0" 
 }
 
 version = '1.14.0' 
@@ -32,7 +32,7 @@ if (!hasProperty('runArgs')) {
 repositories {
     mavenCentral()
     jcenter()
-    maven { url "http://maven.imagej.net/content/repositories/public/" }     
+    maven { url "https://maven.scijava.org/content/repositories/public/" }     
     maven { url "https://dl.bintray.com/paulscherrerinstitute/hltools/" }
 }
 
@@ -83,7 +83,7 @@ def urlFile = { url, name ->
 }
 
 dependencies {
-    compile 'ch.psi:jcae:2.9.7'   
+    compile 'ch.psi:jcae:2.9.8'   
     compile 'org.glassfish.jersey.media:jersey-media-json-jackson:2.27'
     compile 'org.glassfish.jersey.containers:jersey-container-grizzly2-http:2.27'
     compile 'org.glassfish.jersey.media:jersey-media-sse:2.27'
@@ -137,7 +137,7 @@ task fatJar(type: Jar, dependsOn: jar) {
     manifest {
         attributes (
             'Main-Class': mainClass,
-            'Implementation-Version': version,
+            'Implementation-Version': archiveVersion,
             'Build-Time': timestamp,
             'Build-Type': type,
             'Add-Opens': addopens
@@ -152,11 +152,48 @@ task fatJar(type: Jar, dependsOn: jar) {
     with jar
 }
 
-artifacts {
+def app_name = project.name
+def app_path = '/opt/psi/' + project.name + "/" + version
+
+task generateRpm(type: Rpm) {
+    packageName project.name
+    requires 'java'
+    release = 1
+    //version '1.0.0'    
+    arch 'noarch'
+    os LINUX
+  
+    user='root'
+    permissionGroup 'root'
+
+    directory(app_path, 755)
+    directory(app_path + '/lib', 755)
+    directory(app_path + '/bin', 755)
     
-    //archives sourcesJar
-    //archives javadocJar
-    archives fatJar
+    into app_path  
+
+    from ('build/libs') {
+        into 'lib'
+        fileMode 0644
+    }
+
+    from('scripts') {
+        into 'bin'
+        //Add version to startup script name
+        rename { String fileName ->
+            if (fileName == "startup"){
+                app_name + "_" + version
+            }
+        }
+        expand([
+            "app_name": app_name,
+            "app_version": version,
+        ])
+        fileMode 0755
+    }
+
+    link('/usr/lib/' + app_name + "_" + version + '.jar', app_path + '/lib/' + fatJar.archiveName)   
+    link('/usr/bin/' + app_name, app_path + '/bin/' + app_name + "_" + version)   
 }
 
 compileJava {
@@ -164,26 +201,9 @@ compileJava {
     options.compilerArgs << '-parameters'
 }
 
-uploadArchives {
-    repositories {
-        mavenDeployer {
-            setUniqueVersion(true)
-            repository(url: artifactoryUrlRel){
-            	authentication(userName: artifactoryUser, password: artifactoryPwd)
-            }
-            snapshotRepository(url: artifactoryUrlRel){
-            	authentication(userName: artifactoryUser, password: artifactoryPwd)
-            }
-            pom.groupId = project.group
-            pom.artifactId =  project.name
-            pom.version = version
-        }
-    }
-}
-
 
 jar {
-    baseName = project.name
+    archiveBaseName = project.name
     from('src/main/assembly') {
         include '**/*'
         exclude '**/assembly.xml'
@@ -220,22 +240,39 @@ task(run, dependsOn: 'classes', type: JavaExec) {
     debug false
 }
 
+
 publishing {
+    repositories {
+        maven {
+            credentials {
+                username artifactoryUser 
+                password artifactoryPwd
+            }
+            url = artifactoryUrlRel
+        }
+    }
+
     publications {
         MyPublication(MavenPublication) {
             from components.java
             artifact sourcesJar
+            //artifact javadocJar
+            artifact generateRpm
+            artifact fatJar
             groupId group
             artifactId project.name
             version version
         }
     }
 }
+
     
 bintray {
     user = project.hasProperty('bintrayUser') ? project.property('bintrayUser') : System.getenv('BINTRAY_USER')
     key = project.hasProperty('bintrayApiKey') ? project.property('bintrayApiKey') : System.getenv('BINTRAY_API_KEY')
-    publications = ['MyPublication']     
+    publications = ['MyPublication']    
+    override = true
+    publish = true
     pkg {
         repo = 'hltools'
         name = project.name

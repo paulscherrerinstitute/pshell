@@ -1,0 +1,4 @@
+#!/bin/bash
+
+
+java -jar /usr/lib/${app_name}_${app_version}.jar -home=~/pshell/home "\$@"
