@@ -153,7 +153,10 @@ task fatJar(type: Jar, dependsOn: jar) {
 }
 
 def app_name = project.name
-def app_path = '/opt/psi/' + project.name + "/" + version
+def app_path = '/opt/' + project.name + "/" + version
+def jar_file = app_path + '/lib/' + fatJar.archiveName
+def sys_bin ='/usr/local/bin/'
+def sys_lib ='/usr/local/lib/'
 
 task generateRpm(type: Rpm) {
     packageName project.name
@@ -165,6 +168,7 @@ task generateRpm(type: Rpm) {
   
     user='root'
     permissionGroup 'root'
+    addParentDirs true
 
     directory(app_path, 755)
     directory(app_path + '/lib', 755)
@@ -174,6 +178,11 @@ task generateRpm(type: Rpm) {
 
     from ('build/libs') {
         into 'lib'
+        fileMode 0644
+    }
+
+    from ('src/main/assembly/www') {
+        into 'lib/www'
         fileMode 0644
     }
 
@@ -188,12 +197,16 @@ task generateRpm(type: Rpm) {
         expand([
             "app_name": app_name,
             "app_version": version,
+            "jar_file": jar_file
         ])
         fileMode 0755
     }
 
-    link('/usr/lib/' + app_name + "_" + version + '.jar', app_path + '/lib/' + fatJar.archiveName)   
-    link('/usr/bin/' + app_name, app_path + '/bin/' + app_name + "_" + version)   
+    link(sys_bin + app_name +   "_" + version, app_path + '/bin/' + app_name + "_" + version)   
+    link(sys_bin + app_name, sys_bin + app_name + "_" + version) 
+
+    link(sys_lib + fatJar.archiveName, app_path + '/lib/' + fatJar.archiveName)   
+    link(sys_lib + "pshell.jar", sys_lib + fatJar.archiveName) 
 }
 
 compileJava {
