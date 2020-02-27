@@ -1510,7 +1510,7 @@ public class View extends MainFrame {
                     break;
             }
             checkTabLeftVisibility();
-        }        
+        }                
     }
     
     void checkTabLeftVisibility(){
@@ -1618,10 +1618,7 @@ public class View extends MainFrame {
 
         if (!App.isLocalMode()) {
             setScanPlotDetached(preferences.plotsDetached);
-            setConsoleLocation(preferences.consoleLocation);
-            for (Component item : menuConsoleLocation.getMenuComponents()) {
-                ((JRadioButtonMenuItem) item).setSelected(((JRadioButtonMenuItem) item).getText().equals(preferences.consoleLocation.toString()));
-            }            
+            setConsoleLocation(preferences.consoleLocation);          
         }
 
         statusBar.setShowDataFileName(!preferences.hideFileName);
@@ -3247,6 +3244,9 @@ public class View extends MainFrame {
             try {
                 menuViewPlotWindow.setSelected(isPlotsVisible());
                 menuFullScreen.setSelected(isFullScreen());
+                for (Component item : menuConsoleLocation.getMenuComponents()) {
+                    ((JRadioButtonMenuItem) item).setSelected(((JRadioButtonMenuItem) item).getText().equals(consoleLocation.toString()));
+                }                          
             } catch (Exception ex) {
             }
         }
