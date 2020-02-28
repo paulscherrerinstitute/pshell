@@ -356,6 +356,9 @@ public class View extends MainFrame {
                     }
                     currentProcessor = null;
                 }
+                for (Processor p : getProcessors()) {
+                    p.onStateChanged(state, former);
+                }
                 updateButtons();
             }
             @Override
@@ -3131,7 +3134,9 @@ public class View extends MainFrame {
                         menuSaveAsActionPerformed(null);
                     } else {
                         processor.save();
-                        tabDoc.setTitleAt(tabDoc.getSelectedIndex(), new File(processor.getFileName()).getName());
+                        if (processor.getFileName() != null){
+                            tabDoc.setTitleAt(tabDoc.getSelectedIndex(), new File(processor.getFileName()).getName());
+                        }
                     }
                 }
             }

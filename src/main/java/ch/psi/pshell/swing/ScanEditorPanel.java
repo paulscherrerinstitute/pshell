@@ -19,7 +19,6 @@ import java.util.List;
 import javax.swing.DefaultCellEditor;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JComboBox;
-import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
@@ -270,19 +269,6 @@ public class ScanEditorPanel extends MonitoredPanel implements Processor {
         } catch (Exception ex) {
             return null;
         }
-    }
-
-    @Override
-    public void save() throws IOException {
-        if (fileName == null) {
-            JFileChooser chooser = new JFileChooser(getHomePath());
-            int rVal = chooser.showSaveDialog(this);
-            if (rVal != JFileChooser.APPROVE_OPTION) {
-                return;
-            }
-            fileName = chooser.getSelectedFile().getAbsolutePath();
-        }
-        saveAs(fileName);
     }
 
     @Override

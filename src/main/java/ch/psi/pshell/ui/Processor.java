@@ -1,6 +1,8 @@
-    package ch.psi.pshell.ui;
+package ch.psi.pshell.ui;
 
+import ch.psi.pshell.core.Context;
 import ch.psi.pshell.data.DataManager;
+import ch.psi.utils.State;
 import ch.psi.utils.swing.SwingUtils;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -13,12 +15,13 @@ import java.util.Map;
 import java.util.ServiceLoader;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.JFileChooser;
 import javax.swing.JPanel;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
 /**
- * File-based process executor - and alternative to script execution, in order to provide extensions
- * to create other syntaxes for DAQ.
+ * File-based process executor - and alternative to script execution, in order
+ * to provide extensions to create other syntaxes for DAQ.
  */
 public interface Processor {
 
@@ -33,37 +36,55 @@ public interface Processor {
     public void abort() throws InterruptedException;
 
     /**
-     * Support to command line starting execution of processor.
-     * If implementation expects arguments from command line, this must be overridden.
+     * Support to command line starting execution of processor. If
+     * implementation expects arguments from command line, this must be
+     * overridden.
      */
-    default public void execute(String file, Map<String, Object> vars) throws Exception{
+    default public void execute(String file, Map<String, Object> vars) throws Exception {
         open(file);
         execute();
     }
+    
+    default public Object waitComplete(int timeout) throws Exception {
+        Context.getInstance().waitStateNotProcessing(timeout);
+        return null;
+    }    
 
     public String getHomePath();
-    
-    default public String resolveFile(String fileName) throws IOException{
+
+    default public String resolveFile(String fileName) throws IOException {
         String home = getHomePath();
-        if ((home!=null) && !home.isEmpty()){
-            try{
-                Path p = Paths.get(home,fileName);
-                if (p.toFile().exists()){
+        if ((home != null) && !home.isEmpty()) {
+            try {
+                Path p = Paths.get(home, fileName);
+                if (p.toFile().exists()) {
                     return p.toString();
                 }
-            } catch (Exception ex){
+            } catch (Exception ex) {
             }
         }
         File f = new File(fileName);
-        if (f.exists()){
-            return  f.getPath();
+        if (f.exists()) {
+            return f.getPath();
         }
         throw new FileNotFoundException("File not found: " + fileName);
     }
 
     public void open(String fileName) throws IOException;
 
-    public void save() throws IOException;
+    default public void save() throws IOException {
+        String fileName = getFileName();
+        if (fileName == null) {
+            JFileChooser chooser = new JFileChooser(getHomePath());
+            FileNameExtensionFilter filter = new FileNameExtensionFilter(getDescription(), getExtensions());
+            chooser.setFileFilter(filter);
+            if (chooser.showSaveDialog(getPanel()) != JFileChooser.APPROVE_OPTION) {
+                return;
+            }
+            fileName = chooser.getSelectedFile().getAbsolutePath();
+        }
+        saveAs(fileName);
+    }
 
     public void saveAs(String fileName) throws IOException;
 
@@ -74,7 +95,7 @@ public interface Processor {
 
     public boolean hasChanged();
 
-    default public boolean checkChangeOnClose() throws IOException{
+    default public boolean checkChangeOnClose() throws IOException {
         if (hasChanged()) {
             switch (SwingUtils.showOption(getPanel(), "Closing", "Document has changed. Do you want to save it?", SwingUtils.OptionType.YesNoCancel)) {
                 case Yes:
@@ -118,7 +139,7 @@ public interface Processor {
 
     }
 
-    public static boolean checkProcessorsPlotting(String root, String path, DataManager dm){
+    public static boolean checkProcessorsPlotting(String root, String path, DataManager dm) {
         HashMap<FileNameExtensionFilter, Processor> processors = new HashMap<>();
         for (Processor processor : Processor.getServiceProviders()) {
             try {
@@ -127,18 +148,22 @@ public interface Processor {
             } catch (Exception e) {
             }
         }
-        return false;    
+        return false;
     }
-    
+
     default void plotDataFile(File file) throws Exception {
         throw new Exception("Not implemented");
     }
 
-    default boolean createFilePanel(){
+    default boolean createFilePanel() {
         return false;
-    }    
+    }
+
+    default boolean createMenuNew() {
+        return false;
+    }
     
-    default boolean createMenuNew(){
-        return false;
-    }       
+    default void onStateChanged(State state, State former){
+        
+    }
 }
