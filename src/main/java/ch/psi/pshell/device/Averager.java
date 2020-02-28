@@ -2,6 +2,7 @@ package ch.psi.pshell.device;
 
 import ch.psi.pshell.bs.Stream;
 import ch.psi.pshell.core.InlineDevice;
+import ch.psi.pshell.device.Readable.DoubleType;
 import ch.psi.pshell.device.ReadonlyRegister.ReadonlyRegisterNumber;
 import ch.psi.utils.Chrono;
 import ch.psi.utils.Reflection;
@@ -21,7 +22,7 @@ import java.util.logging.Logger;
  * source 'measures' times. Otherwise, read is not blocking, returning the 'measures' last samples
  * average. A permanent update timer will be created if averager is monitored and interval>=0.
  */
-public class Averager extends ReadonlyRegisterBase<DescStatsDouble> implements ReadonlyRegisterNumber<DescStatsDouble> {
+public class Averager extends ReadonlyRegisterBase<DescStatsDouble> implements ReadonlyRegisterNumber<DescStatsDouble>, DoubleType {
 
     AveragerConfig config;
     final Readable source;

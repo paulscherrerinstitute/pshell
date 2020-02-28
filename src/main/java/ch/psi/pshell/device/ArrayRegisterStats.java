@@ -1,5 +1,6 @@
 package ch.psi.pshell.device;
 
+import ch.psi.pshell.device.Readable.DoubleType;
 import ch.psi.pshell.device.ReadonlyRegister.ReadonlyRegisterNumber;
 import ch.psi.utils.Arr;
 import ch.psi.utils.Convert;
@@ -9,7 +10,7 @@ import java.io.IOException;
  * Provides statistics on ReadonlyRegisterArray and ReadonlyRegisterMatric
  * devices.
  */
-public class ArrayRegisterStats extends ReadonlyRegisterBase<DescStatsDouble> implements ReadonlyRegisterNumber<DescStatsDouble> {
+public class ArrayRegisterStats extends ReadonlyRegisterBase<DescStatsDouble> implements ReadonlyRegisterNumber<DescStatsDouble>, DoubleType {
 
     ReadonlyRegister source;
     int precision = -1;
