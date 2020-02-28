@@ -235,7 +235,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
                         }
                     }
                 } catch (Exception ex) {
-                    Logger.getLogger(Context.class.getName()).log(Level.WARNING, null, ex);
+                    logger.log(Level.WARNING, null, ex);
                 }
                 if (!hostName.equalsIgnoreCase(config.hostName)) {
                     throw new RuntimeException("Application must run on host: " + config.hostName + " or else in local mode (-l option)");

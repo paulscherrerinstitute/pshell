@@ -1046,6 +1046,9 @@ public class View extends MainFrame {
             currentScriptEditor.stopExecution();
             currentScriptEditor = null;
         }
+        for (Processor p : getProcessors()) {
+            p.onTaskFinished(task);
+        }        
     }
 
     void updateStatusPanels() {

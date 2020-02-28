@@ -5,12 +5,20 @@ import ch.psi.pshell.core.Context;
 import ch.psi.pshell.core.ContextAdapter;
 import ch.psi.pshell.scripting.Statement;
 import ch.psi.pshell.core.CommandSource;
+import ch.psi.pshell.core.JsonSerializer;
+import ch.psi.pshell.core.LogManager;
 import ch.psi.pshell.ui.Preferences.ScriptPopupDialog;
 import ch.psi.utils.Str;
 import ch.psi.utils.swing.SwingUtils;
 import java.awt.event.ActionEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.io.File;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.JOptionPane;
 import javax.swing.SwingWorker;
 import javax.swing.Timer;
@@ -237,6 +245,123 @@ public abstract class Task extends SwingWorker<Object, Void> {
         }
     }
 
+   public static class QueueTask{
+        File file;
+        Map<String, Object> args;
+        QueueTaskErrorAction error;
+        
+        public QueueTask(File file, Map<String, Object> args, QueueTaskErrorAction error){
+            this.file = file;
+            this.args = args;
+            this.error = error;
+        }
+        
+        public QueueTask(File file, String args, QueueTaskErrorAction error){
+            this(file, convertArgString(args), error);
+        }
+    }
+    
+    public enum QueueTaskErrorAction {
+        Resume,
+        Retry,
+        Abort;
+    }
+    
+    public interface QueueExecutionListener{
+        void onStartTask(QueueTask task, int index);
+        void onFinishedTask(QueueTask task, int index, Object ret, Exception ex);
+        void onAborted(int index);
+    }
+    /**
+     * Task to run a queue of scripts
+     */
+    public static class QueueExecution extends Task {
+
+        QueueExecutionListener listener;
+        volatile QueueTask currentTask;
+        volatile int currentIndex;
+        QueueTask[] queue;
+
+        public QueueExecution(QueueTask[] queue, QueueExecutionListener listener) {
+            this.queue = queue;
+            this.listener=listener;
+            currentIndex = -1;
+        }
+
+        @Override
+        protected Object doInBackground() throws Exception {
+            try{
+                for (QueueTask task: queue){
+                    currentTask = task;
+                    currentIndex ++;
+                    while(true){
+                        try{
+                            if (listener!=null){
+                                listener.onStartTask(task, currentIndex);
+                            }
+                            Object ret = App.getInstance().evalFile(task.file, task.args);
+                            //
+                            if (Context.getInstance().getState().isProcessing()){
+                                Logger.getLogger(QueueExecution.class.getName()).info("State busy after task: waiting completion of next stage");
+                                Context.getInstance().waitStateNotProcessing(-1);
+                            }
+                            listener.onFinishedTask(task, currentIndex, ret, null);
+                            break;
+                        } catch (Exception ex){
+                            if (Context.getInstance().isAborted()){
+                                if (listener!=null){
+                                    listener.onAborted(currentIndex);
+                                }                                
+                                return null;
+                            }
+                            if (listener!=null){
+                                listener.onFinishedTask(task, currentIndex, null, ex);
+                            }
+                            if (task.error == QueueTaskErrorAction.Abort){
+                                throw ex;
+                            } 
+                            if (task.error == QueueTaskErrorAction.Resume){
+                                break;
+                            }
+                        }
+                    }
+                }
+                return "Success running task queue";
+            } finally{
+                currentTask = null;
+                currentIndex= -1;
+            }
+        }
+        public QueueTask getCurrentTask(){
+            return currentTask;
+        }
+        
+        public int getCurrentIndex(){
+            return currentIndex;
+        }        
+    }
+        
+    static Map<String, Object> convertArgString(String args){
+        args=args.trim();
+        if (args.length()>0){
+            if (!args.startsWith("{")){
+                args= "{" + args;
+            }
+            if (!args.endsWith("?")){
+                args= args + "}";
+            }            
+            try {
+                return (Map) JsonSerializer.decode(args,  Map.class);
+            } catch (IOException ex) {
+                Logger.getLogger(QueueExecution.class.getName()).log(Level.WARNING, args, ex);
+            }
+        }
+        return new HashMap<>();
+    }
+    
+
+       
+    
     /**
      * Task to checkout another brunch in the local Git repository.
      */

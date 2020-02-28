@@ -166,4 +166,8 @@ public interface Processor {
     default void onStateChanged(State state, State former){
         
     }
+    
+    default void onTaskFinished(Task task) {
+        
+    }
 }
