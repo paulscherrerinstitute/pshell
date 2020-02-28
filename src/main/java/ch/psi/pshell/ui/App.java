@@ -892,7 +892,7 @@ public class App extends ObservableBase<AppListener> {
                     }
                 } else {
                     logger.log(Level.INFO, "Create workbench");
-                    Processor.addServiceProvider(ScanEditorPanel.class);
+                    registerProcessors();
                     view = new View();
                     if (isFullScreen()) {
                         SwingUtils.setFullScreen(view, true);
@@ -939,7 +939,7 @@ public class App extends ObservableBase<AppListener> {
             } else {
                 context.start();
                 File file = getFileArg();
-                if (file != null) {
+                if (file != null) {                   
                     runFile(file, !isServerMode());
                     exit(this);
                 } else {
@@ -966,6 +966,11 @@ public class App extends ObservableBase<AppListener> {
                 }
             }
         }
+    }
+    
+    void registerProcessors(){
+        Processor.addServiceProvider(ScanEditorPanel.class);
+        Processor.addServiceProvider(TaskQueue.class);        
     }
 
     Path getPlotWindowStatePath(){
@@ -1160,23 +1165,13 @@ public class App extends ObservableBase<AppListener> {
 
     void runFile(File file, boolean printScan) {
         logger.log(Level.INFO, "Run file: " + file.getPath());
+        registerProcessors(); 
         try {
             console = new ch.psi.pshell.core.Console();
             console.attachInterpreterOutput();
             console.setPrintScan(printScan && scanPrintingActive);
+            Object ret = evalFile(file, getInterpreterArgs());
 
-            if (!IO.getExtension(file).isEmpty()) {
-                for (Processor processor : Processor.getServiceProviders()) {
-                    if (Arr.containsEqual(processor.getExtensions(), IO.getExtension(file))) {
-                        if (view != null) {
-                            view.currentProcessor = processor;
-                        }
-                        processor.execute(processor.resolveFile(file.getPath()), getInterpreterArgs());
-                        return;
-                    }
-                }
-            }
-            Object ret = context.evalFile(file.getPath(), getInterpreterArgs());
             if (ret != null) {
                 System.out.println(ret);
             }
@@ -1184,6 +1179,21 @@ public class App extends ObservableBase<AppListener> {
             ex.printStackTrace();
             logger.log(Level.WARNING, null, ex);
         }
+    }
+    
+    Object evalFile(File file,  Map<String, Object> args) throws Exception{
+        if (!IO.getExtension(file).isEmpty()) {
+            for (Processor processor : Processor.getServiceProviders()) {
+                if (Arr.containsEqual(processor.getExtensions(), IO.getExtension(file))) {
+                    if (view != null) {
+                        view.currentProcessor = processor;
+                    }
+                    processor.execute(processor.resolveFile(file.getPath()), args);
+                    return processor.waitComplete(-1);
+                }
+            }
+        }
+        return context.evalFile(file.getPath(), args);
     }
 
     //Acceps multiple -p options or plugin names can be separetate by ','

@@ -471,6 +471,19 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
         } catch (TimeoutException ex) {
         }
     }
+    
+    public void waitStateNotProcessing(int timeout) throws IOException, InterruptedException {
+        Chrono chrono = new Chrono();
+        try {
+            chrono.waitCondition(new Condition() {
+                @Override
+                public boolean evaluate() throws InterruptedException {
+                    return !getState().isProcessing();
+                }
+            }, timeout);
+        } catch (TimeoutException ex) {
+        }
+    }    
 
     public boolean isLocalMode() {
         return localMode;
