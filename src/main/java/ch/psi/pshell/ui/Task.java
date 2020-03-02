@@ -270,7 +270,7 @@ public abstract class Task extends SwingWorker<Object, Void> {
     public interface QueueExecutionListener{
         void onStartTask(QueueTask task, int index);
         void onFinishedTask(QueueTask task, int index, Object ret, Exception ex);
-        void onAborted(int index);
+        void onAborted(QueueTask task, int index, boolean userAbort);
     }
     /**
      * Task to run a queue of scripts
@@ -305,12 +305,19 @@ public abstract class Task extends SwingWorker<Object, Void> {
                                 Logger.getLogger(QueueExecution.class.getName()).info("State busy after task: waiting completion of next stage");
                                 Context.getInstance().waitStateNotProcessing(-1);
                             }
+                            if (Context.getInstance().isAborted()){
+                                if (listener!=null){
+                                    listener.onAborted(task, currentIndex, true);
+                                }                                
+                                return null;
+                            }                            
                             listener.onFinishedTask(task, currentIndex, ret, null);
                             break;
                         } catch (Exception ex){
+                            Logger.getLogger(QueueExecution.class.getName()).log(Level.WARNING, null, ex);
                             if (Context.getInstance().isAborted()){
                                 if (listener!=null){
-                                    listener.onAborted(currentIndex);
+                                    listener.onAborted(task, currentIndex, true);
                                 }                                
                                 return null;
                             }
@@ -318,6 +325,9 @@ public abstract class Task extends SwingWorker<Object, Void> {
                                 listener.onFinishedTask(task, currentIndex, null, ex);
                             }
                             if (task.error == QueueTaskErrorAction.Abort){
+                                if (listener!=null){
+                                    listener.onAborted(task, currentIndex, false);
+                                }                                
                                 throw ex;
                             } 
                             if (task.error == QueueTaskErrorAction.Resume){

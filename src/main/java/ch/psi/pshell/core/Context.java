@@ -1854,6 +1854,12 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
         setState(State.Busy);
         getExecutionPars().onExecutionStarted();
     }    
+    
+    @Hidden
+    public void clearAborted() throws ContextStateException{
+        assertReady();
+        aborted = false;
+    }
 
     Object evalNextStage(CommandInfo currentInfo, final String command) throws ScriptException, IOException, ContextStateException, InterruptedException {
         onCommand(Command.then, new Object[]{command}, currentInfo.source);

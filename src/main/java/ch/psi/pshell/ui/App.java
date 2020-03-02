@@ -1182,20 +1182,31 @@ public class App extends ObservableBase<AppListener> {
     }
     
     Object evalFile(File file,  Map<String, Object> args) throws Exception{
-        if (!IO.getExtension(file).isEmpty()) {
-            for (Processor processor : Processor.getServiceProviders()) {
-                if (Arr.containsEqual(processor.getExtensions(), IO.getExtension(file))) {
-                    if (view != null) {
-                        view.currentProcessor = processor;
-                    }
-                    processor.execute(processor.resolveFile(file.getPath()), args);
-                    return processor.waitComplete(-1);
-                }
-            }
+        context.clearAborted();
+        Processor processor = getProcessor(file);
+        if (processor!=null){
+            if (view != null) {
+                view.currentProcessor = processor;
+            }            
+            processor.execute(processor.resolveFile(file.getPath()), args);
+            Thread.sleep(100); //Give som time if processor does not change app state immediatelly;
+            return processor.waitComplete(-1);
         }
         return context.evalFile(file.getPath(), args);
     }
 
+    Processor getProcessor(File file) throws Exception{
+        if (!IO.getExtension(file).isEmpty()) {
+            for (Processor processor : Processor.getServiceProviders()) {
+                if (Arr.containsEqual(processor.getExtensions(), IO.getExtension(file))) {
+                    return processor;
+                }
+            }
+        }
+        return null;
+    }
+
+    
     //Acceps multiple -p options or plugin names can be separetate by ','
     void loadCommandLinePlugins() {
         if (hasArgument("p")) {

@@ -54,7 +54,7 @@ public final class TaskQueue extends MonitoredPanel implements Processor {
     public void onTaskFinished(Task task) {
         if (task == processingTask) {
             table.getSelectionModel().clearSelection();
-            processingTask = null;
+            //processingTask = null;
         }
     }
 
@@ -116,9 +116,10 @@ public final class TaskQueue extends MonitoredPanel implements Processor {
             }
 
             @Override
-            public void onAborted(int index) {
+            public void onAborted(QueueTask task, int index, boolean userAbort) {
                 if (processingTask != null) {
-                    for (int i = index; i < model.getRowCount(); i++) {
+                    model.setValueAt(userAbort ? "Aborted" : "Failure", index, 3);
+                    for (int i = index+1; i < model.getRowCount(); i++) {
                         model.setValueAt("Skipped", i, 3);
                     }
                 }

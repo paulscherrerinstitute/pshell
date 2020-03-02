@@ -6,6 +6,8 @@ import ch.psi.pshell.core.InlineDevice;
 import ch.psi.pshell.scripting.ScriptType;
 import ch.psi.pshell.ui.Processor;
 import ch.psi.utils.Arr;
+import ch.psi.utils.Chrono;
+import ch.psi.utils.Condition;
 import ch.psi.utils.IO;
 import ch.psi.utils.Str;
 import ch.psi.utils.swing.MonitoredPanel;
@@ -16,6 +18,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeoutException;
 import javax.swing.DefaultCellEditor;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JComboBox;
@@ -36,8 +39,10 @@ public class ScanEditorPanel extends MonitoredPanel implements Processor {
     static final int COLUMN_TYPE = 0;
     static final int COLUMN_PLOT = 4;
 
+
     boolean changed;
-    boolean running;
+    volatile boolean running;
+    volatile Object result;
     String fileName;
 
     final DefaultTableModel modelPositioners;
@@ -326,6 +331,7 @@ public class ScanEditorPanel extends MonitoredPanel implements Processor {
 
     @Override
     public void execute() throws Exception {
+        result = null;
         spinnerPasses.commitEdit();
         spinnerTime.commitEdit();
         spinnerLatency.commitEdit();
@@ -340,7 +346,8 @@ public class ScanEditorPanel extends MonitoredPanel implements Processor {
         //String name = ((fileName == null) ? "Unknown" : IO.getPrefix(fileName)) ;
         //command = "set_exec_pars(name='" + name + "'); " + command;
         Context.getInstance().evalLineAsync(command).handle((ok, ex) -> {
-            if ((ex != null) && (!Context.getInstance().isAborted())) {
+            result = (ex != null) ? ex : ok;
+            if ((ex != null) && (!Context.getInstance().isAborted()) && isDisplayable()) {
                 SwingUtils.showException(this, (Exception) ex);
             }
             running = false;
@@ -353,7 +360,25 @@ public class ScanEditorPanel extends MonitoredPanel implements Processor {
         running = true;
         update();
     }
-
+    
+    @Override
+    public Object waitComplete(int timeout) throws Exception {
+        Chrono chrono = new Chrono();
+        try {
+            chrono.waitCondition(new Condition() {
+                @Override
+                public boolean evaluate() throws InterruptedException {
+                    return (running==false);
+                }
+            }, timeout);
+        } catch (TimeoutException ex) {
+        }        
+        if (result instanceof Exception){
+            throw (Exception)result;
+        }
+        return result;
+    }        
+    
     public String getCommand() {
         return textCommand.getText();
     }
