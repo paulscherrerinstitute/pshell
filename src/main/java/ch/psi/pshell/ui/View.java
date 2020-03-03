@@ -1817,6 +1817,14 @@ public class View extends MainFrame {
                 }
             } catch (Exception ex) {
             }
+            try {
+                String fileName = (String) e.getTransferable().getTransferData(DataFlavor.stringFlavor);
+                File file = new File(fileName);
+                if (isSupported(file)) {
+                    ret.add(file);
+                }
+            } catch (Exception ex) {
+            }            
             return ret;
         }
 

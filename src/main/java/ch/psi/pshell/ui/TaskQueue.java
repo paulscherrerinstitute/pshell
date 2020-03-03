@@ -10,6 +10,9 @@ import ch.psi.utils.swing.ExtensionFileFilter;
 import ch.psi.utils.swing.MonitoredPanel;
 import ch.psi.utils.swing.SwingUtils;
 import java.awt.Component;
+import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.UnsupportedFlavorException;
+import java.awt.dnd.DnDConstants;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
@@ -23,12 +26,15 @@ import java.util.HashMap;
 import javax.swing.AbstractAction;
 import javax.swing.AbstractCellEditor;
 import javax.swing.Action;
+import javax.swing.DropMode;
 import javax.swing.GroupLayout;
 import javax.swing.JButton;
+import javax.swing.JComponent;
 import javax.swing.JFileChooser;
 import javax.swing.JPanel;
 import javax.swing.JTable;
 import javax.swing.JTextField;
+import javax.swing.TransferHandler;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 import javax.swing.filechooser.FileNameExtensionFilter;
@@ -57,6 +63,46 @@ public final class TaskQueue extends MonitoredPanel implements Processor {
         };
         model.addTableModelListener(modelChartsListener);
         initializeTable();
+        table.setDropMode(DropMode.INSERT_ROWS);
+        table.setTransferHandler(new TransferHandler() {
+
+            @Override
+            public int getSourceActions(JComponent c) {
+                return DnDConstants.ACTION_COPY_OR_MOVE;
+            }
+
+            @Override
+            public boolean canImport(TransferHandler.TransferSupport info) {
+                return info.isDataFlavorSupported(DataFlavor.stringFlavor);
+            }
+
+            @Override
+            public boolean importData(TransferSupport support) {
+
+                if (!support.isDrop()) {
+                    return false;
+                }
+
+                if (!canImport(support)) {
+                    return false;
+                }                      
+
+                try {
+                    JTable.DropLocation dl = (JTable.DropLocation)support.getDropLocation();
+                    String filename = (String) support.getTransferable().getTransferData(DataFlavor.stringFlavor);                    
+                    if (IO.isSubPath(filename, Context.getInstance().getSetup().getScriptPath())) {
+                        filename = IO.getRelativePath(filename, Context.getInstance().getSetup().getScriptPath());
+                    }                    
+                    Object[] data = new Object[]{true, filename, "", Task.QueueTaskErrorAction.Resume, ""};
+                    model.insertRow(dl.getRow(), data);
+                    update();                    
+                } catch (Exception ex) {
+                    return false;
+                }                
+                return true;
+            }
+
+        });
     }
 
     public void initializeTable() {
@@ -149,7 +195,7 @@ public final class TaskQueue extends MonitoredPanel implements Processor {
             public Object getCellEditorValue() {
                 return editor.field.getText();
             }
-            
+
             @Override
             public boolean isCellEditable(EventObject ev) {
                 if (ev instanceof MouseEvent) {
@@ -162,11 +208,11 @@ public final class TaskQueue extends MonitoredPanel implements Processor {
             @Override
             public boolean shouldSelectCell(EventObject ev) {
                 return false;
-            }            
+            }
         }
-        table.getColumnModel().getColumn(1).setCellEditor(new ParsEditor());         
+        table.getColumnModel().getColumn(1).setCellEditor(new ParsEditor());
 
-        SwingUtils.setEnumTableColum(table, 3, Task.QueueTaskErrorAction.class);                
+        SwingUtils.setEnumTableColum(table, 3, Task.QueueTaskErrorAction.class);
         update();
     }
 
@@ -174,7 +220,6 @@ public final class TaskQueue extends MonitoredPanel implements Processor {
     public void onStateChanged(State state, State former) {
         update();
     }
-
 
     protected void update() {
         boolean editing = completed(); //!Context.getInstance().getState().isProcessing();
@@ -233,7 +278,7 @@ public final class TaskQueue extends MonitoredPanel implements Processor {
 
             @Override
             public void onAborted(QueueTask task, int index, boolean userAbort, boolean skipped) {
-                if (skipped){
+                if (skipped) {
                     model.setValueAt("Skipped", index, INDEX_STATUS);
                 } else {
                     model.setValueAt(userAbort ? "Aborted" : "Failure", index, INDEX_STATUS);
@@ -248,7 +293,7 @@ public final class TaskQueue extends MonitoredPanel implements Processor {
                 table.getSelectionModel().clearSelection();
                 processingTask = null;
                 update();
-                if (App.getInstance().getMainFrame()!=null){
+                if (App.getInstance().getMainFrame() != null) {
                     App.getInstance().getMainFrame().updateButtons();
                 }
             }
@@ -269,12 +314,11 @@ public final class TaskQueue extends MonitoredPanel implements Processor {
     public String getHomePath() {
         return Context.getInstance().getSetup().getScriptPath();
     }
-    
+
     @Override
     public boolean completed() {
         return processingTask == null;
-    }        
-    
+    }
 
     @Override
     public void open(String fileName) throws IOException {
@@ -321,18 +365,18 @@ public final class TaskQueue extends MonitoredPanel implements Processor {
     public boolean createMenuNew() {
         return true;
     }
-    
+
     @Override
     public boolean canStep() {
-        return (processingTask!=null) && (table.getSelectionModel().getMinSelectionIndex()<(model.getRowCount()));
-    }       
-    
+        return (processingTask != null) && (table.getSelectionModel().getMinSelectionIndex() < (model.getRowCount()));
+    }
+
     @Override
-    public void step(){
-        if (processingTask!=null){
+    public void step() {
+        if (processingTask != null) {
             processingTask.skip();
         }
-    }       
+    }
 
     @Override
     public Object waitComplete(int timeout) throws Exception {
@@ -341,7 +385,7 @@ public final class TaskQueue extends MonitoredPanel implements Processor {
         }
         return null;
     }
-    
+
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -381,7 +425,6 @@ public final class TaskQueue extends MonitoredPanel implements Processor {
                 return canEdit [columnIndex];
             }
         });
-        table.setPreferredSize(new java.awt.Dimension(375, 200));
         table.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
         table.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseReleased(java.awt.event.MouseEvent evt) {
