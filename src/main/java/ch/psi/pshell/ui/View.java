@@ -404,7 +404,7 @@ public class View extends MainFrame {
                 int index = tabStatus.getTabCount() - 1;
                 tabStatus.add(pn, index);
                 tabStatus.setTitleAt(index, processor.getType());
-                pn.initialize(processor.getHomePath(), processor.getExtensions()[0]);
+                pn.initialize(processor.getHomePath(), processor.getExtensions());
                 pn.setListener((File file) -> {
                     try {
                         openProcessor(processor.getClass(), file.getAbsolutePath());
@@ -627,7 +627,7 @@ public class View extends MainFrame {
         scriptsPanel.initialize();
         scriptsPanel.setListener((File file) -> {
             try {
-                openScript(file.getCanonicalPath());
+                openScriptOrProcessor(file.getCanonicalPath());
             } catch (Exception ex) {
                 showException(ex);
             }

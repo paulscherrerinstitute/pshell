@@ -64,6 +64,7 @@ public final class TaskQueue extends MonitoredPanel implements Processor {
         model.addTableModelListener(modelChartsListener);
         initializeTable();
         table.setDropMode(DropMode.INSERT_ROWS);
+        table.setFillsViewportHeight(true);
         table.setTransferHandler(new TransferHandler() {
 
             @Override

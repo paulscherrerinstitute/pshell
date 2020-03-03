@@ -13,7 +13,6 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.Desktop;
 import java.awt.Frame;
-import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.StringSelection;
 import java.awt.datatransfer.Transferable;
 import java.awt.dnd.DnDConstants;
@@ -263,12 +262,14 @@ public class ScriptsPanel extends MonitoredPanel implements UpdatablePanel {
 
             @Override
             public Transferable createTransferable(JComponent comp) {
-                String value = (String) table.getModel().getValueAt(table.getSelectedRow(), 0);
-                Path path = Paths.get(homePath, value);
                 StringSelection transferable = null;
-                if (path.toFile().isFile()){
-                    value = path.toString();
-                    transferable = new StringSelection(value);
+                String filename = getSelectedScript();
+                if (filename != null) {
+       
+                        Path path = Paths.get(currentPath, filename);
+                        if (path.toFile().isFile()){
+                            transferable = new StringSelection(path.toString());
+                        }
                 }
                 return transferable;
             }
@@ -316,15 +317,18 @@ public class ScriptsPanel extends MonitoredPanel implements UpdatablePanel {
     }
 
     String homePath;
-    String extension;
+    String[] extensions;
 
     public void initialize() {
-        initialize(Context.getInstance().getSetup().getScriptPath(), Context.getInstance().getScriptType().toString());
+        initialize(Context.getInstance().getSetup().getScriptPath(), new String[]{
+            Context.getInstance().getScriptType().toString(),
+            ScanEditorPanel.EXTENSION
+        });
     }
 
-    public void initialize(String homePath, String extension) {
+    public void initialize(String homePath, String[] extensions) {
         this.homePath = homePath;
-        this.extension = extension;
+        this.extensions = extensions;
         setPath(homePath);
     }
 
@@ -367,7 +371,7 @@ public class ScriptsPanel extends MonitoredPanel implements UpdatablePanel {
     }
 
     File[] getFiles() {
-        File[] ret = IO.listFiles(currentPath, "*." + extension);
+        File[] ret = IO.listFiles(currentPath, extensions);
         if (orderByFileName) {
             IO.orderByName(ret);
         }

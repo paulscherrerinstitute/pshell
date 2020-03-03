@@ -6,8 +6,6 @@ import ch.psi.pshell.core.InlineDevice;
 import ch.psi.pshell.scripting.ScriptType;
 import ch.psi.pshell.ui.Processor;
 import ch.psi.utils.Arr;
-import ch.psi.utils.Chrono;
-import ch.psi.utils.Condition;
 import ch.psi.utils.IO;
 import ch.psi.utils.Str;
 import ch.psi.utils.swing.MonitoredPanel;
@@ -18,7 +16,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.TimeoutException;
 import javax.swing.DefaultCellEditor;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JComboBox;
@@ -38,6 +35,9 @@ public class ScanEditorPanel extends MonitoredPanel implements Processor {
 
     static final int COLUMN_TYPE = 0;
     static final int COLUMN_PLOT = 4;
+    
+    static final String EXTENSION = "scan";
+    
 
 
     boolean changed;
@@ -167,12 +167,12 @@ public class ScanEditorPanel extends MonitoredPanel implements Processor {
 
     @Override
     public String getDescription() {
-        return "Scan configuration file  (*.scan)";
+        return "Scan configuration file  (*." + EXTENSION + ")";
     }
 
     @Override
     public String[] getExtensions() {
-        return new String[]{"scan"};
+        return new String[]{EXTENSION};
     }
 
     @Override
