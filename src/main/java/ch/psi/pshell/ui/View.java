@@ -354,7 +354,12 @@ public class View extends MainFrame {
                         currentScriptEditor.stopExecution();
                         currentScriptEditor = null;
                     }
-                    currentProcessor = null;
+                    if (topLevelProcessor!=null){
+                         if (topLevelProcessor.completed()){
+                             topLevelProcessor = null;
+                         }
+                    }
+                    currentProcessor = null;                    
                 }
                 for (Processor p : getProcessors()) {
                     p.onStateChanged(state, former);
@@ -427,6 +432,10 @@ public class View extends MainFrame {
             }
         });
     }
+    
+    Processor getRunningProcessor(){
+         return ((topLevelProcessor!=null) && (!topLevelProcessor.completed())) ? topLevelProcessor: null;
+    }
 
     void updateButtons() {
         if (!SwingUtilities.isEventDispatchThread()) {
@@ -447,11 +456,12 @@ public class View extends MainFrame {
             boolean ready = (state == State.Ready);
             boolean busy = (state == State.Busy);
             boolean paused = (state == State.Paused);
+            Processor runningProcessor = getRunningProcessor();
 
             buttonRun.setEnabled(ready && executable && allowRun);
             buttonDebug.setEnabled((ready && showingScript && allowRun) || (paused));
-            buttonPause.setEnabled(context.canPause());
-            buttonStep.setEnabled(((ready && showingScript) || context.canStep()) && allowRun);
+            buttonPause.setEnabled( context.canPause() || ((runningProcessor!=null) && (topLevelProcessor.canPause())));
+            buttonStep.setEnabled(((ready && showingScript) || context.canStep() || ((runningProcessor!=null) && (topLevelProcessor.canStep()))) && allowRun);
             buttonAbort.setEnabled(busy || paused || (state == State.Initializing));
             menuRun.setEnabled(buttonRun.isEnabled());
             menuDebug.setEnabled(buttonDebug.isEnabled());
@@ -471,7 +481,7 @@ public class View extends MainFrame {
 
         }
     }
-
+    
     void onFirstStart() {
         //setupPanelsMenu()
         if (context.getConfig().getName().length() > 0) {
@@ -1136,6 +1146,7 @@ public class View extends MainFrame {
 
     ScriptEditor currentScriptEditor;
     Processor currentProcessor;
+    Processor topLevelProcessor;
 
     void debugScript(final boolean pauseOnStart) throws Exception {
         try {
@@ -1173,13 +1184,21 @@ public class View extends MainFrame {
                 App.getInstance().startTask(new Task.ScriptExecution(currentScriptEditor.getFileName(), null, null, false, false));
             }
         } else {
-            currentProcessor = getSelectedProcessor();
+            setCurrentProcessor(getSelectedProcessor(), true);
             if (currentProcessor != null) {
                 logger.info("Run processor: " + currentProcessor.getType() + " file: " + currentProcessor.getFileName());
                 currentProcessor.execute();
             }
         }
     }
+    
+    void setCurrentProcessor(Processor processor, boolean topLevel){
+        if (topLevel){
+            topLevelProcessor = processor;
+        }
+        currentProcessor = processor;
+    }
+    
 
     final DocumentListener scriptChangeListener = new DocumentListener() {
         @Override
@@ -3070,7 +3089,12 @@ public class View extends MainFrame {
 
     private void buttonPauseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonPauseActionPerformed
         try {
-            context.pause();
+            Processor runningProcessor = getRunningProcessor();
+            if (runningProcessor!=null){
+                runningProcessor.pause();
+            } else {
+                context.pause();
+            }
             updateButtons();
         } catch (Exception ex) {
             showException(ex);
@@ -3082,7 +3106,12 @@ public class View extends MainFrame {
             if (context.getState() == State.Ready) {
                 debugScript(true);
             } else {
-                context.step();
+                Processor runningProcessor = getRunningProcessor();
+                if (runningProcessor!=null){
+                    runningProcessor.step();
+                } else {
+                    context.step();
+                }
             }
             updateButtons();
         } catch (Exception ex) {
@@ -3096,6 +3125,7 @@ public class View extends MainFrame {
             if (currentProcessor != null) {
                 currentProcessor.abort();
                 currentProcessor = null;
+                topLevelProcessor = null;
             }
             context.abort();
             updateButtons();

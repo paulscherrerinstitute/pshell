@@ -1170,7 +1170,7 @@ public class App extends ObservableBase<AppListener> {
             console = new ch.psi.pshell.core.Console();
             console.attachInterpreterOutput();
             console.setPrintScan(printScan && scanPrintingActive);
-            Object ret = evalFile(file, getInterpreterArgs());
+            Object ret = evalFile(file, getInterpreterArgs(), true);
 
             if (ret != null) {
                 System.out.println(ret);
@@ -1182,11 +1182,15 @@ public class App extends ObservableBase<AppListener> {
     }
     
     Object evalFile(File file,  Map<String, Object> args) throws Exception{
+        return evalFile(file, args, false);
+    }
+    
+    Object evalFile(File file,  Map<String, Object> args, boolean topLevel) throws Exception{
         context.clearAborted();
         Processor processor = getProcessor(file);
         if (processor!=null){
             if (view != null) {
-                view.currentProcessor = processor;
+                view.setCurrentProcessor(processor, topLevel);
             }            
             processor.execute(processor.resolveFile(file.getPath()), args);
             Thread.sleep(100); //Give som time if processor does not change app state immediatelly;

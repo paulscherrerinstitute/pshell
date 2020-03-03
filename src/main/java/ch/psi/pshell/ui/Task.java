@@ -24,7 +24,8 @@ import javax.swing.SwingWorker;
 import javax.swing.Timer;
 
 /**
- * Abstraction for a background activity in the Workbench, extending SwingWorker.
+ * Abstraction for a background activity in the Workbench, extending
+ * SwingWorker.
  */
 public abstract class Task extends SwingWorker<Object, Void> {
 
@@ -245,33 +246,42 @@ public abstract class Task extends SwingWorker<Object, Void> {
         }
     }
 
-   public static class QueueTask{
+    public static class QueueTask {
+
+        boolean enabled;
         File file;
         Map<String, Object> args;
         QueueTaskErrorAction error;
-        
-        public QueueTask(File file, Map<String, Object> args, QueueTaskErrorAction error){
+
+        public QueueTask(boolean enabled, File file, Map<String, Object> args, QueueTaskErrorAction error) {
+            this.enabled = enabled;
             this.file = file;
             this.args = args;
             this.error = error;
         }
-        
-        public QueueTask(File file, String args, QueueTaskErrorAction error){
-            this(file, convertArgString(args), error);
+
+        public QueueTask(boolean enabled, File file, String args, QueueTaskErrorAction error) {
+            this(enabled, file, convertArgString(args), error);
         }
     }
-    
+
     public enum QueueTaskErrorAction {
         Resume,
         Retry,
         Abort;
     }
-    
-    public interface QueueExecutionListener{
+
+    public interface QueueExecutionListener {
+
         void onStartTask(QueueTask task, int index);
+
         void onFinishedTask(QueueTask task, int index, Object ret, Exception ex);
-        void onAborted(QueueTask task, int index, boolean userAbort);
+
+        void onAborted(QueueTask task, int index, boolean userAbort, boolean skipped);
+
+        void onFinishedExecution(QueueTask task);
     }
+
     /**
      * Task to run a queue of scripts
      */
@@ -281,97 +291,118 @@ public abstract class Task extends SwingWorker<Object, Void> {
         volatile QueueTask currentTask;
         volatile int currentIndex;
         QueueTask[] queue;
+        boolean skipped;
 
         public QueueExecution(QueueTask[] queue, QueueExecutionListener listener) {
             this.queue = queue;
-            this.listener=listener;
+            this.listener = listener;
             currentIndex = -1;
         }
 
         @Override
         protected Object doInBackground() throws Exception {
-            try{
-                for (QueueTask task: queue){
+            try {
+                for (QueueTask task : queue) {
                     currentTask = task;
-                    currentIndex ++;
-                    while(true){
-                        try{
-                            if (listener!=null){
+                    currentIndex++;
+                    while (true) {
+                        try {
+                            skipped = false;
+                            if (listener != null) {
                                 listener.onStartTask(task, currentIndex);
                             }
-                            Object ret = App.getInstance().evalFile(task.file, task.args);
-                            //
-                            if (Context.getInstance().getState().isProcessing()){
-                                Logger.getLogger(QueueExecution.class.getName()).info("State busy after task: waiting completion of next stage");
-                                Context.getInstance().waitStateNotProcessing(-1);
+                            if (task.enabled) {
+                                Object ret = App.getInstance().evalFile(task.file, task.args);
+                                //
+                                if (Context.getInstance().getState().isProcessing()) {
+                                    Logger.getLogger(QueueExecution.class.getName()).info("State busy after task: waiting completion of next stage");
+                                    Context.getInstance().waitStateNotProcessing(-1);
+                                }
+                                if (Context.getInstance().isAborted()) {
+                                    if (listener != null) {
+                                        listener.onAborted(task, currentIndex, true, skipped);
+                                    }
+                                    if (skipped) {
+                                        break;
+                                    }
+                                    return null;
+                                }
+                                listener.onFinishedTask(task, currentIndex, ret, null);
                             }
-                            if (Context.getInstance().isAborted()){
-                                if (listener!=null){
-                                    listener.onAborted(task, currentIndex, true);
-                                }                                
-                                return null;
-                            }                            
-                            listener.onFinishedTask(task, currentIndex, ret, null);
                             break;
-                        } catch (Exception ex){
+                        } catch (Exception ex) {
                             Logger.getLogger(QueueExecution.class.getName()).log(Level.WARNING, null, ex);
-                            if (Context.getInstance().isAborted()){
-                                if (listener!=null){
-                                    listener.onAborted(task, currentIndex, true);
-                                }                                
+                            if (Context.getInstance().isAborted()) {
+                                if (listener != null) {
+                                    listener.onAborted(task, currentIndex, true, skipped);
+                                }
+                                if (skipped) {
+                                    break;
+                                }
                                 return null;
-                            }
-                            if (listener!=null){
-                                listener.onFinishedTask(task, currentIndex, null, ex);
-                            }
-                            if (task.error == QueueTaskErrorAction.Abort){
-                                if (listener!=null){
-                                    listener.onAborted(task, currentIndex, false);
-                                }                                
-                                throw ex;
-                            } 
-                            if (task.error == QueueTaskErrorAction.Resume){
-                                break;
+                            } else {
+                                if (listener != null) {
+                                    listener.onFinishedTask(task, currentIndex, null, ex);
+                                }
+                                if (task.error == QueueTaskErrorAction.Abort) {
+                                    if (listener != null) {
+                                        listener.onAborted(task, currentIndex, false, false);
+                                    }
+                                    throw ex;
+                                }
+                                if (task.error == QueueTaskErrorAction.Resume) {
+                                    break;
+                                }
                             }
                         }
                     }
                 }
                 return "Success running task queue";
-            } finally{
+            } finally {
+                currentIndex = -1;
+                if (listener != null) {
+                    listener.onFinishedExecution(currentTask);
+                }
                 currentTask = null;
-                currentIndex= -1;
             }
         }
-        public QueueTask getCurrentTask(){
+
+        public QueueTask getCurrentTask() {
             return currentTask;
         }
-        
-        public int getCurrentIndex(){
+
+        public int getCurrentIndex() {
             return currentIndex;
-        }        
-    }
-        
-    static Map<String, Object> convertArgString(String args){
-        args=args.trim();
-        if (args.length()>0){
-            if (!args.startsWith("{")){
-                args= "{" + args;
-            }
-            if (!args.endsWith("?")){
-                args= args + "}";
-            }            
+        }
+
+        public void skip() {
+            skipped = true;
             try {
-                return (Map) JsonSerializer.decode(args,  Map.class);
+                Context.getInstance().abort();
+            } catch (InterruptedException ex) {
+                Logger.getLogger(QueueExecution.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+    }
+
+    static Map<String, Object> convertArgString(String args) {
+        args = args.trim();
+        if (args.length() > 0) {
+            if (!args.startsWith("{")) {
+                args = "{" + args;
+            }
+            if (!args.endsWith("?")) {
+                args = args + "}";
+            }
+            try {
+                return (Map) JsonSerializer.decode(args, Map.class);
             } catch (IOException ex) {
                 Logger.getLogger(QueueExecution.class.getName()).log(Level.WARNING, args, ex);
             }
         }
         return new HashMap<>();
     }
-    
 
-       
-    
     /**
      * Task to checkout another brunch in the local Git repository.
      */

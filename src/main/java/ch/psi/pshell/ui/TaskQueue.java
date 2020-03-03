@@ -4,18 +4,36 @@ import ch.psi.pshell.core.Context;
 import ch.psi.pshell.core.JsonSerializer;
 import ch.psi.pshell.ui.Task.QueueExecution;
 import ch.psi.pshell.ui.Task.QueueTask;
-import ch.psi.utils.Arr;
+import ch.psi.utils.IO;
 import ch.psi.utils.State;
+import ch.psi.utils.swing.ExtensionFileFilter;
 import ch.psi.utils.swing.MonitoredPanel;
 import ch.psi.utils.swing.SwingUtils;
+import java.awt.Component;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.MouseEvent;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.EventObject;
+import java.util.HashMap;
+import javax.swing.AbstractAction;
+import javax.swing.AbstractCellEditor;
+import javax.swing.Action;
+import javax.swing.GroupLayout;
+import javax.swing.JButton;
+import javax.swing.JFileChooser;
+import javax.swing.JPanel;
+import javax.swing.JTable;
+import javax.swing.JTextField;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableCellEditor;
 
 /**
  *
@@ -26,6 +44,7 @@ public final class TaskQueue extends MonitoredPanel implements Processor {
     final DefaultTableModel model;
     boolean modified;
     Task.QueueExecution processingTask;
+    final int INDEX_STATUS = 4;
 
     public TaskQueue() {
         initComponents();
@@ -41,7 +60,124 @@ public final class TaskQueue extends MonitoredPanel implements Processor {
 
     public void initializeTable() {
 
-        SwingUtils.setEnumTableColum(table, 2, Task.QueueTaskErrorAction.class);
+        class ParsEditorPanel extends JPanel {
+
+            private final JTextField field = new JTextField();
+            private final Action parsEditAction = new AbstractAction("...") {
+                public void actionPerformed(ActionEvent e) {
+                    try {
+                        JFileChooser chooser = new JFileChooser(Context.getInstance().getSetup().getScriptPath());
+                        chooser.addChoosableFileFilter(new ExtensionFileFilter("Script files (*." + Context.getInstance().getScriptType() + ")", new String[]{String.valueOf(Context.getInstance().getScriptType())}));
+                        HashMap<FileNameExtensionFilter, Processor> processors = new HashMap<>();
+                        for (Processor processor : Processor.getServiceProviders()) {
+                            FileNameExtensionFilter filter = new FileNameExtensionFilter(processor.getDescription(), processor.getExtensions());
+                            chooser.addChoosableFileFilter(filter);
+                            processors.put(filter, processor);
+                        }
+                        chooser.setAcceptAllFileFilterUsed(true);
+                        String filename = field.getText().trim();
+                        if (!filename.isEmpty()) {
+                            String ext = IO.getExtension(filename);
+                            if (ext.isEmpty()) {
+                                filename = filename + "." + Context.getInstance().getScriptType().toString();
+                            }
+                            File file = Paths.get(Context.getInstance().getSetup().getScriptPath(), filename).toFile();
+
+                            if (!file.exists()) {
+                                file = new File(filename);
+                            }
+                            chooser.setSelectedFile(file);
+                        }
+                        int rVal = chooser.showOpenDialog(TaskQueue.this);
+                        if (rVal == JFileChooser.APPROVE_OPTION) {
+                            filename = chooser.getSelectedFile().toString();
+                            if (IO.isSubPath(filename, Context.getInstance().getSetup().getScriptPath())) {
+                                filename = IO.getRelativePath(filename, Context.getInstance().getSetup().getScriptPath());
+                            }
+                            field.setText(filename);
+                        }
+                    } catch (Exception ex) {
+                        SwingUtils.showException(TaskQueue.this, ex);
+                    }
+                }
+            };
+            private final JButton button = new JButton(parsEditAction);
+            private Class type;
+            private HashMap<String, Class> referencedDevices;
+
+            public ParsEditorPanel() {
+                field.setBorder(null);
+                field.addActionListener(new ActionListener() {
+
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        table.getCellEditor().stopCellEditing();
+                    }
+                });
+                button.setBorder(javax.swing.BorderFactory.createEtchedBorder());
+
+                GroupLayout layout = new GroupLayout(this);
+                this.setLayout(layout);
+                layout.setHorizontalGroup(
+                        layout.createParallelGroup(GroupLayout.Alignment.LEADING)
+                                .addGroup(layout.createSequentialGroup()
+                                        .addComponent(field)
+                                        .addComponent(button, 20, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE))
+                );
+                layout.setVerticalGroup(
+                        layout.createParallelGroup(GroupLayout.Alignment.LEADING)
+                                .addComponent(field, GroupLayout.PREFERRED_SIZE, table.getRowHeight(), table.getRowHeight())
+                                .addComponent(button, GroupLayout.Alignment.CENTER, GroupLayout.PREFERRED_SIZE, table.getRowHeight() - 2, table.getRowHeight() - 2)
+                );
+
+            }
+
+        }
+
+        class ParsEditor extends AbstractCellEditor implements TableCellEditor {
+
+            private final ParsEditorPanel editor = new ParsEditorPanel();
+
+            @Override
+            public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
+                editor.field.setText((String) value);
+                return editor;
+            }
+
+            @Override
+            public Object getCellEditorValue() {
+                return editor.field.getText();
+            }
+            
+            @Override
+            public boolean isCellEditable(EventObject ev) {
+                if (ev instanceof MouseEvent) {
+                    //2 clicks to start
+                    return ((MouseEvent) ev).getClickCount() >= 2;
+                }
+                return true;
+            }
+
+            @Override
+            public boolean shouldSelectCell(EventObject ev) {
+                return false;
+            }            
+        }
+        table.getColumnModel().getColumn(1).setCellEditor(new ParsEditor());
+
+        SwingUtils.setEnumTableColum(table, 3, Task.QueueTaskErrorAction.class);
+        
+        table.getColumnModel().getColumn(0).setPreferredWidth(40);
+        table.getColumnModel().getColumn(1).setPreferredWidth(100);
+        table.getColumnModel().getColumn(2).setPreferredWidth(100);
+        table.getColumnModel().getColumn(3).setPreferredWidth(100);        
+        table.getColumnModel().getColumn(4).setPreferredWidth(50);        
+        table.getColumnModel().getColumn(0).setResizable(true);   
+        table.getColumnModel().getColumn(1).setResizable(true);
+        table.getColumnModel().getColumn(2).setResizable(true);
+        table.getColumnModel().getColumn(3).setResizable(true);
+        table.getColumnModel().getColumn(4).setResizable(true);
+        
         update();
     }
 
@@ -50,13 +186,15 @@ public final class TaskQueue extends MonitoredPanel implements Processor {
         update();
     }
 
+    /*
     @Override
     public void onTaskFinished(Task task) {
         if (task == processingTask) {
             table.getSelectionModel().clearSelection();
-            //processingTask = null;
+            processingTask = null;
         }
     }
+    */
 
     protected void update() {
         boolean editing = !Context.getInstance().getState().isProcessing();
@@ -88,45 +226,56 @@ public final class TaskQueue extends MonitoredPanel implements Processor {
     public void execute() throws Exception {
         ArrayList<QueueTask> queue = new ArrayList<>();
         for (int i = 0; i < model.getRowCount(); i++) {
-            String task = (String) model.getValueAt(i, 0);
-            String args = (String) model.getValueAt(i, 1);
-            Task.QueueTaskErrorAction errorAction = Task.QueueTaskErrorAction.valueOf(String.valueOf(model.getValueAt(i, 2)));
-            QueueTask qt = new QueueTask(new File(task), args, errorAction);
+            Boolean enabled = (Boolean) model.getValueAt(i, 0);
+            String task = (String) model.getValueAt(i, 1);
+            String args = (String) model.getValueAt(i, 2);
+            Task.QueueTaskErrorAction errorAction = Task.QueueTaskErrorAction.valueOf(String.valueOf(model.getValueAt(i, 3)));
+            QueueTask qt = new QueueTask(enabled, new File(task), args, errorAction);
             queue.add(qt);
 
         }
         QueueExecution task = new QueueExecution(queue.toArray(new QueueTask[0]), new Task.QueueExecutionListener() {
             @Override
             public void onStartTask(QueueTask task, int index) {
-                if (processingTask != null) {
+                //if (processingTask != null) {
                     if ((index >= 0) && (index < model.getRowCount())) {
                         table.getSelectionModel().setSelectionInterval(index, index);
-                        model.setValueAt("Running", index, 3);
+                        model.setValueAt(task.enabled ? "Running" : "Skipped", index, INDEX_STATUS);
                     }
-                }
+                //}
             }
 
             @Override
             public void onFinishedTask(QueueTask task, int index, Object ret, Exception ex) {
-                if (processingTask != null) {
+                //if (processingTask != null) {
                     if ((index >= 0) && (index < model.getRowCount())) {
-                        model.setValueAt((ex == null) ? "Success" : (Context.getInstance().isAborted() ? "Aborted" : "Failure"), index, 3);
+                        model.setValueAt((ex == null) ? "Success" : (Context.getInstance().isAborted() ? "Aborted" : "Failure"), index, INDEX_STATUS);
                     }
-                }
+                //}
             }
 
             @Override
-            public void onAborted(QueueTask task, int index, boolean userAbort) {
-                if (processingTask != null) {
-                    model.setValueAt(userAbort ? "Aborted" : "Failure", index, 3);
-                    for (int i = index+1; i < model.getRowCount(); i++) {
-                        model.setValueAt("Skipped", i, 3);
+            public void onAborted(QueueTask task, int index, boolean userAbort, boolean skipped) {
+                //if (processingTask != null) {
+                    if (skipped){
+                        model.setValueAt("Skipped", index, INDEX_STATUS);
+                    } else {
+                        model.setValueAt(userAbort ? "Aborted" : "Failure", index, INDEX_STATUS);
+                        for (int i = index + 1; i < model.getRowCount(); i++) {
+                            model.setValueAt("Skipped", i, INDEX_STATUS);
+                        }
                     }
-                }
+                //}
+            }
+
+            @Override
+            public void onFinishedExecution(QueueTask task) {
+                table.getSelectionModel().clearSelection();
+                processingTask = null;
             }
         });
         for (int i = 0; i < model.getRowCount(); i++) {
-            model.setValueAt("", i, 3);
+            model.setValueAt("", i, INDEX_STATUS);
         }
         App.getInstance().startTask(task);
         processingTask = task;
@@ -141,6 +290,12 @@ public final class TaskQueue extends MonitoredPanel implements Processor {
     public String getHomePath() {
         return Context.getInstance().getSetup().getScriptPath();
     }
+    
+    @Override
+    public boolean completed() {
+        return processingTask == null;
+    }        
+    
 
     @Override
     public void open(String fileName) throws IOException {
@@ -149,9 +304,11 @@ public final class TaskQueue extends MonitoredPanel implements Processor {
 
         Object[][] tableData = vector[0];
         for (int i = 0; i < tableData.length; i++) {
-            tableData[i] = new Object[]{tableData[i][0],
+            tableData[i] = new Object[]{
+                tableData[i][0],
                 tableData[i][1],
-                Task.QueueTaskErrorAction.valueOf(String.valueOf(tableData[i][2])),
+                tableData[i][2],
+                Task.QueueTaskErrorAction.valueOf(String.valueOf(tableData[i][3])),
                 ""};
 
         }
@@ -185,6 +342,18 @@ public final class TaskQueue extends MonitoredPanel implements Processor {
     public boolean createMenuNew() {
         return true;
     }
+    
+    @Override
+    public boolean canStep() {
+        return (processingTask!=null) && (table.getSelectionModel().getMinSelectionIndex()<(model.getRowCount()));
+    }       
+    
+    @Override
+    public void step(){
+        if (processingTask!=null){
+            processingTask.skip();
+        }
+    }       
 
     @Override
     public Object waitComplete(int timeout) throws Exception {
@@ -203,7 +372,7 @@ public final class TaskQueue extends MonitoredPanel implements Processor {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
-        jScrollPane1 = new javax.swing.JScrollPane();
+        scrollPane = new javax.swing.JScrollPane();
         table = new javax.swing.JTable();
         buttonUp = new javax.swing.JButton();
         buttonDown = new javax.swing.JButton();
@@ -215,14 +384,14 @@ public final class TaskQueue extends MonitoredPanel implements Processor {
 
             },
             new String [] {
-                "Task Name", "Arguments", "On Error", "Status"
+                "Enabled", "File ", "Arguments", "On Error", "Status"
             }
         ) {
             Class[] types = new Class [] {
-                java.lang.String.class, java.lang.String.class, java.lang.Object.class, java.lang.String.class
+                java.lang.Boolean.class, java.lang.String.class, java.lang.String.class, java.lang.Object.class, java.lang.String.class
             };
             boolean[] canEdit = new boolean [] {
-                true, true, true, false
+                true, true, true, true, false
             };
 
             public Class getColumnClass(int columnIndex) {
@@ -233,6 +402,7 @@ public final class TaskQueue extends MonitoredPanel implements Processor {
                 return canEdit [columnIndex];
             }
         });
+        table.setPreferredSize(new java.awt.Dimension(375, 200));
         table.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
         table.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseReleased(java.awt.event.MouseEvent evt) {
@@ -244,7 +414,7 @@ public final class TaskQueue extends MonitoredPanel implements Processor {
                 tableKeyReleased(evt);
             }
         });
-        jScrollPane1.setViewportView(table);
+        scrollPane.setViewportView(table);
 
         buttonUp.setText("Move Up");
         buttonUp.addActionListener(new java.awt.event.ActionListener() {
@@ -278,7 +448,6 @@ public final class TaskQueue extends MonitoredPanel implements Processor {
         this.setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jScrollPane1)
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addComponent(buttonUp)
@@ -289,6 +458,7 @@ public final class TaskQueue extends MonitoredPanel implements Processor {
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(buttonDelete)
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+            .addComponent(scrollPane)
         );
 
         layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {buttonDelete, buttonDown, buttonInsert, buttonUp});
@@ -296,7 +466,7 @@ public final class TaskQueue extends MonitoredPanel implements Processor {
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 277, Short.MAX_VALUE)
+                .addComponent(scrollPane, javax.swing.GroupLayout.DEFAULT_SIZE, 271, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(buttonDelete)
@@ -332,7 +502,7 @@ public final class TaskQueue extends MonitoredPanel implements Processor {
     }//GEN-LAST:event_buttonDownActionPerformed
 
     private void buttonInsertActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonInsertActionPerformed
-        Object[] data = new Object[]{"", "", Task.QueueTaskErrorAction.Resume, ""};
+        Object[] data = new Object[]{true, "", "", Task.QueueTaskErrorAction.Resume, ""};
         if (table.getSelectedRow() >= 0) {
             model.insertRow(table.getSelectedRow() + 1, data);
         } else {
@@ -363,7 +533,7 @@ public final class TaskQueue extends MonitoredPanel implements Processor {
     private javax.swing.JButton buttonDown;
     private javax.swing.JButton buttonInsert;
     private javax.swing.JButton buttonUp;
-    private javax.swing.JScrollPane jScrollPane1;
+    private javax.swing.JScrollPane scrollPane;
     private javax.swing.JTable table;
     // End of variables declaration//GEN-END:variables
 

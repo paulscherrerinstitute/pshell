@@ -2,6 +2,8 @@ package ch.psi.pshell.ui;
 
 import ch.psi.pshell.core.Context;
 import ch.psi.pshell.data.DataManager;
+import ch.psi.utils.Chrono;
+import ch.psi.utils.Condition;
 import ch.psi.utils.State;
 import ch.psi.utils.swing.SwingUtils;
 import java.io.File;
@@ -13,6 +15,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.ServiceLoader;
+import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JFileChooser;
@@ -34,7 +37,7 @@ public interface Processor {
     public void execute() throws Exception;
 
     public void abort() throws InterruptedException;
-
+    
     /**
      * Support to command line starting execution of processor. If
      * implementation expects arguments from command line, this must be
@@ -45,10 +48,31 @@ public interface Processor {
         execute();
     }
     
-    default public Object waitComplete(int timeout) throws Exception {
-        Context.getInstance().waitStateNotProcessing(timeout);
+    default Object waitComplete(int timeout) throws Exception {
+        Chrono chrono = new Chrono();
+        try {
+            chrono.waitCondition(new Condition() {
+                @Override
+                public boolean evaluate() throws InterruptedException {
+                    return completed();
+                }
+            }, timeout);
+        } catch (TimeoutException ex) {
+        }        
+        Object result = getResult();
+        if (result instanceof Exception){
+            throw (Exception)result;
+        }
+        return result;
+    }        
+    
+    default Object getResult(){
         return null;
     }    
+    
+    default boolean completed() {
+        return !Context.getInstance().getState().isProcessing();
+    }            
 
     public String getHomePath();
 
@@ -163,6 +187,21 @@ public interface Processor {
         return false;
     }
     
+    default boolean canStep() {
+        return false;
+    }    
+    
+    default boolean canPause() {
+        return false;
+    }     
+
+    default void step(){
+    }    
+    
+
+    default void pause(){
+    }    
+    
     default void onStateChanged(State state, State former){
         
     }
@@ -170,5 +209,6 @@ public interface Processor {
     default void onTaskFinished(Task task) {
         
     }
+    
     
 }

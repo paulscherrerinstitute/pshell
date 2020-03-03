@@ -360,24 +360,16 @@ public class ScanEditorPanel extends MonitoredPanel implements Processor {
         running = true;
         update();
     }
+        
+    @Override
+    public  Object getResult(){
+        return result;
+    }    
     
     @Override
-    public Object waitComplete(int timeout) throws Exception {
-        Chrono chrono = new Chrono();
-        try {
-            chrono.waitCondition(new Condition() {
-                @Override
-                public boolean evaluate() throws InterruptedException {
-                    return (running==false);
-                }
-            }, timeout);
-        } catch (TimeoutException ex) {
-        }        
-        if (result instanceof Exception){
-            throw (Exception)result;
-        }
-        return result;
-    }        
+    public boolean completed() {
+        return running==false;
+    }      
     
     public String getCommand() {
         return textCommand.getText();
