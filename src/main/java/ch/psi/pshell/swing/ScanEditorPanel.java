@@ -307,7 +307,6 @@ public class ScanEditorPanel extends MonitoredPanel implements Processor {
         state.add(comboDomain.getSelectedItem());
         state.add(checkSteps.isSelected());
         state.add(checkFollowingError.isSelected());
-        JsonSerializer.encode(state, changed);
         String json = JsonSerializer.encode(state, true);
         Files.write(new File(fileName).toPath(), json.getBytes());
         this.fileName = fileName;
@@ -363,7 +362,7 @@ public class ScanEditorPanel extends MonitoredPanel implements Processor {
         
     @Override
     public  Object getResult(){
-        return result;
+        return null;
     }    
     
     @Override

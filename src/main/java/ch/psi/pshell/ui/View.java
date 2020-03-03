@@ -450,18 +450,21 @@ public class View extends MainFrame {
             boolean allowRun = (rights != null) && !rights.denyRun;
             Component selectedDocument = tabDoc.getSelectedComponent();
             State state = App.getInstance().getState();
+            Processor runningProcessor = getRunningProcessor();
+            if (state==State.Ready && (runningProcessor!=null)&&(runningProcessor instanceof TaskQueue)){
+                state = State.Busy;
+            }
             boolean showingScript = (selectedDocument != null) && (selectedDocument instanceof ScriptEditor);
             boolean showingProcessor = (selectedDocument != null) && (selectedDocument instanceof Processor);
             boolean executable = showingScript || showingProcessor;
             boolean ready = (state == State.Ready);
             boolean busy = (state == State.Busy);
-            boolean paused = (state == State.Paused);
-            Processor runningProcessor = getRunningProcessor();
+            boolean paused = (state == State.Paused);            
 
             buttonRun.setEnabled(ready && executable && allowRun);
             buttonDebug.setEnabled((ready && showingScript && allowRun) || (paused));
-            buttonPause.setEnabled( context.canPause() || ((runningProcessor!=null) && (topLevelProcessor.canPause())));
-            buttonStep.setEnabled(((ready && showingScript) || context.canStep() || ((runningProcessor!=null) && (topLevelProcessor.canStep()))) && allowRun);
+            buttonPause.setEnabled( context.canPause() || ((runningProcessor!=null) && (runningProcessor.canPause())));
+            buttonStep.setEnabled(((ready && showingScript) || context.canStep() || ((runningProcessor!=null) && (runningProcessor.canStep()))) && allowRun);
             buttonAbort.setEnabled(busy || paused || (state == State.Initializing));
             menuRun.setEnabled(buttonRun.isEnabled());
             menuDebug.setEnabled(buttonDebug.isEnabled());
@@ -478,7 +481,6 @@ public class View extends MainFrame {
             menuSave.setEnabled(executable && allowEdit);
             menuSaveAs.setEnabled(executable && allowEdit);
             buttonSave.setEnabled(executable && allowEdit);
-
         }
     }
     
@@ -3103,13 +3105,13 @@ public class View extends MainFrame {
 
     private void buttonStepActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonStepActionPerformed
         try {
-            if (context.getState() == State.Ready) {
-                debugScript(true);
-            } else {
                 Processor runningProcessor = getRunningProcessor();
                 if (runningProcessor!=null){
                     runningProcessor.step();
                 } else {
+                    if (context.getState() == State.Ready) {
+                        debugScript(true);
+                    } else {
                     context.step();
                 }
             }

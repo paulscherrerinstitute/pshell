@@ -55,6 +55,7 @@ public final class TaskQueue extends MonitoredPanel implements Processor {
                 modified = true;
             }
         };
+        model.addTableModelListener(modelChartsListener);
         initializeTable();
     }
 
@@ -163,21 +164,9 @@ public final class TaskQueue extends MonitoredPanel implements Processor {
                 return false;
             }            
         }
-        table.getColumnModel().getColumn(1).setCellEditor(new ParsEditor());
+        table.getColumnModel().getColumn(1).setCellEditor(new ParsEditor());         
 
-        SwingUtils.setEnumTableColum(table, 3, Task.QueueTaskErrorAction.class);
-        
-        table.getColumnModel().getColumn(0).setPreferredWidth(40);
-        table.getColumnModel().getColumn(1).setPreferredWidth(100);
-        table.getColumnModel().getColumn(2).setPreferredWidth(100);
-        table.getColumnModel().getColumn(3).setPreferredWidth(100);        
-        table.getColumnModel().getColumn(4).setPreferredWidth(50);        
-        table.getColumnModel().getColumn(0).setResizable(true);   
-        table.getColumnModel().getColumn(1).setResizable(true);
-        table.getColumnModel().getColumn(2).setResizable(true);
-        table.getColumnModel().getColumn(3).setResizable(true);
-        table.getColumnModel().getColumn(4).setResizable(true);
-        
+        SwingUtils.setEnumTableColum(table, 3, Task.QueueTaskErrorAction.class);                
         update();
     }
 
@@ -186,18 +175,9 @@ public final class TaskQueue extends MonitoredPanel implements Processor {
         update();
     }
 
-    /*
-    @Override
-    public void onTaskFinished(Task task) {
-        if (task == processingTask) {
-            table.getSelectionModel().clearSelection();
-            processingTask = null;
-        }
-    }
-    */
 
     protected void update() {
-        boolean editing = !Context.getInstance().getState().isProcessing();
+        boolean editing = completed(); //!Context.getInstance().getState().isProcessing();
         int rows = model.getRowCount();
         int cur = table.getSelectedRow();
         buttonUp.setEnabled((rows > 0) && (cur > 0) && editing);
@@ -209,12 +189,12 @@ public final class TaskQueue extends MonitoredPanel implements Processor {
 
     @Override
     public String getType() {
-        return "Task Queue";
+        return "Execution Queue";
     }
 
     @Override
     public String getDescription() {
-        return "Task queue (*.que)";
+        return "Execution queue (*.que)";
     }
 
     @Override
@@ -237,41 +217,40 @@ public final class TaskQueue extends MonitoredPanel implements Processor {
         QueueExecution task = new QueueExecution(queue.toArray(new QueueTask[0]), new Task.QueueExecutionListener() {
             @Override
             public void onStartTask(QueueTask task, int index) {
-                //if (processingTask != null) {
-                    if ((index >= 0) && (index < model.getRowCount())) {
-                        table.getSelectionModel().setSelectionInterval(index, index);
-                        model.setValueAt(task.enabled ? "Running" : "Skipped", index, INDEX_STATUS);
-                    }
-                //}
+                if ((index >= 0) && (index < model.getRowCount())) {
+                    table.getColumnModel().getColumn(1).getCellEditor().cancelCellEditing();
+                    table.getSelectionModel().setSelectionInterval(index, index);
+                    model.setValueAt(task.enabled ? "Running" : "Skipped", index, INDEX_STATUS);
+                }
             }
 
             @Override
             public void onFinishedTask(QueueTask task, int index, Object ret, Exception ex) {
-                //if (processingTask != null) {
-                    if ((index >= 0) && (index < model.getRowCount())) {
-                        model.setValueAt((ex == null) ? "Success" : (Context.getInstance().isAborted() ? "Aborted" : "Failure"), index, INDEX_STATUS);
-                    }
-                //}
+                if ((index >= 0) && (index < model.getRowCount())) {
+                    model.setValueAt((ex == null) ? "Success" : (Context.getInstance().isAborted() ? "Aborted" : "Failure"), index, INDEX_STATUS);
+                }
             }
 
             @Override
             public void onAborted(QueueTask task, int index, boolean userAbort, boolean skipped) {
-                //if (processingTask != null) {
-                    if (skipped){
-                        model.setValueAt("Skipped", index, INDEX_STATUS);
-                    } else {
-                        model.setValueAt(userAbort ? "Aborted" : "Failure", index, INDEX_STATUS);
-                        for (int i = index + 1; i < model.getRowCount(); i++) {
-                            model.setValueAt("Skipped", i, INDEX_STATUS);
-                        }
+                if (skipped){
+                    model.setValueAt("Skipped", index, INDEX_STATUS);
+                } else {
+                    model.setValueAt(userAbort ? "Aborted" : "Failure", index, INDEX_STATUS);
+                    for (int i = index + 1; i < model.getRowCount(); i++) {
+                        model.setValueAt("Skipped", i, INDEX_STATUS);
                     }
-                //}
+                }
             }
 
             @Override
             public void onFinishedExecution(QueueTask task) {
                 table.getSelectionModel().clearSelection();
                 processingTask = null;
+                update();
+                if (App.getInstance().getMainFrame()!=null){
+                    App.getInstance().getMainFrame().updateButtons();
+                }
             }
         });
         for (int i = 0; i < model.getRowCount(); i++) {
@@ -362,7 +341,7 @@ public final class TaskQueue extends MonitoredPanel implements Processor {
         }
         return null;
     }
-
+    
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always

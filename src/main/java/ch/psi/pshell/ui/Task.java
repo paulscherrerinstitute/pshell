@@ -8,6 +8,7 @@ import ch.psi.pshell.core.CommandSource;
 import ch.psi.pshell.core.JsonSerializer;
 import ch.psi.pshell.core.LogManager;
 import ch.psi.pshell.ui.Preferences.ScriptPopupDialog;
+import ch.psi.utils.State;
 import ch.psi.utils.Str;
 import ch.psi.utils.swing.SwingUtils;
 import java.awt.event.ActionEvent;
@@ -305,13 +306,14 @@ public abstract class Task extends SwingWorker<Object, Void> {
                 for (QueueTask task : queue) {
                     currentTask = task;
                     currentIndex++;
-                    while (true) {
+                    while (!isDone()) {
                         try {
                             skipped = false;
                             if (listener != null) {
                                 listener.onStartTask(task, currentIndex);
                             }
                             if (task.enabled) {
+                                Context.getInstance().waitState(State.Ready, 5000); //Tries to keep up with some concurrent execution.
                                 Object ret = App.getInstance().evalFile(task.file, task.args);
                                 //
                                 if (Context.getInstance().getState().isProcessing()) {
@@ -353,11 +355,15 @@ public abstract class Task extends SwingWorker<Object, Void> {
                                 if (task.error == QueueTaskErrorAction.Resume) {
                                     break;
                                 }
+                                Thread.sleep(1000); //Delays restart to handle skipping and avoid high number of exceptions
+                                if (skipped) {
+                                    break;
+                                }
                             }
                         }
                     }
                 }
-                return "Success running task queue";
+                return "Success running queue";
             } finally {
                 currentIndex = -1;
                 if (listener != null) {
