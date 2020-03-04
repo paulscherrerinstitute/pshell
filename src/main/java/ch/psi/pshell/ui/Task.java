@@ -397,7 +397,7 @@ public abstract class Task extends SwingWorker<Object, Void> {
             if (!args.startsWith("{")) {
                 args = "{" + args;
             }
-            if (!args.endsWith("?")) {
+            if (!args.endsWith("}")) {
                 args = args + "}";
             }
             try {

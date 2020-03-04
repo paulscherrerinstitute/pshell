@@ -11,10 +11,8 @@ import ch.psi.utils.swing.MonitoredPanel;
 import ch.psi.utils.swing.SwingUtils;
 import java.awt.Component;
 import java.awt.datatransfer.DataFlavor;
-import java.awt.datatransfer.UnsupportedFlavorException;
 import java.awt.dnd.DnDConstants;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.io.File;
 import java.io.IOException;
@@ -31,7 +29,9 @@ import javax.swing.GroupLayout;
 import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JFileChooser;
+import javax.swing.JMenuItem;
 import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
 import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.TransferHandler;
@@ -50,16 +50,13 @@ public final class TaskQueue extends MonitoredPanel implements Processor {
     final DefaultTableModel model;
     boolean modified;
     Task.QueueExecution processingTask;
-    final int INDEX_STATUS = 4;
+    final int INDEX_STATUS = 4;  
 
     public TaskQueue() {
         initComponents();
         model = (DefaultTableModel) table.getModel();
-        TableModelListener modelChartsListener = new TableModelListener() {
-            @Override
-            public void tableChanged(TableModelEvent e) {
-                modified = true;
-            }
+        TableModelListener modelChartsListener = (TableModelEvent e) -> {
+            modified = true;
         };
         model.addTableModelListener(modelChartsListener);
         initializeTable();
@@ -99,6 +96,7 @@ public final class TaskQueue extends MonitoredPanel implements Processor {
             }
 
         });
+               
     }
     
     public void addNewFile(String filename){
@@ -116,12 +114,30 @@ public final class TaskQueue extends MonitoredPanel implements Processor {
         update();  
     }
 
+    File getFile(String filename){
+        filename = filename.trim();
+        if (filename.isEmpty()) {
+            return null;
+        }
+        String ext = IO.getExtension(filename);
+        if (ext.isEmpty()) {
+            filename = filename + "." + Context.getInstance().getScriptType().toString();
+        }
+        File file = Paths.get(Context.getInstance().getSetup().getScriptPath(), filename).toFile();
+
+        if (!file.exists()) {
+            file = new File(filename);
+        }
+        return file;
+    }
+    
     public void initializeTable() {
 
         class ParsEditorPanel extends JPanel {
 
             private final JTextField field = new JTextField();
             private final Action parsEditAction = new AbstractAction("...") {
+                @Override
                 public void actionPerformed(ActionEvent e) {
                     try {
                         JFileChooser chooser = new JFileChooser(Context.getInstance().getSetup().getScriptPath());
@@ -134,16 +150,8 @@ public final class TaskQueue extends MonitoredPanel implements Processor {
                         }
                         chooser.setAcceptAllFileFilterUsed(true);
                         String filename = field.getText().trim();
-                        if (!filename.isEmpty()) {
-                            String ext = IO.getExtension(filename);
-                            if (ext.isEmpty()) {
-                                filename = filename + "." + Context.getInstance().getScriptType().toString();
-                            }
-                            File file = Paths.get(Context.getInstance().getSetup().getScriptPath(), filename).toFile();
-
-                            if (!file.exists()) {
-                                file = new File(filename);
-                            }
+                        File file = getFile(filename);
+                        if (filename!=null) {
                             chooser.setSelectedFile(file);
                         }
                         int rVal = chooser.showOpenDialog(TaskQueue.this);
@@ -165,12 +173,8 @@ public final class TaskQueue extends MonitoredPanel implements Processor {
 
             public ParsEditorPanel() {
                 field.setBorder(null);
-                field.addActionListener(new ActionListener() {
-
-                    @Override
-                    public void actionPerformed(ActionEvent e) {
-                        table.getCellEditor().stopCellEditing();
-                    }
+                field.addActionListener((ActionEvent e) -> {
+                    table.getCellEditor().stopCellEditing();
                 });
                 button.setBorder(javax.swing.BorderFactory.createEtchedBorder());
 
@@ -396,6 +400,34 @@ public final class TaskQueue extends MonitoredPanel implements Processor {
         }
         return null;
     }
+    
+    
+    private void checkPopup(MouseEvent e) {
+        try {
+            if (e.isPopupTrigger()) {
+                int row = table.rowAtPoint(e.getPoint());
+                if (row >= 0 && row < table.getRowCount()) {
+                    table.setRowSelectionInterval(row, row);
+                    File file = getFile(String.valueOf(model.getValueAt(table.getSelectedRow(), 1)));                      
+                    JPopupMenu popupMenu = new JPopupMenu();
+                    JMenuItem menuOpen = new JMenuItem("Open File");            
+                    menuOpen.addActionListener((evt)->{
+                       try {
+                            App.getInstance().getMainFrame().openScriptOrProcessor(file.getCanonicalPath());
+                       } catch (Exception ex) {
+                           SwingUtils.showException(this, ex);
+                       }
+                    });
+                    popupMenu.add(menuOpen);                                            
+                    menuOpen.setEnabled((file!=null) && (file.exists()));
+                    popupMenu.show(e.getComponent(), e.getX(), e.getY());
+                }
+            }
+        } catch (Exception ex) {
+            SwingUtils.showException(this, ex);
+        }
+
+    } 
 
     /**
      * This method is called from within the constructor to initialize the form.
@@ -437,7 +469,11 @@ public final class TaskQueue extends MonitoredPanel implements Processor {
             }
         });
         table.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
+        table.getTableHeader().setReorderingAllowed(false);
         table.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mousePressed(java.awt.event.MouseEvent evt) {
+                tableMousePressed(evt);
+            }
             public void mouseReleased(java.awt.event.MouseEvent evt) {
                 tableMouseReleased(evt);
             }
@@ -562,7 +598,12 @@ public final class TaskQueue extends MonitoredPanel implements Processor {
 
     private void tableMouseReleased(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_tableMouseReleased
         update();
+        checkPopup(evt);
     }//GEN-LAST:event_tableMouseReleased
+
+    private void tableMousePressed(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_tableMousePressed
+        checkPopup(evt);
+    }//GEN-LAST:event_tableMousePressed
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
