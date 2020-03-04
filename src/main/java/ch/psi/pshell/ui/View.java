@@ -452,7 +452,7 @@ public class View extends MainFrame {
             Component selectedDocument = tabDoc.getSelectedComponent();
             State state = App.getInstance().getState();
             Processor runningProcessor = getRunningProcessor();
-            if (state==State.Ready && (runningProcessor!=null)&&(runningProcessor instanceof TaskQueue)){
+            if (state==State.Ready && (runningProcessor!=null)&&(runningProcessor instanceof QueueProcessor)){
                 state = State.Busy;
             }
             boolean showingScript = (selectedDocument != null) && (selectedDocument instanceof ScriptEditor);
@@ -1105,11 +1105,11 @@ public class View extends MainFrame {
         return ret;
     }
     
-    public List<TaskQueue> getQueues() {
-        ArrayList<TaskQueue> ret = new ArrayList();
+    public List<QueueProcessor> getQueues() {
+        ArrayList<QueueProcessor> ret = new ArrayList();
         for (Processor processor : getProcessors()) {
-            if (processor instanceof TaskQueue){
-                ret.add((TaskQueue) processor);
+            if (processor instanceof QueueProcessor){
+                ret.add((QueueProcessor) processor);
             }
         }
         return ret;
@@ -3283,9 +3283,9 @@ public class View extends MainFrame {
                 Processor runningProcessor = getRunningProcessor();
                 boolean showingExecutor = (selectedDocument != null) && (selectedDocument instanceof Executor);
             
-                List<TaskQueue> queues = getQueues();  
-                if (showingExecutor && (selectedDocument instanceof TaskQueue)){
-                    queues.remove((TaskQueue)selectedDocument);
+                List<QueueProcessor> queues = getQueues();  
+                if (showingExecutor && (selectedDocument instanceof QueueProcessor)){
+                    queues.remove((QueueProcessor)selectedDocument);
                 }
                 menuAddToQueue.setVisible(showingExecutor);
                 menuAddToQueue.removeAll();
@@ -3297,7 +3297,7 @@ public class View extends MainFrame {
                             JMenuItem item = new JMenuItem("New");
                             item.addActionListener((e)->{
                                 try {
-                                    TaskQueue tq = openProcessor(TaskQueue.class, null);
+                                    QueueProcessor tq = openProcessor(QueueProcessor.class, null);
                                     tq.addNewFile(filename);
                                 } catch (Exception ex) {
                                     showException(ex);

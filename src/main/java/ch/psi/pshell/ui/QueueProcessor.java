@@ -44,7 +44,7 @@ import javax.swing.table.TableCellEditor;
 /**
  *
  */
-public final class TaskQueue extends MonitoredPanel implements Processor {
+public final class QueueProcessor extends MonitoredPanel implements Processor {
 
     String fileName;
     final DefaultTableModel model;
@@ -52,7 +52,7 @@ public final class TaskQueue extends MonitoredPanel implements Processor {
     Task.QueueExecution processingTask;
     final int INDEX_STATUS = 4;  
 
-    public TaskQueue() {
+    public QueueProcessor() {
         initComponents();
         model = (DefaultTableModel) table.getModel();
         TableModelListener modelChartsListener = (TableModelEvent e) -> {
@@ -154,7 +154,7 @@ public final class TaskQueue extends MonitoredPanel implements Processor {
                         if (filename!=null) {
                             chooser.setSelectedFile(file);
                         }
-                        int rVal = chooser.showOpenDialog(TaskQueue.this);
+                        int rVal = chooser.showOpenDialog(QueueProcessor.this);
                         if (rVal == JFileChooser.APPROVE_OPTION) {
                             filename = chooser.getSelectedFile().toString();
                             if (IO.isSubPath(filename, Context.getInstance().getSetup().getScriptPath())) {
@@ -163,7 +163,7 @@ public final class TaskQueue extends MonitoredPanel implements Processor {
                             field.setText(filename);
                         }
                     } catch (Exception ex) {
-                        SwingUtils.showException(TaskQueue.this, ex);
+                        SwingUtils.showException(QueueProcessor.this, ex);
                     }
                 }
             };

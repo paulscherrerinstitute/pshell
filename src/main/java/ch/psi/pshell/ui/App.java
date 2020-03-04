@@ -970,7 +970,7 @@ public class App extends ObservableBase<AppListener> {
     
     void registerProcessors(){
         Processor.addServiceProvider(ScanEditorPanel.class);
-        Processor.addServiceProvider(TaskQueue.class);        
+        Processor.addServiceProvider(QueueProcessor.class);        
     }
 
     Path getPlotWindowStatePath(){
