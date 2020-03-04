@@ -1,9 +1,8 @@
 package ch.psi.pshell.ui;
 
+import ch.psi.pshell.swing.Executor;
 import ch.psi.pshell.core.Context;
 import ch.psi.pshell.data.DataManager;
-import ch.psi.utils.Chrono;
-import ch.psi.utils.Condition;
 import ch.psi.utils.State;
 import ch.psi.utils.swing.SwingUtils;
 import java.io.File;
@@ -15,7 +14,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.ServiceLoader;
-import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JFileChooser;
@@ -26,7 +24,7 @@ import javax.swing.filechooser.FileNameExtensionFilter;
  * File-based process executor - and alternative to script execution, in order
  * to provide extensions to create other syntaxes for DAQ.
  */
-public interface Processor {
+public interface Processor extends Executor{
 
     public String getType();
 
@@ -46,32 +44,11 @@ public interface Processor {
     default public void execute(String file, Map<String, Object> vars) throws Exception {
         open(file);
         execute();
-    }
+    }     
     
-    default Object waitComplete(int timeout) throws Exception {
-        Chrono chrono = new Chrono();
-        try {
-            chrono.waitCondition(new Condition() {
-                @Override
-                public boolean evaluate() throws InterruptedException {
-                    return completed();
-                }
-            }, timeout);
-        } catch (TimeoutException ex) {
-        }        
-        Object result = getResult();
-        if (result instanceof Exception){
-            throw (Exception)result;
-        }
-        return result;
-    }        
-    
-    default Object getResult(){
-        return null;
-    }    
-    
-    default boolean completed() {
-        return !Context.getInstance().getState().isProcessing();
+    @Override
+    default boolean isExecuting() {
+        return Context.getInstance().getState().isProcessing();
     }            
 
     public String getHomePath();
@@ -117,7 +94,6 @@ public interface Processor {
         return (JPanel) this;
     }
 
-    public boolean hasChanged();
 
     default public boolean checkChangeOnClose() throws IOException {
         if (hasChanged()) {
@@ -133,8 +109,6 @@ public interface Processor {
         }
         return true;
     }
-
-    public String getFileName();
 
     static ArrayList<Class> dynamicProviders = new ArrayList<>();
 
@@ -187,10 +161,12 @@ public interface Processor {
         return false;
     }
     
+    @Override
     default boolean canStep() {
         return false;
     }    
     
+    @Override
     default boolean canPause() {
         return false;
     }     

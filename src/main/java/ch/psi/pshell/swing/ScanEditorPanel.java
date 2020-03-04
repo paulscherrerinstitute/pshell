@@ -366,8 +366,8 @@ public class ScanEditorPanel extends MonitoredPanel implements Processor {
     }    
     
     @Override
-    public boolean completed() {
-        return running==false;
+    public boolean isExecuting() {
+        return running;
     }      
     
     public String getCommand() {

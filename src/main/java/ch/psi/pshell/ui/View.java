@@ -119,6 +119,7 @@ import ch.psi.pshell.core.LogManager;
 import ch.psi.pshell.imaging.FileSource;
 import ch.psi.pshell.scripting.ViewPreference.PlotPreferences;
 import ch.psi.pshell.swing.DataPanel;
+import ch.psi.pshell.swing.Executor;
 import ch.psi.pshell.swing.HistoryChart;
 import ch.psi.pshell.swing.MotorPanel;
 import ch.psi.pshell.swing.RepositoryChangesDialog;
@@ -355,7 +356,7 @@ public class View extends MainFrame {
                         currentScriptEditor = null;
                     }
                     if (topLevelProcessor!=null){
-                         if (topLevelProcessor.completed()){
+                         if (!topLevelProcessor.isExecuting()){
                              topLevelProcessor = null;
                          }
                     }
@@ -434,7 +435,7 @@ public class View extends MainFrame {
     }
     
     Processor getRunningProcessor(){
-         return ((topLevelProcessor!=null) && (!topLevelProcessor.completed())) ? topLevelProcessor: null;
+         return ((topLevelProcessor!=null) && (topLevelProcessor.isExecuting())) ? topLevelProcessor: null;
     }
 
     void updateButtons() {
@@ -455,13 +456,12 @@ public class View extends MainFrame {
                 state = State.Busy;
             }
             boolean showingScript = (selectedDocument != null) && (selectedDocument instanceof ScriptEditor);
-            boolean showingProcessor = (selectedDocument != null) && (selectedDocument instanceof Processor);
-            boolean executable = showingScript || showingProcessor;
+            boolean showingExecutor = (selectedDocument != null) && (selectedDocument instanceof Executor);
             boolean ready = (state == State.Ready);
             boolean busy = (state == State.Busy);
             boolean paused = (state == State.Paused);            
 
-            buttonRun.setEnabled(ready && executable && allowRun);
+            buttonRun.setEnabled(ready && showingExecutor && allowRun);
             buttonDebug.setEnabled((ready && showingScript && allowRun) || (paused));
             buttonPause.setEnabled( context.canPause() || ((runningProcessor!=null) && (runningProcessor.canPause())));
             buttonStep.setEnabled(((ready && showingScript) || context.canStep() || ((runningProcessor!=null) && (runningProcessor.canStep()))) && allowRun);
@@ -478,9 +478,9 @@ public class View extends MainFrame {
             menuStopAll.setEnabled(buttonStopAll.isEnabled());
 
             menuNew.setEnabled(allowEdit);
-            menuSave.setEnabled(executable && allowEdit);
-            menuSaveAs.setEnabled(executable && allowEdit);
-            buttonSave.setEnabled(executable && allowEdit);
+            menuSave.setEnabled(showingExecutor && allowEdit);
+            menuSaveAs.setEnabled(showingExecutor && allowEdit);
+            buttonSave.setEnabled(showingExecutor && allowEdit);            
         }
     }
     
@@ -1104,6 +1104,16 @@ public class View extends MainFrame {
         }
         return ret;
     }
+    
+    public List<TaskQueue> getQueues() {
+        ArrayList<TaskQueue> ret = new ArrayList();
+        for (Processor processor : getProcessors()) {
+            if (processor instanceof TaskQueue){
+                ret.add((TaskQueue) processor);
+            }
+        }
+        return ret;
+    }
 
     public List<PlotPanel> getPlotPanels() {
         ArrayList<PlotPanel> ret = new ArrayList();
@@ -1175,7 +1185,7 @@ public class View extends MainFrame {
         App.getInstance().getContext().assertState(State.Ready);
         currentScriptEditor = getSelectedEditor();
         if (currentScriptEditor != null) {
-            if (currentScriptEditor.getDocument().hasChanged()) {
+            if (currentScriptEditor.hasChanged()) {
                 if (SwingUtils.showOption(this, "Save", "Document has changed. Do you want to save it?", OptionType.YesNo) != OptionResult.Yes) {
                     return;
                 }
@@ -1221,7 +1231,7 @@ public class View extends MainFrame {
 
     void updateScriptEditorTabTitle(ScriptEditor editor, int index) {
             try {
-                String title = editor.getScriptName() + (editor.getDocument().hasChanged() ? "*" : "");
+                String title = editor.getScriptName() + (editor.hasChanged() ? "*" : "");
                 if (!title.equals(tabDoc.getTitleAt(index))){
                     tabDoc.setTitleAt(index, title);
                     CloseButtonTabComponent tabComponent = (CloseButtonTabComponent) tabDoc.getTabComponentAt(index);
@@ -1351,7 +1361,7 @@ public class View extends MainFrame {
         return editor;
     }
 
-    public Processor openProcessor(Class cls, String file) throws IOException, InstantiationException, IllegalAccessException {
+    public <T extends Processor> T  openProcessor(Class<T> cls, String file) throws IOException, InstantiationException, IllegalAccessException {
         if (file != null) {
             for (Processor p : getProcessors()) {
                 if ((p.getClass().isAssignableFrom(cls)) && p.getFileName() != null) {
@@ -1362,7 +1372,7 @@ public class View extends MainFrame {
                             } else if (detachedScripts.containsValue(p.getPanel())) {
                                 p.getPanel().getTopLevelAncestor().requestFocus();
                             }
-                            return p;
+                            return (T) p;
                         }
                     } catch (Exception ex){
                     }
@@ -1370,7 +1380,7 @@ public class View extends MainFrame {
             }
         }
 
-        Processor processor = (Processor) cls.newInstance();
+        T processor = cls.newInstance();
         if (file != null) {
             file = processor.resolveFile(file);
             processor.open(file);
@@ -1930,6 +1940,7 @@ public class View extends MainFrame {
         menuOpen = new javax.swing.JMenuItem();
         menuSave = new javax.swing.JMenuItem();
         menuSaveAs = new javax.swing.JMenuItem();
+        menuAddToQueue = new javax.swing.JMenu();
         menuOpenRecent = new javax.swing.JMenu();
         jSeparator2 = new javax.swing.JPopupMenu.Separator();
         menuImport = new javax.swing.JMenuItem();
@@ -2356,6 +2367,10 @@ public class View extends MainFrame {
             }
         });
         menuFile.add(menuSaveAs);
+
+        menuAddToQueue.setText(bundle.getString("View.menuAddToQueue.text")); // NOI18N
+        menuAddToQueue.setName("menuAddToQueue"); // NOI18N
+        menuFile.add(menuAddToQueue);
 
         menuOpenRecent.setText(bundle.getString("View.menuOpenRecent.text")); // NOI18N
         menuOpenRecent.setName("menuOpenRecent"); // NOI18N
@@ -3263,7 +3278,59 @@ public class View extends MainFrame {
                     item.addActionListener(listener);
                     menuOpenRecent.add(item, 0);
                 }
+                
+                Component selectedDocument = tabDoc.getSelectedComponent();
+                Processor runningProcessor = getRunningProcessor();
+                boolean showingExecutor = (selectedDocument != null) && (selectedDocument instanceof Executor);
+            
+                List<TaskQueue> queues = getQueues();  
+                if (showingExecutor && (selectedDocument instanceof TaskQueue)){
+                    queues.remove((TaskQueue)selectedDocument);
+                }
+                menuAddToQueue.setVisible(showingExecutor);
+                menuAddToQueue.removeAll();
+                if (showingExecutor){
+                    String filename = ((Executor)selectedDocument).getFileName();
+                    menuAddToQueue.setEnabled(filename!=null);
+                    if (filename!=null){    
+                        if (queues.size()==0){
+                            JMenuItem item = new JMenuItem("New");
+                            item.addActionListener((e)->{
+                                try {
+                                    TaskQueue tq = openProcessor(TaskQueue.class, null);
+                                    tq.addNewFile(filename);
+                                } catch (Exception ex) {
+                                    showException(ex);
+                                }
+                            });
+                            menuAddToQueue.add(item);
+                             
+                        } else {
+                            for (int i=0; i< queues.size(); i++){
+                                if (queues.get(i) != selectedDocument){
+                                    String queueFilename = queues.get(i).getFileName();
+                                    if (queueFilename==null){
+                                        queueFilename = "Unknown";
+                                    }
+                                    JMenuItem item = new JMenuItem(IO.getPrefix(queueFilename));
+                                    item.setEnabled(queues.get(i) != runningProcessor);
+                                    int index = i;
+                                    item.addActionListener((e)->{
+                                        try {
+                                            queues.get(index).addNewFile(filename);
+                                            tabDoc.setSelectedComponent(queues.get(index));
+                                        } catch (Exception ex) {
+                                            showException(ex);
+                                        }
+                                    });
+                                    menuAddToQueue.add(item);
+                                }
+                            }
+                        }
+                    }
+                }
             } catch (Exception ex) {
+                showException(ex);
             }
 
             User user = context.getUser();
@@ -4210,6 +4277,7 @@ public class View extends MainFrame {
     private ch.psi.pshell.swing.LoggerPanel loggerPanel;
     private javax.swing.JPanel mainPanel;
     private javax.swing.JMenuItem menuAbort;
+    private javax.swing.JMenu menuAddToQueue;
     private javax.swing.JMenuBar menuBar;
     private javax.swing.JMenu menuBlock;
     private javax.swing.JMenuItem menuChangeUser;

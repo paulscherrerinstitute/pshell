@@ -39,7 +39,7 @@ import org.fife.ui.rsyntaxtextarea.RSyntaxTextAreaEditorKit;
 /**
  *
  */
-public class ScriptEditor extends MonitoredPanel {
+public class ScriptEditor extends MonitoredPanel implements Executor {
 
     static final Color STATEMENT_HIGHLIGHT = MainFrame.isDark() ? new Color(84, 84, 84) : new Color(200, 200, 200);
     static final Color STATEMENT_HIGHLIGHT_MAC = new Color(208, 208, 208);
@@ -123,6 +123,7 @@ public class ScriptEditor extends MonitoredPanel {
         //setEnabled(true);
     }
 
+    @Override
     public boolean isExecuting() {
         return getTextEditor().isManualHighligting();
     }
@@ -259,6 +260,7 @@ public class ScriptEditor extends MonitoredPanel {
         return editor.isReadOnly();
     }
 
+    @Override
     public String getFileName() {
         return editor.getFileName();
     }
@@ -319,6 +321,11 @@ public class ScriptEditor extends MonitoredPanel {
 
     public Font getTextPaneFont() {
         return editor.getEditor().getFont();
+    }
+    
+    @Override
+    public boolean hasChanged(){
+        return editor.hasChanged();
     }
 
     //Context menu

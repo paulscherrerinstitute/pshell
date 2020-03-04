@@ -90,13 +90,8 @@ public final class TaskQueue extends MonitoredPanel implements Processor {
 
                 try {
                     JTable.DropLocation dl = (JTable.DropLocation)support.getDropLocation();
-                    String filename = (String) support.getTransferable().getTransferData(DataFlavor.stringFlavor);                    
-                    if (IO.isSubPath(filename, Context.getInstance().getSetup().getScriptPath())) {
-                        filename = IO.getRelativePath(filename, Context.getInstance().getSetup().getScriptPath());
-                    }                    
-                    Object[] data = new Object[]{true, filename, "", Task.QueueTaskErrorAction.Resume, ""};
-                    model.insertRow(dl.getRow(), data);
-                    update();                    
+                    String filename = (String) support.getTransferable().getTransferData(DataFlavor.stringFlavor);         
+                    addNewFile(filename, dl.getRow());                  
                 } catch (Exception ex) {
                     return false;
                 }                
@@ -104,6 +99,21 @@ public final class TaskQueue extends MonitoredPanel implements Processor {
             }
 
         });
+    }
+    
+    public void addNewFile(String filename){
+        addNewFile(filename, model.getRowCount());
+    }
+    
+    public void addNewFile(String filename, int index){
+        if (IO.isSubPath(filename, Context.getInstance().getSetup().getScriptPath())) {
+            filename = IO.getRelativePath(filename, Context.getInstance().getSetup().getScriptPath());
+        }                    
+        Object[] data = new Object[]{true, filename, "", Task.QueueTaskErrorAction.Resume, ""};
+        model.insertRow(index, data);
+        model.fireTableDataChanged();        
+        table.getSelectionModel().setSelectionInterval(index, index);
+        update();  
     }
 
     public void initializeTable() {
@@ -223,7 +233,7 @@ public final class TaskQueue extends MonitoredPanel implements Processor {
     }
 
     protected void update() {
-        boolean editing = completed(); //!Context.getInstance().getState().isProcessing();
+        boolean editing = !isExecuting(); //!Context.getInstance().getState().isProcessing();
         int rows = model.getRowCount();
         int cur = table.getSelectedRow();
         buttonUp.setEnabled((rows > 0) && (cur > 0) && editing);
@@ -235,7 +245,7 @@ public final class TaskQueue extends MonitoredPanel implements Processor {
 
     @Override
     public String getType() {
-        return "Execution Queue";
+        return "Queue";
     }
 
     @Override
@@ -317,8 +327,8 @@ public final class TaskQueue extends MonitoredPanel implements Processor {
     }
 
     @Override
-    public boolean completed() {
-        return processingTask == null;
+    public boolean isExecuting() {
+        return processingTask != null;
     }
 
     @Override
@@ -526,12 +536,16 @@ public final class TaskQueue extends MonitoredPanel implements Processor {
 
     private void buttonInsertActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonInsertActionPerformed
         Object[] data = new Object[]{true, "", "", Task.QueueTaskErrorAction.Resume, ""};
+        int index;
         if (table.getSelectedRow() >= 0) {
-            model.insertRow(table.getSelectedRow() + 1, data);
+            index = table.getSelectedRow() + 1;
+            model.insertRow(index, data);            
         } else {
             model.addRow(data);
+            index = model.getRowCount();
         }
         model.fireTableDataChanged();
+        table.getSelectionModel().setSelectionInterval(index, index);
         update();
     }//GEN-LAST:event_buttonInsertActionPerformed
 
