@@ -171,14 +171,14 @@ public class Console {
     final ContextListener contextListener = new ContextAdapter() {
         @Override
         public void onShellCommand(CommandSource source, String command) {
-            if (source.isRemote()) {
+            if (source.isRemote() && !Context.getInstance().getConfig().hideServerMessages) {
                 System.out.println(command);
             }
         }
 
         @Override
         public void onShellResult(CommandSource source, Object result) {
-            if (source.isRemote()) {
+            if (source.isRemote() && !Context.getInstance().getConfig().hideServerMessages) {
                 if (result != null) {
                     System.out.println(result.toString());
                 }
