@@ -315,7 +315,7 @@ public abstract class Task extends SwingWorker<Object, Void> {
                             if (task.enabled) {
                                 Context.getInstance().waitState(State.Ready, 5000); //Tries to keep up with some concurrent execution.
                                 Object ret = App.getInstance().evalFile(task.file, task.args);
-                                //
+                                
                                 if (Context.getInstance().getState().isProcessing()) {
                                     Logger.getLogger(QueueExecution.class.getName()).info("State busy after task: waiting completion of next stage");
                                     Context.getInstance().waitStateNotProcessing(-1);
@@ -384,7 +384,7 @@ public abstract class Task extends SwingWorker<Object, Void> {
         public void skip() {
             skipped = true;
             try {
-                Context.getInstance().abort();
+                App.getInstance().abortEvalFile(currentTask.file);
             } catch (InterruptedException ex) {
                 Logger.getLogger(QueueExecution.class.getName()).log(Level.SEVERE, null, ex);
             }

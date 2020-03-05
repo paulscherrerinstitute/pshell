@@ -280,7 +280,7 @@ public final class QueueProcessor extends MonitoredPanel implements Processor {
                 if ((index >= 0) && (index < model.getRowCount())) {
                     table.getColumnModel().getColumn(1).getCellEditor().cancelCellEditing();
                     table.getSelectionModel().setSelectionInterval(index, index);
-                    model.setValueAt(task.enabled ? "Running" : "Skipped", index, INDEX_STATUS);
+                    model.setValueAt(task.enabled ? "Running" : "Disabled", index, INDEX_STATUS);
                 }
             }
 
@@ -297,9 +297,9 @@ public final class QueueProcessor extends MonitoredPanel implements Processor {
                     model.setValueAt("Skipped", index, INDEX_STATUS);
                 } else {
                     model.setValueAt(userAbort ? "Aborted" : "Failure", index, INDEX_STATUS);
-                    for (int i = index + 1; i < model.getRowCount(); i++) {
-                        model.setValueAt("Skipped", i, INDEX_STATUS);
-                    }
+                    //for (int i = index + 1; i < model.getRowCount(); i++) {
+                    //    model.setValueAt("Skipped", i, INDEX_STATUS);
+                    //}
                 }
             }
 

@@ -1181,6 +1181,8 @@ public class App extends ObservableBase<AppListener> {
         }
     }
     
+    Processor runningProcessor;
+            
     Object evalFile(File file,  Map<String, Object> args) throws Exception{
         return evalFile(file, args, false);
     }
@@ -1192,13 +1194,25 @@ public class App extends ObservableBase<AppListener> {
             if (view != null) {
                 view.setCurrentProcessor(processor, topLevel);
             }            
-            processor.execute(processor.resolveFile(file.getPath()), args);
-            Thread.sleep(100); //Give som time if processor does not change app state immediatelly;
-            return processor.waitComplete(-1);
+            runningProcessor = processor;
+            try{
+                processor.execute(processor.resolveFile(file.getPath()), args);
+                Thread.sleep(100); //Give som time if processor does not change app state immediatelly;
+                return processor.waitComplete(-1);
+            } finally{
+                runningProcessor = null;
+            }
         }
         return context.evalFile(file.getPath(), args);
     }
-
+    
+    void abortEvalFile(File file) throws InterruptedException{
+        if (runningProcessor!=null){
+            runningProcessor.abort();
+        }                            
+        Context.getInstance().abort();
+    }
+    
     Processor getProcessor(File file) throws Exception{
         if (!IO.getExtension(file).isEmpty()) {
             for (Processor processor : Processor.getServiceProviders()) {
