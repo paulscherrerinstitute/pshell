@@ -1457,7 +1457,8 @@ public class LinePlotJFree extends LinePlotBase {
                                     return;
                                 }
                                 pointers[i] = new XYPointerAnnotation(text, x, f, Math.toRadians(270));
-                                pointers[i].setArrowPaint(Color.DARK_GRAY);
+                                pointers[i].setArrowPaint(getAxisTextColor());
+                                pointers[i].setPaint(getAxisTextColor());
                                 pointers[i].setBaseRadius(0);
                                 pointers[i].setArrowLength(5);
                                 pointers[i].setTipRadius(10);
