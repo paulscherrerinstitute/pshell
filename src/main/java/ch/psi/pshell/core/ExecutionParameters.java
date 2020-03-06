@@ -684,6 +684,10 @@ public class ExecutionParameters {
         CommandInfo cmd = getCommandInfo();
         return (cmd != null) ? cmd.background : !Context.getInstance().isInterpreterThread();
     }
+    
+    public boolean isDebug() {
+        return Context.getInstance().isRunningStatements();
+    }
 
     @Override
     public String toString() {
