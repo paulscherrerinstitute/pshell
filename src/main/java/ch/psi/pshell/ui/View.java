@@ -355,65 +355,40 @@ public class View extends MainFrame {
                         currentScriptEditor.stopExecution();
                         currentScriptEditor = null;
                     }
-                    if (topLevelProcessor!=null){
-                         if (!topLevelProcessor.isExecuting()){
-                             topLevelProcessor = null;
-                         }
+                    if (topLevelProcessor != null) {
+                        if (!topLevelProcessor.isExecuting()) {
+                            topLevelProcessor = null;
+                        }
                     }
-                    currentProcessor = null;                    
+                    currentProcessor = null;
                 }
                 for (Processor p : getProcessors()) {
                     p.onStateChanged(state, former);
                 }
                 updateButtons();
             }
+
             @Override
-            public void onPathChange(String pathId){
-                 if (Setup.TOKEN_DATA.equals(pathId)){
-                     dataPanel.initialize();
-                 } else if (Setup.TOKEN_SCRIPT.equals(pathId)){
-                     scriptsPanel.initialize();
-                 }
-            }            
+            public void onPathChange(String pathId) {
+                if (Setup.TOKEN_DATA.equals(pathId)) {
+                    dataPanel.initialize();
+                } else if (Setup.TOKEN_SCRIPT.equals(pathId)) {
+                    scriptsPanel.initialize();
+                }
+            }
         });
         restorePreferences();
-        if (!App.isFullScreen()  && App.getInstance().isContextPersisted()) {
+        if (!App.isFullScreen() && App.getInstance().isContextPersisted()) {
             //restoring again (also in App.startup) to take into avcount hidden panels displayed by restorePreferences
             restoreState();
         }
-        
+
         if (tabDoc.getTabCount() > 0) {
             tabDoc.setSelectedIndex(0);
         }
 
-        int indexMenu = 1;
         for (Processor processor : Processor.getServiceProviders()) {
-            if (processor.createMenuNew()) {
-                JMenuItem item = new JMenuItem("New " + processor.getType());
-                item.addActionListener((java.awt.event.ActionEvent evt) -> {
-                    try {
-                        openProcessor(processor.getClass(), null);
-                    } catch (Exception ex) {
-                        showException(ex);
-                    }
-                });
-                menuFile.add(item, indexMenu);
-                indexMenu++;
-            }
-            if (processor.createFilePanel()) {
-                ScriptsPanel pn = new ScriptsPanel();
-                int index = tabStatus.getTabCount() - 1;
-                tabStatus.add(pn, index);
-                tabStatus.setTitleAt(index, processor.getType());
-                pn.initialize(processor.getHomePath(), processor.getExtensions());
-                pn.setListener((File file) -> {
-                    try {
-                        openProcessor(processor.getClass(), file.getAbsolutePath());
-                    } catch (Exception ex) {
-                        showException(ex);
-                    }
-                });
-            }
+            addProcessorComponents(processor);
         }
 
         App.getInstance().addListener(new AppListener() {
@@ -433,9 +408,61 @@ public class View extends MainFrame {
             }
         });
     }
-    
-    Processor getRunningProcessor(){
-         return ((topLevelProcessor!=null) && (topLevelProcessor.isExecuting())) ? topLevelProcessor: null;
+
+    void addProcessorComponents(Processor processor) {
+        if (processor.createMenuNew()) {
+            JMenuItem item = new JMenuItem(processor.getType());
+            item.addActionListener((java.awt.event.ActionEvent evt) -> {
+                try {
+                    openProcessor(processor.getClass(), null);
+                } catch (Exception ex) {
+                    showException(ex);
+                }
+            });
+            menuFileNew.add(item);
+        }
+        if (processor.createFilePanel()) {
+            ScriptsPanel pn = new ScriptsPanel();
+            int index = tabStatus.getTabCount() - 1;
+            tabStatus.add(pn, index);
+            tabStatus.setTitleAt(index, processor.getType());
+            pn.initialize(processor.getHomePath(), processor.getExtensions());
+            pn.setListener((File file) -> {
+                try {
+                    openProcessor(processor.getClass(), file.getAbsolutePath());
+                } catch (Exception ex) {
+                    showException(ex);
+                }
+            });
+        }
+    }
+
+    void removeProcessorComponents(Processor processor) {
+        if (processor.createMenuNew()) {
+            for (int i = menuFileNew.getMenuComponents().length - 1; i > 0; i--) {
+                Component c = menuFileNew.getMenuComponents()[i];
+                if (c instanceof JMenuItem) {
+                    if (((JMenuItem) c).getText().equals(processor.getType())) {
+                        menuFileNew.remove((JMenuItem) c);
+                        break;
+                    }
+                }
+            }
+        }
+        if (processor.createFilePanel()) {
+            for (int i = tabStatus.getTabCount() - 1; i > 0; i--) {
+                if (tabStatus.getComponentAt(i) instanceof ScriptsPanel) {
+                    if (tabStatus.getTitleAt(i).equals(processor.getType())) {
+                        tabStatus.remove(i);
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    Processor getRunningProcessor() {
+        return ((topLevelProcessor != null) && (topLevelProcessor.isExecuting())) ? topLevelProcessor : null;
     }
 
     void updateButtons() {
@@ -452,19 +479,19 @@ public class View extends MainFrame {
             Component selectedDocument = tabDoc.getSelectedComponent();
             State state = App.getInstance().getState();
             Processor runningProcessor = getRunningProcessor();
-            if (state==State.Ready && (runningProcessor!=null)&&(runningProcessor instanceof QueueProcessor)){
+            if (state == State.Ready && (runningProcessor != null) && (runningProcessor instanceof QueueProcessor)) {
                 state = State.Busy;
             }
             boolean showingScript = (selectedDocument != null) && (selectedDocument instanceof ScriptEditor);
             boolean showingExecutor = (selectedDocument != null) && (selectedDocument instanceof Executor);
             boolean ready = (state == State.Ready);
             boolean busy = (state == State.Busy);
-            boolean paused = (state == State.Paused);            
+            boolean paused = (state == State.Paused);
 
             buttonRun.setEnabled(ready && showingExecutor && allowRun);
             buttonDebug.setEnabled((ready && showingScript && allowRun) || (paused));
-            buttonPause.setEnabled( context.canPause() || ((runningProcessor!=null) && (runningProcessor.canPause())));
-            buttonStep.setEnabled(((ready && showingScript) || context.canStep() || ((runningProcessor!=null) && (runningProcessor.canStep()))) && allowRun);
+            buttonPause.setEnabled(context.canPause() || ((runningProcessor != null) && (runningProcessor.canPause())));
+            buttonStep.setEnabled(((ready && showingScript) || context.canStep() || ((runningProcessor != null) && (runningProcessor.canStep()))) && allowRun);
             buttonAbort.setEnabled(busy || paused || (state == State.Initializing));
             menuRun.setEnabled(buttonRun.isEnabled());
             menuDebug.setEnabled(buttonDebug.isEnabled());
@@ -480,11 +507,11 @@ public class View extends MainFrame {
             menuNew.setEnabled(allowEdit);
             menuSave.setEnabled(showingExecutor && allowEdit);
             menuSaveAs.setEnabled(showingExecutor && allowEdit);
-            buttonSave.setEnabled(showingExecutor && ((Executor)selectedDocument).canSave() && allowEdit);  
-           
+            buttonSave.setEnabled(showingExecutor && ((Executor) selectedDocument).canSave() && allowEdit);
+
         }
     }
-    
+
     void onFirstStart() {
         //setupPanelsMenu()
         if (context.getConfig().getName().length() > 0) {
@@ -579,9 +606,9 @@ public class View extends MainFrame {
                     if (plottingActive) {
                         plottingPanel.triggerScanStarted(scan, plotTitle);
                         if (plottingPanel.isDisplayable() && SwingUtils.containsComponent(tabPlots, plottingPanel)) {
-                            SwingUtilities.invokeLater(()->{
+                            SwingUtilities.invokeLater(() -> {
                                 tabPlots.setSelectedComponent(plottingPanel);
-                            }); 
+                            });
                         }
                     }
                 }
@@ -645,11 +672,11 @@ public class View extends MainFrame {
             System.setOut(new PrintStream(new ConsoleStream(false)));
             System.setErr(new PrintStream(new ConsoleStream(true)));
         }
-        
+
         openCmdLineFiles(false);
     }
-    
-    void openCmdLineFiles(boolean showExceptions){
+
+    void openCmdLineFiles(boolean showExceptions) {
         if (!App.isPlotOnly()) {
             for (File file : App.getFileArgs()) {
                 try {
@@ -662,7 +689,7 @@ public class View extends MainFrame {
                     }
                 }
             }
-        }        
+        }
     }
 
     final DataPanelListener dataPanelListener = new DataPanelListener() {
@@ -1010,7 +1037,7 @@ public class View extends MainFrame {
             plotData(contextName, dm.getScanPlots(root, path).toArray(new PlotDescriptor[0]), preferences);
         } catch (IOException ex) {
             //If cannot open file, try with external processors
-            if (!Processor.checkProcessorsPlotting(root, path, dm)){
+            if (!Processor.checkProcessorsPlotting(root, path, dm)) {
                 throw ex;
             }
         }
@@ -1061,7 +1088,7 @@ public class View extends MainFrame {
         }
         for (Processor p : getProcessors()) {
             p.onTaskFinished(task);
-        }        
+        }
     }
 
     void updateStatusPanels() {
@@ -1105,11 +1132,11 @@ public class View extends MainFrame {
         }
         return ret;
     }
-    
+
     public List<QueueProcessor> getQueues() {
         ArrayList<QueueProcessor> ret = new ArrayList();
         for (Processor processor : getProcessors()) {
-            if (processor instanceof QueueProcessor){
+            if (processor instanceof QueueProcessor) {
                 ret.add((QueueProcessor) processor);
             }
         }
@@ -1204,14 +1231,13 @@ public class View extends MainFrame {
             }
         }
     }
-    
-    void setCurrentProcessor(Processor processor, boolean topLevel){
-        if (topLevel){
+
+    void setCurrentProcessor(Processor processor, boolean topLevel) {
+        if (topLevel) {
             topLevelProcessor = processor;
         }
         currentProcessor = processor;
     }
-    
 
     final DocumentListener scriptChangeListener = new DocumentListener() {
         @Override
@@ -1231,22 +1257,22 @@ public class View extends MainFrame {
     };
 
     void updateScriptEditorTabTitle(ScriptEditor editor, int index) {
-            try {
-                String title = editor.getScriptName() + (editor.hasChanged() ? "*" : "");
-                if (!title.equals(tabDoc.getTitleAt(index))){
-                    tabDoc.setTitleAt(index, title);
-                    CloseButtonTabComponent tabComponent = (CloseButtonTabComponent) tabDoc.getTabComponentAt(index);
-                    tabComponent.updateUI();
-                }
-            } catch (Exception ex) {
-                logger.log(Level.WARNING, null, ex);
+        try {
+            String title = editor.getScriptName() + (editor.hasChanged() ? "*" : "");
+            if (!title.equals(tabDoc.getTitleAt(index))) {
+                tabDoc.setTitleAt(index, title);
+                CloseButtonTabComponent tabComponent = (CloseButtonTabComponent) tabDoc.getTabComponentAt(index);
+                tabComponent.updateUI();
             }
+        } catch (Exception ex) {
+            logger.log(Level.WARNING, null, ex);
+        }
     }
 
     void updateProcessorTabTitle(Processor processor, int index) {
         if (processor.hasChanged()) {
             try {
-                if (processor.getFileName()!=null){
+                if (processor.getFileName() != null) {
                     tabDoc.setTitleAt(index, new File(processor.getFileName()).getName() + "*");
                     CloseButtonTabComponent tabComponent = (CloseButtonTabComponent) tabDoc.getTabComponentAt(index);
                     tabComponent.updateUI();
@@ -1311,7 +1337,7 @@ public class View extends MainFrame {
     public void openComponent(String title, Component c) {
         openComponent(title, c, tabDoc);
     }
-    
+
     public void openComponent(String title, Component c, JTabbedPane pane) {
         pane.add(title, c);
         int index = pane.getTabCount() - 1;
@@ -1362,11 +1388,11 @@ public class View extends MainFrame {
         return editor;
     }
 
-    public <T extends Processor> T  openProcessor(Class<T> cls, String file) throws IOException, InstantiationException, IllegalAccessException {
+    public <T extends Processor> T openProcessor(Class<T> cls, String file) throws IOException, InstantiationException, IllegalAccessException {
         if (file != null) {
             for (Processor p : getProcessors()) {
                 if ((p.getClass().isAssignableFrom(cls)) && p.getFileName() != null) {
-                    try{
+                    try {
                         if ((new File(p.resolveFile(file)).getCanonicalFile()).equals((new File(p.getFileName()).getCanonicalFile()))) {
                             if (tabDoc.indexOfComponent(p.getPanel()) >= 0) {
                                 tabDoc.setSelectedComponent(p.getPanel());
@@ -1375,20 +1401,20 @@ public class View extends MainFrame {
                             }
                             return (T) p;
                         }
-                    } catch (Exception ex){
+                    } catch (Exception ex) {
                     }
                 }
             }
         }
         T processor = null;
-        if (PanelProcessor.class.isAssignableFrom(cls)){
-            for (Processor p : getProcessors()){
-                if (p.getClass() == cls){
+        if (PanelProcessor.class.isAssignableFrom(cls)) {
+            for (Processor p : getProcessors()) {
+                if (p.getClass() == cls) {
                     processor = (T) p;
                     processor.open(file);
+                    tabDoc.setSelectedComponent(processor.getPanel());
                 }
             }
-            
         } else {
             processor = cls.newInstance();
             if (file != null) {
@@ -1436,8 +1462,8 @@ public class View extends MainFrame {
             }
         }
     }
-    
-    void setTabPlotVisible(boolean value){
+
+    void setTabPlotVisible(boolean value) {
         tabPlots.setVisible(value);
         splitterHoriz.setDividerSize(value ? splitterVert.getDividerSize() : 0);
     }
@@ -1493,17 +1519,18 @@ public class View extends MainFrame {
         }
         if (parent == tabLeft) {
             return PanelLocation.Left;
-        }        
+        }
         return PanelLocation.Detached;
     }
 
     PanelLocation consoleLocation = Preferences.DEFAULT_CONSOLE_LOCATION;
+
     void setConsoleLocation(PanelLocation location) {
         if (App.isPlotOnly()) {
             return;
         }
         consoleLocation = location;
-        
+
         if (context.getRights().hideConsole) {
             location = PanelLocation.Hidden;
         }
@@ -1527,11 +1554,11 @@ public class View extends MainFrame {
             switch (location) {
                 case Document:
                     int index = 0;
-                    for (index = 0; index<tabDoc.getTabCount(); index++) {
+                    for (index = 0; index < tabDoc.getTabCount(); index++) {
                         if (!(tabDoc.getComponentAt(index) instanceof Panel)) {
                             break;
                         }
-                    }    
+                    }
                     tabDoc.add(shell, index);
                     tabDoc.setTitleAt(index, title);
                     break;
@@ -1539,10 +1566,10 @@ public class View extends MainFrame {
                     tabStatus.add(shell, 0);
                     tabStatus.setTitleAt(0, title);
                     break;
-                case Left:                    
+                case Left:
                     tabLeft.add(shell, 0);
                     tabLeft.setTitleAt(0, title);
-                    break;                    
+                    break;
                 case Plot:
                     tabPlots.add(shell, 0);
                     tabPlots.setTitleAt(0, title);
@@ -1558,15 +1585,15 @@ public class View extends MainFrame {
                     break;
             }
             checkTabLeftVisibility();
-        }                
+        }
     }
-    
-    void checkTabLeftVisibility(){
-        boolean tabLeftVisible = tabLeft.getTabCount()>0;
-        if (tabLeftVisible!=tabLeft.isVisible()){
+
+    void checkTabLeftVisibility() {
+        boolean tabLeftVisible = tabLeft.getTabCount() > 0;
+        if (tabLeftVisible != tabLeft.isVisible()) {
             tabLeft.setVisible(tabLeftVisible);
-            splitterDoc.setDividerSize(tabLeftVisible ? splitterVert.getDividerSize() : 0);    
-            if (tabLeftVisible && (splitterDoc.getDividerLocation()<0.1)){
+            splitterDoc.setDividerSize(tabLeftVisible ? splitterVert.getDividerSize() : 0);
+            if (tabLeftVisible && (splitterDoc.getDividerLocation() < 0.1)) {
                 splitterDoc.setDividerLocation(0.40);
             }
         }
@@ -1666,7 +1693,7 @@ public class View extends MainFrame {
 
         if (!App.isLocalMode()) {
             setScanPlotDetached(preferences.plotsDetached);
-            setConsoleLocation(preferences.consoleLocation);          
+            setConsoleLocation(preferences.consoleLocation);
         }
 
         statusBar.setShowDataFileName(!preferences.hideFileName);
@@ -1693,8 +1720,8 @@ public class View extends MainFrame {
             logger.log(Level.FINE, null, ex);
         }
     }
-    
-    void showEmergencyStop(boolean value){
+
+    void showEmergencyStop(boolean value) {
         separatorStopAll.setVisible(value);
         buttonStopAll.setVisible(value);
         menuStopAll.setVisible(value);
@@ -1718,11 +1745,11 @@ public class View extends MainFrame {
     public JTabbedPane getStatusTab() {
         return tabStatus;
     }
-    
+
     public JTabbedPane getLeftTab() {
         return tabLeft;
     }
-    
+
     public StatusBar getStatusBar() {
         return statusBar;
     }
@@ -1845,7 +1872,7 @@ public class View extends MainFrame {
                     ret.add(file);
                 }
             } catch (Exception ex) {
-            }            
+            }
             return ret;
         }
 
@@ -1947,6 +1974,7 @@ public class View extends MainFrame {
         filler3 = new javax.swing.Box.Filler(new java.awt.Dimension(0, 0), new java.awt.Dimension(0, 0), new java.awt.Dimension(0, 32767));
         menuBar = new javax.swing.JMenuBar();
         menuFile = new javax.swing.JMenu();
+        menuFileNew = new javax.swing.JMenu();
         menuNew = new javax.swing.JMenuItem();
         menuOpen = new javax.swing.JMenuItem();
         menuSave = new javax.swing.JMenuItem();
@@ -2340,6 +2368,9 @@ public class View extends MainFrame {
             }
         });
 
+        menuFileNew.setText(bundle.getString("View.menuFileNew.text_1")); // NOI18N
+        menuFileNew.setName("menuFileNew"); // NOI18N
+
         menuNew.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_N, java.awt.event.InputEvent.CTRL_MASK));
         menuNew.setText(bundle.getString("View.menuNew.text")); // NOI18N
         menuNew.setName("menuNew"); // NOI18N
@@ -2348,7 +2379,9 @@ public class View extends MainFrame {
                 menuNewActionPerformed(evt);
             }
         });
-        menuFile.add(menuNew);
+        menuFileNew.add(menuNew);
+
+        menuFile.add(menuFileNew);
 
         menuOpen.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_O, java.awt.event.InputEvent.CTRL_MASK));
         menuOpen.setText(bundle.getString("View.menuOpen.text")); // NOI18N
@@ -3070,7 +3103,7 @@ public class View extends MainFrame {
 
             HashMap<FileNameExtensionFilter, Processor> processors = new HashMap<>();
             for (Processor processor : Processor.getServiceProviders()) {
-                if ((processor.getExtensions().length>0) & processor.canSave()){
+                if ((processor.getExtensions().length > 0) & processor.canSave()) {
                     FileNameExtensionFilter filter = new FileNameExtensionFilter(processor.getDescription(), processor.getExtensions());
                     chooser.addChoosableFileFilter(filter);
                     processors.put(filter, processor);
@@ -3128,7 +3161,7 @@ public class View extends MainFrame {
     private void buttonPauseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonPauseActionPerformed
         try {
             Processor runningProcessor = getRunningProcessor();
-            if (runningProcessor!=null){
+            if (runningProcessor != null) {
                 runningProcessor.pause();
             } else {
                 context.pause();
@@ -3141,13 +3174,13 @@ public class View extends MainFrame {
 
     private void buttonStepActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonStepActionPerformed
         try {
-                Processor runningProcessor = getRunningProcessor();
-                if (runningProcessor!=null){
-                    runningProcessor.step();
+            Processor runningProcessor = getRunningProcessor();
+            if (runningProcessor != null) {
+                runningProcessor.step();
+            } else {
+                if (context.getState() == State.Ready) {
+                    debugScript(true);
                 } else {
-                    if (context.getState() == State.Ready) {
-                        debugScript(true);
-                    } else {
                     context.step();
                 }
             }
@@ -3205,7 +3238,7 @@ public class View extends MainFrame {
                         menuSaveAsActionPerformed(null);
                     } else {
                         processor.save();
-                        if (processor.getFileName() != null){
+                        if (processor.getFileName() != null) {
                             tabDoc.setTitleAt(tabDoc.getSelectedIndex(), new File(processor.getFileName()).getName());
                         }
                     }
@@ -3263,7 +3296,7 @@ public class View extends MainFrame {
                             fileName += extension;
                         }
                         processor.saveAs(fileName);
-                        if (processor.getFileName()!=null){
+                        if (processor.getFileName() != null) {
                             fileHistory.put(processor.getFileName());
                             tabDoc.setTitleAt(tabDoc.getSelectedIndex(), new File(processor.getFileName()).getName());
                         }
@@ -3293,24 +3326,24 @@ public class View extends MainFrame {
                     item.addActionListener(listener);
                     menuOpenRecent.add(item, 0);
                 }
-                
+
                 Component selectedDocument = tabDoc.getSelectedComponent();
                 Processor runningProcessor = getRunningProcessor();
                 boolean showingExecutor = (selectedDocument != null) && (selectedDocument instanceof Executor);
-            
-                List<QueueProcessor> queues = getQueues();  
-                if (showingExecutor && (selectedDocument instanceof QueueProcessor)){
-                    queues.remove((QueueProcessor)selectedDocument);
+
+                List<QueueProcessor> queues = getQueues();
+                if (showingExecutor && (selectedDocument instanceof QueueProcessor)) {
+                    queues.remove((QueueProcessor) selectedDocument);
                 }
                 menuAddToQueue.setVisible(showingExecutor);
                 menuAddToQueue.removeAll();
-                if (showingExecutor){
-                    String filename = ((Executor)selectedDocument).getFileName();
-                    menuAddToQueue.setEnabled(filename!=null);
-                    if (filename!=null){    
-                        if (queues.size()==0){
+                if (showingExecutor) {
+                    String filename = ((Executor) selectedDocument).getFileName();
+                    menuAddToQueue.setEnabled(filename != null);
+                    if (filename != null) {
+                        if (queues.size() == 0) {
                             JMenuItem item = new JMenuItem("New");
-                            item.addActionListener((e)->{
+                            item.addActionListener((e) -> {
                                 try {
                                     QueueProcessor tq = openProcessor(QueueProcessor.class, null);
                                     tq.addNewFile(filename);
@@ -3319,18 +3352,18 @@ public class View extends MainFrame {
                                 }
                             });
                             menuAddToQueue.add(item);
-                             
+
                         } else {
-                            for (int i=0; i< queues.size(); i++){
-                                if (queues.get(i) != selectedDocument){
+                            for (int i = 0; i < queues.size(); i++) {
+                                if (queues.get(i) != selectedDocument) {
                                     String queueFilename = queues.get(i).getFileName();
-                                    if (queueFilename==null){
+                                    if (queueFilename == null) {
                                         queueFilename = "Unknown";
                                     }
                                     JMenuItem item = new JMenuItem(IO.getPrefix(queueFilename));
                                     item.setEnabled(queues.get(i) != runningProcessor);
                                     int index = i;
-                                    item.addActionListener((e)->{
+                                    item.addActionListener((e) -> {
                                         try {
                                             queues.get(index).addNewFile(filename);
                                             tabDoc.setSelectedComponent(queues.get(index));
@@ -3376,7 +3409,7 @@ public class View extends MainFrame {
                 menuFullScreen.setSelected(isFullScreen());
                 for (Component item : menuConsoleLocation.getMenuComponents()) {
                     ((JRadioButtonMenuItem) item).setSelected(((JRadioButtonMenuItem) item).getText().equals(consoleLocation.toString()));
-                }                          
+                }
             } catch (Exception ex) {
             }
         }
@@ -3788,11 +3821,11 @@ public class View extends MainFrame {
             for (ch.psi.pshell.core.Plugin p : context.getPlugins()) {
                 plugins.add(p.getPluginName());
             }
-            
+
             ArrayList<String> extensions = new ArrayList<>();
             for (File f : context.getExtensions()) {
                 extensions.add(f.getName());
-            }            
+            }
 
             Setup setup = context.getSetup();
             Server server = context.getServer();
@@ -3800,11 +3833,11 @@ public class View extends MainFrame {
                 {"Process", Sys.getProcessName()},
                 {"Version", App.getApplicationBuildInfo()},
                 {"Java", /*System.getProperty("java.vendor") + " " + */
-                          System.getProperty("java.vm.name") + " (" + System.getProperty("java.version") + ")"},
+                    System.getProperty("java.vm.name") + " (" + System.getProperty("java.version") + ")"},
                 {"Jar file", String.valueOf(context.getSetup().getJarFile())},
                 {"Arguments", String.join(" ", App.getArguments())},
-                {"Plugins", String.join("; " , plugins)},
-                {"Extensions", String.join("; " , extensions)},
+                {"Plugins", String.join("; ", plugins)},
+                {"Extensions", String.join("; ", extensions)},
                 {"Current folder", new File(".").getCanonicalPath()},
                 {"Home path", setup.getHomePath()},
                 {"Output path", setup.getOutputPath()},
@@ -3840,16 +3873,16 @@ public class View extends MainFrame {
 
                 @Override
                 public boolean isCellEditable(int rowIndex, int columnIndex) {
-                    return (columnIndex==1);
+                    return (columnIndex == 1);
                 }
             });
             //table.setPreferredSize(new Dimension(400,200));
             table.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_INTERVAL_SELECTION);
             table.getColumnModel().getColumn(0).setPreferredWidth(150);
             table.getColumnModel().getColumn(1).setPreferredWidth(450);
-            JTextField textField = new JTextField() ;
+            JTextField textField = new JTextField();
             textField.setEditable(false);
-            DefaultCellEditor editor = new DefaultCellEditor( textField );
+            DefaultCellEditor editor = new DefaultCellEditor(textField);
             table.getColumnModel().getColumn(1).setCellEditor(editor);
             StandardDialog dlg = new StandardDialog(this, "Setup", true);
             dlg.setContentPane(table);
@@ -4043,7 +4076,7 @@ public class View extends MainFrame {
 
     private void menuIndentActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuIndentActionPerformed
         try {
-            ScriptEditor editor= getSelectedEditor();
+            ScriptEditor editor = getSelectedEditor();
             if (editor != null) {
                 editor.indent();
             }
@@ -4054,7 +4087,7 @@ public class View extends MainFrame {
 
     private void menuUnindentActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuUnindentActionPerformed
         try {
-            ScriptEditor editor= getSelectedEditor();
+            ScriptEditor editor = getSelectedEditor();
             if (editor != null) {
                 editor.unindent();
             }
@@ -4065,7 +4098,7 @@ public class View extends MainFrame {
 
     private void menuCommentActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuCommentActionPerformed
         try {
-            ScriptEditor editor= getSelectedEditor();
+            ScriptEditor editor = getSelectedEditor();
             if (editor != null) {
                 editor.comment();
             }
@@ -4076,7 +4109,7 @@ public class View extends MainFrame {
 
     private void menuUncommentActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuUncommentActionPerformed
         try {
-            ScriptEditor editor= getSelectedEditor();
+            ScriptEditor editor = getSelectedEditor();
             if (editor != null) {
                 editor.uncomment();
             }
@@ -4240,7 +4273,7 @@ public class View extends MainFrame {
 
     private void menuToggleCommentActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuToggleCommentActionPerformed
         try {
-            ScriptEditor editor= getSelectedEditor();
+            ScriptEditor editor = getSelectedEditor();
             if (editor != null) {
                 editor.toggleComment();
             }
@@ -4317,6 +4350,7 @@ public class View extends MainFrame {
     private javax.swing.JMenuItem menuDevicesEpics;
     private javax.swing.JMenu menuEdit;
     private javax.swing.JMenu menuFile;
+    private javax.swing.JMenu menuFileNew;
     private javax.swing.JMenuItem menuFind;
     private javax.swing.JMenuItem menuFindInFiles;
     private javax.swing.JMenuItem menuFindNext;

@@ -327,9 +327,9 @@ public class ScriptsPanel extends MonitoredPanel implements UpdatablePanel {
     }
 
     public void initialize(String homePath, String[] extensions) {
-        this.homePath = homePath;
+        this.homePath = Context.getInstance().getSetup().expandPath(homePath);
         this.extensions = extensions;
-        setPath(homePath);
+        setPath(this.homePath);
     }
 
     String currentPath;

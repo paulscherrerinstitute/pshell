@@ -32,12 +32,18 @@ public abstract class PanelProcessor extends Panel implements Processor{
     public void onStart() {
         super.onStart();
         Processor.addServiceProvider(this.getClass());
+        if (getView()!=null){
+            getView().addProcessorComponents(this);
+        }
     }
 
     @Override
     public void onStop() {
-        super.onStop();
         Processor.removeServiceProvider(this.getClass());
+        if (getView()!=null){
+            getView().removeProcessorComponents(this);
+        }     
+        super.onStop();
     }
     
     @Override
