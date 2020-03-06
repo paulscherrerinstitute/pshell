@@ -3196,8 +3196,11 @@ public class View extends MainFrame {
             if (currentProcessor != null) {
                 currentProcessor.abort();
                 currentProcessor = null;
-                topLevelProcessor = null;
             }
+            if (topLevelProcessor != null) {
+                topLevelProcessor.abort();
+                topLevelProcessor = null;
+            }            
             context.abort();
             updateButtons();
         } catch (Exception ex) {

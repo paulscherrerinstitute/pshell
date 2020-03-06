@@ -6,7 +6,6 @@ import ch.psi.pshell.core.ContextAdapter;
 import ch.psi.pshell.scripting.Statement;
 import ch.psi.pshell.core.CommandSource;
 import ch.psi.pshell.core.JsonSerializer;
-import ch.psi.pshell.core.LogManager;
 import ch.psi.pshell.ui.Preferences.ScriptPopupDialog;
 import ch.psi.utils.State;
 import ch.psi.utils.Str;
@@ -269,6 +268,7 @@ public abstract class Task extends SwingWorker<Object, Void> {
     public enum QueueTaskErrorAction {
         Resume,
         Retry,
+        RetryOnce,
         Abort;
     }
 
@@ -293,6 +293,7 @@ public abstract class Task extends SwingWorker<Object, Void> {
         volatile int currentIndex;
         QueueTask[] queue;
         boolean skipped;
+        boolean aborted;
 
         public QueueExecution(QueueTask[] queue, QueueExecutionListener listener) {
             this.queue = queue;
@@ -306,7 +307,8 @@ public abstract class Task extends SwingWorker<Object, Void> {
                 for (QueueTask task : queue) {
                     currentTask = task;
                     currentIndex++;
-                    while (!isDone()) {
+                    boolean retried = false;
+                    while (!isDone() && !aborted) {
                         try {
                             skipped = false;
                             if (listener != null) {
@@ -315,7 +317,7 @@ public abstract class Task extends SwingWorker<Object, Void> {
                             if (task.enabled) {
                                 Context.getInstance().waitState(State.Ready, 5000); //Tries to keep up with some concurrent execution.
                                 Object ret = App.getInstance().evalFile(task.file, task.args);
-                                
+
                                 if (Context.getInstance().getState().isProcessing()) {
                                     Logger.getLogger(QueueExecution.class.getName()).info("State busy after task: waiting completion of next stage");
                                     Context.getInstance().waitStateNotProcessing(-1);
@@ -334,11 +336,11 @@ public abstract class Task extends SwingWorker<Object, Void> {
                             break;
                         } catch (Exception ex) {
                             Logger.getLogger(QueueExecution.class.getName()).log(Level.WARNING, null, ex);
-                            if (Context.getInstance().isAborted()) {
+                            if (aborted || Context.getInstance().isAborted() || skipped) {
                                 if (listener != null) {
                                     listener.onAborted(task, currentIndex, true, skipped);
                                 }
-                                if (skipped) {
+                                if (!aborted && skipped) {
                                     break;
                                 }
                                 return null;
@@ -355,9 +357,23 @@ public abstract class Task extends SwingWorker<Object, Void> {
                                 if (task.error == QueueTaskErrorAction.Resume) {
                                     break;
                                 }
+                                if (task.error == QueueTaskErrorAction.RetryOnce) {
+                                    if (retried){
+                                        break;
+                                    }
+                                    retried = true;
+                                }
+                                                                
                                 Thread.sleep(1000); //Delays restart to handle skipping and avoid high number of exceptions
-                                if (skipped) {
-                                    break;
+
+                                if (aborted || Context.getInstance().isAborted() || skipped) {
+                                    if (listener != null) {
+                                        listener.onAborted(task, currentIndex, true, skipped);
+                                    }
+                                    if (!aborted && skipped) {
+                                        break;
+                                    }
+                                    return null;
                                 }
                             }
                         }
@@ -388,6 +404,10 @@ public abstract class Task extends SwingWorker<Object, Void> {
             } catch (InterruptedException ex) {
                 Logger.getLogger(QueueExecution.class.getName()).log(Level.SEVERE, null, ex);
             }
+        }
+
+        public void abort() {
+            aborted = true;
         }
     }
 

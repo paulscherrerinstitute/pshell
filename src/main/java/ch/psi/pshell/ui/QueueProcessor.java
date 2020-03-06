@@ -322,6 +322,9 @@ public final class QueueProcessor extends MonitoredPanel implements Processor {
 
     @Override
     public void abort() throws InterruptedException {
+        if (processingTask != null) {
+            processingTask.abort();
+        }        
         Context.getInstance().abort();
     }
 
