@@ -19,6 +19,10 @@ public interface Executor {
         return true;
     }   
     
+    default boolean canSave() {
+        return true;
+    }      
+    
     
     boolean isExecuting();
     boolean hasChanged();    

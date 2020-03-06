@@ -480,7 +480,8 @@ public class View extends MainFrame {
             menuNew.setEnabled(allowEdit);
             menuSave.setEnabled(showingExecutor && allowEdit);
             menuSaveAs.setEnabled(showingExecutor && allowEdit);
-            buttonSave.setEnabled(showingExecutor && allowEdit);            
+            buttonSave.setEnabled(showingExecutor && ((Executor)selectedDocument).canSave() && allowEdit);  
+           
         }
     }
     
@@ -1379,15 +1380,25 @@ public class View extends MainFrame {
                 }
             }
         }
-
-        T processor = cls.newInstance();
-        if (file != null) {
-            file = processor.resolveFile(file);
-            processor.open(file);
-            openComponent(new File(processor.getFileName()).getName(), processor.getPanel());
-            fileHistory.put(file);
+        T processor = null;
+        if (PanelProcessor.class.isAssignableFrom(cls)){
+            for (Processor p : getProcessors()){
+                if (p.getClass() == cls){
+                    processor = (T) p;
+                    processor.open(file);
+                }
+            }
+            
         } else {
-            openComponent("Unknown", processor.getPanel());
+            processor = cls.newInstance();
+            if (file != null) {
+                file = processor.resolveFile(file);
+                processor.open(file);
+                openComponent(new File(processor.getFileName()).getName(), processor.getPanel());
+                fileHistory.put(file);
+            } else {
+                openComponent("Unknown", processor.getPanel());
+            }
         }
         return processor;
     }
@@ -3059,9 +3070,11 @@ public class View extends MainFrame {
 
             HashMap<FileNameExtensionFilter, Processor> processors = new HashMap<>();
             for (Processor processor : Processor.getServiceProviders()) {
-                FileNameExtensionFilter filter = new FileNameExtensionFilter(processor.getDescription(), processor.getExtensions());
-                chooser.addChoosableFileFilter(filter);
-                processors.put(filter, processor);
+                if ((processor.getExtensions().length>0) & processor.canSave()){
+                    FileNameExtensionFilter filter = new FileNameExtensionFilter(processor.getDescription(), processor.getExtensions());
+                    chooser.addChoosableFileFilter(filter);
+                    processors.put(filter, processor);
+                }
             }
             chooser.setAcceptAllFileFilterUsed(true);
             int rVal = chooser.showOpenDialog(this);
@@ -3250,8 +3263,10 @@ public class View extends MainFrame {
                             fileName += extension;
                         }
                         processor.saveAs(fileName);
-                        fileHistory.put(fileName);
-                        tabDoc.setTitleAt(tabDoc.getSelectedIndex(), new File(processor.getFileName()).getName());
+                        if (processor.getFileName()!=null){
+                            fileHistory.put(processor.getFileName());
+                            tabDoc.setTitleAt(tabDoc.getSelectedIndex(), new File(processor.getFileName()).getName());
+                        }
                     }
                 }
             }
