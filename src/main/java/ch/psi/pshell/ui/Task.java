@@ -268,7 +268,7 @@ public abstract class Task extends SwingWorker<Object, Void> {
     public enum QueueTaskErrorAction {
         Resume,
         Retry,
-        RetryOnce,
+        Once,
         Abort;
     }
 
@@ -357,7 +357,7 @@ public abstract class Task extends SwingWorker<Object, Void> {
                                 if (task.error == QueueTaskErrorAction.Resume) {
                                     break;
                                 }
-                                if (task.error == QueueTaskErrorAction.RetryOnce) {
+                                if (task.error == QueueTaskErrorAction.Once) {
                                     if (retried){
                                         break;
                                     }
@@ -412,20 +412,24 @@ public abstract class Task extends SwingWorker<Object, Void> {
     }
 
     static Map<String, Object> convertArgString(String args) {
-        args = args.trim();
-        if (args.length() > 0) {
-            if (!args.startsWith("{")) {
-                args = "{" + args;
+        try {
+            Map<String, String> data = QueueParsDialog.getParsMap(args);
+
+            StringBuilder sb = new StringBuilder();
+            sb.append("{");
+            for (String key : data.keySet()){
+                if (sb.length()>1){
+                    sb.append(", ");
+                }
+                sb.append("\"").append(key).append("\":").append(data.get(key));
             }
-            if (!args.endsWith("}")) {
-                args = args + "}";
-            }
-            try {
-                return (Map) JsonSerializer.decode(args, Map.class);
-            } catch (IOException ex) {
-                Logger.getLogger(QueueExecution.class.getName()).log(Level.WARNING, args, ex);
-            }
+            sb.append("}");
+        
+            return (Map) JsonSerializer.decode(sb.toString(), Map.class);
+        } catch (IOException ex) {
+            Logger.getLogger(QueueExecution.class.getName()).log(Level.WARNING, args, ex);
         }
+
         return new HashMap<>();
     }
 

@@ -65,9 +65,7 @@ public class ScanEditorPanel extends MonitoredPanel implements Processor {
 
     boolean updatingDomain;
 
-    /**
-     * Creates new form ScanEditorPanel
-     */
+
     public ScanEditorPanel() {
         initComponents();
         modelPositioners = (DefaultTableModel) tablePositioners.getModel();

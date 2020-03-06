@@ -28,9 +28,7 @@ public class RangeSelectionPanel extends javax.swing.JPanel {
     boolean inserting;
     String[] aditionalColumns;
 
-    /**
-     * Creates new form RangeSelectionPanel
-     */
+    
     public RangeSelectionPanel() {
         initComponents();
         model = (DefaultTableModel) table.getModel();

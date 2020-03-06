@@ -29,9 +29,6 @@ import java.util.logging.Logger;
  */
 public class Histogram extends MonitoredPanel implements RendererListener, ImageListener {
 
-    /**
-     * Creates new form Histogram
-     */
     //double[] data = new double[]{1.0,1.0,1.0,1.0,1.0};
     LinePlotSeries series = new LinePlotSeries("Histogram");
     Object origin;

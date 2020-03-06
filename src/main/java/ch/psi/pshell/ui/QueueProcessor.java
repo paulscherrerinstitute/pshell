@@ -133,7 +133,7 @@ public final class QueueProcessor extends MonitoredPanel implements Processor {
     
     public void initializeTable() {
 
-        class ParsEditorPanel extends JPanel {
+        class FileEditorPanel extends JPanel {
 
             private final JTextField field = new JTextField();
             private final Action parsEditAction = new AbstractAction("...") {
@@ -162,6 +162,93 @@ public final class QueueProcessor extends MonitoredPanel implements Processor {
                             }
                             field.setText(filename);
                         }
+                    } catch (Exception ex) {
+                        SwingUtils.showException(QueueProcessor.this, ex);
+                    }
+                }
+            };
+            private final JButton button = new JButton(parsEditAction);
+            private Class type;
+            private HashMap<String, Class> referencedDevices;
+
+            public FileEditorPanel() {
+                field.setBorder(null);
+                field.addActionListener((ActionEvent e) -> {
+                    table.getCellEditor().stopCellEditing();
+                });
+                button.setBorder(javax.swing.BorderFactory.createEtchedBorder());
+
+                GroupLayout layout = new GroupLayout(this);
+                this.setLayout(layout);
+                layout.setHorizontalGroup(
+                        layout.createParallelGroup(GroupLayout.Alignment.LEADING)
+                                .addGroup(layout.createSequentialGroup()
+                                        .addComponent(field)
+                                        .addComponent(button, 20, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE))
+                );
+                layout.setVerticalGroup(
+                        layout.createParallelGroup(GroupLayout.Alignment.LEADING)
+                                .addComponent(field, GroupLayout.PREFERRED_SIZE, table.getRowHeight(), table.getRowHeight())
+                                .addComponent(button, GroupLayout.Alignment.CENTER, GroupLayout.PREFERRED_SIZE, table.getRowHeight() - 2, table.getRowHeight() - 2)
+                );
+
+            }
+
+        }
+
+        class FileEditor extends AbstractCellEditor implements TableCellEditor {
+
+            private final FileEditorPanel editor = new FileEditorPanel();
+
+            @Override
+            public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
+                editor.field.setText((String) value);
+                return editor;
+            }
+
+            @Override
+            public Object getCellEditorValue() {
+                return editor.field.getText();
+            }
+
+            @Override
+            public boolean isCellEditable(EventObject ev) {
+                if (ev instanceof MouseEvent) {
+                    //2 clicks to start
+                    return ((MouseEvent) ev).getClickCount() >= 2;
+                }
+                return true;
+            }
+
+            @Override
+            public boolean shouldSelectCell(EventObject ev) {
+                return false;
+            }
+        }
+        table.getColumnModel().getColumn(1).setCellEditor(new FileEditor());
+
+        
+        class ParsEditorPanel extends JPanel {
+
+            private final JTextField field = new JTextField();
+            private final Action parsEditAction = new AbstractAction("...") {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    try {
+                        QueueParsDialog dlg = new QueueParsDialog(SwingUtils.getFrame(QueueProcessor.this),true);
+                        dlg.setLocationRelativeTo(QueueProcessor.this);
+                        dlg.setText(field.getText());
+                        dlg.setVisible(true);
+                        if (dlg.getResult()) {
+                            field.setText(dlg.getText());
+                            
+                            TableCellEditor editor = table.getCellEditor();
+                            if (editor != null) {
+                                editor.stopCellEditing();
+                            }
+                            model.fireTableDataChanged();
+                        }                            
+                        
                     } catch (Exception ex) {
                         SwingUtils.showException(QueueProcessor.this, ex);
                     }
@@ -225,8 +312,8 @@ public final class QueueProcessor extends MonitoredPanel implements Processor {
                 return false;
             }
         }
-        table.getColumnModel().getColumn(1).setCellEditor(new ParsEditor());
-
+        table.getColumnModel().getColumn(2).setCellEditor(new ParsEditor());        
+        
         SwingUtils.setEnumTableColum(table, 3, Task.QueueTaskErrorAction.class);
         update();
     }

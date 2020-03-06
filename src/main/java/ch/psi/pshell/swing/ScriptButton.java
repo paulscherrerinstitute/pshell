@@ -17,9 +17,7 @@ import ch.psi.pshell.core.ContextListener;
  */
 public class ScriptButton extends MonitoredPanel {
 
-    /**
-     * Creates new form ScriptButton
-     */
+
     public ScriptButton() {
         initComponents();
     }

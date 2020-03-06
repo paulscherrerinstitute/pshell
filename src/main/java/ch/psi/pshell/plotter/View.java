@@ -24,9 +24,8 @@ public class View extends MainFrame {
     final Plotter pm;
     final PlotServer ps;
     final LogManager logManager;
-    /**
-     * Creates new form View
-     */
+
+    
     public View() {
         super();
         initComponents();

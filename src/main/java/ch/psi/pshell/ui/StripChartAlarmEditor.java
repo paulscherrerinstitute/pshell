@@ -106,9 +106,7 @@ public class StripChartAlarmEditor extends StandardDialog {
 
     public StripChartAlarmConfig config;
 
-    /**
-     * Creates new form StripChartAlarmEditor
-     */
+    
     public StripChartAlarmEditor(java.awt.Frame parent, boolean modal, StripChartAlarmConfig config, String channel) {
         super(parent, modal);
         initComponents();

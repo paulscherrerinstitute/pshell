@@ -39,9 +39,7 @@ public class HelpContentsDialog extends StandardDialog {
     final DefaultMutableTreeNode root;
     boolean initialMessage;
 
-    /**
-     * Creates new form HelpContentsDialog
-     */
+
     public HelpContentsDialog(java.awt.Frame parent, boolean modal) {
         super(parent, modal);
         initComponents();

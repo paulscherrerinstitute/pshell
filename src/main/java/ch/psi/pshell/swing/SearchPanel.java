@@ -16,9 +16,7 @@ public class SearchPanel extends javax.swing.JPanel {
 
     DefaultTableModel model;
 
-    /**
-     * Creates new form SearchPanel
-     */
+    
     public SearchPanel(String pathName, final String filter,
             String pattern, boolean caseInsensitive, boolean wholeWords, String[] ignores, boolean recursive) {
         initComponents();

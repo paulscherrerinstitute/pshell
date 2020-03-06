@@ -33,9 +33,7 @@ public class EpicsConfigDialog extends StandardDialog {
     final static String keyChannelRetries = "ch.psi.jcae.impl.DefaultChannelService.retries";
     final static String keyChannelTimeout = "ch.psi.jcae.impl.DefaultChannelService.timeout";
 
-    /**
-     * Creates new form EpicsConfigDialog
-     */
+
     public EpicsConfigDialog(java.awt.Frame parent, boolean modal) {
         super(parent, modal);
         initComponents();
