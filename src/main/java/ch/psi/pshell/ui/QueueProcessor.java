@@ -104,9 +104,13 @@ public final class QueueProcessor extends MonitoredPanel implements Processor {
     }
     
     public void addNewFile(String filename, int index){
-        if (IO.isSubPath(filename, Context.getInstance().getSetup().getScriptPath())) {
-            filename = IO.getRelativePath(filename, Context.getInstance().getSetup().getScriptPath());
-        }                    
+        for (String path : new String[]{Context.getInstance().getSetup().getScriptPath(), 
+                                        Context.getInstance().getSetup().getHomePath()}) {
+            if (IO.isSubPath(filename, path)) {
+                filename = IO.getRelativePath(filename, path);
+                break;
+            }
+        }        
         Object[] data = new Object[]{true, filename, "", Task.QueueTaskErrorAction.Resume, ""};
         model.insertRow(index, data);
         model.fireTableDataChanged();        
@@ -115,7 +119,7 @@ public final class QueueProcessor extends MonitoredPanel implements Processor {
     }
 
     File getFile(String filename){
-        filename = filename.trim();
+        filename = Context.getInstance().getSetup().expandPath(filename).trim();
         if (filename.isEmpty()) {
             return null;
         }
@@ -123,9 +127,16 @@ public final class QueueProcessor extends MonitoredPanel implements Processor {
         if (ext.isEmpty()) {
             filename = filename + "." + Context.getInstance().getScriptType().toString();
         }
-        File file = Paths.get(Context.getInstance().getSetup().getScriptPath(), filename).toFile();
-
-        if (!file.exists()) {
+        
+        File file =null;
+        for (String path : new String[]{Context.getInstance().getSetup().getScriptPath(), 
+                                        Context.getInstance().getSetup().getHomePath()}) {
+            file = Paths.get(path, filename).toFile();
+            if (file.exists()){
+                break;
+            }
+        }                
+        if ((file==null) || (!file.exists())) {            
             file = new File(filename);
         }
         return file;
@@ -354,10 +365,10 @@ public final class QueueProcessor extends MonitoredPanel implements Processor {
         ArrayList<QueueTask> queue = new ArrayList<>();
         for (int i = 0; i < model.getRowCount(); i++) {
             Boolean enabled = (Boolean) model.getValueAt(i, 0);
-            String task = (String) model.getValueAt(i, 1);
+            String filename = (String) model.getValueAt(i, 1);
             String args = (String) model.getValueAt(i, 2);
             Task.QueueTaskErrorAction errorAction = Task.QueueTaskErrorAction.valueOf(String.valueOf(model.getValueAt(i, 3)));
-            QueueTask qt = new QueueTask(enabled, new File(task), args, errorAction);
+            QueueTask qt = new QueueTask(enabled, getFile(filename), args, errorAction);
             queue.add(qt);
 
         }
