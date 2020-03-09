@@ -1333,8 +1333,9 @@ public class App extends ObservableBase<AppListener> {
                 }
             }
         });
-        if (task instanceof Task.Restart) {
+        if (task instanceof Task.Restart) {            
             getState().assertNot(State.Initializing);
+            abort();
         } else {
             getState().assertReady();
         }

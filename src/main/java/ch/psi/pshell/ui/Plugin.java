@@ -1,5 +1,6 @@
 package ch.psi.pshell.ui;
 
+import ch.psi.pshell.core.Context;
 import ch.psi.pshell.device.GenericDevice;
 import ch.psi.pshell.device.Device;
 import ch.psi.pshell.imaging.Renderer;
@@ -50,7 +51,6 @@ public interface Plugin extends ch.psi.pshell.core.Plugin {
     @Override
     default void abort() throws InterruptedException {
         ch.psi.pshell.core.Plugin.super.abort();
-        getApp().abort();
     }
 
     default Frame getTopLevel() {
