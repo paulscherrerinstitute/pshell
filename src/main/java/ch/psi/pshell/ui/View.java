@@ -143,6 +143,7 @@ import javax.swing.DefaultCellEditor;
 import javax.swing.JComboBox;
 import javax.swing.JOptionPane;
 import javax.swing.KeyStroke;
+import javax.swing.MenuSelectionManager;
 
 /**
  * The main dialog of the Workbench.
@@ -2370,6 +2371,11 @@ public class View extends MainFrame {
 
         menuFileNew.setText(bundle.getString("View.menuFileNew.text_1")); // NOI18N
         menuFileNew.setName("menuFileNew"); // NOI18N
+        menuFileNew.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                menuFileNewMouseClicked(evt);
+            }
+        });
 
         menuNew.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_N, java.awt.event.InputEvent.CTRL_MASK));
         menuNew.setText(bundle.getString("View.menuNew.text")); // NOI18N
@@ -4284,6 +4290,11 @@ public class View extends MainFrame {
             showException(ex);
         }
     }//GEN-LAST:event_menuToggleCommentActionPerformed
+
+    private void menuFileNewMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_menuFileNewMouseClicked
+        menuNewActionPerformed(null);
+        MenuSelectionManager.defaultManager().clearSelectedPath();
+    }//GEN-LAST:event_menuFileNewMouseClicked
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton buttonAbort;
