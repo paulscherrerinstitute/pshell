@@ -3287,7 +3287,7 @@ public class View extends MainFrame {
             } else {
                 Processor processor = getSelectedProcessor();
                 if (processor != null) {
-                    JFileChooser chooser = new JFileChooser(processor.getHomePath());
+                    JFileChooser chooser = new JFileChooser(context.getSetup().expandPath(processor.getHomePath()));
                     FileNameExtensionFilter filter = new FileNameExtensionFilter(processor.getDescription(), processor.getExtensions());
                     chooser.setFileFilter(filter);
                     if (processor.getFileName() != null) {

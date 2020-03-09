@@ -421,7 +421,7 @@ public class ScriptManager implements AutoCloseable {
     }
 
     public void abort() {
-        logger.info("Aborting");
+        logger.fine("Aborting");
         try {
             if ((evalThread != null) && (evalThread != Thread.currentThread())) {
                 evalThread.interrupt();
