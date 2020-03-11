@@ -117,30 +117,6 @@ public final class QueueProcessor extends MonitoredPanel implements Processor {
         table.getSelectionModel().setSelectionInterval(index, index);
         update();  
     }
-
-    File getFile(String filename){
-        filename = Context.getInstance().getSetup().expandPath(filename).trim();
-        if (filename.isEmpty()) {
-            return null;
-        }
-        String ext = IO.getExtension(filename);
-        if (ext.isEmpty()) {
-            filename = filename + "." + Context.getInstance().getScriptType().toString();
-        }
-        
-        File file =null;
-        for (String path : new String[]{Context.getInstance().getSetup().getScriptPath(), 
-                                        Context.getInstance().getSetup().getHomePath()}) {
-            file = Paths.get(path, filename).toFile();
-            if (file.exists()){
-                break;
-            }
-        }                
-        if ((file==null) || (!file.exists())) {            
-            file = new File(filename);
-        }
-        return file;
-    }
     
     public void initializeTable() {
 
@@ -161,7 +137,7 @@ public final class QueueProcessor extends MonitoredPanel implements Processor {
                         }
                         chooser.setAcceptAllFileFilterUsed(true);
                         String filename = field.getText().trim();
-                        File file = getFile(filename);
+                        File file = QueueTask.getFile(filename);
                         if (filename!=null) {
                             chooser.setSelectedFile(file);
                         }
@@ -301,6 +277,7 @@ public final class QueueProcessor extends MonitoredPanel implements Processor {
             @Override
             public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
                 editor.field.setText((String) value);
+                editor.button.setVisible(!(String.valueOf(model.getValueAt(row, 1))).trim().isEmpty());                
                 return editor;
             }
 
@@ -368,8 +345,7 @@ public final class QueueProcessor extends MonitoredPanel implements Processor {
             String filename = (String) model.getValueAt(i, 1);
             String args = (String) model.getValueAt(i, 2);
             Task.QueueTaskErrorAction errorAction = Task.QueueTaskErrorAction.valueOf(String.valueOf(model.getValueAt(i, 3)));
-            QueueTask qt = new QueueTask(enabled, getFile(filename), args, errorAction);
-            queue.add(qt);
+            queue.add(QueueTask.newInstance(enabled, filename, args, errorAction));
 
         }
         QueueExecution task = new QueueExecution(queue.toArray(new QueueTask[0]), new Task.QueueExecutionListener() {
@@ -442,7 +418,7 @@ public final class QueueProcessor extends MonitoredPanel implements Processor {
         Object[][][] vector = (Object[][][]) JsonSerializer.decode(json, Object[][][].class);
 
         Object[][] tableData = vector[0];
-        for (int i = 0; i < tableData.length; i++) {
+        for (int i = 0; i < tableData.length; i++) {            
             tableData[i] = new Object[]{
                 tableData[i][0],
                 tableData[i][1],
@@ -509,7 +485,7 @@ public final class QueueProcessor extends MonitoredPanel implements Processor {
                 int row = table.rowAtPoint(e.getPoint());
                 if (row >= 0 && row < table.getRowCount()) {
                     table.setRowSelectionInterval(row, row);
-                    File file = getFile(String.valueOf(model.getValueAt(table.getSelectedRow(), 1)));                      
+                    File file = QueueTask.getFile(String.valueOf(model.getValueAt(table.getSelectedRow(), 1)));                      
                     JPopupMenu popupMenu = new JPopupMenu();
                     JMenuItem menuOpen = new JMenuItem("Open File");            
                     menuOpen.addActionListener((evt)->{

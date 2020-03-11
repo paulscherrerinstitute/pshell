@@ -1206,7 +1206,12 @@ public class App extends ObservableBase<AppListener> {
         return context.evalFile(file.getPath(), args);
     }
     
-    void abortEvalFile(File file) throws InterruptedException{
+    Object evalStatement(String statement) throws Exception{
+        context.clearAborted();
+        return context.evalLine(statement);
+    }    
+    
+    void abortEval(File file) throws InterruptedException{
         if (runningProcessor!=null){
             runningProcessor.abort();
         }                            

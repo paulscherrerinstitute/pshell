@@ -7,6 +7,7 @@ import ch.psi.pshell.scripting.Statement;
 import ch.psi.pshell.core.CommandSource;
 import ch.psi.pshell.core.JsonSerializer;
 import ch.psi.pshell.ui.Preferences.ScriptPopupDialog;
+import ch.psi.utils.IO;
 import ch.psi.utils.State;
 import ch.psi.utils.Str;
 import ch.psi.utils.swing.SwingUtils;
@@ -15,6 +16,7 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
@@ -248,22 +250,86 @@ public abstract class Task extends SwingWorker<Object, Void> {
 
     public static class QueueTask {
 
-        boolean enabled;
-        File file;
-        Map<String, Object> args;
-        QueueTaskErrorAction error;
+        final boolean enabled;
+        final File file;
+        final String statement;
+        final Map<String, Object> args;
+        final QueueTaskErrorAction error;
 
         public QueueTask(boolean enabled, File file, Map<String, Object> args, QueueTaskErrorAction error) {
             this.enabled = enabled;
             this.file = file;
+            this.statement =null;
             this.args = args;
             this.error = error;
         }
 
-        public QueueTask(boolean enabled, File file, String args, QueueTaskErrorAction error) {
-            this(enabled, file, convertArgString(args), error);
+        public QueueTask(boolean enabled, String statement, QueueTaskErrorAction error) {
+            this.enabled = enabled;
+            this.file = null;
+            this.statement = statement;
+            this.args = null;
+            this.error = error;
         }
-    }
+        
+        public static QueueTask newInstance(boolean enabled, String file, String args, QueueTaskErrorAction error) {    
+            file = (file==null) ? "" :file.trim();
+            args = (args==null) ? "" :args.trim();
+            if (!file.isEmpty()){
+                return new QueueTask(enabled, getFile(file), convertArgString(args), error);
+            } else if (!args.isEmpty()) {
+                return new QueueTask(enabled, args, error);
+            } else {
+                return new QueueTask(false, null, convertArgString(args), error);
+            }
+        }
+
+        public static File getFile(String filename) {
+            filename = Context.getInstance().getSetup().expandPath(filename).trim();
+            if (filename.isEmpty()) {
+                return null;
+            }
+            String ext = IO.getExtension(filename);
+            if (ext.isEmpty()) {
+                filename = filename + "." + Context.getInstance().getScriptType().toString();
+            }
+
+            File file = null;
+            for (String path : new String[]{Context.getInstance().getSetup().getScriptPath(),
+                Context.getInstance().getSetup().getHomePath()}) {
+                file = Paths.get(path, filename).toFile();
+                if (file.exists()) {
+                    break;
+                }
+            }
+            if ((file == null) || (!file.exists())) {
+                file = new File(filename);
+            }
+            return file;
+        }             
+        
+        static Map<String, Object> convertArgString(String args) {
+            try {
+                Map<String, String> data = QueueParsDialog.getParsMap(args);
+
+                StringBuilder sb = new StringBuilder();
+                sb.append("{");
+                for (String key : data.keySet()) {
+                    if (sb.length() > 1) {
+                        sb.append(", ");
+                    }
+                    sb.append("\"").append(key).append("\":").append(data.get(key));
+                }
+                sb.append("}");
+
+                return (Map) JsonSerializer.decode(sb.toString(), Map.class);
+            } catch (IOException ex) {
+                Logger.getLogger(QueueExecution.class.getName()).log(Level.WARNING, args, ex);
+            }
+
+            return new HashMap<>();
+        }        
+    }         
 
     public enum QueueTaskErrorAction {
         Resume,
@@ -316,7 +382,10 @@ public abstract class Task extends SwingWorker<Object, Void> {
                             }
                             if (task.enabled) {
                                 Context.getInstance().waitState(State.Ready, 5000); //Tries to keep up with some concurrent execution.
-                                Object ret = App.getInstance().evalFile(task.file, task.args);
+
+                                Object ret = (task.file != null)
+                                        ? App.getInstance().evalFile(task.file, task.args)
+                                        : App.getInstance().evalStatement(task.statement);
 
                                 if (Context.getInstance().getState().isProcessing()) {
                                     Logger.getLogger(QueueExecution.class.getName()).info("State busy after task: waiting completion of next stage");
@@ -358,12 +427,12 @@ public abstract class Task extends SwingWorker<Object, Void> {
                                     break;
                                 }
                                 if (task.error == QueueTaskErrorAction.Once) {
-                                    if (retried){
+                                    if (retried) {
                                         break;
                                     }
                                     retried = true;
                                 }
-                                                                
+
                                 Thread.sleep(1000); //Delays restart to handle skipping and avoid high number of exceptions
 
                                 if (aborted || Context.getInstance().isAborted() || skipped) {
@@ -400,7 +469,7 @@ public abstract class Task extends SwingWorker<Object, Void> {
         public void skip() {
             skipped = true;
             try {
-                App.getInstance().abortEvalFile(currentTask.file);
+                App.getInstance().abortEval(currentTask.file);
             } catch (InterruptedException ex) {
                 Logger.getLogger(QueueExecution.class.getName()).log(Level.SEVERE, null, ex);
             }
@@ -409,28 +478,6 @@ public abstract class Task extends SwingWorker<Object, Void> {
         public void abort() {
             aborted = true;
         }
-    }
-
-    static Map<String, Object> convertArgString(String args) {
-        try {
-            Map<String, String> data = QueueParsDialog.getParsMap(args);
-
-            StringBuilder sb = new StringBuilder();
-            sb.append("{");
-            for (String key : data.keySet()){
-                if (sb.length()>1){
-                    sb.append(", ");
-                }
-                sb.append("\"").append(key).append("\":").append(data.get(key));
-            }
-            sb.append("}");
-        
-            return (Map) JsonSerializer.decode(sb.toString(), Map.class);
-        } catch (IOException ex) {
-            Logger.getLogger(QueueExecution.class.getName()).log(Level.WARNING, args, ex);
-        }
-
-        return new HashMap<>();
     }
 
     /**
