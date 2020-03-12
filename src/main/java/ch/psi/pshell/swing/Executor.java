@@ -11,6 +11,10 @@ import java.util.concurrent.TimeoutException;
 public interface Executor {
     String getFileName();
     
+    default boolean isTabNameUpdated() {
+        return true;
+    }  
+    
     default boolean canStep() {
         return true;
     }    

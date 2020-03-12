@@ -1271,7 +1271,7 @@ public class View extends MainFrame {
     }
 
     void updateProcessorTabTitle(Processor processor, int index) {
-        if (processor.hasChanged()) {
+        if (processor.hasChanged() && processor.isTabNameUpdated()) {
             try {
                 if (processor.getFileName() != null) {
                     tabDoc.setTitleAt(index, new File(processor.getFileName()).getName() + "*");
@@ -3248,7 +3248,9 @@ public class View extends MainFrame {
                     } else {
                         processor.save();
                         if (processor.getFileName() != null) {
-                            tabDoc.setTitleAt(tabDoc.getSelectedIndex(), new File(processor.getFileName()).getName());
+                            if (processor.isTabNameUpdated()){
+                                tabDoc.setTitleAt(tabDoc.getSelectedIndex(), new File(processor.getFileName()).getName());
+                            }
                         }
                     }
                 }
@@ -3307,7 +3309,9 @@ public class View extends MainFrame {
                         processor.saveAs(fileName);
                         if (processor.getFileName() != null) {
                             fileHistory.put(processor.getFileName());
-                            tabDoc.setTitleAt(tabDoc.getSelectedIndex(), new File(processor.getFileName()).getName());
+                            if (processor.isTabNameUpdated()){
+                                tabDoc.setTitleAt(tabDoc.getSelectedIndex(), new File(processor.getFileName()).getName());
+                            }
                         }
                     }
                 }
