@@ -1,9 +1,10 @@
 package:
     name: pshell_client
-    version: 1.0.3
+    version: "{{ load_setup_py_data().version }}"
 
 build:
   number: 0
+  noarch: python
 
 source:
     path: ..
