@@ -331,6 +331,13 @@ public class View extends MainFrame {
         }
         dropListner = new DropTargetListener();
         dropListner.enable();
+        
+        for (String name : App.getArgumentValues("hide")){
+            Component component = SwingUtils.getComponentByName(this, name);
+            if (component!=null){
+                component.setVisible(false);
+            }
+        }
     }
 
     //TODO: This flag is used to re-inject detached windows to original tabs.
