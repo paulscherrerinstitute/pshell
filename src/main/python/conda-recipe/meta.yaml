@@ -1,5 +1,5 @@
 package:
-    name: pshell_client
+    name: pshell
     version: "{{ load_setup_py_data().version }}"
 
 build:
