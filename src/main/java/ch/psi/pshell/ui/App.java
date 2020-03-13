@@ -394,11 +394,11 @@ public class App extends ObservableBase<AppListener> {
     }
 
     static public boolean isLocalMode() {
-        return hasArgument("l") || isPlotOnly() || isHelpOnly() || isDataPanel() || isStripChart();
+        return hasArgument("l") || isPlotOnly() || isHelpOnly() || isDataPanel() || isStripChart()|| isOffline() || isVolatile();
     }
 
     static public boolean isBareMode() {
-        return hasArgument("b");
+        return hasArgument("b") || isVolatile();
     }
 
     static public boolean isEmptyMode() {

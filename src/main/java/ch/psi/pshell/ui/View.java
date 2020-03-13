@@ -761,8 +761,8 @@ public class View extends MainFrame {
                 //Doing every time because each script can overide this
                 restorePreferences();
             }
-            buttonRestart.setEnabled(state != State.Initializing);
-            menuRestart.setEnabled(state != State.Initializing);
+            buttonRestart.setEnabled((state != State.Initializing) && !App.isOffline());
+            menuRestart.setEnabled(buttonRestart.isEnabled());
         }
 
         void restorePreferences() {
