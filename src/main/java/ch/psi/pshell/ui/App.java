@@ -366,11 +366,12 @@ public class App extends ObservableBase<AppListener> {
         sb.append("\n\t-libp=<path>\tAdd to library path");
         sb.append("\n\t-clsp=<path>\tAdd to class path");        
         sb.append("\n\t-scrp=<path>\tAdd to script path");                
-        sb.append("\n\t-mlaf\tUse Metal look and feel (cross platform)");
-        sb.append("\n\t-slaf\tUse System look and feel (or Metal if no System LAF is installed)");
-        sb.append("\n\t-nlaf\tUse Nimbus look and feel (cross platform)");
-        sb.append("\n\t-dlaf\tUse a dark look and feel (cross platform)");
-        sb.append("\n\t-flaf\tUse a flat look and feel (cross platform, can be used together with -dark)");
+        sb.append("\n\t-mlaf\tSet Metal look and feel (cross platform)");
+        sb.append("\n\t-slaf\tSet System look and feel (or Metal if no System LAF is installed)");
+        sb.append("\n\t-nlaf\tSet Nimbus look and feel (cross platform)");
+        sb.append("\n\t-dlaf\tSet Dark look and feel (cross platform)");
+        sb.append("\n\t-flaf\tSet Flat look and feel (cross platform");        
+        sb.append("\n\t-blaf\tSet Flat&Dark look and feel  (cross platform)");
         sb.append("\n\t-args=...\tProvide arguments to interpreter");
         sb.append("\n\t-f=<..>\tRun a file instead of entering interactive shell (together with -c option)");
         sb.append("\n\t-p=<..>\tLoad a plugin");
@@ -1507,16 +1508,18 @@ public class App extends ObservableBase<AppListener> {
             laf = UIManager.getSystemLookAndFeelClassName();
         } else if (hasArgument("nlaf")) {
             laf = MainFrame.getNimbusLookAndFeel();
+        } else if (hasArgument("blaf")) {
+            laf = MainFrame.getFlatLookAndFeel(FlatLookAndFeelType.Darcula);                  
         } else if (hasArgument("flaf")) {
             String type=getArgumentValue("flaf");                        
             if (Arr.containsEqual(Convert.toStringArray(FlatLookAndFeelType.values()), type)){
                 laf = MainFrame.getFlatLookAndFeel(FlatLookAndFeelType.valueOf(type));  
             } else {                    
                 if (hasArgument("dlaf")){
-                    laf = MainFrame.getFlatLookAndFeel(FlatLookAndFeelType.Darcula);  
+                laf = MainFrame.getFlatLookAndFeel(FlatLookAndFeelType.Darcula);  
                 } else {
                     laf = MainFrame.getFlatLookAndFeel(FlatLookAndFeelType.IntelliJ);  
-                }
+            }
             }
         } else if (hasArgument("dlaf")) {
             laf = MainFrame.getDarculaLookAndFeel();
