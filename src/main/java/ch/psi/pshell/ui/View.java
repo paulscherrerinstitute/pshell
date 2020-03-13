@@ -170,8 +170,8 @@ public class View extends MainFrame {
             logger.log(Level.SEVERE, null, t);
             throw t;
         }
-
-        setTitle(App.getApplicationTitle());
+        String title = App.getArgumentValue("title");
+        setTitle((title==null) ? App.getApplicationTitle() : title);
         setIcon(App.getResourceUrl("IconSmall.png"));
         if (MainFrame.isDark()) {
             for (Component b : SwingUtils.getComponentsByType(toolBar, JButton.class)) {
@@ -180,6 +180,7 @@ public class View extends MainFrame {
                 ((JButton) b).setIcon(new ImageIcon(App.getResourceUrl("dark/" + new File(((JButton) b).getIcon().toString()).getName())));
             }
         }
+        menuVersioning.setVisible(false);
         tabLeft.setVisible(false);
         tabLeft.addContainerListener(new ContainerListener() {
             @Override
@@ -338,6 +339,17 @@ public class View extends MainFrame {
                 component.setVisible(false);
             }
         }
+        if (App.isOffline()){
+            setConsoleLocation(PanelLocation.Hidden);
+            menuUpdateAll.setEnabled(false);
+            menuReinit.setEnabled(false);
+            tabStatus.remove(loggerPanel);
+            tabStatus.remove(devicesPanel);
+            tabStatus.remove(imagingPanel);
+            tabStatus.remove(scanPanel);
+            tabStatus.remove(outputPanel);
+            menuShell.setVisible(false);
+       }
     }
 
     //TODO: This flag is used to re-inject detached windows to original tabs.
@@ -1539,7 +1551,7 @@ public class View extends MainFrame {
         }
         consoleLocation = location;
 
-        if (context.getRights().hideConsole) {
+        if ((context.getRights().hideConsole) || App.isOffline()) {
             location = PanelLocation.Hidden;
         }
 
@@ -1670,7 +1682,7 @@ public class View extends MainFrame {
                 editor.setEditorBackground(preferences.getEditorBackground());
             }
         }
-        showEmergencyStop(preferences.showEmergencyStop);
+        showEmergencyStop(preferences.showEmergencyStop && !App.isOffline());
         PlotBase.setPlotBackground(preferences.plotBackground);
         PlotBase.setGridColor(preferences.gridColor);
         PlotBase.setOutlineColor(preferences.outlineColor);
