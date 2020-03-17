@@ -237,5 +237,72 @@ public class Sys {
             ex.printStackTrace();
         }
         return -1;
+    }    
+    
+    public static int getUid() {
+        if (isWindows()) {
+            return -1;
+        }
+
+        return Posix.getuid();
     }
+    
+    public static int setUid(int uid) {
+        if (isWindows()) {
+            return -1;
+        }
+        return Posix.setuid(uid);
+    }    
+    
+    public static int getEuid() {
+        if (isWindows()) {
+            return -1;
+        }
+
+        return Posix.geteuid();
+    }    
+    
+    public static int setEuid(int uid) {
+        if (isWindows()) {
+            return -1;
+        }
+        return Posix.seteuid(uid);
+    }    
+        
+    public static int getGid() {
+        if (isWindows()) {
+            return -1;
+        }
+
+        return Posix.geteuid();
+    }       
+
+    public static int setGid(int gid) {
+        if (isWindows()) {
+            return -1;
+        }
+        return Posix.setgid(gid);
+    }
+    
+    public static int getEgid() {
+        if (isWindows()) {
+            return -1;
+        }
+
+        return Posix.geteuid();
+    }       
+
+    public static int setEgid(int gid) {
+        if (isWindows()) {
+            return -1;
+        }
+        return Posix.setgid(gid);
+    }    
+
+    public static int setUmask(int umask) {
+        if (isWindows()) {
+            return -1;
+        }
+        return Posix.setumask(umask);
+    }   
 }
