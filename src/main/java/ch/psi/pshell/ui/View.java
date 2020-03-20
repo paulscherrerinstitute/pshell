@@ -2007,6 +2007,7 @@ public class View extends MainFrame {
         menuLogQuery = new javax.swing.JMenuItem();
         menuOpenLogFile = new javax.swing.JMenuItem();
         jSeparator1 = new javax.swing.JPopupMenu.Separator();
+        menuDataFile = new javax.swing.JMenuItem();
         menuPlugins = new javax.swing.JMenuItem();
         menuTasks = new javax.swing.JMenuItem();
         menuUsers = new javax.swing.JMenuItem();
@@ -2480,6 +2481,15 @@ public class View extends MainFrame {
 
         jSeparator1.setName("jSeparator1"); // NOI18N
         menuFile.add(jSeparator1);
+
+        menuDataFile.setText(bundle.getString("View.menuDataFile.text")); // NOI18N
+        menuDataFile.setName("menuDataFile"); // NOI18N
+        menuDataFile.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                menuDataFileActionPerformed(evt);
+            }
+        });
+        menuFile.add(menuDataFile);
 
         menuPlugins.setText(bundle.getString("View.menuPlugins.text")); // NOI18N
         menuPlugins.setName("menuPlugins"); // NOI18N
@@ -4319,6 +4329,16 @@ public class View extends MainFrame {
         MenuSelectionManager.defaultManager().clearSelectedPath();
     }//GEN-LAST:event_menuFileNewMouseClicked
 
+    private void menuDataFileActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuDataFileActionPerformed
+        try {
+            DataFileDialog dlg = new DataFileDialog(this,  false);
+            dlg.setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+            showChildWindow(dlg); 
+        } catch (Exception ex) {
+            showException(ex);
+        }       
+    }//GEN-LAST:event_menuDataFileActionPerformed
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton buttonAbort;
     private javax.swing.JButton buttonAbout;
@@ -4378,6 +4398,7 @@ public class View extends MainFrame {
     private javax.swing.JMenuItem menuCreateBranch;
     private javax.swing.JMenuItem menuCreateTag;
     private javax.swing.JMenuItem menuCut;
+    private javax.swing.JMenuItem menuDataFile;
     private javax.swing.JMenuItem menuDebug;
     private javax.swing.JMenuItem menuDeleteBranch;
     private javax.swing.JMenuItem menuDeleteTag;
