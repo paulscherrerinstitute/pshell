@@ -5,6 +5,8 @@ import ch.psi.pshell.core.Context;
 import ch.psi.pshell.core.ContextAdapter;
 import ch.psi.pshell.core.ContextListener;
 import ch.psi.pshell.core.Setup;
+import ch.psi.pshell.data.DataManager;
+import ch.psi.pshell.data.Provider;
 import ch.psi.utils.Config;
 import ch.psi.utils.State;
 import ch.psi.utils.swing.StandardDialog;
@@ -24,12 +26,13 @@ public class DataFileDialog extends StandardDialog {
 
     final Configuration config;
     final Setup setup;
-    final String defaultPath;    
+    final String defaultPath;
     int sequential;
-            
+    Provider provider;
+
     public DataFileDialog(java.awt.Frame parent, boolean modal) {
         super(parent, "Data File Configuration", modal);
-        initComponents();        
+        initComponents();
         config = Context.getInstance().getConfig();
         setup = Context.getInstance().getSetup();
         try {
@@ -46,38 +49,39 @@ public class DataFileDialog extends StandardDialog {
         } catch (Exception ex) {
             Logger.getLogger(DataFileDialog.class.getName()).log(Level.SEVERE, null, ex);
         }
-        defaultPath = new Configuration().dataPath; 
+        defaultPath = new Configuration().dataPath;
         textPathConfig.setText(config.dataPath.trim());
         comboProvider.setSelectedItem(config.dataProvider.trim());
         comboLayout.setSelectedItem(config.dataLayout.trim());
         sequential = Context.getInstance().getFileSequentialNumber();
-        update();                
+        updateProvider();
+        update();
     }
-    
+
     final ContextListener contextListener = new ContextAdapter() {
         @Override
         public void onContextStateChanged(State state, State former) {
-            if ((dialogTokens!=null) && (dialogTokens.isShowing())){
-                ((DefaultTableModel)tableTokens.getModel()).setDataVector(getTokenData(), 
+            if ((dialogTokens != null) && (dialogTokens.isShowing())) {
+                ((DefaultTableModel) tableTokens.getModel()).setDataVector(getTokenData(),
                         SwingUtils.getTableColumnNames(tableTokens));
                 setTokensTableColumnSizes(tableTokens);
-            }    
+            }
             sequential = Context.getInstance().getFileSequentialNumber();
             try {
                 spinnerSeq.setValue(sequential);
-            } catch (Exception ex) {        
-            }        
-            
+            } catch (Exception ex) {
+            }
+
             updateButtons();
         }
     };
-    
-    void setTokensTableColumnSizes(JTable tableTokens){
+
+    void setTokensTableColumnSizes(JTable tableTokens) {
         tableTokens.getColumnModel().getColumn(0).setPreferredWidth(75);
         tableTokens.getColumnModel().getColumn(1).setPreferredWidth(125);
-        tableTokens.getColumnModel().getColumn(2).setPreferredWidth(400);                  
+        tableTokens.getColumnModel().getColumn(2).setPreferredWidth(400);
     }
-    
+
     @Override
     protected void onOpened() {
         Context.getInstance().addListener(contextListener);
@@ -89,10 +93,8 @@ public class DataFileDialog extends StandardDialog {
         Context.getInstance().removeListener(contextListener);
     }
 
-    
-    
-    Object[][] getTokenData(){
-        Object[][] tokenData= new Object[][]{
+    Object[][] getTokenData() {
+        Object[][] tokenData = new Object[][]{
             new Object[]{Setup.TOKEN_DATA, "", "Data root folder"},
             new Object[]{Setup.TOKEN_USER, "", "Application user name"},
             new Object[]{Setup.TOKEN_DATE, "", "Current date (format: YYYYMMDD)"},
@@ -109,70 +111,81 @@ public class DataFileDialog extends StandardDialog {
             new Object[]{Setup.TOKEN_EXEC_INDEX, "", "Scan index  (formatter can be appended: " + Setup.TOKEN_EXEC_INDEX + "%02d )"},
             new Object[]{Setup.TOKEN_FILE_SEQUENTIAL_NUMBER, "", "Execution sequential number (formatter can be appended: " + Setup.TOKEN_FILE_SEQUENTIAL_NUMBER + "%02d )"},
             new Object[]{Setup.TOKEN_SYS_HOME, "", "System user name"},
-            new Object[]{Setup.TOKEN_SYS_USER, "", "System user home folder"},
-            
-        };
-        
-        for (Object[] row: tokenData){
+            new Object[]{Setup.TOKEN_SYS_USER, "", "System user home folder"},};
+
+        for (Object[] row : tokenData) {
             row[1] = setup.expandPath(String.valueOf(row[0]));
         }
-        
-        return tokenData;        
+
+        return tokenData;
     }
-    
-    void updateButtons(){
+
+    void updateButtons() {
         buttonPathDefault.setEnabled(!textPathConfig.getText().trim().equals(defaultPath));
         buttonPathUndo.setEnabled(!textPathConfig.getText().trim().equals(config.dataPath.trim()));
         buttonProviderUndo.setEnabled(!String.valueOf(comboProvider.getSelectedItem()).trim().equals(config.dataProvider.trim()));
         buttonLayoutUndo.setEnabled(!String.valueOf(comboLayout.getSelectedItem()).trim().equals(config.dataLayout.trim()));
         buttonSeqUndo.setEnabled(!spinnerSeq.getValue().equals(sequential));
         buttonResetSeq.setEnabled(!spinnerSeq.getValue().equals(0));
-        buttonApply.setEnabled(buttonPathUndo.isEnabled() || buttonProviderUndo.isEnabled() || buttonLayoutUndo.isEnabled() || buttonSeqUndo.isEnabled());        
+        buttonApply.setEnabled(buttonPathUndo.isEnabled() || buttonProviderUndo.isEnabled() || buttonLayoutUndo.isEnabled() || buttonSeqUndo.isEnabled());
     }
-        
-    void update(){
+
+    void update() {
         updateButtons();
-        try{
-            textPathExpansion.setText(setup.expandPath(textPathConfig.getText().trim()));
-        } catch (Exception ex){
-             textPathExpansion.setText("");
-        }        
+        try {
+            String path = setup.expandPath(textPathConfig.getText().trim());
+            if (provider != null) {
+                path = path + (provider.isPacked() ? ("." + provider.getFileType()) : "/");
+            }
+            textPathExpansion.setText(path);
+        } catch (Exception ex) {
+            textPathExpansion.setText("");
+        }
     }
-    
+
+    void updateProvider() {
+        try {
+            provider = ((Provider) DataManager.getProviderClass(String.valueOf(comboProvider.getSelectedItem())).newInstance());
+        } catch (Exception ex) {
+            provider = null;
+        }
+    }
+
     JTable tableTokens;
     JDialog dialogTokens;
-    void showTokens(){
-        if ((dialogTokens!=null) && (dialogTokens.isShowing())){
+
+    void showTokens() {
+        if ((dialogTokens != null) && (dialogTokens.isShowing())) {
             dialogTokens.setVisible(false);
         }
         JScrollPane scrollTokens = new JScrollPane();
-        tableTokens = new JTable();        
+        tableTokens = new JTable();
         tableTokens.setModel(new DefaultTableModel(
-            getTokenData(),
-            new String [] {"Token", "Expansion", "Description"}
+                getTokenData(),
+                new String[]{"Token", "Expansion", "Description"}
         ) {
-            Class[] types = new Class [] {
+            Class[] types = new Class[]{
                 java.lang.String.class, java.lang.String.class, java.lang.String.class
             };
-            boolean[] canEdit = new boolean [] {
+            boolean[] canEdit = new boolean[]{
                 false, false, false
             };
 
             public Class getColumnClass(int columnIndex) {
-                return types [columnIndex];
+                return types[columnIndex];
             }
 
             public boolean isCellEditable(int rowIndex, int columnIndex) {
-                return canEdit [columnIndex];
+                return canEdit[columnIndex];
             }
         });
         tableTokens.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
         tableTokens.setCellSelectionEnabled(true);
         tableTokens.getTableHeader().setReorderingAllowed(false);
         scrollTokens.setViewportView(tableTokens);
-        
+
         dialogTokens = SwingUtils.showDialog(this, "Expansion Tokens", new Dimension(600, 400), scrollTokens);
-        setTokensTableColumnSizes(tableTokens);        
+        setTokensTableColumnSizes(tableTokens);
     }
 
     @SuppressWarnings("unchecked")
@@ -487,31 +500,32 @@ public class DataFileDialog extends StandardDialog {
 
     private void buttonApplyActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonApplyActionPerformed
         try {
-            if (buttonPathUndo.isEnabled() || buttonProviderUndo.isEnabled() || buttonLayoutUndo.isEnabled()){
-                config.dataPath =textPathConfig.getText().trim();
+            if (buttonPathUndo.isEnabled() || buttonProviderUndo.isEnabled() || buttonLayoutUndo.isEnabled()) {
+                config.dataPath = textPathConfig.getText().trim();
                 config.dataProvider = String.valueOf(comboProvider.getSelectedItem()).trim();
                 config.dataLayout = String.valueOf(comboLayout.getSelectedItem()).trim();
                 config.save();
             }
-            if (buttonSeqUndo.isEnabled()){
-                Context.getInstance().setFileSequentialNumber((Integer)spinnerSeq.getValue());
+            if (buttonSeqUndo.isEnabled()) {
+                Context.getInstance().setFileSequentialNumber((Integer) spinnerSeq.getValue());
             }
             update();
-            
+
         } catch (Exception ex) {
             SwingUtils.showException(this, ex);
         }
     }//GEN-LAST:event_buttonApplyActionPerformed
 
     private void buttonOkActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonOkActionPerformed
-        if (buttonApply.isEnabled()){
+        if (buttonApply.isEnabled()) {
             buttonApplyActionPerformed(evt);
-        }        
+        }
         accept();
     }//GEN-LAST:event_buttonOkActionPerformed
 
     private void comboProviderActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_comboProviderActionPerformed
-        updateButtons();
+        updateProvider();
+        update();
     }//GEN-LAST:event_comboProviderActionPerformed
 
     private void buttonPathDefaultActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonPathDefaultActionPerformed
@@ -526,7 +540,8 @@ public class DataFileDialog extends StandardDialog {
 
     private void buttonProviderUndoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonProviderUndoActionPerformed
         comboProvider.setSelectedItem(config.dataProvider.trim());
-        updateButtons();
+        updateProvider();
+        update();
     }//GEN-LAST:event_buttonProviderUndoActionPerformed
 
     private void buttonLayoutUndoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonLayoutUndoActionPerformed
