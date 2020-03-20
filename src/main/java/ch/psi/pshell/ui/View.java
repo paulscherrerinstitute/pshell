@@ -123,11 +123,14 @@ import ch.psi.pshell.swing.Executor;
 import ch.psi.pshell.swing.HistoryChart;
 import ch.psi.pshell.swing.MotorPanel;
 import ch.psi.pshell.swing.RepositoryChangesDialog;
+import ch.psi.utils.Config;
 import ch.psi.utils.Sys;
 import ch.psi.utils.Sys.OSFamily;
+import ch.psi.utils.swing.PropertiesDialog;
 import ch.psi.utils.swing.TextEditor;
 import java.awt.Color;
 import java.awt.Cursor;
+import java.awt.Frame;
 import java.awt.Graphics;
 import java.awt.Image;
 import java.awt.Point;
@@ -144,6 +147,7 @@ import javax.swing.JComboBox;
 import javax.swing.JOptionPane;
 import javax.swing.KeyStroke;
 import javax.swing.MenuSelectionManager;
+import javax.swing.WindowConstants;
 
 /**
  * The main dialog of the Workbench.
@@ -1461,6 +1465,68 @@ public class View extends MainFrame {
         }
         openScript(file);
     }
+    
+    public static PropertiesDialog showSettingsEditor(Frame parent, boolean modal, boolean readOnly) {
+        return showPropertiesEditor("Settings", parent, Context.getInstance().getSettingsFile(), modal, readOnly);
+    }
+    
+    public static PropertiesDialog showPropertiesEditor(String title, Frame parent, String fileName, boolean modal, boolean readOnly) {
+        try {
+            final PropertiesDialog dlg = new PropertiesDialog(parent, modal);
+            dlg.setTitle((title==null) ? fileName : title);
+            Properties props = new Properties();
+            try (FileInputStream in = new FileInputStream(fileName)) {
+                props.load(in);
+            }             
+            dlg.setProperties(props);
+            dlg.setReadOnly(readOnly);            
+            dlg.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+            dlg.setListener((StandardDialog sd, boolean accepted) -> {
+                if (sd.getResult()) {
+                    try (FileOutputStream out = new FileOutputStream(fileName);) {
+                        props.store(out, null);
+                    } catch (IOException ex) {
+                        SwingUtils.showException(dlg, ex);
+                    }
+                }
+            });
+            dlg.setLocationRelativeTo(parent);
+            dlg.setVisible(true);
+            dlg.requestFocus();
+            return dlg;
+
+        } catch (Exception ex) {
+            SwingUtils.showException(parent, ex);
+        }   
+        return null;
+    }
+    
+    public static ConfigDialog showConfigEditor(String title, Frame parent, Config cfg, boolean modal, boolean readOnly) {
+        try {
+            final ConfigDialog dlg = new ConfigDialog(parent, modal);
+            dlg.setTitle((title==null) ? cfg.getFileName() : title);
+            dlg.setConfig(cfg);
+            dlg.setReadOnly(readOnly);            
+            dlg.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+            dlg.setListener((StandardDialog sd, boolean accepted) -> {
+                if (sd.getResult()) {
+                    try {
+                        cfg.save();
+                    } catch (IOException ex) {
+                        SwingUtils.showException(dlg, ex);
+                    }
+                }
+            });
+            dlg.setLocationRelativeTo(parent);
+            dlg.setVisible(true);
+            dlg.requestFocus();
+            return dlg;
+
+        } catch (Exception ex) {
+            SwingUtils.showException(parent, ex);
+        }   
+        return null;
+    }  
 
     boolean isPlotsVisible() {
         if (plotsDetached) {
@@ -2036,6 +2102,7 @@ public class View extends MainFrame {
         menuRestart = new javax.swing.JMenuItem();
         jSeparator19 = new javax.swing.JPopupMenu.Separator();
         menuSetLogLevel = new javax.swing.JMenu();
+        menuSettings = new javax.swing.JMenuItem();
         menuChangeUser = new javax.swing.JMenuItem();
         jSeparator4 = new javax.swing.JPopupMenu.Separator();
         menuCheckSyntax = new javax.swing.JMenuItem();
@@ -2719,6 +2786,15 @@ public class View extends MainFrame {
         menuSetLogLevel.setText(bundle.getString("View.menuSetLogLevel.text")); // NOI18N
         menuSetLogLevel.setName("menuSetLogLevel"); // NOI18N
         menuShell.add(menuSetLogLevel);
+
+        menuSettings.setText(bundle.getString("View.menuSettings.text")); // NOI18N
+        menuSettings.setName("menuSettings"); // NOI18N
+        menuSettings.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                menuSettingsbuttonAbortActionPerformed(evt);
+            }
+        });
+        menuShell.add(menuSettings);
 
         menuChangeUser.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_L, java.awt.event.InputEvent.CTRL_MASK));
         menuChangeUser.setText(bundle.getString("View.menuChangeUser.text")); // NOI18N
@@ -4299,6 +4375,12 @@ public class View extends MainFrame {
                     item.setSelected(item.getText().equalsIgnoreCase(level));
                 }
             }
+            
+            try {
+                menuSettings.setEnabled(!context.getSettings().isEmpty());
+            } catch (IOException ex) {
+                menuSettings.setEnabled(false);
+            }
         }
     }//GEN-LAST:event_menuShellStateChanged
 
@@ -4338,6 +4420,14 @@ public class View extends MainFrame {
             showException(ex);
         }       
     }//GEN-LAST:event_menuDataFileActionPerformed
+
+    private void menuSettingsbuttonAbortActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuSettingsbuttonAbortActionPerformed
+        try {
+            showSettingsEditor(this, true, context.getRights().denyConfig);
+        } catch (Exception ex) {
+            showException(ex);
+        }
+    }//GEN-LAST:event_menuSettingsbuttonAbortActionPerformed
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton buttonAbort;
@@ -4438,6 +4528,7 @@ public class View extends MainFrame {
     private javax.swing.JMenuItem menuSetCurrentBranch;
     private javax.swing.JMenuItem menuSetCurrentBranch1;
     private javax.swing.JMenu menuSetLogLevel;
+    private javax.swing.JMenuItem menuSettings;
     private javax.swing.JMenu menuShell;
     private javax.swing.JMenuItem menuStep;
     private javax.swing.JMenuItem menuStopAll;

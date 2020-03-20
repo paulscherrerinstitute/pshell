@@ -93,32 +93,9 @@ public interface Plugin extends ch.psi.pshell.core.Plugin {
     }
     
     default void showPropertiesEditor(String fileName, boolean modal) {
-        try {
-            final PropertiesDialog dlg = new PropertiesDialog(getTopLevel(), modal);
-            dlg.setTitle(fileName);
-            Properties props = new Properties();
-            try (FileInputStream in = new FileInputStream(fileName)) {
-                props.load(in);
-            } 
-            dlg.setProperties(props);
-            dlg.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
-            dlg.setListener((StandardDialog sd, boolean accepted) -> {
-                if (sd.getResult()) {
-                    try (FileOutputStream out = new FileOutputStream(fileName);) {
-                        props.store(out, null);
-                    } catch (IOException ex) {
-                        SwingUtils.showException(dlg, ex);
-                    }
-                }
-            });
-            dlg.setLocationRelativeTo(getTopLevel());
-            dlg.setVisible(true);
-            dlg.requestFocus();
-
-        } catch (Exception ex) {
-            SwingUtils.showException(getTopLevel(), ex);
-        }   
+        View.showPropertiesEditor(null, getTopLevel(), fileName, modal, false);
     }
+    
     
     default void showConfigEditor(Config cfg, boolean modal) {
         try {
