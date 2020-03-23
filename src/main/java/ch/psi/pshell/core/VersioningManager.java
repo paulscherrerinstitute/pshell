@@ -91,9 +91,10 @@ public class VersioningManager implements AutoCloseable {
         logger.info("Initializing " + getClass().getSimpleName());
         context = Context.getInstance();
 
-        this.localPath = context.getSetup().getHomePath();
-        this.remotePath = context.getConfig().versionTrackingRemote.trim();
-        this.remoteLogin = context.getConfig().versionTrackingLogin.trim();
+        manualCommit = context.isVersioningManual();
+        localPath = context.getSetup().getHomePath();
+        remotePath = context.getConfig().versionTrackingRemote.trim();
+        remoteLogin = context.getConfig().versionTrackingLogin.trim();
 
         if (getConnectionType() == ConnectionType.ssh) {
             //Evaluating here in order startPush to work in different process (no context)
@@ -113,9 +114,7 @@ public class VersioningManager implements AutoCloseable {
                     : context.getSetup().expandPath(remoteLogin) + ":" + secret;
         } else {
             privateKeyFile = null;
-        }
-
-        manualCommit = context.getConfig().versionTrackingManual;
+        }        
 
         if (!manualCommit) {
             context.addListener(contextListener);

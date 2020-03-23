@@ -274,6 +274,10 @@ public class App extends ObservableBase<AppListener> {
         if (hasArgument("extr")) {
             System.setProperty(Context.PROPERTY_FORCE_EXTRACT, "true");
         }
+        
+        if (hasArgument("vers")) {
+            System.setProperty(Context.PROPERTY_FORCE_VERSIONING, "true");
+        }        
 
         System.setProperty(Context.PROPERTY_FILE_LOCK, isFileLock() ? "true" : "false");   
         
@@ -363,6 +367,7 @@ public class App extends ObservableBase<AppListener> {
         sb.append("\n\t-dtpn\tShow data panel window only (can be used together with -f)");
         sb.append("\n\t-help\tStart the GUI help window");
         sb.append("\n\t-full\tStart in full screen mode");
+        sb.append("\n\t-vers\tEnables versioning in local mode (manual)");
         sb.append("\n\t-libp=<path>\tAdd to library path");
         sb.append("\n\t-clsp=<path>\tAdd to class path");        
         sb.append("\n\t-scrp=<path>\tAdd to script path");                

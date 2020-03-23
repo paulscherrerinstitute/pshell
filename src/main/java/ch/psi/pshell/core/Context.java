@@ -106,6 +106,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
     final Boolean serverMode;
     final Boolean simulation;
     final Boolean forceExtract;
+    final Boolean forceVersioning;
     final Boolean fileLockEnabled;
     final LogManager logManager;
     final PluginManager pluginManager;
@@ -141,6 +142,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
     public static final String PROPERTY_SERVER_MODE = "ch.psi.pshell.server";
     public static final String PROPERTY_FILE_LOCK = "ch.psi.pshell.file.lock";
     public static final String PROPERTY_FORCE_EXTRACT = "ch.psi.pshell.force.extract";
+    public static final String PROPERTY_FORCE_VERSIONING = "ch.psi.pshell.force.versioning";    
     public static final String PROPERTY_SIMULATION = "ch.psi.pshell.simulation";
 
     private static Context instance;
@@ -194,7 +196,13 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
         } else {
             forceExtract = false;
         }
-
+        
+        if (System.getProperty(PROPERTY_FORCE_VERSIONING) != null) {
+            forceVersioning= Boolean.valueOf(System.getProperty(PROPERTY_FORCE_VERSIONING));
+        } else {
+            forceVersioning = false;
+        }
+        
         if (System.getProperty(PROPERTY_FILE_LOCK) != null) {
             fileLockEnabled = Boolean.valueOf(System.getProperty(PROPERTY_FILE_LOCK));
         } else {
@@ -1983,8 +1991,14 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
 
     //Versioning
     public boolean isVersioningEnabled() {
-        return (config.versionTrackingEnabled && (!isLocalMode()));
+        return (config.versionTrackingEnabled && (!isLocalMode() || forceVersioning));
     }
+    public boolean isVersioningManual() {
+        if (isLocalMode() && forceVersioning) {
+            return true;
+        }        
+        return getConfig().versionTrackingManual;
+    }    
 
     @Hidden
     public void assertVersioningEnabled(CommandSource source) throws IOException {
@@ -1992,7 +2006,9 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
             throw new IOException("Versioning not enabled");
         }
         if (isLocalMode()) {
-            throw new IOException("Versioning disabled in local mode");
+            if (!forceVersioning){
+                throw new IOException("Versioning disabled in local mode");
+            }
         }
         if (versioningManager == null) {
             throw new IOException("Versioning manager not instantiated");

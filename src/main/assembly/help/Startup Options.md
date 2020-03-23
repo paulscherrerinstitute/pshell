@@ -194,6 +194,10 @@
     <td>Start in full screen mode.</td>
   </tr>
   <tr>
+    <td>-vers</td>
+    <td>Enables versioning in local mode (manual).</td>
+  </tr>
+  <tr>
     <td>-libp</td>
     <td>Add to library path.</td>
   </tr>
