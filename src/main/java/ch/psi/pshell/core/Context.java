@@ -36,8 +36,6 @@ import ch.psi.utils.Sys;
 import ch.psi.utils.Threading;
 import ch.psi.pshell.core.Configuration.NotificationLevel;
 import ch.psi.pshell.core.ExecutionParameters.ExecutionStage;
-import static ch.psi.pshell.core.Setup.PROPERTY_DATA_PATH;
-import static ch.psi.pshell.core.Setup.TOKEN_HOMEDATA;
 import ch.psi.pshell.core.VersioningManager.Revision;
 import ch.psi.pshell.data.DataServer;
 import ch.psi.pshell.data.PlotDescriptor;

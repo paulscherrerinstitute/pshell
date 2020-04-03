@@ -54,6 +54,7 @@ public class ScanRecord implements SubscriptableArray<Object>{
         return positions;
     }
 
+    @Override
     public Object[] getValues() {
         return values;
     }
@@ -177,12 +178,6 @@ public class ScanRecord implements SubscriptableArray<Object>{
      */
     public void cancel() {
         canceled = true;
-    }
-
-    @Override
-    @Hidden
-    public Object[] getItemsArray() {
-        return values;
     }
 
 }

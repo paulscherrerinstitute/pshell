@@ -8,11 +8,12 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 /**
  * This class loads data from a text file into a double[][] array.
  */
-public class Table implements Subscriptable.MappedSequence{
+public class Table implements Subscriptable.MappedSequence<String, double[]>{
 
     String[] header;
     double[][] data;
@@ -181,18 +182,24 @@ public class Table implements Subscriptable.MappedSequence{
     }
 
     @Override
-    public Object getItemValue(int index) {
+    public double[] getItem(int index) {
         return getCol(index);
     }
 
     @Override
-    public int getItemsLenght() {
+    public int getLenght() {
         return getCols();
     }
 
     @Override
     public int toItemIndex(String itemKey) {
         return getColIndex(itemKey);
+    }
+    
+    @Override
+    public java.util.List<String> getKeys(){
+        return Arrays.asList(getHeader());
+       
     }
 
 }

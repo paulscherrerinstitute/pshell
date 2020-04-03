@@ -8,7 +8,7 @@ import java.util.List;
  * Entity containing the current value for a stream, including a list of identifiers, their values,
  * a pulse id and a timestamp.
  */
-public class StreamValue extends Number implements Subscriptable.MappedList{
+public class StreamValue extends Number implements Subscriptable.MappedList<String, Object>{
 
     final long pulseId;
     final long timestamp;
@@ -44,10 +44,18 @@ public class StreamValue extends Number implements Subscriptable.MappedList{
         return (timestamp * 1000000) + nanosOffset;
     }
 
+    //Backward compatibility
+    @Hidden
     public List<String> getIdentifiers() {
-        return identifiers;
+        return getKeys();
     }
 
+    @Override
+    public java.util.List<String> getKeys(){
+        return identifiers;
+    }  
+    
+    @Override
     public List getValues() {
         return values;
     }
@@ -98,11 +106,5 @@ public class StreamValue extends Number implements Subscriptable.MappedList{
             }
         }
         return -1;
-    }
-    
-    @Override
-    @Hidden
-    public List getItemsList() {
-        return values;
-    }    
+    }      
 }

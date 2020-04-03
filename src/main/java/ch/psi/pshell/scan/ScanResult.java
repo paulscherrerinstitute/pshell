@@ -16,7 +16,7 @@ import org.apache.commons.math3.util.MultidimensionalCounter;
 /**
  * ScanResult objects package all the acquired data during a scan.
  */
-public class ScanResult implements SubscriptableList{
+public class ScanResult implements SubscriptableList<ScanRecord>{
 
     final ArrayList<ScanRecord> records;
     final Scan scan;
@@ -206,7 +206,7 @@ public class ScanResult implements SubscriptableList{
 
     @Hidden
     @Override
-    public List getItemsList() {
+    public List getValues() {
         return records;
     }
 
