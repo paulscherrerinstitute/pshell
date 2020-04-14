@@ -963,6 +963,8 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
         boolean firstRun = (getState() == State.Invalid);
 
         setState(State.Initializing);
+        aborted = false;
+        foregroundException = null;
 
         for (AutoCloseable ac : new AutoCloseable[]{scanStreamer, dataStreamer, taskManager, notificationManager, scriptManager, devicePool, versioningManager}) {
             try {
