@@ -292,7 +292,9 @@ public class StatusBar extends MonitoredPanel implements PropertyChangeListener 
 
     public void setApplicationState(final State state) {
         setApplicationStateIcon(state);
-        setApplicationStatusMessage(state);
+        if ((state!=State.Busy) || (command==null)){
+            setApplicationStatusMessage(state);
+        }
         progressBar.setVisible(state.isProcessing());
         progressBar.setIndeterminate(state == State.Initializing);
         if (!state.isProcessing()) {
@@ -349,6 +351,7 @@ public class StatusBar extends MonitoredPanel implements PropertyChangeListener 
         }
     }
 
+    String currentMessage;
     public void setStatusMessage(final String str) {
         if (!SwingUtilities.isEventDispatchThread()) {
             SwingUtilities.invokeLater(() -> {
@@ -356,8 +359,39 @@ public class StatusBar extends MonitoredPanel implements PropertyChangeListener 
             });
             return;
         }
-        statusMessage.setText(str);
+        if (timerTransitoryStatusMessage!=null){
+            timerTransitoryStatusMessage.stop();            
+            timerTransitoryStatusMessage = null;
+        }
+        currentMessage = str;
+        statusMessage.setText(currentMessage);
     }
+    
+    public String getStatusMessage(){
+        return currentMessage;
+    }
+    
+    Timer timerTransitoryStatusMessage;
+    
+    String formerMessage;
+    public void setTransitoryStatusMessage(final String str, int timer) {
+        if (!SwingUtilities.isEventDispatchThread()) {
+            SwingUtilities.invokeLater(() -> {
+                setTransitoryStatusMessage(str, timer);
+            });
+            return;
+        }
+        if (timerTransitoryStatusMessage==null){
+            formerMessage = currentMessage;
+        }
+        setStatusMessage(str);
+        timerTransitoryStatusMessage = new Timer(timer, (ActionEvent ae) -> {
+            setStatusMessage(formerMessage);
+        });
+        timerTransitoryStatusMessage.start();
+        
+    }
+    
 
     public void setAuxMessage(final String str) {
         if (!SwingUtilities.isEventDispatchThread()) {
@@ -445,6 +479,8 @@ public class StatusBar extends MonitoredPanel implements PropertyChangeListener 
         }
     };
 
+    String command;
+    
     @Override
     public void propertyChange(PropertyChangeEvent e) {
         String propertyName = e.getPropertyName();
@@ -463,6 +499,9 @@ public class StatusBar extends MonitoredPanel implements PropertyChangeListener 
         } else if ("message".equals(propertyName)) {
             String text = (String) (e.getNewValue());
             setStatusMessage(text);
+        } else if ("command".equals(propertyName)) {
+            command = (String) (e.getNewValue());
+            setStatusMessage("Running: " + command);
         } else if ("aux".equals(propertyName)) {
             String text = (String) (e.getNewValue());
             setAuxMessage(text);
@@ -476,7 +515,10 @@ public class StatusBar extends MonitoredPanel implements PropertyChangeListener 
         } else if ("appstate".equals(propertyName)) {
             State state = (State) (e.getNewValue());
             State former = (State) (e.getOldValue());
-
+            
+            if (former == State.Busy){
+                command = null;
+            }
             //In the end of taks keep final message and progress for some more time
             if ((state == State.Ready) && (former == State.Busy)) {
                 SwingUtils.invokeDelayed(new Runnable() {

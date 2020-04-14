@@ -6,6 +6,7 @@ import ch.psi.pshell.core.ContextAdapter;
 import ch.psi.pshell.scripting.Statement;
 import ch.psi.pshell.core.CommandSource;
 import ch.psi.pshell.core.JsonSerializer;
+import ch.psi.pshell.swing.Executor;
 import ch.psi.pshell.ui.Preferences.ScriptPopupDialog;
 import ch.psi.utils.IO;
 import ch.psi.utils.State;
@@ -88,6 +89,10 @@ public abstract class Task extends SwingWorker<Object, Void> {
             newMessage = this.message;
         }
         firePropertyChange("message", oldMessage, newMessage);
+    }
+
+    protected void setCommand(String command) {
+        firePropertyChange("command", null, command);
     }
 
     public String getMessage() {
@@ -181,7 +186,7 @@ public abstract class Task extends SwingWorker<Object, Void> {
             currentStatement = null;
             scriptName = Context.getInstance().getStandardScriptName(fileName);
 
-            setMessage("Running " + scriptName);
+            setCommand(scriptName);
             setProgress(0);
             try {
                 Object ret = null;
@@ -209,6 +214,73 @@ public abstract class Task extends SwingWorker<Object, Void> {
                 throw ex;
             } finally {
                 currentStatement = null;
+            }
+        }
+    }
+
+    public static class ExecutorTask extends Task {
+
+        final Executor executor;
+        final File file;
+        final Map<String, Object> args;
+        final String statement;
+
+        public ExecutorTask(Executor executor, Map<String, Object> args) {
+            super();
+            this.executor = executor;
+            this.file = new File(executor.getFileName());
+            this.args = args;
+            this.statement = null;
+        }
+
+        public ExecutorTask(File file, Map<String, Object> args) {
+            super();
+            this.executor = null;
+            this.file = file;
+            this.args = args;
+            this.statement = null;
+        }
+
+        public ExecutorTask(String statement) {
+            super();
+            this.executor = null;
+            this.file = null;
+            this.args = null;
+            this.statement = statement;
+        }
+
+        @Override
+        protected Object doInBackground() throws Exception {
+            try {
+                setCommand(((file != null) ? file.toString() : statement));
+                setProgress(0);
+                //App.getInstance().sendTaskInit(msg);
+                Object ret = null;
+                if (file != null) {
+                    ret = App.getInstance().evalFile(file, args, true);
+                } else if (statement != null) {
+                    ret = App.getInstance().evalStatement(statement);
+                }
+                setProgress(100);
+                if (App.getInstance().getMainFrame().getPreferences().getScriptPopupDialog() == ScriptPopupDialog.Return) {
+                    if ((!Context.getInstance().isAborted()) && (ret != null)) {
+                        SwingUtils.showMessage(App.getInstance().getMainFrame(), "Script Return", String.valueOf(ret));
+                    }
+                }
+                return ret;
+            } catch (ScriptException ex) {
+                if (App.getInstance().getMainFrame().getPreferences().getScriptPopupDialog() != ScriptPopupDialog.None) {
+                    if (!Context.getInstance().isAborted()) {
+                        SwingUtils.showMessage(App.getInstance().getMainFrame(), "Script Error", ex.getMessage(), -1, JOptionPane.ERROR_MESSAGE);
+                    }
+                }
+                throw ex;
+            } catch (Exception ex) {
+                App.getInstance().sendError(ex.toString());
+                throw ex;
+            } finally {
+                //App.getInstance().sendTaskFinish(msg);
+                //Context.getInstance().endExecution();
             }
         }
     }
@@ -259,7 +331,7 @@ public abstract class Task extends SwingWorker<Object, Void> {
         public QueueTask(boolean enabled, File file, Map<String, Object> args, QueueTaskErrorAction error) {
             this.enabled = enabled;
             this.file = file;
-            this.statement =null;
+            this.statement = null;
             this.args = args;
             this.error = error;
         }
@@ -271,11 +343,11 @@ public abstract class Task extends SwingWorker<Object, Void> {
             this.args = null;
             this.error = error;
         }
-        
-        public static QueueTask newInstance(boolean enabled, String file, String args, QueueTaskErrorAction error) {    
-            file = (file==null) ? "" :file.trim();
-            args = (args==null) ? "" :args.trim();
-            if (!file.isEmpty()){
+
+        public static QueueTask newInstance(boolean enabled, String file, String args, QueueTaskErrorAction error) {
+            file = (file == null) ? "" : file.trim();
+            args = (args == null) ? "" : args.trim();
+            if (!file.isEmpty()) {
                 return new QueueTask(enabled, getFile(file), convertArgString(args), error);
             } else if (!args.isEmpty()) {
                 return new QueueTask(enabled, args, error);
@@ -306,8 +378,8 @@ public abstract class Task extends SwingWorker<Object, Void> {
                 file = new File(filename);
             }
             return file;
-        }             
-        
+        }
+
         static Map<String, Object> convertArgString(String args) {
             try {
                 Map<String, String> data = QueueParsDialog.getParsMap(args);
@@ -328,8 +400,8 @@ public abstract class Task extends SwingWorker<Object, Void> {
             }
 
             return new HashMap<>();
-        }        
-    }         
+        }
+    }
 
     public enum QueueTaskErrorAction {
         Resume,

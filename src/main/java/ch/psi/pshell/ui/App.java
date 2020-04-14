@@ -41,7 +41,6 @@ import ch.psi.utils.swing.ConfigDialog;
 import ch.psi.utils.swing.MainFrame;
 import ch.psi.utils.swing.MainFrame.FlatLookAndFeelType;
 import java.awt.BorderLayout;
-import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.GraphicsEnvironment;
 import java.awt.Image;
@@ -762,6 +761,7 @@ public class App extends ObservableBase<AppListener> {
                     if (pcs != null) {
                         pcs.firePropertyChange("appstate", former, state);
                     }
+                    checkNext(state);
                 } catch (Exception ex) {
                     logger.log(Level.WARNING, null, ex);
                 }
@@ -1189,11 +1189,11 @@ public class App extends ObservableBase<AppListener> {
     
     Processor runningProcessor;
             
-    Object evalFile(File file,  Map<String, Object> args) throws Exception{
+    public Object evalFile(File file,  Map<String, Object> args) throws Exception{
         return evalFile(file, args, false);
     }
     
-    Object evalFile(File file,  Map<String, Object> args, boolean topLevel) throws Exception{
+    public Object evalFile(File file,  Map<String, Object> args, boolean topLevel) throws Exception{
         context.clearAborted();
         Processor processor = getProcessor(file);
         if (processor!=null){
@@ -1212,12 +1212,12 @@ public class App extends ObservableBase<AppListener> {
         return context.evalFile(file.getPath(), args);
     }
     
-    Object evalStatement(String statement) throws Exception{
+    public Object evalStatement(String statement) throws Exception{
         context.clearAborted();
         return context.evalLine(statement);
     }    
     
-    void abortEval(File file) throws InterruptedException{
+    public void abortEval(File file) throws InterruptedException{
         if (runningProcessor!=null){
             runningProcessor.abort();
         }                            
@@ -1235,6 +1235,79 @@ public class App extends ObservableBase<AppListener> {
         return null;
     }
 
+    
+    
+    volatile File nextFile;
+    volatile Map<String, Object> nextArgs;
+    volatile String nextStatement;
+    
+    public void evalFileNext(File file) throws State.StateException{
+        evalFileNext(file, null);
+    }
+
+    public void evalFileNext(File file,  Map<String, Object> args) throws State.StateException{
+        Context.getInstance().getState().assertProcessing();
+        nextFile = file;
+        nextArgs = args;
+        getStatusBar().setTransitoryStatusMessage("Run next: " + nextFile.toString(), 5000);
+    }
+    
+    public void evalStatementNext(String statement) throws State.StateException{
+        Context.getInstance().getState().assertProcessing();
+        nextStatement = statement;
+        getStatusBar().setTransitoryStatusMessage("Run next: " + statement, 5000);
+    }    
+    
+    
+    public File getNextFile(){
+        return nextFile;
+    }
+    
+    public Map<String, Object> getNextArgs(){
+        return nextArgs;
+    }
+    
+    public String getNextStatement(){
+        return nextStatement;
+    }
+    
+    public void abortEvalNext(File file){
+        nextFile = null;
+        nextArgs = null;  
+        nextStatement = null;
+    }
+    
+    public boolean hasNextStage(){
+        return (nextFile!= null) || (nextStatement!=null);
+    }
+    
+    void checkNext(State state){
+        if (state == State.Ready){            
+            if (hasNextStage()){
+                if (getContext().isSuccess()){
+                    File file = nextFile;
+                    Map<String, Object> args = nextArgs;
+                    String statement = nextStatement;                                
+                    //new Thread(() -> {
+                    SwingUtilities.invokeLater(()->{
+                        try {
+                            if (file!=null){
+                                startTask(new Task.ExecutorTask(file,args));
+                            } else  if (statement!=null){
+                                startTask(new Task.ExecutorTask(statement));
+                            }
+                        } catch (Exception ex) {
+                            logger.log(Level.SEVERE, null, ex);
+                        };                    
+                  //  }, "Next stage processing").start();    
+                    });
+                }
+            }
+        }
+        nextFile=null;
+        nextArgs=null;
+        nextStatement = null;
+    }
     
     //Acceps multiple -p options or plugin names can be separetate by ','
     void loadCommandLinePlugins() {

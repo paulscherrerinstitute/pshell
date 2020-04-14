@@ -123,6 +123,9 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
     ScanStreamer scanStreamer;
     DataServer dataStreamer;
     CommandManager commandManager;
+    volatile String next;
+    volatile boolean aborted;
+    volatile Exception foregroundException;
 
     int runCount;
 
@@ -1210,6 +1213,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
     Object runInInterpreterThread(CommandInfo info, Callable callable) throws ScriptException, IOException, InterruptedException {
         assertInterpreterEnabled();
         Object result = null;
+        foregroundException = null;
         try {
             if (isInterpreterThread()) {
                 result = callable.call();
@@ -1252,7 +1256,10 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
                 }
             }
             if (info != null){
-                commandManager.finishCommandInfo( info, result);
+                commandManager.finishCommandInfo( info, result);                
+            }
+            if ((result != null) && (result instanceof Exception)) {
+                foregroundException = (Exception)result;
             }
         }
     }
@@ -1748,9 +1755,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
             Logger.getLogger(Context.class
                     .getName()).log(Level.WARNING, null, ex);
         }
-    }
-
-    boolean aborted = false;
+    }   
 
     void abort(final CommandSource source) throws InterruptedException {
         onCommand(Command.abort, null, source);
@@ -1788,6 +1793,18 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
     public boolean isAborted() {
         return aborted;
     }
+    
+    public boolean isFailed() {            
+        return (foregroundException != null);
+    }
+    
+    public boolean isSuccess() {            
+        return !getState().isProcessing() && !isAborted() && !isFailed();
+    }
+    
+    public Exception getForegroundException(){
+        return foregroundException;
+    } 
 
     void pause(final CommandSource source) {
         onCommand(Command.pause, null, source);
@@ -1856,6 +1873,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
         } else {
             assertConsoleCommandAllowed(source);
         }
+        next = null;
         aborted = false;
         setState(State.Busy);
         getExecutionPars().onExecutionStarted();
@@ -1872,7 +1890,8 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
         triggerShellCommand(currentInfo.source, "Then: " + command);
         CommandInfo info = new CommandInfo(currentInfo.source, null, command, null, false);
         commandManager.initCommandInfo(info);
-        aborted = false;
+        next = null;
+        aborted = false;        
         getExecutionPars().onExecutionStarted();
         try {
             InterpreterResult result = (InterpreterResult) runInInterpreterThread(info, (Callable<InterpreterResult>) () -> scriptManager.eval(command));
@@ -1925,8 +1944,24 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
                 return then.onException;
             }
         }       
+        
+        if (!info.background){
+            if (next != null){
+                return next;
+            }
+        }
         return null;
     }
+    
+    public void setNext(String nextStatement) throws State.StateException{
+        this.getState().assertProcessing();
+        next = nextStatement;
+    }
+    
+    public String getNext(){
+        return next;
+    }
+    
     
     void updateAll(final CommandSource source) {
         onCommand(Command.updateAll, null, source);
