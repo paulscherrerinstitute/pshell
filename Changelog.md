@@ -1,5 +1,105 @@
 # Changelog
 
+## 1.14.0
+
+### Added
+
+* HistogramGenerator device.
+
+* Command-line option to include items to class path, library path and script path.
+
+* Data.copy method.
+
+* 'fda' file format.
+
+* Highligting VB files.
+
+* Image threshold operation.
+
+* Saving metadata to TIF files.
+
+* Access to left tab pane.
+
+* ctrl+q accelerator to quit application.
+
+* 'split keyword on scan commands to separate scan passes in multiple tables.
+
+* RPM generation.
+
+* Task queues.
+
+* PanelProcessor: Panel plugins that interact with buttons and menu for execution.
+
+* 'debug'property to exec pars.
+
+* -blaf option as a shortcut for flat&dark laf.
+
+* Ability to hide Main Frame's components with the -hide option.
+
+* Methods for changing user/effective user.
+
+* Data file configuration dialog.
+
+* Menu to display script settings property file.
+
+* Command line argument '-vers' to force versioning in local mode.
+
+* Added keys(), values() and items() methods do Subsctiptable.Mapped interface (e.g: BS stream value).
+
+* Run Next command (Menu Shell->Run Next).
+  
+
+### Changed
+
+* ScanEditor doesn't keep records in memory.
+
+* Block indentation with tab/shift+tab.
+
+* Block commenting with alt+/.
+
+* Allow operations between Data objects if underlying buffer length is different (width and height must match).
+
+* Gradle update.
+
+* Console only display server messages if configured.
+
+* Line plot pointer colors match axis color.
+
+* Set 'File New' as a menu. 
+
+* Reorganize Python client package.
+
+* Button Restart disabled in offline mode.
+
+
+### Fixed
+
+* Autoscale in step plots.
+
+* Logarithmic Axis.
+
+* AreaDetector simulated data type.
+
+* Text format supports flat folder layout reopening same log file.
+
+* Protected image division by zero.
+
+* Show alias in domain axis.
+
+* When pasting, text tabs are translated into spaces.
+
+* Bug generating series names when 2d data was drawn in line plots.
+
+* Plot bugs on mscan.
+
+* Console location menu in local mode.
+
+* Make Averager & ArrayRegisterStats implement ReadableType so no exception if preserving types.
+
+* Execution of processors in command line.
+
+
+
 ## 1.13.0
 
 ### Added
