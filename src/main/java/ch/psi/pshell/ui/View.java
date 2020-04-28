@@ -123,6 +123,7 @@ import ch.psi.pshell.swing.Executor;
 import ch.psi.pshell.swing.HistoryChart;
 import ch.psi.pshell.swing.MotorPanel;
 import ch.psi.pshell.swing.RepositoryChangesDialog;
+import ch.psi.pshell.swing.NextStagesPanel;
 import ch.psi.utils.Config;
 import ch.psi.utils.Sys;
 import ch.psi.utils.Sys.OSFamily;
@@ -161,6 +162,7 @@ public class View extends MainFrame {
     final String openedFilesFileName;
     final Properties openedFiles;
     final CloseableTabListener closableTabListener;
+    final NextStagesPanel nextStagesPanel;
 
     String[] imageFileExtensions = new String[]{"png", "bmp", "gif", "tif", "tiff", "jpg", "jpeg"};
     String[] textFileExtensions = new String[]{"txt", "csv", "log"};
@@ -175,7 +177,7 @@ public class View extends MainFrame {
             throw t;
         }
         String title = App.getArgumentValue("title");
-        setTitle((title==null) ? App.getApplicationTitle() : title);
+        setTitle((title == null) ? App.getApplicationTitle() : title);
         setIcon(App.getResourceUrl("IconSmall.png"));
         if (MainFrame.isDark()) {
             for (Component b : SwingUtils.getComponentsByType(toolBar, JButton.class)) {
@@ -207,7 +209,7 @@ public class View extends MainFrame {
         fileHistory = new History(getSessionPath() + "/FileHistory.dat", 10, true);
         openedFiles = new Properties();
         openedFilesFileName = getSessionPath() + "/OpenedFiles.dat";
-        try (FileInputStream in = new FileInputStream(openedFilesFileName)) {
+        try ( FileInputStream in = new FileInputStream(openedFilesFileName)) {
             openedFiles.load(in);
         } catch (Throwable ex) {
             logger.log(Level.FINE, null, ex);
@@ -336,14 +338,14 @@ public class View extends MainFrame {
         }
         dropListner = new DropTargetListener();
         dropListner.enable();
-        
-        for (String name : App.getArgumentValues("hide")){
+
+        for (String name : App.getArgumentValues("hide")) {
             Component component = SwingUtils.getComponentByName(this, name);
-            if (component!=null){
+            if (component != null) {
                 component.setVisible(false);
             }
         }
-        if (App.isOffline()){
+        if (App.isOffline()) {
             setConsoleLocation(PanelLocation.Hidden);
             menuUpdateAll.setEnabled(false);
             menuReinit.setEnabled(false);
@@ -353,7 +355,8 @@ public class View extends MainFrame {
             tabStatus.remove(scanPanel);
             tabStatus.remove(outputPanel);
             menuShell.setVisible(false);
-       }
+        }
+        nextStagesPanel = new NextStagesPanel();
     }
 
     //TODO: This flag is used to re-inject detached windows to original tabs.
@@ -483,8 +486,8 @@ public class View extends MainFrame {
                 }
             }
         }
-    }    
-    
+    }
+
     void updateButtons() {
         if (!SwingUtilities.isEventDispatchThread()) {
             SwingUtilities.invokeLater(() -> {
@@ -502,7 +505,7 @@ public class View extends MainFrame {
             if (state == State.Ready && (runningProcessor != null) && (runningProcessor instanceof QueueProcessor)) {
                 state = State.Busy;
             }
-            boolean showingScript =isShowingScriptEditor();
+            boolean showingScript = isShowingScriptEditor();
             boolean showingExecutor = isShowingExecutor();
             boolean ready = (state == State.Ready);
             boolean busy = (state == State.Busy);
@@ -528,21 +531,13 @@ public class View extends MainFrame {
             menuSave.setEnabled(showingExecutor && allowEdit);
             menuSaveAs.setEnabled(showingExecutor && allowEdit);
             buttonSave.setEnabled(showingExecutor && getSelectedExecutor().canSave() && allowEdit);
-            
-            if (context.getState().isProcessing()){
-                if (App.getInstance().hasNextStage()){
-                    menuCancelRunNext.setVisible(true); 
-                    menuRunNext.setVisible(false);
-                } else {
-                    menuCancelRunNext.setVisible(false); 
-                    menuRunNext.setVisible(true);
-                    menuRunNext.setEnabled(isShowingExecutor());
-                }
+
+            if (context.getState().isProcessing()) {
+                menuRunNext.setVisible(true);
+                menuRunNext.setEnabled(isShowingExecutor());
             } else {
-                menuCancelRunNext.setVisible(false); 
                 menuRunNext.setVisible(false);
-            }                                    
-            
+            }
         }
     }
 
@@ -1077,6 +1072,30 @@ public class View extends MainFrame {
         }
     }
 
+    void onExecQueueChanged(App.ExecutionStage[] queue) {
+        if (!SwingUtilities.isEventDispatchThread()) {
+            SwingUtilities.invokeLater(() -> {
+                onExecQueueChanged(queue);
+            });
+            return;
+        }
+        if (queue.length == 0) {
+            if (nextStagesPanel.isDisplayable()) {
+                boolean isSelected = tabStatus.getSelectedComponent() == nextStagesPanel;
+                tabStatus.remove(nextStagesPanel);
+                if (isSelected){
+                    tabStatus.setSelectedComponent(outputPanel);
+                }
+            }
+        } else {
+            if (!nextStagesPanel.isDisplayable()) {
+                tabStatus.addTab("Next Stages", nextStagesPanel);
+                tabStatus.setSelectedComponent(nextStagesPanel);
+            }
+            nextStagesPanel.setExecutionQueue(queue);
+        }
+    }
+
     @Override
     protected void onDispose() {
     }
@@ -1222,39 +1241,38 @@ public class View extends MainFrame {
         }
         return null;
     }
-    
+
     public QueueProcessor getSelectedQueueProcessor() {
         if (tabDoc.getSelectedComponent() instanceof QueueProcessor) {
             return ((QueueProcessor) tabDoc.getSelectedComponent());
         }
         return null;
     }
-        
-    
+
     Processor getRunningProcessor() {
         return ((topLevelProcessor != null) && (topLevelProcessor.isExecuting())) ? topLevelProcessor : null;
     }
-    
-    boolean isShowingExecutor(){
+
+    boolean isShowingExecutor() {
         Component selectedDocument = tabDoc.getSelectedComponent();
-        return (selectedDocument != null) && (selectedDocument instanceof Executor);        
-    }    
-    
-    boolean isShowingProcessor(){
+        return (selectedDocument != null) && (selectedDocument instanceof Executor);
+    }
+
+    boolean isShowingProcessor() {
         Component selectedDocument = tabDoc.getSelectedComponent();
-        return (selectedDocument != null) && (selectedDocument instanceof Processor);        
-    }    
-    
-    boolean isShowingScriptEditor(){
+        return (selectedDocument != null) && (selectedDocument instanceof Processor);
+    }
+
+    boolean isShowingScriptEditor() {
         Component selectedDocument = tabDoc.getSelectedComponent();
-        return (selectedDocument != null) && (selectedDocument instanceof ScriptEditor);        
-    }    
-    
-    boolean isShowingQueueProcessor(){
+        return (selectedDocument != null) && (selectedDocument instanceof ScriptEditor);
+    }
+
+    boolean isShowingQueueProcessor() {
         Component selectedDocument = tabDoc.getSelectedComponent();
-        return (selectedDocument != null) && (selectedDocument instanceof QueueProcessor);        
-    }    
-            
+        return (selectedDocument != null) && (selectedDocument instanceof QueueProcessor);
+    }
+
     ScriptEditor currentScriptEditor;
     Processor currentProcessor;
     Processor topLevelProcessor;
@@ -1512,25 +1530,25 @@ public class View extends MainFrame {
         }
         openScript(file);
     }
-    
+
     public static PropertiesDialog showSettingsEditor(Frame parent, boolean modal, boolean readOnly) {
         return showPropertiesEditor("Settings", parent, Context.getInstance().getSettingsFile(), modal, readOnly);
     }
-    
+
     public static PropertiesDialog showPropertiesEditor(String title, Frame parent, String fileName, boolean modal, boolean readOnly) {
         try {
             final PropertiesDialog dlg = new PropertiesDialog(parent, modal);
-            dlg.setTitle((title==null) ? fileName : title);
+            dlg.setTitle((title == null) ? fileName : title);
             Properties props = new Properties();
-            try (FileInputStream in = new FileInputStream(fileName)) {
+            try ( FileInputStream in = new FileInputStream(fileName)) {
                 props.load(in);
-            }             
+            }
             dlg.setProperties(props);
-            dlg.setReadOnly(readOnly);            
+            dlg.setReadOnly(readOnly);
             dlg.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
             dlg.setListener((StandardDialog sd, boolean accepted) -> {
                 if (sd.getResult()) {
-                    try (FileOutputStream out = new FileOutputStream(fileName);) {
+                    try ( FileOutputStream out = new FileOutputStream(fileName);) {
                         props.store(out, null);
                     } catch (IOException ex) {
                         SwingUtils.showException(dlg, ex);
@@ -1544,16 +1562,16 @@ public class View extends MainFrame {
 
         } catch (Exception ex) {
             SwingUtils.showException(parent, ex);
-        }   
+        }
         return null;
     }
-    
+
     public static ConfigDialog showConfigEditor(String title, Frame parent, Config cfg, boolean modal, boolean readOnly) {
         try {
             final ConfigDialog dlg = new ConfigDialog(parent, modal);
-            dlg.setTitle((title==null) ? cfg.getFileName() : title);
+            dlg.setTitle((title == null) ? cfg.getFileName() : title);
             dlg.setConfig(cfg);
-            dlg.setReadOnly(readOnly);            
+            dlg.setReadOnly(readOnly);
             dlg.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
             dlg.setListener((StandardDialog sd, boolean accepted) -> {
                 if (sd.getResult()) {
@@ -1571,9 +1589,9 @@ public class View extends MainFrame {
 
         } catch (Exception ex) {
             SwingUtils.showException(parent, ex);
-        }   
+        }
         return null;
-    }  
+    }
 
     boolean isPlotsVisible() {
         if (plotsDetached) {
@@ -1847,7 +1865,7 @@ public class View extends MainFrame {
                 }
             }
         };
-        try (FileOutputStream out = new FileOutputStream(openedFilesFileName)) {
+        try ( FileOutputStream out = new FileOutputStream(openedFilesFileName)) {
             openedFiles.store(out, null);
         } catch (Exception ex) {
             logger.log(Level.FINE, null, ex);
@@ -2156,7 +2174,6 @@ public class View extends MainFrame {
         jSeparator9 = new javax.swing.JPopupMenu.Separator();
         menuRun = new javax.swing.JMenuItem();
         menuRunNext = new javax.swing.JMenuItem();
-        menuCancelRunNext = new javax.swing.JMenuItem();
         menuDebug = new javax.swing.JMenuItem();
         menuStep = new javax.swing.JMenuItem();
         menuPause = new javax.swing.JMenuItem();
@@ -2891,16 +2908,6 @@ public class View extends MainFrame {
         });
         menuShell.add(menuRunNext);
 
-        menuCancelRunNext.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_F5, java.awt.event.InputEvent.ALT_MASK));
-        menuCancelRunNext.setText(bundle.getString("View.menuCancelRunNext.text")); // NOI18N
-        menuCancelRunNext.setName("menuCancelRunNext"); // NOI18N
-        menuCancelRunNext.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                menuCancelRunNextbuttonRunActionPerformed(evt);
-            }
-        });
-        menuShell.add(menuCancelRunNext);
-
         menuDebug.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_F5, java.awt.event.InputEvent.CTRL_MASK));
         menuDebug.setText(bundle.getString("View.menuDebug.text")); // NOI18N
         menuDebug.setName("menuDebug"); // NOI18N
@@ -3380,7 +3387,7 @@ public class View extends MainFrame {
             if (topLevelProcessor != null) {
                 topLevelProcessor.abort();
                 topLevelProcessor = null;
-            }            
+            }
             context.abort();
             updateButtons();
         } catch (Exception ex) {
@@ -3422,7 +3429,7 @@ public class View extends MainFrame {
                     } else {
                         processor.save();
                         if (processor.getFileName() != null) {
-                            if (processor.isTabNameUpdated()){
+                            if (processor.isTabNameUpdated()) {
                                 tabDoc.setTitleAt(tabDoc.getSelectedIndex(), new File(processor.getFileName()).getName());
                             }
                         }
@@ -3483,7 +3490,7 @@ public class View extends MainFrame {
                         processor.saveAs(fileName);
                         if (processor.getFileName() != null) {
                             fileHistory.put(processor.getFileName());
-                            if (processor.isTabNameUpdated()){
+                            if (processor.isTabNameUpdated()) {
                                 tabDoc.setTitleAt(tabDoc.getSelectedIndex(), new File(processor.getFileName()).getName());
                             }
                         }
@@ -3519,12 +3526,12 @@ public class View extends MainFrame {
                 QueueProcessor queueProcessor = getSelectedQueueProcessor();
 
                 List<QueueProcessor> queues = getQueues();
-                if (queueProcessor!=null){
+                if (queueProcessor != null) {
                     queues.remove(queueProcessor);
                 }
                 menuAddToQueue.setVisible(isShowingExecutor());
                 menuAddToQueue.removeAll();
-                if (executor!=null) {
+                if (executor != null) {
                     String filename = executor.getFileName();
                     menuAddToQueue.setEnabled(filename != null);
                     if (filename != null) {
@@ -4436,7 +4443,7 @@ public class View extends MainFrame {
     }//GEN-LAST:event_menuLogQueryActionPerformed
 
     private void menuShellStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_menuShellStateChanged
-        if (menuShell.isSelected()) {            
+        if (menuShell.isSelected()) {
             String level = context.getLogLevel().toString();
             for (Component c : menuSetLogLevel.getMenuComponents()) {
                 if (c instanceof JMenuItem) {
@@ -4444,7 +4451,7 @@ public class View extends MainFrame {
                     item.setSelected(item.getText().equalsIgnoreCase(level));
                 }
             }
-            
+
             try {
                 menuSettings.setEnabled(!context.getSettings().isEmpty());
             } catch (IOException ex) {
@@ -4483,12 +4490,12 @@ public class View extends MainFrame {
 
     private void menuDataFileActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuDataFileActionPerformed
         try {
-            DataFileDialog dlg = new DataFileDialog(this,  false);
+            DataFileDialog dlg = new DataFileDialog(this, false);
             dlg.setDefaultCloseOperation(DISPOSE_ON_CLOSE);
-            showChildWindow(dlg); 
+            showChildWindow(dlg);
         } catch (Exception ex) {
             showException(ex);
-        }       
+        }
     }//GEN-LAST:event_menuDataFileActionPerformed
 
     private void menuSettingsbuttonAbortActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuSettingsbuttonAbortActionPerformed
@@ -4502,38 +4509,23 @@ public class View extends MainFrame {
     private void menuRunNextbuttonRunActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuRunNextbuttonRunActionPerformed
         try {
             String filename = getSelectedExecutor().getFileName();
-            if (filename!=null){
-                if (SwingUtils.showOption(this, "Run Next", "Do you want to run this file next?\n" + filename , OptionType.YesNo) == OptionResult.Yes) {
-                    if (context.getState().isProcessing()){                        
-                        for (String path : new String[]{context.getSetup().getScriptPath(), context.getSetup().getHomePath()}) {
-                            if (IO.isSubPath(filename, path)) {
-                                filename = IO.getRelativePath(filename, path);
-                                break;
-                            }
-                        }                                
-                        App.getInstance().evalFileNext(new File(filename)); 
-                    } else {
-                        runScript();
-                    }                           
+            if (filename != null) {
+                if (context.getState().isProcessing()) {
+                    for (String path : new String[]{context.getSetup().getScriptPath(), context.getSetup().getHomePath()}) {
+                        if (IO.isSubPath(filename, path)) {
+                            filename = IO.getRelativePath(filename, path);
+                            break;
+                        }
+                    }
+                    App.getInstance().evalFileNext(new File(filename));
+                } else {
+                    runScript();
                 }
             }
         } catch (Exception ex) {
             showException(ex);
-        }        
+        }
     }//GEN-LAST:event_menuRunNextbuttonRunActionPerformed
-
-    private void menuCancelRunNextbuttonRunActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuCancelRunNextbuttonRunActionPerformed
-        try {
-            if (App.getInstance().getNextFile()!=null){
-                if (SwingUtils.showOption(this, "Run Next", "Do you want to cancel running this file next?\n" + App.getInstance().getNextFile().toString(),
-                        OptionType.YesNo) == OptionResult.Yes) {
-                    App.getInstance().abortEvalNext(null);                
-                }
-            }
-        } catch (Exception ex) {
-            showException(ex);
-        }        
-    }//GEN-LAST:event_menuCancelRunNextbuttonRunActionPerformed
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton buttonAbort;
@@ -4581,7 +4573,6 @@ public class View extends MainFrame {
     private javax.swing.JMenu menuAddToQueue;
     private javax.swing.JMenuBar menuBar;
     private javax.swing.JMenu menuBlock;
-    private javax.swing.JMenuItem menuCancelRunNext;
     private javax.swing.JMenuItem menuChangeUser;
     private javax.swing.JMenuItem menuChanges;
     private javax.swing.JMenuItem menuCheckSyntax;

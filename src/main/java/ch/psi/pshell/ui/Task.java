@@ -250,6 +250,14 @@ public abstract class Task extends SwingWorker<Object, Void> {
             this.statement = statement;
         }
 
+        public ExecutorTask(App.ExecutionStage stage) {
+            super();
+            this.executor = null;
+            this.file = stage.file;
+            this.args = stage.args;
+            this.statement = stage.statement;
+        }
+
         @Override
         protected Object doInBackground() throws Exception {
             try {
@@ -380,51 +388,54 @@ public abstract class Task extends SwingWorker<Object, Void> {
             }
             return file;
         }
-        
-        public static class InterpreterVariable{
+
+        public static class InterpreterVariable {
+
             final public String name;
             final public Object var;
-            InterpreterVariable (String name, Object var){
+
+            InterpreterVariable(String name, Object var) {
                 this.name = name;
                 this.var = var;
             }
-            public String toString(){
+
+            public String toString() {
                 return name;
             }
         }
-        
-        static Object expandVariables(Object obj){
-            if (obj instanceof String){
-                String str = (String)obj;
-                if (str.startsWith("$")){                    
-                    Object var = Context.getInstance().getInterpreterVariable(str.substring(1));                
-                    if (var != null){
+
+        static Object expandVariables(Object obj) {
+            if (obj instanceof String) {
+                String str = (String) obj;
+                if (str.startsWith("$")) {
+                    Object var = Context.getInstance().getInterpreterVariable(str.substring(1));
+                    if (var != null) {
                         obj = var;
                     }
                 }
-                
-            } else if (obj instanceof List){
+
+            } else if (obj instanceof List) {
                 List list = (List) obj;
-                for (int i=0; i< list.size(); i++){
+                for (int i = 0; i < list.size(); i++) {
                     list.set(i, expandVariables(list.get(i)));
                 }
-            } else if (obj instanceof Map){
+            } else if (obj instanceof Map) {
                 Map map = (Map) obj;
-                for (Object key : map.keySet()){
+                for (Object key : map.keySet()) {
                     map.put(key, expandVariables(map.get(key)));
                 }
             }
             return obj;
         }
-        
+
         static Map<String, Object> getArgsFromString(String args, boolean forDisplay) {
-                               
-            Map<String, Object>  ret =new HashMap<>();
+
+            Map<String, Object> ret = new HashMap<>();
             Exception originalException = null;
-            try {   
-                try{
+            try {
+                try {
                     //First try converting as a JSON: supports nested brackets. Script variables names have the prefix $
-                    args = args.trim();                
+                    args = args.trim();
                     StringBuilder sb = new StringBuilder();
                     if (!args.startsWith("{")) {
                         sb.append("{");
@@ -440,7 +451,7 @@ public abstract class Task extends SwingWorker<Object, Void> {
                     if (args.startsWith("{")) {
                         args = args.substring(1, args.length() - 1);
                     }
-                    
+
                     ret = new LinkedHashMap<>();
                     for (String token : Str.splitIgnoringBrackets(args, ",")) {
                         if (token.contains(":")) {
@@ -454,24 +465,24 @@ public abstract class Task extends SwingWorker<Object, Void> {
                             name = name.trim();
 
                             String value = token.substring(token.indexOf(":") + 1).trim();
-                            try{
-                                ret.put(name, JsonSerializer.decode(value, Object.class));                            
-                            } catch (Exception e){
+                            try {
+                                ret.put(name, JsonSerializer.decode(value, Object.class));
+                            } catch (Exception e) {
                                 Object var = Context.getInstance().getInterpreterVariable(value);
-                                ret.put(name, (var == null) ? value : 
-                                        ( forDisplay ? new InterpreterVariable(value, var) : var));                                
+                                ret.put(name, (var == null) ? value
+                                        : (forDisplay ? new InterpreterVariable(value, var) : var));
                             }
-                        }                    
-                    }                    
+                        }
+                    }
                 }
             } catch (Exception e) {
                 Logger.getLogger(QueueExecution.class.getName()).log(Level.WARNING, args, originalException);
             }
-            if (!forDisplay){
+            if (!forDisplay) {
                 expandVariables(ret);
-            }             
-            return ret;                    
-        }        
+            }
+            return ret;
+        }
     }
 
     public enum QueueTaskErrorAction {
