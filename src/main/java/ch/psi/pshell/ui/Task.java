@@ -16,9 +16,10 @@ import java.awt.event.ActionEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.File;
-import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -348,11 +349,11 @@ public abstract class Task extends SwingWorker<Object, Void> {
             file = (file == null) ? "" : file.trim();
             args = (args == null) ? "" : args.trim();
             if (!file.isEmpty()) {
-                return new QueueTask(enabled, getFile(file), convertArgString(args), error);
+                return new QueueTask(enabled, getFile(file), getArgsFromString(args, false), error);
             } else if (!args.isEmpty()) {
                 return new QueueTask(enabled, args, error);
             } else {
-                return new QueueTask(false, null, convertArgString(args), error);
+                return new QueueTask(false, null, getArgsFromString(args, false), error);
             }
         }
 
@@ -379,28 +380,98 @@ public abstract class Task extends SwingWorker<Object, Void> {
             }
             return file;
         }
-
-        static Map<String, Object> convertArgString(String args) {
-            try {
-                Map<String, String> data = QueueParsDialog.getParsMap(args);
-
-                StringBuilder sb = new StringBuilder();
-                sb.append("{");
-                for (String key : data.keySet()) {
-                    if (sb.length() > 1) {
-                        sb.append(", ");
-                    }
-                    sb.append("\"").append(key).append("\":").append(data.get(key));
-                }
-                sb.append("}");
-
-                return (Map) JsonSerializer.decode(sb.toString(), Map.class);
-            } catch (IOException ex) {
-                Logger.getLogger(QueueExecution.class.getName()).log(Level.WARNING, args, ex);
+        
+        public static class InterpreterVariable{
+            final public String name;
+            final public Object var;
+            InterpreterVariable (String name, Object var){
+                this.name = name;
+                this.var = var;
             }
-
-            return new HashMap<>();
+            public String toString(){
+                return name;
+            }
         }
+        
+        static Object expandVariables(Object obj){
+            if (obj instanceof String){
+                String str = (String)obj;
+                if (str.startsWith("$")){                    
+                    Object var = Context.getInstance().getInterpreterVariable(str.substring(1));                
+                    if (var != null){
+                        obj = var;
+                    }
+                }
+                
+            } else if (obj instanceof List){
+                List list = (List) obj;
+                for (int i=0; i< list.size(); i++){
+                    list.set(i, expandVariables(list.get(i)));
+                }
+            } else if (obj instanceof Map){
+                Map map = (Map) obj;
+                for (Object key : map.keySet()){
+                    map.put(key, expandVariables(map.get(key)));
+                }
+            }
+            return obj;
+        }
+        
+        static Map<String, Object> getArgsFromString(String args, boolean forDisplay) {
+                               
+            Map<String, Object>  ret =new HashMap<>();
+            Exception originalException = null;
+            try {   
+                try{
+                    //First try converting as a JSON: supports nested brackets. Script variables names have the prefix $
+                    args = args.trim();                
+                    StringBuilder sb = new StringBuilder();
+                    if (!args.startsWith("{")) {
+                        sb.append("{");
+                    }
+                    sb.append(args);
+                    if (!args.startsWith("{")) {
+                        sb.append("}");
+                    }
+                    ret = (Map) JsonSerializer.decode(sb.toString(), Map.class);
+                } catch (Exception ex) {
+                    //Then parses the string: support script variables but not nested brackets.
+                    originalException = ex;
+                    if (args.startsWith("{")) {
+                        args = args.substring(1, args.length() - 1);
+                    }
+                    
+                    ret = new LinkedHashMap<>();
+                    for (String token : Str.splitIgnoringBrackets(args, ",")) {
+                        if (token.contains(":")) {
+                            String name = token.substring(0, token.indexOf(":")).trim();
+                            if (name.startsWith("\"")) {
+                                name = name.substring(1);
+                            }
+                            if (name.endsWith("\"")) {
+                                name = name.substring(0, name.length() - 1);
+                            }
+                            name = name.trim();
+
+                            String value = token.substring(token.indexOf(":") + 1).trim();
+                            try{
+                                ret.put(name, JsonSerializer.decode(value, Object.class));                            
+                            } catch (Exception e){
+                                Object var = Context.getInstance().getInterpreterVariable(value);
+                                ret.put(name, (var == null) ? value : 
+                                        ( forDisplay ? new InterpreterVariable(value, var) : var));                                
+                            }
+                        }                    
+                    }                    
+                }
+            } catch (Exception e) {
+                Logger.getLogger(QueueExecution.class.getName()).log(Level.WARNING, args, originalException);
+            }
+            if (!forDisplay){
+                expandVariables(ret);
+            }             
+            return ret;                    
+        }        
     }
 
     public enum QueueTaskErrorAction {

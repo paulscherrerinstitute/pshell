@@ -69,7 +69,12 @@
                 <Column editable="true" title="Value" type="java.lang.String"/>
               </Table>
             </Property>
+            <Property name="selectionMode" type="int" value="0"/>
           </Properties>
+          <Events>
+            <EventHandler event="mouseReleased" listener="java.awt.event.MouseListener" parameters="java.awt.event.MouseEvent" handler="tableMouseReleased"/>
+            <EventHandler event="keyReleased" listener="java.awt.event.KeyListener" parameters="java.awt.event.KeyEvent" handler="tableKeyReleased"/>
+          </Events>
         </Component>
       </SubComponents>
     </Container>

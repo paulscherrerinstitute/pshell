@@ -182,5 +182,14 @@ public class Str {
             args.add(m.group(1));
         }
         return args.toArray(new String[0]);
+    }    
+    
+    /**
+     * Split strings ignoring separators in brackets - parenthesis, curly and square. Don't support nested brackets. 
+     */
+    public static String[] splitIgnoringBrackets(String str, String separator) {
+        return str.split(separator + "(?![^\\{\\(\\[]*[\\]\\)\\}])", -1);
     }
+
+
 }

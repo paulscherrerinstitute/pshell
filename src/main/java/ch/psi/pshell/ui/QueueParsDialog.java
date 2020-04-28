@@ -1,7 +1,9 @@
 package ch.psi.pshell.ui;
 
+import ch.psi.pshell.core.JsonSerializer;
 import ch.psi.utils.swing.StandardDialog;
-import java.util.HashMap;
+import java.io.IOException;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableCellEditor;
@@ -26,70 +28,34 @@ public class QueueParsDialog extends StandardDialog {
         buttonDelete.setEnabled((rows > 0) && (cur >= 0));
     }
 
-    public void setData(Map<String, String> data) {
+    public void setData(Map<String, Object> data) throws IOException {
         model.setRowCount(0);
         for (String key : data.keySet()) {
-            model.addRow(new Object[]{key, data.get(key)});
+            Object value = data.get(key);
+            String text;
+            try{
+                text =  JsonSerializer.encode(value);
+            } catch (Exception ex){
+                text = String.valueOf(value);
+            }
+            model.addRow(new Object[]{key, text});
         }
     }
 
     public Map<String, String> getData() {
-        Map<String, String> data = new HashMap<>();
+        Map<String, String> data = new LinkedHashMap<>();
         for (int i = 0; i < model.getRowCount(); i++) {
-            String str = (String) model.getValueAt(i, 1);
-            data.put((String) model.getValueAt(i, 0), str);
-        }
-        return data;
-    }
-
-    public static Map<String, String> getParsMap(String text) {
-        Map<String, String> data = new HashMap<String, String>();
-        text = text.trim();
-        if (text.startsWith("{")) {
-            text = text.substring(1);
-        }
-        if (text.endsWith("}")) {
-            text = text.substring(0, text.length() - 1);
-        }
-        for (String token : text.split(",")) {
-            if (token.contains(":")) {
-                String name = token.substring(0, token.indexOf(":")).trim();
-                if (name.startsWith("\"")) {
-                    name = name.substring(1);
-                }
-                if (name.endsWith("\"")) {
-                    name = name.substring(0, name.length() - 1);
-                }
-                name = name.trim();
-
-                String value = token.substring(token.indexOf(":") + 1).trim();
-                if (value.equalsIgnoreCase("true") || value.equalsIgnoreCase("false")) {
-                    value = value.toLowerCase();
-                } else if (value.equalsIgnoreCase("null")) {
-                    value = value.toLowerCase();
-                } else {
-                    try {
-                        Double.parseDouble(value);
-                        //Numeric value
-                    } catch (Exception e) {
-                        //Assume should be a string
-                        if (!value.startsWith("\"")) {
-                            value = "\"" + value;
-                        }
-                        if (!value.endsWith("\"")) {
-                            value = value + "\"";
-                        }
-                    }
-                }
-
-                data.put(name, value);
+            String key = ((String) model.getValueAt(i, 0)).trim();
+            if (!key.isEmpty()){
+                String str = (String) model.getValueAt(i, 1);
+                data.put("\"" + key + "\"", str);
             }
         }
         return data;
     }
-
-    public void setText(String text) {
-        Map<String, String> data = getParsMap(text);
+   
+    public void setText(String text) throws IOException {
+        Map<String, Object>  data = Task.QueueTask.getArgsFromString(text, true);
         setData(data);
     }
 
@@ -132,6 +98,17 @@ public class QueueParsDialog extends StandardDialog {
 
             public Class getColumnClass(int columnIndex) {
                 return types [columnIndex];
+            }
+        });
+        table.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
+        table.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseReleased(java.awt.event.MouseEvent evt) {
+                tableMouseReleased(evt);
+            }
+        });
+        table.addKeyListener(new java.awt.event.KeyAdapter() {
+            public void keyReleased(java.awt.event.KeyEvent evt) {
+                tableKeyReleased(evt);
             }
         });
         jScrollPane1.setViewportView(table);
@@ -235,6 +212,14 @@ public class QueueParsDialog extends StandardDialog {
         }
         accept();
     }//GEN-LAST:event_buttonOkActionPerformed
+
+    private void tableKeyReleased(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_tableKeyReleased
+        update();
+    }//GEN-LAST:event_tableKeyReleased
+
+    private void tableMouseReleased(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_tableMouseReleased
+        update();
+    }//GEN-LAST:event_tableMouseReleased
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
