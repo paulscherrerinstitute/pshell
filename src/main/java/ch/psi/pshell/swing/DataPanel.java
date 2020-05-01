@@ -1,5 +1,6 @@
 package ch.psi.pshell.swing;
 
+import ch.psi.pshell.data.Converter;
 import ch.psi.pshell.core.Context;
 import ch.psi.pshell.core.Setup;
 import ch.psi.pshell.data.DataManager;
@@ -283,6 +284,7 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
 
         JPopupMenu popupMenu = new JPopupMenu();
         JMenuItem menuPlotData = new JMenuItem("Plot data");
+        JMenu menuConvert = new JMenu("Convert");
         menuPlotData.addActionListener((ActionEvent e) -> {
             try {
                 TreePath path = treeFile.getSelectionPath();
@@ -298,7 +300,11 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
 
         Separator menuPlotDataSeparator = new Separator();
         popupMenu.add(menuPlotDataSeparator);
-
+        
+        popupMenu.add(menuConvert);       
+        Separator menuConvertSeparator = new Separator();
+        popupMenu.add(menuConvertSeparator);
+        
         JMenuItem menuCopyLink = new JMenuItem("Copy link to clipboard");
         menuCopyLink.addActionListener((ActionEvent e) -> {
             try {
@@ -404,6 +410,7 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
                         Map<String, Object> info = dataManager.getInfo(currentFile.getPath(), dataPath);
                         menuPlotData.setVisible(false);
                         menuAssign.setVisible(false);
+                        menuConvert.setVisible(false);
                         if (info != null) {
                             String type = String.valueOf(info.get(Provider.INFO_TYPE));
                             if ((type.equals(Provider.INFO_VAL_TYPE_GROUP))) {
@@ -417,12 +424,31 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
                             } else if (type.equals(Provider.INFO_VAL_TYPE_DATASET)) {
                                 menuAssign.setVisible(Context.getInstance().getScriptManager() != null);
                                 if (dataManager.isDisplayablePlot(info)) {
+                                    menuConvert.removeAll();
+                                    for (Converter converter : Converter.getServiceProviders()){
+                                        JMenuItem item = new JMenuItem(converter.getName());                                        
+                                        item.addActionListener((a)->{    
+                                            TreePath tp = treeFile.getSelectionPath();
+                                            converter.startConvert(dataManager, currentFile.getPath(),  getDataPath(tp), DataPanel.this).handle((ret,ex)->{
+                                                if (ex != null){
+                                                    SwingUtils.showException(DataPanel.this, (Exception) ex);
+                                                } else{
+                                                    SwingUtils.showMessage(DataPanel.this, "Success", "Success creating:\n" + String.valueOf(ret));
+                                                }
+                                                return ret;
+                                            });
+                                        });
+                                        menuConvert.add(item);
+                                    }
+                                    
                                     menuPlotData.setVisible(true);
+                                    menuConvert.setVisible(menuConvert.getMenuComponentCount()>0);
                                 }
                             }
                         }
                         menuOpenScript.setVisible((info != null) && "/".equals(dataPath) && (dataManager.getAttribute(currentFile.getPath(), dataPath, Layout.ATTR_FILE) != null));
                         menuPlotDataSeparator.setVisible(menuPlotData.isVisible());
+                        menuConvertSeparator.setVisible(menuConvert.isVisible());
                         popupMenu.show(e.getComponent(), e.getX(), e.getY());
                     }
                 } catch (Exception ex) {

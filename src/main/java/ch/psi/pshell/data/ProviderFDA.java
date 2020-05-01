@@ -24,6 +24,7 @@ import java.util.Map;
  *
  */
 public class ProviderFDA extends ProviderText{
+    public static final String INFO_FIELD_DIMENSIONS= "Field Dimensions";  
     
     public ProviderFDA(){
         super();
@@ -102,10 +103,18 @@ public class ProviderFDA extends ProviderText{
             int[] fieldLengths = new int[fields];
             if (filePath.toFile().isFile()) {
                 try (BufferedReader br = new BufferedReader(new FileReader(filePath.toFile()))) {
-                    br.readLine();
-                    br.readLine();
+                    br.readLine();                        
+                    String str = br.readLine();
+                    try{
+                        if (str.startsWith(COMMENT_MARKER)) { 
+                            str = str.substring(1);
+                            String[] vals = str.split(getItemSeparator());                        
+                            ret.put(INFO_FIELD_DIMENSIONS, Convert.toPrimitiveArray(vals, int.class));
+                        }
+                    } catch (Exception ex){                        
+                    }
+                    
                     String line = br.readLine();
-
                     if (!line.isEmpty()) {
                         String[] vals = line.split(getItemSeparator());
                         if (fields != null) {
