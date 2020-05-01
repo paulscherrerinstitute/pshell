@@ -855,9 +855,55 @@ public class StripChart extends StandardDialog {
         updateTitle();
     }
 
-    public void open(String json) throws IOException {
+    public void open(String json) throws IOException {        
         json = json.replace("'", "\"");
-        Object[][][] state = (Object[][][]) JsonSerializer.decode(json, Object[][][].class);
+        Object[][][] state = null;
+        try{
+            //parse a complete configuration
+            state = (Object[][][]) JsonSerializer.decode(json, Object[][][].class);                        
+        } catch(Exception ex) {
+            //parse list of channel names
+            List<String> channels = (List<String>) JsonSerializer.decode(json, List.class); 
+            state = new Object[1][channels.size()][];
+            for (int i=0; i<channels.size(); i++){
+                Type type = Type.Channel;
+                String name = channels.get(i);
+                int plot = 1;
+                int axis = 1;
+                String color = null;
+                try{
+                    //Try parsing protocol/parameters
+                    InlineDevice dev = new InlineDevice(name);
+                    name = dev.getId();
+                    switch(dev.getProtocol()){
+                        case "bs":
+                            type = Type.Stream;
+                            break;
+                        case "cs":
+                            type = Type.CamServer;
+                            break;
+                        case "dev":
+                            type = Type.Device;
+                            break;
+                        case "pv":
+                        case "ca":
+                        default:
+                            break;
+                    }
+                    if (dev.getPars().keySet().contains("plot" )){
+                        plot = Integer.valueOf(String.valueOf(dev.getPars().get("plot")));
+                    }
+                    if (dev.getPars().keySet().contains("axis" )){
+                        axis = Integer.valueOf(String.valueOf(dev.getPars().get("axis")));
+                    }
+                    if (dev.getPars().keySet().contains("color" )){
+                        color = String.valueOf(dev.getPars().get("color"));
+                    }
+                } catch (Exception e){                    
+                }                
+                state[0][i] = new Object[] { true, name, type, plot, axis, color, null };
+            }            
+        }
         if (state.length > 0) {
             modelSeries.setDataVector((Object[][]) state[0], SwingUtils.getTableColumnNames(tableSeries));
         }
