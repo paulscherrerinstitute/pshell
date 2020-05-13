@@ -305,4 +305,35 @@ public class Sys {
         }
         return Posix.setumask(umask);
     }   
+    
+    public static class UserInfo{
+        public final String name;
+        public final int uid;
+        public final int gid;        
+        
+        UserInfo (String name, int uid, int gid){
+            this.name = name;
+            this.uid = uid;
+            this.gid = gid;
+        }
+        
+        @Override
+        public String toString(){
+            return "user name=" + name+ " uid=" + uid+ " gid=" + gid;
+        }
+    }
+    
+    public static UserInfo getUserInfo(String userName) {
+        if (isWindows()) {
+            return null;
+        }
+        Posix.Passwd passwd = Posix.getpwnam(userName);    
+        return new UserInfo(passwd.getName(), passwd.getUID(), passwd.getGID());
+    }               
+            
+                
+    public static void main (String[] args){
+        System.out.println(getUserInfo("gobbo_a"));
+        System.out.println(getUserInfo("root"));
+    }
 }
