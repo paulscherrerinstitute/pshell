@@ -232,6 +232,8 @@ public class StripChart extends StandardDialog {
         comboFormat.setEnabled(false);
         comboLayout.setEnabled(false);
         textFileName.setText((Context.getInstance() != null) ? Context.getInstance().getConfig().dataPath : "");
+        comboFormat.setSelectedItem(getInitFormat());
+        comboLayout.setSelectedItem(getInitLayout());        
         updateTitle();
         setCancelledOnEscape(false);
 
