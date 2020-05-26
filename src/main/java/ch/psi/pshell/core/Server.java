@@ -59,9 +59,6 @@ public class Server implements AutoCloseable {
         String home = Context.getInstance().getSetup().getWwwPath();
         server.getServerConfiguration().addHttpHandler(new StaticHttpHandler(home), "/static");
         logger.info(String.format("Interface available at %s", getInterfaceURL()));
-        
-        String test = Context.getInstance().getSetup().getWwwPath() + "/test";
-        server.getServerConfiguration().addHttpHandler(new StaticHttpHandler(test), "/test");        
     }
 
     @Override
