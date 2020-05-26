@@ -100,7 +100,7 @@ public class PreferencesDialog extends StandardDialog {
     }
 
     Preferences preferences;
-    Font[] selectedFonts = new Font[4];
+    Font[] selectedFonts = new Font[7];
 
     String getFontDesc(Font f) {
         StringBuilder sb = new StringBuilder();
@@ -136,12 +136,22 @@ public class PreferencesDialog extends StandardDialog {
         checkShowRowNumbers.setSelected(!preferences.hideEditorLineNumbers);
         checkEditorContextMenu.setSelected(!preferences.hideEditorContextMenu);
         panelEditorForeground.setBackground(selectedEditorForeground);
-        selectedFonts = new Font[]{preferences.fontShellPanel, preferences.fontEditor, preferences.fontOutput, preferences.fontShellCommand};
+        selectedFonts = new Font[]{ preferences.fontShellPanel, 
+                                    preferences.fontEditor, 
+                                    preferences.fontOutput, 
+                                    preferences.fontShellCommand,
+                                    preferences.fontPlotLabel,
+                                    preferences.fontPlotTick,
+                                    preferences.fontPlotTitle
+                                  };
         comboConsoleLocation.setSelectedItem(preferences.consoleLocation);
         textSP.setText(getFontDesc(preferences.fontShellPanel));
         textSC.setText(getFontDesc(preferences.fontShellCommand));
         textOP.setText(getFontDesc(preferences.fontOutput));
         textSE.setText(getFontDesc(preferences.fontEditor));
+        textPTit.setText(getFontDesc(preferences.fontPlotTitle));
+        textPL.setText(getFontDesc(preferences.fontPlotLabel));
+        textPT.setText(getFontDesc(preferences.fontPlotTick));
         ckAsyncUpdate.setSelected(preferences.asyncViewersUpdate);
         ckScanPlotDisabled.setSelected(preferences.scanPlotDisabled);
         ckScanTableDisabled.setSelected(preferences.scanTableDisabled);
@@ -215,6 +225,15 @@ public class PreferencesDialog extends StandardDialog {
         textSE = new javax.swing.JTextField();
         buttonSE = new javax.swing.JButton();
         buttonDefaultFonts = new javax.swing.JButton();
+        jLabel22 = new javax.swing.JLabel();
+        textPTit = new javax.swing.JTextField();
+        buttonPTit = new javax.swing.JButton();
+        textPL = new javax.swing.JTextField();
+        jLabel23 = new javax.swing.JLabel();
+        buttonPL = new javax.swing.JButton();
+        buttonPT = new javax.swing.JButton();
+        textPT = new javax.swing.JTextField();
+        jLabel24 = new javax.swing.JLabel();
         jPanel2 = new javax.swing.JPanel();
         jLabel1 = new javax.swing.JLabel();
         spinnerTab = new javax.swing.JSpinner();
@@ -345,40 +364,84 @@ public class PreferencesDialog extends StandardDialog {
             }
         });
 
+        jLabel22.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
+        jLabel22.setText("Plot Title:");
+
+        textPTit.setEditable(false);
+
+        buttonPTit.setText("Set");
+        buttonPTit.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                buttonPTitActionPerformed(evt);
+            }
+        });
+
+        textPL.setEditable(false);
+
+        jLabel23.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
+        jLabel23.setText("Plot Label:");
+
+        buttonPL.setText("Set");
+        buttonPL.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                buttonPLActionPerformed(evt);
+            }
+        });
+
+        buttonPT.setText("Set");
+        buttonPT.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                buttonPTActionPerformed(evt);
+            }
+        });
+
+        textPT.setEditable(false);
+
+        jLabel24.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
+        jLabel24.setText("Plot Tick:");
+
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel1Layout.createSequentialGroup()
-                .addGap(24, 24, 24)
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(jLabel2)
                     .addComponent(jLabel3)
                     .addComponent(jLabel4)
-                    .addComponent(jLabel5))
+                    .addComponent(jLabel5)
+                    .addComponent(jLabel22)
+                    .addComponent(jLabel23)
+                    .addComponent(jLabel24))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(buttonDefaultFonts)
-                    .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(textSP, javax.swing.GroupLayout.PREFERRED_SIZE, 300, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(textSC, javax.swing.GroupLayout.PREFERRED_SIZE, 300, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(textOP, javax.swing.GroupLayout.PREFERRED_SIZE, 300, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(textSE, javax.swing.GroupLayout.PREFERRED_SIZE, 300, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(buttonSP)
-                            .addComponent(buttonSC)
-                            .addComponent(buttonOP)
-                            .addComponent(buttonSE))))
+                    .addComponent(textSP, javax.swing.GroupLayout.PREFERRED_SIZE, 300, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(textSC, javax.swing.GroupLayout.PREFERRED_SIZE, 300, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(textOP, javax.swing.GroupLayout.PREFERRED_SIZE, 300, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(textSE, javax.swing.GroupLayout.PREFERRED_SIZE, 300, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(textPTit, javax.swing.GroupLayout.PREFERRED_SIZE, 300, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(textPL, javax.swing.GroupLayout.PREFERRED_SIZE, 300, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(textPT, javax.swing.GroupLayout.PREFERRED_SIZE, 300, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.CENTER)
+                    .addComponent(buttonSP)
+                    .addComponent(buttonSE)
+                    .addComponent(buttonSC)
+                    .addComponent(buttonOP)
+                    .addComponent(buttonPTit)
+                    .addComponent(buttonPL)
+                    .addComponent(buttonPT))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(buttonDefaultFonts)
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
-        jPanel1Layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {jLabel2, jLabel3, jLabel4, jLabel5});
+        jPanel1Layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {jLabel2, jLabel22, jLabel23, jLabel24, jLabel3, jLabel4, jLabel5});
 
-        jPanel1Layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {textOP, textSC, textSE, textSP});
+        jPanel1Layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {textOP, textPL, textPT, textPTit, textSC, textSE, textSP});
 
-        jPanel1Layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {buttonOP, buttonSC, buttonSE, buttonSP});
+        jPanel1Layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {buttonOP, buttonPL, buttonPT, buttonPTit, buttonSC, buttonSE, buttonSP});
 
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -387,24 +450,38 @@ public class PreferencesDialog extends StandardDialog {
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel2)
                     .addComponent(textSP, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(buttonSP))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                    .addComponent(buttonSP)
+                    .addComponent(buttonDefaultFonts))
+                .addGap(1, 1, 1)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel3)
                     .addComponent(textSC, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(buttonSC))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGap(1, 1, 1)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel4)
                     .addComponent(textOP, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(buttonOP))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGap(1, 1, 1)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel5)
                     .addComponent(textSE, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(buttonSE))
-                .addGap(18, 18, 18)
-                .addComponent(buttonDefaultFonts)
+                .addGap(1, 1, 1)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel22)
+                    .addComponent(textPTit, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(buttonPTit))
+                .addGap(1, 1, 1)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel23)
+                    .addComponent(textPL, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(buttonPL))
+                .addGap(1, 1, 1)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel24)
+                    .addComponent(textPT, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(buttonPT))
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
@@ -650,7 +727,7 @@ public class PreferencesDialog extends StandardDialog {
                         .addComponent(jLabel20)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(comboPlotsLocation, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addContainerGap(314, Short.MAX_VALUE))
+                .addContainerGap(321, Short.MAX_VALUE))
         );
 
         jPanel9Layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {jLabel14, jLabel20});
@@ -756,7 +833,7 @@ public class PreferencesDialog extends StandardDialog {
         panelPlotsLayout.setHorizontalGroup(
             panelPlotsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(panelPlotsLayout.createSequentialGroup()
-                .addContainerGap()
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addGroup(panelPlotsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(jLabel11, javax.swing.GroupLayout.Alignment.TRAILING)
                     .addComponent(jLabel10, javax.swing.GroupLayout.Alignment.TRAILING)
@@ -774,7 +851,7 @@ public class PreferencesDialog extends StandardDialog {
                         .addGroup(panelPlotsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
                             .addComponent(comboQuality, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                             .addComponent(comboLayout, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 116, Short.MAX_VALUE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 84, Short.MAX_VALUE)
                         .addGroup(panelPlotsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                             .addGroup(panelPlotsLayout.createSequentialGroup()
                                 .addComponent(jLabel15)
@@ -790,7 +867,7 @@ public class PreferencesDialog extends StandardDialog {
                                 .addComponent(jLabel18)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addComponent(spinnerMarkerSize, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))))
-                .addContainerGap())
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
         panelPlotsLayout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {jLabel6, jLabel7, jLabel8, jLabel9});
@@ -858,7 +935,7 @@ public class PreferencesDialog extends StandardDialog {
                     .addComponent(checkStatusBar)
                     .addComponent(checkPersistRendererWindows)
                     .addComponent(ckeckBackgroundRendering))
-                .addContainerGap(329, Short.MAX_VALUE))
+                .addContainerGap(374, Short.MAX_VALUE))
         );
         jPanel5Layout.setVerticalGroup(
             jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -922,7 +999,7 @@ public class PreferencesDialog extends StandardDialog {
             .addGroup(jPanel6Layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 480, Short.MAX_VALUE)
+                    .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 575, Short.MAX_VALUE)
                     .addGroup(jPanel6Layout.createSequentialGroup()
                         .addComponent(buttonDefaultPanels)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
@@ -972,7 +1049,7 @@ public class PreferencesDialog extends StandardDialog {
                 .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(jPanel3Layout.createSequentialGroup()
                         .addComponent(checkCachedDataPanel)
-                        .addContainerGap(448, Short.MAX_VALUE))
+                        .addContainerGap(416, Short.MAX_VALUE))
                     .addGroup(jPanel3Layout.createSequentialGroup()
                         .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(checkShowEmergencyStop)
@@ -1055,7 +1132,7 @@ public class PreferencesDialog extends StandardDialog {
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addComponent(jTabbedPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 278, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(buttonOk)
                     .addComponent(buttonCancel))
@@ -1085,6 +1162,9 @@ public class PreferencesDialog extends StandardDialog {
                 preferences.fontEditor = selectedFonts[1];
                 preferences.fontOutput = selectedFonts[2];
                 preferences.fontShellCommand = selectedFonts[3];
+                preferences.fontPlotLabel = selectedFonts[4];
+                preferences.fontPlotTick = selectedFonts[5];
+                preferences.fontPlotTitle = selectedFonts[6];
                 preferences.tabSize = (Integer) spinnerTab.getValue();
                 preferences.contentWidth = (Integer) spinnerContentWidth.getValue();
                 preferences.editorBackground = selectedEditorBackground;
@@ -1179,13 +1259,16 @@ public class PreferencesDialog extends StandardDialog {
     private void buttonDefaultFontsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonDefaultFontsActionPerformed
         try {
             Font[] fonts = Preferences.getDefaultFonts();
-            for (int i = 0; i < 4; i++) {
+            for (int i = 0; i < 7; i++) {
                 selectedFonts[i] = fonts[i];
             }
             textSP.setText(getFontDesc(fonts[0]));
             textSE.setText(getFontDesc(fonts[1]));
             textOP.setText(getFontDesc(fonts[2]));
             textSC.setText(getFontDesc(fonts[3]));
+            textPL.setText(getFontDesc(fonts[4]));
+            textPT.setText(getFontDesc(fonts[5]));
+            textPTit.setText(getFontDesc(fonts[6]));            
         } catch (Exception ex) {
             SwingUtils.showException(PreferencesDialog.this, ex);
         }
@@ -1243,6 +1326,18 @@ public class PreferencesDialog extends StandardDialog {
         checkShowRowNumbers.setEnabled(checkSyntaxHighlight.isSelected());
     }//GEN-LAST:event_checkSyntaxHighlightActionPerformed
 
+    private void buttonPTitActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonPTitActionPerformed
+        getFont(6, textPTit);
+    }//GEN-LAST:event_buttonPTitActionPerformed
+
+    private void buttonPLActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonPLActionPerformed
+        getFont(4, textPL);
+    }//GEN-LAST:event_buttonPLActionPerformed
+
+    private void buttonPTActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonPTActionPerformed
+        getFont(5, textPT);
+    }//GEN-LAST:event_buttonPTActionPerformed
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton buttonCancel;
     private javax.swing.JButton buttonDefaultEditorColors;
@@ -1252,6 +1347,9 @@ public class PreferencesDialog extends StandardDialog {
     private javax.swing.JButton buttonInsert;
     private javax.swing.JButton buttonOP;
     private javax.swing.JButton buttonOk;
+    private javax.swing.JButton buttonPL;
+    private javax.swing.JButton buttonPT;
+    private javax.swing.JButton buttonPTit;
     private javax.swing.JButton buttonResetBackground;
     private javax.swing.JButton buttonSC;
     private javax.swing.JButton buttonSE;
@@ -1297,6 +1395,9 @@ public class PreferencesDialog extends StandardDialog {
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel20;
     private javax.swing.JLabel jLabel21;
+    private javax.swing.JLabel jLabel22;
+    private javax.swing.JLabel jLabel23;
+    private javax.swing.JLabel jLabel24;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
     private javax.swing.JLabel jLabel5;
@@ -1326,6 +1427,9 @@ public class PreferencesDialog extends StandardDialog {
     private javax.swing.JSpinner spinnerTab;
     private javax.swing.JTable tablePanels;
     private javax.swing.JTextField textOP;
+    private javax.swing.JTextField textPL;
+    private javax.swing.JTextField textPT;
+    private javax.swing.JTextField textPTit;
     private javax.swing.JTextField textSC;
     private javax.swing.JTextField textSE;
     private javax.swing.JTextField textSP;

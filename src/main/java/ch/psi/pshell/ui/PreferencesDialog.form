@@ -52,7 +52,7 @@
       <Group type="103" groupAlignment="0" attributes="0">
           <Group type="102" alignment="0" attributes="0">
               <Component id="jTabbedPane1" min="-2" pref="278" max="-2" attributes="0"/>
-              <EmptySpace type="unrelated" max="-2" attributes="0"/>
+              <EmptySpace max="-2" attributes="0"/>
               <Group type="103" groupAlignment="3" attributes="0">
                   <Component id="buttonOk" alignment="3" min="-2" max="-2" attributes="0"/>
                   <Component id="buttonCancel" alignment="3" min="-2" max="-2" attributes="0"/>
@@ -80,32 +80,38 @@
             <DimensionLayout dim="0">
               <Group type="103" groupAlignment="0" attributes="0">
                   <Group type="102" alignment="0" attributes="0">
-                      <EmptySpace min="-2" pref="24" max="-2" attributes="0"/>
+                      <EmptySpace max="32767" attributes="0"/>
                       <Group type="103" groupAlignment="0" attributes="0">
                           <Component id="jLabel2" linkSize="2" alignment="0" min="-2" max="-2" attributes="0"/>
                           <Component id="jLabel3" linkSize="2" alignment="0" min="-2" max="-2" attributes="0"/>
                           <Component id="jLabel4" linkSize="2" alignment="0" min="-2" max="-2" attributes="0"/>
                           <Component id="jLabel5" linkSize="2" alignment="0" min="-2" max="-2" attributes="0"/>
+                          <Component id="jLabel22" linkSize="2" alignment="0" min="-2" max="-2" attributes="0"/>
+                          <Component id="jLabel23" linkSize="2" alignment="0" min="-2" max="-2" attributes="0"/>
+                          <Component id="jLabel24" linkSize="2" alignment="0" min="-2" max="-2" attributes="0"/>
                       </Group>
                       <EmptySpace max="-2" attributes="0"/>
                       <Group type="103" groupAlignment="0" attributes="0">
-                          <Component id="buttonDefaultFonts" min="-2" max="-2" attributes="0"/>
-                          <Group type="102" attributes="0">
-                              <Group type="103" groupAlignment="0" attributes="0">
-                                  <Component id="textSP" linkSize="3" min="-2" pref="300" max="-2" attributes="0"/>
-                                  <Component id="textSC" linkSize="3" min="-2" pref="300" max="-2" attributes="0"/>
-                                  <Component id="textOP" linkSize="3" min="-2" pref="300" max="-2" attributes="0"/>
-                                  <Component id="textSE" linkSize="3" min="-2" pref="300" max="-2" attributes="0"/>
-                              </Group>
-                              <EmptySpace type="unrelated" max="-2" attributes="0"/>
-                              <Group type="103" groupAlignment="0" attributes="0">
-                                  <Component id="buttonSP" linkSize="4" alignment="0" min="-2" max="-2" attributes="0"/>
-                                  <Component id="buttonSC" linkSize="4" alignment="0" min="-2" max="-2" attributes="0"/>
-                                  <Component id="buttonOP" linkSize="4" alignment="0" min="-2" max="-2" attributes="0"/>
-                                  <Component id="buttonSE" linkSize="4" alignment="0" min="-2" max="-2" attributes="0"/>
-                              </Group>
-                          </Group>
+                          <Component id="textSP" linkSize="3" min="-2" pref="300" max="-2" attributes="0"/>
+                          <Component id="textSC" linkSize="3" min="-2" pref="300" max="-2" attributes="0"/>
+                          <Component id="textOP" linkSize="3" min="-2" pref="300" max="-2" attributes="0"/>
+                          <Component id="textSE" linkSize="3" min="-2" pref="300" max="-2" attributes="0"/>
+                          <Component id="textPTit" linkSize="3" min="-2" pref="300" max="-2" attributes="0"/>
+                          <Component id="textPL" linkSize="3" min="-2" pref="300" max="-2" attributes="0"/>
+                          <Component id="textPT" linkSize="3" min="-2" pref="300" max="-2" attributes="0"/>
                       </Group>
+                      <EmptySpace max="-2" attributes="0"/>
+                      <Group type="103" groupAlignment="2" attributes="0">
+                          <Component id="buttonSP" linkSize="4" alignment="2" min="-2" max="-2" attributes="0"/>
+                          <Component id="buttonSE" linkSize="4" alignment="2" min="-2" max="-2" attributes="0"/>
+                          <Component id="buttonSC" linkSize="4" alignment="2" min="-2" max="-2" attributes="0"/>
+                          <Component id="buttonOP" linkSize="4" alignment="2" min="-2" max="-2" attributes="0"/>
+                          <Component id="buttonPTit" linkSize="4" alignment="2" min="-2" max="-2" attributes="0"/>
+                          <Component id="buttonPL" linkSize="4" alignment="2" min="-2" max="-2" attributes="0"/>
+                          <Component id="buttonPT" linkSize="4" alignment="2" min="-2" max="-2" attributes="0"/>
+                      </Group>
+                      <EmptySpace max="32767" attributes="0"/>
+                      <Component id="buttonDefaultFonts" min="-2" max="-2" attributes="0"/>
                       <EmptySpace max="32767" attributes="0"/>
                   </Group>
               </Group>
@@ -118,27 +124,44 @@
                           <Component id="jLabel2" alignment="3" min="-2" max="-2" attributes="0"/>
                           <Component id="textSP" alignment="3" min="-2" max="-2" attributes="0"/>
                           <Component id="buttonSP" alignment="3" min="-2" max="-2" attributes="0"/>
+                          <Component id="buttonDefaultFonts" alignment="3" min="-2" max="-2" attributes="0"/>
                       </Group>
-                      <EmptySpace max="-2" attributes="0"/>
+                      <EmptySpace min="-2" pref="1" max="-2" attributes="0"/>
                       <Group type="103" groupAlignment="3" attributes="0">
                           <Component id="jLabel3" alignment="3" min="-2" max="-2" attributes="0"/>
                           <Component id="textSC" alignment="3" min="-2" max="-2" attributes="0"/>
                           <Component id="buttonSC" alignment="3" min="-2" max="-2" attributes="0"/>
                       </Group>
-                      <EmptySpace max="-2" attributes="0"/>
+                      <EmptySpace min="-2" pref="1" max="-2" attributes="0"/>
                       <Group type="103" groupAlignment="3" attributes="0">
                           <Component id="jLabel4" alignment="3" min="-2" max="-2" attributes="0"/>
                           <Component id="textOP" alignment="3" min="-2" max="-2" attributes="0"/>
                           <Component id="buttonOP" alignment="3" min="-2" max="-2" attributes="0"/>
                       </Group>
-                      <EmptySpace max="-2" attributes="0"/>
+                      <EmptySpace min="-2" pref="1" max="-2" attributes="0"/>
                       <Group type="103" groupAlignment="3" attributes="0">
                           <Component id="jLabel5" alignment="3" min="-2" max="-2" attributes="0"/>
                           <Component id="textSE" alignment="3" min="-2" max="-2" attributes="0"/>
                           <Component id="buttonSE" alignment="3" min="-2" max="-2" attributes="0"/>
                       </Group>
-                      <EmptySpace type="separate" max="-2" attributes="0"/>
-                      <Component id="buttonDefaultFonts" min="-2" max="-2" attributes="0"/>
+                      <EmptySpace min="-2" pref="1" max="-2" attributes="0"/>
+                      <Group type="103" groupAlignment="3" attributes="0">
+                          <Component id="jLabel22" alignment="3" min="-2" max="-2" attributes="0"/>
+                          <Component id="textPTit" alignment="3" min="-2" max="-2" attributes="0"/>
+                          <Component id="buttonPTit" alignment="3" min="-2" max="-2" attributes="0"/>
+                      </Group>
+                      <EmptySpace min="-2" pref="1" max="-2" attributes="0"/>
+                      <Group type="103" groupAlignment="3" attributes="0">
+                          <Component id="jLabel23" alignment="3" min="-2" max="-2" attributes="0"/>
+                          <Component id="textPL" alignment="3" min="-2" max="-2" attributes="0"/>
+                          <Component id="buttonPL" alignment="3" min="-2" max="-2" attributes="0"/>
+                      </Group>
+                      <EmptySpace min="-2" pref="1" max="-2" attributes="0"/>
+                      <Group type="103" groupAlignment="3" attributes="0">
+                          <Component id="jLabel24" alignment="3" min="-2" max="-2" attributes="0"/>
+                          <Component id="textPT" alignment="3" min="-2" max="-2" attributes="0"/>
+                          <Component id="buttonPT" alignment="3" min="-2" max="-2" attributes="0"/>
+                      </Group>
                       <EmptySpace max="32767" attributes="0"/>
                   </Group>
               </Group>
@@ -228,6 +251,63 @@
               <Events>
                 <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="buttonDefaultFontsActionPerformed"/>
               </Events>
+            </Component>
+            <Component class="javax.swing.JLabel" name="jLabel22">
+              <Properties>
+                <Property name="horizontalAlignment" type="int" value="11"/>
+                <Property name="text" type="java.lang.String" value="Plot Title:"/>
+              </Properties>
+            </Component>
+            <Component class="javax.swing.JTextField" name="textPTit">
+              <Properties>
+                <Property name="editable" type="boolean" value="false"/>
+              </Properties>
+            </Component>
+            <Component class="javax.swing.JButton" name="buttonPTit">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="Set"/>
+              </Properties>
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="buttonPTitActionPerformed"/>
+              </Events>
+            </Component>
+            <Component class="javax.swing.JTextField" name="textPL">
+              <Properties>
+                <Property name="editable" type="boolean" value="false"/>
+              </Properties>
+            </Component>
+            <Component class="javax.swing.JLabel" name="jLabel23">
+              <Properties>
+                <Property name="horizontalAlignment" type="int" value="11"/>
+                <Property name="text" type="java.lang.String" value="Plot Label:"/>
+              </Properties>
+            </Component>
+            <Component class="javax.swing.JButton" name="buttonPL">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="Set"/>
+              </Properties>
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="buttonPLActionPerformed"/>
+              </Events>
+            </Component>
+            <Component class="javax.swing.JButton" name="buttonPT">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="Set"/>
+              </Properties>
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="buttonPTActionPerformed"/>
+              </Events>
+            </Component>
+            <Component class="javax.swing.JTextField" name="textPT">
+              <Properties>
+                <Property name="editable" type="boolean" value="false"/>
+              </Properties>
+            </Component>
+            <Component class="javax.swing.JLabel" name="jLabel24">
+              <Properties>
+                <Property name="horizontalAlignment" type="int" value="11"/>
+                <Property name="text" type="java.lang.String" value="Plot Tick:"/>
+              </Properties>
             </Component>
           </SubComponents>
         </Container>
@@ -583,7 +663,7 @@
                               <Component id="comboPlotsLocation" linkSize="18" min="-2" max="-2" attributes="0"/>
                           </Group>
                       </Group>
-                      <EmptySpace pref="314" max="32767" attributes="0"/>
+                      <EmptySpace pref="321" max="32767" attributes="0"/>
                   </Group>
               </Group>
             </DimensionLayout>
@@ -655,7 +735,7 @@
             <DimensionLayout dim="0">
               <Group type="103" groupAlignment="0" attributes="0">
                   <Group type="102" attributes="0">
-                      <EmptySpace min="-2" max="-2" attributes="0"/>
+                      <EmptySpace max="32767" attributes="0"/>
                       <Group type="103" groupAlignment="0" attributes="0">
                           <Component id="jLabel11" linkSize="6" alignment="1" min="-2" max="-2" attributes="0"/>
                           <Component id="jLabel10" linkSize="6" alignment="1" min="-2" max="-2" attributes="0"/>
@@ -675,7 +755,7 @@
                                   <Component id="comboQuality" linkSize="7" alignment="1" min="-2" max="-2" attributes="0"/>
                                   <Component id="comboLayout" linkSize="7" alignment="1" min="-2" max="-2" attributes="0"/>
                               </Group>
-                              <EmptySpace pref="116" max="32767" attributes="0"/>
+                              <EmptySpace pref="84" max="32767" attributes="0"/>
                               <Group type="103" groupAlignment="0" max="-2" attributes="0">
                                   <Group type="102" attributes="0">
                                       <Component id="jLabel15" linkSize="15" min="-2" max="-2" attributes="0"/>
@@ -696,7 +776,7 @@
                               </Group>
                           </Group>
                       </Group>
-                      <EmptySpace max="-2" attributes="0"/>
+                      <EmptySpace max="32767" attributes="0"/>
                   </Group>
               </Group>
             </DimensionLayout>
@@ -946,7 +1026,7 @@
                           <Component id="checkPersistRendererWindows" min="-2" max="-2" attributes="0"/>
                           <Component id="ckeckBackgroundRendering" min="-2" max="-2" attributes="0"/>
                       </Group>
-                      <EmptySpace pref="329" max="32767" attributes="0"/>
+                      <EmptySpace pref="374" max="32767" attributes="0"/>
                   </Group>
               </Group>
             </DimensionLayout>
@@ -997,7 +1077,7 @@
                   <Group type="102" attributes="0">
                       <EmptySpace min="-2" max="-2" attributes="0"/>
                       <Group type="103" groupAlignment="0" attributes="0">
-                          <Component id="jScrollPane1" pref="480" max="32767" attributes="0"/>
+                          <Component id="jScrollPane1" pref="575" max="32767" attributes="0"/>
                           <Group type="102" alignment="0" attributes="0">
                               <Component id="buttonDefaultPanels" min="-2" max="-2" attributes="0"/>
                               <EmptySpace max="32767" attributes="0"/>
@@ -1095,7 +1175,7 @@
                       <Group type="103" groupAlignment="0" attributes="0">
                           <Group type="102" alignment="0" attributes="0">
                               <Component id="checkCachedDataPanel" min="-2" max="-2" attributes="0"/>
-                              <EmptySpace pref="448" max="32767" attributes="0"/>
+                              <EmptySpace pref="416" max="32767" attributes="0"/>
                           </Group>
                           <Group type="102" attributes="0">
                               <Group type="103" groupAlignment="0" attributes="0">

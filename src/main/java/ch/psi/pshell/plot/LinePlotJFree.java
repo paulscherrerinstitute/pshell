@@ -92,9 +92,6 @@ public class LinePlotJFree extends LinePlotBase {
     boolean legendVisible;
     boolean showTooltips;
 
-    public static final Font TICK_LABEL_FONT = new Font(Font.SANS_SERIF, 0, 10);
-    public static final Font LABEL_FONT = new Font(Font.SANS_SERIF, 0, 11);
-
     AbstractXYDataset dataY1;
     AbstractXYDataset dataY2;
     NumberAxis axisX2;
@@ -589,10 +586,11 @@ public class LinePlotJFree extends LinePlotBase {
             chart.getTitle().setPaint(getAxisTextColor());
         }
         chart.getLegend().setItemPaint(getAxisTextColor());
+        chart.getLegend().setItemFont(tickLabelFont);
         plot.getDomainAxis().setTickLabelPaint(getAxisTextColor());
         plot.getDomainAxis().setLabelPaint(getAxisTextColor());
         plot.getRangeAxis().setLabelPaint(getAxisTextColor());
-        plot.getRangeAxis().setTickLabelPaint(getAxisTextColor());
+        plot.getRangeAxis().setTickLabelPaint(getAxisTextColor());        
         plot.getDomainAxis().setLabelFont(labelFont);
         plot.getRangeAxis().setLabelFont(labelFont);
         plot.getDomainAxis().setTickLabelFont(tickLabelFont);
@@ -602,9 +600,10 @@ public class LinePlotJFree extends LinePlotBase {
         }
     }
 
+    @Override
     public void setLabelFont(Font f) {
         labelFont = f;
-        XYPlot plot = (XYPlot) chart.getPlot();
+        XYPlot plot = (XYPlot) chart.getPlot();        
         plot.getDomainAxis().setLabelFont(f);
         plot.getRangeAxis().setLabelFont(f);
         if (dataY2 == null) {
@@ -612,9 +611,11 @@ public class LinePlotJFree extends LinePlotBase {
         }
     }
 
+    @Override
     public void setTickLabelFont(Font f) {
         tickLabelFont = f;
         XYPlot plot = (XYPlot) chart.getPlot();
+        chart.getLegend().setItemFont(f);
         plot.getDomainAxis().setTickLabelFont(f);
         plot.getRangeAxis().setTickLabelFont(f);
         if (dataY2 == null) {
@@ -1178,7 +1179,7 @@ public class LinePlotJFree extends LinePlotBase {
     // http://www.jfree.org/phpBB2/viewtopic.php?t=12788&highlight=redraw+speed+performance+problem
     void showTooltips() {
         tooltips = true;
-        DecimalFormat dm = new DecimalFormat("0.##########");
+        DecimalFormat dm = new DecimalFormat("0.##########");       
         getRenderer(1).setBaseToolTipGenerator(new StandardXYToolTipGenerator("x={1} y={2}", dm, dm));
         if (getRenderer(2) != null) {
             getRenderer(2).setBaseToolTipGenerator(new StandardXYToolTipGenerator("x={1} y={2}", dm, dm));
@@ -1463,6 +1464,7 @@ public class LinePlotJFree extends LinePlotBase {
                                 pointers[i].setArrowLength(5);
                                 pointers[i].setTipRadius(10);
                                 pointers[i].setLabelOffset(25);
+                                pointers[i].setFont(tickLabelFont);
                                 chart.getXYPlot().addAnnotation(pointers[i]);
                             } else {
                                 pointers[i].setText(text);

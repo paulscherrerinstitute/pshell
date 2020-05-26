@@ -60,7 +60,7 @@ public class TimePlotJFree extends TimePlotBase {
     final TimeSeriesCollection data;
     final ChartPanel chartPanel;
     final Shape marker;
-    Font tickLabelFont = LinePlotJFree.TICK_LABEL_FONT;
+    Font tickLabelFont = TICK_LABEL_FONT;
     Font labelFont = LinePlotJFree.LABEL_FONT;
     
 
@@ -142,6 +142,7 @@ public class TimePlotJFree extends TimePlotBase {
         //chartPanel.setMouseZoomable(true, true);
     }
     
+    @Override
     public void setLabelFont(Font f){
         labelFont = f;
         XYPlot plot = (XYPlot) chart.getPlot();
@@ -152,6 +153,7 @@ public class TimePlotJFree extends TimePlotBase {
         }
     }
     
+    @Override
     public void setTickLabelFont(Font f){
         tickLabelFont = f;
         XYPlot plot = (XYPlot) chart.getPlot();

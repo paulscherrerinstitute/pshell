@@ -1817,6 +1817,9 @@ public class View extends MainFrame {
         PlotBase.setPlotBackground(preferences.plotBackground);
         PlotBase.setGridColor(preferences.gridColor);
         PlotBase.setOutlineColor(preferences.outlineColor);
+        PlotBase.setDefaultLabelFont(preferences.fontPlotLabel);
+        PlotBase.setDefaultTickFont(preferences.fontPlotTick);
+        PlotPanel.setTitleFont(preferences.fontPlotTitle);
         HistoryChart.setDefaultAsync(preferences.asyncViewersUpdate);
 
         if (preferences.linePlot != null) {

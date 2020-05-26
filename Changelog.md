@@ -47,6 +47,8 @@
 * Added keys(), values() and items() methods do Subsctiptable.Mapped interface (e.g: BS stream value).
 
 * Run Next command (Menu Shell->Run Next).
+
+* Configuration of plot fonts.
   
 
 ### Changed

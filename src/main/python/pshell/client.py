@@ -339,7 +339,7 @@ class PShellClient:
         """
         Initializes server event loop task.
         Args:    
-            subscribed_events: list of event names to substribe to. If None subscribes to all.
+            subscribed_events: list of event names to subscribe to. If None subscribes to all.
             event_callback: callback function. If None, self.on_event is called instead.
 
         Usage example:

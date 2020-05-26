@@ -127,6 +127,11 @@ public interface Plot<T extends PlotSeries> {
     
     default void setPlotOutlineColor(Color c) {};      
     
+    default void setLabelFont(Font f) {}
+
+    default void setTickLabelFont(Font f) {}
+    
+    
     
     @Hidden
     public static Plot newPlot(String className) throws ClassNotFoundException, InstantiationException, IllegalAccessException {

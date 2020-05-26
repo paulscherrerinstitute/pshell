@@ -74,7 +74,7 @@ public class PlotPanel extends MonitoredPanel {
     static public Quality DEFAULT_PLOT_QUALITY = Quality.High;
     static public PlotLayout DEFAULT_PLOT_LAYOUT = PlotLayout.Vertical;
 
-    public static final Font TITLE_FONT = new Font(Font.SANS_SERIF, Font.BOLD, 13);
+    static Font TITLE_FONT = new Font(Font.SANS_SERIF, Font.BOLD, 13);
     public static final int DEFAULT_RANGE_STEPS = 199;
 
     public static final boolean offscreen = App.isOffscreenPlotting();
@@ -93,6 +93,14 @@ public class PlotPanel extends MonitoredPanel {
         updating = new AtomicBoolean(false);
         prefs = new PlotPreferences();
     }
+    
+    public static void setTitleFont(Font font) {
+        TITLE_FONT = font;
+    }
+
+    public static  Font getTitleFont() {
+        return TITLE_FONT;
+    }    
 
     static public String getLinePlotImpl() {
         String impl = System.getProperty(PROPERTY_PLOT_IMPL_LINE);

@@ -65,6 +65,10 @@ abstract public class PlotBase<T extends PlotSeries> extends MonitoredPanel impl
 
     protected static int SNAPSHOT_WIDTH = 1200;
     protected static int SNAPSHOT_HEIGHT = 1000;
+    
+    protected static Font TICK_LABEL_FONT = new Font(Font.SANS_SERIF, 0, 10);
+    protected static Font LABEL_FONT = new Font(Font.SANS_SERIF, 0, 11);
+    
 
     final Class seriesType;
 
@@ -697,6 +701,23 @@ abstract public class PlotBase<T extends PlotSeries> extends MonitoredPanel impl
     public static Colormap getDefaultColormap() {
 
         return defaultColormap;
+    }
+        
+    public static void setDefaultLabelFont(Font font) {
+        LABEL_FONT = font;
+    }
+
+    public static Font getDefaultLabelFont() {
+
+        return LABEL_FONT;
+    }
+
+    public static void setDefaultTickFont(Font font) {
+        TICK_LABEL_FONT = font;
+    }
+
+    public static Font getDefaultTickFont() {
+        return TICK_LABEL_FONT;
     }
 
     static public int getMarkerSize() {

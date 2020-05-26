@@ -574,8 +574,8 @@ public class MatrixPlotJFree extends MatrixPlotBase {
         // Set axis: (plus half bin size on both sides), since we plot the bins centered.
         xAxis = new NumberAxis("");
         yAxis = new NumberAxis("");
-        xAxis.setTickLabelFont(LinePlotJFree.TICK_LABEL_FONT);
-        yAxis.setTickLabelFont(LinePlotJFree.TICK_LABEL_FONT);
+        xAxis.setTickLabelFont(TICK_LABEL_FONT);
+        yAxis.setTickLabelFont(TICK_LABEL_FONT);
         xAxis.setLabelFont(LinePlotJFree.LABEL_FONT);
         yAxis.setLabelFont(LinePlotJFree.LABEL_FONT);
         xAxis.setLabelPaint(getAxisTextColor());

@@ -70,6 +70,9 @@ public class Preferences {
     public Font fontShellCommand;
     public Font fontOutput;
     public Font fontEditor;
+    public Font fontPlotLabel;
+    public Font fontPlotTick;
+    public Font fontPlotTitle;
     public int tabSize = 4;
     public int contentWidth;
     public Color editorBackground;
@@ -122,6 +125,10 @@ public class Preferences {
         preferences.fontEditor = fonts[1];
         preferences.fontOutput = fonts[2];
         preferences.fontShellCommand = fonts[3];
+        preferences.fontPlotLabel = fonts[4];
+        preferences.fontPlotTick = fonts[5];
+        preferences.fontPlotTitle= fonts[6];
+        new Font(Font.SANS_SERIF, Font.BOLD, 13);
         preferences.defaultPanels = getDefaultPanels();
         preferences.consoleLocation = DEFAULT_CONSOLE_LOCATION;
         //preferences.propagateVariableEvaluation = true;
@@ -181,12 +188,18 @@ public class Preferences {
                 ? new Font("Lucida Console", 0, 11)
                 : new Font(Font.MONOSPACED, 0, 13);
         Font commandFont = new Font(Font.SANS_SERIF, 0, 13);
+        Font plotLabelFont = new Font(Font.SANS_SERIF, 0, 11);        
+        Font plotTickFont = new Font(Font.SANS_SERIF, 0, 10); 
+        Font plotTitleFont =  new Font(Font.SANS_SERIF, Font.BOLD, 13);
 
         return new Font[]{
             editorFont,
             editorFont,
             editorFont,
-            commandFont
+            commandFont,
+            plotLabelFont,
+            plotTickFont,
+            plotTitleFont
         };
     }
 
