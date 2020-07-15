@@ -23,9 +23,6 @@ class Waveform(ReadonlyRegisterBase, ReadonlyRegisterArray):
         self.val = to_array(self.calc(), 'd')
         return self.val
 
-    def getSize(self):
-        return len(self.take(-1))    #only reads if cache is None
-
 class Image(ReadonlyRegisterBase, ReadonlyRegisterMatrix):
     def doRead(self):
         time.sleep(0.001)

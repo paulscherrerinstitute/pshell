@@ -38,6 +38,7 @@
 
 from __future__ import absolute_import
 import traceback
+import os
 
 
 import Jama.Matrix
@@ -47,7 +48,6 @@ if not diffcalc_path in sys.path:
 
 import diffcalc
 import math
-import os
 from diffcalc import settings
 from diffcalc.hkl.you.geometry import YouGeometry,SixCircle, FiveCircle, FourCircle, YouPosition
 from diffcalc.hardware import HardwareAdapter

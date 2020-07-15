@@ -11,6 +11,10 @@ public interface Register<T> extends ReadonlyRegister<T>, Writable<T> {
     }
 
     public interface RegisterArray<T> extends Register<T>, ReadonlyRegisterArray<T>, WritableArray<T> {
+        @Override
+        default public int getSize() {            
+            return ReadonlyRegisterArray.super.getSize();
+        }           
     }
 
     public interface RegisterBoolean extends Register<Boolean>, ReadonlyRegisterBoolean, WritableBoolean {

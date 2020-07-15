@@ -26,6 +26,24 @@ public interface ReadonlyRegister<T> extends Device, Readable<T>, Cacheable<T> {
         default public void setSize(int size) throws IOException {
             throw new IOException("Cannot change array size");
         }
+        
+        @Override
+        /**
+         * Derived classes may define size by overriding this method.
+         * Default implementation verifies size of cache.
+         */
+        default public int getSize() {
+            Object cache;
+            try {
+                cache = take(-1);
+            } catch (Exception ex) {
+                cache = null;
+            }
+            if ((cache == null) || (!cache.getClass().isArray())) {
+                return 0;
+            }
+            return Array.getLength(cache);
+        }        
     }
 
     public interface ReadonlyRegisterMatrix<T> extends ReadonlyRegister<T>, Readable.ReadableMatrix<T>, Cacheable.CacheableMatrix<T> {
@@ -37,19 +55,6 @@ public interface ReadonlyRegister<T> extends Device, Readable<T>, Cacheable<T> {
 
     public interface ReadonlyRegisterString extends ReadonlyRegister<String>, StringType, Cacheable.CacheableString {
     }    
-
-    //TODO: Not implemented in ReadonlyRegisterArray so Jython classes can override getSize in ReadonlyRegisterArray (http://bugs.jython.org/issue2403)
-    public interface DefaultReadonlyRegisterArray<T> extends ReadonlyRegisterArray<T> {
-
-        @Override
-        default int getSize() {
-            Object cache = take();
-            if ((cache == null) || (!cache.getClass().isArray())) {
-                return 0;
-            }
-            return Array.getLength(cache);
-        }
-    }
 
     /**
      * Performs a take if monitored, otherwise a read.

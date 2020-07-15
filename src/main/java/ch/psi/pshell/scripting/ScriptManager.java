@@ -76,15 +76,6 @@ public class ScriptManager implements AutoCloseable {
         if (engine == null) {
             throw new RuntimeException("Error instantiating script engine");
         }
-        
-        if (type == ScriptType.py) {
-            //TODO: __name__ is set to '__builtin__' in Jython under Java Scripting API.Setting to __main__. Are there consequences?            
-            PyObject globals = Py.newStringMap();
-            PyModule module = new PyModule("__main__", globals);        
-            PySystemState systemState= Py.getSystemState();
-            systemState.modules.__setitem__("__main__", module);
-            engine.put("__name__", "__main__");
-        }
 
         boolean threaded = false;
         try{

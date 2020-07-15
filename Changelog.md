@@ -1,5 +1,25 @@
 # Changelog
 
+
+## 1.14.0
+
+### Added
+ 
+* None
+
+### Changed
+
+* Jython 2.7.2
+
+* ReadonlyRegisterArray has default getSize (returning size of cache)
+
+
+### Fixed
+
+* None
+
+
+
 ## 1.14.0
 
 ### Added
