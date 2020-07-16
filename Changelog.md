@@ -1,7 +1,7 @@
 # Changelog
 
 
-## 1.14.0
+## 1.15.0
 
 ### Added
  
@@ -9,9 +9,11 @@
 
 ### Changed
 
+* Java 11 is required to run PShell (source and bin formats are set to Java 11).
+
 * Jython 2.7.2
 
-* ReadonlyRegisterArray has default getSize (returning size of cache)
+* ReadonlyRegisterArray has default getSize (returning size of cache).
 
 
 ### Fixed

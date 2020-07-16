@@ -7,9 +7,9 @@ PShell is a scripting environment for experiments developed at PSI.
 
 # Installation
 
-The only requirement for running PShell is Java 8 JRE. 
-Java 8 JDK is needed if using dynamic plugins (compiled on-the-fly). 
-Netbeans 8 is required for visually editing graphical plugins.
+The only requirement for running PShell is Java 11 or superior. 
+The JDK is needed if using dynamic plugins (compiled on-the-fly). 
+Netbeans 11.3 or superior is required for visually editing graphical plugins.
 
  1. Download or build the JAR file pshell-*.jar
 

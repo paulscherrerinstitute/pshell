@@ -10,12 +10,11 @@ version = '1.15.0'
 group = 'ch.psi'
 ext.timestamp = new Date().format("yyMMddHHmm")
 
-//py, groovy, js or all
-ext.type = 'py'
+ext.type = 'py'     //py, groovy, js or all
+ext.javafx = false
+ext.addopens = 'java.base/sun.nio.ch java.base/java.io java.desktop/sun.awt java.desktop/javax.swing.text.html java.desktop/sun.swing java.base/jdk.internal.loader jdk.nashorn.internal.runtime'
+sourceCompatibility = '1.11'
 
-ext.addopens = 'java.base/sun.nio.ch java.base/java.io java.desktop/sun.awt java.desktop/javax.swing.text.html java.desktop/sun.swing java.base/jdk.internal.loader'
-    
-sourceCompatibility = '1.8'
 [compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
 
 if (!hasProperty('mainClass')) {
@@ -209,9 +208,18 @@ task generateRpm(type: Rpm) {
     link(sys_lib + "pshell.jar", sys_lib + fatJar.archiveName) 
 }
 
-compileJava {
-    //So we have parameter names for reflection
-    options.compilerArgs << '-parameters'
+if (ext.javafx == false){
+    compileJava {
+        //So we have parameter names for reflection
+        options.compilerArgs << '-parameters'    
+        exclude '**/LinePlotJavaFx.java'
+    }
+    
+} else {
+    compileJava {
+        //So we have parameter names for reflection
+        options.compilerArgs << '-parameters'    
+    }
 }
 
 

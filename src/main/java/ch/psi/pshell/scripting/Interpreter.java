@@ -10,8 +10,6 @@ import javax.script.Compilable;
 import javax.script.CompiledScript;
 import javax.script.ScriptEngine;
 import javax.script.ScriptException;
-import jdk.nashorn.internal.runtime.JSErrorType;
-import jdk.nashorn.internal.runtime.ParserException;
 
 public class Interpreter {
 
@@ -171,15 +169,21 @@ public class Interpreter {
 
                 switch (type) {
                     case js:
-                        if (se.getCause() instanceof ParserException) {
-                            ParserException pex = (ParserException) se.getCause();
-                            Integer pos = pex.getPosition();
-                            if (pex.getErrorType() == JSErrorType.SYNTAX_ERROR) {
-                                if (pos == string.length()) {
-                                    rethrow = false;
-                                } else if (string.contains("/*") && !string.contains("*/")) {
-                                    rethrow = false;
-                                }
+                        Throwable cause = se.getCause();
+                        if (cause != null) {
+                            if (cause.getClass().getSimpleName().equals("ParserException")) {
+                                try{
+                                    Integer pos = (Integer) cause.getClass().getMethod("getPosition").invoke(cause);
+                                    String type = cause.getClass().getMethod("getErrorType").invoke(cause).toString();
+                                    if (type.equals("SYNTAX_ERROR")) {
+                                         if (pos == string.length()) {
+                                             rethrow = false;
+                                         } else if (string.contains("/*") && !string.contains("*/")) {
+                                             rethrow = false;
+                                         }
+                                    }
+                                } catch (Exception e){                                    
+                                }                            
                             }
                         }
                         break;
