@@ -8,10 +8,17 @@ The latest stable build (pshell-<version>-fat.jar) can be download from [here](h
 
 # Requirements
 
-The only requirement for running PShell is Java 11 or superior. 
+The only requirement for running PShell is Java: 
 
- * The JDK is needed if using dynamic plugins (compiled on-the-fly). 
- * Netbeans 11.3 or superior is required for visually editing graphical plugins.
+ * Version from 1.15 onward require Java 11 or superior. 
+ * Versions up to 1.14 require Java 8 or superior. 
+
+The JDK is needed if using dynamic plugins (compiled on-the-fly). 
+
+Netbeans is required for visually editing graphical plugins.
+
+ * Version from 1.15 onward require Netbeans 11.3 or superior. 
+ * Versions up to 1.14 require Netbeans 8 or superior. 
 
 
 
