@@ -1499,7 +1499,7 @@ class Channel(java.beans.PropertyChangeListener, Writable, Readable):
     def close(self):
         """Close the channel.
         """
-        self.channel.destroy()
+        Epics.closeChannel(self.channel)
 
     def write(self, value):
         self.put(value)
@@ -1507,6 +1507,11 @@ class Channel(java.beans.PropertyChangeListener, Writable, Readable):
     def read(self):
         return self.get()
 
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *args):
+        self.close()
 
 ###################################################################################################
 #Concurrent execution
@@ -1701,7 +1706,7 @@ def is_interpreter_thread():
 ###################################################################################################
 
 def commit(message, force = False):
-    """Commit the changes to the repository. If manual commit is not configured then there is no need to call this function: commits are made as needed.
+    """Commit the changes to the repository.
 
     Args:
         message(str): commit message
