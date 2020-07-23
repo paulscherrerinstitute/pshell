@@ -207,10 +207,10 @@ def is_string(obj):
 
 
 ###################################################################################################
-#Standard scan commands
+#Scan commands
 ###################################################################################################
 
-def on_before_scan_readout(scan, pos):
+def __before_readout(scan, pos):
     try:
         if scan.before_read != None:
             arguments = scan.before_read.func_code.co_argcount
@@ -223,7 +223,7 @@ def on_before_scan_readout(scan, pos):
     except AttributeError:
         pass
 
-def on_after_scan_readout(scan, record):
+def __after_readout(scan, record):
     try:
         if scan.after_read != None:
             arguments = scan.after_read.func_code.co_argcount
@@ -236,7 +236,7 @@ def on_after_scan_readout(scan, record):
     except AttributeError:
         pass
 
-def on_before_scan_pass(scan, num_pass):
+def __before_pass(scan, num_pass):
     try:
         if scan.before_pass != None:
             arguments = scan.before_pass.func_code.co_argcount
@@ -249,7 +249,7 @@ def on_before_scan_pass(scan, num_pass):
     except AttributeError:
         pass
 
-def on_after_scan_pass(scan, num_pass):
+def __after_pass(scan, num_pass):
     try:
         if scan.after_pass != None:
             arguments = scan.after_pass.func_code.co_argcount
@@ -262,122 +262,73 @@ def on_after_scan_pass(scan, num_pass):
     except AttributeError:
         pass
 
+def __before_region(scan, num_region):
+    try:
+        if scan.before_region != None:
+            arguments = scan.before_region.func_code.co_argcount
+            if arguments == 0:
+                scan.before_region()
+            elif arguments==1:
+                scan.before_region(num_region)
+            elif arguments==2:
+                scan.before_region(num_region, scan)
+    except AttributeError:
+        pass
+
 class LineScan(ch.psi.pshell.scan.LineScan):
-    def onBeforeReadout(self, pos):
-        on_before_scan_readout(self, pos)
-
-    def onAfterReadout(self, record):
-        on_after_scan_readout(self, record)
-
-    def onBeforePass(self, num_pass):
-        on_before_scan_pass(self, num_pass)
-
-    def onAfterPass(self, num_pass):
-        on_after_scan_pass(self, num_pass)
+    def onBeforeReadout(self, pos): __before_readout(self, pos)
+    def onAfterReadout(self, rec): __after_readout(self, rec)
+    def onBeforePass(self, num): __before_pass(self, num)
+    def onAfterPass(self, num): __after_pass(self, num)
 
 class ContinuousScan(ch.psi.pshell.scan.ContinuousScan):
-    def onBeforeReadout(self, pos):
-        on_before_scan_readout(self, pos)
-
-    def onAfterReadout(self, record):
-        on_after_scan_readout(self, record)
-
-    def onBeforePass(self, num_pass):
-        on_before_scan_pass(self, num_pass)
-
-    def onAfterPass(self, num_pass):
-        on_after_scan_pass(self, num_pass)
+    def onBeforeReadout(self, pos): __before_readout(self, pos)
+    def onAfterReadout(self, rec): __after_readout(self, rec)
+    def onBeforePass(self, num): __before_pass(self, num)
+    def onAfterPass(self, num): __after_pass(self, num)
 
 class AreaScan(ch.psi.pshell.scan.AreaScan):
-    def onBeforeReadout(self, pos):
-        on_before_scan_readout(self, pos)
-
-    def onAfterReadout(self, record):
-        on_after_scan_readout(self, record)
-
-    def onBeforePass(self, num_pass):
-        on_before_scan_pass(self, num_pass)
-
-    def onAfterPass(self, num_pass):
-        on_after_scan_pass(self, num_pass)
+    def onBeforeReadout(self, pos): __before_readout(self, pos)
+    def onAfterReadout(self, rec): __after_readout(self, rec)
+    def onBeforePass(self, num): __before_pass(self, num)
+    def onAfterPass(self, num): __after_pass(self, num)
 
 class RegionScan(ch.psi.pshell.scan.RegionScan):
-    def onBeforeReadout(self, pos):
-        on_before_scan_readout(self, pos)
-
-    def onAfterReadout(self, record):
-        on_after_scan_readout(self, record)
-
-    def onBeforePass(self, num_pass):
-        on_before_scan_pass(self, num_pass)
-
-    def onAfterPass(self, num_pass):
-        on_after_scan_pass(self, num_pass)
+    def onBeforeReadout(self, pos): __before_readout(self, pos)
+    def onAfterReadout(self, rec): __after_readout(self, rec)
+    def onBeforePass(self, num): __before_pass(self, num)
+    def onAfterPass(self, num): __after_pass(self, num)
+    def onBeforeRegion(self, num): __before_region(self,num)
 
 class VectorScan(ch.psi.pshell.scan.VectorScan):
-    def onBeforeReadout(self, pos):
-        on_before_scan_readout(self, pos)
-
-    def onAfterReadout(self, record):
-        on_after_scan_readout(self, record)
-
-    def onBeforePass(self, num_pass):
-        on_before_scan_pass(self, num_pass)
-
-    def onAfterPass(self, num_pass):
-        on_after_scan_pass(self, num_pass)
+    def onBeforeReadout(self, pos): __before_readout(self, pos)
+    def onAfterReadout(self, rec): __after_readout(self, rec)
+    def onBeforePass(self, num): __before_pass(self, num)
+    def onAfterPass(self, num): __after_pass(self, num)
 
 class ContinuousScan(ch.psi.pshell.scan.ContinuousScan):
-    def onBeforeReadout(self, pos):
-        on_before_scan_readout(self, pos)
-
-    def onAfterReadout(self, record):
-        on_after_scan_readout(self, record)
-
-    def onBeforePass(self, num_pass):
-        on_before_scan_pass(self, num_pass)
-
-    def onAfterPass(self, num_pass):
-        on_after_scan_pass(self, num_pass)
+    def onBeforeReadout(self, pos): __before_readout(self, pos)
+    def onAfterReadout(self, rec): __after_readout(self, rec)
+    def onBeforePass(self, num): __before_pass(self, num)
+    def onAfterPass(self, num): __after_pass(self, num)
 
 class TimeScan(ch.psi.pshell.scan.TimeScan):
-    def onBeforeReadout(self, pos):
-        on_before_scan_readout(self, pos)
-
-    def onAfterReadout(self, record):
-        on_after_scan_readout(self, record)
-
-    def onBeforePass(self, num_pass):
-        on_before_scan_pass(self, num_pass)
-
-    def onAfterPass(self, num_pass):
-        on_after_scan_pass(self, num_pass)
+    def onBeforeReadout(self, pos): __before_readout(self, pos)
+    def onAfterReadout(self, rec): __after_readout(self, rec)
+    def onBeforePass(self, num): __before_pass(self, num)
+    def onAfterPass(self, num): __after_pass(self, num)
 
 class MonitorScan(ch.psi.pshell.scan.MonitorScan):
-    def onBeforeReadout(self, pos):
-        on_before_scan_readout(self, pos)
-
-    def onAfterReadout(self, record):
-        on_after_scan_readout(self, record)
-
-    def onBeforePass(self, num_pass):
-        on_before_scan_pass(self, num_pass)
-
-    def onAfterPass(self, num_pass):
-        on_after_scan_pass(self, num_pass)
+    def onBeforeReadout(self, pos): __before_readout(self, pos)
+    def onAfterReadout(self, rec): __after_readout(self, rec)
+    def onBeforePass(self, num): __before_pass(self, num)
+    def onAfterPass(self, num): __after_pass(self, num)
 
 class BsScan(ch.psi.pshell.bs.BsScan):
-    def onBeforeReadout(self, pos):
-        on_before_scan_readout(self, pos)
-
-    def onAfterReadout(self, record):
-        on_after_scan_readout(self, record)
-
-    def onBeforePass(self, num_pass):
-        on_before_scan_pass(self, num_pass)
-
-    def onAfterPass(self, num_pass):
-        on_after_scan_pass(self, num_pass)
+    def onBeforeReadout(self, pos): __before_readout(self, pos)
+    def onAfterReadout(self, rec): __after_readout(self, rec)
+    def onBeforePass(self, num): __before_pass(self, num)
+    def onAfterPass(self, num): __after_pass(self, num)
 
 class ManualScan (ch.psi.pshell.scan.ManualScan):
     def __init__(self, writables, readables, start = None, end = None, steps = None, relative = False, dimensions = None):
@@ -394,24 +345,19 @@ class ManualScan (ch.psi.pshell.scan.ManualScan):
             return self._dimensions
 
 class BinarySearch(ch.psi.pshell.scan.BinarySearch):
-    def onBeforeReadout(self, pos):
-        on_before_scan_readout(self, pos)
-
-    def onAfterReadout(self, record):
-        on_after_scan_readout(self, record)
+    def onBeforeReadout(self, pos): __before_readout(self, pos)
+    def onAfterReadout(self, rec): __after_readout(self, rec)
 
 class HillClimbingSearch(ch.psi.pshell.scan.HillClimbingSearch):
-    def onBeforeReadout(self, pos):
-        on_before_scan_readout(self, pos)
-
-    def onAfterReadout(self, record):
-        on_after_scan_readout(self, record)
+    def onBeforeReadout(self, pos): __before_readout(self, pos)
+    def onAfterReadout(self, rec): __after_readout(self, rec)
 
 def processScanPars(scan, pars):
     scan.before_read = pars.pop("before_read",None)
     scan.after_read = pars.pop("after_read",None)
     scan.before_pass = pars.pop("before_pass",None)
     scan.after_pass =  pars.pop("after_pass",None)
+    scan.before_region= pars.pop("before_region",None)
     scan.setPlotTitle(pars.pop("title",None))
     scan.setHidden(pars.pop("hidden",False))
     scan.setSettleTimeout (pars.pop("settle_timeout",ScanBase.getScansSettleTimeout()))
@@ -441,10 +387,10 @@ def lscan(writables, readables, start, end, steps, latency=0.0, relative=False, 
         pars(keyworded variable length arguments, optional): scan optional named arguments:
             - title(str, optional): plotting window name.
             - hidden(bool, optional): if true generates no effects on user interface.
-            - before_read (function(positions, scan), optional): callback on each step, before sampling.
-            - after_read (function(record, scan), optional): callback on each step, after sampling.
-            - before_pass (function(pass_num, scan), optional): callback before each scan pass execution.
-            - after_pass (function(pass_num, scan), optional): callback after each scan pass execution.
+            - before_read (function(positions, scan), optional): called on each step, before sampling.
+            - after_read (function(record, scan), optional): called on each step, after sampling.
+            - before_pass (function(pass_num, scan), optional): called before each pass.
+            - after_pass (function(pass_num, scan), optional): callback after each pass.
             - settle_timeout(int, optional): timeout for each positioner get to position. Default (-1) waits forever.
             - initial_move (bool, optional): if true (default) perform move to initial position prior to scan start.
             - parallel_positioning (bool, optional): if true (default) all positioners are set in parallel.
@@ -454,7 +400,7 @@ def lscan(writables, readables, start, end, steps, latency=0.0, relative=False, 
             - Aditional arguments defined by set_exec_pars.
 
     Returns:
-        ScanResult object.
+        ScanResult.
     """
     latency_ms=int(latency*1000)
     writables=to_list(string_to_obj(writables))
@@ -469,7 +415,7 @@ def lscan(writables, readables, start, end, steps, latency=0.0, relative=False, 
     return scan.getResult()
 
 def vscan(writables, readables, vector, line = False, latency=0.0, relative=False, passes=1, zigzag=False, **pars):
-    """Vector Scan: positioners change following values provided in a vector.
+    """Vector Scan: positioner values provided in a vector.
 
     Args:
         writables(list of Writable): Positioners set on each step.
@@ -482,10 +428,10 @@ def vscan(writables, readables, vector, line = False, latency=0.0, relative=Fals
         zigzag(bool, optional): if true writables invert direction on each pass (disregarded if vector is a generator).
         pars(keyworded variable length arguments, optional): scan optional named arguments:
             - title(str, optional): plotting window name.
-            - before_read (function(positions, scan), optional): callback on each step, before sampling.
-            - after_read (function(record, scan), optional): callback on each step, after sampling.
-            - before_pass (function(pass_num, scan), optional): callback before each scan pass execution.
-            - after_pass (function(pass_num, scan), optional): callback after each scan pass execution.
+            - before_read (function(positions, scan), optional): called on each step, before sampling.
+            - after_read (function(record, scan), optional): called on each step, after sampling.
+            - before_pass (function(pass_num, scan), optional): called before each pass.
+            - after_pass (function(pass_num, scan), optional): callback after each pass.
             - settle_timeout(int, optional): timeout for each positioner get to position. Default (-1) waits forever.
             - initial_move (bool, optional): if true (default) perform move to initial position prior to scan start.
             - parallel_positioning (bool, optional): if true (default) all positioners are set in parallel.
@@ -495,7 +441,7 @@ def vscan(writables, readables, vector, line = False, latency=0.0, relative=Fals
             - Aditional arguments defined by set_exec_pars.
 
     Returns:
-        ScanResult object.
+        ScanResult.
     """
     latency_ms=int(latency*1000)
     writables=to_list(string_to_obj(writables))
@@ -528,10 +474,10 @@ def ascan(writables, readables, start, end, steps, latency=0.0, relative=False, 
         zigzag (bool, optional): if true writables invert direction on each row.
         pars(keyworded variable length arguments, optional): scan optional named arguments:
             - title(str, optional): plotting window name.
-            - before_read (function(positions, scan), optional): callback on each step, before sampling.
-            - after_read (function(record, scan), optional): callback on each step, after sampling.
-            - before_pass (function(pass_num, scan), optional): callback before each scan pass execution.
-            - after_pass (function(pass_num, scan), optional): callback after each scan pass execution.
+            - before_read (function(positions, scan), optional): called on each step, before sampling.
+            - after_read (function(record, scan), optional): called on each step, after sampling.
+            - before_pass (function(pass_num, scan), optional): called before each pass.
+            - after_pass (function(pass_num, scan), optional): callback after each pass.
             - settle_timeout(int, optional): timeout for each positioner get to position. Default (-1) waits forever.
             - initial_move (bool, optional): if true (default) perform move to initial position prior to scan start.
             - parallel_positioning (bool, optional): if true (default) all positioners are set in parallel.
@@ -541,7 +487,7 @@ def ascan(writables, readables, start, end, steps, latency=0.0, relative=False, 
             - Aditional arguments defined by set_exec_pars.
 
     Returns:
-        ScanResult object.
+        ScanResult.
     """
     latency_ms=int(latency*1000)
     writables=to_list(string_to_obj(writables))
@@ -570,10 +516,11 @@ def rscan(writable, readables, regions, latency=0.0, relative=False, passes=1, z
         zigzag(bool, optional): if true writable invert direction on each pass.
         pars(keyworded variable length arguments, optional): scan optional named arguments:
             - title(str, optional): plotting window name.
-            - before_read (function(positions, scan), optional): callback on each step, before sampling.
-            - after_read (function(record, scan), optional): callback on each step, after sampling.
-            - before_pass (function(pass_num, scan), optional): callback before each scan pass execution.
-            - after_pass (function(pass_num, scan), optional): callback after each scan pass execution.
+            - before_read (function(positions, scan), optional): called on each step, before sampling.
+            - after_read (function(record, scan), optional): called on each step, after sampling.
+            - before_pass (function(pass_num, scan), optional): called before each pass.
+            - after_pass (function(pass_num, scan), optional): callback after each pass.
+            - before_region (function(region_num, scan), optional): callback before entering a region.
             - settle_timeout(int, optional): timeout for each positioner get to position. Default (-1) waits forever.
             - initial_move (bool, optional): if true (default) perform move to initial position prior to scan start.
             - parallel_positioning (bool, optional): if true (default) all positioners are set in parallel.
@@ -583,7 +530,7 @@ def rscan(writable, readables, regions, latency=0.0, relative=False, passes=1, z
             - Aditional arguments defined by set_exec_pars.
 
     Returns:
-        ScanResult object.
+        ScanResult.
     """
     start=[]
     end=[]
@@ -619,16 +566,16 @@ def cscan(writables, readables, start, end, steps, latency=0.0, time=None, relat
         passes(int, optional): number of passes
         pars(keyworded variable length arguments, optional): scan optional named arguments:
             - title(str, optional): plotting window name.
-            - before_read (function(positions, scan), optional): callback on each step, before sampling.
-            - after_read (function(record, scan), optional): callback on each step, after sampling.
-            - before_pass (function(pass_num, scan), optional): callback before each scan pass execution.
-            - after_pass (function(pass_num, scan), optional): callback after each scan pass execution.
+            - before_read (function(positions, scan), optional): called on each step, before sampling.
+            - after_read (function(record, scan), optional): called on each step, after sampling.
+            - before_pass (function(pass_num, scan), optional): called before each pass.
+            - after_pass (function(pass_num, scan), optional): callback after each pass.
             - abort_on_error (bool, optional): if true then aborts scan in sensor failures. Default is false.
             - restore_position (bool, optional): if true (default) then restore initial position after relative scans.
             - Aditional arguments defined by set_exec_pars.
 
     Returns:
-        ScanResult object.
+        ScanResult.
     """
     latency_ms=int(latency*1000)
     readables=to_list(string_to_obj(readables))
@@ -670,18 +617,18 @@ def hscan(config, writable, readables, start, end, steps, passes=1, zigzag=False
             - Aditional arguments defined by set_exec_pars.
 
     Returns:
-        ScanResult object.
+        ScanResult.
     """
     cls = Class.forName(config["class"])
     class HardwareScan(cls):
         def __init__(self, config, writable, readables, start, end, stepSize, passes, zigzag):
             cls.__init__(self, config, writable, readables, start, end, stepSize, passes, zigzag)
         def onAfterReadout(self, record):
-            on_after_scan_readout(self, record)
+            __after_readout(self, record)
         def onBeforePass(self, num_pass):
-            on_before_scan_pass(self, num_pass)
+            __before_pass(self, num_pass)
         def onAfterPass(self, num_pass):
-            on_after_scan_pass(self, num_pass)
+            __after_pass(self, num_pass)
 
     readables=to_list(string_to_obj(readables))
     scan = HardwareScan(config, writable,readables, start, end , steps, int(passes), zigzag)
@@ -699,14 +646,14 @@ def bscan(stream, records, timeout = None, passes=1, **pars):
         passes(int, optional): number of passes
         pars(keyworded variable length arguments, optional): scan optional named arguments:
             - title(str, optional): plotting window name.
-            - before_read (function(positions, scan), optional): callback on each step, before sampling.
-            - after_read (function(record, scan), optional): callback on each step, after sampling.
-            - before_pass (function(pass_num, scan), optional): callback before each scan pass execution.
-            - after_pass (function(pass_num, scan), optional): callback after each scan pass execution.
+            - before_read (function(positions, scan), optional): called on each step, before sampling.
+            - after_read (function(record, scan), optional): called on each step, after sampling.
+            - before_pass (function(pass_num, scan), optional): called before each pass.
+            - after_pass (function(pass_num, scan), optional): callback after each pass.
             - Aditional arguments defined by set_exec_pars.
 
     Returns:
-        ScanResult object.
+        ScanResult.
     """
     timeout_ms=int(timeout*1000) if ((timeout is not None) and (timeout>=0)) else -1
     if not is_list(stream):
@@ -726,15 +673,15 @@ def tscan(readables, points, interval, passes=1, **pars):
         passes(int, optional): number of passes
         pars(keyworded variable length arguments, optional): scan optional named arguments:
             - title(str, optional): plotting window name.
-            - before_read (function(positions, scan), optional): callback on each step, before sampling.
-            - after_read (function(record, scan), optional): callback on each step, after sampling.
-            - before_pass (function(pass_num, scan), optional): callback before each scan pass execution.
-            - after_pass (function(pass_num, scan), optional): callback after each scan pass execution.
+            - before_read (function(positions, scan), optional): called on each step, before sampling.
+            - after_read (function(record, scan), optional): called on each step, after sampling.
+            - before_pass (function(pass_num, scan), optional): called before each pass.
+            - after_pass (function(pass_num, scan), optional): callback after each pass.
             - abort_on_error (bool, optional): if true then aborts scan in sensor failures. Default is false.
             - Aditional arguments defined by set_exec_pars.
 
     Returns:
-        ScanResult object.
+        ScanResult.
     """
     interval= max(interval, 0.001)   #Minimum temporization is 1ms
     interval_ms=int(interval*1000)
@@ -762,15 +709,15 @@ def mscan(trigger, readables, points, timeout = None, async=True, take_initial=F
         passes(int, optional): number of passes
         pars(keyworded variable length arguments, optional): scan optional named arguments:
             - title(str, optional): plotting window name.
-            - before_read (function(positions, scan), optional): callback on each step, before sampling.
-            - after_read (function(record, scan), optional): callback on each step, after sampling.
-            - before_pass (function(pass_num, scan), optional): callback before each scan pass execution.
-            - after_pass (function(pass_num, scan), optional): callback after each scan pass execution.
+            - before_read (function(positions, scan), optional): called on each step, before sampling.
+            - after_read (function(record, scan), optional): called on each step, after sampling.
+            - before_pass (function(pass_num, scan), optional): called before each pass.
+            - after_pass (function(pass_num, scan), optional): callback after each pass.
             - abort_on_error (bool, optional): if true then aborts scan in sensor failures. Default is false.
             - Aditional arguments defined by set_exec_pars.
 
     Returns:
-        ScanResult object.
+        ScanResult.
     """
     timeout_ms=int(timeout*1000) if ((timeout is not None) and (timeout>=0)) else -1
     trigger = string_to_obj(trigger)
@@ -791,7 +738,7 @@ def escan(name, **pars):
             - Aditional arguments defined by set_exec_pars.
 
     Returns:
-        ScanResult object.
+        ScanResult.
     """
     scan = EpicsScan(name)
     processScanPars(scan, pars)
@@ -818,8 +765,8 @@ def bsearch(writables, readable, start, end, steps, maximum = True, strategy = "
         relative (bool, optional): if true, start and end positions are relative to current.
         pars(keyworded variable length arguments, optional): scan optional named arguments:
             - title(str, optional): plotting window name.
-            - before_read (function(positions, scan), optional): callback on each step, before sampling.
-            - after_read (function(record, scan), optional): callback on each step, after sampling.
+            - before_read (function(positions, scan), optional): called on each step, before sampling.
+            - after_read (function(record, scan), optional): called on each step, after sampling.
             - settle_timeout(int, optional): timeout for each positioner get to position. Default (-1) waits forever.
             - parallel_positioning (bool, optional): if true (default) all positioners are set in parallel.
             - abort_on_error (bool, optional): if true then aborts scan in sensor failures. Default is false.
@@ -828,7 +775,7 @@ def bsearch(writables, readable, start, end, steps, maximum = True, strategy = "
             - Aditional arguments defined by set_exec_pars.
 
     Returns:
-        SearchResult object.
+        SearchResult.
     """
     latency_ms=int(latency*1000)
     writables=to_list(string_to_obj(writables))
@@ -857,8 +804,8 @@ def hsearch(writables, readable, range_min, range_max, initial_step, resolution,
         relative (bool, optional): if true, start and end positions are relative to current.
         pars(keyworded variable length arguments, optional): scan optional named arguments:
             - title(str, optional): plotting window name.
-            - before_read (function(positions, scan), optional): callback on each step, before sampling.
-            - after_read (function(record, scan), optional): callback on each step, after sampling.
+            - before_read (function(positions, scan), optional): called on each step, before sampling.
+            - after_read (function(record, scan), optional): called on each step, after sampling.
             - settle_timeout(int, optional): timeout for each positioner get to position. Default (-1) waits forever.
             - parallel_positioning (bool, optional): if true (default) all positioners are set in parallel.
             - abort_on_error (bool, optional): if true then aborts scan in sensor failures. Default is false.
@@ -867,7 +814,7 @@ def hsearch(writables, readable, range_min, range_max, initial_step, resolution,
             - Aditional arguments defined by set_exec_pars.
 
     Returns:
-        SearchResult object.
+        SearchResult.
     """
     latency_ms=int(latency*1000)
     writables=to_list(string_to_obj(writables))
@@ -897,7 +844,7 @@ def plot(data, name = None, xdata = None, ydata=None, title=None):
         title(str, optional): plotting window name.
 
     Returns:
-        ArrayList of Plot objects.
+        ArrayList of Plot.
     """
     if isinstance(data, ch.psi.pshell.data.Table):
         if is_list(xdata):
@@ -937,7 +884,7 @@ def get_plots(title=None):
         title(str, optional): plotting window name.
 
     Returns:
-        ArrayList of Plot objects.
+        ArrayList of Plot.
     """
     return get_context().getPlots(title)
 
@@ -970,7 +917,7 @@ def get_plot_snapshots(title = None, file_type = "png", size = None, temp_path =
 
 
 ###################################################################################################
-#Data access functions
+#Data access
 ###################################################################################################
 
 def load_data(path, index=0, shape=None):
@@ -1233,7 +1180,7 @@ def get_exec_pars():
 
 
 ###################################################################################################
-#EPICS channel access
+#EPICS
 ###################################################################################################
 
 def _adjust_channel_value(value, var_type=None):
@@ -1536,7 +1483,7 @@ def fork(*functions):
         *functions(function references)
 
     Returns:
-        List of callable objects
+        List of callable
     """
     callables = []
     for m in functions:
@@ -1630,8 +1577,7 @@ def abort():
     Returns:
         None
     """
-    #Cannot be on script execution thread
-    fork(get_context().abort)
+    fork(get_context().abort) #Cannot be on script execution thread
     while True: sleep(10.0)
 
 def start_task(script, delay = 0.0, interval = -1):
@@ -1702,7 +1648,7 @@ def is_interpreter_thread():
 
 
 ###################################################################################################
-#Versioning tools
+#Versioning
 ###################################################################################################
 
 def commit(message, force = False):
@@ -1781,7 +1727,7 @@ def cleanup_repository():
 
 
 ###################################################################################################
-#Device Pool functions
+#Device Pool
 ###################################################################################################
 
 def get_device(device_name):
@@ -1799,7 +1745,7 @@ def add_device(device, force = False):
     """Add  a device (or imaging source) to the device pool.
 
     Args:
-        device(Device or Source): device object.
+        device(Device or Source)
         force(boolean, optional): if true then dispose existing device with same name.
              Otherwise will fail in case of name clash.
 
@@ -1818,7 +1764,7 @@ def remove_device(device):
     """Remove a device (or imaging source) from the device pool.
 
     Args:
-        device(Device or Source): device object.
+        device(Device or Source)
 
     Returns:
         bool: true if device was removed.
@@ -1829,7 +1775,7 @@ def set_device_alias(device, alias):
     """Set a device alias to be used in scans (datasets and plots).
 
     Args:
-        device(Device): device object.
+        device(Device)
         alias(str): replace device name in scans.
 
     Returns:
@@ -1889,8 +1835,7 @@ def create_averager(dev, count, interval=0.0, name = None,  monitored = False):
     Args:
         dev(Device): the source device
         count(int): number of samples
-        interval(float, optional): sampling interval in seconds.
-                                   If less than zero, sampling is made on data change event.
+        interval(float, optional): sampling interval(s). If negative sampling is made on data change event.
         name(str, optional): sets the name of the device (default is: <dev name> averager)
         monitored (bool, optional): if true then averager processes asynchronously.
 
@@ -1933,7 +1878,7 @@ def tweak(dev, step, is2d=False):
 
 
 ###################################################################################################
-#Mathematical functions
+#Maths
 ###################################################################################################
 
 def arrmul(a, b):
@@ -2409,7 +2354,7 @@ def help(object = None):
                 print object.__doc__
 
 ###################################################################################################
-#UI interaction
+#UI
 ###################################################################################################
 
 def set_status(status):
@@ -2449,8 +2394,7 @@ def set_preference(preference, value):
             PLOT_LAYOUT: "Horizontal", "Vertical" or "Grid"
             TABLE_DISABLED: enable/disable scan table (True/False)
             ENABLED_PLOTS: select Readables to be plotted (list of Readable or String (names))
-            PLOT_TYPES: Dictionary or (Readable or String):(String or int) pairs
-                where the key is a plot name and the value is the desired plot type
+            PLOT_TYPES: Dictionary - Plot name(Readable or String) : Plot type(String or int)
             PRINT_SCAN: Print scan records to console
             AUTO_RANGE: Automatic range scan plots x-axis
             MANUAL_RANGE: Manually set scan plots x-axis
@@ -2518,7 +2462,6 @@ def show_panel(device, title=None):
     if is_string(device):
         device = get_device(device)
     return get_context().showPanel(device)
-
 
 
 

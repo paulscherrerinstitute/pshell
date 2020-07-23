@@ -5,7 +5,9 @@
 
 ### Added
  
-* None
+* IntelliJ project
+
+* __before_region__ callback in RegionScan.
 
 ### Changed
 

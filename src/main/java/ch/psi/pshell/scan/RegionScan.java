@@ -35,6 +35,7 @@ public class RegionScan extends DiscreteScan {
     protected void doScan() throws IOException, InterruptedException {
         if (isCurrentPassBackwards()) {
             for (int region = getNumberOfSteps().length - 1; region >= 0; region--) {
+                onBeforeRegion(region);
                 for (int step = getNumberOfSteps()[region]; step >= 0; step--) {
                     double[] pos = new double[]{getWritablePosition(step, region)};
                     processPosition(pos);
@@ -43,6 +44,7 @@ public class RegionScan extends DiscreteScan {
 
         } else {
             for (int region = 0; region < getNumberOfSteps().length; region++) {
+                onBeforeRegion(region);
                 for (int step = 0; step <= getNumberOfSteps()[region]; step++) {
                     double[] pos = new double[]{getWritablePosition(step, region)};
                     processPosition(pos);
@@ -57,6 +59,10 @@ public class RegionScan extends DiscreteScan {
 
         return new double[]{Collections.min(Arrays.asList(arr)), Collections.max(Arrays.asList(arr))};
     }
+    
+    protected void onBeforeRegion(int region) {
+    }
+   
 
     @Override
     public int getDimensions() {
