@@ -8,7 +8,7 @@
 *.*~
 *.jar
 *.log
+gradle.properties
 .nb-gradle-properties
 nbactions.xml
 **/*.class
-/src/main/python/PShellClient/.idea/

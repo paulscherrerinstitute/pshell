@@ -12,7 +12,8 @@ ext.timestamp = new Date().format("yyMMddHHmm")
 
 ext.type = 'py'     //py, groovy, js or all
 ext.javafx = false
-ext.addopens = 'java.base/sun.nio.ch java.base/java.io java.desktop/sun.awt java.desktop/javax.swing.text.html java.desktop/sun.swing java.base/jdk.internal.loader jdk.nashorn.internal.runtime'
+ext.manif_addopens = 'java.base/sun.nio.ch java.base/java.io java.desktop/sun.awt java.desktop/javax.swing.text.html java.desktop/sun.swing java.base/jdk.internal.loader jdk.nashorn.internal.runtime'
+ext.run_addopens = 'java.base/jdk.internal.loader=ALL-UNNAMED'
 sourceCompatibility = '1.11'
 
 [compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
@@ -139,7 +140,7 @@ task fatJar(type: Jar, dependsOn: jar) {
             'Implementation-Version': archiveVersion,
             'Build-Time': timestamp,
             'Build-Type': type,
-            'Add-Opens': addopens
+            'Add-Opens': manif_addopens
             //,'Class-Path': configurations.compile.collect { it.getName() }.join(' ')
         )
     }    
@@ -235,7 +236,7 @@ jar {
             'Main-Class': mainClass, 
             'Implementation-Version': version,
             'Build-Time': timestamp,
-            'Add-Opens': addopens
+            'Add-Opens': manif_addopens
         )
     }       
 }
@@ -249,6 +250,9 @@ task(debug, dependsOn: 'classes', type: JavaExec) {
     args arguments
     ignoreExitValue = true
     debug true
+    jvmArgs = [
+        "--add-opens", run_addopens
+    ]
 }
 
 task(run, dependsOn: 'classes', type: JavaExec) {      
@@ -259,6 +263,9 @@ task(run, dependsOn: 'classes', type: JavaExec) {
     args arguments 
     ignoreExitValue = true
     debug false
+    jvmArgs = [
+        "--add-opens", run_addopens
+    ]
 }
 
 
