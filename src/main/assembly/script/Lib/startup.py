@@ -24,6 +24,7 @@ import java.awt.Dimension as Dimension
 import java.awt.Font as Font
 import org.python.core.PyArray as PyArray
 import org.python.core.PyFunction as PyFunction
+import org.python.core.PyMethod as PyMethod
 import org.python.core.PyGenerator as PyGenerator
 
 import ch.psi.utils.Threading as Threading
@@ -210,68 +211,57 @@ def is_string(obj):
 #Scan commands
 ###################################################################################################
 
+def __no_args(f):
+    ret = f.func_code.co_argcount
+    return (ret-1) if type(f)==PyMethod else ret
+
 def __before_readout(scan, pos):
     try:
         if scan.before_read != None:
-            arguments = scan.before_read.func_code.co_argcount
-            if arguments == 0:
-                scan.before_read()
-            elif arguments==1:
-                scan.before_read(pos.tolist())
-            elif arguments==2:
-                scan.before_read(pos.tolist(), scan)
+            args = __no_args(scan.before_read)
+            if   args==0: scan.before_read()
+            elif args==1: scan.before_read(pos.tolist())
+            elif args==2: scan.before_read(pos.tolist(), scan)
     except AttributeError:
         pass
 
 def __after_readout(scan, record):
     try:
         if scan.after_read != None:
-            arguments = scan.after_read.func_code.co_argcount
-            if  arguments == 0:
-                scan.after_read()
-            elif arguments==1:
-                scan.after_read(record)
-            elif arguments==2:
-                scan.after_read(record, scan)
+            args = __no_args(scan.after_read)
+            if   args==0: scan.after_read()
+            elif args==1: scan.after_read(record)
+            elif args==2: scan.after_read(record, scan)
     except AttributeError:
         pass
 
 def __before_pass(scan, num_pass):
     try:
         if scan.before_pass != None:
-            arguments = scan.before_pass.func_code.co_argcount
-            if arguments == 0:
-                scan.before_pass()
-            elif arguments==1:
-                scan.before_pass(num_pass)
-            elif arguments==2:
-                scan.before_pass(num_pass, scan)
+            args = __no_args(scan.before_pass)
+            if   args==0:scan.before_pass()
+            elif args==1:scan.before_pass(num_pass)
+            elif args==2:scan.before_pass(num_pass, scan)
     except AttributeError:
         pass
 
 def __after_pass(scan, num_pass):
     try:
         if scan.after_pass != None:
-            arguments = scan.after_pass.func_code.co_argcount
-            if  arguments == 0:
-                scan.after_pass()
-            elif arguments==1:
-                scan.after_pass(num_pass)
-            elif arguments==2:
-                scan.after_pass(num_pass, scan)
+            args = __no_args(scan.after_pass)
+            if   args==0:scan.after_pass()
+            elif args==1:scan.after_pass(num_pass)
+            elif args==2:scan.after_pass(num_pass, scan)
     except AttributeError:
         pass
 
 def __before_region(scan, num_region):
     try:
         if scan.before_region != None:
-            arguments = scan.before_region.func_code.co_argcount
-            if arguments == 0:
-                scan.before_region()
-            elif arguments==1:
-                scan.before_region(num_region)
-            elif arguments==2:
-                scan.before_region(num_region, scan)
+            args = __no_args(scan.before_region)
+            if   args==0:scan.before_region()
+            elif args==1:scan.before_region(num_region)
+            elif args==2:scan.before_region(num_region, scan)
     except AttributeError:
         pass
 
