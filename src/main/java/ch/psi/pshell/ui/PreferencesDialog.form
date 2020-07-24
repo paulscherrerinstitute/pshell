@@ -14,6 +14,12 @@
         </Property>
       </Properties>
     </Component>
+    <Component class="javax.swing.JLabel" name="jLabel25">
+      <Properties>
+        <Property name="horizontalAlignment" type="int" value="11"/>
+        <Property name="text" type="java.lang.String" value="Background:"/>
+      </Properties>
+    </Component>
   </NonVisualComponents>
   <Properties>
     <Property name="defaultCloseOperation" type="int" value="2"/>
@@ -735,14 +741,15 @@
             <DimensionLayout dim="0">
               <Group type="103" groupAlignment="0" attributes="0">
                   <Group type="102" attributes="0">
-                      <EmptySpace max="32767" attributes="0"/>
+                      <EmptySpace min="-2" pref="7" max="-2" attributes="0"/>
                       <Group type="103" groupAlignment="0" attributes="0">
-                          <Component id="jLabel11" linkSize="6" alignment="1" min="-2" max="-2" attributes="0"/>
                           <Component id="jLabel10" linkSize="6" alignment="1" min="-2" max="-2" attributes="0"/>
+                          <Component id="jLabel11" linkSize="6" alignment="1" min="-2" max="-2" attributes="0"/>
+                          <Component id="jLabel19" alignment="1" min="-2" max="-2" attributes="0"/>
                           <Component id="jLabel9" linkSize="5" alignment="1" min="-2" max="-2" attributes="0"/>
-                          <Component id="jLabel6" linkSize="5" alignment="1" min="-2" max="-2" attributes="0"/>
-                          <Component id="jLabel7" linkSize="5" alignment="1" min="-2" max="-2" attributes="0"/>
                           <Component id="jLabel8" linkSize="5" alignment="1" min="-2" max="-2" attributes="0"/>
+                          <Component id="jLabel7" linkSize="5" alignment="1" min="-2" max="-2" attributes="0"/>
+                          <Component id="jLabel6" linkSize="5" alignment="1" min="-2" max="-2" attributes="0"/>
                       </Group>
                       <EmptySpace max="-2" attributes="0"/>
                       <Group type="103" groupAlignment="0" attributes="0">
@@ -755,28 +762,26 @@
                                   <Component id="comboQuality" linkSize="7" alignment="1" min="-2" max="-2" attributes="0"/>
                                   <Component id="comboLayout" linkSize="7" alignment="1" min="-2" max="-2" attributes="0"/>
                               </Group>
-                              <EmptySpace pref="84" max="32767" attributes="0"/>
-                              <Group type="103" groupAlignment="0" max="-2" attributes="0">
-                                  <Group type="102" attributes="0">
-                                      <Component id="jLabel15" linkSize="15" min="-2" max="-2" attributes="0"/>
-                                      <EmptySpace max="-2" attributes="0"/>
-                                      <Component id="jPanel4" min="-2" max="-2" attributes="0"/>
-                                      <EmptySpace max="-2" attributes="0"/>
-                                      <Component id="buttonResetBackground" min="-2" max="-2" attributes="0"/>
-                                  </Group>
-                                  <Group type="102" attributes="0">
-                                      <Component id="jLabel19" min="-2" max="-2" attributes="0"/>
-                                      <EmptySpace max="-2" attributes="0"/>
-                                      <Component id="comboColormapPlot" min="-2" max="-2" attributes="0"/>
-                                      <EmptySpace max="32767" attributes="0"/>
-                                      <Component id="jLabel18" linkSize="15" min="-2" max="-2" attributes="0"/>
-                                      <EmptySpace max="-2" attributes="0"/>
-                                      <Component id="spinnerMarkerSize" min="-2" max="-2" attributes="0"/>
-                                  </Group>
+                              <EmptySpace type="separate" pref="36" max="32767" attributes="0"/>
+                              <Group type="103" groupAlignment="0" attributes="0">
+                                  <Component id="jLabel26" linkSize="15" alignment="1" min="-2" max="-2" attributes="0"/>
+                                  <Component id="jLabel15" linkSize="15" alignment="1" min="-2" max="-2" attributes="0"/>
+                                  <Component id="jLabel18" linkSize="15" alignment="1" min="-2" max="-2" attributes="0"/>
                               </Group>
+                              <EmptySpace max="-2" attributes="0"/>
+                              <Group type="103" groupAlignment="0" attributes="0">
+                                  <Component id="jPanel4" alignment="0" min="-2" max="-2" attributes="0"/>
+                                  <Component id="spinnerMarkerSize" alignment="0" min="-2" max="-2" attributes="0"/>
+                                  <Component id="checkOffscreenBuffers" alignment="0" min="-2" max="-2" attributes="0"/>
+                              </Group>
+                              <EmptySpace pref="20" max="32767" attributes="0"/>
+                          </Group>
+                          <Group type="102" alignment="0" attributes="0">
+                              <Component id="comboColormapPlot" linkSize="7" min="-2" max="-2" attributes="0"/>
+                              <EmptySpace min="0" pref="0" max="32767" attributes="0"/>
                           </Group>
                       </Group>
-                      <EmptySpace max="32767" attributes="0"/>
+                      <EmptySpace max="-2" attributes="0"/>
                   </Group>
               </Group>
             </DimensionLayout>
@@ -788,37 +793,41 @@
                           <Component id="jLabel6" alignment="3" min="-2" max="-2" attributes="0"/>
                           <Component id="comboLinePlot" alignment="3" min="-2" max="-2" attributes="0"/>
                       </Group>
-                      <EmptySpace max="-2" attributes="0"/>
+                      <EmptySpace min="-2" pref="2" max="-2" attributes="0"/>
                       <Group type="103" groupAlignment="3" attributes="0">
                           <Component id="jLabel7" alignment="3" min="-2" max="-2" attributes="0"/>
                           <Component id="comboMatrixPlot" alignment="3" min="-2" max="-2" attributes="0"/>
                       </Group>
-                      <EmptySpace max="-2" attributes="0"/>
+                      <EmptySpace min="-2" pref="2" max="-2" attributes="0"/>
                       <Group type="103" groupAlignment="3" attributes="0">
                           <Component id="jLabel8" alignment="3" min="-2" max="-2" attributes="0"/>
                           <Component id="comboSurfacePlot" alignment="3" min="-2" max="-2" attributes="0"/>
                       </Group>
-                      <EmptySpace max="-2" attributes="0"/>
+                      <EmptySpace min="-2" pref="2" max="-2" attributes="0"/>
                       <Group type="103" groupAlignment="3" attributes="0">
                           <Component id="jLabel9" alignment="3" min="-2" max="-2" attributes="0"/>
                           <Component id="comboTimePlot" alignment="3" min="-2" max="-2" attributes="0"/>
                       </Group>
-                      <EmptySpace type="separate" max="-2" attributes="0"/>
+                      <EmptySpace type="unrelated" max="-2" attributes="0"/>
                       <Group type="103" groupAlignment="2" attributes="0">
-                          <Component id="jPanel4" alignment="2" min="-2" max="-2" attributes="0"/>
-                          <Component id="jLabel15" alignment="2" min="-2" max="-2" attributes="0"/>
                           <Component id="comboQuality" alignment="2" min="-2" max="-2" attributes="0"/>
                           <Component id="jLabel10" alignment="2" min="-2" max="-2" attributes="0"/>
-                          <Component id="buttonResetBackground" alignment="2" min="-2" max="-2" attributes="0"/>
+                          <Component id="checkOffscreenBuffers" alignment="2" min="-2" max="-2" attributes="0"/>
+                          <Component id="jLabel26" alignment="2" min="-2" max="-2" attributes="0"/>
                       </Group>
-                      <EmptySpace max="-2" attributes="0"/>
+                      <EmptySpace min="-2" pref="2" max="-2" attributes="0"/>
+                      <Group type="103" groupAlignment="2" attributes="0">
+                          <Component id="comboLayout" alignment="2" min="-2" max="-2" attributes="0"/>
+                          <Component id="jLabel11" alignment="2" min="-2" max="-2" attributes="0"/>
+                          <Component id="jPanel4" alignment="2" min="-2" max="-2" attributes="0"/>
+                          <Component id="jLabel15" alignment="2" min="-2" max="-2" attributes="0"/>
+                      </Group>
+                      <EmptySpace min="-2" pref="2" max="-2" attributes="0"/>
                       <Group type="103" groupAlignment="2" attributes="0">
                           <Component id="jLabel19" linkSize="16" alignment="2" min="-2" max="-2" attributes="0"/>
                           <Component id="comboColormapPlot" linkSize="16" alignment="2" min="-2" max="-2" attributes="0"/>
                           <Component id="jLabel18" alignment="2" min="-2" max="-2" attributes="0"/>
                           <Component id="spinnerMarkerSize" alignment="2" min="-2" max="-2" attributes="0"/>
-                          <Component id="comboLayout" alignment="2" min="-2" max="-2" attributes="0"/>
-                          <Component id="jLabel11" alignment="2" min="-2" max="-2" attributes="0"/>
                       </Group>
                       <EmptySpace max="32767" attributes="0"/>
                   </Group>
@@ -958,16 +967,16 @@
                     <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="buttonSetBackgroundActionPerformed"/>
                   </Events>
                 </Component>
+                <Component class="javax.swing.JButton" name="buttonResetBackground">
+                  <Properties>
+                    <Property name="text" type="java.lang.String" value="Default"/>
+                  </Properties>
+                  <Events>
+                    <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="buttonResetBackgroundActionPerformed"/>
+                  </Events>
+                </Component>
               </SubComponents>
             </Container>
-            <Component class="javax.swing.JButton" name="buttonResetBackground">
-              <Properties>
-                <Property name="text" type="java.lang.String" value="Default"/>
-              </Properties>
-              <Events>
-                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="buttonResetBackgroundActionPerformed"/>
-              </Events>
-            </Component>
             <Component class="javax.swing.JLabel" name="jLabel15">
               <Properties>
                 <Property name="horizontalAlignment" type="int" value="11"/>
@@ -977,7 +986,7 @@
             <Component class="javax.swing.JLabel" name="jLabel18">
               <Properties>
                 <Property name="horizontalAlignment" type="int" value="11"/>
-                <Property name="text" type="java.lang.String" value="Marker size:"/>
+                <Property name="text" type="java.lang.String" value="Marker Size:"/>
               </Properties>
             </Component>
             <Component class="javax.swing.JSpinner" name="spinnerMarkerSize">
@@ -1003,6 +1012,14 @@
                     <StringItem index="3" value="Item 4"/>
                   </StringArray>
                 </Property>
+              </Properties>
+            </Component>
+            <Component class="javax.swing.JCheckBox" name="checkOffscreenBuffers">
+            </Component>
+            <Component class="javax.swing.JLabel" name="jLabel26">
+              <Properties>
+                <Property name="horizontalAlignment" type="int" value="11"/>
+                <Property name="text" type="java.lang.String" value="Offscreen Buffers:"/>
               </Properties>
             </Component>
           </SubComponents>
@@ -1094,14 +1111,14 @@
               <Group type="103" groupAlignment="0" attributes="0">
                   <Group type="102" alignment="0" attributes="0">
                       <EmptySpace min="-2" pref="18" max="-2" attributes="0"/>
-                      <Component id="jScrollPane1" pref="161" max="32767" attributes="0"/>
-                      <EmptySpace type="unrelated" min="-2" max="-2" attributes="0"/>
+                      <Component id="jScrollPane1" pref="173" max="32767" attributes="0"/>
+                      <EmptySpace max="-2" attributes="0"/>
                       <Group type="103" groupAlignment="3" attributes="0">
                           <Component id="buttonDelete" alignment="3" min="-2" max="-2" attributes="0"/>
                           <Component id="buttonInsert" alignment="3" min="-2" max="-2" attributes="0"/>
                           <Component id="buttonDefaultPanels" alignment="3" min="-2" max="-2" attributes="0"/>
                       </Group>
-                      <EmptySpace min="12" pref="12" max="-2" attributes="0"/>
+                      <EmptySpace max="-2" attributes="0"/>
                   </Group>
               </Group>
             </DimensionLayout>
@@ -1192,11 +1209,11 @@
                           </Group>
                           <Group type="102" attributes="0">
                               <Component id="ckAsyncUpdate" min="-2" max="-2" attributes="0"/>
-                              <EmptySpace max="32767" attributes="0"/>
+                              <EmptySpace type="separate" max="32767" attributes="0"/>
                               <Component id="jLabel21" min="-2" max="-2" attributes="0"/>
                               <EmptySpace max="-2" attributes="0"/>
                               <Component id="comboScriptPopup" min="-2" max="-2" attributes="0"/>
-                              <EmptySpace min="121" pref="121" max="-2" attributes="0"/>
+                              <EmptySpace max="32767" attributes="0"/>
                           </Group>
                       </Group>
                   </Group>

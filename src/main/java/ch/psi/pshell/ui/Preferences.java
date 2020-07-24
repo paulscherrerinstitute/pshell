@@ -110,6 +110,7 @@ public class Preferences {
     public Color plotBackground = null; //Default
     public Color gridColor = null;  //Default
     public Color outlineColor = null; //Default
+    public boolean disableOffscreenBuffer;
 
     public DefaultPanel[] defaultPanels;
 

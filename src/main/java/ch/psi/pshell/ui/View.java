@@ -1819,6 +1819,7 @@ public class View extends MainFrame {
         PlotBase.setOutlineColor(preferences.outlineColor);
         PlotBase.setDefaultLabelFont(preferences.fontPlotLabel);
         PlotBase.setDefaultTickFont(preferences.fontPlotTick);
+        PlotBase.setOffscreenBuffer(!preferences.disableOffscreenBuffer);
         PlotPanel.setTitleFont(preferences.fontPlotTitle);
         HistoryChart.setDefaultAsync(preferences.asyncViewersUpdate);
 

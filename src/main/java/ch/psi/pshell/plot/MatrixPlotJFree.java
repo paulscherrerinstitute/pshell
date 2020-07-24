@@ -1,10 +1,6 @@
 package ch.psi.pshell.plot;
 
-import java.awt.BasicStroke;
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Component;
-import java.awt.Graphics;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.print.PageFormat;
 import java.awt.print.PrinterException;
@@ -44,7 +40,7 @@ import ch.psi.pshell.imaging.Colormap;
 import static ch.psi.pshell.plot.PlotBase.SNAPSHOT_WIDTH;
 import ch.psi.utils.Reflection.Hidden;
 import ch.psi.utils.swing.SwingUtils;
-import java.awt.Dimension;
+
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.List;
@@ -125,8 +121,13 @@ public class MatrixPlotJFree extends MatrixPlotBase {
     @Override
     public void setQuality(Quality quality) {
         super.setQuality(quality);
-        if (chart != null) {
+        if ((chart != null) && (quality != null)) {
             chart.setAntiAlias(quality.ordinal() >= Quality.High.ordinal());
+            if (quality.ordinal() >= Quality.Maximum.ordinal()) {
+                chart.setTextAntiAlias(RenderingHints.VALUE_TEXT_ANTIALIAS_LCD_HRGB);
+            } else {
+                chart.setTextAntiAlias(quality.ordinal() >= Quality.Medium.ordinal());
+            }
         }
     }
 
@@ -631,7 +632,7 @@ public class MatrixPlotJFree extends MatrixPlotBase {
         updateColorScale(0, 1);
 
         //Create the Chartpanel where the chart will be plotted
-        chartPanel = new ChartPanel(chart);
+        chartPanel = new ChartPanel(chart, getOffscreenBuffer());
 
         //Fonts will be distorted if greater than this value. Default values are 1024x728
         chartPanel.setMaximumDrawHeight(2000);

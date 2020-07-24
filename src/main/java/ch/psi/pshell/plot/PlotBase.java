@@ -635,17 +635,29 @@ abstract public class PlotBase<T extends PlotSeries> extends MonitoredPanel impl
         return hardwareAccelerated;
     }
 
-    static boolean lighweightPopups = true;
+    //Offscreen buffer drawing
+    static boolean offscreenBuffer = true;
 
-    public static void setLighweightPopups(boolean value) {
-        lighweightPopups = value;
+    public static void setOffscreenBuffer(boolean value) {
+        offscreenBuffer = value;
+    }
+
+    public static boolean getOffscreenBuffer() {
+        return offscreenBuffer || offscreen;
+    }
+
+
+    static boolean lightWeightPopups = true;
+
+    public static void setLightWeightPopups(boolean value) {
+        lightWeightPopups = value;
         if (javax.swing.JPopupMenu.getDefaultLightWeightPopupEnabled() != value) {
-            javax.swing.JPopupMenu.setDefaultLightWeightPopupEnabled(lighweightPopups);
+            javax.swing.JPopupMenu.setDefaultLightWeightPopupEnabled(lightWeightPopups);
         }
     }
 
-    public static boolean getLighweightPopups() {
-        return lighweightPopups;
+    public static boolean getLightWeightPopups() {
+        return lightWeightPopups;
     }
 
     //Preferred Colors (not all implementations may enable changing these colors)

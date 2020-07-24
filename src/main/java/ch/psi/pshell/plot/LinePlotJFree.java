@@ -22,6 +22,7 @@ import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.awt.print.PageFormat;
 import java.awt.print.PrinterException;
+import java.awt.RenderingHints;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -138,6 +139,14 @@ public class LinePlotJFree extends LinePlotBase {
         super.setQuality(quality);
         if ((chart != null) && (quality != null)) {
             chart.setAntiAlias(quality.ordinal() >= Quality.High.ordinal());
+            if (quality.ordinal() >= Quality.Maximum.ordinal()) {
+                chart.setTextAntiAlias(RenderingHints.VALUE_TEXT_ANTIALIAS_LCD_HRGB);
+            } else {
+                chart.setTextAntiAlias(quality.ordinal() >= Quality.Medium.ordinal());
+            }
+            if (chartPanel!=null) {
+                chartPanel.setRefreshBuffer(true);
+            }
         }
     }
 
@@ -806,9 +815,9 @@ public class LinePlotJFree extends LinePlotBase {
     }
 
     protected ChartPanel newChartPanel(JFreeChart chart) {
-        return new ChartPanel(chart) {
+        return new ChartPanel(chart, getOffscreenBuffer()) {
             //TODO: This is to fix JFreeChart bug zooming out when range has been set. 
-            //JFreeChart is then performin an auto range which is unexpected.
+            //JFreeChart is then performing an auto range which is unexpected.
             //http://www.jfree.org/phpBB2/viewtopic.php?t=23763
             @Override
             public void restoreAutoRangeBounds() {

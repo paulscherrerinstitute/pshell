@@ -8,12 +8,8 @@ import ch.psi.utils.Reflection.Hidden;
 import ch.psi.utils.swing.ExtensionFileFilter;
 import ch.psi.utils.swing.ImageTransferHandler;
 import ch.psi.utils.swing.SwingUtils;
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.Font;
-import java.awt.Paint;
-import java.awt.Shape;
-import java.awt.Toolkit;
+
+import java.awt.*;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.Transferable;
 import java.awt.event.ActionEvent;
@@ -116,7 +112,7 @@ public class TimePlotJFree extends TimePlotBase {
         //((NumberAxis)plot.getRangeAxis()).setNumberFormatOverride(new DecimalFormat("####0.000"));
 
         setLayout(new java.awt.BorderLayout());
-        chartPanel = new ChartPanel(chart) {
+        chartPanel = new ChartPanel(chart, getOffscreenBuffer()) {
 
             @Override
             public void restoreAutoRangeBounds() {
@@ -609,6 +605,11 @@ public class TimePlotJFree extends TimePlotBase {
         super.setQuality(quality);
         if ((chart != null) && (quality != null)) {
             chart.setAntiAlias(quality.ordinal() >= Quality.High.ordinal());
+            if (quality.ordinal() >= Quality.Maximum.ordinal()) {
+                chart.setTextAntiAlias(RenderingHints.VALUE_TEXT_ANTIALIAS_LCD_HRGB);
+            } else {
+                chart.setTextAntiAlias(quality.ordinal() >= Quality.Medium.ordinal());
+            }
         }
     }
 
