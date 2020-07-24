@@ -24,7 +24,8 @@ import java.util.Map;
  *
  */
 public class ProviderFDA extends ProviderText{
-    public static final String INFO_FIELD_DIMENSIONS= "Field Dimensions";  
+    public static final String INFO_FIELD_DIMENSIONS= "Field Dimensions";
+    public static boolean ADD_ATTRIBUTE_FILE_TIMESTAMP = true;
     
     public ProviderFDA(){
         super();
@@ -32,12 +33,14 @@ public class ProviderFDA extends ProviderText{
     }
     @Override
     protected Path getAttibutePath(String root, String path) throws IOException {
-        ExecutionParameters pars =  Context.getInstance().getExecutionPars();
-        if (pars!=null){
-            return isGroup(root, path)
-                    ? Paths.get(root, path, Context.getInstance().getSetup().expandPath("{date}_{time}_{name}." + ATTR_FILE))
-                    : Paths.get(root, new File(path).getParent() + Context.getInstance().getSetup().expandPath("{date}_{time}_{name}_") + 
-                                    new File(path).getName() + "." + ATTR_FILE);
+        if (ADD_ATTRIBUTE_FILE_TIMESTAMP && LayoutFDA.isFlatStorage()){
+            ExecutionParameters pars = Context.getInstance().getExecutionPars();
+            if (pars != null) {
+                if (isGroup(root, path)) {
+                        return Paths.get(root, path, Context.getInstance().getSetup().expandPath(
+                            "{date}_{time}_{name}." + ATTR_FILE, pars.getStart()));
+                }
+            }
         }
         return super.getAttibutePath(root, path);
     }

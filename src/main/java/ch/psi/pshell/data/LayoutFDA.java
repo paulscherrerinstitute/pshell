@@ -19,11 +19,16 @@ import java.util.List;
  */
 public class LayoutFDA extends LayoutTable {
     static String filePrefix = null;
-            
+
+    public static boolean isFlatStorage(){
+        String dataPath = Context.getInstance().getConfig().dataPath;
+        return !dataPath.contains("{name}");
+    }
+
     public static String getFilePrefix(){
         if (filePrefix == null){
-            String dataPath = Context.getInstance().getConfig().dataPath;
-            if (dataPath.contains("{name}")){ 
+            if (!isFlatStorage()){
+                String dataPath = Context.getInstance().getConfig().dataPath;
                 try{
                     dataPath = dataPath.replaceAll("./$", ""); //remove last / if present
                     String[] tokens  = dataPath.split("/");
