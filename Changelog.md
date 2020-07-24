@@ -9,6 +9,9 @@
 
 * __before_region__ callback in RegionScan.
 
+* Preference to Disable offscreen buffers on plots - better drawing quality on Mac. 
+
+
 ### Changed
 
 * Java 11 is required to run PShell (source and bin formats are set to Java 11).
@@ -20,7 +23,8 @@
 
 ### Fixed
 
-* None
+* Fixed names of attribute files in LayoutFDA
+  
 
 
 
