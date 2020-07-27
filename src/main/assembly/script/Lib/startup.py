@@ -26,6 +26,8 @@ import org.python.core.PyArray as PyArray
 import org.python.core.PyFunction as PyFunction
 import org.python.core.PyMethod as PyMethod
 import org.python.core.PyGenerator as PyGenerator
+import org.python.core.finalization.FinalizablePyObject as FinalizablePyObject
+import org.python.core.finalization.FinalizeTrigger as FinalizeTrigger
 
 import ch.psi.utils.Threading as Threading
 import ch.psi.utils.State as State
@@ -1336,8 +1338,8 @@ def create_channel_device(channel_name, type=None, size=None, device_name=None):
 def create_channel(name, type=None, size=None):
     return Epics.newChannel(name, Epics.getChannelType(type), size)
 
-class Channel(java.beans.PropertyChangeListener, Writable, Readable):
-    def __init__(self, channel_name, type = None, size = None, callback=None, alias = None):
+class Channel(FinalizablePyObject, java.beans.PropertyChangeListener, Writable, Readable):
+    def __init__(self, channel_name, type = None, size = None, callback=None, alias = None, monitored=None):
         """ Create an object that encapsulates an Epics PV connection.
         Args:
             channel_name(str):name of the channel
@@ -1350,12 +1352,11 @@ class Channel(java.beans.PropertyChangeListener, Writable, Readable):
         """
         self.channel = create_channel(channel_name, type, size)
         self.callback = callback
-        if alias is not None:
-            set_device_alias(self, alias)
-        else:
-            set_device_alias(self, channel_name)
+        self._alias = alias
+        if monitored is not None: self.set_monitored(monitored)
+        #FinalizeTrigger.ensureFinalizer(self)
 
-    def get_name(self):
+    def get_channel_name(self):
         """Return the name of the channel.
         """
         return self.channel.name
@@ -1438,6 +1439,15 @@ class Channel(java.beans.PropertyChangeListener, Writable, Readable):
         """
         Epics.closeChannel(self.channel)
 
+    def getName(self):
+        return self.get_channel_name()
+
+    def setAlias(self, alias):
+        self._alias = alias
+
+    def getAlias(self):
+        return self._alias if self._alias else self.getName()
+
     def write(self, value):
         self.put(value)
 
@@ -1449,6 +1459,11 @@ class Channel(java.beans.PropertyChangeListener, Writable, Readable):
 
     def __exit__(self, *args):
         self.close()
+
+    def finalize(self): pass #TODO: if not overriden, __del__ is not called!!!
+    def __del__(self):
+        self.close()
+
 
 ###################################################################################################
 #Concurrent execution
@@ -1762,7 +1777,7 @@ def remove_device(device):
     return get_context().devicePool.removeDevice(device)
 
 def set_device_alias(device, alias):
-    """Set a device alias to be used in scans (datasets and plots).
+    """Deprecated, use "dev.set_alias" instead. Set a device alias to be used in scans (datasets and plots).
 
     Args:
         device(Device)
@@ -1771,7 +1786,7 @@ def set_device_alias(device, alias):
     Returns:
         None
     """
-    get_context().dataManager.setAlias(device, alias)
+    device.setAlias(alias)
 
 def stop():
     """Stop all devices implementing the Stoppable interface.

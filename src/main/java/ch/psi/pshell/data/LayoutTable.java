@@ -64,7 +64,7 @@ public class LayoutTable extends LayoutBase implements Layout {
         for (Writable writable : scan.getWritables()) {
             fieldTypes[index] = Double.class;
             writableDims[index] = (dimension > 1) ? dimension-- : dimension;
-            fieldNames[index++] = getDataManager().getAlias(writable);
+            fieldNames[index++] = writable.getAlias();
         }
         for (ch.psi.pshell.device.Readable readable : scan.getReadables()) {
             Class type = getDatasetType(readable);
@@ -77,7 +77,7 @@ public class LayoutTable extends LayoutBase implements Layout {
             } else {
                 fieldTypes[index] = type;
             }
-            fieldNames[index++] = getDataManager().getAlias(readable);
+            fieldNames[index++] = readable.getAlias();
         }
 
         getDataManager().createDataset(path, fieldNames, fieldTypes, fieldLength);

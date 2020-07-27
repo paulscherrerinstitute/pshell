@@ -16,15 +16,21 @@
 
 * Java 11 is required to run PShell (source and bin formats are set to Java 11).
 
-* Jython 2.7.2
+* Jython 2.7.2 - fixing http://bugs.jython.org/issue2403 and https://bugs.jython.org/issue2846. 
+
+* Aliases are not needed for Python devices anymore (as getName can be nor overridden)
+
+* Alias handled by Nameable class.
+
+* Devices avoid creating references to themselves on alias map not to block GC.
 
 * ReadonlyRegisterArray has default getSize (returning size of cache).
-
 
 ### Fixed
 
 * Fixed names of attribute files in LayoutFDA
   
+* Channel class closes channel on finalizer.
 
 
 

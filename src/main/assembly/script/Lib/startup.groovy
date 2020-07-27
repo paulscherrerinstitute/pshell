@@ -885,7 +885,7 @@ class Channel implements java.beans.PropertyChangeListener, Writable, Readable{
         this.callback = callback
     }
     
-    def get_name(){
+    def get_channel_name(){
         /*
         Return the name of the channel.
         */  
@@ -1364,7 +1364,7 @@ def set_device_alias(device, alias){
     Returns:
         None
     */
-    get_context().dataManager.setAlias(device, alias)
+    device.setAlias(alias)
 }    
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////

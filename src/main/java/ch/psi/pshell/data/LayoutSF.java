@@ -276,7 +276,7 @@ public class LayoutSF extends LayoutBase implements Layout {
         int samples = contiguous ? scan.getNumberOfRecords() : 0;
         
         for (Writable writable : scan.getWritables()) {
-            String name = dataManager.getAlias(writable);
+            String name = writable.getAlias();
             String groupDev = getDataPath(scan, name);
             dataManager.createGroup(groupDev);
             if (writable instanceof WritableArray) {
@@ -302,7 +302,7 @@ public class LayoutSF extends LayoutBase implements Layout {
         }        
 
         for (ch.psi.pshell.device.Readable readable : scan.getReadables()) {
-            String name = dataManager.getAlias(readable);
+            String name = readable.getAlias();
             String groupDev = getDataPath(scan, name);
             dataManager.createDataset(groupDev + DATASET_VALUE, scan, readable);
             if (readable instanceof ReadableMatrix) {                             
@@ -357,13 +357,13 @@ public class LayoutSF extends LayoutBase implements Layout {
         }
 
         for (Writable writable : scan.getWritables()) {
-            String path = getDataPath(scan, dataManager.getAlias(writable));
+            String path = getDataPath(scan, writable.getAlias());
             dataManager.setItem(path + DATASET_SETPOINT, record.getSetpoints()[deviceIndex], index);
             dataManager.setItem(path + DATASET_READBACK, positions[deviceIndex++], index);
         }
         deviceIndex = 0;
         for (ch.psi.pshell.device.Readable readable : scan.getReadables()) {
-            String name = dataManager.getAlias(readable);
+            String name = readable.getAlias();
             String path = getDataPath(scan, name);
             Long timestamp = deviceTimestamps[deviceIndex];
             Object value = values[deviceIndex++];
@@ -386,7 +386,7 @@ public class LayoutSF extends LayoutBase implements Layout {
             if (Averager.isAverager(readable)) {
                 try {
                     getDataManager().flush();
-                    String name = getDataManager().getAlias(readable);
+                    String name = readable.getAlias();
                     String path = getDataPath(scan, name);
                     double[] stdev = (double[]) getDataManager().getData(path + DATASET_STDEV).sliceData;
                     //Not using error vector, but stde dataset 

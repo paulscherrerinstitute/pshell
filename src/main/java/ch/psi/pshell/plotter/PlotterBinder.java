@@ -46,7 +46,7 @@ public class PlotterBinder implements AutoCloseable {
             pm.setProgress(plotTitle, 0.0);
             scans.put(scan, plotTitle);
             for (ch.psi.pshell.device.Readable r : scan.getReadables()) {
-                String name = context.getDataManager().getAlias(r);
+                String name = r.getAlias();
                 if (r instanceof ch.psi.pshell.device.Readable.ReadableMatrix) {
                     pm.addMatrixPlot(plotTitle, name, null, null);
                     pm.addMatrixSeries(plotTitle + "/" + name, name, null, null, null, null, null, null);
@@ -68,7 +68,7 @@ public class PlotterBinder implements AutoCloseable {
                 double x = (record.getPositions().length > 0) ? record.getPositions()[0].doubleValue() : record.getIndex();
                 for (int i = 0; i < scan.getReadables().length; i++) {
                     ch.psi.pshell.device.Readable r = scan.getReadables()[i];
-                    String name = context.getDataManager().getAlias(r);
+                    String name = r.getAlias();
                     String series = title + "/" + name + "/0";
                     if (r instanceof ch.psi.pshell.device.Readable.ReadableMatrix) {
                         pm.setMatrixSeriesData(series, (double[][]) record.getValues()[i], null, null);

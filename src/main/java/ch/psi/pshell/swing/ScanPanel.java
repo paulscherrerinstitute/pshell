@@ -60,10 +60,10 @@ public class ScanPanel extends MonitoredPanel {
             columns.add("Time");
             columns.add("Index");
             for (Writable w : scan.getWritables()) {
-                columns.add(Context.getInstance().getDataManager().getAlias(w));
+                w.getAlias();
             }
             for (Readable r : scan.getReadables()) {
-                columns.add(Context.getInstance().getDataManager().getAlias(r));
+                r.getAlias();
             }
             model = new DefaultTableModel(new Object[][]{}, columns.toArray(new String[0])) {
                 @Override

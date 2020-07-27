@@ -73,7 +73,7 @@ These functions provide the script API to many aspects of PShell:
     - add_device
     - remove_device
     - get_device
-    - set_device_alias
+    - set_device_alias (deprecated, use "dev.set_alias" instead)
     - stop
     - update
     - reinit

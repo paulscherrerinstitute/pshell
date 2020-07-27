@@ -1,9 +1,16 @@
 package ch.psi.pshell.core;
 
+import java.util.HashMap;
+
 /**
  * Interface implemented by globally recognizable objects such as devices and image sources.
  */
 public interface Nameable {
+    //Default implementation not great,  keeping object references in the map
+    final HashMap<Nameable, String> aliases = new HashMap<>();
+    public static void clear(){
+        aliases.clear();
+    }
 
     public static String getShortClassName(Class cls) {
         String ret = cls.getSimpleName();
@@ -21,6 +28,21 @@ public interface Nameable {
             ret = ret.substring(0, ret.indexOf("$$"));
         }
         return ret;
+    }
+
+    default void setAlias(String alias) {
+        if (alias != null) {
+            aliases.put(this, alias);
+        } else {
+            aliases.remove(this);
+        }
+    }
+
+    default String getAlias() {
+        if (aliases.containsKey(this)) {
+            return aliases.get(this);
+        }
+        return getName();
     }
 
     /**

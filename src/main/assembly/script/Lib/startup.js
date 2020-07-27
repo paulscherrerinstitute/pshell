@@ -1721,7 +1721,7 @@ function set_device_alias(device, alias){
     Returns:
         None
     */
-    get_context().dataManager.setAlias(device, alias)
+    device.setAlias(alias)
 }    
 
 function stop(){

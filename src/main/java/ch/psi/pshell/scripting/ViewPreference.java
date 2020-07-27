@@ -100,7 +100,7 @@ public enum ViewPreference {
                 Object type = types.get(plot);
 
                 if (plot instanceof Nameable) {
-                    plot = Context.getInstance().getDataManager().getAlias((Nameable) plot);
+                    plot =  ((Nameable) plot).getAlias();
                 } else {
                     plot = (String.valueOf(plot));
                 }

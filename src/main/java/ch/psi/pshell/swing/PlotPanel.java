@@ -297,9 +297,7 @@ public class PlotPanel extends MonitoredPanel {
                     }
                 }
                 if (labelX == null) {
-                    labelX = (scan.getWritables().length >= 1) ? 
-                            Context.getInstance().getDataManager().getAlias(scan.getWritables()[0]) : 
-                            null;
+                    labelX = (scan.getWritables().length >= 1) ? (scan.getWritables()[0]).getAlias() : null;
                 } else {
                     prefs.autoRange = (prefs.range == null) ? true : false;
                 }
@@ -309,7 +307,7 @@ public class PlotPanel extends MonitoredPanel {
                     Writable[] writables = scan.getWritables();
                     for (int i = 0; i < writables.length; i++) {
                         Writable w = writables[i];
-                        String name = Context.getInstance().getDataManager().getAlias(w);
+                        String name = w.getAlias();
                         if (prefs.enabledPlots.contains(name)) {
                             addPlot(name, true, "Time", 1, null, null, null, null, w.getClass());
                             writableIndexes.add(i);
@@ -320,7 +318,7 @@ public class PlotPanel extends MonitoredPanel {
                 Readable[] readables = scan.getReadables();
                 for (int i = 0; i < readables.length; i++) {
                     Readable r = readables[i];
-                    String name = Context.getInstance().getDataManager().getAlias(r);
+                    String name = r.getAlias();
                     if (((prefs.enabledPlots == null) || (prefs.enabledPlots.contains(name))) && (domainAxisReadableIndex != i)) {
                         double[] start = new double[scan.getStart().length];
                         System.arraycopy(scan.getStart(), 0, start, 0, start.length);

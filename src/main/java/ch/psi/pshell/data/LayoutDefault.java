@@ -69,7 +69,7 @@ public class LayoutDefault extends LayoutBase implements Layout {
         int dimension = 1;
         int index = 0;
         for (Writable writable : scan.getWritables()) {
-            String name = dataManager.getAlias(writable);
+            String name = writable.getAlias();
             //Positioners are always saved as double
             if (writable instanceof WritableArray) {
                 dataManager.createDataset(getPath(scan, name), Double.class, new int[]{samples, ((WritableArray) writable).getSize()});
@@ -96,7 +96,7 @@ public class LayoutDefault extends LayoutBase implements Layout {
         ReadableArray a;
         index = 0;
         for (ch.psi.pshell.device.Readable readable : scan.getReadables()) {
-            String name = dataManager.getAlias(readable);
+            String name = readable.getAlias();
             dataManager.createDataset(getPath(scan, name), scan, readable);
             
             if (readable instanceof ReadableMatrix) {   
@@ -143,7 +143,7 @@ public class LayoutDefault extends LayoutBase implements Layout {
         int index = getIndex(scan, record);
         int deviceIndex = 0;
         for (Writable writable : scan.getWritables()) {
-            String path = getPath(scan, dataManager.getAlias(writable));
+            String path = getPath(scan, writable.getAlias());
             if (persistSetpoints) {
                 dataManager.setItem(path + SETPOINTS_DATASET_SUFFIX, record.getSetpoints()[deviceIndex], index);
             }
@@ -151,7 +151,7 @@ public class LayoutDefault extends LayoutBase implements Layout {
         }
         deviceIndex = 0;
         for (ch.psi.pshell.device.Readable readable : scan.getReadables()) {
-            String name = dataManager.getAlias(readable);
+            String name = readable.getAlias();
             String path = getPath(scan, name);
             Object value = values[deviceIndex++];
             dataManager.setItem(path, value, index);
@@ -171,7 +171,7 @@ public class LayoutDefault extends LayoutBase implements Layout {
             if (Averager.isAverager(readable)) {
                 try {
                     getDataManager().flush();
-                    String name = getDataManager().getAlias(readable);
+                    String name = readable.getAlias();
                     double[] stdev = (double[]) getDataManager().getData(getPath(scan, META_GROUP + name + DEVICE_STDEV_DATASET)).sliceData;
                     getDataManager().setAttribute(getPath(scan, name), ATTR_ERROR_VECTOR, stdev);
                 } catch (Exception ex) {

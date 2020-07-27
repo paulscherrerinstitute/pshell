@@ -128,16 +128,11 @@ public interface Scan {
         header.add(String.format("%-12s", "Time"));
         header.add("Index");
         for (Writable w : getWritables()) {
-            header.add(getDeviceName(w));
+            header.add(w.getAlias());
         }
         for (ch.psi.pshell.device.Readable r : getReadables()) {
-            header.add(getDeviceName(r));
+            header.add(r.getAlias());
         }
         return String.join(separator, header);
-    }
-
-    default String getDeviceName(Nameable dev) {
-        Context c = Context.getInstance();
-        return (c == null) ? dev.getName() : c.getDataManager().getAlias(dev);
     }
 }

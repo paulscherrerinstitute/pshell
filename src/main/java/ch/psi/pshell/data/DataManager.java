@@ -93,7 +93,6 @@ public class DataManager implements AutoCloseable {
         closeOutput();
         setProvider(context.getConfig().getDataProvider());
         setLayout(context.getConfig().getDataLayout());
-        aliases.clear();
         dataRootDepth = Paths.get(IO.getRelativePath(getExecutionPars().getPath(), getDataFolder())).getNameCount();
         logger.info("Finished " + getClass().getSimpleName() + " initialization");
         initialized = true;
@@ -1255,24 +1254,6 @@ public class DataManager implements AutoCloseable {
             }
         }
         return false;
-    }
-
-    //TODO: Device aliases should be managed elsewhere?
-    final HashMap<Nameable, String> aliases = new HashMap<>();
-
-    public void setAlias(Nameable obj, String alias) {
-        if (alias != null) {
-            aliases.put(obj, alias);
-        } else {
-            aliases.remove(obj);
-        }
-    }
-
-    public String getAlias(Nameable dev) {
-        if (aliases.containsKey(dev)) {
-            return aliases.get(dev);
-        }
-        return dev.getName();
     }
 
     @Override

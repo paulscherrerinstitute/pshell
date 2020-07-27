@@ -33,6 +33,7 @@ public abstract class GenericDeviceBase<T> extends ObservableBase<T> implements 
     final AtomicBoolean closed;
     
     int waitSleep = 5;
+    String alias;
 
     //Construction 
     /**
@@ -431,6 +432,19 @@ public abstract class GenericDeviceBase<T> extends ObservableBase<T> implements 
             return name;
         }
         return GenericDevice.super.getName();
+    }
+
+    @Override
+    public void setAlias(String alias) {
+        alias=alias;
+    }
+
+    @Override
+    public String getAlias() {
+        if ((alias!=null)&&(!alias.isBlank())) {
+            return alias;
+        }
+        return getName();
     }
 
     @Override

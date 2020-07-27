@@ -975,6 +975,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
                 logger.log(Level.WARNING, null, ex);
             }
         }
+        Nameable.clear();
         Interlock.clear();
 
         //A new file for each session

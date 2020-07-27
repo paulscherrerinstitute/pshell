@@ -13,7 +13,7 @@ __Channel__ objects can be used in scan functions as positioners or sensors.
 
 
 Methods:
- * Constructor: `__init__`(name, type = None, size = None, callback=None, alias = None)
+ * Constructor: `__init__`(name, type = None, size = None, callback=None, alias = None, monitored=None)
     - name(str): value to be written
     - type(str, optional): type of PV, defaults 's'. 
 
@@ -22,7 +22,9 @@ Methods:
         Array: values: '[b', '[i,', '[l', '[d', '[s'.
     - size(int, optional): the size of the channel
     - callback(function, optional): The monitor callback.
- * get_name(): Return the name of the channel.
+    - alias (str, optional): Name to be used in plots and datasets (if different to the channel name).
+    - monitored (bool, optional): If set to true enables the channel monitor.
+ * get_channel_name(): Return the name of the channel.
  * get_size(): Return the size of the channel. 
  * set_size(size): Set the size of the channel.
  * is_connected(): Return True if channel is connected.

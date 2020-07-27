@@ -550,7 +550,7 @@ public class ExecutionParameters {
             if (option == device) {
                 return true;
             }
-            String name = Context.getInstance().getDataManager().getAlias(device);
+            String name = device.getAlias();
             if (option.equals(name)) {
                 return true;
             }
@@ -773,7 +773,7 @@ public class ExecutionParameters {
                     ArrayList<String> plots = new ArrayList<>();
                     for (Object obj : (Object[]) value) {
                         if (obj instanceof Nameable) {
-                            plots.add(Context.getInstance().getDataManager().getAlias((Nameable) obj));
+                            plots.add(((Nameable) obj).getAlias());
                         } else {
                             plots.add(String.valueOf(obj));
                         }

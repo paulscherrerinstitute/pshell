@@ -277,7 +277,7 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
             } catch (IOException | InterruptedException ex) {
                 throw ex;
             } catch (Exception ex) {
-                throw new IOException("Positioner type must be <Double> for relative scans: " + getDeviceName(writables[i]));
+                throw new IOException("Positioner type must be <Double> for relative scans: " + writables[i].getAlias());
             }
         }
     }
@@ -666,7 +666,7 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
     public String[] getWritableNames() {
         ArrayList<String> names = new ArrayList();
         for (Writable writable : getWritables()) {
-            names.add(getDeviceName(writable));
+            names.add(writable.getAlias());
         }
         return names.toArray(new String[0]);
     }
@@ -675,7 +675,7 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
     public String[] getReadableNames() {
         ArrayList<String> names = new ArrayList();
         for (Readable readable : getReadables()) {
-            names.add(getDeviceName(readable));
+            names.add(readable.getAlias());
         }
         return names.toArray(new String[0]);
     }
