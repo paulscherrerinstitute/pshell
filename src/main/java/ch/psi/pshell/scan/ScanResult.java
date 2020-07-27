@@ -30,7 +30,8 @@ public class ScanResult implements SubscriptableList<ScanRecord>{
         return records;
     }
 
-    public List<Object> getReadable(int index) {
+    public List<Object> getReadable(Object id) {
+        int index = (id instanceof Number) ? ((Number)id).intValue() : scan.getReadableIndex(id);
         if ((index < 0) || (index >= getReadables().size())) {
             throw new IllegalArgumentException("Index");
         }
@@ -42,7 +43,8 @@ public class ScanResult implements SubscriptableList<ScanRecord>{
         return ret;
     }
 
-    public List<Number> getSetpoints(int index) {
+    public List<Number> getSetpoints(Object id) {
+        int index = (id instanceof Number) ? ((Number)id).intValue() : scan.getWritableIndex(id);
         if ((index < 0) || (index >= getWritables().size())) {
             throw new IllegalArgumentException("Index");
         }
@@ -54,7 +56,8 @@ public class ScanResult implements SubscriptableList<ScanRecord>{
         return ret;
     }
 
-    public List<Number> getPositions(int index) {
+    public List<Number> getPositions(Object id) {
+        int index = (id instanceof Number) ? ((Number)id).intValue() : scan.getWritableIndex(id);
         if ((index < 0) || (index >= getWritables().size())) {
             throw new IllegalArgumentException("Index");
         }

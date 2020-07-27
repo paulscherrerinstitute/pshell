@@ -23,6 +23,7 @@ import ch.psi.utils.IO;
 import ch.psi.utils.ObservableBase;
 import ch.psi.utils.State;
 import java.io.IOException;
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -507,6 +508,7 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
 
     protected ScanRecord newRecord() {
         ScanRecord record = new ScanRecord();
+        record.scan = this;
         record.index = recordIndex;
         record.pass = getCurrentPass();
         record.indexInPass = getRecordIndexInPass();
@@ -661,6 +663,36 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
     public Readable[] getReadables() {
         return readables;
     }
+
+    int getDeviceIndex(Object arr, Object obj) {
+        if (obj instanceof Number){
+            return ((Number) obj).intValue();
+        }
+        for (int i=0;  i< Array.getLength(arr); i++) {
+            Nameable element = (Nameable) Array.get(arr,i);
+            if (obj== element){
+                return i;
+            }
+            if (obj instanceof String){
+                if ((((String)obj).equals(element.getAlias())) || ((((String)obj).equals(element.getName())))){
+                    return i;
+                }
+            }
+        }
+        throw new RuntimeException("Invalid device: " + obj);
+    }
+
+    @Override
+    public int getReadableIndex(Object obj) {
+        return getDeviceIndex(getReadables(), obj);
+    }
+
+    @Override
+    public int getWritableIndex(Object obj) {
+        return getDeviceIndex(getWritables(), obj);
+    }
+
+
 
     @Override
     public String[] getWritableNames() {

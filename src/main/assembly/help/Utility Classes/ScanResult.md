@@ -15,9 +15,9 @@ Methods:
  * List getWritables(): Returns positioners in the scan.
  * List getReadables(): Returns sensors in the scan.
  * List getRecords(): returns the list of __ScanRecord__ elements.
- * List getSetpoints(int index): returns a list of all setpoints of the index-th positioner.
- * List getPositions(int index): returns a list of all readbacks of the index-th positioner.  
- * List getReadable(int index): returns a list of all readouts of the index-th sensor.  
+ * List getSetpoints(obj id): returns a list of all setpoints of the positioner given by __id__ (index, name, or device reference)
+ * List getPositions(obj id): returns a list of all readbacks of the positioner given by __id__ (index, name, or device reference)
+ * List getReadable(obj id): returns a list of all readouts of the sensor given by __id__ (index, name, or device reference)
  * int getIndex(): index of this scan in the execution context.
  * String getRoot(): the data persistence root for the current scan.
  * String getGroup(): the scan group insioide the root (relative path).

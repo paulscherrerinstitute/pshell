@@ -15,6 +15,9 @@ Methods:
   * Number[] getSetpoints(): the setpoint for each positioner.
   * Number[] getPositions (): the readback for each positioner.
   * Object[] getValues(): the readout of each sensor, which can be a scalar or an array.
+  * Number getSetpoint(positioner): the setpoint for the positioner (device or device name).
+  * Number getPosition (positioner): the readback for the positioner (device or device name).
+  * Object getValue(sensor): the readout of the sensor (device or device name), which can be a scalar or an array.
   * void invalidate():  when called from __after_read__ callback, flags the scan to re-sample current scan record.
   * void cancel():  when called from __after_read__ callback, flags this record to be discarded.
   * String print(String separator):  print contents to a string, which columns are time, index, positioner values and sensor values.

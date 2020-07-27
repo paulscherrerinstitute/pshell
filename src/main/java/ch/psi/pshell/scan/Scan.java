@@ -24,6 +24,10 @@ public interface Scan {
 
     public String[] getReadableNames();
 
+    public int getReadableIndex(Object obj);
+
+    public int getWritableIndex(Object obj);
+
     public double[] getStart();
 
     public double[] getEnd();

@@ -1,11 +1,13 @@
 package ch.psi.pshell.scan;
 
-import ch.psi.pshell.scripting.Subscriptable.SubscriptableArray;
+import ch.psi.pshell.scripting.Subscriptable;
 import ch.psi.utils.Arr;
 import ch.psi.utils.Chrono;
 import ch.psi.utils.Convert;
 import ch.psi.utils.Reflection.Hidden;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.Arrays;
 
 /**
  * The ScanRecord class contains the data acquired for one point during a scan. It encapsulates the
@@ -15,7 +17,7 @@ import java.util.ArrayList;
  * readback for each positioner. - values (array of Objects): the readout of each sensor in the
  * scan, which can be a scalar or an array).
  */
-public class ScanRecord implements SubscriptableArray<Object>{
+public class ScanRecord implements Subscriptable.MappedSequence<Object,Object>{
 
     int index;   
     int dimensions;
@@ -28,7 +30,8 @@ public class ScanRecord implements SubscriptableArray<Object>{
     Long[] deviceTimestamps;
     int pass;
     long id;
-    boolean sent;   
+    boolean sent;
+    Scan scan;
 
     public int getIndex() {
         return index;
@@ -54,11 +57,24 @@ public class ScanRecord implements SubscriptableArray<Object>{
         return positions;
     }
 
-    @Override
+    //Overridden for SubscriptableArray
+    //@Override
     public Object[] getValues() {
         return values;
     }
-    
+
+    public Number getSetpoint(Object index) {
+        return setpoints[scan.getWritableIndex(index)];
+    }
+
+    public Number getPosition(Object index) {
+        return positions[scan.getWritableIndex(index)];
+    }
+
+    public Object getValue(Object index) {
+        return values[scan.getReadableIndex(index)];
+    }
+
     public long getTimestamp() {
         return (timestamp == null) ? localTimestamp : timestamp;
     }
@@ -91,6 +107,7 @@ public class ScanRecord implements SubscriptableArray<Object>{
     @Hidden
     public ScanRecord copy() {
         ScanRecord ret = new ScanRecord();
+        ret.scan = this.scan;
         ret.index = index;
         ret.indexInPass = indexInPass;
         ret.pass = pass;
@@ -180,4 +197,23 @@ public class ScanRecord implements SubscriptableArray<Object>{
         canceled = true;
     }
 
+    @Override
+    public int toItemIndex(Object key) {
+        return scan.getReadableIndex(key);
+    }
+
+    @Override
+    public List<Object> getKeys() {
+        return Arrays.asList(scan.getReadableNames());
+    }
+
+    @Override
+    public Object getItem(int index) {
+        return values[index];
+    }
+
+    @Override
+    public int getLenght() {
+        return values.length;
+    }
 }

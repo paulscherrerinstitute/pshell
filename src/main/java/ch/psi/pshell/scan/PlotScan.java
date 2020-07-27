@@ -88,6 +88,7 @@ public class PlotScan extends DiscreteScan {
         int steps = Math.min(size, getNumberOfSteps()[0]);
         for (int i = 0; i < steps; i++) {
             ScanRecord record = new ScanRecord();
+            record.scan = this;
             record.dimensions = rank;
             record.setpoints = new Number[1];
             record.positions = new Number[1];
