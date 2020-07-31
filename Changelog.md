@@ -11,6 +11,10 @@
 
 * Preference to Disable offscreen buffers on plots - better drawing quality on Mac. 
 
+* ScanResult and can be indexed by int (list of records) or device (list of device values for that scan).
+
+* ScanRecord can be indexed also by device.
+
 
 ### Changed
 
@@ -25,6 +29,7 @@
 * Devices avoid creating references to themselves on alias map not to block GC.
 
 * ReadonlyRegisterArray has default getSize (returning size of cache).
+
 
 ### Fixed
 
