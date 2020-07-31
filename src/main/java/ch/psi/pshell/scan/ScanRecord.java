@@ -197,23 +197,34 @@ public class ScanRecord implements Subscriptable.MappedSequence<Object,Object>{
         canceled = true;
     }
 
+    @Hidden
     @Override
     public int toItemIndex(Object key) {
-        return scan.getReadableIndex(key);
+        return scan.getDeviceIndex(key);
     }
 
+    @Hidden
     @Override
     public List<Object> getKeys() {
-        return Arrays.asList(Convert.toObjectArray(scan.getReadableNames()));
+        return Arrays.asList(Convert.toObjectArray(scan.getDeviceNames()));
     }
 
+    @Hidden
     @Override
-    public Object getItem(int index) {
-        return values[index];
+    public Object getItem(int index){
+        if (index<values.length) {
+            return values[index];
+        }
+        index-=values.length;
+        if (index<positions.length) {
+            return positions[index];
+        }
+        throw new IllegalArgumentException("Index");
     }
 
+    @Hidden
     @Override
     public int getLenght() {
-        return values.length;
+        return scan.getDevices().length;
     }
 }

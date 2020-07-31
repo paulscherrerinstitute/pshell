@@ -27,9 +27,15 @@ public interface Scan {
 
     public String[] getReadableNames();
 
+    public Nameable[] getDevices();
+
+    public String[] getDeviceNames();
+
     public int getReadableIndex(Object obj);
 
     public int getWritableIndex(Object obj);
+
+    public int getDeviceIndex(Object obj);
 
     public double[] getStart();
 

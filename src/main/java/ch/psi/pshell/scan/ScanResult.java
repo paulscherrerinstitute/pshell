@@ -5,6 +5,7 @@ import ch.psi.pshell.data.DataSlice;
 import ch.psi.pshell.data.LayoutDefault;
 import ch.psi.pshell.device.Writable;
 import ch.psi.pshell.device.Readable;
+import ch.psi.pshell.scripting.Subscriptable;
 import ch.psi.pshell.scripting.Subscriptable.SubscriptableList;
 import ch.psi.utils.Arr;
 import ch.psi.utils.Convert;
@@ -15,12 +16,13 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import org.apache.commons.math3.util.MultidimensionalCounter;
+import org.python.core.Py;
 import org.python.google.common.collect.Lists;
 
 /**
  * ScanResult objects package all the acquired data during a scan.
  */
-public class ScanResult implements SubscriptableList<ScanRecord>{
+public class ScanResult implements /*SubscriptableList<ScanRecord>,*/ Subscriptable.MappedSequence<Object,Object>{
 
     final ArrayList<ScanRecord> records;
     final Scan scan;
@@ -82,6 +84,18 @@ public class ScanResult implements SubscriptableList<ScanRecord>{
         }
     }
 
+    public List getDevice(Object id) {
+        int index = (id instanceof Number) ? ((Number)id).intValue() : scan.getDeviceIndex(id);
+        if (index<getReadables().size()) {
+            return getReadable(index);
+        }
+        index-=getReadables().size();
+        if (index<getWritables().size()) {
+            return getPositions(index);
+        }
+        throw new IllegalArgumentException("Index");
+    }
+
     public int getSize() {
         return records.size();
     }
@@ -94,6 +108,11 @@ public class ScanResult implements SubscriptableList<ScanRecord>{
     @Transient
     public List<Writable> getWritables() {
         return Arrays.asList(scan.getWritables());
+    }
+
+    @Transient
+    public List<Nameable> getDevices() {
+        return Arrays.asList(scan.getDevices());
     }
 
     public int getIndex() {
@@ -220,10 +239,44 @@ public class ScanResult implements SubscriptableList<ScanRecord>{
         return sb.toString();
     }
 
+    //Overridden for SubscriptableArray
     @Hidden
-    @Override
+    //@Override
     public List getValues() {
         return records;
     }
 
+    @Hidden
+    @Override
+    public int toItemIndex(Object key) {
+        //Map of devices
+        return scan.getDeviceIndex(key);
+    }
+
+    @Hidden
+    @Override
+    public List<Object> getKeys() {
+        return Arrays.asList(Convert.toObjectArray(scan.getDeviceNames()));
+    }
+
+    @Hidden
+    @Override
+    public Object getItem(int index){
+        //return getDevice(index);
+        return records.get(index);
+    }
+
+    @Hidden
+    @Override
+    public int getLenght() {
+        //return scan.getDevices().length;
+        return records.size();
+    }
+
+    @Hidden
+    @Override
+    public Object __getitem__(Object key) {
+        int index = toItemIndex(key);
+        return getDevice(index);
+    }
 }

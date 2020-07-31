@@ -22,10 +22,8 @@ import ch.psi.pshell.device.ReadonlyRegister;
 import ch.psi.pshell.device.Stoppable;
 import ch.psi.pshell.device.Timestamped;
 import ch.psi.pshell.device.TimestampedValue;
-import ch.psi.utils.Convert;
-import ch.psi.utils.IO;
-import ch.psi.utils.ObservableBase;
-import ch.psi.utils.State;
+import ch.psi.utils.*;
+
 import java.io.IOException;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
@@ -681,6 +679,11 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
         return readables;
     }
 
+    @Override
+    public Nameable[] getDevices(){
+        return Arr.append(readables, writables);
+    }
+
     int getDeviceIndex(Object arr, Object obj) {
         if (obj instanceof Number){
             return ((Number) obj).intValue();
@@ -709,7 +712,10 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
         return getDeviceIndex(getWritables(), obj);
     }
 
-
+    @Override
+    public int getDeviceIndex(Object obj){
+        return getDeviceIndex(getDevices(), obj);
+    }
 
     @Override
     public String[] getWritableNames() {
@@ -725,6 +731,15 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
         ArrayList<String> names = new ArrayList();
         for (Readable readable : getReadables()) {
             names.add(readable.getAlias());
+        }
+        return names.toArray(new String[0]);
+    }
+
+    @Override
+    public String[] getDeviceNames(){
+        ArrayList<String> names = new ArrayList();
+        for (Nameable device : getDevices()) {
+            names.add(device.getAlias());
         }
         return names.toArray(new String[0]);
     }
