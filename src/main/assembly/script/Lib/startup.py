@@ -1405,7 +1405,7 @@ class Channel(FinalizablePyObject, java.beans.PropertyChangeListener, Writable, 
         if (timeout==None):
             self.channel.setValue(value)
         else:
-            self.channel.setValueAsync(value).get(int(timeout*1000), java.util.concurrent.TimeUnit.MILLISECONDS);
+            self.channel.setValueAsync(value).get(int(timeout*1000), java.util.concurrent.TimeUnit.MILLISECONDS)
 
     def putq(self, value):
         """Write to channel and don't wait.

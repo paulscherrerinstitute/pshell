@@ -1,7 +1,6 @@
 package ch.psi.pshell.scan;
 
 import ch.psi.pshell.core.Nameable;
-import ch.psi.pshell.data.DataSlice;
 import ch.psi.pshell.data.LayoutDefault;
 import ch.psi.pshell.device.Writable;
 import ch.psi.pshell.device.Readable;
@@ -242,6 +241,7 @@ public class ScanResult implements /*SubscriptableList<ScanRecord>,*/ Subscripta
     //Overridden for SubscriptableArray
     @Hidden
     //@Override
+    @Deprecated
     public List getValues() {
         return records;
     }

@@ -236,6 +236,10 @@
     <td>Set Flat&Dark look and feel (cross platform).</td>
   </tr>
   <tr>
+    <td>-size=WxH</td>
+    <td>Set application window size if GUI state not persisted.</td>
+  </tr>
+  <tr>
     <td>-args=id:val,...</td>
     <td>Provide arguments to interpreter.</td>
   </tr>

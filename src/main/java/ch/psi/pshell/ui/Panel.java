@@ -181,6 +181,12 @@ public class Panel extends MonitoredPanel implements Plugin {
                     if (fullScreen) {
                         SwingUtils.setFullScreen(frame, true);
                     } else {
+                        if (!App.isDetachedPanelsPersisted()) {
+                            Dimension size = App.getSize();
+                            if (size!=null){
+                                frame.setSize(size);
+                            }
+                        }
                         SwingUtils.centerComponent(null, frame);
                         if (App.isDetachedPanelsPersisted()) {
                             loadWindowState();

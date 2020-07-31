@@ -377,6 +377,7 @@ public class App extends ObservableBase<AppListener> {
         sb.append("\n\t-dlaf\tSet Dark look and feel (cross platform)");
         sb.append("\n\t-flaf\tSet Flat look and feel (cross platform");
         sb.append("\n\t-blaf\tSet Flat&Dark look and feel  (cross platform)");
+        sb.append("\n\t-size=WxH\tSet application window size if GUI state not persisted.");
         sb.append("\n\t-args=...\tProvide arguments to interpreter");
         sb.append("\n\t-f=<..>\tRun a file instead of entering interactive shell (together with -c option)");
         sb.append("\n\t-p=<..>\tLoad a plugin");
@@ -523,6 +524,16 @@ public class App extends ObservableBase<AppListener> {
 
     static public boolean isDataPanel() {
         return hasArgument("dtpn");
+    }
+
+    static public Dimension getSize() {
+        try {
+            String opt = getArgumentValue("size");
+            String[]tokens= opt.toLowerCase().split("x");
+            return new Dimension(Integer.valueOf(tokens[0]), Integer.valueOf(tokens[1]));
+        } catch (Exception ex){
+        }
+        return null;
     }
 
     static public File getFileArg() {
@@ -913,6 +924,10 @@ public class App extends ObservableBase<AppListener> {
                                 Logger.getLogger(DataPanel.class.getName()).log(Level.INFO, null, ex);
                             }
                         } else {
+                            Dimension size = getSize();
+                            if (size!=null){
+                                view.setSize(size);
+                            }
                             SwingUtils.centerComponent(null, view);
                         }
                     }

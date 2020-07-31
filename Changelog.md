@@ -15,6 +15,7 @@
 
 * ScanRecord can be indexed also by device.
 
+* __size__ startup option to set the size of main dialog if GUI state is not persisted.
 
 ### Changed
 
