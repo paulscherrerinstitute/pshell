@@ -24,12 +24,11 @@ import java.util.HashMap;
  * Common layouts utilities
  */
 public abstract class LayoutBase implements Layout {
-     
 
-    boolean persistSetpoints;
+    Boolean persistSetpoints;
 
     public boolean getPersistSetpoints() {
-        return persistSetpoints;
+        return (persistSetpoints == null) ? getDataManager().getExecutionPars().getSaveSetpoints() : persistSetpoints;
     }
 
     public void setPersistSetpoints(boolean value) {

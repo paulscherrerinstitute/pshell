@@ -76,7 +76,7 @@ public class LayoutDefault extends LayoutBase implements Layout {
             } else {
                 dataManager.createDataset(getPath(scan, name), Double.class, new int[]{samples});
             }
-            if (persistSetpoints) {
+            if (getPersistSetpoints()) {
                 if (writable instanceof WritableArray) {
                     dataManager.createDataset(getPath(scan, name) + SETPOINTS_DATASET_SUFFIX, Double.class, new int[]{samples, ((WritableArray) writable).getSize()});
                 } else {
@@ -144,7 +144,7 @@ public class LayoutDefault extends LayoutBase implements Layout {
         int deviceIndex = 0;
         for (Writable writable : scan.getWritables()) {
             String path = getPath(scan, writable.getAlias());
-            if (persistSetpoints) {
+            if (getPersistSetpoints()) {
                 dataManager.setItem(path + SETPOINTS_DATASET_SUFFIX, record.getSetpoints()[deviceIndex], index);
             }
             dataManager.setItem(path, positions[deviceIndex++], index);
@@ -317,16 +317,19 @@ public class LayoutDefault extends LayoutBase implements Layout {
     public Object getData(Scan scan, String device, DataManager dm) {
         dm = (dm == null) ? getDataManager() : dm;
         DataManager.DataAddress scanPath = DataManager.getAddress(scan.getPath());
-        Object ret = null;
         try {
-            //getPath(scan, name)
-            DataSlice dataSlice = device.endsWith(SETPOINTS_DATASET_SUFFIX) ?
-                    dm.getData(scanPath.root, getPath(scan, device.substring(0, device.length()-SETPOINTS_DATASET_SUFFIX.length()))+ SETPOINTS_DATASET_SUFFIX) :
-                    dm.getData(scanPath.root, getPath(scan, device));
-            ret = dataSlice.sliceData;
+            if (device.endsWith(SETPOINTS_DATASET_SUFFIX)) {
+                device = device.substring(0, device.length() - SETPOINTS_DATASET_SUFFIX.length());
+                String path_setpoint =getPath(scan, device) + SETPOINTS_DATASET_SUFFIX;
+                //If no setpoint is saved, returns the readback values (same behabior as in-memory scan records)
+                if (dm.exists(path_setpoint)) {
+                    return dm.getData(scanPath.root, path_setpoint).sliceData;
+                }
+            }
+            return dm.getData(scanPath.root, getPath(scan, device)).sliceData;
         } catch (IOException e) {
         }
-        return ret;
+        return null;
     }
     
     @Override

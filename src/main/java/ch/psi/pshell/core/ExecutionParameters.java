@@ -27,7 +27,7 @@ import java.util.logging.Level;
 public class ExecutionParameters {
 
     final String[] executionOptions = new String[]{"defaults", "group", "open", "reset", "name", "type", "path", "tag", "seq", "split",
-        "layout", "provider", "format", "save", "persist", "flush", "preserve", "keep", "accumulate", "depth_dim", "compression",
+        "layout", "provider", "format", "save", "persist", "flush", "preserve", "keep", "accumulate", "setpoints", "depth_dim", "compression",
         "shuffle", "contiguous", "then", "then_exception", "then_success"};
 
     final String[] viewOptions = new String[]{"plot_disabled", "table_disabled", "enabled_plots", "plot_layout",
@@ -543,6 +543,11 @@ public class ExecutionParameters {
             option = getOption("accumulate"); //backward compatibility
         }
         return (option != null) ? (Boolean) option : !Context.getInstance().getConfig().dataScanReleaseRecords;
+    }
+
+    public Boolean getSaveSetpoints() {
+        Object option = getOption("setpoints");
+        return (option != null) ? (Boolean) option : Context.getInstance().getConfig().dataScanSaveSetpoints;
     }
 
     boolean isOptionForDevice(Object option, Nameable device) {

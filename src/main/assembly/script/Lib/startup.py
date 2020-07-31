@@ -1114,14 +1114,15 @@ def set_exec_pars(**args):
                              This field can be used to store data in  sub-folders of standard location.
         path(str):  If defined provides the full path name for data output root (overriding config))
                              The tag {data} can be used to enter a path relative to the standard data folder.
-        layout(str): Overrides default data layout.
-        format(str): Overrides default data format.
+        layout(str): Change data layout.
+        format(str): Change data format.
         split(scan or True): Split scan data to another table. If set to True in scan command then split every pass.
         depth_dim(int): dimension of 2d-matrixes in 3d datasets.
-        save(bool): Overrides the config option to auto save scan data.
-        flush(bool): Overrides the config option to flush file on each record.
-        keep(bool): Overrides the config option keep scan records in memory. If false do not add records to scan result.
-        preserve(bool): Overrides the config option to preserve device types. If false all values are converted to double.
+        save(bool): Change option to auto save scan data.
+        flush(bool): Change option to flush file on each record.
+        keep(bool): Change option keep scan records in memory. If false do not add records to scan result.
+        preserve(bool): Change option to preserve device types. If false all values are converted to double.
+        setpoints(bool): Request the layout to save the positioner setpoints too.
         compression(obj): True for enabling default compression, int for specifying deflation level.
                           Device or list of devices for specifying devices to be compressed.
         shuffle(obj): True for enabling shuffling before compression.
@@ -1131,8 +1132,8 @@ def set_exec_pars(**args):
         seq(int): Set next data file sequence number. 
         open(bool): If true create data output path immediately. If false closes output root, if open.
         reset(bool): If true reset the scan counter - the {count} tag and set the timestamp to now.
-        group(str): Overrides default layout group name for scans
-        tag(str): Overrides default tag for scan names (affecting group or dataset name, according to layout)
+        group(str): Change layout group name for scans
+        tag(str): Change tag for scan names (affecting group or dataset name, according to layout)
         then, then_success, then_exception(str): Sets statement to be executed on the completion of current.
         defaults(bool): If true restore the original execution parameters.
 

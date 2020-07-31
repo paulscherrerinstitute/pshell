@@ -31,6 +31,7 @@ public class Configuration extends Config {
     public boolean dataScanFlushRecords = false;
     public boolean dataScanReleaseRecords = false;
     public boolean dataScanPreserveTypes = false;
+    public boolean dataScanSaveSetpoints = false;
     public boolean commandExecutionEvents = false;
     public String hostName;
     public boolean hideServerMessages = false;
