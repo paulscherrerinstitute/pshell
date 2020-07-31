@@ -1,9 +1,12 @@
 package ch.psi.pshell.scan;
 
 import ch.psi.pshell.core.Nameable;
+import ch.psi.pshell.data.DataSlice;
+import ch.psi.pshell.data.LayoutDefault;
 import ch.psi.pshell.device.Writable;
 import ch.psi.pshell.device.Readable;
 import ch.psi.pshell.scripting.Subscriptable.SubscriptableList;
+import ch.psi.utils.Arr;
 import ch.psi.utils.Convert;
 import ch.psi.utils.Reflection.Hidden;
 import java.beans.Transient;
@@ -12,6 +15,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import org.apache.commons.math3.util.MultidimensionalCounter;
+import org.python.google.common.collect.Lists;
 
 /**
  * ScanResult objects package all the acquired data during a scan.
@@ -35,12 +39,15 @@ public class ScanResult implements SubscriptableList<ScanRecord>{
         if ((index < 0) || (index >= getReadables().size())) {
             throw new IllegalArgumentException("Index");
         }
-
-        ArrayList<Object> ret = new ArrayList<>();
-        for (ScanRecord record : records) {
-            ret.add(record.values[index]);
+        if(scan.getKeep()) {
+            List ret = new ArrayList<>();
+            for (ScanRecord record : records) {
+                ret.add(record.values[index]);
+            }
+            return ret;
+        } else {
+            return Arr.toList(scan.readData(scan.getReadableNames()[index]));
         }
-        return ret;
     }
 
     public List<Number> getSetpoints(Object id) {
@@ -48,12 +55,15 @@ public class ScanResult implements SubscriptableList<ScanRecord>{
         if ((index < 0) || (index >= getWritables().size())) {
             throw new IllegalArgumentException("Index");
         }
-
-        ArrayList<Number> ret = new ArrayList<>();
-        for (ScanRecord record : records) {
-            ret.add(record.setpoints[index]);
+        if(scan.getKeep()) {
+            ArrayList<Number> ret = new ArrayList<>();
+            for (ScanRecord record : records) {
+                ret.add(record.setpoints[index]);
+            }
+            return ret;
+        } else {
+            return Arr.toList(scan.readData(scan.getWritableNames()[index]+ LayoutDefault.SETPOINTS_DATASET_SUFFIX));
         }
-        return ret;
     }
 
     public List<Number> getPositions(Object id) {
@@ -61,12 +71,15 @@ public class ScanResult implements SubscriptableList<ScanRecord>{
         if ((index < 0) || (index >= getWritables().size())) {
             throw new IllegalArgumentException("Index");
         }
-
-        ArrayList<Number> ret = new ArrayList<>();
-        for (ScanRecord record : records) {
-            ret.add(record.positions[index]);
+        if(scan.getKeep()) {
+            ArrayList<Number> ret = new ArrayList<>();
+            for (ScanRecord record : records) {
+                ret.add(record.positions[index]);
+            }
+            return ret;
+        } else {
+            return  Arr.toList(scan.readData(scan.getWritableNames()[index]));
         }
-        return ret;
     }
 
     public int getSize() {

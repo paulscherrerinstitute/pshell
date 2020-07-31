@@ -204,7 +204,7 @@ public class ScanRecord implements Subscriptable.MappedSequence<Object,Object>{
 
     @Override
     public List<Object> getKeys() {
-        return Arrays.asList(scan.getReadableNames());
+        return Arrays.asList(Convert.toObjectArray(scan.getReadableNames()));
     }
 
     @Override

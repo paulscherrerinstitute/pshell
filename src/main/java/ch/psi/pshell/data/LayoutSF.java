@@ -534,6 +534,25 @@ public class LayoutSF extends LayoutBase implements Layout {
         return null;
     }
 
+
+    @Override
+    public Object getData(Scan scan, String device, DataManager dm) {
+        dm = (dm == null) ? getDataManager() : dm;
+        DataManager.DataAddress scanPath = DataManager.getAddress(scan.getPath());
+        Object ret = null;
+        try {
+            ret = dm.getData(scanPath.root, getDataPath(scan, device)+DATASET_VALUE).sliceData;
+        } catch (IOException ex) {
+            try {
+                ret = device.endsWith(LayoutDefault.SETPOINTS_DATASET_SUFFIX) ?
+                        dm.getData(scanPath.root, getDataPath(scan, device.substring(0, device.length()-LayoutDefault.SETPOINTS_DATASET_SUFFIX.length()))+DATASET_SETPOINT).sliceData :
+                        dm.getData(scanPath.root, getDataPath(scan, device)+DATASET_READBACK).sliceData;
+            } catch (IOException e) {
+            }
+        }
+        return ret;
+    }
+
     @Override
     public boolean isScanDataset(String root, String path, DataManager dm) {
         if (path.startsWith("/")) {

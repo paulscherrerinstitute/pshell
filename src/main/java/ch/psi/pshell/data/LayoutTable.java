@@ -6,6 +6,7 @@ import ch.psi.pshell.device.Writable;
 import ch.psi.pshell.scan.AreaScan;
 import ch.psi.pshell.scan.Scan;
 import ch.psi.pshell.scan.ScanRecord;
+import ch.psi.utils.Arr;
 import ch.psi.utils.Convert;
 import java.io.IOException;
 import java.lang.reflect.Array;
@@ -186,6 +187,23 @@ public class LayoutTable extends LayoutBase implements Layout {
 
         //Uses default data manager plot parsing
         return null;
+    }
+
+    @Override
+    public Object getData(Scan scan, String device, DataManager dm) {
+        dm = (dm == null) ? getDataManager() : dm;
+        DataManager.DataAddress scanPath = DataManager.getAddress(scan.getPath());
+        Object[] data = null;
+        try {
+            Map<String, Object> info = dm.getInfo(scanPath.root, scanPath.path);
+            String[] names = (String[]) info.get(Provider.INFO_FIELD_NAMES);
+            int index = Arr.getIndexEqual(  names, device);
+            DataSlice slice = dm.getData(scanPath.root, scanPath.path);
+            Object[][] sliceData = (Object[][]) slice.sliceData;
+            data = Arr.getColumn(sliceData, index);
+        } catch (IOException e) {
+        }
+        return data;
     }
 
     @Override

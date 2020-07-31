@@ -73,6 +73,10 @@ public interface Layout{
         return null;
     }
 
+    default Object getData(Scan scan, String device, DataManager dm) {
+        return null;
+    }
+
     //returns true if the path belongs to a scan
     boolean isScanDataset(String root, String path, DataManager dm);
 

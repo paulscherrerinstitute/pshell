@@ -312,6 +312,22 @@ public class LayoutDefault extends LayoutBase implements Layout {
         }
         return getScanPath(scan) + device;
     }
+
+    @Override
+    public Object getData(Scan scan, String device, DataManager dm) {
+        dm = (dm == null) ? getDataManager() : dm;
+        DataManager.DataAddress scanPath = DataManager.getAddress(scan.getPath());
+        Object ret = null;
+        try {
+            //getPath(scan, name)
+            DataSlice dataSlice = device.endsWith(SETPOINTS_DATASET_SUFFIX) ?
+                    dm.getData(scanPath.root, getPath(scan, device.substring(0, device.length()-SETPOINTS_DATASET_SUFFIX.length()))+ SETPOINTS_DATASET_SUFFIX) :
+                    dm.getData(scanPath.root, getPath(scan, device));
+            ret = dataSlice.sliceData;
+        } catch (IOException e) {
+        }
+        return ret;
+    }
     
     @Override
     public String getTimestampsDataset(String scanPath){

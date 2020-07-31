@@ -644,9 +644,12 @@ public class DataManager implements AutoCloseable {
     }
 
     public static class DataAddress {
-
-        String root;
-        String path;
+        DataAddress(String root, String path){
+            this.root=root;
+            this.path=path;
+        }
+        final public String root;
+        final public String path;
     }
 
     public static DataAddress getAddress(String path) {
@@ -654,10 +657,7 @@ public class DataManager implements AutoCloseable {
         for (String delimitor : rootDelimitors) {
             if (path.contains(delimitor)) {
                 int index = path.indexOf(delimitor);
-                DataAddress ret = new DataAddress();
-                ret.root = path.substring(0, index).trim();
-                ret.path = path.substring(index + delimitor.length()).trim();
-                return ret;
+                return new DataAddress(path.substring(0, index).trim(), path.substring(index + delimitor.length()).trim());
             }
         }
         return null;

@@ -272,6 +272,17 @@ public class Arr {
         return rank;
     }
 
+    public static <T> T[] getColumn(T[][] matrix, int index) {
+        if (matrix==null){
+            return null;
+        }
+        T[] ret = newArray(matrix[0], matrix.length);
+        for(int i=0; i<ret.length; i++){
+            ret[i] = matrix[i][index];
+        }
+        return ret;
+    }
+
     /**
      * [..., Y, X]
      */
@@ -364,8 +375,15 @@ public class Arr {
         return ret;
     }
 
-    static List toList(Object array) {
+    public static List toList(Object array) {
+        if (array instanceof List ){
+            return (List) array;
+        }
         Class type = array.getClass().getComponentType();
+        if (type.isPrimitive()) {
+            array = Convert.toWrapperArray(array);
+            type = array.getClass().getComponentType();
+        }
         if (type == Double.class) {
             return Arrays.asList((Double[]) array);
         }
@@ -393,21 +411,15 @@ public class Arr {
         if (type == Character.class) {
             return Arrays.asList((Character[]) array);
         }
-        return Arrays.asList(array);
+        return Arrays.asList(Convert.toObjectArray(array));
     }
 
     public static Object getMin(Object array) {
-        if (getComponentType(array).isPrimitive()) {
-            array = Convert.toWrapperArray(array);
-        }
         List list = toList(array);
         return Collections.min(list);
     }
 
     public static Object getMax(Object array) {
-        if (getComponentType(array).isPrimitive()) {
-            array = Convert.toWrapperArray(array);
-        }
         List list = toList(array);
         return Collections.max(list);
     }

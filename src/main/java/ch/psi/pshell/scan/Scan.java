@@ -2,11 +2,14 @@ package ch.psi.pshell.scan;
 
 import ch.psi.pshell.core.Context;
 import ch.psi.pshell.core.Nameable;
+import ch.psi.pshell.data.DataSlice;
 import ch.psi.pshell.device.Writable;
 import ch.psi.pshell.device.Readable;
 import ch.psi.utils.Reflection;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
+
 /**
  *
  */
@@ -80,6 +83,8 @@ public interface Scan {
     public int getIndex();
 
     public String getPath();
+
+    public Object readData(String device);
     
     public String getTag();
     

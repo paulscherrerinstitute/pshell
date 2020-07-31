@@ -6,6 +6,10 @@ import ch.psi.pshell.bs.Waveform;
 import ch.psi.pshell.core.Context;
 import ch.psi.pshell.core.ExecutionParameters;
 import ch.psi.pshell.core.Nameable;
+import ch.psi.pshell.data.DataManager;
+import ch.psi.pshell.data.DataSlice;
+import ch.psi.pshell.data.Layout;
+import ch.psi.pshell.data.Provider;
 import ch.psi.pshell.device.Device;
 import ch.psi.pshell.device.Motor;
 import ch.psi.pshell.device.Movable;
@@ -66,6 +70,8 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
     int pass = 1;
     boolean keep;
     String name = "Scan";
+    Layout dataLayout;
+    Provider dataProvider;
 
     boolean useWritableReadback = getScansUseWritableReadback();
     boolean restorePosition = getRestorePositionOnRelativeScans();
@@ -335,7 +341,7 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
                             onAfterPass(pass);
                             if (getSplitPasses()){
                                 if(pass < getNumberOfPasses()){
-                                    Context.getInstance().getDataManager().splitScanData(this);    
+                                    Context.getInstance().getDataManager().splitScanData(this);
                                     setRecordIndexOffset(getRecordIndex());
                                 }
                             }
@@ -592,6 +598,10 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
                     scanRoot = IO.getRelativePath(scanRoot, context.getSetup().getDataPath());
                 }
                 scanPath = scanRoot + " | " + context.getDataManager().getScanPath(this);
+                if (execPars.isScanPersisted(this)) {
+                    dataLayout = (execPars.getDataLayout() != null) ? execPars.getDataLayout() : context.getDataManager().getLayout();
+                    dataProvider = (execPars.getDataProvider() != null) ? execPars.getDataProvider() : context.getDataManager().getProvider();
+                }
             }
         }
     }
@@ -609,11 +619,11 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
         }
         currentRecord = record;
         for (ScanListener listener : getListeners()) {
-            try{
+            try {
                 listener.onNewRecord(ScanBase.this, record);
-            } catch (Exception ex){
+            } catch (Exception ex) {
                 logger.log(Level.WARNING, null, ex);
-            }                
+            }
         }
         currentRecord.sent = true;
     }
@@ -642,6 +652,13 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
     @Override
     public String getPath() {
         return scanPath;
+    }
+
+    public Object readData(String device){
+        if (dataLayout!=null) {
+            return dataLayout.getData(this, device, Context.getInstance().getDataManager());
+        }
+        return null;
     }
 
     @Override
