@@ -21,9 +21,9 @@ import org.python.google.common.collect.Lists;
 /**
  * ScanResult objects package all the acquired data during a scan.
  */
-public class ScanResult implements /*SubscriptableList<ScanRecord>,*/ Subscriptable.MappedSequence<Object,Object>{
+public class ScanResult implements SubscriptableList<ScanRecord>, Subscriptable.Dict<Object,Object>{
 
-    final ArrayList<ScanRecord> records;
+    final List<ScanRecord> records;
     final Scan scan;
 
     ScanResult(Scan scan) {
@@ -238,45 +238,22 @@ public class ScanResult implements /*SubscriptableList<ScanRecord>,*/ Subscripta
         return sb.toString();
     }
 
-    //Overridden for SubscriptableArray
+    //SubscriptableArray interface
     @Hidden
-    //@Override
-    @Deprecated
+    @Override
     public List getValues() {
         return records;
     }
 
-    @Hidden
-    @Override
-    public int toItemIndex(Object key) {
-        //Map of devices
-        return scan.getDeviceIndex(key);
-    }
-
-    @Hidden
-    @Override
-    public List<Object> getKeys() {
-        return Arrays.asList(Convert.toObjectArray(scan.getDeviceNames()));
-    }
-
-    @Hidden
-    @Override
-    public Object getItem(int index){
-        //return getDevice(index);
-        return records.get(index);
-    }
-
-    @Hidden
-    @Override
-    public int getLenght() {
-        //return scan.getDevices().length;
-        return records.size();
-    }
-
+    //Dict interface
     @Hidden
     @Override
     public Object __getitem__(Object key) {
-        int index = toItemIndex(key);
-        return getDevice(index);
+        return getDevice(key);
+    }
+
+    @Override
+    public List<Object> keys() {
+        return Arrays.asList(Convert.toObjectArray(scan.getDeviceNames()));
     }
 }

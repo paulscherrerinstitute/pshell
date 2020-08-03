@@ -1,5 +1,6 @@
 package ch.psi.pshell.scripting;
 
+import ch.psi.utils.Arr;
 import ch.psi.utils.Reflection.Hidden;
 import java.util.Arrays;
 import java.util.Collections;
@@ -11,82 +12,125 @@ import org.python.core.PyTuple;
 /**
  * Utiliy interfaces to make objects subscriptable in Python.
  */
-public interface Subscriptable<T> {
-    T __getitem__(int index);
+public interface Subscriptable {
     int __len__();
-    
-    default void _assertIndexValid(int index) {
-            if ((index >= __len__()) || (index < 0)) {
-                throw Py.IndexError("Invalid index: " + index + " (size: " + __len__() + ")");
-            }        
-    }
-    
-    public static interface Mapped<S, T> extends Subscriptable<T>{
-        default T __getitem__(S key) {
-            int index = toItemIndex(key);
-            if (index < 0) {
-                throw Py.IndexError("Invalid key: " + key);
-            }
-            return __getitem__(index);
+
+    default int assertIndexValid(int index) {
+        if  (index < 0){
+            index = __len__() + index;
         }
-        default java.util.List<S> keys() {
-            return getKeys();
+        if ((index >= __len__()) || (index < 0)) {
+            throw Py.IndexError("Invalid index: " + index + " (size: " + __len__() + ")");
+        }
+        return index;
+    }
+
+    /**
+     * Basic type for subscriptable lists.
+     */
+    interface Lst<T> extends Subscriptable {
+        T __getitem__(int index);
+    }
+
+    /**
+     * Basic type for subscriptable maps .
+     */
+    interface Dict<S, T> extends Subscriptable {
+        T __getitem__(S key);
+
+        default S assertIndexValid(S index) {
+            if (!Arr.containsEqual(keys().toArray(),index)) {
+                throw Py.IndexError("Invalid index: " + index);
+            }
+            return index;
         }
 
-        default java.util.List<T> values() {
-            java.util.List<T> ret = new java.util.ArrayList<>();
+        List<S> keys();
+
+        default List<T> values() {
+            List<T> ret = new java.util.ArrayList<>();
             for (S key : keys()){
                 ret.add(__getitem__(key));
             }
             return ret;
         }
 
-        default java.util.List<List> items() {
-            java.util.List<List> ret = new java.util.ArrayList<>();
+        default List<List> items() {
+            List<List> ret = new java.util.ArrayList<>();
             for (S key : keys()){
-               ret.add(Collections.unmodifiableList(Arrays.asList(key, __getitem__(key))));
+                ret.add(Collections.unmodifiableList(Arrays.asList(key, __getitem__(key))));
             }
             return ret;
         }
-        
-        int toItemIndex(S itemKey);
-        @Hidden
-        java.util.List<S> getKeys();
+
     }
 
-    public static interface SubscriptableList<T> extends Subscriptable<T>{
+    /**
+     * Basic subscriptable list with index control.
+     */
+    interface Sequence<T> extends Lst<T>{
+        @Override
+        default T __getitem__(int index) {
+            index = assertIndexValid(index);
+            return getItem(index);
+        }
+        @Override
+        default int __len__() {
+            return getLenght();
+        }
+
+        T getItem(int index);
+
+        int getLenght();
+    }
+
+    /**
+     * Basic subscriptable map with index control.
+     */
+    interface Map<S, T> extends Dict<S,T> {
+        default T __getitem__(S key) {
+            key = assertIndexValid(key);
+            return  getItem(key);
+        }
+
+        T getItem(S key);
+    }
+
+    /**
+     * Subscriptable list backed by a Java List.
+     */
+    interface SubscriptableList<T> extends Lst<T>{
 
         @Override
         default T __getitem__(int index) {
-            _assertIndexValid(index);
+            index = assertIndexValid(index);
             return getValues().get(index);
         }
 
         @Override
         default int __len__() {
-            java.util.List list = getValues();
+            List list = getValues();
             return (list == null) ? 0 : list.size();
         }
 
-        java.util.List<T> getValues();
+        List<T> getValues();
                 
         //Backward compatibility
         @Hidden
-        default java.util.List<T> getItemsList(){
+        default List<T> getItemsList(){
             return getValues();
         }
 
     }
 
-    public static interface MappedList<S,T> extends SubscriptableList<T>, Mapped<S,T> {        
-        
-    }
-
-    public static interface SubscriptableArray<T> extends Subscriptable<T>{
+    /**
+     * Subscriptable list backed by a Java array.
+     */
+    interface SubscriptableArray<T> extends Lst<T>{
 
         @Override
         default T __getitem__(int index) {
-            _assertIndexValid(index);
+            index = assertIndexValid(index);
             return getValues()[index];
         }
 
@@ -97,40 +141,52 @@ public interface Subscriptable<T> {
         }
 
         T[] getValues();
-        
+
         //Backward compatibility
         @Hidden
         default T[] getItemsArray(){
             return getValues();
-        }        
+        }
     }
 
-    public static interface MappedArray<S,T> extends SubscriptableArray<T> , Mapped<S,T>{
-
-    }
-
-    
-    public static interface Sequence<T> extends Subscriptable<T>{
-
-        @Override
-        default T __getitem__(int index) {
-            if ((index >= __len__()) || (index < 0)) {
-                throw Py.IndexError("Invalid index: " + index + " (size: " + __len__() + ")");
+    /**
+     * A map that can be accesses also by order of element.
+     */
+    interface OrderedMap<S, T> extends Lst<T>, Dict<S, T>{
+        default T __getitem__(S key) {
+            int index = toItemIndex(key);
+            if (index < 0) {
+                throw Py.IndexError("Invalid key: " + key);
             }
-            return getItem(index);
+            return __getitem__(index);
+        }
+        default List<S> keys() {
+            return getKeys();
         }
 
-        @Override
-        default int __len__() {
-            return getLenght();
-        }
+        int toItemIndex(S itemKey);
+        @Hidden
+        List<S> getKeys();
+    }
 
-        T getItem(int index);
+    /**
+     * OrderedMap with index control.
+     */
+    interface MappedSequence<S,T> extends Sequence<T> , OrderedMap<S,T>{
 
-        int getLenght();
-    }    
-    
-    public static interface MappedSequence<S,T> extends Sequence<T> , Mapped<S,T>{
+    }
 
-    }    
+    /**
+     * OrderedMap backed by a Java list.
+     */
+    interface MappedList<S,T> extends SubscriptableList<T>, OrderedMap<S,T> {
+        
+    }
+
+    /**
+     * OrderedMap backed by a Java array.
+     */
+    interface MappedArray<S,T> extends SubscriptableArray<T> , OrderedMap<S,T>{
+
+    }
 }
