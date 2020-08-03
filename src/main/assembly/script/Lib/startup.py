@@ -26,8 +26,6 @@ import org.python.core.PyArray as PyArray
 import org.python.core.PyFunction as PyFunction
 import org.python.core.PyMethod as PyMethod
 import org.python.core.PyGenerator as PyGenerator
-import org.python.core.finalization.FinalizablePyObject as FinalizablePyObject
-import org.python.core.finalization.FinalizeTrigger as FinalizeTrigger
 
 import ch.psi.utils.Threading as Threading
 import ch.psi.utils.State as State
@@ -1339,7 +1337,8 @@ def create_channel_device(channel_name, type=None, size=None, device_name=None):
 def create_channel(name, type=None, size=None):
     return Epics.newChannel(name, Epics.getChannelType(type), size)
 
-class Channel(FinalizablePyObject, java.beans.PropertyChangeListener, Writable, Readable):
+#Not using finalizer: closing channels in garbage collection generate errors
+class Channel(java.beans.PropertyChangeListener, Writable, Readable):
     def __init__(self, channel_name, type = None, size = None, callback=None, alias = None, monitored=None):
         """ Create an object that encapsulates an Epics PV connection.
         Args:
@@ -1355,7 +1354,6 @@ class Channel(FinalizablePyObject, java.beans.PropertyChangeListener, Writable, 
         self.callback = callback
         self._alias = alias
         if monitored is not None: self.set_monitored(monitored)
-        #FinalizeTrigger.ensureFinalizer(self)
 
     def get_channel_name(self):
         """Return the name of the channel.
@@ -1459,10 +1457,6 @@ class Channel(FinalizablePyObject, java.beans.PropertyChangeListener, Writable, 
         return self
 
     def __exit__(self, *args):
-        self.close()
-
-    def finalize(self): pass #TODO: if not overriden, __del__ is not called!!!
-    def __del__(self):
         self.close()
 
 
