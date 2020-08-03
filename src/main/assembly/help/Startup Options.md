@@ -210,32 +210,10 @@
     <td>Add to script path.</td>
   </tr>
   <tr>
-    <td>-mlaf</td>
-    <td>Set Metal look and feel (cross platform).</td>
+    <td>-laf=[name]</td>
+    <td>Set application Look and Feel: system (s), metal (m), nimbus (n), darcula (d), 
+        flat (f), or dark (b).</td>
   </tr>
-  <tr>
-    <td>-slaf</td>
-    <td>Set System look and feel (or Metal if no System look and feel is found).</td>
-  </tr>
-  <tr>
-    <td>-nlaf</td>
-    <td>Set Nimbus look and feel (cross platform).</td>
-  </tr>
-  <tr>
-    <td>-dlaf</td>
-    <td>Set Dark look and feel (cross platform).</td>
-  </tr>
-  <tr>
-    <td>-flaf&lt;=type&gt</td>
-    <td>Ser a flat look and feel (cross platform). 
-        Optional type parameter can be: Light, Dark, IntelliJ(default), Darcula (default if -dark is set).
-    </td>
-  </tr>
-  <tr>
-    <td>-blaf</td>
-    <td>Set Flat&Dark look and feel (cross platform).</td>
-  </tr>
-  <tr>
     <td>-size=WxH</td>
     <td>Set application window size if GUI state not persisted.</td>
   </tr>

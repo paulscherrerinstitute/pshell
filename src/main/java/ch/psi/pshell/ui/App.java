@@ -40,7 +40,7 @@ import ch.psi.utils.ObservableBase;
 import ch.psi.utils.Reflection.Hidden;
 import ch.psi.utils.swing.ConfigDialog;
 import ch.psi.utils.swing.MainFrame;
-import ch.psi.utils.swing.MainFrame.FlatLookAndFeelType;
+import ch.psi.utils.swing.MainFrame.LookAndFeelType;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.GraphicsEnvironment;
@@ -371,12 +371,7 @@ public class App extends ObservableBase<AppListener> {
         sb.append("\n\t-libp=<path>\tAdd to library path");
         sb.append("\n\t-clsp=<path>\tAdd to class path");
         sb.append("\n\t-scrp=<path>\tAdd to script path");
-        sb.append("\n\t-mlaf\tSet Metal look and feel (cross platform)");
-        sb.append("\n\t-slaf\tSet System look and feel (or Metal if no System LAF is installed)");
-        sb.append("\n\t-nlaf\tSet Nimbus look and feel (cross platform)");
-        sb.append("\n\t-dlaf\tSet Dark look and feel (cross platform)");
-        sb.append("\n\t-flaf\tSet Flat look and feel (cross platform");
-        sb.append("\n\t-blaf\tSet Flat&Dark look and feel  (cross platform)");
+        sb.append("\n\t-laf=<name> \tLook and feel: system, metal, nimbus, darcula, flat, or dark");
         sb.append("\n\t-size=WxH\tSet application window size if GUI state not persisted.");
         sb.append("\n\t-args=...\tProvide arguments to interpreter");
         sb.append("\n\t-f=<..>\tRun a file instead of entering interactive shell (together with -c option)");
@@ -1654,35 +1649,28 @@ public class App extends ObservableBase<AppListener> {
         }
         //Look and feel: default is system
         String laf = getArgumentValue("laf");
-        if (laf != null) {
-        } else if (hasArgument("mlaf")) {
-            laf = UIManager.getCrossPlatformLookAndFeelClassName();
-        } else if (hasArgument("slaf")) {
-            laf = UIManager.getSystemLookAndFeelClassName();
-        } else if (hasArgument("nlaf")) {
-            laf = MainFrame.getNimbusLookAndFeel();
-        } else if (hasArgument("blaf")) {
-            laf = MainFrame.getFlatLookAndFeel(FlatLookAndFeelType.Darcula);
-        } else if (hasArgument("flaf")) {
-            String type = getArgumentValue("flaf");
-            if (Arr.containsEqual(Convert.toStringArray(FlatLookAndFeelType.values()), type)) {
-                laf = MainFrame.getFlatLookAndFeel(FlatLookAndFeelType.valueOf(type));
+        if (laf == null) {
+            LookAndFeelType type;
+            //Deprecated arguments
+            if (hasArgument("mlaf")) {
+                type = LookAndFeelType.metal;
+            } else if (hasArgument("slaf")) {
+                type = LookAndFeelType.system;
+            } else if (hasArgument("nlaf")) {
+                type = LookAndFeelType.nimbus;
+            } else if (hasArgument("blaf")) {
+                type = LookAndFeelType.dark;
+            } else if (hasArgument("dlaf")) {
+                type = LookAndFeelType.darcula;
             } else {
-                if (hasArgument("dlaf")) {
-                    laf = MainFrame.getFlatLookAndFeel(FlatLookAndFeelType.Darcula);
-                } else {
-                    laf = MainFrame.getFlatLookAndFeel(FlatLookAndFeelType.IntelliJ);
+                // Default is system laf (or Metal, if no system installed).
+                // However prefer Nimbus on Windows & Linux
+                type = LookAndFeelType.nimbus;
+                if ((laf == null) || (Sys.getOSFamily() == OSFamily.Mac)) {
+                    type = LookAndFeelType.system;
                 }
             }
-        } else if (hasArgument("dlaf")) {
-            laf = MainFrame.getDarculaLookAndFeel();
-        } else {
-            // Default is system laf (or Metal, if no system installed).
-            // However prefer Nimbus on Windows & Linux
-            laf = MainFrame.getNimbusLookAndFeel();
-            if ((laf == null) || (Sys.getOSFamily() == OSFamily.Mac)) {
-                laf = UIManager.getSystemLookAndFeelClassName();
-            }
+            laf = MainFrame.getLookAndFeel(type);
         }
         MainFrame.setLookAndFeel(laf);
     }

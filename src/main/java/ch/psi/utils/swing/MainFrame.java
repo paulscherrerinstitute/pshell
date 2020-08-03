@@ -2,6 +2,7 @@ package ch.psi.utils.swing;
 
 import ch.psi.pshell.ui.App;
 import ch.psi.utils.Arr;
+import ch.psi.utils.Convert;
 import ch.psi.utils.Serializer;
 import ch.psi.utils.Sys;
 import java.awt.Component;
@@ -352,29 +353,55 @@ public abstract class MainFrame extends JFrame {
         return "com.bulenkov.darcula.DarculaLaf";
     }
     
-    public enum FlatLookAndFeelType{
-        Light,
-        IntelliJ,
-        Darcula,
-        Dark
-    }
-            
-    public static String getFlatLookAndFeel(FlatLookAndFeelType type) {
-        switch (type){
-            case IntelliJ: return "com.formdev.flatlaf.FlatIntelliJLaf";
-            case Darcula: return "com.formdev.flatlaf.FlatDarculaLaf";
-            case Dark: return "com.formdev.flatlaf.FlatDarkLaf";
-            default: return "com.formdev.flatlaf.FlatLightLaf";
+    public enum LookAndFeelType {
+        s, system,
+        m, metal,
+        n, nimbus,
+        d, darcula,
+        f, flat,
+        b, dark;
+        static public LookAndFeelType[] getFullNames(){
+            return new LookAndFeelType[]{system, metal, nimbus, darcula, flat, dark};
         }
+        static public LookAndFeelType[] getShortNames(){
+            return new LookAndFeelType[]{s, m, n, d, f, b};
+        }
+    }
+
+    public static LookAndFeelType getLookAndFeelType(){
+        String laf = UIManager.getLookAndFeel().getClass().getName();
+        for (LookAndFeelType type : LookAndFeelType.getFullNames()) {
+            if (getLookAndFeel(type).equalsIgnoreCase(laf)){
+                return type;
+            }
+        }
+
+        return null;
+    }
+
+    public static String getLookAndFeel() {
+        return UIManager.getLookAndFeel().getClass().getName();
+    }
+
+    public static String getLookAndFeel(LookAndFeelType type) {
+        switch (type){
+            case s: case system: return UIManager.getSystemLookAndFeelClassName();
+            case m: case metal: return UIManager.getCrossPlatformLookAndFeelClassName();
+            case n: case nimbus: return getNimbusLookAndFeel();
+            case d: case darcula: return MainFrame.getDarculaLookAndFeel();
+            case f: case flat: return "com.formdev.flatlaf.FlatIntelliJLaf";
+            case b: case dark: return "com.formdev.flatlaf.FlatDarculaLaf";
+        }
+        return null;
     }
 
     static Boolean dark; 
     public static boolean isDark() {
         if (dark==null){
             dark = Arr.containsEqual(new String[]{
-                        getDarculaLookAndFeel(),
-                        getFlatLookAndFeel(FlatLookAndFeelType.Dark),
-                        getFlatLookAndFeel(FlatLookAndFeelType.Darcula),
+                        getLookAndFeel(LookAndFeelType.darcula),
+                        getLookAndFeel(LookAndFeelType.dark),
+                        "com.formdev.flatlaf.FlatDarkLaf",
                     },
                     UIManager.getLookAndFeel().getClass().getName() );            
         }
@@ -385,9 +412,15 @@ public abstract class MainFrame extends JFrame {
         return UIManager.getLookAndFeel().getClass().getName().equals(getNimbusLookAndFeel());
     }
 
-    public static void setLookAndFeel(final String className) {
+    public static void setLookAndFeel(LookAndFeelType type) {
+        setLookAndFeel(type.toString());
+    }
+    public static void setLookAndFeel(String className) {
         if (className == null) {
             return;
+        }
+        if (Arr.containsEqual(Convert.toStringArray(LookAndFeelType.values()), className)){
+            className = getLookAndFeel(LookAndFeelType.valueOf(className));
         }
         try {
             if ((Sys.getOSFamily() == Sys.OSFamily.Linux) && (className.equals(getDarculaLookAndFeel()))) {
@@ -396,6 +429,7 @@ public abstract class MainFrame extends JFrame {
                 UIManager.getFont("Label.font");
             }
             UIManager.setLookAndFeel(className);
+            dark = null;
             SwingUtils.updateAllFrames();
         } catch (Exception ex) {
             logger.log(Level.INFO, null, ex);

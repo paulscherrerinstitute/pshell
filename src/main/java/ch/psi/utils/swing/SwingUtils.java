@@ -897,7 +897,8 @@ public class SwingUtils {
                     return null;
                 }
             };
-
+            label.setOpaque(true);
+            label.setFocusable(false);
             add(label);
             label.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 5));
             button = new TabButton();

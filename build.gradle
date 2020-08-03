@@ -108,7 +108,7 @@ dependencies {
     compile 'com.github.sarxos:webcam-capture:0.3.12'
     compile 'org.clojars.nakkaya:darcula:1.0.0'   //Netbeans darcula
     //compile 'com.bulenkov:darcula:2018.2'    //Original darcula  
-    compile 'com.formdev:flatlaf:0.24'
+    compile 'com.formdev:flatlaf:0.38'
     compile 'javax.xml.bind:jaxb-api:2.3.0'
     
     //TIFF support for ImageIO can be added installing JAI, or one of the following dependencies:
@@ -285,8 +285,8 @@ publishing {
             from components.java
             artifact sourcesJar
             //artifact javadocJar
-            artifact generateRpm
             artifact fatJar
+            artifact generateRpm
             groupId group
             artifactId project.name
             version version
