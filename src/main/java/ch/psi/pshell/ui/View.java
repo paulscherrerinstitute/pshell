@@ -232,16 +232,16 @@ public class View extends MainFrame {
         labelUser.setFont(labelUser.getFont().deriveFont(Font.BOLD));
         closableTabListener = (JTabbedPane tabbedPane, int index) -> {
             try {
-                if (tabDoc.getComponentAt(index) instanceof ScriptEditor) {
-                    ScriptEditor editor = ((ScriptEditor) tabDoc.getComponentAt(index));
-                    if (!(tabDoc.getSelectedComponent() == editor)) {
-                        tabDoc.setSelectedComponent(editor);
+                if (tabbedPane.getComponentAt(index) instanceof ScriptEditor) {
+                    ScriptEditor editor = ((ScriptEditor) tabbedPane.getComponentAt(index));
+                    if (!(tabbedPane.getSelectedComponent() == editor)) {
+                        tabbedPane.setSelectedComponent(editor);
                     }
                     return editor.getTextEditor().checkChangeOnClose();
-                } else if (tabDoc.getComponentAt(index) instanceof Processor) {
-                    Processor processor = ((Processor) tabDoc.getComponentAt(index));
-                    if (!(tabDoc.getSelectedComponent() == processor)) {
-                        tabDoc.setSelectedComponent((Component) processor);
+                } else if (tabbedPane.getComponentAt(index) instanceof Processor) {
+                    Processor processor = ((Processor) tabbedPane.getComponentAt(index));
+                    if (!(tabbedPane.getSelectedComponent() == processor)) {
+                        tabbedPane.setSelectedComponent((Component) processor);
                     }
                     return processor.checkChangeOnClose();
                 }
