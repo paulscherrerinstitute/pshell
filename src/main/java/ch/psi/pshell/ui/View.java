@@ -104,9 +104,6 @@ import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.KeyEventDispatcher;
 import java.awt.KeyboardFocusManager;
-import java.awt.event.KeyEvent;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 import java.lang.reflect.Array;
 import java.nio.file.Paths;
 import javax.swing.ImageIcon;
@@ -141,8 +138,6 @@ import java.awt.dnd.DropTarget;
 import java.awt.dnd.DropTargetDragEvent;
 import java.awt.dnd.DropTargetDropEvent;
 import java.awt.dnd.DropTargetEvent;
-import java.awt.event.ContainerEvent;
-import java.awt.event.WindowAdapter;
 import javax.swing.DefaultCellEditor;
 import javax.swing.JComboBox;
 import javax.swing.JOptionPane;
@@ -925,7 +920,9 @@ public class View extends MainFrame {
 
     void setTabDetachable(final JTabbedPane tabbedPane, int index, final HashMap<String, Component> detachedMap) {
         Component component = tabbedPane.getComponentAt(index);
-        ((CloseButtonTabComponent) tabbedPane.getTabComponentAt(index)).getLabel().addMouseListener(new MouseAdapter() {
+        CloseButtonTabComponent tabComponent = (CloseButtonTabComponent) tabbedPane.getTabComponentAt(index);
+
+        final MouseAdapter listener = new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
                 if ((e.getClickCount() == 2) && (tabbedPane.getSelectedComponent() == component) && canDetach(component)) {
@@ -989,7 +986,50 @@ public class View extends MainFrame {
                     tabbedPane.setSelectedComponent(component);
                 }
             }
-        });
+        };
+        LookAndFeelType laf = MainFrame.getLookAndFeelType();
+        if ((laf==null) || (!laf.hasTabHoverEffect())) {
+            ((CloseButtonTabComponent) tabbedPane.getTabComponentAt(index)).getLabel().addMouseListener(listener);
+        } else {
+            //TODO: This is a workaround to the fact that, when using dark, flat or nimbus laf,
+            //      adding the listener will make the tab hover background color not be drawn on the tab.
+            //      So we keep adding/removing as needed.
+            tabbedPane.addChangeListener(new javax.swing.event.ChangeListener() {
+                @Override
+                public void stateChanged(javax.swing.event.ChangeEvent evt) {
+                    if (tabComponent.isDisplayable()) {
+                        if (tabbedPane.getSelectedComponent() == component) {
+                            if (!tabbedPane.hasFocus()) {
+                                tabbedPane.requestFocus();
+                            } else {
+                                if (!Arr.contains(tabComponent.getLabel().getMouseListeners(), listener)) {
+                                    tabComponent.getLabel().addMouseListener(listener);
+                                }
+                            }
+                        } else {
+                                tabComponent.getLabel().removeMouseListener(listener);
+                        }
+                    } else {
+                        tabbedPane.removeChangeListener(this);
+                    }
+                }
+            });
+            tabbedPane.addFocusListener(new FocusListener() {
+                @Override
+                public void focusGained(FocusEvent e) {
+                    tabComponent.getLabel().removeMouseListener(listener);
+                    if (tabbedPane.getSelectedComponent() == component) {
+                        if (!Arr.contains(tabComponent.getLabel().getMouseListeners(), listener)) {
+                            tabComponent.getLabel().addMouseListener(listener);
+                        }
+                    }
+                }
+                @Override
+                public void focusLost(FocusEvent e) {
+                    tabComponent.getLabel().removeMouseListener(listener);
+                }
+            });
+        }
     }
 
     public void setScanTableDisabled(boolean value) {

@@ -366,6 +366,9 @@ public abstract class MainFrame extends JFrame {
         static public LookAndFeelType[] getShortNames(){
             return new LookAndFeelType[]{s, m, n, d, f, b};
         }
+        public boolean hasTabHoverEffect(){
+            return Arr.contains(new LookAndFeelType[]{n, nimbus, f, flat, b, dark}, this);
+        }
     }
 
     public static LookAndFeelType getLookAndFeelType(){
