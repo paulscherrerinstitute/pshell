@@ -1,5 +1,7 @@
 package ch.psi.pshell.device;
 
+import ch.psi.utils.Reflection.Hidden;
+
 /**
  * Interface for devices containing a raw numeric or array value.
  */

@@ -6,7 +6,7 @@ import ch.psi.pshell.device.Readable.DoubleType;
  * A Readonly Register with metadata: units, range, scale and offset. Metadata
  * may be static or persisted in configuration.
  */
-public interface ReadonlyProcessVariable extends ReadonlyRegister<Double>, DoubleType {
+public interface ReadonlyProcessVariable extends ReadonlyRegister.ReadonlyRegisterNumber<Double>, DoubleType {
 
     @Override
     public ReadonlyProcessVariableConfig getConfig();

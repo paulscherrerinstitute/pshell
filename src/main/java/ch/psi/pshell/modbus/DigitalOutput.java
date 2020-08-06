@@ -1,13 +1,14 @@
 package ch.psi.pshell.modbus;
 
 import ch.psi.pshell.device.Readable.BooleanType;
+import ch.psi.pshell.device.Register.RegisterBoolean;
 import ch.psi.pshell.device.RegisterBase;
 import java.io.IOException;
 
 /**
  * Scalar register classes wrapping single DO in a master.
  */
-public class DigitalOutput extends RegisterBase<Boolean> implements  BooleanType {
+public class DigitalOutput extends RegisterBase<Boolean> implements RegisterBoolean, BooleanType {
 
     final int index;
 

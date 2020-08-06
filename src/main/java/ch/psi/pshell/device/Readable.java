@@ -58,10 +58,10 @@ public interface Readable<T> extends Nameable {
     public interface ReadableNumber<T extends Number> extends Readable<T> {
     }
 
-    public interface ReadableBoolean extends Readable<Boolean> {
+    public interface ReadableBoolean extends Readable<Boolean>, BooleanType {
     }
 
-    public interface ReadableString extends Readable<String> {
+    public interface ReadableString extends Readable<String>, StringType {
     }
 
     public interface ReadableByte extends ReadableNumber<Byte>, ByteType {

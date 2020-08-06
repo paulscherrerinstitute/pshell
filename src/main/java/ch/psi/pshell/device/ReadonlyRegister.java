@@ -1,9 +1,8 @@
 package ch.psi.pshell.device;
 
-import ch.psi.pshell.device.Readable.BooleanType;
-import ch.psi.pshell.device.Readable.StringType;
 import java.io.IOException;
 import java.lang.reflect.Array;
+import ch.psi.utils.Reflection.Hidden;
 
 /**
  * Interface for devices containing a readonly numeric or array value.
@@ -50,10 +49,10 @@ public interface ReadonlyRegister<T> extends Device, Readable<T>, Cacheable<T> {
 
     }
     
-    public interface ReadonlyRegisterBoolean extends ReadonlyRegister<Boolean>, BooleanType, Cacheable.CacheableBoolean {
+    public interface ReadonlyRegisterBoolean extends ReadonlyRegister<Boolean>, Readable.ReadableBoolean, Cacheable.CacheableBoolean {
     }
 
-    public interface ReadonlyRegisterString extends ReadonlyRegister<String>, StringType, Cacheable.CacheableString {
+    public interface ReadonlyRegisterString extends ReadonlyRegister<String>, Readable.ReadableString, Cacheable.CacheableString {
     }    
 
     /**
