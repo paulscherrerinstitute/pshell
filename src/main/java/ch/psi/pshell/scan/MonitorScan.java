@@ -13,7 +13,7 @@ import ch.psi.utils.Chrono;
 import ch.psi.pshell.device.Cacheable;
 import ch.psi.pshell.device.Cacheable.CacheReadable;
 import ch.psi.pshell.device.DeviceAdapter;
-import ch.psi.pshell.device.RegisterBase;
+import ch.psi.pshell.device.ReadonlyRegisterBase;
 import ch.psi.utils.Arr;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -89,8 +89,8 @@ public class MonitorScan extends LineScan {
         if (async){
             for (int i=0; i< originalReadables.length; i++){
                 if (originalReadables[i] instanceof InlineDevice){
-                    if (readables[i] instanceof RegisterBase){
-                        ((RegisterBase)readables[i]).setAsyncUpdate(true);
+                    if (readables[i] instanceof ReadonlyRegisterBase){
+                        ((ReadonlyRegisterBase)readables[i]).setAsyncUpdate(true);
                     }
                 }
             }

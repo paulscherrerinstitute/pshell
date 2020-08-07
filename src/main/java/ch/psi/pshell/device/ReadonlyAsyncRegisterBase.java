@@ -14,6 +14,7 @@ public abstract class ReadonlyAsyncRegisterBase<T> extends ReadonlyRegisterBase<
     protected ReadonlyAsyncRegisterBase(String name, RegisterConfig config) {
         super(name, config);
         setMonitored(true);
+        setAccessType(AccessType.Read);
     }
 
     /*

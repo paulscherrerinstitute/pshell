@@ -15,12 +15,16 @@ public abstract class MotorBase extends PositionerBase implements Motor {
 
     protected MotorBase(String name, MotorConfig config) {
         super(name, config);
-        setVelocity(new ReadonlyRegisterBase<Double>(null, getPrecision()) {
-            @Override
-            protected Double doRead() throws IOException, InterruptedException {
-                return doReadVelocity();
+        setVelocity(new RegisterBase<Double>(null, getPrecision()) {
+                @Override
+                protected void doWrite(Double value) throws IOException, InterruptedException {
+                }
+
+                @Override
+                protected Double doRead() throws IOException, InterruptedException {
+                    return doReadVelocity();
+                }
             }
-        }
         );
         try {
             velocity.initialize();
@@ -119,7 +123,7 @@ public abstract class MotorBase extends PositionerBase implements Motor {
         readStatus();
         getPosition();
         if (isSimulated()) {
-            ((RegisterBase) getReadback()).setCache((Double) simulatedPosition);
+            ((ReadonlyRegisterBase) getReadback()).setCache((Double) simulatedPosition);
         }
     }
 
@@ -416,8 +420,8 @@ public abstract class MotorBase extends PositionerBase implements Motor {
 
     @Override
     protected void onSimulationTimer() throws IOException, InterruptedException {
-        if (((RegisterBase) getReadback()).take() == null) {
-            ((RegisterBase) getReadback()).setCache((Double) simulatedPosition);
+        if (((ReadonlyRegisterBase) getReadback()).take() == null) {
+            ((ReadonlyRegisterBase) getReadback()).setCache((Double) simulatedPosition);
         }
         if (!isReady()) {
             double destination = take();
@@ -430,7 +434,7 @@ public abstract class MotorBase extends PositionerBase implements Motor {
             }
             simulatedPosition = Convert.roundDouble(simulatedPosition, getPrecision());
             if (isMonitored()) {
-                ((RegisterBase) getReadback()).setCache((Double) simulatedPosition);
+                ((ReadonlyRegisterBase) getReadback()).setCache((Double) simulatedPosition);
             }
         }
     }

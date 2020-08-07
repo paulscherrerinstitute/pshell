@@ -139,7 +139,7 @@ public class LayoutDefault extends LayoutBase implements Layout {
     public void onRecord(Scan scan, ScanRecord record) throws IOException {
         DataManager dataManager = getDataManager();
         Number[] positions = record.getPositions();
-        Object[] values = record.getValues();
+        Object[] values = record.getReadables();
         int index = getIndex(scan, record);
         int deviceIndex = 0;
         for (Writable writable : scan.getWritables()) {

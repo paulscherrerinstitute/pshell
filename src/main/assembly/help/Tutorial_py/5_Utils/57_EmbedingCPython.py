@@ -41,7 +41,7 @@ print a.getDimensions()
 steps = (3,4)
 dims = (steps[0]+1,steps[1]+1)
 r = ascan((m1,m2), (ai1), (0.0,0.0), (0.2,0.2), steps)
-data = r.getReadable(0)
+data = r[ai1]
 a = to_npa(data, dims,'d')
 print a.getDimensions()
 print a.getData()

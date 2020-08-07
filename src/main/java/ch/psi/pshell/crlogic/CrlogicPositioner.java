@@ -5,7 +5,7 @@ import ch.psi.pshell.device.Device;
 import ch.psi.pshell.device.Movable;
 import ch.psi.pshell.device.ReadbackDevice;
 import ch.psi.pshell.device.ReadonlyAsyncRegisterBase;
-import ch.psi.pshell.device.Register;
+import ch.psi.pshell.device.ReadonlyRegister;
 import ch.psi.pshell.device.RegisterBase;
 import ch.psi.pshell.device.Resolved;
 import ch.psi.pshell.device.Speedable;
@@ -27,7 +27,7 @@ public class CrlogicPositioner extends RegisterBase<Double> implements ReadbackD
     final String key;
     final String positionerReadback;
     String readbackKey;
-    final ReadbackRegister readbackRegister;
+    final ReadonlyRegister readbackRegister;
     boolean useReadback;
     boolean useEncoder;
     ChannelDouble extEncoder;
@@ -208,7 +208,7 @@ public class CrlogicPositioner extends RegisterBase<Double> implements ReadbackD
     }
 
     @Override
-    public Register<Double> getReadback() {
+    public ReadonlyRegister<Double> getReadback() {
         return readbackRegister;
     }
 

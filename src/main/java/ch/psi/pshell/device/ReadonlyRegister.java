@@ -13,6 +13,9 @@ public interface ReadonlyRegister<T> extends Device, Readable<T>, Cacheable<T> {
     //public int getMaximumSize();
     int getPrecision();
 
+    @Hidden
+    default boolean isReadonlyRegister() { return true; }
+
     public interface ReadonlyRegisterNumber<T extends Number> extends ReadonlyRegister<T>, Readable.ReadableNumber<T>, Cacheable.CacheableNumber<T> {
     }
 

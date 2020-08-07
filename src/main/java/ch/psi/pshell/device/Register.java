@@ -9,6 +9,10 @@ public interface Register<T> extends ReadonlyRegister<T>, Writable<T> {
 
     public void assertValidValue(T value) throws IllegalArgumentException;
 
+    @Override
+    @Hidden
+    default boolean isReadonlyRegister() { return false; }
+
     public interface RegisterNumber<T extends Number> extends Register<T>, ReadonlyRegisterNumber<T>, WritableNumber<T> {
     }
 

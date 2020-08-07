@@ -57,11 +57,15 @@ public class ScanRecord implements Subscriptable.MappedSequence<Object,Object>{
         return positions;
     }
 
-    //Overridden for SubscriptableArray
-    //@Override
-    public Object[] getValues() {
+    public Object[] getReadables() {
         return values;
     }
+
+    //Overridden for SubscriptableArray
+    //Deprecated to avoid confusion with values() method of Dict class: ScanRecord.values is not valid any more
+    @Hidden
+    @Deprecated
+    public List getValues() { return values(); }
 
     public Number getSetpoint(Object index) {
         return setpoints[scan.getWritableIndex(index)];
@@ -71,9 +75,13 @@ public class ScanRecord implements Subscriptable.MappedSequence<Object,Object>{
         return positions[scan.getWritableIndex(index)];
     }
 
-    public Object getValue(Object index) {
+    public Object getReadable(Object index) {
         return values[scan.getReadableIndex(index)];
     }
+
+    @Hidden
+    @Deprecated
+    public Object getValue(Object index) { return __getitem__(index);}
 
     public long getTimestamp() {
         return (timestamp == null) ? localTimestamp : timestamp;
@@ -167,7 +175,7 @@ public class ScanRecord implements Subscriptable.MappedSequence<Object,Object>{
         for (Number value : getPositions()) {
             values.add(String.valueOf(value));
         }
-        for (Object value : getValues()) {
+        for (Object value : getReadables()) {
             if ((value != null) && (value.getClass().isArray())) {
                 int[] shape = Arr.getShape(value);
                 if (shape.length == 1) {

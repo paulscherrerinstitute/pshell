@@ -19,6 +19,5 @@
 #step = sys.argv[2]
 
 
-a= lscan(ao1, ai1, start, end, step, 0.1)
-a.getReadable(0)
-set_return(a.getReadable(0))
+ret = lscan(ao1, ai1, start, end, step, 0.1)
+set_return(ret[ai1])

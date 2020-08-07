@@ -92,7 +92,7 @@ public class LayoutTable extends LayoutBase implements Layout {
         int index = 0;
         int deviceIndex = 0;
         Number[] positions = record.getPositions();
-        Object[] values = record.getValues();
+        Object[] values = record.getReadables();
         int fields = scan.getWritables().length + scan.getReadables().length;
         Object[] data = new Object[fields];
 

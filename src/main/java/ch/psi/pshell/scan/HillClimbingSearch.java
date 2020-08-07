@@ -48,7 +48,7 @@ public class HillClimbingSearch extends Search {
         List<ScanRecord> record = result.getRecords();
         for (int i = 0; i < record.size(); i++) {
             if (Arrays.equals(position, (double[]) Convert.toPrimitiveArray(record.get(i).positions, Double.class))) {
-                return (Double) record.get(i).getValues()[0] * (maximum ? 1.0 : -1.0);
+                return (Double) record.get(i).getReadables()[0] * (maximum ? 1.0 : -1.0);
             }
         }
         processPosition(position);

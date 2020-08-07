@@ -71,15 +71,15 @@ public class PlotterBinder implements AutoCloseable {
                     String name = r.getAlias();
                     String series = title + "/" + name + "/0";
                     if (r instanceof ch.psi.pshell.device.Readable.ReadableMatrix) {
-                        pm.setMatrixSeriesData(series, (double[][]) record.getValues()[i], null, null);
+                        pm.setMatrixSeriesData(series, (double[][]) record.getReadables()[i], null, null);
                     } else if (r instanceof ch.psi.pshell.device.Readable.ReadableArray) {
-                        double[] z = (double[]) record.getValues()[i];
+                        double[] z = (double[]) record.getReadables()[i];
                         double[] ax = new double[z.length];
                         Arrays.fill(ax, x);
                         double[] ay = Arr.indexesDouble(z.length);
                         pm.appendMatrixSeriesDataArray(series, ax, ay, z);
                     } else {
-                        Number y = ((Number) record.getValues()[i]);
+                        Number y = ((Number) record.getReadables()[i]);
                         pm.appendLineSeriesData(series, x, y.doubleValue(), (y instanceof DescStatsDouble) ? ((DescStatsDouble) y).getStdev() : 0);
                     }
                 }

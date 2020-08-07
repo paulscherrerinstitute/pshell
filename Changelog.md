@@ -31,6 +31,8 @@
 
 * ReadonlyRegisterArray has default getSize (returning size of cache).
 
+* ScanRecord.values is not valid any more: should be replaced by ScanRecord.readables or ScanRecord[device].
+
 
 ### Fixed
 

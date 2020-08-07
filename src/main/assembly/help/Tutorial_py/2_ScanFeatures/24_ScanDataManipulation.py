@@ -9,7 +9,7 @@ scan2= lscan(ao1, (ai1,ai2,wf1), 0, 40, 40, 0.01, False, title="Scan 2")
 
 
 from operator import add
-result = map(add, scan1.getReadable(0), scan2.getReadable(0))
+result = map(add, scan1[ai1], scan2[ai1])
 
 #Alternative:
 #result=[]

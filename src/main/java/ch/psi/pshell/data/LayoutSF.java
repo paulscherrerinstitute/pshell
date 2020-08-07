@@ -346,7 +346,7 @@ public class LayoutSF extends LayoutBase implements Layout {
     public void onRecord(Scan scan, ScanRecord record) throws IOException {
         String group = getScanPath(scan);
         Number[] positions = record.getPositions();
-        Object[] values = record.getValues();
+        Object[] values = record.getReadables();
         Long[] deviceTimestamps = record.getDeviceTimestamps();
         int index = getIndex(scan, record);
         int deviceIndex = 0;

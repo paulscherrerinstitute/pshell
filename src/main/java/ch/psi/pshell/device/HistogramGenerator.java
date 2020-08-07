@@ -25,7 +25,7 @@ public class HistogramGenerator extends ReadonlyRegisterBase<Histogram> implemen
         public int bins;
     }
 
-    final RegisterBase source;
+    final ReadonlyRegisterBase source;
     final HistogramDeviceConfig volatileConfig;
     final List<Double> samples = new ArrayList<>();
     volatile Object currentSample;
@@ -42,14 +42,14 @@ public class HistogramGenerator extends ReadonlyRegisterBase<Histogram> implemen
         return (HistogramDeviceConfig) super.getConfig();
     }
     
-    public HistogramGenerator(String name, RegisterBase source) {
+    public HistogramGenerator(String name, ReadonlyRegisterBase source) {
         super(name, new HistogramDeviceConfig());
         this.source = source;
         setParent(source);
         volatileConfig = null;
     }
 
-    public HistogramGenerator(String name, RegisterBase source, int numberOfSamples, double min, double max, int bins) {
+    public HistogramGenerator(String name, ReadonlyRegisterBase source, int numberOfSamples, double min, double max, int bins) {
         super(name);
         this.source = source;
         setParent(source);        
@@ -62,8 +62,8 @@ public class HistogramGenerator extends ReadonlyRegisterBase<Histogram> implemen
 
 
 
-    public RegisterBase getSource() {
-        return (RegisterBase) getParent();
+    public ReadonlyRegisterBase getSource() {
+        return (ReadonlyRegisterBase) getParent();
     }
 
     public double[] getX() {

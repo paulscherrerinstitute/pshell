@@ -681,7 +681,12 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
 
     @Override
     public Nameable[] getDevices(){
-        return Arr.append(readables, writables);
+        Nameable[] devices = new Nameable[readables.length];
+        System.arraycopy(readables, 0, devices, 0, readables.length);
+        if (writables!=null){
+            devices = Arr.append(devices, writables);
+        }
+        return devices;
     }
 
     int getDeviceIndex(Object arr, Object obj) {

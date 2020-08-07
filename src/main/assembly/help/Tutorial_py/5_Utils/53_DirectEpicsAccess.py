@@ -46,7 +46,7 @@ attrs_names = ["TESTIOC:TESTCALCOUT:Input",
 attrs_types = ["d", "d", "d", "[d"]
 attrs_lenghts = [0,0,0,10]
 
-def AfterReadout(rec):
+def after_read(rec):
     global attrs_dataset, attrs_names, attrs_type, attrs_lenghts
     if attrs_dataset is None:
         attrs_dataset = get_exec_pars().group + "attributes"
@@ -57,7 +57,7 @@ def AfterReadout(rec):
     #print record
     append_table(attrs_dataset, record)   
 
-a = lscan(m1, (ai1, ai2), 0, 0.1, 20, 0.01, after_read=AfterReadout)
+a = lscan(m1, (ai1, ai2), 0, 0.1, 20, 0.01, after_read=after_read)
 
 
 
