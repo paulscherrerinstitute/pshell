@@ -94,11 +94,11 @@ dependencies {
     compile 'org.slf4j:slf4j-nop:1.7.25'
     compile 'org.apache.commons:commons-math3:3.6.1'
     compile 'com.github.rjeschke:txtmark:0.13'
-    //compile 'org.rxtx:rxtx:2.1.7'  
-    compile 'com.neuronrobotics:nrjavaserial_java11:3.15.0'    
+    //compile 'org.rxtx:rxtx:2.1.7'
+    compile 'com.neuronrobotics:nrjavaserial:5.2.1'
     compile 'net.wimpi:jamod:1.2'
     compile 'net.java.dev.jna:jna:4.4.0'
-    compile 'com.fifesoft:rsyntaxtextarea:3.0.8'
+    compile 'com.fifesoft:rsyntaxtextarea:3.1.1'
     compile 'jline:jline:2.14.6'
     //compile 'org.zeromq:jeromq:0.5.1' #On BSREAD 4.0.0
     compile 'ch.psi:bsread:4.0.0'
@@ -286,7 +286,7 @@ publishing {
             artifact sourcesJar
             //artifact javadocJar
             artifact fatJar
-            artifact generateRpm
+            //artifact generateRpm
             groupId group
             artifactId project.name
             version version
