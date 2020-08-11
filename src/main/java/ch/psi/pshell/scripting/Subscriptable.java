@@ -2,12 +2,16 @@ package ch.psi.pshell.scripting;
 
 import ch.psi.utils.Arr;
 import ch.psi.utils.Reflection.Hidden;
+
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import org.python.core.Py;
 import org.python.core.PyObject;
+import org.python.core.PySlice;
 import org.python.core.PyTuple;
+import org.python.core.PyNone;
 
 /**
  * Utiliy interfaces to make objects subscriptable in Python.
@@ -30,6 +34,17 @@ public interface Subscriptable {
      */
     interface Lst<T> extends Subscriptable {
         T __getitem__(int index);
+
+        default List<T> __getitem__(PySlice slice) {
+            int start =  (slice.getStart().getType() == PyNone.TYPE) ? 0: assertIndexValid(slice.getStart().asInt());
+            int stop = (slice.getStop().getType() == PyNone.TYPE) ? __len__()-1 :assertIndexValid(slice.getStop().asInt());
+            int step = (slice.getStep().getType() == PyNone.TYPE) ? 1 : slice.getStep().asInt();
+            List<T> ret = new ArrayList<>();
+            for (int i = start; i < stop; i += step) {
+                ret.add(__getitem__(i));
+            }
+            return ret;
+        }
     }
 
     /**
