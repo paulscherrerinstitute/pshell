@@ -1666,7 +1666,7 @@ public class App extends ObservableBase<AppListener> {
                 // Default is system laf (or Metal, if no system installed).
                 // However prefer Nimbus on Windows & Linux
                 type = LookAndFeelType.nimbus;
-                if ((laf == null) || (Sys.getOSFamily() == OSFamily.Mac)) {
+                if (Sys.getOSFamily() == OSFamily.Mac) {
                     type = LookAndFeelType.system;
                 }
             }
