@@ -17,6 +17,10 @@
 
 * __size__ startup option to set the size of main dialog if GUI state is not persisted.
 
+* Script callback for data folder change: __on_change_data_path__
+
+* Options to save scan script and output.
+
 ### Changed
 
 * Java 11 is required to run PShell (source and bin formats are set to Java 11).
