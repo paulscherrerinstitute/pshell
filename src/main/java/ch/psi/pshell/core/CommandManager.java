@@ -4,6 +4,7 @@ import ch.psi.pshell.scripting.InterpreterResult;
 import ch.psi.utils.Chrono;
 import ch.psi.utils.Config;
 import ch.psi.utils.Str;
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -35,7 +36,7 @@ public class CommandManager implements AutoCloseable {
                 onCommandStarted(info);
             }
         }
-    }
+        }
 
     boolean requestedCleanup;
 
@@ -305,6 +306,17 @@ public class CommandManager implements AutoCloseable {
                     commandStatisticsConfig.load(path.toString());
                 }
                 saveCommandStatistics(info);
+            } catch (Exception ex) {
+                Logger.getLogger(CommandManager.class.getName()).log(Level.WARNING, null, ex);
+            }
+        }
+    }
+
+    void onChangeDataPath(File dataPath) {
+        if (Context.getInstance().config.commandExecutionEvents) {
+            try {
+                String filename = (dataPath==null)? "None" : ("'" + dataPath.getCanonicalPath() + "'");
+                Context.getInstance().scriptManager.getEngine().eval("on_change_data_path(" + filename + ")");
             } catch (Exception ex) {
                 Logger.getLogger(CommandManager.class.getName()).log(Level.WARNING, null, ex);
             }

@@ -189,9 +189,15 @@ public class ExecutionParameters {
 
     @Hidden
     public void setDataPath(File dataPath) {
-        outputFile = dataPath;
-        if (dataPath != null) {
-            lastOutputFile = outputFile;
+        if (dataPath!=outputFile) {
+            if (dataPath!=null) {
+                dataPath.mkdirs();
+            }
+            Context.getInstance().getCommandManager().onChangeDataPath(dataPath);
+            outputFile = dataPath;
+            if (dataPath != null) {
+                lastOutputFile = outputFile;
+            }
         }
     }
 

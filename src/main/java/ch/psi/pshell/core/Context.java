@@ -1861,9 +1861,10 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
     }    
     
     @Hidden
-    public void startExecution(final CommandSource source, String fileName,  Object args, boolean background) throws ContextStateException {
+    public CommandInfo startExecution(final CommandSource source, String fileName,  Object args, boolean background) throws ContextStateException {
         CommandInfo info = new CommandInfo(source, fileName, null, args, background);
         startExecution(source, fileName, info);
+        return info;
     }
 
     @Hidden
@@ -1914,10 +1915,20 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
     @Hidden
     public void endExecution() throws ContextStateException {  
         endExecution(null);
-    }  
-    
+    }
+
     @Hidden
     public void endExecution(CommandInfo info) throws ContextStateException {
+        endExecution(info, null);
+    }
+
+    @Hidden
+    public void endExecution(CommandInfo info, Object result) throws ContextStateException {
+        if (info != null) {
+            if (info.isRunning()){
+                commandManager.finishCommandInfo(info, result);
+            }
+        }
         String then = (info == null) ? null : getThen(info);
         getExecutionPars().onExecutionEnded();
         if (then != null) {
