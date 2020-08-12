@@ -277,18 +277,20 @@ public class Shell extends MonitoredPanel {
         }
     };
 
-    boolean printScan;
-    Boolean defaultPrintScan;
+    static boolean defaultPrintScan;
 
     public boolean getPrintScan(boolean value) {
         return printScan;
     }
 
+    public static void setDefaultPrintScan(boolean value) {
+        defaultPrintScan = value;
+    }
+
+    boolean printScan=defaultPrintScan;
+
     public void setPrintScan(boolean value) {
         printScan = value;
-        if (defaultPrintScan == null) {
-            defaultPrintScan = value;
-        }
         if (value) {
             Context.getInstance().addScanListener(printScanListener);
         } else {

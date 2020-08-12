@@ -263,12 +263,12 @@ public class App extends ObservableBase<AppListener> {
             System.setProperty(Context.PROPERTY_SIMULATION, "true");
         }
 
-        if (hasArgument("dspt")) {
-            App.setScanPlottingActive(false);
+        if (isScanPlottingDisabled()) {
+            setScanPlottingActive(false);
         }
 
-        if (hasArgument("dspr")) {
-            App.setScanPrintingActive(false);
+        if (isScanPrintingDisabled()) {
+            setScanPrintingActive(false);
         }
 
         if (hasArgument("extr")) {
@@ -519,6 +519,14 @@ public class App extends ObservableBase<AppListener> {
 
     static public boolean isDataPanel() {
         return hasArgument("dtpn");
+    }
+
+    static public boolean isScanPlottingDisabled() {
+        return hasArgument("dspt");
+    }
+
+    static public boolean isScanPrintingDisabled() {
+        return hasArgument("dspr");
     }
 
     static public Dimension getSize() {
@@ -965,7 +973,7 @@ public class App extends ObservableBase<AppListener> {
                         logger.log(Level.INFO, "Start console");
                         try {
                             console = new ch.psi.pshell.core.Console();
-                            console.setPrintScan(!isServerMode() && scanPrintingActive);
+                            setScanPrintingActive(!isServerMode() && !isScanPrintingDisabled());
                             setupConsoleScanPlotting();
                             console.run(System.in, System.out, !isServerMode());
                         } catch (Exception ex) {
@@ -1157,22 +1165,41 @@ public class App extends ObservableBase<AppListener> {
     ch.psi.pshell.core.Console console;
     Shell shell;
 
-    static volatile boolean scanPrintingActive = true;
+    static volatile boolean scanPrintingActive;
 
     public static boolean isScanPrintingActive() {
         return scanPrintingActive;
     }
 
     public static void setScanPrintingActive(boolean value) {
-        if (value != scanPrintingActive) {
-            scanPrintingActive = value;
-            if (getInstance().console != null) {
-                getInstance().console.setPrintScan(true);
-            }
+        scanPrintingActive = value;
+        ch.psi.pshell.core.Console.setDefaultPrintScan(value);
+        Shell.setDefaultPrintScan(value);
+        if (getConsole() != null) {
+            getConsole().setPrintScan(value);
+        }
+        if (getShell()!=null){
+            getShell().setPrintScan(value);
+        }
+    }
+
+    public static Shell getShell(){
+        if (getInstance()!=null) {
             if (getInstance().shell != null) {
-                getInstance().shell.setPrintScan(true);
+                return getInstance().shell;
+            }
+            if (getInstance().view != null) {
+                return getInstance().view.getShell();
             }
         }
+        return null;
+    }
+
+    public static  ch.psi.pshell.core.Console getConsole(){
+        if (getInstance()!=null) {
+            return (getInstance().console);
+        }
+        return null;
     }
 
     @Hidden
@@ -1186,7 +1213,7 @@ public class App extends ObservableBase<AppListener> {
         try {
             console = new ch.psi.pshell.core.Console();
             console.attachInterpreterOutput();
-            console.setPrintScan(printScan && scanPrintingActive);
+            setScanPrintingActive(printScan && !isScanPrintingDisabled());
             Object ret = evalFile(file, getInterpreterArgs(), true);
 
             if (ret != null) {
@@ -1418,7 +1445,7 @@ public class App extends ObservableBase<AppListener> {
         mainPanel.setLayout(new BorderLayout());
         mainPanel.add(shell, BorderLayout.CENTER);
         mainPanel.add(statusBar, BorderLayout.SOUTH);
-        shell.setPrintScan(scanPrintingActive);
+        setScanPrintingActive(!isScanPrintingDisabled());
         shell.initialize();
         JFrame frame = new JFrame();
         frame.setIconImage(getIconSmall());

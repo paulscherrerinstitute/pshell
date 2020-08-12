@@ -209,18 +209,18 @@ public class Console {
         }
     };
 
-    boolean printScan;
-    Boolean defaultPrintScan;
+    static boolean defaultPrintScan;
+    public static void setDefaultPrintScan(boolean value) {
+        defaultPrintScan = value;
+    }
 
+    boolean printScan=defaultPrintScan;
     public boolean getPrintScan(boolean value) {
         return printScan;
     }
 
     public void setPrintScan(boolean value) {
         printScan = value;
-        if (defaultPrintScan == null) {
-            defaultPrintScan = value;
-        }
         if (value) {
             Context.getInstance().addScanListener(scanListener);
         } else {

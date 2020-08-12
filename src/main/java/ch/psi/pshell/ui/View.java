@@ -1968,6 +1968,8 @@ public class View extends MainFrame {
         return App.getInstance().getDevicePanelManager().showPanel(name);
     }
 
+    public ch.psi.pshell.swing.Shell getShell(){return shell;};
+
     public JPanel showPanel(final GenericDevice dev) {
         return App.getInstance().getDevicePanelManager().showPanel(dev);
     }
