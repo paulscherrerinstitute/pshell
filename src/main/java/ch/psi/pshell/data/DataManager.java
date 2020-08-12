@@ -15,7 +15,6 @@ import ch.psi.utils.Str;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.DirectoryStream;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -481,10 +480,6 @@ public class DataManager implements AutoCloseable {
             getLayout().onOpened(getExecutionPars().getOutputFile());
             if (getExecutionPars().getSave()) {
                 appendLog("Open persistence context: " + getExecutionPars().getOutputFile());
-            }
-            File script = getExecutionPars().getScriptFile();
-            if (script != null){
-                this.setDataset("/script", new String(Files.readAllBytes(script.toPath())));
             }
         }
     }
