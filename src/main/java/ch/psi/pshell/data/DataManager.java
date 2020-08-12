@@ -1,9 +1,8 @@
 package ch.psi.pshell.data;
 
-import ch.psi.pshell.core.Context;
+import ch.psi.pshell.core.*;
 import ch.psi.pshell.device.ArrayCalibration;
 import ch.psi.pshell.device.MatrixCalibration;
-import ch.psi.pshell.core.Nameable;
 import ch.psi.pshell.scan.PlotScan;
 import ch.psi.pshell.scan.Scan;
 import ch.psi.pshell.scan.ScanListener;
@@ -15,14 +14,14 @@ import ch.psi.utils.Str;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.DirectoryStream;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import ch.psi.pshell.core.ExecutionParameters;
-import ch.psi.pshell.core.LogManager;
+
 import ch.psi.pshell.scripting.ViewPreference;
 import ch.psi.pshell.scripting.ViewPreference.PlotPreferences;
 import ch.psi.utils.Range;
@@ -460,11 +459,50 @@ public class DataManager implements AutoCloseable {
         }
         return null;
     }
-    
+
+    class OutputListener extends ContextAdapter{
+        StringBuilder output;
+        public void start(){
+            output = new StringBuilder();
+            try {
+                context.addListener(this);
+                createDataset(getLayout().getOutputFilePath(), String.class);
+            } catch (Exception ex){
+                output = null;
+                context.removeListener(this);
+            }
+        }
+
+        public void stop() {
+            context.removeListener(this);
+        }
+
+        void append(String str){
+            if (isOpen()){
+                try {
+                    appendItem(getLayout().getOutputFilePath(),str);
+                } catch (IOException e) {
+                }
+            } else {
+                stop();
+            }
+        }
+        public void onShellStdout(String str){
+            append(str);
+        }
+        public void onShellStderr(String str){
+            append(str);
+        }
+        public void onShellStdin(String str){
+            append(">>> " + str);
+        }
+    };
+    final OutputListener outputListener = new OutputListener();
+
+
     public int getCurrentFileSequentialNumber(){
         return fileSequentialNumber;
     }
-
     public void openOutput() throws IOException {
         //Continue using open file        
         if (isOpen()) {
@@ -481,6 +519,19 @@ public class DataManager implements AutoCloseable {
             if (getExecutionPars().getSave()) {
                 appendLog("Open persistence context: " + getExecutionPars().getOutputFile());
             }
+            if (getExecutionPars().getSaveScripts()){
+                try{
+                    File script = getExecutionPars().getScriptFile();
+                    if (script != null){
+                        getLayout().saveScript(script.getName(), new String(Files.readAllBytes(script.toPath())));
+                    }
+                } catch (Exception ex) {
+                    logger.log(Level.WARNING, null, ex);
+                }
+            }
+            if (getExecutionPars().getSaveOutput()) {
+                outputListener.start();
+            }
         }
     }
 
@@ -489,6 +540,9 @@ public class DataManager implements AutoCloseable {
     }
 
     public void closeOutput() {
+        if (getExecutionPars().getSaveOutput()) {
+            outputListener.stop();
+        }
         if (outputFile!=null) { 
                 try {
                     getProvider().closeOutput();

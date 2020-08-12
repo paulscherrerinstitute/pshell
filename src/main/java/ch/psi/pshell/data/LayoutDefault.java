@@ -47,11 +47,6 @@ public class LayoutDefault extends LayoutBase implements Layout {
     }
 
     @Override
-    public String getLogFilePath() {
-        return "logs/logs";
-    }
-
-    @Override
     public String getDefaultGroup(Scan scan) {
         return scan.getTag();
     }

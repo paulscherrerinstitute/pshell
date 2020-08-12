@@ -36,8 +36,13 @@ public class LayoutTable extends LayoutBase implements Layout {
     }
 
     @Override
+    public String getLogsPath() {
+        return getDefaultGroup(null);
+    }
+
+    @Override
     public String getLogFilePath() {
-        return getDefaultGroup(null) + getLogFileName();
+        return getLogsPath() + getLogFileName();
     }
 
     protected String getLogFileName() {

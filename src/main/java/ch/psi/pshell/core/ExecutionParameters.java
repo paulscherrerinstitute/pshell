@@ -27,8 +27,8 @@ import java.util.logging.Level;
 public class ExecutionParameters {
 
     final String[] executionOptions = new String[]{"defaults", "group", "open", "reset", "name", "type", "path", "tag", "seq", "split",
-        "layout", "provider", "format", "save", "persist", "flush", "preserve", "keep", "accumulate", "setpoints", "depth_dim", "compression",
-        "shuffle", "contiguous", "then", "then_exception", "then_success"};
+        "layout", "provider", "format", "save", "persist", "flush", "preserve", "keep", "accumulate", "setpoints", "verbose",
+        "depth_dim", "compression", "shuffle", "contiguous", "then", "then_exception", "then_success"};
 
     final String[] viewOptions = new String[]{"plot_disabled", "table_disabled", "enabled_plots", "plot_layout",
         "plot_types", "print_scan", "auto_range", "manual_range", "manual_range_y", "domain_axis", "status"};
@@ -554,6 +554,16 @@ public class ExecutionParameters {
     public Boolean getSaveSetpoints() {
         Object option = getOption("setpoints");
         return (option != null) ? (Boolean) option : Context.getInstance().getConfig().dataScanSaveSetpoints;
+    }
+
+    public Boolean getSaveOutput() {
+        Object option = getOption("verbose");
+        return (option != null) ? (Boolean) option : Context.getInstance().getConfig().dataScanSaveOutput;
+    }
+
+    public Boolean getSaveScripts() {
+        Object option = getOption("verbose");
+        return (option != null) ? (Boolean) option : Context.getInstance().getConfig().dataScanSaveScript;
     }
 
     boolean isOptionForDevice(Object option, Nameable device) {

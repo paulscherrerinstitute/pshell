@@ -1118,7 +1118,8 @@ def set_exec_pars(**args):
         flush(bool): Change option to flush file on each record.
         keep(bool): Change option keep scan records in memory. If false do not add records to scan result.
         preserve(bool): Change option to preserve device types. If false all values are converted to double.
-        setpoints(bool): Request the layout to save the positioner setpoints too.
+        setpoints(bool): Save the positioner setpoints too.
+        verbose(bool): Enable options to save additional information (output, script).
         compression(obj): True for enabling default compression, int for specifying deflation level.
                           Device or list of devices for specifying devices to be compressed.
         shuffle(obj): True for enabling shuffling before compression.

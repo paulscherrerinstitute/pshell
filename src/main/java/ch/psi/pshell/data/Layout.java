@@ -10,14 +10,15 @@ import java.util.List;
 /**
  * Layout implementations define the structure of the acquired data on file.
  */
-public interface Layout{
+public interface Layout {
 
     //Common attributes
     public static final String ATTR_NAME = "Name";
-    public static final String ATTR_FILE= "File";
+    public static final String ATTR_FILE = "File";
     public static final String ATTR_VERSION = "Version";
-    public static final String ATTR_COMMAND= "Command";
+    public static final String ATTR_COMMAND = "Command";
     public static final String ATTR_LAYOUT = "Layout";
+    public static final String ATTR_SCRIPT = "Script";
 
     public static final String ATTR_START_TIMESTAMP = "Start";
     public static final String ATTR_END_TIMESTAMP = "End";
@@ -43,7 +44,7 @@ public interface Layout{
         }
         if (!ret.endsWith("/")) {
             ret = ret + "/";
-        }        
+        }
         return ret;
     }
 
@@ -96,18 +97,31 @@ public interface Layout{
         return record.getIndex() - scan.getRecordIndexOffset();
     }
 
-    default public String getId(){
+    default public String getId() {
         return getClass().getName();
     }
-    
-    default public void appendLog(String log) throws IOException{
-    }    
-    
+
+    default public void appendLog(String log) throws IOException {
+    }
+
+    default public void saveScript(String name, String contents) throws IOException {
+    }
+
     String getScanPath(Scan scan);
-    
+
     void resetScanPath(Scan scan);
-    
-    default public String getTimestampsDataset(String scanPath){
+
+    default public String getTimestampsDataset(String scanPath) {
         return null;
     }
+
+    String getLogsPath();
+
+    String getScriptsPath();
+
+    String getLogFilePath();
+
+    String getOutputFilePath();
+
+
 }

@@ -17,6 +17,9 @@ import ch.psi.pshell.scripting.ViewPreference;
 import ch.psi.utils.Chrono;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -34,10 +37,22 @@ public abstract class LayoutBase implements Layout {
     public void setPersistSetpoints(boolean value) {
         persistSetpoints = value;
     }
-    
-    public String getLogFilePath() {
-        return "logs/logs";
+
+    @Override
+    public String getLogsPath() {
+        return "logs/";
     }
+
+    @Override
+    public String getLogFilePath() {
+        return getLogsPath() + "logs";
+    }
+
+    @Override
+    public String getOutputFilePath() {
+        return getLogsPath() + "output";
+    }
+
 
     @Override
     public void appendLog(String log) throws IOException {
@@ -48,8 +63,29 @@ public abstract class LayoutBase implements Layout {
             String time = Chrono.getTimeStr(System.currentTimeMillis(), "dd/MM/YY HH:mm:ss.SSS - ");
             dataManager.appendItem(logFile, time + log);
         }
-    }    
-    
+    }
+
+    @Override
+    public String getScriptsPath() {
+        return "scripts/";
+    }
+
+    @Override
+    public void saveScript(String name, String contents) throws IOException {
+        DataManager dataManager = getDataManager();
+        String scriptsPath = getScriptsPath();
+        if (scriptsPath != null) {
+            String filename = scriptsPath + name;
+            if (dataManager.getProvider() instanceof ProviderText){
+                Path path = ((ProviderText)dataManager.getProvider()).getFilePath(filename, false);
+                path.toFile().getParentFile().mkdirs();
+                Files.writeString(path, contents);
+            } else {
+                dataManager.setDataset(filename, contents);
+            }
+        }
+    }
+
     @Override
     public void onOpened(File output) throws IOException {
         setLayoutAttribute();

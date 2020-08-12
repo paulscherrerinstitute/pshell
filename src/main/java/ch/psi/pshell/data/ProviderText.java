@@ -189,17 +189,27 @@ public class ProviderText implements Provider {
         return getFilePath(this.root, path);
     }
 
+    public Path getFilePath(String path, boolean addExtension) {
+        return getFilePath(this.root, path, addExtension);
+    }
+
     public Path getFilePath(String root, String path) {
+        return getFilePath(root, path, true);
+    }
+
+    public Path getFilePath(String root, String path, boolean addExtension) {
         //Filenames don't support ':'
         path = path.replace(":", "_");
 
         Path ret = Paths.get(root, path);
-        if (!ret.toFile().isDirectory()) {
-            String extension = IO.getExtension(path);
-            if ((extension == null) || extension.isEmpty()) {
-                path += getFileExtension(path);
+        if (addExtension){
+            if (!ret.toFile().isDirectory()) {
+                String extension = IO.getExtension(path);
+                if ((extension == null) || extension.isEmpty()) {
+                    path += getFileExtension(path);
+                }
+                ret = Paths.get(root, path);
             }
-            ret = Paths.get(root, path);
         }
         return ret;
     }   
