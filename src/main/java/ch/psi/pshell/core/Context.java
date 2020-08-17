@@ -2927,6 +2927,9 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
     protected void onCreation() {
         if (isLocalMode()) {
             logger.warning("Local mode");
+            if (forceExtract) {
+                extractUtilities();
+            }
         } else {
             if (fileLockEnabled) {
                 if (lockFile == null) {
@@ -2986,75 +2989,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
                     }
                 }
             }
-
-            //Extract script path if not present - if not in local mode
-            //TODO: Does not work with a Linux hard link
-            String jar = setup.getJarFile();
-            if (jar != null) {              //If not in IDE
-                File jarFile = new File(jar);
-                File startupScript = new File(setup.getDefaultStartupScript());
-
-                boolean defaultLibPathConfig = (startupScript != null) && (IO.isSubPath(startupScript.getParent(), setup.getScriptPath())) //&& (IO.isSubPath(setup.getScriptPath(), setup.getHomePath()))
-                        ;
-                //Only extracts binary files if startup script is inside script path
-                if (defaultLibPathConfig) {
-                    //Only extracts the full library contents in the first run
-                    if ((new File(setup.getScriptPath())).listFiles().length == 0) {
-                        logger.warning("Extracting script library folder");
-                        try {
-                            IO.extractZipFile(jarFile, setup.getHomePath(), "script");
-                        } catch (Exception ex) {
-                            logger.log(Level.WARNING, null, ex);
-                        }
-                    } else {
-                        if (!startupScript.exists() || (startupScript.lastModified() < jarFile.lastModified()) || forceExtract) {
-                            logger.warning("Extracting startup script and utilities");
-                            try {
-                                logger.fine("Extracting: " + startupScript.getName());
-                                IO.extractZipFileContent(jarFile, "script/Lib/" + startupScript.getName(), startupScript.getCanonicalPath());
-                            } catch (Exception ex) {
-                                logger.log(Level.WARNING, null, ex);
-                            }
-
-                            try {
-                                for (String file : IO.getJarChildren(new JarFile(jarFile), "script/Lib/")) {
-                                    String ext = IO.getExtension(file);
-                                    String prefix = IO.getPrefix(file);
-                                    String name = prefix + "." + ext;
-                                    if (ext.equalsIgnoreCase(getScriptType().toString())) {
-                                        File scriptFile = Paths.get(setup.getStandardLibraryPath(), name).toFile();
-                                        if (!scriptFile.equals(startupScript)) {
-                                            logger.fine("Extracting: " + name);
-                                            IO.extractZipFileContent(jarFile, "script/Lib/" + name, scriptFile.getCanonicalPath());
-                                        }
-                                    }
-                                }
-                            } catch (Exception ex) {
-                                logger.log(Level.WARNING, null, ex);
-                            }
-                        }
-                    }
-                }
-                //Extract default www if not present           
-                if (isServerEnabled()) {
-                    File indexFile = new File(setup.getWwwIndexFile());
-                    if (!indexFile.exists()) {
-                        try {
-                            logger.warning("Extracting www folder");
-                            IO.extractZipFile(jarFile, new File(setup.getWwwPath()).getParent(), new File(setup.getWwwPath()).getName());
-                        } catch (Exception ex) {
-                            logger.log(Level.WARNING, null, ex);
-                        }
-                    } else if ((indexFile.lastModified() < jarFile.lastModified())) {
-                        logger.warning("Extracting index.html");
-                        try {
-                            IO.extractZipFileContent(jarFile, "www/index.html", indexFile.getCanonicalPath());
-                        } catch (Exception ex) {
-                            logger.log(Level.WARNING, null, ex);
-                        }
-                    }
-                }
-            }
+            extractUtilities();
         }
 
         if (!isInterpreterEnabled()) {
@@ -3077,6 +3012,78 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
         }
         //Even if isBareMode because plugins may be loaded by command line
         pluginManager.startPlugins();
+    }
+
+    void extractUtilities(){
+        //Extract script path if not present
+        //TODO: Does not work with a Linux hard link
+        String jar = setup.getJarFile();
+        if (jar != null) {              //If not in IDE
+            File jarFile = new File(jar);
+            File startupScript = new File(setup.getDefaultStartupScript());
+
+            boolean defaultLibPathConfig =  (startupScript != null) &&
+                                            //(IO.isSubPath(setup.getScriptPath(), setup.getHomePath())) &&
+                                            (IO.isSubPath(startupScript.getParent(), setup.getScriptPath()));
+            //Only extracts binary files if startup script is inside script path
+            if (defaultLibPathConfig) {
+                //Only extracts the full library contents in the first run
+                if ((new File(setup.getScriptPath())).listFiles().length == 0) {
+                    logger.warning("Extracting script library folder");
+                    try {
+                        IO.extractZipFile(jarFile, setup.getHomePath(), "script");
+                    } catch (Exception ex) {
+                        logger.log(Level.WARNING, null, ex);
+                    }
+                } else {
+                    if (!startupScript.exists() || (startupScript.lastModified() < jarFile.lastModified()) || forceExtract) {
+                        logger.info("Extracting startup script and utilities");
+                        try {
+                            logger.fine("Extracting: " + startupScript.getName());
+                            IO.extractZipFileContent(jarFile, "script/Lib/" + startupScript.getName(), startupScript.getCanonicalPath());
+                        } catch (Exception ex) {
+                            logger.log(Level.WARNING, null, ex);
+                        }
+
+                        try {
+                            for (String file : IO.getJarChildren(new JarFile(jarFile), "script/Lib/")) {
+                                String ext = IO.getExtension(file);
+                                String prefix = IO.getPrefix(file);
+                                String name = prefix + "." + ext;
+                                if (ext.equalsIgnoreCase(getScriptType().toString())) {
+                                    File scriptFile = Paths.get(setup.getStandardLibraryPath(), name).toFile();
+                                    if (!scriptFile.equals(startupScript)) {
+                                        logger.fine("Extracting: " + name);
+                                        IO.extractZipFileContent(jarFile, "script/Lib/" + name, scriptFile.getCanonicalPath());
+                                    }
+                                }
+                            }
+                        } catch (Exception ex) {
+                            logger.log(Level.WARNING, null, ex);
+                        }
+                    }
+                }
+            }
+            //Extract default www if not present
+            if (isServerEnabled()) {
+                File indexFile = new File(setup.getWwwIndexFile());
+                if (!indexFile.exists()) {
+                    try {
+                        logger.warning("Extracting www folder");
+                        IO.extractZipFile(jarFile, new File(setup.getWwwPath()).getParent(), new File(setup.getWwwPath()).getName());
+                    } catch (Exception ex) {
+                        logger.log(Level.WARNING, null, ex);
+                    }
+                } else if ((indexFile.lastModified() < jarFile.lastModified())) {
+                    logger.warning("Extracting index.html");
+                    try {
+                        IO.extractZipFileContent(jarFile, "www/index.html", indexFile.getCanonicalPath());
+                    } catch (Exception ex) {
+                        logger.log(Level.WARNING, null, ex);
+                    }
+                }
+            }
+        }
     }
 
     void reloadPlugins(CommandSource source) {
