@@ -77,7 +77,7 @@ public class TasksEditor extends Editor {
             }
             for (int i = 0; i < modelLoaded.getRowCount(); i++) {
                 modelLoaded.setValueAt(tasks[i].getScript(), i, 0);
-                modelLoaded.setValueAt(tasks[i].getInterval() / 1000, i, 1);
+                modelLoaded.setValueAt(((Double)(tasks[i].getInterval() / 1000.0)), i, 1);
                 modelLoaded.setValueAt(tasks[i].isStarted(), i, 2);
                 modelLoaded.setValueAt(tasks[i].isRunning(), i, 3);
             }
@@ -131,7 +131,7 @@ public class TasksEditor extends Editor {
                     }
                     String val = tokens[1].trim();
                     try {
-                        Integer interval = Integer.valueOf(val);
+                        Double interval = Double.valueOf(val);
                         editor.model.addRow(new Object[]{enabled, name, interval});
                     } catch (Exception ex) {
                     }
@@ -146,7 +146,7 @@ public class TasksEditor extends Editor {
             for (int i = 0; i < editor.model.getRowCount(); i++) {
                 Boolean enabled = (Boolean) editor.model.getValueAt(i, 0);
                 String name = ((String) editor.model.getValueAt(i, 1)).trim();
-                Integer interval = ((Integer) editor.model.getValueAt(i, 2));
+                Double interval = ((Number) editor.model.getValueAt(i, 2)).doubleValue();
                 if (!name.isEmpty()) {
                     StringBuilder sb = new StringBuilder();
                     if (!enabled) {
@@ -228,7 +228,7 @@ public class TasksEditor extends Editor {
             }
         ) {
             Class[] types = new Class [] {
-                java.lang.Boolean.class, java.lang.String.class, java.lang.Integer.class
+                java.lang.Boolean.class, java.lang.String.class, java.lang.Double.class
             };
 
             public Class getColumnClass(int columnIndex) {
@@ -404,9 +404,7 @@ public class TasksEditor extends Editor {
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(buttonRunLoaded)
                 .addContainerGap(91, Short.MAX_VALUE))
-            .addGroup(jPanel1Layout.createSequentialGroup()
-                .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
-                .addGap(0, 0, 0))
+            .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
         );
 
         jTabbedPane1.addTab("Loaded", jPanel1);
@@ -483,8 +481,8 @@ public class TasksEditor extends Editor {
         try {
             String task = (table.getSelectedRow() >= 0) ? ((String) model.getValueAt(table.getSelectedRow(), 1)).trim() : null;
             if (task != null) {
-                Integer interval = (Integer) model.getValueAt(table.getSelectedRow(), 2);
-                Context.getInstance().getTaskManager().create(task, interval, interval);
+                Double intervalMillis =(((Number) model.getValueAt(table.getSelectedRow(), 2)).doubleValue() * 1000);
+                Context.getInstance().getTaskManager().create(task, intervalMillis.intValue(),  intervalMillis.intValue());
                 Context.getInstance().getTaskManager().start(task);
             }
             updateTables();

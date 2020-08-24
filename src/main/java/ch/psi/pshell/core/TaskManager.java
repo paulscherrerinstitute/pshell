@@ -31,7 +31,7 @@ public class TaskManager implements AutoCloseable {
                 Logger.getLogger(TaskManager.class.getName()).info("Starting task: " + script);
                 try {
                     String value = properties.getProperty(script);
-                    Integer interval = Integer.valueOf(value) * 1000; //Convert to ms
+                    Integer interval = ((Double)((Double.valueOf(value)) * 1000)).intValue(); //Convert to ms
                     if (interval > 0) {
                         create(script, interval, interval);
                     } else {
