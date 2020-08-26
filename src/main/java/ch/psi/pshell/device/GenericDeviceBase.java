@@ -436,7 +436,7 @@ public abstract class GenericDeviceBase<T> extends ObservableBase<T> implements 
 
     @Override
     public void setAlias(String alias) {
-        alias=alias;
+        this.alias=alias;
     }
 
     @Override
