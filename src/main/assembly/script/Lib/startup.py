@@ -946,7 +946,7 @@ def save_dataset(path, data, type='d', unsigned=False, features=None):
     Args:
         path(str): Path to dataset relative to the current persistence context root.
         type(str, optional): array type - 'd'=double (default), 'b'=byte, 'h'=short, 'i'=int, 
-                             'l'=long, 'f'=float, 'c'=char, 's'=String, 'o'=Object
+                             'l'=long, 'f'=float, 'c'=char, 's'=String, 'z'=bool, 'o'=Object
         data (array or list): data to be saved
         unsigned(boolean, optional): create a dataset of unsigned type.
         features(dictionary, optional): See create_dataset.
@@ -973,7 +973,7 @@ def create_dataset(path, type, unsigned=False, dimensions=None, features=None):
     Args:
         path(str): Path to dataset relative to the current persistence context root.
         type(str): array type 'b' = byte, 'h' = short, 'i' = int, 'l' = long,  'f' = float,
-                              'd' = double, 'c' = char, 's' = String,  'o' = Object
+                              'd' = double, 'c' = char, 's' = String, 'z'=bool, 'o' = Object
         unsigned(boolean, optional)
         dimensions(tuple of int, optional): a 0 value means variable length in that dimension.
         features(dictionary, optional): storage features for the dataset, format specific.

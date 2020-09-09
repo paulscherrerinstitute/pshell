@@ -12,3 +12,4 @@ gradle.properties
 .nb-gradle-properties
 nbactions.xml
 **/*.class
+/lib/

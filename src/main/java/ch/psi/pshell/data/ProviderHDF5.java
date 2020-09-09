@@ -122,10 +122,10 @@ public class ProviderHDF5 implements Provider {
         List<String> elements = reader.getGroupMembers(group);
         List contents = new ArrayList();
         List subgroups = new ArrayList();
-        HDF5LinkInformation info = reader.getLinkInformation(group);
+        HDF5LinkInformation info = reader.object().getLinkInformation(group);
         contents.add(info.getName());
         for (String element : elements) {
-            info = reader.getLinkInformation(group + "/" + element);
+            info = reader.object().getLinkInformation(group + "/" + element);
             if (info.isGroup()) {
                 subgroups.add(getGroupStructure(reader, info.getPath()));
             } else {
@@ -173,7 +173,7 @@ public class ProviderHDF5 implements Provider {
     public boolean isDataset(String root, String path) {
         IHDF5Reader reader = openInputFile(root);
         try {
-            HDF5LinkInformation info = reader.getLinkInformation(path);
+            HDF5LinkInformation info = reader.object().getLinkInformation(path);
             return info.isDataSet();
         } finally {
             if ((reader != null) && (reader != writer)) {
@@ -187,7 +187,7 @@ public class ProviderHDF5 implements Provider {
     public boolean isGroup(String root, String path) {
         IHDF5Reader reader = openInputFile(root);
         try {
-            HDF5LinkInformation info = reader.getLinkInformation(path);
+            HDF5LinkInformation info = reader.object().getLinkInformation(path);
             return info.isGroup();
         } finally {
             if ((reader != null) && (reader != writer)) {
@@ -199,7 +199,7 @@ public class ProviderHDF5 implements Provider {
     public DataSlice getData(String root, String path,  long[] index, int[] shape) throws IOException {        
         IHDF5Reader reader = openInputFile(root);
         try {
-            HDF5LinkInformation info = reader.getLinkInformation(path);
+            HDF5LinkInformation info = reader.object().getLinkInformation(path);
             if (!info.isDataSet()) {
                 return null;
             }
@@ -268,7 +268,7 @@ public class ProviderHDF5 implements Provider {
         IHDF5Reader reader = openInputFile(root);
         DataSlice ret = null;
         try {
-            HDF5LinkInformation info = reader.getLinkInformation(path);
+            HDF5LinkInformation info = reader.object().getLinkInformation(path);
             if (!info.isDataSet()) {
                 return null;
             }
@@ -391,7 +391,23 @@ public class ProviderHDF5 implements Provider {
                     }
                     break;
                 case BOOLEAN:
-                    array = reader.readBoolean(path);
+                    switch (rank) {
+                        case 0:
+                            array = reader.readBoolean(path);
+                            break;
+                        case 1:
+                            byte[] arr = reader.uint8().readArray(path);
+                            array = Convert.fromByteArray(arr, boolean.class);
+                            break;
+                        case 2:
+                            byte[][] matrix = reader.uint8().readMatrix(path);
+                            boolean[][] bmatrix = new boolean[matrix.length][];
+                            for (int i = 0; i < matrix.length; i++) {
+                                bmatrix[i]= (boolean[]) Convert.fromByteArray(matrix[i], boolean.class);;
+                            }
+                            array = bmatrix;
+                            break;
+                    }
                     break;
                 case BITFIELD:
                     /*
@@ -432,7 +448,7 @@ public class ProviderHDF5 implements Provider {
         HashMap<String, Object> ret = new HashMap<>();
         IHDF5Reader reader = openInputFile(root);
         try {
-            HDF5LinkInformation info = reader.getLinkInformation(path);
+            HDF5LinkInformation info = reader.object().getLinkInformation(path);
             HDF5ObjectType type = info.getType();
             ret.put("Type", type);
             //ret.put("Size", reader.object().getSize(path));
