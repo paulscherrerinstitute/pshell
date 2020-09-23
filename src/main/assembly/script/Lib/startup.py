@@ -2123,18 +2123,18 @@ def set_setting(name, value):
     """
     get_context().setSetting(name, value)
 
-def exec_cmd(cmd):
+def exec_cmd(cmd, stderr_raise_ex = True):
     """Executes a shell command. If errors happens raises an exception.
 
     Args:
-        cmd (str): command process input.
+        cmd (str): command process input. If stderr_raise_ex is set then raise exception if stderr is not null.
     Returns:
         Output of command process.
     """
     import subprocess
-    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE if stderr_raise_ex else subprocess.STDOUT, shell=True)
     (ret, err) = proc.communicate()
-    if (err is not None) and err!="":
+    if stderr_raise_ex and (err is not None) and err!="":
         raise Exception(err)
     return ret
 
