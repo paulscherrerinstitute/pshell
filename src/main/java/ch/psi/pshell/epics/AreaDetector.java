@@ -126,7 +126,8 @@ public class AreaDetector extends CameraBase {
         setSimulatedValue("Model_RBV", "Simulation");
         setSimulationData(DataType.UInt8); 
     }
-    
+
+    int simulationOffset = 0;
     void setSimulationData(DataType type){
         try {        
             int width = sizeX.take();
@@ -136,11 +137,13 @@ public class AreaDetector extends CameraBase {
             data.setSize(width * height);
             Object array = Array.newInstance(type.getElementType(), data.getSize());
             for (int i = 0; i < width; i++) {
-                for (int j = 0; j < height; j++) { 
+                int index = (i + simulationOffset) % width;
+                for (int j = 0; j < height; j++) {
                     Object val = Convert.toType((i / 2 + j / 2), type.getElementType());
-                    Array.set(array, j * width + i, val);
+                    Array.set(array, j * width + index, val);
                 }
             }
+            simulationOffset++;
             this.setCache(data, array);
         } catch (Exception ex) {
 
@@ -163,6 +166,9 @@ public class AreaDetector extends CameraBase {
     @Override
     protected void doUpdate() throws IOException, InterruptedException {
         super.doUpdate();
+        if (isSimulated()){
+            setSimulationData(getDataType());
+        }
         acquire.update();
         arraySize0.update();
         arraySize1.update();
