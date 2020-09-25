@@ -36,6 +36,8 @@ import java.awt.event.MouseListener;
 import java.awt.image.BufferedImage;
 import java.awt.image.FilteredImageSource;
 import java.awt.image.RGBImageFilter;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -44,6 +46,7 @@ import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.AbstractButton;
+import javax.swing.Action;
 import javax.swing.BorderFactory;
 import javax.swing.DefaultCellEditor;
 import javax.swing.DefaultComboBoxModel;
@@ -1145,6 +1148,67 @@ public class SwingUtils {
             tree.collapsePath(parent);
         }
     }
+    
+    /**
+     * Implement table change listener that provide new and former value
+     */
+    public static abstract class TableChangeListener implements PropertyChangeListener {
+
+        final private JTable table;
+        private int row;
+        private int column;
+        private Object former;
+        private Object value;
+
+        public TableChangeListener(JTable table) {
+            this.table = table;
+            this.table.addPropertyChangeListener("tableCellEditor", this);
+        }
+
+        public int getColumn() {
+            return column;
+        }
+
+        public Object getValue() {
+            return value;
+        }
+
+        public Object getFormer() {
+            return former;
+        }
+
+        public int getRow() {
+            return row;
+        }
+
+        public JTable getTable() {
+            return table;
+        }
+
+        void processEditingStopped() {
+            value = table.getModel().getValueAt(row, column);
+            if (!value.equals(former)) {
+                onTableChange(row, column, value, former);
+            }
+        }    
+
+        @Override
+        public void propertyChange(PropertyChangeEvent e) {
+            if (table.isEditing()) {
+                SwingUtilities.invokeLater(() -> {
+                    row = table.convertRowIndexToModel(table.getEditingRow());
+                    column = table.convertColumnIndexToModel(table.getEditingColumn());
+                    former = table.getModel().getValueAt(row, column);
+                    value = null;
+                });
+            } else {
+                processEditingStopped();
+            }
+        }  
+        
+        abstract protected void onTableChange(int row, int column, Object value, Object former);
+    }
+    
 
     //Layout
     //Based on SpringUtilities.makeCompactGrid
