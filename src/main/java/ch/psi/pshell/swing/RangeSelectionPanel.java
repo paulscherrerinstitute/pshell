@@ -68,7 +68,7 @@ public class RangeSelectionPanel extends javax.swing.JPanel {
                     try {
                         int index = table.convertRowIndexToModel(table.getSelectedRow());
                         if (index >= 0) {
-                            RangeSelection range = getPlotRange((Double) model.getValueAt(index, indexLower), null, (Double) model.getValueAt(index, indexUpper));
+                            RangeSelection range = getPlotRange((Double) model.getValueAt(index, indexLower), (Double) model.getValueAt(index, indexUpper));
                             plot.selectMarker(range);
                         } else {
                             plot.selectMarker(null);
@@ -247,7 +247,11 @@ public class RangeSelectionPanel extends javax.swing.JPanel {
         return ret;
     }
 
-    RangeSelection getPlotRange(Double min, Double center, Double max) {
+    public RangeSelection getPlotRange(Double min, Double max) {
+        return getPlotRange(min, null, max);
+    }
+    
+    public RangeSelection getPlotRange(Double min, Double center, Double max) {
         double res = getResolution();
         for (RangeSelection range : plot.getSelectedRanges()) {
             if ((min != null) && (max != null)) {
@@ -631,7 +635,7 @@ public class RangeSelectionPanel extends javax.swing.JPanel {
         try {
             if (table.getSelectedRow() >= 0) {
                 int index = table.convertRowIndexToModel(table.getSelectedRow());
-                RangeSelection range = getPlotRange((Double) model.getValueAt(index, indexLower), null, (Double) model.getValueAt(index, indexUpper));
+                RangeSelection range = getPlotRange((Double) model.getValueAt(index, indexLower), (Double) model.getValueAt(index, indexUpper));
                 if (range != null) {
                     plot.removeRange(range);
                 } else {
