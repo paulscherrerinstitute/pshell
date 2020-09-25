@@ -26,17 +26,39 @@ public class RangeSelectionPanel extends javax.swing.JPanel {
 
     boolean tableSelection;
     boolean inserting;
-    String[] aditionalColumns;
-
+    boolean showMiddle = true;
+    boolean tableInitialized;
+    
+    int indexLower = 0;
+    int indexMiddle = 1;
+    int indexUpper = 2;
     
     public RangeSelectionPanel() {
         initComponents();
+        //table.setColumnModel(new HideColumnModel());                
         model = (DefaultTableModel) table.getModel();
         initPlot();
         initModel();
         initTable();
-        plot.setSelectionColor(MainFrame.isDark() ? table.getSelectionBackground() : brighter(table.getSelectionBackground()));
+        plot.setSelectionColor(MainFrame.isDark() ? table.getSelectionBackground() : brighter(table.getSelectionBackground()));        
     }
+    
+    
+    public boolean getShowMiddle(){
+        return showMiddle;
+    }
+
+    public void setShowMiddle(boolean value){
+        if (showMiddle!=value){
+            showMiddle=value;
+            indexMiddle = showMiddle? 1 : -1;
+            indexUpper = showMiddle? 2 : 1;            
+            if (tableInitialized){
+                this.setAditionalColumns(new String[0], new Class[0]);
+            }
+        }
+    }
+    
 
     void initTable() {
         table.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
@@ -46,7 +68,7 @@ public class RangeSelectionPanel extends javax.swing.JPanel {
                     try {
                         int index = table.convertRowIndexToModel(table.getSelectedRow());
                         if (index >= 0) {
-                            RangeSelection range = getPlotRange((Double) model.getValueAt(index, 0), null, (Double) model.getValueAt(index, 2));
+                            RangeSelection range = getPlotRange((Double) model.getValueAt(index, indexLower), null, (Double) model.getValueAt(index, indexUpper));
                             plot.selectMarker(range);
                         } else {
                             plot.selectMarker(null);
@@ -60,7 +82,7 @@ public class RangeSelectionPanel extends javax.swing.JPanel {
 
     }
 
-    void initModel() {
+    void initModel() {        
         model.addTableModelListener(new TableModelListener() {
             boolean processingUpdate;
 
@@ -72,18 +94,18 @@ public class RangeSelectionPanel extends javax.swing.JPanel {
                     int index = -1;
                     RangeSelection range = null;
                     try {
-                        if ((table.getSelectedRow() >= 0) && (table.getSelectedColumn() < 3)) {
+                        if ((table.getSelectedRow() >= 0) && (table.getSelectedColumn() <= indexUpper)) {
                             index = table.convertRowIndexToModel(table.getSelectedRow());
-                            Double min = (Double) model.getValueAt(index, 0);
-                            Double center = (Double) model.getValueAt(index, 1);
-                            Double max = (Double) model.getValueAt(index, 2);
+                            Double min = (Double) model.getValueAt(index, indexLower);
+                            Double center =  showMiddle ? (Double) model.getValueAt(index, indexMiddle) : null;
+                            Double max = (Double) model.getValueAt(index, indexUpper);
                             min = (min == null) ? null : Convert.roundDouble(min, getPrecision());
                             center = (center == null) ? null : Convert.roundDouble(center, getPrecision());
                             max = (max == null) ? null : Convert.roundDouble(max, getPrecision());
 
-                            Double[] vals = new Double[]{min, center, max};
+                            Double[] vals = showMiddle ? new Double[]{min, center, max} : new Double[]{min, max};
                             vals[e.getColumn()] = null;
-                            range = getPlotRange(vals[0], vals[1], vals[2]);
+                            range = getPlotRange(vals[0], showMiddle ? vals[1] : null, vals[vals.length-1]);
 
                             if ((min == null) || (max == null)) {
                                 if ((min != null) && (center != null)) {
@@ -93,28 +115,30 @@ public class RangeSelectionPanel extends javax.swing.JPanel {
                                     min = center - (max - center);
                                 }
                             }
-
+                                
                             if (range != null) {
                                 //Editing existing
 
-                                if (e.getColumn() == 1) {
+                                if ((showMiddle) && (e.getColumn() == 1)) {
                                     //If changed center
                                     double offset = center - range.getCenter();
                                     plot.updateRange(range, min + offset, max + offset);
                                 } else {
                                     plot.updateRange(range, min, max);
-                                    model.setValueAt(range.getCenter(), index, 1);
+                                    if (showMiddle){
+                                        model.setValueAt(range.getCenter(), index, 1);
+                                    }
                                 }
                                 //Setting those to enforce precision
-                                model.setValueAt(range.getMin(), index, 0);
-                                model.setValueAt(range.getMax(), index, 2);
+                                model.setValueAt(range.getMin(), index, indexLower);
+                                model.setValueAt(range.getMax(), index, indexUpper);
                             } else {
                                 //Adding new
                                 adding = true;
                                 if ((min != null) && (max != null)) {
                                     plot.addRange(min, max);
 
-                                    for (int j = 3; j < model.getColumnCount(); j++) {
+                                    for (int j = (indexUpper+1); j < model.getColumnCount(); j++) {
                                         model.setValueAt(model.getValueAt(index, j), model.getRowCount() - 1, j);
                                     }
                                     model.removeRow(index);
@@ -130,9 +154,11 @@ public class RangeSelectionPanel extends javax.swing.JPanel {
                             //Restore values
                             if (index >= 0) {
                                 if (range != null) {
-                                    model.setValueAt(range.getMin(), index, 0);
-                                    model.setValueAt(range.getCenter(), index, 1);
-                                    model.setValueAt(range.getMax(), index, 2);
+                                    model.setValueAt(range.getMin(), index, indexLower);
+                                    if (showMiddle){
+                                        model.setValueAt(range.getCenter(), index, indexMiddle);
+                                    }
+                                    model.setValueAt(range.getMax(), index, indexUpper);
                                 }
                             }
                         }
@@ -142,7 +168,7 @@ public class RangeSelectionPanel extends javax.swing.JPanel {
                 }
             }
         });
-
+        tableInitialized = true;
     }
 
     void initPlot() {
@@ -154,7 +180,10 @@ public class RangeSelectionPanel extends javax.swing.JPanel {
         plot.setListener(new RangeSelectionPlotListener() {
             @Override
             public void onRangeAdded(RangeSelectionPlot.RangeSelection range) {
-                model.addRow(new Object[]{range.getMin(), range.getCenter(), range.getMax()});
+                model.addRow(showMiddle ? 
+                        new Object[]{range.getMin(), range.getCenter(), range.getMax()}:
+                        new Object[]{range.getMin(), range.getMax()}
+                );
                 updateTablePanels();
                 onSelectionChanged();
             }
@@ -198,9 +227,10 @@ public class RangeSelectionPanel extends javax.swing.JPanel {
 
     public void setAditionalColumns(String[] names, final Class[] types) {
         //model
-        model = new javax.swing.table.DefaultTableModel(new Object[][]{}, Arr.append(new String[]{"Lower", "Middle", "Upper"}, names)) {
+        model = new javax.swing.table.DefaultTableModel(new Object[][]{}, 
+                Arr.append(showMiddle ? new String[]{"Lower", "Middle", "Upper"}: new String[]{"Lower", "Upper"}, names)) {
             public Class getColumnClass(int columnIndex) {
-                return (columnIndex < 3) ? Double.class : types[columnIndex - 3];
+                return (columnIndex < (indexUpper+1)) ? Double.class : types[columnIndex - (indexUpper+1)];
             }
         };
         table.setModel(model);
@@ -224,6 +254,16 @@ public class RangeSelectionPanel extends javax.swing.JPanel {
                 if ((Math.abs(min - range.getMin()) <= res) && (Math.abs(max - range.getMax()) <= res)) {
                     return range;
                 }
+            } else if (!showMiddle){
+                if (min != null) {
+                    if (Math.abs(min - range.getMin()) <= res) {
+                        return range;
+                    }
+                } else if (max != null) {
+                    if (Math.abs(max - range.getMax()) <= res) {
+                        return range;
+                    }
+                }                
             } else if ((min != null) && (center != null)) {
                 if ((Math.abs(min - range.getMin()) <= res) && (Math.abs(center - range.getCenter()) <= res)) {
                     return range;
@@ -232,7 +272,6 @@ public class RangeSelectionPanel extends javax.swing.JPanel {
                 if ((Math.abs(center - range.getCenter()) <= res) && (Math.abs(max - range.getMax()) <= res)) {
                     return range;
                 }
-
             }
         }
         return null;
@@ -257,8 +296,8 @@ public class RangeSelectionPanel extends javax.swing.JPanel {
         }
         double res = getResolution();
         for (int i = 0; i < table.getRowCount(); i++) {
-            if (Math.abs((Double) table.getValueAt(i, 0) - min) <= res) {
-                if (Math.abs((Double) table.getValueAt(i, 2) - max) <= res) {
+            if ((table.getValueAt(i, indexLower) != null) && (Math.abs((Double) table.getValueAt(i, indexLower) - min) <= res)) {
+                if ((table.getValueAt(i, indexUpper) != null) && (Math.abs((Double) table.getValueAt(i, indexUpper) - max) <= res)) {
                     return i;
                 }
             }
@@ -412,11 +451,11 @@ public class RangeSelectionPanel extends javax.swing.JPanel {
 
     Object[] getVars(RangeSelection range) {
         for (int i = 0; i < model.getRowCount(); i++) {
-            Double min = (Double) model.getValueAt(i, 0);
-            Double max = (Double) model.getValueAt(i, 2);
+            Double min = (Double) model.getValueAt(i, indexLower);
+            Double max = (Double) model.getValueAt(i, indexUpper);
             if (range.equals(min, max)) {
                 ArrayList ret = new ArrayList();
-                for (int j = 3; j < model.getColumnCount(); j++) {
+                for (int j = (indexUpper+1); j < model.getColumnCount(); j++) {
                     ret.add(model.getValueAt(i, j));
                 }
                 return ret.toArray();
@@ -592,7 +631,7 @@ public class RangeSelectionPanel extends javax.swing.JPanel {
         try {
             if (table.getSelectedRow() >= 0) {
                 int index = table.convertRowIndexToModel(table.getSelectedRow());
-                RangeSelection range = getPlotRange((Double) model.getValueAt(index, 0), null, (Double) model.getValueAt(index, 2));
+                RangeSelection range = getPlotRange((Double) model.getValueAt(index, indexLower), null, (Double) model.getValueAt(index, indexUpper));
                 if (range != null) {
                     plot.removeRange(range);
                 } else {
