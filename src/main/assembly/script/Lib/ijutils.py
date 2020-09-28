@@ -219,6 +219,20 @@ def get_image_type(ip):
     return "byte"
 
 ###################################################################################################
+#Image measurements
+###################################################################################################
+
+def get_measurement(ip, measurement):
+    """
+    Return image measurement:
+    "Area", "Mean", "StdDev", "Mode", "Min", "Max", "X", "Y", "XM", "YM", "Perim.", "BX", "BY",
+    "Width", "Height", "Major", "Minor", "Angle", "Circ.", "Feret", "IntDen", "Median", "Skew",
+    "Kurt", "%Area", "RawIntDen", "Ch", "Slice", "Frame", "FeretX", "FeretY", "FeretAngle",
+    "MinFeret", "AR", "Round", "Solidity", "MinThr" or "MaxThr"
+    """
+    return IJ.getValue(ip,measurement)
+
+###################################################################################################
 #Image type conversion
 ###################################################################################################
 def grayscale(ip, do_scaling=None, in_place=True):
