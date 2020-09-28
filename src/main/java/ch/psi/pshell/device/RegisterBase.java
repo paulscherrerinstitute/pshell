@@ -61,9 +61,9 @@ public abstract class RegisterBase<T> extends ReadonlyRegisterBase<T> implements
             if (isTrustedWrite() || isSimulated()) {
                 setCache(value);
             } else {
-                if (!isMonitored()) {
-                    request();  //Cache has not been updated
-                }
+                //if (!isMonitored()) {
+                    request();  //Update cache asynchronously
+                //}
             }
             if (getState() == State.Offline) {
                 setState(State.Ready);
