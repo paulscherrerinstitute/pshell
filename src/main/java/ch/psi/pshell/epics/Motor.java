@@ -306,7 +306,7 @@ public class Motor extends MotorBase {
         if (!isTrustedWrite()) {
             Double confirm = setpoint.read();
             if (Math.abs(confirm - destination) > Math.abs(getResolution())) {
-                throw new DeviceException("Cannot write value to setpoint: " + destination);
+                throw new DeviceException("Cannot change setpoint to: " + destination + " - read value is: " + confirm);
             }
             setCache(confirm);
         }
