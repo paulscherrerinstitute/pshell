@@ -38,6 +38,7 @@ def sync_user_data(user, src, dest, do_log=True, do_print=True):
         key = os.path.expanduser("~/.ssh/" + ("ke" if RSYNC_GENERATE_USER_KEY else "id_rsa"))
         if not os.path.isfile(key):
             raise Exception ("Invalid key file")
+        dest = "'" + dest.replace(" ", "\ ") + "'"
         dest = user + "@localhost:" + dest
         files, bytes_sent, bytes_received = rsync(src,dest,key)
         msg = "Transferred " + str(bytes_sent) + " bytes to " + user + ": "
