@@ -84,7 +84,7 @@ public class GenericArray extends RegisterBase implements Register.RegisterArray
 
     public void resolveType() throws IOException, InterruptedException {
         try {
-            Object val = Epics.get(channelName, null, 1);
+            Object val = isSimulated() ?  byte[].class : Epics.get(channelName, null, 1);
             setType(val.getClass());
         } catch (InterruptedException ex) {
             throw ex;

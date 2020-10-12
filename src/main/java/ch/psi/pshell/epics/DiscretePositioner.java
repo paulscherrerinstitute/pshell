@@ -96,11 +96,14 @@ public class DiscretePositioner extends DiscretePositionerBase {
             try {
                 ArrayList<String> positions = new ArrayList<>();
                 for (String str : new String[]{"ZRST", "ONST", "TWST", "THST", "FRST", "FVST", "SXST", "SVST", "EIST", "NIST", "TEST", "ELST", "TVST", "TTST", "FTST", "FFST"}) {
-                    String p = Epics.get(setpoint.getChannelName() + "." + str, String.class);
-                    if (p.trim().isEmpty()) {
-                        break;
+                    String position = str;
+                    if (!isSimulated()) {
+                        position = Epics.get(setpoint.getChannelName() + "." + str, String.class);
+                        if (position.trim().isEmpty()) {
+                            break;
+                        }
                     }
-                    positions.add(p);
+                    positions.add(position);
                 }
                 setPositions(positions.toArray(new String[0]));
             } catch (ChannelException | java.util.concurrent.TimeoutException | ExecutionException ex) {
@@ -137,5 +140,4 @@ public class DiscretePositioner extends DiscretePositionerBase {
             }
         }
     }
-
 }

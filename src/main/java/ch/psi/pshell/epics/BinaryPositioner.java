@@ -41,8 +41,8 @@ public class BinaryPositioner extends DiscretePositioner {
         if ((pos == null) || ((pos.length) != 2) || (pos[0] == null) || (pos[0].isEmpty())) {
             //If undefined try to read from a binary output channel.            
             try {
-                String position1 = Epics.get(setpoint.getChannelName() + ".ZNAM", String.class);
-                String position2 = Epics.get(setpoint.getChannelName() + ".ONAM", String.class);
+                String position1 = isSimulated() ? "ZNAM" : Epics.get(setpoint.getChannelName() + ".ZNAM", String.class);
+                String position2 = isSimulated() ? "ONAM" :Epics.get(setpoint.getChannelName() + ".ONAM", String.class);
                 setPositions(position1, position2);
             } catch (ChannelException | java.util.concurrent.TimeoutException | ExecutionException ex) {
                 throw new DeviceException(ex);
