@@ -113,6 +113,28 @@ public class CameraServer extends StreamCamera {
     }
 
     /**
+     * Camera aliases.
+     */
+    public Map<String,String> getCameraAliases() throws IOException {
+        WebTarget resource = client.target(prefix+ "/aliases");
+        String json = resource.request().accept(MediaType.TEXT_HTML).get(String.class);
+        Map<String, Object> map = (Map) JsonSerializer.decode(json, Map.class);
+        checkReturn(map);
+        return (Map<String,String>) map.get("aliases");
+    }
+
+    /**
+     * Camera groups.
+     */
+    public Map<String,List<String>> getCameraGroups() throws IOException {
+        WebTarget resource = client.target(prefix+ "/groups");
+        String json = resource.request().accept(MediaType.TEXT_HTML).get(String.class);
+        Map<String, Object> map = (Map) JsonSerializer.decode(json, Map.class);
+        checkReturn(map);
+        return (Map<String,List<String>>) map.get("groups");
+    }
+
+    /**
      * Return the camera configuration.
      */
     public Map<String, Object> getConfig(String cameraName) throws IOException {
