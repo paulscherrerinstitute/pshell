@@ -279,8 +279,10 @@ public class CommandManager implements AutoCloseable {
         if (Context.getInstance().config.commandExecutionEvents) {
             try {
                 String var_name = "_command_info_" + Thread.currentThread().getId();
-                Context.getInstance().scriptManager.getEngine().put(var_name, info);
-                Context.getInstance().scriptManager.getEngine().eval("on_command_started(" + var_name + ")");
+                if (Context.getInstance().scriptManager!=null) {
+                    Context.getInstance().scriptManager.getEngine().put(var_name, info);
+                    Context.getInstance().scriptManager.getEngine().eval("on_command_started(" + var_name + ")");
+                }
             } catch (Exception ex) {
                 Logger.getLogger(CommandManager.class.getName()).log(Level.WARNING, null, ex);
             }
@@ -291,8 +293,10 @@ public class CommandManager implements AutoCloseable {
         if (Context.getInstance().config.commandExecutionEvents) {
             try {
                 String var_name = "_command_info_" + Thread.currentThread().getId();
-                Context.getInstance().scriptManager.getEngine().put(var_name, info);
-                Context.getInstance().scriptManager.getEngine().eval("on_command_finished(" + var_name + ")");
+                if (Context.getInstance().scriptManager!=null) {
+                    Context.getInstance().scriptManager.getEngine().put(var_name, info);
+                    Context.getInstance().scriptManager.getEngine().eval("on_command_finished(" + var_name + ")");
+                }
             } catch (Exception ex) {
                 Logger.getLogger(CommandManager.class.getName()).log(Level.WARNING, null, ex);
             }
