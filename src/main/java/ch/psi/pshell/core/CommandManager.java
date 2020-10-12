@@ -316,7 +316,9 @@ public class CommandManager implements AutoCloseable {
         if (Context.getInstance().config.commandExecutionEvents) {
             try {
                 String filename = (dataPath==null)? "None" : ("'" + dataPath.getCanonicalPath() + "'");
-                Context.getInstance().scriptManager.getEngine().eval("on_change_data_path(" + filename + ")");
+                if (Context.getInstance().scriptManager!=null) {
+                    Context.getInstance().scriptManager.getEngine().eval("on_change_data_path(" + filename + ")");
+                }
             } catch (Exception ex) {
                 Logger.getLogger(CommandManager.class.getName()).log(Level.WARNING, null, ex);
             }
