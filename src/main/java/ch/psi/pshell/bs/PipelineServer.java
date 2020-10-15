@@ -506,8 +506,8 @@ public class PipelineServer extends StreamCamera {
     }        
 
     public boolean isRoiEnabled() throws IOException {
-        List roi = (List) getInstanceConfigValue("image_region_of_interest");
-        return (roi != null) && (roi.size() == 4);
+        Object roi = getInstanceConfigValue("image_region_of_interest");
+        return (roi != null) && (roi instanceof List) && (((List) roi).size() == 4);
     }
 
     public void resetRoi() throws IOException {
@@ -523,7 +523,7 @@ public class PipelineServer extends StreamCamera {
     }
 
     public int[] getRoi() throws IOException {
-        List roi = (List) getInstanceConfigValue("image_region_of_interest");
+        Object roi = getInstanceConfigValue("image_region_of_interest");
         if ((roi != null) && (roi instanceof List)) {
             List<Integer> l = (List<Integer>) roi;
             if (l.size() >= 4) {
@@ -533,8 +533,33 @@ public class PipelineServer extends StreamCamera {
         return null;
     }
 
+    public void setBinning(int binning_x, int binning_y) throws IOException {
+        setBinning(binning_x, binning_y, false);
+    }
+
+    public void setBinning(int binning_x, int binning_y, boolean mean) throws IOException {
+        Map<String, Object> pars = new HashMap();
+        pars.put("binning_x", binning_x);
+        pars.put("binning_y", binning_y);
+        pars.put("binning_mean", mean);
+        setInstanceConfig(pars);
+    }
+
+    public Map getBinning() throws IOException {
+        Map ret = new HashMap();
+        Map<String, Object> pars = getInstanceConfig();
+        ret.put("binning_x", pars.getOrDefault("binning_x", 1));
+        ret.put("binning_y", pars.getOrDefault("binning_y", 1));
+        ret.put("binning_mean", pars.getOrDefault("binning_mean", false));
+        return ret;
+    }
+
     public String getBackground() throws IOException {
-        return (String) getInstanceConfigValue("image_background");
+        Object ret = getInstanceConfigValue("image_background");
+        if (ret instanceof String){
+            return (String) ret;
+        }
+        return null;
     }
 
     public void setBackground(String id) throws IOException {
