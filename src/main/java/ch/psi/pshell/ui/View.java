@@ -45,6 +45,8 @@ import javax.swing.JToolBar;
 import javax.swing.SwingUtilities;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.table.DefaultTableModel;
+
+import ch.psi.pshell.data.ProviderHDF5;
 import ch.psi.utils.Arr;
 import ch.psi.utils.ControlChar;
 import ch.psi.utils.swing.ConfigDialog;
@@ -4082,6 +4084,7 @@ public class View extends MainFrame {
                 {"Java", /*System.getProperty("java.vendor") + " " + */
                     System.getProperty("java.vm.name") + " (" + System.getProperty("java.version") + ")"},
                 {"Jar file", String.valueOf(context.getSetup().getJarFile())},
+                {"HDF5", Convert.arrayToString(ProviderHDF5.getVersion(),".")},
                 {"Arguments", String.join(" ", App.getArguments())},
                 {"Plugins", String.join("; ", plugins)},
                 {"Extensions", String.join("; ", extensions)},

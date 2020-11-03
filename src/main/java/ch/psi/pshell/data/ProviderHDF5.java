@@ -56,6 +56,16 @@ public class ProviderHDF5 implements Provider {
         compoundTypes = new HashMap<>();
     }
 
+    static public int[] getVersion(){
+        for (String cls : new String[]{"ncsa.hdf.hdf5lib.H5", "hdf.hdf5lib.H5"}){
+            try {
+                return (int[]) Class.forName(cls).getField("LIB_VERSION").get(null);
+            } catch (Throwable t) {
+            }
+        }
+        return new int[]  {0,0,0};
+    }
+
     @Override
     public String getFileType() {
         return "h5";
@@ -72,7 +82,7 @@ public class ProviderHDF5 implements Provider {
         if (writerFile != null) {
             writerFile.mkdirs();
             writerFile.delete();
-            writer = HDF5Factory.open(writerFile.getPath());    
+            writer = HDF5Factory.open(writerFile.getPath());
         }
     }
 
