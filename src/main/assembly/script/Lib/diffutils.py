@@ -54,7 +54,7 @@ from diffcalc.hardware import HardwareAdapter
 from diffcalc.ub.persistence import UBCalculationJSONPersister, UbCalculationNonPersister
 from diffcalc.gdasupport.minigda.scannable import ScannableBase, ScannableGroup
 #from diffcalc.gdasupport.minigda import command
-from diffcalc.hardware import HardwareAdapter
+import diffcalc.hkl.you.calc as you_calc
 
 
 import ch.psi.pshell.device.PositionerConfig as PositionerConfig
@@ -362,8 +362,8 @@ def setup_diff(diffractometer= None, energy= None, diffcalc_axis_names = None, g
             settings.ubcalc_persister = UbCalculationNonPersister()
         settings.axes_scannable_group = settings.hardware.diffractometer
         settings.energy_scannable = settings.hardware.energy
-        settings.ubcalc_strategy = diffcalc.hkl.you.calc.YouUbCalcStrategy()
-        settings.angles_to_hkl_function = diffcalc.hkl.you.calc.youAnglesToHkl
+        settings.ubcalc_strategy = you_calc.YouUbCalcStrategy()
+        settings.angles_to_hkl_function = you_calc.youAnglesToHkl
         from diffcalc.gdasupport import you
         reload(you)
         
