@@ -2184,6 +2184,19 @@ function notify(subject, text, attachments, to){
     get_context().notify(subject, text, attachments, to)
 }
 
+function expand_path(path, timestamp){
+    /*Expand path  containing tokens.
+
+          rgs:
+              path(str): path name.
+              timestamp(int): If not defined(-1), uses now.
+          Returns:
+              Expanded path name.
+
+    */
+    return get_context().setup.expandPath(path, timestamp)
+}
+
 function sleep(seconds){
     java.lang.Thread.sleep(seconds * 1000);
 }

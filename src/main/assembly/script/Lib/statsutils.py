@@ -11,7 +11,7 @@ import java.sql.ResultSet as ResultSet
 import java.util.Properties as Properties
 import java.lang.Class as Class
 import os
-from startup import get_context
+from startup import get_context, expand_path
 import ch.psi.pshell.core.CommandManager.CommandStatisticsFileRange as CommandStatisticsFileRange
 
 stmt = None 
@@ -19,7 +19,7 @@ STAT_COLUMN_NAMES = ["Command","Args","Source","Start","End","Background","Resul
 def get_stats_connection():
     global stmt
     Class.forName("org.relique.jdbc.csv.CsvDriver");   
-    db = os.path.abspath(get_context().setup.expandPath("{home}/statistics"))
+    db = os.path.abspath(expand_path("{home}/statistics"))
     props = Properties()
     props.put("fileExtension", ".csv")
     props.put("separator", ";")     

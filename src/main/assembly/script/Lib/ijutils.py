@@ -9,7 +9,7 @@
 
 import ch.psi.utils.Convert as Convert
 import ch.psi.pshell.imaging.Utils as Utils
-from startup import get_context
+from startup import get_context, expand_path
 import java.awt.image.BufferedImage as BufferedImage
 import jarray
 
@@ -73,7 +73,7 @@ def load_image(image, title = "img"):
     """    
     if isinstance(image, str):
         try:
-            file = get_context().setup.expandPath(image)
+            file = expand_path(image)
         except:
             pass
         try:
@@ -120,7 +120,7 @@ def save_image(ip, path=None, format = None, metadata={}):
     if path == None: fs.save()
     else:
         try:
-            path = get_context().setup.expandPath(path)
+            path = expandPath(path)
         except:
             pass           
         if format == "bmp": fs.saveAsBmp(path) 
@@ -143,7 +143,7 @@ def open_image(path):
     Open file using ij.io,Opener
     """
     try:
-        path = get_context().setup.expandPath(path)
+        path = expand_path(path)
     except:
         pass  
     opener = Opener()

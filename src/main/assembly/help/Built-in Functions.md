@@ -102,6 +102,7 @@ These functions provide the script API to many aspects of PShell:
     - to_list 
     - inject
     - notify
+    - expand_path
     - help       
 
  * UI interaction:

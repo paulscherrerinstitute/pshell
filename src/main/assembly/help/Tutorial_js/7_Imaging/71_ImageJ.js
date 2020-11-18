@@ -9,14 +9,14 @@ ip = load_image("images/img.png", title="Image")
 
 //Basic image manipulation: creation, copying, padding, saving 
 resized = resize(ip, 300,300)
-save_image(resized, get_context().setup.expandPath("{images}/resized.tiff") ,"tiff")
+save_image(resized, expand_path("{images}/resized.tiff") ,"tiff")
 crop=sub_image(ip,10,20,50,30)    
 bin_im = binning(ip,2)
 new_im = new_image(256, 256, "color")
 copy_image_to(bin_im, new_im, 20, 20)
 pad_im = pad_image(ip, 1, 2, 3, 4, Color.RED)
 stack=create_stack([ip,resized,crop, bin_im, new_im, pad_im], undefined, title = "Basic Functions")
-save_image(stack, get_context().setup.expandPath("{images}/stack.tiff") ,"tiff")
+save_image(stack, expand_path("{images}/stack.tiff") ,"tiff")
 stack.show()
 
 

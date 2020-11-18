@@ -42,7 +42,7 @@ import os
 
 
 import Jama.Matrix
-diffcalc_path = os.path.abspath(get_context().setup.expandPath("{script}/Lib/diffcalc"))
+diffcalc_path = os.path.abspath(expand_path("{script}/Lib/diffcalc"))
 if not diffcalc_path in sys.path:
     sys.path.append(diffcalc_path)
 
@@ -352,7 +352,7 @@ def setup_diff(diffractometer= None, energy= None, diffcalc_axis_names = None, g
         settings.hardware = MotorGroupAdapter(diffractometer, energy, 1, diffcalc_axis_names, simultaneous_move)
         
         if persist_ub:
-            settings.persistence_path = os.path.abspath(get_context().setup.expandPath("{config}/diffcalc"))
+            settings.persistence_path = os.path.abspath(expand_path("{config}/diffcalc"))
             if not os.path.exists(settings.persistence_path):
                 os.makedirs(settings.persistence_path) 
             print "UB calculations persistence path: " + settings.persistence_path
@@ -942,7 +942,7 @@ def set_exp_context(context):
         print sys.exc_info()[1]  
 
 
-EXPERIMENT_CONTEXT_FILE = get_context().setup.expandPath("{context}/diff_exp_context.json")
+EXPERIMENT_CONTEXT_FILE = expand_path("{context}/diff_exp_context.json")
 def save_exp_context():
     """
     Saves experiment context (constraints, ub and hw limits)

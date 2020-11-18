@@ -2275,6 +2275,18 @@ def notify(subject, text, attachments = None, to=None):
     """
     get_context().notify(subject, text, to_list(attachments), to_list(to))
 
+def expand_path(path, timestamp=-1):
+    """Expand path  containing tokens.
+
+    Args:
+        path(str): path name.
+        timestamp(int): If not defined(-1), uses now.
+    Returns:
+        Expanded path name.
+    """
+
+    return get_context().setup.expandPath(path, timestamp)
+
 def string_to_obj(o):
     if is_string(o):
         if "://" in o:

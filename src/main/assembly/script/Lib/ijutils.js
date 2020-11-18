@@ -77,7 +77,7 @@ function  load_image(image, title){
     
     if (typeof image == 'string') 
         try{
-            file = get_context().setup.expandPath(image)
+            file = expand_path(image)
         } catch(ex) {
         }
         try{
@@ -129,7 +129,7 @@ function save_image(ip, path, format){
     if (path == null)fs.save()
     else{
         try{
-            path = get_context().setup.expandPath(path)
+            path = expand_path(path)
         } catch(ex) {
         }      
         if (format == "bmp") fs.saveAsBmp(path) 
