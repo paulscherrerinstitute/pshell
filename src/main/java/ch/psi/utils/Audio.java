@@ -52,4 +52,12 @@ public class Audio {
         former = clip;
         return clip;
     }
+
+    public static Clip playFile(String file) throws Exception {
+        return playFile(new File(file));
+    }
+
+    public static Clip playFile(String file, boolean cancel) throws Exception {
+        return playFile(new File(file), cancel);
+    }
 }
