@@ -115,6 +115,10 @@ public interface Layout {
         return null;
     }
 
+    default public boolean getCreateLogs() {
+        return true;
+    }
+
     String getLogsPath();
 
     String getScriptsPath();

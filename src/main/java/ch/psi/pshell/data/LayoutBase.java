@@ -34,6 +34,16 @@ public abstract class LayoutBase implements Layout {
         return (persistSetpoints == null) ? getDataManager().getExecutionPars().getSaveSetpoints() : persistSetpoints;
     }
 
+    boolean createLogs = true;
+
+    public boolean getCreateLogs() {
+        return createLogs;
+    }
+
+    public void setCreateLogs(boolean value) {
+        createLogs = value;
+    }
+
     public void setPersistSetpoints(boolean value) {
         persistSetpoints = value;
     }

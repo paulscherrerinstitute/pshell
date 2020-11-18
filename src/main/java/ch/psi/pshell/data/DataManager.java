@@ -227,6 +227,16 @@ public class DataManager implements AutoCloseable {
         return (ret == null) ? layout : ret;
     }
 
+    boolean createLogs = true;
+
+    public boolean getCreateLogs() {
+        return createLogs;
+    }
+
+    public void setCreateLogs(boolean value) {
+        createLogs = value;
+    }
+
     public String getDataFileType() {
         return getProvider().getFileType();
     }
@@ -863,10 +873,12 @@ public class DataManager implements AutoCloseable {
     }
 
     public void appendLog(String log) throws IOException {
-        openOutput();
-        if (isOpen()) {
-            getLayout().appendLog(log);
-            flush();  //Logs are always immediatelly flushed
+        if (getCreateLogs() && getLayout().getCreateLogs() && getLayout().getLogsPath()!=null) {
+            openOutput();
+            if (isOpen()) {
+                getLayout().appendLog(log);
+                flush();  //Logs are always immediatelly flushed
+            }
         }
     }
 
