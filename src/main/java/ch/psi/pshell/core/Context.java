@@ -872,7 +872,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
         return taskManager;
     }
 
-    public NotificationManager getMailManager() {
+    public NotificationManager getNotificationManager() {
         return notificationManager;
     }
 
