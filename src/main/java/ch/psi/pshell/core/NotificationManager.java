@@ -41,21 +41,44 @@ public class NotificationManager implements AutoCloseable{
     
     public NotificationManager(){
         config = new MailConfig();
+        initialize();
+    }
+
+    public void initialize(){
         try {
             config.load(getMailConfigFile().toString());
         } catch (IOException ex) {
             Logger.getLogger(NotificationManager.class.getName()).log(Level.WARNING, null, ex);
-        }        
-        
+        }
+
         if ((config.to!=null) && (!config.to.trim().isEmpty())){
             to = config.to.split(";");
             to = validateRecipients(to);
-        } 
-        
+        }
+
         from = ((config.from==null)||(config.from.isEmpty()))? Sys.getProcessName() : config.from;
-        
     }
-        
+
+    public void setRecipients(String[] to) throws IOException{
+        to = validateRecipients(to);
+        config.to = String.join(";", to);
+        config.save();
+    }
+
+    public MailConfig getConfig(){
+        return config;
+    }
+
+    public boolean isEnabled(){
+        return (config.host!=null);
+    }
+
+    public void assertEnabled() throws IOException{
+        if (!isEnabled()){
+            throw new IOException("Mailing is not configured");
+        }
+    }
+
     private String[] validateRecipients(String[] to){
         for (int i=0; i< to.length; i++){
             to[i] =to[i].trim();
@@ -115,16 +138,6 @@ public class NotificationManager implements AutoCloseable{
             throw ex;
         } catch (Exception ex){
             throw new IOException(ex.getMessage());
-        }
-    }
-
-    public boolean isEnabled(){
-        return (config.host!=null);
-    }
-
-    public void assertEnabled() throws IOException{
-        if (!isEnabled()){
-            throw new IOException("Mailing is not configured");
         }
     }
     
