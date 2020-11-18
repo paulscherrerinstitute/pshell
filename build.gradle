@@ -6,7 +6,7 @@ plugins {
     id "nebula.ospackage" version "8.1.0" 
 }
 
-version = '1.15.0' 
+version = '1.16.0'
 group = 'ch.psi'
 ext.timestamp = new Date().format("yyMMddHHmm")
 
@@ -15,7 +15,7 @@ ext.javafx = false
 ext.manif_addopens = 'java.base/sun.nio.ch java.base/java.io java.desktop/sun.awt java.desktop/javax.swing.text.html java.desktop/sun.swing java.base/jdk.internal.loader jdk.nashorn.internal.runtime'
 ext.run_addopens = 'java.base/jdk.internal.loader=ALL-UNNAMED'
 sourceCompatibility = '1.11'
-ext.hdf5 = '1.8' // '1.10' or '1.8
+ext.hdf5 = '1.10' // '1.10' or '1.8
 
 [compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
 
