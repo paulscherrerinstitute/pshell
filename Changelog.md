@@ -21,6 +21,12 @@
 
 * Options to save scan script and output.
 
+* Facade to ImageJ image measurements.
+
+* Rsync utilities.
+
+* Build option for HDF5 1.10.
+
 ### Changed
 
 * Java 11 is required to run PShell (source and bin formats are set to Java 11).
@@ -44,6 +50,7 @@
   
 * Channel class closes channel on finalizer.
 
+* Reading array of Boolean type on HDF5 files.
 
 
 ## 1.14.0
