@@ -1,10 +1,16 @@
 ####################################################################################################
 #  Utilities for synchronizing folders with rsync
+#  On RH7  (not SL6)
+#  Change permission of the account, otherwise SSH keys are not accepted:
+#       ~/.ssh    from drwxr-S--- to drwx----
+#       ~ :       from drwxrws--- to drwxr-s---
 ####################################################################################################
 
 import sys
 import os
 import os.path
+import shutil
+
 from startup import exec_cmd, log
 
 RSYNC_GENERATE_USER_KEY = True
@@ -19,8 +25,13 @@ def rsync(src, dest, key):
     if len(lines)<3:
         print "Invalid return from rsync:\n", ret
         raise Exception ("Invalid format")
-    files = lines[1:-2]
-
+    #files = lines[1:-2]
+    files = []
+    head,tail=os.path.split(src)
+    for l in lines:
+        f = os.path.join(head,l)
+        if os.path.exists(f):
+            files.append(f)
     try:
         stats = lines[-2].replace(",", "").replace(".", "")
         stats = [int(s) for s in stats.split() if s.isdigit()]
@@ -31,7 +42,7 @@ def rsync(src, dest, key):
 
     return files, bytes_sent, bytes_received
 
-def sync_user_data(user, src, dest, do_log=True, do_print=True):
+def sync_user_data(user, src, dest, host= "localhost", remove_local_folder=False, remove_local_files=False, do_log=True, do_print=True):
     try:
         if do_log:
             log("Start synchronizing %s to %s:%s" % (src, user, dest), False )
@@ -39,7 +50,7 @@ def sync_user_data(user, src, dest, do_log=True, do_print=True):
         if not os.path.isfile(key):
             raise Exception ("Invalid key file")
         dest = "'" + dest.replace(" ", "\ ") + "'"
-        dest = user + "@localhost:" + dest
+        dest = user + "@" + host + ":" + dest
         files, bytes_sent, bytes_received = rsync(src,dest,key)
         msg = "Transferred " + str(bytes_sent) + " bytes to " + user + ": "
         for f in files:
@@ -48,6 +59,22 @@ def sync_user_data(user, src, dest, do_log=True, do_print=True):
             log(msg, False)
         if do_print:
             print msg
+        if remove_local_folder:
+            if do_log:
+                log("Removing folder: " + src)
+            shutil.rmtree(src)
+        elif remove_local_files:
+            for f in files:
+                if not os.path.samefile(f, src):
+                    if os.path.isfile(f):
+                        if do_log:
+                            log("Removing file: " + f)
+                        os.remove(f)
+                    elif os.path.isdir(f):
+                        if do_log:
+                            log("Removing folder: " + f)
+                        shutil.rmtree(f)
+
     except:
         msg = "Error transferring user data to " + user + ": " + str(sys.exc_info()[1])
         if do_log:
