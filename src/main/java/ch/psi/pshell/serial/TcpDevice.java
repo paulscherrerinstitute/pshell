@@ -153,4 +153,7 @@ public class TcpDevice extends SerialDeviceBase {
         client.checkConnected();
     }
 
+    public boolean isConnected() {
+        return client.isConnected();
+    }
 }
