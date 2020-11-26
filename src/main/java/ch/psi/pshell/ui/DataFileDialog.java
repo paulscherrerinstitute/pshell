@@ -27,7 +27,6 @@ public class DataFileDialog extends StandardDialog {
     final Configuration config;
     final Setup setup;
     final String defaultPath;
-    int sequential;
     Provider provider;
 
     public DataFileDialog(java.awt.Frame parent, boolean modal) {
@@ -53,7 +52,6 @@ public class DataFileDialog extends StandardDialog {
         textPathConfig.setText(config.dataPath.trim());
         comboProvider.setSelectedItem(config.dataProvider.trim());
         comboLayout.setSelectedItem(config.dataLayout.trim());
-        sequential = Context.getInstance().getFileSequentialNumber();
         updateProvider();
         update();
     }
@@ -66,9 +64,8 @@ public class DataFileDialog extends StandardDialog {
                         SwingUtils.getTableColumnNames(tableTokens));
                 setTokensTableColumnSizes(tableTokens);
             }
-            sequential = Context.getInstance().getFileSequentialNumber();
             try {
-                spinnerSeq.setValue(sequential);
+                spinnerSeq.setValue(Context.getInstance().getFileSequentialNumber());
             } catch (Exception ex) {
             }
 
@@ -110,6 +107,7 @@ public class DataFileDialog extends StandardDialog {
             new Object[]{Setup.TOKEN_EXEC_COUNT, "", "Scan index since 'reset' parameter was set  (formatter can be appended: " + Setup.TOKEN_EXEC_COUNT + "%02d )"},
             new Object[]{Setup.TOKEN_EXEC_INDEX, "", "Scan index  (formatter can be appended: " + Setup.TOKEN_EXEC_INDEX + "%02d )"},
             new Object[]{Setup.TOKEN_FILE_SEQUENTIAL_NUMBER, "", "Execution sequential number (formatter can be appended: " + Setup.TOKEN_FILE_SEQUENTIAL_NUMBER + "%02d )"},
+            new Object[]{Setup.TOKEN_DAY_SEQUENTIAL_NUMBER, "", "Daily run index (formatter can be appended: " + Setup.TOKEN_DAY_SEQUENTIAL_NUMBER + "%02d )"},
             new Object[]{Setup.TOKEN_SYS_HOME, "", "System user name"},
             new Object[]{Setup.TOKEN_SYS_USER, "", "System user home folder"},};
 
@@ -125,9 +123,10 @@ public class DataFileDialog extends StandardDialog {
         buttonPathUndo.setEnabled(!textPathConfig.getText().trim().equals(config.dataPath.trim()));
         buttonProviderUndo.setEnabled(!String.valueOf(comboProvider.getSelectedItem()).trim().equals(config.dataProvider.trim()));
         buttonLayoutUndo.setEnabled(!String.valueOf(comboLayout.getSelectedItem()).trim().equals(config.dataLayout.trim()));
-        buttonSeqUndo.setEnabled(!spinnerSeq.getValue().equals(sequential));
+        buttonSeqUndo.setEnabled(!spinnerSeq.getValue().equals(Context.getInstance().getFileSequentialNumber()));
         buttonResetSeq.setEnabled(!spinnerSeq.getValue().equals(0));
         buttonApply.setEnabled(buttonPathUndo.isEnabled() || buttonProviderUndo.isEnabled() || buttonLayoutUndo.isEnabled() || buttonSeqUndo.isEnabled());
+        textDayIndex.setText(String.valueOf(Context.getInstance().getDaySequentialNumber()));
     }
 
     void update() {
@@ -205,6 +204,8 @@ public class DataFileDialog extends StandardDialog {
         spinnerSeq = new javax.swing.JSpinner();
         buttonTokens = new javax.swing.JButton();
         buttonSeqUndo = new javax.swing.JButton();
+        jLabel6 = new javax.swing.JLabel();
+        textDayIndex = new javax.swing.JTextField();
         jPanel3 = new javax.swing.JPanel();
         jLabel3 = new javax.swing.JLabel();
         jLabel4 = new javax.swing.JLabel();
@@ -285,45 +286,52 @@ public class DataFileDialog extends StandardDialog {
             }
         });
 
+        jLabel6.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
+        jLabel6.setText("Day Index:");
+
+        textDayIndex.setEditable(false);
+        textDayIndex.setHorizontalAlignment(javax.swing.JTextField.TRAILING);
+
         javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
         jPanel2.setLayout(jPanel2Layout);
         jPanel2Layout.setHorizontalGroup(
             jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel2Layout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jLabel1)
+                    .addComponent(jLabel2)
+                    .addComponent(jLabel6))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(jPanel2Layout.createSequentialGroup()
-                        .addContainerGap()
-                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jLabel1)
-                            .addComponent(jLabel2))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
                             .addGroup(jPanel2Layout.createSequentialGroup()
                                 .addComponent(buttonTokens)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 191, Short.MAX_VALUE)
-                                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel2Layout.createSequentialGroup()
-                                        .addComponent(buttonResetSeq)
-                                        .addGap(5, 5, 5))
-                                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel2Layout.createSequentialGroup()
-                                        .addComponent(buttonPathDefault)
-                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)))
-                                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                    .addComponent(buttonPathUndo)
-                                    .addComponent(buttonSeqUndo, javax.swing.GroupLayout.Alignment.TRAILING)))
-                            .addComponent(textPathConfig)
-                            .addComponent(textPathExpansion)))
-                    .addGroup(jPanel2Layout.createSequentialGroup()
-                        .addGap(6, 6, 6)
-                        .addComponent(jLabel5)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                .addComponent(buttonPathDefault))
+                            .addGroup(jPanel2Layout.createSequentialGroup()
+                                .addComponent(textDayIndex, javax.swing.GroupLayout.PREFERRED_SIZE, 85, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGap(18, 18, Short.MAX_VALUE)
+                                .addComponent(jLabel5)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(spinnerSeq, javax.swing.GroupLayout.PREFERRED_SIZE, 92, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(buttonResetSeq)
+                                .addGap(0, 0, 0)))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(spinnerSeq, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addContainerGap())
+                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(buttonPathUndo)
+                            .addComponent(buttonSeqUndo, javax.swing.GroupLayout.Alignment.TRAILING)))
+                    .addComponent(textPathConfig)
+                    .addComponent(textPathExpansion)))
         );
 
         jPanel2Layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {buttonPathDefault, buttonPathUndo, buttonResetSeq, buttonSeqUndo});
 
-        jPanel2Layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {jLabel1, jLabel2, jLabel5});
+        jPanel2Layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {jLabel1, jLabel2, jLabel6});
+
+        jPanel2Layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {buttonTokens, spinnerSeq, textDayIndex});
 
         jPanel2Layout.setVerticalGroup(
             jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -346,8 +354,10 @@ public class DataFileDialog extends StandardDialog {
                     .addComponent(jLabel5)
                     .addComponent(buttonResetSeq)
                     .addComponent(spinnerSeq, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(buttonSeqUndo))
-                .addContainerGap())
+                    .addComponent(buttonSeqUndo)
+                    .addComponent(jLabel6)
+                    .addComponent(textDayIndex, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
         jPanel3.setBorder(javax.swing.BorderFactory.createTitledBorder("Data Format"));
@@ -583,7 +593,7 @@ public class DataFileDialog extends StandardDialog {
     }//GEN-LAST:event_comboLayoutActionPerformed
 
     private void buttonSeqUndoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonSeqUndoActionPerformed
-        spinnerSeq.setValue(sequential);
+        spinnerSeq.setValue(Context.getInstance().getFileSequentialNumber());
         updateButtons();
     }//GEN-LAST:event_buttonSeqUndoActionPerformed
 
@@ -605,10 +615,12 @@ public class DataFileDialog extends StandardDialog {
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
     private javax.swing.JLabel jLabel5;
+    private javax.swing.JLabel jLabel6;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel2;
     private javax.swing.JPanel jPanel3;
     private javax.swing.JSpinner spinnerSeq;
+    private javax.swing.JTextField textDayIndex;
     private javax.swing.JTextField textPathConfig;
     private javax.swing.JTextField textPathExpansion;
     // End of variables declaration//GEN-END:variables

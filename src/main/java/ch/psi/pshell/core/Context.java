@@ -2710,6 +2710,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
     }        
 
     final static String FILE_SEQUENTIAL_NUMBER = "FileSequentialNumber";
+    final static String LAST_RUN_DATE = "LastRunDate";
     public int getFileSequentialNumber(){
         try{
             return Integer.valueOf(getVariable(FILE_SEQUENTIAL_NUMBER));
@@ -2718,13 +2719,43 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
         }
     }
     
-    public void setFileSequentialNumber(int seq )  throws IOException {
+    public void setFileSequentialNumber(int seq)  throws IOException {
         setVariable(FILE_SEQUENTIAL_NUMBER, seq);
-    }    
-    
+    }
+
+    final static String DAY_SEQUENTIAL_NUMBER = "DaySequentialNumber";
+    public int getDaySequentialNumber(){
+        try{
+            if (!Chrono.getTimeStr( System.currentTimeMillis(), "YYMMdd").equals(getVariable(LAST_RUN_DATE))){
+                setVariable(DAY_SEQUENTIAL_NUMBER,0);
+            }
+            return Integer.valueOf(getVariable(DAY_SEQUENTIAL_NUMBER));
+        } catch (Exception ex){
+            return 0;
+        }
+    }
+
+    public void setDaySequentialNumber(int seq)  throws IOException {
+        int current =  getDaySequentialNumber();
+        if (seq <= current) {
+            throw new IOException("Invalid day run index: " + seq + " - Current: " + current);
+        }
+        setVariable(DAY_SEQUENTIAL_NUMBER,seq);
+        setVariable(LAST_RUN_DATE, Chrono.getTimeStr( System.currentTimeMillis(), "YYMMdd"));
+    }
+
     public void incrementFileSequentialNumber() throws IOException{
         int current = getFileSequentialNumber();
-        setFileSequentialNumber(current + 1);   
+        setFileSequentialNumber(current + 1);
+    }
+
+    public void incrementDaySequentialNumber() throws IOException{
+        setDaySequentialNumber(getDaySequentialNumber()+1);
+    }
+
+    public void incrementSequentialNumbers() throws IOException{
+        incrementFileSequentialNumber();
+        incrementDaySequentialNumber();
     }
 
     Map<String, Object> globals = new HashMap<>();

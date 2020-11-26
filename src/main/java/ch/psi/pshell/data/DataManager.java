@@ -43,6 +43,7 @@ public class DataManager implements AutoCloseable {
     Layout layout;
     Provider provider;
     int fileSequentialNumber = -1;
+    int daySequentialNumber = -1;
     final File outputFile;
 
     class ProviderData {
@@ -513,18 +514,24 @@ public class DataManager implements AutoCloseable {
     public int getCurrentFileSequentialNumber(){
         return fileSequentialNumber;
     }
+
+    public int getCurrentDaySequentialNumber(){
+        return daySequentialNumber;
+    }
+
     public void openOutput() throws IOException {
         //Continue using open file        
         if (isOpen()) {
             return;
         }
-        fileSequentialNumber = context.getFileSequentialNumber();       
+        fileSequentialNumber = context.getFileSequentialNumber();
+        daySequentialNumber = context.getDaySequentialNumber();
         getExecutionPars().initializeData();
         File dataPath = getDataRootPath();
         if (dataPath != null) {
             getExecutionPars().setDataPath(dataPath);
             getProvider().openOutput(dataPath);
-            context.incrementFileSequentialNumber();
+            context.incrementSequentialNumbers();
             getLayout().onOpened(getExecutionPars().getOutputFile());
             if (getExecutionPars().getSave()) {
                 appendLog("Open persistence context: " + getExecutionPars().getOutputFile());

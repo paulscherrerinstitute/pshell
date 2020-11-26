@@ -113,8 +113,14 @@ public class ExecutionParameters {
             return Context.getInstance().getFileSequentialNumber();
         }    
     }
-     
 
+    public int getDaySeq() {
+        if (Context.getInstance().dataManager.isOpen()){
+            return Context.getInstance().getDataManager().getCurrentDaySequentialNumber();
+        } else {
+            return Context.getInstance().getDaySequentialNumber();
+        }
+    }
     public int getCount() {
         return scanIndex - offset;
     }

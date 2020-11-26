@@ -73,6 +73,7 @@ public class Setup extends Config {
     public static transient final String TOKEN_EXEC_COUNT = "{count}";
     public static transient final String TOKEN_EXEC_INDEX = "{index}";
     public static transient final String TOKEN_FILE_SEQUENTIAL_NUMBER= "{seq}";
+    public static transient final String TOKEN_DAY_SEQUENTIAL_NUMBER= "{dseq}";
     public static transient final String TOKEN_SYS_HOME = "{syshome}";
     public static transient final String TOKEN_SYS_USER = "{sysuser}";
     
@@ -371,13 +372,25 @@ public class Setup extends Config {
                 } else {
                     path = path.replaceFirst(Pattern.quote(TOKEN_FILE_SEQUENTIAL_NUMBER), String.format("%04d", index));
                 }
-            }            
+            }
+            while (path.contains(TOKEN_DAY_SEQUENTIAL_NUMBER)) {
+                int index = executionContext.getDaySeq();
+                int i = path.indexOf(TOKEN_DAY_SEQUENTIAL_NUMBER) + TOKEN_DAY_SEQUENTIAL_NUMBER.length();
+                if ((i < path.length()) && path.substring(i, i + 1).equals("%")) {
+                    String format = path.substring(i).split(" ")[0];
+                    path = path.replaceFirst(Pattern.quote(TOKEN_DAY_SEQUENTIAL_NUMBER) + format, String.format(format, index));
+                } else {
+                    path = path.replaceFirst(Pattern.quote(TOKEN_DAY_SEQUENTIAL_NUMBER), String.format("%04d", index));
+                }
+            }
         }
         if (timestamp <= 0) {
             timestamp = System.currentTimeMillis();
         }
+        path = path.replace(TOKEN_DATE+"%02d", Chrono.getTimeStr(timestamp, "YYMMdd"));
         path = path.replace(TOKEN_DATE, Chrono.getTimeStr(timestamp, "YYYYMMdd"));
         path = path.replace(TOKEN_TIME, Chrono.getTimeStr(timestamp, "HHmmss"));
+        path = path.replace(TOKEN_YEAR+"%02d", Chrono.getTimeStr(timestamp, "YY"));
         path = path.replace(TOKEN_YEAR, Chrono.getTimeStr(timestamp, "YYYY"));
         path = path.replace(TOKEN_MONTH, Chrono.getTimeStr(timestamp, "MM"));
         path = path.replace(TOKEN_DAY, Chrono.getTimeStr(timestamp, "dd"));
