@@ -119,13 +119,13 @@ dependencies {
     compile 'jline:jline:2.14.6'
     //compile 'org.zeromq:jeromq:0.5.1' #On BSREAD 4.0.0
     compile 'ch.psi:bsread:4.0.0'
-    compile 'net.imagej:ij:1.52s'    
+    compile 'net.imagej:ij:1.53f'
     compile 'javax.mail:javax.mail-api:1.6.2'
     compile 'com.sun.mail:javax.mail:1.6.2'
     compile 'com.github.sarxos:webcam-capture:0.3.12'
     compile 'org.clojars.nakkaya:darcula:1.0.0'   //Netbeans darcula
     //compile 'com.bulenkov:darcula:2018.2'    //Original darcula  
-    compile 'com.formdev:flatlaf:0.38'
+    compile 'com.formdev:flatlaf:0.44'
     compile 'javax.xml.bind:jaxb-api:2.3.0'
     
     //TIFF support for ImageIO can be added installing JAI, or one of the following dependencies:
