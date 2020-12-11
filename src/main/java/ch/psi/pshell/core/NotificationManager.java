@@ -61,7 +61,8 @@ public class NotificationManager implements AutoCloseable{
 
     public void setRecipients(String[] to) throws IOException{
         to = validateRecipients(to);
-        config.to = String.join(";", to);
+        this.to = to;
+        config.to = (to == null) ? "" : String.join(";", to);
         config.save();
     }
 
