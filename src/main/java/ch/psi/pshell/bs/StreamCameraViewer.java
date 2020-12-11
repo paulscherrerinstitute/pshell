@@ -2489,7 +2489,7 @@ public class StreamCameraViewer extends MonitoredPanel {
             if (server.isStarted()) {
                 updatingServerControls = true;
                 try {
-                    checkBackground.setSelected(server.getBackgroundSubtraction());
+                    checkBackground.setSelected(server.isBackgroundSubtractionEnabled());
                     Double threshold = (server.getThreshold());
                     checkThreshold.setSelected(threshold != null);
                     spinnerThreshold.setValue((threshold == null) ? 0 : threshold);

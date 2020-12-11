@@ -581,19 +581,28 @@ public class PipelineServer extends StreamCamera {
         return id;
     }
 
-    public boolean getBackgroundSubtraction() throws IOException {
-        return Boolean.TRUE.equals(getInstanceConfigValue("image_background_enable"));
+    private boolean isBackgroundSubtractionEnabled(Object value) throws IOException {
+        return !value.equals(false) && !value.equals("false") && !value.equals("");
+    }
+    
+    public boolean isBackgroundSubtractionEnabled() throws IOException {
+        Object value = getBackgroundSubtraction();
+        return isBackgroundSubtractionEnabled(value);
+    }
+    
+    public Object getBackgroundSubtraction() throws IOException {
+        return getInstanceConfigValue("image_background_enable");
     }
 
-    public void setBackgroundSubtraction(boolean value) throws IOException {
-        if (value) {
+    public void setBackgroundSubtraction(Object value) throws IOException {
+        if (isBackgroundSubtractionEnabled(value)){
             String id = getBackground();
             if (id == null) {
                 setBackground(getLastBackground());
             }
         }
         setInstanceConfigValue("image_background_enable", value);
-    }
+    }    
 
     public Double getThreshold() throws IOException {
         Object ret = getInstanceConfigValue("image_threshold");
