@@ -8,6 +8,10 @@ import static ch.psi.pshell.core.Setup.TOKEN_MONTH;
 import static ch.psi.pshell.core.Setup.TOKEN_TIME;
 import static ch.psi.pshell.core.Setup.TOKEN_YEAR;
 import ch.psi.utils.Config;
+import ch.psi.utils.Str;
+
+import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Level;
 
 /**
@@ -42,6 +46,7 @@ public class Configuration extends Config {
     public LogLevel logLevel = LogLevel.Info;
     public LogLevel logLevelConsole = LogLevel.Off;
     public NotificationLevel notificationLevel = NotificationLevel.Off;
+    public String notifiedTasks = "";
     public boolean simulation;
     public boolean versionTrackingEnabled;
     public boolean versionTrackingManual;
@@ -72,8 +77,9 @@ public class Configuration extends Config {
 
     public enum NotificationLevel {
         Off,
-        Completion,
-        Error
+        User,
+        Error,
+        Completion
     }
 
     public Level getLogLevel() {
@@ -103,6 +109,22 @@ public class Configuration extends Config {
             return NotificationLevel.Off;
         }
         return notificationLevel;
+    }
+
+    List<String> getNotifiedTasks() {
+        List<String> ret = new ArrayList<>();
+        if (notifiedTasks != null) {
+            if (!Str.toString(null).equals(notifiedTasks)) {
+                String[] tokens = notifiedTasks.split("\\|");
+                for (String str : tokens){
+                    str=str.trim();
+                    if (!str.isEmpty()){
+                        ret.add(str);
+                    }
+                }
+            }
+        }
+        return ret;
     }
 
     public int getDepthDim() {

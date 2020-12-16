@@ -716,15 +716,33 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
             pluginManager.onExecutedFile(fileName, result);
         }
         boolean error = (result instanceof Throwable) && !aborted;
+
         try {
-            if (error && config.getNotificationLevel() != NotificationLevel.Off) {
-                this.notify("Execution error", "File: " + fileName + "\n" + ((Throwable) result).getMessage(), null);
-            }
-            if (config.getNotificationLevel() == NotificationLevel.Completion) {
-                if (aborted) {
-                    notify("Execution aborted", "File: " + fileName, null);
-                } else {
-                    notify("Execution success", "File: " + fileName + "\nReturn:" + String.valueOf(result), null);
+            if (config.getNotificationLevel() != NotificationLevel.Off) {
+                boolean notifyTask = true;
+
+                List<String> tasks = config.getNotifiedTasks();
+                if (tasks.size() > 0){
+                    notifyTask = false;
+                    String taskName = IO.getPrefix(fileName);
+                    for (String task:tasks){
+                        if (task.equalsIgnoreCase(taskName)){
+                            notifyTask = true;
+                        }
+                    }
+                }
+
+                if (notifyTask) {
+                    if (error && config.getNotificationLevel() != NotificationLevel.User) {
+                        this.notify("Execution error", "File: " + fileName + "\n" + ((Throwable) result).getMessage(), null);
+                    }
+                    if (config.getNotificationLevel() == NotificationLevel.Completion) {
+                        if (aborted) {
+                            notify("Execution aborted", "File: " + fileName, null);
+                        } else {
+                            notify("Execution success", "File: " + fileName + "\nReturn:" + String.valueOf(result), null);
+                        }
+                    }
                 }
             }
         } catch (Exception ex) {
@@ -2609,19 +2627,21 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
     }
 
     public void notify(String subject, String text, List<String> attachments, List<String> to) throws IOException {
-        File[] att = null;
-        if (attachments != null) {
-            ArrayList<File> files = new ArrayList();
-            for (String attachment : attachments) {
-                files.add(new File(getSetup().expandPath(attachment)));
+        if (config.getNotificationLevel() != NotificationLevel.Off) {
+            File[] att = null;
+            if (attachments != null) {
+                ArrayList<File> files = new ArrayList();
+                for (String attachment : attachments) {
+                    files.add(new File(getSetup().expandPath(attachment)));
+                }
+                att = files.toArray(new File[0]);
             }
-            att = files.toArray(new File[0]);
-        }
 
-        if (to == null) {
-            notificationManager.send(subject, text, att);
-        } else {
-            notificationManager.send(subject, text, att, to.toArray(new String[0]));
+            if (to == null) {
+                notificationManager.send(subject, text, att);
+            } else {
+                notificationManager.send(subject, text, att, to.toArray(new String[0]));
+            }
         }
     }
 
