@@ -133,11 +133,15 @@ public interface Plugin {
         return getContext().evalFileBackgroundAsync(CommandSource.plugin, scriptName);
     }
 
-    default void setGlobalVar(String name, Object val) throws Context.ContextStateException {
+    default Object getGlobalVar(String name) {
+        return getContext().getScriptManager().getVar(name);
+    }
+
+    default void setGlobalVar(String name, Object val){
         getContext().getScriptManager().setVar(name, val);
     }
 
-    default void setGlobalsVars(HashMap<String, Object> vars) throws Context.ContextStateException {
+    default void setGlobalsVars(HashMap<String, Object> vars)  {
         for (String key : vars.keySet()) {
             setGlobalVar(key, vars.get(key));
         }
