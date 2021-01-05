@@ -735,8 +735,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
                 if (notifyTask) {
                     if (error && config.getNotificationLevel() != NotificationLevel.User) {
                         this.notify("Execution error", "File: " + fileName + "\n" + ((Throwable) result).getMessage(), null);
-                    }
-                    if (config.getNotificationLevel() == NotificationLevel.Completion) {
+                    } else if (config.getNotificationLevel() == NotificationLevel.Completion) {
                         if (aborted) {
                             notify("Execution aborted", "File: " + fileName, null);
                         } else {
