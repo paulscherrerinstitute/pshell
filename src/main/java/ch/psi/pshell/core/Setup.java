@@ -76,7 +76,9 @@ public class Setup extends Config {
     public static transient final String TOKEN_DAY_SEQUENTIAL_NUMBER= "{dseq}";
     public static transient final String TOKEN_SYS_HOME = "{syshome}";
     public static transient final String TOKEN_SYS_USER = "{sysuser}";
-    
+    public static transient final String TOKEN_SESSION_ID = "{session_id}";
+    public static transient final String TOKEN_SESSION_NAME = "{session_name}";
+
     public static transient final String DEFAULT_HOME_FOLDER = "./home";
 
     String homePath;
@@ -159,7 +161,7 @@ public class Setup extends Config {
             configFileVariables = TOKEN_CONFIG + "/variables.properties";
             save();
         }
-        
+
         if (System.getProperty(PROPERTY_DATA_PATH) != null) {
             dataPath = System.getProperty(PROPERTY_DATA_PATH);
         }
@@ -224,7 +226,6 @@ public class Setup extends Config {
 
     HashMap<String, String> expansionTokens;
     HashMap<String, String> expandedPathNames;
-
     void initPaths() {
         expansionTokens = new HashMap<>();
         expansionTokens.put(TOKEN_HOME, homePath);
@@ -322,7 +323,7 @@ public class Setup extends Config {
     String expandStaticTokens(String path) {
         return expandStaticTokens(path, -1);
     }
-    
+
     String expandStaticTokens(String path, long timestamp) {
         return expand(path, timestamp, user);
     }
@@ -334,7 +335,8 @@ public class Setup extends Config {
         if (user != null) {
             path = path.replace(TOKEN_USER, user);
         }
-        ExecutionParameters executionContext = (Context.getInstance() == null) ? null : Context.getInstance().getExecutionPars();
+        Context ctx = Context.getInstance();
+        ExecutionParameters executionContext = ( ctx== null) ? null : ctx.getExecutionPars();
         if (executionContext != null) {
             String execName = executionContext.getName();
             String execType = executionContext.getType();
@@ -382,6 +384,13 @@ public class Setup extends Config {
                 } else {
                     path = path.replaceFirst(Pattern.quote(TOKEN_DAY_SEQUENTIAL_NUMBER), String.format("%04d", index));
                 }
+            }
+            //Cannot be used in defining other tokens, only for data folder as depends on the running context
+            if (path.contains(TOKEN_SESSION_ID)) {
+                path = path.replace(TOKEN_SESSION_ID, String.valueOf(ctx.getSessionManager().getCurrentId()));
+            }
+            if (path.contains(TOKEN_SESSION_NAME)) {
+                path = path.replace(TOKEN_SESSION_NAME, String.valueOf(ctx.getSessionManager().getCurrentName()));
             }
         }
         if (timestamp <= 0) {
@@ -457,6 +466,15 @@ public class Setup extends Config {
     public String getSessionsPath() {
         return expandedPathNames.get(sessionsPath);
     }
+
+    public String getConsoleSessionsPath() {
+        return getSessionsPath() + "/console";
+    }
+
+    public String getUserSessionsPath() {
+        return getSessionsPath() + "/user";
+    }
+
 
     public String getContextPath() {
         return expandedPathNames.get(contextPath);
@@ -604,21 +622,21 @@ public class Setup extends Config {
 
     public String[] getLibraryPath() {
         String[] ret = libraryPath.split(";");
-        for (int i = 0; i < ret.length; i++) {         
+        for (int i = 0; i < ret.length; i++) {
             ret[i] = expandPath(ret[i].trim());
-        } 
+        }
         String standard = getStandardLibraryPath();
         if (!Arr.containsEqual(ret, standard)) {
             ret = Arr.append(ret, standard);
         }
-        
+
         if (System.getProperty(PROPERTY_EXT_SCRIPT_PATH) != null) {
             String[] ext = System.getProperty(PROPERTY_EXT_SCRIPT_PATH).split(";");
-            for (int i = 0; i < ext.length; i++) {    
+            for (int i = 0; i < ext.length; i++) {
                 ret = Arr.append(ret, expandPath(ext[i].trim()));
-            }  
-        }                
-                
+            }
+        }
+
         //If default path exists and not in path, included it - so Lib can be shared
         if (!isRunningInIde()) {
             String file = "startup." + getScriptType().toString();
@@ -631,12 +649,12 @@ public class Setup extends Config {
                 }
             }
         }
-        
-        
+
+
         if (!scriptPath.equals(originalScriptPath)){
             Logger.getLogger(Setup.class.getName()).info("Adding original script folder to library path");
             ret = Arr.append(ret, expandPath(originalScriptPath));
-        }        
+        }
         return ret;
     }
 
@@ -697,7 +715,7 @@ public class Setup extends Config {
     
     public String getVariablesFile() {
         return expandPath(configFileVariables);
-    }    
+    }
 
     public static String getSourceAssemblyFolder() {
         return Paths.get("src", "main", "assembly").toString();

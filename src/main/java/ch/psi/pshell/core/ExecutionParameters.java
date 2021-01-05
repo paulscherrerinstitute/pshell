@@ -207,6 +207,7 @@ public class ExecutionParameters {
                 lastOutputFile = outputFile;
             }
             Context.getInstance().getCommandManager().onChangeDataPath(dataPath);
+            Context.getInstance().getSessionManager().onChangeDataPath(dataPath);
         }
     }
 

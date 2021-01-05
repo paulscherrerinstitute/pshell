@@ -24,7 +24,7 @@ public class Configuration extends Config {
     public static transient final String PROPERTY_DATA_LAYOUT= "ch.psi.pshell.data.layout";
 
     public boolean autoSaveScanData = true;
-    public boolean createSessionFiles;
+    public boolean saveConsoleSessionFiles;
 
     public String dataPath = TOKEN_DATA + "/" + TOKEN_YEAR + "_" + TOKEN_MONTH + "/" + TOKEN_DATE + "/" + TOKEN_DATE + "_" + TOKEN_TIME + "_" + TOKEN_EXEC_NAME;
     @Defaults(values = {"h5", "txt", "csv", "fda"})
