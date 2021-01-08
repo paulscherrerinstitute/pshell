@@ -20,8 +20,8 @@ import java.util.logging.Level;
 public class Configuration extends Config {
 
     public static transient final String PROPERTY_CONSOLE_LOG = "ch.psi.pshell.console.log";
-    public static transient final String PROPERTY_DATA_PROVIDER= "ch.psi.pshell.data.provider";
-    public static transient final String PROPERTY_DATA_LAYOUT= "ch.psi.pshell.data.layout";
+    public static transient final String PROPERTY_DATA_PROVIDER = "ch.psi.pshell.data.provider";
+    public static transient final String PROPERTY_DATA_LAYOUT = "ch.psi.pshell.data.layout";
 
     public boolean autoSaveScanData = true;
     public boolean saveConsoleSessionFiles;
@@ -35,9 +35,12 @@ public class Configuration extends Config {
     public boolean dataScanFlushRecords = false;
     public boolean dataScanReleaseRecords = false;
     public boolean dataScanPreserveTypes = false;
-    public boolean dataScanSaveOutput= false;
+    public boolean dataScanSaveOutput = false;
     public boolean dataScanSaveScript = false;
     public boolean dataScanSaveSetpoints = false;
+    public DataTransferMode dataTransferMode = DataTransferMode.Off;
+    public String dataTransferPath;
+    public String dataTransferUser;
     public boolean commandExecutionEvents = false;
     public String hostName;
     public boolean hideServerMessages = false;
@@ -82,6 +85,12 @@ public class Configuration extends Config {
         Completion
     }
 
+    public enum DataTransferMode {
+        Off,
+        Copy,
+        Move
+    }
+
     public Level getLogLevel() {
         return Level.parse(logLevel.toString().toUpperCase());
     }
@@ -92,17 +101,16 @@ public class Configuration extends Config {
                 ? consoleLogLevel.toUpperCase()
                 : logLevelConsole.toString().toUpperCase());
     }
-    
-    
+
     public String getDataProvider() {
         String provider = System.getProperty(PROPERTY_DATA_PROVIDER);
         return provider == null ? dataProvider : provider;
-    }    
-    
+    }
+
     public String getDataLayout() {
         String layout = System.getProperty(PROPERTY_DATA_LAYOUT);
         return layout == null ? dataLayout : layout;
-    }      
+    }
 
     NotificationLevel getNotificationLevel() {
         if (notificationLevel == null) {
@@ -111,14 +119,35 @@ public class Configuration extends Config {
         return notificationLevel;
     }
 
+    public DataTransferMode getDataTransferMode() {
+        if (dataTransferMode == null) {
+            return DataTransferMode.Off;
+        }
+        return dataTransferMode;
+    }
+
+    public String getDataTransferPath() {
+        if (Str.toString(dataTransferPath).equals(Str.toString(null))) {
+            return "";
+        }
+        return dataTransferPath.trim();
+    }
+
+    public String getDataTransferUser() {
+        if (Str.toString(dataTransferUser).equals(Str.toString(null))) {
+            return "";
+        }
+        return dataTransferUser.trim();
+    }
+
     List<String> getNotifiedTasks() {
         List<String> ret = new ArrayList<>();
         if (notifiedTasks != null) {
             if (!Str.toString(null).equals(notifiedTasks)) {
                 String[] tokens = notifiedTasks.split("\\|");
-                for (String str : tokens){
-                    str=str.trim();
-                    if (!str.isEmpty()){
+                for (String str : tokens) {
+                    str = str.trim();
+                    if (!str.isEmpty()) {
                         ret.add(str);
                     }
                 }
@@ -130,12 +159,12 @@ public class Configuration extends Config {
     public int getDepthDim() {
         return (((depthDimension < 0) || (depthDimension > 2)) ? 0 : depthDimension);
     }
-    
-    public boolean isParallelInitialization(){        
+
+    public boolean isParallelInitialization() {
         String prop = System.getProperty(Setup.PROPERTY_PARALLEL_INIT);
-        if ((prop != null) && (prop.length()>0)){
+        if ((prop != null) && (prop.length() > 0)) {
             return Boolean.valueOf(prop);
-        }    
+        }
         return parallelInitialization;
     }
 

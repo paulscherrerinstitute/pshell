@@ -72,8 +72,8 @@ public class Setup extends Config {
     public static transient final String TOKEN_EXEC_TYPE = "{type}";
     public static transient final String TOKEN_EXEC_COUNT = "{count}";
     public static transient final String TOKEN_EXEC_INDEX = "{index}";
-    public static transient final String TOKEN_FILE_SEQUENTIAL_NUMBER= "{seq}";
-    public static transient final String TOKEN_DAY_SEQUENTIAL_NUMBER= "{dseq}";
+    public static transient final String TOKEN_FILE_SEQUENTIAL_NUMBER = "{seq}";
+    public static transient final String TOKEN_DAY_SEQUENTIAL_NUMBER = "{dseq}";
     public static transient final String TOKEN_SYS_HOME = "{syshome}";
     public static transient final String TOKEN_SYS_USER = "{sysuser}";
     public static transient final String TOKEN_SESSION_ID = "{session_id}";
@@ -102,7 +102,7 @@ public class Setup extends Config {
     public String configFileDevices = TOKEN_CONFIG + "/devices.properties";
     public String configFileTasks = TOKEN_CONFIG + "/tasks.properties";
     public String configFileSettings = TOKEN_CONFIG + "/settings.properties";
-    public String configFileVariables= TOKEN_CONFIG + "/variables.properties";
+    public String configFileVariables = TOKEN_CONFIG + "/variables.properties";
 
     String originalScriptPath;
     String originalDataPath;
@@ -226,6 +226,7 @@ public class Setup extends Config {
 
     HashMap<String, String> expansionTokens;
     HashMap<String, String> expandedPathNames;
+
     void initPaths() {
         expansionTokens = new HashMap<>();
         expansionTokens.put(TOKEN_HOME, homePath);
@@ -331,12 +332,13 @@ public class Setup extends Config {
     public static String expand(String path) {
         return expand(path, -1, null);
     }
+
     public static String expand(String path, long timestamp, String user) {
         if (user != null) {
             path = path.replace(TOKEN_USER, user);
         }
         Context ctx = Context.getInstance();
-        ExecutionParameters executionContext = ( ctx== null) ? null : ctx.getExecutionPars();
+        ExecutionParameters executionContext = (ctx == null) ? null : ctx.getExecutionPars();
         if (executionContext != null) {
             String execName = executionContext.getName();
             String execType = executionContext.getType();
@@ -386,8 +388,15 @@ public class Setup extends Config {
                 }
             }
             //Cannot be used in defining other tokens, only for data folder as depends on the running context
-            if (path.contains(TOKEN_SESSION_ID)) {
-                path = path.replace(TOKEN_SESSION_ID, String.valueOf(ctx.getSessionManager().getCurrentId()));
+            while (path.contains(TOKEN_SESSION_ID)) {
+                int index = ctx.getSessionManager().getCurrentId();
+                int i = path.indexOf(TOKEN_SESSION_ID) + TOKEN_SESSION_ID.length();
+                if ((i < path.length()) && path.substring(i, i + 1).equals("%")) {
+                    String format = path.substring(i).split(" ")[0];
+                    path = path.replaceFirst(Pattern.quote(TOKEN_SESSION_ID) + format, String.format(format, index));
+                } else {
+                    path = path.replaceFirst(Pattern.quote(TOKEN_SESSION_ID), String.format("%04d", index));
+                }
             }
             if (path.contains(TOKEN_SESSION_NAME)) {
                 path = path.replace(TOKEN_SESSION_NAME, String.valueOf(ctx.getSessionManager().getCurrentName()));
@@ -396,10 +405,10 @@ public class Setup extends Config {
         if (timestamp <= 0) {
             timestamp = System.currentTimeMillis();
         }
-        path = path.replace(TOKEN_DATE+"%02d", Chrono.getTimeStr(timestamp, "YYMMdd"));
+        path = path.replace(TOKEN_DATE + "%02d", Chrono.getTimeStr(timestamp, "YYMMdd"));
         path = path.replace(TOKEN_DATE, Chrono.getTimeStr(timestamp, "YYYYMMdd"));
         path = path.replace(TOKEN_TIME, Chrono.getTimeStr(timestamp, "HHmmss"));
-        path = path.replace(TOKEN_YEAR+"%02d", Chrono.getTimeStr(timestamp, "YY"));
+        path = path.replace(TOKEN_YEAR + "%02d", Chrono.getTimeStr(timestamp, "YY"));
         path = path.replace(TOKEN_YEAR, Chrono.getTimeStr(timestamp, "YYYY"));
         path = path.replace(TOKEN_MONTH, Chrono.getTimeStr(timestamp, "MM"));
         path = path.replace(TOKEN_DAY, Chrono.getTimeStr(timestamp, "dd"));
@@ -474,7 +483,6 @@ public class Setup extends Config {
     public String getUserSessionsPath() {
         return getSessionsPath() + "/user";
     }
-
 
     public String getContextPath() {
         return expandedPathNames.get(contextPath);
@@ -650,8 +658,7 @@ public class Setup extends Config {
             }
         }
 
-
-        if (!scriptPath.equals(originalScriptPath)){
+        if (!scriptPath.equals(originalScriptPath)) {
             Logger.getLogger(Setup.class.getName()).info("Adding original script folder to library path");
             ret = Arr.append(ret, expandPath(originalScriptPath));
         }
@@ -712,7 +719,7 @@ public class Setup extends Config {
     public String getSettingsFile() {
         return expandPath(configFileSettings);
     }
-    
+
     public String getVariablesFile() {
         return expandPath(configFileVariables);
     }

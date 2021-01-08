@@ -10,10 +10,12 @@ import sys
 import os
 import os.path
 import shutil
+import ch.psi.utils.Sys
 
 from startup import exec_cmd, log
 
 RSYNC_GENERATE_USER_KEY = True
+XTERM = "/opt/X11/bin/xterm" if ch.psi.utils.Sys.getOSFamily().name()=="Mac" else "xterm"
 
 def rsync(src, dest, key):
     #cmd = 'rsync -e "ssh -i ' + key + ' -o LogLevel=quiet" --chmod=ug=rwx --verbose --modify-window=1 --times --recursive ' + src + ' ' + dest
@@ -86,14 +88,18 @@ def sync_user_data(user, src, dest, host= "localhost", remove_local_folder=False
 def remove_user_key(do_print=True):
     cmd = "rm ~/.ssh/ke;"
     cmd = cmd + "rm ~/.ssh/ke.pub"
+    ret = exec_cmd(cmd, False)     
     if do_print:
-        print exec_cmd(cmd, False)
+        if not ret.strip():
+            ret = "Success removing ssh keys"
+        print ret    
 
 def reset_user_key(do_print=True):
     remove_user_key(do_print)
     cmd = "ssh-keygen -N '' -f ~/.ssh/ke -t rsa;"
+    ret = exec_cmd(cmd)
     if do_print:
-        print exec_cmd(cmd)
+        print ret
 
 def authorize_user(user, aux_file = os.path.expanduser("~/.rsync.tmp"), fix_permissions=True, do_print=True):
     if (os.path.isfile(aux_file)):
@@ -123,7 +129,7 @@ def authorize_user(user, aux_file = os.path.expanduser("~/.rsync.tmp"), fix_perm
     #xterm_options = '-hold -T "Authentication" -into 44040199' #Get Winfow ID with 'wmctrl -lp'
     xterm_options = '-T "Authentication" -fa monaco -fs 14 -bg black -fg green -geometry 80x15+400+100'
     try:
-        ret = exec_cmd("xterm " + xterm_options + " -e '" + cmd + "'")
+        ret = exec_cmd(XTERM + " " + xterm_options + " -e '" + cmd + "'")
         with open (aux_file, "r") as myfile:
             ret=myfile.read()
         #;if [ "$depth" -eq "1" ]; then echo ' + success_msg + '; fi')
@@ -138,3 +144,6 @@ def authorize_user(user, aux_file = os.path.expanduser("~/.rsync.tmp"), fix_perm
             os.remove(aux_file)
     return ret
 
+def is_authorized():
+    key = os.path.expanduser("~/.ssh/" + ("ke" if RSYNC_GENERATE_USER_KEY else "id_rsa"))
+    return os.path.isfile(key)

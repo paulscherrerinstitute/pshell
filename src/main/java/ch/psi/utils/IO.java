@@ -262,6 +262,10 @@ public class IO {
         Arrays.sort(files, (a, b) -> Long.compare(a.lastModified(), b.lastModified()));
     }
 
+    static public void deleteRecursive(File file) throws IOException {
+        deleteRecursive(file.getCanonicalPath());
+    }
+    
     static public void deleteRecursive(String pathName) throws IOException {
         Path path = Paths.get(pathName);
 
