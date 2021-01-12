@@ -2779,9 +2779,17 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
         setDaySequentialNumber(getDaySequentialNumber()+1);
     }
 
-    public void incrementSequentialNumbers() throws IOException{
-        incrementFileSequentialNumber();
-        incrementDaySequentialNumber();
+    public void incrementSequentialNumbers(){
+        try{
+            incrementFileSequentialNumber();
+        } catch (Exception ex){
+            logger.log(Level.WARNING, null, ex);
+        }        
+        try{
+            incrementDaySequentialNumber();
+        } catch (Exception ex){
+            logger.log(Level.WARNING, null, ex);
+        }                        
     }
 
     Map<String, Object> globals = new HashMap<>();
