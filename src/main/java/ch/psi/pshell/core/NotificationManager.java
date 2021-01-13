@@ -7,6 +7,7 @@ package ch.psi.pshell.core;
 import ch.psi.utils.Arr;
 import ch.psi.utils.Config;
 import ch.psi.utils.Mail;
+import ch.psi.utils.Str;
 import ch.psi.utils.Sys;
 import java.io.File;
 import java.io.IOException;
@@ -51,14 +52,21 @@ public class NotificationManager implements AutoCloseable{
             Logger.getLogger(NotificationManager.class.getName()).log(Level.WARNING, null, ex);
         }
 
-        if ((config.to!=null) && (!config.to.trim().isEmpty())){
-            to = config.to.split(";");
-            to = validateRecipients(to);
+        if ((config.to!=null) && (!config.to.trim().isEmpty())){            
+            to = validateRecipients(config.to);
         }
 
         from = ((config.from==null)||(config.from.isEmpty()))? Sys.getProcessName() : config.from;
     }
+    
+    public String[] getRecipients(){
+        return to;
+    }
 
+    public void setRecipients(String to) throws IOException{
+        setRecipients(validateRecipients(to));
+    }
+    
     public void setRecipients(String[] to) throws IOException{
         to = validateRecipients(to);
         this.to = to;
@@ -80,6 +88,15 @@ public class NotificationManager implements AutoCloseable{
         }
     }
 
+    private String[] validateRecipients(String to){
+        if ((to==null) || (to.isBlank())){
+            return null;
+        }
+        String[] ret = Str.trim(Str.split(to, new String[]{"|", ";", ","}));        
+        ret = validateRecipients(ret);
+        return ret;
+    }
+    
     private String[] validateRecipients(String[] to){
         for (int i=0; i< to.length; i++){
             to[i] =to[i].trim();

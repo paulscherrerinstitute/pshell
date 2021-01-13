@@ -53,6 +53,7 @@ public class DataFileDialog extends StandardDialog {
         }
         defaultPath = new Configuration().dataPath;
         SwingUtils.setEnumCombo(comboTransferMode, Configuration.DataTransferMode.class);
+        SwingUtils.setEnumCombo(comboNotification, Configuration.NotificationLevel.class);
         buttonUndoActionPerformed(null);
     }
 
@@ -155,18 +156,26 @@ public class DataFileDialog extends StandardDialog {
     }
 
     boolean changedTransfer() {
-
         return (config.getDataTransferMode() != comboTransferMode.getSelectedItem())
                 || !textTransferPath.getText().trim().equals(config.getDataTransferPath())
                 || !textTransferUser.getText().trim().equals(config.getDataTransferUser());
     }
 
+    boolean changedNotify() {
+        return (config.notificationLevel != comboNotification.getSelectedItem())
+                || !textTasks.getText().trim().equals(config.notifiedTasks);
+    }
+
+    boolean changedNotificationManager() {
+        return !textRecipients.getText().trim().equals(Context.getInstance().getNotificationManager().getConfig().to);
+    }
+
     boolean changedConfig() {
-        return changedLocation() || changedFormat() || changedScans() || changedTransfer();
+        return changedLocation() || changedFormat() || changedScans() || changedTransfer() || changedNotify();
     }
 
     boolean changed() {
-        return changedSeq() || changedConfig();
+        return changedSeq() || changedConfig() || changedNotificationManager();
     }
 
     void updateButtons() {
@@ -231,6 +240,12 @@ public class DataFileDialog extends StandardDialog {
             }
         }).start();
 
+    }
+
+    void updateNotify() {
+        comboNotification.setSelectedItem(config.notificationLevel);
+        textTasks.setText(config.notifiedTasks);
+        textRecipients.setText(Context.getInstance().getNotificationManager().getConfig().to);
     }
 
     JTable tableTokens;
@@ -326,6 +341,13 @@ public class DataFileDialog extends StandardDialog {
         buttonRSyncAuthorize = new javax.swing.JButton();
         checkRSyncAuthorized = new javax.swing.JCheckBox();
         jLabel9 = new javax.swing.JLabel();
+        jPanel6 = new javax.swing.JPanel();
+        jLabel13 = new javax.swing.JLabel();
+        comboNotification = new javax.swing.JComboBox<>();
+        jLabel14 = new javax.swing.JLabel();
+        textRecipients = new javax.swing.JTextField();
+        jLabel15 = new javax.swing.JLabel();
+        textTasks = new javax.swing.JTextField();
         buttonUndo = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
@@ -493,7 +515,8 @@ public class DataFileDialog extends StandardDialog {
             }
         });
 
-        jLabel7.setText("Depth dimension: ");
+        jLabel7.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
+        jLabel7.setText("Depth dimension:");
 
         spinnerDepthDim.setModel(new javax.swing.SpinnerNumberModel(0, 0, 2, 1));
         spinnerDepthDim.addChangeListener(new javax.swing.event.ChangeListener() {
@@ -509,15 +532,14 @@ public class DataFileDialog extends StandardDialog {
             .addGroup(jPanel3Layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                        .addComponent(jLabel7, javax.swing.GroupLayout.Alignment.TRAILING)
-                        .addComponent(jLabel4, javax.swing.GroupLayout.Alignment.TRAILING))
-                    .addComponent(jLabel3))
+                    .addComponent(jLabel3, javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addComponent(jLabel4, javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addComponent(jLabel7, javax.swing.GroupLayout.Alignment.TRAILING))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(comboProvider, javax.swing.GroupLayout.PREFERRED_SIZE, 182, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(spinnerDepthDim, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(comboLayout, javax.swing.GroupLayout.PREFERRED_SIZE, 182, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(spinnerDepthDim, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(comboProvider, javax.swing.GroupLayout.PREFERRED_SIZE, 182, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addGap(101, 101, 101))
         );
 
@@ -739,9 +761,6 @@ public class DataFileDialog extends StandardDialog {
                     .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addContainerGap())
         );
-
-        jPanel5Layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {jLabel18, jLabel19});
-
         jPanel5Layout.setVerticalGroup(
             jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel5Layout.createSequentialGroup()
@@ -759,6 +778,80 @@ public class DataFileDialog extends StandardDialog {
         );
 
         jTabbedPane1.addTab("Transfer", jPanel5);
+
+        jLabel13.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
+        jLabel13.setText("Mode:");
+
+        comboNotification.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
+        comboNotification.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                comboNotificationActionPerformed(evt);
+            }
+        });
+
+        jLabel14.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
+        jLabel14.setText("Recipients:");
+
+        textRecipients.addKeyListener(new java.awt.event.KeyAdapter() {
+            public void keyReleased(java.awt.event.KeyEvent evt) {
+                textRecipientsKeyReleased(evt);
+            }
+        });
+
+        jLabel15.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
+        jLabel15.setText("Notified Tasks:");
+
+        textTasks.addKeyListener(new java.awt.event.KeyAdapter() {
+            public void keyReleased(java.awt.event.KeyEvent evt) {
+                textTasksKeyReleased(evt);
+            }
+        });
+
+        javax.swing.GroupLayout jPanel6Layout = new javax.swing.GroupLayout(jPanel6);
+        jPanel6.setLayout(jPanel6Layout);
+        jPanel6Layout.setHorizontalGroup(
+            jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel6Layout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(jPanel6Layout.createSequentialGroup()
+                        .addGroup(jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                            .addComponent(jLabel13)
+                            .addComponent(jLabel14))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addGroup(jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(jPanel6Layout.createSequentialGroup()
+                                .addComponent(comboNotification, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGap(0, 243, Short.MAX_VALUE))
+                            .addComponent(textRecipients)))
+                    .addGroup(jPanel6Layout.createSequentialGroup()
+                        .addComponent(jLabel15)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(textTasks)))
+                .addContainerGap())
+        );
+
+        jPanel6Layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {jLabel13, jLabel14, jLabel15});
+
+        jPanel6Layout.setVerticalGroup(
+            jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel6Layout.createSequentialGroup()
+                .addGap(16, 16, 16)
+                .addGroup(jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel13)
+                    .addComponent(comboNotification, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(18, 18, 18)
+                .addGroup(jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel14)
+                    .addComponent(textRecipients, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(18, 18, 18)
+                .addGroup(jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel15)
+                    .addComponent(textTasks, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addContainerGap(78, Short.MAX_VALUE))
+        );
+
+        jTabbedPane1.addTab("Notification", jPanel6);
 
         buttonUndo.setText("Undo");
         buttonUndo.addActionListener(new java.awt.event.ActionListener() {
@@ -778,7 +871,7 @@ public class DataFileDialog extends StandardDialog {
                 .addComponent(buttonUndo)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(buttonApply)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(buttonOk)
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
             .addComponent(jTabbedPane1)
@@ -828,10 +921,16 @@ public class DataFileDialog extends StandardDialog {
                 config.dataTransferMode = (Configuration.DataTransferMode) comboTransferMode.getSelectedItem();
                 config.dataTransferPath = textTransferPath.getText().trim();
                 config.dataTransferUser = textTransferUser.getText().trim();
+                config.notificationLevel = (Configuration.NotificationLevel) comboNotification.getSelectedItem();
+                config.notifiedTasks = textTasks.getText().trim();
                 config.save();
                 if (changedLayout || changedProvider) {
                     Context.getInstance().getDataManager().initialize();
                 }
+            }
+            if (changedNotificationManager()) {
+                String to = textRecipients.getText().trim();
+                Context.getInstance().getNotificationManager().setRecipients(to);
             }
             updateTransfer();
             update();
@@ -856,6 +955,7 @@ public class DataFileDialog extends StandardDialog {
         spinnerSeq.setValue(Context.getInstance().getFileSequentialNumber());
         updateScans();
         updateTransfer();
+        updateNotify();
         if (changedProvider) {
             updateProvider();
         }
@@ -954,6 +1054,18 @@ public class DataFileDialog extends StandardDialog {
         }
     }//GEN-LAST:event_buttonRSyncRemoveActionPerformed
 
+    private void textRecipientsKeyReleased(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_textRecipientsKeyReleased
+        update();
+    }//GEN-LAST:event_textRecipientsKeyReleased
+
+    private void textTasksKeyReleased(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_textTasksKeyReleased
+        update();
+    }//GEN-LAST:event_textTasksKeyReleased
+
+    private void comboNotificationActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_comboNotificationActionPerformed
+        update();
+    }//GEN-LAST:event_comboNotificationActionPerformed
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton buttonApply;
     private javax.swing.JButton buttonCancel;
@@ -973,10 +1085,14 @@ public class DataFileDialog extends StandardDialog {
     private javax.swing.JCheckBox ckSaveScript;
     private javax.swing.JCheckBox ckSaveSetpoints;
     private javax.swing.JComboBox<String> comboLayout;
+    private javax.swing.JComboBox<String> comboNotification;
     private javax.swing.JComboBox<String> comboProvider;
     private javax.swing.JComboBox<String> comboTransferMode;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel11;
+    private javax.swing.JLabel jLabel13;
+    private javax.swing.JLabel jLabel14;
+    private javax.swing.JLabel jLabel15;
     private javax.swing.JLabel jLabel18;
     private javax.swing.JLabel jLabel19;
     private javax.swing.JLabel jLabel2;
@@ -991,12 +1107,15 @@ public class DataFileDialog extends StandardDialog {
     private javax.swing.JPanel jPanel3;
     private javax.swing.JPanel jPanel4;
     private javax.swing.JPanel jPanel5;
+    private javax.swing.JPanel jPanel6;
     private javax.swing.JTabbedPane jTabbedPane1;
     private javax.swing.JSpinner spinnerDepthDim;
     private javax.swing.JSpinner spinnerSeq;
     private javax.swing.JTextField textDayIndex;
     private javax.swing.JTextField textPathConfig;
     private javax.swing.JTextField textPathExpansion;
+    private javax.swing.JTextField textRecipients;
+    private javax.swing.JTextField textTasks;
     private javax.swing.JTextField textTransferPath;
     private javax.swing.JTextField textTransferUser;
     // End of variables declaration//GEN-END:variables

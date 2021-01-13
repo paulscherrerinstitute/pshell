@@ -191,5 +191,24 @@ public class Str {
         return str.split(separator + "(?![^\\{\\(\\[]*[\\]\\)\\}])", -1);
     }
 
-
+    
+    public static String[] split(String str, String[] separators) {
+        for (String sep: separators){
+            if (str.contains(sep)){
+                if (Arr.containsEqual(new String[]{".","|","?"}, sep)){                
+                    sep = "\\"+sep;
+                }
+                return str.split(sep);
+            }
+        }
+        return new String[]{str};
+    }
+    
+    
+    public static String[] trim(String[] array) {
+        for (int i=0; i<array.length; i++){
+            array[i] = array[i].trim();
+        }
+        return array;
+    }
 }
