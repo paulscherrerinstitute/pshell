@@ -4,6 +4,7 @@ import ch.psi.pshell.core.Context;
 import ch.psi.pshell.core.SessionManager;
 import ch.psi.pshell.core.SessionManager.SessionManagerListener;
 import ch.psi.utils.Chrono;
+import ch.psi.utils.IO;
 import ch.psi.utils.Str;
 import ch.psi.utils.swing.MonitoredPanel;
 import java.io.IOException;
@@ -31,10 +32,17 @@ public class SessionPanel extends MonitoredPanel implements SessionManagerListen
         manager = Context.getInstance().getSessionManager();
         modelMetadata = (DefaultTableModel) tableMetadata.getModel();
         modelRuns = (DefaultTableModel) tableRuns.getModel();
-        tableRuns.getColumnModel().getColumn(0).setPreferredWidth(120);
-        tableRuns.getColumnModel().getColumn(0).setMaxWidth(120);
+        tableRuns.getColumnModel().getColumn(0).setPreferredWidth(60);
+        tableRuns.getColumnModel().getColumn(0).setMaxWidth(60);
         tableRuns.getColumnModel().getColumn(0).setResizable(false);                
-        tableRuns.getColumnModel().getColumn(2).setResizable(false);
+        tableRuns.getColumnModel().getColumn(1).setPreferredWidth(60);
+        tableRuns.getColumnModel().getColumn(1).setMaxWidth(60);
+        tableRuns.getColumnModel().getColumn(1).setResizable(false);                
+        tableRuns.getColumnModel().getColumn(2).setPreferredWidth(60);
+        tableRuns.getColumnModel().getColumn(2).setMaxWidth(60);
+        tableRuns.getColumnModel().getColumn(2).setResizable(false);                
+        tableRuns.getColumnModel().getColumn(4).setPreferredWidth(60);
+        tableRuns.getColumnModel().getColumn(4).setResizable(false);
            
         modelMetadata.addTableModelListener((TableModelEvent e) -> {
             if (!updating){
@@ -82,10 +90,25 @@ public class SessionPanel extends MonitoredPanel implements SessionManagerListen
     }
     
     
-    String getTimeStr(long timestamp){
-        return (timestamp>0) ? Chrono.getTimeStr(timestamp, "dd.MM HH:mm:ss") : "";
+    public static String getDateStr(Number timestamp){
+        long l = timestamp.longValue();
+        return (l>0) ? Chrono.getTimeStr(l, "dd.MM.YY") : "";
     }
     
+    public static String getTimeStr(Number timestamp){
+        long l = timestamp.longValue();
+        return (l>0) ? Chrono.getTimeStr(l, "HH:mm:ss") : "";
+    }
+    
+    public static String getDisplayFileName(String file, String home){  
+        /*
+        if ((home!=null) && IO.isSubPath(file, home)) {
+            file = IO.getRelativePath(file, home);
+        }        
+        */
+        return file;
+    }    
+
     public void update(){
         updateInfo();
         updateMetadata();
@@ -104,18 +127,15 @@ public class SessionPanel extends MonitoredPanel implements SessionManagerListen
             try{
                 List<Map<String, Object>> runs = manager.getRuns();            
                 modelRuns.setNumRows(runs.size());
+                String dataHome = Context.getInstance().getSetup().getDataPath();
                 int index=0;
                 for(int i=0; i<runs.size(); i++ ){
                     Map<String, Object> run = runs.get(i);                
-                    try {        
-                        textStart.setText(getTimeStr(manager.getStart()));
-                        modelRuns.setValueAt(getTimeStr((Long)run.get("start")), index, 0);
-                    } catch (Exception ex) {
-                        modelRuns.setValueAt(run.getOrDefault("start", ""), index, 0);
-                    }
-                    modelRuns.setValueAt(getTimeStr((Long)run.getOrDefault("start", 0)), index, 0);
-                    modelRuns.setValueAt(run.getOrDefault("data", ""), index, 1);
-                    modelRuns.setValueAt(run.getOrDefault("state", ""), index++, 2);
+                    modelRuns.setValueAt(getDateStr((Number)run.getOrDefault("start", 0)), index, 0);
+                    modelRuns.setValueAt(getTimeStr((Number)run.getOrDefault("start", 0)), index, 1);
+                    modelRuns.setValueAt(getTimeStr((Number)run.getOrDefault("stop", 0)), index, 2);
+                    modelRuns.setValueAt(getDisplayFileName(Str.toString(run.getOrDefault("data", "")), dataHome), index, 3);
+                    modelRuns.setValueAt(run.getOrDefault("state", ""), index++, 4);
                 }
             } catch (Exception ex){
                 modelRuns.setNumRows(0);
@@ -256,7 +276,7 @@ public class SessionPanel extends MonitoredPanel implements SessionManagerListen
                 return canEdit [columnIndex];
             }
         });
-        tableMetadata.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
+        tableMetadata.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_INTERVAL_SELECTION);
         tableMetadata.getTableHeader().setReorderingAllowed(false);
         jScrollPane1.setViewportView(tableMetadata);
 
@@ -286,14 +306,14 @@ public class SessionPanel extends MonitoredPanel implements SessionManagerListen
 
             },
             new String [] {
-                "Start", "Data", "State"
+                "Date", "Start", "Stop", "Data", "State"
             }
         ) {
             Class[] types = new Class [] {
-                java.lang.String.class, java.lang.String.class, java.lang.String.class
+                java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.String.class
             };
             boolean[] canEdit = new boolean [] {
-                false, false, false
+                false, false, false, false, false
             };
 
             public Class getColumnClass(int columnIndex) {

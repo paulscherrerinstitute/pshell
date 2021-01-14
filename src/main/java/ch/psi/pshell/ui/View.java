@@ -4707,7 +4707,10 @@ public class View extends MainFrame {
     private void menuSessionStartActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuSessionStartActionPerformed
         try {
             if (!context.getSessionManager().isStarted()) {
-                context.getSessionManager().start("Test");
+                String name = SwingUtils.getString(this, "Enter the new session name:", "");
+                if (name != null) {
+                    context.getSessionManager().start(name);
+                }
             }
         } catch (Exception ex) {
             showException(ex);
@@ -4718,7 +4721,7 @@ public class View extends MainFrame {
         try {
             SessionsDialog dlg = new SessionsDialog(this, false);
             dlg.setDefaultCloseOperation(DISPOSE_ON_CLOSE);
-            dlg.setTitle("Manage Sessions");
+            dlg.setTitle("Session Manager");
             showChildWindow(dlg);
         } catch (Exception ex) {
             showException(ex);
@@ -4732,7 +4735,12 @@ public class View extends MainFrame {
                 if (sessionPanel!=null){
                     tabStatus.setSelectedComponent(sessionPanel);
                 }
-                if (SwingUtils.showOption(this, "Session", "Do you want to complete the curent session?", OptionType.YesNo) == OptionResult.Yes) {
+                int id = context.getSessionManager().getCurrentId();
+                String name = context.getSessionManager().getCurrentName();
+                String msg =  name.isBlank() ?                          
+                        String.format("Do you want to complete the session %d?", id):
+                        String.format("Do you want to complete the session %d (%s)?", id, name);
+                if (SwingUtils.showOption(this, "Session", msg , OptionType.YesNo) == OptionResult.Yes) {
                     context.getSessionManager().stop();
                 }
             }

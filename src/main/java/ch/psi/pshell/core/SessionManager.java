@@ -3,6 +3,7 @@ package ch.psi.pshell.core;
 import ch.psi.pshell.core.Configuration.DataTransferMode;
 import ch.psi.pshell.data.RSync;
 import ch.psi.pshell.swing.MetadataEditor;
+import ch.psi.utils.Arr;
 import ch.psi.utils.Folder;
 import ch.psi.utils.IO;
 import ch.psi.utils.ObservableBase;
@@ -16,54 +17,57 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class SessionManager  extends ObservableBase<SessionManager.SessionManagerListener>{
-    
-    public enum ChangeType{
+public class SessionManager extends ObservableBase<SessionManager.SessionManagerListener> {
+
+    public enum ChangeType {
         STATE,
         INFO,
         METADATA
     }
-    
-    public enum MetadataType{
-        String, 
+
+    public enum MetadataType {
+        String,
         Integer,
-        Double, 
-        Boolean, 
+        Double,
+        Boolean,
         List
     }
-    
-    public static interface SessionManagerListener{
+
+    public static interface SessionManagerListener {
+
         void onChange(ChangeType type);
     }
-    
-    void triggerChanged(ChangeType type){
+
+    void triggerChanged(ChangeType type) {
         for (SessionManagerListener listener : getListeners()) {
             try {
                 listener.onChange(type);
             } catch (Exception ex) {
                 Logger.getLogger(SessionManager.class.getName()).log(Level.WARNING, null, ex);
             }
-        }    
+        }
     }
-    
+
     final static String CURRENT_SESSION = "CurrentSession";
     final static String SESSION_COUNTER = "SessionCounter";
 
     final static String INFO_FILE = "info.json";
     final static String METADATA_FILE = "metadata.json";
-    
+
     boolean firstTransfer = true;
 
     int getCurrentCounter() {
         try {
-            return Integer.valueOf(Context.getInstance().getVariable("SessionCounter"));
+            return Integer.valueOf(Context.getInstance().getVariable(SESSION_COUNTER));
         } catch (Exception ex) {
             return 0;
         }
@@ -80,15 +84,19 @@ public class SessionManager  extends ObservableBase<SessionManager.SessionManage
 
     public int start(String name, Map<String, Object> metadata) throws IOException {
         stop();
+        if ((name == null) || name.isBlank()){
+            name = "";
+        }
         int counter = getCurrentCounter();
         counter++;
-        Context.getInstance().setVariable("SessionCounter", counter);
-        Context.getInstance().setVariable("CurrentSession", (name == null) ? counter : name);
+        Context.getInstance().setVariable(SESSION_COUNTER, counter);
+        Context.getInstance().setVariable(CURRENT_SESSION, name);
         Path path = getCurrentPath();
         path.toFile().mkdirs();
         Map info = new HashMap<String, Object>();
         info.put("name", name);
         info.put("start", getTimestamp());
+        info.put("state", "started");
         List runs = new ArrayList();
         info.put("runs", runs);
         setInfo(info);
@@ -99,8 +107,9 @@ public class SessionManager  extends ObservableBase<SessionManager.SessionManage
 
     public void stop() throws IOException {
         if (isStarted()) {
+            addInfo("state", "completed");
             addInfo("stop", getTimestamp());
-            Context.getInstance().setVariable("CurrentSession", "");
+            Context.getInstance().setVariable(CURRENT_SESSION, null);
             triggerChanged(ChangeType.STATE);
         }
     }
@@ -118,7 +127,7 @@ public class SessionManager  extends ObservableBase<SessionManager.SessionManage
     public String getCurrentName() {
         try {
             if (isStarted()) {
-                return Context.getInstance().getVariable("CurrentSession");
+                return Context.getInstance().getVariable(CURRENT_SESSION);
             }
         } catch (Exception ex) {
         }
@@ -133,49 +142,49 @@ public class SessionManager  extends ObservableBase<SessionManager.SessionManage
     public Path getSessionPath(int id) throws IOException {
         return Paths.get(Context.getInstance().getSetup().getUserSessionsPath(), String.valueOf(id));
     }
-    
-    public List<Integer> getIDs(){
+
+    public List<Integer> getIDs() {
         List<Integer> ret = new ArrayList<>();
-        try{
+        try {
             File folder = new File(Context.getInstance().getSetup().getUserSessionsPath());
-            for (File file : folder.listFiles()){
-                if (file.isDirectory()){
+            for (File file : folder.listFiles()) {
+                if (file.isDirectory()) {
                     String name = file.getName();
-                    try{
+                    try {
                         ret.add(Integer.valueOf(name));
-                    } catch(Exception ex){                        
+                    } catch (Exception ex) {
                     }
                 }
             }
-            
-        } catch (Exception ex){
-        }        
+
+        } catch (Exception ex) {
+        }
+        Collections.sort(ret);
         return ret;
     }
-    
-    public String getName(int id){
-        try{
+
+    public String getName(int id) {
+        try {
             return (String) getInfo(id).get("name");
-        } catch (Exception ex){
+        } catch (Exception ex) {
             return "";
         }
     }
-    
-    public long getStart(int id) throws IOException{
+
+    public long getStart(int id) throws IOException {
         return (Long) getInfo(id).get("start");
-    }    
-    
+    }
+
     public long getStart() throws IOException {
         assertStarted();
         return getStart(getCurrentId());
-    }    
-    
+    }
 
     Object getTimestamp() {
         //return Chrono.getTimeStr(System.currentTimeMillis(), "YYYY-MM-dd HH:mm:ss.SSS");
         return System.currentTimeMillis();
     }
-    
+
     String transferData(File from) throws Exception {
         IO.assertExists(from);
         String path = Context.getInstance().config.getDataTransferPath();
@@ -196,7 +205,7 @@ public class SessionManager  extends ObservableBase<SessionManager.SessionManage
             }
             if (Context.getInstance().config.dataTransferMode == DataTransferMode.Move) {
                 IO.deleteRecursive(from);
-            }            
+            }
             return to.toFile().getCanonicalPath();
         } else {
             //Should not expand ~
@@ -209,7 +218,7 @@ public class SessionManager  extends ObservableBase<SessionManager.SessionManage
             }
             Path to = Paths.get(path, from.getName());
             boolean move = (Context.getInstance().config.dataTransferMode == DataTransferMode.Move);
-            String ret = RSync.sync(user, from.getCanonicalPath(), path, move);            
+            String ret = RSync.sync(user, from.getCanonicalPath(), path, move);
             //Thread.sleep(5000);
             return to.toString();
         }
@@ -277,36 +286,36 @@ public class SessionManager  extends ObservableBase<SessionManager.SessionManage
             properties.load(in);
         } catch (Exception ex) {
             Logger.getLogger(MetadataEditor.class.getName()).log(Level.WARNING, null, ex);
-        }           
+        }
         return properties.entrySet();
     }
-    
+
     public MetadataType getMetadataType(String key) {
-        try{
-            for (Map.Entry entry: getMetadataDefinition()){
-                if (entry.getKey().equals(key)){
+        try {
+            for (Map.Entry entry : getMetadataDefinition()) {
+                if (entry.getKey().equals(key)) {
                     return MetadataType.valueOf(String.valueOf(entry.getValue()).trim());
                 }
             }
-        } catch (Exception ex) {            
+        } catch (Exception ex) {
         }
         return MetadataType.String;
     }
- 
-    public void onMetadataDefinitionChanged(){
+
+    public void onMetadataDefinitionChanged() {
         try {
-            if (isStarted()){
+            if (isStarted()) {
                 Set<Map.Entry<Object, Object>> metadataDefinition = getMetadataDefinition();
                 Map<String, Object> metadata = getMetadata();
                 Map<String, Object> newMetadata = new HashMap<>();
-                for (Map.Entry<Object, Object> entry:metadataDefinition){
+                for (Map.Entry<Object, Object> entry : metadataDefinition) {
                     newMetadata.put(Str.toString(entry.getKey()), metadata.getOrDefault(entry.getKey(), ""));
                 }
                 setMetadata(newMetadata);
             }
         } catch (Exception ex) {
             Logger.getLogger(MetadataEditor.class.getName()).log(Level.WARNING, null, ex);
-        } 
+        }
     }
 
     void setInfo(Map<String, Object> metadata) throws IOException {
@@ -317,7 +326,7 @@ public class SessionManager  extends ObservableBase<SessionManager.SessionManage
     void setInfo(int id, Map<String, Object> metadata) throws IOException {
         String json = JsonSerializer.encode(metadata);
         Files.writeString(Paths.get(getSessionPath(id).toString(), INFO_FILE), json);
-        if (id == getCurrentId()){
+        if (id == getCurrentId()) {
             triggerChanged(ChangeType.INFO);
         }
     }
@@ -329,7 +338,12 @@ public class SessionManager  extends ObservableBase<SessionManager.SessionManage
     }
 
     public List<Map<String, Object>> getRuns() throws IOException {
-        Map<String, Object> info = getInfo();
+        assertStarted();
+        return getRuns(getCurrentId());
+    }
+
+    public List<Map<String, Object>> getRuns(int id) throws IOException {
+        Map<String, Object> info = getInfo(id);
         List<Map<String, Object>> runs = (List) info.get("runs");
         return runs;
     }
@@ -358,6 +372,54 @@ public class SessionManager  extends ObservableBase<SessionManager.SessionManage
         return true;
     }
 
+    public List<String> getAdditionalFiles() throws IOException {
+        assertStarted();
+        return getAdditionalFiles(getCurrentId());
+    }
+
+    public List<String> getAdditionalFiles(int id) throws IOException {
+        Map<String, Object> info = getInfo(id);
+        List files = (List) info.getOrDefault("files", new ArrayList<>());
+        return files;
+    }
+    
+    public String getState(int id) throws IOException {
+        Map<String, Object> info = getInfo(id);
+        String state = (String) info.getOrDefault("state", "completed");
+        return state;
+    }    
+
+    public void setState(int id, String state) throws IOException {
+        Map<String, Object> info = getInfo(id);
+        info.put("state", state);
+        setInfo(id, info);
+    }    
+
+    public void setAdditionalFiles(List<String> files) throws IOException {
+        assertStarted();
+        setAdditionalFiles(getCurrentId(), files);
+    }
+
+    public void setAdditionalFiles(int id, List<String> files) throws IOException {
+        List<String> filesWithoutDuplicates = new ArrayList<>(new HashSet<>(files));        
+        Map<String, Object> info = getInfo(id);
+        info.put("files", filesWithoutDuplicates);
+        setInfo(id, info);
+    }
+
+    public void addAdditionalFile(String file) throws IOException {
+        assertStarted();
+        addAdditionalFile(getCurrentId(), file);
+    }
+
+    void addAdditionalFile(int id, String file) throws IOException {
+        List<String> files = getAdditionalFiles(id);
+        if (!Arr.containsEqual(files.toArray(), file)) {
+            files.add(file);
+        }
+        setAdditionalFiles(id, files);
+    }
+
     public Map<String, Object> getInfo() throws IOException {
         assertStarted();
         return getInfo(getCurrentId());
@@ -372,17 +434,17 @@ public class SessionManager  extends ObservableBase<SessionManager.SessionManage
     public void setMetadata(Map<String, Object> metadata) throws IOException {
         assertStarted();
         Set<Map.Entry<Object, Object>> metadataDefinition = getMetadataDefinition();
-        for (String key: metadata.keySet().toArray(new String[0])){
+        for (String key : metadata.keySet().toArray(new String[0])) {
             MetadataType type = getMetadataType(key);
             Object value = metadata.get(key);
-            try{
-                if (value == null){
+            try {
+                if (value == null) {
                     value = "";
                 }
-                if (value instanceof String){
+                if (value instanceof String) {
                     String str = (String) value;
-                    value = str.trim();                    
-                    switch(type){
+                    value = str.trim();
+                    switch (type) {
                         case Integer:
                             value = Integer.valueOf(str);
                             break;
@@ -390,23 +452,23 @@ public class SessionManager  extends ObservableBase<SessionManager.SessionManage
                             value = Double.valueOf(str);
                             break;
                         case Boolean:
-                            value =Boolean.valueOf(str);
+                            value = Boolean.valueOf(str);
                             break;
                         case List:
-                            if (str.startsWith("[") && str.endsWith("]")){
-                                str=str.substring(1, str.length()-1);
+                            if (str.startsWith("[") && str.endsWith("]")) {
+                                str = str.substring(1, str.length() - 1);
                             }
                             value = Str.trim(Str.split(str, new String[]{"|", ";", ","}));
                             break;
                     }
-                } else if (type == MetadataType.String){
+                } else if (type == MetadataType.String) {
                     value = Str.toString(value);
                 }
-            } catch (Exception ex){
+            } catch (Exception ex) {
             }
             metadata.put(key, value);
         }
-                
+
         String json = JsonSerializer.encode(metadata);
         Files.writeString(Paths.get(getCurrentPath().toString(), METADATA_FILE), json);
         triggerChanged(ChangeType.METADATA);
@@ -430,8 +492,8 @@ public class SessionManager  extends ObservableBase<SessionManager.SessionManage
     }
 
     public boolean isStarted() throws IOException {
-        String cur = Context.getInstance().getVariable("CurrentSession");
-        return ((cur != null) && !cur.isBlank());
+        String cur = Context.getInstance().getVariable(CURRENT_SESSION);
+        return (cur != null) ;
     }
 
     void assertStarted() throws IOException {
