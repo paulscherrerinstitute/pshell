@@ -1,5 +1,7 @@
 package ch.psi.pshell.ui;
 
+import ch.psi.pshell.swing.SessionPanel;
+import ch.psi.pshell.swing.SessionsDialog;
 import java.awt.Component;
 import java.awt.Container;
 import java.awt.GridBagConstraints;
@@ -122,11 +124,14 @@ import javax.swing.JRadioButtonMenuItem;
 import javax.swing.JTable;
 import ch.psi.pshell.core.ContextListener;
 import ch.psi.pshell.core.LogManager;
+import ch.psi.pshell.core.SessionManager;
+import ch.psi.pshell.core.SessionManager.ChangeType;
 import ch.psi.pshell.imaging.FileSource;
 import ch.psi.pshell.scripting.ViewPreference.PlotPreferences;
 import ch.psi.pshell.swing.DataPanel;
 import ch.psi.pshell.swing.Executor;
 import ch.psi.pshell.swing.HistoryChart;
+import ch.psi.pshell.swing.MetadataEditor;
 import ch.psi.pshell.swing.MotorPanel;
 import ch.psi.pshell.swing.RepositoryChangesDialog;
 import ch.psi.pshell.swing.NextStagesPanel;
@@ -213,7 +218,7 @@ public class View extends MainFrame {
         fileHistory = new History(getSessionPath() + "/FileHistory.dat", 10, true);
         openedFiles = new Properties();
         openedFilesFileName = getSessionPath() + "/OpenedFiles.dat";
-        try ( FileInputStream in = new FileInputStream(openedFilesFileName)) {
+        try (FileInputStream in = new FileInputStream(openedFilesFileName)) {
             openedFiles.load(in);
         } catch (Throwable ex) {
             logger.log(Level.FINE, null, ex);
@@ -408,6 +413,16 @@ public class View extends MainFrame {
                 }
             }
         });
+
+        context.getSessionManager().addListener((type) -> {
+            if (type == ChangeType.STATE) {
+                SwingUtilities.invokeLater(() -> {
+                    checkSessionPanel();
+                });
+            }
+        });
+        checkSessionPanel();
+
         restorePreferences();
         if (!App.isFullScreen() && App.getInstance().isContextPersisted()) {
             //restoring again (also in App.startup) to take into avcount hidden panels displayed by restorePreferences
@@ -997,7 +1012,7 @@ public class View extends MainFrame {
             }
         };
         LookAndFeelType laf = MainFrame.getLookAndFeelType();
-        if ((laf==null) || (!laf.hasTabHoverEffect())) {
+        if ((laf == null) || (!laf.hasTabHoverEffect())) {
             ((CloseButtonTabComponent) tabbedPane.getTabComponentAt(index)).getLabel().addMouseListener(listener);
         } else {
             //TODO: This is a workaround to the fact that, when using dark, flat or nimbus laf,
@@ -1016,7 +1031,7 @@ public class View extends MainFrame {
                                 }
                             }
                         } else {
-                                tabComponent.getLabel().removeMouseListener(listener);
+                            tabComponent.getLabel().removeMouseListener(listener);
                         }
                     } else {
                         tabbedPane.removeChangeListener(this);
@@ -1033,6 +1048,7 @@ public class View extends MainFrame {
                         }
                     }
                 }
+
                 @Override
                 public void focusLost(FocusEvent e) {
                     tabComponent.getLabel().removeMouseListener(listener);
@@ -1132,7 +1148,7 @@ public class View extends MainFrame {
             if (nextStagesPanel.isDisplayable()) {
                 boolean isSelected = tabStatus.getSelectedComponent() == nextStagesPanel;
                 tabStatus.remove(nextStagesPanel);
-                if (isSelected){
+                if (isSelected) {
                     tabStatus.setSelectedComponent(outputPanel);
                 }
             }
@@ -1589,7 +1605,7 @@ public class View extends MainFrame {
             final PropertiesDialog dlg = new PropertiesDialog(parent, modal);
             dlg.setTitle((title == null) ? fileName : title);
             Properties props = new Properties();
-            try ( FileInputStream in = new FileInputStream(fileName)) {
+            try (FileInputStream in = new FileInputStream(fileName)) {
                 props.load(in);
             }
             dlg.setProperties(props);
@@ -1597,7 +1613,7 @@ public class View extends MainFrame {
             dlg.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
             dlg.setListener((StandardDialog sd, boolean accepted) -> {
                 if (sd.getResult()) {
-                    try ( FileOutputStream out = new FileOutputStream(fileName);) {
+                    try (FileOutputStream out = new FileOutputStream(fileName);) {
                         props.store(out, null);
                     } catch (IOException ex) {
                         SwingUtils.showException(dlg, ex);
@@ -1822,6 +1838,49 @@ public class View extends MainFrame {
         }
     }
 
+    void checkSessionPanel() {        
+        if (context.getSessionManager().getCurrentId() > 0) {
+            showSessionPanel();
+        } else {
+            hideSessionPanel();
+        }
+    }
+
+    SessionPanel getSessionPanel() {
+        for (int i = tabStatus.getTabCount() - 1; i > 0; i--) {
+            if (tabStatus.getComponentAt(i) instanceof SessionPanel) {
+                return (SessionPanel) tabStatus.getComponentAt(i);
+            }
+        }
+        return null;
+    }
+
+    void showSessionPanel() {
+        SessionPanel sessionPanel = getSessionPanel();
+        if (sessionPanel == null) {
+            sessionPanel = new SessionPanel();
+            int i = 0;
+            for (; i < tabStatus.getTabCount(); i++) {
+                if (tabStatus.getComponentAt(i) instanceof DataPanel) {
+                    i++;
+                    break;
+                }
+            }
+            tabStatus.add(sessionPanel, i);
+            tabStatus.setTitleAt(i, "Session");
+        }
+        tabStatus.setSelectedComponent(sessionPanel);
+    }
+
+    void hideSessionPanel() {
+        for (int i = tabStatus.getTabCount() - 1; i > 0; i--) {
+            if (tabStatus.getComponentAt(i) instanceof SessionPanel) {
+                tabStatus.remove(i);
+                break;
+            }
+        }
+    }
+
     //Preferences
     Preferences preferences;
 
@@ -1918,7 +1977,7 @@ public class View extends MainFrame {
                 }
             }
         };
-        try ( FileOutputStream out = new FileOutputStream(openedFilesFileName)) {
+        try (FileOutputStream out = new FileOutputStream(openedFilesFileName)) {
             openedFiles.store(out, null);
         } catch (Exception ex) {
             logger.log(Level.FINE, null, ex);
@@ -1970,7 +2029,11 @@ public class View extends MainFrame {
         return App.getInstance().getDevicePanelManager().showPanel(name);
     }
 
-    public ch.psi.pshell.swing.Shell getShell(){return shell;};
+    public ch.psi.pshell.swing.Shell getShell() {
+        return shell;
+    }
+
+    ;
 
     public JPanel showPanel(final GenericDevice dev) {
         return App.getInstance().getDevicePanelManager().showPanel(dev);
@@ -2186,6 +2249,13 @@ public class View extends MainFrame {
         menuSave = new javax.swing.JMenuItem();
         menuSaveAs = new javax.swing.JMenuItem();
         menuAddToQueue = new javax.swing.JMenu();
+        menuSessions = new javax.swing.JMenu();
+        menuSessionStart = new javax.swing.JMenuItem();
+        menuSessionStop = new javax.swing.JMenuItem();
+        jSeparator7 = new javax.swing.JPopupMenu.Separator();
+        menuSessionsMetadata = new javax.swing.JMenuItem();
+        jSeparator23 = new javax.swing.JPopupMenu.Separator();
+        menuSessionHistory = new javax.swing.JMenuItem();
         menuOpenRecent = new javax.swing.JMenu();
         jSeparator2 = new javax.swing.JPopupMenu.Separator();
         menuImport = new javax.swing.JMenuItem();
@@ -2629,6 +2699,53 @@ public class View extends MainFrame {
         menuAddToQueue.setText(bundle.getString("View.menuAddToQueue.text")); // NOI18N
         menuAddToQueue.setName("menuAddToQueue"); // NOI18N
         menuFile.add(menuAddToQueue);
+
+        menuSessions.setText(bundle.getString("View.menuSessions.text_1")); // NOI18N
+        menuSessions.setName("menuSessions"); // NOI18N
+
+        menuSessionStart.setText(bundle.getString("View.menuSessionStart.text")); // NOI18N
+        menuSessionStart.setName("menuSessionStart"); // NOI18N
+        menuSessionStart.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                menuSessionStartActionPerformed(evt);
+            }
+        });
+        menuSessions.add(menuSessionStart);
+
+        menuSessionStop.setText(bundle.getString("View.menuSessionStop.text")); // NOI18N
+        menuSessionStop.setName("menuSessionStop"); // NOI18N
+        menuSessionStop.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                menuSessionStopbuttonAbortActionPerformed(evt);
+            }
+        });
+        menuSessions.add(menuSessionStop);
+
+        jSeparator7.setName("jSeparator7"); // NOI18N
+        menuSessions.add(jSeparator7);
+
+        menuSessionsMetadata.setText(bundle.getString("View.menuSessionsMetadata.text")); // NOI18N
+        menuSessionsMetadata.setName("menuSessionsMetadata"); // NOI18N
+        menuSessionsMetadata.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                menuSessionsMetadataActionPerformed(evt);
+            }
+        });
+        menuSessions.add(menuSessionsMetadata);
+
+        jSeparator23.setName("jSeparator23"); // NOI18N
+        menuSessions.add(jSeparator23);
+
+        menuSessionHistory.setText(bundle.getString("View.menuSessionHistory.text")); // NOI18N
+        menuSessionHistory.setName("menuSessionHistory"); // NOI18N
+        menuSessionHistory.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                menuSessionHistorybuttonAbortActionPerformed(evt);
+            }
+        });
+        menuSessions.add(menuSessionHistory);
+
+        menuFile.add(menuSessions);
 
         menuOpenRecent.setText(bundle.getString("View.menuOpenRecent.text")); // NOI18N
         menuOpenRecent.setName("menuOpenRecent"); // NOI18N
@@ -3626,6 +3743,10 @@ public class View extends MainFrame {
                         }
                     }
                 }
+
+                boolean sessionStarted = context.getSessionManager().isStarted();
+                menuSessionStop.setEnabled(sessionStarted);
+                menuSessionStart.setEnabled(!sessionStarted);
             } catch (Exception ex) {
                 showException(ex);
             }
@@ -3674,7 +3795,7 @@ public class View extends MainFrame {
         try {
             if ((devicePoolEditorDlg == null) || !devicePoolEditorDlg.isDisplayable()) {
                 DevicePoolEditor devicePoolEditor;
-                devicePoolEditor = new DevicePoolEditor();;
+                devicePoolEditor = new DevicePoolEditor();
                 devicePoolEditorDlg = devicePoolEditor.getDialog(this, false);
                 devicePoolEditorDlg.setSize(900, 400);
                 devicePoolEditor.load(context.getSetup().getDevicePoolFile());
@@ -4084,7 +4205,7 @@ public class View extends MainFrame {
                 {"Java", /*System.getProperty("java.vendor") + " " + */
                     System.getProperty("java.vm.name") + " (" + System.getProperty("java.version") + ")"},
                 {"Jar file", String.valueOf(context.getSetup().getJarFile())},
-                {"HDF5", Convert.arrayToString(ProviderHDF5.getVersion(),".")},
+                {"HDF5", Convert.arrayToString(ProviderHDF5.getVersion(), ".")},
                 {"Arguments", String.join(" ", App.getArguments())},
                 {"Plugins", String.join("; ", plugins)},
                 {"Extensions", String.join("; ", extensions)},
@@ -4583,6 +4704,63 @@ public class View extends MainFrame {
         }
     }//GEN-LAST:event_menuRunNextbuttonRunActionPerformed
 
+    private void menuSessionStartActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuSessionStartActionPerformed
+        try {
+            if (!context.getSessionManager().isStarted()) {
+                context.getSessionManager().start("Test");
+            }
+        } catch (Exception ex) {
+            showException(ex);
+        }
+    }//GEN-LAST:event_menuSessionStartActionPerformed
+
+    private void menuSessionHistorybuttonAbortActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuSessionHistorybuttonAbortActionPerformed
+        try {
+            SessionsDialog dlg = new SessionsDialog(this, false);
+            dlg.setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+            dlg.setTitle("Manage Sessions");
+            showChildWindow(dlg);
+        } catch (Exception ex) {
+            showException(ex);
+        }
+    }//GEN-LAST:event_menuSessionHistorybuttonAbortActionPerformed
+
+    private void menuSessionStopbuttonAbortActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuSessionStopbuttonAbortActionPerformed
+        try {
+            if (context.getSessionManager().isStarted()) {
+                SessionPanel sessionPanel = getSessionPanel();
+                if (sessionPanel!=null){
+                    tabStatus.setSelectedComponent(sessionPanel);
+                }
+                if (SwingUtils.showOption(this, "Session", "Do you want to complete the curent session?", OptionType.YesNo) == OptionResult.Yes) {
+                    context.getSessionManager().stop();
+                }
+            }
+        } catch (Exception ex) {
+            showException(ex);
+        }
+    }//GEN-LAST:event_menuSessionStopbuttonAbortActionPerformed
+
+    private void menuSessionsMetadataActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuSessionsMetadataActionPerformed
+        try{
+            MetadataEditor editor = new MetadataEditor(Convert.toStringArray(SessionManager.MetadataType.values()));  //new TextEditor();
+            EditorDialog dlg = editor.getDialog(this, true);
+            editor.load(context.getSetup().getSessionMetadataDefinitionFile());
+            editor.setReadOnly(context.getRights().denyConfig);
+            dlg.setContentPane(editor);
+            dlg.setSize(480, 320);
+            editor.setTitle("Session Metadata");
+            showChildWindow(dlg);            
+            if (editor.wasSaved()){
+                context.getSessionManager().onMetadataDefinitionChanged();
+            }
+        } catch (Exception ex) {
+            showException(ex);
+        }
+        
+        
+    }//GEN-LAST:event_menuSessionsMetadataActionPerformed
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton buttonAbort;
     private javax.swing.JButton buttonAbout;
@@ -4616,10 +4794,12 @@ public class View extends MainFrame {
     private javax.swing.JPopupMenu.Separator jSeparator20;
     private javax.swing.JPopupMenu.Separator jSeparator21;
     private javax.swing.JPopupMenu.Separator jSeparator22;
+    private javax.swing.JPopupMenu.Separator jSeparator23;
     private javax.swing.JPopupMenu.Separator jSeparator3;
     private javax.swing.JPopupMenu.Separator jSeparator4;
     private javax.swing.JToolBar.Separator jSeparator5;
     private javax.swing.JToolBar.Separator jSeparator6;
+    private javax.swing.JPopupMenu.Separator jSeparator7;
     private javax.swing.JPopupMenu.Separator jSeparator8;
     private javax.swing.JPopupMenu.Separator jSeparator9;
     private javax.swing.JLabel labelUser;
@@ -4680,6 +4860,11 @@ public class View extends MainFrame {
     private javax.swing.JMenuItem menuRunNext;
     private javax.swing.JMenuItem menuSave;
     private javax.swing.JMenuItem menuSaveAs;
+    private javax.swing.JMenuItem menuSessionHistory;
+    private javax.swing.JMenuItem menuSessionStart;
+    private javax.swing.JMenuItem menuSessionStop;
+    private javax.swing.JMenu menuSessions;
+    private javax.swing.JMenuItem menuSessionsMetadata;
     private javax.swing.JMenuItem menuSetCurrentBranch;
     private javax.swing.JMenuItem menuSetCurrentBranch1;
     private javax.swing.JMenu menuSetLogLevel;

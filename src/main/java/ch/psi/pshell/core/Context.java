@@ -2892,6 +2892,31 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
         return logManager == null ? null : logManager.getLevel();
     }
 
+    //Session data
+    public void writeSessionMetadata(String location, boolean dataset) throws IOException {
+        if (location==null){
+            location = "/";
+        }
+        Map<String, Object> metadata = getSessionManager().getMetadata();
+        for (String key : metadata.keySet()) {
+            Object value = metadata.get(key);
+            if (value != null) {
+                if (value instanceof List){
+                    value = ((List)value).toArray(new String[0]);
+                }
+                try {
+                    if (dataset){
+                        getDataManager().setDataset(location+"/"+key, value);                        
+                    } else {
+                        getDataManager().setAttribute(location, key, value);
+                    }
+                } catch (Exception ex) {
+                    Logger.getLogger(SessionManager.class.getName()).log(Level.WARNING, null, ex);
+                }
+            }
+        }
+    }
+    
     //Scans
     final List<ScanListener> scanListeners = new ArrayList<>();
 

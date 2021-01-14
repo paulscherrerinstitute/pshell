@@ -19,21 +19,16 @@ import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import ch.psi.pshell.device.GenericDevice;
-import ch.psi.pshell.device.GenericDeviceBase;
 import ch.psi.pshell.device.Readable;
 import ch.psi.pshell.device.Writable;
 import ch.psi.pshell.epics.Epics;
-import ch.psi.utils.Chrono;
-import ch.psi.utils.Condition;
 import ch.psi.utils.Convert;
 import ch.psi.utils.Str;
 import ch.psi.utils.Threading;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Parameter;
-import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
 
 /**
  * Class that manages the instantiation and disposal of the global device list.

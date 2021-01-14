@@ -106,6 +106,9 @@ public interface Layout {
 
     default public void saveScript(String name, String contents) throws IOException {
     }
+    
+    default public void writeSessionMetadata() throws IOException {
+    }    
 
     String getScanPath(Scan scan);
 

@@ -2,12 +2,15 @@ package ch.psi.pshell.core;
 
 import ch.psi.pshell.core.Configuration.DataTransferMode;
 import ch.psi.pshell.data.RSync;
-import ch.psi.utils.Chrono;
+import ch.psi.pshell.swing.MetadataEditor;
 import ch.psi.utils.Folder;
 import ch.psi.utils.IO;
+import ch.psi.utils.ObservableBase;
+import ch.psi.utils.OrderedProperties;
 import ch.psi.utils.Str;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -16,11 +19,40 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class SessionManager {
-
+public class SessionManager  extends ObservableBase<SessionManager.SessionManagerListener>{
+    
+    public enum ChangeType{
+        STATE,
+        INFO,
+        METADATA
+    }
+    
+    public enum MetadataType{
+        String, 
+        Integer,
+        Double, 
+        Boolean, 
+        List
+    }
+    
+    public static interface SessionManagerListener{
+        void onChange(ChangeType type);
+    }
+    
+    void triggerChanged(ChangeType type){
+        for (SessionManagerListener listener : getListeners()) {
+            try {
+                listener.onChange(type);
+            } catch (Exception ex) {
+                Logger.getLogger(SessionManager.class.getName()).log(Level.WARNING, null, ex);
+            }
+        }    
+    }
+    
     final static String CURRENT_SESSION = "CurrentSession";
     final static String SESSION_COUNTER = "SessionCounter";
 
@@ -61,6 +93,7 @@ public class SessionManager {
         info.put("runs", runs);
         setInfo(info);
         setMetadata(metadata);
+        triggerChanged(ChangeType.STATE);
         return counter;
     }
 
@@ -68,6 +101,7 @@ public class SessionManager {
         if (isStarted()) {
             addInfo("stop", getTimestamp());
             Context.getInstance().setVariable("CurrentSession", "");
+            triggerChanged(ChangeType.STATE);
         }
     }
 
@@ -99,11 +133,49 @@ public class SessionManager {
     public Path getSessionPath(int id) throws IOException {
         return Paths.get(Context.getInstance().getSetup().getUserSessionsPath(), String.valueOf(id));
     }
+    
+    public List<Integer> getIDs(){
+        List<Integer> ret = new ArrayList<>();
+        try{
+            File folder = new File(Context.getInstance().getSetup().getUserSessionsPath());
+            for (File file : folder.listFiles()){
+                if (file.isDirectory()){
+                    String name = file.getName();
+                    try{
+                        ret.add(Integer.valueOf(name));
+                    } catch(Exception ex){                        
+                    }
+                }
+            }
+            
+        } catch (Exception ex){
+        }        
+        return ret;
+    }
+    
+    public String getName(int id){
+        try{
+            return (String) getInfo(id).get("name");
+        } catch (Exception ex){
+            return "";
+        }
+    }
+    
+    public long getStart(int id) throws IOException{
+        return (Long) getInfo(id).get("start");
+    }    
+    
+    public long getStart() throws IOException {
+        assertStarted();
+        return getStart(getCurrentId());
+    }    
+    
 
     Object getTimestamp() {
-        return Chrono.getTimeStr(System.currentTimeMillis(), "YYYY-MM-dd HH:mm:ss.SSS");
+        //return Chrono.getTimeStr(System.currentTimeMillis(), "YYYY-MM-dd HH:mm:ss.SSS");
+        return System.currentTimeMillis();
     }
-
+    
     String transferData(File from) throws Exception {
         IO.assertExists(from);
         String path = Context.getInstance().config.getDataTransferPath();
@@ -154,13 +226,11 @@ public class SessionManager {
                     Map<String, Object> run = new HashMap<>();
                     run.put("start", getTimestamp());
                     run.put("data", dataPath.getCanonicalPath());
-                    if (transfer) {
-                        updateRun("transfer", "wait");
-                    }
+                    run.put("state", "running");
                     addRun(run);
-                    writeMetadata();
                 } else {
                     updateRun("stop", getTimestamp());
+                    updateRun("state", "completed");
                 }
             }
         } catch (Exception ex) {
@@ -171,7 +241,7 @@ public class SessionManager {
             if ((dataPath == null) && (currentDataPath != null)) {
                 if (transfer) {
                     if (isStarted()) {
-                        updateRun("transfer", "started");
+                        updateRun("state", "transfering");
                     }
                     final File origin = currentDataPath;
                     new Thread(() -> {
@@ -179,13 +249,13 @@ public class SessionManager {
                             String dest = transferData(origin);
                             if (isStarted()) {
                                 updateRun(runId, "data", dest);
-                                updateRun(runId, "transfer", "completed");
+                                updateRun(runId, "state", "transferred");
                             }
                         } catch (Exception ex) {
                             Logger.getLogger(Context.class.getName()).log(Level.SEVERE, null, ex);
                             try {
                                 if (isStarted()) {
-                                    updateRun(runId, "transfer", "error: " + ex.getMessage());
+                                    updateRun(runId, "state", "transfer error: " + ex.getMessage());
                                 }
                             } catch (IOException ex1) {
                                 Logger.getLogger(SessionManager.class.getName()).log(Level.SEVERE, null, ex1);
@@ -201,6 +271,44 @@ public class SessionManager {
 
     }
 
+    public Set<Map.Entry<Object, Object>> getMetadataDefinition() {
+        OrderedProperties properties = new OrderedProperties();
+        try (FileInputStream in = new FileInputStream(Context.getInstance().getSetup().getSessionMetadataDefinitionFile())) {
+            properties.load(in);
+        } catch (Exception ex) {
+            Logger.getLogger(MetadataEditor.class.getName()).log(Level.WARNING, null, ex);
+        }           
+        return properties.entrySet();
+    }
+    
+    public MetadataType getMetadataType(String key) {
+        try{
+            for (Map.Entry entry: getMetadataDefinition()){
+                if (entry.getKey().equals(key)){
+                    return MetadataType.valueOf(String.valueOf(entry.getValue()).trim());
+                }
+            }
+        } catch (Exception ex) {            
+        }
+        return MetadataType.String;
+    }
+ 
+    public void onMetadataDefinitionChanged(){
+        try {
+            if (isStarted()){
+                Set<Map.Entry<Object, Object>> metadataDefinition = getMetadataDefinition();
+                Map<String, Object> metadata = getMetadata();
+                Map<String, Object> newMetadata = new HashMap<>();
+                for (Map.Entry<Object, Object> entry:metadataDefinition){
+                    newMetadata.put(Str.toString(entry.getKey()), metadata.getOrDefault(entry.getKey(), ""));
+                }
+                setMetadata(newMetadata);
+            }
+        } catch (Exception ex) {
+            Logger.getLogger(MetadataEditor.class.getName()).log(Level.WARNING, null, ex);
+        } 
+    }
+
     void setInfo(Map<String, Object> metadata) throws IOException {
         assertStarted();
         setInfo(getCurrentId(), metadata);
@@ -209,6 +317,9 @@ public class SessionManager {
     void setInfo(int id, Map<String, Object> metadata) throws IOException {
         String json = JsonSerializer.encode(metadata);
         Files.writeString(Paths.get(getSessionPath(id).toString(), INFO_FILE), json);
+        if (id == getCurrentId()){
+            triggerChanged(ChangeType.INFO);
+        }
     }
 
     void addInfo(String key, Object value) throws IOException {
@@ -260,8 +371,45 @@ public class SessionManager {
 
     public void setMetadata(Map<String, Object> metadata) throws IOException {
         assertStarted();
+        Set<Map.Entry<Object, Object>> metadataDefinition = getMetadataDefinition();
+        for (String key: metadata.keySet().toArray(new String[0])){
+            MetadataType type = getMetadataType(key);
+            Object value = metadata.get(key);
+            try{
+                if (value == null){
+                    value = "";
+                }
+                if (value instanceof String){
+                    String str = (String) value;
+                    value = str.trim();                    
+                    switch(type){
+                        case Integer:
+                            value = Integer.valueOf(str);
+                            break;
+                        case Double:
+                            value = Double.valueOf(str);
+                            break;
+                        case Boolean:
+                            value =Boolean.valueOf(str);
+                            break;
+                        case List:
+                            if (str.startsWith("[") && str.endsWith("]")){
+                                str=str.substring(1, str.length()-1);
+                            }
+                            value = Str.trim(Str.split(str, new String[]{"|", ";", ","}));
+                            break;
+                    }
+                } else if (type == MetadataType.String){
+                    value = Str.toString(value);
+                }
+            } catch (Exception ex){
+            }
+            metadata.put(key, value);
+        }
+                
         String json = JsonSerializer.encode(metadata);
         Files.writeString(Paths.get(getCurrentPath().toString(), METADATA_FILE), json);
+        triggerChanged(ChangeType.METADATA);
     }
 
     public void addMetadata(String key, Object value) throws IOException {
@@ -300,19 +448,5 @@ public class SessionManager {
 
     List<File> getFiles() {
         return null;
-    }
-
-    public void writeMetadata() throws IOException {
-        Map<String, Object> metadata = getMetadata();
-        for (String key : metadata.keySet()) {
-            Object value = metadata.get(key);
-            if (value != null) {
-                try {
-                    Context.getInstance().getDataManager().setAttribute("/", key, value);
-                } catch (Exception ex) {
-                    Logger.getLogger(SessionManager.class.getName()).log(Level.WARNING, null, ex);
-                }
-            }
-        }
     }
 }

@@ -549,6 +549,11 @@ public class DataManager implements AutoCloseable {
             if (getExecutionPars().getSaveOutput()) {
                 outputListener.start();
             }
+            if (getExecutionPars().getCurrentSessionId() >0) {
+                getLayout().writeSessionMetadata();
+            }
+            
+            
         }
     }
 

@@ -140,11 +140,11 @@ public class Configuration extends Config {
         return dataTransferUser.trim();
     }
 
-    List<String> getNotifiedTasks() {
+    public List<String> getNotifiedTasks() {
         List<String> ret = new ArrayList<>();
         if (notifiedTasks != null) {
             if (!Str.toString(null).equals(notifiedTasks)) {
-                String[] tokens = notifiedTasks.split("\\|");
+                String[] tokens = Str.split(notifiedTasks, new String[]{"|", ";", ","});
                 for (String str : tokens) {
                     str = str.trim();
                     if (!str.isEmpty()) {

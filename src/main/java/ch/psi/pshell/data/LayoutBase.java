@@ -19,7 +19,6 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -29,6 +28,9 @@ import java.util.HashMap;
 public abstract class LayoutBase implements Layout {
 
     Boolean persistSetpoints;
+    boolean writeSessionMetadata=true;
+    String sessionMetadataPath="/";
+    boolean sessionMetadataAttributes=true;
 
     public boolean getPersistSetpoints() {
         return (persistSetpoints == null) ? getDataManager().getExecutionPars().getSaveSetpoints() : persistSetpoints;
@@ -47,6 +49,12 @@ public abstract class LayoutBase implements Layout {
     public void setPersistSetpoints(boolean value) {
         persistSetpoints = value;
     }
+    
+    public void setWriteSessionMetadata(boolean value, String path, boolean attributes) {
+        persistSetpoints = value;
+        sessionMetadataPath = path;
+        sessionMetadataAttributes = attributes;
+    }    
 
     @Override
     public String getLogsPath() {
@@ -62,7 +70,6 @@ public abstract class LayoutBase implements Layout {
     public String getOutputFilePath() {
         return getLogsPath() + "output";
     }
-
 
     @Override
     public void appendLog(String log) throws IOException {
@@ -95,6 +102,11 @@ public abstract class LayoutBase implements Layout {
             }
         }
     }
+
+    @Override
+    public void writeSessionMetadata() throws IOException {
+        Context.getInstance().writeSessionMetadata(sessionMetadataPath, sessionMetadataAttributes);
+    }    
 
     @Override
     public void onOpened(File output) throws IOException {

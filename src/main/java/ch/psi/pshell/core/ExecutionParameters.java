@@ -158,6 +158,14 @@ public class ExecutionParameters {
     void onFinishedChildThread() {
         childThreadCommandOptions.remove(Thread.currentThread());
     }
+    
+    public int getCurrentSessionId(){
+        return Context.getInstance().getSessionManager().getCurrentId();
+    }
+
+    public String getCurrentSessionName(){
+        return Context.getInstance().getSessionManager().getCurrentName();
+    }
 
     @Hidden
     public void initializeData() throws IOException {

@@ -708,6 +708,10 @@ public class Setup extends Config {
         return expandPath(configFilePlugins);
     }
 
+    public String getSessionMetadataDefinitionFile() {
+        return expandPath("{config}/session_metadata.properties");
+    }
+
     public String getDevicePoolFile() {
         return expandPath(configFileDevices);
     }

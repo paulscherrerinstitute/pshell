@@ -1,6 +1,5 @@
 package ch.psi.pshell.ui;
 
-import ch.psi.pshell.core.Context;
 import ch.psi.pshell.device.GenericDevice;
 import ch.psi.pshell.device.Device;
 import ch.psi.pshell.imaging.Renderer;
@@ -8,18 +7,14 @@ import ch.psi.pshell.imaging.Source;
 import ch.psi.pshell.swing.DevicePanel;
 import ch.psi.utils.Config;
 import ch.psi.utils.swing.ConfigDialog;
-import ch.psi.utils.swing.PropertiesDialog;
 import ch.psi.utils.swing.StandardDialog;
 import ch.psi.utils.swing.SwingUtils;
 import java.awt.Frame;
 import java.awt.Window;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Properties;
 import javax.swing.WindowConstants;
 
 /**

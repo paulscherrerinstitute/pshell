@@ -157,11 +157,8 @@ public class DsvEditor extends Editor {
             }
         };
         table.setModel(model);
-        model.addTableModelListener(new TableModelListener() {
-            @Override
-            public void tableChanged(TableModelEvent e) {
-                getDocument().setChanged(true);
-            }
+        model.addTableModelListener((TableModelEvent e) -> {
+            getDocument().setChanged(true);
         });
         table.setComponentPopupMenu(menuPopup);
     }
