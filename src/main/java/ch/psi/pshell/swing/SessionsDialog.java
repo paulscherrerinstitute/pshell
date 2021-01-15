@@ -406,9 +406,14 @@ public class SessionsDialog extends StandardDialog {
 
         jSplitPane1.setRightComponent(jPanel4);
 
-        jPanel5.setBorder(javax.swing.BorderFactory.createTitledBorder("Transfer"));
+        jPanel5.setBorder(javax.swing.BorderFactory.createTitledBorder("Archive"));
 
         buttonScicatInjestion.setText("SciCat Injestion");
+        buttonScicatInjestion.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                buttonScicatInjestionActionPerformed(evt);
+            }
+        });
 
         javax.swing.GroupLayout jPanel5Layout = new javax.swing.GroupLayout(jPanel5);
         jPanel5.setLayout(jPanel5Layout);
@@ -477,6 +482,10 @@ public class SessionsDialog extends StandardDialog {
             SwingUtils.showException(this, ex);
         }            
     }//GEN-LAST:event_buttonRemoveFileActionPerformed
+
+    private void buttonScicatInjestionActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonScicatInjestionActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_buttonScicatInjestionActionPerformed
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton buttonAddFile;

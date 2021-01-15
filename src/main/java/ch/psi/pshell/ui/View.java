@@ -2251,6 +2251,8 @@ public class View extends MainFrame {
         menuAddToQueue = new javax.swing.JMenu();
         menuSessions = new javax.swing.JMenu();
         menuSessionStart = new javax.swing.JMenuItem();
+        menuSessionPause = new javax.swing.JMenuItem();
+        menuSessionResume = new javax.swing.JMenuItem();
         menuSessionStop = new javax.swing.JMenuItem();
         jSeparator7 = new javax.swing.JPopupMenu.Separator();
         menuSessionsMetadata = new javax.swing.JMenuItem();
@@ -2711,6 +2713,24 @@ public class View extends MainFrame {
             }
         });
         menuSessions.add(menuSessionStart);
+
+        menuSessionPause.setText(bundle.getString("View.menuSessionPause.text")); // NOI18N
+        menuSessionPause.setName("menuSessionPause"); // NOI18N
+        menuSessionPause.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                menuSessionPauseActionPerformed(evt);
+            }
+        });
+        menuSessions.add(menuSessionPause);
+
+        menuSessionResume.setText(bundle.getString("View.menuSessionResume.text")); // NOI18N
+        menuSessionResume.setName("menuSessionResume"); // NOI18N
+        menuSessionResume.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                menuSessionResumeActionPerformed(evt);
+            }
+        });
+        menuSessions.add(menuSessionResume);
 
         menuSessionStop.setText(bundle.getString("View.menuSessionStop.text")); // NOI18N
         menuSessionStop.setName("menuSessionStop"); // NOI18N
@@ -3745,8 +3765,11 @@ public class View extends MainFrame {
                 }
 
                 boolean sessionStarted = context.getSessionManager().isStarted();
+                Boolean paused = context.getSessionManager().isPaused();
                 menuSessionStop.setEnabled(sessionStarted);
-                menuSessionStart.setEnabled(!sessionStarted);
+                menuSessionStart.setEnabled(!sessionStarted);                
+                menuSessionPause.setEnabled(sessionStarted && !paused);
+                menuSessionResume.setEnabled(sessionStarted && paused);
             } catch (Exception ex) {
                 showException(ex);
             }
@@ -4721,7 +4744,7 @@ public class View extends MainFrame {
         try {
             SessionsDialog dlg = new SessionsDialog(this, false);
             dlg.setDefaultCloseOperation(DISPOSE_ON_CLOSE);
-            dlg.setTitle("Session Manager");
+            dlg.setTitle("Session Archiver");
             showChildWindow(dlg);
         } catch (Exception ex) {
             showException(ex);
@@ -4768,6 +4791,22 @@ public class View extends MainFrame {
         
         
     }//GEN-LAST:event_menuSessionsMetadataActionPerformed
+
+    private void menuSessionPauseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuSessionPauseActionPerformed
+        try {
+            context.getSessionManager().pause();
+        } catch (Exception ex) {
+            showException(ex);
+        }
+    }//GEN-LAST:event_menuSessionPauseActionPerformed
+
+    private void menuSessionResumeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuSessionResumeActionPerformed
+        try {
+            context.getSessionManager().resume();
+        } catch (Exception ex) {
+            showException(ex);
+        }
+    }//GEN-LAST:event_menuSessionResumeActionPerformed
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton buttonAbort;
@@ -4869,6 +4908,8 @@ public class View extends MainFrame {
     private javax.swing.JMenuItem menuSave;
     private javax.swing.JMenuItem menuSaveAs;
     private javax.swing.JMenuItem menuSessionHistory;
+    private javax.swing.JMenuItem menuSessionPause;
+    private javax.swing.JMenuItem menuSessionResume;
     private javax.swing.JMenuItem menuSessionStart;
     private javax.swing.JMenuItem menuSessionStop;
     private javax.swing.JMenu menuSessions;

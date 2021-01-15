@@ -62,6 +62,14 @@ public class SessionManager extends ObservableBase<SessionManager.SessionManager
 
     final static String INFO_FILE = "info.json";
     final static String METADATA_FILE = "metadata.json";
+    
+    final static String STATE_STARTED = "started";
+    final static String STATE_PAUSED = "paused";
+    final static String STATE_COMPLETED = "completed";
+    final static String STATE_RUNNING = "running";
+    final static String STATE_TRANSFERING = "transfering";
+    final static String STATE_TRANSFERRED = "transfered";
+    final static String STATE_ERROR = "error";
 
     boolean firstTransfer = true;
 
@@ -96,7 +104,7 @@ public class SessionManager extends ObservableBase<SessionManager.SessionManager
         Map info = new HashMap<String, Object>();
         info.put("name", name);
         info.put("start", getTimestamp());
-        info.put("state", "started");
+        info.put("state", STATE_STARTED);
         List runs = new ArrayList();
         info.put("runs", runs);
         setInfo(info);
@@ -107,12 +115,30 @@ public class SessionManager extends ObservableBase<SessionManager.SessionManager
 
     public void stop() throws IOException {
         if (isStarted()) {
-            addInfo("state", "completed");
+            addInfo("state", STATE_COMPLETED);
             addInfo("stop", getTimestamp());
             Context.getInstance().setVariable(CURRENT_SESSION, null);
             triggerChanged(ChangeType.STATE);
         }
     }
+    public void pause() throws IOException {
+        if (isStarted() && !isPaused()) {
+            setState(STATE_PAUSED);
+        }
+    }
+
+    public void resume() throws IOException {
+        if (isPaused()){
+            setState(STATE_STARTED);
+        }
+    }
+    
+    public boolean isPaused() throws IOException {
+        if (isStarted()) {
+            return getState().equals(STATE_PAUSED);
+        }
+        return false;
+    }    
 
     public int getCurrentId() {
         try {
@@ -225,21 +251,29 @@ public class SessionManager extends ObservableBase<SessionManager.SessionManager
     }
 
     private File currentDataPath;
+    boolean saveRun;
 
     void onChangeDataPath(File dataPath) {
-        int runId = getCurrentId();
+        final int sessionId = getCurrentId();        
+        final boolean updateRun = saveRun;
+        
         boolean transfer = (Context.getInstance().config.dataTransferMode != DataTransferMode.Off);
         try {
             if (isStarted()) {
                 if (dataPath != null) {
-                    Map<String, Object> run = new HashMap<>();
-                    run.put("start", getTimestamp());
-                    run.put("data", dataPath.getCanonicalPath());
-                    run.put("state", "running");
-                    addRun(run);
+                    saveRun = !isPaused();
+                    if (saveRun){
+                        Map<String, Object> run = new HashMap<>();
+                        run.put("start", getTimestamp());
+                        run.put("data", dataPath.getCanonicalPath());
+                        run.put("state", STATE_RUNNING);
+                        addRun(run);
+                    }
                 } else {
-                    updateRun("stop", getTimestamp());
-                    updateRun("state", "completed");
+                    if (saveRun){
+                        updateRun("stop", getTimestamp());
+                        updateRun("state", STATE_COMPLETED);
+                    }
                 }
             }
         } catch (Exception ex) {
@@ -249,22 +283,22 @@ public class SessionManager extends ObservableBase<SessionManager.SessionManager
         try {
             if ((dataPath == null) && (currentDataPath != null)) {
                 if (transfer) {
-                    if (isStarted()) {
-                        updateRun("state", "transfering");
+                    if (isStarted() && updateRun) {
+                        updateRun("state", STATE_TRANSFERING);
                     }
                     final File origin = currentDataPath;
                     new Thread(() -> {
                         try {
                             String dest = transferData(origin);
-                            if (isStarted()) {
-                                updateRun(runId, "data", dest);
-                                updateRun(runId, "state", "transferred");
+                            if (isStarted() && updateRun) {
+                                updateRun(sessionId, "data", dest);
+                                updateRun(sessionId, "state", STATE_TRANSFERRED);
                             }
                         } catch (Exception ex) {
                             Logger.getLogger(Context.class.getName()).log(Level.SEVERE, null, ex);
                             try {
-                                if (isStarted()) {
-                                    updateRun(runId, "state", "transfer error: " + ex.getMessage());
+                                if (isStarted() && updateRun) {
+                                    updateRun(sessionId, "state", STATE_ERROR + ": " + ex.getMessage());
                                 }
                             } catch (IOException ex1) {
                                 Logger.getLogger(SessionManager.class.getName()).log(Level.SEVERE, null, ex1);
@@ -383,12 +417,22 @@ public class SessionManager extends ObservableBase<SessionManager.SessionManager
         return files;
     }
     
+    public String getState() throws IOException {
+        assertStarted();
+        return getState(getCurrentId());
+    }    
+
     public String getState(int id) throws IOException {
         Map<String, Object> info = getInfo(id);
-        String state = (String) info.getOrDefault("state", "completed");
+        String state = (String) info.getOrDefault("state", STATE_COMPLETED);
         return state;
     }    
 
+    public void setState(String state) throws IOException {
+        assertStarted();
+        setState(getCurrentId(), state);
+    }    
+    
     public void setState(int id, String state) throws IOException {
         Map<String, Object> info = getInfo(id);
         info.put("state", state);

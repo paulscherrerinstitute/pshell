@@ -330,7 +330,7 @@
       <Properties>
         <Property name="border" type="javax.swing.border.Border" editor="org.netbeans.modules.form.editors2.BorderEditor">
           <Border info="org.netbeans.modules.form.compat2.border.TitledBorderInfo">
-            <TitledBorder title="Transfer"/>
+            <TitledBorder title="Archive"/>
           </Border>
         </Property>
       </Properties>
@@ -360,6 +360,9 @@
           <Properties>
             <Property name="text" type="java.lang.String" value="SciCat Injestion"/>
           </Properties>
+          <Events>
+            <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="buttonScicatInjestionActionPerformed"/>
+          </Events>
         </Component>
       </SubComponents>
     </Container>

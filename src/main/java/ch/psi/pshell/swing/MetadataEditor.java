@@ -149,7 +149,7 @@ public class MetadataEditor extends Editor {
 
             },
             new String [] {
-                "Name", "Class"
+                "Name", "Type"
             }
         ) {
             Class[] types = new Class [] {
