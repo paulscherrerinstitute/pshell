@@ -271,8 +271,8 @@ public class SessionManager extends ObservableBase<SessionManager.SessionManager
                     }
                 } else {
                     if (saveRun){
-                        updateRun("stop", getTimestamp());
-                        updateRun("state", STATE_COMPLETED);
+                        updateLastRun("stop", getTimestamp());
+                        updateLastRun("state", STATE_COMPLETED);
                     }
                 }
             }
@@ -284,21 +284,21 @@ public class SessionManager extends ObservableBase<SessionManager.SessionManager
             if ((dataPath == null) && (currentDataPath != null)) {
                 if (transfer) {
                     if (isStarted() && updateRun) {
-                        updateRun("state", STATE_TRANSFERING);
+                        updateLastRun("state", STATE_TRANSFERING);
                     }
                     final File origin = currentDataPath;
                     new Thread(() -> {
                         try {
                             String dest = transferData(origin);
                             if (isStarted() && updateRun) {
-                                updateRun(sessionId, "data", dest);
-                                updateRun(sessionId, "state", STATE_TRANSFERRED);
+                                updateLastRun(sessionId, "data", dest);
+                                updateLastRun(sessionId, "state", STATE_TRANSFERRED);
                             }
                         } catch (Exception ex) {
                             Logger.getLogger(Context.class.getName()).log(Level.SEVERE, null, ex);
                             try {
                                 if (isStarted() && updateRun) {
-                                    updateRun(sessionId, "state", STATE_ERROR + ": " + ex.getMessage());
+                                    updateLastRun(sessionId, "state", STATE_ERROR + ": " + ex.getMessage());
                                 }
                             } catch (IOException ex1) {
                                 Logger.getLogger(SessionManager.class.getName()).log(Level.SEVERE, null, ex1);
@@ -381,6 +381,7 @@ public class SessionManager extends ObservableBase<SessionManager.SessionManager
         List<Map<String, Object>> runs = (List) info.get("runs");
         return runs;
     }
+    
 
     void addRun(Map<String, Object> value) throws IOException {
         Map<String, Object> info = getInfo();
@@ -389,22 +390,42 @@ public class SessionManager extends ObservableBase<SessionManager.SessionManager
         setInfo(info);
     }
 
-    boolean updateRun(String key, Object value) throws IOException {
-        assertStarted();
-        return updateRun(getCurrentId(), key, value);
+    public boolean updateLastRun(String key, Object value) throws IOException {
+        return updateRun(-1, key, value);
     }
 
-    boolean updateRun(int id, String key, Object value) throws IOException {
+    public boolean updateLastRun(int id, String key, Object value) throws IOException {
+        return updateRun(id, -1, key, value);
+    }
+    
+    public boolean updateRun(int runIndex, String key, Object value) throws IOException {
+        assertStarted();
+        return updateRun(getCurrentId(), runIndex, key, value);
+    }
+
+    public boolean updateRun(int id, int runIndex, String key, Object value) throws IOException {
         Map<String, Object> info = getInfo(id);
         List runs = (List) info.get("runs");
-        if (runs.size() < 1) {
+        if (runIndex<0){
+            runIndex = runs.size() - 1;
+        }
+        if (runIndex >= runs.size()) {
             return false;
         }
-        Map<String, Object> run = (Map<String, Object>) runs.get(runs.size() - 1);
+        Map<String, Object> run = (Map<String, Object>) runs.get(runIndex);
         run.put(key, value);
         setInfo(id, info);
         return true;
+    }    
+        
+    public boolean setRunEnabled(int runIndex, boolean enabled) throws IOException {
+        assertStarted();
+        return setRunEnabled(getCurrentId(), runIndex, enabled);
     }
+
+    public boolean setRunEnabled(int id, int runIndex, boolean enabled) throws IOException {
+        return updateRun(id, runIndex, "enabled", enabled);
+    }    
 
     public List<String> getAdditionalFiles() throws IOException {
         assertStarted();

@@ -4,7 +4,6 @@ import ch.psi.pshell.core.Context;
 import ch.psi.pshell.core.SessionManager;
 import ch.psi.pshell.core.SessionManager.SessionManagerListener;
 import ch.psi.utils.Chrono;
-import ch.psi.utils.IO;
 import ch.psi.utils.Str;
 import ch.psi.utils.swing.MonitoredPanel;
 import ch.psi.utils.swing.SwingUtils;
@@ -16,7 +15,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.SwingUtilities;
 import javax.swing.event.TableModelEvent;
-import javax.swing.event.TableModelListener;
 import javax.swing.table.DefaultTableModel;
 
 /**
@@ -27,6 +25,8 @@ public class SessionPanel extends MonitoredPanel implements SessionManagerListen
     final SessionManager manager;    
     final DefaultTableModel modelMetadata;
     final DefaultTableModel modelRuns;
+    
+    boolean scrollRunsTable = true;
     
     public SessionPanel() {
         initComponents();
@@ -42,8 +42,11 @@ public class SessionPanel extends MonitoredPanel implements SessionManagerListen
         tableRuns.getColumnModel().getColumn(2).setPreferredWidth(60);
         tableRuns.getColumnModel().getColumn(2).setMaxWidth(60);
         tableRuns.getColumnModel().getColumn(2).setResizable(false);                
-        tableRuns.getColumnModel().getColumn(4).setPreferredWidth(60);
-        tableRuns.getColumnModel().getColumn(4).setResizable(false);
+        tableRuns.getColumnModel().getColumn(3).setPreferredWidth(60);
+        tableRuns.getColumnModel().getColumn(3).setMaxWidth(60);
+        tableRuns.getColumnModel().getColumn(3).setResizable(false);                
+        tableRuns.getColumnModel().getColumn(5).setPreferredWidth(60);
+        tableRuns.getColumnModel().getColumn(5).setResizable(false);
            
         modelMetadata.addTableModelListener((TableModelEvent e) -> {
             if (!updating){
@@ -63,6 +66,23 @@ public class SessionPanel extends MonitoredPanel implements SessionManagerListen
             }
         });
         
+        modelRuns.addTableModelListener((TableModelEvent e) -> {
+            if (!updating){
+                if (e.getType() == TableModelEvent.UPDATE){
+                    int col=e.getColumn();
+                    if (e.getColumn()==0){
+                        int runIndex = e.getFirstRow();                              
+                        try {
+                            Boolean value = (Boolean) modelRuns.getValueAt(runIndex, 0);
+                            scrollRunsTable = false;
+                            manager.setRunEnabled(runIndex, value);
+                        } catch (IOException ex) {
+                            Logger.getLogger(SessionPanel.class.getName()).log(Level.WARNING, null, ex);
+                        }
+                    }
+                }
+            }
+        });
     }    
     
     @Override
@@ -71,9 +91,13 @@ public class SessionPanel extends MonitoredPanel implements SessionManagerListen
             switch(type){
                 case INFO:
                     updateInfo();
-                    if (modelRuns.getRowCount()>0){
-                        SwingUtils.scrollToVisible(tableRuns, modelRuns.getRowCount()-1, 0);
-                    }                    
+                    if (scrollRunsTable){
+                        if (modelRuns.getRowCount()>0){
+                            SwingUtils.scrollToVisible(tableRuns, modelRuns.getRowCount()-1, 0);
+                        }                    
+                    } else {
+                        scrollRunsTable = true;
+                    }
                     break;
                 case METADATA:
                     updateMetadata();
@@ -141,11 +165,12 @@ public class SessionPanel extends MonitoredPanel implements SessionManagerListen
                 int index=0;
                 for(int i=0; i<runs.size(); i++ ){
                     Map<String, Object> run = runs.get(i);                
-                    modelRuns.setValueAt(getDateStr((Number)run.getOrDefault("start", 0)), index, 0);
-                    modelRuns.setValueAt(getTimeStr((Number)run.getOrDefault("start", 0)), index, 1);
-                    modelRuns.setValueAt(getTimeStr((Number)run.getOrDefault("stop", 0)), index, 2);
-                    modelRuns.setValueAt(getDisplayFileName(Str.toString(run.getOrDefault("data", "")), dataHome), index, 3);
-                    modelRuns.setValueAt(run.getOrDefault("state", ""), index++, 4);
+                    modelRuns.setValueAt(run.getOrDefault("enabled", true), index, 0);
+                    modelRuns.setValueAt(getDateStr((Number)run.getOrDefault("start", 0)), index, 1);
+                    modelRuns.setValueAt(getTimeStr((Number)run.getOrDefault("start", 0)), index, 2);
+                    modelRuns.setValueAt(getTimeStr((Number)run.getOrDefault("stop", 0)), index, 3);
+                    modelRuns.setValueAt(getDisplayFileName(Str.toString(run.getOrDefault("data", "")), dataHome), index, 4);
+                    modelRuns.setValueAt(run.getOrDefault("state", ""), index++, 5);
                 }
             } catch (Exception ex){
                 modelRuns.setNumRows(0);
@@ -330,14 +355,14 @@ public class SessionPanel extends MonitoredPanel implements SessionManagerListen
 
             },
             new String [] {
-                "Date", "Start", "Stop", "Data", "State"
+                "Enabled", "Date", "Start", "Stop", "Data", "State"
             }
         ) {
             Class[] types = new Class [] {
-                java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.String.class
+                java.lang.Boolean.class, java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.String.class
             };
             boolean[] canEdit = new boolean [] {
-                false, false, false, false, false
+                true, false, false, false, false, false
             };
 
             public Class getColumnClass(int columnIndex) {

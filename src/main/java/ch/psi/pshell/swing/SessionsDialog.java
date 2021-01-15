@@ -15,6 +15,7 @@ import java.util.logging.Logger;
 import javax.swing.JFileChooser;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
+import javax.swing.event.TableModelEvent;
 import javax.swing.table.DefaultTableModel;
 
 
@@ -25,6 +26,8 @@ public class SessionsDialog extends StandardDialog {
     final DefaultTableModel modelMetadata;
     final DefaultTableModel modelRuns;
     final DefaultTableModel modelFiles;
+    
+    volatile boolean updating;
     
 
     public SessionsDialog(java.awt.Frame parent, boolean modal) {
@@ -64,6 +67,23 @@ public class SessionsDialog extends StandardDialog {
                 }
             }
         });
+        
+        modelRuns.addTableModelListener((TableModelEvent e) -> {
+            if ((!updating) & (currentSession>=0)){
+                if (e.getType() == TableModelEvent.UPDATE){
+                    int col=e.getColumn();
+                    if (e.getColumn()==0){
+                        int runIndex = e.getFirstRow();                              
+                        try {
+                            Boolean value = (Boolean) modelRuns.getValueAt(runIndex, 0);
+                            manager.setRunEnabled(currentSession, runIndex, value);
+                        } catch (IOException ex) {
+                            Logger.getLogger(SessionPanel.class.getName()).log(Level.WARNING, null, ex);
+                        }
+                    }
+                }
+            }
+        });            
     }
         
     void updateButtons(){
@@ -77,71 +97,81 @@ public class SessionsDialog extends StandardDialog {
     }
     
     void update(){
-        List<Integer> ids = manager.getIDs();
-        
-        modelSessions.setNumRows(0);
-        for (int i=0; i<ids.size(); i++){
-            try{
-                int id = ids.get(i);
-                Map<String, Object> info = manager.getInfo(id);
-                String name = (String)info.getOrDefault("name", "");
-                String start = SessionPanel.getTimeStr((Number)info.getOrDefault("start", 0));
-                String stop = SessionPanel.getTimeStr((Number)info.getOrDefault("stop", 0));
-                String state = (String)info.getOrDefault("state", "unknown");
-                modelSessions.addRow(new Object[]{String.valueOf(id), name, start, stop, state});
-            } catch (Exception ex){
-                Logger.getLogger(SessionsDialog.class.getName()).log(Level.WARNING, null, ex);
+        updating = true;
+        try{
+            List<Integer> ids = manager.getIDs();
+
+            modelSessions.setNumRows(0);
+            for (int i=0; i<ids.size(); i++){
+                try{
+                    int id = ids.get(i);
+                    Map<String, Object> info = manager.getInfo(id);
+                    String name = (String)info.getOrDefault("name", "");
+                    String start = SessionPanel.getTimeStr((Number)info.getOrDefault("start", 0));
+                    String stop = SessionPanel.getTimeStr((Number)info.getOrDefault("stop", 0));
+                    String state = (String)info.getOrDefault("state", "unknown");
+                    modelSessions.addRow(new Object[]{String.valueOf(id), name, start, stop, state});
+                } catch (Exception ex){
+                    Logger.getLogger(SessionsDialog.class.getName()).log(Level.WARNING, null, ex);
+                }
             }
+            updateButtons();
+        } finally {
+            updating = false;
         }
-        updateButtons();
     }
     
 
     int currentSession = -1;
     void selectSession(int session){
-       currentSession = session; 
-        Map<String, Object> metadata;
-        try {            
-            metadata = manager.getMetadata(session);
-            Set<Map.Entry<Object, Object>> entries = manager.getMetadataDefinition();
-            modelMetadata.setNumRows(entries.size());
-            int index=0;
-            for(Map.Entry entry : entries){
-                modelMetadata.setValueAt(entry.getKey(), index, 0);
-                modelMetadata.setValueAt(metadata.getOrDefault(entry.getKey(), ""), index++, 1);
+        updating = true;
+        try{        
+           currentSession = session; 
+            Map<String, Object> metadata;
+            try {            
+                metadata = manager.getMetadata(session);
+                Set<Map.Entry<Object, Object>> entries = manager.getMetadataDefinition();
+                modelMetadata.setNumRows(entries.size());
+                int index=0;
+                for(Map.Entry entry : entries){
+                    modelMetadata.setValueAt(entry.getKey(), index, 0);
+                    modelMetadata.setValueAt(metadata.getOrDefault(entry.getKey(), ""), index++, 1);
+                }
+            } catch (Exception ex) {
+                modelMetadata.setNumRows(0);
             }
-        } catch (Exception ex) {
-            modelMetadata.setNumRows(0);
+
+            try{
+                List<Map<String, Object>> runs = manager.getRuns(session);            
+                modelRuns.setNumRows(runs.size());
+                String dataHome = Context.getInstance().getSetup().getDataPath();
+                int index=0;
+                for(int i=0; i<runs.size(); i++ ){
+                    Map<String, Object> run = runs.get(i);                
+                    modelRuns.setValueAt(run.getOrDefault("enabled", true), index, 0);
+                    modelRuns.setValueAt(SessionPanel.getDateStr((Number)run.getOrDefault("start", 0)), index, 1);
+                    modelRuns.setValueAt(SessionPanel.getTimeStr((Number)run.getOrDefault("start", 0)), index, 2);
+                    modelRuns.setValueAt(SessionPanel.getTimeStr((Number)run.getOrDefault("stop", 0)), index, 3);
+                    modelRuns.setValueAt(SessionPanel.getDisplayFileName(Str.toString(run.getOrDefault("data", "")), dataHome), index, 4);
+                    modelRuns.setValueAt(run.getOrDefault("state", ""), index++, 5);
+                }
+            } catch (Exception ex){
+                modelRuns.setNumRows(0);
+            }        
+
+            try{
+                List<String> files = manager.getAdditionalFiles(session);            
+                modelFiles.setNumRows(files.size());
+                for (int i=0; i<files.size(); i++){
+                    modelFiles.setValueAt(files.get(i), i,0);
+                }       
+            } catch (Exception ex){
+                modelFiles.setNumRows(0);
+            }  
+            updateButtons();
+        } finally {
+            updating = false;
         }
-        
-        try{
-            List<Map<String, Object>> runs = manager.getRuns(session);            
-            modelRuns.setNumRows(runs.size());
-            String dataHome = Context.getInstance().getSetup().getDataPath();
-            int index=0;
-            for(int i=0; i<runs.size(); i++ ){
-                Map<String, Object> run = runs.get(i);                
-                modelRuns.setValueAt(true, index, 0);
-                modelRuns.setValueAt(SessionPanel.getDateStr((Number)run.getOrDefault("start", 0)), index, 1);
-                modelRuns.setValueAt(SessionPanel.getTimeStr((Number)run.getOrDefault("start", 0)), index, 2);
-                modelRuns.setValueAt(SessionPanel.getTimeStr((Number)run.getOrDefault("stop", 0)), index, 3);
-                modelRuns.setValueAt(SessionPanel.getDisplayFileName(Str.toString(run.getOrDefault("data", "")), dataHome), index, 4);
-                modelRuns.setValueAt(run.getOrDefault("state", ""), index++, 5);
-            }
-        } catch (Exception ex){
-            modelRuns.setNumRows(0);
-        }        
-        
-        try{
-            List<String> files = manager.getAdditionalFiles(session);            
-            modelFiles.setNumRows(files.size());
-            for (int i=0; i<files.size(); i++){
-                modelFiles.setValueAt(files.get(i), i,0);
-            }       
-        } catch (Exception ex){
-            modelFiles.setNumRows(0);
-        }  
-        updateButtons();
     }
     
     void setAdditionalFiles() throws IOException{
@@ -237,7 +267,7 @@ public class SessionsDialog extends StandardDialog {
 
             },
             new String [] {
-                "Selected", "Date", "Start", "Stop", "Data", "State"
+                "Enabled", "Date", "Start", "Stop", "Data", "State"
             }
         ) {
             Class[] types = new Class [] {

@@ -144,7 +144,7 @@
               <Properties>
                 <Property name="model" type="javax.swing.table.TableModel" editor="org.netbeans.modules.form.editors2.TableModelEditor">
                   <Table columnCount="6" rowCount="0">
-                    <Column editable="true" title="Selected" type="java.lang.Boolean"/>
+                    <Column editable="true" title="Enabled" type="java.lang.Boolean"/>
                     <Column editable="false" title="Date" type="java.lang.String"/>
                     <Column editable="false" title="Start" type="java.lang.String"/>
                     <Column editable="false" title="Stop" type="java.lang.String"/>
