@@ -143,7 +143,7 @@ public class SessionsDialog extends StandardDialog {
            currentSession = session; 
             Map<String, Object> metadata;
             try {            
-                metadata = manager.getMetadata(session);
+                metadata = manager.getMetadata(session, false);
                 Set<Map.Entry<Object, Object>> entries = manager.getMetadataDefinition();
                 modelMetadata.setNumRows(entries.size());
                 int index=0;

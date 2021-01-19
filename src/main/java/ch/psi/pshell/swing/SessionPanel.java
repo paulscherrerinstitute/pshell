@@ -1,6 +1,7 @@
 package ch.psi.pshell.swing;
 
 import ch.psi.pshell.core.Context;
+import ch.psi.pshell.core.JsonSerializer;
 import ch.psi.pshell.core.SessionManager;
 import ch.psi.pshell.core.SessionManager.SessionManagerListener;
 import ch.psi.utils.Chrono;
@@ -184,14 +185,14 @@ public class SessionPanel extends MonitoredPanel implements SessionManagerListen
         Map<String, Object> metadata;
         updating = true;
         try {            
-            metadata = manager.getMetadata();
+            metadata = manager.getMetadata(false);
             Set<Map.Entry<Object, Object>> entries = manager.getMetadataDefinition();
             modelMetadata.setNumRows(entries.size());
             int index=0;
             for(Map.Entry entry : entries){
                 modelMetadata.setValueAt(entry.getKey(), index, 0);
                 modelMetadata.setValueAt(metadata.getOrDefault(entry.getKey(), ""), index++, 1);
-            }
+                }
         } catch (Exception ex) {
             modelMetadata.setNumRows(0);
         } finally{

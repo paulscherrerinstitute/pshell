@@ -39,7 +39,8 @@ public class SessionManager extends ObservableBase<SessionManager.SessionManager
         Integer,
         Double,
         Boolean,
-        List
+        List,
+        Map
     }
 
     public static interface SessionManagerListener {
@@ -551,11 +552,12 @@ public class SessionManager extends ObservableBase<SessionManager.SessionManager
                             value = Boolean.valueOf(str);
                             break;
                         case List:
-                            if (str.startsWith("[") && str.endsWith("]")) {
-                                str = str.substring(1, str.length() - 1);
-                            }
-                            value = Str.trim(Str.split(str, new String[]{"|", ";", ","}));
+                            value = JsonSerializer.decode(str, List.class);
                             break;
+                        case Map:
+                            value = JsonSerializer.decode(str, Map.class);
+                            break;
+                            
                     }
                 } else if (type == MetadataType.String) {
                     value = Str.toString(value);
@@ -577,13 +579,32 @@ public class SessionManager extends ObservableBase<SessionManager.SessionManager
     }
 
     public Map<String, Object> getMetadata() throws IOException {
-        assertStarted();
-        return getMetadata(getCurrentId());
+        return getMetadata(true);
     }
-
+    
     public Map<String, Object> getMetadata(int id) throws IOException {
+        return getMetadata(id, true);
+    }
+    
+    public Map<String, Object> getMetadata(boolean asCollection) throws IOException {
+        assertStarted();
+        return getMetadata(getCurrentId(), asCollection);
+    }
+    
+    public Map<String, Object> getMetadata(int id, boolean asCollection) throws IOException {
         String json = Files.readString(Paths.get(getSessionPath(id).toString(), METADATA_FILE));
         Map<String, Object> ret = (Map) JsonSerializer.decode(json, Map.class);
+        if (!asCollection){
+            for (String key : ret.keySet()){
+                Object value = ret.get(key);
+                if (value != null){
+                    if ((value instanceof Map) || (value instanceof List)){
+                        value = JsonSerializer.encode(value);
+                        ret.put(key, value);
+                    }    
+                }
+            }
+        }
         return ret;
     }
 
