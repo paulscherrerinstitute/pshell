@@ -4760,11 +4760,25 @@ public class View extends MainFrame {
                 }
                 int id = context.getSessionManager().getCurrentId();
                 String name = context.getSessionManager().getCurrentName();
-                String msg =  name.isBlank() ?                          
-                        String.format("Do you want to complete the session %d?", id):
-                        String.format("Do you want to complete the session %d (%s)?", id, name);
-                if (SwingUtils.showOption(this, "Session", msg , OptionType.YesNo) == OptionResult.Yes) {
+                String session = name.isBlank() ? String.valueOf(id) : String.valueOf(id) + "-" + name;
+                String msg = String.format("Do you want to complete session %s?", session);
+                JPanel panel = new JPanel();
+                panel.setLayout(new BorderLayout(0,30));
+                JLabel label = new JLabel(msg);     
+                panel.add(label, BorderLayout.CENTER);        
+                JCheckBox checkArchive = new JCheckBox("Archive session");     
+                panel.add(checkArchive, BorderLayout.SOUTH);  
+                panel.setPreferredSize(new Dimension(400, panel.getPreferredSize().height));
+                
+                if (SwingUtils.showOption(this, "Session", panel , OptionType.YesNo) == OptionResult.Yes) {
                     context.getSessionManager().stop();
+                    if (checkArchive.isSelected()){
+                        SessionsDialog dlg = new SessionsDialog(this, false);
+                        dlg.setSingleSession(id);
+                        dlg.setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+                        dlg.setTitle("Session Archiver: " + session);             
+                        showChildWindow(dlg);
+                    }
                 }
             }
         } catch (Exception ex) {
