@@ -2893,7 +2893,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
     }
 
     //Session data
-    public void writeSessionMetadata(String location, boolean dataset) throws IOException {
+    public void writeSessionMetadata(String location, boolean attributes) throws IOException {
         if (location==null){
             location = "/";
         }
@@ -2905,10 +2905,10 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
                     value = ((List)value).toArray(new String[0]);
                 }
                 try {
-                    if (dataset){
-                        getDataManager().setDataset(location+"/"+key, value);                        
+                    if (attributes){
+                        getDataManager().setAttribute(location, key, value);                        
                     } else {
-                        getDataManager().setAttribute(location, key, value);
+                        getDataManager().setDataset(location+"/"+key, value);                        
                     }
                 } catch (Exception ex) {
                     Logger.getLogger(SessionManager.class.getName()).log(Level.WARNING, null, ex);
