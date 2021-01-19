@@ -438,6 +438,35 @@ public class SessionManager extends ObservableBase<SessionManager.SessionManager
         return files;
     }
     
+    public List<String> getFileList(int id) throws IOException{
+        List<String> ret = new ArrayList();
+        ret.add(Paths.get(getSessionPath(id).toString(), INFO_FILE).toString());
+        ret.add(Paths.get(getSessionPath(id).toString(), METADATA_FILE).toString());
+        for (Map<String, Object> run : getRuns(id)){
+            if (run.containsKey("data")){
+               ret.add(run.get("data").toString());
+            }   
+        }
+        for (String str : getAdditionalFiles(id)){
+            ret.add(str);
+        }
+        return ret;        
+    }
+    
+    public void createZipFile(int id, File file) throws IOException{
+        List<String> names = getFileList(id);
+        List<File> files = new ArrayList<>();
+        for (String name: names){
+            File f = new File(name);
+            if (f.exists()){
+                files.add(f);
+            } else {
+                Logger.getLogger(SessionManager.class.getName()).warning("Invalid data file: " + f.toString());
+            }
+        }
+        IO.createZipFile(file, files);
+    }    
+    
     public String getState() throws IOException {
         assertStarted();
         return getState(getCurrentId());

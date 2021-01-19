@@ -1,5 +1,6 @@
 package ch.psi.utils;
 
+import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -17,12 +18,14 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Enumeration;
+import java.util.List;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
+import java.util.zip.ZipOutputStream;
 import org.apache.commons.io.FileUtils;
 
 /**
@@ -109,6 +112,61 @@ public class IO {
         byte[] data = extractZipFileContent(zip, resourceFileName);
         new File(fileName).getParentFile().mkdirs();
         Files.write(Paths.get(fileName), data);
+    }
+
+    static void generateZipFileList(String sourceFolder, File node, List<String> fileList) {
+        if (!node.isHidden()){
+            if (node.isFile()) {
+                String file = node.toString();
+                String zipEntry = file.substring(sourceFolder.length() + 1, file.length());
+                fileList.add(zipEntry);
+            }
+            if (node.isDirectory()) {
+                String[] subNote = node.list();
+                for (String filename : subNote) {
+                    generateZipFileList(sourceFolder, new File(node, filename), fileList);
+                }
+            }
+        }
+    }
+
+    public static void createZipFile(File zip, List<File> files) throws IOException {
+        try (FileOutputStream fos = new FileOutputStream(zip.getCanonicalPath())){
+            try(ZipOutputStream zos = new ZipOutputStream(fos)){
+                final int BUFFER_SIZE = 0x10000;
+                byte data[] = new byte[BUFFER_SIZE];
+                int count;
+                for (File file : files) {
+                    if (file.isFile()) {
+                        try (FileInputStream fis = new FileInputStream(file)) {
+                            try (BufferedInputStream bis = new BufferedInputStream(fis, BUFFER_SIZE)){
+                                ZipEntry ze = new ZipEntry(file.getName());
+                                zos.putNextEntry(ze);
+                                while ((count = bis.read(data, 0, BUFFER_SIZE)) != -1) {
+                                    zos.write(data, 0, count);
+                                }
+                            }
+                        }
+                    } else {
+                        List<String> fileList = new ArrayList<>();
+                        String sourceFolder = file.getCanonicalPath();
+                        generateZipFileList(sourceFolder, file, fileList);
+                        for (String f : fileList) {
+                            String source = file.getName();
+                            ZipEntry ze = new ZipEntry(file.getName() + File.separator + f);
+                            zos.putNextEntry(ze);
+                            try (FileInputStream fis = new FileInputStream(sourceFolder + File.separator + f)) {
+                                try (BufferedInputStream bis = new BufferedInputStream(fis, BUFFER_SIZE)){
+                                    while ((count = bis.read(data, 0, BUFFER_SIZE)) != -1) {
+                                        zos.write(data, 0, count);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        } 
     }
 
     public static String[] getJarContents(String fileName) throws IOException {
@@ -265,7 +323,7 @@ public class IO {
     static public void deleteRecursive(File file) throws IOException {
         deleteRecursive(file.getCanonicalPath());
     }
-    
+
     static public void deleteRecursive(String pathName) throws IOException {
         Path path = Paths.get(pathName);
 

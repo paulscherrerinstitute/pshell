@@ -2,9 +2,15 @@ package ch.psi.pshell.swing;
 
 import ch.psi.pshell.core.Context;
 import ch.psi.pshell.core.SessionManager;
+import ch.psi.utils.IO;
 import ch.psi.utils.Str;
 import ch.psi.utils.swing.StandardDialog;
 import ch.psi.utils.swing.SwingUtils;
+import ch.psi.utils.swing.SwingUtils.OptionResult;
+import ch.psi.utils.swing.SwingUtils.OptionType;
+import java.awt.BorderLayout;
+import java.awt.Dimension;
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -12,10 +18,14 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.JDialog;
 import javax.swing.JFileChooser;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.event.TableModelEvent;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.table.DefaultTableModel;
 
 
@@ -93,7 +103,8 @@ public class SessionsDialog extends StandardDialog {
         buttonAddFile.setEnabled(currentSession>=0);
         buttonRemoveFile.setEnabled(buttonAddFile.isEnabled() && tableFiles.getSelectedRow()>=0);
         
-        buttonScicatInjestion.setEnabled(sessionState.equals("completed"));
+        buttonZIP.setEnabled(sessionState.equals("completed"));
+        buttonScicatIngestion.setEnabled(sessionState.equals("completed"));
     }
     
     void update(){
@@ -184,7 +195,7 @@ public class SessionsDialog extends StandardDialog {
         }
         updateButtons();
     }   
-
+   
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -210,7 +221,8 @@ public class SessionsDialog extends StandardDialog {
         buttonAddFile = new javax.swing.JButton();
         buttonRemoveFile = new javax.swing.JButton();
         jPanel5 = new javax.swing.JPanel();
-        buttonScicatInjestion = new javax.swing.JButton();
+        buttonZIP = new javax.swing.JButton();
+        buttonScicatIngestion = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
 
@@ -385,6 +397,16 @@ public class SessionsDialog extends StandardDialog {
         });
         tableFiles.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_INTERVAL_SELECTION);
         tableFiles.getTableHeader().setReorderingAllowed(false);
+        tableFiles.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseReleased(java.awt.event.MouseEvent evt) {
+                tableFilesMouseReleased(evt);
+            }
+        });
+        tableFiles.addKeyListener(new java.awt.event.KeyAdapter() {
+            public void keyReleased(java.awt.event.KeyEvent evt) {
+                tableFilesKeyReleased(evt);
+            }
+        });
         jScrollPane4.setViewportView(tableFiles);
 
         buttonAddFile.setText("Add");
@@ -438,10 +460,17 @@ public class SessionsDialog extends StandardDialog {
 
         jPanel5.setBorder(javax.swing.BorderFactory.createTitledBorder("Archive"));
 
-        buttonScicatInjestion.setText("SciCat Injestion");
-        buttonScicatInjestion.addActionListener(new java.awt.event.ActionListener() {
+        buttonZIP.setText("ZIP file");
+        buttonZIP.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                buttonScicatInjestionActionPerformed(evt);
+                buttonZIPActionPerformed(evt);
+            }
+        });
+
+        buttonScicatIngestion.setText("SciCat Ingestion");
+        buttonScicatIngestion.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                buttonScicatIngestionActionPerformed(evt);
             }
         });
 
@@ -449,17 +478,23 @@ public class SessionsDialog extends StandardDialog {
         jPanel5.setLayout(jPanel5Layout);
         jPanel5Layout.setHorizontalGroup(
             jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel5Layout.createSequentialGroup()
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel5Layout.createSequentialGroup()
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addComponent(buttonScicatInjestion)
+                .addComponent(buttonScicatIngestion)
+                .addGap(88, 88, 88)
+                .addComponent(buttonZIP)
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
+
+        jPanel5Layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {buttonScicatIngestion, buttonZIP});
+
         jPanel5Layout.setVerticalGroup(
             jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel5Layout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(buttonScicatInjestion)
-                .addContainerGap())
+                .addGroup(jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(buttonZIP)
+                    .addComponent(buttonScicatIngestion))
+                .addGap(12, 12, 12))
         );
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
@@ -504,8 +539,9 @@ public class SessionsDialog extends StandardDialog {
 
     private void buttonRemoveFileActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonRemoveFileActionPerformed
         try {
-            if(tableFiles.getSelectedRow()>=0){
-                tableFiles.removeRowSelectionInterval(tableFiles.getSelectedRow(), tableFiles.getSelectedRow());
+            int row = tableFiles.getSelectedRow();
+            if(row>=0){
+                modelFiles.removeRow(row);
                 setAdditionalFiles();
             }
         } catch (Exception ex) {
@@ -513,14 +549,64 @@ public class SessionsDialog extends StandardDialog {
         }            
     }//GEN-LAST:event_buttonRemoveFileActionPerformed
 
-    private void buttonScicatInjestionActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonScicatInjestionActionPerformed
+    private void buttonZIPActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonZIPActionPerformed
+        try {
+            JFileChooser chooser = new JFileChooser();
+            FileNameExtensionFilter filter = new FileNameExtensionFilter("ZIP files", "zip");
+            String name = manager.getName(currentSession);
+            String filename = (name.isBlank()) ? String.valueOf(currentSession) : currentSession+"_"+name;
+            chooser.setSelectedFile(new File(filename + ".zip"));
+            chooser.setFileFilter(filter);
+            chooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+            chooser.setAcceptAllFileFilterUsed(true);            
+            int rVal = chooser.showSaveDialog(this);
+            if (rVal == JFileChooser.APPROVE_OPTION) {
+                File file =  chooser.getSelectedFile();
+                if (IO.getExtension(file).isBlank()){
+                    file = new File(file.getCanonicalPath()+".zip");
+                }     
+                if (file.exists()){
+                    if (SwingUtils.showOption(this, "Overwrite", "File " + file.getName() + " already exists.\nDo you want to overwrite it?", OptionType.YesNo) != OptionResult.Yes) {
+                        return;
+                    }
+                }
+                
+                JPanel panel = new JPanel();
+                panel.setLayout(new BorderLayout());
+                JLabel label = new JLabel("Generating ZIP file...");        
+                label.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+                panel.add(label, BorderLayout.CENTER);        
+                JDialog dialogMessage = SwingUtils.showDialog(this, "Archive",new Dimension(400,200), panel);
+                panel.paintImmediately(0,0,panel.getWidth(),panel.getHeight());
+                try{
+                    manager.createZipFile(currentSession, file);                    
+                } finally{
+                    dialogMessage.setVisible(false);
+                }
+                SwingUtils.showMessage(this, "Archive", "Success creating ZIP file: " + file.getName());
+            }
+        } catch (Exception ex) {
+            SwingUtils.showException(this, ex);
+        }     
+    }//GEN-LAST:event_buttonZIPActionPerformed
+
+    private void buttonScicatIngestionActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonScicatIngestionActionPerformed
         // TODO add your handling code here:
-    }//GEN-LAST:event_buttonScicatInjestionActionPerformed
+    }//GEN-LAST:event_buttonScicatIngestionActionPerformed
+
+    private void tableFilesKeyReleased(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_tableFilesKeyReleased
+        updateButtons();
+    }//GEN-LAST:event_tableFilesKeyReleased
+
+    private void tableFilesMouseReleased(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_tableFilesMouseReleased
+        updateButtons();
+    }//GEN-LAST:event_tableFilesMouseReleased
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton buttonAddFile;
     private javax.swing.JButton buttonRemoveFile;
-    private javax.swing.JButton buttonScicatInjestion;
+    private javax.swing.JButton buttonScicatIngestion;
+    private javax.swing.JButton buttonZIP;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel2;
     private javax.swing.JPanel jPanel3;
