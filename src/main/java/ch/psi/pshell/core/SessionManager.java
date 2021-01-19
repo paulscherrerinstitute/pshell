@@ -444,7 +444,9 @@ public class SessionManager extends ObservableBase<SessionManager.SessionManager
         ret.add(Paths.get(getSessionPath(id).toString(), METADATA_FILE).toString());
         for (Map<String, Object> run : getRuns(id)){
             if (run.containsKey("data")){
-               ret.add(run.get("data").toString());
+               if (Boolean.TRUE.equals(run.getOrDefault("enabled", true))){
+                    ret.add(run.get("data").toString());
+               }
             }   
         }
         for (String str : getAdditionalFiles(id)){
