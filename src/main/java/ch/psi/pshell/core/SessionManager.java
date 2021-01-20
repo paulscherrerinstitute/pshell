@@ -651,6 +651,7 @@ public class SessionManager extends ObservableBase<SessionManager.SessionManager
             for (String key : ret.keySet()){
                 Object value = ret.get(key);
                 value = toString(value);
+                ret.put(key, value);
             }
         }
         return ret;
