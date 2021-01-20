@@ -322,6 +322,7 @@ public class SessionManager extends ObservableBase<SessionManager.SessionManager
         } catch (Exception ex) {
             Logger.getLogger(MetadataEditor.class.getName()).log(Level.WARNING, null, ex);
         }
+        
         return properties.entrySet();
     }
 
@@ -329,7 +330,11 @@ public class SessionManager extends ObservableBase<SessionManager.SessionManager
         try {
             for (Map.Entry entry : getMetadataDefinition()) {
                 if (entry.getKey().equals(key)) {
-                    return MetadataType.valueOf(String.valueOf(entry.getValue()).trim());
+                    String val = String.valueOf(entry.getValue()).trim();
+                    if (val.contains(";")){
+                        val = val.substring(0, val.indexOf(";")).trim();
+                    }
+                    return MetadataType.valueOf(val);
                 }
             }
         } catch (Exception ex) {
@@ -337,6 +342,43 @@ public class SessionManager extends ObservableBase<SessionManager.SessionManager
         return MetadataType.String;
     }
 
+    public static Object getDefaultValue(MetadataType type) {
+        switch (type){
+            case List: return "[]";
+            case Map: return "{}";
+            default: return "";
+        }            
+    }
+    
+    public static Object getDefaultValue(String type) {
+        try {
+            return getDefaultValue(MetadataType.valueOf(type));
+        } catch (Exception ex) {
+        }
+        return "";     
+    }    
+    
+    public Object getMetadataDefault(String key) {
+        try {
+            for (Map.Entry entry : getMetadataDefinition()) {
+                if (entry.getKey().equals(key)) {
+                    return getMetadataDefault(entry);
+                }
+            }
+        } catch (Exception ex) {
+        }
+        return getDefaultValue(getMetadataType(key));
+    }
+    
+    public Object getMetadataDefault(Map.Entry entry) {
+            String val = String.valueOf(entry.getValue()).trim();
+            if (val.contains(";")){
+                return  val.substring(val.indexOf(";") + 1).trim();
+            }         
+            return "";
+    }
+    
+    
     public void onMetadataDefinitionChanged() {
         try {
             if (isStarted()) {
@@ -344,7 +386,9 @@ public class SessionManager extends ObservableBase<SessionManager.SessionManager
                 Map<String, Object> metadata = getMetadata();
                 Map<String, Object> newMetadata = new HashMap<>();
                 for (Map.Entry<Object, Object> entry : metadataDefinition) {
-                    newMetadata.put(Str.toString(entry.getKey()), metadata.getOrDefault(entry.getKey(), ""));
+                    String val = String.valueOf(entry.getValue()).trim();
+                    Object def = getMetadataDefault(entry);
+                    newMetadata.put(Str.toString(entry.getKey()), metadata.getOrDefault(entry.getKey(), def));
                 }
                 setMetadata(newMetadata);
             }
@@ -527,6 +571,34 @@ public class SessionManager extends ObservableBase<SessionManager.SessionManager
         Map<String, Object> ret = (Map) JsonSerializer.decode(json, Map.class);
         return ret;
     }
+    
+    public static String toString(Object obj) throws IOException{
+        if (obj == null){
+            return "";
+        }
+        if ((obj instanceof Map) || (obj instanceof List)){
+            return  JsonSerializer.encode(obj);
+        }    
+        return obj.toString();
+    }
+    
+    public static Object fromString(MetadataType type, String str) throws Exception{
+        str = str.trim();        
+        switch (type) {
+            case Integer:
+                return Integer.valueOf(str);
+            case Double:
+                return Double.valueOf(str);
+            case Boolean:
+                return Boolean.valueOf(str);
+            case List:
+                return JsonSerializer.decode(str, List.class);
+            case Map:
+                return JsonSerializer.decode(str, Map.class);
+            default:
+                return str;
+        }        
+    }
 
     public void setMetadata(Map<String, Object> metadata) throws IOException {
         assertStarted();
@@ -539,26 +611,7 @@ public class SessionManager extends ObservableBase<SessionManager.SessionManager
                     value = "";
                 }
                 if (value instanceof String) {
-                    String str = (String) value;
-                    value = str.trim();
-                    switch (type) {
-                        case Integer:
-                            value = Integer.valueOf(str);
-                            break;
-                        case Double:
-                            value = Double.valueOf(str);
-                            break;
-                        case Boolean:
-                            value = Boolean.valueOf(str);
-                            break;
-                        case List:
-                            value = JsonSerializer.decode(str, List.class);
-                            break;
-                        case Map:
-                            value = JsonSerializer.decode(str, Map.class);
-                            break;
-                            
-                    }
+                    value = fromString (type, (String)value);
                 } else if (type == MetadataType.String) {
                     value = Str.toString(value);
                 }
@@ -579,30 +632,25 @@ public class SessionManager extends ObservableBase<SessionManager.SessionManager
     }
 
     public Map<String, Object> getMetadata() throws IOException {
-        return getMetadata(true);
+        return getMetadata(false);
     }
     
     public Map<String, Object> getMetadata(int id) throws IOException {
-        return getMetadata(id, true);
+        return getMetadata(id, false);
     }
     
-    public Map<String, Object> getMetadata(boolean asCollection) throws IOException {
+    public Map<String, Object> getMetadata(boolean asString) throws IOException {
         assertStarted();
-        return getMetadata(getCurrentId(), asCollection);
+        return getMetadata(getCurrentId(), asString);
     }
     
-    public Map<String, Object> getMetadata(int id, boolean asCollection) throws IOException {
+    public Map<String, Object> getMetadata(int id, boolean asString) throws IOException {
         String json = Files.readString(Paths.get(getSessionPath(id).toString(), METADATA_FILE));
         Map<String, Object> ret = (Map) JsonSerializer.decode(json, Map.class);
-        if (!asCollection){
+        if (asString){
             for (String key : ret.keySet()){
                 Object value = ret.get(key);
-                if (value != null){
-                    if ((value instanceof Map) || (value instanceof List)){
-                        value = JsonSerializer.encode(value);
-                        ret.put(key, value);
-                    }    
-                }
+                value = toString(value);
             }
         }
         return ret;

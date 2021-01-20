@@ -1,34 +1,38 @@
 package ch.psi.pshell.swing;
 
 import ch.psi.pshell.core.Context;
-import ch.psi.pshell.core.JsonSerializer;
 import ch.psi.pshell.core.SessionManager;
+import ch.psi.pshell.core.SessionManager.MetadataType;
 import ch.psi.pshell.core.SessionManager.SessionManagerListener;
 import ch.psi.utils.Chrono;
 import ch.psi.utils.Str;
 import ch.psi.utils.swing.MonitoredPanel;
 import ch.psi.utils.swing.SwingUtils;
+import java.awt.Color;
+import java.awt.Component;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.JTable;
 import javax.swing.SwingUtilities;
 import javax.swing.event.TableModelEvent;
+import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 
 /**
  *
  */
-public class SessionPanel extends MonitoredPanel implements SessionManagerListener{
+public class SessionPanel extends MonitoredPanel implements SessionManagerListener {
 
-    final SessionManager manager;    
+    final SessionManager manager;
     final DefaultTableModel modelMetadata;
     final DefaultTableModel modelRuns;
-    
+
     boolean scrollRunsTable = true;
-    
+
     public SessionPanel() {
         initComponents();
         manager = Context.getInstance().getSessionManager();
@@ -36,43 +40,53 @@ public class SessionPanel extends MonitoredPanel implements SessionManagerListen
         modelRuns = (DefaultTableModel) tableRuns.getModel();
         tableRuns.getColumnModel().getColumn(0).setPreferredWidth(60);
         tableRuns.getColumnModel().getColumn(0).setMaxWidth(60);
-        tableRuns.getColumnModel().getColumn(0).setResizable(false);                
+        tableRuns.getColumnModel().getColumn(0).setResizable(false);
         tableRuns.getColumnModel().getColumn(1).setPreferredWidth(60);
         tableRuns.getColumnModel().getColumn(1).setMaxWidth(60);
-        tableRuns.getColumnModel().getColumn(1).setResizable(false);                
+        tableRuns.getColumnModel().getColumn(1).setResizable(false);
         tableRuns.getColumnModel().getColumn(2).setPreferredWidth(60);
         tableRuns.getColumnModel().getColumn(2).setMaxWidth(60);
-        tableRuns.getColumnModel().getColumn(2).setResizable(false);                
+        tableRuns.getColumnModel().getColumn(2).setResizable(false);
         tableRuns.getColumnModel().getColumn(3).setPreferredWidth(60);
         tableRuns.getColumnModel().getColumn(3).setMaxWidth(60);
-        tableRuns.getColumnModel().getColumn(3).setResizable(false);                
+        tableRuns.getColumnModel().getColumn(3).setResizable(false);
         tableRuns.getColumnModel().getColumn(5).setPreferredWidth(60);
         tableRuns.getColumnModel().getColumn(5).setResizable(false);
-           
+
         modelMetadata.addTableModelListener((TableModelEvent e) -> {
-            if (!updating){
-                if (e.getType() == TableModelEvent.UPDATE){
-                    int col=e.getColumn();
-                    if (e.getColumn()==1){
+            if (!updating) {
+                if (e.getType() == TableModelEvent.UPDATE) {
+                    int col = e.getColumn();
+                    if (e.getColumn() == 1) {
                         int row = e.getFirstRow();
                         String key = Str.toString(modelMetadata.getValueAt(row, 0));
                         Object value = modelMetadata.getValueAt(row, 1);
                         try {
+                            MetadataType type = manager.getMetadataType(key);
+                            manager.fromString(type, Str.toString(value));
+                        } catch (Exception ex) {
+                            SwingUtilities.invokeLater(()->{
+                                SwingUtils.showException(this, ex);
+                            });
+                            //If value cannot be Converted to type, restore old value 
+                            //updateMetadata();                            
+                        }
+                        try {
                             manager.addMetadata(key, value);
                         } catch (IOException ex) {
                             Logger.getLogger(SessionPanel.class.getName()).log(Level.WARNING, null, ex);
-                        }
+                        }                        
                     }
                 }
             }
         });
-        
+
         modelRuns.addTableModelListener((TableModelEvent e) -> {
-            if (!updating){
-                if (e.getType() == TableModelEvent.UPDATE){
-                    int col=e.getColumn();
-                    if (e.getColumn()==0){
-                        int runIndex = e.getFirstRow();                              
+            if (!updating) {
+                if (e.getType() == TableModelEvent.UPDATE) {
+                    int col = e.getColumn();
+                    if (e.getColumn() == 0) {
+                        int runIndex = e.getFirstRow();
                         try {
                             Boolean value = (Boolean) modelRuns.getValueAt(runIndex, 0);
                             scrollRunsTable = false;
@@ -84,18 +98,43 @@ public class SessionPanel extends MonitoredPanel implements SessionManagerListen
                 }
             }
         });
-    }    
-    
+        tableMetadata.getColumnModel().getColumn(1).setCellRenderer(new MetadataValueRenderer());
+    }
+
+    class MetadataValueRenderer extends DefaultTableCellRenderer {
+
+        Color backgroundColor = getBackground();
+        final Color errorColor = Color.red.darker();
+        final Color errorSelectedColor = Color.red.darker().darker();
+
+        @Override
+        public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected,boolean hasFocus, int row, int column) {
+            Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+            try {
+                String key = Str.toString(modelMetadata.getValueAt(row, 0));                        
+                manager.fromString(manager.getMetadataType(key), Str.toString(value));
+                c.setBackground(backgroundColor);  
+            } catch (Exception ex) {
+                if (!isSelected) {
+                    c.setBackground(errorColor);
+                } else {
+                    c.setBackground(errorSelectedColor);
+                }
+            }
+            return c;
+        }
+    }
+
     @Override
     public void onChange(SessionManager.ChangeType type) {
-        SwingUtilities.invokeLater(()->{
-            switch(type){
+        SwingUtilities.invokeLater(() -> {
+            switch (type) {
                 case INFO:
                     updateInfo();
-                    if (scrollRunsTable){
-                        if (modelRuns.getRowCount()>0){
-                            SwingUtils.scrollToVisible(tableRuns, modelRuns.getRowCount()-1, 0);
-                        }                    
+                    if (scrollRunsTable) {
+                        if (modelRuns.getRowCount() > 0) {
+                            SwingUtils.scrollToVisible(tableRuns, modelRuns.getRowCount() - 1, 0);
+                        }
                     } else {
                         scrollRunsTable = true;
                     }
@@ -105,11 +144,11 @@ public class SessionPanel extends MonitoredPanel implements SessionManagerListen
                     break;
             }
         });
-    }    
-    
+    }
+
     @Override
     protected void onShow() {
-        update(); 
+        update();
         manager.addListener(this);
     }
 
@@ -117,89 +156,92 @@ public class SessionPanel extends MonitoredPanel implements SessionManagerListen
     protected void onHide() {
         manager.removeListener(this);
     }
-    
-    
-    public static String getDateStr(Number timestamp){
+
+    public static String getDateStr(Number timestamp) {
         long l = timestamp.longValue();
-        return (l>0) ? Chrono.getTimeStr(l, "dd.MM.YY") : "";
+        return (l > 0) ? Chrono.getTimeStr(l, "dd.MM.YY") : "";
     }
-    
-    public static String getTimeStr(Number timestamp){
+
+    public static String getTimeStr(Number timestamp) {
         long l = timestamp.longValue();
-        return (l>0) ? Chrono.getTimeStr(l, "HH:mm:ss") : "";
+        return (l > 0) ? Chrono.getTimeStr(l, "HH:mm:ss") : "";
     }
-    
-    public static String getDisplayFileName(String file, String home){  
+
+    public static String getDisplayFileName(String file, String home) {
         /*
         if ((home!=null) && IO.isSubPath(file, home)) {
             file = IO.getRelativePath(file, home);
         }        
-        */
+         */
         return file;
-    }    
+    }
 
-    public void update(){
+    public void update() {
         updateInfo();
         updateMetadata();
     }
     volatile boolean updating;
-    public void updateInfo(){
+
+    public void updateInfo() {
         updating = true;
-        try{
+        try {
             textId.setText(Str.toString(manager.getCurrentId()));
             textName.setText(Str.toString(manager.getCurrentName()));
-            try {        
+            try {
                 textStart.setText(getTimeStr(manager.getStart()));
             } catch (Exception ex) {
                 textStart.setText("");
             }
-            try {        
+            try {
                 textState.setText(manager.getState());
             } catch (Exception ex) {
                 textState.setText("");
-            }                        
-            
-            try{
-                List<Map<String, Object>> runs = manager.getRuns();            
+            }
+
+            try {
+                List<Map<String, Object>> runs = manager.getRuns();
                 modelRuns.setNumRows(runs.size());
                 String dataHome = Context.getInstance().getSetup().getDataPath();
-                int index=0;
-                for(int i=0; i<runs.size(); i++ ){
-                    Map<String, Object> run = runs.get(i);                
+                int index = 0;
+                for (int i = 0; i < runs.size(); i++) {
+                    Map<String, Object> run = runs.get(i);
                     modelRuns.setValueAt(run.getOrDefault("enabled", true), index, 0);
-                    modelRuns.setValueAt(getDateStr((Number)run.getOrDefault("start", 0)), index, 1);
-                    modelRuns.setValueAt(getTimeStr((Number)run.getOrDefault("start", 0)), index, 2);
-                    modelRuns.setValueAt(getTimeStr((Number)run.getOrDefault("stop", 0)), index, 3);
+                    modelRuns.setValueAt(getDateStr((Number) run.getOrDefault("start", 0)), index, 1);
+                    modelRuns.setValueAt(getTimeStr((Number) run.getOrDefault("start", 0)), index, 2);
+                    modelRuns.setValueAt(getTimeStr((Number) run.getOrDefault("stop", 0)), index, 3);
                     modelRuns.setValueAt(getDisplayFileName(Str.toString(run.getOrDefault("data", "")), dataHome), index, 4);
                     modelRuns.setValueAt(run.getOrDefault("state", ""), index++, 5);
                 }
-            } catch (Exception ex){
+            } catch (Exception ex) {
                 modelRuns.setNumRows(0);
             }
-        } finally{
+        } finally {
             updating = false;
         }
     }
 
-    public void updateMetadata(){
+    public void updateMetadata() {
         Map<String, Object> metadata;
         updating = true;
-        try {            
-            metadata = manager.getMetadata(false);
+        try {
+            metadata = manager.getMetadata(true);
             Set<Map.Entry<Object, Object>> entries = manager.getMetadataDefinition();
             modelMetadata.setNumRows(entries.size());
-            int index=0;
-            for(Map.Entry entry : entries){
-                modelMetadata.setValueAt(entry.getKey(), index, 0);
-                modelMetadata.setValueAt(metadata.getOrDefault(entry.getKey(), ""), index++, 1);
-                }
+            int index = 0;
+            for (Map.Entry entry : entries) {
+                String key = entry.getKey().toString();
+                Object def = manager.getMetadataDefault(entry);
+                Object value = metadata.getOrDefault(entry.getKey(), def);
+                modelMetadata.setValueAt(key, index, 0);
+                modelMetadata.setValueAt(value, index++, 1);
+            }
         } catch (Exception ex) {
             modelMetadata.setNumRows(0);
-        } finally{
-            updating=false;
+        } finally {
+            updating = false;
         }
-    }    
-    
+    }
+
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -433,6 +475,5 @@ public class SessionPanel extends MonitoredPanel implements SessionManagerListen
     private javax.swing.JTextField textStart;
     private javax.swing.JTextField textState;
     // End of variables declaration//GEN-END:variables
-
 
 }

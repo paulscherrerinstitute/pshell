@@ -1,5 +1,6 @@
 package ch.psi.pshell.swing;
 
+import ch.psi.pshell.core.SessionManager;
 import ch.psi.utils.OrderedProperties;
 import ch.psi.utils.swing.Document;
 import ch.psi.utils.swing.Editor;
@@ -89,7 +90,15 @@ public class MetadataEditor extends Editor {
 
             for (Object key : editor.properties.keySet()){
                 try {
-                        editor.model.addRow(new Object[]{key,editor.properties.getOrDefault(key, editor.knownTypes[0])});
+                    String type = editor.properties.getOrDefault(key, editor.knownTypes[0]).toString().trim();
+                    String def = null;
+                    if (type.contains(";")){
+                        def = type.substring(type.indexOf(";") + 1).trim();
+                        type = type.substring(0, type.indexOf(";")).trim();                        
+                    } else {
+                        def = String.valueOf(SessionManager.getDefaultValue(type));
+                    }
+                    editor.model.addRow(new Object[]{key,type, def});
                 } catch (Exception ex) {
                 }            
             }            
@@ -103,6 +112,10 @@ public class MetadataEditor extends Editor {
             for (int i = 0; i<editor.model.getRowCount();i++ ){
                 String name = editor.model.getValueAt(i, 0).toString();
                 String type = editor.model.getValueAt(i, 1).toString();
+                String def = editor.model.getValueAt(i, 2).toString().trim();
+                if (!def.isBlank()){
+                    type = type + ";" + def;
+                }
                 editor.properties.put(name, type);
             }
             try (FileOutputStream out = new FileOutputStream(fileName)) {
@@ -149,11 +162,11 @@ public class MetadataEditor extends Editor {
 
             },
             new String [] {
-                "Name", "Type"
+                "Name", "Type", "Default Value"
             }
         ) {
             Class[] types = new Class [] {
-                java.lang.String.class, java.lang.String.class
+                java.lang.String.class, java.lang.String.class, java.lang.String.class
             };
 
             public Class getColumnClass(int columnIndex) {
@@ -238,7 +251,7 @@ public class MetadataEditor extends Editor {
     }// </editor-fold>//GEN-END:initComponents
 
     private void buttonInsertActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonInsertActionPerformed
-        model.insertRow(table.getSelectedRow() + 1, new Object[]{"", knownTypes[0]});
+        model.insertRow(table.getSelectedRow() + 1, new Object[]{"", knownTypes[0], ""});
         update();
     }//GEN-LAST:event_buttonInsertActionPerformed
 

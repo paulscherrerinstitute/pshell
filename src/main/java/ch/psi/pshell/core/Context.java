@@ -2897,7 +2897,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
         if (location==null){
             location = "/";
         }
-        Map<String, Object> metadata = getSessionManager().getMetadata(false);
+        Map<String, Object> metadata = getSessionManager().getMetadata(true);
         for (String key : metadata.keySet()) {
             Object value = metadata.get(key);
             if (value != null) {
