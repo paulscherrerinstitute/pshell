@@ -223,6 +223,10 @@ public class SessionManager extends ObservableBase<SessionManager.SessionManager
         return getStart(getCurrentId());
     }
     
+    public long getStop(int id) throws IOException {
+         return (Long) getInfo(id).get("stop");
+    }
+
     public String getRoot(int id) throws IOException {
         return (String) getInfo(id).getOrDefault("root", Context.getInstance().getSetup().getDataPath());
     }
@@ -761,7 +765,7 @@ public class SessionManager extends ObservableBase<SessionManager.SessionManager
 
     void assertStarted() throws IOException {
         if (!isStarted()) {
-            throw new IOException("Session not stated");
+            throw new IOException("Session not started");
         }
     }
 

@@ -3,6 +3,7 @@ package ch.psi.pshell.swing;
 import ch.psi.pshell.core.Context;
 import ch.psi.pshell.core.SessionManager;
 import ch.psi.utils.IO;
+import ch.psi.utils.SciCat;
 import ch.psi.utils.Str;
 import ch.psi.utils.swing.StandardDialog;
 import ch.psi.utils.swing.SwingUtils;
@@ -36,6 +37,8 @@ public class SessionsDialog extends StandardDialog {
     final DefaultTableModel modelMetadata;
     final DefaultTableModel modelRuns;
     final DefaultTableModel modelFiles;
+    
+    final SciCat sciCat;
     
     volatile boolean updating;
     
@@ -93,7 +96,12 @@ public class SessionsDialog extends StandardDialog {
                     }
                 }
             }
-        });            
+        });     
+        
+        sciCat= new SciCat(Context.getInstance().getSetup().expandPath("{config}/scicat.properties"));
+        textScicatLocation.setText(sciCat.getConfig().creationLocation);
+        textScicatGroup.setText(sciCat.getConfig().ownerGroup);        
+        
     }
         
     void updateButtons(){
@@ -239,9 +247,9 @@ public class SessionsDialog extends StandardDialog {
         jPanel2 = new javax.swing.JPanel();
         buttonScicatIngestion = new javax.swing.JButton();
         jLabel1 = new javax.swing.JLabel();
-        jTextField1 = new javax.swing.JTextField();
+        textScicatLocation = new javax.swing.JTextField();
         jLabel2 = new javax.swing.JLabel();
-        jTextField2 = new javax.swing.JTextField();
+        textScicatGroup = new javax.swing.JTextField();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
 
@@ -521,8 +529,20 @@ public class SessionsDialog extends StandardDialog {
         jLabel1.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
         jLabel1.setText("Creation Location:");
 
+        textScicatLocation.addKeyListener(new java.awt.event.KeyAdapter() {
+            public void keyReleased(java.awt.event.KeyEvent evt) {
+                textScicatLocationKeyReleased(evt);
+            }
+        });
+
         jLabel2.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
         jLabel2.setText("Owner Group:");
+
+        textScicatGroup.addKeyListener(new java.awt.event.KeyAdapter() {
+            public void keyReleased(java.awt.event.KeyEvent evt) {
+                textScicatGroupKeyReleased(evt);
+            }
+        });
 
         javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
         jPanel2.setLayout(jPanel2Layout);
@@ -534,17 +554,17 @@ public class SessionsDialog extends StandardDialog {
                     .addGroup(jPanel2Layout.createSequentialGroup()
                         .addComponent(jLabel1)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jTextField1, javax.swing.GroupLayout.PREFERRED_SIZE, 185, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addComponent(textScicatLocation, javax.swing.GroupLayout.PREFERRED_SIZE, 185, javax.swing.GroupLayout.PREFERRED_SIZE))
                     .addGroup(jPanel2Layout.createSequentialGroup()
                         .addComponent(jLabel2)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jTextField2, javax.swing.GroupLayout.PREFERRED_SIZE, 185, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        .addComponent(textScicatGroup, javax.swing.GroupLayout.PREFERRED_SIZE, 185, javax.swing.GroupLayout.PREFERRED_SIZE)))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 117, Short.MAX_VALUE)
                 .addComponent(buttonScicatIngestion)
                 .addGap(20, 20, 20))
         );
 
-        jPanel2Layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {jTextField1, jTextField2});
+        jPanel2Layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {textScicatGroup, textScicatLocation});
 
         jPanel2Layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {jLabel1, jLabel2});
 
@@ -560,11 +580,11 @@ public class SessionsDialog extends StandardDialog {
                         .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(jLabel1)
-                            .addComponent(jTextField1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addComponent(textScicatLocation, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(jLabel2)
-                            .addComponent(jTextField2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))))
+                            .addComponent(textScicatGroup, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))))
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
@@ -675,7 +695,18 @@ public class SessionsDialog extends StandardDialog {
     }//GEN-LAST:event_buttonZIPActionPerformed
 
     private void buttonScicatIngestionActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonScicatIngestionActionPerformed
-        // TODO add your handling code here:
+        try {            
+            sciCat.setSourceFolder(manager.getRoot(currentSession));
+            sciCat.setDatasetType(SciCat.DatasetType.raw);
+            sciCat.setCreationLocation(textScicatLocation.getText());
+            sciCat.setOwnerGroup(textScicatGroup.getText());    
+            sciCat.setFiles(manager.getFileListAtRoot(currentSession));
+            sciCat.setMetadata(manager.getMetadata(currentSession));
+            sciCat.setInfo(manager.getName(currentSession), manager.getStart(currentSession), manager.getStop(currentSession));            
+            sciCat.ingest();
+        } catch (Exception ex) {
+            SwingUtils.showException(this, ex);
+        }  
     }//GEN-LAST:event_buttonScicatIngestionActionPerformed
 
     private void tableFilesKeyReleased(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_tableFilesKeyReleased
@@ -685,6 +716,22 @@ public class SessionsDialog extends StandardDialog {
     private void tableFilesMouseReleased(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_tableFilesMouseReleased
         updateButtons();
     }//GEN-LAST:event_tableFilesMouseReleased
+
+    private void textScicatLocationKeyReleased(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_textScicatLocationKeyReleased
+        try {
+            sciCat.setCreationLocation(textScicatLocation.getText());
+        } catch (IOException ex) {
+            SwingUtils.showException(this, ex);
+        }
+    }//GEN-LAST:event_textScicatLocationKeyReleased
+
+    private void textScicatGroupKeyReleased(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_textScicatGroupKeyReleased
+        try {
+            sciCat.setOwnerGroup(textScicatGroup.getText());
+        } catch (IOException ex) {
+            SwingUtils.showException(this, ex);
+        }
+    }//GEN-LAST:event_textScicatGroupKeyReleased
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton buttonAddFile;
@@ -702,8 +749,6 @@ public class SessionsDialog extends StandardDialog {
     private javax.swing.JScrollPane jScrollPane4;
     private javax.swing.JSplitPane jSplitPane1;
     private javax.swing.JTabbedPane jTabbedPane1;
-    private javax.swing.JTextField jTextField1;
-    private javax.swing.JTextField jTextField2;
     private javax.swing.JPanel panelArchive;
     private javax.swing.JPanel panelFiles;
     private javax.swing.JPanel panelMetadata;
@@ -713,5 +758,7 @@ public class SessionsDialog extends StandardDialog {
     private javax.swing.JTable tableMetadata;
     private javax.swing.JTable tableRuns;
     private javax.swing.JTable tableSessions;
+    private javax.swing.JTextField textScicatGroup;
+    private javax.swing.JTextField textScicatLocation;
     // End of variables declaration//GEN-END:variables
 }
