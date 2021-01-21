@@ -129,18 +129,27 @@ public class IO {
             }
         }
     }
-
+    
     public static void createZipFile(File zip, List<File> files) throws IOException {
+        createZipFile(zip, files, null);
+    }
+
+    public static void createZipFile(File zip, List<File> files, File root) throws IOException {
         try (FileOutputStream fos = new FileOutputStream(zip.getCanonicalPath())) {
             try (ZipOutputStream zos = new ZipOutputStream(fos)) {
                 final int BUFFER_SIZE = 0x10000;
                 byte data[] = new byte[BUFFER_SIZE];
                 int count;
+                
                 for (File file : files) {
                     if (file.isFile()) {
                         try (FileInputStream fis = new FileInputStream(file)) {
-                            try (BufferedInputStream bis = new BufferedInputStream(fis, BUFFER_SIZE)) {
-                                ZipEntry ze = new ZipEntry(file.getName());
+                            try (BufferedInputStream bis = new BufferedInputStream(fis, BUFFER_SIZE)) {                                
+                                String zipPath = file.getName();
+                                if ((root!=null)&& (IO.isSubPath(file, root))){
+                                    zipPath = IO.getRelativePath(file.toString(), root.toString());
+                                }                                                                
+                                ZipEntry ze = new ZipEntry(zipPath);
                                 zos.putNextEntry(ze);
                                 while ((count = bis.read(data, 0, BUFFER_SIZE)) != -1) {
                                     zos.write(data, 0, count);
@@ -152,8 +161,11 @@ public class IO {
                         String sourceFolder = file.getCanonicalPath();
                         generateZipFileList(sourceFolder, file, fileList);
                         for (String f : fileList) {
-                            String source = file.getName();
-                            ZipEntry ze = new ZipEntry(file.getName() + File.separator + f);
+                            String zipPath = file.getName();
+                             if ((root!=null)&& (IO.isSubPath(file, root))){
+                                 zipPath = IO.getRelativePath(file.toString(), root.toString());
+                             }                                 
+                            ZipEntry ze = new ZipEntry(zipPath + File.separator + f);                            
                             zos.putNextEntry(ze);
                             try (FileInputStream fis = new FileInputStream(sourceFolder + File.separator + f)) {
                                 try (BufferedInputStream bis = new BufferedInputStream(fis, BUFFER_SIZE)) {
@@ -168,7 +180,7 @@ public class IO {
             }
         }
     }
-
+        
     public static String[] getJarContents(String fileName) throws IOException {
         try (JarFile file = new JarFile(fileName)) {
             return getJarContents(file);

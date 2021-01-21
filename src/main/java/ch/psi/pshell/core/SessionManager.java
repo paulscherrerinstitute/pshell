@@ -88,10 +88,10 @@ public class SessionManager extends ObservableBase<SessionManager.SessionManager
     }
 
     public int start(String name) throws IOException {
-        return start(name, new HashMap<>());
+        return start(name, null);
     }
     
-    public int start(String name, Map<String, Object> metadata) throws IOException {        
+    public int start(String name, Map<String, Object> metadata) throws IOException {            
         return start(name, metadata, null);
     }
 
@@ -99,6 +99,9 @@ public class SessionManager extends ObservableBase<SessionManager.SessionManager
         stop();
         if ((name == null) || name.isBlank()){
             name = "";
+        }
+        if (metadata == null){
+            metadata = getMetadataDefault();
         }
         if ((root == null) || root.isBlank()){
             root = Context.getInstance().getSetup().getDataPath();
@@ -400,6 +403,13 @@ public class SessionManager extends ObservableBase<SessionManager.SessionManager
             return "";
     }
     
+    public Map<String, Object> getMetadataDefault() {
+        Map<String, Object> ret = new HashMap();
+        for (Map.Entry entry : getMetadataDefinition()) {
+            ret.put(entry.getKey().toString(),getMetadataDefault(entry));
+        }    
+        return ret;
+    }
     
     public void onMetadataDefinitionChanged() {
         try {
@@ -586,18 +596,18 @@ public class SessionManager extends ObservableBase<SessionManager.SessionManager
         return ret;
     }
     
-    public void createZipFile(int id, File file) throws IOException{
-        List<String> names = getFileList(id);
+    public void createZipFile(int id, File file, boolean preserveDirectoryStructure) throws IOException{
+        List<String> names = getFileList(id, false);
         List<File> files = new ArrayList<>();
         for (String name: names){
-            File f = new File(name);
+            File f = new File(name); 
             if (f.exists()){
                 files.add(f);
             } else {
                 Logger.getLogger(SessionManager.class.getName()).warning("Invalid data file: " + f.toString());
             }
         }
-        IO.createZipFile(file, files);
+        IO.createZipFile(file, files, preserveDirectoryStructure ? new File(getRoot(id)): null);
     }    
     
     public String getState() throws IOException {
