@@ -61,21 +61,7 @@ public class SessionPanel extends MonitoredPanel implements SessionManagerListen
                         int row = e.getFirstRow();
                         String key = Str.toString(modelMetadata.getValueAt(row, 0));
                         Object value = modelMetadata.getValueAt(row, 1);
-                        try {
-                            MetadataType type = manager.getMetadataType(key);
-                            manager.fromString(type, Str.toString(value));
-                        } catch (Exception ex) {
-                            SwingUtilities.invokeLater(()->{
-                                SwingUtils.showException(this, ex);
-                            });
-                            //If value cannot be Converted to type, restore old value 
-                            //updateMetadata();                            
-                        }
-                        try {
-                            manager.addMetadata(key, value);
-                        } catch (IOException ex) {
-                            Logger.getLogger(SessionPanel.class.getName()).log(Level.WARNING, null, ex);
-                        }                        
+                        addMetadata(key, value);
                     }
                 }
             }
@@ -99,6 +85,56 @@ public class SessionPanel extends MonitoredPanel implements SessionManagerListen
             }
         });
         tableMetadata.getColumnModel().getColumn(1).setCellRenderer(new MetadataValueRenderer());
+        
+        /*
+        tableMetadata.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                try {
+                    if ((e.getClickCount() == 2) && (!e.isPopupTrigger())) {
+                        int row = tableMetadata.getSelectedRow();
+                        int col = tableMetadata.getSelectedColumn();
+                        if ((col == 0) && (row >= 0)) {
+                            String key = String.valueOf(tableMetadata.getModel().getValueAt(row, 0));
+                            String value = String.valueOf(tableMetadata.getModel().getValueAt(row, 1));
+                            MetadataType type = manager.getMetadataType(key);
+                            if (type == MetadataType.Map) {
+                                TextEditor editor = new TextEditor();
+                                editor.setText(value);
+                                editor.setTitle(key);
+                                Editor.EditorDialog dlg = editor.getDialog(SwingUtils.getFrame(SessionPanel.this), true);
+                                dlg.setSize(480, 240);
+                                dlg.setLocationRelativeTo(tableMetadata);                                
+                                dlg.setVisible(true);                                
+                                editor.getText();
+                                addMetadata(key, editor.getText());
+                            }
+                        }
+                    }
+                } catch (Exception ex) {
+                    SwingUtils.showException(SessionPanel.this, ex);
+                }
+            }
+        });
+        */
+    }
+
+    void addMetadata(String key, Object value) {
+        try {
+            MetadataType type = manager.getMetadataType(key);
+            manager.fromString(type, Str.toString(value));
+        } catch (Exception ex) {
+            SwingUtilities.invokeLater(() -> {
+                SwingUtils.showException(this, ex);
+            });
+            //If value cannot be Converted to type, restore old value 
+            //updateMetadata();                            
+        }
+        try {
+            manager.addMetadata(key, value);
+        } catch (IOException ex) {
+            Logger.getLogger(SessionPanel.class.getName()).log(Level.WARNING, null, ex);
+        }
     }
 
     class MetadataValueRenderer extends DefaultTableCellRenderer {
@@ -108,12 +144,12 @@ public class SessionPanel extends MonitoredPanel implements SessionManagerListen
         final Color errorSelectedColor = Color.red.darker().darker();
 
         @Override
-        public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected,boolean hasFocus, int row, int column) {
+        public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
             Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
             try {
-                String key = Str.toString(modelMetadata.getValueAt(row, 0));                        
+                String key = Str.toString(modelMetadata.getValueAt(row, 0));
                 manager.fromString(manager.getMetadataType(key), Str.toString(value));
-                c.setBackground(backgroundColor);  
+                c.setBackground(backgroundColor);
             } catch (Exception ex) {
                 if (!isSelected) {
                     c.setBackground(errorColor);
@@ -167,15 +203,6 @@ public class SessionPanel extends MonitoredPanel implements SessionManagerListen
         return (l > 0) ? Chrono.getTimeStr(l, "HH:mm:ss") : "";
     }
 
-    public static String getDisplayFileName(String file, String home) {
-        /*
-        if ((home!=null) && IO.isSubPath(file, home)) {
-            file = IO.getRelativePath(file, home);
-        }        
-         */
-        return file;
-    }
-
     public void update() {
         updateInfo();
         updateMetadata();
@@ -199,9 +226,8 @@ public class SessionPanel extends MonitoredPanel implements SessionManagerListen
             }
 
             try {
-                List<Map<String, Object>> runs = manager.getRuns();
+                List<Map<String, Object>> runs = manager.getRuns(true);
                 modelRuns.setNumRows(runs.size());
-                String dataHome = Context.getInstance().getSetup().getDataPath();
                 int index = 0;
                 for (int i = 0; i < runs.size(); i++) {
                     Map<String, Object> run = runs.get(i);
@@ -209,7 +235,7 @@ public class SessionPanel extends MonitoredPanel implements SessionManagerListen
                     modelRuns.setValueAt(getDateStr((Number) run.getOrDefault("start", 0)), index, 1);
                     modelRuns.setValueAt(getTimeStr((Number) run.getOrDefault("start", 0)), index, 2);
                     modelRuns.setValueAt(getTimeStr((Number) run.getOrDefault("stop", 0)), index, 3);
-                    modelRuns.setValueAt(getDisplayFileName(Str.toString(run.getOrDefault("data", "")), dataHome), index, 4);
+                    modelRuns.setValueAt(Str.toString(run.getOrDefault("data", "")), index, 4);
                     modelRuns.setValueAt(run.getOrDefault("state", ""), index++, 5);
                 }
             } catch (Exception ex) {

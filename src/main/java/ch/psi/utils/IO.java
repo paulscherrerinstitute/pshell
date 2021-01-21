@@ -115,7 +115,7 @@ public class IO {
     }
 
     static void generateZipFileList(String sourceFolder, File node, List<String> fileList) {
-        if (!node.isHidden()){
+        if (!node.isHidden()) {
             if (node.isFile()) {
                 String file = node.toString();
                 String zipEntry = file.substring(sourceFolder.length() + 1, file.length());
@@ -131,15 +131,15 @@ public class IO {
     }
 
     public static void createZipFile(File zip, List<File> files) throws IOException {
-        try (FileOutputStream fos = new FileOutputStream(zip.getCanonicalPath())){
-            try(ZipOutputStream zos = new ZipOutputStream(fos)){
+        try (FileOutputStream fos = new FileOutputStream(zip.getCanonicalPath())) {
+            try (ZipOutputStream zos = new ZipOutputStream(fos)) {
                 final int BUFFER_SIZE = 0x10000;
                 byte data[] = new byte[BUFFER_SIZE];
                 int count;
                 for (File file : files) {
                     if (file.isFile()) {
                         try (FileInputStream fis = new FileInputStream(file)) {
-                            try (BufferedInputStream bis = new BufferedInputStream(fis, BUFFER_SIZE)){
+                            try (BufferedInputStream bis = new BufferedInputStream(fis, BUFFER_SIZE)) {
                                 ZipEntry ze = new ZipEntry(file.getName());
                                 zos.putNextEntry(ze);
                                 while ((count = bis.read(data, 0, BUFFER_SIZE)) != -1) {
@@ -156,7 +156,7 @@ public class IO {
                             ZipEntry ze = new ZipEntry(file.getName() + File.separator + f);
                             zos.putNextEntry(ze);
                             try (FileInputStream fis = new FileInputStream(sourceFolder + File.separator + f)) {
-                                try (BufferedInputStream bis = new BufferedInputStream(fis, BUFFER_SIZE)){
+                                try (BufferedInputStream bis = new BufferedInputStream(fis, BUFFER_SIZE)) {
                                     while ((count = bis.read(data, 0, BUFFER_SIZE)) != -1) {
                                         zos.write(data, 0, count);
                                     }
@@ -166,7 +166,7 @@ public class IO {
                     }
                 }
             }
-        } 
+        }
     }
 
     public static String[] getJarContents(String fileName) throws IOException {
@@ -555,6 +555,15 @@ public class IO {
         }
         return false;
     }
+    
+    public static boolean isSubPath(File path,File referencePath) {
+        try {
+            return path.getCanonicalPath().startsWith(referencePath.getCanonicalPath());
+        } catch (Exception ex) {
+        }
+        return false;
+    }
+           
 
     public static String getRelativePath(String fileName, String referencePath) {
         try {
@@ -568,12 +577,17 @@ public class IO {
                 referenceFile = referenceFile.getCanonicalFile();
             } catch (Exception ex) {
             }
-            return referenceFile.toURI().relativize(file.toURI()).getPath();
+            String ret = referenceFile.toURI().relativize(file.toURI()).getPath();
+            //TODO: sometimes file.toURI() appends a slash  to the name
+            if (ret.endsWith("/") && !fileName.endsWith("/")){
+                ret = ret.substring(0, ret.length()-1);
+            }
+            return ret;
         } catch (Exception ex) {
         }
         return fileName;
     }
-
+    
     //Asserting
     public static void assertExists(String path) throws FileNotFoundException {
         assertExists(new File(path));

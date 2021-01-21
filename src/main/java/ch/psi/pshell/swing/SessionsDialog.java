@@ -100,7 +100,7 @@ public class SessionsDialog extends StandardDialog {
         boolean archiveEnabled = true;
         if (panelSessions.isVisible()){
             int sessionRow = tableSessions.getSelectedRow();
-            String sessionState = (sessionRow>=0) ? Str.toString(modelSessions.getValueAt(sessionRow, 4)) : "";
+            String sessionState = (sessionRow>=0) ? Str.toString(modelSessions.getValueAt(sessionRow, 5)) : "";
             archiveEnabled = sessionState.equals("completed");
         } 
         buttonAddFile.setEnabled(currentSession>=0);
@@ -123,8 +123,9 @@ public class SessionsDialog extends StandardDialog {
                     String name = (String)info.getOrDefault("name", "");
                     String start = SessionPanel.getTimeStr((Number)info.getOrDefault("start", 0));
                     String stop = SessionPanel.getTimeStr((Number)info.getOrDefault("stop", 0));
+                    String root = (String)info.getOrDefault("root", "");
                     String state = (String)info.getOrDefault("state", "unknown");
-                    modelSessions.addRow(new Object[]{String.valueOf(id), name, start, stop, state});
+                    modelSessions.addRow(new Object[]{String.valueOf(id), name, start, stop, root, state});
                 } catch (Exception ex){
                     Logger.getLogger(SessionsDialog.class.getName()).log(Level.WARNING, null, ex);
                 }
@@ -141,7 +142,7 @@ public class SessionsDialog extends StandardDialog {
         updating = true;
         try{        
            currentSession = session; 
-            Map<String, Object> metadata;
+            Map<String, Object> metadata;             
             try {            
                 metadata = manager.getMetadata(session, true);
                 Set<Map.Entry<Object, Object>> entries = manager.getMetadataDefinition();
@@ -157,7 +158,7 @@ public class SessionsDialog extends StandardDialog {
             }
 
             try{
-                List<Map<String, Object>> runs = manager.getRuns(session);            
+                List<Map<String, Object>> runs = manager.getRuns(session, true);            
                 modelRuns.setNumRows(runs.size());
                 String dataHome = Context.getInstance().getSetup().getDataPath();
                 int index=0;
@@ -167,7 +168,7 @@ public class SessionsDialog extends StandardDialog {
                     modelRuns.setValueAt(SessionPanel.getDateStr((Number)run.getOrDefault("start", 0)), index, 1);
                     modelRuns.setValueAt(SessionPanel.getTimeStr((Number)run.getOrDefault("start", 0)), index, 2);
                     modelRuns.setValueAt(SessionPanel.getTimeStr((Number)run.getOrDefault("stop", 0)), index, 3);
-                    modelRuns.setValueAt(SessionPanel.getDisplayFileName(Str.toString(run.getOrDefault("data", "")), dataHome), index, 4);
+                    modelRuns.setValueAt(Str.toString(run.getOrDefault("data", "")), index, 4);
                     modelRuns.setValueAt(run.getOrDefault("state", ""), index++, 5);
                 }
             } catch (Exception ex){
@@ -175,7 +176,7 @@ public class SessionsDialog extends StandardDialog {
             }        
 
             try{
-                List<String> files = manager.getAdditionalFiles(session);            
+                List<String> files = manager.getAdditionalFiles(session, true);            
                 modelFiles.setNumRows(files.size());
                 for (int i=0; i<files.size(); i++){
                     modelFiles.setValueAt(files.get(i), i,0);
@@ -231,7 +232,11 @@ public class SessionsDialog extends StandardDialog {
         buttonAddFile = new javax.swing.JButton();
         buttonRemoveFile = new javax.swing.JButton();
         panelArchive = new javax.swing.JPanel();
+        jTabbedPane1 = new javax.swing.JTabbedPane();
+        jPanel1 = new javax.swing.JPanel();
         buttonZIP = new javax.swing.JButton();
+        checkPreserveDirectoryStructure = new javax.swing.JCheckBox();
+        jPanel2 = new javax.swing.JPanel();
         buttonScicatIngestion = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
@@ -243,14 +248,14 @@ public class SessionsDialog extends StandardDialog {
 
             },
             new String [] {
-                "Id", "Name", "Start", "Finish", "State"
+                "Id", "Name", "Start", "Finish", "Root", "State"
             }
         ) {
             Class[] types = new Class [] {
-                java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.String.class
+                java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.String.class
             };
             boolean[] canEdit = new boolean [] {
-                false, false, false, false, false
+                false, false, false, false, false, false
             };
 
             public Class getColumnClass(int columnIndex) {
@@ -278,7 +283,7 @@ public class SessionsDialog extends StandardDialog {
             panelSessionsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(panelSessionsLayout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 162, Short.MAX_VALUE)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 138, Short.MAX_VALUE)
                 .addContainerGap())
         );
 
@@ -323,7 +328,7 @@ public class SessionsDialog extends StandardDialog {
             panelRunsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, panelRunsLayout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 164, Short.MAX_VALUE)
+                .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 139, Short.MAX_VALUE)
                 .addContainerGap())
         );
 
@@ -372,9 +377,9 @@ public class SessionsDialog extends StandardDialog {
         );
         panelMetadataLayout.setVerticalGroup(
             panelMetadataLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, panelMetadataLayout.createSequentialGroup()
+            .addGroup(panelMetadataLayout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
+                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 119, Short.MAX_VALUE)
                 .addContainerGap())
         );
 
@@ -458,7 +463,7 @@ public class SessionsDialog extends StandardDialog {
             panelFilesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(panelFilesLayout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jScrollPane4, javax.swing.GroupLayout.DEFAULT_SIZE, 127, Short.MAX_VALUE)
+                .addComponent(jScrollPane4, javax.swing.GroupLayout.DEFAULT_SIZE, 84, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(panelFilesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(buttonRemoveFile)
@@ -470,41 +475,73 @@ public class SessionsDialog extends StandardDialog {
 
         panelArchive.setBorder(javax.swing.BorderFactory.createTitledBorder("Archive"));
 
-        buttonZIP.setText("ZIP file");
+        buttonZIP.setText("Genarate ZIP File");
         buttonZIP.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 buttonZIPActionPerformed(evt);
             }
         });
 
-        buttonScicatIngestion.setText("SciCat Ingestion");
+        checkPreserveDirectoryStructure.setText("Preserve root directory structure");
+
+        javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
+        jPanel1.setLayout(jPanel1Layout);
+        jPanel1Layout.setHorizontalGroup(
+            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
+                .addGap(50, 50, 50)
+                .addComponent(checkPreserveDirectoryStructure)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 91, Short.MAX_VALUE)
+                .addComponent(buttonZIP)
+                .addGap(50, 50, 50))
+        );
+        jPanel1Layout.setVerticalGroup(
+            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel1Layout.createSequentialGroup()
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(buttonZIP)
+                    .addComponent(checkPreserveDirectoryStructure))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+        );
+
+        jTabbedPane1.addTab("ZIP", jPanel1);
+
+        buttonScicatIngestion.setText("Ingest");
         buttonScicatIngestion.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 buttonScicatIngestionActionPerformed(evt);
             }
         });
 
+        javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
+        jPanel2.setLayout(jPanel2Layout);
+        jPanel2Layout.setHorizontalGroup(
+            jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel2Layout.createSequentialGroup()
+                .addContainerGap(471, Short.MAX_VALUE)
+                .addComponent(buttonScicatIngestion)
+                .addGap(20, 20, 20))
+        );
+        jPanel2Layout.setVerticalGroup(
+            jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel2Layout.createSequentialGroup()
+                .addGap(18, 18, 18)
+                .addComponent(buttonScicatIngestion)
+                .addContainerGap(22, Short.MAX_VALUE))
+        );
+
+        jTabbedPane1.addTab("SciCat", jPanel2);
+
         javax.swing.GroupLayout panelArchiveLayout = new javax.swing.GroupLayout(panelArchive);
         panelArchive.setLayout(panelArchiveLayout);
         panelArchiveLayout.setHorizontalGroup(
             panelArchiveLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, panelArchiveLayout.createSequentialGroup()
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addComponent(buttonScicatIngestion)
-                .addGap(88, 88, 88)
-                .addComponent(buttonZIP)
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+            .addComponent(jTabbedPane1, javax.swing.GroupLayout.Alignment.TRAILING)
         );
-
-        panelArchiveLayout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {buttonScicatIngestion, buttonZIP});
-
         panelArchiveLayout.setVerticalGroup(
             panelArchiveLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(panelArchiveLayout.createSequentialGroup()
-                .addGroup(panelArchiveLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(buttonZIP)
-                    .addComponent(buttonScicatIngestion))
-                .addGap(12, 12, 12))
+            .addComponent(jTabbedPane1)
         );
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
@@ -617,11 +654,15 @@ public class SessionsDialog extends StandardDialog {
     private javax.swing.JButton buttonRemoveFile;
     private javax.swing.JButton buttonScicatIngestion;
     private javax.swing.JButton buttonZIP;
+    private javax.swing.JCheckBox checkPreserveDirectoryStructure;
+    private javax.swing.JPanel jPanel1;
+    private javax.swing.JPanel jPanel2;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JScrollPane jScrollPane3;
     private javax.swing.JScrollPane jScrollPane4;
     private javax.swing.JSplitPane jSplitPane1;
+    private javax.swing.JTabbedPane jTabbedPane1;
     private javax.swing.JPanel panelArchive;
     private javax.swing.JPanel panelFiles;
     private javax.swing.JPanel panelMetadata;

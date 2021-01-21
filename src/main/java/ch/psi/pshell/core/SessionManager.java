@@ -73,7 +73,7 @@ public class SessionManager extends ObservableBase<SessionManager.SessionManager
     final static String STATE_ERROR = "error";
 
     boolean firstTransfer = true;
-
+    
     int getCurrentCounter() {
         try {
             return Integer.valueOf(Context.getInstance().getVariable(SESSION_COUNTER));
@@ -90,11 +90,23 @@ public class SessionManager extends ObservableBase<SessionManager.SessionManager
     public int start(String name) throws IOException {
         return start(name, new HashMap<>());
     }
+    
+    public int start(String name, Map<String, Object> metadata) throws IOException {        
+        return start(name, metadata, null);
+    }
 
-    public int start(String name, Map<String, Object> metadata) throws IOException {
+    public int start(String name, Map<String, Object> metadata, String root) throws IOException {
         stop();
         if ((name == null) || name.isBlank()){
             name = "";
+        }
+        if ((root == null) || root.isBlank()){
+            root = Context.getInstance().getSetup().getDataPath();
+        }
+        try{
+            root = Paths.get(root).toRealPath().toString();
+        } catch (Exception ex){
+            Logger.getLogger(SessionManager.class.getName()).log(Level.WARNING, null, ex);
         }
         int counter = getCurrentCounter();
         counter++;
@@ -106,6 +118,7 @@ public class SessionManager extends ObservableBase<SessionManager.SessionManager
         info.put("name", name);
         info.put("start", getTimestamp());
         info.put("state", STATE_STARTED);
+        info.put("root", root);
         List runs = new ArrayList();
         info.put("runs", runs);
         setInfo(info);
@@ -206,6 +219,15 @@ public class SessionManager extends ObservableBase<SessionManager.SessionManager
         assertStarted();
         return getStart(getCurrentId());
     }
+    
+    public String getRoot(int id) throws IOException {
+        return (String) getInfo(id).getOrDefault("root", Context.getInstance().getSetup().getDataPath());
+    }
+
+    public String getRoot() throws IOException {
+        assertStarted();
+        return getRoot(getCurrentId());
+    }    
 
     Object getTimestamp() {
         //return Chrono.getTimeStr(System.currentTimeMillis(), "YYYY-MM-dd HH:mm:ss.SSS");
@@ -265,8 +287,8 @@ public class SessionManager extends ObservableBase<SessionManager.SessionManager
                     saveRun = !isPaused();
                     if (saveRun){
                         Map<String, Object> run = new HashMap<>();
-                        run.put("start", getTimestamp());
-                        run.put("data", dataPath.getCanonicalPath());
+                        run.put("start", getTimestamp());                        
+                        run.put("data", getFileName(dataPath.getCanonicalPath(), true));
                         run.put("state", STATE_RUNNING);
                         addRun(run);
                     }
@@ -291,8 +313,8 @@ public class SessionManager extends ObservableBase<SessionManager.SessionManager
                     new Thread(() -> {
                         try {
                             String dest = transferData(origin);
-                            if (isStarted() && updateRun) {
-                                updateLastRun(sessionId, "data", dest);
+                            if (isStarted() && updateRun) {                                
+                                updateLastRun(sessionId, "data", getFileName(dest, true));
                                 updateLastRun(sessionId, "state", STATE_TRANSFERRED);
                             }
                         } catch (Exception ex) {
@@ -417,15 +439,29 @@ public class SessionManager extends ObservableBase<SessionManager.SessionManager
     }
 
     public List<Map<String, Object>> getRuns() throws IOException {
-        assertStarted();
-        return getRuns(getCurrentId());
+        return getRuns(false);
     }
 
     public List<Map<String, Object>> getRuns(int id) throws IOException {
+        return getRuns(id, false);
+    }
+    
+    public List<Map<String, Object>> getRuns(boolean relative) throws IOException {
+        return getRuns(getCurrentId(), relative);
+    }
+
+    public List<Map<String, Object>> getRuns(int id, boolean relative) throws IOException {
         Map<String, Object> info = getInfo(id);
         List<Map<String, Object>> runs = (List) info.get("runs");
+        String root = getRoot(id);
+        for (int i=0; i<runs.size(); i++){
+            Map<String, Object> run = runs.get(i);
+            if (run.containsKey("data")){
+                run.put("data",getFileName(Str.toString(run.get("data")), relative, root));
+            }
+        }
         return runs;
-    }
+    }    
     
 
     void addRun(Map<String, Object> value) throws IOException {
@@ -478,26 +514,76 @@ public class SessionManager extends ObservableBase<SessionManager.SessionManager
     }
 
     public List<String> getAdditionalFiles(int id) throws IOException {
-        Map<String, Object> info = getInfo(id);
-        List files = (List) info.getOrDefault("files", new ArrayList<>());
-        return files;
+        return getAdditionalFiles(id, false);
     }
     
+    public List<String> getAdditionalFiles(int id, boolean relative) throws IOException {
+        Map<String, Object> info = getInfo(id);
+        List <String> files = (List) info.getOrDefault("files", new ArrayList<>());
+        
+        String root = getRoot(id);
+        if (relative){
+            for (int i=0; i< files.size(); i++){
+                files.set(i, getFileName(files.get(i), relative, root));
+            }
+        }
+        return files;
+    }
+       
+    public static String getFileName(String filename, boolean relative,  String root) {   
+        if (new File(filename).isAbsolute() == relative){       
+            if (relative){
+                if (IO.isSubPath(filename,root)) {
+                    return IO.getRelativePath(filename, root);
+                } 
+            } else{
+                return Paths.get(root, filename).toString();
+            }        
+        }
+        return filename;
+    }    
+
+    public String getFileName(String filename, boolean relative, int id) throws IOException {    
+        return getFileName(filename, relative, getRoot(id));
+    }        
+    
+    public String getFileName(String filename, boolean relative) throws IOException {    
+        return getFileName(filename, relative, getRoot());
+    }        
+    
     public List<String> getFileList(int id) throws IOException{
+        return getFileList(id, false);        
+    }
+    
+    
+    public List<String> getFileList(int id, boolean relative) throws IOException{
         List<String> ret = new ArrayList();
+        String root = getRoot(id);
         ret.add(Paths.get(getSessionPath(id).toString(), INFO_FILE).toString());
         ret.add(Paths.get(getSessionPath(id).toString(), METADATA_FILE).toString());
         for (Map<String, Object> run : getRuns(id)){
             if (run.containsKey("data")){
                if (Boolean.TRUE.equals(run.getOrDefault("enabled", true))){
-                    ret.add(run.get("data").toString());
+                   ret.add(getFileName(run.get("data").toString(), relative, root));
                }
             }   
         }
         for (String str : getAdditionalFiles(id)){
-            ret.add(str);
+            ret.add(getFileName(str, relative, root));
         }
-        return ret;        
+        return ret;
+    }
+    
+    public List<String> getFileListAtRoot(int id) throws IOException{
+        List<String> ret = new ArrayList<>();
+        for (String name: getFileList(id, true)){
+            if (new File(name).isAbsolute()){
+                Logger.getLogger(SessionManager.class.getName()).warning("File not on data root: " + name);
+            } else{
+                ret.add(name);
+            }
+        }
+        return ret;
     }
     
     public void createZipFile(int id, File file) throws IOException{
@@ -554,6 +640,7 @@ public class SessionManager extends ObservableBase<SessionManager.SessionManager
     }
 
     void addAdditionalFile(int id, String file) throws IOException {
+        file = getFileName(file, true, id);
         List<String> files = getAdditionalFiles(id);
         if (!Arr.containsEqual(files.toArray(), file)) {
             files.add(file);
@@ -672,9 +759,5 @@ public class SessionManager extends ObservableBase<SessionManager.SessionManager
         if (isStarted()) {
             throw new IOException("Session already started");
         }
-    }
-
-    List<File> getFiles() {
-        return null;
     }
 }
