@@ -139,8 +139,8 @@ public class SessionManager extends ObservableBase<SessionManager.SessionManager
         if (isStarted()) {
             int sessionId = getCurrentId();
             Context.getInstance().getCommandManager().onSessionFinished(sessionId);        
-            addInfo("state", STATE_COMPLETED);
-            addInfo("stop", getTimestamp());
+            setInfo("state", STATE_COMPLETED);
+            setInfo("stop", getTimestamp());
             Context.getInstance().setVariable(CURRENT_SESSION, null);
             triggerChanged(ChangeType.STATE);            
         }
@@ -461,24 +461,28 @@ public class SessionManager extends ObservableBase<SessionManager.SessionManager
         }
     }
 
-    void setInfo(Map<String, Object> metadata) throws IOException {
+    void setInfo(Map<String, Object> info) throws IOException {
         assertStarted();
-        setInfo(getCurrentId(), metadata);
+        setInfo(getCurrentId(), info);
     }
 
-    void setInfo(int id, Map<String, Object> metadata) throws IOException {
-        String json = JsonSerializer.encode(metadata);
+    void setInfo(int id, Map<String, Object> info) throws IOException {
+        String json = JsonSerializer.encode(info);
         Files.writeString(Paths.get(getSessionPath(id).toString(), INFO_FILE), json);
         if (id == getCurrentId()) {
             triggerChanged(ChangeType.INFO);
         }
     }
 
-    void addInfo(String key, Object value) throws IOException {
-        Map<String, Object> info = getInfo();
+    public void setInfo(String key, Object value) throws IOException {
+        setInfo(getCurrentId(), key, value);
+    }
+    
+    public void setInfo(int id, String key, Object value) throws IOException {
+        Map<String, Object> info = getInfo(id);
         info.put(key, value);
         setInfo(info);
-    }
+    }  
 
     public List<Map<String, Object>> getRuns() throws IOException {
         return getRuns(false);

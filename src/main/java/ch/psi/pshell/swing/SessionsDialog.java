@@ -2,7 +2,9 @@ package ch.psi.pshell.swing;
 
 import ch.psi.pshell.core.Context;
 import ch.psi.pshell.core.SessionManager;
+import static ch.psi.pshell.core.SessionManager.STATE_COMPLETED;
 import ch.psi.pshell.core.SessionManager.SessionManagerListener;
+import ch.psi.utils.Chrono;
 import ch.psi.utils.IO;
 import ch.psi.utils.SciCat;
 import ch.psi.utils.Str;
@@ -138,7 +140,7 @@ public class SessionsDialog extends StandardDialog implements SessionManagerList
         if (panelSessions.isVisible()){
             int sessionRow = tableSessions.getSelectedRow();
             String sessionState = (sessionRow>=0) ? Str.toString(modelSessions.getValueAt(sessionRow, 5)) : "";
-            archiveEnabled = sessionState.equals("completed");
+            archiveEnabled = sessionState.equals(STATE_COMPLETED);
         } 
         buttonAddFile.setEnabled(currentSession>=0);
         buttonRemoveFile.setEnabled(buttonAddFile.isEnabled() && tableFiles.getSelectedRow()>=0);
@@ -745,7 +747,12 @@ public class SessionsDialog extends StandardDialog implements SessionManagerList
     }//GEN-LAST:event_buttonZIPActionPerformed
 
     private void buttonScicatIngestionActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonScicatIngestionActionPerformed
-        try {            
+        try {        
+            Map<String, Object> info =manager.getInfo(currentSession);
+                if (info.containsKey("ingested")){
+                long timestamp = ((Number)info.get("ingested")).longValue();                
+                throw new Exception("This session was already ingested on " + Chrono.getTimeStr(timestamp, "dd/MM/YYYY HH:mm:ss"));
+            }
             sciCat.setSourceFolder(manager.getRoot(currentSession));
             sciCat.setDatasetType(SciCat.DatasetType.raw);
             sciCat.setCreationLocation(textScicatLocation.getText());
@@ -758,6 +765,7 @@ public class SessionsDialog extends StandardDialog implements SessionManagerList
             String result = null;
             try{
                 result = sciCat.ingest();
+                manager.setInfo(currentSession, "ingested", System.currentTimeMillis());
             } finally{
                 dialogMessage.setVisible(false);
             }
