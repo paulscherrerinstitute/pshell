@@ -2253,6 +2253,7 @@ public class View extends MainFrame {
         menuSessionStart = new javax.swing.JMenuItem();
         menuSessionPause = new javax.swing.JMenuItem();
         menuSessionResume = new javax.swing.JMenuItem();
+        menuSessionCancel = new javax.swing.JMenuItem();
         menuSessionStop = new javax.swing.JMenuItem();
         jSeparator7 = new javax.swing.JPopupMenu.Separator();
         menuSessionsMetadata = new javax.swing.JMenuItem();
@@ -2731,6 +2732,15 @@ public class View extends MainFrame {
             }
         });
         menuSessions.add(menuSessionResume);
+
+        menuSessionCancel.setText(bundle.getString("View.menuSessionCancel.text")); // NOI18N
+        menuSessionCancel.setName("menuSessionCancel"); // NOI18N
+        menuSessionCancel.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                menuSessionCancelActionPerformed(evt);
+            }
+        });
+        menuSessions.add(menuSessionCancel);
 
         menuSessionStop.setText(bundle.getString("View.menuSessionStop.text")); // NOI18N
         menuSessionStop.setName("menuSessionStop"); // NOI18N
@@ -3765,11 +3775,12 @@ public class View extends MainFrame {
                 }
 
                 boolean sessionStarted = context.getSessionManager().isStarted();
-                Boolean paused = context.getSessionManager().isPaused();
+                Boolean paused = sessionStarted ? context.getSessionManager().isPaused(): false;
                 menuSessionStop.setEnabled(sessionStarted);
                 menuSessionStart.setEnabled(!sessionStarted);                
                 menuSessionPause.setEnabled(sessionStarted && !paused);
                 menuSessionResume.setEnabled(sessionStarted && paused);
+                menuSessionCancel.setEnabled(sessionStarted && (context.getSessionManager().getNumberRuns()==0));
             } catch (Exception ex) {
                 showException(ex);
             }
@@ -4822,6 +4833,16 @@ public class View extends MainFrame {
         }
     }//GEN-LAST:event_menuSessionResumeActionPerformed
 
+    private void menuSessionCancelActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuSessionCancelActionPerformed
+        try {
+            if (SwingUtils.showOption(this, "Session", "Do you want to cancel the current session?" , OptionType.YesNo) == OptionResult.Yes) {
+                context.getSessionManager().cancel();
+            }
+        } catch (Exception ex) {
+            showException(ex);
+        }
+    }//GEN-LAST:event_menuSessionCancelActionPerformed
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton buttonAbort;
     private javax.swing.JButton buttonAbout;
@@ -4921,6 +4942,7 @@ public class View extends MainFrame {
     private javax.swing.JMenuItem menuRunNext;
     private javax.swing.JMenuItem menuSave;
     private javax.swing.JMenuItem menuSaveAs;
+    private javax.swing.JMenuItem menuSessionCancel;
     private javax.swing.JMenuItem menuSessionHistory;
     private javax.swing.JMenuItem menuSessionPause;
     private javax.swing.JMenuItem menuSessionResume;

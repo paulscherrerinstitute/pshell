@@ -157,6 +157,19 @@ public class SessionManager extends ObservableBase<SessionManager.SessionManager
         }
     }
     
+    public void cancel() throws IOException {
+        if (isStarted() && (getNumberRuns()==0)) {
+            int sessionId = getCurrentId();
+            Path path = getSessionPath(getCurrentId());
+            IO.deleteRecursive(path.toFile());
+            Context.getInstance().setVariable(SESSION_COUNTER, sessionId-1);
+            Context.getInstance().setVariable(CURRENT_SESSION, null);
+            triggerChanged(ChangeType.STATE);            
+            
+        }
+    }    
+    
+    
     public boolean isPaused() throws IOException {
         if (isStarted()) {
             return getState().equals(STATE_PAUSED);
@@ -499,7 +512,18 @@ public class SessionManager extends ObservableBase<SessionManager.SessionManager
         runs.add(value);
         setInfo(info);
     }
+    
+    
+    public int getNumberRuns(int id) throws IOException{
+        Map<String, Object> info = getInfo(id);
+        List<Map<String, Object>> runs = (List) info.get("runs");
+        return runs.size();
+    }
 
+    public int getNumberRuns() throws IOException{
+        assertStarted();
+        return getNumberRuns(getCurrentId());
+    }
     public boolean updateLastRun(String key, Object value) throws IOException {
         return updateRun(-1, key, value);
     }
