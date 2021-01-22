@@ -6,7 +6,9 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -28,12 +30,9 @@ public class SciCat {
     final public static String JSON_FILE = "metadata.json";
     
     final Map<String, Object> metadata = new HashMap<>();
+    final Map<String, Object> info = new HashMap<>();
     final List<String> files = new ArrayList<>();
-    
-    String name;
-    long start;
-    long stop;
-    
+   
     
     
     public class ScicatConfig extends Config{
@@ -41,7 +40,8 @@ public class SciCat {
         public String sourceFolder = ".";
         public DatasetType type = DatasetType.raw;
         public String ownerGroup = "";
-        public String parameters = "--ingest";
+        public String principalInvestigator = "";
+        public String parameters = "-ingest";
     }
     
     final ScicatConfig config; 
@@ -55,10 +55,9 @@ public class SciCat {
         }
     }
 
-    public void setInfo(String name, long start, long stop){
-        this.name = name;
-        this.start = start;
-        this.stop = stop;        
+    public void setInfo(Map<String, Object> info){
+        this.info.clear();
+        this.info.putAll(info);
     }
     
     
@@ -85,7 +84,12 @@ public class SciCat {
         config.ownerGroup = value;
         config.save();
     }
-
+    
+    public void setPrincipalInvestigator(String value) throws IOException{
+        config.principalInvestigator = value;
+        config.save();
+    }
+    
     public void setParameters(String value) throws IOException{
         config.parameters = value;
         config.save();
@@ -116,8 +120,27 @@ public class SciCat {
         ret.put("sourceFolder", config.sourceFolder);
         ret.put("type", config.type.toString());
         ret.put("ownerGroup", config.ownerGroup);
+        ret.put("principalInvestigator", config.principalInvestigator);
+        
+        if (!ret.containsKey("description")){
+            ret.put("description", info.getOrDefault("name", ""));
+        }
+        if (!ret.containsKey("dataFormat")){
+            ret.put("dataFormat", info.getOrDefault("format", ""));
+        }        
+        if (!ret.containsKey("endTime")){
+            Long stopTimestamp = (Long) info.getOrDefault("stop", System.currentTimeMillis());
+            ret.put("endTime", getDate(stopTimestamp));
+            
+        }        
+        
         return ret;
     }    
+    
+    public static String getDate(long timestamp){
+         return Chrono.getTimeStr(timestamp, "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
+    }
+
     
     public String getJson() throws IOException{
         return JsonSerializer.encode(getJsonMap());

@@ -126,6 +126,8 @@ public class SessionManager extends ObservableBase<SessionManager.SessionManager
         info.put("start", getTimestamp());
         info.put("state", STATE_STARTED);
         info.put("root", root);
+        info.put("format", Context.getInstance().getConfig().dataProvider);
+        info.put("layout", Context.getInstance().getConfig().dataLayout);
         List runs = new ArrayList();
         info.put("runs", runs);
         setInfo(info);
