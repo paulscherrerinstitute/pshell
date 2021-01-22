@@ -5,7 +5,6 @@ import ch.psi.utils.swing.SwingUtils;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.lang.ProcessBuilder.Redirect;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -43,6 +42,7 @@ public class SciCat {
         public String sourceFolder = ".";
         public DatasetType type = DatasetType.raw;
         public String ownerGroup = "";
+        public String parameters = "--ingest";
     }
     
     final ScicatConfig config; 
@@ -85,7 +85,14 @@ public class SciCat {
     public void setOwnerGroup(String value) throws IOException{
         config.ownerGroup = value;
         config.save();
-    }       
+    }
+
+    public void setParameters(String value) throws IOException{
+        config.parameters = value;
+        config.save();
+    }
+
+
     
     public Map<String, Object> getMetadata(){
         return metadata;
@@ -125,28 +132,44 @@ public class SciCat {
     }
     
     
-    public void ingest() throws IOException, InterruptedException { 
+    public String ingest() throws IOException, InterruptedException { 
         String listing = getFileListing();
         String json = getJson();
         Files.writeString(Paths.get(".", FILE_LISTING_FILE), listing);
         Files.writeString(Paths.get(".", JSON_FILE), json);
-        String cmd = "datasetIngestor --ingest metadata.json filelisting.txt";
-        cmd = "ls  metadata.json";
-        //Process p = Runtime.getRuntime().exec(cmd);
-                
-        ProcessBuilder pb =new ProcessBuilder("datasetIngestor", "--ingest", "metadata.json", "filelisting.txt");
-        pb.redirectErrorStream(true); // merges err and out
+        
+        List<String> pars= new ArrayList<>();
+        pars.add("datasetIngestor");
+        for (String par: config.parameters.split(" ")){
+            if (!par.isBlank()){
+                pars.add(par.trim());
+            }
+        }        
+        pars.add("metadata.json");
+        pars.add("filelisting.txt");
+        
+        ProcessBuilder pb = new ProcessBuilder(pars);
         Process p = pb.start();
         p.waitFor();      
-        BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
+        
+        BufferedReader reader = new BufferedReader(new InputStreamReader(p.getErrorStream()));
         StringBuilder builder = new StringBuilder();
         String line = null;
         while ( (line = reader.readLine()) != null) {
-            builder.append(line);
-            builder.append(System.getProperty("line.separator"));
+            builder.append(line).append(Sys.getLineSeparator());
         }
-        String result = builder.toString();   
-        SwingUtils.showMessage(null, "SciCat Ingest", result);
+        String error = builder.toString();
+        if (!error.isBlank()){
+            throw new IOException(error);
+        }
+        
+        reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
+        builder = new StringBuilder();
+        while ( (line = reader.readLine()) != null) {
+            builder.append(line).append(Sys.getLineSeparator());
+        }
+        String result = builder.toString(); 
+        return result;        
     }
 
     

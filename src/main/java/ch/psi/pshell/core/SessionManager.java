@@ -64,13 +64,16 @@ public class SessionManager extends ObservableBase<SessionManager.SessionManager
     final static String INFO_FILE = "info.json";
     final static String METADATA_FILE = "metadata.json";
     
-    final static String STATE_STARTED = "started";
-    final static String STATE_PAUSED = "paused";
-    final static String STATE_COMPLETED = "completed";
-    final static String STATE_RUNNING = "running";
-    final static String STATE_TRANSFERING = "transfering";
-    final static String STATE_TRANSFERRED = "transfered";
-    final static String STATE_ERROR = "error";
+    public final static String STATE_STARTED = "started";
+    public final static String STATE_PAUSED = "paused";
+    public final static String STATE_COMPLETED = "completed";
+    public final static String STATE_RUNNING = "running";
+    public final static String STATE_TRANSFERING = "transfering";
+    public final static String STATE_TRANSFERRED = "transfered";
+    public final static String STATE_ERROR = "error";
+    
+    public final static String UNNAMED_SESSION_NAME = "unnamed";
+    public final static String UNDEFINED_SESSION_NAME = "unknown";
 
     boolean firstTransfer = true;
     
@@ -98,7 +101,7 @@ public class SessionManager extends ObservableBase<SessionManager.SessionManager
     public int start(String name, Map<String, Object> metadata, String root) throws IOException {
         stop();
         if ((name == null) || name.isBlank()){
-            name = "";
+            name = UNNAMED_SESSION_NAME;
         }
         if (metadata == null){
             metadata = getMetadataDefault();
@@ -170,11 +173,15 @@ public class SessionManager extends ObservableBase<SessionManager.SessionManager
     public String getCurrentName() {
         try {
             if (isStarted()) {
-                return Context.getInstance().getVariable(CURRENT_SESSION);
+                String ret = Context.getInstance().getVariable(CURRENT_SESSION);
+                if (ret.isBlank()){
+                    return UNNAMED_SESSION_NAME;                
+                }
+                return ret;
             }
         } catch (Exception ex) {
         }
-        return "null";
+        return UNDEFINED_SESSION_NAME;
     }
 
     public Path getCurrentPath() throws IOException {
@@ -213,6 +220,10 @@ public class SessionManager extends ObservableBase<SessionManager.SessionManager
             return "";
         }
     }
+    public String getName() throws IOException {
+        assertStarted();
+        return getName(getCurrentId());
+    }           
 
     public long getStart(int id) throws IOException {
         return (Long) getInfo(id).get("start");

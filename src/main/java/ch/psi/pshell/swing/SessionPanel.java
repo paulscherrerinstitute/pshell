@@ -213,7 +213,11 @@ public class SessionPanel extends MonitoredPanel implements SessionManagerListen
         updating = true;
         try {
             textId.setText(Str.toString(manager.getCurrentId()));
-            textName.setText(Str.toString(manager.getCurrentName()));
+            try {                
+                textName.setText(Str.toString(manager.getName()));
+            } catch (Exception ex) {
+                textName.setText("");
+            }
             try {
                 textStart.setText(getTimeStr(manager.getStart()));
             } catch (Exception ex) {

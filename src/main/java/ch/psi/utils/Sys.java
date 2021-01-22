@@ -120,6 +120,10 @@ public class Sys {
                 return "so";
         }
     }
+    
+    public static String getLineSeparator() {
+        return System.getProperty("line.separator");
+    }
 
     public static boolean is64bits() {
         return System.getProperty("os.arch").contains("64");
