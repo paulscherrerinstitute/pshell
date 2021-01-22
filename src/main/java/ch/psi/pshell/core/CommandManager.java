@@ -276,30 +276,26 @@ public class CommandManager implements AutoCloseable {
 
     //Callbacks for triggering script handlers to command start/finish
     void onCommandStarted(CommandInfo info) {
-        if (Context.getInstance().config.commandExecutionEvents) {
-            try {
-                String var_name = "_command_info_" + Thread.currentThread().getId();
-                if (Context.getInstance().scriptManager!=null) {
-                    Context.getInstance().scriptManager.getEngine().put(var_name, info);
-                    Context.getInstance().scriptManager.getEngine().eval("on_command_started(" + var_name + ")");
-                }
-            } catch (Exception ex) {
-                Logger.getLogger(CommandManager.class.getName()).log(Level.WARNING, null, ex);
+        try {
+            String var_name = "_command_info_" + Thread.currentThread().getId();
+            if (Context.getInstance().scriptManager!=null) {
+                Context.getInstance().scriptManager.getEngine().put(var_name, info);
+                Context.getInstance().scriptManager.getEngine().eval("on_command_started(" + var_name + ")");
             }
+        } catch (Exception ex) {
+            Logger.getLogger(CommandManager.class.getName()).log(Level.WARNING, null, ex);
         }
     }
 
     void onCommandFinished(CommandInfo info) {
-        if (Context.getInstance().config.commandExecutionEvents) {
-            try {
-                String var_name = "_command_info_" + Thread.currentThread().getId();
-                if (Context.getInstance().scriptManager!=null) {
-                    Context.getInstance().scriptManager.getEngine().put(var_name, info);
-                    Context.getInstance().scriptManager.getEngine().eval("on_command_finished(" + var_name + ")");
-                }
-            } catch (Exception ex) {
-                Logger.getLogger(CommandManager.class.getName()).log(Level.WARNING, null, ex);
+        try {
+            String var_name = "_command_info_" + Thread.currentThread().getId();
+            if (Context.getInstance().scriptManager!=null) {
+                Context.getInstance().scriptManager.getEngine().put(var_name, info);
+                Context.getInstance().scriptManager.getEngine().eval("on_command_finished(" + var_name + ")");
             }
+        } catch (Exception ex) {
+            Logger.getLogger(CommandManager.class.getName()).log(Level.WARNING, null, ex);
         }
         if (Context.getInstance().config.saveCommandStatistics) {
             try {
@@ -317,18 +313,36 @@ public class CommandManager implements AutoCloseable {
     }
 
     void onChangeDataPath(File dataPath) {
-        if (Context.getInstance().config.commandExecutionEvents) {
-            try {
-                String filename = (dataPath==null)? "None" : ("'" + dataPath.getCanonicalPath() + "'");
-                if (Context.getInstance().scriptManager!=null) {
-                    Context.getInstance().scriptManager.getEngine().eval("on_change_data_path(" + filename + ")");
-                }
-            } catch (Exception ex) {
-                Logger.getLogger(CommandManager.class.getName()).log(Level.WARNING, null, ex);
+        try {
+            String filename = (dataPath==null)? "None" : ("'" + dataPath.getCanonicalPath() + "'");
+            if (Context.getInstance().scriptManager!=null) {
+                Context.getInstance().scriptManager.getEngine().eval("on_change_data_path(" + filename + ")");
             }
+        } catch (Exception ex) {
+            Logger.getLogger(CommandManager.class.getName()).log(Level.WARNING, null, ex);
         }
     }
 
+    void onSessionStarted(int id) {
+        try {
+            if (Context.getInstance().scriptManager!=null) {
+                Context.getInstance().scriptManager.getEngine().eval("on_session_started(" + id + ")");
+            }
+        } catch (Exception ex) {
+            Logger.getLogger(CommandManager.class.getName()).log(Level.WARNING, null, ex);
+        }
+    }
+
+    void onSessionFinished(int id) {
+        try {
+            if (Context.getInstance().scriptManager!=null) {
+                Context.getInstance().scriptManager.getEngine().eval("on_session_finished(" + id + ")");
+            }
+        } catch (Exception ex) {
+            Logger.getLogger(CommandManager.class.getName()).log(Level.WARNING, null, ex);
+        }
+    }
+    
     public enum CommandStatisticsFileRange {
         Daily,
         Monthly,

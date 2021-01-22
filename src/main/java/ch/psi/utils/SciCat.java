@@ -1,7 +1,6 @@
 package ch.psi.utils;
 
 import ch.psi.pshell.core.JsonSerializer;
-import ch.psi.utils.swing.SwingUtils;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;

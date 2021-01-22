@@ -16,6 +16,7 @@ import java.awt.Dimension;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -31,6 +32,7 @@ import javax.swing.event.ListSelectionListener;
 import javax.swing.event.TableModelEvent;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.table.DefaultTableModel;
+import org.apache.commons.lang3.tuple.ImmutablePair;
 
 
 public class SessionsDialog extends StandardDialog implements SessionManagerListener{
@@ -182,16 +184,13 @@ public class SessionsDialog extends StandardDialog implements SessionManagerList
         updating = true;
         try{        
            currentSession = session; 
-            Map<String, Object> metadata;             
             try {            
-                metadata = manager.getMetadata(session, true);
-                Set<Map.Entry<Object, Object>> entries = manager.getMetadataDefinition();
-                modelMetadata.setNumRows(entries.size());
-                int index=0;
-                for(Map.Entry entry : entries){
-                    Object def = manager.getMetadataDefault(entry);
-                    modelMetadata.setValueAt(entry.getKey(), index, 0);
-                    modelMetadata.setValueAt(metadata.getOrDefault(entry.getKey(), def), index++, 1);
+                List<ImmutablePair<String,Object>>  metadata= manager.getDisplayableMetadata(session);
+                modelMetadata.setNumRows(metadata.size());
+                int index = 0;
+                for (ImmutablePair<String,Object> entry : metadata) {
+                    modelMetadata.setValueAt(entry.getLeft(), index, 0);
+                    modelMetadata.setValueAt(entry.getRight(), index++, 1);
                 }
             } catch (Exception ex) {
                 modelMetadata.setNumRows(0);

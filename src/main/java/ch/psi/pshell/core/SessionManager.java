@@ -25,6 +25,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.apache.commons.lang3.tuple.ImmutablePair;
 
 public class SessionManager extends ObservableBase<SessionManager.SessionManagerListener> {
 
@@ -114,9 +115,9 @@ public class SessionManager extends ObservableBase<SessionManager.SessionManager
         } catch (Exception ex){
             Logger.getLogger(SessionManager.class.getName()).log(Level.WARNING, null, ex);
         }
-        int counter = getCurrentCounter();
-        counter++;
-        Context.getInstance().setVariable(SESSION_COUNTER, counter);
+        int sessionId = getCurrentCounter();
+        sessionId++;
+        Context.getInstance().setVariable(SESSION_COUNTER, sessionId);
         Context.getInstance().setVariable(CURRENT_SESSION, name);
         Path path = getCurrentPath();
         path.toFile().mkdirs();
@@ -130,15 +131,18 @@ public class SessionManager extends ObservableBase<SessionManager.SessionManager
         setInfo(info);
         setMetadata(metadata);
         triggerChanged(ChangeType.STATE);
-        return counter;
+        Context.getInstance().getCommandManager().onSessionStarted(sessionId);        
+        return sessionId;
     }
 
     public void stop() throws IOException {
         if (isStarted()) {
+            int sessionId = getCurrentId();
+            Context.getInstance().getCommandManager().onSessionFinished(sessionId);        
             addInfo("state", STATE_COMPLETED);
             addInfo("stop", getTimestamp());
             Context.getInstance().setVariable(CURRENT_SESSION, null);
-            triggerChanged(ChangeType.STATE);
+            triggerChanged(ChangeType.STATE);            
         }
     }
     public void pause() throws IOException {
@@ -737,7 +741,7 @@ public class SessionManager extends ObservableBase<SessionManager.SessionManager
         triggerChanged(ChangeType.METADATA);
     }
 
-    public void addMetadata(String key, Object value) throws IOException {
+    public void setMetadata(String key, Object value) throws IOException {
         Map<String, Object> info = getMetadata();
         info.put(key, value);
         setMetadata(info);
@@ -765,6 +769,31 @@ public class SessionManager extends ObservableBase<SessionManager.SessionManager
                 value = toString(value);
                 ret.put(key, value);
             }
+        }
+        return ret;
+    }
+    
+    public  List<ImmutablePair<String,Object>> getDisplayableMetadata() throws IOException{
+        assertStarted();
+        return getDisplayableMetadata(getCurrentId());
+    }
+    
+    public  List<ImmutablePair<String,Object>> getDisplayableMetadata(int id) throws IOException{
+        List<ImmutablePair<String,Object>> ret = new ArrayList<>();
+        Map<String, Object> metadata = getMetadata(id, true);
+        Set<String> keys = new HashSet<>(metadata.keySet());
+        Set<Map.Entry<Object, Object>> entries = getMetadataDefinition();        
+        for (Map.Entry entry : entries) {
+            String key = entry.getKey().toString();
+            Object def = getMetadataDefault(entry);
+            Object value = metadata.getOrDefault(entry.getKey(), def);
+            ret.add(new ImmutablePair(key, value));
+            keys.remove(key);
+        }
+        //Keys not in metadata definition
+        for (String key: keys){
+            Object value = metadata.getOrDefault(key, "");
+            ret.add(new ImmutablePair(key, value));
         }
         return ret;
     }

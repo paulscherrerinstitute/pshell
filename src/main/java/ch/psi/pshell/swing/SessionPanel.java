@@ -11,6 +11,8 @@ import ch.psi.utils.swing.SwingUtils;
 import java.awt.Color;
 import java.awt.Component;
 import java.io.IOException;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -21,6 +23,8 @@ import javax.swing.SwingUtilities;
 import javax.swing.event.TableModelEvent;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.glassfish.jersey.internal.guava.Lists;
 
 /**
  *
@@ -131,7 +135,7 @@ public class SessionPanel extends MonitoredPanel implements SessionManagerListen
             //updateMetadata();                            
         }
         try {
-            manager.addMetadata(key, value);
+            manager.setMetadata(key, value);
         } catch (IOException ex) {
             Logger.getLogger(SessionPanel.class.getName()).log(Level.WARNING, null, ex);
         }
@@ -251,19 +255,14 @@ public class SessionPanel extends MonitoredPanel implements SessionManagerListen
     }
 
     public void updateMetadata() {
-        Map<String, Object> metadata;
         updating = true;
         try {
-            metadata = manager.getMetadata(true);
-            Set<Map.Entry<Object, Object>> entries = manager.getMetadataDefinition();
-            modelMetadata.setNumRows(entries.size());
+            List<ImmutablePair<String,Object>>  metadata= manager.getDisplayableMetadata();
+            modelMetadata.setNumRows(metadata.size());
             int index = 0;
-            for (Map.Entry entry : entries) {
-                String key = entry.getKey().toString();
-                Object def = manager.getMetadataDefault(entry);
-                Object value = metadata.getOrDefault(entry.getKey(), def);
-                modelMetadata.setValueAt(key, index, 0);
-                modelMetadata.setValueAt(value, index++, 1);
+            for (ImmutablePair<String,Object> entry : metadata) {
+                modelMetadata.setValueAt(entry.getLeft(), index, 0);
+                modelMetadata.setValueAt(entry.getRight(), index++, 1);
             }
         } catch (Exception ex) {
             modelMetadata.setNumRows(0);
