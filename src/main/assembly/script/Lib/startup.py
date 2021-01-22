@@ -113,6 +113,8 @@ def get_context():
 
 def on_command_started(info): pass
 def on_command_finished(info): pass
+def on_session_started(id): pass
+def on_session_finished(id): pass
 def on_change_data_path(path): pass
 
 ###################################################################################################
