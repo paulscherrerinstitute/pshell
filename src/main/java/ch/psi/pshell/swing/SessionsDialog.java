@@ -8,7 +8,6 @@ import ch.psi.utils.Chrono;
 import ch.psi.utils.IO;
 import ch.psi.utils.SciCat;
 import ch.psi.utils.Str;
-import ch.psi.utils.Sys;
 import ch.psi.utils.swing.StandardDialog;
 import ch.psi.utils.swing.SwingUtils;
 import ch.psi.utils.swing.SwingUtils.OptionResult;
@@ -19,10 +18,8 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JDialog;
@@ -796,10 +793,13 @@ public class SessionsDialog extends StandardDialog implements SessionManagerList
             } finally{
                 dialogMessage.setVisible(false);
             }
-            SwingUtils.showMessage(this, "SciCat Ingestion", "Success ingesting SciCat dataset" + Sys.getLineSeparator() + result);
+            SwingUtils.showScrollableMessage(this, "SciCat Ingestion", "Success ingesting SciCat dataset", result);
+            Logger.getLogger(SessionPanel.class.getName()).info("Success ingesting SciCat dataset " + currentSession+ "\n" + result);
         } catch (Exception ex) {
-            SwingUtils.showException(this, ex);
+            SwingUtils.showScrollableMessage(this, "SciCat Ingestion", "Error ingesting SciCat dataset", ex.getMessage());
+            Logger.getLogger(SessionPanel.class.getName()).warning( "Error ingesting SciCat dataset " + currentSession+ "\n" + ex.getMessage());
         }  
+        
     }//GEN-LAST:event_buttonScicatIngestionActionPerformed
 
     private void tableFilesKeyReleased(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_tableFilesKeyReleased

@@ -165,12 +165,21 @@ public class SciCat {
         this.files.clear();
         this.files.addAll(files);
     }
+    
+    public String getDefaultName(){
+        String name = info.getOrDefault("name", "").toString();
+        return id + "_" + name;
+    }
+    
+
+    public String getDefaultDesciption(){
+        String name = info.getOrDefault("name", "").toString();
+        return name;
+    }    
 
     public Map<String, Object> getJsonMap() {
         Map ret = new HashMap<>();
-        Map<String, Object> scientificMetadata = new HashMap<>();
-
-        String name = info.getOrDefault("name", "").toString();
+        Map<String, Object> scientificMetadata = new HashMap<>();        
 
         for (String key : metadata.keySet()) {
             if (metadataFields.containsKey(key)) {
@@ -180,17 +189,26 @@ public class SciCat {
             }
         }
 
-        ret.put("creationLocation", config.creationLocation);
-        ret.put("sourceFolder", config.sourceFolder);
-        ret.put("type", config.type.toString());
-        ret.put("ownerGroup", config.ownerGroup);
-        ret.put("principalInvestigator", config.principalInvestigator);
-
+        if (!ret.containsKey("creationLocation")) {
+            ret.put("creationLocation", config.creationLocation);
+        }
+        if (!ret.containsKey("sourceFolder")) {
+            ret.put("sourceFolder", config.sourceFolder);
+        }
+        if (!ret.containsKey("type")) {
+            ret.put("type", config.type.toString());
+        }
+        if (!ret.containsKey("ownerGroup")) {
+            ret.put("ownerGroup", config.ownerGroup);
+        }
+        if (!ret.containsKey("principalInvestigator")) {
+            ret.put("principalInvestigator", config.principalInvestigator);
+        }
         if (!ret.containsKey("datasetName")) {
-            ret.put("datasetName", id + "_" + name);
+            ret.put("datasetName", getDefaultName());
         }
         if (!ret.containsKey("description")) {
-            ret.put("description", name);
+            ret.put("description", getDefaultDesciption());
         }
         if (!ret.containsKey("isPublished")) {
             ret.put("isPublished", true);

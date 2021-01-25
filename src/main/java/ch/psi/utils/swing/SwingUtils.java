@@ -155,27 +155,31 @@ public class SwingUtils {
     }
 
     static public Frame getFrame(Component c) {
-        while (c.getParent() != null) {
-            c = c.getParent();
-        }
+        if (c!=null) {
+            while (c.getParent() != null) {
+                c = c.getParent();
+            }
 
-        while ((c != null) && (c instanceof Window)) {
-            if (c instanceof Frame) {
-                return (Frame) c;
-            } else if (c instanceof Dialog) {
-                c = (((Dialog) c).getOwner());
-            } else {
-                break;
+            while ((c != null) && (c instanceof Window)) {
+                if (c instanceof Frame) {
+                    return (Frame) c;
+                } else if (c instanceof Dialog) {
+                    c = (((Dialog) c).getOwner());
+                } else {
+                    break;
+                }
             }
         }
         return null;
     }
 
     static public Window getWindow(Component c) {
-        while (c.getParent() != null) {
-            c = c.getParent();
-            if (c instanceof Window) {
-                return (Window) c;
+        if (c!=null) {
+            while (c.getParent() != null) {
+                c = c.getParent();
+                if (c instanceof Window) {
+                    return (Window) c;
+                }
             }
         }
         return null;
@@ -442,7 +446,7 @@ public class SwingUtils {
         showExceptionBlocking(parent, ex, null);
     }
 
-    public static void showExceptionBlocking(final Component parent, final Exception ex, String title) {
+    public static void showExceptionBlocking(final Component parent, final Exception ex, final String title) {
         //JOptionPane.showMessageDialog(parent, message, (title == null) ? "Exception" : title, JOptionPane.WARNING_MESSAGE, null);
 
         int max_width = 1000;
@@ -512,7 +516,7 @@ public class SwingUtils {
         showException(parent, ex, null);
     }
 
-    public static void showException(final Component parent, final Exception ex, String title) {
+    public static void showException(final Component parent, final Exception ex, final String title) {
         if (!SwingUtilities.isEventDispatchThread()) {
             SwingUtilities.invokeLater(() -> {
                 showExceptionBlocking(parent, ex, title);
@@ -522,8 +526,54 @@ public class SwingUtils {
         showExceptionBlocking(parent, ex, title);
     }
 
-    public enum OptionType {
+    public static void showScrollableMessageBlocking(final Component parent, final String title, final String description, final String message) {
+        BorderLayout layout = new BorderLayout();
+        layout.setVgap(8);        
+        JPanel panel = new JPanel(layout);        
+        panel.setPreferredSize(new Dimension(600,300));
+        Border padding = BorderFactory.createEmptyBorder(8, 8, 8, 8);
+        panel.setBorder(padding);
+        if (description!=null){
+            JTextArea textDescription = new JTextArea(description);
+            textDescription.setEnabled(false);
+            textDescription.setFont(new JLabel().getFont().deriveFont(Font.BOLD));
+            textDescription.setLineWrap(false);
+            textDescription.setBorder(null);
+            textDescription.setBackground(null);
+            textDescription.setDisabledTextColor(textDescription.getForeground());
+            textDescription.setAutoscrolls(true);
+            panel.add(textDescription, BorderLayout.NORTH);
+        }
+        if (message!=null){
+            JScrollPane scrollDetails = new javax.swing.JScrollPane();
+            JTextArea textMessage = new JTextArea(message);
+            textMessage.setEditable(false);
+            textMessage.setLineWrap(true);
+            textMessage.setRows(12);
+            scrollDetails.setViewportView(textMessage);
+            scrollDetails.setAutoscrolls(true);                        
+            panel.add(scrollDetails, BorderLayout.CENTER);
+        }
+        JOptionPane.showMessageDialog(parent, panel, (title == null) ? "Message" : title, JOptionPane.WARNING_MESSAGE, null);
+        //SwingUtils.showDialog(SwingUtils.getWindow(parent), (title == null) ? "Message" : title, new Dimension(600,400), panel);
+    }
 
+    /**
+     * Safe to call from any thread
+     */
+    public static void showScrollableMessage(final Component parent, final String title, final String description, final String message) {
+        if (!SwingUtilities.isEventDispatchThread()) {
+            SwingUtilities.invokeLater(() -> {
+                showScrollableMessageBlocking(parent, title, description, message);
+            });
+            return;
+        }
+        showScrollableMessageBlocking(parent, title, description, message);
+    }
+    
+    
+    public enum OptionType {
+        
         Default,
         YesNo,
         YesNoCancel,
@@ -669,7 +719,7 @@ public class SwingUtils {
     }
 
     //Automates dialog& frame creation for displaying a component
-    public static JDialog showDialog(final Window parent, final String title, Dimension size, final JComponent content) {
+    public static JDialog showDialog(final Component parent, final String title, Dimension size, final JComponent content) {
         JDialog dialog = null;
         if ((content.getTopLevelAncestor() != null) && (content.getTopLevelAncestor() instanceof JDialog)) {
             dialog = (JDialog) content.getTopLevelAncestor();
@@ -682,7 +732,11 @@ public class SwingUtils {
                     size = new Dimension(480, 240);
                 }
             }
-            dialog = new JDialog(parent);
+            Window parentWindow = null;
+            if ((parent != null) && (parent instanceof Window)){
+                parentWindow = (Window) parent;
+            }
+            dialog = new JDialog(parentWindow);
             JPanel panel = null;
             if (content instanceof JPanel) {
                 panel = (JPanel) content;

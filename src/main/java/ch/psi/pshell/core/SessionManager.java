@@ -637,7 +637,7 @@ public class SessionManager extends ObservableBase<SessionManager.SessionManager
         List<String> ret = new ArrayList<>();
         for (String name: getFileList(id, true)){
             if (new File(name).isAbsolute()){
-                Logger.getLogger(SessionManager.class.getName()).warning("File not on data root: " + name);
+                Logger.getLogger(SessionManager.class.getName()).fine("File not on data root: " + name);
             } else{
                 ret.add(name);
             }
