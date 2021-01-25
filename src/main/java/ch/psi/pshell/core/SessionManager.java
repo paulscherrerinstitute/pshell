@@ -483,7 +483,7 @@ public class SessionManager extends ObservableBase<SessionManager.SessionManager
     public void setInfo(int id, String key, Object value) throws IOException {
         Map<String, Object> info = getInfo(id);
         info.put(key, value);
-        setInfo(info);
+        setInfo(id,info);
     }  
 
     public List<Map<String, Object>> getRuns() throws IOException {

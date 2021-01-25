@@ -18,6 +18,7 @@ import java.awt.Dimension;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -767,9 +768,14 @@ public class SessionsDialog extends StandardDialog implements SessionManagerList
     private void buttonScicatIngestionActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonScicatIngestionActionPerformed
         try {        
             Map<String, Object> info =manager.getInfo(currentSession);
-                if (info.containsKey("ingested")){
-                long timestamp = ((Number)info.get("ingested")).longValue();                
-                throw new Exception("This session was already ingested on " + Chrono.getTimeStr(timestamp, "dd/MM/YYYY HH:mm:ss"));
+           
+            Map<String,Long> ingested = info.containsKey("ingested") ? (Map<String,Long>)info.get("ingested") : new HashMap<>();
+            String env = SciCat.Environment.getFromArguments(textScicatParameters.getText()).toString();
+            for (String ingestedEnv : ingested.keySet()){
+                if (ingestedEnv.equals(env)){
+                    long timestamp = ingested.get(env);                
+                    throw new Exception("This session was already ingested in " + env + " on " + Chrono.getTimeStr(timestamp, "dd/MM/YYYY HH:mm:ss"));
+                }
             }
             sciCat.setSourceFolder(manager.getRoot(currentSession));
             sciCat.setDatasetType(SciCat.DatasetType.raw);
@@ -780,12 +786,13 @@ public class SessionsDialog extends StandardDialog implements SessionManagerList
             
             sciCat.setFiles(manager.getFileListAtRoot(currentSession));
             sciCat.setMetadata(manager.getMetadata(currentSession));
-            sciCat.setInfo(info);            
+            sciCat.setInfo(currentSession, info);            
             JDialog dialogMessage = showMessageDialog("Ingesting SciCat dataset...");
             String result = null;
             try{
                 result = sciCat.ingest();
-                manager.setInfo(currentSession, "ingested", System.currentTimeMillis());
+                ingested.put(env, System.currentTimeMillis());
+                manager.setInfo(currentSession, "ingested", ingested);
             } finally{
                 dialogMessage.setVisible(false);
             }

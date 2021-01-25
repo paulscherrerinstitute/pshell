@@ -1,10 +1,14 @@
 package ch.psi.pshell.swing;
 
 import ch.psi.pshell.core.SessionManager;
+import ch.psi.pshell.core.SessionManager.MetadataType;
 import ch.psi.utils.OrderedProperties;
+import ch.psi.utils.SciCat;
 import ch.psi.utils.swing.Document;
 import ch.psi.utils.swing.Editor;
 import ch.psi.utils.swing.SwingUtils;
+import java.awt.BorderLayout;
+import java.awt.Dimension;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -12,7 +16,10 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.DefaultCellEditor;
 import javax.swing.DefaultComboBoxModel;
+import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
 import javax.swing.event.TableModelEvent;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableColumn;
@@ -49,6 +56,7 @@ public class MetadataEditor extends Editor {
         int cur = table.getSelectedRow();
         buttonDelete.setEnabled((rows > 0) && (cur >= 0) && (!readOnly));
         buttonInsert.setEnabled(!readOnly);
+        buttonScicat.setEnabled(!readOnly);
         buttonOk.setEnabled(!readOnly && getDocument().hasChanged());
     }   
 
@@ -156,6 +164,7 @@ public class MetadataEditor extends Editor {
         buttonDelete = new javax.swing.JButton();
         buttonOk = new javax.swing.JButton();
         buttonCancel = new javax.swing.JButton();
+        buttonScicat = new javax.swing.JButton();
 
         table.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
@@ -217,14 +226,23 @@ public class MetadataEditor extends Editor {
             }
         });
 
+        buttonScicat.setText("SciCat");
+        buttonScicat.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                buttonScicatActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 460, Short.MAX_VALUE)
+            .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 519, Short.MAX_VALUE)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                 .addContainerGap()
                 .addComponent(buttonInsert)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(buttonScicat)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(buttonDelete)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
@@ -245,7 +263,8 @@ public class MetadataEditor extends Editor {
                     .addComponent(buttonDelete)
                     .addComponent(buttonInsert)
                     .addComponent(buttonOk)
-                    .addComponent(buttonCancel))
+                    .addComponent(buttonCancel)
+                    .addComponent(buttonScicat))
                 .addContainerGap())
         );
     }// </editor-fold>//GEN-END:initComponents
@@ -284,11 +303,34 @@ public class MetadataEditor extends Editor {
         closeWindow(true);
     }//GEN-LAST:event_buttonCancelActionPerformed
 
+    private void buttonScicatActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonScicatActionPerformed
+        try {
+            JPanel panel = new JPanel();
+            panel.setLayout(new BorderLayout(0,10));
+            JLabel label = new JLabel("Select the SciCat metadata field");     
+            panel.add(label, BorderLayout.NORTH);        
+            JComboBox comboBox = new JComboBox();
+            ((DefaultComboBoxModel)comboBox.getModel()).addAll(SciCat.metadataFields.keySet());
+            comboBox.setSelectedIndex(0);
+            panel.add(comboBox, BorderLayout.CENTER);        
+            if (SwingUtils.showOption(this, "Session", panel , SwingUtils.OptionType.OkCancel) == SwingUtils.OptionResult.Yes) {                
+                String key = comboBox.getSelectedItem().toString();
+                MetadataType type = SciCat.metadataFields.get(key);
+                Object def = SessionManager.getDefaultValue(type);
+                model.insertRow(table.getSelectedRow() + 1, new Object[]{key,type.toString(), def});
+                update();
+            }
+        } catch (Exception ex) {
+            SwingUtils.showException(this, ex);
+        }
+    }//GEN-LAST:event_buttonScicatActionPerformed
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton buttonCancel;
     private javax.swing.JButton buttonDelete;
     private javax.swing.JButton buttonInsert;
     private javax.swing.JButton buttonOk;
+    private javax.swing.JButton buttonScicat;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JTable table;
     // End of variables declaration//GEN-END:variables
