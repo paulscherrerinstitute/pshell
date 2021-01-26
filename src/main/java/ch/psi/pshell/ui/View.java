@@ -2249,23 +2249,13 @@ public class View extends MainFrame {
         menuSave = new javax.swing.JMenuItem();
         menuSaveAs = new javax.swing.JMenuItem();
         menuAddToQueue = new javax.swing.JMenu();
-        menuSessions = new javax.swing.JMenu();
-        menuSessionStart = new javax.swing.JMenuItem();
-        menuSessionPause = new javax.swing.JMenuItem();
-        menuSessionResume = new javax.swing.JMenuItem();
-        menuSessionCancel = new javax.swing.JMenuItem();
-        menuSessionStop = new javax.swing.JMenuItem();
-        jSeparator7 = new javax.swing.JPopupMenu.Separator();
-        menuSessionsMetadata = new javax.swing.JMenuItem();
-        jSeparator23 = new javax.swing.JPopupMenu.Separator();
-        menuSessionHistory = new javax.swing.JMenuItem();
         menuOpenRecent = new javax.swing.JMenu();
         jSeparator2 = new javax.swing.JPopupMenu.Separator();
         menuImport = new javax.swing.JMenuItem();
         jSeparator3 = new javax.swing.JPopupMenu.Separator();
         menuLogQuery = new javax.swing.JMenuItem();
         menuOpenLogFile = new javax.swing.JMenuItem();
-        jSeparator1 = new javax.swing.JPopupMenu.Separator();
+        jSeparator24 = new javax.swing.JPopupMenu.Separator();
         menuDataFile = new javax.swing.JMenuItem();
         menuPlugins = new javax.swing.JMenuItem();
         menuTasks = new javax.swing.JMenuItem();
@@ -2316,6 +2306,16 @@ public class View extends MainFrame {
         menuStopAll = new javax.swing.JMenuItem();
         jSeparator22 = new javax.swing.JPopupMenu.Separator();
         menuStripChart = new javax.swing.JMenuItem();
+        menuSessions = new javax.swing.JMenu();
+        menuSessionStart = new javax.swing.JMenuItem();
+        menuSessionPause = new javax.swing.JMenuItem();
+        menuSessionResume = new javax.swing.JMenuItem();
+        menuSessionCancel = new javax.swing.JMenuItem();
+        menuSessionStop = new javax.swing.JMenuItem();
+        jSeparator7 = new javax.swing.JPopupMenu.Separator();
+        menuSessionsMetadata = new javax.swing.JMenuItem();
+        jSeparator23 = new javax.swing.JPopupMenu.Separator();
+        menuSessionHistory = new javax.swing.JMenuItem();
         menuVersioning = new javax.swing.JMenu();
         menuSetCurrentBranch = new javax.swing.JMenuItem();
         menuCreateBranch = new javax.swing.JMenuItem();
@@ -2703,80 +2703,6 @@ public class View extends MainFrame {
         menuAddToQueue.setName("menuAddToQueue"); // NOI18N
         menuFile.add(menuAddToQueue);
 
-        menuSessions.setText(bundle.getString("View.menuSessions.text_1")); // NOI18N
-        menuSessions.setName("menuSessions"); // NOI18N
-
-        menuSessionStart.setText(bundle.getString("View.menuSessionStart.text")); // NOI18N
-        menuSessionStart.setName("menuSessionStart"); // NOI18N
-        menuSessionStart.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                menuSessionStartActionPerformed(evt);
-            }
-        });
-        menuSessions.add(menuSessionStart);
-
-        menuSessionPause.setText(bundle.getString("View.menuSessionPause.text")); // NOI18N
-        menuSessionPause.setName("menuSessionPause"); // NOI18N
-        menuSessionPause.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                menuSessionPauseActionPerformed(evt);
-            }
-        });
-        menuSessions.add(menuSessionPause);
-
-        menuSessionResume.setText(bundle.getString("View.menuSessionResume.text")); // NOI18N
-        menuSessionResume.setName("menuSessionResume"); // NOI18N
-        menuSessionResume.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                menuSessionResumeActionPerformed(evt);
-            }
-        });
-        menuSessions.add(menuSessionResume);
-
-        menuSessionCancel.setText(bundle.getString("View.menuSessionCancel.text")); // NOI18N
-        menuSessionCancel.setName("menuSessionCancel"); // NOI18N
-        menuSessionCancel.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                menuSessionCancelActionPerformed(evt);
-            }
-        });
-        menuSessions.add(menuSessionCancel);
-
-        menuSessionStop.setText(bundle.getString("View.menuSessionStop.text")); // NOI18N
-        menuSessionStop.setName("menuSessionStop"); // NOI18N
-        menuSessionStop.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                menuSessionStopbuttonAbortActionPerformed(evt);
-            }
-        });
-        menuSessions.add(menuSessionStop);
-
-        jSeparator7.setName("jSeparator7"); // NOI18N
-        menuSessions.add(jSeparator7);
-
-        menuSessionsMetadata.setText(bundle.getString("View.menuSessionsMetadata.text")); // NOI18N
-        menuSessionsMetadata.setName("menuSessionsMetadata"); // NOI18N
-        menuSessionsMetadata.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                menuSessionsMetadataActionPerformed(evt);
-            }
-        });
-        menuSessions.add(menuSessionsMetadata);
-
-        jSeparator23.setName("jSeparator23"); // NOI18N
-        menuSessions.add(jSeparator23);
-
-        menuSessionHistory.setText(bundle.getString("View.menuSessionHistory.text")); // NOI18N
-        menuSessionHistory.setName("menuSessionHistory"); // NOI18N
-        menuSessionHistory.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                menuSessionHistorybuttonAbortActionPerformed(evt);
-            }
-        });
-        menuSessions.add(menuSessionHistory);
-
-        menuFile.add(menuSessions);
-
         menuOpenRecent.setText(bundle.getString("View.menuOpenRecent.text")); // NOI18N
         menuOpenRecent.setName("menuOpenRecent"); // NOI18N
         menuFile.add(menuOpenRecent);
@@ -2814,8 +2740,8 @@ public class View extends MainFrame {
         });
         menuFile.add(menuOpenLogFile);
 
-        jSeparator1.setName("jSeparator1"); // NOI18N
-        menuFile.add(jSeparator1);
+        jSeparator24.setName("jSeparator24"); // NOI18N
+        menuFile.add(jSeparator24);
 
         menuDataFile.setText(bundle.getString("View.menuDataFile.text")); // NOI18N
         menuDataFile.setName("menuDataFile"); // NOI18N
@@ -3221,6 +3147,85 @@ public class View extends MainFrame {
         menuDevices.add(menuStripChart);
 
         menuBar.add(menuDevices);
+
+        menuSessions.setText(bundle.getString("View.menuSessions.text_1")); // NOI18N
+        menuSessions.setName("menuSessions"); // NOI18N
+        menuSessions.addChangeListener(new javax.swing.event.ChangeListener() {
+            public void stateChanged(javax.swing.event.ChangeEvent evt) {
+                menuSessionsStateChanged(evt);
+            }
+        });
+
+        menuSessionStart.setText(bundle.getString("View.menuSessionStart.text")); // NOI18N
+        menuSessionStart.setName("menuSessionStart"); // NOI18N
+        menuSessionStart.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                menuSessionStartActionPerformed(evt);
+            }
+        });
+        menuSessions.add(menuSessionStart);
+
+        menuSessionPause.setText(bundle.getString("View.menuSessionPause.text")); // NOI18N
+        menuSessionPause.setName("menuSessionPause"); // NOI18N
+        menuSessionPause.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                menuSessionPauseActionPerformed(evt);
+            }
+        });
+        menuSessions.add(menuSessionPause);
+
+        menuSessionResume.setText(bundle.getString("View.menuSessionResume.text")); // NOI18N
+        menuSessionResume.setName("menuSessionResume"); // NOI18N
+        menuSessionResume.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                menuSessionResumeActionPerformed(evt);
+            }
+        });
+        menuSessions.add(menuSessionResume);
+
+        menuSessionCancel.setText(bundle.getString("View.menuSessionCancel.text")); // NOI18N
+        menuSessionCancel.setName("menuSessionCancel"); // NOI18N
+        menuSessionCancel.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                menuSessionCancelActionPerformed(evt);
+            }
+        });
+        menuSessions.add(menuSessionCancel);
+
+        menuSessionStop.setText(bundle.getString("View.menuSessionStop.text")); // NOI18N
+        menuSessionStop.setName("menuSessionStop"); // NOI18N
+        menuSessionStop.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                menuSessionStopbuttonAbortActionPerformed(evt);
+            }
+        });
+        menuSessions.add(menuSessionStop);
+
+        jSeparator7.setName("jSeparator7"); // NOI18N
+        menuSessions.add(jSeparator7);
+
+        menuSessionsMetadata.setText(bundle.getString("View.menuSessionsMetadata.text")); // NOI18N
+        menuSessionsMetadata.setName("menuSessionsMetadata"); // NOI18N
+        menuSessionsMetadata.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                menuSessionsMetadataActionPerformed(evt);
+            }
+        });
+        menuSessions.add(menuSessionsMetadata);
+
+        jSeparator23.setName("jSeparator23"); // NOI18N
+        menuSessions.add(jSeparator23);
+
+        menuSessionHistory.setText(bundle.getString("View.menuSessionHistory.text")); // NOI18N
+        menuSessionHistory.setName("menuSessionHistory"); // NOI18N
+        menuSessionHistory.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                menuSessionHistorybuttonAbortActionPerformed(evt);
+            }
+        });
+        menuSessions.add(menuSessionHistory);
+
+        menuBar.add(menuSessions);
 
         menuVersioning.setText(bundle.getString("View.menuVersioning.text")); // NOI18N
         menuVersioning.setName("menuVersioning"); // NOI18N
@@ -3773,14 +3778,6 @@ public class View extends MainFrame {
                         }
                     }
                 }
-
-                boolean sessionStarted = context.getSessionManager().isStarted();
-                Boolean paused = sessionStarted ? context.getSessionManager().isPaused(): false;
-                menuSessionStop.setEnabled(sessionStarted);
-                menuSessionStart.setEnabled(!sessionStarted);                
-                menuSessionPause.setEnabled(sessionStarted && !paused);
-                menuSessionResume.setEnabled(sessionStarted && paused);
-                menuSessionCancel.setEnabled(sessionStarted && (context.getSessionManager().getNumberRuns()==0));
             } catch (Exception ex) {
                 showException(ex);
             }
@@ -4843,6 +4840,20 @@ public class View extends MainFrame {
         }
     }//GEN-LAST:event_menuSessionCancelActionPerformed
 
+    private void menuSessionsStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_menuSessionsStateChanged
+        try{                
+            boolean sessionStarted = context.getSessionManager().isStarted();
+                Boolean paused = sessionStarted ? context.getSessionManager().isPaused(): false;
+                menuSessionStop.setEnabled(sessionStarted);
+                menuSessionStart.setEnabled(!sessionStarted);                
+                menuSessionPause.setEnabled(sessionStarted && !paused);
+                menuSessionResume.setEnabled(sessionStarted && paused);
+                menuSessionCancel.setEnabled(sessionStarted && (context.getSessionManager().getNumberRuns()==0));
+        } catch (Exception ex) {
+            showException(ex);
+        }
+    }//GEN-LAST:event_menuSessionsStateChanged
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton buttonAbort;
     private javax.swing.JButton buttonAbout;
@@ -4861,7 +4872,6 @@ public class View extends MainFrame {
     private javax.swing.Box.Filler filler2;
     private javax.swing.Box.Filler filler3;
     private ch.psi.pshell.swing.DevicePoolPanel imagingPanel;
-    private javax.swing.JPopupMenu.Separator jSeparator1;
     private javax.swing.JPopupMenu.Separator jSeparator10;
     private javax.swing.JPopupMenu.Separator jSeparator11;
     private javax.swing.JPopupMenu.Separator jSeparator12;
@@ -4877,6 +4887,7 @@ public class View extends MainFrame {
     private javax.swing.JPopupMenu.Separator jSeparator21;
     private javax.swing.JPopupMenu.Separator jSeparator22;
     private javax.swing.JPopupMenu.Separator jSeparator23;
+    private javax.swing.JPopupMenu.Separator jSeparator24;
     private javax.swing.JPopupMenu.Separator jSeparator3;
     private javax.swing.JPopupMenu.Separator jSeparator4;
     private javax.swing.JToolBar.Separator jSeparator5;
