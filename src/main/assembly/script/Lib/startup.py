@@ -1170,6 +1170,15 @@ def get_exec_pars():
     """
     return get_context().getExecutionPars()
 
+def add_data_file(path):
+    """ Adds file to session, if opened. 
+
+    Args:
+         path(str): Relative to data path or absolute.
+    """
+    sm=get_context().sessionManager
+    if sm.started: sm.addAdditionalFile(path)
+
 
 ###################################################################################################
 #EPICS

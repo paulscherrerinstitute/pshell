@@ -37,6 +37,7 @@ These functions provide the script API to many aspects of PShell:
     - set_attribute
     - set_exec_pars
     - get_exec_pars
+    - add_data_file
     - log
 
  * EPICS channel access:

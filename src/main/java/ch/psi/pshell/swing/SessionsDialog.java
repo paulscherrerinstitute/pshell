@@ -108,6 +108,12 @@ public class SessionsDialog extends StandardDialog implements SessionManagerList
         textScicatGroup.setText(sciCat.getConfig().ownerGroup);        
         textScicatParameters.setText(sciCat.getConfig().parameters);   
         textScicatPI.setText(sciCat.getConfig().principalInvestigator);   
+        
+        int sessions = tableSessions.getRowCount();
+        if (sessions>0){
+            tableSessions.setRowSelectionInterval(sessions-1, sessions-1);
+            SwingUtils.scrollToVisible(tableSessions, sessions-1, 0);
+        }
     }
     
     @Override
@@ -136,15 +142,15 @@ public class SessionsDialog extends StandardDialog implements SessionManagerList
         
     void updateButtons(){
         boolean archiveEnabled = true;
-        if (panelSessions.isVisible()){
-            int sessionRow = tableSessions.getSelectedRow();
+        int sessionRow = tableSessions.getSelectedRow();
+        if (panelSessions.isVisible()){            
             String sessionState = (sessionRow>=0) ? Str.toString(modelSessions.getValueAt(sessionRow, 5)) : "";
             archiveEnabled = sessionState.equals(STATE_COMPLETED);
         } 
         buttonAddFile.setEnabled(currentSession>=0);
         buttonRemoveFile.setEnabled(buttonAddFile.isEnabled() && tableFiles.getSelectedRow()>=0);
         
-        buttonZIP.setEnabled(archiveEnabled);
+        buttonZIP.setEnabled(sessionRow>=0); //Allow zipping open sessions
         buttonScicatIngestion.setEnabled(archiveEnabled);
     }
     
