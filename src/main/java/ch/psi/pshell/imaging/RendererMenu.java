@@ -72,7 +72,7 @@ public class RendererMenu extends JPopupMenu {
         Rectangle
     }
 
-    RendererMenu(final Renderer renderer) {
+    RendererMenu(final Renderer renderer) {        
         this.renderer = renderer;
         menuPause = new JCheckBoxMenuItem("Pause");
         menuStatus = new JCheckBoxMenuItem("Status Bar");
@@ -446,10 +446,9 @@ public class RendererMenu extends JPopupMenu {
         add(menuCopyWithOverlays);
         add(menuSaveSnapshot);
         add(menuSnapshotDialog);
-        add(menuPlot);
-        setVisible(true);
+        add(menuPlot);        
 
-        this.addPopupMenuListener(new PopupMenuListener() {
+        addPopupMenuListener(new PopupMenuListener() {
 
             @Override
             public void popupMenuWillBecomeVisible(PopupMenuEvent e) {
@@ -533,8 +532,7 @@ public class RendererMenu extends JPopupMenu {
                 }
             }
 
-        };
-
+        };    
     }
 
     RendererListener integrationListener = new RendererListener() {

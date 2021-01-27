@@ -79,7 +79,6 @@ import ch.psi.pshell.device.Device;
 import ch.psi.pshell.device.GenericDevice;
 import ch.psi.utils.Range;
 import ch.psi.pshell.imaging.Renderer;
-import ch.psi.pshell.imaging.RendererMenu;
 import ch.psi.pshell.imaging.Source;
 import ch.psi.pshell.plot.Plot;
 import ch.psi.pshell.plot.PlotBase;

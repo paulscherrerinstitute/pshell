@@ -268,6 +268,7 @@ public class Renderer extends MonitoredPanel implements ImageListener, ImageBuff
                         triggerMouseReleased(toImageCoord(e.getPoint()));
                     }
                 } catch (Exception ex) {
+                     Logger.getLogger(Renderer.class.getName()).log(Level.WARNING, null, ex);
                 }
             }
 
@@ -287,9 +288,9 @@ public class Renderer extends MonitoredPanel implements ImageListener, ImageBuff
                             triggerMousePressed(new Point(lastClick));
                         }
                     }
-
                     checkPopupMenu(e);
                 } catch (Exception ex) {
+                     Logger.getLogger(Renderer.class.getName()).log(Level.WARNING, null, ex);
                 }
             }
 
@@ -353,7 +354,7 @@ public class Renderer extends MonitoredPanel implements ImageListener, ImageBuff
 
     public JPopupMenu getPopupMenu() {
         if (popupMenu == null) {
-            popupMenu = new RendererMenu(this);
+            popupMenu = new RendererMenu(this);        
         }
         return popupMenu;
     }
