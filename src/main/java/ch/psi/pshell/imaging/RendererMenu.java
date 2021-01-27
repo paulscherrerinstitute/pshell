@@ -63,17 +63,7 @@ public class RendererMenu extends JPopupMenu {
     Overlay selectionOverlay;
     SelectionType selectionType;
     SelectionType integrationType;
-
-    static String imagesFolderName;
-
-    public static void setImageFileFolder(String folderName) {
-        imagesFolderName = folderName;
-    }
-
-    public static String getImageFileFolder() {
-        return imagesFolderName;
-    }
-
+    
     protected enum SelectionType {
 
         Line,
@@ -387,7 +377,7 @@ public class RendererMenu extends JPopupMenu {
         menuSaveSnapshot.addActionListener((ActionEvent e) -> {
             try {
 
-                JFileChooser chooser = new JFileChooser(imagesFolderName);
+                JFileChooser chooser = new JFileChooser(Utils.getSelectedImageFolder());
                 JPanel panel = new JPanel();
                 JCheckBox overlays = new JCheckBox("Overlays");
                 panel.add(overlays);
@@ -399,7 +389,7 @@ public class RendererMenu extends JPopupMenu {
                 chooser.addChoosableFileFilter(new ExtensionFileFilter("JPEG files (*.jpg)", new String[]{"jpg", "jpeg"}));
                 chooser.setAcceptAllFileFilterUsed(false);
                 if (chooser.showSaveDialog(renderer) == JFileChooser.APPROVE_OPTION) {
-
+                    Utils.setSelectedImageFolder(chooser.getSelectedFile().getParent());
                     String filename = chooser.getSelectedFile().getAbsolutePath();
                     String type = "png";
                     String ext = IO.getExtension(chooser.getSelectedFile());

@@ -562,4 +562,17 @@ public class Utils {
         return 255;
     }
 
+    
+    static String selectedImageFolder;
+    
+    public static void setSelectedImageFolder(String folderName) {
+        if (folderName!=null){
+            selectedImageFolder = folderName;
+        }                
+    }
+
+    public static String getSelectedImageFolder() {
+        return selectedImageFolder;
+    }
+    
 }

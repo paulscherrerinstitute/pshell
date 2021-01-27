@@ -1,6 +1,7 @@
 package ch.psi.pshell.plot;
 
 import ch.psi.pshell.imaging.Colormap;
+import ch.psi.pshell.imaging.Utils;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
@@ -69,7 +70,8 @@ abstract public class PlotBase<T extends PlotSeries> extends MonitoredPanel impl
     protected static Font TICK_LABEL_FONT = new Font(Font.SANS_SERIF, 0, 10);
     protected static Font LABEL_FONT = new Font(Font.SANS_SERIF, 0, 11);
     
-
+    public static boolean UPDATE_IMAGE_FOLDER = true;
+    
     final Class seriesType;
 
     protected PlotBase(Class<T> seriesType) {
@@ -99,17 +101,7 @@ abstract public class PlotBase<T extends PlotSeries> extends MonitoredPanel impl
         instantiated = true;
         executor = offscreen ? Executors.newSingleThreadExecutor(new NamedThreadFactory("Offscreen plot update task")) : null;
     }
-
-    static String imagesFolderName;
-
-    public static void setImageFileFolder(String folderName) {
-        imagesFolderName = folderName;
-    }
-
-    public static String getImageFileFolder() {
-        return imagesFolderName;
-    }
-
+    
     String title;
 
     @Override
@@ -289,7 +281,7 @@ abstract public class PlotBase<T extends PlotSeries> extends MonitoredPanel impl
         saveSnapshot.addActionListener((ActionEvent e) -> {
             try {
 
-                JFileChooser chooser = new JFileChooser(imagesFolderName);
+                JFileChooser chooser = new JFileChooser(Utils.getSelectedImageFolder());
                 chooser.addChoosableFileFilter(new ExtensionFileFilter("PNG files (*.png)", new String[]{"png"}));
                 chooser.addChoosableFileFilter(new ExtensionFileFilter("Bitmap files (*.bmp)", new String[]{"bmp"}));
                 chooser.addChoosableFileFilter(new ExtensionFileFilter("GIF files (*.gif)", new String[]{"gif"}));
@@ -297,7 +289,7 @@ abstract public class PlotBase<T extends PlotSeries> extends MonitoredPanel impl
                 chooser.addChoosableFileFilter(new ExtensionFileFilter("JPEG files (*.jpg)", new String[]{"jpg", "jpeg"}));
                 chooser.setAcceptAllFileFilterUsed(false);
                 if (chooser.showSaveDialog(PlotBase.this) == JFileChooser.APPROVE_OPTION) {
-
+                    Utils.setSelectedImageFolder(chooser.getSelectedFile().getParent());
                     String filename = chooser.getSelectedFile().getAbsolutePath();
                     String type = "png";
                     String ext = IO.getExtension(chooser.getSelectedFile());

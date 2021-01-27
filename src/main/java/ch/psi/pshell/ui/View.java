@@ -127,6 +127,7 @@ import ch.psi.pshell.core.LogManager;
 import ch.psi.pshell.core.SessionManager;
 import ch.psi.pshell.core.SessionManager.ChangeType;
 import ch.psi.pshell.imaging.FileSource;
+import ch.psi.pshell.imaging.Utils;
 import ch.psi.pshell.scripting.ViewPreference.PlotPreferences;
 import ch.psi.pshell.swing.DataPanel;
 import ch.psi.pshell.swing.Executor;
@@ -324,8 +325,7 @@ public class View extends MainFrame {
             }
         });
         menuPull.setVisible(false); //Disabling this menu because may be dangerous for users have such easy access
-        PlotBase.setImageFileFolder(context.getSetup().getImagesPath());
-        RendererMenu.setImageFileFolder(context.getSetup().getImagesPath());
+        Utils.setSelectedImageFolder(context.getSetup().getImagesPath());
         toolBar.setRollover(true);
 
         if (App.isPlotOnly()) {
