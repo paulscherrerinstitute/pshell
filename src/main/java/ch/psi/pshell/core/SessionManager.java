@@ -117,10 +117,9 @@ public class SessionManager extends ObservableBase<SessionManager.SessionManager
         }
         int sessionId = getCurrentCounter();
         sessionId++;
+        createSessionPath(sessionId);        
         Context.getInstance().setVariable(SESSION_COUNTER, sessionId);
-        Context.getInstance().setVariable(CURRENT_SESSION, name);
-        Path path = getCurrentPath();
-        path.toFile().mkdirs();
+        Context.getInstance().setVariable(CURRENT_SESSION, name);        
         Map info = new HashMap<String, Object>();
         info.put("name", name);
         info.put("start", getTimestamp());
@@ -141,8 +140,12 @@ public class SessionManager extends ObservableBase<SessionManager.SessionManager
         if (isStarted()) {
             int sessionId = getCurrentId();
             Context.getInstance().getCommandManager().onSessionFinished(sessionId);        
-            setInfo("state", STATE_COMPLETED);
-            setInfo("stop", getTimestamp());
+            try{
+                setInfo("state", STATE_COMPLETED);
+                setInfo("stop", getTimestamp());
+            } catch (Exception ex){
+                Logger.getLogger(SessionManager.class.getName()).log(Level.WARNING, null, ex);
+            }
             Context.getInstance().setVariable(CURRENT_SESSION, null);
             triggerChanged(ChangeType.STATE);            
         }
@@ -173,10 +176,13 @@ public class SessionManager extends ObservableBase<SessionManager.SessionManager
     
     
     public boolean isPaused() throws IOException {
-        if (isStarted()) {
-            return getState().equals(STATE_PAUSED);
+        try {
+            if (isStarted()) {
+                return getState().equals(STATE_PAUSED);
+            }            
+        } catch (Exception ex) {
         }
-        return false;
+        return false;     
     }    
 
     public int getCurrentId() {
@@ -203,14 +209,32 @@ public class SessionManager extends ObservableBase<SessionManager.SessionManager
         return UNDEFINED_SESSION_NAME;
     }
 
+    Path createSessionPath(int id) throws IOException {
+        Path path =  _getSessionPath(id);
+        path.toFile().mkdirs();
+        return path;
+    }
+
     public Path getCurrentPath() throws IOException {
         assertStarted();
         return getSessionPath(getCurrentId());
     }
-
-    public Path getSessionPath(int id) throws IOException {
-        return Paths.get(Context.getInstance().getSetup().getUserSessionsPath(), String.valueOf(id));
+    
+    public Path getSessionPath(int id) throws IOException {        
+        Path ret = _getSessionPath(id);
+        if (!ret.toFile().isDirectory()){
+            if (getCurrentId() == id){
+                throw new IOException("Current session folder cannot be found.");
+            } else {
+                throw new IOException("Invalid session id: " + id);
+            }
+        }
+        return ret;
     }
+    
+    Path _getSessionPath(int id) throws IOException {        
+        return Paths.get(Context.getInstance().getSetup().getUserSessionsPath(), String.valueOf(id));
+    }    
 
     public List<Integer> getIDs() {
         List<Integer> ret = new ArrayList<>();
@@ -477,6 +501,7 @@ public class SessionManager extends ObservableBase<SessionManager.SessionManager
     }
 
     public void setInfo(String key, Object value) throws IOException {
+        assertStarted();
         setInfo(getCurrentId(), key, value);
     }
     
@@ -487,7 +512,8 @@ public class SessionManager extends ObservableBase<SessionManager.SessionManager
     }  
 
     public List<Map<String, Object>> getRuns() throws IOException {
-        return getRuns(false);
+        assertStarted();
+        return getRuns(getCurrentId(), false);
     }
 
     public List<Map<String, Object>> getRuns(int id) throws IOException {
@@ -495,6 +521,7 @@ public class SessionManager extends ObservableBase<SessionManager.SessionManager
     }
     
     public List<Map<String, Object>> getRuns(boolean relative) throws IOException {
+        assertStarted();
         return getRuns(getCurrentId(), relative);
     }
 
@@ -571,10 +598,15 @@ public class SessionManager extends ObservableBase<SessionManager.SessionManager
         assertStarted();
         return getAdditionalFiles(getCurrentId());
     }
-
+    
     public List<String> getAdditionalFiles(int id) throws IOException {
         return getAdditionalFiles(id, false);
     }
+    
+    public List<String> getAdditionalFiles(boolean relative) throws IOException {
+        assertStarted();
+        return getAdditionalFiles(getCurrentId(), relative);
+    }    
     
     public List<String> getAdditionalFiles(int id, boolean relative) throws IOException {
         Map<String, Object> info = getInfo(id);
@@ -610,8 +642,18 @@ public class SessionManager extends ObservableBase<SessionManager.SessionManager
         return getFileName(filename, relative, getRoot());
     }        
     
+    public List<String> getFileList() throws IOException{
+        assertStarted();
+        return getFileList(getCurrentId());
+    }
+        
     public List<String> getFileList(int id) throws IOException{
         return getFileList(id, false);        
+    }    
+    
+    public List<String> getFileList(boolean relative) throws IOException {
+        assertStarted();
+        return getFileList(getCurrentId(), relative);
     }
     
     
@@ -643,6 +685,19 @@ public class SessionManager extends ObservableBase<SessionManager.SessionManager
             }
         }
         return ret;
+    }
+    
+    public void createZipFile(String file, boolean preserveDirectoryStructure) throws IOException{
+        createZipFile(new File(file), preserveDirectoryStructure);
+    }
+    
+    public void createZipFile(File file, boolean preserveDirectoryStructure) throws IOException{
+        assertStarted();
+        createZipFile(getCurrentId(), file, preserveDirectoryStructure);        
+    }
+    
+    public void createZipFile(int id, String file, boolean preserveDirectoryStructure) throws IOException{
+        createZipFile(id, new File(file), preserveDirectoryStructure);
     }
     
     public void createZipFile(int id, File file, boolean preserveDirectoryStructure) throws IOException{
@@ -772,11 +827,16 @@ public class SessionManager extends ObservableBase<SessionManager.SessionManager
     }
 
     public void setMetadata(String key, Object value) throws IOException {
-        Map<String, Object> info = getMetadata();
+        assertStarted();
+        setMetadata(getCurrentId(), key, value);
+    }
+    
+    public void setMetadata(int id, String key, Object value) throws IOException {
+        Map<String, Object> info = getMetadata(id);
         info.put(key, value);
         setMetadata(info);
     }
-
+    
     public Map<String, Object> getMetadata() throws IOException {
         return getMetadata(false);
     }

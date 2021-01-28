@@ -1257,17 +1257,6 @@ function get_exec_pars(){
     return get_context().getExecutionPars()    
 }
 
-function add_data_file(path){
-    /* Adds file to session, if opened. 
-
-    Args:
-         path(str): Relative to data path or absolute.
-    */
-    sm=get_context().getSssionManager()
-    if (sm.isStart())
-        sm.addAdditionalFile(path)
-}
-
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // Epics Channels access
 ///////////////////////////////////////////////////////////////////////////////////////////////////

@@ -4842,14 +4842,14 @@ public class View extends MainFrame {
     private void menuSessionsStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_menuSessionsStateChanged
         try{                
             boolean sessionStarted = context.getSessionManager().isStarted();
-                Boolean paused = sessionStarted ? context.getSessionManager().isPaused(): false;
-                menuSessionStop.setEnabled(sessionStarted);
-                menuSessionStart.setEnabled(!sessionStarted);                
-                menuSessionPause.setEnabled(sessionStarted && !paused);
-                menuSessionResume.setEnabled(sessionStarted && paused);
-                menuSessionCancel.setEnabled(sessionStarted && (context.getSessionManager().getNumberRuns()==0));
+            Boolean paused = sessionStarted ? context.getSessionManager().isPaused(): false;
+            menuSessionStop.setEnabled(sessionStarted);
+            menuSessionStart.setEnabled(!sessionStarted);                
+            menuSessionPause.setEnabled(sessionStarted && !paused);
+            menuSessionResume.setEnabled(sessionStarted && paused);
+            menuSessionCancel.setEnabled(sessionStarted && (context.getSessionManager().getNumberRuns()==0));
         } catch (Exception ex) {
-            showException(ex);
+            menuSessionCancel.setEnabled(false);
         }
     }//GEN-LAST:event_menuSessionsStateChanged
 

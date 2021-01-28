@@ -4,7 +4,6 @@ import ch.psi.pshell.core.Context;
 import ch.psi.pshell.core.SessionManager;
 import static ch.psi.pshell.core.SessionManager.STATE_COMPLETED;
 import ch.psi.pshell.core.SessionManager.SessionManagerListener;
-import ch.psi.utils.Chrono;
 import ch.psi.utils.IO;
 import ch.psi.utils.SciCat;
 import ch.psi.utils.Str;
@@ -103,7 +102,7 @@ public class SessionsDialog extends StandardDialog implements SessionManagerList
             }
         });     
         
-        sciCat= new SciCat(Context.getInstance().getSetup().expandPath("{config}/scicat.properties"));
+        sciCat= new SciCat();
         textScicatLocation.setText(sciCat.getConfig().creationLocation);
         textScicatGroup.setText(sciCat.getConfig().ownerGroup);        
         textScicatParameters.setText(sciCat.getConfig().parameters);   
@@ -769,43 +768,25 @@ public class SessionsDialog extends StandardDialog implements SessionManagerList
     }//GEN-LAST:event_buttonZIPActionPerformed
 
     private void buttonScicatIngestionActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonScicatIngestionActionPerformed
-        try {        
-            Map<String, Object> info =manager.getInfo(currentSession);
-           
-            Map<String,Long> ingested = info.containsKey("ingested") ? (Map<String,Long>)info.get("ingested") : new HashMap<>();
-            String env = SciCat.Environment.getFromArguments(textScicatParameters.getText()).toString();
-            for (String ingestedEnv : ingested.keySet()){
-                if (ingestedEnv.equals(env)){
-                    long timestamp = ingested.get(env);                
-                    throw new Exception("This session was already ingested in " + env + " on " + Chrono.getTimeStr(timestamp, "dd/MM/YYYY HH:mm:ss"));
-                }
-            }
-            sciCat.setSourceFolder(manager.getRoot(currentSession));
-            sciCat.setDatasetType(SciCat.DatasetType.raw);
-            sciCat.setCreationLocation(textScicatLocation.getText());
-            sciCat.setOwnerGroup(textScicatGroup.getText());    
-            sciCat.setPrincipalInvestigator(textScicatPI.getText());
-            sciCat.setParameters(textScicatParameters.getText());            
-            
-            sciCat.setFiles(manager.getFileListAtRoot(currentSession));
-            sciCat.setMetadata(manager.getMetadata(currentSession));
-            sciCat.setInfo(currentSession, info);            
+        try {    
+            SciCat.IngestOutput result = null;
             JDialog dialogMessage = showMessageDialog("Ingesting SciCat dataset...");
-            String result = null;
-            try{
-                result = sciCat.ingest();
-                ingested.put(env, System.currentTimeMillis());
-                manager.setInfo(currentSession, "ingested", ingested);
+            try{                
+                Map<String, Object> metadata = new HashMap<>();
+                metadata.put("creationLocation", textScicatLocation.getText());
+                metadata.put("principalInvestigator", textScicatPI.getText());
+                metadata.put("ownerGroup", textScicatGroup.getText());                
+                result  = sciCat.ingest(currentSession, metadata, textScicatParameters.getText());
             } finally{
                 dialogMessage.setVisible(false);
             }
-            SwingUtils.showScrollableMessage(this, "SciCat Ingestion", "Success ingesting SciCat dataset", result);
-            Logger.getLogger(SessionPanel.class.getName()).info("Success ingesting SciCat dataset " + currentSession+ "\n" + result);
+            String msg = result.success ? "Success ingesting SciCat dataset " + result.datasetId : "Success ingesting SciCat dataset";
+            SwingUtils.showScrollableMessage(this, "SciCat Ingestion", msg, result.output);
+            Logger.getLogger(SessionPanel.class.getName()).info(msg + "\n" + result);
         } catch (Exception ex) {
-            SwingUtils.showScrollableMessage(this, "SciCat Ingestion", "Error ingesting SciCat dataset", ex.getMessage());
-            Logger.getLogger(SessionPanel.class.getName()).warning( "Error ingesting SciCat dataset " + currentSession+ "\n" + ex.getMessage());
-        }  
-        
+            SwingUtils.showException(this, ex);
+            Logger.getLogger(SessionPanel.class.getName()).log(Level.WARNING, null, ex);
+        }          
     }//GEN-LAST:event_buttonScicatIngestionActionPerformed
 
     private void tableFilesKeyReleased(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_tableFilesKeyReleased

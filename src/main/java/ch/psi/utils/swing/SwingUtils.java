@@ -71,6 +71,7 @@ import javax.swing.JTree;
 import javax.swing.JViewport;
 import javax.swing.JWindow;
 import javax.swing.KeyStroke;
+import javax.swing.ScrollPaneConstants;
 import javax.swing.Spring;
 import javax.swing.SpringLayout;
 import javax.swing.SwingUtilities;
@@ -548,7 +549,7 @@ public class SwingUtils {
             JScrollPane scrollDetails = new javax.swing.JScrollPane();
             JTextArea textMessage = new JTextArea(message);
             textMessage.setEditable(false);
-            textMessage.setLineWrap(true);
+            textMessage.setLineWrap(false);
             textMessage.setRows(12);
             scrollDetails.setViewportView(textMessage);
             scrollDetails.setAutoscrolls(true);                        

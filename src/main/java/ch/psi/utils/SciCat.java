@@ -1,6 +1,8 @@
 package ch.psi.utils;
 
+import ch.psi.pshell.core.Context;
 import ch.psi.pshell.core.JsonSerializer;
+import ch.psi.pshell.core.SessionManager;
 import ch.psi.pshell.core.SessionManager.MetadataType;
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -24,6 +26,9 @@ public class SciCat {
         raw,
         derived
     }
+    
+    final public static String DEFAULT_PROPERTIES_FILE = "{config}/scicat.properties";
+    
     final public static String DATASET_TYPE_RAW = "raw";
     final public static String DATASET_TYPE_DERIVED = "derived";
 
@@ -43,12 +48,14 @@ public class SciCat {
         prod;
         public static Environment getFromArguments(String args){
             Environment ret = prod;
-            for (String arg : args.split(" ")){
-                if (arg.equals("-devenv")){
-                   ret =  dev;
-                }
-                if (arg.equals("-testenv")){
-                   ret =  test;
+            if (args!=null){
+                for (String arg : args.split(" ")){
+                    if (arg.equals("-devenv")){
+                       ret =  dev;
+                    }
+                    if (arg.equals("-testenv")){
+                       ret =  test;
+                    }
                 }
             }
             return ret;
@@ -102,7 +109,11 @@ public class SciCat {
     }
 
     final ScicatConfig config;
-
+    
+    public SciCat() {
+        this(Context.getInstance().getSetup().expandPath(DEFAULT_PROPERTIES_FILE));
+    }
+            
     public SciCat(String configurationFile) {
         config = new ScicatConfig();
         try {
@@ -245,8 +256,19 @@ public class SciCat {
         }
         return String.join("\n", files);
     }
+    
+    public static class IngestOutput {
+        IngestOutput(boolean success, String output, String datasetId){
+            this.success = success;
+            this.output = output;
+            this.datasetId = datasetId;
+        }
+        public final boolean success;
+        public final String output;
+        public final String datasetId;
+    }
 
-    public String ingest() throws IOException, InterruptedException {
+    public IngestOutput ingest() throws IOException, InterruptedException {
         String listing = getFileListing();
         String json = getJson();
         Files.writeString(Paths.get(".", FILE_LISTING_FILE), listing);
@@ -263,26 +285,21 @@ public class SciCat {
         pars.add("filelisting.txt");
 
         ProcessBuilder pb = new ProcessBuilder(pars);
-        pb.redirectErrorStream(true);
+        //pb.redirectErrorStream(true);
         Process p = pb.start();
         p.waitFor();
 
         BufferedReader reader;
         StringBuilder builder;
         String line = null;
-
-        /*
-        BufferedReader reader = new BufferedReader(new InputStreamReader(p.getErrorStream()));
-        StringBuilder builder = new StringBuilder();
-        String line = null;
+        
+        reader = new BufferedReader(new InputStreamReader(p.getErrorStream()));
+        builder = new StringBuilder();
         while ( (line = reader.readLine()) != null) {
             builder.append(line).append(Sys.getLineSeparator());
         }
-        String error = builder.toString();
-        if (!error.isBlank()){
-            throw new IOException(error);
-        }
-         */
+        String output = builder.toString();
+         
         reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
         builder = new StringBuilder();
         while ((line = reader.readLine()) != null) {
@@ -290,10 +307,39 @@ public class SciCat {
                 builder.append(line).append(Sys.getLineSeparator());
             }
         }
-        String result = builder.toString();
+        String datasetId = builder.toString();
+        return new IngestOutput(p.exitValue() == 0, output, datasetId);
+    }
+    
+    public IngestOutput ingest(int sessionId, Map<String, Object> metadata, String parameters) throws IOException, InterruptedException {
+        SessionManager manager = Context.getInstance().getSessionManager();
+        Map<String, Object> info =manager.getInfo(sessionId);           
+        Map<String,String> ingested = info.containsKey("ingested") ? (Map<String,String>)info.get("ingested") : new HashMap<>();
+        String env = Environment.getFromArguments(parameters).toString();
+        for (String ingestedEnv : ingested.keySet()){
+            if (ingestedEnv.equals(env)){
+                String id = Str.toString(ingested.get(env));                
+                throw new IOException("This session was already ingested as dataset " + id);
+            }
+        }                    
+        setSourceFolder(manager.getRoot(sessionId));
+        setDatasetType(SciCat.DatasetType.raw);
 
-        if (p.exitValue() != 0) {
-            throw new IOException(result);
+        Map<String, Object> pars = manager.getMetadata(sessionId);
+        if (metadata==null){
+             metadata = new HashMap<>();
+             pars.putAll(metadata);
+        }        
+        if (parameters!=null){
+            setParameters(parameters);              
+        }
+        setMetadata(metadata);
+        setFiles(manager.getFileListAtRoot(sessionId));        
+        setInfo(sessionId, info);            
+        IngestOutput result = ingest();
+        if (result.success){
+            ingested.put(env, result.datasetId);
+            manager.setInfo(sessionId, "ingested", ingested);
         }
         return result;
     }
