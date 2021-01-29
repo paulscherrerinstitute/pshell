@@ -275,22 +275,22 @@ def session_create_zip(file_name, id=None, preserve_folder_structure=True):
     return _sm().createZipFile(file_name, preserve_folder_structure) if id is None else _sm().createZipFile(id, file_name, preserve_folder_structure)
 
 
-def session_ingest_scicat(id, matadata={}, parameters=None):
+def session_ingest_scicat(id, matadata={}):
     """ Ingest a completed session to SciCat
     
     Args:
         id(int): Session id. 
-        creation_location_name(str):  
+        matadata(dict): session metadata 
         
     Returns:
-        Dataset ID in case of success. Otherwise throws an exception.               
+        Tuple (Dataset Name, Dataset ID) in case of success. Otherwise throws an exception.               
     """
     sciCat= SciCat()
-    result  = sciCat.ingest(id, matadata, parameters);
+    result  = sciCat.ingest(id, matadata)
     print result.output
     if not result.success:
         raise  Exception ("Error ingesting session " + str(id))
-    return result.datasetId
+    return result.datasetName, result.datasetId
     
 
 

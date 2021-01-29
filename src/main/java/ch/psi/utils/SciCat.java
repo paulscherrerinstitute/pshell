@@ -35,6 +35,8 @@ public class SciCat {
     final public static String FILE_LISTING_FILE = "filelisting.txt";
     final public static String JSON_FILE = "metadata.json";
 
+    static String DEFAULT_PARAMETERS = "-ingest -allowexistingsource -noninteractive";     
+    
     final Map<String, Object> metadata = new HashMap<>();
     final Map<String, Object> info = new HashMap<>();
     final List<String> files = new ArrayList<>();
@@ -50,17 +52,29 @@ public class SciCat {
             Environment ret = prod;
             if (args!=null){
                 for (String arg : args.split(" ")){
-                    if (arg.equals("-devenv")){
+                    if (arg.equals(dev.getParameter())){
                        ret =  dev;
                     }
-                    if (arg.equals("-testenv")){
+                    if (arg.equals(test.getParameter())){
                        ret =  test;
                     }
                 }
             }
             return ret;
         }
+        public String getParameter(){
+            switch (this){
+                case dev:
+                    return "-devenv";
+                case test:
+                    return "-testenv";
+                default:
+                case prod:
+                    return "";
+            }
+        }              
     }
+    
 
     static {
         Map<String, MetadataType> map = new HashMap<>();
@@ -89,11 +103,12 @@ public class SciCat {
         map.put("endTime	date", MetadataType.String);
         map.put("creationLocation", MetadataType.String);
         map.put("dataFormat", MetadataType.String);
-        map.put("investigator", MetadataType.String);
-        map.put("inputDatasets", MetadataType.List);
-        map.put("usedSoftware", MetadataType.String);
-        map.put("jobParameters", MetadataType.Map);
-        map.put("jobLogData", MetadataType.String);
+        //These are derived metadata parameters
+        //map.put("investigator", MetadataType.String);    
+        //map.put("inputDatasets", MetadataType.List);
+        //map.put("usedSoftware", MetadataType.String);
+        //map.put("jobParameters", MetadataType.Map);
+        //map.put("jobLogData", MetadataType.String);
         map.put("scientificMetadata", MetadataType.Map);
         metadataFields = Collections.unmodifiableMap(map);
     }
@@ -105,7 +120,33 @@ public class SciCat {
         public DatasetType type = DatasetType.raw;
         public String ownerGroup = "";
         public String principalInvestigator = "";
-        public String parameters = "-ingest";
+        public String parameters = DEFAULT_PARAMETERS;
+        public Environment environment = Environment.prod;
+        public String prodParameters = Environment.prod.getParameter() + " -user slssim:slssim";
+        public String testParameters = Environment.test.getParameter() + " -user slssim:slssim";
+        public String devParameters = Environment.dev.getParameter() + " -user slssim:slssim";    
+        
+        public Environment getEnvironment(){
+            if (environment == null){
+                environment = Environment.prod;
+            }
+            return environment;
+        }            
+        
+        public String getEnvironmentParameters(){
+            switch (getEnvironment()){
+                 case dev:
+                    return devParameters;
+                case test:
+                    return testParameters;
+                default:
+                case prod:
+                    return prodParameters;
+            }
+        }
+        public String getParameters(){
+            return getEnvironmentParameters() + " " + parameters;
+        }
     }
 
     final ScicatConfig config;
@@ -163,6 +204,11 @@ public class SciCat {
         config.save();
     }
 
+    public void setEnvironment(Environment value) throws IOException {
+        config.environment = value;
+        config.save();
+    }
+
     public Map<String, Object> getMetadata() {
         return metadata;
     }
@@ -182,15 +228,33 @@ public class SciCat {
         return id + "_" + name;
     }
     
+    public Environment getEnvironment() throws IOException {
+        return config.getEnvironment();        
+    }    
+    
 
     public String getDefaultDesciption(){
         String name = info.getOrDefault("name", "").toString();
         return name;
     }    
 
-    public Map<String, Object> getJsonMap() {
+    String datasetName;
+    public Map<String, Object> getJsonMap() throws IOException {
         Map ret = new HashMap<>();
         Map<String, Object> scientificMetadata = new HashMap<>();        
+        String user = Sys.getUserName();        
+        String pgroup = null;   
+        datasetName = null;
+        boolean isEaccount=false;
+        try{
+             if (user.startsWith("e")){
+                 Integer.valueOf(user.substring(1));
+                 pgroup = "p" + user.substring(1);
+                 isEaccount = true;
+             }
+        } catch (Exception ex){            
+        }
+                
 
         for (String key : metadata.keySet()) {
             if (metadataFields.containsKey(key)) {
@@ -201,6 +265,9 @@ public class SciCat {
         }
 
         if (!ret.containsKey("creationLocation")) {
+            if (config.creationLocation.isBlank()){
+                throw new IOException("The creation location must be defined");
+            }            
             ret.put("creationLocation", config.creationLocation);
         }
         if (!ret.containsKey("sourceFolder")) {
@@ -210,14 +277,29 @@ public class SciCat {
             ret.put("type", config.type.toString());
         }
         if (!ret.containsKey("ownerGroup")) {
-            ret.put("ownerGroup", config.ownerGroup);
+            if (isEaccount){
+                ret.put("ownerGroup", pgroup);
+            } else {
+                if (config.ownerGroup.isBlank()){
+                    throw new IOException("If not running on an e-accunt then the owner group must be defined");
+                }
+                ret.put("ownerGroup", config.ownerGroup);
+            }
+            
         }
-        if (!ret.containsKey("principalInvestigator")) {
-            ret.put("principalInvestigator", config.principalInvestigator);
+        if (!ret.containsKey("principalInvestigator")) {            
+            if (config.principalInvestigator.isBlank()){
+                if (!isEaccount){
+                    ret.put("principalInvestigator", user);
+                }
+            } else {
+                ret.put("principalInvestigator", config.principalInvestigator);
+            }
         }
         if (!ret.containsKey("datasetName")) {
             ret.put("datasetName", getDefaultName());
         }
+        datasetName = Str.toString(ret.get("datasetName"));
         if (!ret.containsKey("description")) {
             ret.put("description", getDefaultDesciption());
         }
@@ -258,17 +340,19 @@ public class SciCat {
     }
     
     public static class IngestOutput {
-        IngestOutput(boolean success, String output, String datasetId){
+        IngestOutput(boolean success, String output, String datasetId, String datasetName){
             this.success = success;
             this.output = output;
             this.datasetId = datasetId;
+            this.datasetName = datasetName;
         }
         public final boolean success;
         public final String output;
         public final String datasetId;
+        public final String datasetName;
     }
 
-    public IngestOutput ingest() throws IOException, InterruptedException {
+    public synchronized IngestOutput ingest() throws IOException, InterruptedException {
         String listing = getFileListing();
         String json = getJson();
         Files.writeString(Paths.get(".", FILE_LISTING_FILE), listing);
@@ -276,7 +360,7 @@ public class SciCat {
 
         List<String> pars = new ArrayList<>();
         pars.add("datasetIngestor");
-        for (String par : config.parameters.split(" ")) {
+        for (String par : config.getParameters().split(" ")) {
             if (!par.isBlank()) {
                 pars.add(par.trim());
             }
@@ -307,15 +391,16 @@ public class SciCat {
                 builder.append(line).append(Sys.getLineSeparator());
             }
         }
-        String datasetId = builder.toString();
-        return new IngestOutput(p.exitValue() == 0, output, datasetId);
+        String datasetId = builder.toString().trim();
+        return new IngestOutput(!datasetId.isEmpty(), output, datasetId, datasetName);
     }
-    
-    public IngestOutput ingest(int sessionId, Map<String, Object> metadata, String parameters) throws IOException, InterruptedException {
+        
+    public IngestOutput ingest(int sessionId, Map<String, Object> metadata) throws IOException, InterruptedException {
         SessionManager manager = Context.getInstance().getSessionManager();
         Map<String, Object> info =manager.getInfo(sessionId);           
         Map<String,String> ingested = info.containsKey("ingested") ? (Map<String,String>)info.get("ingested") : new HashMap<>();
-        String env = Environment.getFromArguments(parameters).toString();
+        Environment environment = getEnvironment();
+        String env = environment.toString();
         for (String ingestedEnv : ingested.keySet()){
             if (ingestedEnv.equals(env)){
                 String id = Str.toString(ingested.get(env));                
@@ -326,14 +411,10 @@ public class SciCat {
         setDatasetType(SciCat.DatasetType.raw);
 
         Map<String, Object> pars = manager.getMetadata(sessionId);
-        if (metadata==null){
-             metadata = new HashMap<>();
+        if (metadata!=null){
              pars.putAll(metadata);
-        }        
-        if (parameters!=null){
-            setParameters(parameters);              
-        }
-        setMetadata(metadata);
+        }                
+        setMetadata(pars);
         setFiles(manager.getFileListAtRoot(sessionId));        
         setInfo(sessionId, info);            
         IngestOutput result = ingest();

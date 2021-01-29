@@ -101,11 +101,12 @@ public class SessionsDialog extends StandardDialog implements SessionManagerList
                 }
             }
         });     
+        SwingUtils.setEnumCombo(comboScicatEnv, SciCat.Environment.class);
         
         sciCat= new SciCat();
         textScicatLocation.setText(sciCat.getConfig().creationLocation);
         textScicatGroup.setText(sciCat.getConfig().ownerGroup);        
-        textScicatParameters.setText(sciCat.getConfig().parameters);   
+        comboScicatEnv.setSelectedItem(sciCat.getConfig().getEnvironment());   
         textScicatPI.setText(sciCat.getConfig().principalInvestigator);   
         
         int sessions = tableSessions.getRowCount();
@@ -293,15 +294,16 @@ public class SessionsDialog extends StandardDialog implements SessionManagerList
         buttonZIP = new javax.swing.JButton();
         checkPreserveDirectoryStructure = new javax.swing.JCheckBox();
         jPanel2 = new javax.swing.JPanel();
-        buttonScicatIngestion = new javax.swing.JButton();
         jLabel1 = new javax.swing.JLabel();
         textScicatLocation = new javax.swing.JTextField();
         jLabel2 = new javax.swing.JLabel();
         textScicatGroup = new javax.swing.JTextField();
         jLabel3 = new javax.swing.JLabel();
-        textScicatParameters = new javax.swing.JTextField();
         jLabel5 = new javax.swing.JLabel();
         textScicatPI = new javax.swing.JTextField();
+        comboScicatEnv = new javax.swing.JComboBox<>();
+        jPanel3 = new javax.swing.JPanel();
+        buttonScicatIngestion = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
 
@@ -436,7 +438,7 @@ public class SessionsDialog extends StandardDialog implements SessionManagerList
             panelMetadataLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(panelMetadataLayout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 276, Short.MAX_VALUE)
+                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 279, Short.MAX_VALUE)
                 .addContainerGap())
         );
         panelMetadataLayout.setVerticalGroup(
@@ -512,11 +514,11 @@ public class SessionsDialog extends StandardDialog implements SessionManagerList
                 .addContainerGap()
                 .addGroup(panelFilesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, panelFilesLayout.createSequentialGroup()
-                        .addGap(0, 40, Short.MAX_VALUE)
+                        .addGap(0, 39, Short.MAX_VALUE)
                         .addComponent(buttonAddFile)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addComponent(buttonRemoveFile)
-                        .addGap(0, 40, Short.MAX_VALUE))
+                        .addGap(0, 38, Short.MAX_VALUE))
                     .addComponent(jScrollPane4, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE))
                 .addContainerGap())
         );
@@ -571,13 +573,6 @@ public class SessionsDialog extends StandardDialog implements SessionManagerList
 
         jTabbedPane1.addTab("ZIP", jPanel1);
 
-        buttonScicatIngestion.setText("Ingest");
-        buttonScicatIngestion.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                buttonScicatIngestionActionPerformed(evt);
-            }
-        });
-
         jLabel1.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
         jLabel1.setText("Creation Location:");
 
@@ -597,13 +592,7 @@ public class SessionsDialog extends StandardDialog implements SessionManagerList
         });
 
         jLabel3.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
-        jLabel3.setText("Parameters:");
-
-        textScicatParameters.addKeyListener(new java.awt.event.KeyAdapter() {
-            public void keyReleased(java.awt.event.KeyEvent evt) {
-                textScicatParametersKeyReleased(evt);
-            }
-        });
+        jLabel3.setText("Environment:");
 
         jLabel5.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
         jLabel5.setText("Principal Investigator:");
@@ -614,26 +603,59 @@ public class SessionsDialog extends StandardDialog implements SessionManagerList
             }
         });
 
+        comboScicatEnv.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
+        comboScicatEnv.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                comboScicatEnvActionPerformed(evt);
+            }
+        });
+
+        buttonScicatIngestion.setText("Ingest");
+        buttonScicatIngestion.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                buttonScicatIngestionActionPerformed(evt);
+            }
+        });
+
+        javax.swing.GroupLayout jPanel3Layout = new javax.swing.GroupLayout(jPanel3);
+        jPanel3.setLayout(jPanel3Layout);
+        jPanel3Layout.setHorizontalGroup(
+            jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel3Layout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(buttonScicatIngestion)
+                .addContainerGap())
+        );
+        jPanel3Layout.setVerticalGroup(
+            jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel3Layout.createSequentialGroup()
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(buttonScicatIngestion)
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+        );
+
         javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
         jPanel2.setLayout(jPanel2Layout);
         jPanel2Layout.setHorizontalGroup(
             jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel2Layout.createSequentialGroup()
-                .addGap(48, 48, 48)
+            .addGroup(jPanel2Layout.createSequentialGroup()
+                .addContainerGap()
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jLabel3)
-                    .addComponent(jLabel2)
-                    .addComponent(jLabel1)
-                    .addComponent(jLabel5))
+                    .addComponent(jLabel5, javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addComponent(jLabel2, javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addComponent(jLabel1, javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addComponent(jLabel3, javax.swing.GroupLayout.Alignment.TRAILING))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(textScicatParameters, javax.swing.GroupLayout.DEFAULT_SIZE, 262, Short.MAX_VALUE)
-                    .addComponent(textScicatGroup)
                     .addComponent(textScicatLocation)
-                    .addComponent(textScicatPI))
-                .addGap(18, 18, 18)
-                .addComponent(buttonScicatIngestion)
-                .addGap(20, 20, 20))
+                    .addComponent(textScicatGroup)
+                    .addComponent(textScicatPI)
+                    .addGroup(jPanel2Layout.createSequentialGroup()
+                        .addComponent(comboScicatEnv, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(0, 212, Short.MAX_VALUE)))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 16, Short.MAX_VALUE)
+                .addComponent(jPanel3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap())
         );
 
         jPanel2Layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {jLabel1, jLabel2, jLabel3, jLabel5});
@@ -641,32 +663,27 @@ public class SessionsDialog extends StandardDialog implements SessionManagerList
         jPanel2Layout.setVerticalGroup(
             jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel2Layout.createSequentialGroup()
-                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(jPanel2Layout.createSequentialGroup()
-                        .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(buttonScicatIngestion)
-                        .addGap(0, 0, Short.MAX_VALUE))
-                    .addGroup(jPanel2Layout.createSequentialGroup()
-                        .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(jLabel1)
-                            .addComponent(textScicatLocation, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addGap(0, 0, 0)
-                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(jLabel2)
-                            .addComponent(textScicatGroup, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addGap(0, 0, 0)
-                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(jLabel5)
-                            .addComponent(textScicatPI, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addGap(0, 0, 0)
-                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(jLabel3)
-                            .addComponent(textScicatParameters, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel3)
+                    .addComponent(comboScicatEnv, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(0, 0, 0)
+                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel1)
+                    .addComponent(textScicatLocation, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(0, 0, 0)
+                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel2)
+                    .addComponent(textScicatGroup, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(0, 0, 0)
+                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel5)
+                    .addComponent(textScicatPI, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+            .addComponent(jPanel3, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
         );
 
-        jPanel2Layout.linkSize(javax.swing.SwingConstants.VERTICAL, new java.awt.Component[] {textScicatGroup, textScicatLocation, textScicatParameters});
+        jPanel2Layout.linkSize(javax.swing.SwingConstants.VERTICAL, new java.awt.Component[] {textScicatGroup, textScicatLocation});
 
         jTabbedPane1.addTab("SciCat", jPanel2);
 
@@ -772,17 +789,15 @@ public class SessionsDialog extends StandardDialog implements SessionManagerList
             SciCat.IngestOutput result = null;
             JDialog dialogMessage = showMessageDialog("Ingesting SciCat dataset...");
             try{                
-                Map<String, Object> metadata = new HashMap<>();
-                metadata.put("creationLocation", textScicatLocation.getText());
-                metadata.put("principalInvestigator", textScicatPI.getText());
-                metadata.put("ownerGroup", textScicatGroup.getText());                
-                result  = sciCat.ingest(currentSession, metadata, textScicatParameters.getText());
+                result  = sciCat.ingest(currentSession, null);
             } finally{
                 dialogMessage.setVisible(false);
             }
-            String msg = result.success ? "Success ingesting SciCat dataset " + result.datasetId : "Success ingesting SciCat dataset";
+            String msg = result.success ? 
+                "Success ingesting SciCat dataset " + result.datasetName + "\nId: " + result.datasetId : 
+                "Error ingesting SciCat dataset " + result.datasetName;
             SwingUtils.showScrollableMessage(this, "SciCat Ingestion", msg, result.output);
-            Logger.getLogger(SessionPanel.class.getName()).info(msg + "\n" + result);
+            Logger.getLogger(SessionPanel.class.getName()).info(msg + "\n" + result.output);
         } catch (Exception ex) {
             SwingUtils.showException(this, ex);
             Logger.getLogger(SessionPanel.class.getName()).log(Level.WARNING, null, ex);
@@ -813,15 +828,6 @@ public class SessionsDialog extends StandardDialog implements SessionManagerList
         }
     }//GEN-LAST:event_textScicatGroupKeyReleased
 
-    private void textScicatParametersKeyReleased(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_textScicatParametersKeyReleased
-                        
-        try {
-            sciCat.setParameters(textScicatParameters.getText());
-        } catch (IOException ex) {
-            SwingUtils.showException(this, ex);
-        }                    
-    }//GEN-LAST:event_textScicatParametersKeyReleased
-
     private void textScicatPIKeyReleased(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_textScicatPIKeyReleased
         try {
             sciCat.setPrincipalInvestigator(textScicatPI.getText());
@@ -830,18 +836,28 @@ public class SessionsDialog extends StandardDialog implements SessionManagerList
         } 
     }//GEN-LAST:event_textScicatPIKeyReleased
 
+    private void comboScicatEnvActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_comboScicatEnvActionPerformed
+        try {
+            sciCat.setEnvironment((SciCat.Environment) comboScicatEnv.getSelectedItem());
+        } catch (IOException ex) {
+            SwingUtils.showException(this, ex);
+        } 
+    }//GEN-LAST:event_comboScicatEnvActionPerformed
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton buttonAddFile;
     private javax.swing.JButton buttonRemoveFile;
     private javax.swing.JButton buttonScicatIngestion;
     private javax.swing.JButton buttonZIP;
     private javax.swing.JCheckBox checkPreserveDirectoryStructure;
+    private javax.swing.JComboBox<String> comboScicatEnv;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel5;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel2;
+    private javax.swing.JPanel jPanel3;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JScrollPane jScrollPane3;
@@ -860,6 +876,5 @@ public class SessionsDialog extends StandardDialog implements SessionManagerList
     private javax.swing.JTextField textScicatGroup;
     private javax.swing.JTextField textScicatLocation;
     private javax.swing.JTextField textScicatPI;
-    private javax.swing.JTextField textScicatParameters;
     // End of variables declaration//GEN-END:variables
 }
