@@ -112,14 +112,14 @@ public class Configuration extends Config {
     }
 
     NotificationLevel getNotificationLevel() {
-        if (notificationLevel == null) {
+        if (Str.toString(notificationLevel).equals(Str.toString(null))) {
             return NotificationLevel.Off;
         }
         return notificationLevel;
     }
 
     public DataTransferMode getDataTransferMode() {
-        if (dataTransferMode == null) {
+        if (Str.toString(dataTransferMode).equals(Str.toString(null))) {
             return DataTransferMode.Off;
         }
         return dataTransferMode;
@@ -138,7 +138,7 @@ public class Configuration extends Config {
         }
         return dataTransferUser.trim();
     }
-
+    
     public List<String> getNotifiedTasks() {
         List<String> ret = new ArrayList<>();
         if (notifiedTasks != null) {

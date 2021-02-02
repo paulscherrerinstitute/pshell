@@ -12,6 +12,7 @@ import ch.psi.utils.Str;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -313,7 +314,7 @@ public class SessionManager extends ObservableBase<SessionManager.SessionManager
             } else {
                 IO.copy(from.getCanonicalPath(), to.toFile().getCanonicalPath());
             }
-            if (Context.getInstance().config.dataTransferMode == DataTransferMode.Move) {
+            if (Context.getInstance().config.getDataTransferMode() == DataTransferMode.Move) {
                 IO.deleteRecursive(from);
             }
             return to.toFile().getCanonicalPath();
@@ -327,7 +328,7 @@ public class SessionManager extends ObservableBase<SessionManager.SessionManager
                 path = path.replaceFirst("&", "~");
             }
             Path to = Paths.get(path, from.getName());
-            boolean move = (Context.getInstance().config.dataTransferMode == DataTransferMode.Move);
+            boolean move = (Context.getInstance().config.getDataTransferMode() == DataTransferMode.Move);
             String ret = RSync.sync(user, from.getCanonicalPath(), path, move);
             //Thread.sleep(5000);
             return to.toString();
@@ -341,7 +342,7 @@ public class SessionManager extends ObservableBase<SessionManager.SessionManager
         final int sessionId = getCurrentId();        
         final boolean updateRun = saveRun;
         
-        boolean transfer = (Context.getInstance().config.dataTransferMode != DataTransferMode.Off);
+        boolean transfer = (Context.getInstance().config.getDataTransferMode() != DataTransferMode.Off);
         try {
             if (isStarted()) {
                 if (dataPath != null) {
@@ -402,6 +403,7 @@ public class SessionManager extends ObservableBase<SessionManager.SessionManager
         OrderedProperties properties = new OrderedProperties();
         try (FileInputStream in = new FileInputStream(Context.getInstance().getSetup().getSessionMetadataDefinitionFile())) {
             properties.load(in);
+        } catch (FileNotFoundException ex) {
         } catch (Exception ex) {
             Logger.getLogger(MetadataEditor.class.getName()).log(Level.WARNING, null, ex);
         }

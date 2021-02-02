@@ -35,7 +35,7 @@ public class SciCat {
     final public static String FILE_LISTING_FILE = "filelisting.txt";
     final public static String JSON_FILE = "metadata.json";
 
-    static String DEFAULT_PARAMETERS = "-ingest -allowexistingsource -noninteractive";     
+    static String DEFAULT_PARAMETERS = "-ingest -allowexistingsource -noninteractive -autoarchive";     
     
     final Map<String, Object> metadata = new HashMap<>();
     final Map<String, Object> info = new HashMap<>();
@@ -289,9 +289,7 @@ public class SciCat {
         }
         if (!ret.containsKey("principalInvestigator")) {            
             if (config.principalInvestigator.isBlank()){
-                if (!isEaccount){
-                    ret.put("principalInvestigator", user);
-                }
+                ret.put("principalInvestigator", user);
             } else {
                 ret.put("principalInvestigator", config.principalInvestigator);
             }
