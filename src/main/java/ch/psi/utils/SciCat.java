@@ -277,20 +277,18 @@ public class SciCat {
             ret.put("type", config.type.toString());
         }
         if (!ret.containsKey("ownerGroup")) {
-            if (isEaccount){
-                ret.put("ownerGroup", pgroup);
-            } else {
-                if (config.ownerGroup.isBlank()){
+            if (!config.ownerGroup.isBlank()){
+                ret.put("ownerGroup", config.ownerGroup);                    
+            }else {
+                if (isEaccount){
+                    ret.put("ownerGroup", pgroup);
+                } else {
                     throw new IOException("If not running on an e-accunt then the owner group must be defined");
                 }
-                ret.put("ownerGroup", config.ownerGroup);
-            }
-            
+            }                
         }
         if (!ret.containsKey("principalInvestigator")) {            
-            if (config.principalInvestigator.isBlank()){
-                ret.put("principalInvestigator", user);
-            } else {
+            if (!config.principalInvestigator.isBlank()){
                 ret.put("principalInvestigator", config.principalInvestigator);
             }
         }
@@ -302,7 +300,7 @@ public class SciCat {
             ret.put("description", getDefaultDesciption());
         }
         if (!ret.containsKey("isPublished")) {
-            ret.put("isPublished", true);
+            ret.put("isPublished", false);
         }
         if (!ret.containsKey("dataFormat")) {
             ret.put("dataFormat", info.getOrDefault("format", ""));

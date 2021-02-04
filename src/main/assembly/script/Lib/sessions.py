@@ -1,4 +1,4 @@
-from startup import get_context
+from startup import get_context, set_exec_pars
 import ch.psi.utils.SciCat as SciCat
 import java.lang.Boolean
 
@@ -11,17 +11,19 @@ def session_start(name, metadata=None):
 
     Args:
          name(str): Session name.
-         metadata(dict): Map of initial metdata parameters
+         metadata(dict): Map of initial metadata parameters
                          If None(Default) use the default metadata definition. 
 
     Returns:
         session id (int)     
     """
+    set_exec_pars(open=False)
     return _sm().start(name, metadata)
 
 def session_complete():
     """ Completes current session, if started.         
     """
+    set_exec_pars(open=False)
     return _sm().stop()
 
 def session_pause():
