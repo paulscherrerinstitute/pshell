@@ -417,6 +417,7 @@ public class SciCat {
         if (result.success){
             ingested.put(env, result.datasetId);
             manager.setInfo(sessionId, "ingested", ingested);
+            manager.setState(sessionId, SessionManager.STATE_ARCHIVED);
         }
         return result;
     }

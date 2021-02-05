@@ -72,6 +72,7 @@ public class SessionManager extends ObservableBase<SessionManager.SessionManager
     public final static String STATE_RUNNING = "running";
     public final static String STATE_TRANSFERING = "transfering";
     public final static String STATE_TRANSFERRED = "transfered";
+    public final static String STATE_ARCHIVED = "archived";
     public final static String STATE_ERROR = "error";
     
     public final static String UNNAMED_SESSION_NAME = "unnamed";
@@ -736,6 +737,7 @@ public class SessionManager extends ObservableBase<SessionManager.SessionManager
         Map<String, Object> info = getInfo(id);
         info.put("state", state);
         setInfo(id, info);
+        triggerChanged(ChangeType.STATE);
     }    
 
     public void setAdditionalFiles(List<String> files) throws IOException {
@@ -835,7 +837,14 @@ public class SessionManager extends ObservableBase<SessionManager.SessionManager
     
     public void setMetadata(int id, String key, Object value) throws IOException {
         Map<String, Object> info = getMetadata(id);
-        info.put(key, value);
+        if (value == null){
+            if (!info.containsKey(key)){
+                return;
+            }
+            info.remove(key);
+        } else {
+            info.put(key, value);
+        }
         setMetadata(info);
     }
     

@@ -2,7 +2,6 @@ package ch.psi.pshell.swing;
 
 import ch.psi.pshell.core.Context;
 import ch.psi.pshell.core.SessionManager;
-import static ch.psi.pshell.core.SessionManager.STATE_COMPLETED;
 import ch.psi.pshell.core.SessionManager.SessionManagerListener;
 import ch.psi.utils.IO;
 import ch.psi.utils.SciCat;
@@ -16,7 +15,6 @@ import java.awt.Dimension;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
@@ -145,7 +143,7 @@ public class SessionsDialog extends StandardDialog implements SessionManagerList
         int sessionRow = tableSessions.getSelectedRow();
         if (panelSessions.isVisible()){            
             String sessionState = (sessionRow>=0) ? Str.toString(modelSessions.getValueAt(sessionRow, 5)) : "";
-            archiveEnabled = sessionState.equals(STATE_COMPLETED);
+            archiveEnabled = sessionState.equals(SessionManager.STATE_COMPLETED) || sessionState.equals(SessionManager.STATE_ARCHIVED);
         } 
         buttonAddFile.setEnabled(currentSession>=0);
         buttonRemoveFile.setEnabled(buttonAddFile.isEnabled() && tableFiles.getSelectedRow()>=0);
