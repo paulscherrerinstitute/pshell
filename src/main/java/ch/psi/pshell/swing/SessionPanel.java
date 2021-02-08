@@ -11,11 +11,8 @@ import ch.psi.utils.swing.SwingUtils;
 import java.awt.Color;
 import java.awt.Component;
 import java.io.IOException;
-import java.util.Collection;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JTable;
@@ -24,7 +21,6 @@ import javax.swing.event.TableModelEvent;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import org.apache.commons.lang3.tuple.ImmutablePair;
-import org.glassfish.jersey.internal.guava.Lists;
 
 /**
  *
@@ -60,7 +56,6 @@ public class SessionPanel extends MonitoredPanel implements SessionManagerListen
         modelMetadata.addTableModelListener((TableModelEvent e) -> {
             if (!updating) {
                 if (e.getType() == TableModelEvent.UPDATE) {
-                    int col = e.getColumn();
                     if (e.getColumn() == 1) {
                         int row = e.getFirstRow();
                         String key = Str.toString(modelMetadata.getValueAt(row, 0));
@@ -74,7 +69,6 @@ public class SessionPanel extends MonitoredPanel implements SessionManagerListen
         modelRuns.addTableModelListener((TableModelEvent e) -> {
             if (!updating) {
                 if (e.getType() == TableModelEvent.UPDATE) {
-                    int col = e.getColumn();
                     if (e.getColumn() == 0) {
                         int runIndex = e.getFirstRow();
                         try {
@@ -131,8 +125,8 @@ public class SessionPanel extends MonitoredPanel implements SessionManagerListen
             SwingUtilities.invokeLater(() -> {
                 SwingUtils.showException(this, ex);
             });
-            //If value cannot be Converted to type, restore old value 
-            //updateMetadata();                            
+            //If cannot parse value according to type, keeps the change
+            //and displays value with error background                
         }
         try {
             manager.setMetadata(key, value);
@@ -144,12 +138,13 @@ public class SessionPanel extends MonitoredPanel implements SessionManagerListen
     class MetadataValueRenderer extends DefaultTableCellRenderer {
 
         Color backgroundColor = getBackground();
+        Color foregroundColor = getForeground();
         final Color errorColor = Color.red.darker();
         final Color errorSelectedColor = Color.red.darker().darker();
 
         @Override
         public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
-            Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+            Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);            
             try {
                 String key = Str.toString(modelMetadata.getValueAt(row, 0));
                 manager.fromString(manager.getMetadataType(key), Str.toString(value));
@@ -161,6 +156,7 @@ public class SessionPanel extends MonitoredPanel implements SessionManagerListen
                     c.setBackground(errorSelectedColor);
                 }
             }
+            c.setForeground(foregroundColor);
             return c;
         }
     }
