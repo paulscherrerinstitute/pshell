@@ -805,9 +805,7 @@ public class SessionManager extends ObservableBase<SessionManager.SessionManager
         }        
     }
 
-    public void setMetadata(Map<String, Object> metadata) throws IOException {
-        assertStarted();
-        Set<Map.Entry<Object, Object>> metadataDefinition = getMetadataDefinition();
+    public void setMetadata(int id, Map<String, Object> metadata) throws IOException {
         for (String key : metadata.keySet().toArray(new String[0])) {
             MetadataType type = getMetadataType(key);
             Object value = metadata.get(key);
@@ -826,8 +824,15 @@ public class SessionManager extends ObservableBase<SessionManager.SessionManager
         }
 
         String json = JsonSerializer.encode(metadata);
-        Files.writeString(Paths.get(getCurrentPath().toString(), METADATA_FILE), json);
-        triggerChanged(ChangeType.METADATA);
+        Files.writeString(Paths.get(getSessionPath(id).toString(), METADATA_FILE), json);
+        if (id == getCurrentId()) {
+            triggerChanged(ChangeType.METADATA);        
+        }
+    }
+    
+    public void setMetadata(Map<String, Object> metadata) throws IOException {
+        assertStarted();
+        setMetadata(getCurrentId(), metadata);
     }
 
     public void setMetadata(String key, Object value) throws IOException {
@@ -845,7 +850,7 @@ public class SessionManager extends ObservableBase<SessionManager.SessionManager
         } else {
             info.put(key, value);
         }
-        setMetadata(info);
+        setMetadata(id, info);
     }
     
     public Map<String, Object> getMetadata() throws IOException {

@@ -2,6 +2,7 @@ package ch.psi.pshell.swing;
 
 import ch.psi.pshell.core.Context;
 import ch.psi.pshell.core.SessionManager;
+import ch.psi.pshell.core.SessionManager.MetadataType;
 import ch.psi.pshell.core.SessionManager.SessionManagerListener;
 import ch.psi.utils.IO;
 import ch.psi.utils.SciCat;
@@ -29,6 +30,7 @@ import javax.swing.event.ListSelectionListener;
 import javax.swing.event.TableModelEvent;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableCellEditor;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 
 
@@ -85,7 +87,8 @@ public class SessionsDialog extends StandardDialog implements SessionManagerList
         
         modelRuns.addTableModelListener((TableModelEvent e) -> {
             if ((!updating) & (currentSession>=0)){
-                if (e.getType() == TableModelEvent.UPDATE){
+                cancelMetadataEditing();
+                if (e.getType() == TableModelEvent.UPDATE){                    
                     int col=e.getColumn();
                     if (e.getColumn()==0){
                         int runIndex = e.getFirstRow();                              
@@ -112,7 +115,58 @@ public class SessionsDialog extends StandardDialog implements SessionManagerList
             tableSessions.setRowSelectionInterval(sessions-1, sessions-1);
             SwingUtils.scrollToVisible(tableSessions, sessions-1, 0);
         }
+        
+        modelMetadata.addTableModelListener((TableModelEvent e) -> {
+            if (!updating) {
+                if ((!updating) & (currentSession>=0)){
+                    if (e.getType() == TableModelEvent.UPDATE) {
+                        int row = e.getFirstRow();
+                        String key = Str.toString(modelMetadata.getValueAt(row, 0));
+                        Object value = modelMetadata.getValueAt(row, 1);                           
+                        String current = null;
+                        try{
+                            current = Str.toString(manager.getMetadata(currentSession, true).get(key));
+                        } catch (Exception ex){
+                            
+                        }                            
+                        if (!Str.toString(value).equals(current)){
+                            String state = getSelectedSessionState();
+                            if (getSelectedSessionState().equals(SessionManager.STATE_ARCHIVED)){
+                                SwingUtils.showMessage(this, "Error", "Cannot change session metadata if session state is " + state);
+                                SwingUtilities.invokeLater(()->{ 
+                                    selectSession(currentSession); 
+                                });                            
+                                return;
+                            }
+                            if (e.getColumn() == 1) {
+                                addMetadata(currentSession, key, value);
+                            }
+                        }
+                    }
+                }
+            }
+        });    
     }
+    
+    void addMetadata(int session, String key, Object value) {
+        try {
+            MetadataType type = manager.getMetadataType(key);
+            manager.fromString(type, Str.toString(value));
+        } catch (Exception ex) {
+            SwingUtilities.invokeLater(() -> {
+                SwingUtils.showException(this, ex);
+                selectSession(currentSession); 
+            });
+            //Don't update values if cannot parse value according to type
+            return;
+            
+        }
+        try {
+            manager.setMetadata(session, key, value);
+        } catch (IOException ex) {
+            Logger.getLogger(SessionPanel.class.getName()).log(Level.WARNING, null, ex);
+        }
+    }    
     
     @Override
     protected void onOpened() {
@@ -137,12 +191,17 @@ public class SessionsDialog extends StandardDialog implements SessionManagerList
             }
         });
     }    
+    
+    String getSelectedSessionState(){
+        int sessionRow = tableSessions.getSelectedRow();
+        return (sessionRow>=0) ? Str.toString(modelSessions.getValueAt(sessionRow, 5)) : "";
+    }
         
     void updateButtons(){
         boolean archiveEnabled = true;
         int sessionRow = tableSessions.getSelectedRow();
         if (panelSessions.isVisible()){            
-            String sessionState = (sessionRow>=0) ? Str.toString(modelSessions.getValueAt(sessionRow, 5)) : "";
+            String sessionState = getSelectedSessionState();
             archiveEnabled = sessionState.equals(SessionManager.STATE_COMPLETED) || sessionState.equals(SessionManager.STATE_ARCHIVED);
         } 
         buttonAddFile.setEnabled(currentSession>=0);
@@ -182,14 +241,24 @@ public class SessionsDialog extends StandardDialog implements SessionManagerList
             updating = false;
         }
     }
-    
+
+    void cancelMetadataEditing(){
+        try{
+            TableCellEditor editor = tableMetadata.getCellEditor();
+            if (editor!=null){
+                editor.cancelCellEditing();
+            }
+        } catch (Exception ex) {
+        }        
+    }
 
     int currentSession = -1;
     void selectSession(int session){
         updating = true;
         try{        
-           currentSession = session; 
-            try {            
+            currentSession = session;    
+            cancelMetadataEditing();
+            try {   
                 List<ImmutablePair<String,Object>>  metadata= manager.getDisplayableMetadata(session);
                 modelMetadata.setNumRows(metadata.size());
                 int index = 0;
@@ -413,7 +482,7 @@ public class SessionsDialog extends StandardDialog implements SessionManagerList
                 java.lang.String.class, java.lang.Object.class
             };
             boolean[] canEdit = new boolean [] {
-                false, false
+                false, true
             };
 
             public Class getColumnClass(int columnIndex) {
@@ -703,6 +772,7 @@ public class SessionsDialog extends StandardDialog implements SessionManagerList
 
     private void buttonAddFileActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonAddFileActionPerformed
         try {
+            cancelMetadataEditing();
             JFileChooser chooser = new JFileChooser(Context.getInstance().getSetup().getDataPath());
             chooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
             chooser.setAcceptAllFileFilterUsed(true);
@@ -718,6 +788,7 @@ public class SessionsDialog extends StandardDialog implements SessionManagerList
 
     private void buttonRemoveFileActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonRemoveFileActionPerformed
         try {
+            cancelMetadataEditing();
             int row = tableFiles.getSelectedRow();
             if(row>=0){
                 modelFiles.removeRow(row);
