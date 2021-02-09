@@ -25,7 +25,7 @@ public class ArraySource extends RegisterArraySource {
     }
 
     protected ArraySource(String name, String channelName, RegisterArraySourceConfig config) {
-        this(name, channelName, -1, config);
+        this(name, channelName, SIZE_MAX, config);
     }
 
     protected ArraySource(String name, String channelName, int size, RegisterArraySourceConfig config) {

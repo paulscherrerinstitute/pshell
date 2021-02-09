@@ -1,6 +1,5 @@
 package ch.psi.pshell.device;
 
-import ch.psi.pshell.core.Nameable;
 import ch.psi.pshell.core.Setup;
 import java.io.IOException;
 import java.nio.file.Paths;
@@ -14,7 +13,7 @@ import java.util.concurrent.CompletableFuture;
 /**
  * Interface of GenericDevice, which have a specific listener interface.
  */
-public interface GenericDevice<T> extends Observable<T>, Timestamped, AutoCloseable, Configurable, Nameable {
+public interface GenericDevice<T> extends Observable<T>, Timestamped, AutoCloseable, Configurable, Record {
 
     public static final String PROPERTY_CONFIG_PATH = "ch.psi.pshell.device.config.path";
 

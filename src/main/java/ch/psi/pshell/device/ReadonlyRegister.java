@@ -22,7 +22,7 @@ public interface ReadonlyRegister<T> extends Device, Readable<T>, Cacheable<T> {
     public interface ReadonlyRegisterArray<T> extends ReadonlyRegister<T>, Readable.ReadableArray<T>, Cacheable.CacheableArray<T> {
 
         default public int getMaximumSize() {
-            return -1;
+            return UNDEFINED;
         }
 
         default public void setSize(int size) throws IOException {

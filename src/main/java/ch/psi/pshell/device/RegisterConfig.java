@@ -5,5 +5,5 @@ package ch.psi.pshell.device;
  */
 public class RegisterConfig extends DeviceConfig {
 
-    public int precision = -1;      //Number of decimals
+    public int precision = Record.UNDEFINED_PRECISION;      //Number of decimals
 }

@@ -49,7 +49,7 @@ public class Averager extends ReadonlyRegisterBase<DescStatsDouble> implements R
     }
 
     public Averager(String name, Readable source, int measures) {
-        this(name, source, measures, -1);
+        this(name, source, measures, UNDEFINED);
     }
 
     public Averager(String name, Readable source, int measures, int interval) {
@@ -72,7 +72,7 @@ public class Averager extends ReadonlyRegisterBase<DescStatsDouble> implements R
     }
 
     public Averager(Readable source, int measures) {
-        this(source, measures, -1);
+        this(source, measures, UNDEFINED);
     }
 
     public Averager(Readable source, int measures, int interval) {
@@ -122,14 +122,14 @@ public class Averager extends ReadonlyRegisterBase<DescStatsDouble> implements R
             config = (AveragerConfig) getConfig();
         }
         if (config.interval < 0) {
-            config.interval = -1; //Sampling on event change
+            config.interval = UNDEFINED; //Sampling on event change
         }
         if (innerDevice instanceof Stream){
             ((Stream)innerDevice).start(true); 
             ((Stream)innerDevice).waitCacheChange(Stream.TIMEOUT_START_STREAMING);
         }
         
-        if (config.interval < 0) {
+        if (config.interval == UNDEFINED) {
             if (!(source instanceof Device)) {
                 throw new IOException("Configuration error: cannot configure read on change event if source is not a Device");
             }

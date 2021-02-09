@@ -13,7 +13,7 @@ import java.io.IOException;
 public class ArrayRegisterStats extends ReadonlyRegisterBase<DescStatsDouble> implements ReadonlyRegisterNumber<DescStatsDouble>, DoubleType {
 
     ReadonlyRegister source;
-    int precision = -1;
+    int precision = UNDEFINED_PRECISION;
     DeviceListener sourceListener;
 
     public ArrayRegisterStats(String name, ReadonlyRegisterArray source) {

@@ -25,7 +25,7 @@ public abstract class ReadonlyAsyncRegisterBase<T> extends ReadonlyRegisterBase<
     }
 
     protected ReadonlyAsyncRegisterBase(String name) {
-        this(name, -1);
+        this(name, UNDEFINED_PRECISION);
     }
 
     protected ReadonlyAsyncRegisterBase(String name, int precision) {

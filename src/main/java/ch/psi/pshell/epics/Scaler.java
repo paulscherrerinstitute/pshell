@@ -189,7 +189,7 @@ public class Scaler extends ReadonlyRegisterBase<int[]> implements ReadonlyRegis
         int[] cache = new int[channels.size()];
         for (int i = 0; i < channels.size(); i++) {
             ScalerChannel channel = channels.get(i);
-            cache[i] = ((channel == null) || (channel.take() == null)) ? -1 : channel.take();
+            cache[i] = ((channel == null) || (channel.take() == null)) ? UNDEFINED : channel.take();
         }
         setCache(cache);
     }

@@ -12,11 +12,11 @@ public class ChannelInteger extends EpicsRegisterNumber<Integer> implements Inte
     }
 
     public ChannelInteger(String name, String channelName, boolean timestamped) {
-        super(name, channelName, -1, timestamped);
+        super(name, channelName, UNDEFINED_PRECISION, timestamped);
     }
 
     public ChannelInteger(String name, String channelName, boolean timestamped, InvalidValueAction invalidAction) {
-        super(name, channelName, -1, timestamped, invalidAction);
+        super(name, channelName, UNDEFINED_PRECISION, timestamped, invalidAction);
     }
 
     @Override

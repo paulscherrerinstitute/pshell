@@ -148,7 +148,7 @@ public abstract class CameraBase extends DeviceBase implements Camera {
         public int getWidth() {
             CameraImageDescriptor desc = takeImageDescriptor();
             if (desc == null) {
-                return -1;
+                return UNDEFINED;
             }
             return desc.width;
         }
@@ -157,7 +157,7 @@ public abstract class CameraBase extends DeviceBase implements Camera {
         public int getHeight() {
             CameraImageDescriptor desc = takeImageDescriptor();
             if (desc == null) {
-                return -1;
+                return UNDEFINED;
             }
             return desc.height;
         }

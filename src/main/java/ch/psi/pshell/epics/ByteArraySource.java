@@ -8,7 +8,7 @@ import ch.psi.pshell.imaging.RegisterArraySource;
 public class ByteArraySource extends RegisterArraySource {
 
     public ByteArraySource(String name, String channelName) {
-        this(name, channelName, -1);
+        this(name, channelName, SIZE_MAX);
     }
 
     public ByteArraySource(String name, String channelName, int size) {

@@ -25,8 +25,8 @@ public class GenericMatrix extends ReadonlyRegisterBase implements ReadonlyRegis
         public boolean mirror_y = false;
         public int roi_x = 0;
         public int roi_y = 0;
-        public int roi_width = -1;
-        public int roi_height = -1;
+        public int roi_width = UNDEFINED;
+        public int roi_height = UNDEFINED;
     }
 
     @Override

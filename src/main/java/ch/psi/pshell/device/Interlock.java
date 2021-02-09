@@ -1,6 +1,5 @@
 package ch.psi.pshell.device;
 
-import ch.psi.pshell.core.Nameable;
 import ch.psi.utils.Str;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -15,7 +14,7 @@ import java.util.logging.Logger;
  * class constructor with the list of controlled devices, and then override the check() method. The
  * check method receive each device value and returns true if they are allowed.
  */
-public abstract class Interlock implements AutoCloseable, Nameable {
+public abstract class Interlock implements AutoCloseable, Record {
 
     final Device[] devices;
     final DeviceListener listener;

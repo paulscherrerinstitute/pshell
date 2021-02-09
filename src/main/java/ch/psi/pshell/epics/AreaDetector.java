@@ -47,7 +47,7 @@ public class AreaDetector extends CameraBase {
         sizeY = new ChannelInteger(name + " size y", channelCtrl + ":SizeY", false);
         imageCounter = new ChannelInteger(name + " img counter", channelCtrl + ":ArrayCounter_RBV", false);
         imageCounter.setAccessType(AccessType.Read);
-        data = new GenericArray(name + " data", channelData + ":ArrayData", -1, false); //If nullable on invalidd value, read blocks on Scienta.
+        data = new GenericArray(name + " data", channelData + ":ArrayData", SIZE_MAX, false); //If nullable on invalidd value, read blocks on Scienta.
         data.setAutoResolveType(false);
 
         this.setChildren(new Device[]{data, imageCounter, acquire, arraySize0, arraySize1, arraySize2, colorMode, dataType, minX, minY, sizeX, sizeY});

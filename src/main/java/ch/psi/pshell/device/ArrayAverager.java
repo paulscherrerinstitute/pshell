@@ -49,7 +49,7 @@ public class ArrayAverager extends ReadonlyRegisterBase<double[]> implements Rea
     }
 
     public ArrayAverager(String name, ReadableArray source, int measures) {
-        this(name, source, measures, -1);
+        this(name, source, measures, UNDEFINED);
     }
 
     public ArrayAverager(String name, ReadableArray source, int measures, int interval) {
@@ -77,7 +77,7 @@ public class ArrayAverager extends ReadonlyRegisterBase<double[]> implements Rea
     }
 
     public ArrayAverager(ReadableArray source, int measures) {
-        this(source, measures, -1);
+        this(source, measures, UNDEFINED);
     }
 
     public ArrayAverager(ReadableArray source, int measures, int interval) {
@@ -108,14 +108,14 @@ public class ArrayAverager extends ReadonlyRegisterBase<double[]> implements Rea
             config = (ArrayAveragerConfig) getConfig();
         }
         if (config.interval < 0) {
-            config.interval = -1; //Sampling on event change
+            config.interval = UNDEFINED; //Sampling on event change
         }
         if (innerDevice instanceof Stream) {
             ((Stream) innerDevice).start(true);
             ((Stream) innerDevice).waitCacheChange(Stream.TIMEOUT_START_STREAMING);
         }
 
-        if (config.interval < 0) {
+        if (config.interval == UNDEFINED) {
             if (!(source instanceof Device)) {
                 throw new IOException("Configuration error: cannot configure read on change event if source is not a Device");
             }

@@ -5,7 +5,7 @@ import java.io.IOException;
 /**
  * Interface for devices that have a position value and are capable of knowing if are in position.
  */
-public interface Positionable<T> {
+public interface Positionable<T> {        
 
     public T getPosition() throws IOException, InterruptedException;
 

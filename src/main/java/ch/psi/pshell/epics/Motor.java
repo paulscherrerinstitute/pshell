@@ -48,7 +48,7 @@ public class Motor extends MotorBase {
         super(name, new EpicsMotorConfig());
         this.channelName = channelName;
         setpoint = new ChannelDouble(name + " setpoint", this.channelName + ".VAL");
-        velocity = new ChannelDouble(name + " speed", this.channelName + ".VELO", -1, false);
+        velocity = new ChannelDouble(name + " speed", this.channelName + ".VELO", UNDEFINED_PRECISION, false);
         readback = new ReadbackChannel(name + " readback", this.channelName + ".RBV");
         readback.setAccessType(AccessType.Read);
         state = new ChannelInteger(name + " state", this.channelName + ".MSTA", false);

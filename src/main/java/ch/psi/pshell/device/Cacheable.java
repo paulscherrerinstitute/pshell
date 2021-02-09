@@ -21,11 +21,15 @@ public interface Cacheable<T> extends Readable<T>, Timestamped {
 
     /**
      * If cache available and cache more recent than maximumAge then returns
-     * cache, otherwise reads from device
+     * cache, otherwise reads from device.
+     * If maximumAge is negative then returns cache if available, otherwise reads value.
      */
     default public T take(int maximumAge) throws IOException, InterruptedException {
         T value = take();
-        if ((maximumAge >= 0) && (value != null)) {
+        if (value != null) {            
+            if (maximumAge < 0){
+                return value;
+            }
             Integer age = getAge();
             if ((age != null) && (age <= maximumAge)) {
                 return value;

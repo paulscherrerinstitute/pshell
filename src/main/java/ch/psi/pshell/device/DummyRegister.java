@@ -24,7 +24,7 @@ public class DummyRegister extends RegisterBase<Double> {
     }
 
     public DummyRegister(String name) {
-        this(name, -1);
+        this(name, UNDEFINED_PRECISION);
     }
 
     public DummyRegister(String name, int precision) {

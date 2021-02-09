@@ -413,7 +413,7 @@ public class MotorGroupBase extends DeviceBase implements MotorGroup {
     @Override
     public void move(double[] destination) throws IOException, InterruptedException {
         assertWriteEnabled();
-        move(destination, -1);
+        move(destination, TIMEOUT_INFINITE);
     }
 
     public double[] getMoveSpeeds(Motor[] motors, double[] destinations, MoveMode mode, double time) throws IOException, InterruptedException {

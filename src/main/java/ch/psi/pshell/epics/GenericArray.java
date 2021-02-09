@@ -18,7 +18,7 @@ public class GenericArray extends RegisterBase implements Register.RegisterArray
     final String typeName;    
     final boolean timestamped;
     final InvalidValueAction invalidAction;
-    int size = -1;
+    int size = SIZE_MAX;
     RegisterArray register;
     Class type;
     boolean autoResolveType = true;    
@@ -26,7 +26,7 @@ public class GenericArray extends RegisterBase implements Register.RegisterArray
     
 
     public GenericArray(String name, final String channelName) {
-         this(name, channelName, -1);
+         this(name, channelName, SIZE_MAX);
     }
 
     public GenericArray(String name, final String channelName, final int size) {
@@ -72,13 +72,11 @@ public class GenericArray extends RegisterBase implements Register.RegisterArray
             boolean initialized = isInitialized();
             closeRegister();
             String name = getName() + " channel";
-            setRegister((EpicsRegisterArray) Epics.newChannelDevice(name, channelName, type, timestamped, -1, -1, invalidAction));
+            setRegister((EpicsRegisterArray) Epics.newChannelDevice(name, channelName, type, timestamped, UNDEFINED_PRECISION, SIZE_MAX, invalidAction));
             if (initialized) {
                 register.initialize();
             }
-            if (size != -1) {
-                register.setSize(size);
-            }
+            register.setSize(size);
         }
     }
 
@@ -128,9 +126,7 @@ public class GenericArray extends RegisterBase implements Register.RegisterArray
             if (!register.isInitialized()) {
                 register.initialize();
             }
-            if (size != -1) {
-                register.setSize(size);
-            }
+            register.setSize(size);
         }
     }
 
@@ -179,7 +175,7 @@ public class GenericArray extends RegisterBase implements Register.RegisterArray
     @Override
     public int getMaximumSize() {
         if (register == null) {
-            return -1;
+            return UNDEFINED;
         }
         return register.getMaximumSize();
     }
@@ -187,7 +183,7 @@ public class GenericArray extends RegisterBase implements Register.RegisterArray
     @Override
     public int getSize() {
         if (register == null) {
-            return -1;
+            return UNDEFINED;
         }
         return register.getSize();
     }
@@ -201,14 +197,27 @@ public class GenericArray extends RegisterBase implements Register.RegisterArray
     }
     
     public void setSizeToValidElements() throws IOException, InterruptedException{
-        setSize(getValidElemets());
+        setSize(SIZE_VALID);
     }
     
     
-    public int getValidElemets() throws IOException, InterruptedException{
+    public int getValidElements() throws IOException, InterruptedException{
         if ((register != null) && (register instanceof EpicsRegisterArray)){
-            return ((EpicsRegisterArray)register).getValidElemets();
+            return ((EpicsRegisterArray)register).getValidElements();
         }
-        return -1;
+        return SIZE_MAX;
     }    
+    
+    public void setKeepToValidElements(boolean value) throws IOException {   
+        if ((register != null) && (register instanceof EpicsRegisterArray)){
+            ((EpicsRegisterArray)register).setKeepToValidElements(value);
+        }        
+    }    
+    
+    public boolean getKeepToValidElements(){    
+        if ((register != null) && (register instanceof EpicsRegisterArray)){
+            return ((EpicsRegisterArray)register).getKeepToValidElements();
+        }        
+        return false;
+    }
 }

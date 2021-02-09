@@ -12,15 +12,15 @@ public class ChannelIntegerArray extends EpicsRegisterArray<int[]> implements In
     }
 
     public ChannelIntegerArray(String name, String channelName, int size) {
-        super(name, channelName, -1, size);
+        super(name, channelName, UNDEFINED_PRECISION, size);
     }
 
     public ChannelIntegerArray(String name, String channelName, int size, boolean timestamped) {
-        super(name, channelName, -1, size, timestamped);
+        super(name, channelName, UNDEFINED_PRECISION, size, timestamped);
     }
 
     public ChannelIntegerArray(String name, String channelName, int size, boolean timestamped, InvalidValueAction invalidAction) {
-        super(name, channelName, -1, size, timestamped, invalidAction);
+        super(name, channelName, UNDEFINED_PRECISION, size, timestamped, invalidAction);
     }
 
     @Override

@@ -86,9 +86,9 @@ public class Scienta extends AreaDetector {
          spectrum.setAccessType(AccessType.Read);
          */
         spectrum = new ScientaSpectrum();
-        image = new ChannelDoubleArray(name + " image", channelCtrl + ":IMAGE", 8, -1, false);
+        image = new ChannelDoubleArray(name + " image", channelCtrl + ":IMAGE", 8, EpicsRegister.SIZE_MAX, false);
         image.setAccessType(AccessType.Read);
-        extio = new ChannelDoubleArray(name + " extio", channelCtrl + ":EXTIO", 8, -1, false);
+        extio = new ChannelDoubleArray(name + " extio", channelCtrl + ":EXTIO", 8, EpicsRegister.SIZE_MAX, false);
         extio.setAccessType(AccessType.Read);
 
         currentChannel = new ChannelDouble(name + " current channel", channelCtrl + ":CURRENT_CHANNEL_RBV", 0, false);

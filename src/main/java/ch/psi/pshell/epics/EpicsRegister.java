@@ -14,10 +14,9 @@ import java.io.IOException;
 /**
  * Base for all EPICS register classes.
  */
-public abstract class EpicsRegister<T> extends RegisterBase<T> {
-
+public abstract class EpicsRegister<T> extends RegisterBase<T> {    
     Channel<T> channel;
-    int maximumSize = -1;
+    int maximumSize = UNDEFINED;
     final String channelName;
     final protected Boolean timestamped;
     final protected Boolean requestMetadata;
@@ -46,7 +45,7 @@ public abstract class EpicsRegister<T> extends RegisterBase<T> {
      * Volatile configuration
      */
     protected EpicsRegister(String name, String channelName) {
-        this(name, channelName, -1);
+        this(name, channelName, UNDEFINED_PRECISION);
     }
 
     protected EpicsRegister(String name, String channelName, int precision) {
@@ -223,27 +222,13 @@ public abstract class EpicsRegister<T> extends RegisterBase<T> {
             if (!isSimulated()) {
                 channel = (Channel<T>) Epics.newChannel(getChannelName(), getType());
                 maximumSize = channel.getSize();
-
-                if (this instanceof EpicsRegisterArray) {
-                    int size = ((EpicsRegisterArray) this).size;
-                    //Has already been initialized and size has been set
-                    if (size > 0) {
-                        channel.setSize(size);
-                    } else {
-                        Integer maxArrayBytes = Epics.getMaxArrayBytes();
-                        if (maxArrayBytes != null) {
-                            int maxArraySize = maxArrayBytes / ((EpicsRegisterArray) this).getComponentSize();
-                            if (maximumSize > maxArraySize) {
-                                maximumSize = maxArraySize;
-                                channel.setSize(maximumSize);
-                            }
-                        }
-                    }
-                }
-            }
+            }            
             if (isMonitored()) {
-                doSetMonitored(true);
-            }
+                //If this is an array then sets monitor after the size is initialized.            
+                if (! (this instanceof EpicsRegisterArray)) {
+                    doSetMonitored(true);
+                }
+            }            
         } catch (InterruptedException ex) {
             throw ex;
         } catch (java.util.concurrent.TimeoutException ex) {

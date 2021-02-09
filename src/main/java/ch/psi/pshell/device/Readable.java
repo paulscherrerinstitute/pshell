@@ -1,6 +1,5 @@
 package ch.psi.pshell.device;
 
-import ch.psi.pshell.core.Nameable;
 import ch.psi.pshell.device.Cacheable.CacheReadable;
 import ch.psi.utils.Arr;
 import ch.psi.utils.Convert;
@@ -12,8 +11,8 @@ import java.util.concurrent.CompletableFuture;
 /**
  * Interface implemented by sensors in scans.
  */
-public interface Readable<T> extends Nameable {
-
+public interface Readable<T> extends Record {
+   
     T read() throws IOException, InterruptedException;
 
     default CompletableFuture<T> readAsync() {

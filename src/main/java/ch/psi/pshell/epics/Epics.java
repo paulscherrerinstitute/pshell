@@ -253,15 +253,15 @@ public class Epics {
     }
 
     public static EpicsRegister newChannelDevice(String name, String channelName, Class type, boolean timestamped) {
-        return newChannelDevice(name, channelName, type, timestamped, -1);
+        return newChannelDevice(name, channelName, type, timestamped, EpicsRegister.UNDEFINED_PRECISION);
     }
 
     public static EpicsRegister newChannelDevice(String name, String channelName, Class type, boolean timestamped, int precision) {
-        return newChannelDevice(name, channelName, type, timestamped, -1, -1);
+        return newChannelDevice(name, channelName, type, timestamped, EpicsRegister.UNDEFINED_PRECISION, EpicsRegister.SIZE_MAX);
     }
 
     public static EpicsRegister newChannelDevice(String name, String channelName, Class type, boolean timestamped, int precision, int size) {
-        return newChannelDevice(name, channelName, type, timestamped, -1, -1, timestamped ? getDefaultInvalidValueAction() : null); ////By default, if not timestamped, request only value data
+        return newChannelDevice(name, channelName, type, timestamped, EpicsRegister.UNDEFINED_PRECISION, size, timestamped ? getDefaultInvalidValueAction() : null); ////By default, if not timestamped, request only value data
     }
 
     public static EpicsRegister newChannelDevice(String name, String channelName, Class type, boolean timestamped, int precision, int size, InvalidValueAction invalidAction) {

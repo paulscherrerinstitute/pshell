@@ -106,6 +106,7 @@ import ch.psi.pshell.bs.BsScan
 import ch.psi.pshell.bs.Stream as Stream
 import ch.psi.pshell.scripting.ViewPreference as Preference
 import ch.psi.pshell.scripting.ScriptUtils as ScriptUtils
+from ch.psi.pshell.device.Record import *
 from javax.swing.SwingUtilities import invokeLater, invokeAndWait
 
 def get_context():

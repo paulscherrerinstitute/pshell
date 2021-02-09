@@ -27,7 +27,7 @@ public class ReadonlyProcessVariable extends ReadonlyProcessVariableBase {
     public ReadonlyProcessVariable(String name, String channelName, boolean timestamped, InvalidValueAction invalidValueAction) {
         super(name, new ReadonlyProcessVariableConfig());
         this.channelName = channelName;
-        channel = new ChannelDouble(name + " channel", channelName, -1, timestamped, invalidValueAction);
+        channel = new ChannelDouble(name + " channel", channelName, UNDEFINED_PRECISION, timestamped, invalidValueAction);
         setChildren(new Device[]{channel});
         setTrackChildren(true);
     }

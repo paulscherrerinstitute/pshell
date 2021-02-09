@@ -15,7 +15,7 @@ import java.util.logging.Level;
  * Base class for readonly registers.
  */
 public abstract class ReadonlyRegisterBase<T> extends DeviceBase implements ReadonlyRegister<T> {
-    private int precision = -1;
+    private int precision = UNDEFINED_PRECISION;
 
     /**
      * Persisted configuration
@@ -67,7 +67,7 @@ public abstract class ReadonlyRegisterBase<T> extends DeviceBase implements Read
     }
 
     protected ReadonlyRegisterBase(String name) {
-        this(name, -1);
+        this(name, UNDEFINED_PRECISION);
     }
 
     protected ReadonlyRegisterBase(String name, int precision) {

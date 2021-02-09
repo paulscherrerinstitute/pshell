@@ -27,7 +27,7 @@ public interface MotorGroup extends Device, Readable<double[]>, Writable<double[
     }
 
     default void moveRel(double[] offset) throws IOException, InterruptedException {
-        moveRel(offset, -1);
+        moveRel(offset, TIMEOUT_INFINITE);
     }
 
     default CompletableFuture moveAsync(double[] destinations, MoveMode mode, double time) {
@@ -39,7 +39,7 @@ public interface MotorGroup extends Device, Readable<double[]>, Writable<double[
     }
 
     default CompletableFuture moveRelAsync(double[] offset) {
-        return moveRelAsync(offset, -1);
+        return moveRelAsync(offset, TIMEOUT_INFINITE);
     }
 
     //Overiding so Jython can contert list properly

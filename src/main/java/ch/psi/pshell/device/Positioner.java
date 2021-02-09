@@ -1,5 +1,6 @@
 package ch.psi.pshell.device;
 
+import static ch.psi.pshell.device.Readable.TIMEOUT_INFINITE;
 import ch.psi.utils.Threading;
 import java.io.IOException;
 import java.util.concurrent.CompletableFuture;
@@ -15,11 +16,11 @@ public interface Positioner extends Movable<Double> {
     void moveRel(Double offset, int timeout) throws IOException, InterruptedException;
 
     default void moveRel(Double offset) throws IOException, InterruptedException {
-        moveRel(offset, -1);
+        moveRel(offset, TIMEOUT_INFINITE);
     }
 
     default CompletableFuture moveRelAsync(Double offset) {
-        return moveRelAsync(offset, -1);
+        return moveRelAsync(offset, TIMEOUT_INFINITE);
     }
 
     default CompletableFuture moveRelAsync(Double offset, int timeout) {

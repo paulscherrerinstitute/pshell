@@ -26,7 +26,7 @@ public abstract class RegisterBase<T> extends ReadonlyRegisterBase<T> implements
     }
 
     protected RegisterBase(String name) {
-        this(name, -1);
+        this(name, UNDEFINED_PRECISION);
     }
 
     protected RegisterBase(String name, int precision) {
