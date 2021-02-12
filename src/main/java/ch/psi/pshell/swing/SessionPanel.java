@@ -17,6 +17,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JTable;
 import javax.swing.SwingUtilities;
+import javax.swing.UIManager;
 import javax.swing.event.TableModelEvent;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
@@ -34,23 +35,24 @@ public class SessionPanel extends MonitoredPanel implements SessionManagerListen
     boolean scrollRunsTable = true;
 
     public SessionPanel() {
-        initComponents();
+        initComponents();        
+        int minColSize =  (UIManager.getLookAndFeel().getName().equalsIgnoreCase("nimbus"))? 68:60;
         manager = Context.getInstance().getSessionManager();
         modelMetadata = (DefaultTableModel) tableMetadata.getModel();
         modelRuns = (DefaultTableModel) tableRuns.getModel();
-        tableRuns.getColumnModel().getColumn(0).setPreferredWidth(60);
-        tableRuns.getColumnModel().getColumn(0).setMaxWidth(60);
+        tableRuns.getColumnModel().getColumn(0).setPreferredWidth(minColSize);
+        tableRuns.getColumnModel().getColumn(0).setMaxWidth(minColSize);
         tableRuns.getColumnModel().getColumn(0).setResizable(false);
-        tableRuns.getColumnModel().getColumn(1).setPreferredWidth(60);
-        tableRuns.getColumnModel().getColumn(1).setMaxWidth(60);
+        tableRuns.getColumnModel().getColumn(1).setPreferredWidth(minColSize);
+        tableRuns.getColumnModel().getColumn(1).setMaxWidth(minColSize);
         tableRuns.getColumnModel().getColumn(1).setResizable(false);
-        tableRuns.getColumnModel().getColumn(2).setPreferredWidth(60);
-        tableRuns.getColumnModel().getColumn(2).setMaxWidth(60);
+        tableRuns.getColumnModel().getColumn(2).setPreferredWidth(minColSize);
+        tableRuns.getColumnModel().getColumn(2).setMaxWidth(minColSize);
         tableRuns.getColumnModel().getColumn(2).setResizable(false);
-        tableRuns.getColumnModel().getColumn(3).setPreferredWidth(60);
-        tableRuns.getColumnModel().getColumn(3).setMaxWidth(60);
+        tableRuns.getColumnModel().getColumn(3).setPreferredWidth(minColSize);
+        tableRuns.getColumnModel().getColumn(3).setMaxWidth(minColSize);
         tableRuns.getColumnModel().getColumn(3).setResizable(false);
-        tableRuns.getColumnModel().getColumn(5).setPreferredWidth(60);
+        tableRuns.getColumnModel().getColumn(5).setPreferredWidth(minColSize);
         tableRuns.getColumnModel().getColumn(5).setResizable(false);
 
         modelMetadata.addTableModelListener((TableModelEvent e) -> {
@@ -162,24 +164,26 @@ public class SessionPanel extends MonitoredPanel implements SessionManagerListen
     }
 
     @Override
-    public void onChange(SessionManager.ChangeType type) {
-        SwingUtilities.invokeLater(() -> {
-            switch (type) {
-                case INFO:
-                    updateInfo();
-                    if (scrollRunsTable) {
-                        if (modelRuns.getRowCount() > 0) {
-                            SwingUtils.scrollToVisible(tableRuns, modelRuns.getRowCount() - 1, 0);
+    public void onChange(int id, SessionManager.ChangeType type) {
+        if (id==manager.getCurrentSession()){
+            SwingUtilities.invokeLater(() -> {
+                switch (type) {
+                    case INFO:
+                        updateInfo();
+                        if (scrollRunsTable) {
+                            if (modelRuns.getRowCount() > 0) {
+                                SwingUtils.scrollToVisible(tableRuns, modelRuns.getRowCount() - 1, 0);
+                            }
+                        } else {
+                            scrollRunsTable = true;
                         }
-                    } else {
-                        scrollRunsTable = true;
-                    }
-                    break;
-                case METADATA:
-                    updateMetadata();
-                    break;
-            }
-        });
+                        break;
+                    case METADATA:
+                        updateMetadata();
+                        break;
+                }
+            });
+        }
     }
 
     @Override
@@ -202,6 +206,11 @@ public class SessionPanel extends MonitoredPanel implements SessionManagerListen
         long l = timestamp.longValue();
         return (l > 0) ? Chrono.getTimeStr(l, "HH:mm:ss") : "";
     }
+    
+    public static String getDateTimeStr(Number timestamp) {
+        long l = timestamp.longValue();
+        return (l > 0) ? Chrono.getTimeStr(l, "dd.MM HH:mm") : "";
+    }    
 
     public void update() {
         updateInfo();
@@ -212,14 +221,14 @@ public class SessionPanel extends MonitoredPanel implements SessionManagerListen
     public void updateInfo() {
         updating = true;
         try {
-            textId.setText(Str.toString(manager.getCurrentId()));
+            textId.setText(Str.toString(manager.getCurrentSession()));
             try {                
                 textName.setText(Str.toString(manager.getName()));
             } catch (Exception ex) {
                 textName.setText("");
             }
             try {
-                textStart.setText(getTimeStr(manager.getStart()));
+                textStart.setText(getDateTimeStr(manager.getStart()));
             } catch (Exception ex) {
                 textStart.setText("");
             }

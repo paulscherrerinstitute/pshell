@@ -1,18 +1,22 @@
 package ch.psi.pshell.swing;
 
 import ch.psi.pshell.core.Context;
+import ch.psi.pshell.core.JsonSerializer;
 import ch.psi.pshell.core.SessionManager;
 import ch.psi.pshell.core.SessionManager.MetadataType;
 import ch.psi.pshell.core.SessionManager.SessionManagerListener;
 import ch.psi.utils.IO;
 import ch.psi.utils.SciCat;
 import ch.psi.utils.Str;
+import ch.psi.utils.Sys;
 import ch.psi.utils.swing.StandardDialog;
 import ch.psi.utils.swing.SwingUtils;
 import ch.psi.utils.swing.SwingUtils.OptionResult;
 import ch.psi.utils.swing.SwingUtils.OptionType;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -25,6 +29,7 @@ import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
+import javax.swing.UIManager;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.event.TableModelEvent;
@@ -56,14 +61,16 @@ public class SessionsDialog extends StandardDialog implements SessionManagerList
         modelRuns = (DefaultTableModel) tableRuns.getModel();
         modelFiles = (DefaultTableModel) tableFiles.getModel();
         
-        tableRuns.getColumnModel().getColumn(0).setPreferredWidth(60);
-        tableRuns.getColumnModel().getColumn(0).setMaxWidth(60);
-        tableRuns.getColumnModel().getColumn(1).setPreferredWidth(60);
-        tableRuns.getColumnModel().getColumn(1).setMaxWidth(60);
-        tableRuns.getColumnModel().getColumn(2).setPreferredWidth(60);
-        tableRuns.getColumnModel().getColumn(2).setMaxWidth(60);
-        tableRuns.getColumnModel().getColumn(3).setPreferredWidth(60);
-        tableRuns.getColumnModel().getColumn(3).setMaxWidth(60);
+        
+        int minColSize =  (UIManager.getLookAndFeel().getName().equalsIgnoreCase("nimbus"))? 68:60;
+        tableRuns.getColumnModel().getColumn(0).setPreferredWidth(minColSize);
+        tableRuns.getColumnModel().getColumn(0).setMaxWidth(minColSize);
+        tableRuns.getColumnModel().getColumn(1).setPreferredWidth(minColSize);
+        tableRuns.getColumnModel().getColumn(1).setMaxWidth(minColSize);
+        tableRuns.getColumnModel().getColumn(2).setPreferredWidth(minColSize);
+        tableRuns.getColumnModel().getColumn(2).setMaxWidth(minColSize);
+        tableRuns.getColumnModel().getColumn(3).setPreferredWidth(minColSize);
+        tableRuns.getColumnModel().getColumn(3).setMaxWidth(minColSize);
         tableRuns.getColumnModel().getColumn(0).setResizable(false);                
         tableRuns.getColumnModel().getColumn(1).setResizable(false);                
         tableRuns.getColumnModel().getColumn(2).setResizable(false);                
@@ -73,28 +80,70 @@ public class SessionsDialog extends StandardDialog implements SessionManagerList
         tableRuns.getColumnModel().getColumn(5).setResizable(false);
         
         
-        update();        
+        update();                
         tableSessions.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
             public void valueChanged(ListSelectionEvent lse) {
                 if (!lse.getValueIsAdjusting()) {         
                     int row = tableSessions.getSelectedRow();
-                    if (row >=0){
-                        selectSession(Integer.valueOf(tableSessions.getValueAt(row, 0).toString()));
+                    if (row >=0){                        
+                        try{
+                            selectSession(Integer.valueOf(tableSessions.getValueAt(row, 0).toString()));
+                        } catch (Exception ex){
+                            selectSession(-1);
+                        }
                     }
                 }
             }
         });
         
+        tableRuns.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
+            public void valueChanged(ListSelectionEvent lse) {
+                if (!lse.getValueIsAdjusting() && !updating) {         
+                    updateButtons();
+                }
+            }
+        });        
+        
+        tableSessions.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                try {
+                    if ((e.getClickCount() == 2) && (!e.isPopupTrigger())) {
+                        if (currentSession>0){
+                            Map<String, Object> info = manager.getInfo(currentSession);                           
+                            info.put("metadata", manager.getMetadata(currentSession));  
+                            SwingUtils.showScrollableMessage(SessionsDialog.this, "Session Info",  
+                                    "Session id: " + currentSession, JsonSerializer.encode(info, true));
+                        }
+                    }
+                } catch (Exception ex) {
+                    Logger.getLogger(SessionPanel.class.getName()).log(Level.WARNING, null, ex);
+                }
+            }        
+        });
         modelRuns.addTableModelListener((TableModelEvent e) -> {
             if ((!updating) & (currentSession>=0)){
                 cancelMetadataEditing();
                 if (e.getType() == TableModelEvent.UPDATE){                    
                     int col=e.getColumn();
                     if (e.getColumn()==0){
-                        int runIndex = e.getFirstRow();                              
-                        try {
+                        int runIndex = e.getFirstRow();                                                      
+                        try {                            
                             Boolean value = (Boolean) modelRuns.getValueAt(runIndex, 0);
-                            manager.setRunEnabled(currentSession, runIndex, value);
+                            String data = (String) modelRuns.getValueAt(runIndex, 4);
+                            
+                            boolean editable = SessionManager.isSessionEditable(getSelectedSessionState());                                                   
+                            if (editable){
+                                //manager.setRunEnabled(currentSession, runIndex, value);
+                                manager.setRunEnabled(currentSession, data, value);
+                            } else {
+                                updating = true;
+                                try{
+                                    modelRuns.setValueAt(manager.isRunEnabled(currentSession, data), runIndex, 0);
+                                } finally{
+                                    updating = false;
+                                }
+                            }
                         } catch (IOException ex) {
                             Logger.getLogger(SessionPanel.class.getName()).log(Level.WARNING, null, ex);
                         }
@@ -118,7 +167,7 @@ public class SessionsDialog extends StandardDialog implements SessionManagerList
         
         modelMetadata.addTableModelListener((TableModelEvent e) -> {
             if (!updating) {
-                if ((!updating) & (currentSession>=0)){
+                if (currentSession>=0){
                     if (e.getType() == TableModelEvent.UPDATE) {
                         int row = e.getFirstRow();
                         String key = Str.toString(modelMetadata.getValueAt(row, 0));
@@ -131,8 +180,8 @@ public class SessionsDialog extends StandardDialog implements SessionManagerList
                         }                            
                         if (!Str.toString(value).equals(current)){
                             String state = getSelectedSessionState();
-                            if (getSelectedSessionState().equals(SessionManager.STATE_ARCHIVED)){
-                                SwingUtils.showMessage(this, "Error", "Cannot change session metadata if session state is " + state);
+                            if (!SessionManager.isSessionEditable(state)){
+                                SwingUtils.showMessage(this, "Error", "Cannot change session metadata if state is " + state);
                                 SwingUtilities.invokeLater(()->{ 
                                     selectSession(currentSession); 
                                 });                            
@@ -146,6 +195,8 @@ public class SessionsDialog extends StandardDialog implements SessionManagerList
                 }
             }
         });    
+        checkCurrentUser.setFont(UIManager.getFont("Table.font"));
+        checkCompleted.setFont(checkCurrentUser.getFont());
     }
     
     void addMetadata(int session, String key, Object value) {
@@ -179,15 +230,27 @@ public class SessionsDialog extends StandardDialog implements SessionManagerList
     }   
     
     @Override
-    public void onChange(SessionManager.ChangeType type) {
+    public void onChange(int id, SessionManager.ChangeType type) {
         SwingUtilities.invokeLater(() -> {
             int session = currentSession;
-            int current = manager.getCurrentId();
-            if (type==SessionManager.ChangeType.STATE){
-                update();
-            }
-            if ((session >=0) && (session==current)) {
-                selectSession(session);                
+            switch(type){
+                case STATE:
+                    update();
+                    if (session >=0) {
+                        selectSession(session);                
+                    }                    
+                    break;
+                case METADATA:
+                    if (id==session){
+                        updateMetadata();
+                    }
+                    break;
+                case INFO:
+                    if (id==session){
+                        updateRuns();
+                        updateFiles();
+                    }                    
+                    break;
             }
         });
     }    
@@ -199,44 +262,57 @@ public class SessionsDialog extends StandardDialog implements SessionManagerList
         
     void updateButtons(){
         boolean archiveEnabled = true;
+        boolean editEnabled = false;
         int sessionRow = tableSessions.getSelectedRow();
         if (panelSessions.isVisible()){            
             String sessionState = getSelectedSessionState();
-            archiveEnabled = sessionState.equals(SessionManager.STATE_COMPLETED) || sessionState.equals(SessionManager.STATE_ARCHIVED);
+            archiveEnabled = SessionManager.isSessionArchivable(sessionState);
+            editEnabled = SessionManager.isSessionEditable(sessionState) && (currentUser.equals(Sys.getUserName()));
         } 
-        buttonAddFile.setEnabled(currentSession>=0);
-        buttonRemoveFile.setEnabled(buttonAddFile.isEnabled() && tableFiles.getSelectedRow()>=0);
+        buttonAddFile.setEnabled(editEnabled);
+        buttonRemoveFile.setEnabled(editEnabled && tableFiles.getSelectedRow()>=0);
         
+        buttonAddMetadata.setEnabled(editEnabled);
+        int row =  tableMetadata.getSelectedRow();
+        buttonRemoveMetadata.setEnabled(editEnabled && (row>=0) && (!manager.isMetadataDefinedKey(Str.toString(modelMetadata.getValueAt(row,0)))));
+
         buttonZIP.setEnabled(sessionRow>=0); //Allow zipping open sessions
         buttonScicatIngestion.setEnabled(archiveEnabled);
+                
+        buttonDetach.setEnabled(editEnabled && (tableRuns.getSelectedRows().length>0));
+        buttonMove.setEnabled(editEnabled && (tableRuns.getSelectedRows().length>0));
     }
     
     void update(){
         updating = true;
         try{
-            List<Integer> ids = manager.getIDs();
+            
+            List<Integer> ids = manager.getIDs(
+                    checkCompleted.isSelected() ? SessionManager.STATE_COMPLETED : null, 
+                    checkCurrentUser.isSelected() ? Sys.getUserName() : null);            
             modelSessions.setNumRows(ids.size());
             for (int i=0; i<ids.size(); i++){
                 try{
                     int id = ids.get(i);
                     Map<String, Object> info = manager.getInfo(id);
                     String name = (String)info.getOrDefault("name", "");
-                    String start = SessionPanel.getTimeStr((Number)info.getOrDefault("start", 0));
-                    String stop = SessionPanel.getTimeStr((Number)info.getOrDefault("stop", 0));
+                    String start = SessionPanel.getDateTimeStr((Number)info.getOrDefault("start", 0));
+                    String stop = SessionPanel.getDateTimeStr((Number)info.getOrDefault("stop", 0));
                     String root = (String)info.getOrDefault("root", "");
+                    String user = (String)info.getOrDefault("user", "");
                     String state = (String)info.getOrDefault("state", "unknown");
                     modelSessions.setValueAt(String.valueOf(id), i, 0);
                     modelSessions.setValueAt(name, i, 1);
                     modelSessions.setValueAt(start, i, 2);
                     modelSessions.setValueAt(stop, i, 3);
-                    modelSessions.setValueAt(root, i, 4);
+                    modelSessions.setValueAt(user, i, 4);
                     modelSessions.setValueAt(state, i, 5);
                     //modelSessions.addRow(new Object[]{String.valueOf(id), name, start, stop, root, state});
                 } catch (Exception ex){
                     Logger.getLogger(SessionsDialog.class.getName()).log(Level.WARNING, null, ex);
                 }
-            }
-            updateButtons();
+            }            
+            updateButtons();            
         } finally {
             updating = false;
         }
@@ -251,55 +327,78 @@ public class SessionsDialog extends StandardDialog implements SessionManagerList
         } catch (Exception ex) {
         }        
     }
-
-    int currentSession = -1;
-    void selectSession(int session){
+    
+    void updateMetadata(){
         updating = true;
-        try{        
-            currentSession = session;    
-            cancelMetadataEditing();
-            try {   
-                List<ImmutablePair<String,Object>>  metadata= manager.getDisplayableMetadata(session);
-                modelMetadata.setNumRows(metadata.size());
-                int index = 0;
-                for (ImmutablePair<String,Object> entry : metadata) {
-                    modelMetadata.setValueAt(entry.getLeft(), index, 0);
-                    modelMetadata.setValueAt(entry.getRight(), index++, 1);
-                }
-            } catch (Exception ex) {
-                modelMetadata.setNumRows(0);
+        try {   
+            List<ImmutablePair<String,Object>>  metadata= manager.getDisplayableMetadata(currentSession);
+            modelMetadata.setNumRows(metadata.size());
+            int index = 0;
+            for (ImmutablePair<String,Object> entry : metadata) {
+                modelMetadata.setValueAt(entry.getLeft(), index, 0);
+                modelMetadata.setValueAt(entry.getRight(), index++, 1);
             }
-
-            try{
-                List<Map<String, Object>> runs = manager.getRuns(session, true);            
-                modelRuns.setNumRows(runs.size());
-                String dataHome = Context.getInstance().getSetup().getDataPath();
-                int index=0;
-                for(int i=0; i<runs.size(); i++ ){
-                    Map<String, Object> run = runs.get(i);                
-                    modelRuns.setValueAt(run.getOrDefault("enabled", true), index, 0);
-                    modelRuns.setValueAt(SessionPanel.getDateStr((Number)run.getOrDefault("start", 0)), index, 1);
-                    modelRuns.setValueAt(SessionPanel.getTimeStr((Number)run.getOrDefault("start", 0)), index, 2);
-                    modelRuns.setValueAt(SessionPanel.getTimeStr((Number)run.getOrDefault("stop", 0)), index, 3);
-                    modelRuns.setValueAt(Str.toString(run.getOrDefault("data", "")), index, 4);
-                    modelRuns.setValueAt(run.getOrDefault("state", ""), index++, 5);
-                }
-            } catch (Exception ex){
-                modelRuns.setNumRows(0);
-            }        
-
-            try{
-                List<String> files = manager.getAdditionalFiles(session, true);            
-                modelFiles.setNumRows(files.size());
-                for (int i=0; i<files.size(); i++){
-                    modelFiles.setValueAt(files.get(i), i,0);
-                }       
-            } catch (Exception ex){
-                modelFiles.setNumRows(0);
-            }  
-            updateButtons();
+        } catch (Exception ex) {
+            modelMetadata.setNumRows(0);
         } finally {
             updating = false;
+        }       }
+    
+    void updateRuns(){
+        updating = true;
+        try{
+            String filter = testRunFilter.getText();
+            List<Map<String, Object>> runs = manager.getRuns(currentSession, true, filter);            
+            modelRuns.setNumRows(runs.size());
+            String dataHome = Context.getInstance().getSetup().getDataPath();
+            int index=0;
+            for(int i=0; i<runs.size(); i++ ){
+                Map<String, Object> run = runs.get(i);                
+                modelRuns.setValueAt(run.getOrDefault("enabled", true), index, 0);
+                modelRuns.setValueAt(SessionPanel.getDateStr((Number)run.getOrDefault("start", 0)), index, 1);
+                modelRuns.setValueAt(SessionPanel.getTimeStr((Number)run.getOrDefault("start", 0)), index, 2);
+                modelRuns.setValueAt(SessionPanel.getTimeStr((Number)run.getOrDefault("stop", 0)), index, 3);
+                modelRuns.setValueAt(Str.toString(run.getOrDefault("data", "")), index, 4);
+                modelRuns.setValueAt(run.getOrDefault("state", ""), index++, 5);
+            }
+        } catch (Exception ex){
+            modelRuns.setNumRows(0);
+        } finally {
+            updating = false;
+        }   
+    }
+    
+    void updateFiles(){
+        updating = true;
+        try{
+            List<String> files = manager.getAdditionalFiles(currentSession, true);            
+            modelFiles.setNumRows(files.size());
+            for (int i=0; i<files.size(); i++){
+                modelFiles.setValueAt(files.get(i), i,0);
+            }       
+        } catch (Exception ex){
+            modelFiles.setNumRows(0);
+        } finally {
+            updating = false;
+        }   
+    }
+    String currentUser = "";
+    int currentSession = -1;
+    void selectSession(int session){
+        try{        
+            currentSession = session;    
+            currentUser = Str.toString(tableSessions.getValueAt(tableSessions.getSelectedRow(), 4));
+            cancelMetadataEditing();
+            testRunFilter.setText("");
+            updateMetadata();
+            updateRuns();
+            updateFiles();
+            tableRuns.clearSelection();
+            tableMetadata.clearSelection();
+            tableFiles.clearSelection();
+            updateButtons();
+        } finally {
+            this.setTitle((currentSession>0)? "Session Archiver: " + currentSession : "Session Archiver");         
         }
     }
     
@@ -343,13 +442,22 @@ public class SessionsDialog extends StandardDialog implements SessionManagerList
         panelSessions = new javax.swing.JPanel();
         jScrollPane1 = new javax.swing.JScrollPane();
         tableSessions = new javax.swing.JTable();
+        checkCurrentUser = new javax.swing.JCheckBox();
+        checkCompleted = new javax.swing.JCheckBox();
+        jLabel3 = new javax.swing.JLabel();
         panelRuns = new javax.swing.JPanel();
         jScrollPane3 = new javax.swing.JScrollPane();
         tableRuns = new javax.swing.JTable();
+        jLabel4 = new javax.swing.JLabel();
+        testRunFilter = new javax.swing.JTextField();
+        buttonDetach = new javax.swing.JButton();
+        buttonMove = new javax.swing.JButton();
         jSplitPane1 = new javax.swing.JSplitPane();
         panelMetadata = new javax.swing.JPanel();
         jScrollPane2 = new javax.swing.JScrollPane();
         tableMetadata = new javax.swing.JTable();
+        buttonAddMetadata = new javax.swing.JButton();
+        buttonRemoveMetadata = new javax.swing.JButton();
         panelFiles = new javax.swing.JPanel();
         jScrollPane4 = new javax.swing.JScrollPane();
         tableFiles = new javax.swing.JTable();
@@ -379,7 +487,7 @@ public class SessionsDialog extends StandardDialog implements SessionManagerList
 
             },
             new String [] {
-                "Id", "Name", "Start", "Finish", "Root", "State"
+                "Id", "Name", "Start", "Stop", "User", "State"
             }
         ) {
             Class[] types = new Class [] {
@@ -401,21 +509,49 @@ public class SessionsDialog extends StandardDialog implements SessionManagerList
         tableSessions.getTableHeader().setReorderingAllowed(false);
         jScrollPane1.setViewportView(tableSessions);
 
+        checkCurrentUser.setText("Current User");
+        checkCurrentUser.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                checkCurrentUserActionPerformed(evt);
+            }
+        });
+
+        checkCompleted.setText("Completed");
+        checkCompleted.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                checkCompletedActionPerformed(evt);
+            }
+        });
+
+        jLabel3.setText("Filter:");
+
         javax.swing.GroupLayout panelSessionsLayout = new javax.swing.GroupLayout(panelSessions);
         panelSessions.setLayout(panelSessionsLayout);
         panelSessionsLayout.setHorizontalGroup(
             panelSessionsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(panelSessionsLayout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jScrollPane1)
+                .addGroup(panelSessionsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jScrollPane1)
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, panelSessionsLayout.createSequentialGroup()
+                        .addGap(0, 0, Short.MAX_VALUE)
+                        .addComponent(jLabel3)
+                        .addGap(18, 18, 18)
+                        .addComponent(checkCurrentUser)
+                        .addGap(18, 18, 18)
+                        .addComponent(checkCompleted)))
                 .addContainerGap())
         );
         panelSessionsLayout.setVerticalGroup(
             panelSessionsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(panelSessionsLayout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 128, Short.MAX_VALUE)
-                .addContainerGap())
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 115, Short.MAX_VALUE)
+                .addGap(0, 0, 0)
+                .addGroup(panelSessionsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(checkCurrentUser)
+                    .addComponent(checkCompleted)
+                    .addComponent(jLabel3)))
         );
 
         panelRuns.setBorder(javax.swing.BorderFactory.createTitledBorder("Runs"));
@@ -446,21 +582,63 @@ public class SessionsDialog extends StandardDialog implements SessionManagerList
         tableRuns.getTableHeader().setReorderingAllowed(false);
         jScrollPane3.setViewportView(tableRuns);
 
+        jLabel4.setText("Filter:");
+
+        testRunFilter.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                testRunFilterActionPerformed(evt);
+            }
+        });
+
+        buttonDetach.setText("Detach");
+        buttonDetach.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                buttonDetachActionPerformed(evt);
+            }
+        });
+
+        buttonMove.setText("Move");
+        buttonMove.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                buttonMoveActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout panelRunsLayout = new javax.swing.GroupLayout(panelRuns);
         panelRuns.setLayout(panelRunsLayout);
         panelRunsLayout.setHorizontalGroup(
             panelRunsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(panelRunsLayout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jScrollPane3)
-                .addGap(7, 7, 7))
+                .addGroup(panelRunsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(panelRunsLayout.createSequentialGroup()
+                        .addComponent(jScrollPane3)
+                        .addGap(7, 7, 7))
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, panelRunsLayout.createSequentialGroup()
+                        .addComponent(buttonDetach)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(buttonMove)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(jLabel4)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(testRunFilter, javax.swing.GroupLayout.PREFERRED_SIZE, 220, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addContainerGap())))
         );
+
+        panelRunsLayout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {buttonDetach, buttonMove});
+
         panelRunsLayout.setVerticalGroup(
             panelRunsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, panelRunsLayout.createSequentialGroup()
+            .addGroup(panelRunsLayout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 126, Short.MAX_VALUE)
-                .addContainerGap())
+                .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 112, Short.MAX_VALUE)
+                .addGap(0, 0, 0)
+                .addGroup(panelRunsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel4)
+                    .addComponent(testRunFilter, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(buttonDetach)
+                    .addComponent(buttonMove))
+                .addGap(0, 0, 0))
         );
 
         jSplitPane1.setBorder(null);
@@ -495,7 +673,33 @@ public class SessionsDialog extends StandardDialog implements SessionManagerList
         });
         tableMetadata.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_INTERVAL_SELECTION);
         tableMetadata.getTableHeader().setReorderingAllowed(false);
+        tableMetadata.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseReleased(java.awt.event.MouseEvent evt) {
+                tableMetadataMouseReleased(evt);
+            }
+        });
+        tableMetadata.addKeyListener(new java.awt.event.KeyAdapter() {
+            public void keyReleased(java.awt.event.KeyEvent evt) {
+                tableMetadataKeyReleased(evt);
+            }
+        });
         jScrollPane2.setViewportView(tableMetadata);
+
+        buttonAddMetadata.setText("Add");
+        buttonAddMetadata.setEnabled(false);
+        buttonAddMetadata.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                buttonAddMetadataActionPerformed(evt);
+            }
+        });
+
+        buttonRemoveMetadata.setText("Remove");
+        buttonRemoveMetadata.setEnabled(false);
+        buttonRemoveMetadata.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                buttonRemoveMetadataActionPerformed(evt);
+            }
+        });
 
         javax.swing.GroupLayout panelMetadataLayout = new javax.swing.GroupLayout(panelMetadata);
         panelMetadata.setLayout(panelMetadataLayout);
@@ -503,20 +707,34 @@ public class SessionsDialog extends StandardDialog implements SessionManagerList
             panelMetadataLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(panelMetadataLayout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 279, Short.MAX_VALUE)
+                .addGroup(panelMetadataLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 275, Short.MAX_VALUE)
+                    .addGroup(panelMetadataLayout.createSequentialGroup()
+                        .addGap(0, 0, Short.MAX_VALUE)
+                        .addComponent(buttonAddMetadata)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addComponent(buttonRemoveMetadata)
+                        .addGap(0, 0, Short.MAX_VALUE)))
                 .addContainerGap())
         );
+
+        panelMetadataLayout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {buttonAddMetadata, buttonRemoveMetadata});
+
         panelMetadataLayout.setVerticalGroup(
             panelMetadataLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(panelMetadataLayout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 109, Short.MAX_VALUE)
-                .addContainerGap())
+                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 86, Short.MAX_VALUE)
+                .addGap(0, 0, 0)
+                .addGroup(panelMetadataLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(buttonRemoveMetadata)
+                    .addComponent(buttonAddMetadata))
+                .addGap(0, 0, 0))
         );
 
         jSplitPane1.setLeftComponent(panelMetadata);
 
-        panelFiles.setBorder(javax.swing.BorderFactory.createTitledBorder("Additional Files"));
+        panelFiles.setBorder(javax.swing.BorderFactory.createTitledBorder("Files"));
 
         tableFiles.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
@@ -583,7 +801,7 @@ public class SessionsDialog extends StandardDialog implements SessionManagerList
                         .addComponent(buttonAddFile)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addComponent(buttonRemoveFile)
-                        .addGap(0, 38, Short.MAX_VALUE))
+                        .addGap(0, 39, Short.MAX_VALUE))
                     .addComponent(jScrollPane4, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE))
                 .addContainerGap())
         );
@@ -594,12 +812,12 @@ public class SessionsDialog extends StandardDialog implements SessionManagerList
             panelFilesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(panelFilesLayout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jScrollPane4, javax.swing.GroupLayout.DEFAULT_SIZE, 74, Short.MAX_VALUE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jScrollPane4, javax.swing.GroupLayout.DEFAULT_SIZE, 86, Short.MAX_VALUE)
+                .addGap(0, 0, 0)
                 .addGroup(panelFilesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(buttonRemoveFile)
                     .addComponent(buttonAddFile))
-                .addContainerGap())
+                .addGap(0, 0, 0))
         );
 
         jSplitPane1.setRightComponent(panelFiles);
@@ -622,7 +840,7 @@ public class SessionsDialog extends StandardDialog implements SessionManagerList
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
                 .addGap(50, 50, 50)
                 .addComponent(checkPreserveDirectoryStructure)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 91, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 88, Short.MAX_VALUE)
                 .addComponent(buttonZIP)
                 .addGap(50, 50, 50))
         );
@@ -701,10 +919,10 @@ public class SessionsDialog extends StandardDialog implements SessionManagerList
                     .addComponent(jLabel1, javax.swing.GroupLayout.Alignment.TRAILING))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(textScicatLocation, javax.swing.GroupLayout.DEFAULT_SIZE, 308, Short.MAX_VALUE)
+                    .addComponent(textScicatLocation, javax.swing.GroupLayout.DEFAULT_SIZE, 306, Short.MAX_VALUE)
                     .addComponent(textScicatGroup)
                     .addComponent(textScicatPI))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 16, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 15, Short.MAX_VALUE)
                 .addComponent(jPanel3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap())
         );
@@ -885,14 +1103,122 @@ public class SessionsDialog extends StandardDialog implements SessionManagerList
         }
     }//GEN-LAST:event_textScicatLocationKeyReleased
 
+    private void checkCurrentUserActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_checkCurrentUserActionPerformed
+        try {
+            update();
+            selectSession(-1);
+        } catch (Exception ex) {
+            SwingUtils.showException(this, ex);
+        }
+    }//GEN-LAST:event_checkCurrentUserActionPerformed
+
+    private void checkCompletedActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_checkCompletedActionPerformed
+        try {
+            update();
+            selectSession(-1);
+        } catch (Exception ex) {
+            SwingUtils.showException(this, ex);
+        }
+    }//GEN-LAST:event_checkCompletedActionPerformed
+
+    private void testRunFilterActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_testRunFilterActionPerformed
+        try {
+            updateRuns();
+        } catch (Exception ex) {
+            SwingUtils.showException(this, ex);
+        }
+    }//GEN-LAST:event_testRunFilterActionPerformed
+
+    private void buttonDetachActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonDetachActionPerformed
+        try {
+            int[] row = tableRuns.getSelectedRows();
+            List<String> data = new ArrayList<>();
+            for (int i : tableRuns.getSelectedRows()){
+                data.add(Str.toString(modelRuns.getValueAt(i, 4)));
+            }
+            String currentName = manager.getName(currentSession);
+            String name = SwingUtils.getString(this, "Enter the new session name for detaching the selected data files", currentName);
+            if (name != null) {
+                manager.detach(name, currentSession, data);
+            }            
+        } catch (Exception ex) {
+            SwingUtils.showException(this, ex);
+        } 
+    }//GEN-LAST:event_buttonDetachActionPerformed
+
+    private void buttonMoveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonMoveActionPerformed
+        try {
+            int[] row = tableRuns.getSelectedRows();
+            List<String> data = new ArrayList<>();
+            for (int i : tableRuns.getSelectedRows()){
+                data.add(Str.toString(modelRuns.getValueAt(i, 4)));
+            }
+            
+            SessionReopenDialog dlg = new SessionReopenDialog(SwingUtils.getFrame(this),true, "Select Destination Session");
+            dlg.setLocationRelativeTo(this);
+            dlg.setVisible(true);
+            if (dlg.getResult()) {
+                manager.move(currentSession, data, dlg.getSelectedSession());
+            }
+        } catch (Exception ex) {
+            SwingUtils.showException(this, ex);
+        } 
+    }//GEN-LAST:event_buttonMoveActionPerformed
+
+    private void buttonAddMetadataActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonAddMetadataActionPerformed
+        try {
+            cancelMetadataEditing();
+            String name = SwingUtils.getString(this, "Enter the name of the new metadata field:", "");
+            if (name != null) {
+                if (manager.getMetadata(currentSession,name)!=null){
+                    throw new Exception("The field is already defined: " + name);
+                } else {
+                    manager.setMetadata(currentSession, name, manager.getMetadataDefault(name));
+                    updateMetadata();
+                }
+            }            
+        } catch (Exception ex) {
+            SwingUtils.showException(this, ex);
+        } 
+    }//GEN-LAST:event_buttonAddMetadataActionPerformed
+
+    private void buttonRemoveMetadataActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonRemoveMetadataActionPerformed
+        try {
+            cancelMetadataEditing();
+            int row = tableMetadata.getSelectedRow();
+            if(row>=0){
+                manager.setMetadata(currentSession, Str.toString(modelMetadata.getValueAt(row, 0)), null);
+                updateMetadata();
+            }
+        } catch (Exception ex) {
+            SwingUtils.showException(this, ex);
+        } 
+    }//GEN-LAST:event_buttonRemoveMetadataActionPerformed
+
+    private void tableMetadataKeyReleased(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_tableMetadataKeyReleased
+        updateButtons();
+    }//GEN-LAST:event_tableMetadataKeyReleased
+
+    private void tableMetadataMouseReleased(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_tableMetadataMouseReleased
+        updateButtons();
+    }//GEN-LAST:event_tableMetadataMouseReleased
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton buttonAddFile;
+    private javax.swing.JButton buttonAddMetadata;
+    private javax.swing.JButton buttonDetach;
+    private javax.swing.JButton buttonMove;
     private javax.swing.JButton buttonRemoveFile;
+    private javax.swing.JButton buttonRemoveMetadata;
     private javax.swing.JButton buttonScicatIngestion;
     private javax.swing.JButton buttonZIP;
+    private javax.swing.JCheckBox checkCompleted;
+    private javax.swing.JCheckBox checkCurrentUser;
     private javax.swing.JCheckBox checkPreserveDirectoryStructure;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
+    private javax.swing.JLabel jLabel3;
+    private javax.swing.JLabel jLabel4;
     private javax.swing.JLabel jLabel5;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel2;
@@ -912,6 +1238,7 @@ public class SessionsDialog extends StandardDialog implements SessionManagerList
     private javax.swing.JTable tableMetadata;
     private javax.swing.JTable tableRuns;
     private javax.swing.JTable tableSessions;
+    private javax.swing.JTextField testRunFilter;
     private javax.swing.JTextField textScicatGroup;
     private javax.swing.JTextField textScicatLocation;
     private javax.swing.JTextField textScicatPI;

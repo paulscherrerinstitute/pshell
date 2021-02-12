@@ -1,7 +1,5 @@
 package ch.psi.pshell.ui;
 
-import ch.psi.pshell.swing.SessionPanel;
-import ch.psi.pshell.swing.SessionsDialog;
 import java.awt.Component;
 import java.awt.Container;
 import java.awt.GridBagConstraints;
@@ -105,6 +103,9 @@ import ch.psi.pshell.swing.SearchPanel;
 import ch.psi.pshell.swing.TasksEditor;
 import ch.psi.pshell.swing.UpdatablePanel;
 import ch.psi.pshell.swing.UsersEditor;
+import ch.psi.pshell.swing.SessionPanel;
+import ch.psi.pshell.swing.SessionsDialog;
+import ch.psi.pshell.swing.SessionReopenDialog;
 import ch.psi.pshell.ui.Preferences.PanelLocation;
 import ch.psi.utils.Convert;
 import ch.psi.utils.swing.ExtensionFileFilter;
@@ -413,7 +414,7 @@ public class View extends MainFrame {
             }
         });
 
-        context.getSessionManager().addListener((type) -> {
+        context.getSessionManager().addListener((id, type) -> {
             if (type == ChangeType.STATE) {
                 SwingUtilities.invokeLater(() -> {
                     checkSessionPanel();
@@ -1838,7 +1839,7 @@ public class View extends MainFrame {
     }
 
     void checkSessionPanel() {        
-        if (context.getSessionManager().getCurrentId() > 0) {
+        if (context.getSessionManager().getCurrentSession() > 0) {
             showSessionPanel();
         } else {
             hideSessionPanel();
@@ -1867,8 +1868,8 @@ public class View extends MainFrame {
             }
             tabStatus.add(sessionPanel, i);
             tabStatus.setTitleAt(i, "Session");
-        }
-        tabStatus.setSelectedComponent(sessionPanel);
+            tabStatus.setSelectedComponent(sessionPanel);
+        }        
     }
 
     void hideSessionPanel() {
@@ -2307,9 +2308,12 @@ public class View extends MainFrame {
         menuStripChart = new javax.swing.JMenuItem();
         menuSessions = new javax.swing.JMenu();
         menuSessionStart = new javax.swing.JMenuItem();
+        menuSessionReopen = new javax.swing.JMenuItem();
         menuSessionPause = new javax.swing.JMenuItem();
         menuSessionResume = new javax.swing.JMenuItem();
         menuSessionStop = new javax.swing.JMenuItem();
+        jSeparator25 = new javax.swing.JPopupMenu.Separator();
+        menuSessionCreate = new javax.swing.JMenuItem();
         jSeparator7 = new javax.swing.JPopupMenu.Separator();
         menuSessionsMetadata = new javax.swing.JMenuItem();
         jSeparator23 = new javax.swing.JPopupMenu.Separator();
@@ -3163,6 +3167,15 @@ public class View extends MainFrame {
         });
         menuSessions.add(menuSessionStart);
 
+        menuSessionReopen.setText(bundle.getString("View.menuSessionReopen.text")); // NOI18N
+        menuSessionReopen.setName("menuSessionReopen"); // NOI18N
+        menuSessionReopen.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                menuSessionReopenActionPerformed(evt);
+            }
+        });
+        menuSessions.add(menuSessionReopen);
+
         menuSessionPause.setText(bundle.getString("View.menuSessionPause.text")); // NOI18N
         menuSessionPause.setName("menuSessionPause"); // NOI18N
         menuSessionPause.addActionListener(new java.awt.event.ActionListener() {
@@ -3189,6 +3202,18 @@ public class View extends MainFrame {
             }
         });
         menuSessions.add(menuSessionStop);
+
+        jSeparator25.setName("jSeparator25"); // NOI18N
+        menuSessions.add(jSeparator25);
+
+        menuSessionCreate.setText(bundle.getString("View.menuSessionCreate.text")); // NOI18N
+        menuSessionCreate.setName("menuSessionCreate"); // NOI18N
+        menuSessionCreate.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                menuSessionCreateActionPerformed(evt);
+            }
+        });
+        menuSessions.add(menuSessionCreate);
 
         jSeparator7.setName("jSeparator7"); // NOI18N
         menuSessions.add(jSeparator7);
@@ -4566,9 +4591,7 @@ public class View extends MainFrame {
                     }
                     if (logQueryLevel == null) {
                         logQueryLevel = new JComboBox();
-                        SwingUtils
-                                .setEnumCombo(logQueryLevel, Configuration.LogLevel.class
-                                );
+                        SwingUtils.setEnumCombo(logQueryLevel, Configuration.LogLevel.class);
                         logQueryLevel.remove(0); //Remove LogLevel.Off
                         logQueryLevel.setSelectedItem(Configuration.LogLevel.Info);
                     }
@@ -4741,7 +4764,6 @@ public class View extends MainFrame {
         try {
             SessionsDialog dlg = new SessionsDialog(this, false);
             dlg.setDefaultCloseOperation(DISPOSE_ON_CLOSE);
-            dlg.setTitle("Session Archiver");
             showChildWindow(dlg);
         } catch (Exception ex) {
             showException(ex);
@@ -4755,7 +4777,7 @@ public class View extends MainFrame {
                 if (sessionPanel!=null){
                     tabStatus.setSelectedComponent(sessionPanel);
                 }
-                int id = context.getSessionManager().getCurrentId();
+                int id = context.getSessionManager().getCurrentSession();
                 String name = context.getSessionManager().getCurrentName();
                 String session = name.isBlank() ? String.valueOf(id) : String.valueOf(id) + "-" + name;
                 
@@ -4782,8 +4804,7 @@ public class View extends MainFrame {
                     if (checkArchive.isSelected()){
                         SessionsDialog dlg = new SessionsDialog(this, false);
                         dlg.setSingleSession(id);
-                        dlg.setDefaultCloseOperation(DISPOSE_ON_CLOSE);
-                        dlg.setTitle("Session Archiver: " + session);             
+                        dlg.setDefaultCloseOperation(DISPOSE_ON_CLOSE);                        
                         showChildWindow(dlg);
                     }
                 }
@@ -4832,14 +4853,39 @@ public class View extends MainFrame {
     private void menuSessionsStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_menuSessionsStateChanged
         try{                
             boolean sessionStarted = context.getSessionManager().isStarted();
-            Boolean paused = sessionStarted ? context.getSessionManager().isPaused(): false;            
+            Boolean paused = sessionStarted ? context.getSessionManager().isPaused(): false;     
             menuSessionStop.setEnabled(sessionStarted);
-            menuSessionStart.setEnabled(!sessionStarted);                
+            menuSessionStart.setEnabled(!sessionStarted);           
+            menuSessionReopen.setEnabled(!sessionStarted);           
             menuSessionPause.setEnabled(sessionStarted && !paused);
-            menuSessionResume.setEnabled(sessionStarted && paused);            
+            menuSessionResume.setEnabled(sessionStarted && paused);                              
+            menuSessionCreate.setEnabled(dataPanel.isShowing() && dataPanel.getSelectedFilesCount() > 0);
         } catch (Exception ex) {
         }
     }//GEN-LAST:event_menuSessionsStateChanged
+
+    private void menuSessionReopenActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuSessionReopenActionPerformed
+        try{                
+            SessionReopenDialog dlg = new SessionReopenDialog(this,true, "Reopen Session");
+            this.showChildWindow(dlg);
+            if (dlg.getResult()) {
+                context.getSessionManager().restart(dlg.getSelectedSession());
+            }          
+        } catch (Exception ex) {
+            showException(ex);
+        }
+    }//GEN-LAST:event_menuSessionReopenActionPerformed
+
+    private void menuSessionCreateActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuSessionCreateActionPerformed
+        try{
+            String name = SwingUtils.getString(this, "Enter the session name created with the files selected in the data panel:", "");
+            if (name != null) {
+                context.getSessionManager().create(name, dataPanel.getSelectedFiles(), null, null);
+            }
+        } catch (Exception ex) {
+            showException(ex);
+        }        
+    }//GEN-LAST:event_menuSessionCreateActionPerformed
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton buttonAbort;
@@ -4875,6 +4921,7 @@ public class View extends MainFrame {
     private javax.swing.JPopupMenu.Separator jSeparator22;
     private javax.swing.JPopupMenu.Separator jSeparator23;
     private javax.swing.JPopupMenu.Separator jSeparator24;
+    private javax.swing.JPopupMenu.Separator jSeparator25;
     private javax.swing.JPopupMenu.Separator jSeparator3;
     private javax.swing.JPopupMenu.Separator jSeparator4;
     private javax.swing.JToolBar.Separator jSeparator5;
@@ -4940,8 +4987,10 @@ public class View extends MainFrame {
     private javax.swing.JMenuItem menuRunNext;
     private javax.swing.JMenuItem menuSave;
     private javax.swing.JMenuItem menuSaveAs;
+    private javax.swing.JMenuItem menuSessionCreate;
     private javax.swing.JMenuItem menuSessionHistory;
     private javax.swing.JMenuItem menuSessionPause;
+    private javax.swing.JMenuItem menuSessionReopen;
     private javax.swing.JMenuItem menuSessionResume;
     private javax.swing.JMenuItem menuSessionStart;
     private javax.swing.JMenuItem menuSessionStop;

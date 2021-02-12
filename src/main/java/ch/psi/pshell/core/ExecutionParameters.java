@@ -160,7 +160,7 @@ public class ExecutionParameters {
     }
     
     public int getCurrentSessionId(){
-        return Context.getInstance().getSessionManager().getCurrentId();
+        return Context.getInstance().getSessionManager().getCurrentSession();
     }
 
     public String getCurrentSessionName(){

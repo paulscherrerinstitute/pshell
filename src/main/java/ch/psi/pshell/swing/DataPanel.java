@@ -1543,6 +1543,22 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
         SwingUtils.showDialog(parent, title, null, plotPanel);
         return ret;
     }
+    
+    public int getSelectedFilesCount(){
+        return treeFolder.getSelectionCount();
+    }
+    
+    public List<String> getSelectedFiles(){
+        List<String> ret = new ArrayList<>();
+        for (TreePath tp : treeFolder.getSelectionPaths()){
+            String file = getDataPath(tp);
+            if (file.startsWith("/")) {
+                file = file.substring(1);
+            }
+            ret.add(file);
+        }
+        return ret;                
+    }
 
     public static void main(String args[]) {      
         App.init(args);

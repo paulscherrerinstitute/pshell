@@ -103,6 +103,12 @@ public class Setup extends Config {
     public String configFileTasks = TOKEN_CONFIG + "/tasks.properties";
     public String configFileSettings = TOKEN_CONFIG + "/settings.properties";
     public String configFileVariables = TOKEN_CONFIG + "/variables.properties";
+    public String configFileSessions = TOKEN_CONFIG + "/sessions.properties";
+    
+    public String userSessionsPath = TOKEN_SESSIONS + "/user";
+    public String consoleSessionsPath = TOKEN_SESSIONS + "/console";
+    
+    
 
     String originalScriptPath;
     String originalDataPath;
@@ -153,15 +159,27 @@ public class Setup extends Config {
         super.load(fileName);
 
         //Backward compatibility
-        if ((configFileSettings == null) || (configFileSettings.equals(String.valueOf((Object) null)))) {
+        if (Str.toString(configFileSettings).equals((Str.toString(null)))) {
             configFileSettings = TOKEN_CONFIG + "/settings.properties";
             save();
         }
-        if ((configFileVariables == null) || (configFileVariables.equals(String.valueOf((Object) null)))) {
+        if (Str.toString(configFileVariables).equals((Str.toString(null)))) {
             configFileVariables = TOKEN_CONFIG + "/variables.properties";
             save();
         }
-
+        if (Str.toString(configFileSessions).equals((Str.toString(null)))) {
+            configFileSessions = TOKEN_CONFIG + "/sessions.properties";
+            save();
+        }
+        if (Str.toString(consoleSessionsPath).equals((Str.toString(null)))) {
+            consoleSessionsPath = TOKEN_SESSIONS + "/console";
+            save();
+        }
+        if (Str.toString(userSessionsPath).equals((Str.toString(null)))) {
+            userSessionsPath = TOKEN_SESSIONS + "/user";
+            save();
+        }
+ 
         if (System.getProperty(PROPERTY_DATA_PATH) != null) {
             dataPath = System.getProperty(PROPERTY_DATA_PATH);
         }
@@ -389,7 +407,7 @@ public class Setup extends Config {
             }
             //Cannot be used in defining other tokens, only for data folder as depends on the running context
             while (path.contains(TOKEN_SESSION_ID)) {
-                int index = ctx.getSessionManager().getCurrentId();
+                int index = ctx.getSessionManager().getCurrentSession();
                 int i = path.indexOf(TOKEN_SESSION_ID) + TOKEN_SESSION_ID.length();
                 if ((i < path.length()) && path.substring(i, i + 1).equals("%")) {
                     String format = path.substring(i).split(" ")[0];
@@ -477,13 +495,13 @@ public class Setup extends Config {
     }
 
     public String getConsoleSessionsPath() {
-        return getSessionsPath() + "/console";
+        return expandPath(consoleSessionsPath);        
     }
 
     public String getUserSessionsPath() {
-        return getSessionsPath() + "/user";
+        return expandPath(userSessionsPath);        
     }
-
+    
     public String getContextPath() {
         return expandedPathNames.get(contextPath);
     }
@@ -707,6 +725,11 @@ public class Setup extends Config {
     public String getPluginsConfigurationFile() {
         return expandPath(configFilePlugins);
     }
+    
+    public String getSessionsConfigurationFile() {
+        return expandPath(configFileSessions);        
+    }
+        
 
     public String getSessionMetadataDefinitionFile() {
         return expandPath("{config}/session_metadata.properties");

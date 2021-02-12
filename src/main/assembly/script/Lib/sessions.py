@@ -41,6 +41,54 @@ def session_cancel():
     """
     return _sm().cancel()        
 
+def session_restart(id):
+    """ Reopens a completed if not yet archived and if belongs to the same user.
+
+    Args:
+         id(int): Session id.
+    """
+    return _sm().restart(id)  
+
+def session_move(origin, files, dest):
+    """ Moves a list of run files (relative to root) to another session.
+        Sessions must not be archived and belong to the same user.
+
+    Args:
+        origin(int): Origin session id.
+        files(list): file names
+        dest(int): Destination session id.
+    """
+    return _sm().move(origin, files, dest)  
+
+def session_detach(name, id, files):
+    """ Detaches a list of run files (relative to root) to a new session.
+        Session must not be archived and  belong to the same user.
+
+    Args:
+        name(str): Name of new session.
+        id(int): Session id.
+        files(list): file names        
+
+    Returns:
+        New session id (int)  
+    """
+    return _sm().detach(name, id, files)  
+
+
+def session_create(name, files, metadata=None, root=None):
+    """ Create a session from existing data files.
+
+    Args:
+        name(str): Name of new session.
+        files(list): file names relative to root       
+        metadata(dict): Map of initial metadata parameters
+                         If None(Default) use the default metadata definition. 
+        root(str): data root path. If None(Default) uses default data path.
+
+    Returns:
+        New session id (int)  
+    """
+    return _sm().create(name, files, metadata, root)  
 
 def session_id():
     """ Returns current session id (0 if no session is started).
@@ -48,7 +96,7 @@ def session_id():
     Returns:
         session id (int)       
     """
-    return _sm().getCurrentId()
+    return _sm().getCurrentSession()
 
 
 def session_name():
