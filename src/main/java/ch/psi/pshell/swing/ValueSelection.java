@@ -363,6 +363,9 @@ public class ValueSelection extends MonitoredPanel implements Observable<ValueSe
                 .addComponent(buttonEnd)
                 .addGap(0, 0, 0))
         );
+
+        panelRightLayout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {buttonEnd, buttonNext});
+
         panelRightLayout.setVerticalGroup(
             panelRightLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(panelRightLayout.createSequentialGroup()
