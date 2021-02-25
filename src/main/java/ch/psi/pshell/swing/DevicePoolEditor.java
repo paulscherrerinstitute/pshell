@@ -253,6 +253,7 @@ public class DevicePoolEditor extends Editor {
                 ch.psi.pshell.epics.ChannelString.class.getName(),
                 ch.psi.pshell.epics.ControlledVariable.class.getName(),
                 ch.psi.pshell.epics.DiscretePositioner.class.getName(),
+                ch.psi.pshell.epics.GenericChannel.class.getName(),
                 ch.psi.pshell.epics.GenericArray.class.getName(),
                 ch.psi.pshell.epics.GenericMatrix.class.getName(),
                 ch.psi.pshell.epics.Manipulator.class.getName(),
