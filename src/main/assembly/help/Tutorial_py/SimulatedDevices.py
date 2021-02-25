@@ -175,10 +175,9 @@ src1.polling = 100
 src2.polling = 100
 
 #Some configuration for so the imaging will work out of the box
-if not configured:
-    import ch.psi.pshell.imaging.Colormap
+if not configured:    
     src1.config.colormapAutomatic = True
-    src1.config.colormap = ch.psi.pshell.imaging.Colormap.Temperature
+    src1.config.colormap = Colormap.Temperature
     src1.config.save()
     src2.config.colormapAutomatic = True
     src2.config.save()

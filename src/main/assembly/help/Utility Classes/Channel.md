@@ -3,13 +3,10 @@
 
 This class encapsulates a Epics CA connection. __caput__ and __caget__ functions create and destroy a connection 
 for each access and therefore __Channel__ objects are more efficient to be used inside loops.
+__Channel__ objects can be used in scan functions as positioners or sensors.
 
 For permanent global objects, the use of classes __ch.psi.epics.Channel*__ is preferable as they manage  
 reconnection. 
-
-This class is not a __Device__ extension, but it implements __Readable__ and __Writable__, and therefore 
-__Channel__ objects can be used in scan functions as positioners or sensors.
-
 
 
 Methods:

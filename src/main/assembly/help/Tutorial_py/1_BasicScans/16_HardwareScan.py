@@ -2,9 +2,6 @@
 # Use of HardwareScan 
 ################################################################################################### 
 
-import ch.psi.pshell.crlogic.CrlogicPositioner as CrlogicPositioner
-import ch.psi.pshell.crlogic.CrlogicSensor as CrlogicSensor
-
 #sc1.stop()
 #sc1.setOneShot()
 #sc1.channels[0].setPreset(False)

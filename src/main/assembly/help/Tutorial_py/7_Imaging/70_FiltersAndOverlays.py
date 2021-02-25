@@ -4,17 +4,11 @@
 ################################################################################################### 
 
 
-import ch.psi.pshell.imaging.Filter as Filter
-from ch.psi.pshell.imaging.Utils import *
-from ch.psi.pshell.imaging.Overlays import *
-import ch.psi.pshell.imaging.Pen as Pen
-
-
 class MyFilter(Filter):
     def process(self, image, data):
-        image = grayscale(image)
-        image = blur(image)
-        image = sobel(image)
+        image = ImagingUtils.grayscale(image)
+        image = ImagingUtils.blur(image)
+        image = ImagingUtils.sobel(image)
         return image
 
 #Setting the filter to a source
@@ -35,11 +29,11 @@ renderer = show_panel(src1)
 #Overlays
 plots = None
 size = renderer.getImageSize() ; 
-ov_text = Text(Pen(java.awt.Color.GREEN.darker()), "Ploting Histogram", 
+ov_text = Overlays.Text(Pen(java.awt.Color.GREEN.darker()), "Ploting Histogram", 
     java.awt.Font("Verdana", java.awt.Font.PLAIN, 12), java.awt.Point(20,20))
-ov_line = Line(Pen(java.awt.Color.DARK_GRAY), java.awt.Point(0,size.height/2), java.awt.Point( size.width ,size.height/2))
-ov_rect = Rect(Pen(java.awt.Color.DARK_GRAY), java.awt.Point(size.width/2 -15,size.height/2+10), java.awt.Dimension(30,30))
-ov_cross = Crosshairs(Pen(java.awt.Color.DARK_GRAY),  java.awt.Point(size.width/2 ,size.height/3), java.awt.Dimension(15,15))
+ov_line = Overlays.Line(Pen(java.awt.Color.DARK_GRAY), java.awt.Point(0,size.height/2), java.awt.Point( size.width ,size.height/2))
+ov_rect = Overlays.Rect(Pen(java.awt.Color.DARK_GRAY), java.awt.Point(size.width/2 -15,size.height/2+10), java.awt.Dimension(30,30))
+ov_cross = Overlays.Crosshairs(Pen(java.awt.Color.DARK_GRAY),  java.awt.Point(size.width/2 ,size.height/3), java.awt.Dimension(15,15))
 ov_rect.setSolid(True)
 ov_rect.setMovable(True)
 
@@ -49,7 +43,7 @@ try:
     while(True):       
         (hd,xd) = histogram(im1.read(), bin=0.1)     
         
-        image = ch.psi.pshell.imaging.Utils.grayscale(src1.getOutput())   
+        image = ImagingUtils.grayscale(src1.getOutput())   
         data = Convert.toUnsigned(image.getData().getDataBuffer().getData())
         (hi,xi) = histogram(data, range_min=0, range_max=255)     
     

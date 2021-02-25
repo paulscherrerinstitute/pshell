@@ -19,7 +19,7 @@ import java.util.logging.Level;
  * The base class for Device implementations
  */
 public abstract class DeviceBase extends GenericDeviceBase<DeviceListener> implements Device {
-
+    
     static ScheduledExecutorService schedulerSimulation;
     final protected Object valueWaitLock = new Object();
     final protected Object cacheUpdateLock = new Object();

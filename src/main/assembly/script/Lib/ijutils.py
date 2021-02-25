@@ -8,7 +8,7 @@
 #   Analyze: https://imagej.nih.gov/ij/docs/guide/146-30.html#toc-Section-30
 
 import ch.psi.utils.Convert as Convert
-import ch.psi.pshell.imaging.Utils as Utils
+import ch.psi.pshell.imaging.Utils as ImagingUtils
 from startup import get_context, expand_path
 import java.awt.image.BufferedImage as BufferedImage
 import jarray
@@ -77,7 +77,7 @@ def load_image(image, title = "img"):
         except:
             pass
         try:
-            image = Utils.newImage(file)
+            image = ImagingUtils.newImage(file)
         except:
             #try loading from assembly
             image = get_context().setup.getAssemblyImage(image)

@@ -29,7 +29,6 @@ channel.close()
 
 
 #Or else we can use a Device
-import ch.psi.pshell.epics.ChannelDouble as ChannelDouble
 channel = ChannelDouble("My Channel", channel_name)
 channel.initialize()
 lscan(channel, ai2, 0, 10, 0.1)
@@ -66,8 +65,6 @@ a = lscan(m1, (ai1, ai2), 0, 0.1, 20, 0.01, after_read=after_read)
 #The following scan is performed waiting "TESTIOC:TESTCALCOUT:Input" value to be 0 after every write.
 #A readback is used with with no dependency on the setpoint (the in-position band is set to infinity).
 
-import ch.psi.pshell.epics.ControlledVariable as ControlledVariable
-import ch.psi.pshell.epics.ChannelSettlingCondition as ChannelSettlingCondition
 caput("TESTIOC:TESTCALCOUT:Input", 0)
 positioner = ControlledVariable("positioner", "TESTIOC:TESTCALCOUT:Output", "TESTIOC:TESTSINUS:SinCalc")
 positioner.config.resolution = float('inf') 

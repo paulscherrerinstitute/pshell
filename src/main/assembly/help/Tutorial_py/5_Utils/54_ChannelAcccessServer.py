@@ -2,8 +2,6 @@
 # Creation of EPICS CA servers over register devices
 ################################################################################################### 
 
-import ch.psi.pshell.epics.CAS as CAS
-
 cas = []
 
 #CAS.setServerPort(5062)

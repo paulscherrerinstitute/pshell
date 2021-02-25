@@ -29,7 +29,7 @@ public class BsScan extends LineScan {
     boolean addPid;
 
     public BsScan(Stream stream, int records, int time_ms) {
-        this(stream, records, time_ms, 1);
+        this(stream, records, time_ms, 1);                        
     }
     
     public BsScan(Stream stream, int records, int time_ms, int passes) {

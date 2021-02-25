@@ -14,9 +14,6 @@ sleep(0.5) #Give some time for the averager to fill its buffer, before first use
 res= lscan(ao1, (av, av.samples), 0, 40, 20, 0.1)
 
 #Second option: creating pseudo-devices
-import ch.psi.pshell.device.ReadonlyRegisterBase as ReadonlyRegisterBase
-import ch.psi.pshell.device.ReadonlyRegister.ReadonlyRegisterArray as ReadonlyRegisterArray
-
 class Mean(Readable):
     def __init__(self, dev):
         self.dev =dev    

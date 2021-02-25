@@ -3,13 +3,10 @@
 ################################################################################################### 
 
 from ijutils import get_measurement, load_array
-import ch.psi.pshell.imaging.Filter as Filter
-from ch.psi.pshell.imaging.Overlays import Text
-import ch.psi.pshell.imaging.Pen as Pen
 
 class MeasurementsFilter(Filter):
     def __init__(self, measurements):
-        self.overlay = Text(Pen(java.awt.Color.GREEN.darker()), "", \
+        self.overlay = Overlays.Text(Pen(java.awt.Color.GREEN.darker()), "", \
             java.awt.Font("Verdana", java.awt.Font.PLAIN, 12), java.awt.Point(20,20))
         self.measurements = measurements
         self.source = None
