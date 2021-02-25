@@ -24,6 +24,7 @@ import ch.psi.pshell.device.AccessType;
 import ch.psi.pshell.device.Device;
 import ch.psi.pshell.device.DeviceAdapter;
 import ch.psi.pshell.device.ReadonlyRegister.ReadonlyRegisterArray;
+import ch.psi.pshell.device.ReadonlyRegisterBase;
 import ch.psi.pshell.device.RegisterBase;
 import ch.psi.utils.Convert;
 import ch.psi.utils.State;
@@ -40,15 +41,15 @@ import java.util.List;
  */
 public class CAS extends ProcessVariable implements AutoCloseable {
 
-    final RegisterBase register;
+    final ReadonlyRegisterBase register;
     final String channelName;
     final DBRType type;
 
-    public CAS(String channelName, RegisterBase register) throws Exception {
+    public CAS(String channelName, ReadonlyRegisterBase register) throws Exception {
         this(channelName, register, null);
     }
 
-    public CAS(String channelName, RegisterBase register, String typeName) throws Exception {
+    public CAS(String channelName, ReadonlyRegisterBase register, String typeName) throws Exception {
         super(channelName, null);
         if (!isStarted()) {
             start();
@@ -197,6 +198,9 @@ public class CAS extends ProcessVariable implements AutoCloseable {
         if (register.getAccessType() == AccessType.Read) {
             return CAStatus.NOWTACCESS;
         }
+        if (!(register instanceof RegisterBase)) {
+            return CAStatus.NOWTACCESS;
+        }
         try {
             Object obj = null;
             if (dbr.getCount() > 0) {
@@ -207,7 +211,7 @@ public class CAS extends ProcessVariable implements AutoCloseable {
                 }
             }
             synchronized (this) {
-                register.write(obj);
+                ((RegisterBase)register).write(obj);
             }
             //postEvent(); Not posting here, let  value change callback             
             return CAStatus.NORMAL;
