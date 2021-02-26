@@ -177,16 +177,30 @@ import ch.psi.pshell.imaging.MjpegSource as MjpegSource
 import ch.psi.pshell.imaging.Webcam as Webcam
 import ch.psi.pshell.imaging.Filter as Filter
 import ch.psi.pshell.imaging.Utils as ImagingUtils
+import ch.psi.pshell.imaging.Overlay as Overlay
 import ch.psi.pshell.imaging.Overlays as Overlays
 import ch.psi.pshell.imaging.Pen as Pen
 import ch.psi.pshell.imaging.Data as Data
 import ch.psi.pshell.imaging.Colormap as Colormap
 
 
+import ch.psi.pshell.plot.RangeSelectionPlot as RangeSelectionPlot
+import ch.psi.pshell.plot.RangeSelectionPlot.RangeSelectionPlotListener as RangeSelectionPlotListener
+import ch.psi.pshell.plot.LinePlot as LinePlot
+import ch.psi.pshell.plot.MatrixPlot as MatrixPlot
+import ch.psi.pshell.plot.TimePlot as TimePlot
+import ch.psi.pshell.plot.SlicePlot as SlicePlot
+
+import ch.psi.pshell.plot.LinePlotJFree as LinePlotJFree
+import ch.psi.pshell.plot.MatrixPlotJFree as MatrixPlotJFree
+import ch.psi.pshell.plot.TimePlotJFree as TimePlotJFree
+import ch.psi.pshell.plot.SlicePlotDefault as SlicePlotDefault
+
 import ch.psi.pshell.plot.LinePlotSeries as LinePlotSeries
 import ch.psi.pshell.plot.LinePlotErrorSeries as LinePlotErrorSeries
 import ch.psi.pshell.plot.MatrixPlotSeries as MatrixPlotSeries
 import ch.psi.pshell.plot.TimePlotSeries as TimePlotSeries
+import ch.psi.pshell.plot.SlicePlotSeries as SlicePlotSeries
 
 import ch.psi.pshell.scan.ScanBase as ScanBase
 import ch.psi.pshell.scan.LineScan
@@ -229,6 +243,10 @@ import ch.psi.pshell.scripting.ViewPreference as Preference
 import ch.psi.pshell.scripting.ScriptUtils as ScriptUtils
 from ch.psi.pshell.device.Record import *
 from javax.swing.SwingUtilities import invokeLater, invokeAndWait
+
+import org.jfree.ui.RectangleAnchor as RectangleAnchor
+import org.jfree.ui.TextAnchor as TextAnchor
+
 
 
 ###################################################################################################
