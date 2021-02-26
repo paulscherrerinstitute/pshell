@@ -386,8 +386,8 @@ public class SessionsDialog extends StandardDialog implements SessionManagerList
     int currentSession = -1;
     void selectSession(int session){
         try{        
-            currentSession = session;    
-            currentUser = Str.toString(tableSessions.getValueAt(tableSessions.getSelectedRow(), 4));
+            currentSession = session;            
+            currentUser = (session<0) ? "" : Str.toString(tableSessions.getValueAt(tableSessions.getSelectedRow(), 4));
             cancelMetadataEditing();
             testRunFilter.setText("");
             updateMetadata();
