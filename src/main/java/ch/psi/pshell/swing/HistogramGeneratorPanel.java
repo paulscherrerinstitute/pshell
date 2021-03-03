@@ -4,6 +4,7 @@ import ch.psi.pshell.device.Device;
 import ch.psi.pshell.device.HistogramGenerator;
 import ch.psi.pshell.plot.LinePlotSeries;
 import ch.psi.pshell.plot.Plot;
+import ch.psi.pshell.plot.LinePlot;
 import ch.psi.utils.Histogram;
 import java.awt.event.ActionEvent;
 import javax.swing.JMenuItem;
@@ -66,7 +67,15 @@ public class HistogramGeneratorPanel extends DevicePanel {
         }
     }
             
- 
+    public LinePlot getPlot(){
+        return plot;
+    }
+
+    public LinePlotSeries getSeries(){
+        return series;
+    }
+    
+    
 
     /**
      * This method is called from within the constructor to initialize the form.
