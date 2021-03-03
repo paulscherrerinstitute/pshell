@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -966,7 +967,8 @@ public class SessionManager extends ObservableBase<SessionManager.SessionManager
         for (String str : getAdditionalFiles(id)) {
             ret.add(getFileName(str, relative, root));
         }
-        return ret;
+        List<String> removeDuplicates = new ArrayList<>(new LinkedHashSet<>(ret));
+        return removeDuplicates; //Remove duplicates
     }
 
     public List<String> getFileListAtRoot(int id) throws IOException {
@@ -1049,7 +1051,7 @@ public class SessionManager extends ObservableBase<SessionManager.SessionManager
     }
 
     public void setAdditionalFiles(int id, List<String> files) throws IOException {
-        List<String> filesWithoutDuplicates = new ArrayList<>(new HashSet<>(files));
+        List<String> filesWithoutDuplicates = new ArrayList<>(new LinkedHashSet<>(files));
         Map<String, Object> info = getInfo(id);
         info.put("files", filesWithoutDuplicates);
         setInfo(id, info);
