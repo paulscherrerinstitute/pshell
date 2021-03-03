@@ -28,12 +28,14 @@ public class SciCat {
     }
     
     final public static String DEFAULT_PROPERTIES_FILE = "{config}/scicat.properties";
+    final public static String FILE_LISTING_FILE = "{context}/filelisting.txt";
+    final public static String JSON_FILE = "{context}/metadata.json";
     
     final public static String DATASET_TYPE_RAW = "raw";
     final public static String DATASET_TYPE_DERIVED = "derived";
 
-    final public static String FILE_LISTING_FILE = "filelisting.txt";
-    final public static String JSON_FILE = "metadata.json";
+    //final public static String FILE_LISTING_FILE = "filelisting.txt";
+    //final public static String JSON_FILE = "metadata.json";
 
     static String DEFAULT_PARAMETERS = "-ingest -allowexistingsource -noninteractive -autoarchive";     
     
@@ -351,8 +353,12 @@ public class SciCat {
     public synchronized IngestOutput ingest() throws IOException, InterruptedException {
         String listing = getFileListing();
         String json = getJson();
-        Files.writeString(Paths.get(".", FILE_LISTING_FILE), listing);
-        Files.writeString(Paths.get(".", JSON_FILE), json);
+        //Files.writeString(Paths.get(".", FILE_LISTING_FILE), listing);
+        //Files.writeString(Paths.get(".", JSON_FILE), json);
+        String jsonFile = Context.getInstance().getSetup().expandPath(JSON_FILE);
+        String fileListingFile =   Context.getInstance().getSetup().expandPath(FILE_LISTING_FILE);
+        Files.writeString(Paths.get(jsonFile), json);
+        Files.writeString(Paths.get(fileListingFile), listing);
 
         List<String> pars = new ArrayList<>();
         pars.add("datasetIngestor");
@@ -361,8 +367,10 @@ public class SciCat {
                 pars.add(par.trim());
             }
         }
-        pars.add("metadata.json");
-        pars.add("filelisting.txt");
+        //pars.add("metadata.json");
+        //pars.add("filelisting.txt");
+        pars.add(jsonFile);
+        pars.add(fileListingFile);
 
         ProcessBuilder pb = new ProcessBuilder(pars);
         //pb.redirectErrorStream(true);
