@@ -53,7 +53,6 @@ import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
-import java.awt.Image;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.Toolkit;
@@ -67,11 +66,8 @@ import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.image.BufferedImage;
-import java.io.File;
 import java.io.FileInputStream;
 import java.lang.reflect.Array;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -417,17 +413,17 @@ public class StreamCameraViewer extends MonitoredPanel {
 
             if (App.hasArgument("user_overlays")) {
                 try {
-                    setUserOverlaysConfigFile(App.getArgumentValue("usr_ov"));
+                    setUserOverlaysConfigFile(App.getArgumentValue("user_overlays"));
                 } catch (Exception ex) {
                     ex.printStackTrace();
                 }
             }
 
-            if (App.hasArgument("local_fit")) {
+            if (App.getBoolArgumentValue("local_fit")) {
                 setLocalFit(true);
             }
 
-            if (App.hasArgument("persist_camera")) {
+            if (App.getBoolArgumentValue("persist_camera")) {
                 setPersist(true);
             }
 

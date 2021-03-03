@@ -38,6 +38,7 @@ import ch.psi.utils.Convert;
 import ch.psi.utils.IO;
 import ch.psi.utils.ObservableBase;
 import ch.psi.utils.Reflection.Hidden;
+import ch.psi.utils.Str;
 import ch.psi.utils.swing.ConfigDialog;
 import ch.psi.utils.swing.MainFrame;
 import ch.psi.utils.swing.MainFrame.LookAndFeelType;
@@ -271,11 +272,11 @@ public class App extends ObservableBase<AppListener> {
             setScanPrintingActive(false);
         }
 
-        if (hasArgument("extr")) {
+        if (getBoolArgumentValue("extr")) {
             System.setProperty(Context.PROPERTY_FORCE_EXTRACT, "true");
         }
 
-        if (hasArgument("vers")) {
+        if (getBoolArgumentValue("vers")) {
             System.setProperty(Context.PROPERTY_FORCE_VERSIONING, "true");
         }
 
@@ -395,35 +396,35 @@ public class App extends ObservableBase<AppListener> {
     }
 
     static public boolean isLocalMode() {
-        return hasArgument("l") || isPlotOnly() || isHelpOnly() || isDataPanel() || isStripChart() || isOffline() || isVolatile();
+        return getBoolArgumentValue("l") || isPlotOnly() || isHelpOnly() || isDataPanel() || isStripChart() || isOffline() || isVolatile();
     }
 
     static public boolean isBareMode() {
-        return hasArgument("b") || isVolatile();
+        return getBoolArgumentValue("b") || isVolatile();
     }
 
     static public boolean isEmptyMode() {
-        return hasArgument("e");
+        return getBoolArgumentValue("e");
     }
 
     static public boolean isGenericMode() {
-        return hasArgument("g");
+        return getBoolArgumentValue("g");
     }
 
     static public boolean isFileLock() {
-        return !hasArgument("i");
+        return !getBoolArgumentValue("i");
     }
 
     static public boolean isCli() {
-        return hasArgument("c");
+        return getBoolArgumentValue("c");
     }
 
     static public boolean isDebug() {
-        return hasArgument("debug");
+        return getBoolArgumentValue("debug");
     }
 
     static public boolean isServerMode() {
-        return hasArgument("v");
+        return getBoolArgumentValue("v");
     }
 
     static public boolean isOffscreenPlotting() {
@@ -435,23 +436,23 @@ public class App extends ObservableBase<AppListener> {
     }
 
     static public boolean isDual() {
-        return isGui() && hasArgument("t");
+        return isGui() && getBoolArgumentValue("t");
     }
 
-    static public boolean isAttach() {
-        return isGui() && hasArgument("attach");
+    static public boolean isAttach() {       
+        return isGui() && getBoolArgumentValue("attach");
     }
 
     static public boolean isConsole() {
-        return isGui() && hasArgument("w");
+        return isGui() && getBoolArgumentValue("w");
     }
 
     static public boolean isDetachedPersisted() {
-        return hasArgument("k");
+        return getBoolArgumentValue("k");
     }
 
     static public boolean isDetached() {
-        return isGui() && hasArgument("d");
+        return isGui() && getBoolArgumentValue("d");
     }
 
     static public boolean isDetachedPanelsPersisted() {
@@ -459,19 +460,19 @@ public class App extends ObservableBase<AppListener> {
     }
 
     static public boolean isDetachedAppendStatusBar() {
-        return isDetached() && hasArgument("sbar");
+        return isDetached() && getBoolArgumentValue("sbar");
     }
 
     static public boolean isFullScreen() {
-        return isGui() && hasArgument("full");
+        return isGui() && getBoolArgumentValue("full");
     }
 
     static public boolean isQuiet() {
-        return hasArgument("q");
+        return getBoolArgumentValue("q");
     }
 
     static public boolean isVolatile() {
-        return hasArgument("z");
+        return getBoolArgumentValue("z");
     }
 
     static public String getDetachedPanel() {
@@ -482,35 +483,35 @@ public class App extends ObservableBase<AppListener> {
     //Console null and no jar means debbuging in IDE
     static public boolean isOutputRedirected() {
         return (((System.console() == null) && (Context.getInstance().getSetup().getJarFile() != null))
-                || (hasArgument("r")));
+                || (getBoolArgumentValue("r")));
     }
 
     static public boolean isOffline() {
-        return hasArgument("o") || isDataPanel();
+        return getBoolArgumentValue("o") || isDataPanel();
     }
 
     static public boolean isSimulation() {
-        return hasArgument("s");
+        return getBoolArgumentValue("s");
     }
 
     static public boolean isDetachedPlots() {
-        return App.hasArgument("dplt");
+        return App.getBoolArgumentValue("dplt");
     }
 
     static public boolean isPlotOnly() {
-        return App.hasArgument("x");
+        return App.getBoolArgumentValue("x");
     }
 
     static public boolean isHelpOnly() {
-        return (hasArgument("help") && !isHeadless());
+        return (getBoolArgumentValue("help") && !isHeadless());
     }
 
     static public boolean isAutoClose() {
-        return App.hasArgument("a");
+        return App.getBoolArgumentValue("a");
     }
 
     static public boolean isStripChart() {
-        return hasArgument("strp");
+        return getBoolArgumentValue("strp");
     }
 
     static public boolean isStripChartServer() {
@@ -518,15 +519,15 @@ public class App extends ObservableBase<AppListener> {
     }
 
     static public boolean isDataPanel() {
-        return hasArgument("dtpn");
+        return getBoolArgumentValue("dtpn");
     }
 
     static public boolean isScanPlottingDisabled() {
-        return hasArgument("dspt");
+        return getBoolArgumentValue("dspt");
     }
 
     static public boolean isScanPrintingDisabled() {
-        return hasArgument("dspr");
+        return getBoolArgumentValue("dspr");
     }
 
     static public Dimension getSize() {
@@ -641,7 +642,7 @@ public class App extends ObservableBase<AppListener> {
      * If disabled the interpreter is not instantiated
      */
     static public boolean isDisabled() {
-        return hasArgument("n");
+        return getBoolArgumentValue("n");
     }
 
     static public boolean isHeadless() {
@@ -882,13 +883,13 @@ public class App extends ObservableBase<AppListener> {
             } else if (isStripChart()) {
                 if (isAttach()) {
                     try {
-                        String ret = StripChartServer.create(getFileArg(), getArgumentValue("config"), hasArgument("start"));
+                        String ret = StripChartServer.create(getFileArg(), getArgumentValue("config"), getBoolArgumentValue("start"));
                         System.out.println("Panel handled by server: " + ret);
                         System.exit(0);
                     } catch (Exception ex) {
                         if ((ex.getCause() != null) && (ex.getCause() instanceof ConnectException)) {
                             System.out.println("Server not found");
-                            StripChart.create(getFileArg(), getArgumentValue("config"), getStripChartFolderArg(), hasArgument("start"), false);
+                            StripChart.create(getFileArg(), getArgumentValue("config"), getStripChartFolderArg(), getBoolArgumentValue("start"), false);
                             stripChartServer = new StripChartServer();
                         } else {
                             ex.printStackTrace();
@@ -896,7 +897,7 @@ public class App extends ObservableBase<AppListener> {
                         }
                     }
                 } else {
-                    StripChart.create(getFileArg(), getArgumentValue("config"), getStripChartFolderArg(), hasArgument("start"), true);
+                    StripChart.create(getFileArg(), getArgumentValue("config"), getStripChartFolderArg(), getBoolArgumentValue("start"), true);
                 }
             } else if (isDataPanel()) {
                 DataPanel.createPanel(getFileArg());
@@ -934,7 +935,7 @@ public class App extends ObservableBase<AppListener> {
                             SwingUtils.centerComponent(null, view);
                         }
                     }
-                    view.setVisible(!hasArgument("u"));
+                    view.setVisible(!getBoolArgumentValue("u"));
                     outputPanel = (OutputPanel) SwingUtils.getComponentByName(getMainFrame(), "outputPanel");
                 }
             }
@@ -1598,6 +1599,13 @@ public class App extends ObservableBase<AppListener> {
         }
         return false;
     }
+    
+    //accepts -option as -option=true
+    static public boolean getBoolArgumentValue(String arg){
+        String val = Str.toString(getArgumentValue(arg));
+        return hasArgument(arg) && !(val.equalsIgnoreCase("false")) && !(val.equalsIgnoreCase("0"));
+    } 
+    
 
     boolean contextPersisted = true;
 
