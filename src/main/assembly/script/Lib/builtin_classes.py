@@ -423,7 +423,6 @@ class Channel(java.beans.PropertyChangeListener, Writable, Readable, DeviceBase)
             callback(function, optional): The monitor callback.
             alias(str): name to be used on scans.
         """
-        print name
         super(DeviceBase, self).__init__(name if (name is not None) else channel_name.replace(":","_").replace(".","_"))
         self.channel = create_channel(channel_name, type, size)
         self.callback = callback
