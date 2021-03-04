@@ -1602,8 +1602,11 @@ public class App extends ObservableBase<AppListener> {
     
     //accepts -option as -option=true
     static public boolean getBoolArgumentValue(String arg){
-        String val = Str.toString(getArgumentValue(arg));
-        return hasArgument(arg) && !(val.equalsIgnoreCase("false")) && !(val.equalsIgnoreCase("0"));
+        if (hasArgument(arg)){
+            String val = Str.toString(getArgumentValue(arg));
+            return !(val.equalsIgnoreCase("false")) && !(val.equalsIgnoreCase("0"));
+        }
+        return false;
     } 
     
 

@@ -178,7 +178,7 @@ public class SessionManager extends ObservableBase<SessionManager.SessionManager
                 setInfo("state", STATE_COMPLETED);
                 setInfo("stop", getTimestamp());
             } catch (Exception ex) {
-                Logger.getLogger(SessionManager.class.getName()).log(Level.WARNING, null, ex);
+                Logger.getLogger(SessionManager.class.getName()).log(Level.SEVERE, null, ex);
             }
             setCurrentSession(null);
             triggerChanged(sessionId, ChangeType.STATE);
@@ -593,7 +593,7 @@ public class SessionManager extends ObservableBase<SessionManager.SessionManager
                 }
             }
         } catch (Exception ex) {
-            Logger.getLogger(SessionManager.class.getName()).log(Level.WARNING, null, ex);
+            Logger.getLogger(SessionManager.class.getName()).log(Level.SEVERE, null, ex);
         }
 
         try {
@@ -625,7 +625,7 @@ public class SessionManager extends ObservableBase<SessionManager.SessionManager
             }
             currentDataPath = dataPath;
         } catch (Exception ex) {
-            Logger.getLogger(SessionManager.class.getName()).log(Level.WARNING, null, ex);
+            Logger.getLogger(SessionManager.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
@@ -638,7 +638,7 @@ public class SessionManager extends ObservableBase<SessionManager.SessionManager
                     }
                 }
             } catch (Exception ex) {
-                Logger.getLogger(SessionManager.class.getName()).log(Level.WARNING, null, ex);
+                Logger.getLogger(SessionManager.class.getName()).log(Level.SEVERE, null, ex);
             }                        
         }
     }

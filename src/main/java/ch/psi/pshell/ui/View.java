@@ -4856,7 +4856,7 @@ public class View extends MainFrame {
             Boolean paused = sessionStarted ? context.getSessionManager().isPaused(): false;     
             menuSessionStop.setEnabled(sessionStarted);
             menuSessionStart.setEnabled(!sessionStarted);           
-            menuSessionReopen.setEnabled(!sessionStarted);           
+            menuSessionReopen.setEnabled(true);           
             menuSessionPause.setEnabled(sessionStarted && !paused);
             menuSessionResume.setEnabled(sessionStarted && paused);                              
             menuSessionCreate.setEnabled(dataPanel.isShowing() && dataPanel.getSelectedFilesCount() > 0);
