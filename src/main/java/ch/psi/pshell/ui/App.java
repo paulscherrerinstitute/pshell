@@ -34,7 +34,6 @@ import ch.psi.pshell.swing.ScanEditorPanel;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import ch.psi.utils.Arr;
-import ch.psi.utils.Convert;
 import ch.psi.utils.IO;
 import ch.psi.utils.ObservableBase;
 import ch.psi.utils.Reflection.Hidden;
@@ -68,7 +67,6 @@ import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 import javax.swing.SwingWorker.StateValue;
-import javax.swing.UIManager;
 import javax.swing.WindowConstants;
 import javax.swing.event.SwingPropertyChangeSupport;
 import java.util.List;
@@ -248,9 +246,6 @@ public class App extends ObservableBase<AppListener> {
             System.setProperty(Context.PROPERTY_EMPTY_MODE, "true");
         }
 
-        if (isGenericMode()) {
-            System.setProperty(Context.PROPERTY_GENERIC_MODE, "true");
-        }
 
         if (isDisabled()) {
             System.setProperty(Context.PROPERTY_DISABLED, "true");
@@ -280,7 +275,8 @@ public class App extends ObservableBase<AppListener> {
             System.setProperty(Context.PROPERTY_FORCE_VERSIONING, "true");
         }
 
-        System.setProperty(Context.PROPERTY_FILE_LOCK, isFileLock() ? "true" : "false");
+        System.setProperty(Context.PROPERTY_FILE_LOCK, isFileLock() ? "true" : "false");        
+        System.setProperty(Context.PROPERTY_SESSIONS_ENABLED, isSessionsEnabled() ? "true" : "false" );
 
         if (isVolatile()) {
             try {
@@ -334,6 +330,7 @@ public class App extends ObservableBase<AppListener> {
         sb.append("\n\t-b\tBare mode: no plugin is loaded");
         sb.append("\n\t-e\tEmpty mode: device pool is not loaded");
         sb.append("\n\t-g\tLocal initialization script is not executed in startup");
+        sb.append("\n\t-j\tDisable session management");
         sb.append("\n\t-u\tHide graphical user interface at startup");
         sb.append("\n\t-r\tRedirect standard output to Output window");
         sb.append("\n\t-o\tStart in offline mode: data access only");
@@ -341,7 +338,7 @@ public class App extends ObservableBase<AppListener> {
         sb.append("\n\t-n\tInterpreter is not started");
         sb.append("\n\t-q\tQuiet mode");
         sb.append("\n\t-a\tAuto close after executing file");
-        sb.append("\n\t-z\tHome folder is volatile (created in tmp folder)");
+        sb.append("\n\t-z\tHome folder is volatile (created in tmp folder)");        
         sb.append("\n\t-home=<path>\tSet the home folder (default is ./home)");
         sb.append("\n\t-outp=<path>\tSet the output folder (default is {home})");
         sb.append("\n\t-data=<path>\tSet the data folder (default is {home}/data)");
@@ -411,6 +408,11 @@ public class App extends ObservableBase<AppListener> {
         return getBoolArgumentValue("g");
     }
 
+    static public boolean isSessionsEnabled() {
+        boolean disableSessions =getBoolArgumentValue("j")  || isPlotOnly() || isHelpOnly() || isDataPanel() || isStripChart() || isVolatile() || isDetached();
+        return !disableSessions;
+    }    
+   
     static public boolean isFileLock() {
         return !getBoolArgumentValue("i");
     }

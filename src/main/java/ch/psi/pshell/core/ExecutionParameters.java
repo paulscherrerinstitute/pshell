@@ -159,11 +159,21 @@ public class ExecutionParameters {
         childThreadCommandOptions.remove(Thread.currentThread());
     }
     
+    public boolean isSessionsEnabled(){
+        return Context.getInstance().isSessionsEnabled();
+    }
+    
     public int getCurrentSessionId(){
+        if (!isSessionsEnabled()){
+            return SessionManager.UNDEFINED_SESSION_ID;
+        }
         return Context.getInstance().getSessionManager().getCurrentSession();
     }
 
     public String getCurrentSessionName(){
+        if (!isSessionsEnabled()){
+            return SessionManager.UNDEFINED_SESSION_NAME;
+        }        
         return Context.getInstance().getSessionManager().getCurrentName();
     }
 
@@ -215,7 +225,9 @@ public class ExecutionParameters {
                 lastOutputFile = outputFile;
             }
             Context.getInstance().getCommandManager().onChangeDataPath(dataPath);
-            Context.getInstance().getSessionManager().onChangeDataPath(dataPath);
+            if (isSessionsEnabled()){
+                Context.getInstance().getSessionManager().onChangeDataPath(dataPath);
+            }
         }
     }
 

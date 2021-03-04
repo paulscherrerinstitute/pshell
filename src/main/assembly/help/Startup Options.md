@@ -58,6 +58,10 @@
     <td>Local initialization script is not executed in startup.</td>
   </tr>
   <tr>
+    <td>-j</td>
+    <td>Disable session management.</td>
+  </tr>
+  <tr>
     <td>-h</td>
     <td>Hide graphical user interface at startup.</td>
   </tr>

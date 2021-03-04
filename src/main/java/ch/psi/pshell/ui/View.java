@@ -195,8 +195,7 @@ public class View extends MainFrame {
                 //Using specific icons for dark. Could come up with icons that fit both.
                 ((JButton) b).setIcon(new ImageIcon(App.getResourceUrl("dark/" + new File(((JButton) b).getIcon().toString()).getName())));
             }
-        }
-        menuVersioning.setVisible(false);
+        }        
         tabLeft.setVisible(false);
         tabLeft.addContainerListener(new ContainerListener() {
             @Override
@@ -215,6 +214,9 @@ public class View extends MainFrame {
 
         context = Context.getInstance();
         context.addListener(contextListener);
+        
+        menuVersioning.setVisible(false);             
+        menuSessions.setVisible(context.isSessionsEnabled());        
 
         fileHistory = new History(getSessionPath() + "/FileHistory.dat", 10, true);
         openedFiles = new Properties();
@@ -414,14 +416,16 @@ public class View extends MainFrame {
             }
         });
 
-        context.getSessionManager().addListener((id, type) -> {
-            if (type == ChangeType.STATE) {
-                SwingUtilities.invokeLater(() -> {
-                    checkSessionPanel();
-                });
-            }
-        });
-        checkSessionPanel();
+        if (context.isSessionsEnabled() &&  !App.isOffline()){
+            context.getSessionManager().addListener((id, type) -> {
+                if (type == ChangeType.STATE) {
+                    SwingUtilities.invokeLater(() -> {
+                        checkSessionPanel();
+                    });
+                }
+            });
+            checkSessionPanel();
+        }
 
         restorePreferences();
         if (!App.isFullScreen() && App.getInstance().isContextPersisted()) {
@@ -606,7 +610,7 @@ public class View extends MainFrame {
 
         App.getInstance().getDevicePanelManager().checkWindowRestart();
 
-        menuVersioning.setVisible(context.isVersioningEnabled());
+        menuVersioning.setVisible(context.isVersioningEnabled());        
         menuPush.setEnabled(context.isVersioningEnabled()
                 && (context.getConfig().versionTrackingRemote != null)
                 && (!context.getConfig().versionTrackingRemote.trim().isEmpty()));
@@ -4852,13 +4856,15 @@ public class View extends MainFrame {
 
     private void menuSessionsStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_menuSessionsStateChanged
         try{                
+            boolean enabled = !App.isOffline();
             boolean sessionStarted = context.getSessionManager().isStarted();
             Boolean paused = sessionStarted ? context.getSessionManager().isPaused(): false;     
-            menuSessionStop.setEnabled(sessionStarted);
-            menuSessionStart.setEnabled(!sessionStarted);           
-            menuSessionReopen.setEnabled(true);           
-            menuSessionPause.setEnabled(sessionStarted && !paused);
-            menuSessionResume.setEnabled(sessionStarted && paused);                              
+            menuSessionStop.setEnabled(enabled && sessionStarted);
+            menuSessionStart.setEnabled(enabled && !sessionStarted);           
+            menuSessionReopen.setEnabled(enabled);           
+            menuSessionPause.setEnabled(enabled && sessionStarted && !paused);
+            menuSessionResume.setEnabled(enabled && sessionStarted && paused);                              
+            
             menuSessionCreate.setEnabled(dataPanel.isShowing() && dataPanel.getSelectedFilesCount() > 0);
         } catch (Exception ex) {
         }

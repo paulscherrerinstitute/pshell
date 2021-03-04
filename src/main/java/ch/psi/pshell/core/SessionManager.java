@@ -80,6 +80,8 @@ public class SessionManager extends ObservableBase<SessionManager.SessionManager
 
     public final static String UNNAMED_SESSION_NAME = "unnamed";
     public final static String UNDEFINED_SESSION_NAME = "unknown";
+    
+    public final static int UNDEFINED_SESSION_ID = 0;
 
     boolean firstTransfer = true;
 
@@ -159,7 +161,7 @@ public class SessionManager extends ObservableBase<SessionManager.SessionManager
             return Integer.valueOf(Context.getInstance().getProperty(getSessionsInfoFile(), CURRENT_SESSION));
         } catch (Exception ex) {
         }
-        return 0;
+        return UNDEFINED_SESSION_ID;
     }    
 
     public boolean isPacked(){

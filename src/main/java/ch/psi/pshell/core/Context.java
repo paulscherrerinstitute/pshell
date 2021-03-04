@@ -101,6 +101,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
     final Boolean emptyMode;
     final Boolean genericMode;
     final Boolean interpreterEnabled;
+    final Boolean sessionsEnabled;
     final Boolean serverMode;
     final Boolean simulation;
     final Boolean forceExtract;
@@ -140,6 +141,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
     public static final String PROPERTY_BARE_MODE = "ch.psi.pshell.bare";
     public static final String PROPERTY_EMPTY_MODE = "ch.psi.pshell.empty";
     public static final String PROPERTY_GENERIC_MODE = "ch.psi.pshell.generic";
+    public static final String PROPERTY_SESSIONS_ENABLED = "ch.psi.pshell.sessions";
     public static final String PROPERTY_DISABLED = "ch.psi.pshell.disabled";
     public static final String PROPERTY_SERVER_MODE = "ch.psi.pshell.server";
     public static final String PROPERTY_FILE_LOCK = "ch.psi.pshell.file.lock";
@@ -174,7 +176,13 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
         } else {
             genericMode = false;
         }
-
+        
+        if (System.getProperty(PROPERTY_SESSIONS_ENABLED) != null) {
+            sessionsEnabled = Boolean.valueOf(System.getProperty(PROPERTY_SESSIONS_ENABLED));
+        } else {
+            sessionsEnabled = true;
+        }
+  
         if (System.getProperty(PROPERTY_DISABLED) != null) {
             interpreterEnabled = !Boolean.valueOf(System.getProperty(PROPERTY_DISABLED));
         } else {
@@ -293,7 +301,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
 
         devicePool = new DevicePool();
 
-        sessionManager = new SessionManager();
+        sessionManager = isSessionsEnabled()? new SessionManager() : null;
 
         setStdioListener(null);
 
@@ -547,6 +555,10 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
         return /*(serverMode || config.serverEnabled) && */ (config.dataServerPort > 0) && !isLocalMode();
     }
 
+    public boolean isSessionsEnabled(){
+        return sessionsEnabled;
+    }
+    
     public boolean isSimulation() {
         return config.simulation || simulation;
     }
@@ -2908,24 +2920,26 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
 
     //Session data
     public void writeSessionMetadata(String location, boolean attributes) throws IOException {
-        if (location==null){
-            location = "/";
-        }
-        Map<String, Object> metadata = getSessionManager().getMetadata(true);
-        for (String key : metadata.keySet()) {
-            Object value = metadata.get(key);
-            if (value != null) {
-                if (value instanceof List){
-                    value = ((List)value).toArray(new String[0]);
-                }
-                try {
-                    if (attributes){
-                        getDataManager().setAttribute(location, key, value);                        
-                    } else {
-                        getDataManager().setDataset(location+"/"+key, value);                        
+        if (isSessionsEnabled()){
+            if (location==null){
+                location = "/";
+            }
+            Map<String, Object> metadata = getSessionManager().getMetadata(true);
+            for (String key : metadata.keySet()) {
+                Object value = metadata.get(key);
+                if (value != null) {
+                    if (value instanceof List){
+                        value = ((List)value).toArray(new String[0]);
                     }
-                } catch (Exception ex) {
-                    Logger.getLogger(SessionManager.class.getName()).log(Level.WARNING, null, ex);
+                    try {
+                        if (attributes){
+                            getDataManager().setAttribute(location, key, value);                        
+                        } else {
+                            getDataManager().setDataset(location+"/"+key, value);                        
+                        }
+                    } catch (Exception ex) {
+                        Logger.getLogger(SessionManager.class.getName()).log(Level.WARNING, null, ex);
+                    }
                 }
             }
         }
