@@ -185,6 +185,7 @@ public class ProviderText implements Provider {
         return ext;
     }
 
+    @Override
     public Path getFilePath(String path) {
         return getFilePath(this.root, path);
     }

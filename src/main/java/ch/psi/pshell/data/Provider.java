@@ -3,6 +3,8 @@ package ch.psi.pshell.data;
 import ch.psi.pshell.core.Context;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Map;
 
 /**
@@ -106,5 +108,13 @@ public interface Provider {
     
     default public void checkLogFile(String logFile) throws IOException{
     }    
+    
+    /**
+    * Returns the actual file path for the relative location. 
+    * The defualt implementation returns the output file (valid for packed providers as hdf5).  
+    */
+    default public Path getFilePath(String path) {
+        return Paths.get(Context.getInstance().getDataManager().getRootFileName());
+    }
         
 }
