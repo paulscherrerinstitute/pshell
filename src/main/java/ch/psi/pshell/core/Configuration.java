@@ -41,6 +41,8 @@ public class Configuration extends Config {
     public DataTransferMode dataTransferMode = DataTransferMode.Off;
     public String dataTransferPath;
     public String dataTransferUser;
+    public boolean disableDataFileLogs = false;
+    public boolean disableEmbeddedAttributes = false;
     public String hostName;
     public boolean hideServerMessages = false;
     public String logPath = TOKEN_LOGS + "/" + TOKEN_DATE + "_" + TOKEN_TIME;

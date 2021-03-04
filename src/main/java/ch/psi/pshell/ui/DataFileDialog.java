@@ -137,9 +137,15 @@ public class DataFileDialog extends StandardDialog {
     boolean changedLayout() {
         return !String.valueOf(comboLayout.getSelectedItem()).trim().equals(config.dataLayout.trim());
     }
+    
+    boolean changedDataLogs() {
+        return  (checkDataLogs.isSelected() == config.disableDataFileLogs) ;
+    }    
 
     boolean changedFormat() {
-        return (changedProvider() || changedLayout()
+        return (changedProvider() || changedLayout() || changedDataLogs() 
+                || (checkDataLogs.isSelected() == config.disableDataFileLogs) 
+                || (checkEmbeddedAttrs.isSelected() == config.disableEmbeddedAttributes)                 
                 || !spinnerDepthDim.getValue().equals(config.depthDimension));
 
     }
@@ -222,6 +228,8 @@ public class DataFileDialog extends StandardDialog {
         ckSaveScript.setSelected(config.dataScanSaveScript);
         ckSaveSetpoints.setSelected(config.dataScanSaveSetpoints);
         spinnerDepthDim.setValue((config.depthDimension > 2) ? 0 : Math.max(config.depthDimension, 0));
+        checkDataLogs.setSelected(!config.disableDataFileLogs);
+        checkEmbeddedAttrs.setSelected(!config.disableEmbeddedAttributes);
     }
 
     void updateTransfer() {
@@ -321,6 +329,11 @@ public class DataFileDialog extends StandardDialog {
         comboLayout = new javax.swing.JComboBox<>();
         jLabel7 = new javax.swing.JLabel();
         spinnerDepthDim = new javax.swing.JSpinner();
+        jLabel8 = new javax.swing.JLabel();
+        checkDataLogs = new javax.swing.JCheckBox();
+        jLabel10 = new javax.swing.JLabel();
+        checkEmbeddedAttrs = new javax.swing.JCheckBox();
+        jLabel12 = new javax.swing.JLabel();
         jPanel4 = new javax.swing.JPanel();
         ckAutoSave = new javax.swing.JCheckBox();
         ckConvert = new javax.swing.JCheckBox();
@@ -525,6 +538,26 @@ public class DataFileDialog extends StandardDialog {
             }
         });
 
+        jLabel8.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
+        jLabel8.setText("Create data logs:");
+
+        checkDataLogs.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                checkDataLogsActionPerformed(evt);
+            }
+        });
+
+        jLabel10.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
+        jLabel10.setText("Embedded attibutes:");
+
+        checkEmbeddedAttrs.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                checkEmbeddedAttrsActionPerformed(evt);
+            }
+        });
+
+        jLabel12.setText("(on text files)");
+
         javax.swing.GroupLayout jPanel3Layout = new javax.swing.GroupLayout(jPanel3);
         jPanel3.setLayout(jPanel3Layout);
         jPanel3Layout.setHorizontalGroup(
@@ -534,13 +567,20 @@ public class DataFileDialog extends StandardDialog {
                 .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(jLabel3, javax.swing.GroupLayout.Alignment.TRAILING)
                     .addComponent(jLabel4, javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addComponent(jLabel7, javax.swing.GroupLayout.Alignment.TRAILING))
+                    .addComponent(jLabel7, javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addComponent(jLabel8, javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addComponent(jLabel10, javax.swing.GroupLayout.Alignment.TRAILING))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(spinnerDepthDim, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(comboLayout, javax.swing.GroupLayout.PREFERRED_SIZE, 182, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(comboProvider, javax.swing.GroupLayout.PREFERRED_SIZE, 182, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGap(101, 101, 101))
+                    .addComponent(comboProvider, javax.swing.GroupLayout.PREFERRED_SIZE, 182, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(checkDataLogs)
+                    .addGroup(jPanel3Layout.createSequentialGroup()
+                        .addComponent(checkEmbeddedAttrs)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jLabel12)))
+                .addContainerGap())
         );
 
         jPanel3Layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {jLabel3, jLabel4, jLabel7});
@@ -556,6 +596,15 @@ public class DataFileDialog extends StandardDialog {
                 .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.CENTER)
                     .addComponent(jLabel4)
                     .addComponent(comboLayout, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.CENTER)
+                    .addComponent(jLabel8)
+                    .addComponent(checkDataLogs))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.CENTER)
+                    .addComponent(jLabel10)
+                    .addComponent(checkEmbeddedAttrs)
+                    .addComponent(jLabel12))
                 .addGap(18, 18, 18)
                 .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel7)
@@ -752,7 +801,7 @@ public class DataFileDialog extends StandardDialog {
                     .addGroup(jPanel5Layout.createSequentialGroup()
                         .addComponent(jLabel18)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(textTransferPath, javax.swing.GroupLayout.DEFAULT_SIZE, 397, Short.MAX_VALUE))
+                        .addComponent(textTransferPath, javax.swing.GroupLayout.DEFAULT_SIZE, 404, Short.MAX_VALUE))
                     .addGroup(jPanel5Layout.createSequentialGroup()
                         .addComponent(jLabel19)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -905,8 +954,7 @@ public class DataFileDialog extends StandardDialog {
                 Context.getInstance().setFileSequentialNumber((Integer) spinnerSeq.getValue());
             }
             if (changedConfig()) {
-                boolean changedProvider = changedProvider();
-                boolean changedLayout = changedLayout();
+                boolean changedFormat = changedFormat();
                 config.dataPath = textPathConfig.getText().trim();
                 config.dataProvider = String.valueOf(comboProvider.getSelectedItem()).trim();
                 config.dataLayout = String.valueOf(comboLayout.getSelectedItem()).trim();
@@ -918,15 +966,17 @@ public class DataFileDialog extends StandardDialog {
                 config.dataScanSaveScript = ckSaveScript.isSelected();
                 config.dataScanSaveSetpoints = ckSaveSetpoints.isSelected();
                 config.depthDimension = (Integer) spinnerDepthDim.getValue();
+                config.disableDataFileLogs = !checkDataLogs.isSelected();
+                config.disableEmbeddedAttributes = !checkEmbeddedAttrs.isSelected();                
                 config.dataTransferMode = (Configuration.DataTransferMode) comboTransferMode.getSelectedItem();
                 config.dataTransferPath = textTransferPath.getText().trim();
                 config.dataTransferUser = textTransferUser.getText().trim();
                 config.notificationLevel = (Configuration.NotificationLevel) comboNotification.getSelectedItem();
                 config.notifiedTasks = textTasks.getText().trim();
                 config.save();
-                if (changedLayout || changedProvider) {
+                if (changedFormat) {
                     Context.getInstance().getDataManager().initialize();
-                }
+                } 
             }
             if (changedNotificationManager()) {
                 String to = textRecipients.getText().trim();
@@ -1066,6 +1116,14 @@ public class DataFileDialog extends StandardDialog {
         update();
     }//GEN-LAST:event_comboNotificationActionPerformed
 
+    private void checkDataLogsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_checkDataLogsActionPerformed
+       update();
+    }//GEN-LAST:event_checkDataLogsActionPerformed
+
+    private void checkEmbeddedAttrsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_checkEmbeddedAttrsActionPerformed
+        update();
+    }//GEN-LAST:event_checkEmbeddedAttrsActionPerformed
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton buttonApply;
     private javax.swing.JButton buttonCancel;
@@ -1076,6 +1134,8 @@ public class DataFileDialog extends StandardDialog {
     private javax.swing.JButton buttonResetSeq;
     private javax.swing.JButton buttonTokens;
     private javax.swing.JButton buttonUndo;
+    private javax.swing.JCheckBox checkDataLogs;
+    private javax.swing.JCheckBox checkEmbeddedAttrs;
     private javax.swing.JCheckBox checkRSyncAuthorized;
     private javax.swing.JCheckBox ckAutoSave;
     private javax.swing.JCheckBox ckConvert;
@@ -1089,7 +1149,9 @@ public class DataFileDialog extends StandardDialog {
     private javax.swing.JComboBox<String> comboProvider;
     private javax.swing.JComboBox<String> comboTransferMode;
     private javax.swing.JLabel jLabel1;
+    private javax.swing.JLabel jLabel10;
     private javax.swing.JLabel jLabel11;
+    private javax.swing.JLabel jLabel12;
     private javax.swing.JLabel jLabel13;
     private javax.swing.JLabel jLabel14;
     private javax.swing.JLabel jLabel15;
@@ -1101,6 +1163,7 @@ public class DataFileDialog extends StandardDialog {
     private javax.swing.JLabel jLabel5;
     private javax.swing.JLabel jLabel6;
     private javax.swing.JLabel jLabel7;
+    private javax.swing.JLabel jLabel8;
     private javax.swing.JLabel jLabel9;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel2;

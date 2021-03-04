@@ -64,6 +64,7 @@ public class SessionManager extends ObservableBase<SessionManager.SessionManager
 
     final static String CURRENT_SESSION = "CurrentSession";
     final static String SESSION_COUNTER = "SessionCounter";
+    final static String PACKED = "Packed";
 
     final static String INFO_FILE = "info.json";
     final static String METADATA_FILE = "metadata.json";
@@ -116,6 +117,8 @@ public class SessionManager extends ObservableBase<SessionManager.SessionManager
         info.put("root", root);
         info.put("format", Context.getInstance().getConfig().dataProvider);
         info.put("layout", Context.getInstance().getConfig().dataLayout);
+        info.put("packed", isPacked());
+        
         List runs = new ArrayList();
         info.put("runs", runs);
         setInfo(info);
@@ -159,6 +162,14 @@ public class SessionManager extends ObservableBase<SessionManager.SessionManager
         return 0;
     }    
 
+    public boolean isPacked(){
+        try {
+            return !Str.toString(Context.getInstance().getProperty(getSessionsInfoFile(), PACKED)).equalsIgnoreCase("false");
+        } catch (Exception ex) {
+        }
+        return true;
+    }
+    
     public void stop() throws IOException {
         if (isStarted()) {
             int sessionId = getCurrentSession();
@@ -616,7 +627,20 @@ public class SessionManager extends ObservableBase<SessionManager.SessionManager
         } catch (Exception ex) {
             Logger.getLogger(SessionManager.class.getName()).log(Level.WARNING, null, ex);
         }
+    }
 
+    public void onCreateDataset(File file) {
+        if (!isPacked()){
+            try {
+                if (isStarted()) {
+                    if (file.exists()){
+                        addAdditionalFile(file.toString());
+                    }
+                }
+            } catch (Exception ex) {
+                Logger.getLogger(SessionManager.class.getName()).log(Level.WARNING, null, ex);
+            }                        
+        }
     }
 
     public Set<Map.Entry<Object, Object>> getMetadataDefinition() {
@@ -747,6 +771,23 @@ public class SessionManager extends ObservableBase<SessionManager.SessionManager
         info.put(key, value);
         setInfo(id, info);
     }
+
+    public Map<String, Object> getLastRun(boolean relative) throws IOException {
+        assertStarted();
+        List<Map<String, Object>> runs = getRuns(relative);
+        if (runs.size() == 0) {
+            return null;
+        }
+        return runs.get(runs.size() - 1);
+    }
+    
+    public String getLastRunData(boolean relative) throws IOException {
+        Map<String, Object> run  = getLastRun(relative);
+        if ((run!=null) && (run.containsKey("data"))) {
+            return (String)run.get("data");
+        }
+        return null;
+    }    
 
     public List<Map<String, Object>> getRuns() throws IOException {
         assertStarted();
@@ -957,10 +998,12 @@ public class SessionManager extends ObservableBase<SessionManager.SessionManager
         String root = getRoot(id);
         ret.add(Paths.get(getSessionPath(id).toString(), INFO_FILE).toString());
         ret.add(Paths.get(getSessionPath(id).toString(), METADATA_FILE).toString());
-        for (Map<String, Object> run : getRuns(id)) {
-            if (run.containsKey("data")) {
-                if (Boolean.TRUE.equals(run.getOrDefault("enabled", true))) {
-                    ret.add(getFileName(run.get("data").toString(), relative, root));
+        if (isPacked()){
+            for (Map<String, Object> run : getRuns(id)) {
+                if (run.containsKey("data")) {
+                    if (Boolean.TRUE.equals(run.getOrDefault("enabled", true))) {
+                        ret.add(getFileName(run.get("data").toString(), relative, root));
+                    }
                 }
             }
         }

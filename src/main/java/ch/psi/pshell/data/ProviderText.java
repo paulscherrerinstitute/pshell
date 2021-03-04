@@ -29,7 +29,7 @@ import java.util.regex.Pattern;
  * Provider implementation storing data in text files.
  */
 public class ProviderText implements Provider {
-
+            
     class OutputFile {
 
         OutputFile(PrintWriter out) {
@@ -110,16 +110,20 @@ public class ProviderText implements Provider {
     String itemSeparator = getDefaultItemSeparator();
     String arraySeparator = getDefaultArraySeparator();
     String lineSeparator = getDefaultLineSeparator();
-
-    boolean embeddedAtributes = true;
-
-    public boolean getEmbeddedAtributes() {
-        return embeddedAtributes;
-    }
-
+    
+    Boolean embeddedAtributes = null;
+    //Keeping this for backward compatibility
     public void setEmbeddedAtributes(boolean value) {
         embeddedAtributes = value;
     }
+
+    public boolean getEmbeddedAtributes() {
+        if (embeddedAtributes!=null){
+            return embeddedAtributes;
+        }
+        return Provider.super.getEmbeddedAtributes();
+    }
+    
 
     boolean orderedAtributes = true;
 

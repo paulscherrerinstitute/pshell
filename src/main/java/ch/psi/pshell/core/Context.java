@@ -356,6 +356,20 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
     public static Context getInstance() {
         return instance;
     }
+    
+    public static boolean isInstantiated(){
+        return  (instance != null);
+    }
+    
+    public static boolean isDataManagerInstantiated(){
+        return  (instance != null) && (instance.getDataManager()!=null);
+    }
+    
+    public static void assertInstantiated(){
+        if (instance == null){
+            throw new RuntimeException("Contect no instantiated");
+        }
+    }
 
     void restartLogger() {
         String ext = localMode ? "local.log" : "log";

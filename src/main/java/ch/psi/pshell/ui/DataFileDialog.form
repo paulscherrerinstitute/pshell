@@ -260,14 +260,22 @@
                           <Component id="jLabel3" linkSize="3" alignment="1" min="-2" max="-2" attributes="0"/>
                           <Component id="jLabel4" linkSize="3" alignment="1" min="-2" max="-2" attributes="0"/>
                           <Component id="jLabel7" linkSize="3" alignment="1" min="-2" max="-2" attributes="0"/>
+                          <Component id="jLabel8" alignment="1" min="-2" max="-2" attributes="0"/>
+                          <Component id="jLabel10" alignment="1" min="-2" max="-2" attributes="0"/>
                       </Group>
                       <EmptySpace max="-2" attributes="0"/>
                       <Group type="103" groupAlignment="0" attributes="0">
                           <Component id="spinnerDepthDim" alignment="0" min="-2" max="-2" attributes="0"/>
                           <Component id="comboLayout" alignment="0" min="-2" pref="182" max="-2" attributes="0"/>
                           <Component id="comboProvider" alignment="0" min="-2" pref="182" max="-2" attributes="0"/>
+                          <Component id="checkDataLogs" min="-2" max="-2" attributes="0"/>
+                          <Group type="102" attributes="0">
+                              <Component id="checkEmbeddedAttrs" min="-2" max="-2" attributes="0"/>
+                              <EmptySpace max="-2" attributes="0"/>
+                              <Component id="jLabel12" min="-2" max="-2" attributes="0"/>
+                          </Group>
                       </Group>
-                      <EmptySpace min="-2" pref="101" max="-2" attributes="0"/>
+                      <EmptySpace max="-2" attributes="0"/>
                   </Group>
               </Group>
             </DimensionLayout>
@@ -283,6 +291,17 @@
                       <Group type="103" groupAlignment="2" attributes="0">
                           <Component id="jLabel4" alignment="2" min="-2" max="-2" attributes="0"/>
                           <Component id="comboLayout" linkSize="7" alignment="2" min="-2" max="-2" attributes="0"/>
+                      </Group>
+                      <EmptySpace max="-2" attributes="0"/>
+                      <Group type="103" groupAlignment="2" attributes="0">
+                          <Component id="jLabel8" alignment="2" min="-2" max="-2" attributes="0"/>
+                          <Component id="checkDataLogs" alignment="2" min="-2" max="-2" attributes="0"/>
+                      </Group>
+                      <EmptySpace max="-2" attributes="0"/>
+                      <Group type="103" groupAlignment="2" attributes="0">
+                          <Component id="jLabel10" alignment="2" min="-2" max="-2" attributes="0"/>
+                          <Component id="checkEmbeddedAttrs" alignment="2" min="-2" max="-2" attributes="0"/>
+                          <Component id="jLabel12" alignment="2" min="-2" max="-2" attributes="0"/>
                       </Group>
                       <EmptySpace type="separate" max="-2" attributes="0"/>
                       <Group type="103" groupAlignment="3" attributes="0">
@@ -344,6 +363,33 @@
               <Events>
                 <EventHandler event="stateChanged" listener="javax.swing.event.ChangeListener" parameters="javax.swing.event.ChangeEvent" handler="spinnerDepthDimStateChanged"/>
               </Events>
+            </Component>
+            <Component class="javax.swing.JLabel" name="jLabel8">
+              <Properties>
+                <Property name="horizontalAlignment" type="int" value="11"/>
+                <Property name="text" type="java.lang.String" value="Create data logs:"/>
+              </Properties>
+            </Component>
+            <Component class="javax.swing.JCheckBox" name="checkDataLogs">
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="checkDataLogsActionPerformed"/>
+              </Events>
+            </Component>
+            <Component class="javax.swing.JLabel" name="jLabel10">
+              <Properties>
+                <Property name="horizontalAlignment" type="int" value="11"/>
+                <Property name="text" type="java.lang.String" value="Embedded attibutes:"/>
+              </Properties>
+            </Component>
+            <Component class="javax.swing.JCheckBox" name="checkEmbeddedAttrs">
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="checkEmbeddedAttrsActionPerformed"/>
+              </Events>
+            </Component>
+            <Component class="javax.swing.JLabel" name="jLabel12">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="(on text files)"/>
+              </Properties>
             </Component>
           </SubComponents>
         </Container>
@@ -473,7 +519,7 @@
                           <Group type="102" alignment="0" attributes="0">
                               <Component id="jLabel18" min="-2" max="-2" attributes="0"/>
                               <EmptySpace min="-2" max="-2" attributes="0"/>
-                              <Component id="textTransferPath" pref="397" max="32767" attributes="0"/>
+                              <Component id="textTransferPath" pref="404" max="32767" attributes="0"/>
                           </Group>
                           <Group type="102" attributes="0">
                               <Component id="jLabel19" min="-2" max="-2" attributes="0"/>

@@ -103,6 +103,9 @@ public interface Provider {
     }            
 
     default int getDepthDimension(){
+        if (!Context.isDataManagerInstantiated()){
+            return 0;
+        }
         return Context.getInstance().getDataManager().getDepthDimension();
     }    
     
@@ -113,8 +116,17 @@ public interface Provider {
     * Returns the actual file path for the relative location. 
     * The defualt implementation returns the output file (valid for packed providers as hdf5).  
     */
-    default public Path getFilePath(String path) {
+    default public Path getFilePath(String path) {        
+        Context.assertInstantiated();
         return Paths.get(Context.getInstance().getDataManager().getRootFileName());
     }
+    
+    default public boolean getEmbeddedAtributes() {
+        if (!Context.isDataManagerInstantiated()){
+            return true;                
+        }
+        return Context.getInstance().getDataManager().getEmbeddedAttributes();
+    }
+
         
 }
