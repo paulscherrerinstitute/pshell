@@ -407,7 +407,7 @@ public class Setup extends Config {
             }
             //Cannot be used in defining other tokens, only for data folder as depends on the running context
             while (path.contains(TOKEN_SESSION_ID)) {
-                int index = ctx.isSessionsEnabled() ? ctx.getSessionManager().getCurrentSession() : SessionManager.UNDEFINED_SESSION_ID;
+                int index = ctx.isHandlingSessions() ? ctx.getSessionManager().getCurrentSession() : SessionManager.UNDEFINED_SESSION_ID;
                 int i = path.indexOf(TOKEN_SESSION_ID) + TOKEN_SESSION_ID.length();
                 if ((i < path.length()) && path.substring(i, i + 1).equals("%")) {
                     String format = path.substring(i).split(" ")[0];
@@ -417,7 +417,7 @@ public class Setup extends Config {
                 }
             }
             if (path.contains(TOKEN_SESSION_NAME)) {
-                path = path.replace(TOKEN_SESSION_NAME, ctx.isSessionsEnabled() ? String.valueOf(ctx.getSessionManager().getCurrentName()) : SessionManager.UNDEFINED_SESSION_NAME);
+                path = path.replace(TOKEN_SESSION_NAME, ctx.isHandlingSessions() ? String.valueOf(ctx.getSessionManager().getCurrentName()) : SessionManager.UNDEFINED_SESSION_NAME);
             }
         }
         if (timestamp <= 0) {

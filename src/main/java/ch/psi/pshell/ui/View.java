@@ -216,7 +216,7 @@ public class View extends MainFrame {
         context.addListener(contextListener);
         
         menuVersioning.setVisible(false);             
-        menuSessions.setVisible(context.isSessionsEnabled());        
+        menuSessions.setVisible(context.isHandlingSessions());        
 
         fileHistory = new History(getSessionPath() + "/FileHistory.dat", 10, true);
         openedFiles = new Properties();
@@ -416,7 +416,7 @@ public class View extends MainFrame {
             }
         });
 
-        if (context.isSessionsEnabled() &&  !App.isOffline()){
+        if (context.isHandlingSessions() &&  !App.isOffline()){
             context.getSessionManager().addListener((id, type) -> {
                 if (type == ChangeType.STATE) {
                     SwingUtilities.invokeLater(() -> {

@@ -101,7 +101,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
     final Boolean emptyMode;
     final Boolean genericMode;
     final Boolean interpreterEnabled;
-    final Boolean sessionsEnabled;
+    final Boolean handlingSessions;
     final Boolean serverMode;
     final Boolean simulation;
     final Boolean forceExtract;
@@ -178,9 +178,9 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
         }
         
         if (System.getProperty(PROPERTY_SESSIONS_ENABLED) != null) {
-            sessionsEnabled = Boolean.valueOf(System.getProperty(PROPERTY_SESSIONS_ENABLED));
+            handlingSessions = Boolean.valueOf(System.getProperty(PROPERTY_SESSIONS_ENABLED));
         } else {
-            sessionsEnabled = true;
+            handlingSessions = true;
         }
   
         if (System.getProperty(PROPERTY_DISABLED) != null) {
@@ -301,7 +301,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
 
         devicePool = new DevicePool();
 
-        sessionManager = isSessionsEnabled()? new SessionManager() : null;
+        sessionManager = isHandlingSessions() ? new SessionManager() : null;
 
         setStdioListener(null);
 
@@ -555,8 +555,8 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
         return /*(serverMode || config.serverEnabled) && */ (config.dataServerPort > 0) && !isLocalMode();
     }
 
-    public boolean isSessionsEnabled(){
-        return sessionsEnabled;
+    public boolean isHandlingSessions(){
+        return handlingSessions;
     }
     
     public boolean isSimulation() {
@@ -2920,7 +2920,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
 
     //Session data
     public void writeSessionMetadata(String location, boolean attributes) throws IOException {
-        if (isSessionsEnabled()){
+        if (isHandlingSessions()){
             if (location==null){
                 location = "/";
             }

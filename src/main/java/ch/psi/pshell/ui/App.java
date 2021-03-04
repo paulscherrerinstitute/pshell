@@ -276,7 +276,7 @@ public class App extends ObservableBase<AppListener> {
         }
 
         System.setProperty(Context.PROPERTY_FILE_LOCK, isFileLock() ? "true" : "false");        
-        System.setProperty(Context.PROPERTY_SESSIONS_ENABLED, isSessionsEnabled() ? "true" : "false" );
+        System.setProperty(Context.PROPERTY_SESSIONS_ENABLED, isHandlingSessions() ? "true" : "false" );
 
         if (isVolatile()) {
             try {
@@ -408,7 +408,7 @@ public class App extends ObservableBase<AppListener> {
         return getBoolArgumentValue("g");
     }
 
-    static public boolean isSessionsEnabled() {
+    static public boolean isHandlingSessions() {
         boolean disableSessions =getBoolArgumentValue("j")  || isPlotOnly() || isHelpOnly() || isDataPanel() || isStripChart() || isVolatile() || isDetached();
         return !disableSessions;
     }    
