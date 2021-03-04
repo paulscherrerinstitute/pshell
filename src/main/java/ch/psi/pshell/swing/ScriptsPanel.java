@@ -51,6 +51,7 @@ public class ScriptsPanel extends MonitoredPanel implements UpdatablePanel {
     JMenuItem menuRevisionHistory;
     JMenuItem menuEdit;
     JMenuItem menuEditExt;
+    JMenuItem menuReadOnly;
     JMenuItem menuBrowse;
     JMenuItem menuRun;
 
@@ -102,6 +103,23 @@ public class ScriptsPanel extends MonitoredPanel implements UpdatablePanel {
             }
         });
 
+        menuReadOnly = new JMenuItem("Set read-only");
+        menuReadOnly.addActionListener((ActionEvent e) -> {
+            String script = getSelectedScript();
+            if (script != null) {
+                try {
+                    File file = Paths.get(currentPath, script).toFile();
+                    if (file.exists()) {
+                        Logger.getLogger(DataPanel.class.getName()).fine(menuReadOnly.getText() + ": " + String.valueOf(file));                        
+                        file.setWritable(menuReadOnly.getText().equals("Set read-only") ? false : true);
+                        buildList();
+                    }
+                } catch (Exception ex) {
+                    SwingUtils.showException(ScriptsPanel.this, ex);
+                }
+            }
+        });
+        
         menuBrowse = new JMenuItem("Browse containing folder");
         menuBrowse.addActionListener((ActionEvent e) -> {
             String script = getSelectedScript();
@@ -147,6 +165,7 @@ public class ScriptsPanel extends MonitoredPanel implements UpdatablePanel {
 
         popupMenu.add(menuEdit);
         popupMenu.add(menuEditExt);
+        popupMenu.add(menuReadOnly);
         popupMenu.add(menuBrowse);
         popupMenu.addSeparator();
         popupMenu.add(menuRun);
@@ -200,11 +219,24 @@ public class ScriptsPanel extends MonitoredPanel implements UpdatablePanel {
                         } else {
                             table.clearSelection();
                         }
-
-                        if (getSelectedScript() != null) {
+                        String script = getSelectedScript();
+                        if (script != null) {
                             boolean allowRun = !Context.getInstance().getRights().denyRun;
                             menuRun.setEnabled(allowRun && (Context.getInstance().getState() == State.Ready));
                             menuRevisionHistory.setEnabled(Context.getInstance().isVersioningEnabled());
+
+                            try{
+                                File file = Paths.get(currentPath, script).toFile();      
+                                //if (!file.getParentFile().canWrite()){
+                                //    menuReadOnly.setVisible(false);
+                                //} else {
+                                    menuReadOnly.setText(file.canWrite() ? "Set read-only" : "Set read-write");
+                                    menuReadOnly.setVisible(true);
+                                //}
+                            } catch (Exception ex) {
+                                menuReadOnly.setVisible(false);
+                            }
+                            
                             popupMenu.show(e.getComponent(), e.getX(), e.getY());
                         }
                     }
@@ -395,7 +427,13 @@ public class ScriptsPanel extends MonitoredPanel implements UpdatablePanel {
             model.addRow(new Object[]{file.getName() + "/", ""});
         }
         for (File file : getFiles()) {
-            model.addRow(new Object[]{file.getName(), Chrono.getTimeStr(file.lastModified(), "YY/MM/dd HH:mm:ss\n")});
+            String modified = Chrono.getTimeStr(file.lastModified(), "YY/MM/dd HH:mm:ss");
+            /*
+            if (!file.canWrite()){
+                modified = modified + " (read-only)";
+            }
+            */
+            model.addRow(new Object[]{file.getName(), modified});
         }
         if (disableRowSorterOnUpdate) {
             table.setAutoCreateRowSorter(true);

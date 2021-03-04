@@ -60,32 +60,39 @@ public class LayoutFDA extends LayoutTable {
     
     @Override
     public List<PlotDescriptor> getScanPlots(String root, String path, DataManager dm) throws IOException {
-        if (isFdaDataFile(root, path)){
+        if (isFdaDataFile(root, path, dm, null)){
             throw new IOException("Let FDA make the plotting");
         }
         return super.getScanPlots(root, path, dm);
     }
     
     public static boolean isFdaDataFile(String root, String path) throws IOException{
-        if (!Context.getInstance().getDataManager().isDataset(root, path)) {
-            return false;
-        }        
-        Provider p = Context.getInstance().getDataManager().getProvider();
-        if (!(p instanceof ProviderText)){
-            return false;
-        }
-        Path filePath = ((ProviderText)p).getFilePath(root, path);
-        try (BufferedReader br = new BufferedReader(new FileReader(filePath.toFile()))) {
-            String first = br.readLine(); 
-            String second = br.readLine();
-            String third = br.readLine();
-            if ((first.startsWith("#")) && (second.startsWith("#")) && (!third.startsWith("#"))){
-                for (String token: second.substring(1).split(((ProviderText)p).getItemSeparator())){
-                    Integer.valueOf(token.trim());
+        return isFdaDataFile(root, path, (Context.isDataManagerInstantiated()) ? Context.getInstance().getDataManager() : null, null);
+    }
+    
+    static boolean isFdaDataFile(String root, String path, DataManager dm, Provider p) throws IOException{
+        if (dm!=null){
+            if (!dm.isDataset(root, path)) {
+                return false;
+            }        
+            if (p==null){
+                p = dm.getProvider();
+            } 
+        }       
+        if ((p!=null) && (p instanceof ProviderText)){
+            Path filePath = ((ProviderText)p).getFilePath(root, path);
+            try (BufferedReader br = new BufferedReader(new FileReader(filePath.toFile()))) {
+                String first = br.readLine(); 
+                String second = br.readLine();
+                String third = br.readLine();
+                if ((first.startsWith("#")) && (second.startsWith("#")) && (!third.startsWith("#"))){
+                    for (String token: second.substring(1).split(((ProviderText)p).getItemSeparator())){
+                        Integer.valueOf(token.trim());
+                    }
+                    return true;
                 }
-                return true;
+            } catch (Exception ex) {            
             }
-        } catch (Exception ex) {            
         }
         return false;
     }

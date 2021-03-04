@@ -45,7 +45,7 @@ public class ProviderFDA extends ProviderText{
         
     @Override
     public DataSlice getData(String root, String path, int page) throws IOException {
-        if (!LayoutFDA.isFdaDataFile( root, path)){
+        if (!LayoutFDA.isFdaDataFile( root, path, null, this)){
             return super.getData(root, path, page);
         } 
         
@@ -93,7 +93,7 @@ public class ProviderFDA extends ProviderText{
     @Override
     public Map<String, Object> getInfo(String root, String path) throws IOException {
         Map<String, Object> ret = super.getInfo(root, path);
-        if (!LayoutFDA.isFdaDataFile( root, path)){
+        if (!LayoutFDA.isFdaDataFile( root, path, null, this)){
             return ret;
         } 
         
