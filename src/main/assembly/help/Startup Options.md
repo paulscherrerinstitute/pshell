@@ -151,11 +151,11 @@
   </tr>
   <tr>
     <td>-dfmt=[format]</td>
-    <td>Set the data format, overriding the configuration: h5, txt or csv.</td>
+    <td>Set the data format, overriding the configuration: h5, txt, csv or fda.</td>
   </tr>
   <tr>
     <td>-dlay=[format]</td>
-    <td>Set the data layout, overriding the configuration: default, table ot sf.</td>
+    <td>Set the data layout, overriding the configuration: default, table, sf or fda.</td>
   </tr>
   <tr>
     <td>-dspt</td>

@@ -353,8 +353,8 @@ public class App extends ObservableBase<AppListener> {
         sb.append("\n\t-clog=<level>\tSet the console logging level");
         sb.append("\n\t-user=<name>\tSet the startup user");
         sb.append("\n\t-type=<ext>\tSet the script type, overriding the setup");
-        sb.append("\n\t-dfmt=<format>\tSet the data format, overriding the configuration: h5, txt or csv.");
-        sb.append("\n\t-dlay=<layout>\tSet the data layout, overriding the configuration: default, table ot sf.");
+        sb.append("\n\t-dfmt=<format>\tSet the data format, overriding the configuration: h5, txt, csv or fda.");
+        sb.append("\n\t-dlay=<layout>\tSet the data layout, overriding the configuration: default, table, sf or fda.");
         sb.append("\n\t-dspt\tDisable scan plots");
         sb.append("\n\t-dspr\tDisable printing scans to console");
         sb.append("\n\t-sbar\tAppend status bar to detached windows");

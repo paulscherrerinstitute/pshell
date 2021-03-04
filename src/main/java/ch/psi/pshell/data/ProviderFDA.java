@@ -11,13 +11,11 @@ import static ch.psi.pshell.data.Provider.INFO_FIELDS;
 import static ch.psi.pshell.data.ProviderText.COMMENT_MARKER;
 import ch.psi.utils.Convert;
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Map;
 
 /**
