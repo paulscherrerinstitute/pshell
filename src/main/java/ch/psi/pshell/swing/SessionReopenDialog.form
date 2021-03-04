@@ -26,7 +26,7 @@
           <Group type="102" attributes="0">
               <EmptySpace max="-2" attributes="0"/>
               <Group type="103" groupAlignment="0" attributes="0">
-                  <Component id="jScrollPane1" alignment="0" pref="447" max="32767" attributes="0"/>
+                  <Component id="jScrollPane1" alignment="0" pref="488" max="32767" attributes="0"/>
                   <Group type="102" alignment="0" attributes="0">
                       <EmptySpace min="0" pref="0" max="32767" attributes="0"/>
                       <Component id="buttonOk" linkSize="1" min="-2" max="-2" attributes="0"/>
@@ -43,7 +43,7 @@
       <Group type="103" groupAlignment="0" attributes="0">
           <Group type="102" alignment="0" attributes="0">
               <EmptySpace min="-2" max="-2" attributes="0"/>
-              <Component id="jScrollPane1" pref="118" max="32767" attributes="0"/>
+              <Component id="jScrollPane1" pref="133" max="32767" attributes="0"/>
               <EmptySpace min="-2" max="-2" attributes="0"/>
               <Group type="103" groupAlignment="3" attributes="0">
                   <Component id="buttonOk" alignment="3" min="-2" max="-2" attributes="0"/>
@@ -65,11 +65,12 @@
         <Component class="javax.swing.JTable" name="tableSessions">
           <Properties>
             <Property name="model" type="javax.swing.table.TableModel" editor="org.netbeans.modules.form.editors2.TableModelEditor">
-              <Table columnCount="4" rowCount="0">
+              <Table columnCount="5" rowCount="0">
                 <Column editable="false" title="Id" type="java.lang.String"/>
                 <Column editable="false" title="Name" type="java.lang.String"/>
                 <Column editable="false" title="Start" type="java.lang.String"/>
                 <Column editable="false" title="Finish" type="java.lang.String"/>
+                <Column editable="false" title="State" type="java.lang.String"/>
               </Table>
             </Property>
             <Property name="selectionMode" type="int" value="0"/>

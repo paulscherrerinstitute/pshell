@@ -57,7 +57,7 @@ public class SessionReopenDialog extends StandardDialog {
     void update(){
         updating = true;
         try{
-            List<Integer> ids = manager.getIDs(SessionManager.STATE_COMPLETED, Sys.getUserName());            
+            List<Integer> ids = manager.getIDs(null, Sys.getUserName());            
             modelSessions.setNumRows(ids.size());
             for (int i=0; i<ids.size(); i++){
                 try{
@@ -67,11 +67,12 @@ public class SessionReopenDialog extends StandardDialog {
                     String start = SessionPanel.getTimeStr((Number)info.getOrDefault("start", 0));
                     String stop = SessionPanel.getTimeStr((Number)info.getOrDefault("stop", 0));
                     String state = (String)info.getOrDefault("state", "unknown");
-                    if (state.equals(SessionManager.STATE_COMPLETED)){
+                    if (SessionManager.isSessionEditable(state)){
                         modelSessions.setValueAt(String.valueOf(id), i, 0);
                         modelSessions.setValueAt(name, i, 1);
                         modelSessions.setValueAt(start, i, 2);
                         modelSessions.setValueAt(stop, i, 3);
+                        modelSessions.setValueAt(state, i, 4);
                     }
                     //modelSessions.addRow(new Object[]{String.valueOf(id), name, start, stop, root, state});
                 } catch (Exception ex){
@@ -106,14 +107,14 @@ public class SessionReopenDialog extends StandardDialog {
 
             },
             new String [] {
-                "Id", "Name", "Start", "Finish"
+                "Id", "Name", "Start", "Finish", "State"
             }
         ) {
             Class[] types = new Class [] {
-                java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.String.class
+                java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.String.class
             };
             boolean[] canEdit = new boolean [] {
-                false, false, false, false
+                false, false, false, false, false
             };
 
             public Class getColumnClass(int columnIndex) {
@@ -149,7 +150,7 @@ public class SessionReopenDialog extends StandardDialog {
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 447, Short.MAX_VALUE)
+                    .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 488, Short.MAX_VALUE)
                     .addGroup(layout.createSequentialGroup()
                         .addGap(0, 0, Short.MAX_VALUE)
                         .addComponent(buttonOk)
@@ -165,7 +166,7 @@ public class SessionReopenDialog extends StandardDialog {
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 118, Short.MAX_VALUE)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 133, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(buttonOk)
