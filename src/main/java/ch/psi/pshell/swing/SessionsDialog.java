@@ -55,7 +55,7 @@ public class SessionsDialog extends StandardDialog implements SessionManagerList
     public SessionsDialog(java.awt.Frame parent, boolean modal) {
         super(parent, modal);
         initComponents();
-        manager = Context.getInstance().getSessionManager();
+        manager = Context.getInstance().getSessionManagerIfHandling();
         modelSessions = (DefaultTableModel) tableSessions.getModel();
         modelMetadata = (DefaultTableModel) tableMetadata.getModel();
         modelRuns = (DefaultTableModel) tableRuns.getModel();

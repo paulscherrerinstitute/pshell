@@ -26,7 +26,7 @@ public class SessionReopenDialog extends StandardDialog {
         super(parent, modal);
         setTitle(title);
         initComponents();
-        manager = Context.getInstance().getSessionManager();
+        manager = Context.getInstance().getSessionManagerIfHandling();
         modelSessions = (DefaultTableModel) tableSessions.getModel();    
         update();
         int sessions = tableSessions.getRowCount();

@@ -19,12 +19,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
- * TODO: Not working for background commands Unify with CommandInfo so execution
- * parameters are specific to each command
+ * 
  */
 public class ExecutionParameters {
+    
+    static final Logger logger = Logger.getLogger(ExecutionParameters.class.getName());
 
     final String[] executionOptions = new String[]{"defaults", "group", "open", "reset", "name", "type", "path", "tag", "seq", "split",
         "layout", "provider", "format", "save", "persist", "flush", "preserve", "keep", "accumulate", "setpoints", "verbose",
@@ -163,18 +165,12 @@ public class ExecutionParameters {
         return Context.getInstance().isHandlingSessions();
     }
     
-    public int getCurrentSessionId(){
-        if (!isHandlingSessions()){
-            return SessionManager.UNDEFINED_SESSION_ID;
-        }
-        return Context.getInstance().getSessionManager().getCurrentSession();
+    public int getSessionId(){
+        return Context.getInstance().getSessionId();
     }
 
-    public String getCurrentSessionName(){
-        if (!isHandlingSessions()){
-            return SessionManager.UNDEFINED_SESSION_NAME;
-        }        
-        return Context.getInstance().getSessionManager().getCurrentName();
+    public String getSessionName(){
+        return Context.getInstance().getSessionName();
     }
 
     @Hidden
@@ -226,7 +222,11 @@ public class ExecutionParameters {
             }
             Context.getInstance().getCommandManager().onChangeDataPath(dataPath);
             if (isHandlingSessions()){
-                Context.getInstance().getSessionManager().onChangeDataPath(dataPath);
+                try{
+                    Context.getInstance().getSessionManager().onChangeDataPath(dataPath);
+                } catch(Exception ex){
+                    logger.log(Level.WARNING, null, ex);
+                }
             }
         }
     }
@@ -333,7 +333,7 @@ public class ExecutionParameters {
                 Number seq = (Number)getOption("seq");
                 Context.getInstance().setFileSequentialNumber(seq.intValue());
             } catch (Exception ex) {
-                Context.getInstance().logger.log(Level.WARNING, null, ex);
+                logger.log(Level.WARNING, null, ex);
             }            
             clearOption("seq");
         }
@@ -344,7 +344,7 @@ public class ExecutionParameters {
                 try {
                     Context.getInstance().dataManager.openOutput();
                 } catch (IOException ex) {
-                    Context.getInstance().logger.log(Level.WARNING, null, ex);
+                    logger.log(Level.WARNING, null, ex);
                 }
             } else if ((Boolean.FALSE.equals(open)) && (Context.getInstance().dataManager.isOpen())) {
                 Context.getInstance().dataManager.closeOutput();
@@ -375,7 +375,7 @@ public class ExecutionParameters {
             try {
                 Context.getInstance().dataManager.splitScanData((Scan) getOption("split"));
             } catch (IOException ex) {
-                Context.getInstance().logger.log(Level.WARNING, null, ex);
+                logger.log(Level.WARNING, null, ex);
             }
             clearOption("split");
         }        

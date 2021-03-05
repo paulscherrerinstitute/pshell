@@ -417,14 +417,18 @@ public class View extends MainFrame {
         });
 
         if (context.isHandlingSessions() &&  !App.isOffline()){
-            context.getSessionManager().addListener((id, type) -> {
-                if (type == ChangeType.STATE) {
-                    SwingUtilities.invokeLater(() -> {
-                        checkSessionPanel();
-                    });
-                }
-            });
-            checkSessionPanel();
+            try {
+                context.getSessionManager().addListener((id, type) -> {
+                    if (type == ChangeType.STATE) {
+                        SwingUtilities.invokeLater(() -> {
+                            checkSessionPanel();
+                        });
+                    }
+                });
+                checkSessionPanel();
+            } catch (IOException ex) {
+                logger.log(Level.SEVERE, null, ex);
+            }
         }
 
         restorePreferences();
@@ -1843,10 +1847,14 @@ public class View extends MainFrame {
     }
 
     void checkSessionPanel() {        
-        if (context.getSessionManager().getCurrentSession() > 0) {
-            showSessionPanel();
-        } else {
-            hideSessionPanel();
+        try {
+            if (context.getSessionManager().getCurrentSession() > 0) {
+                showSessionPanel();
+            } else {
+                hideSessionPanel();
+            }
+        } catch (IOException ex) {
+            logger.log(Level.SEVERE, null, ex);
         }
     }
 

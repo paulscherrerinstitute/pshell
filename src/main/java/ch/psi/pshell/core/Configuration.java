@@ -43,6 +43,7 @@ public class Configuration extends Config {
     public String dataTransferUser;
     public boolean disableDataFileLogs = false;
     public boolean disableEmbeddedAttributes = false;
+    public SessionHandling sessionHandling;
     public String hostName;
     public boolean hideServerMessages = false;
     public String logPath = TOKEN_LOGS + "/" + TOKEN_DATE + "_" + TOKEN_TIME;
@@ -91,6 +92,13 @@ public class Configuration extends Config {
         Copy,
         Move
     }
+    
+    public enum SessionHandling {
+        Off,
+        Files,
+        Exclusive,
+        On
+    }    
 
     public Level getLogLevel() {
         return Level.parse(logLevel.toString().toUpperCase());
@@ -139,6 +147,13 @@ public class Configuration extends Config {
             return "";
         }
         return dataTransferUser.trim();
+    }
+    
+    public SessionHandling getSessionHandling() {
+        if (Str.toString(sessionHandling).equals(Str.toString(null))) {
+            return SessionHandling.Off;
+        }
+        return sessionHandling;
     }
     
     public List<String> getNotifiedTasks() {

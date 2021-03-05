@@ -301,7 +301,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
 
         devicePool = new DevicePool();
 
-        sessionManager = isHandlingSessions() ? new SessionManager() : null;
+        sessionManager = new SessionManager();
 
         setStdioListener(null);
 
@@ -556,9 +556,17 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
     }
 
     public boolean isHandlingSessions(){
-        return handlingSessions;
-    }
-    
+        if (handlingSessions){
+            switch(config.getSessionHandling()){
+                case On:
+                case Files:
+                    return true;
+                case Exclusive:
+                    return !isLocalMode();
+            }           
+        }
+        return false;
+    }    
     public boolean isSimulation() {
         return config.simulation || simulation;
     }
@@ -588,6 +596,14 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
             throw new IOException("Server is disabled");
         }
     }
+    
+    @Hidden
+    public void assertHandlingSessions() throws IOException {
+        if (!isHandlingSessions()) {
+            throw new IOException("Session handling is disabled");
+        }
+    }    
+    
 
     @Hidden
     public boolean isInterpreterThread() {
@@ -930,8 +946,30 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
         return scriptManager;
     }
 
-    public SessionManager getSessionManager() {
+    public SessionManager getSessionManager() throws IOException {
+        assertHandlingSessions();
         return sessionManager;
+    }
+
+    public SessionManager getSessionManagerIfHandling() {
+        if (!isHandlingSessions()){
+            return null;
+        }
+        return sessionManager;
+    }
+    
+    public int getSessionId() {
+        if (isHandlingSessions()){
+            return sessionManager.getCurrentSession();
+        }
+        return SessionManager.UNDEFINED_SESSION_ID;
+    }
+
+    public String getSessionName() {
+        if (isHandlingSessions()){
+            return sessionManager.getCurrentName();
+        }
+        return SessionManager.UNDEFINED_SESSION_NAME;
     }
 
     public ScanStreamer getScanStreamer() {

@@ -37,7 +37,7 @@ public class SessionPanel extends MonitoredPanel implements SessionManagerListen
     public SessionPanel() {
         initComponents();        
         int minColSize =  (UIManager.getLookAndFeel().getName().equalsIgnoreCase("nimbus"))? 68:60;
-        manager = Context.getInstance().getSessionManager();
+        manager = Context.getInstance().getSessionManagerIfHandling();
         modelMetadata = (DefaultTableModel) tableMetadata.getModel();
         modelRuns = (DefaultTableModel) tableRuns.getModel();
         tableRuns.getColumnModel().getColumn(0).setPreferredWidth(minColSize);

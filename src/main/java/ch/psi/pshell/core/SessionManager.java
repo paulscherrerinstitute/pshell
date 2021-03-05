@@ -1,6 +1,7 @@
 package ch.psi.pshell.core;
 
 import ch.psi.pshell.core.Configuration.DataTransferMode;
+import ch.psi.pshell.core.Configuration.SessionHandling;
 import ch.psi.pshell.data.RSync;
 import ch.psi.pshell.swing.MetadataEditor;
 import ch.psi.utils.Arr;
@@ -119,7 +120,7 @@ public class SessionManager extends ObservableBase<SessionManager.SessionManager
         info.put("root", root);
         info.put("format", Context.getInstance().getConfig().dataProvider);
         info.put("layout", Context.getInstance().getConfig().dataLayout);
-        info.put("packed", isPacked());
+        info.put("mode", getMode());
         
         List runs = new ArrayList();
         info.put("runs", runs);
@@ -128,6 +129,10 @@ public class SessionManager extends ObservableBase<SessionManager.SessionManager
         triggerChanged(sessionId, ChangeType.STATE);
         Context.getInstance().getCommandManager().onSessionStarted(sessionId);
         return sessionId;
+    }
+    
+    public SessionHandling getMode(){
+        return Context.getInstance().getConfig().getSessionHandling();
     }
     
     int getNewSession() throws IOException{
@@ -163,15 +168,7 @@ public class SessionManager extends ObservableBase<SessionManager.SessionManager
         }
         return UNDEFINED_SESSION_ID;
     }    
-
-    public boolean isPacked(){
-        try {
-            return !Str.toString(Context.getInstance().getProperty(getSessionsInfoFile(), PACKED)).equalsIgnoreCase("false");
-        } catch (Exception ex) {
-        }
-        return true;
-    }
-    
+   
     public void stop() throws IOException {
         if (isStarted()) {
             int sessionId = getCurrentSession();
@@ -632,7 +629,7 @@ public class SessionManager extends ObservableBase<SessionManager.SessionManager
     }
 
     public void onCreateDataset(File file) {
-        if (!isPacked()){
+        if (getMode() == SessionHandling.Files){
             try {
                 if (isStarted()) {
                     if (file.exists()){
@@ -1000,7 +997,7 @@ public class SessionManager extends ObservableBase<SessionManager.SessionManager
         String root = getRoot(id);
         ret.add(Paths.get(getSessionPath(id).toString(), INFO_FILE).toString());
         ret.add(Paths.get(getSessionPath(id).toString(), METADATA_FILE).toString());
-        if (isPacked()){
+        if (getMode() != SessionHandling.Files){
             for (Map<String, Object> run : getRuns(id)) {
                 if (run.containsKey("data")) {
                     if (Boolean.TRUE.equals(run.getOrDefault("enabled", true))) {
