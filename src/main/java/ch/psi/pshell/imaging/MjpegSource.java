@@ -18,6 +18,10 @@ public class MjpegSource extends SourceBase {
     final boolean flushOnUpdate;
     final String flushStrategy;
 
+    public String getUrl(){
+        return url;
+    }
+    
     public MjpegSource(String name, String url) {
         this(name, url, false);
     }
