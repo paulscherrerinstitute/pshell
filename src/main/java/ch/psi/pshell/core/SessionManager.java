@@ -628,7 +628,7 @@ public class SessionManager extends ObservableBase<SessionManager.SessionManager
         }
     }
 
-    public void onCreateDataset(File file) {
+    public void onCreateDetachedFile(File file) {
         if (getMode() == SessionHandling.Files){
             try {
                 if (isStarted()) {

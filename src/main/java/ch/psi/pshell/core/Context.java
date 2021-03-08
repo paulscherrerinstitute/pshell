@@ -971,6 +971,13 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
         }
         return SessionManager.UNDEFINED_SESSION_NAME;
     }
+    
+    @Hidden
+    public void addDetachedFileToSession(File file) throws IOException{    
+        if (isHandlingSessions()){
+            getSessionManager().onCreateDetachedFile(file);
+        }
+    }
 
     public ScanStreamer getScanStreamer() {
         return (config.scanStreamerPort > 0) ? scanStreamer : null;

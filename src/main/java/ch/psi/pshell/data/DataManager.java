@@ -562,11 +562,11 @@ public class DataManager implements AutoCloseable {
             if (getExecutionPars().getSaveOutput()) {
                 outputListener.start();
             }
-            if (getExecutionPars().getSessionId() >0) {
-                getLayout().writeSessionMetadata();
-            }
-            
-            
+            if (Context.getInstance().isHandlingSessions()){
+                if (getExecutionPars().getSessionId() >0) {
+                    getLayout().writeSessionMetadata();
+                }
+            }            
         }
     }
 
@@ -943,8 +943,8 @@ public class DataManager implements AutoCloseable {
         logger.finer(String.format("Set \"%s\" type = %s dims = %s", path, type.getSimpleName(), rank, Str.toString(shape, 10)));
         createGroup(group);              
         getProvider().setDataset(path, data, type, rank, shape, unsigned, features);
-        if (!getProvider().isPacked() && Context.getInstance().isHandlingSessions()){
-            Context.getInstance().getSessionManager().onCreateDataset(getProvider().getFilePath(path).toFile());
+        if (!getProvider().isPacked()){
+            Context.getInstance().addDetachedFileToSession(getProvider().getFilePath(path).toFile());
         }
         flush();
     }
@@ -1006,10 +1006,9 @@ public class DataManager implements AutoCloseable {
 
         logger.finer(String.format("Create \"%s\" type = %s dims = %s", path, type.getSimpleName(), Str.toString(dimensions, 10)));
         getProvider().createDataset(path, type, dimensions, unsigned, features);
-        if (!getProvider().isPacked() && Context.getInstance().isHandlingSessions()){
-            Context.getInstance().getSessionManager().onCreateDataset(getProvider().getFilePath(path).toFile());
-        }
-        
+                if (!getProvider().isPacked()){
+            Context.getInstance().addDetachedFileToSession(getProvider().getFilePath(path).toFile());
+        }        
         ProviderData pd = getProviderData();
     }
 
@@ -1045,9 +1044,9 @@ public class DataManager implements AutoCloseable {
 
         logger.finer(String.format("Create \"%s\"", path));
         getProvider().createDataset(path, names, types, lengths, features);
-        if (!getProvider().isPacked() && Context.getInstance().isHandlingSessions()){
-            Context.getInstance().getSessionManager().onCreateDataset(getProvider().getFilePath(path).toFile());
-        }        
+        if (!getProvider().isPacked()){
+            Context.getInstance().addDetachedFileToSession(getProvider().getFilePath(path).toFile());
+        }      
         flush();
     }
 
