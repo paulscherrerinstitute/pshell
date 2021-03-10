@@ -53,54 +53,91 @@ def to_array(obj, type = 'o'):
     Returns:
         Java array.
     """
-    if type[0] == '[':
-        type = type[1:]
-    arrayType = ScriptUtils.getType("["+type)
 
+def to_array(obj, type = None, primitive = True):
+    """Convert Python list to Java array.
+
+    Args:
+        obj(list): Original data.
+        type(str): array type 'b' = byte, 'h' = short, 'i' = int, 'l' = long,  'f' = float, 'd' = double,
+                              'c' = char, 'z' = boolean, 's' = String,  'o' = Object
+    Returns:
+        Java array.
+    """
     if obj is None:
         return None
-    if isinstance(obj,java.util.List):
-        obj = obj.toArray()
-        if type != 'o':
-            obj = Convert.toPrimitiveArray(obj, ScriptUtils.getType(type))
+    if type is None:
+        type = 'o'
+        enforceArrayType=False
+    else:
+        enforceArrayType=True
+    if type[0] == '[':
+        type = type[1:]        
+    element_type = ScriptUtils.getPrimitiveType(type) if primitive else ScriptUtils.getType(type)
+
+    def convert_1d_array(obj):
+        try:
+            return jarray.array(obj,type)
+        except:
+            if type == 'c':
+                ret = java.lang.reflect.Array.newInstance(element_type,len(obj))
+                for i in range(len(obj)): ret[i] = chr(obj[i])
+                return ret
+            if type == 'z':
+                ret = java.lang.reflect.Array.newInstance(element_type,len(obj))
+                for i in range(len(obj)):
+                    ret[i]= True if obj[i] else False
+                return ret
+            if type == 'o':
+                ret = java.lang.reflect.Array.newInstance(element_type,len(obj))
+                for i in range(len(obj)):
+                    ret[i]= obj[i] 
+                return ret
+            if type == "s":
+                return Convert.toStringArray(obj)   
+            if primitive:   
+                ret = Convert.toPrimitiveArray(obj, element_type)  
+            else:
+                ret = java.lang.reflect.Array.newInstance(element_type,len(obj))
+                for i in range(len(obj)): ret[i] = Convert.toType(obj[i],element_type)
+            return ret
+                
     if isinstance(obj,PyArray):
-        if type != 'o':
-            if (Arr.getRank(obj)== 1) and (obj.typecode != type):
-                ret = java.lang.reflect.Array.newInstance(ScriptUtils.getType(type), len(obj))
-                if type == 's':
-                    for i in range(len(obj)): ret[i] = str(obj[i])
-                elif type == 'c':
-                    for i in range(len(obj)): ret[i] = chr(obj[i])
-                else:
-                    for i in range(len(obj)): ret[i] = obj[i]
-                obj = ret
-            if type not in ['o', 's']:
-                obj = Convert.toPrimitiveArray(obj)
-        return obj
-    if is_list(obj):
-        if type=='o' or  type== 's':
-            ret = java.lang.reflect.Array.newInstance(ScriptUtils.getType(type), len(obj))
+        if enforceArrayType:
+            if Arr.getComponentType(obj) != element_type:
+                rank = Arr.getRank(obj)
+                if (rank== 1):
+                    obj=convert_1d_array(obj)
+                elif (rank>1):  
+                    pars, aux = [element_type], obj
+                    for i  in range(rank):
+                        pars.append(len(aux))
+                        aux = aux[0]
+                    ret = java.lang.reflect.Array.newInstance(*pars)    
+                    for i in range(len(obj)):
+                        ret[i]=to_array(obj[i], type)                        
+                    obj = ret
+    elif is_list(obj):        
+        if type=='o':
+            ret = java.lang.reflect.Array.newInstance(element_type, len(obj))
             for i in range (len(obj)):
-                if is_list(obj[i]):
+                if is_list(obj[i]) or isinstance(obj[i],PyArray):
                     ret[i] = to_array(obj[i],type)
-                elif type == 's':
-                    ret[i] = str(obj[i])
                 else:
                     ret[i] = obj[i]
-            return ret
-
-        if len(obj)>0 and is_list(obj[0]):
-            if  len(obj[0])>0 and is_list(obj[0][0]):
-                    ret = java.lang.reflect.Array.newInstance(arrayType,len(obj),len(obj[0]))
-                    for i in range(len(obj)):
-                        ret[i]=to_array(obj[i], type)
-                    return ret
-            else:
-                ret = java.lang.reflect.Array.newInstance(arrayType,len(obj))
-                for i in range(len(obj)):
-                    ret[i]=to_array(obj[i], type)
-                return ret
-        return jarray.array(obj,type)
+            obj=ret
+        elif len(obj)>0 and (is_list(obj[0]) or isinstance(obj[0],PyArray)):
+            pars, aux = [element_type], obj
+            while len(aux)>0 and (is_list(aux[0]) or isinstance(aux[0],PyArray)):
+                pars.append(len(aux))
+                aux = aux[0]
+            pars.append(0)
+            ret = java.lang.reflect.Array.newInstance(*pars)
+            for i in range(len(obj)):
+                ret[i]=to_array(obj[i], type)
+            obj=ret
+        else:
+         obj= convert_1d_array(obj)
     return obj
 
 def to_list(obj):
