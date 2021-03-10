@@ -522,9 +522,35 @@ def fit_gaussian_exp_bkg(y, x, start_point = None, weights = None):
     (parameters, residuals, rms, evals, iters) = optimize_least_squares(model, target, start_point, weights)        
     return parameters
 
+###################################################################################################
+#Functions
+###################################################################################################
+
+class GaussianOffset(UnivariateFunction):
+    def __init__(self, offset, normalization, mean_value, sigma):
+        self.gaussian = Gaussian(normalization, mean_value, sigma)
+        self.offset = offset
+    def value(self,x):
+        return self.gaussian.value(x) + self.offset
+
+class GaussianLinear(UnivariateFunction):
+    def __init__(self, a,b, normalization, mean_value, sigma):
+        self.gaussian = Gaussian(normalization, mean_value, sigma)
+        self.a = a
+        self.b = b
+    def value(self,x):
+        return self.gaussian.value(x) + self.a * x + self.b
+        
+class GaussianExpBkg(UnivariateFunction):
+    def __init__(self, a, b, normalization, mean_value, sigma):
+        self.gaussian = Gaussian(normalization, mean_value, sigma)
+        self.a = a
+        self.b = b
+    def value(self,x):
+        return self.gaussian.value(x) + self.a * math.exp(-(x/self.b))
 
 ###################################################################################################
-#Least squares problem
+#Least squares
 ###################################################################################################
 
 def optimize_least_squares(model, target, initial, weights):   
