@@ -58,6 +58,59 @@ public class ScriptUtils {
         return Class.forName(typeId);
     }
 
+    public static Class getPrimitiveType(String typeId) throws ClassNotFoundException {
+        if (typeId == null) {
+            return null;
+        }
+        switch (typeId) {
+            case "b":
+                return byte.class;
+            case "h":
+                return short.class;
+            case "u":
+                return int.class;
+            case "i":
+                return int.class;
+            case "l":
+                return long.class;
+            case "c":
+                return char.class;
+            case "f":
+                return float.class;
+            case "d":
+                return double.class;
+            case "z":
+                return boolean.class;
+            case "s":
+                return String.class;
+            case "o":
+                return Object.class;
+            case "[b":
+                return byte[].class;
+            case "[h":
+                return short[].class;
+            case "[u":
+                return int[].class;
+            case "[i":
+                return int[].class;
+            case "[l":
+                return long[].class;
+            case "[c":
+                return char[].class;
+            case "[f":
+                return float[].class;
+            case "[d":
+                return double[].class;
+            case "[z":
+                return boolean.class;
+            case "[s":
+                return String[].class;
+            case "[o":
+                return Object[].class;
+        }
+        return Class.forName(typeId);
+    }
+    
     public static boolean isStandardType(String typeId) {
         if (typeId != null) {
             try {
