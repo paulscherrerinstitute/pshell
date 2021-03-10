@@ -69,6 +69,15 @@ def init_jep():
     j.eval("sys.stdout.clear()")
     j.eval("sys.stderr.clear()")
 
+    #Import reload on Python 3
+    j.eval("try:\n" + 
+           "    reload  # Python 2.7\n" +
+           "except NameError:\n" + 
+           "    try:\n" +
+           "        from importlib import reload  # Python 3.4+\n" +
+           "    except ImportError:\n" +
+           "        from imp import reload  # Python 3.0 - 3.3\n")
+
 def __print_stdout():
     j=__get_jep()
     output = j.getValue("sys.stdout.str")
