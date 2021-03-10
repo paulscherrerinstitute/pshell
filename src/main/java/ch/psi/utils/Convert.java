@@ -608,7 +608,9 @@ public class Convert {
         if (array == null) {
             return null;
         }
-
+        if (array instanceof List) {
+            array = ((List) array).toArray();
+        }    
         if (!array.getClass().isArray()) {
             throw new IllegalArgumentException("Parameter is not an array");
         }
@@ -662,7 +664,9 @@ public class Convert {
         if (array == null) {
             return null;
         }
-
+        if (array instanceof List) {
+            array = ((List) array).toArray();
+        } 
         if (!array.getClass().isArray()) {
             throw new IllegalArgumentException("Parameter is not an array");
         }
@@ -784,6 +788,9 @@ public class Convert {
     }
 
     public static String arrayToString(Object array, String separator, int maxElements) {
+        if (array instanceof List) {
+            array = ((List) array).toArray();
+        }         
         if (!array.getClass().isArray()) {
             throw new IllegalArgumentException("Parameter is not an array");
         }
@@ -809,6 +816,9 @@ public class Convert {
     }
 
     public static String arrayToHexString(Object array, String separator, int maxElements) {
+        if (array instanceof List) {
+            array = ((List) array).toArray();
+        }         
         if (!array.getClass().isArray()) {
             throw new IllegalArgumentException("Parameter is not an array");
         }
@@ -830,6 +840,9 @@ public class Convert {
     }
 
     public static String[] toStringArray(Object array) {
+        if (array instanceof List) {
+            array = ((List) array).toArray();
+        }         
         if (!array.getClass().isArray()) {
             throw new IllegalArgumentException("Parameter is not an array");
         }
@@ -843,6 +856,9 @@ public class Convert {
     }
 
     public static Object[] toObjectArray(Object array) {
+        if (array instanceof List) {
+            array = ((List) array).toArray();
+        }         
         if (!array.getClass().isArray()) {
             throw new IllegalArgumentException("Parameter is not an array");
         }
@@ -1011,6 +1027,9 @@ public class Convert {
     }
 
     public static Object toWrapperArray(Object primitiveArray) {
+        if (primitiveArray instanceof List) {
+            primitiveArray = ((List) primitiveArray).toArray();
+        }        
         if (!primitiveArray.getClass().isArray()) {
             throw new IllegalArgumentException("Parameter is not an array");
         }
