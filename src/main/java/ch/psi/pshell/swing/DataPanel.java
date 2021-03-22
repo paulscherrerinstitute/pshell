@@ -1238,6 +1238,9 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
                 return 1;
             }
             Object element = Array.get(data, 0);
+            if (element == null){
+                return 1;
+            }
             if (!element.getClass().isArray()) {
                 return 1;
             }
