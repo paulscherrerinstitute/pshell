@@ -43,17 +43,6 @@ import ch.psi.utils.Arr as Arr
 #Type conversion and checking
 ###################################################################################################
 
-def to_array(obj, type = 'o'):
-    """Convert Python list to Java array.
-
-    Args:
-        obj(list): Original data.
-        type(str): array type 'b' = byte, 'h' = short, 'i' = int, 'l' = long,  'f' = float, 'd' = double,
-                              'c' = char, 'z' = boolean, 's' = String,  'o' = Object
-    Returns:
-        Java array.
-    """
-
 def to_array(obj, type = None, primitive = True):
     """Convert Python list to Java array.
 
