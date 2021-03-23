@@ -27,6 +27,7 @@ These functions provide the script API to many aspects of PShell:
  * Data access functions:
     - load_data
     - get_attributes
+    - get_data_info
     - save_dataset
     - create_group
     - create_dataset

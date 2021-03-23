@@ -554,12 +554,14 @@ def get_plot_snapshots(title = None, file_type = "png", size = None, temp_path =
 #Data access
 ###################################################################################################
 
-def load_data(path, index=0, shape=None):
+def load_data(path, index=0, shape=None, root=None):
     """Read data from the current persistence context or from data files.
 
     Args:
-        path(str): Path to group or dataset relative to the persistence context root.
-                   If in the format 'root|path' then read from path given by 'root'.
+        path(str): Path to group or dataset relative to the root.
+                   If path is in the format 'root|path', or else if 'root' is defined, then 
+                   reads from data file given by root. Otherwise uses current data persistence file.
+        root(str, optional):  data file.
         index(int or list, optional):
                 if integer, data depth (used for 3D datasets returning a 2d matrix)
                 If a list, specifies the full coordinate for multidimensional datasets.
@@ -569,22 +571,42 @@ def load_data(path, index=0, shape=None):
     Returns:
         Data array
     """
+    dm=get_context().dataManager
     if index is not None and is_list(index):
-        slice = get_context().dataManager.getData(path, index, shape)
+        slice = dm.getData(path, index, shape) if (root==None) else dm.getData(root, path, index, shape)
     else:
-        slice = get_context().dataManager.getData(path, index)
+        slice = dm.getData(path, index) if (root==None) else dm.getData(root, path, index)
     return slice.sliceData
 
-def get_attributes(path):
-    """Get the attributes from the current persistence context or from data files.
+def get_attributes(path, root=None):
+    """Get the attributes from group or dataset.
 
     Args:
-        path(str): Path to group or dataset relative to the current persistence context root.
-                   If in the format 'root|path' then read from path given by 'root'.
+        path(str): Path to group or dataset relative to the root.
+                   If path is in the format 'root|path', or else if 'root' is defined, then 
+                   reads from data file given by root. Otherwise uses current data persistence file.
+        root(str, optional):  data file.
     Returns:
         Dictionary
     """
-    return get_context().dataManager.getAttributes(path)
+    if (root==None):
+        ret = get_context().dataManager.getAttributes(path)
+    return get_context().dataManager.getAttributes(root, path)
+
+def get_data_info(path, root=None):
+    """Get information about the group or dataset.
+
+    Args:
+        path(str): Path to group or dataset relative to the current persistence context root.
+                   If path is in the format 'root|path', or else if 'root' is defined, then 
+                   reads from data file given by root. Otherwise uses current data persistence file.
+        root(str, optional):  data file.
+    Returns:
+        Dictionary
+    """
+    if (root==None):
+        return get_context().dataManager.getInfo(path)
+    return get_context().dataManager.getInfo(root, path)
 
 def save_dataset(path, data, type='d', unsigned=False, features=None):
     """Save data into a dataset within the current persistence context.
