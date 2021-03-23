@@ -51,8 +51,10 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.BorderFactory;
@@ -81,6 +83,7 @@ import javax.swing.tree.DefaultTreeCellRenderer;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreeModel;
 import javax.swing.tree.TreePath;
+import org.apache.commons.lang3.tuple.ImmutablePair;
 
 /**
  *
@@ -107,9 +110,11 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
     ValueSelection pageSelection;
     String[] fieldNames = null;
     DataPanelListener listener;
+    String[] processingScripts;
 
     public DataPanel() {
         initComponents();
+        setPlottingScripts(null);
         if (MainFrame.isDark()) {
             treeFolder.setBorder(BorderFactory.createEmptyBorder(0, 5, 0, 0));
             treeFile.setBorder(BorderFactory.createEmptyBorder(0, 5, 0, 0));
@@ -173,6 +178,9 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
             }
         });
         filePopupMenu.add(menuBrowse);
+        
+        JMenu menuProcessing = new JMenu("Run");
+        filePopupMenu.add(menuProcessing);        
 
         JMenu menuFileOrder = new JMenu("File order");
         for (FileOrder fo : FileOrder.values()) {
@@ -261,6 +269,13 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
                             menuCalcSize.setVisible(selected.isDirectory() && (path.getPathCount() > 1));
                             menuRefresh.setVisible(selected.isDirectory());
                             menuFileOrder.setVisible(path.getPathCount() == 1);
+                            
+                            if (isRoot==false){
+                                menuProcessing.setVisible(false);
+                            } else {
+                                setupProcessMenu(menuProcessing);
+                                menuProcessing.setVisible(true);
+                            }
                             filePopupMenu.show(e.getComponent(), e.getX(), e.getY());
                         }
                     }
@@ -307,19 +322,12 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
         
         JMenuItem menuCopyLink = new JMenuItem("Copy link to clipboard");
         menuCopyLink.addActionListener((ActionEvent e) -> {
-            try {
-                Context context = Context.getInstance();
+            try {                
                 TreePath path = treeFile.getSelectionPath();
-                String root = currentFile.getPath();
+                String root = getCurrentRoot();
                 String dataPath = getDataPath(path);
                 if (dataPath == null) {
                     dataPath = "/";
-                }
-
-                if (IO.isSubPath(root, context.getSetup().getDataPath())) {
-                    root = IO.getRelativePath(root, context.getSetup().getDataPath());
-                } else {
-                    root = root.replace("\\", "\\\\");
                 }
                 Toolkit.getDefaultToolkit().getSystemClipboard().setContents(new StringSelection("\"" + root + "|" + dataPath + "\""), null);
             } catch (Exception ex) {
@@ -357,14 +365,11 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
                 Context context = Context.getInstance();
 
                 TreePath path = treeFile.getSelectionPath();
-                String root = currentFile.getPath();
+                String root = getCurrentRoot();
                 String dataPath = getDataPath(path);
-
-                if (IO.isSubPath(root, context.getSetup().getDataPath())) {
-                    root = IO.getRelativePath(root, context.getSetup().getDataPath());
-                } else {
-                    root = root.replace("\\", "\\\\");
-                }
+                if (dataPath == null) {
+                    dataPath = "/";
+                }                
                 String var = SwingUtils.getString(this, "Enter variable name:", null);
                 if ((var != null) && (!var.trim().isEmpty())) {
                     context.evalLineBackground(var.trim() + "=load_data(\"" + root + "|" + dataPath + "\")");
@@ -501,7 +506,71 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
 
         ((DefaultTreeCellRenderer) treeFile.getCellRenderer()).setLeafIcon(new ImageIcon(App.getResourceImage("Data.png")));
     }
+    
+    
+    void setupProcessMenu(JMenuItem menuItem){
+        List<ImmutablePair<String,String>> scripts = new ArrayList<>();
+        Set<String> categories = new LinkedHashSet<>();
+        if (processingScripts!=null){
+            for (String script: processingScripts){
+                String[] tokens = script.split("\\|");        
+                String file = tokens[0].trim();
+                String category = ((tokens.length==1) || (tokens[1].isBlank()))? "" : tokens[1].trim();                                    
+                File f = Context.getInstance().getScriptFile(file);
+                if ((f!=null) && (f.exists())){
+                    scripts.add(new ImmutablePair(file, category));
+                    if (!category.isEmpty()){
+                        categories.add(category);
+                    }
+                }
+            }
+        }
+        menuItem.removeAll();
+        if (scripts.size()==0){
+            menuItem.setEnabled(false);
+        } else {
+            menuItem.setEnabled(true);
+            for (String category:categories){
+                JMenu categoryMenu = new JMenu(category);
+                categoryMenu.setName(category);
+                menuItem.add(categoryMenu);
+            }
+            for (ImmutablePair<String,String> script:scripts){
+                String file = script.left;
+                String category = script.right;
+                JMenuItem item = new JMenuItem(IO.getPrefix(file));
+                item.addActionListener((ActionEvent ae) -> {
+                    try {
+                        Context.getInstance().evalFileBackgroundAsync(file, List.of(getCurrentRoot())).handle((ret, ex)->{
+                            if (ex != null){
+                               SwingUtils.showException(DataPanel.this, (Exception)ex);
+                            }
+                            return ret;
+                        });
+                    } catch (Exception ex) {
+                        SwingUtils.showException(DataPanel.this, ex);
+                    }
+                });      
+                if (category.isEmpty()){
+                    menuItem.add(item);                                    
+                } else {
+                    ((JMenu)SwingUtils.getComponentByName(menuItem, category)).add(item);
+                }
+            }
+        }
+    }
 
+    String getCurrentRoot(){
+        String root = currentFile.getPath();
+        Context context = Context.getInstance();
+        if (IO.isSubPath(root, context.getSetup().getDataPath())) {
+            root = IO.getRelativePath(root, context.getSetup().getDataPath());
+        } else {
+            root = root.replace("\\", "\\\\");
+        }
+        return root;
+    }
+    
     public File getFolderTreeSelectedFile() {
         TreePath selection = treeFolder.getSelectionPath();
         if (selection != null) {
@@ -538,6 +607,14 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
             }
         }
         return ret;
+    }
+    
+    
+    public void setPlottingScripts(String[] plottingScripts) {
+        if (plottingScripts==null){
+            plottingScripts = new String[0];
+        }
+        this.processingScripts = plottingScripts;
     }
 
     public void setListener(DataPanelListener listener) {

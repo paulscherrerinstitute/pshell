@@ -83,6 +83,7 @@ import java.util.Enumeration;
 import java.util.Properties;
 import java.util.concurrent.TimeoutException;
 import java.util.jar.JarFile;
+import org.python.google.common.collect.Lists;
 
 /**
  * Global singleton managing creation, disposal and holding the state of the
@@ -1684,6 +1685,8 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
                 }
                 if (args instanceof List) {
                     ret.put("args", args);
+                } else {                    
+                    ret.put("args", List.of(args));
                 }
             }
         }

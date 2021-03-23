@@ -1,5 +1,6 @@
 package ch.psi.pshell.ui;
 
+import ch.psi.pshell.core.Context;
 import ch.psi.pshell.imaging.Colormap;
 import ch.psi.pshell.plot.LinePlot;
 import ch.psi.pshell.plot.MatrixPlot;
@@ -22,8 +23,10 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JColorChooser;
+import javax.swing.JFileChooser;
 import javax.swing.JTextField;
 import javax.swing.SpinnerNumberModel;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.table.DefaultTableModel;
 
 /**
@@ -31,7 +34,8 @@ import javax.swing.table.DefaultTableModel;
  */
 public class PreferencesDialog extends StandardDialog {
 
-    final DefaultTableModel modelPanels;
+    final DefaultTableModel modelPanels;    
+    final DefaultTableModel modelProcessingScripts;
     Color selectedEditorBackground;
     Color selectedEditorForeground;
     Color selectedPlotBackground;
@@ -86,8 +90,10 @@ public class PreferencesDialog extends StandardDialog {
         SwingUtils.setEnumCombo(comboColormapPlot, Colormap.class);
         SwingUtils.setEnumCombo(comboScriptPopup, ScriptPopupDialog.class);
 
-        modelPanels = (DefaultTableModel) tablePanels.getModel();
+        modelPanels = (DefaultTableModel) tablePanels.getModel();        
+        modelProcessingScripts = (DefaultTableModel) tableProcessingScripts.getModel();
         updateTablePanels();
+        updateListProcFiles();
 
     }
 
@@ -185,7 +191,17 @@ public class PreferencesDialog extends StandardDialog {
         for (DefaultPanel defaultPanel : preferences.defaultPanels) {
             modelPanels.addRow(new Object[]{defaultPanel.deviceClassName, defaultPanel.panelClassName});
         }
+        
+        for (String plottingScript: preferences.processingScripts) {
+            String[] tokens = plottingScript.split("\\|");        
+            String file = tokens[0].trim();
+            String category = ((tokens.length==1) || (tokens[1].isBlank()))? "" : tokens[1].trim();
+            modelProcessingScripts.addRow(new Object[]{file, category});
+        }
+        
+                
         updateTablePanels();
+        updateListProcFiles();
     }
 
     void getFont(int index, JTextField txt) {
@@ -201,6 +217,10 @@ public class PreferencesDialog extends StandardDialog {
         buttonDelete.setEnabled(modelPanels.getRowCount() > 0);
         checkSyntaxHighlightActionPerformed(null);
     }
+    
+    private void updateListProcFiles() {        
+        buttonRemoveProcScript.setEnabled(modelProcessingScripts.getRowCount() > 0);
+    }    
 
     /**
      * This method is called from within the constructor to initialize the form. WARNING: Do NOT
@@ -261,6 +281,11 @@ public class PreferencesDialog extends StandardDialog {
         comboConsoleLocation = new javax.swing.JComboBox();
         jLabel20 = new javax.swing.JLabel();
         comboPlotsLocation = new javax.swing.JComboBox();
+        jLabel27 = new javax.swing.JLabel();
+        buttonInsertProcScript = new javax.swing.JButton();
+        buttonRemoveProcScript = new javax.swing.JButton();
+        jScrollPane2 = new javax.swing.JScrollPane();
+        tableProcessingScripts = new javax.swing.JTable();
         panelPlots = new javax.swing.JPanel();
         jLabel6 = new javax.swing.JLabel();
         jLabel7 = new javax.swing.JLabel();
@@ -719,6 +744,52 @@ public class PreferencesDialog extends StandardDialog {
 
         comboPlotsLocation.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "Internal", "Detached" }));
 
+        jLabel27.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
+        jLabel27.setText("Processing Scripts:");
+
+        buttonInsertProcScript.setText("Insert");
+        buttonInsertProcScript.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                buttonInsertProcScriptActionPerformed(evt);
+            }
+        });
+
+        buttonRemoveProcScript.setText("Delete");
+        buttonRemoveProcScript.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                buttonRemoveProcScriptActionPerformed(evt);
+            }
+        });
+
+        tableProcessingScripts.setModel(new javax.swing.table.DefaultTableModel(
+            new Object [][] {
+
+            },
+            new String [] {
+                "File Name", "Category"
+            }
+        ) {
+            Class[] types = new Class [] {
+                java.lang.String.class, java.lang.String.class
+            };
+            boolean[] canEdit = new boolean [] {
+                false, true
+            };
+
+            public Class getColumnClass(int columnIndex) {
+                return types [columnIndex];
+            }
+
+            public boolean isCellEditable(int rowIndex, int columnIndex) {
+                return canEdit [columnIndex];
+            }
+        });
+        tableProcessingScripts.setColumnSelectionAllowed(true);
+        tableProcessingScripts.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
+        tableProcessingScripts.getTableHeader().setReorderingAllowed(false);
+        jScrollPane2.setViewportView(tableProcessingScripts);
+        tableProcessingScripts.getColumnModel().getSelectionModel().setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
+
         javax.swing.GroupLayout jPanel9Layout = new javax.swing.GroupLayout(jPanel9);
         jPanel9.setLayout(jPanel9Layout);
         jPanel9Layout.setHorizontalGroup(
@@ -726,18 +797,24 @@ public class PreferencesDialog extends StandardDialog {
             .addGroup(jPanel9Layout.createSequentialGroup()
                 .addGap(32, 32, 32)
                 .addGroup(jPanel9Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jLabel14)
+                    .addGroup(jPanel9Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                        .addComponent(jLabel27)
+                        .addComponent(jLabel20)))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanel9Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                     .addGroup(jPanel9Layout.createSequentialGroup()
-                        .addComponent(jLabel14)
+                        .addGroup(jPanel9Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(comboPlotsLocation, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(comboConsoleLocation, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(buttonInsertProcScript))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(comboConsoleLocation, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addGroup(jPanel9Layout.createSequentialGroup()
-                        .addComponent(jLabel20)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(comboPlotsLocation, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addContainerGap(321, Short.MAX_VALUE))
+                        .addComponent(buttonRemoveProcScript))
+                    .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE))
+                .addGap(101, 225, Short.MAX_VALUE))
         );
 
-        jPanel9Layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {jLabel14, jLabel20});
+        jPanel9Layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {jLabel14, jLabel20, jLabel27});
 
         jPanel9Layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {comboConsoleLocation, comboPlotsLocation});
 
@@ -752,7 +829,15 @@ public class PreferencesDialog extends StandardDialog {
                 .addGroup(jPanel9Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(comboPlotsLocation, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jLabel20))
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addGap(18, 18, 18)
+                .addGroup(jPanel9Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jLabel27)
+                    .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 76, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanel9Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(buttonRemoveProcScript)
+                    .addComponent(buttonInsertProcScript))
+                .addContainerGap(19, Short.MAX_VALUE))
         );
 
         jTabbedPane1.addTab("Layout", jPanel9);
@@ -1166,6 +1251,14 @@ public class PreferencesDialog extends StandardDialog {
                     defaultPanel.getPanelClass();
                     panels.add(defaultPanel);
                 }
+                
+                ArrayList<String> plottingScript = new ArrayList<>();
+                for (int i = 0; i < modelProcessingScripts.getRowCount(); i++) {
+                    String file = (String) modelProcessingScripts.getValueAt(i, 0);
+                    String category = (String) modelProcessingScripts.getValueAt(i, 1);
+                    plottingScript.add(file + "|" + category);
+                }
+                
                 Quality quality = (Quality) comboQuality.getSelectedItem();
                 PlotLayout plotLayout = (PlotLayout) comboLayout.getSelectedItem();
                 ScriptPopupDialog scriptPopup = (ScriptPopupDialog) comboScriptPopup.getSelectedItem();
@@ -1210,6 +1303,7 @@ public class PreferencesDialog extends StandardDialog {
                 preferences.showImageStatusBar = checkStatusBar.isSelected();
                 preferences.persistRendererWindows = checkPersistRendererWindows.isSelected();
                 preferences.defaultPanels = panels.toArray(new DefaultPanel[0]);
+                preferences.processingScripts = plottingScript.toArray(new String[0]);
             }
             accept();
 
@@ -1352,6 +1446,41 @@ public class PreferencesDialog extends StandardDialog {
         getFont(5, textPT);
     }//GEN-LAST:event_buttonPTActionPerformed
 
+    private void buttonInsertProcScriptActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonInsertProcScriptActionPerformed
+        try {
+            Context context =Context.getInstance();
+            JFileChooser chooser = new JFileChooser(context.getSetup().getScriptPath());
+            chooser.setAcceptAllFileFilterUsed(false);
+            FileNameExtensionFilter filter = new FileNameExtensionFilter("Script files (*." + context.getScriptType() + ")", new String[]{String.valueOf(context.getScriptType())});
+            chooser.setFileFilter(filter);
+            int rVal = chooser.showOpenDialog(this);
+            if (rVal == JFileChooser.APPROVE_OPTION) {
+                String file = context.getStandardScriptName(chooser.getSelectedFile().getPath());
+                for (int i =0; i< modelProcessingScripts.getRowCount(); i++){
+                    if (file.equals(modelProcessingScripts.getValueAt(i, 0))){
+                        return;
+                    }
+                }
+                modelProcessingScripts.insertRow(tableProcessingScripts.getSelectedRow() + 1, new Object[]{file,""});
+                updateListProcFiles();
+                
+            }            
+        } catch (Exception ex) {
+            SwingUtils.showException(PreferencesDialog.this, ex);
+        }
+    }//GEN-LAST:event_buttonInsertProcScriptActionPerformed
+
+    private void buttonRemoveProcScriptActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonRemoveProcScriptActionPerformed
+        try {
+            if (tableProcessingScripts.getSelectedRow() >= 0) {
+                modelProcessingScripts.removeRow(tableProcessingScripts.getSelectedRow());
+                updateListProcFiles();
+            }
+        } catch (Exception ex) {
+            SwingUtils.showException(PreferencesDialog.this, ex);
+        }
+    }//GEN-LAST:event_buttonRemoveProcScriptActionPerformed
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton buttonCancel;
     private javax.swing.JButton buttonDefaultEditorColors;
@@ -1359,11 +1488,13 @@ public class PreferencesDialog extends StandardDialog {
     private javax.swing.JButton buttonDefaultPanels;
     private javax.swing.JButton buttonDelete;
     private javax.swing.JButton buttonInsert;
+    private javax.swing.JButton buttonInsertProcScript;
     private javax.swing.JButton buttonOP;
     private javax.swing.JButton buttonOk;
     private javax.swing.JButton buttonPL;
     private javax.swing.JButton buttonPT;
     private javax.swing.JButton buttonPTit;
+    private javax.swing.JButton buttonRemoveProcScript;
     private javax.swing.JButton buttonResetBackground;
     private javax.swing.JButton buttonSC;
     private javax.swing.JButton buttonSE;
@@ -1415,6 +1546,7 @@ public class PreferencesDialog extends StandardDialog {
     private javax.swing.JLabel jLabel24;
     private javax.swing.JLabel jLabel25;
     private javax.swing.JLabel jLabel26;
+    private javax.swing.JLabel jLabel27;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
     private javax.swing.JLabel jLabel5;
@@ -1434,6 +1566,7 @@ public class PreferencesDialog extends StandardDialog {
     private javax.swing.JPanel jPanel8;
     private javax.swing.JPanel jPanel9;
     private javax.swing.JScrollPane jScrollPane1;
+    private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JTabbedPane jTabbedPane1;
     private javax.swing.JPanel panelBackground;
     private javax.swing.JPanel panelEditorBackground;
@@ -1443,6 +1576,7 @@ public class PreferencesDialog extends StandardDialog {
     private javax.swing.JSpinner spinnerMarkerSize;
     private javax.swing.JSpinner spinnerTab;
     private javax.swing.JTable tablePanels;
+    private javax.swing.JTable tableProcessingScripts;
     private javax.swing.JTextField textOP;
     private javax.swing.JTextField textPL;
     private javax.swing.JTextField textPT;

@@ -1922,6 +1922,7 @@ public class View extends MainFrame {
         outputPanel.setTextPaneFont(preferences.fontOutput);
         devicesPanel.setAsyncUpdate(preferences.asyncViewersUpdate);
         dataPanel.setCached(preferences.cachedDataPanel);
+        dataPanel.setPlottingScripts(preferences.processingScripts);
         MotorPanel.setDefaultShowHoming(preferences.showHomingButtons);
         MotorPanel.setDefaultShowJog(preferences.showJogButtons);
         for (int i = 0; i < tabDoc.getTabCount(); i++) {
