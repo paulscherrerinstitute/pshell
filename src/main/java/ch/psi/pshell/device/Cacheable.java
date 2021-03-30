@@ -57,6 +57,11 @@ public interface Cacheable<T> extends Readable<T>, Timestamped {
                 public String getName() {
                     return CacheableNumber.this.getName();
                 }
+                
+                @Override
+                public String getAlias() {
+                    return CacheableNumber.this.getAlias();
+                }                
 
                 @Override
                 public Cacheable getParent() {
@@ -86,6 +91,11 @@ public interface Cacheable<T> extends Readable<T>, Timestamped {
                     return CacheableArray.this.getName();
                 }
 
+                @Override
+                public String getAlias() {
+                    return CacheableArray.this.getAlias();
+                }     
+                
                 @Override
                 public Cacheable getParent() {
                     return CacheableArray.this;
@@ -120,6 +130,11 @@ public interface Cacheable<T> extends Readable<T>, Timestamped {
                 }
 
                 @Override
+                public String getAlias() {
+                    return CacheableMatrix.this.getAlias();
+                }     
+                
+                @Override
                 public Cacheable getParent() {
                     return CacheableMatrix.this;
                 }
@@ -141,6 +156,11 @@ public interface Cacheable<T> extends Readable<T>, Timestamped {
                 public String getName() {
                     return CacheableBoolean.this.getName();
                 }
+                
+                @Override
+                public String getAlias() {
+                    return CacheableBoolean.this.getAlias();
+                }                     
 
                 @Override
                 public Cacheable getParent() {
@@ -164,6 +184,11 @@ public interface Cacheable<T> extends Readable<T>, Timestamped {
                 public String getName() {
                     return CacheableString.this.getName();
                 }
+                
+                @Override
+                public String getAlias() {
+                    return CacheableString.this.getAlias();
+                }                     
 
                 @Override
                 public Cacheable getParent() {
@@ -187,6 +212,11 @@ public interface Cacheable<T> extends Readable<T>, Timestamped {
             public String getName() {
                 return Cacheable.this.getName();
             }
+            
+            @Override
+            public String getAlias() {
+                return Cacheable.this.getAlias();
+            }                 
 
             //@Override
             public Cacheable getParent() {
