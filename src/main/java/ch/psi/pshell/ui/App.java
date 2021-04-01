@@ -41,6 +41,7 @@ import ch.psi.utils.Str;
 import ch.psi.utils.swing.ConfigDialog;
 import ch.psi.utils.swing.MainFrame;
 import ch.psi.utils.swing.MainFrame.LookAndFeelType;
+import static ch.psi.utils.swing.MainFrame.isDark;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.GraphicsEnvironment;
@@ -71,6 +72,8 @@ import javax.swing.WindowConstants;
 import javax.swing.event.SwingPropertyChangeSupport;
 import java.util.List;
 import java.util.Map;
+import javax.swing.ImageIcon;
+import javax.swing.UIManager;
 
 /**
  * The application singleton object.
@@ -663,11 +666,15 @@ public class App extends ObservableBase<AppListener> {
     static public URL getResourceUrl(String name) {
         return App.class.getResource("/ch/psi/pshell/ui/" + name);
     }
-
+    
     static public Image getResourceImage(String name) {
         return Toolkit.getDefaultToolkit().getImage(getResourceUrl(name));
     }
-
+    
+    public static ImageIcon searchIcon(String name) {
+        return MainFrame.searchIcon(name, App.class, "/ch/psi/pshell/ui/") ;     
+    }
+    
     static public String getApplicationName() {
         return getResourceBundleValue("Application.name");
     }
@@ -1713,6 +1720,21 @@ public class App extends ObservableBase<AppListener> {
             laf = MainFrame.getLookAndFeel(type);
         }
         MainFrame.setLookAndFeel(laf);
+        if (isDark()) {
+            UIManager.put("FileView.directoryIcon", new ImageIcon(getResourceImage("FolderClosed.png")));
+            UIManager.put("FileChooser.homeFolderIcon", new ImageIcon(getResourceImage("Home.png")));
+            UIManager.put("FileView.computerIcon", new ImageIcon(getResourceImage("Computer.png")));
+            UIManager.put("FileView.floppyDriveIcon", new ImageIcon(getResourceImage("Floppy.png")));
+            UIManager.put("FileView.hardDriveIcon", new ImageIcon(getResourceImage("HardDrive.png")));
+            UIManager.put("FileChooser.upFolderIcon", new ImageIcon(getResourceImage("FolderUp.png")));
+            UIManager.put("FileChooser.newFolderIcon", new ImageIcon(getResourceImage("FolderNew.png")));
+            UIManager.put("FileView.fileIcon", new ImageIcon(getResourceImage("File.png")));
+            UIManager.put("FileChooser.listViewIcon", new ImageIcon(getResourceImage("List.png")));
+            UIManager.put("FileChooser.detailsViewIcon", new ImageIcon(getResourceImage("Details.png")));
+            UIManager.put("Tree.openIcon", new ImageIcon(getResourceImage("FolderOpen.png")));
+            UIManager.put("Tree.closedIcon", new ImageIcon(getResourceImage("FolderClosed.png")));
+            UIManager.put("Tree.leafIcon", new ImageIcon(getResourceImage("File.png")));
+        }        
     }
 
     static void appendLibraryPath() {

@@ -1,6 +1,5 @@
 package ch.psi.utils.swing;
 
-import ch.psi.pshell.swing.DevicePanel;
 import ch.psi.utils.Sys;
 import ch.psi.utils.Sys.OSFamily;
 import ch.psi.utils.swing.SwingUtils.OptionResult;
@@ -60,6 +59,8 @@ import javax.swing.undo.UndoManager;
  * Editor for text files.
  */
 public class TextEditor extends Editor {
+    
+    public final static Color TEXT_EDIT_BACKGROUND_COLOR = MainFrame.isDark() ? new Color(43, 43, 43) : Color.WHITE;    
 
     //Undo manager knows when document returns to a saved state, so title can be updated
     class MyUndoManager extends UndoManager {
@@ -340,7 +341,7 @@ public class TextEditor extends Editor {
                 KeyEvent.VK_Z, modifiers), JComponent.WHEN_FOCUSED);
         editorPane.registerKeyboardAction(redoAction, KeyStroke.getKeyStroke(
                 KeyEvent.VK_Y, modifiers), JComponent.WHEN_FOCUSED);
-        editorBackground = editorPane.isEnabled() ? editorPane.getBackground() : DevicePanel.TEXT_EDIT_BACKGROUND_COLOR;
+        editorBackground = editorPane.isEnabled() ? editorPane.getBackground() : TEXT_EDIT_BACKGROUND_COLOR;
     }
 
     public void setScrollPane(JScrollPane pane) {
@@ -580,7 +581,7 @@ public class TextEditor extends Editor {
     }
 
     public void setEditorBackground(Color color) {
-        editorBackground = color == null ? DevicePanel.TEXT_EDIT_BACKGROUND_COLOR : color;
+        editorBackground = color == null ? TEXT_EDIT_BACKGROUND_COLOR : color;
         if (editorPane.isEnabled()) {
             doSetEditorBackground(editorBackground);
         }

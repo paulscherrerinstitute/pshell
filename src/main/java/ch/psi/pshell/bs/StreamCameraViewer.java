@@ -2533,7 +2533,7 @@ public class StreamCameraViewer extends MonitoredPanel {
     }
 
     public static ImageIcon getIcon(String name) {
-        return MainFrame.searchIcon(name);
+        return App.searchIcon(name);
     }
 
     public static String getIconName(JButton button) {

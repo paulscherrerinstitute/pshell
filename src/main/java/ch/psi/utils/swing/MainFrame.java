@@ -1,6 +1,5 @@
 package ch.psi.utils.swing;
 
-import ch.psi.pshell.ui.App;
 import ch.psi.utils.Arr;
 import ch.psi.utils.Convert;
 import ch.psi.utils.Serializer;
@@ -221,8 +220,8 @@ public abstract class MainFrame extends JFrame {
     public URL getIcon() {
         return iconURL;
     }
-
-    public static ImageIcon searchIcon(String name) {
+    
+    public static ImageIcon searchIcon(String name, Class appClass, String resourcePath) {
         try {
             //First look for icons in current folder and resource folder
             for (String path : new String[]{"./", "./resources/"}) {
@@ -233,7 +232,7 @@ public abstract class MainFrame extends JFrame {
                 } catch (Exception ex) {
                 }
             }
-            Class[] classes = new Class[]{App.class};
+            Class[] classes = new Class[]{appClass};
             try {
                 Class cls = Class.forName(Thread.currentThread().getStackTrace()[2].getClassName());
                 classes = Arr.insert(classes, cls, 0);
@@ -256,17 +255,18 @@ public abstract class MainFrame extends JFrame {
             //Look at internal icons, checking if a dark version exists            
             if (isDark()) {
                 try {
-                    return new ImageIcon(App.class.getResource("/ch/psi/pshell/ui/dark/" + name + ".png"));
+                    return new ImageIcon(appClass.getResource(resourcePath + "dark/" +name + ".png")); 
                 } catch (Exception e) {
                 }
             }
-            return new ImageIcon(App.class.getResource("/ch/psi/pshell/ui/" + name + ".png"));
+            return new ImageIcon(appClass.getResource(resourcePath + name + ".png"));
 
         } catch (Exception ex) {
             ex.printStackTrace();
         }
         return null;
     }
+ 
 
     //GUI utils
     public void showChildWindow(Window window) {
@@ -341,16 +341,19 @@ public abstract class MainFrame extends JFrame {
 
     //LAF
     public static String getNimbusLookAndFeel() {
-        for (UIManager.LookAndFeelInfo info : UIManager.getInstalledLookAndFeels()) {
-            if ("nimbus".equalsIgnoreCase(info.getName())) {
-                return info.getClassName();
-            }
-        }
-        return null;
+        return SwingUtils.getNimbusLookAndFeel();
     }
 
     public static String getDarculaLookAndFeel() {
-        return "com.bulenkov.darcula.DarculaLaf";
+        return SwingUtils.getDarculaLookAndFeel();
+    }
+    
+    public static String getDarkLookAndFeel() {
+        return SwingUtils.getDarkLookAndFeel();
+    }
+
+    public static String getFlatLookAndFeel() {
+        return SwingUtils.getFlatLookAndFeel();
     }
     
     public enum LookAndFeelType {
@@ -392,27 +395,22 @@ public abstract class MainFrame extends JFrame {
             case m: case metal: return UIManager.getCrossPlatformLookAndFeelClassName();
             case n: case nimbus: return getNimbusLookAndFeel();
             case d: case darcula: return MainFrame.getDarculaLookAndFeel();
-            case f: case flat: return "com.formdev.flatlaf.FlatIntelliJLaf";
-            case b: case dark: return "com.formdev.flatlaf.FlatDarculaLaf";
+            case f: case flat: return MainFrame.getFlatLookAndFeel();
+            case b: case dark: return MainFrame.getDarkLookAndFeel();
         }
         return null;
     }
-
+ 
     static Boolean dark; 
     public static boolean isDark() {
         if (dark==null){
-            dark = Arr.containsEqual(new String[]{
-                        getLookAndFeel(LookAndFeelType.darcula),
-                        getLookAndFeel(LookAndFeelType.dark),
-                        "com.formdev.flatlaf.FlatDarkLaf",
-                    },
-                    UIManager.getLookAndFeel().getClass().getName() );            
-        }
+            dark = SwingUtils.isDark();
+    }
         return dark;
     }
 
     public static boolean isNimbus() {
-        return UIManager.getLookAndFeel().getClass().getName().equals(getNimbusLookAndFeel());
+        return SwingUtils.isNimbus();
     }
 
     public static void setLookAndFeel(LookAndFeelType type) {
@@ -425,86 +423,7 @@ public abstract class MainFrame extends JFrame {
         if (Arr.containsEqual(Convert.toStringArray(LookAndFeelType.values()), className)){
             className = getLookAndFeel(LookAndFeelType.valueOf(className));
         }
-        try {
-            if ((Sys.getOSFamily() == Sys.OSFamily.Linux) && (className.equals(getDarculaLookAndFeel()))) {
-                //TODO: workaround to https://github.com/bulenkov/Darcula/issues/29
-                //Not needed with netbeans darcula
-                UIManager.getFont("Label.font");
-            }
-            UIManager.setLookAndFeel(className);
-            dark = null;
-            SwingUtils.updateAllFrames();
-        } catch (Exception ex) {
-            logger.log(Level.INFO, null, ex);
-        }
-        adjustLAF();
-    }
-
-    public static void adjustLAF() {
-        if (isDark()) {
-            //Color DARK_GREEN = new Color(55, 196, 38);
-            //Color DARK_RED = new Color(255, 100, 100);
-            //Color DARK_GREY = new Color(136, 136, 136);
-            //Color DARK_YELLOW = new Color(251, 230, 33);
-            //Color DARK_BLUE = new Color(88, 157, 246);
-
-            UIManager.put("FileView.directoryIcon", new ImageIcon(App.getResourceImage("FolderClosed.png")));
-            UIManager.put("FileChooser.homeFolderIcon", new ImageIcon(App.getResourceImage("Home.png")));
-            UIManager.put("FileView.computerIcon", new ImageIcon(App.getResourceImage("Computer.png")));
-            UIManager.put("FileView.floppyDriveIcon", new ImageIcon(App.getResourceImage("Floppy.png")));
-            UIManager.put("FileView.hardDriveIcon", new ImageIcon(App.getResourceImage("HardDrive.png")));
-            UIManager.put("FileChooser.upFolderIcon", new ImageIcon(App.getResourceImage("FolderUp.png")));
-            UIManager.put("FileChooser.newFolderIcon", new ImageIcon(App.getResourceImage("FolderNew.png")));
-            UIManager.put("FileView.fileIcon", new ImageIcon(App.getResourceImage("File.png")));
-            UIManager.put("FileChooser.listViewIcon", new ImageIcon(App.getResourceImage("List.png")));
-            UIManager.put("FileChooser.detailsViewIcon", new ImageIcon(App.getResourceImage("Details.png")));
-
-            UIManager.put("Tree.openIcon", new ImageIcon(App.getResourceImage("FolderOpen.png")));
-            UIManager.put("Tree.closedIcon", new ImageIcon(App.getResourceImage("FolderClosed.png")));
-            UIManager.put("Tree.leafIcon", new ImageIcon(App.getResourceImage("File.png")));
-
-            //TODO: These properties are not working in Darcula. 
-            //A workaround not to cut root icon is to set the tree border: treeFolder.setBorder(BorderFactory.createEmptyBorder(0, 5, 0, 0));
-            //UIManager.put("Tree.leftChildIndent", new Integer(12));            
-            //UIManager.put("Tree.rightChildIndent", new Integer(4)); 
-            //UIManager.put("ButtonUI", .class.getName());
-            //UIManager.put("Button.border", .class.getName());
-        }
-
-        /*
-        //A Nimbus dark LAF
-        if (isDark() && className.equals(getNimbusLookAndFeel())) {
-            //These are the Netbeans dark style parameters
-            UIManager.put("control", new Color(128, 128, 128));
-            UIManager.put("info", new Color(128, 128, 128));
-            UIManager.put("nimbusBase", new Color(18, 30, 49));
-            UIManager.put("nimbusAlertYellow", new Color(248, 187, 0));
-            UIManager.put("nimbusDisabledText", new Color(128, 128, 128));
-            UIManager.put("nimbusFocus", new Color(115, 164, 209));
-            UIManager.put("nimbusGreen", new Color(176, 179, 50));
-            UIManager.put("nimbusInfoBlue", new Color(66, 139, 221));
-            UIManager.put("nimbusLightBackground", new Color(18, 30, 49));
-            UIManager.put("nimbusOrange", new Color(191, 98, 4));
-            UIManager.put("nimbusRed", new Color(169, 46, 34));
-            UIManager.put("nimbusSelectedText", new Color(255, 255, 255));
-            UIManager.put("nimbusSelectionBackground", new Color(104, 93, 156));
-
-            //Customizing...                
-            //UIManager.put( "control", new Color( 64, 64, 64) );         //default = (214,217,223)
-            //UIManager.put( "nimbusBase", new Color( 18, 30, 49) );  // Popup menu, control backgrounds, tabbed panel header defaulrt = (51,98,140);
-            //UIManager.put( "nimbusBlueGrey" , new Color( 32, 32, 32) );  //Menus bar, headers. default = 169,176,190                
-            //UIManager.put( "menu", new Color(237,239,242) );               
-            UIManager.put("nimbusLightBackground", new Color(128, 128, 128));
-            UIManager.put("nimbusSelectionBackground", new Color(60, 60, 80));
-            UIManager.put("controlText", new Color(0, 0, 0));
-            UIManager.put("text", new Color(0, 0, 0));
-            UIManager.put("nimbusDisabledText", new Color(64, 64, 64));
-
-            UIManager.put("ToolBar.disabled", new Color(255, 64, 64));
-        
-           PropertiesDialog.setNimbusRowColor(new Color(128, 128, 128));        
-        }        
-         */
+        SwingUtils.setLookAndFeel(className);
     }
 
     //Window state persistence

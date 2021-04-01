@@ -1,5 +1,6 @@
 package ch.psi.utils.swing;
 
+import ch.psi.utils.Arr;
 import ch.psi.utils.Chrono;
 import ch.psi.utils.Sys;
 import ch.psi.utils.Sys.OSFamily;
@@ -76,6 +77,7 @@ import javax.swing.Spring;
 import javax.swing.SpringLayout;
 import javax.swing.SwingUtilities;
 import javax.swing.Timer;
+import javax.swing.UIManager;
 import javax.swing.border.Border;
 import javax.swing.event.AncestorEvent;
 import javax.swing.event.AncestorListener;
@@ -280,7 +282,7 @@ public class SwingUtils {
             }
         } catch (ClassNotFoundException e1) {
         } catch (Exception ex) {
-            Logger.getLogger(SwingUtils.class.getCanonicalName()).log(Level.WARNING, null, ex);
+            Logger.getLogger(SwingUtils.class.getName()).log(Level.WARNING, null, ex);
         }
     }
 
@@ -1349,4 +1351,59 @@ public class SwingUtils {
     public static Image invert(Image image) {
         return Toolkit.getDefaultToolkit().createImage(new FilteredImageSource(image.getSource(), new ImageInvertFilter()));
     }
+    
+    //LAF
+    
+    public static String getNimbusLookAndFeel() {
+        for (UIManager.LookAndFeelInfo info : UIManager.getInstalledLookAndFeels()) {
+            if ("nimbus".equalsIgnoreCase(info.getName())) {
+                return info.getClassName();
+            }
+        }
+        return null;
+    }
+
+    public static String getDarculaLookAndFeel() {
+        return "com.bulenkov.darcula.DarculaLaf";
+    }
+
+    public static String getDarkLookAndFeel() {
+        return "com.formdev.flatlaf.FlatDarculaLaf";
+    }
+
+    public static String getFlatLookAndFeel() {
+        return "com.formdev.flatlaf.FlatIntelliJLaf";
+    }
+
+    
+    public static boolean isDark() {
+        return Arr.containsEqual(new String[]{
+                    "com.bulenkov.darcula.DarculaLaf",
+                    "com.formdev.flatlaf.FlatDarculaLaf",
+                    "com.formdev.flatlaf.FlatDarkLaf",
+                },
+                UIManager.getLookAndFeel().getClass().getName() );            
+    }    
+    
+    public static boolean isNimbus() {
+        return UIManager.getLookAndFeel().getClass().getName().equals(getNimbusLookAndFeel());
+    }
+    
+    public static void setLookAndFeel(String className) {
+        if (className == null) {
+            return;
+        }
+        try {
+            if ((Sys.getOSFamily() == Sys.OSFamily.Linux) && (className.equals(getDarculaLookAndFeel()))) {
+                //TODO: workaround to https://github.com/bulenkov/Darcula/issues/29
+                //Not needed with netbeans darcula
+                UIManager.getFont("Label.font");
+            }
+            UIManager.setLookAndFeel(className);            
+            SwingUtils.updateAllFrames();
+        } catch (Exception ex) {
+            Logger.getLogger(SwingUtils.class.getName()).log(Level.WARNING, null, ex);
+        }
+    }
+    
 }
