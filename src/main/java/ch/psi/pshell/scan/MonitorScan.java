@@ -283,7 +283,7 @@ public class MonitorScan extends LineScan {
                     }
                 } else {
                     boolean start = true;
-                    while (!chrono.isTimeout(time_ms)) {
+                    while (  (time_ms <= 0) || (!chrono.isTimeout(time_ms))) {
                         if ((!start) || !takeInitialValue) {
                             trigger.waitCacheChange(time_ms - chrono.getEllapsed());
                         }
