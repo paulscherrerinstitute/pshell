@@ -1,10 +1,13 @@
 package ch.psi.pshell.imaging;
 
+import ch.psi.pshell.device.Device;
 import ch.psi.pshell.device.DummyRegister;
 import ch.psi.pshell.device.GenericDevice;
 import ch.psi.pshell.device.GenericDeviceBase;
 import ch.psi.pshell.device.Readable.ReadableMatrix;
+import ch.psi.pshell.device.ReadonlyAsyncRegisterBase;
 import ch.psi.pshell.device.ReadonlyRegister;
+import ch.psi.pshell.device.ReadonlyRegisterBase;
 import ch.psi.utils.Chrono;
 import ch.psi.utils.Convert;
 import ch.psi.utils.Serializer;
@@ -256,6 +259,9 @@ public class SourceBase extends GenericDeviceBase<ImageListener> implements Sour
                 waitLock.notifyAll();
             }
             triggerImage(image, data);
+            if (trigger!=null){
+                trigger.setCount(count);
+            }
         }
     }
 
@@ -559,6 +565,23 @@ public class SourceBase extends GenericDeviceBase<ImageListener> implements Sour
     }
 
     protected void onTimeout() {
+    }
+    
+    class SourceTrigger extends ReadonlyAsyncRegisterBase{        
+        SourceTrigger(){
+            super(SourceBase.this.getName() + " trigger");
+        }
+        void setCount(int count){
+            this.setCache(count);
+        }        
+    }
+    
+    SourceTrigger trigger;
+    public SourceTrigger getTrigger(){
+        if (trigger == null){
+            trigger = new SourceTrigger();
+        }
+        return trigger;
     }
 
     //Overridables
