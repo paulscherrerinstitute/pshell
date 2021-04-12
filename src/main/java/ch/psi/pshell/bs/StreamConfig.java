@@ -11,7 +11,17 @@ import java.util.logging.Logger;
  */
 public class StreamConfig extends DeviceConfig {
 
+    public enum Incomplete {
+        provide_as_is,
+        drop,
+        fill_null;
+
+        public String getConfigValue() {
+            return this.toString().replace("_", "-");
+        }
+    }    
     public String filter;
+    public Incomplete mappingIncomplete;
 
     public String channel01;
     public String channel02;

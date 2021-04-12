@@ -109,6 +109,10 @@ public class Dispatcher extends Provider {
     }
 
     public String addStream(List channels) throws IOException {
+        return addStream(null);
+    }
+    
+    public String addStream(List channels, Stream stream) throws IOException {
         Map config = new HashMap();
         List channelsList = new ArrayList();
         config.put("channels", channelsList);
@@ -117,7 +121,10 @@ public class Dispatcher extends Provider {
             config.put("compression", "none");
         }
         Map mapping = new HashMap();
-        if (getConfig().mappingIncomplete!=null){
+        StreamConfig.Incomplete streamIncomplete = (stream==null) ? null : stream.getIncomplete();
+        if (streamIncomplete!=null){
+            mapping.put("incomplete", streamIncomplete.getConfigValue());
+        } else if (getConfig().mappingIncomplete!=null){
             mapping.put("incomplete", getConfig().mappingIncomplete.getConfigValue());
         }
         config.put("mapping", mapping);
@@ -197,7 +204,7 @@ public class Dispatcher extends Provider {
             channels.add(channel);
         }
         try {
-            String socket = addStream(channels);
+            String socket = addStream(channels, stream);
             streamSockets.put(stream, socket);
         } catch (IOException ex) {
             throw ex;

@@ -646,5 +646,9 @@ public class IO {
             }
         });
     }
-
+    
+    public static void setFilePublic(File file){
+        file.setReadable(true, false);
+        file.setWritable(true, false);        
+    }
 }

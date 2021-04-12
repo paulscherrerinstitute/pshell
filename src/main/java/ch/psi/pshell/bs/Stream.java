@@ -9,6 +9,7 @@ import ch.psi.bsread.ReceiverConfig;
 import ch.psi.bsread.message.ValueImpl;
 import ch.psi.pshell.device.Device;
 import ch.psi.bsread.converter.MatlabByteConverter;
+import ch.psi.pshell.bs.StreamConfig.Incomplete;
 import ch.psi.pshell.device.Cacheable;
 import ch.psi.pshell.device.Readable.ReadableType;
 import ch.psi.pshell.device.ReadonlyAsyncRegisterBase;
@@ -20,6 +21,7 @@ import ch.psi.utils.Threading;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -118,6 +120,11 @@ public class Stream extends DeviceBase implements Readable<StreamValue>, Cacheab
         this(name, provider);
         setFilter(filter);
     }
+    
+    public Stream(String name, Provider provider, String filter, Incomplete incomplete) {
+        this(name, provider, filter);
+        setIncomplete(incomplete);
+    }    
 
     public Stream(String name, Scalar... channels) {
         this(name, null, channels);
@@ -128,6 +135,37 @@ public class Stream extends DeviceBase implements Readable<StreamValue>, Cacheab
         setChildren(channels);
     }
 
+    public Stream(String name, Provider provider, Incomplete incomplete, Scalar... channels) {
+        this(name, provider, channels);
+        setIncomplete(incomplete);
+    }
+    
+    public Stream(String name, Provider provider, String filter, Incomplete incomplete, Scalar... channels) {
+        this(name, provider, incomplete, channels);
+        setFilter(filter);
+    }    
+    
+    public Incomplete mappingIncomplete;
+    
+    public void setIncomplete(String mappingIncomplete){
+        setIncomplete(Incomplete.valueOf(mappingIncomplete));
+    }
+    
+    public void setIncomplete(Incomplete mappingIncomplete){
+        this.mappingIncomplete = mappingIncomplete;
+    }
+
+    public Incomplete getIncomplete(){
+        if (mappingIncomplete != null){
+            return mappingIncomplete;
+        }
+        if (getConfig()!=null){
+            return getConfig().mappingIncomplete;
+        }
+        return null;
+    }
+
+    
     @Override
     protected void doInitialize() throws IOException, InterruptedException {
         stop();
@@ -511,9 +549,18 @@ public class Stream extends DeviceBase implements Readable<StreamValue>, Cacheab
         return true;
     }
 
+    LinkedHashMap<String, Object> streamCache = new  LinkedHashMap<>();
     protected void onMessage(long pulse_id, long timestamp, long nanosOffset, Map<String, ValueImpl> data) {
-        ArrayList<String> names = new ArrayList<>();
-        ArrayList<Object> values = new ArrayList<>();
+        boolean fill_null = (getIncomplete() == Incomplete.fill_null) && fixedChildren ;                
+        
+        if (!fixedChildren){
+            streamCache.clear();
+        } else if (fill_null){
+            for (String name:channelNames){
+                streamCache.put(name, null);
+            }
+        } 
+
         for (String channel : data.keySet()) {
             Scalar c = channels.get(channel);
             ValueImpl v = data.get(channel);
@@ -546,8 +593,13 @@ public class Stream extends DeviceBase implements Readable<StreamValue>, Cacheab
             if (debug) {
                 System.out.println(channel + ": " + Str.toString(val, 100));
             }
-            names.add(channel);
-            values.add(val);
+            if (!fixedChildren){
+                streamCache.put(channel, val);
+            } else if (fill_null){
+                if (channelNames.contains(channel)){
+                    streamCache.put(channel, val);
+                }
+            }
         }
 
         if (pidReader != null) {
@@ -559,10 +611,16 @@ public class Stream extends DeviceBase implements Readable<StreamValue>, Cacheab
 
         if (fixedChildren) {
             //If ids are declared, value list is fixed and ordered 
-            setCache(new StreamValue(pulse_id, timestamp, nanosOffset, channelNames, Arrays.asList(getChildrenValues())), timestamp, nanosOffset);
+            if (getIncomplete() == Incomplete.fill_null){
+                //Null values are cached
+                setCache(new StreamValue(pulse_id, timestamp, nanosOffset, channelNames, new ArrayList(streamCache.values())), timestamp, nanosOffset);
+            } else {
+                //If received null value caches last value
+                setCache(new StreamValue(pulse_id, timestamp, nanosOffset, channelNames, Arrays.asList(getChildrenValues())), timestamp, nanosOffset);
+            }
         } else {
-            //Else caches everything received
-            setCache(new StreamValue(pulse_id, timestamp, nanosOffset, names, values), timestamp, nanosOffset);
+            //Else caches everything received            
+            setCache(new StreamValue(pulse_id, timestamp, nanosOffset, new ArrayList(streamCache.keySet()), new ArrayList(streamCache.values())), timestamp, nanosOffset);
         }
     }
 
