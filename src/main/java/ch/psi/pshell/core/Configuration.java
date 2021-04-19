@@ -39,12 +39,12 @@ public class Configuration extends Config {
     public boolean dataScanSaveScript = false;
     public boolean dataScanSaveSetpoints = false;
     public DataTransferMode dataTransferMode = DataTransferMode.Off;
-    public String dataTransferPath;
-    public String dataTransferUser;
+    public String dataTransferPath = "";
+    public String dataTransferUser = "";
     public boolean disableDataFileLogs = false;
     public boolean disableEmbeddedAttributes = false;
-    public SessionHandling sessionHandling;
-    public String hostName;
+    public SessionHandling sessionHandling = SessionHandling.Off;
+    public String hostName  = "";
     public boolean hideServerMessages = false;
     public String logPath = TOKEN_LOGS + "/" + TOKEN_DATE + "_" + TOKEN_TIME;
     public int logDaysToLive = -1;
