@@ -89,7 +89,7 @@ public class Threading {
     }
 
     public static boolean stop(Thread thread, boolean force, int waitMillis) throws InterruptedException {
-        if (thread.isAlive()) {
+        if ((thread!=null) && (thread.isAlive())) {
             thread.interrupt();
             if (waitMillis > 0) {
                 for (int i = 0; i < waitMillis; i++) {

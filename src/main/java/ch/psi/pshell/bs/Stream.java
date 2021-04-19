@@ -353,7 +353,7 @@ public class Stream extends DeviceBase implements Readable<StreamValue>, Cacheab
         if (thread != null) {
             try {
                 long start = System.currentTimeMillis();
-                while (thread.isAlive()) {
+                while ((thread != null) && (thread.isAlive())){
                     if (System.currentTimeMillis() - start > 1000) {
                         getLogger().log(Level.WARNING, "Receiver did't quit: interrupting thread");
                         //TODO: Killing thread because it blocks  if no message is received
