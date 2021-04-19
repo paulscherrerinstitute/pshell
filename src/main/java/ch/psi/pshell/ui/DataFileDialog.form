@@ -416,7 +416,7 @@
                           <Component id="ckSaveSetpoints" min="-2" max="-2" attributes="0"/>
                           <Component id="ckAutoSave" min="-2" max="-2" attributes="0"/>
                       </Group>
-                      <EmptySpace pref="57" max="32767" attributes="0"/>
+                      <EmptySpace pref="26" max="32767" attributes="0"/>
                   </Group>
               </Group>
             </DimensionLayout>
@@ -453,7 +453,7 @@
             </Component>
             <Component class="javax.swing.JCheckBox" name="ckConvert">
               <Properties>
-                <Property name="text" type="java.lang.String" value="Convert sensor values to double"/>
+                <Property name="text" type="java.lang.String" value="Sensors with undefined type have datasets set to double"/>
               </Properties>
               <Events>
                 <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="ckAutoSaveActionPerformed"/>

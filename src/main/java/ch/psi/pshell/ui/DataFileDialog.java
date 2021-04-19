@@ -623,7 +623,7 @@ public class DataFileDialog extends StandardDialog {
             }
         });
 
-        ckConvert.setText("Convert sensor values to double");
+        ckConvert.setText("Sensors with undefined type have datasets set to double");
         ckConvert.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 ckAutoSaveActionPerformed(evt);
@@ -679,7 +679,7 @@ public class DataFileDialog extends StandardDialog {
                     .addComponent(ckFlush)
                     .addComponent(ckSaveSetpoints)
                     .addComponent(ckAutoSave))
-                .addContainerGap(57, Short.MAX_VALUE))
+                .addContainerGap(26, Short.MAX_VALUE))
         );
         jPanel4Layout.setVerticalGroup(
             jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
