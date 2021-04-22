@@ -249,7 +249,10 @@ public class App extends ObservableBase<AppListener> {
             System.setProperty(Context.PROPERTY_EMPTY_MODE, "true");
         }
 
-
+        if (isGenericMode()) {
+            System.setProperty(Context.PROPERTY_GENERIC_MODE, "true");
+        }
+        
         if (isDisabled()) {
             System.setProperty(Context.PROPERTY_DISABLED, "true");
         }
