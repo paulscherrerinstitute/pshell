@@ -21,6 +21,8 @@ import java.util.Enumeration;
 import java.util.List;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
@@ -395,7 +397,11 @@ public class IO {
     private static void grep(File file, final String filter, Pattern pattern, boolean recursive, String[] ignored, GrepListener listener) throws IOException {
         for (File f : IO.listFiles(file, filter)) {
             if (!f.isDirectory()) {
-                grep(f, pattern, listener);
+                try{
+                    grep(f, pattern, listener);
+                } catch(IOException ex){
+                    Logger.getLogger(IO.class.getName()).log(Level.WARNING, null, ex);
+                }
             }
         }
         if (recursive) {
