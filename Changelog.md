@@ -1,5 +1,45 @@
 # Changelog
 
+## 1.16.0
+
+### Added
+ 
+* Session management.
+
+* SciCat integration.
+
+* expand_path (shortcut to get_context().setup.expandPath) function to scripting API.
+
+* Options to disable logs file in data output.
+
+* {dseq} tag: unique daily index of the run.
+
+* Notification task list.
+
+* Increased number of imported Java builtin classes.
+
+* Automatic size adjustment of Epics arrays (waveforms) according to NORD.
+
+* ImageSource.getTrigger to trigger monitor scans
+
+* Override value-less command line arguments -<arg> with -<arg>=false.
+
+### Changed
+
+* Data Setup dialog includes all configuration for data generation and transfer.
+
+* Split startup.py to overcome limitation of 10kb. 
+
+* Channel objects are now Device and can be added to device pool.
+
+### Fixed
+
+* JEP module reloading with Python3.
+
+* fill_null behaviour in streams.
+  
+* Many small fixes.
+
 
 ## 1.15.0
 
