@@ -321,7 +321,8 @@ public abstract class Task extends SwingWorker<Object, Void> {
                 setProgress(100);
                 return msg;
             } catch (Exception ex) {
-                App.getInstance().sendError(ex.toString());
+                setMessage("Error commiting");
+                App.getInstance().sendError(ex.toString());                
                 throw ex;
             } finally {
                 App.getInstance().sendTaskFinish(msg);
@@ -674,6 +675,7 @@ public abstract class Task extends SwingWorker<Object, Void> {
                 setProgress(100);
                 return msg;
             } catch (Exception ex) {
+                setMessage("Error checking out");
                 App.getInstance().sendError(ex.toString());
                 throw ex;
             } finally {
@@ -703,6 +705,7 @@ public abstract class Task extends SwingWorker<Object, Void> {
                 setProgress(100);
                 return msg;
             } catch (Exception ex) {
+                setMessage("Error pulling from upstream");
                 App.getInstance().sendError(ex.toString());
                 throw ex;
             } finally {
@@ -741,6 +744,7 @@ public abstract class Task extends SwingWorker<Object, Void> {
                 setProgress(100);
                 return msg;
             } catch (Exception ex) {
+                setMessage("Error pushing to upstream");
                 App.getInstance().sendError(ex.toString());
                 throw ex;
             } finally {
