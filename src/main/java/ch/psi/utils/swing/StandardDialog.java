@@ -2,6 +2,7 @@ package ch.psi.utils.swing;
 
 import java.awt.Dialog;
 import java.awt.Frame;
+import java.awt.Window;
 import java.awt.GraphicsConfiguration;
 import java.awt.event.ActionEvent;
 import java.awt.event.HierarchyEvent;
@@ -220,6 +221,23 @@ public class StandardDialog extends JDialog {
 
     protected void onDesactive() {
     }
+    
+    //Utils
+    public void showException(Exception ex) {                                           
+        SwingUtils.showException(this, ex);
+    }        
+
+    public void showMessage(String title, String message) {
+        SwingUtils.showMessage(this, title, message);
+    }      
+    
+    public Frame getFrame(){
+        return SwingUtils.getFrame(this);
+    }
+    
+    public Window getWindow() {
+        return SwingUtils.getWindow(this);
+    }    
 
     //Result values
     private boolean mResult = false;
@@ -246,6 +264,6 @@ public class StandardDialog extends JDialog {
 
     public boolean getResult() {
         return mResult;
-    }
+    }      
 
 }

@@ -367,14 +367,6 @@ public class DevicePanel extends MonitoredPanel {
 
     protected void onTimer() {
     }
-
-    protected void showException(Exception ex) {
-        SwingUtils.showException(this, ex);
-    }
-
-    protected void showMessage(String title, String message) {
-        SwingUtils.showMessage(this, title, message);
-    }
     
     public static ConfigDialog showConfigEditor(Component parent, GenericDevice device, boolean modal, boolean readOnly) {
         if (device==null){

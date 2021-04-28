@@ -1,5 +1,7 @@
 package ch.psi.utils.swing;
 
+import java.awt.Frame;
+import java.awt.Window;
 import java.awt.event.HierarchyEvent;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -78,5 +80,22 @@ public class MonitoredPanel extends JPanel {
     }
 
     protected void onParentChange() {
+    }
+    
+    //Utils
+    public void showException(Exception ex) {                                           
+        SwingUtils.showException(SwingUtils.getWindow(this), ex);
+    }        
+
+    public void showMessage(String title, String message) {
+        SwingUtils.showMessage(SwingUtils.getWindow(this), title, message);
+    }      
+    
+    public Frame getFrame(){
+        return SwingUtils.getFrame(this);
+    }
+    
+    public Window getWindow() {
+        return SwingUtils.getWindow(this);
     }
 }
