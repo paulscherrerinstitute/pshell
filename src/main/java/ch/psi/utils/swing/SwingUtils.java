@@ -622,9 +622,17 @@ public class SwingUtils {
         return OptionResult.fromJOptionPaneResult(ret);
     }
 
+    public static int showOption(final Component parent, final String title, final String msg, Object[] options, Object initialValue) {
+        return JOptionPane.showOptionDialog(parent, msg, (title == null) ? "Input" : title, JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, initialValue);        
+    }
+
     public static OptionResult showOption(final Component parent, final String title, final Component component, OptionType type) {
         int ret = JOptionPane.showOptionDialog(parent, component, (title == null) ? "Input" : title, type.toJOptionPaneType(), JOptionPane.QUESTION_MESSAGE, null, null, null);
         return OptionResult.fromJOptionPaneResult(ret);
+    }
+
+    public static int showOption(final Component parent, final String title, final Component component, Object[] options, Object initialValue) {
+        return JOptionPane.showOptionDialog(parent, component, (title == null) ? "Input" : title, JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, initialValue);    
     }
 
     public static String getString(final Component parent, final String msg, final Object current) {
