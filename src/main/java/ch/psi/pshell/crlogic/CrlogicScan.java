@@ -201,10 +201,10 @@ public class CrlogicScan extends HardwareScan {
                 logger.info("CRLOGIC in FAULT state");
                 logger.info("Error message: " + template.getMessage().getValue());
                 logger.info("Recover logic and set it to INACTIVE");
-                template.getStatus().setValue(TemplateCrlogic.Status.INACTIVE.toString());
+                template.setStatus(TemplateCrlogic.Status.INACTIVE);
             } else if (status.equals(TemplateCrlogic.Status.ACTIVE.toString())) {
-                template.getStatus().setValue(TemplateCrlogic.Status.STOP.toString());
-                template.getStatus().waitForValue(TemplateCrlogic.Status.INACTIVE.toString(), startStopTimeout);
+                template.setStatus(TemplateCrlogic.Status.STOP);
+                template.waitStatus(TemplateCrlogic.Status.INACTIVE, startStopTimeout);                
             } else {
                 throw new RuntimeException("CRLOGIC is not inactive");
             }
@@ -323,16 +323,16 @@ public class CrlogicScan extends HardwareScan {
             positioner.setBacklash(0d);
             // Start crlogic logic
             logger.info("Start CRLOGIC");
-            template.getStatus().setValue(TemplateCrlogic.Status.INITIALIZE.toString());
+            template.setStatus(TemplateCrlogic.Status.INITIALIZE);
             try {
-                template.getStatus().waitForValue(TemplateCrlogic.Status.ACTIVE.toString(), startStopTimeout);
+                template.waitStatus(TemplateCrlogic.Status.ACTIVE, startStopTimeout);
             } catch (ChannelException | ExecutionException | TimeoutException e) {
                 logger.info("Failed to start CRLOGIC. Logic in status: " + template.getStatus().getValue());
                 if (template.getStatus().getValue().equals(TemplateCrlogic.Status.FAULT.toString())) {
                     logger.info("Error message: " + template.getMessage().getValue());
                 }
                 // Recover to inactive
-                template.getStatus().setValue(TemplateCrlogic.Status.INACTIVE.toString());
+                template.setStatus(TemplateCrlogic.Status.INACTIVE);
                 // TODO Improve error handling
                 throw new RuntimeException("Failed to start CRLOGIC. Logic in status: " + template.getStatus().getValue() + " Error message: " + template.getMessage().getValue(), e);
 
@@ -377,11 +377,11 @@ public class CrlogicScan extends HardwareScan {
 
             // Stop crlogic logic
             logger.info("Stop CRLOGIC");
-            template.getStatus().setValue(TemplateCrlogic.Status.STOP.toString());
+            template.setStatus(TemplateCrlogic.Status.STOP);
             // Wait until stopped
             logger.info("Wait until stopped");
             try {
-                template.getStatus().waitForValue(TemplateCrlogic.Status.INACTIVE.toString(), startStopTimeout);
+                template.waitStatus(TemplateCrlogic.Status.INACTIVE, startStopTimeout);
             } catch (ChannelException | ExecutionException | TimeoutException e) {
                 logger.info("Failed to stop CRLOGIC. Logic in status: " + template.getStatus().getValue());
                 // TODO Improve error handling

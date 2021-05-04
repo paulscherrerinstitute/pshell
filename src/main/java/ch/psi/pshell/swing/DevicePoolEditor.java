@@ -223,6 +223,7 @@ public class DevicePoolEditor extends Editor {
         String[] getKnownClassNames() {
             List<String> knownClasses = new ArrayList(Arrays.asList(new String[]{
                 ch.psi.pshell.device.Averager.class.getName(),
+                ch.psi.pshell.device.ArrayAverager.class.getName(),
                 ch.psi.pshell.device.Delta.class.getName(),
                 ch.psi.pshell.device.DummyMotor.class.getName(),
                 ch.psi.pshell.device.DummyPositioner.class.getName(),

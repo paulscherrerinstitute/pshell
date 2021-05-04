@@ -27,6 +27,7 @@ import ch.psi.utils.Range as Range
 import ch.psi.utils.Reflection as Reflection
 import ch.psi.utils.Serializer as Serializer
 import ch.psi.utils.Windows as Windows
+import ch.psi.utils.NumberComparator as NumberComparator
 
 
 import ch.psi.pshell.core.CommandSource as CommandSource

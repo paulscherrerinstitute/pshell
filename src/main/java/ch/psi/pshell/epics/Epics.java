@@ -9,6 +9,7 @@ import ch.psi.jcae.impl.DefaultChannelService;
 import ch.psi.jcae.impl.JcaeProperties;
 import ch.psi.jcae.impl.type.TimestampValue;
 import ch.psi.utils.Convert;
+import ch.psi.utils.NumberComparator;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
@@ -169,8 +170,20 @@ public class Epics {
         }
     }
 
+    public static <T> T waitValue(String channelName, T value, Integer timeout, Class<T> type, Integer size) throws ChannelException, InterruptedException, TimeoutException, ExecutionException {       
+        return waitValue(channelName, value, null, timeout, type, size);
+    }
+    
     public static <T> T waitValue(String channelName, T value, Comparator<T> comparator, Integer timeout, Class<T> type, Integer size) throws ChannelException, InterruptedException, TimeoutException, ExecutionException {
         Channel<T> channel = newChannel(channelName, type, size);
+        return waitValue(channel, value, comparator, timeout);
+    }    
+
+    public static <T> T waitValue(Channel<T> channel, T value, Integer timeout) throws ChannelException, InterruptedException, TimeoutException, ExecutionException {
+        return waitValue(channel, value, null, timeout);
+    }
+    
+    public static <T> T waitValue(Channel<T> channel, T value, Comparator<T> comparator, Integer timeout) throws ChannelException, InterruptedException, TimeoutException, ExecutionException {        
         try {
             if (comparator != null) {
                 if (timeout != null) {
@@ -185,6 +198,24 @@ public class Epics {
                     return channel.waitForValue(value);
                 }
             }
+        } catch (TimeoutException ex) {
+            //In some rare occasions the waiting monitor fails.
+            //Checking if channel is in the expected value beor triggering the exception.
+            //TODO: Should then not base the wait in monitor?
+            try{
+                T v = channel.get(true);
+                if (comparator != null) {
+                    if (comparator.compare(v, value)==0){
+                        return v;
+                    }
+                } else {
+                    if (v.equals(value)){
+                        return v;
+                    }
+                }
+            } catch (Exception e){                
+            }
+            throw ex;
         } finally {
             closeChannel(channel);
         }
@@ -197,21 +228,15 @@ public class Epics {
         if ((type != null) && (!Number.class.isAssignableFrom(type))) {
             throw new IllegalArgumentException("Must be a number type");
         }
-        Comparator<T> comparator = (T o1, T o2) -> {
-            if ((o1 == null) && (o2 == null)) {
-                return 0;
-            }
-            if ((o1 == null) || (o2 == null)) {
-                return 1;
-            }
-            if (Math.abs(o1.doubleValue() - o2.doubleValue()) <= Math.abs(precision)) {
-                return 0;
-            }
-            return Double.valueOf(o1.doubleValue()).compareTo(o2.doubleValue());
-        };
-
-        return waitValue(channelName, value, comparator, timeout, type, size);
-    }
+        return waitValue(channelName, value, new NumberComparator<T>(precision), timeout, type, size);
+    }           
+    
+    public static <T extends Number> T waitValue(Channel<T> channel, T value, double precision, Integer timeout) throws ChannelException, InterruptedException, TimeoutException, ExecutionException {
+        if (!(value instanceof Number)) {
+            throw new IllegalArgumentException("Number value required");
+        }       
+        return waitValue(channel, value, new NumberComparator<T>(precision), timeout);
+    }    
 
     public static void put(String channelName, Object value) throws ChannelException, InterruptedException, TimeoutException, ExecutionException {
         put(channelName, value, null);
