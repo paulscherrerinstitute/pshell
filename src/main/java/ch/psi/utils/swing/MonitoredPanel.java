@@ -91,6 +91,10 @@ public class MonitoredPanel extends JPanel {
         SwingUtils.showMessage(SwingUtils.getWindow(this), title, message);
     }      
     
+    public void showScrollableMessage(String title, String description, String message) {
+        SwingUtils.showScrollableMessage(this, title, description, message);
+    }    
+    
     public Frame getFrame(){
         return SwingUtils.getFrame(this);
     }

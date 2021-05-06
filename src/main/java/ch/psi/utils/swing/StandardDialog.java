@@ -1,5 +1,6 @@
 package ch.psi.utils.swing;
 
+import java.awt.Component;
 import java.awt.Dialog;
 import java.awt.Frame;
 import java.awt.Window;
@@ -230,6 +231,10 @@ public class StandardDialog extends JDialog {
     public void showMessage(String title, String message) {
         SwingUtils.showMessage(this, title, message);
     }      
+    
+    public void showScrollableMessage(String title, String description, String message) {
+        SwingUtils.showScrollableMessage(this, title, description, message);
+    }
     
     public Frame getFrame(){
         return SwingUtils.getFrame(this);

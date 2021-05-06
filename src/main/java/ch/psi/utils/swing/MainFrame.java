@@ -318,6 +318,10 @@ public abstract class MainFrame extends JFrame {
     public void showMessage(String title, String msg, int messageType) {
         SwingUtils.showMessage(this, title, msg, -1, messageType);
     }
+    
+    public void showScrollableMessage(String title, String description, String message) {
+        SwingUtils.showScrollableMessage(this, title, description, message);
+    }    
 
     public void showException(Exception ex) {
         SwingUtils.showException(this, ex);
