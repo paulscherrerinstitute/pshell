@@ -1,10 +1,15 @@
 package ch.psi.utils.swing;
 
+import java.awt.Component;
+import java.awt.Dimension;
 import java.awt.Frame;
 import java.awt.Window;
 import java.awt.event.HierarchyEvent;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.JComponent;
+import javax.swing.JDialog;
+import javax.swing.JFrame;
 import javax.swing.JPanel;
 
 /**
@@ -83,17 +88,57 @@ public class MonitoredPanel extends JPanel {
     }
     
     //Utils
-    public void showException(Exception ex) {                                           
-        SwingUtils.showException(SwingUtils.getWindow(this), ex);
-    }        
-
     public void showMessage(String title, String message) {
-        SwingUtils.showMessage(SwingUtils.getWindow(this), title, message);
+        SwingUtils.showMessage(this, title, message);
     }      
     
+    public void showMessage(String title, String msg, int messageType) {
+        SwingUtils.showMessage(this, title, msg, -1, messageType);
+    }
+
     public void showScrollableMessage(String title, String description, String message) {
         SwingUtils.showScrollableMessage(this, title, description, message);
+    }
+    
+    public JDialog showSplash(String title,  Dimension size, String message){
+        return SwingUtils.showSplash(this, title, size, message);
     }    
+    
+    public JDialog showSplash(String title,  Dimension size, JPanel panel){
+        return SwingUtils.showSplash(this, title, size, panel);
+    }     
+    
+    public void showException(Exception ex) {
+        SwingUtils.showException(this, ex);
+    }
+
+    public SwingUtils.OptionResult showOption(String title, String msg, SwingUtils.OptionType type) {
+        return SwingUtils.showOption(this, title, msg, type);
+    }
+
+    public SwingUtils.OptionResult showOption(String title, Component componment, SwingUtils.OptionType type) {
+        return SwingUtils.showOption(this, title, componment, type);
+    }
+
+    public String getString(String msg, Object current) {
+        return SwingUtils.getString(this, msg, current);
+    }
+
+    public String getPassword(Component parent, String title, String msg) {
+        return SwingUtils.getPassword(this, title, msg);
+    }
+
+    public Object getEnum(Component parent, String msg, Class type, Object current) {
+        return SwingUtils.getEnum(this, msg,  type, current);
+    }
+    
+    public JDialog showDialog(String title, Dimension size, JComponent content) {
+        return SwingUtils.showDialog(this, title, size, content);
+    }
+    
+    public JFrame showFrame(String title, Dimension size, JComponent content) {
+        return SwingUtils.showFrame(getWindow(), title, size, content);
+    }        
     
     public Frame getFrame(){
         return SwingUtils.getFrame(this);

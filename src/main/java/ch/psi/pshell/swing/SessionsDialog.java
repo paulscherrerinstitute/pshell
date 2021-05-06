@@ -420,18 +420,7 @@ public class SessionsDialog extends StandardDialog implements SessionManagerList
         selectSession(session);
         panelSessions.setVisible(false);
         updateButtons();
-    }
-    
-    JDialog showMessageDialog(String message){
-        JPanel panel = new JPanel();
-        panel.setLayout(new BorderLayout());
-        JLabel label = new JLabel(message);        
-        label.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-        panel.add(label, BorderLayout.CENTER);        
-        JDialog dialogMessage = SwingUtils.showDialog(this, "Archive",new Dimension(400,200), panel);
-        panel.paintImmediately(0,0,panel.getWidth(),panel.getHeight());
-        return dialogMessage;
-    }
+    }   
    
     /**
      * This method is called from within the constructor to initialize the form.
@@ -1041,11 +1030,12 @@ public class SessionsDialog extends StandardDialog implements SessionManagerList
                         return;
                     }
                 }
-                JDialog dialogMessage = showMessageDialog("Generating ZIP file...");
+                
+                JDialog splash = showSplash("Archive", new Dimension(400,200), "Generating ZIP file...");
                 try{
                     manager.createZipFile(currentSession, file, checkPreserveDirectoryStructure.isSelected());                    
                 } finally{
-                    dialogMessage.setVisible(false);
+                    splash.setVisible(false);
                 }
                 SwingUtils.showMessage(this, "Archive", "Success creating ZIP file: " + file.getName());
             }
@@ -1065,11 +1055,11 @@ public class SessionsDialog extends StandardDialog implements SessionManagerList
     private void buttonScicatIngestionActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonScicatIngestionActionPerformed
         try {
             SciCat.IngestOutput result = null;
-            JDialog dialogMessage = showMessageDialog("Ingesting SciCat dataset...");
+            JDialog splash = showSplash("Archive", new Dimension(400,200), "Ingesting SciCat dataset...");
             try{
                 result  = sciCat.ingest(currentSession, null);
             } finally{
-                dialogMessage.setVisible(false);
+                splash.setVisible(false);
             }
             String msg = result.success ?
             "Success ingesting SciCat dataset " + result.datasetName + "\nId: " + result.datasetId :

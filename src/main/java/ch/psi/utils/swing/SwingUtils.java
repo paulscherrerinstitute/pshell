@@ -573,7 +573,22 @@ public class SwingUtils {
         }
         showScrollableMessageBlocking(parent, title, description, message);
     }
+        
+    public static JDialog showSplash(final Component parent, String title,  Dimension size, String message){
+        JPanel panel = new JPanel();
+        panel.setLayout(new BorderLayout());
+        JLabel label = new JLabel(message);        
+        label.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        panel.add(label, BorderLayout.CENTER);        
+        return showSplash(parent, title, size,panel);
+    }    
     
+    public static JDialog showSplash(final Component parent, String title,  Dimension size, JPanel panel){
+        JDialog dialogMessage = SwingUtils.showDialog(parent, title, size, panel);
+        dialogMessage.setAlwaysOnTop(true);
+        panel.paintImmediately(0,0,panel.getWidth(),panel.getHeight());
+        return dialogMessage;
+    }    
     
     public enum OptionType {
         
