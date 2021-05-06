@@ -18,6 +18,7 @@ import java.awt.image.BufferedImage as BufferedImage
 import java.awt.Color as Color
 import java.awt.Point as Point
 import java.awt.Dimension as Dimension
+import java.awt.Rectangle as Rectangle
 import java.awt.Font as Font
 import org.python.core.PyArray as PyArray
 import org.python.core.PyFunction as PyFunction
