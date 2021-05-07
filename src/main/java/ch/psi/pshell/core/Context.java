@@ -2252,11 +2252,11 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
         }
     }
 
-    void pushToUpstream(final CommandSource source, boolean allBranches, boolean force) throws IOException, InterruptedException, ContextStateException {
-        onCommand(Command.push, new Object[]{allBranches, force}, source);
+    void pushToUpstream(final CommandSource source, boolean allBranches, boolean force, boolean pushTags) throws IOException, InterruptedException, ContextStateException {
+        onCommand(Command.push, new Object[]{allBranches, force, pushTags}, source);
         assertRemoteRepoEnabled(source);
         try {
-            getVersioningManager().pushToUpstream(allBranches, force);
+            getVersioningManager().pushToUpstream(allBranches, force, pushTags);
         } catch (IOException | InterruptedException | ContextStateException ex) {
             throw ex;
         } catch (Exception ex) {
@@ -3494,7 +3494,11 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
     }
 
     public void pushToUpstream(boolean allBranches, boolean force) throws IOException, InterruptedException, ContextStateException {
-        pushToUpstream(getPublicCommandSource(), allBranches, force);
+        pushToUpstream(allBranches, force, false);
+    }
+    
+    public void pushToUpstream(boolean allBranches, boolean force, boolean pushTags) throws IOException, InterruptedException, ContextStateException {
+        pushToUpstream(getPublicCommandSource(), allBranches, force, pushTags);
     }
 
     public void reloadPlugins() {

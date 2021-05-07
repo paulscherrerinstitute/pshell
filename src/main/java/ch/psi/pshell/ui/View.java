@@ -153,6 +153,7 @@ import java.awt.dnd.DropTarget;
 import java.awt.dnd.DropTargetDragEvent;
 import java.awt.dnd.DropTargetDropEvent;
 import java.awt.dnd.DropTargetEvent;
+import javax.swing.BoxLayout;
 import javax.swing.DefaultCellEditor;
 import javax.swing.JComboBox;
 import javax.swing.JOptionPane;
@@ -3964,8 +3965,22 @@ public class View extends MainFrame {
     private void menuPushActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuPushActionPerformed
         try {
             context.assertVersioningEnabled();
-            //TODO: Is it ok force at all times?
-            App.getInstance().startTask(new Task.PushUpstream(Boolean.TRUE, Boolean.TRUE));
+            
+            JCheckBox checkAll = new JCheckBox("All Branches");            
+            JCheckBox checkForce = new JCheckBox("Force");            
+            JCheckBox checkTags = new JCheckBox("Push Tags");
+            
+            checkAll.setSelected(true);
+                        
+            JPanel panel = new JPanel();
+            panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+            panel.add(checkAll);
+            panel.add(checkForce);
+            panel.add(checkTags);                                    
+
+            if (showOption("Push to remote repository", panel, OptionType.OkCancel) == OptionResult.Yes) {            
+                App.getInstance().startTask(new Task.PushUpstream(checkAll.isSelected(), checkForce.isSelected(), checkTags.isSelected()));
+            }
         } catch (Exception ex) {
             showException(ex);
         }

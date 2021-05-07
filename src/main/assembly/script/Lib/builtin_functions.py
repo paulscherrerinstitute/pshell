@@ -1162,17 +1162,18 @@ def pull_repository():
     """
     get_context().pullFromUpstream()
 
-def push_repository(all_branches=True, force=False):
+def push_repository(all_branches=True, force=False, push_tags=False):
     """Push to remote repository.
 
     Args:
         all_branches(boolean, optional): all branches or just current.
         force(boolean, optional): force flag.
+        push_tags(boolean, optional): push tags.
 
     Returns:
         None
     """
-    get_context().pushToUpstream(all_branches, force)
+    get_context().pushToUpstream(all_branches, force, push_tags)
 
 def cleanup_repository():
     """Performs a repository cleanup.

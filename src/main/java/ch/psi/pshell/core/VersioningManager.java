@@ -735,8 +735,12 @@ public class VersioningManager implements AutoCloseable {
     }
 
     public void pushToUpstream(final boolean allBranches, final boolean force) throws Exception {
+        pushToUpstream(allBranches, force, false);
+    }
+    
+    public void pushToUpstream(final boolean allBranches, final boolean force, final boolean pushTags) throws Exception {
         if (hasRemoteRepo()) {
-            logger.info("Push to upstream");
+            logger.info("Push to upstream all=" + allBranches + " force=" + force + " tags=" + pushTags);
             CredentialsProvider credentialsProvider = getCredentialsProvider();
             TransportConfigCallback transportConfigCallback = getTransportConfigCallback();
             PushCommand cmd = git.push().setForce(force).setRemote(remotePath);
@@ -747,6 +751,9 @@ public class VersioningManager implements AutoCloseable {
             }
             if (allBranches) {
                 cmd.setPushAll();
+            }
+            if (pushTags){
+                cmd.setPushTags();
             }
             String message = "";
             Iterable<PushResult> ret = cmd.call();

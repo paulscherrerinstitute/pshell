@@ -721,11 +721,13 @@ public abstract class Task extends SwingWorker<Object, Void> {
 
         final boolean allBranches;
         final boolean force;
+        final boolean tags;
 
-        public PushUpstream(boolean allBranches, boolean force) {
+        public PushUpstream(boolean allBranches, boolean force, boolean tags) {
             super();
             this.allBranches = allBranches;
             this.force = force;
+            this.tags = tags;
         }
 
         @Override
@@ -737,7 +739,7 @@ public abstract class Task extends SwingWorker<Object, Void> {
                 App.getInstance().sendTaskInit(msg);
                 Context.getInstance().assertRemoteRepoEnabled();
                 Context.getInstance().setSourceUI(CommandSource.ui); //Ensure authentication dialog comes to local interface
-                Context.getInstance().pushToUpstream(allBranches, force);
+                Context.getInstance().pushToUpstream(allBranches, force, tags);
                 msg = "Success pushing to upstream";
                 App.getInstance().sendOutput(msg);
                 setMessage(msg);
