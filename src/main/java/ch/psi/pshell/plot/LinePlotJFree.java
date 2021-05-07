@@ -37,7 +37,6 @@ import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JRadioButtonMenuItem;
 import javax.swing.KeyStroke;
-import javax.swing.SwingUtilities;
 import javax.swing.event.PopupMenuEvent;
 import javax.swing.event.PopupMenuListener;
 import org.jfree.chart.ChartFactory;
@@ -1057,7 +1056,7 @@ public class LinePlotJFree extends LinePlotBase {
                 p.addSeries(dseries);
                 dseries.setData(derivative[0], derivative[1]);
             }
-            Frame frame = SwingUtils.getFrame(this);
+            Frame frame = getFrame();
             JDialog dlg = new JDialog(frame, title, false);
             p.setPreferredSize(new Dimension(DETACHED_WIDTH, DETACHED_HEIGHT));
             dlg.setContentPane(p);
@@ -1085,7 +1084,7 @@ public class LinePlotJFree extends LinePlotBase {
                 p.addSeries(dseries);
                 dseries.setData(integral[0], integral[1]);
             }
-            Frame frame = SwingUtils.getFrame(this);
+            Frame frame = getFrame();
             JDialog dlg = new JDialog(frame, title, false);
             p.setPreferredSize(new Dimension(DETACHED_WIDTH, DETACHED_HEIGHT));
             dlg.setContentPane(p);

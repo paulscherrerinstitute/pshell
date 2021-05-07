@@ -1,7 +1,6 @@
 package ch.psi.pshell.plot;
 
 import ch.psi.pshell.device.TimestampedValue;
-import ch.psi.utils.swing.SwingUtils;
 import java.awt.Color;
 import java.awt.event.ActionEvent;
 import javax.swing.JMenuItem;
@@ -12,7 +11,6 @@ import java.util.Map;
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JMenu;
 import javax.swing.JPopupMenu;
-import javax.swing.SwingUtilities;
 import javax.swing.event.PopupMenuEvent;
 import javax.swing.event.PopupMenuListener;
 
@@ -89,12 +87,12 @@ public abstract class TimePlotBase extends PlotBase<TimePlotSeries> implements T
         JMenuItem menuDisplayDuration = new JMenuItem("Duration...");
         menuDisplayDuration.addActionListener((ActionEvent e) -> {
             try {
-                String str = SwingUtils.getString(TimePlotBase.this, "Enter time window (display duration) in seconds:", String.valueOf(getDurationMillis() / 1000));
+                String str = getString("Enter time window (display duration) in seconds:", String.valueOf(getDurationMillis() / 1000));
                 if (str != null) {
                     setDurationMillis(Integer.valueOf(str) * 1000);
                 }
             } catch (Exception ex) {
-                SwingUtils.showException(TimePlotBase.this, ex);
+                showException(ex);
             }
         });
 

@@ -7,7 +7,6 @@ import ch.psi.utils.IO;
 import ch.psi.utils.Reflection.Hidden;
 import ch.psi.utils.swing.ExtensionFileFilter;
 import ch.psi.utils.swing.ImageTransferHandler;
-import ch.psi.utils.swing.SwingUtils;
 
 import java.awt.*;
 import java.awt.datatransfer.Clipboard;
@@ -24,12 +23,10 @@ import java.util.Date;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JFileChooser;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
-import javax.swing.SwingUtilities;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
@@ -184,7 +181,7 @@ public class TimePlotJFree extends TimePlotBase {
                 try {
                     saveData(fileName);
                 } catch (IOException ex) {
-                    SwingUtils.showException(TimePlotJFree.this, ex);
+                    showException(ex);
                 }
             }
 

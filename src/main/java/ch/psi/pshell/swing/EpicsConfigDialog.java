@@ -5,7 +5,6 @@ import ch.psi.utils.Config;
 import ch.psi.utils.OrderedProperties;
 import ch.psi.utils.Str;
 import ch.psi.utils.swing.StandardDialog;
-import ch.psi.utils.swing.SwingUtils;
 import java.awt.Component;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -293,7 +292,7 @@ public class EpicsConfigDialog extends StandardDialog {
             }
             accept();
         } catch (Exception ex) {
-            SwingUtils.showException(this, ex);
+            showException(ex);
         }
     }//GEN-LAST:event_buttonOkActionPerformed
 

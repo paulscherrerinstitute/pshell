@@ -2,7 +2,7 @@ package ch.psi.pshell.swing;
 
 import ch.psi.utils.IO;
 import ch.psi.utils.swing.MainFrame;
-import ch.psi.utils.swing.SwingUtils;
+import ch.psi.utils.swing.MonitoredPanel;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.File;
@@ -12,7 +12,7 @@ import javax.swing.table.DefaultTableModel;
 /**
  *
  */
-public class SearchPanel extends javax.swing.JPanel {
+public class SearchPanel extends MonitoredPanel {
 
     DefaultTableModel model;
 
@@ -32,7 +32,7 @@ public class SearchPanel extends javax.swing.JPanel {
             try {
                 IO.grep(pathName, filter, pattern, caseInsensitive, wholeWords, recursive, ignores, grepListener);
             } catch (IOException ex) {
-                SwingUtils.showException(SearchPanel.this, ex);
+                showException(ex);
             }
             status.setText(table.getRowCount() + " occurances found");
         });
@@ -50,7 +50,7 @@ public class SearchPanel extends javax.swing.JPanel {
                         onDoubleClick(file, row, text);
                     }
                 } catch (Exception ex) {
-                    SwingUtils.showException(SearchPanel.this, ex);
+                    showException(ex);
                 }
             }
         });

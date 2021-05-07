@@ -1377,7 +1377,7 @@ public class View extends MainFrame {
         currentScriptEditor = getSelectedEditor();
         if (currentScriptEditor != null) {
             if (currentScriptEditor.hasChanged()) {
-                if (SwingUtils.showOption(this, "Save", "Document has changed. Do you want to save it?", OptionType.YesNo) != OptionResult.Yes) {
+                if (showOption("Save", "Document has changed. Do you want to save it?", OptionType.YesNo) != OptionResult.Yes) {
                     return;
                 }
                 menuSaveActionPerformed(null);
@@ -3991,7 +3991,7 @@ public class View extends MainFrame {
             context.assertVersioningEnabled();
             List<String> branches = context.getVersioningManager().getLocalBranches();
             String current = context.getVersioningManager().getCurrentBranch();
-            String branch = SwingUtils.getString(this, "Select working branch:", branches.toArray(new String[0]), current);
+            String branch = getString("Select working branch:", branches.toArray(new String[0]), current);
             if ((branch != null) && (!branch.equals(current))) {
                 App.getInstance().startTask(new Task.Checkout(true, branch));
             }
@@ -4003,7 +4003,7 @@ public class View extends MainFrame {
     private void menuCreateBranchActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuCreateBranchActionPerformed
         try {
             context.assertVersioningEnabled();
-            String branch = SwingUtils.getString(this, "Enter branch name:", null);
+            String branch = getString("Enter branch name:", null);
             if (branch != null) {
                 context.getVersioningManager().createBranch(branch);
             }
@@ -4019,7 +4019,7 @@ public class View extends MainFrame {
             String current = context.getVersioningManager().getCurrentBranch();
             branches.remove(VersioningManager.MASTER_BRANCH);
             //branches.remove(current);
-            String ret = SwingUtils.getString(this, "Select branch to be deleted:", branches.toArray(new String[0]), null);
+            String ret = getString("Select branch to be deleted:", branches.toArray(new String[0]), null);
             if (ret != null) {
                 context.getVersioningManager().deleteBranch(ret);
             }
@@ -4134,7 +4134,7 @@ public class View extends MainFrame {
         try {
             context.assertVersioningEnabled();
             List<String> tags = context.getVersioningManager().getTags();
-            String ret = SwingUtils.getString(this, "Select tag to be deleted:", tags.toArray(new String[0]), null);
+            String ret = getString("Select tag to be deleted:", tags.toArray(new String[0]), null);
             if (ret != null) {
                 context.getVersioningManager().deleteTag(ret);
             }
@@ -4147,7 +4147,7 @@ public class View extends MainFrame {
         try {
             context.assertVersioningEnabled();
             List<String> tags = context.getVersioningManager().getTags();
-            String tag = SwingUtils.getString(this, "Select tag to checkout:", tags.toArray(new String[0]), null);
+            String tag = getString("Select tag to checkout:", tags.toArray(new String[0]), null);
             if (tag != null) {
                 App.getInstance().startTask(new Task.Checkout(false, tag));
             }
@@ -4190,12 +4190,12 @@ public class View extends MainFrame {
     private void menuChangeUserActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuChangeUserActionPerformed
         try {
             String current = context.getUser().name;
-            String name = SwingUtils.getString(this, "Select user:", context.getUsersManager().getUserNames(), current);
+            String name = getString("Select user:", context.getUsersManager().getUserNames(), current);
             if ((name != null) && (!name.equals(current))) {
                 context.getUsersManager().selectUser(name);
             }
         } catch (Exception ex) {
-            SwingUtils.showException(this, ex);
+            showException(ex);
         }
     }//GEN-LAST:event_menuChangeUserActionPerformed
 
@@ -4212,7 +4212,7 @@ public class View extends MainFrame {
             }
             showChildWindow(dialogHelp);
         } catch (Exception ex) {
-            SwingUtils.showException(this, ex);
+            showException(ex);
         }
     }//GEN-LAST:event_menuHelpContentsActionPerformed
 
@@ -4778,7 +4778,7 @@ public class View extends MainFrame {
     private void menuSessionStartActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuSessionStartActionPerformed
         try {
             if (!context.getSessionManager().isStarted()) {
-                String name = SwingUtils.getString(this, "Enter the new session name:", "");
+                String name = getString("Enter the new session name:", "");
                 if (name != null) {
                     context.getSessionManager().start(name);
                 }
@@ -4827,7 +4827,7 @@ public class View extends MainFrame {
                 panel.add(checkArchive, BorderLayout.SOUTH);  
                 panel.setPreferredSize(new Dimension(400, panel.getPreferredSize().height));
                 
-                if (SwingUtils.showOption(this, "Session", panel , OptionType.YesNo) == OptionResult.Yes) {
+                if (showOption("Session", panel , OptionType.YesNo) == OptionResult.Yes) {
                     context.getSessionManager().stop();
                     if (checkArchive.isSelected()){
                         SessionsDialog dlg = new SessionsDialog(this, false);
@@ -4908,7 +4908,7 @@ public class View extends MainFrame {
 
     private void menuSessionCreateActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuSessionCreateActionPerformed
         try{
-            String name = SwingUtils.getString(this, "Enter the session name created with the files selected in the data panel:", "");
+            String name = getString("Enter the session name created with the files selected in the data panel:", "");
             if (name != null) {
                 context.getSessionManager().create(name, dataPanel.getSelectedFiles(), null, null);
             }

@@ -79,7 +79,7 @@ public class DevicePoolPanel extends MonitoredPanel implements UpdatablePanel {
                 try {
                     dev.request();
                 } catch (Exception ex) {
-                    SwingUtils.showException(DevicePoolPanel.this, ex);
+                    showException(ex);
                 }
             }
         });
@@ -131,7 +131,7 @@ public class DevicePoolPanel extends MonitoredPanel implements UpdatablePanel {
                     dlg.requestFocus();
 
                 } catch (Exception ex) {
-                    SwingUtils.showException(DevicePoolPanel.this, ex);
+                    showException(ex);
                 }
             }
         });
@@ -142,7 +142,7 @@ public class DevicePoolPanel extends MonitoredPanel implements UpdatablePanel {
                 try {
                     showConfigHistory(dev);
                 } catch (Exception ex) {
-                    SwingUtils.showException(DevicePoolPanel.this, ex);
+                    showException(ex);
                 }
             }
         });
@@ -155,7 +155,7 @@ public class DevicePoolPanel extends MonitoredPanel implements UpdatablePanel {
                         showHistory((Device) dev);
                     }
                 } catch (Exception ex) {
-                    SwingUtils.showException(DevicePoolPanel.this, ex);
+                    showException(ex);
                 }
             }
         });
@@ -165,7 +165,7 @@ public class DevicePoolPanel extends MonitoredPanel implements UpdatablePanel {
                 try {
                     onDoubleClick(dev);
                 } catch (Exception ex) {
-                    SwingUtils.showException(DevicePoolPanel.this, ex);
+                    showException(ex);
                 }
             }
         });
@@ -189,7 +189,7 @@ public class DevicePoolPanel extends MonitoredPanel implements UpdatablePanel {
                         }
                     }
                 } catch (Exception ex) {
-                    SwingUtils.showException(DevicePoolPanel.this, ex);
+                    showException(ex);
                 }
             }
 
@@ -224,7 +224,7 @@ public class DevicePoolPanel extends MonitoredPanel implements UpdatablePanel {
                         }
                     }
                 } catch (Exception ex) {
-                    SwingUtils.showException(DevicePoolPanel.this, ex);
+                    showException(ex);
                 }
 
             }

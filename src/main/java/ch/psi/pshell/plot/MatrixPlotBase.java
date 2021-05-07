@@ -132,7 +132,7 @@ abstract public class MatrixPlotBase extends PlotBase<MatrixPlotSeries> implemen
 
             //TODO: Detaching always in HIGH quality?
             //p.setQuality(quality);        
-            Frame frame = SwingUtils.getFrame(this);
+            Frame frame = getFrame();
             JDialog dlg = new JDialog(frame, getTitle(), false);
             ((JPanel) p).setPreferredSize(new Dimension(DETACHED_WIDTH, DETACHED_HEIGHT));
             dlg.setContentPane((JPanel) p);
@@ -140,7 +140,7 @@ abstract public class MatrixPlotBase extends PlotBase<MatrixPlotSeries> implemen
             SwingUtils.centerComponent(frame, dlg);
             dlg.setVisible(true);
         } catch (Exception ex) {
-            SwingUtils.showException(MatrixPlotBase.this, ex);
+            showException(ex);
         }
     }
 

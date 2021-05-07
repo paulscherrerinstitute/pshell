@@ -145,7 +145,7 @@ abstract public class LinePlotBase extends PlotBase<LinePlotSeries> implements L
                 detachedSeries.setData(series.getX(), series.getY());
             }
             ((JPanel) p).setPreferredSize(new Dimension(DETACHED_WIDTH, DETACHED_HEIGHT));
-            Frame frame = SwingUtils.getFrame(this);
+            Frame frame = getFrame();
             JDialog dlg = new JDialog(frame, getTitle(), false);
             dlg.setContentPane((JPanel) p);
             dlg.pack();
@@ -153,7 +153,7 @@ abstract public class LinePlotBase extends PlotBase<LinePlotSeries> implements L
             dlg.setVisible(true);
             dlg.requestFocus();
         } catch (Exception ex) {
-            SwingUtils.showException(LinePlotBase.this, ex);
+            showException(ex);
         }
     }
 

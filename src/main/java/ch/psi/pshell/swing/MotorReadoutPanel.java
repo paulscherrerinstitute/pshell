@@ -3,7 +3,6 @@ package ch.psi.pshell.swing;
 import ch.psi.pshell.device.Motor;
 import ch.psi.utils.Convert;
 import ch.psi.utils.State;
-import ch.psi.utils.swing.SwingUtils;
 import java.awt.event.KeyEvent;
 import java.io.IOException;
 
@@ -103,7 +102,7 @@ public final class MotorReadoutPanel extends DevicePanel {
     protected void move(double value) throws IOException {
         getDevice().writeAsync(value).handle((ok, ex) -> {
             if ((ex != null) && (ex instanceof IOException)) {
-                SwingUtils.showException(this, (Exception) ex);
+                showException((Exception) ex);
             }
             return ok;
         });

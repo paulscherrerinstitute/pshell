@@ -2,7 +2,6 @@ package ch.psi.pshell.plot;
 
 import ch.psi.utils.Convert;
 import ch.psi.utils.swing.MainFrame;
-import ch.psi.utils.swing.SwingUtils;
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Font;
@@ -449,7 +448,7 @@ public class RangeSelectionPlot extends LinePlotJFree {
                             addRange(range[0], range[1]);
                         }
                     } catch (Exception ex) {
-                        SwingUtils.showException(RangeSelectionPlot.this, ex);
+                        showException(ex);
                     }
                 }
             }

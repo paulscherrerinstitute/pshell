@@ -205,7 +205,7 @@ public class PreferencesDialog extends StandardDialog {
     }
 
     void getFont(int index, JTextField txt) {
-        FontDialog dlg = new FontDialog(SwingUtils.getFrame(this), true, selectedFonts[index]);
+        FontDialog dlg = new FontDialog(getFrame(), true, selectedFonts[index]);
         dlg.setVisible(true);
         if (dlg.getResult()) {
             selectedFonts[index] = dlg.getSelectedFont();
@@ -1308,7 +1308,7 @@ public class PreferencesDialog extends StandardDialog {
             accept();
 
         } catch (Exception ex) {
-            SwingUtils.showException(PreferencesDialog.this, ex);
+            showException(ex);
         }
     }//GEN-LAST:event_buttonOkActionPerformed
 
@@ -1337,7 +1337,7 @@ public class PreferencesDialog extends StandardDialog {
             modelPanels.insertRow(tablePanels.getSelectedRow() + 1, new Object[]{"", ""});
             updateTablePanels();
         } catch (Exception ex) {
-            SwingUtils.showException(PreferencesDialog.this, ex);
+            showException(ex);
         }
     }//GEN-LAST:event_buttonInsertActionPerformed
 
@@ -1348,7 +1348,7 @@ public class PreferencesDialog extends StandardDialog {
                 updateTablePanels();
             }
         } catch (Exception ex) {
-            SwingUtils.showException(PreferencesDialog.this, ex);
+            showException(ex);
         }
     }//GEN-LAST:event_buttonDeleteActionPerformed
 
@@ -1360,7 +1360,7 @@ public class PreferencesDialog extends StandardDialog {
             }
             updateTablePanels();
         } catch (Exception ex) {
-            SwingUtils.showException(PreferencesDialog.this, ex);
+            showException(ex);
         }
     }//GEN-LAST:event_buttonDefaultPanelsActionPerformed
 
@@ -1378,7 +1378,7 @@ public class PreferencesDialog extends StandardDialog {
             textPT.setText(getFontDesc(fonts[5]));
             textPTit.setText(getFontDesc(fonts[6]));            
         } catch (Exception ex) {
-            SwingUtils.showException(PreferencesDialog.this, ex);
+            showException(ex);
         }
     }//GEN-LAST:event_buttonDefaultFontsActionPerformed
 
@@ -1390,7 +1390,7 @@ public class PreferencesDialog extends StandardDialog {
                 panelBackground.setBackground(selectedPlotBackground);
             }
         } catch (Exception ex) {
-            SwingUtils.showException(PreferencesDialog.this, ex);
+            showException(ex);
         }
     }//GEN-LAST:event_buttonSetBackgroundActionPerformed
 
@@ -1402,7 +1402,7 @@ public class PreferencesDialog extends StandardDialog {
                 panelEditorBackground.setBackground(selectedEditorBackground);
             }
         } catch (Exception ex) {
-            SwingUtils.showException(PreferencesDialog.this, ex);
+            showException(ex);
         }
     }//GEN-LAST:event_buttonSetEditorBackgroundActionPerformed
 
@@ -1414,7 +1414,7 @@ public class PreferencesDialog extends StandardDialog {
                 panelEditorForeground.setBackground(selectedEditorForeground);
             }
         } catch (Exception ex) {
-            SwingUtils.showException(PreferencesDialog.this, ex);
+            showException(ex);
         }
     }//GEN-LAST:event_buttonSetEditorForegroundActionPerformed
 
@@ -1466,7 +1466,7 @@ public class PreferencesDialog extends StandardDialog {
                 
             }            
         } catch (Exception ex) {
-            SwingUtils.showException(PreferencesDialog.this, ex);
+            showException(ex);
         }
     }//GEN-LAST:event_buttonInsertProcScriptActionPerformed
 
@@ -1477,7 +1477,7 @@ public class PreferencesDialog extends StandardDialog {
                 updateListProcFiles();
             }
         } catch (Exception ex) {
-            SwingUtils.showException(PreferencesDialog.this, ex);
+            showException(ex);
         }
     }//GEN-LAST:event_buttonRemoveProcScriptActionPerformed
 

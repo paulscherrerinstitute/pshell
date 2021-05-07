@@ -73,7 +73,7 @@ public abstract class Editor<T extends Document>
                     copy();
                 }
             } catch (Exception ex) {
-                SwingUtils.showException(Editor.this, ex);
+                showException(ex);
             }
         }
     };
@@ -244,7 +244,7 @@ public abstract class Editor<T extends Document>
 
     public boolean checkChangeOnClose() throws IOException {
         if (hasChanged() && (!isReadOnly())) {
-            switch (SwingUtils.showOption(Editor.this, "Closing", "Document has changed. Do you want to save it?", OptionType.YesNoCancel)) {
+            switch (showOption("Closing", "Document has changed. Do you want to save it?", OptionType.YesNoCancel)) {
                 case Yes:
                     save();
                     break;
@@ -273,7 +273,7 @@ public abstract class Editor<T extends Document>
                             }
                         }
                     } catch (Exception ex) {
-                        SwingUtils.showException(Editor.this, ex);
+                        showException(ex);
                     }
                 }
 
@@ -317,7 +317,7 @@ public abstract class Editor<T extends Document>
                         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
                         if (e.getID() == WindowEvent.WINDOW_CLOSING) {
                             if (hasChanged() && (!isReadOnly())) {
-                                switch (SwingUtils.showOption(Editor.this, "Closing", "Document has changed. Do you want to save it?", OptionType.YesNoCancel)) {
+                                switch (showOption( "Closing", "Document has changed. Do you want to save it?", OptionType.YesNoCancel)) {
                                     case Yes:
                                         setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
                                         save();
@@ -331,7 +331,7 @@ public abstract class Editor<T extends Document>
                             }
                         }
                     } catch (Exception ex) {
-                        SwingUtils.showException(Editor.this, ex);
+                        showException(ex);
                     }
                 }
             });

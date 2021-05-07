@@ -22,12 +22,8 @@ import javax.swing.Timer;
 import javax.swing.border.TitledBorder;
 import ch.psi.pshell.core.ContextListener;
 import ch.psi.pshell.device.GenericDevice;
-import ch.psi.utils.Config;
 import ch.psi.utils.swing.ConfigDialog;
-import ch.psi.utils.swing.StandardDialog;
 import java.awt.Component;
-import java.awt.Window;
-import javax.swing.WindowConstants;
 
 /**
  * Device panels should only read cached values (take) or execute direct device access in private

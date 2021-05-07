@@ -144,7 +144,7 @@ public class CameraCalibrationDialog extends StandardDialog {
             renderer.refresh();
             
         } catch (Exception ex){
-            SwingUtils.showException(this, ex);
+            showException(ex);
         }
     }
             
@@ -596,7 +596,7 @@ public class CameraCalibrationDialog extends StandardDialog {
             if (ex instanceof InvocationTargetException){
                 ex = (Exception) ((InvocationTargetException)ex).getCause();
             }
-            SwingUtils.showException(this, ex);
+            showException(ex);
         }        
     }//GEN-LAST:event_buttonFetchActionPerformed
 
@@ -642,13 +642,13 @@ public class CameraCalibrationDialog extends StandardDialog {
             if (reticle){
                 renderer.setShowReticle(false);
             }
-            SwingUtils.showMessage(this, "Success", "Updated " + cameraName + " configuration");
+            showMessage("Success", "Updated " + cameraName + " configuration");
 
             if (reticle){
                 renderer.setShowReticle(true);
             }
         } catch (Exception ex) {
-            SwingUtils.showException(this, ex);
+            showException(ex);
         }
     }//GEN-LAST:event_buttonApplyActionPerformed
 

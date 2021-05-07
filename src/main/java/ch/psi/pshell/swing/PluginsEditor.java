@@ -4,7 +4,6 @@ import ch.psi.pshell.core.Context;
 import ch.psi.pshell.core.Plugin;
 import ch.psi.utils.Arr;
 import ch.psi.utils.IO;
-import ch.psi.utils.swing.SwingUtils;
 import ch.psi.utils.swing.Document;
 import ch.psi.utils.swing.Editor;
 import java.io.File;
@@ -203,7 +202,7 @@ public class PluginsEditor extends Editor {
 
     void create(boolean panel) {
         try {
-            String name = SwingUtils.getString(this, "Enter Plugin name:", "");
+            String name = getString("Enter Plugin name:", "");
             if ((name == null) || (name.isEmpty())) {
                 return;
             }
@@ -249,7 +248,7 @@ public class PluginsEditor extends Editor {
                 IO.replace(path, "public class DefaultPlugin", "public class " + name);
             }
 
-            SwingUtils.showMessage(this, "Plugin Creation", "Success creating plugin: " + name);
+            showMessage("Plugin Creation", "Success creating plugin: " + name);
             //Reload table
             ((PluginsEditorDocument) getDocument()).load(Context.getInstance().getSetup().getPluginsConfigurationFile());
             for (int i = 0; i < model.getRowCount(); i++) {
@@ -261,7 +260,7 @@ public class PluginsEditor extends Editor {
             updateButtons();
 
         } catch (Exception ex) {
-            SwingUtils.showException(this, ex);
+            showException(ex);
         }
     }
 
@@ -613,7 +612,7 @@ public class PluginsEditor extends Editor {
             table.setRowSelectionInterval(cur - 1, cur - 1);
             updateButtons();
         } catch (Exception ex) {
-            SwingUtils.showException(this, ex);
+            showException(ex);
         }
     }//GEN-LAST:event_buttonUpActionPerformed
 
@@ -625,7 +624,7 @@ public class PluginsEditor extends Editor {
             table.setRowSelectionInterval(cur + 1, cur + 1);
             updateButtons();
         } catch (Exception ex) {
-            SwingUtils.showException(this, ex);
+            showException(ex);
         }
     }//GEN-LAST:event_buttonDownActionPerformed
 
@@ -636,14 +635,14 @@ public class PluginsEditor extends Editor {
             try {
                 Context.getInstance().reloadPlugins();
             } catch (Exception ex) {
-                SwingUtils.showException(PluginsEditor.this, ex);
+                showException(ex);
             }
             SwingUtilities.invokeLater(() -> {
                 try {
                     updateLoaded();
                     updateButtons();
                 } catch (Exception ex) {
-                    SwingUtils.showException(PluginsEditor.this, ex);
+                    showException(ex);
                 }
                 buttonReloadAll.setEnabled(true);
             });
@@ -654,7 +653,7 @@ public class PluginsEditor extends Editor {
         try {
             save();
         } catch (Exception ex) {
-            SwingUtils.showException(this, ex);
+            showException(ex);
         }
     }//GEN-LAST:event_buttonSaveActionPerformed
 
@@ -666,7 +665,7 @@ public class PluginsEditor extends Editor {
             }
 
         } catch (Exception ex) {
-            SwingUtils.showException(this, ex);
+            showException(ex);
         }
     }//GEN-LAST:event_buttonEditActionPerformed
 
@@ -676,7 +675,7 @@ public class PluginsEditor extends Editor {
             File file = Paths.get(pluginsFolder, getSelectedPlugin()).toFile();
             Context.getInstance().getPluginManager().loadInitializePlugin(file);
         } catch (Exception ex) {
-            SwingUtils.showException(this, ex);
+            showException(ex);
         } finally {
             updateButtons();
             updateLoaded();
@@ -698,7 +697,7 @@ public class PluginsEditor extends Editor {
             }
         } catch (Exception ex) {
             updateLoaded();
-            SwingUtils.showException(this, ex);
+            showException(ex);
         }
         updateLoadedButtons();
         updateButtons();
@@ -714,7 +713,7 @@ public class PluginsEditor extends Editor {
             }
 
         } catch (Exception ex) {
-            SwingUtils.showException(this, ex);
+            showException(ex);
         }
     }//GEN-LAST:event_buttonUnloadActionPerformed
 
@@ -728,7 +727,7 @@ public class PluginsEditor extends Editor {
             }
 
         } catch (Exception ex) {
-            SwingUtils.showException(this, ex);
+            showException(ex);
         }
     }//GEN-LAST:event_buttonStopActionPerformed
 
@@ -742,7 +741,7 @@ public class PluginsEditor extends Editor {
             }
 
         } catch (Exception ex) {
-            SwingUtils.showException(this, ex);
+            showException(ex);
         }
     }//GEN-LAST:event_buttonStartActionPerformed
 

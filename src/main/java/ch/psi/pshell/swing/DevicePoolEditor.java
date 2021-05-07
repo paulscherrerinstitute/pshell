@@ -7,7 +7,6 @@ import ch.psi.pshell.device.AccessType;
 import ch.psi.pshell.device.GenericDevice;
 import ch.psi.utils.swing.Document;
 import ch.psi.utils.swing.Editor;
-import ch.psi.utils.swing.SwingUtils;
 import java.awt.Component;
 import java.awt.Dialog;
 import java.awt.Frame;
@@ -509,7 +508,7 @@ public class DevicePoolEditor extends Editor {
         try {
             save();
         } catch (Exception ex) {
-            SwingUtils.showException(this, ex);
+            showException(ex);
         }
     }//GEN-LAST:event_buttonSaveActionPerformed
 
@@ -521,7 +520,7 @@ public class DevicePoolEditor extends Editor {
             table.setRowSelectionInterval(cur + 1, cur + 1);
             update();
         } catch (Exception ex) {
-            SwingUtils.showException(this, ex);
+            showException(ex);
         }
     }//GEN-LAST:event_buttonDownActionPerformed
 
@@ -533,7 +532,7 @@ public class DevicePoolEditor extends Editor {
             table.setRowSelectionInterval(cur - 1, cur - 1);
             update();
         } catch (Exception ex) {
-            SwingUtils.showException(this, ex);
+            showException(ex);
         }
     }//GEN-LAST:event_buttonUpActionPerformed
 

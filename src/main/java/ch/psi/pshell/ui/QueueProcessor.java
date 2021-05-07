@@ -150,7 +150,7 @@ public final class QueueProcessor extends MonitoredPanel implements Processor {
                             field.setText(filename);
                         }
                     } catch (Exception ex) {
-                        SwingUtils.showException(QueueProcessor.this, ex);
+                        showException(ex);
                     }
                 }
             };
@@ -222,7 +222,7 @@ public final class QueueProcessor extends MonitoredPanel implements Processor {
                 @Override
                 public void actionPerformed(ActionEvent e) {
                     try {
-                        QueueParsDialog dlg = new QueueParsDialog(SwingUtils.getFrame(QueueProcessor.this),true);
+                        QueueParsDialog dlg = new QueueParsDialog(getFrame(),true);
                         dlg.setLocationRelativeTo(QueueProcessor.this);
                         dlg.setText(field.getText());
                         dlg.setVisible(true);
@@ -237,7 +237,7 @@ public final class QueueProcessor extends MonitoredPanel implements Processor {
                         }                            
                         
                     } catch (Exception ex) {
-                        SwingUtils.showException(QueueProcessor.this, ex);
+                        showException(ex);
                     }
                 }
             };
@@ -492,7 +492,7 @@ public final class QueueProcessor extends MonitoredPanel implements Processor {
                        try {
                             App.getInstance().getMainFrame().openScriptOrProcessor(file.getCanonicalPath());
                        } catch (Exception ex) {
-                           SwingUtils.showException(this, ex);
+                           showException(ex);
                        }
                     });
                     popupMenu.add(menuOpen);                                            
@@ -501,7 +501,7 @@ public final class QueueProcessor extends MonitoredPanel implements Processor {
                 }
             }
         } catch (Exception ex) {
-            SwingUtils.showException(this, ex);
+            showException(ex);
         }
 
     } 
@@ -631,7 +631,7 @@ public final class QueueProcessor extends MonitoredPanel implements Processor {
             table.setRowSelectionInterval(cur - 1, cur - 1);
             update();
         } catch (Exception ex) {
-            SwingUtils.showException(this, ex);
+            showException(ex);
         }
     }//GEN-LAST:event_buttonUpActionPerformed
 
@@ -643,7 +643,7 @@ public final class QueueProcessor extends MonitoredPanel implements Processor {
             table.setRowSelectionInterval(cur + 1, cur + 1);
             update();
         } catch (Exception ex) {
-            SwingUtils.showException(this, ex);
+            showException(ex);
         }
     }//GEN-LAST:event_buttonDownActionPerformed
 

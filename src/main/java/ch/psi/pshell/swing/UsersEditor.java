@@ -258,7 +258,7 @@ public class UsersEditor extends Editor {
 
     private void buttonRigthsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonRigthsActionPerformed
         try {
-            String ret = SwingUtils.getString(this, "Select Level", Convert.toStringArray(AccessLevel.values()), null);
+            String ret = getString("Select Level", Convert.toStringArray(AccessLevel.values()), null);
             //if (!current.equals(branch)) {
             if (ret != null) {
                 AccessLevel level = AccessLevel.valueOf(ret);
@@ -282,7 +282,7 @@ public class UsersEditor extends Editor {
                 dlg.setVisible(true);
             }
         } catch (Exception ex) {
-            SwingUtils.showException(this, ex);
+            showException(ex);
         }
     }//GEN-LAST:event_buttonRigthsActionPerformed
 

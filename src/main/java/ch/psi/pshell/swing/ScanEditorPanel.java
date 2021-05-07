@@ -345,7 +345,7 @@ public class ScanEditorPanel extends MonitoredPanel implements Processor {
         Context.getInstance().evalLineAsync(command).handle((ok, ex) -> {
             result = (ex != null) ? ex : ok;
             if ((ex != null) && (!Context.getInstance().isAborted()) && isDisplayable()) {
-                SwingUtils.showException(this, (Exception) ex);
+                showException((Exception) ex);
             }
             running = false;
             SwingUtilities.invokeLater(() -> {
@@ -1622,7 +1622,7 @@ public class ScanEditorPanel extends MonitoredPanel implements Processor {
             ((TitledBorder) panelPositioners.getBorder()).setTitle(getScanCommand().equals("mscan") ? "Trigger" : "Positioners");
             updateUI();
         } catch (Exception ex) {
-            SwingUtils.showException(this, ex);
+            showException(ex);
         }
     }//GEN-LAST:event_comboTypeActionPerformed
 
@@ -1649,7 +1649,7 @@ public class ScanEditorPanel extends MonitoredPanel implements Processor {
             tablePositioners.setRowSelectionInterval(cur - 1, cur - 1);
             update();
         } catch (Exception ex) {
-            SwingUtils.showException(this, ex);
+            showException(ex);
         }
     }//GEN-LAST:event_buttonPosUpActionPerformed
 
@@ -1672,7 +1672,7 @@ public class ScanEditorPanel extends MonitoredPanel implements Processor {
             tablePositioners.setRowSelectionInterval(cur + 1, cur + 1);
             update();
         } catch (Exception ex) {
-            SwingUtils.showException(this, ex);
+            showException(ex);
         }
     }//GEN-LAST:event_buttonPosDownActionPerformed
 
@@ -1699,7 +1699,7 @@ public class ScanEditorPanel extends MonitoredPanel implements Processor {
             tableSensors.setRowSelectionInterval(cur - 1, cur - 1);
             update();
         } catch (Exception ex) {
-            SwingUtils.showException(this, ex);
+            showException(ex);
         }
     }//GEN-LAST:event_buttonSenUpActionPerformed
 
@@ -1722,7 +1722,7 @@ public class ScanEditorPanel extends MonitoredPanel implements Processor {
             tableSensors.setRowSelectionInterval(cur + 1, cur + 1);
             update();
         } catch (Exception ex) {
-            SwingUtils.showException(this, ex);
+            showException(ex);
         }
     }//GEN-LAST:event_buttonSenDownActionPerformed
 

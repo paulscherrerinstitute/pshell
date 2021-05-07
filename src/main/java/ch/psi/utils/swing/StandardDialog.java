@@ -262,6 +262,10 @@ public class StandardDialog extends JDialog {
     public String getString(String msg, Object current) {
         return SwingUtils.getString(this, msg, current);
     }
+    
+    public String getString(String msg, String[] options, String current) {
+        return SwingUtils.getString(this, msg, options, current);
+    }    
 
     public String getPassword(Component parent, String title, String msg) {
         return SwingUtils.getPassword(this, title, msg);

@@ -82,7 +82,7 @@ public class ScriptsPanel extends MonitoredPanel implements UpdatablePanel {
                     }
 
                 } catch (Exception ex) {
-                    SwingUtils.showException(ScriptsPanel.this, ex);
+                    showException(ex);
                 }
             }
         });
@@ -98,7 +98,7 @@ public class ScriptsPanel extends MonitoredPanel implements UpdatablePanel {
                         Desktop.getDesktop().open(file);
                     }
                 } catch (Exception ex) {
-                    SwingUtils.showException(ScriptsPanel.this, ex);
+                    showException(ex);
                 }
             }
         });
@@ -115,7 +115,7 @@ public class ScriptsPanel extends MonitoredPanel implements UpdatablePanel {
                         buildList();
                     }
                 } catch (Exception ex) {
-                    SwingUtils.showException(ScriptsPanel.this, ex);
+                    showException(ex);
                 }
             }
         });
@@ -131,7 +131,7 @@ public class ScriptsPanel extends MonitoredPanel implements UpdatablePanel {
                         Desktop.getDesktop().open(file.getParentFile());
                     }
                 } catch (Exception ex) {
-                    SwingUtils.showException(ScriptsPanel.this, ex);
+                    showException(ex);
                 }
             }
         });
@@ -146,7 +146,7 @@ public class ScriptsPanel extends MonitoredPanel implements UpdatablePanel {
                         Context.getInstance().evalFileAsync(file.getAbsolutePath());
                     }
                 } catch (Exception ex) {
-                    SwingUtils.showException(ScriptsPanel.this, ex);
+                    showException(ex);
                 }
             }
         });
@@ -158,7 +158,7 @@ public class ScriptsPanel extends MonitoredPanel implements UpdatablePanel {
                 try {
                     showHistory(script);
                 } catch (Exception ex) {
-                    SwingUtils.showException(ScriptsPanel.this, ex);
+                    showException(ex);
                 }
             }
         });
@@ -196,7 +196,7 @@ public class ScriptsPanel extends MonitoredPanel implements UpdatablePanel {
                         }
                     }
                 } catch (Exception ex) {
-                    SwingUtils.showException(ScriptsPanel.this, ex);
+                    showException(ex);
                 }
             }
 
@@ -241,7 +241,7 @@ public class ScriptsPanel extends MonitoredPanel implements UpdatablePanel {
                         }
                     }
                 } catch (Exception ex) {
-                    SwingUtils.showException(ScriptsPanel.this, ex);
+                    showException(ex);
                 }
 
             }

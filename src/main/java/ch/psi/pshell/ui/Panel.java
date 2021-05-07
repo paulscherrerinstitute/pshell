@@ -242,7 +242,7 @@ public class Panel extends MonitoredPanel implements Plugin {
         if (isLoaded()) {
             if (isDetached()) {
 
-                Window window = SwingUtils.getWindow(this);
+                Window window = getWindow();
                 if (window != null) {
                     window.setVisible(false);
                 }
@@ -341,8 +341,8 @@ public class Panel extends MonitoredPanel implements Plugin {
     protected void saveWindowState() {
         try {
             if (isDetached()) {
-                if (SwingUtils.getWindow(this) != null) {
-                    MainFrame.save(SwingUtils.getWindow(this), getWindowStatePath());
+                if (getWindow() != null) {
+                    MainFrame.save(getWindow(), getWindowStatePath());
                 }
             }
         } catch (Exception ex) {
@@ -353,8 +353,8 @@ public class Panel extends MonitoredPanel implements Plugin {
     protected void loadWindowState() {
         try {
             if (isDetached()) {
-                if (SwingUtils.getWindow(this) != null) {
-                    MainFrame.restore(SwingUtils.getWindow(this), getWindowStatePath());
+                if (getWindow() != null) {
+                    MainFrame.restore(getWindow(), getWindowStatePath());
                 }
             }
         } catch (Exception ex) {

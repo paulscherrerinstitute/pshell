@@ -40,7 +40,6 @@ import ch.psi.utils.Convert;
 import ch.psi.utils.Str;
 import ch.psi.utils.Sys;
 import ch.psi.utils.swing.Editor;
-import ch.psi.utils.swing.MainFrame;
 import ch.psi.utils.swing.MonitoredPanel;
 import ch.psi.utils.swing.StandardDialog;
 import ch.psi.utils.swing.SwingUtils.OptionResult;
@@ -175,7 +174,7 @@ public class StreamCameraViewer extends MonitoredPanel {
                         DevicePanel.showConfigEditor(getTopLevel(), camera, false, false);
                     }
                 } catch (Exception ex) {
-                    SwingUtils.showException(this, ex);
+                    showException(ex);
                 }
             });
             
@@ -194,13 +193,13 @@ public class StreamCameraViewer extends MonitoredPanel {
                         configEditor.setText(cameraConfigJson);
                         configEditor.setReadOnly(true);
                         configEditor.setTitle(cameraName);
-                        Editor.EditorDialog dlg = configEditor.getDialog(SwingUtils.getFrame(this), false);
+                        Editor.EditorDialog dlg = configEditor.getDialog(getFrame(), false);
                         dlg.setSize(480, 640);
                         dlg.setVisible(true);
                         SwingUtils.centerComponent(getTopLevel(), dlg);
                     }
                 } catch (Exception ex) {
-                    SwingUtils.showException(this, ex);
+                    showException(ex);
                 }
             });            
 
@@ -212,7 +211,7 @@ public class StreamCameraViewer extends MonitoredPanel {
                         this.setImageBufferSize(Integer.valueOf(ret));
                     }
                 } catch (Exception ex) {
-                    SwingUtils.showException(this, ex);
+                    showException(ex);
                 }
             });
 
@@ -221,7 +220,7 @@ public class StreamCameraViewer extends MonitoredPanel {
                 try {
                     saveStack();
                 } catch (Exception ex) {
-                    SwingUtils.showException(this, ex);
+                    showException(ex);
                 }
             });
             
@@ -230,7 +229,7 @@ public class StreamCameraViewer extends MonitoredPanel {
                 try {
                     calibrate();
                 } catch (Exception ex) {
-                    SwingUtils.showException(this, ex);
+                    showException(ex);
                 }
             });            
             
@@ -275,7 +274,7 @@ public class StreamCameraViewer extends MonitoredPanel {
                         renderer.setShowReticle(false);
                         server.resetRoi();
                     } catch (IOException ex) {
-                        SwingUtils.showException(this, ex);
+                        showException(ex);
                     }
                 }
             });            
@@ -326,7 +325,7 @@ public class StreamCameraViewer extends MonitoredPanel {
                     try {
                         setHistogramVisible(true);
                     } catch (Exception ex) {
-                        SwingUtils.showException(this, ex);
+                        showException(ex);
                     }
                 });
                 renderer.getPopupMenu().add(menuHistogram);
@@ -537,7 +536,7 @@ public class StreamCameraViewer extends MonitoredPanel {
                         }
                     }).start();
                 } catch (Exception ex) {
-                    SwingUtils.showException(this, ex);
+                    showException(ex);
                 }
 
             });
@@ -1261,7 +1260,7 @@ public class StreamCameraViewer extends MonitoredPanel {
             });
 
         } catch (Exception ex) {
-            SwingUtils.showException(this, ex);
+            showException(ex);
             renderer.clearOverlays();
             updatePipelineControls();
             if (renderer.getDevice() == null) {
@@ -2213,7 +2212,7 @@ public class StreamCameraViewer extends MonitoredPanel {
     void calibrate() throws Exception {
         if (server != null) {
             server.resetRoi();
-            calibrationDialolg = new CameraCalibrationDialog( SwingUtils.getFrame(this),  App.getArgumentValue("camera_server"), server.getCurrentCamera(), renderer);
+            calibrationDialolg = new CameraCalibrationDialog( getFrame(),  App.getArgumentValue("camera_server"), server.getCurrentCamera(), renderer);
             SwingUtils.centerComponent(getTopLevel(), calibrationDialolg);
             calibrationDialolg.setVisible(true);
             calibrationDialolg.setListener(new StandardDialog.StandardDialogListener() {
@@ -2344,7 +2343,7 @@ public class StreamCameraViewer extends MonitoredPanel {
                             }
                         }
                     } catch (Exception ex) {
-                        SwingUtils.showException(StreamCameraViewer.this, ex);
+                        showException(ex);
                     }
                 }
             });
@@ -3612,7 +3611,7 @@ public class StreamCameraViewer extends MonitoredPanel {
         try {
             checkReticle();
         } catch (Exception ex) {
-            SwingUtils.showException(this, ex);
+            showException(ex);
         }
     }//GEN-LAST:event_buttonReticleActionPerformed
 
@@ -3620,7 +3619,7 @@ public class StreamCameraViewer extends MonitoredPanel {
         try {
             checkFit();
         } catch (Exception ex) {
-            SwingUtils.showException(this, ex);
+            showException(ex);
         }
     }//GEN-LAST:event_buttonFitActionPerformed
 
@@ -3628,7 +3627,7 @@ public class StreamCameraViewer extends MonitoredPanel {
         try {
             checkProfile();
         } catch (Exception ex) {
-            SwingUtils.showException(this, ex);
+            showException(ex);
         }
     }//GEN-LAST:event_buttonProfileActionPerformed
 
@@ -3636,7 +3635,7 @@ public class StreamCameraViewer extends MonitoredPanel {
         try {
             checkMarker(null);
         } catch (Exception ex) {
-            SwingUtils.showException(this, ex);
+            showException(ex);
         }
     }//GEN-LAST:event_buttonMarkerActionPerformed
 
@@ -3644,7 +3643,7 @@ public class StreamCameraViewer extends MonitoredPanel {
         try {
             checkPause();
         } catch (Exception ex) {
-            SwingUtils.showException(this, ex);
+            showException(ex);
         }
     }//GEN-LAST:event_buttonPauseActionPerformed
 
@@ -3652,7 +3651,7 @@ public class StreamCameraViewer extends MonitoredPanel {
         try {
             showStreamData();
         } catch (Exception ex) {
-            SwingUtils.showException(this, ex);
+            showException(ex);
         }
     }//GEN-LAST:event_buttonStreamDataActionPerformed
 
@@ -3660,7 +3659,7 @@ public class StreamCameraViewer extends MonitoredPanel {
         try {
             checkColormap();
         } catch (Exception ex) {
-            SwingUtils.showException(this, ex);
+            showException(ex);
         }
     }//GEN-LAST:event_buttonScaleActionPerformed
 
@@ -3681,7 +3680,7 @@ public class StreamCameraViewer extends MonitoredPanel {
                     server.setThreshold(checkThreshold.isSelected() ? (Double) spinnerThreshold.getValue() : null);
                 }
             } catch (Exception ex) {
-                SwingUtils.showException(this, ex);
+                showException(ex);
                 updatePipelineControls();
             }
         }
@@ -3694,7 +3693,7 @@ public class StreamCameraViewer extends MonitoredPanel {
                     server.setThreshold((Double) spinnerThreshold.getValue());
                 }
             } catch (Exception ex) {
-                SwingUtils.showException(this, ex);
+                showException(ex);
                 updatePipelineControls();
             }
         }
@@ -3708,7 +3707,7 @@ public class StreamCameraViewer extends MonitoredPanel {
                         server.setBackgroundSubtraction(checkBackground.isSelected());
                     }
                 } catch (Exception ex) {
-                    SwingUtils.showException(this, ex);
+                    showException(ex);
                     updatePipelineControls();
                     updatingServerControls = true;
                     checkBackground.setSelected(false);
@@ -3734,7 +3733,7 @@ public class StreamCameraViewer extends MonitoredPanel {
                     }
                 }
             } catch (Exception ex) {
-                SwingUtils.showException(this, ex);
+                showException(ex);
                 updatePipelineControls();
             }
         }
@@ -3747,7 +3746,7 @@ public class StreamCameraViewer extends MonitoredPanel {
                     server.setGoodRegion((Double) spinnerGrThreshold.getValue(), (Double) spinnerGrScale.getValue());
                 }
             } catch (Exception ex) {
-                SwingUtils.showException(this, ex);
+                showException(ex);
                 updatePipelineControls();
             }
         }
@@ -3760,7 +3759,7 @@ public class StreamCameraViewer extends MonitoredPanel {
                     server.setGoodRegion((Double) spinnerGrThreshold.getValue(), (Double) spinnerGrScale.getValue());
                 }
             } catch (Exception ex) {
-                SwingUtils.showException(this, ex);
+                showException(ex);
                 updatePipelineControls();
             }
         }
@@ -3779,7 +3778,7 @@ public class StreamCameraViewer extends MonitoredPanel {
                     }
                 }
             } catch (Exception ex) {
-                SwingUtils.showException(this, ex);
+                showException(ex);
                 updatePipelineControls();
             }
         }
@@ -3792,7 +3791,7 @@ public class StreamCameraViewer extends MonitoredPanel {
                     server.setSlicing((Integer) spinnerSlNumber.getValue(), (Double) spinnerSlScale.getValue(), spinnerSlOrientation.getValue().toString());
                 }
             } catch (Exception ex) {
-                SwingUtils.showException(this, ex);
+                showException(ex);
                 updatePipelineControls();
             }
         }
@@ -3805,7 +3804,7 @@ public class StreamCameraViewer extends MonitoredPanel {
                     server.setSlicing((Integer) spinnerSlNumber.getValue(), (Double) spinnerSlScale.getValue(), spinnerSlOrientation.getValue().toString());
                 }
             } catch (Exception ex) {
-                SwingUtils.showException(this, ex);
+                showException(ex);
                 updatePipelineControls();
             }
         }
@@ -3818,7 +3817,7 @@ public class StreamCameraViewer extends MonitoredPanel {
                     server.setSlicing((Integer) spinnerSlNumber.getValue(), (Double) spinnerSlScale.getValue(), spinnerSlOrientation.getValue().toString());
                 }
             } catch (Exception ex) {
-                SwingUtils.showException(this, ex);
+                showException(ex);
                 updatePipelineControls();
             }
         }
@@ -3837,7 +3836,7 @@ public class StreamCameraViewer extends MonitoredPanel {
                     }
                 }
             } catch (Exception ex) {
-                SwingUtils.showException(this, ex);
+                showException(ex);
                 updatePipelineControls();
             }
         }
@@ -3850,7 +3849,7 @@ public class StreamCameraViewer extends MonitoredPanel {
                     ((Number) spinnerRotationOrder.getValue()).intValue(),
                     mode.equals("constant") ? String.valueOf(spinnerRotationConstant.getValue()) : mode);
         } catch (Exception ex) {
-            SwingUtils.showException(this, ex);
+            showException(ex);
             updatePipelineControls();
         }
     }//GEN-LAST:event_spinnerRotationAngleStateChanged
@@ -3862,7 +3861,7 @@ public class StreamCameraViewer extends MonitoredPanel {
                     ((Number) spinnerRotationOrder.getValue()).intValue(),
                     mode.equals("constant") ? String.valueOf(spinnerRotationConstant.getValue()) : mode);
         } catch (Exception ex) {
-            SwingUtils.showException(this, ex);
+            showException(ex);
             updatePipelineControls();
         }
     }//GEN-LAST:event_spinnerRotationOrderspinnerRotationAngleStateChanged
@@ -3874,7 +3873,7 @@ public class StreamCameraViewer extends MonitoredPanel {
                     ((Number) spinnerRotationOrder.getValue()).intValue(),
                     mode.equals("constant") ? String.valueOf(spinnerRotationConstant.getValue()) : mode);
         } catch (Exception ex) {
-            SwingUtils.showException(this, ex);
+            showException(ex);
             updatePipelineControls();
         }
     }//GEN-LAST:event_spinnerRotationModespinnerRotationAngleStateChanged
@@ -3886,7 +3885,7 @@ public class StreamCameraViewer extends MonitoredPanel {
                     ((Number) spinnerRotationOrder.getValue()).intValue(),
                     mode.equals("constant") ? String.valueOf(spinnerRotationConstant.getValue()) : mode);
         } catch (Exception ex) {
-            SwingUtils.showException(this, ex);
+            showException(ex);
             updatePipelineControls();
         }
     }//GEN-LAST:event_spinnerRotationConstantspinnerRotationAngleStateChanged
@@ -3895,7 +3894,7 @@ public class StreamCameraViewer extends MonitoredPanel {
         try {
             renderer.setMode(RendererMode.Fit);
         } catch (Exception ex) {
-            SwingUtils.showException(this, ex);
+            showException(ex);
         }
     }//GEN-LAST:event_buttonZoomFitActionPerformed
 
@@ -3903,7 +3902,7 @@ public class StreamCameraViewer extends MonitoredPanel {
         try {
             renderer.setMode(RendererMode.Stretch);
         } catch (Exception ex) {
-            SwingUtils.showException(this, ex);
+            showException(ex);
         }
     }//GEN-LAST:event_buttonZoomStretchActionPerformed
 
@@ -3912,7 +3911,7 @@ public class StreamCameraViewer extends MonitoredPanel {
             renderer.setMode(RendererMode.Fixed);
             centralizeRenderer();
         } catch (Exception ex) {
-            SwingUtils.showException(this, ex);
+            showException(ex);
         }
     }//GEN-LAST:event_buttonZoomNormalActionPerformed
 
@@ -3938,7 +3937,7 @@ public class StreamCameraViewer extends MonitoredPanel {
         try {
             setHistogramVisible(checkHistogram.isSelected());
         } catch (Exception ex) {
-            SwingUtils.showException(this, ex);
+            showException(ex);
         }
     }//GEN-LAST:event_checkHistogramActionPerformed
 
@@ -3985,7 +3984,7 @@ public class StreamCameraViewer extends MonitoredPanel {
                 updateColormap();
             }
         } catch (Exception ex) {
-            SwingUtils.showException(this, ex);
+            showException(ex);
         }
     }//GEN-LAST:event_onChangeColormap
 
@@ -4032,7 +4031,7 @@ public class StreamCameraViewer extends MonitoredPanel {
                 updateColormap();
             }
         } catch (Exception ex) {
-            SwingUtils.showException(this, ex);
+            showException(ex);
         }
     }//GEN-LAST:event_buttonFullRangeonChangeColormap
 
@@ -4079,7 +4078,7 @@ public class StreamCameraViewer extends MonitoredPanel {
                 updateColormap();
             }
         } catch (Exception ex) {
-            SwingUtils.showException(this, ex);
+            showException(ex);
         }
     }//GEN-LAST:event_buttonManualonChangeColormap
 
@@ -4126,7 +4125,7 @@ public class StreamCameraViewer extends MonitoredPanel {
                 updateColormap();
             }
         } catch (Exception ex) {
-            SwingUtils.showException(this, ex);
+            showException(ex);
         }
     }//GEN-LAST:event_buttonAutomaticonChangeColormap
 
@@ -4146,7 +4145,7 @@ public class StreamCameraViewer extends MonitoredPanel {
             spinnerMin.setValue(properties.min.intValue());
             buttonManual.setSelected(true);
         } catch (Exception ex) {
-            SwingUtils.showException(this, ex);
+            showException(ex);
         } finally {
             updatingColormap = false;
             onChangeColormap(null);
@@ -4161,7 +4160,7 @@ public class StreamCameraViewer extends MonitoredPanel {
         try {
             grabBackground();
         } catch (Exception ex) {
-            SwingUtils.showException(this, ex);
+            showException(ex);
         }
     }//GEN-LAST:event_buttonGrabBackgroundActionPerformed
 
@@ -4169,7 +4168,7 @@ public class StreamCameraViewer extends MonitoredPanel {
         try {
             manageTitleOverlay();
         } catch (Exception ex) {
-            SwingUtils.showException(this, ex);
+            showException(ex);
         } finally {
         }
     }//GEN-LAST:event_buttonTitleActionPerformed

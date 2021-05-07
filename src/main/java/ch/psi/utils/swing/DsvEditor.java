@@ -2,7 +2,6 @@ package ch.psi.utils.swing;
 
 import ch.psi.utils.Convert;
 import java.awt.Font;
-import java.awt.Frame;
 import java.awt.event.ActionEvent;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -14,7 +13,6 @@ import java.util.Vector;
 import javax.swing.JMenuItem;
 import javax.swing.JTable;
 import javax.swing.event.TableModelEvent;
-import javax.swing.event.TableModelListener;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.undo.UndoManager;
 
@@ -137,8 +135,7 @@ public class DsvEditor extends Editor {
         JMenuItem menuFont;
         menuFont = new JMenuItem("Set font...");
         menuFont.addActionListener((ActionEvent e) -> {
-            Frame owner = SwingUtils.getFrame(this);
-            FontDialog dlg = new FontDialog(owner, true, getTableFont());
+            FontDialog dlg = new FontDialog(getFrame(), true, getTableFont());
             dlg.setVisible(true);
             if (dlg.getResult()) {
                 setTableFont(dlg.getSelectedFont());
@@ -319,7 +316,7 @@ public class DsvEditor extends Editor {
             table.setRowSelectionInterval(cur - 1, cur - 1);
             updateButtons();
         } catch (Exception ex) {
-            SwingUtils.showException(this, ex);
+            showException(ex);
         }
     }//GEN-LAST:event_buttonUpActionPerformed
 
@@ -331,7 +328,7 @@ public class DsvEditor extends Editor {
             table.setRowSelectionInterval(cur + 1, cur + 1);
             updateButtons();
         } catch (Exception ex) {
-            SwingUtils.showException(this, ex);
+            showException(ex);
         }
     }//GEN-LAST:event_buttonDownActionPerformed
 
@@ -339,7 +336,7 @@ public class DsvEditor extends Editor {
         try {
             save();
         } catch (Exception ex) {
-            SwingUtils.showException(this, ex);
+            showException(ex);
         }
     }//GEN-LAST:event_buttonSaveActionPerformed
 
@@ -348,7 +345,7 @@ public class DsvEditor extends Editor {
             model.insertRow(table.getSelectedRow() + 1, getRow(null));
             updateButtons();
         } catch (Exception ex) {
-            SwingUtils.showException(this, ex);
+            showException(ex);
         }
     }//GEN-LAST:event_buttonInsertActionPerformed
 
@@ -359,7 +356,7 @@ public class DsvEditor extends Editor {
                 updateButtons();
             }
         } catch (Exception ex) {
-            SwingUtils.showException(this, ex);
+            showException(ex);
         }
     }//GEN-LAST:event_buttonDeleteActionPerformed
 

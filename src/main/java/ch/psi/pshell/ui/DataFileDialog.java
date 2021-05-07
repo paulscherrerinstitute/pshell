@@ -289,7 +289,7 @@ public class DataFileDialog extends StandardDialog {
         tableTokens.getTableHeader().setReorderingAllowed(false);
         scrollTokens.setViewportView(tableTokens);
 
-        dialogTokens = SwingUtils.showDialog(this, "Expansion Tokens", new Dimension(600, 400), scrollTokens);
+        dialogTokens = showDialog("Expansion Tokens", new Dimension(600, 400), scrollTokens);
         setTokensTableColumnSizes(tableTokens);
     }
 
@@ -986,7 +986,7 @@ public class DataFileDialog extends StandardDialog {
             update();
 
         } catch (Exception ex) {
-            SwingUtils.showException(this, ex);
+            showException(ex);
         }
     }//GEN-LAST:event_buttonApplyActionPerformed
 
@@ -1074,7 +1074,7 @@ public class DataFileDialog extends StandardDialog {
                 throw new Exception("invalid user name");
             }
             boolean fixPermissions = false;
-            switch (SwingUtils.showOption(this, "Authorize", "Do you want to fix permissions for user " + user + "?\n"
+            switch (showOption("Authorize", "Do you want to fix permissions for user " + user + "?\n"
                     + "Some system require no group write access in home folder \n"
                     + "for ssh to work with authorized keys.", OptionType.YesNoCancel)) {
                 case Yes:
@@ -1088,7 +1088,7 @@ public class DataFileDialog extends StandardDialog {
             }
             RSync.authorize(user, fixPermissions);
         } catch (Exception ex) {
-            SwingUtils.showException(this, ex);
+            showException(ex);
         } finally {
             updateTransfer();
         }
@@ -1098,7 +1098,7 @@ public class DataFileDialog extends StandardDialog {
         try {
             RSync.removeAuthorization();
         } catch (Exception ex) {
-            SwingUtils.showException(this, ex);
+            showException(ex);
         } finally {
             updateTransfer();
         }

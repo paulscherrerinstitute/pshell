@@ -3,7 +3,6 @@ package ch.psi.pshell.swing;
 import ch.psi.pshell.device.Device;
 import ch.psi.pshell.device.Slit;
 import ch.psi.utils.State;
-import ch.psi.utils.swing.SwingUtils;
 import java.io.IOException;
 import java.util.logging.Level;
 
@@ -19,7 +18,7 @@ public final class SlitPanel extends DevicePanel {
                 if (editing) {
                     getDevice().getCenterReg().writeAsync(value).handle((ok, ex) -> {
                         if ((ex != null) && (ex instanceof IOException)) {
-                            SwingUtils.showException(this, (Exception) ex);
+                            showException((Exception) ex);
                             onDeviceValueChanged(getDevice().take(), getDevice().take());
                         }
                         return ok;
@@ -35,7 +34,7 @@ public final class SlitPanel extends DevicePanel {
                 if (editing) {
                     getDevice().getSizeReg().writeAsync(value).handle((ok, ex) -> {
                         if ((ex != null) && (ex instanceof IOException)) {
-                            SwingUtils.showException(this, (Exception) ex);
+                            showException((Exception) ex);
                             onDeviceValueChanged(getDevice().take(), getDevice().take());
                         }
                         return ok;

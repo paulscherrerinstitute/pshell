@@ -3,7 +3,6 @@ package ch.psi.pshell.swing;
 import ch.psi.utils.Convert;
 import ch.psi.utils.Observable;
 import ch.psi.utils.swing.MonitoredPanel;
-import ch.psi.utils.swing.SwingUtils;
 import java.awt.event.KeyEvent;
 import java.util.ArrayList;
 import java.util.List;
@@ -410,7 +409,7 @@ public class ValueSelection extends MonitoredPanel implements Observable<ValueSe
         try {
             setValue(Math.max(getValue() - getStep(), getMinValue()), true);
         } catch (Exception ex) {
-            SwingUtils.showException(this, ex);
+            showException(ex);
         }
     }//GEN-LAST:event_buttonBackActionPerformed
 
@@ -418,7 +417,7 @@ public class ValueSelection extends MonitoredPanel implements Observable<ValueSe
         try {
             setValue(getMinValue(), true);
         } catch (Exception ex) {
-            SwingUtils.showException(this, ex);
+            showException(ex);
         }
     }//GEN-LAST:event_buttonStartActionPerformed
 
@@ -426,7 +425,7 @@ public class ValueSelection extends MonitoredPanel implements Observable<ValueSe
         try {
             setValue(Math.min(getValue() + getStep(), getMaxValue()), true);
         } catch (Exception ex) {
-            SwingUtils.showException(this, ex);
+            showException(ex);
         }
     }//GEN-LAST:event_buttonNextActionPerformed
 
@@ -434,7 +433,7 @@ public class ValueSelection extends MonitoredPanel implements Observable<ValueSe
         try {
             setValue(getMaxValue(), true);
         } catch (Exception ex) {
-            SwingUtils.showException(this, ex);
+            showException(ex);
         }
 
     }//GEN-LAST:event_buttonEndActionPerformed
@@ -467,7 +466,7 @@ public class ValueSelection extends MonitoredPanel implements Observable<ValueSe
                 evt.consume();
             }
         } catch (Exception ex) {
-            SwingUtils.showException(this, ex);
+            showException(ex);
         }
 
     }//GEN-LAST:event_textKeyTyped

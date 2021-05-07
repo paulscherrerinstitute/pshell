@@ -1,7 +1,6 @@
 package ch.psi.pshell.imaging;
 
 import ch.psi.utils.swing.MonitoredPanel;
-import ch.psi.utils.swing.SwingUtils;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Point;
@@ -82,7 +81,7 @@ public class RendererStatusBar extends MonitoredPanel {
                         popupMenuUnits.show(e.getComponent(), e.getX(), e.getY());
                     }
                 } catch (Exception ex) {
-                    SwingUtils.showException(RendererStatusBar.this, ex);
+                    showException(ex);
                 }
             }
 

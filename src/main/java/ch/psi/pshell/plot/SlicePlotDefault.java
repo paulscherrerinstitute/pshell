@@ -5,7 +5,6 @@ import ch.psi.pshell.swing.PlotPanel;
 import ch.psi.pshell.swing.ValueSelection;
 import ch.psi.utils.Convert;
 import ch.psi.utils.Range;
-import ch.psi.utils.swing.SwingUtils;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.image.BufferedImage;
@@ -115,7 +114,7 @@ public class SlicePlotDefault extends SlicePlotBase {
             }
         } catch (Exception ex) {
             if (!offscreen){
-                SwingUtils.showException(this, ex);
+                showException(ex);
             }
         }
     }

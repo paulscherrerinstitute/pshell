@@ -304,14 +304,14 @@ abstract public class PlotBase<T extends PlotSeries> extends MonitoredPanel impl
                         filename += "." + type;
                     }
                     if (new File(filename).exists()) {
-                        if (SwingUtils.showOption(PlotBase.this, "Overwrite", "File " + filename + " already exists.\nDo you want to overwrite it?", OptionType.YesNo) == OptionResult.No) {
+                        if (showOption("Overwrite", "File " + filename + " already exists.\nDo you want to overwrite it?", OptionType.YesNo) == OptionResult.No) {
                             return;
                         }
                     }
                     saveSnapshot(filename, type, null);
                 }
             } catch (Exception ex) {
-                SwingUtils.showException(PlotBase.this, ex);
+                showException(ex);
             }
         });
         addPopupMenuItem(saveSnapshot);
@@ -333,7 +333,7 @@ abstract public class PlotBase<T extends PlotSeries> extends MonitoredPanel impl
                     saveData(filename);
                 }
             } catch (Exception ex) {
-                SwingUtils.showException(PlotBase.this, ex);
+                showException(ex);
             }
         });
         addPopupMenuItem(saveData);
@@ -353,7 +353,7 @@ abstract public class PlotBase<T extends PlotSeries> extends MonitoredPanel impl
                 }
                 //}
             } catch (Exception ex) {
-                SwingUtils.showException(PlotBase.this, ex);
+                showException(ex);
             }
         });
         addPopupMenuItem(print);
@@ -363,7 +363,7 @@ abstract public class PlotBase<T extends PlotSeries> extends MonitoredPanel impl
             try {
                 copy();
             } catch (Exception ex) {
-                SwingUtils.showException(PlotBase.this, ex);
+                showException(ex);
             }
         });
         addPopupMenuItem(copy);

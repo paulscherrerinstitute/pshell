@@ -165,10 +165,10 @@ public class SnapshotDialog extends StandardDialog {
                     execute(folder, prefix, format, overwrite, overlays);
                 } catch (InterruptedException ex) {
                     if (backgroungException != null) {
-                        SwingUtils.showException(SnapshotDialog.this, backgroungException);
+                        showException(backgroungException);
                     }
                 } catch (Exception ex) {
-                    SwingUtils.showException(SnapshotDialog.this, ex);
+                    showException(ex);
                 } finally {
                     running = false;
                     renderer.removeListener(rendererListener);
@@ -483,7 +483,7 @@ public class SnapshotDialog extends StandardDialog {
         try {
             grab();
         } catch (Exception ex) {
-            SwingUtils.showException(this, ex);
+            showException(ex);
         }
     }//GEN-LAST:event_buttonGrabSingleActionPerformed
 
@@ -495,7 +495,7 @@ public class SnapshotDialog extends StandardDialog {
                 start();
             }
         } catch (Exception ex) {
-            SwingUtils.showException(this, ex);
+            showException(ex);
         }
 
     }//GEN-LAST:event_buttonStartActionPerformed
@@ -511,7 +511,7 @@ public class SnapshotDialog extends StandardDialog {
             }
 
         } catch (Exception ex) {
-            SwingUtils.showException(this, ex);
+            showException(ex);
         }
     }//GEN-LAST:event_buttonSetActionPerformed
 
@@ -522,7 +522,7 @@ public class SnapshotDialog extends StandardDialog {
             Logger.getLogger(SnapshotDialog.class.getName()).fine("Opening desktop for: " + String.valueOf(file));
             Desktop.getDesktop().open(file);
         } catch (Exception ex) {
-            SwingUtils.showException(this, ex);
+            showException(ex);
         }
     }//GEN-LAST:event_buttonBrowseActionPerformed
 

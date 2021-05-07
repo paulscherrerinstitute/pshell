@@ -6,7 +6,6 @@ import ch.psi.utils.Convert;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
-import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
@@ -96,7 +95,7 @@ public class PropertiesDialog extends StandardDialog {
      * The panel performing the elements edition. Can be added to other dialogs than
      * PropertiesDialog.
      */
-    public static class PropertiesPanel extends javax.swing.JPanel {
+    public static class PropertiesPanel extends MonitoredPanel {
 
         ArrayList<Integer> changed = new ArrayList<>();
         Properties properties;
@@ -306,7 +305,7 @@ public class PropertiesDialog extends StandardDialog {
                     table.setValueAt(getPropertyValue(key), i, 1);
                     table.setValueAt(getDisplayName(key), i, 0); // just to repaint
                 } catch (Exception ex) {
-                    SwingUtils.showException(PropertiesPanel.this, ex);
+                    showException(ex);
                 }
             }
         }
@@ -320,7 +319,7 @@ public class PropertiesDialog extends StandardDialog {
                     String key = getKey((String) table.getValueAt(i, 0));
                     properties.setProperty(key, getPropertyText(i));
                 } catch (Exception ex) {
-                    SwingUtils.showException(PropertiesPanel.this, ex);
+                    showException(ex);
                 }
             }
             undo();//Just to repaint 

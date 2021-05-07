@@ -275,7 +275,7 @@ public class TextEditor extends Editor {
             menuRedo.addActionListener(redoAction);
             menuFont = new JMenuItem("Set font...");
             menuFont.addActionListener((ActionEvent e) -> {
-                Frame owner = SwingUtils.getFrame(this);
+                Frame owner = getFrame();
                 FontDialog dlg = new FontDialog(owner, true, getEditorFont());
                 dlg.setVisible(true);
                 if (dlg.getResult()) {
@@ -511,9 +511,9 @@ public class TextEditor extends Editor {
         panel.add(caseInsens, BorderLayout.SOUTH);
         text.setPreferredSize(new Dimension(200, text.getPreferredSize().height));
         SwingUtils.requestFocusDeferred(text);
-        if (SwingUtils.showOption(TextEditor.this, "Find", panel, OptionType.OkCancel) == OptionResult.Yes) {
+        if (showOption("Find", panel, OptionType.OkCancel) == OptionResult.Yes) {
             if (!search(text.getText(), caseInsens.isSelected())) {
-                SwingUtils.showMessage(TextEditor.this, "Find", "Text not found");
+                showMessage("Find", "Text not found");
             }
         }
 

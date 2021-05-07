@@ -26,7 +26,6 @@ import ch.psi.pshell.scan.StripScanExecutor;
 import ch.psi.pshell.swing.HistoryChart;
 import ch.psi.pshell.swing.PlotPanel;
 import ch.psi.pshell.ui.StripChartAlarmEditor.StripChartAlarmConfig;
-import ch.psi.utils.Arr;
 import ch.psi.utils.Audio;
 import ch.psi.utils.Chrono;
 import ch.psi.utils.IO;
@@ -622,7 +621,7 @@ public class StripChart extends StandardDialog {
                         getTimePlotSeries(index).setColor(color);
                     }
                 } catch (Exception ex) {
-                    SwingUtils.showException(StripChart.this, ex);
+                    showException(ex);
                 }
             }
         }
@@ -692,7 +691,7 @@ public class StripChart extends StandardDialog {
                 try {
                     saveData();
                 } catch (Exception ex) {
-                    SwingUtils.showException(this, ex);
+                    showException(ex);
                 }
             });
             ((GroupLayout) jPanel2.getLayout()).replace(ckPersistence, saveButton);
@@ -1081,7 +1080,7 @@ public class StripChart extends StandardDialog {
                 try {
                     stream.setFilter(textStreamFilter.getText().trim());
                 } catch (Exception ex) {
-                    SwingUtils.showException(this, ex);
+                    showException(ex);
                 }
             }
             synchronized (instantiatedDevices) {
@@ -1714,7 +1713,7 @@ public class StripChart extends StandardDialog {
                         Logger.getLogger(StripChart.class.getName()).log(Level.WARNING, null, ex);
                     }
                 }
-                SwingUtils.showMessage(this, "Strip Chart", "Success saving data to: \n" + path);
+                showMessage("Strip Chart", "Success saving data to: \n" + path);
             } finally {
                 persistenceExecutor.finish();
             }
@@ -2258,7 +2257,7 @@ public class StripChart extends StandardDialog {
         try {
             save();
         } catch (Exception ex) {
-            SwingUtils.showException(this, ex);
+            showException(ex);
         }
     }//GEN-LAST:event_buttonSaveActionPerformed
 
@@ -2270,7 +2269,7 @@ public class StripChart extends StandardDialog {
             tableSeries.setRowSelectionInterval(cur - 1, cur - 1);
             update();
         } catch (Exception ex) {
-            SwingUtils.showException(this, ex);
+            showException(ex);
         }
     }//GEN-LAST:event_buttonUpActionPerformed
 
@@ -2282,7 +2281,7 @@ public class StripChart extends StandardDialog {
             tableSeries.setRowSelectionInterval(cur + 1, cur + 1);
             update();
         } catch (Exception ex) {
-            SwingUtils.showException(this, ex);
+            showException(ex);
         }
     }//GEN-LAST:event_buttonDownActionPerformed
 
@@ -2308,7 +2307,7 @@ public class StripChart extends StandardDialog {
         try {
             open();
         } catch (Exception ex) {
-            SwingUtils.showException(this, ex);
+            showException(ex);
         }
     }//GEN-LAST:event_buttonLoadActionPerformed
 
@@ -2326,7 +2325,7 @@ public class StripChart extends StandardDialog {
                 buttonSound.setVisible(false);
             }
         } catch (Exception ex) {
-            SwingUtils.showException(this, ex);
+            showException(ex);
             ex.printStackTrace();
         }
     }//GEN-LAST:event_tabPaneStateChanged
@@ -2335,7 +2334,7 @@ public class StripChart extends StandardDialog {
         try {
             clear();
         } catch (Exception ex) {
-            SwingUtils.showException(this, ex);
+            showException(ex);
         }
     }//GEN-LAST:event_buttonNewActionPerformed
 
@@ -2362,7 +2361,7 @@ public class StripChart extends StandardDialog {
                 stop();
             }
         } catch (Exception ex) {
-            SwingUtils.showException(this, ex);
+            showException(ex);
             ex.printStackTrace();
         }
     }//GEN-LAST:event_buttonStartStopActionPerformed

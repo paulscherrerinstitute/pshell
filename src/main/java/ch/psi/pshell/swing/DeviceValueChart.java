@@ -14,7 +14,6 @@ import ch.psi.pshell.plot.PlotBase;
 import ch.psi.pshell.plot.PlotSeries;
 import ch.psi.utils.Arr;
 import ch.psi.utils.Convert;
-import ch.psi.utils.swing.SwingUtils;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.util.concurrent.ScheduledExecutorService;
@@ -42,12 +41,12 @@ public class DeviceValueChart extends DevicePanel {
         menuInterval = new JMenuItem("Change interval");
         menuInterval.addActionListener((ActionEvent e) -> {
             try {
-                String str = SwingUtils.getString(DeviceValueChart.this, "Enter update interval in milliseconds (0 to disable):", String.valueOf(DeviceValueChart.this.getTimerInteval()));
+                String str = getString("Enter update interval in milliseconds (0 to disable):", String.valueOf(DeviceValueChart.this.getTimerInteval()));
                 if (str != null) {
                     setInterval(Integer.valueOf(str));
                 }
             } catch (Exception ex) {
-                SwingUtils.showException(DeviceValueChart.this, ex);
+                showException(ex);
             }
         });
         menuAsyncUpdates = new JCheckBoxMenuItem("Asynchronous updates");
@@ -55,7 +54,7 @@ public class DeviceValueChart extends DevicePanel {
             try {
                 setAsyncUpdates(menuAsyncUpdates.isSelected());
             } catch (Exception ex) {
-                SwingUtils.showException(DeviceValueChart.this, ex);
+                showException(ex);
             }
         });
         menuInvertScale = new JCheckBoxMenuItem("Inverted scale");
@@ -63,7 +62,7 @@ public class DeviceValueChart extends DevicePanel {
             try {
                 setInvertedScale(menuInvertScale.isSelected());
             } catch (Exception ex) {
-                SwingUtils.showException(DeviceValueChart.this, ex);
+                showException(ex);
             }
         });
         menuInvertScale.setSelected(true);
@@ -157,7 +156,7 @@ public class DeviceValueChart extends DevicePanel {
                 }
                 add(chart);
             } catch (Exception ex) {
-                SwingUtils.showException(DeviceValueChart.this, ex);
+                showException(ex);
             }
         }
     }

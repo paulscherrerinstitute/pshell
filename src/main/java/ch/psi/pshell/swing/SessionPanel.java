@@ -102,7 +102,7 @@ public class SessionPanel extends MonitoredPanel implements SessionManagerListen
                                 TextEditor editor = new TextEditor();
                                 editor.setText(value);
                                 editor.setTitle(key);
-                                Editor.EditorDialog dlg = editor.getDialog(SwingUtils.getFrame(SessionPanel.this), true);
+                                Editor.EditorDialog dlg = editor.getDialog(getFrame(), true);
                                 dlg.setSize(480, 240);
                                 dlg.setLocationRelativeTo(tableMetadata);                                
                                 dlg.setVisible(true);                                
@@ -112,7 +112,7 @@ public class SessionPanel extends MonitoredPanel implements SessionManagerListen
                         }
                     }
                 } catch (Exception ex) {
-                    SwingUtils.showException(SessionPanel.this, ex);
+                    showException(ex);
                 }
             }
         });
@@ -125,7 +125,7 @@ public class SessionPanel extends MonitoredPanel implements SessionManagerListen
             manager.fromString(type, Str.toString(value));
         } catch (Exception ex) {
             SwingUtilities.invokeLater(() -> {
-                SwingUtils.showException(this, ex);
+                showException(ex);
             });
             //If cannot parse value according to type, keeps the change
             //and displays value with error background                

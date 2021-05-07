@@ -3,7 +3,6 @@ package ch.psi.pshell.swing;
 import ch.psi.pshell.device.Device;
 import ch.psi.pshell.device.Motor;
 import ch.psi.utils.State;
-import ch.psi.utils.swing.SwingUtils;
 import java.awt.Dimension;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
@@ -218,7 +217,7 @@ public class MotorPanel extends DevicePanel {
             destination += offset;
             getDevice().writeAsync(destination).handle((ok, ex) -> {
                 if ((ex != null) && (ex instanceof IOException)) {
-                    SwingUtils.showException(this, (Exception) ex);
+                    showException((Exception) ex);
                 }
                 return ok;
             });

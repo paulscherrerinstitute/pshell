@@ -23,10 +23,7 @@ import javax.swing.Timer;
 import javax.swing.WindowConstants;
 import ch.psi.utils.swing.SwingUtils.OptionResult;
 import ch.psi.utils.swing.SwingUtils.OptionType;
-import static ch.psi.utils.swing.SwingUtils.centerComponent;
-import static ch.psi.utils.swing.SwingUtils.requestFocusDeferred;
 import java.applet.Applet;
-import java.awt.BorderLayout;
 import java.awt.Frame;
 import java.awt.GraphicsConfiguration;
 import java.awt.GraphicsDevice;
@@ -50,10 +47,6 @@ import java.util.StringJoiner;
 import javax.swing.ImageIcon;
 import javax.swing.JComponent;
 import javax.swing.JDialog;
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JPasswordField;
 import javax.swing.JSplitPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JTable;
@@ -350,6 +343,10 @@ public abstract class MainFrame extends JFrame {
 
     public String getString(String msg, Object current) {
         return SwingUtils.getString(this, msg, current);
+    }
+    
+    public String getString(String msg, String[] options, String current) {
+        return SwingUtils.getString(this, msg, options, current);
     }
     
     public String getPassword(Component parent, String title, String msg) {

@@ -285,7 +285,7 @@ public class MetadataEditor extends Editor {
             saved = true;
             closeWindow(true);
         } catch (Exception ex) {
-            SwingUtils.showException(this, ex);
+            showException(ex);
         }
     }//GEN-LAST:event_buttonOkActionPerformed
 
@@ -311,7 +311,7 @@ public class MetadataEditor extends Editor {
             ((DefaultComboBoxModel)comboBox.getModel()).addAll(SciCat.metadataFields.keySet());
             comboBox.setSelectedIndex(0);
             panel.add(comboBox, BorderLayout.CENTER);        
-            if (SwingUtils.showOption(this, "Session", panel , SwingUtils.OptionType.OkCancel) == SwingUtils.OptionResult.Yes) {                
+            if (showOption("Session", panel , SwingUtils.OptionType.OkCancel) == SwingUtils.OptionResult.Yes) {                
                 String key = comboBox.getSelectedItem().toString();
                 MetadataType type = SciCat.metadataFields.get(key);
                 Object def = SessionManager.getDefaultValue(type);
@@ -319,7 +319,7 @@ public class MetadataEditor extends Editor {
                 update();
             }
         } catch (Exception ex) {
-            SwingUtils.showException(this, ex);
+            showException(ex);
         }
     }//GEN-LAST:event_buttonScicatActionPerformed
 

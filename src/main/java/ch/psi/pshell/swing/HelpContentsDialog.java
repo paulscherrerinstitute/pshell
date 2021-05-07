@@ -152,7 +152,7 @@ public class HelpContentsDialog extends StandardDialog {
                 });
 
             } catch (Exception ex) {
-                SwingUtils.showException(HelpContentsDialog.this, ex);
+                showException(ex);
             }
         });
 
@@ -161,7 +161,7 @@ public class HelpContentsDialog extends StandardDialog {
             try {
                 ((View) App.getInstance().getMainFrame()).newScript(editor.getText());
             } catch (Exception ex) {
-                SwingUtils.showException(HelpContentsDialog.this, ex);
+                showException(ex);
             }
         });
 
@@ -191,7 +191,7 @@ public class HelpContentsDialog extends StandardDialog {
                         }
                     }
                 } catch (Exception ex) {
-                    SwingUtils.showException(HelpContentsDialog.this, ex);
+                    showException(ex);
                 }
             }
 

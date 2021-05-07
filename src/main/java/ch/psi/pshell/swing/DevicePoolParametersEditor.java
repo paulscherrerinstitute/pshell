@@ -209,7 +209,7 @@ public class DevicePoolParametersEditor extends StandardDialog {
         try {
             accept();
         } catch (Exception ex) {
-            SwingUtils.showException(this, ex);
+            showException(ex);
         }
     }//GEN-LAST:event_buttonOkActionPerformed
 

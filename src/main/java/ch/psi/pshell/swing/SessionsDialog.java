@@ -13,7 +13,6 @@ import ch.psi.utils.swing.StandardDialog;
 import ch.psi.utils.swing.SwingUtils;
 import ch.psi.utils.swing.SwingUtils.OptionResult;
 import ch.psi.utils.swing.SwingUtils.OptionType;
-import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -26,8 +25,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JDialog;
 import javax.swing.JFileChooser;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.event.ListSelectionEvent;
@@ -112,7 +109,7 @@ public class SessionsDialog extends StandardDialog implements SessionManagerList
                         if (currentSession>0){
                             Map<String, Object> info = manager.getInfo(currentSession);                           
                             info.put("metadata", manager.getMetadata(currentSession));  
-                            SwingUtils.showScrollableMessage(SessionsDialog.this, "Session Info",  
+                            showScrollableMessage("Session Info",  
                                     "Session id: " + currentSession, JsonSerializer.encode(info, true));
                         }
                     }
@@ -181,7 +178,7 @@ public class SessionsDialog extends StandardDialog implements SessionManagerList
                         if (!Str.toString(value).equals(current)){
                             String state = getSelectedSessionState();
                             if (!SessionManager.isSessionEditable(state)){
-                                SwingUtils.showMessage(this, "Error", "Cannot change session metadata if state is " + state);
+                                showMessage( "Error", "Cannot change session metadata if state is " + state);
                                 SwingUtilities.invokeLater(()->{ 
                                     selectSession(currentSession); 
                                 });                            
@@ -205,7 +202,7 @@ public class SessionsDialog extends StandardDialog implements SessionManagerList
             manager.fromString(type, Str.toString(value));
         } catch (Exception ex) {
             SwingUtilities.invokeLater(() -> {
-                SwingUtils.showException(this, ex);
+                showException(ex);
                 selectSession(currentSession); 
             });
             //Don't update values if cannot parse value according to type
@@ -992,7 +989,7 @@ public class SessionsDialog extends StandardDialog implements SessionManagerList
                 setAdditionalFiles();
             }
         } catch (Exception ex) {
-            SwingUtils.showException(this, ex);
+            showException(ex);
         }          
     }//GEN-LAST:event_buttonAddFileActionPerformed
 
@@ -1005,7 +1002,7 @@ public class SessionsDialog extends StandardDialog implements SessionManagerList
                 setAdditionalFiles();
             }
         } catch (Exception ex) {
-            SwingUtils.showException(this, ex);
+            showException(ex);
         }            
     }//GEN-LAST:event_buttonRemoveFileActionPerformed
 
@@ -1026,7 +1023,7 @@ public class SessionsDialog extends StandardDialog implements SessionManagerList
                     file = new File(file.getCanonicalPath()+".zip");
                 }     
                 if (file.exists()){
-                    if (SwingUtils.showOption(this, "Overwrite", "File " + file.getName() + " already exists.\nDo you want to overwrite it?", OptionType.YesNo) != OptionResult.Yes) {
+                    if (showOption("Overwrite", "File " + file.getName() + " already exists.\nDo you want to overwrite it?", OptionType.YesNo) != OptionResult.Yes) {
                         return;
                     }
                 }
@@ -1037,10 +1034,10 @@ public class SessionsDialog extends StandardDialog implements SessionManagerList
                 } finally{
                     splash.setVisible(false);
                 }
-                SwingUtils.showMessage(this, "Archive", "Success creating ZIP file: " + file.getName());
+                showMessage("Archive", "Success creating ZIP file: " + file.getName());
             }
         } catch (Exception ex) {
-            SwingUtils.showException(this, ex);
+            showException(ex);
         }     
     }//GEN-LAST:event_buttonZIPActionPerformed
 
@@ -1064,10 +1061,10 @@ public class SessionsDialog extends StandardDialog implements SessionManagerList
             String msg = result.success ?
             "Success ingesting SciCat dataset " + result.datasetName + "\nId: " + result.datasetId :
             "Error ingesting SciCat dataset " + result.datasetName;
-            SwingUtils.showScrollableMessage(this, "SciCat Ingestion", msg, result.output);
+            showScrollableMessage("SciCat Ingestion", msg, result.output);
             Logger.getLogger(SessionPanel.class.getName()).info(msg + "\n" + result.output);
         } catch (Exception ex) {
-            SwingUtils.showException(this, ex);
+            showException(ex);
             Logger.getLogger(SessionPanel.class.getName()).log(Level.WARNING, null, ex);
         }
     }//GEN-LAST:event_buttonScicatIngestionActionPerformed
@@ -1076,7 +1073,7 @@ public class SessionsDialog extends StandardDialog implements SessionManagerList
         try {
             sciCat.setPrincipalInvestigator(textScicatPI.getText());
         } catch (IOException ex) {
-            SwingUtils.showException(this, ex);
+            showException(ex);
         }
     }//GEN-LAST:event_textScicatPIKeyReleased
 
@@ -1084,7 +1081,7 @@ public class SessionsDialog extends StandardDialog implements SessionManagerList
         try {
             sciCat.setOwnerGroup(textScicatGroup.getText());
         } catch (IOException ex) {
-            SwingUtils.showException(this, ex);
+            showException(ex);
         }
     }//GEN-LAST:event_textScicatGroupKeyReleased
 
@@ -1092,7 +1089,7 @@ public class SessionsDialog extends StandardDialog implements SessionManagerList
         try {
             sciCat.setCreationLocation(textScicatLocation.getText());
         } catch (IOException ex) {
-            SwingUtils.showException(this, ex);
+            showException(ex);
         }
     }//GEN-LAST:event_textScicatLocationKeyReleased
 
@@ -1101,7 +1098,7 @@ public class SessionsDialog extends StandardDialog implements SessionManagerList
             update();
             selectSession(-1);
         } catch (Exception ex) {
-            SwingUtils.showException(this, ex);
+            showException(ex);
         }
     }//GEN-LAST:event_checkCurrentUserActionPerformed
 
@@ -1110,7 +1107,7 @@ public class SessionsDialog extends StandardDialog implements SessionManagerList
             update();
             selectSession(-1);
         } catch (Exception ex) {
-            SwingUtils.showException(this, ex);
+            showException(ex);
         }
     }//GEN-LAST:event_checkCompletedActionPerformed
 
@@ -1118,7 +1115,7 @@ public class SessionsDialog extends StandardDialog implements SessionManagerList
         try {
             updateRuns();
         } catch (Exception ex) {
-            SwingUtils.showException(this, ex);
+            showException(ex);
         }
     }//GEN-LAST:event_testRunFilterActionPerformed
 
@@ -1130,12 +1127,12 @@ public class SessionsDialog extends StandardDialog implements SessionManagerList
                 data.add(Str.toString(modelRuns.getValueAt(i, 4)));
             }
             String currentName = manager.getName(currentSession);
-            String name = SwingUtils.getString(this, "Enter the new session name for detaching the selected data files", currentName);
+            String name =getString("Enter the new session name for detaching the selected data files", currentName);
             if (name != null) {
                 manager.detach(name, currentSession, data);
             }            
         } catch (Exception ex) {
-            SwingUtils.showException(this, ex);
+            showException(ex);
         } 
     }//GEN-LAST:event_buttonDetachActionPerformed
 
@@ -1147,21 +1144,21 @@ public class SessionsDialog extends StandardDialog implements SessionManagerList
                 data.add(Str.toString(modelRuns.getValueAt(i, 4)));
             }
             
-            SessionReopenDialog dlg = new SessionReopenDialog(SwingUtils.getFrame(this),true, "Select Destination Session");
+            SessionReopenDialog dlg = new SessionReopenDialog(getFrame(),true, "Select Destination Session");
             dlg.setLocationRelativeTo(this);
             dlg.setVisible(true);
             if (dlg.getResult()) {
                 manager.move(currentSession, data, dlg.getSelectedSession());
             }
         } catch (Exception ex) {
-            SwingUtils.showException(this, ex);
+            showException(ex);
         } 
     }//GEN-LAST:event_buttonMoveActionPerformed
 
     private void buttonAddMetadataActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonAddMetadataActionPerformed
         try {
             cancelMetadataEditing();
-            String name = SwingUtils.getString(this, "Enter the name of the new metadata field:", "");
+            String name = getString("Enter the name of the new metadata field:", "");
             if (name != null) {
                 if (manager.getMetadata(currentSession,name)!=null){
                     throw new Exception("The field is already defined: " + name);
@@ -1171,7 +1168,7 @@ public class SessionsDialog extends StandardDialog implements SessionManagerList
                 }
             }            
         } catch (Exception ex) {
-            SwingUtils.showException(this, ex);
+            showException(ex);
         } 
     }//GEN-LAST:event_buttonAddMetadataActionPerformed
 
@@ -1184,7 +1181,7 @@ public class SessionsDialog extends StandardDialog implements SessionManagerList
                 updateMetadata();
             }
         } catch (Exception ex) {
-            SwingUtils.showException(this, ex);
+            showException(ex);
         } 
     }//GEN-LAST:event_buttonRemoveMetadataActionPerformed
 

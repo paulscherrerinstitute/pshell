@@ -9,6 +9,7 @@ import ch.psi.utils.EpicsBootInfoAPI;
 import ch.psi.utils.Arr;
 import ch.psi.utils.History;
 import ch.psi.utils.Sys;
+import ch.psi.utils.swing.MonitoredPanel;
 import ch.psi.utils.swing.SwingUtils;
 import java.awt.BorderLayout;
 import java.awt.Component;
@@ -31,7 +32,7 @@ import javax.swing.text.JTextComponent;
 /**
  *
  */
-public class ChannelSelector extends javax.swing.JPanel {
+public class ChannelSelector extends MonitoredPanel {
 
     DataAPI dataApi;
     EpicsBootInfoAPI epicsApi;
@@ -194,7 +195,7 @@ public class ChannelSelector extends javax.swing.JPanel {
         if (listMode == ListMode.Popup) {
             if ((dialogList == null) || (!dialogList.isShowing())) {
                 Component editor = getEditor();
-                dialogList = new JDialog(SwingUtils.getWindow(this));
+                dialogList = new JDialog(getWindow());
                 dialogList.getContentPane().setLayout(new BorderLayout());
                 dialogList.getContentPane().add(listScrollPanel, BorderLayout.CENTER);
                 dialogList.setSize(new Dimension(editor.getWidth(), 200));
@@ -215,7 +216,7 @@ public class ChannelSelector extends javax.swing.JPanel {
                //this.update();
                 //dialogList.setFocusable(false);
                 SwingUtils.invokeDelayed(() -> {
-                    SwingUtils.getWindow(this).requestFocus();
+                    getWindow().requestFocus();
                     getEditor().requestFocus();
                 }, 100);
                 
@@ -228,7 +229,7 @@ public class ChannelSelector extends javax.swing.JPanel {
         component.addFocusListener(new java.awt.event.FocusAdapter() {
             public void focusLost(java.awt.event.FocusEvent evt) {
                 if (listMode == ListMode.Popup) {
-                    Object[] aux =  new Object[]{SwingUtils.getWindow(ChannelSelector.this), getEditor(), list, listScrollPanel, dialogList, getEditorComponent()};
+                    Object[] aux =  new Object[]{getWindow(), getEditor(), list, listScrollPanel, dialogList, getEditorComponent()};
                     //System.out.println((!Arr.contains(aux, evt.getOppositeComponent())) + " - " + evt.getOppositeComponent());
                     if (!Arr.contains(aux, evt.getOppositeComponent())) {
                         closeListDialog();

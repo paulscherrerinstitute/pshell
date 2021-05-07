@@ -2,7 +2,6 @@ package ch.psi.pshell.swing;
 
 import ch.psi.pshell.data.Converter;
 import ch.psi.pshell.core.Context;
-import ch.psi.pshell.core.Setup;
 import ch.psi.pshell.data.DataManager;
 import ch.psi.pshell.data.Provider;
 import ch.psi.pshell.data.DataSlice;
@@ -160,7 +159,7 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
                     }
                 }
             } catch (Exception ex) {
-                SwingUtils.showException(DataPanel.this, ex);
+                showException(ex);
             }
         });
         filePopupMenu.add(menuOpen);
@@ -174,7 +173,7 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
                     Desktop.getDesktop().open(selected);
                 }
             } catch (Exception ex) {
-                SwingUtils.showException(DataPanel.this, ex);
+                showException(ex);
             }
         });
         filePopupMenu.add(menuBrowse);
@@ -219,7 +218,7 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
             try {
                 repaintTreePath(treeFolder.getSelectionPath(), true);
             } catch (Exception ex) {
-                SwingUtils.showException(DataPanel.this, ex);
+                showException(ex);
             }
         });
         filePopupMenu.add(menuRefresh);
@@ -230,7 +229,7 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
                 File selected = getFolderTreeSelectedFile();
                 showFileProps(selected, true);
             } catch (Exception ex) {
-                SwingUtils.showException(DataPanel.this, ex);
+                showException(ex);
             }
         });
         filePopupMenu.add(menuCalcSize);
@@ -280,7 +279,7 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
                         }
                     }
                 } catch (Exception ex) {
-                    SwingUtils.showException(DataPanel.this, ex);
+                    showException(ex);
                 }
             }
 
@@ -308,7 +307,7 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
                     listener.plotData(dataManager, currentFile.getPath(), dataPath);
                 }
             } catch (Exception ex) {
-                SwingUtils.showException(DataPanel.this, ex);
+                showException(ex);
             }
         });
         popupMenu.add(menuPlotData);
@@ -331,7 +330,7 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
                 }
                 Toolkit.getDefaultToolkit().getSystemClipboard().setContents(new StringSelection("\"" + root + "|" + dataPath + "\""), null);
             } catch (Exception ex) {
-                SwingUtils.showException(DataPanel.this, ex);
+                showException(ex);
             }
         });
         popupMenu.add(menuCopyLink);
@@ -353,7 +352,7 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
                     }
                     listener.openFile(fileName);
                 } catch (Exception ex) {
-                    SwingUtils.showException(DataPanel.this, ex);
+                    showException(ex);
                 }
             }
         });
@@ -370,12 +369,12 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
                 if (dataPath == null) {
                     dataPath = "/";
                 }                
-                String var = SwingUtils.getString(this, "Enter variable name:", null);
+                String var = getString("Enter variable name:", null);
                 if ((var != null) && (!var.trim().isEmpty())) {
                     context.evalLineBackground(var.trim() + "=load_data(\"" + root + "|" + dataPath + "\")");
                 }
             } catch (Exception ex) {
-                SwingUtils.showException(DataPanel.this, ex);
+                showException(ex);
             }
         });
         popupMenu.add(menuAssign);
@@ -392,7 +391,7 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
                         }
                     }
                 } catch (Exception ex) {
-                    SwingUtils.showException(DataPanel.this, ex);
+                    showException(ex);
                 }
             }
 
@@ -436,9 +435,9 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
                                             TreePath tp = treeFile.getSelectionPath();
                                             converter.startConvert(dataManager, currentFile.getPath(),  getDataPath(tp), DataPanel.this).handle((ret,ex)->{
                                                 if (ex != null){
-                                                    SwingUtils.showException(DataPanel.this, (Exception) ex);
+                                                    showException((Exception) ex);
                                                 } else{
-                                                    SwingUtils.showMessage(DataPanel.this, "Success", "Success creating:\n" + String.valueOf(ret));
+                                                    showMessage("Success", "Success creating:\n" + String.valueOf(ret));
                                                 }
                                                 return ret;
                                             });
@@ -457,7 +456,7 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
                         popupMenu.show(e.getComponent(), e.getX(), e.getY());
                     }
                 } catch (Exception ex) {
-                    SwingUtils.showException(DataPanel.this, ex);
+                    showException(ex);
                 }
             }
 
@@ -543,12 +542,12 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
                     try {
                         Context.getInstance().evalFileBackgroundAsync(file, List.of(getCurrentRoot())).handle((ret, ex)->{
                             if (ex != null){
-                               SwingUtils.showException(DataPanel.this, (Exception)ex);
+                               showException((Exception)ex);
                             }
                             return ret;
                         });
                     } catch (Exception ex) {
-                        SwingUtils.showException(DataPanel.this, ex);
+                        showException(ex);
                     }
                 });      
                 if (category.isEmpty()){
@@ -1158,7 +1157,7 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
                             }
                         }
                     } catch (Exception ex) {
-                        SwingUtils.showException(DataPanel.this, ex);
+                        showException(ex);
                     }
                 }
             });
@@ -1200,7 +1199,7 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
                             }
                         }
                     } catch (Exception ex) {
-                        SwingUtils.showException(DataPanel.this, ex);
+                        showException(ex);
                     }
                 }
             });
@@ -1216,7 +1215,7 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
                 }
             }
         } catch (Exception ex) {
-            SwingUtils.showException(DataPanel.this, ex);
+            showException(ex);
         }
     }
 
@@ -1231,7 +1230,7 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
                 }
             }
         } catch (Exception ex) {
-            SwingUtils.showException(DataPanel.this, ex);
+            showException(ex);
         }
     }
 
@@ -1441,7 +1440,7 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
                 tableRowHeader.getTableHeader().repaint();
             }
         } catch (Exception ex) {
-            SwingUtils.showException(this, ex);
+            showException(ex);
         }
     }
 
@@ -1461,7 +1460,7 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
     class DefaultDataPanelListener implements DataPanelListener {
 
         Window getParent() {
-            return SwingUtils.getWindow(DataPanel.this);
+            return getWindow();
         }
 
         @Override

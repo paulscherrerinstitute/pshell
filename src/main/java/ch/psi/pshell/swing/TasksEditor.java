@@ -6,7 +6,6 @@ import ch.psi.pshell.core.TaskManager;
 import ch.psi.utils.IO;
 import ch.psi.utils.swing.Document;
 import ch.psi.utils.swing.Editor;
-import ch.psi.utils.swing.SwingUtils;
 import java.awt.event.ActionEvent;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -441,7 +440,7 @@ public class TasksEditor extends Editor {
             }
             updateTables();
         } catch (Exception ex) {
-            SwingUtils.showException(this, ex);
+            showException(ex);
         }
     }//GEN-LAST:event_buttonStartActionPerformed
 
@@ -453,7 +452,7 @@ public class TasksEditor extends Editor {
             }
             updateTables();
         } catch (Exception ex) {
-            SwingUtils.showException(this, ex);
+            showException(ex);
         }
     }//GEN-LAST:event_buttonStopActionPerformed
 
@@ -461,7 +460,7 @@ public class TasksEditor extends Editor {
         try {
             save();
         } catch (IOException ex) {
-            SwingUtils.showException(this, ex);
+            showException(ex);
         }
     }//GEN-LAST:event_butonSaveActionPerformed
 
@@ -473,7 +472,7 @@ public class TasksEditor extends Editor {
             }
             updateTables();
         } catch (Exception ex) {
-            SwingUtils.showException(this, ex);
+            showException(ex);
         }
     }//GEN-LAST:event_buttonUnloadActionPerformed
 
@@ -487,7 +486,7 @@ public class TasksEditor extends Editor {
             }
             updateTables();
         } catch (Exception ex) {
-            SwingUtils.showException(this, ex);
+            showException(ex);
         }
     }//GEN-LAST:event_buttonLoadActionPerformed
 
@@ -497,7 +496,7 @@ public class TasksEditor extends Editor {
             run(task);
             updateTables();
         } catch (Exception ex) {
-            SwingUtils.showException(this, ex);
+            showException(ex);
         }
     }//GEN-LAST:event_buttonRunActionPerformed
 
@@ -507,7 +506,7 @@ public class TasksEditor extends Editor {
             run(task);
             updateTables();
         } catch (Exception ex) {
-            SwingUtils.showException(this, ex);
+            showException(ex);
         }
     }//GEN-LAST:event_buttonRunLoadedActionPerformed
 

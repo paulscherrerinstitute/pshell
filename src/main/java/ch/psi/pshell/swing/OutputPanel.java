@@ -4,7 +4,6 @@ import ch.psi.pshell.core.Console;
 import ch.psi.pshell.core.Context;
 import ch.psi.pshell.core.ContextAdapter;
 import ch.psi.utils.swing.MonitoredPanel;
-import ch.psi.utils.swing.SwingUtils;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.MouseAdapter;
@@ -45,7 +44,7 @@ public class OutputPanel extends MonitoredPanel {
                         popupMenu.show(e.getComponent(), e.getX(), e.getY());
                     }
                 } catch (Exception ex) {
-                    SwingUtils.showException(OutputPanel.this, ex);
+                    showException(ex);
                 }
             }
 

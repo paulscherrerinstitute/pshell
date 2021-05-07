@@ -6,7 +6,6 @@ import ch.psi.pshell.device.ReadbackDevice;
 import ch.psi.pshell.device.Stoppable;
 import ch.psi.utils.Convert;
 import ch.psi.utils.State;
-import ch.psi.utils.swing.SwingUtils;
 import java.io.IOException;
 import java.util.logging.Level;
 import javax.swing.SpinnerNumberModel;
@@ -34,7 +33,7 @@ public final class ProcessVariablePanel extends DevicePanel {
     void write(double value) {
         getDevice().writeAsync(value).handle((ok, ex) -> {
             if ((ex != null) && (ex instanceof IOException)) {
-                SwingUtils.showException(this, (Exception) ex);
+                showException((Exception) ex);
                 onDeviceValueChanged(getDevice().take(), getDevice().take());
             }
             return ok;

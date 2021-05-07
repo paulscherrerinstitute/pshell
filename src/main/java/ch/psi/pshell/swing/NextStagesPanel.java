@@ -1,10 +1,8 @@
 package ch.psi.pshell.swing;
 
-import ch.psi.pshell.core.JsonSerializer;
 import ch.psi.pshell.ui.App;
 import ch.psi.pshell.ui.App.ExecutionStage;
 import ch.psi.utils.swing.MonitoredPanel;
-import ch.psi.utils.swing.SwingUtils;
 import java.awt.event.ActionEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -39,7 +37,7 @@ public class NextStagesPanel extends MonitoredPanel{
                 int index = table.getSelectedRow();
                 App.getInstance().cancelExecutionStage(index);
             } catch (Exception ex) {
-                SwingUtils.showException(NextStagesPanel.this, ex);
+                showException(ex);
             }
         });
 
@@ -48,7 +46,7 @@ public class NextStagesPanel extends MonitoredPanel{
             try {
                 App.getInstance().cancelExecutionQueue();
             } catch (Exception ex) {
-                SwingUtils.showException(NextStagesPanel.this, ex);
+                showException(ex);
             }
         });
 
@@ -81,7 +79,7 @@ public class NextStagesPanel extends MonitoredPanel{
                         popupMenu.show(e.getComponent(), e.getX(), e.getY());
                     }                    
                 } catch (Exception ex) {
-                    SwingUtils.showException(NextStagesPanel.this, ex);
+                    showException(ex);
                 }
             }
         }

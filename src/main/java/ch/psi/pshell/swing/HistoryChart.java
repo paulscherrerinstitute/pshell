@@ -8,7 +8,7 @@ import ch.psi.pshell.device.ReadbackDevice;
 import ch.psi.pshell.device.TimestampedValue;
 import ch.psi.pshell.plot.TimePlotSeries;
 import ch.psi.utils.NamedThreadFactory;
-import ch.psi.utils.swing.SwingUtils;
+import ch.psi.utils.swing.MonitoredPanel;
 import java.awt.event.ActionEvent;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -17,12 +17,11 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JMenuItem;
-import javax.swing.JPanel;
 
 /**
  *
  */
-public class HistoryChart extends JPanel implements AutoCloseable {
+public class HistoryChart extends MonitoredPanel implements AutoCloseable {
 
     TimePlotBase chart;
     int interval;
@@ -51,12 +50,12 @@ public class HistoryChart extends JPanel implements AutoCloseable {
         JMenuItem menuInterval = new JMenuItem("Update Interval...");
         menuInterval.addActionListener((ActionEvent e) -> {
             try {
-                String str = SwingUtils.getString(HistoryChart.this, "Enter update interval in milliseconds (0 to disable):", String.valueOf(HistoryChart.this.interval));
+                String str = getString("Enter update interval in milliseconds (0 to disable):", String.valueOf(HistoryChart.this.interval));
                 if (str != null) {
                     setInterval(Integer.valueOf(str));
                 }
             } catch (Exception ex) {
-                SwingUtils.showException(HistoryChart.this, ex);
+                showException(ex);
             }
         });
         menuAsyncUpdates = new JCheckBoxMenuItem("Asynchronous Updates");
@@ -64,7 +63,7 @@ public class HistoryChart extends JPanel implements AutoCloseable {
             try {
                 setAsyncUpdates(menuAsyncUpdates.isSelected());
             } catch (Exception ex) {
-                SwingUtils.showException(HistoryChart.this, ex);
+                showException(ex);
             }
         });
 

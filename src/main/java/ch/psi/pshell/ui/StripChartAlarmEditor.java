@@ -2,7 +2,6 @@ package ch.psi.pshell.ui;
 
 import ch.psi.pshell.epics.Epics;
 import ch.psi.utils.swing.StandardDialog;
-import ch.psi.utils.swing.SwingUtils;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
@@ -354,7 +353,7 @@ public class StripChartAlarmEditor extends StandardDialog {
             config.put("highLimit", highLimit);
             accept();
         } catch (Exception ex) {
-            SwingUtils.showException(this, ex);
+            showException(ex);
         }
     }//GEN-LAST:event_buttonOkActionPerformed
 

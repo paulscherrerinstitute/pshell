@@ -92,7 +92,7 @@ public class ScriptButton extends MonitoredPanel {
             }
             Context.getInstance().evalFileAsync(script, args);
         } catch (Context.ContextStateException ex) {
-            SwingUtils.showException(this, ex);
+            showException(ex);
         }
     }//GEN-LAST:event_buttonActionPerformed
 

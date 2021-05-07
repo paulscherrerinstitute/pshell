@@ -8,6 +8,7 @@ import ch.psi.pshell.plot.RangeSelectionPlot.RangeSelectionPlotListener;
 import ch.psi.utils.Arr;
 import ch.psi.utils.Convert;
 import ch.psi.utils.swing.MainFrame;
+import ch.psi.utils.swing.MonitoredPanel;
 import ch.psi.utils.swing.SwingUtils;
 import java.awt.Color;
 import java.util.ArrayList;
@@ -22,7 +23,7 @@ import javax.swing.table.DefaultTableModel;
 /**
  *
  */
-public class RangeSelectionPanel extends javax.swing.JPanel {
+public class RangeSelectionPanel extends MonitoredPanel {
 
     boolean tableSelection;
     boolean inserting;
@@ -149,7 +150,7 @@ public class RangeSelectionPanel extends javax.swing.JPanel {
                             }
                         }
                     } catch (Exception ex) {
-                        SwingUtils.showException(RangeSelectionPanel.this, ex);
+                        showException(ex);
                         if (!adding) {
                             //Restore values
                             if (index >= 0) {
@@ -627,7 +628,7 @@ public class RangeSelectionPanel extends javax.swing.JPanel {
             inserting = true;
             updateTablePanels();
         } catch (Exception ex) {
-            SwingUtils.showException(RangeSelectionPanel.this, ex);
+            showException(ex);
         }
     }//GEN-LAST:event_buttonInsertActionPerformed
 
@@ -645,7 +646,7 @@ public class RangeSelectionPanel extends javax.swing.JPanel {
                 updateTablePanels();
             }
         } catch (Exception ex) {
-            SwingUtils.showException(RangeSelectionPanel.this, ex);
+            showException(ex);
         }
     }//GEN-LAST:event_buttonDeleteActionPerformed
 

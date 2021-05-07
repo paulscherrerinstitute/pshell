@@ -192,7 +192,7 @@ public class DiscretePositionerPanel extends DevicePanel implements ActionListen
             if (Arr.containsEqual(getDevice().getPositions(), position)) {
                 getDevice().writeAsync(position).handle((ok, ex) -> {
                     if ((ex != null) && (ex instanceof IOException)) {
-                        SwingUtils.showException(this, (Exception) ex);
+                        showException((Exception) ex);
                     }
                     return ok;
                 });
