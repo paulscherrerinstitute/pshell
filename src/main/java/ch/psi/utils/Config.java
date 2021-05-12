@@ -3,6 +3,7 @@ package ch.psi.utils;
 import java.beans.Transient;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.lang.annotation.Retention;
@@ -171,9 +172,11 @@ public class Config extends ObservableBase<Config.ConfigListener> {
             try (FileInputStream in = new FileInputStream(fileName)) {
                 properties.load(in);
                 updateFields();
-                fileSync = true;
+                fileSync = true;                
+            } catch (FileNotFoundException ex) {
+                Logger.getLogger(Config.class.getName()).info("Configuration file not found: " + fileName);
             } catch (Exception ex) {
-                Logger.getLogger(Config.class.getName()).log(Level.INFO, null, ex);
+                Logger.getLogger(Config.class.getName()).log(Level.WARNING, null, ex);
             }
             for (ConfigListener listener : getListeners()) {
                 listener.onLoad(this);

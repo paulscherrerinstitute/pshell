@@ -538,7 +538,10 @@ public class App extends ObservableBase<AppListener> {
         return getBoolArgumentValue("dspr");
     }
 
-    static public boolean isForceExtract() {
+    static public boolean isForceExtract() {   
+        if (isDisabled()){
+            return false;
+        }
         return getBoolArgumentValue("extr") || isVolatile();
     }
 

@@ -4,6 +4,7 @@
 
 package ch.psi.pshell.core;
 
+import ch.psi.pshell.ui.App;
 import ch.psi.utils.Arr;
 import ch.psi.utils.Config;
 import ch.psi.utils.Mail;
@@ -49,7 +50,9 @@ public class NotificationManager implements AutoCloseable{
         try {
             config.load(getMailConfigFile().toString());
         } catch (IOException ex) {
-            Logger.getLogger(NotificationManager.class.getName()).log(Level.WARNING, null, ex);
+            if (!App.isVolatile()){
+                Logger.getLogger(NotificationManager.class.getName()).log(Level.WARNING, null, ex);
+            }
         }
 
         if ((config.to!=null) && (!config.to.trim().isEmpty())){            
