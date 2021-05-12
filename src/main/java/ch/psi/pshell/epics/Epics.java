@@ -8,8 +8,13 @@ import ch.psi.jcae.DummyChannelDescriptor;
 import ch.psi.jcae.impl.DefaultChannelService;
 import ch.psi.jcae.impl.JcaeProperties;
 import ch.psi.jcae.impl.type.TimestampValue;
+import ch.psi.pshell.ui.App;
 import ch.psi.utils.Convert;
 import ch.psi.utils.NumberComparator;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
@@ -42,10 +47,28 @@ public class Epics {
     public static void create(boolean parallelCreation) {
         create("jcae.properties", parallelCreation);
     }
+    
+    public static String getDefaultPropertyFiles(){
+        return "ch.psi.jcae.ContextFactory.autoAddressList=true\n" +
+                "ch.psi.jcae.ContextFactory.useShellVariables=true\n" +
+                "ch.psi.jcae.ContextFactory.maxArrayBytes=20000000\n" +
+                "ch.psi.jcae.ContextFactory.maxSendArrayBytes=100000";
+    }
         
     public static void create(String configFile, boolean parallelCreation) {        
-        destroy();
+        destroy();        
         System.setProperty(PROPERTY_JCAE_CONFIG_FILE, configFile);
+        File file = new File(configFile);
+        if (! file.exists()){
+            //Manage defaults if volatile
+            if (App.isVolatile()){
+                try {
+                    Files.writeString(file.toPath(), getDefaultPropertyFiles());
+                } catch (IOException ex) {
+                    Logger.getLogger(Epics.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+        }        
         try {
             factory = new DefaultChannelService();
         } catch (Exception ex) {
