@@ -273,11 +273,11 @@ public class App extends ObservableBase<AppListener> {
             setScanPrintingActive(false);
         }
 
-        if (getBoolArgumentValue("extr")) {
+        if (isForceExtract()) {
             System.setProperty(Context.PROPERTY_FORCE_EXTRACT, "true");
         }
 
-        if (getBoolArgumentValue("vers")) {
+        if (isForceVersioning()) {
             System.setProperty(Context.PROPERTY_FORCE_VERSIONING, "true");
         }
 
@@ -538,6 +538,14 @@ public class App extends ObservableBase<AppListener> {
         return getBoolArgumentValue("dspr");
     }
 
+    static public boolean isForceExtract() {
+        return getBoolArgumentValue("extr") || isVolatile();
+    }
+
+    static public boolean isForceVersioning() {
+        return getBoolArgumentValue("vers");
+    }
+   
     static public Dimension getSize() {
         try {
             String opt = getArgumentValue("size");
