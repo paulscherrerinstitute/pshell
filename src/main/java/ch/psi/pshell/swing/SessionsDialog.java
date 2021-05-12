@@ -1129,7 +1129,8 @@ public class SessionsDialog extends StandardDialog implements SessionManagerList
             String currentName = manager.getName(currentSession);
             String name =getString("Enter the new session name for detaching the selected data files", currentName);
             if (name != null) {
-                manager.detach(name, currentSession, data);
+                int id = manager.detach(name, currentSession, data);
+                showScrollableMessage("Success", "Success detaching to session "+ id + "-" + name + " the files:", String.join("\n", data));
             }            
         } catch (Exception ex) {
             showException(ex);
@@ -1148,7 +1149,10 @@ public class SessionsDialog extends StandardDialog implements SessionManagerList
             dlg.setLocationRelativeTo(this);
             dlg.setVisible(true);
             if (dlg.getResult()) {
-                manager.move(currentSession, data, dlg.getSelectedSession());
+                int id = dlg.getSelectedSession();
+                String name = manager.getName(id);
+                manager.move(currentSession, data, id);
+                showScrollableMessage("Success", "Success moving to session " + id + "-" + name + " the files:", String.join("\n", data));
             }
         } catch (Exception ex) {
             showException(ex);

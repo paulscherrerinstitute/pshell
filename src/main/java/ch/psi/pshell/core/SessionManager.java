@@ -339,11 +339,11 @@ public class SessionManager extends ObservableBase<SessionManager.SessionManager
         long start=System.currentTimeMillis();
         long stop=0;
         for (String fileName: files){
-            File file = new File(getFileName(fileName,false));
+            File file = new File(getFileName(fileName,false,getDefaultRoot()));
             long time = file.lastModified();
             start = Math.min(start, time);
             stop = Math.max(stop, time);            
-        }        
+        }                
         int sessionId = getNewSession();
         Map info = new HashMap<String, Object>();        
         info.put("id", sessionId);
@@ -381,7 +381,7 @@ public class SessionManager extends ObservableBase<SessionManager.SessionManager
 
     private String checkRoot(String root){
         if ((root == null) || root.isBlank()) {
-            root = Context.getInstance().getSetup().getDataPath();
+            root = getDefaultRoot();
         }
         try {
             root = Paths.get(root).toRealPath().toString();
@@ -513,7 +513,11 @@ public class SessionManager extends ObservableBase<SessionManager.SessionManager
     }
 
     public String getRoot(int id) throws IOException {
-        return (String) getInfo(id).getOrDefault("root", Context.getInstance().getSetup().getDataPath());
+        return (String) getInfo(id).getOrDefault("root", getDefaultRoot());
+    }
+    
+    public String getDefaultRoot(){
+        return Context.getInstance().getSetup().getDataPath();
     }
 
     public String getRoot() throws IOException {

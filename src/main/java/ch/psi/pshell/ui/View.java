@@ -4910,7 +4910,9 @@ public class View extends MainFrame {
         try{
             String name = getString("Enter the session name created with the files selected in the data panel:", "");
             if (name != null) {
-                context.getSessionManager().create(name, dataPanel.getSelectedFiles(), null, null);
+                List<String> files = dataPanel.getSelectedFiles();
+                int id = context.getSessionManager().create(name, files, null, null);
+                showScrollableMessage("Success", "Success creating session " + id + "-" + name + " with the files:", String.join("\n", files));
             }
         } catch (Exception ex) {
             showException(ex);
