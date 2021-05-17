@@ -1,5 +1,6 @@
 package ch.psi.pshell.core;
 
+import ch.psi.utils.Str;
 import ch.psi.utils.Threading;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -118,6 +119,24 @@ public class Task implements AutoCloseable {
             }
 
         }
+    }
+    
+    public static Task fromString(String str){
+        try{
+            int delay= 0;
+            int inteval=-1;
+            String[] tokens = Str.split(str, new String[]{"|", ";", ","});
+            String script=tokens[0];
+            if (tokens.length>1){
+                delay = Integer.valueOf(tokens[1]);
+            }
+            if (tokens.length>2){
+                inteval = Integer.valueOf(tokens[2]);
+            }
+            return new Task(script, delay, inteval);
+        } catch (Exception ex){
+            throw new IllegalArgumentException("Invalid task definition: " + str);
+        }                
     }
     
     @Override

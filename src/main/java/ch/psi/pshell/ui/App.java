@@ -1,5 +1,6 @@
 package ch.psi.pshell.ui;
 
+import ch.psi.pshell.core.CommandSource;
 import ch.psi.pshell.core.Configuration;
 import ch.psi.pshell.core.Configuration.LogLevel;
 import ch.psi.pshell.core.Context;
@@ -280,6 +281,9 @@ public class App extends ObservableBase<AppListener> {
         if (isForceVersioning()) {
             System.setProperty(Context.PROPERTY_FORCE_VERSIONING, "true");
         }
+        
+        //Raise exception if wrong formatting;
+        getTaskArgs();
 
         System.setProperty(Context.PROPERTY_FILE_LOCK, isFileLock() ? "true" : "false");        
         System.setProperty(Context.PROPERTY_SESSIONS_ENABLED, isHandlingSessions() ? "true" : "false" );
@@ -328,7 +332,6 @@ public class App extends ObservableBase<AppListener> {
         sb.append("\n\t-x\tStart GUI with plots only");
         sb.append("\n\t-v\tStart in server mode");
         sb.append("\n\t-w\tStart the GUI shell console window only");
-        sb.append("\n\t-t\tStart GUI and command line interface: cannot be used if running in the background");
         sb.append("\n\t-l\tExecution in local mode: no servers, no lock, no versioning, no context persistence");
         sb.append("\n\t-d\tDetached mode: no Workbench, Panel plugins are instantiated in a private frames");
         sb.append("\n\t-k\tPersist state of  detached frames");
@@ -371,6 +374,7 @@ public class App extends ObservableBase<AppListener> {
         sb.append("\n\t-dtpn\tShow data panel window only (can be used together with -f)");
         sb.append("\n\t-help\tStart the GUI help window");
         sb.append("\n\t-full\tStart in full screen mode");
+        sb.append("\n\t-dual\tStart GUI and command line interface: cannot be used if running in the background");
         sb.append("\n\t-vers\tEnables versioning in local mode (manual)");
         sb.append("\n\t-libp=<path>\tAdd to library path");
         sb.append("\n\t-clsp=<path>\tAdd to class path");
@@ -378,7 +382,8 @@ public class App extends ObservableBase<AppListener> {
         sb.append("\n\t-laf=<name> \tLook and feel: system, metal, nimbus, darcula, flat, or dark");
         sb.append("\n\t-size=WxH\tSet application window size if GUI state not persisted.");
         sb.append("\n\t-args=...\tProvide arguments to interpreter");
-        sb.append("\n\t-f=<..>\tRun a file instead of entering interactive shell (together with -c option)");
+        sb.append("\n\t-f=<..>\tFile to run (together with -c option) or open in file in editor");
+        sb.append("\n\t-t=<..>\tStart a task using the format script,delay,interval");
         sb.append("\n\t-p=<..>\tLoad a plugin");
 
         if (isStripChart()) {
@@ -444,7 +449,7 @@ public class App extends ObservableBase<AppListener> {
     }
 
     static public boolean isDual() {
-        return isGui() && getBoolArgumentValue("t");
+        return isGui() && getBoolArgumentValue("dual");
     }
 
     static public boolean isAttach() {       
@@ -594,6 +599,16 @@ public class App extends ObservableBase<AppListener> {
         }
         return ret;
     }
+    
+    static public List<ch.psi.pshell.core.Task> getTaskArgs() {
+        List<ch.psi.pshell.core.Task> ret = new ArrayList<>();
+        //Check formatting
+        for (String str : getArgumentValues("t")){
+            ret.add(ch.psi.pshell.core.Task.fromString(str));
+        }
+        return ret;
+    }
+    
 
     static public String getPlotServer() {
         return App.getArgumentValue("psrv");
@@ -791,6 +806,11 @@ public class App extends ObservableBase<AppListener> {
             @Override
             public void onContextStateChanged(State state, State former) {
                 try {
+                    if ((former == State.Initializing) && (state == State.Ready)){
+                        for (ch.psi.pshell.core.Task task: getTaskArgs()){
+                            context.startTask(task);
+                        }
+                    }
                     for (AppListener listener : getListeners()) {
                         try {
                             listener.onStateChanged(state, former);

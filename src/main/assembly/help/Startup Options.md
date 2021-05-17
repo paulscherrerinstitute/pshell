@@ -26,10 +26,6 @@
     <td>Start the GUI shell console window only.</td>
   </tr>
   <tr>
-    <td>-t</td>
-    <td>Start GUI and command line terminal: cannot be used if running in the background.</td>
-  </tr>
-  <tr>
     <td>-l</td>
     <td>Execution in local mode: no lock(exclusive-mode), no servers, no versioning, no context persistence, no startup tasks.</td>
   </tr>
@@ -198,6 +194,10 @@
     <td>Start in full screen mode.</td>
   </tr>
   <tr>
+    <td>-dual</td>
+    <td>Start GUI and command line terminal: cannot be used if running in the background.</td>
+  </tr>
+  <tr>
     <td>-vers</td>
     <td>Enables versioning in local mode (manual).</td>
   </tr>
@@ -227,11 +227,15 @@
   </tr>
   <tr>
     <td>-f=[name]</td>
-    <td>Runs a file instead of entering interactive shell (together with -c option).</td>
+    <td>File to run (together with -c option) or open in file in editor.</td>
+  </tr>
+  <tr>
+    <td>-t=[name,delay,interval]</td>
+    <td>Start a task in the background.</td>
   </tr>
   <tr>
     <td>-p=[name]</td>
-    <td>Loads a given plugin at startup .</td>
+    <td>Load a plugin at startup.</td>
   </tr>
 </table>
 

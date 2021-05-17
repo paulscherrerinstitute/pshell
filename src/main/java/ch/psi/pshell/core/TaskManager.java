@@ -50,11 +50,19 @@ public class TaskManager implements AutoCloseable {
         Logger.getLogger(TaskManager.class.getName()).fine("Finished " + getClass().getSimpleName() + " initialization");
     }
 
+    
+    public void add(Task task) {
+        synchronized (backgroundTasks) {
+            remove(task.script);
+            backgroundTasks.add(task);
+        }
+    }
+
+        
     public Task create(String script, int delay, int interval) {
         synchronized (backgroundTasks) {
-            remove(script);
             Task task = new Task(script, delay, interval);
-            backgroundTasks.add(task);
+            add(task);
             return task;
         }
     }
@@ -97,9 +105,9 @@ public class TaskManager implements AutoCloseable {
     }
     
     public void remove(Task task, boolean force) {
-        synchronized (backgroundTasks) {
-            stop(task, force);
+        synchronized (backgroundTasks) {            
             if (task != null) {
+                stop(task, force);
                 backgroundTasks.remove(task);
             }
         }

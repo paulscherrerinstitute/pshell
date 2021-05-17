@@ -1540,6 +1540,15 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
         return task;
     }
     
+    Task startTask(final CommandSource source, Task task) throws IOException, ContextStateException{        
+        assertInterpreterEnabled();
+        assertStarted();
+        onCommand(Command.startTask, new Object[]{task}, source);
+        taskManager.add(task);
+        taskManager.start(task);
+        return task;
+    }
+
     void stopTask(final CommandSource source, String script, boolean abort) throws IOException, ContextStateException{
         assertInterpreterEnabled();
         assertStarted();
@@ -3462,6 +3471,10 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
 
     public Task startTask(String script, int delay, int interval) throws IOException, ContextStateException {        
         return startTask(getPublicCommandSource(), script, delay, interval);
+    }
+    
+    public Task startTask(Task task) throws IOException, ContextStateException{        
+        return startTask(getPublicCommandSource(), task);
     }
     
     public void stopTask(String script, boolean abort) throws IOException, ContextStateException{
