@@ -16,7 +16,7 @@
   <Layout>
     <DimensionLayout dim="0">
       <Group type="103" groupAlignment="0" attributes="0">
-          <Component id="jTabbedPane1" alignment="0" max="32767" attributes="0"/>
+          <Component id="jTabbedPane1" alignment="0" pref="485" max="32767" attributes="0"/>
       </Group>
     </DimensionLayout>
     <DimensionLayout dim="1">
@@ -43,7 +43,7 @@
             <DimensionLayout dim="0">
               <Group type="103" groupAlignment="0" attributes="0">
                   <Group type="102" alignment="0" attributes="0">
-                      <Component id="jScrollPane1" pref="343" max="32767" attributes="0"/>
+                      <Component id="jScrollPane1" pref="348" max="32767" attributes="0"/>
                       <EmptySpace max="-2" attributes="0"/>
                       <Group type="103" groupAlignment="0" attributes="0">
                           <Group type="103" groupAlignment="0" attributes="0">
@@ -160,7 +160,7 @@
             </Component>
             <Component class="javax.swing.JButton" name="buttonLoad">
               <Properties>
-                <Property name="text" type="java.lang.String" value="Load"/>
+                <Property name="text" type="java.lang.String" value="Start"/>
                 <Property name="minimumSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor">
                   <Dimension value="[86, 0]"/>
                 </Property>
@@ -171,7 +171,7 @@
             </Component>
             <Component class="javax.swing.JButton" name="buttonRun">
               <Properties>
-                <Property name="text" type="java.lang.String" value="Run"/>
+                <Property name="text" type="java.lang.String" value="Run Once"/>
                 <Property name="minimumSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor">
                   <Dimension value="[86, 0]"/>
                 </Property>
@@ -195,7 +195,7 @@
             <DimensionLayout dim="0">
               <Group type="103" groupAlignment="0" attributes="0">
                   <Group type="102" alignment="0" attributes="0">
-                      <Component id="jScrollPane2" pref="340" max="32767" attributes="0"/>
+                      <Component id="jScrollPane2" pref="348" max="32767" attributes="0"/>
                       <EmptySpace min="-2" max="-2" attributes="0"/>
                       <Group type="103" groupAlignment="0" attributes="0">
                           <Component id="buttonStart" linkSize="2" alignment="0" max="32767" attributes="0"/>
@@ -286,7 +286,7 @@
             </Component>
             <Component class="javax.swing.JButton" name="buttonStop">
               <Properties>
-                <Property name="text" type="java.lang.String" value="Stop"/>
+                <Property name="text" type="java.lang.String" value="Pause"/>
               </Properties>
               <Events>
                 <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="buttonStopActionPerformed"/>
@@ -294,7 +294,7 @@
             </Component>
             <Component class="javax.swing.JButton" name="buttonUnload">
               <Properties>
-                <Property name="text" type="java.lang.String" value="Unload"/>
+                <Property name="text" type="java.lang.String" value="Stop"/>
               </Properties>
               <Events>
                 <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="buttonUnloadActionPerformed"/>
@@ -302,7 +302,7 @@
             </Component>
             <Component class="javax.swing.JButton" name="buttonRunLoaded">
               <Properties>
-                <Property name="text" type="java.lang.String" value="Run"/>
+                <Property name="text" type="java.lang.String" value="Run Once"/>
               </Properties>
               <Events>
                 <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="buttonRunLoadedActionPerformed"/>

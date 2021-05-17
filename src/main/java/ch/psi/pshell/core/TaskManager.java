@@ -50,31 +50,39 @@ public class TaskManager implements AutoCloseable {
         Logger.getLogger(TaskManager.class.getName()).fine("Finished " + getClass().getSimpleName() + " initialization");
     }
 
-    public void create(String script, int delay, int interval) {
+    public Task create(String script, int delay, int interval) {
         synchronized (backgroundTasks) {
             remove(script);
             Task task = new Task(script, delay, interval);
             backgroundTasks.add(task);
+            return task;
         }
     }
 
-    public void start(String script) {
-        synchronized (backgroundTasks) {
-            Task task = get(script);
-            if (task != null) {
+    public void start(Task task) {
+        if (task != null) {
+            synchronized (backgroundTasks) {            
                 task.start();
             }
-        }
+        }        
     }
+    
+    public void start(String script) {
+        start(get(script));
+    }
+   
 
     public void stop(String script) {
         stop(script, false);
     }
 
     public void stop(String script, boolean force) {
-        synchronized (backgroundTasks) {
-            Task task = get(script);
-            if (task != null) {
+        stop(get(script), force);
+    }
+    
+    public void stop(Task task, boolean force) {
+        if (task != null) {
+            synchronized (backgroundTasks) {            
                 task.stop(force);
             }
         }
@@ -85,9 +93,12 @@ public class TaskManager implements AutoCloseable {
     }
 
     public void remove(String script, boolean force) {
+        remove(get(script), force);
+    }
+    
+    public void remove(Task task, boolean force) {
         synchronized (backgroundTasks) {
-            stop(script, force);
-            Task task = get(script);
+            stop(task, force);
             if (task != null) {
                 backgroundTasks.remove(task);
             }
@@ -95,10 +106,12 @@ public class TaskManager implements AutoCloseable {
     }
 
     public Task get(String script) {
-        synchronized (backgroundTasks) {
-            for (Task task : backgroundTasks) {
-                if (task.getScript().equals(script)) {
-                    return task;
+        if (script!=null){
+            synchronized (backgroundTasks) {
+                for (Task task : backgroundTasks) {
+                    if (task.getScript().equals(script)) {
+                        return task;
+                    }
                 }
             }
         }

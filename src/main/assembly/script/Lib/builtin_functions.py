@@ -1087,12 +1087,11 @@ def start_task(script, delay = 0.0, interval = -1):
                 If negative (default), single-execution.
 
     Returns:
-        None
+        Task object.
     """
     delay_ms=int(delay*1000)
     interval_ms=int(interval*1000) if (interval>=0) else int(interval)
-    get_context().taskManager.create(script, delay_ms, interval_ms)
-    get_context().taskManager.start(script)
+    return get_context().startTask(script, delay_ms, interval_ms)
 
 def stop_task(script, force = False):
     """Stop a background task
@@ -1104,7 +1103,7 @@ def stop_task(script, force = False):
     Returns:
         None
     """
-    get_context().taskManager.remove(script, force)
+    get_context().stopTask(script, force)
 
 
 ###################################################################################################

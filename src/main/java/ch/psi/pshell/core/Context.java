@@ -1014,6 +1014,8 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
         setLogLevel,
         saveConfig,
         saveDeviceConfig,
+        startTask,
+        stopTask,
         clearHistory,
         commit,
         cleanupRepository,
@@ -1527,6 +1529,41 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
             disposeExecutionContext();
             commandManager.finishCommandInfo(info, result);
         }
+    }
+    
+    Task startTask(final CommandSource source, String script, int delay, int interval) throws IOException, ContextStateException{        
+        assertInterpreterEnabled();
+        assertStarted();
+        onCommand(Command.startTask, new Object[]{script, delay, interval}, source);
+        Task task = taskManager.create(script, delay, interval);
+        taskManager.start(task);
+        return task;
+    }
+    
+    void stopTask(final CommandSource source, String script, boolean abort) throws IOException, ContextStateException{
+        assertInterpreterEnabled();
+        assertStarted();
+        onCommand(Command.stopTask, new Object[]{script, abort}, source);
+        taskManager.remove(script, abort);
+    }
+    
+    void stopTask(final CommandSource source, Task task, boolean abort) throws IOException, ContextStateException{
+        assertInterpreterEnabled();
+        assertStarted();
+        onCommand(Command.stopTask, new Object[]{task, abort}, source);
+        taskManager.remove(task, abort);
+    }    
+    
+    public Task getTask(String name) throws IOException, ContextStateException{
+        assertInterpreterEnabled();
+        assertStarted();
+        return getTaskManager().get(name);
+    }
+    
+    public Task[] getTasks() throws IOException, ContextStateException{
+        assertInterpreterEnabled();
+        assertStarted();
+        return taskManager.getAll();
     }
 
     @Hidden
@@ -2662,9 +2699,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
                 break;
             case tasks:
                 for (Task task : taskManager.getAll()) {
-                    sb.append(task.getScript()).append(" ");
-                    sb.append(task.getInterval()).append(" ");
-                    sb.append(task.isStarted() ? "started" : "stopped").append("\n");
+                    sb.append(task.toString()).append("\n");
                 }
                 break;
             case users:
@@ -3423,6 +3458,18 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
 
     public Object evalStatements(Statement[] statements, boolean pauseOnStart, String fileName, Object args) throws ScriptException, IOException, ContextStateException, InterruptedException {
         return evalStatements(getPublicCommandSource(), statements, pauseOnStart, fileName, args);
+    }
+
+    public Task startTask(String script, int delay, int interval) throws IOException, ContextStateException {        
+        return startTask(getPublicCommandSource(), script, delay, interval);
+    }
+    
+    public void stopTask(String script, boolean abort) throws IOException, ContextStateException{
+        stopTask(getPublicCommandSource(), script, abort);
+    }
+    
+    public void stopTask(Task task, boolean abort) throws IOException, ContextStateException{
+        stopTask(getPublicCommandSource(), task, abort);
     }
 
     public void injectVars() {

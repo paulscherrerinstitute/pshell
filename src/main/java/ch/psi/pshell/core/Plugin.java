@@ -150,24 +150,23 @@ public interface Plugin {
     /**
      * Start a background task
      */
-    default void startTask(String scriptName, int delay) {
+    default void startTask(String scriptName, int delay) throws IOException, Context.ContextStateException {
         startTask(scriptName, delay, -1);
     }
 
-    default void startTask(String scriptName, int delay, int interval) {
-        getContext().taskManager.create(scriptName, delay, interval);
-        getContext().taskManager.start(scriptName);
+    default void startTask(String scriptName, int delay, int interval) throws IOException, Context.ContextStateException {
+        getContext().startTask(CommandSource.plugin, scriptName, delay, interval);
     }
 
     /**
      * Stop a background task
      */
-    default void stopTask(String scriptName) {
-        getContext().taskManager.remove(scriptName, false);
+    default void stopTask(String scriptName) throws IOException, Context.ContextStateException {
+        getContext().stopTask(CommandSource.plugin, scriptName, false);
     }
 
-    default void stopTask(String scriptName, boolean force) {
-        getContext().taskManager.remove(scriptName, force);
+    default void stopTask(String scriptName, boolean force) throws IOException, Context.ContextStateException {
+        getContext().stopTask(CommandSource.plugin, scriptName, force);
     }
 
     default void abort() throws InterruptedException {

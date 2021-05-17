@@ -181,14 +181,13 @@ public class TasksEditor extends Editor {
 
     void run(String taskName) throws Exception {
         if (taskName != null) {
-            Task task = Context.getInstance().getTaskManager().get(taskName);
+            Task task = Context.getInstance().getTask(taskName);
             if (task != null) {
                 task.run();
             } else {
-                Context.getInstance().getTaskManager().create(taskName, 0, -1);
-                Context.getInstance().getTaskManager().start(taskName);
-                Context.getInstance().getTaskManager().get(taskName).waitRunning(3000);
-                Context.getInstance().getTaskManager().remove(taskName, false);
+                task = Context.getInstance().startTask(taskName, 0, -1);
+                task.waitRunning(3000);
+                Context.getInstance().stopTask(taskName, false);
             }
         }
     }
@@ -263,7 +262,7 @@ public class TasksEditor extends Editor {
             }
         });
 
-        buttonLoad.setText("Load");
+        buttonLoad.setText("Start");
         buttonLoad.setMinimumSize(new java.awt.Dimension(86, 0));
         buttonLoad.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -271,7 +270,7 @@ public class TasksEditor extends Editor {
             }
         });
 
-        buttonRun.setText("Run");
+        buttonRun.setText("Run Once");
         buttonRun.setMinimumSize(new java.awt.Dimension(86, 0));
         buttonRun.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -284,7 +283,7 @@ public class TasksEditor extends Editor {
         jPanel2Layout.setHorizontalGroup(
             jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel2Layout.createSequentialGroup()
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 343, Short.MAX_VALUE)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 348, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -353,21 +352,21 @@ public class TasksEditor extends Editor {
             }
         });
 
-        buttonStop.setText("Stop");
+        buttonStop.setText("Pause");
         buttonStop.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 buttonStopActionPerformed(evt);
             }
         });
 
-        buttonUnload.setText("Unload");
+        buttonUnload.setText("Stop");
         buttonUnload.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 buttonUnloadActionPerformed(evt);
             }
         });
 
-        buttonRunLoaded.setText("Run");
+        buttonRunLoaded.setText("Run Once");
         buttonRunLoaded.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 buttonRunLoadedActionPerformed(evt);
@@ -379,7 +378,7 @@ public class TasksEditor extends Editor {
         jPanel1Layout.setHorizontalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel1Layout.createSequentialGroup()
-                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 340, Short.MAX_VALUE)
+                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 348, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(buttonStart, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
@@ -412,7 +411,7 @@ public class TasksEditor extends Editor {
         this.setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jTabbedPane1)
+            .addComponent(jTabbedPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 485, Short.MAX_VALUE)
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -468,7 +467,7 @@ public class TasksEditor extends Editor {
         try {
             String task = (tableLoaded.getSelectedRow() >= 0) ? ((String) modelLoaded.getValueAt(tableLoaded.getSelectedRow(), 0)).trim() : null;
             if (task != null) {
-                Context.getInstance().getTaskManager().remove(task, true);
+                Context.getInstance().stopTask(task, true);
             }
             updateTables();
         } catch (Exception ex) {
@@ -481,8 +480,7 @@ public class TasksEditor extends Editor {
             String task = (table.getSelectedRow() >= 0) ? ((String) model.getValueAt(table.getSelectedRow(), 1)).trim() : null;
             if (task != null) {
                 Double intervalMillis =(((Number) model.getValueAt(table.getSelectedRow(), 2)).doubleValue() * 1000);
-                Context.getInstance().getTaskManager().create(task, intervalMillis.intValue(),  intervalMillis.intValue());
-                Context.getInstance().getTaskManager().start(task);
+                Context.getInstance().startTask(task, intervalMillis.intValue(),  intervalMillis.intValue());
             }
             updateTables();
         } catch (Exception ex) {

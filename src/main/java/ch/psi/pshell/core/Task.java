@@ -119,7 +119,16 @@ public class Task implements AutoCloseable {
 
         }
     }
-
+    
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append(getScript()).append(" ");
+        sb.append(getInterval()).append(" ");
+        sb.append(isStarted() ? "started" : "stopped");
+        return sb.toString();
+    }
+    
     @Override
     public void close() {
         stop(true);
