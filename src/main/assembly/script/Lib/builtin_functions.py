@@ -589,8 +589,8 @@ def get_attributes(path, root=None):
     Returns:
         Dictionary
     """
-    if (root==None):
-        ret = get_context().dataManager.getAttributes(path)
+    if (root is None):
+        return get_context().dataManager.getAttributes(path)
     return get_context().dataManager.getAttributes(root, path)
 
 def get_data_info(path, root=None):
@@ -604,7 +604,7 @@ def get_data_info(path, root=None):
     Returns:
         Dictionary
     """
-    if (root==None):
+    if (root is None):
         return get_context().dataManager.getInfo(path)
     return get_context().dataManager.getInfo(root, path)
 
