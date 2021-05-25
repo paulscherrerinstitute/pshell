@@ -199,7 +199,11 @@ public class Epics {
     
     public static <T> T waitValue(String channelName, T value, Comparator<T> comparator, Integer timeout, Class<T> type, Integer size) throws ChannelException, InterruptedException, TimeoutException, ExecutionException {
         Channel<T> channel = newChannel(channelName, type, size);
-        return waitValue(channel, value, comparator, timeout);
+        try{
+            return waitValue(channel, value, comparator, timeout);
+        } finally {
+            closeChannel(channel);
+        }        
     }    
 
     public static <T> T waitValue(Channel<T> channel, T value, Integer timeout) throws ChannelException, InterruptedException, TimeoutException, ExecutionException {
@@ -239,9 +243,7 @@ public class Epics {
             } catch (Exception e){                
             }
             throw ex;
-        } finally {
-            closeChannel(channel);
-        }
+        } 
     }
 
     public static <T extends Number> T waitValue(String channelName, T value, double precision, Integer timeout, Class<T> type, Integer size) throws ChannelException, InterruptedException, TimeoutException, ExecutionException {
