@@ -205,7 +205,7 @@ public class PluginManager implements AutoCloseable {
     }
 
     public static File[] getFolderJarContents(File folder) {
-        return getFolderContents(folder, new String[]{"jar"});
+        return getFolderContents(folder, new String[]{"jar","class"});
     }
 
     public static File[] getPluginFolderContents() {
