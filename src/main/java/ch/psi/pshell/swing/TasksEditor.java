@@ -60,11 +60,10 @@ public class TasksEditor extends Editor {
             updateTables();
         });
 
-        tableLoaded.getColumnModel().getColumn(0).setPreferredWidth(160);
-        tableLoaded.getColumnModel().getColumn(1).setPreferredWidth(60);
-        tableLoaded.getColumnModel().getColumn(2).setPreferredWidth(60);
-        tableLoaded.getColumnModel().getColumn(2).setPreferredWidth(60);
-
+        tableLoaded.getColumnModel().getColumn(0).setPreferredWidth(130);
+        tableLoaded.getColumnModel().getColumn(1).setPreferredWidth(65);
+        tableLoaded.getColumnModel().getColumn(2).setPreferredWidth(65);
+        tableLoaded.getColumnModel().getColumn(3).setPreferredWidth(65);
     }
 
     void updateTables() {
@@ -110,8 +109,9 @@ public class TasksEditor extends Editor {
             ((JComponent) editor.table.getDefaultRenderer(Boolean.class)).setOpaque(true);
             editor.table.getColumnModel().getColumn(0).setResizable(true);
             editor.table.getColumnModel().getColumn(0).setPreferredWidth(70);
-            editor.table.getColumnModel().getColumn(1).setPreferredWidth(203);
+            editor.table.getColumnModel().getColumn(1).setPreferredWidth(133);
             editor.table.getColumnModel().getColumn(2).setPreferredWidth(70);
+            editor.table.getColumnModel().getColumn(3).setPreferredWidth(70);
             setChanged(false);
         }
 
@@ -128,10 +128,21 @@ public class TasksEditor extends Editor {
                         name = name.substring(1);
                         enabled = false;
                     }
-                    String val = tokens[1].trim();
+                    String value = tokens[1].trim();
+                    Double interval;
+                    Double delay=1.0;
                     try {
-                        Double interval = Double.valueOf(val);
-                        editor.model.addRow(new Object[]{enabled, name, interval});
+                        if (value.contains(";")){
+                             String[] val = value.split(";");
+                             interval = Double.valueOf(val[0]);
+                             delay = Double.valueOf(val[1]);
+                        } else {
+                            interval = Double.valueOf(value);
+                            if (interval >0){
+                                delay = interval;
+                            }
+                        }
+                        editor.model.addRow(new Object[]{enabled, name, delay, interval});
                     } catch (Exception ex) {
                     }
                 }
@@ -145,7 +156,8 @@ public class TasksEditor extends Editor {
             for (int i = 0; i < editor.model.getRowCount(); i++) {
                 Boolean enabled = (Boolean) editor.model.getValueAt(i, 0);
                 String name = ((String) editor.model.getValueAt(i, 1)).trim();
-                Double interval = ((Number) editor.model.getValueAt(i, 2)).doubleValue();
+                Double delay = ((Number) editor.model.getValueAt(i, 2)).doubleValue();
+                Double interval = ((Number) editor.model.getValueAt(i, 3)).doubleValue();
                 if (!name.isEmpty()) {
                     StringBuilder sb = new StringBuilder();
                     if (!enabled) {
@@ -159,6 +171,8 @@ public class TasksEditor extends Editor {
                     }
                     sb.append(name).append("=");
                     sb.append(String.valueOf(interval));
+                    sb.append(";");
+                    sb.append(String.valueOf(delay));
                     lines.add(sb.toString());
                 }
             }
@@ -222,11 +236,11 @@ public class TasksEditor extends Editor {
 
             },
             new String [] {
-                "Enabled", "Script", "Interval (s)"
+                "Enabled", "Script", "Delay (s)", "Interval (s)"
             }
         ) {
             Class[] types = new Class [] {
-                java.lang.Boolean.class, java.lang.String.class, java.lang.Double.class
+                java.lang.Boolean.class, java.lang.String.class, java.lang.Double.class, java.lang.Double.class
             };
 
             public Class getColumnClass(int columnIndex) {
@@ -411,7 +425,7 @@ public class TasksEditor extends Editor {
         this.setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jTabbedPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 485, Short.MAX_VALUE)
+            .addComponent(jTabbedPane1)
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -479,8 +493,9 @@ public class TasksEditor extends Editor {
         try {
             String task = (table.getSelectedRow() >= 0) ? ((String) model.getValueAt(table.getSelectedRow(), 1)).trim() : null;
             if (task != null) {
-                Double intervalMillis =(((Number) model.getValueAt(table.getSelectedRow(), 2)).doubleValue() * 1000);
-                Context.getInstance().startTask(task, intervalMillis.intValue(),  intervalMillis.intValue());
+                Double delayMillis =(((Number) model.getValueAt(table.getSelectedRow(), 2)).doubleValue() * 1000);
+                Double intervalMillis =(((Number) model.getValueAt(table.getSelectedRow(), 3)).doubleValue() * 1000);
+                Context.getInstance().startTask(task, delayMillis.intValue(),  intervalMillis.intValue());
             }
             updateTables();
         } catch (Exception ex) {

@@ -58,6 +58,10 @@ public class Task implements AutoCloseable {
         return interval;
     }
 
+    public int getDelay() {
+        return delay;
+    }
+    
     final Object lock = new Object();
     volatile boolean running;
 
@@ -142,9 +146,10 @@ public class Task implements AutoCloseable {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        sb.append(getScript()).append(" ");
-        sb.append(getInterval()).append(" ");
-        sb.append(isStarted() ? "started" : "stopped");
+        sb.append("Task: ").append(getScript());
+        sb.append(" delay=").append(getDelay());
+        sb.append(" interval=").append(getInterval());
+        sb.append(" state=").append(isStarted() ? (isRunning() ? "running" : "started") : "paused");
         return sb.toString();
     }
     
