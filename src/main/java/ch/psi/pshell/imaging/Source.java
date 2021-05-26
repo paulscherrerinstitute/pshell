@@ -53,6 +53,8 @@ public interface Source extends GenericDevice<ImageListener>, ImageBuffer {
     void loadBackground(String name);
 
     ReadonlyRegister<Double> getContrast();
+    
+    ReadonlyRegister<Double> getIntensity();
 
     public interface EmbeddedCameraSource extends Source {
 

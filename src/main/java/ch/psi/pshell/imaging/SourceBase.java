@@ -115,52 +115,50 @@ public class SourceBase extends GenericDeviceBase<ImageListener> implements Sour
         return null;
     }
 
-    class ContrastMeasure extends DummyRegister implements ImageListener {
+    
+    class ContrastMeasurement extends ImageMeasurement {
 
-        ContrastMeasure() {
-            super(SourceBase.this.getName() + "_contrast");
+        ContrastMeasurement() {
+            super(SourceBase.this, "contrast");
         }
 
         @Override
-        protected Double doRead() throws IOException, InterruptedException {
-            Data data = getData();
-            return data == null ? Double.NaN : getData().getGradientVariance(false, null);
+        protected Double calc(Data data){
+            return data.getGradientVariance(false, null);
         }
-
-        @Override
-        protected void doSetMonitored(boolean value) {
-            super.doSetMonitored(value);
-            if (value) {
-                SourceBase.this.addListener(this);
-            } else {
-                SourceBase.this.removeListener(this);
-            }
-        }
-
-        @Override
-        public void onImage(Object origin, BufferedImage image, Data data) {
-            try {
-                this.read();
-            } catch (Exception ex) {
-                getLogger().log(Level.WARNING, null, ex);
-            }
-        }
-
-        @Override
-        public void onError(Object origin, Exception ex) {
-        }
-
     }
+    
+    class IntensityMeasurement extends ImageMeasurement {
+
+        IntensityMeasurement() {
+            super(SourceBase.this, "instensity");
+        }
+
+        @Override
+        protected Double calc(Data data) {
+            return data.integrate(false);
+        }
+    }    
 
     ReadonlyRegister<Double> contrast;
 
     @Override
     public ReadonlyRegister<Double> getContrast() {
         if (contrast == null) {
-            contrast = new ContrastMeasure();
+            contrast = new ContrastMeasurement();
         }
         return contrast;
     }
+    
+    ReadonlyRegister<Double> intensity;
+    
+    @Override
+    public ReadonlyRegister<Double> getIntensity() {
+        if (intensity == null) {
+            intensity = new IntensityMeasurement();
+        }
+        return intensity;
+    }    
 
     final Object waitLock = new Object();
 
