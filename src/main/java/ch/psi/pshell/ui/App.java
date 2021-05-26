@@ -274,12 +274,14 @@ public class App extends ObservableBase<AppListener> {
             setScanPrintingActive(false);
         }
 
-        if (isForceExtract()) {
-            System.setProperty(Context.PROPERTY_FORCE_EXTRACT, "true");
+        Boolean enableExtract = isEnableExtract();
+        if (enableExtract!=null) {
+            System.setProperty(Context.PROPERTY_ENABLE_EXTRACT, String.valueOf(enableExtract));
         }
 
-        if (isForceVersioning()) {
-            System.setProperty(Context.PROPERTY_FORCE_VERSIONING, "true");
+        Boolean enableVersioning = isEnableVersioning();
+        if (enableVersioning!=null) {
+            System.setProperty(Context.PROPERTY_ENABLE_VERSIONING, String.valueOf(enableVersioning));
         }
         
         //Raise exception if wrong formatting;
@@ -362,25 +364,25 @@ public class App extends ObservableBase<AppListener> {
         sb.append("\n\t-clog=<level>\tSet the console logging level");
         sb.append("\n\t-user=<name>\tSet the startup user");
         sb.append("\n\t-type=<ext>\tSet the script type, overriding the setup");
-        sb.append("\n\t-dfmt=<format>\tSet the data format, overriding the configuration: h5, txt, csv or fda.");
-        sb.append("\n\t-dlay=<layout>\tSet the data layout, overriding the configuration: default, table, sf or fda.");
-        sb.append("\n\t-dspt\tDisable scan plots");
-        sb.append("\n\t-dspr\tDisable printing scans to console");
-        sb.append("\n\t-sbar\tAppend status bar to detached windows");
-        sb.append("\n\t-dplt\tCreate plots for detached windows");
-        sb.append("\n\t-extr\tForce extract startup and utility scrips");
-        sb.append("\n\t-strp\tShow strip chart window (can be used together with -f)");
-        sb.append("\n\t-strh=<path>\tStrip chart default configuration folder.");
-        sb.append("\n\t-dtpn\tShow data panel window only (can be used together with -f)");
-        sb.append("\n\t-help\tStart the GUI help window");
-        sb.append("\n\t-full\tStart in full screen mode");
-        sb.append("\n\t-dual\tStart GUI and command line interface: cannot be used if running in the background");
-        sb.append("\n\t-vers\tEnables versioning in local mode (manual)");
+        sb.append("\n\t-dfmt=<format>\tSet the data format, overriding the configuration: h5, txt, csv or fda");
+        sb.append("\n\t-dlay=<layout>\tSet the data layout, overriding the configuration: default, table, sf or fda");
+        sb.append("\n\t-dspt        \tDisable scan plots");
+        sb.append("\n\t-dspr        \tDisable printing scans to console");
+        sb.append("\n\t-sbar        \tAppend status bar to detached windows");
+        sb.append("\n\t-dplt        \tCreate plots for detached windows");
+        sb.append("\n\t-strp        \tShow strip chart window (can be used together with -f)");
+        sb.append("\n\t-dtpn        \tShow data panel window only (can be used together with -f)");
+        sb.append("\n\t-help        \tStart the GUI help window");
+        sb.append("\n\t-full        \tStart in full screen mode");
+        sb.append("\n\t-dual        \tStart GUI and command line interface (not allowed if running in the background)");
+        sb.append("\n\t-extr=<value>\tForce (true) or disable (false) extraction of startup and utility scrips");
+        sb.append("\n\t-vers=<value>\tForce versioning enabled (true) or disabled (false)");
+        sb.append("\n\t-strh=<path> \tStrip chart default configuration folder");
         sb.append("\n\t-libp=<path>\tAdd to library path");
         sb.append("\n\t-clsp=<path>\tAdd to class path");
         sb.append("\n\t-scrp=<path>\tAdd to script path");
         sb.append("\n\t-laf=<name> \tLook and feel: system, metal, nimbus, darcula, flat, or dark");
-        sb.append("\n\t-size=WxH\tSet application window size if GUI state not persisted.");
+        sb.append("\n\t-size=WxH\tSet application window size if GUI state not persisted");
         sb.append("\n\t-args=...\tProvide arguments to interpreter");
         sb.append("\n\t-f=<..>\tFile to run (together with -c option) or open in file in editor");
         sb.append("\n\t-t=<..>\tStart a task using the format script,delay,interval");
@@ -392,7 +394,7 @@ public class App extends ObservableBase<AppListener> {
             sb.append("\n\t-config=<..>\tJSON configuration string (as in .scd file) or list of channel names");
             sb.append("\n\t-start\tStart the data displaying immediately");
             sb.append("\n\t-v\tCreate a StripChart server");
-            sb.append("\n\t-attach\tShared mode: try connecting to existing server, or create one if not available.");
+            sb.append("\n\t-attach\tShared mode: try connecting to existing server, or create one if not available");
             sb.append("\n\t-background_color=<..>\tSet default plot background color");
             sb.append("\n\t-grid_color=<..>\tSet default plot grid color");
             sb.append("\n\t-tick_label_font=name:size\tSet font for time plot tick labels");
@@ -543,15 +545,24 @@ public class App extends ObservableBase<AppListener> {
         return getBoolArgumentValue("dspr");
     }
 
-    static public boolean isForceExtract() {   
+    static public Boolean isEnableExtract() {   
         if (isDisabled()){
             return false;
         }
-        return getBoolArgumentValue("extr") || isVolatile();
+        if (hasArgument("extr")){
+            return getBoolArgumentValue("extr");
+        }
+        if (isVolatile()){
+            return true;
+        }        
+        return null; //Default
     }
 
-    static public boolean isForceVersioning() {
-        return getBoolArgumentValue("vers");
+    static public Boolean isEnableVersioning(){
+        if (hasArgument("vers")){
+            return getBoolArgumentValue("vers");
+        }
+        return null; //Default
     }
    
     static public Dimension getSize() {

@@ -105,8 +105,8 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
     final Boolean handlingSessions;
     final Boolean serverMode;
     final Boolean simulation;
-    final Boolean forceExtract;
-    final Boolean forceVersioning;
+    final Boolean enableExtract;
+    final Boolean enableVersioning;
     final Boolean fileLockEnabled;
     final LogManager logManager;
     final PluginManager pluginManager;
@@ -146,8 +146,8 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
     public static final String PROPERTY_DISABLED = "ch.psi.pshell.disabled";
     public static final String PROPERTY_SERVER_MODE = "ch.psi.pshell.server";
     public static final String PROPERTY_FILE_LOCK = "ch.psi.pshell.file.lock";
-    public static final String PROPERTY_FORCE_EXTRACT = "ch.psi.pshell.force.extract";
-    public static final String PROPERTY_FORCE_VERSIONING = "ch.psi.pshell.force.versioning";
+    public static final String PROPERTY_ENABLE_EXTRACT = "ch.psi.pshell.force.extract";
+    public static final String PROPERTY_ENABLE_VERSIONING = "ch.psi.pshell.force.versioning";
     public static final String PROPERTY_SIMULATION = "ch.psi.pshell.simulation";
 
     private static Context instance;
@@ -202,16 +202,16 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
             simulation = false;
         }
 
-        if (System.getProperty(PROPERTY_FORCE_EXTRACT) != null) {
-            forceExtract = Boolean.valueOf(System.getProperty(PROPERTY_FORCE_EXTRACT));
+        if (System.getProperty(PROPERTY_ENABLE_EXTRACT) != null) {
+            enableExtract = Boolean.valueOf(System.getProperty(PROPERTY_ENABLE_EXTRACT));
         } else {
-            forceExtract = false;
+            enableExtract = null;
         }
 
-        if (System.getProperty(PROPERTY_FORCE_VERSIONING) != null) {
-            forceVersioning= Boolean.valueOf(System.getProperty(PROPERTY_FORCE_VERSIONING));
+        if (System.getProperty(PROPERTY_ENABLE_VERSIONING) != null) {
+            enableVersioning= Boolean.valueOf(System.getProperty(PROPERTY_ENABLE_VERSIONING));
         } else {
-            forceVersioning = false;
+            enableVersioning = null;
         }
 
         if (System.getProperty(PROPERTY_FILE_LOCK) != null) {
@@ -2182,10 +2182,13 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
 
     //Versioning
     public boolean isVersioningEnabled() {
-        return (config.versionTrackingEnabled && (!isLocalMode() || forceVersioning));
+        if (Boolean.FALSE.equals(enableVersioning)){
+            return false;
+        }
+        return (config.versionTrackingEnabled && (!isLocalMode() || (Boolean.TRUE.equals(enableVersioning))));
     }
     public boolean isVersioningManual() {
-        if (isLocalMode() && forceVersioning) {
+        if (isLocalMode() && (Boolean.TRUE.equals(enableVersioning))) {
             return true;
         }
         return getConfig().versionTrackingManual;
@@ -2197,7 +2200,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
             throw new IOException("Versioning not enabled");
         }
         if (isLocalMode()) {
-            if (!forceVersioning){
+            if (!Boolean.TRUE.equals(enableVersioning)){
                 throw new IOException("Versioning disabled in local mode");
             }
         }
@@ -3137,7 +3140,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
     protected void onCreation() {
         if (isLocalMode()) {
             logger.warning("Local mode");
-            if (forceExtract) {
+            if (Boolean.TRUE.equals(enableExtract)) {
                 extractUtilities();
             }
         } else {
@@ -3225,13 +3228,16 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
     }
 
     void extractUtilities(){
+        if (Boolean.FALSE.equals(enableExtract)){
+            return;
+        }
         //Extract script path if not present
         //TODO: Does not work with a Linux hard link
         String jar = setup.getJarFile();
         if (jar != null) {              //If not in IDE
             File jarFile = new File(jar);
             File startupScript = new File(setup.getDefaultStartupScript());
-
+            
             boolean defaultLibPathConfig =  (startupScript != null) &&
                     //(IO.isSubPath(setup.getScriptPath(), setup.getHomePath())) &&
                     (IO.isSubPath(startupScript.getParent(), setup.getScriptPath()));
@@ -3246,7 +3252,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
                         logger.log(Level.WARNING, null, ex);
                     }
                 } else {
-                    if (!startupScript.exists() || (startupScript.lastModified() < jarFile.lastModified()) || forceExtract) {
+                    if (!startupScript.exists() || (startupScript.lastModified() < jarFile.lastModified()) || (Boolean.TRUE.equals(enableExtract))) {
                         logger.info("Extracting startup script and utilities");
                         try {
                             logger.fine("Extracting: " + startupScript.getName());
@@ -3274,6 +3280,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
                     }
                 }
             }
+           
             //Extract default www if not present
             if (isServerEnabled()) {
                 File indexFile = new File(setup.getWwwIndexFile());

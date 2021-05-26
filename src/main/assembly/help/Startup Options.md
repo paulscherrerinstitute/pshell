@@ -130,8 +130,8 @@
     <td>Override the settings file - persisted script properties (default is {config}/settings.properties).</td>
   </tr>
   <tr>
-    <td>-pini=[true or false]</td>
-    <td>Override config flag for parallel initialization.</td>
+    <td>-pini=[value]</td>
+    <td>Override config flag (true or false)for parallel initialization.</td>
   </tr>
   <tr>
     <td>-user=[name]</td>
@@ -170,16 +170,8 @@
     <td>Create plots for detached windows.</td>
   </tr>
   <tr>
-    <td>-extr</td>
-    <td>Force extract startup and utility scrips (must not be in local mode).</td>
-  </tr>    
-  <tr>
     <td>-strp</td>
     <td>Show strip chart window (can be used together with -f).</td>
-  </tr>
-  <tr>
-    <td>-strh=[path]</td>
-    <td>Strip chart default configuration folder.</td>
   </tr>
   <tr>
     <td>-dtpn</td>
@@ -198,19 +190,28 @@
     <td>Start GUI and command line terminal: cannot be used if running in the background.</td>
   </tr>
   <tr>
-    <td>-vers</td>
-    <td>Enables versioning in local mode (manual).</td>
+    <td>-extr=[value]</td>
+    <td>Force (value=true) or disable (value=false) extraction of startup and utility scrips (default disabled in local mode).</td>
+  </tr>    
+  <tr>
+    <td>-vers=[value]</td>
+    <td>Force versioning enabled (value=true) or disabled (value=false) (default disabled in local mode)</td>
   </tr>
   <tr>
-    <td>-libp</td>
+    <td>-strh=[path]</td>
+    <td>Strip chart default configuration folder.</td>
+  </tr>
+
+  <tr>
+    <td>-libp=[path]</td>
     <td>Add to library path.</td>
   </tr>
   <tr>
-    <td>-clsp</td>
+    <td>-clsp=[path]</td>
     <td>Add to class path.</td>
   </tr>
   <tr>
-    <td>-scrp</td>
+    <td>-scrp=[path]</td>
     <td>Add to script path.</td>
   </tr>
   <tr>
