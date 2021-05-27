@@ -83,6 +83,7 @@ public class TasksEditor extends Editor {
             String currentTaskEnabling = (table.getSelectedRow() >= 0) ? ((String) model.getValueAt(table.getSelectedRow(), 1)).trim() : null;
             Task task = taskManager.get(currentTaskEnabling);
             buttonLoad.setEnabled((currentTaskEnabling != null) && (task == null));
+            buttonRun.setEnabled(table.getSelectedRow() >= 0);
 
             String currentTaskLoaded = (tableLoaded.getSelectedRow() >= 0) ? ((String) modelLoaded.getValueAt(tableLoaded.getSelectedRow(), 0)).trim() : null;
             task = taskManager.get(currentTaskLoaded);
