@@ -378,15 +378,15 @@ public class App extends ObservableBase<AppListener> {
         sb.append("\n\t-extr=<value>\tForce (true) or disable (false) extraction of startup and utility scrips");
         sb.append("\n\t-vers=<value>\tForce versioning enabled (true) or disabled (false)");
         sb.append("\n\t-strh=<path> \tStrip chart default configuration folder");
-        sb.append("\n\t-libp=<path>\tAdd to library path");
-        sb.append("\n\t-clsp=<path>\tAdd to class path");
-        sb.append("\n\t-scrp=<path>\tAdd to script path");
-        sb.append("\n\t-laf=<name> \tLook and feel: system, metal, nimbus, darcula, flat, or dark");
-        sb.append("\n\t-size=WxH\tSet application window size if GUI state not persisted");
-        sb.append("\n\t-args=...\tProvide arguments to interpreter");
-        sb.append("\n\t-f=<..>\tFile to run (together with -c option) or open in file in editor");
-        sb.append("\n\t-t=<..>\tStart a task using the format script,delay,interval");
-        sb.append("\n\t-p=<..>\tLoad a plugin");
+        sb.append("\n\t-libp=<path> \tAdd to library path");
+        sb.append("\n\t-clsp=<path> \tAdd to class path");
+        sb.append("\n\t-scrp=<path> \tAdd to script path");
+        sb.append("\n\t-laf=<name>  \tLook and feel: system, metal, nimbus, darcula, flat, or dark");
+        sb.append("\n\t-size=WxH    \tSet application window size if GUI state not persisted");
+        sb.append("\n\t-args=<...>  \tProvide arguments to interpreter");
+        sb.append("\n\t-f=<...>     \tFile to run (together with -c option) or open in file in editor");
+        sb.append("\n\t-t=<...>     \tStart a task using the format script,delay,interval");
+        sb.append("\n\t-p=<...>     \tLoad a plugin");
 
         if (isStripChart()) {
             sb.append("\n\nStripChart arguments:");

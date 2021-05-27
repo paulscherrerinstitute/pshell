@@ -62,10 +62,10 @@ public class SourceBase extends GenericDeviceBase<ImageListener> implements Sour
 
     protected BufferedImage applyTransformations(BufferedImage image, Data data) {
         if (image == null) {
-             if (data == null) {
-                    return null;
-             }
-             image = data.toBufferedImage(false);
+            if (data == null) {
+                return null;
+            }
+            image = data.toBufferedImage(false);
         }
         SourceConfig cfg = getConfig();
         if (cfg != null) {
@@ -115,7 +115,6 @@ public class SourceBase extends GenericDeviceBase<ImageListener> implements Sour
         return null;
     }
 
-    
     class ContrastMeasurement extends ImageMeasurement {
 
         ContrastMeasurement() {
@@ -123,22 +122,22 @@ public class SourceBase extends GenericDeviceBase<ImageListener> implements Sour
         }
 
         @Override
-        protected Double calc(Data data){
+        protected Double calc(Data data) {
             return data.getGradientVariance(false, null);
         }
     }
-    
+
     class IntensityMeasurement extends ImageMeasurement {
 
         IntensityMeasurement() {
-            super(SourceBase.this, "instensity");
+            super(SourceBase.this, "intensity");
         }
 
         @Override
         protected Double calc(Data data) {
             return data.integrate(false);
         }
-    }    
+    }
 
     ReadonlyRegister<Double> contrast;
 
@@ -149,16 +148,16 @@ public class SourceBase extends GenericDeviceBase<ImageListener> implements Sour
         }
         return contrast;
     }
-    
+
     ReadonlyRegister<Double> intensity;
-    
+
     @Override
     public ReadonlyRegister<Double> getIntensity() {
         if (intensity == null) {
             intensity = new IntensityMeasurement();
         }
         return intensity;
-    }    
+    }
 
     final Object waitLock = new Object();
 
@@ -219,18 +218,18 @@ public class SourceBase extends GenericDeviceBase<ImageListener> implements Sour
         pushImage(image, null);
     }
 
-    protected void pushData(Data data){
-        pushImage(null, data);        
+    protected void pushData(Data data) {
+        pushImage(null, data);
     }
 
     protected void pushImage(BufferedImage image, Data data) {
         if (!isClosed()) {
-            if (getPaused()){
+            if (getPaused()) {
                 chrono = new Chrono();
                 setState(State.Paused);
                 return;
             }
-            
+
             if (backgroundEnabled) {
                 if ((backgroundData != null) && (data != null)) {
                     data = new Data(data);
@@ -257,7 +256,7 @@ public class SourceBase extends GenericDeviceBase<ImageListener> implements Sour
                 waitLock.notifyAll();
             }
             triggerImage(image, data);
-            if (trigger!=null){
+            if (trigger != null) {
                 trigger.setCount(count);
             }
         }
@@ -270,22 +269,23 @@ public class SourceBase extends GenericDeviceBase<ImageListener> implements Sour
             triggerError(ex);
         }
     }
-    
+
     volatile boolean paused;
-    public void setPaused(boolean value){
+
+    public void setPaused(boolean value) {
         paused = value;
-        if (value){
-            if (getState()==State.Ready){
+        if (value) {
+            if (getState() == State.Ready) {
                 setState(State.Paused);
             }
         } else {
-            if (getState()==State.Paused){
+            if (getState() == State.Paused) {
                 setState(State.Ready);
             }
         }
     }
 
-    public boolean getPaused(){
+    public boolean getPaused() {
         return paused;
     }
 
@@ -564,19 +564,22 @@ public class SourceBase extends GenericDeviceBase<ImageListener> implements Sour
 
     protected void onTimeout() {
     }
-    
-    class SourceTrigger extends ReadonlyAsyncRegisterBase{        
-        SourceTrigger(){
+
+    class SourceTrigger extends ReadonlyAsyncRegisterBase {
+
+        SourceTrigger() {
             super(SourceBase.this.getName() + " trigger");
         }
-        void setCount(int count){
+
+        void setCount(int count) {
             this.setCache(count);
-        }        
+        }
     }
-    
+
     SourceTrigger trigger;
-    public SourceTrigger getTrigger(){
-        if (trigger == null){
+
+    public SourceTrigger getTrigger() {
+        if (trigger == null) {
             trigger = new SourceTrigger();
         }
         return trigger;

@@ -1,6 +1,5 @@
 package ch.psi.pshell.scripting;
 
-import ch.psi.pshell.core.Context;
 import ch.psi.pshell.core.Nameable;
 import ch.psi.pshell.plotter.PlotLayout;
 import ch.psi.utils.Range;
