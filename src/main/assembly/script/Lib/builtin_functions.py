@@ -1732,9 +1732,16 @@ def expand_path(path, timestamp=-1):
 
 def string_to_obj(o):
     if is_string(o):
+        o=str(o)
         if "://" in o:
             return InlineDevice(o)
-        return get_context().getInterpreterVariable(o)
+        ret =  get_context().getInterpreterVariable(o)
+        if ret is None:
+            try:
+                return get_context().evalLineBackground(o)
+            except:                        
+                return None
+        return ret
     elif is_list(o):
         ret = []
         for i in o:
