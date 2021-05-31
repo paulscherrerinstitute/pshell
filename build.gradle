@@ -6,7 +6,7 @@ plugins {
     id "nebula.ospackage" version "8.1.0" 
 }
 
-version = '1.16.5'
+version = '1.16.6'
 group = 'ch.psi'
 ext.timestamp = new Date().format("yyMMddHHmm")
 
@@ -119,7 +119,7 @@ dependencies {
     compile 'jline:jline:2.14.6'
     //compile 'org.zeromq:jeromq:0.5.1' #On BSREAD 4.0.0
     compile 'ch.psi:bsread:4.0.0'
-    compile 'net.imagej:ij:1.53f'
+    compile 'net.imagej:ij:1.53j'
     compile 'javax.mail:javax.mail-api:1.6.2'
     compile 'com.sun.mail:javax.mail:1.6.2'
     compile 'com.github.sarxos:webcam-capture:0.3.12'

@@ -1734,7 +1734,7 @@ def string_to_obj(o):
     if is_string(o):
         if "://" in o:
             return InlineDevice(o)
-        return eval(o)
+        return get_context().getInterpreterVariable(o)
     elif is_list(o):
         ret = []
         for i in o:

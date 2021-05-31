@@ -9,17 +9,20 @@
 
 import ch.psi.utils.Convert as Convert
 import ch.psi.pshell.imaging.Utils as ImagingUtils
-from startup import get_context, expand_path
+from startup import get_context, expand_path, is_string
 import java.awt.image.BufferedImage as BufferedImage
 import jarray
+import os
 
 import ij.IJ as IJ
 import ij.ImageJ as ImageJ
 import ij.WindowManager as WindowManager
 import ij.ImagePlus as ImagePlus
+import ij.ImageStack as ImageStack
 import ij.Prefs as Prefs
 import ij.io.FileSaver as FileSaver
 import ij.io.Opener as Opener
+from ij.gui import Roi
 
 import ij.process.ImageProcessor as ImageProcessor
 import ij.process.ByteProcessor as ByteProcessor
@@ -67,11 +70,11 @@ if not "_image_j" in globals().keys():
 ###################################################################################################
 #Image creation, copying & saving
 ###################################################################################################
-def load_image(image, title = "img"):    
+def load_image(image, title = None):    
     """
     image: file name or BufferedImage
     """    
-    if isinstance(image, str):
+    if is_string(image):
         try:
             file = expand_path(image)
         except:
@@ -81,9 +84,9 @@ def load_image(image, title = "img"):
         except:
             #try loading from assembly
             image = get_context().setup.getAssemblyImage(image)
-    return ImagePlus(title, image)
-
-
+        if title is None:
+            title = os.path.basename(file)
+    return ImagePlus("img" if title is None else title, image)
 
 def load_array(array, width=None, height=None, title = "img"):    
     """
@@ -138,7 +141,7 @@ def save_image(ip, path=None, format = None, metadata={}):
         elif format == "zip": fs.saveAsZip(path)   
 
 
-def open_image(path):
+def open_image(path, index=1):
     """
     Open file using ij.io,Opener
     """
@@ -147,7 +150,7 @@ def open_image(path):
     except:
         pass  
     opener = Opener()
-    return opener.openImage(path)
+    return opener.openImage(path, index)
 
 def new_image(width, height, image_type="byte", title = "img", fill_color = None):
     """
@@ -725,11 +728,20 @@ def get_statistics(ip, measurements = None):
 ###################################################################################################
 #Image stack functions
 ###################################################################################################
-def create_stack(ip_list, keep=True, title = None):
-    stack = Concatenator().concatenate(ip_list, keep)
+def create_stack(ip_list, duplicate=True, title = None):
+    stack = Concatenator().concatenate(ip_list, duplicate)
     if title is not None:
         stack.setTitle(title)
     return stack
+
+def open_stack(path_list, title=None):
+    """
+    Open list of files as a stack using ij.io,Opener
+    """
+    ip_list = []
+    for path in path_list:
+        ip_list.append(open_image(path))
+    return  create_stack(ip_list, duplicate=False, title = "stack" if title is None else title)
 
 def reslice(stack, start_at = "Top", vertically = True, flip = True, output_pixel_spacing=1.0, avoid_interpolation = True, title = None):
     ss = Slicer()
