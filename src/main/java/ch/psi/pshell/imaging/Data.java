@@ -112,6 +112,10 @@ public class Data implements Serializable {
         this.image = image;
         timestamp = System.currentTimeMillis();
     }
+    
+    public Data(Data data, Rectangle roi) {
+        this(data, roi, false);
+    }
 
     public Data(Data data, Rectangle roi, boolean transformed) {
         if (transformed) {
@@ -483,8 +487,16 @@ public class Data implements Serializable {
     }
 
     //Selection
+    public Object getElement(Point p) {
+        return getElement(p, false);
+    }
+    
     public Object getElement(Point p, boolean transformed) {
         return getElement(p.y, p.x, transformed);
+    }
+    
+    public Object getElement(int row, int col) {
+        return getElement(row, col, false);
     }
 
     public Object getElement(int row, int col, boolean transformed) {
@@ -511,11 +523,19 @@ public class Data implements Serializable {
         int index = row * width + col;
         return getElement(index);
     }
+    
+    public Object getElementDbl(Point p) {
+        return getElementDbl(p, false);
+    }    
 
     public Double getElementDbl(Point p, boolean transformed) {
         return getElementDbl(p.y, p.x, transformed);
     }
 
+    public Object getElementDbl(int row, int col) {
+        return getElementDbl(row, col, false);
+    }
+    
     public Double getElementDbl(int row, int col, boolean transformed) {
         Object val = getElement(row, col, transformed);
         if (val == null) {
@@ -527,10 +547,18 @@ public class Data implements Serializable {
         return ((Number) val).doubleValue();
     }
 
+    public String getElementStr(Point p) {
+        return getElementStr(p, false);
+    }
+        
     public String getElementStr(Point p, boolean transformed) {
         return getElementStr(p.y, p.x, transformed);
     }
 
+    public String getElementStr(int row, int col) {
+        return getElementStr(row, col, false);
+    }
+    
     public String getElementStr(int row, int col, boolean transformed) {
         Object e = getElement(row, col, transformed);
         if (e == null) {
@@ -549,11 +577,20 @@ public class Data implements Serializable {
         return String.valueOf(e);
     }
 
+    public double[][] getRectSelection(Rectangle rect) {
+        return getRectSelection(rect, false);
+    }
+    
     public double[][] getRectSelection(Rectangle rect, boolean transformed) {
         if (rect == null) {
             rect = new Rectangle(getSize(transformed));
         }
         return getRectSelection(rect.x, rect.y, rect.width, rect.height, transformed);
+    }
+    
+    
+    public double[][] getRectSelection(int x, int y, int width, int height) {
+        return getRectSelection(x, y, width, height, false);
     }
 
     public double[][] getRectSelection(int x, int y, int width, int height, boolean transformed) {
@@ -566,10 +603,18 @@ public class Data implements Serializable {
         return ret;
     }
 
+    public double[] getLineSelection(Point p1, Point p2) {
+        return getLineSelection(p1, p2, false);
+    }
+    
     public double[] getLineSelection(Point p1, Point p2, boolean transformed) {
         return getLineSelection(p1.x, p1.y, p2.x, p2.y, transformed);
     }
 
+    public double[] getLineSelection(int x1, int y1, int x2, int y2) {
+        return getLineSelection(x1, y1, x2, y2, false);
+    }
+    
     public double[] getLineSelection(int x1, int y1, int x2, int y2, boolean transformed) {
         int length = (int) Math.hypot((x2 - x1), (y2 - y1));
         double[] ret = new double[length];
@@ -581,6 +626,10 @@ public class Data implements Serializable {
         return ret;
     }
 
+    public double[] getRowSelection(int row) {
+        return getRowSelection(row, false);
+    }
+    
     public double[] getRowSelection(int row, boolean transformed) {
         double[] ret = new double[getSize(true).width];
         for (int i = 0; i < ret.length; i++) {
@@ -589,12 +638,20 @@ public class Data implements Serializable {
         return ret;
     }
 
+    public double[] getRowSelectionX() {
+        return getRowSelectionX(false);
+    }
+    
     public double[] getRowSelectionX(boolean transformed) {
         double[] ret = new double[getSize(true).width];
         for (int i = 0; i < ret.length; i++) {
             ret[i] = getX(i);
         }
         return ret;
+    }
+    
+    public double[] getColSelection(int col) {
+        return getColSelection(col, false);
     }
 
     public double[] getColSelection(int col, boolean transformed) {
@@ -605,6 +662,10 @@ public class Data implements Serializable {
         return ret;
     }
 
+    public double[] getColSelectionX() {
+        return getColSelectionX(false);
+    }
+    
     public double[] getColSelectionX(boolean transformed) {
         double[] ret = new double[getSize(true).height];
         for (int i = 0; i < ret.length; i++) {
@@ -614,6 +675,10 @@ public class Data implements Serializable {
     }
 
     //Transformation
+    public Dimension getSize() {
+        return getSize(false);
+    }
+     
     public Dimension getSize(boolean transformed) {
         double width = getWidth();
         double height = getHeight();
@@ -757,6 +822,18 @@ public class Data implements Serializable {
     }
 
     //Operations
+    public double getGradientVariance() {
+        return getGradientVariance(false);
+    }
+    
+    public double getGradientVariance(Rectangle roi) {
+        return getGradientVariance(false, roi);
+    }
+    
+    public double getGradientVariance(boolean transformed) {
+        return getGradientVariance(transformed, null);
+    }
+    
     public double getGradientVariance(boolean transformed, Rectangle roi) {
         if (height <= 0) {
             return Double.NaN;
@@ -778,6 +855,10 @@ public class Data implements Serializable {
             }
             return ret / height;
         }
+    }
+    
+    public BufferedImage toBufferedImage() {
+        return toBufferedImage(false);
     }
 
     public BufferedImage toBufferedImage(boolean transformed) {
@@ -803,6 +884,10 @@ public class Data implements Serializable {
         return ret;
     }
 
+    public double[] integrateVertically() {
+          return integrateVertically(false);
+    }
+    
     public double[] integrateVertically(boolean transformed) {
         //TODO: integration is slow mainly because the double loop calling getInversePoint. 
         //Should find a faster solution.
@@ -821,6 +906,10 @@ public class Data implements Serializable {
         return ret;
     }
 
+    public double[] integrateHorizontally() {
+          return integrateHorizontally(false);
+    }
+    
     public double[] integrateHorizontally(boolean transformed) {
         Dimension size = getSize(transformed);
         double[] ret = new double[size.height];
@@ -837,6 +926,9 @@ public class Data implements Serializable {
         return ret;
     }
     
+    public double integrate() {
+        return integrate(false);
+    }
     
     public double integrate(boolean transformed) {
         double ret = 0;
