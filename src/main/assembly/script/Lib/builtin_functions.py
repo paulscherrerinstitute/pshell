@@ -297,7 +297,7 @@ def bscan(stream, records, timeout = None, passes=1, **pars):
     scan.start()
     return scan.getResult()
 
-def tscan(readables, points, interval, passes=1, **pars):
+def tscan(readables, points, interval, passes=1, fixed_rate=True, **pars):
     """Time Scan: sensors are sampled in fixed time intervals.
 
     Args:
@@ -305,6 +305,9 @@ def tscan(readables, points, interval, passes=1, **pars):
         points(int): number of samples.
         interval(float): time interval between readouts. Minimum temporization is 0.001s
         passes(int, optional): number of passes
+        fixed_rate(bool, optional): in the case of delays in sampling:
+                            If True tries to preserve to total scan time, accelerating following sampling.
+                            If False preserves the interval between samples, increasing scan time.
         pars(keyworded variable length arguments, optional): scan optional named arguments:
             - title(str, optional): plotting window name.
             - before_read (function(positions, scan), optional): called on each step, before sampling.
@@ -320,7 +323,7 @@ def tscan(readables, points, interval, passes=1, **pars):
     interval= max(interval, 0.001)   #Minimum temporization is 1ms
     interval_ms=int(interval*1000)
     readables=to_list(string_to_obj(readables))
-    scan = TimeScan(readables, points, interval_ms, int(passes))
+    scan = TimeScan(readables, points, interval_ms, int(passes), bool(fixed_rate))
     processScanPars(scan, pars)
     scan.start()
     return scan.getResult()
