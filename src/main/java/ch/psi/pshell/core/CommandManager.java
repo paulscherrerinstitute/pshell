@@ -89,8 +89,16 @@ public class CommandManager implements AutoCloseable {
         }
     }
 
+    public CommandInfo getCurrentCommand() {
+        return getCurrentCommand(Thread.currentThread(), false);
+    }
+
     public CommandInfo getCurrentCommand(boolean parent) {
         return getCurrentCommand(Thread.currentThread(), parent);
+    }
+
+    public CommandInfo getCurrentCommand(Thread thread) {
+        return getCurrentCommand(thread, false);
     }
 
     public CommandInfo getCurrentCommand(Thread thread, boolean parent) {
@@ -104,6 +112,10 @@ public class CommandManager implements AutoCloseable {
             } while (threadCommand != null);
         }
         return null;
+    }
+
+    public CommandInfo getThreadCommand(Thread thread) {
+        return getThreadCommand(thread, false);
     }
 
     public CommandInfo getThreadCommand(Thread thread, boolean parent) {
@@ -120,6 +132,10 @@ public class CommandManager implements AutoCloseable {
             }
         }
         return null;
+    }
+
+    public CommandInfo getInterpreterThreadCommand() {
+        return getInterpreterThreadCommand(false);
     }
 
     public CommandInfo getInterpreterThreadCommand(boolean parent) {
