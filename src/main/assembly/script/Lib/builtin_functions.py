@@ -325,7 +325,7 @@ def tscan(readables, points, interval, passes=1, **pars):
     scan.start()
     return scan.getResult()
 
-def mscan(trigger, readables, points, timeout = None, async=True, take_initial=False, passes=1, **pars):
+def mscan(trigger, readables, points=-1, timeout=None, async=True, take_initial=False, passes=1, **pars):
     """Monitor Scan: sensors are sampled when received change event of the trigger device.
 
     Args:
@@ -333,8 +333,8 @@ def mscan(trigger, readables, points, timeout = None, async=True, take_initial=F
         readables(list of Readable): Sensors to be sampled on each step.
                                      If  trigger has cache and is included in readables, it is not read
                                      for each step, but the change event value is used.
-        points(int): number of samples.
-        timeout(float, optional): maximum scan time in seconds.
+        points(int, optional): number of samples (-1 for undefined).
+        timeout(float, optional): maximum scan time in seconds (None for no timeout).
         async(bool, optional): if True then records are sampled and stored on event change callback. Enforce
                                reading only cached values of sensors.
                                If False, the scan execution loop waits for trigger cache update. Do not make
@@ -1738,7 +1738,7 @@ def string_to_obj(o):
         ret =  get_context().getInterpreterVariable(o)
         if ret is None:
             try:
-                return get_context().evalLineBackground(o)
+                return get_context().scriptManager.evalBackground(o).result
             except:                        
                 return None
         return ret
