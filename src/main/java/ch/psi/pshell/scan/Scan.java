@@ -131,8 +131,12 @@ public interface Scan {
     
     public boolean getInitialMove();
 
-    public void setInitialMove(boolean value);    
-    
+    public void setInitialMove(boolean value);
+
+    public boolean getResampleOnInvalidate();
+
+    public void setResampleOnInvalidate(boolean value);
+
     public boolean getParallelPositioning();
 
     public void setParallelPositioning(boolean value);     

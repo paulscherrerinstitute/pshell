@@ -22,6 +22,7 @@ public class TimeScan extends LineScan {
                 (points<0) ? Integer.MAX_VALUE : points - 1, 
                 false, 0, passes, false);
         this.interval_ms = interval_ms;
+        setResampleOnInvalidate(false);
     }
 
     @Override

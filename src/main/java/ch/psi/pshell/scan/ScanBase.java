@@ -77,6 +77,7 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
     boolean checkPositions = ScanBase.getScansCheckPositions();
     boolean parallelPositioning = getScansParallelPositioning();
     boolean initialMove = getScansTriggerInitialMove();
+    boolean resampleOnInvalidate = true;
 
     public ScanBase(Writable[] writables, Readable[] readables, double[] start, double[] end, int numberOfSteps[],
             boolean relative, int latency, int passes, boolean zigzag) {
@@ -501,7 +502,11 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
             record.timestamp = timestamp;
             onAfterReadout(record);
             if (record.invalidated) {
-                logger.warning("Resampling record " + record.index);
+                if (!resampleOnInvalidate){
+                    logger.warning("Record invalidated:  " + record.index);
+                    return record;
+                }
+                logger.warning("Resampling record: " + record.index);
             }
         } while (record.invalidated);
         if (!record.canceled) {
@@ -1030,8 +1035,18 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
     @Override
     public void setInitialMove(boolean value){
         initialMove=value;
-    }   
-    
+    }
+
+    @Override
+    public boolean getResampleOnInvalidate(){
+        return resampleOnInvalidate;
+    }
+
+    @Override
+    public void setResampleOnInvalidate(boolean value){
+        resampleOnInvalidate=value;
+    }
+
     @Override
     public boolean getParallelPositioning(){
         return parallelPositioning;
