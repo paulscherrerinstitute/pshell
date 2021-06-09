@@ -35,7 +35,7 @@ public class MonitorScan extends LineScan {
     Device trigger;
     Chrono chrono;
     Exception exception;
-        long initialTimestamp;
+    long initialTimestamp;
 
     public MonitorScan(Device trigger, Readable[] readables, int points) {
         this(trigger, readables, points, -1);
@@ -48,7 +48,7 @@ public class MonitorScan extends LineScan {
     public MonitorScan(Device trigger, Readable[] readables, int points, int time_ms, boolean async, boolean takeInitialValue) {
         this(trigger, readables, points, time_ms, true, false, 1);
     }
-    
+
     public MonitorScan(Device[] triggers, Readable[] readables, int points, int time_ms, boolean async, boolean takeInitialValue) {
         this(triggers, readables, points, time_ms, async, takeInitialValue, 1);
 
@@ -58,9 +58,9 @@ public class MonitorScan extends LineScan {
         this(((triggers == null) || (triggers.length == 0)) ? null : new CompositeTrigger(triggers), readables, points, time_ms, async, takeInitialValue, passes);
 
     }
-    
+
     public MonitorScan(Device trigger, Readable[] readables, int points, int time_ms, boolean async, boolean takeInitialValue, int passes) {
-        super(((points > 0)||(time_ms<0)) ? new Writable[0] : new Writable[]{new DummyPositioner("Time")},
+        super(((points > 0)||(time_ms<0)) ? new Writable[0] : new Writable[]{new TimeSpanPositioner()},
                 getReadables(trigger, readables, async),
                 new double[]{0.0},
                 (points > 0) ? new double[]{points - 1} : new double[]{(time_ms>=0) ? time_ms : 100.0},
@@ -72,18 +72,21 @@ public class MonitorScan extends LineScan {
         this.takeInitialValue = takeInitialValue;
         this.async = async;
         this.originalReadables = readables == null ? null : Arr.copy(readables);
-    }    
+        if ((getWritables().length>0) && ((getWritables()[0] instanceof TimeSpanPositioner))){
+            ((TimeSpanPositioner)getWritables()[0]).scan=this;
+        }
+    }
 
     public Device getTrigger(){
         return trigger;
     }
-    
+
     public Stream getStream(){
         return ((trigger!=null) && (trigger instanceof Stream)) ? (Stream) trigger : null;
-    }            
-            
+    }
+
     @Override
-    protected void openDevices() throws IOException, InterruptedException {     
+    protected void openDevices() throws IOException, InterruptedException {
         super.openDevices();
         //TODO: forcing async update because JCAE freezes when making a read from a monitor callback (on any channel)
         if (async){
@@ -112,7 +115,7 @@ public class MonitorScan extends LineScan {
             //Uses a composite trigger of all monitored readables if not
             List<Device> triggers = new ArrayList<>();
             for (Readable r : readables) {
-                Device device = getSourceDevice(r);                
+                Device device = getSourceDevice(r);
                 if (device != null){
                     triggers.add(device);
                 }
@@ -126,24 +129,24 @@ public class MonitorScan extends LineScan {
             trigger.initialize();
         }
     }
-    
+
     static Device getSourceDevice(Readable r){
         Device dev = null;
         if (r instanceof Device){
             dev = (Device) r;
         }
-        if (r instanceof CacheReadable) {      
+        if (r instanceof CacheReadable) {
             Cacheable parent = ((CacheReadable) r).getParent();
             if ((parent!=null) && (parent instanceof Device)){
                 dev = (Device) parent;
-            }   
+            }
         }
         if ((dev!=null) && (r instanceof Device)){
             dev = InlineDevice.getSourceDevice(dev);
         }
         return dev;
     }
-    
+
 
     @Override
     protected void closeDevices() {
@@ -173,7 +176,7 @@ public class MonitorScan extends LineScan {
         public void onCacheChanged(Device device, Object value, Object former, long timestamp, boolean valueChange) {
             if ((chrono != null) && (!isCompleted())) {
                 try {
-                    appendSample(timestamp);
+                    appendSample();
                     if (points > 0) {
                         if (getRecordIndexInPass() == points) {
                             stopTriggerListening();
@@ -206,13 +209,7 @@ public class MonitorScan extends LineScan {
         }
     }
 
-    void appendSample(Long timestamp) throws IOException, InterruptedException {
-        if (timestamp == null) {
-            timestamp = trigger.getTimestamp();
-            if (timestamp == null) {
-                timestamp = 0L;
-            }
-        }
+    void appendSample() throws IOException, InterruptedException {
         long id = 0;
         Stream stream = getStream();
         if (stream != null){
@@ -220,17 +217,49 @@ public class MonitorScan extends LineScan {
             if (val!=null){
                 id = val.getPulseId();
             }
-        }     
+        }
+        long timestamp = getTriggerTimestamp();
         if (getRecordIndexInPass()==0) {
             initialTimestamp = timestamp - chrono.getEllapsed();
         }
-        if (points > 0) {
+
+        //if (points > 0) {
+        if (getWritables().length==0){
             //Based on index
             processPosition(new double[0], timestamp, id);
         } else {
-            //Based on time            
-            //processPosition(new double[]{chrono.getEllapsed()});      
-            processPosition(new double[]{timestamp - initialTimestamp}, timestamp, id);
+            //Based on time
+            processPosition(new double[]{getTimePosition(timestamp)}, timestamp, id);
+        }
+    }
+    double getTimePosition(){
+        return getTimePosition(getTriggerTimestamp());
+    }
+
+    double getTimePosition(long timestamp){
+        return (double)(timestamp - initialTimestamp);
+    }
+
+    long getTriggerTimestamp(){
+        Long timestamp = trigger.getTimestamp();
+        if (timestamp != null) {
+            return timestamp;
+        }
+        return 0L;
+    }
+
+    //Defined as static because is instatiated in super call
+    static class TimeSpanPositioner extends DummyPositioner {
+        MonitorScan scan;
+        TimeSpanPositioner(){
+            super("Time");
+        }
+        @Override
+        protected Double doRead() throws IOException, InterruptedException {
+            return scan.getTimePosition();
+        }
+        public void waitInPosition(Double pos, int timeout) throws IOException, InterruptedException {
+            return;
         }
     }
 
@@ -250,7 +279,7 @@ public class MonitorScan extends LineScan {
             int steps = getNumberOfSteps()[0];
             if (takeInitialValue) {
                 if (trigger.take() != null) {
-                    appendSample(null);
+                    appendSample();
                 }
             }
             if (async) {
@@ -271,7 +300,7 @@ public class MonitorScan extends LineScan {
                         if ((i > 0) || !takeInitialValue) {
                             trigger.waitCacheChange(0);
                         }
-                        appendSample(null);
+                        appendSample();
                         if (i == steps) {
                             break;
                         }
@@ -288,7 +317,7 @@ public class MonitorScan extends LineScan {
                             trigger.waitCacheChange(time_ms - chrono.getEllapsed());
                         }
                         start = false;
-                        appendSample(null);
+                        appendSample();
                     }
                 }
             }

@@ -21,6 +21,17 @@ r3 = mscan(ai1, [ai1, ai2], -1, 5.0)
 #In this example ai1 is cached (the trigger always is), wf1 is not, and ai2 is.
 r4 = mscan(ai1, [ai1, wf1, ai2.cache], -1, 5.0, async = False)
 
+#Execute the scan: sample undefined number of samples until a condition is met, with auto range
+scan_completed=False
+def after_read(record, scan):
+    global scan_completed
+    if record.index==50:
+        scan_completed=True
+        scan.abort()
+try:
+    r5 = mscan(ai1, [ai1], after_read=after_read, range="auto")
+except ScanAbortedException as ex:
+    if not scan_completed: raise
 
 # Scanning a set of sensors based on a software trigger, using mscan
 import random

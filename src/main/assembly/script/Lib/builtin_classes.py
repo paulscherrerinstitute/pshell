@@ -221,6 +221,8 @@ import ch.psi.pshell.scan.ScanResult
 import ch.psi.pshell.crlogic.CrlogicPositioner as CrlogicPositioner
 import ch.psi.pshell.crlogic.CrlogicSensor as CrlogicSensor
 
+import ch.psi.pshell.scan.ScanAbortedException as ScanAbortedException
+
 import ch.psi.pshell.bs.BsScan
 import ch.psi.pshell.bs.Stream as Stream
 import ch.psi.pshell.bs.Provider as Provider
