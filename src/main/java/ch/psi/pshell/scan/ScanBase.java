@@ -10,18 +10,8 @@ import ch.psi.pshell.data.DataManager;
 import ch.psi.pshell.data.DataSlice;
 import ch.psi.pshell.data.Layout;
 import ch.psi.pshell.data.Provider;
-import ch.psi.pshell.device.Device;
-import ch.psi.pshell.device.Motor;
-import ch.psi.pshell.device.Movable;
-import ch.psi.pshell.device.Writable;
-import ch.psi.pshell.device.Resolved;
+import ch.psi.pshell.device.*;
 import ch.psi.pshell.device.Readable;
-import ch.psi.pshell.device.ReadableRegister;
-import ch.psi.pshell.device.ReadbackDevice;
-import ch.psi.pshell.device.ReadonlyRegister;
-import ch.psi.pshell.device.Stoppable;
-import ch.psi.pshell.device.Timestamped;
-import ch.psi.pshell.device.TimestampedValue;
 import ch.psi.utils.*;
 
 import java.io.IOException;
@@ -455,6 +445,7 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
             Thread.sleep(getLatency());
         }
         do {
+            assertNotAborted();
             onBeforeReadout(pos);
 
             record.invalidated = false;
@@ -504,6 +495,8 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
             if (record.invalidated) {
                 if (!resampleOnInvalidate){
                     logger.warning("Record invalidated:  " + record.index);
+                    record.index=-1;
+                    recordIndex--;
                     return record;
                 }
                 logger.warning("Resampling record: " + record.index);
@@ -707,6 +700,13 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
                 if ((((String)obj).equals(element.getAlias())) || ((((String)obj).equals(element.getName())))){
                     return i;
                 }
+            }
+            if (element instanceof Cacheable.CacheReadable) {
+                Cacheable parent = ((Cacheable.CacheReadable) element).getParent();
+                if (obj== parent){
+                    return i;
+                }
+
             }
         }
         throw new RuntimeException("Invalid device: " + obj);
