@@ -1042,12 +1042,13 @@ def join(futures):
     """Wait parallel execution of functions.
 
     Args:
-        futures(list of Future) : as returned from fork
+        futures(Future or list of Future) : as returned from fork
 
     Returns:
         None
 """
     try:
+        futures=to_list(futures)
         return Threading.join(futures)
     except java.util.concurrent.ExecutionException, ex:
         raise ex.getCause()
