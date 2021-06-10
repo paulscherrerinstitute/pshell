@@ -83,8 +83,12 @@
   </tr>
   <tr>
     <td>-a</td>
-    <td>tAuto close after executing file.</td>
+    <td>Auto close after executing file.</td>
   </tr>
+    <tr>
+      <td>-y</td>
+      <td>Force headless mode.</td>
+    </tr>
   <tr>
     <td>-z</td>
     <td>.</td>

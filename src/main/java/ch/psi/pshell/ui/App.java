@@ -98,6 +98,10 @@ public class App extends ObservableBase<AppListener> {
 
     static public void init(String[] args) {
         arguments = args;
+        if (isForcedHeadless()) {
+            System.setProperty("java.awt.headless", "true");
+        }
+
         Level consoleLogLevel = Level.WARNING;
         try {
             consoleLogLevel = Level.parse(getArgumentValue("clog"));
@@ -353,6 +357,7 @@ public class App extends ObservableBase<AppListener> {
         sb.append("\n\t-n\tInterpreter is not started");
         sb.append("\n\t-q\tQuiet mode");
         sb.append("\n\t-a\tAuto close after executing file");
+        sb.append("\n\t-y\tHeadless mode");
         sb.append("\n\t-z\tHome folder is volatile (created in tmp folder)");        
         sb.append("\n\t-home=<path>\tSet the home folder (default is ./home)");
         sb.append("\n\t-outp=<path>\tSet the output folder (default is {home})");
@@ -695,8 +700,16 @@ public class App extends ObservableBase<AppListener> {
         return getBoolArgumentValue("n");
     }
 
+    static public boolean isHelpMessage() {
+        return hasArgument("h");
+    }
+
     static public boolean isHeadless() {
         return GraphicsEnvironment.isHeadless();
+    }
+
+    static public boolean isForcedHeadless() {
+        return getBoolArgumentValue("y") || isHelpMessage() ;
     }
 
     //Resources
@@ -789,7 +802,7 @@ public class App extends ObservableBase<AppListener> {
     protected void startup() {
         System.out.println("Version " + getApplicationBuildInfo());
 
-        if (hasArgument("h")) {
+        if (isHelpMessage()) {
             System.out.println(getHelpMessage());
             return;
         }
