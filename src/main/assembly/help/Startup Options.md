@@ -198,10 +198,13 @@
     <td>Force versioning enabled (value=true) or disabled (value=false) (default disabled in local mode)</td>
   </tr>
   <tr>
+    <td>-nbcf=[value]</td>
+    <td>Force disabling (true) or enabling (false) the use of bytecode files (default defined in configuration)</td>
+  </tr>
+  <tr>
     <td>-strh=[path]</td>
     <td>Strip chart default configuration folder.</td>
   </tr>
-
   <tr>
     <td>-libp=[path]</td>
     <td>Add to library path.</td>

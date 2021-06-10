@@ -1207,7 +1207,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
 
             if (isInterpreterEnabled()) {
                 runInInterpreterThread(null, (Callable<InterpreterResult>) () -> {
-                    scriptManager = new ScriptManager(getScriptType(), setup.getLibraryPath(), injections);
+                    scriptManager = new ScriptManager(getScriptType(), setup.getLibraryPath(), injections, config.getNoBytecodeFiles());
                     scriptManager.setSessionFilePath((getConfig().saveConsoleSessionFiles && !isLocalMode()) ? setup.getConsoleSessionsPath() : null);
                     setStdioListener(scriptStdioListener);
                     String script = getStartupScript();

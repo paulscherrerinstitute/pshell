@@ -27,10 +27,6 @@ import javax.script.ScriptEngine;
 import javax.script.ScriptEngineFactory;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
-import org.python.core.Py;
-import org.python.core.PyModule;
-import org.python.core.PyObject;
-import org.python.core.PySystemState;
 
 /**
  *
@@ -58,7 +54,7 @@ public class ScriptManager implements AutoCloseable {
     Object lastResult;
     final Map<Thread, Object> results;
 
-    public ScriptManager(ScriptType type, String[] libraryPath, HashMap<String, Object> injections) {
+    public ScriptManager(ScriptType type, String[] libraryPath, HashMap<String, Object> injections, boolean dontWriteBytecode) {
         logger.info("Initializing " + getClass().getSimpleName());
         this.type = type;
         this.libraryPath = libraryPath;
@@ -70,6 +66,7 @@ public class ScriptManager implements AutoCloseable {
             //TODO: This is a workaround to a bug in Jython 2.7.b3 (http://sourceforge.net/p/jython/mailman/message/32935831/)
             //TODO: The problem is solved in Jython 2.7.1, but this option makes startup 0.5s faster. Are there consequences?
             org.python.core.Options.importSite = false;
+            org.python.core.Options.dont_write_bytecode = dontWriteBytecode;
         }
 
         engine = new ScriptEngineManager().getEngineByExtension(type.toString());

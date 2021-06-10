@@ -22,6 +22,7 @@ public class Configuration extends Config {
     public static transient final String PROPERTY_CONSOLE_LOG = "ch.psi.pshell.console.log";
     public static transient final String PROPERTY_DATA_PROVIDER = "ch.psi.pshell.data.provider";
     public static transient final String PROPERTY_DATA_LAYOUT = "ch.psi.pshell.data.layout";
+    public static transient final String PROPERTY_NO_BYTECODE_FILES = "ch.psi.pshell.data.nbcf";
 
     public boolean autoSaveScanData = true;
     public boolean saveConsoleSessionFiles;
@@ -52,6 +53,7 @@ public class Configuration extends Config {
     public LogLevel logLevelConsole = LogLevel.Off;
     public NotificationLevel notificationLevel = NotificationLevel.Off;
     public String notifiedTasks = "";
+    public boolean noBytecodeFiles = false;
     public boolean simulation;
     public boolean versionTrackingEnabled;
     public boolean versionTrackingManual;
@@ -168,6 +170,15 @@ public class Configuration extends Config {
                     }
                 }
             }
+        }
+        return ret;
+    }
+
+    public boolean getNoBytecodeFiles(){
+        boolean ret = noBytecodeFiles;
+        String prop = System.getProperty(PROPERTY_NO_BYTECODE_FILES);
+        if ((prop != null) && (prop.length() > 0)) {
+            ret =  Boolean.valueOf(prop);
         }
         return ret;
     }

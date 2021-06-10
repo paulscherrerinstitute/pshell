@@ -218,6 +218,10 @@ public class App extends ObservableBase<AppListener> {
             System.setProperty(Configuration.PROPERTY_DATA_LAYOUT, getArgumentValue("dlay"));
         }
 
+        if (hasArgument("nbcf")) {
+            System.setProperty(Configuration.PROPERTY_NO_BYTECODE_FILES, String.valueOf(getBoolArgumentValue("nbcf")));
+        }
+
         if (isArgumentDefined("user")) {
             System.setProperty(Context.PROPERTY_USER, getArgumentValue("user"));
         } else if (Config.isStringDefined(pshellProperties.user)) {
@@ -377,6 +381,7 @@ public class App extends ObservableBase<AppListener> {
         sb.append("\n\t-dual        \tStart GUI and command line interface (not allowed if running in the background)");
         sb.append("\n\t-extr=<value>\tForce (true) or disable (false) extraction of startup and utility scrips");
         sb.append("\n\t-vers=<value>\tForce versioning enabled (true) or disabled (false)");
+        sb.append("\n\t-nbcf=<value>\tForce disabling (true) or enabling (false) the use of bytecode files");
         sb.append("\n\t-strh=<path> \tStrip chart default configuration folder");
         sb.append("\n\t-libp=<path> \tAdd to library path");
         sb.append("\n\t-clsp=<path> \tAdd to class path");
