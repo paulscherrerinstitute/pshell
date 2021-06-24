@@ -1,6 +1,8 @@
 package ch.psi.pshell.scripting;
 
+import ch.psi.utils.Arr;
 import ch.psi.utils.Chrono;
+import ch.psi.utils.FileSystemWatch;
 import ch.psi.utils.IO;
 import ch.psi.utils.Reflection.Hidden;
 import ch.psi.utils.Str;
@@ -53,20 +55,31 @@ public class ScriptManager implements AutoCloseable {
     PrintWriter sessionOut;
     Object lastResult;
     final Map<Thread, Object> results;
-
+    FileSystemWatch jythonClassFilePermissionFix;
+        
     public ScriptManager(ScriptType type, String[] libraryPath, HashMap<String, Object> injections, boolean dontWriteBytecode) {
         logger.info("Initializing " + getClass().getSimpleName());
         this.type = type;
         this.libraryPath = libraryPath;
         this.injections = injections;
         results = new HashMap<>();
-
+        
         if (type == ScriptType.py) {
             setPythonPath(libraryPath);
             //TODO: This is a workaround to a bug in Jython 2.7.b3 (http://sourceforge.net/p/jython/mailman/message/32935831/)
             //TODO: The problem is solved in Jython 2.7.1, but this option makes startup 0.5s faster. Are there consequences?
             org.python.core.Options.importSite = false;
             org.python.core.Options.dont_write_bytecode = dontWriteBytecode;
+            if (!dontWriteBytecode) {
+                //TODO: remove this hack when Jython fixes this: https://github.com/jython/jython/issues/93
+                if (JythonUtils.getJythonVersion().equals("2.7.2")) { 
+                    jythonClassFilePermissionFix = new FileSystemWatch(Arr.append(libraryPath, "/Users/gobbo_a/dev/pshell/pshell/src/main/assembly/script"), 
+                            new String[]{"class"}, true, false, false, 5000, (path, kind) -> {
+                        logger.info("Setting class file readable to all: " + path);
+                        path.toFile().setReadable(true, false);
+                    });
+                }
+            }
         }
 
         engine = new ScriptEngineManager().getEngineByExtension(type.toString());
@@ -621,12 +634,14 @@ public class ScriptManager implements AutoCloseable {
 
     @Override
     public void close() {
-        try {
-            if (sessionOut != null) {
-                sessionOut.close();
+        for (AutoCloseable ac : new AutoCloseable[]{sessionOut, jythonClassFilePermissionFix}) {
+            try {
+                if (sessionOut != null) {
+                    sessionOut.close();
+                }
+            } catch (Exception ex) {
+                logger.log(Level.WARNING, null, ex);
             }
-        } catch (Exception ex) {
-            logger.log(Level.WARNING, null, ex);
         }
     }
 }

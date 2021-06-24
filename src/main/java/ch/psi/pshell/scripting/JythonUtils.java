@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.python.core.ClassDictInit;
+import org.python.core.Py;
 import org.python.core.PyArray;
 import org.python.core.PyBoolean;
 import org.python.core.PyBuiltinCallable;
@@ -18,7 +19,9 @@ import org.python.core.PyObject;
 import org.python.core.PyReflectedFunction;
 import org.python.core.PyString;
 import org.python.core.PyStringMap;
+import org.python.core.PySystemState;
 import org.python.core.PyType;
+import org.python.core.PyVersionInfo;
 import org.python.core.ReflectedArgs;
 
 /**
@@ -228,4 +231,9 @@ public class JythonUtils {
         pymap.__setitem__(name, pyVal);
     }
 
+    public static String getJythonVersion(){
+        PySystemState state =  Py.getSystemState();
+        PyVersionInfo version = state.version_info;
+        return  version.major + "." + version.minor + "." + version.micro;
+    }
 }
