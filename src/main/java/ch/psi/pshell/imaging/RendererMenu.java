@@ -11,8 +11,6 @@ import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
 import javax.swing.event.PopupMenuEvent;
 import javax.swing.event.PopupMenuListener;
-import ch.psi.pshell.plot.LinePlotBase;
-import ch.psi.pshell.plot.LinePlotSeries;
 import ch.psi.pshell.plot.MatrixPlotBase;
 import ch.psi.pshell.plot.ManualScaleDialog;
 import ch.psi.pshell.plot.ManualScaleDialog.ScaleChangeListener;
@@ -20,24 +18,18 @@ import ch.psi.pshell.plot.MatrixPlotSeries;
 import ch.psi.pshell.plot.MatrixPlotJFree;
 import ch.psi.pshell.plot.Plot;
 import ch.psi.pshell.plot.Plot.Quality;
-import ch.psi.pshell.plot.PlotBase;
-import ch.psi.pshell.plot.PlotSeries;
 import ch.psi.pshell.swing.PlotPanel;
-import ch.psi.utils.Convert;
 import ch.psi.utils.IO;
 import ch.psi.utils.swing.ExtensionFileFilter;
 import ch.psi.utils.swing.ImageTransferHandler;
 import ch.psi.utils.swing.SwingUtils;
 import java.awt.BorderLayout;
 import java.awt.Component;
-import java.awt.Rectangle;
 import java.awt.Toolkit;
 import java.awt.Window;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.Transferable;
 import java.awt.event.ActionListener;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -60,17 +52,6 @@ public class RendererMenu extends JPopupMenu {
     JMenu menuProfile;
     JCheckBoxMenuItem menuPause;
     JCheckBoxMenuItem menuStatus;
-    Overlay selectionOverlay;
-    SelectionType selectionType;
-    SelectionType integrationType;
-    
-    protected enum SelectionType {
-
-        Line,
-        Horizontal,
-        Vertical,
-        Rectangle
-    }
 
     RendererMenu(final Renderer renderer) {        
         this.renderer = renderer;
@@ -132,11 +113,11 @@ public class RendererMenu extends JPopupMenu {
         JMenu menuIntegration = new JMenu("Integration");
         JMenuItem menuIntegrationHorizontal = new JMenuItem("Horizontal");
         menuIntegrationHorizontal.addActionListener((ActionEvent e) -> {
-            onIntegration(SelectionType.Horizontal);
+            renderer.addIntegration(false);
         });
         JMenuItem menuIntegrationVertical = new JMenuItem("Vertical");
         menuIntegrationVertical.addActionListener((ActionEvent e) -> {
-            onIntegration(SelectionType.Vertical);
+            renderer.addIntegration(true);
         });
 
         menuIntegration.add(menuIntegrationHorizontal);
@@ -145,15 +126,14 @@ public class RendererMenu extends JPopupMenu {
         JMenu menuSelection = new JMenu("Data Selection");
         JMenuItem menuClear = new JMenuItem("Clear");
         menuClear.addActionListener((ActionEvent e) -> {
-            removeDataSelection();
-            removeDataSelectionDialog();
+            renderer.removeDataSelection();
         });
         menuSelection.add(menuClear);
         menuSelection.addSeparator();
-        for (SelectionType type : SelectionType.values()) {
+        for (Renderer.SelectionType type : Renderer.SelectionType.values()) {
             JMenuItem item = new JMenuItem(type.toString());
             item.addActionListener((ActionEvent e) -> {
-                onSelection(SelectionType.valueOf(e.getActionCommand()));
+                renderer.startDataSelection(Renderer.SelectionType.valueOf(e.getActionCommand()));
             });
             menuSelection.add(item);
         }
@@ -288,7 +268,7 @@ public class RendererMenu extends JPopupMenu {
             PlotPanel.addSurfacePlotMenu((MatrixPlotBase) plot);
             plot.setTitle(null);
             plot.addSeries(series);
-            plot.setQuality(getQuality());
+            plot.setQuality(PlotPanel.getQuality());
 
             double minBoundsX = data.getX(0);
             double maxBoundsX = data.getX(size.width);
@@ -500,58 +480,10 @@ public class RendererMenu extends JPopupMenu {
             public void popupMenuCanceled(PopupMenuEvent e) {
             }
         });
-
-        selectionListener = new RendererListener() {
-            @Override
-            public void onImage(Renderer renderer, Object origin, BufferedImage image, Data data) {
-                if (selectionOverlay != null) {
-                    updatePlotData();
-                }
-            }
-
-            @Override
-            public void onError(Renderer renderer, Object origin, Exception ex) {
-                if (selectionOverlay != null) {
-                    cleanPlot();
-                }
-            }
-
-            @Override
-            public void onMoveFinished(Renderer renderer, Overlay overlay) {
-                if (overlay == selectionOverlay) {
-                    updatePlotTitle();
-                    updatePlotData();
-                }
-            }
-
-            @Override
-            public void onDeleted(Renderer renderer, Overlay overlay) {
-                if (overlay == selectionOverlay) {
-                    removeDataSelection();
-                    removeDataSelectionDialog();
-                }
-            }
-
-        };    
-    }
-
-    RendererListener integrationListener = new RendererListener() {
-        @Override
-        public void onImage(Renderer renderer, Object origin, BufferedImage image, Data data) {
-            updatePlotData();
-        }
-    };
-
-    Pen getPenMouseSelecting() {
-        return new Pen(renderer.penSelectedOverlay.getColor(), 1, Pen.LineStyle.dotted);
-    }
-
-    Pen getPenDataSelection() {
-        return new Pen(renderer.penSelectedOverlay.getColor());
     }
 
     protected void onZoomTo() {
-        final Overlays.Rect selection = new Overlays.Rect(getPenMouseSelecting());
+        final Overlays.Rect selection = new Overlays.Rect(renderer.getPenMouseSelecting());
         renderer.addListener(new RendererListener() {
             @Override
             public void onSelectionFinished(Renderer renderer, Overlay overlay) {
@@ -572,95 +504,6 @@ public class RendererMenu extends JPopupMenu {
         renderer.startSelection(selection);
     }
 
-    protected void onIntegration(SelectionType type) {
-        removeDataSelection();
-        selectionType = null;
-        integrationType = type;
-        addDataSelectionDialog();
-        renderer.addListener(integrationListener);
-        dialogPlot.setTitle(type.toString() + " Integration");
-    }
-
-    protected void removeIntegration() {
-        renderer.removeListener(integrationListener);
-        integrationType = null;
-    }
-
-    protected void onSelection(SelectionType type) {
-        Overlay selection = null;
-        selectionType = type;
-        removeIntegration();
-        switch (selectionType) {
-            case Line:
-                selection = new Overlays.Arrow(getPenMouseSelecting());
-                ((Overlays.Arrow) selection).setArrowType(Overlays.Arrow.ArrowType.end);
-                //selection = new Overlays.Line(PEN_MOVING_OVERLAY);
-                break;
-            case Horizontal:
-                selection = new Overlays.Crosshairs(getPenMouseSelecting(), new Dimension(-1, 1));
-                break;
-            case Vertical:
-                selection = new Overlays.Crosshairs(getPenMouseSelecting(), new Dimension(1, -1));
-                break;
-            case Rectangle:
-                selection = new Overlays.Rect(getPenMouseSelecting());
-                //selection.setSolid(true);
-                break;
-        }
-        if (selection != null) {
-            startSelection(selection);
-        }
-    }
-
-    protected void startSelection(Overlay overlay) {
-        removeDataSelection();
-        renderer.addListener(new RendererListener() {
-            @Override
-            public void onSelectionFinished(Renderer renderer, Overlay overlay) {
-                try {
-                    if (overlay.getLength() > 0) {
-                        Overlay dataSelection = overlay.copy();
-                        dataSelection.setPen(getPenDataSelection());
-                        addDataSelection(dataSelection);
-                        addDataSelectionDialog();
-                    }
-                } catch (Exception ex) {
-                    Logger.getLogger(RendererMenu.class.getName()).log(Level.SEVERE, null, ex);
-                } finally {
-                    renderer.removeListener(this);
-                }
-            }
-
-            @Override
-            public void onSelectionAborted(Renderer renderer, Overlay overlay) {
-                renderer.removeListener(this);
-                removeDataSelectionDialog();
-            }
-        });
-        overlay.setPassive(false);
-        renderer.startSelection(overlay);
-    }
-
-    protected void addDataSelection(Overlay overlay) {
-        removeDataSelection();
-        selectionOverlay = overlay;
-        selectionOverlay.setSelectable(true);
-        selectionOverlay.setMovable(true);
-        renderer.addOverlay(selectionOverlay);
-        renderer.addListener(selectionListener);
-    }
-
-    protected void removeDataSelection() {
-        renderer.abortSelection();
-        renderer.removeListener(selectionListener);
-        if (selectionOverlay != null) {
-            renderer.removeOverlay(selectionOverlay);
-            selectionOverlay = null;
-        }
-    }
-
-    RendererListener selectionListener;
-
     //Data selection plots
     Class DEFAULT_PLOT_IMPL_LINE = ch.psi.pshell.plot.LinePlotJFree.class;
     Class DEFAULT_PLOT_IMPL_MATRIX = ch.psi.pshell.plot.MatrixPlotJFree.class;
@@ -680,184 +523,6 @@ public class RendererMenu extends JPopupMenu {
         String impl = System.getProperty(PlotPanel.PROPERTY_PLOT_IMPL_SURFACE);
         return ((impl == null) || (impl.isEmpty()) || (impl.equals(String.valueOf((Object) null))))
                 ? null : impl;
-    }
-
-    public Quality getQuality() {
-        return PlotPanel.getQuality();
-    }
-
-    protected void addDataSelectionDialog() {
-        if (dialogPlot == null) {
-            dialogPlot = new JDialog((Window) renderer.getTopLevelAncestor(), "Data Selection");
-            dialogPlot.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
-            dialogPlot.addWindowListener(new WindowAdapter() {
-                @Override
-                public void windowClosing(WindowEvent e) {
-                    removeDataSelection();
-                    removeIntegration();
-                    selectionType = null;
-                }
-            });
-            dialogPlot.getContentPane().setLayout(new BorderLayout());
-            dialogPlot.setSize(480, 320);
-            SwingUtils.centerComponent(renderer.getTopLevelAncestor(), dialogPlot);
-        }
-        dialogPlot.getContentPane().removeAll();
-        try {
-            if (selectionType != null) {
-                Rectangle bounds = selectionOverlay.getBounds();
-                if (selectionOverlay.isFixed()) {
-                    bounds = renderer.toImageCoord(bounds);
-                }
-                double minX = bounds.x;
-                double maxX = bounds.x + bounds.width - 1;
-                int nX = bounds.width;
-                double minY = bounds.y;
-                double maxY = bounds.y + bounds.height - 1;
-                int nY = bounds.height;
-
-                switch (selectionType) {
-                    case Line:
-                    case Horizontal:
-                    case Vertical:
-                        plot = (PlotBase) Plot.newPlot(getLinePlotImpl());
-                        series = new LinePlotSeries("Selection");
-                        plot.getAxis(Plot.AxisId.X).setLabel(null);
-                        plot.getAxis(Plot.AxisId.Y).setLabel(null);
-                        break;
-                    case Rectangle:
-                        plot = (PlotBase) Plot.newPlot(getMatrixPlotImpl());
-                        plot.getAxis(Plot.AxisId.Y).setInverted(true);
-                        //Rectangle dataRect = renderer.getData().getInverseRect(rect);                        
-                        //series = new MatrixPlotSeries("Selection", minX, maxX, dataRect.width, minY, maxY, dataRect.height );
-                        series = new MatrixPlotSeries("Selection", minX, maxX, nX, minY, maxY, nY);
-                        PlotPanel.addSurfacePlotMenu((MatrixPlotBase) plot);
-                        break;
-                }
-            } else if (integrationType != null) {
-                plot = (PlotBase) Plot.newPlot(getLinePlotImpl());
-                series = new LinePlotSeries("Integration");
-                plot.getAxis(Plot.AxisId.X).setLabel(null);
-                plot.getAxis(Plot.AxisId.Y).setLabel(null);
-            }
-
-            plot.setTitle(null);
-            plot.addSeries(series);
-            plot.setQuality(getQuality());
-            dialogPlot.getContentPane().add(plot);
-            dialogPlot.setVisible(true);
-            updatePlotTitle();
-            updatePlotData();
-            renderer.painter.requestFocus();
-        } catch (Exception ex) {
-            SwingUtils.showException(renderer, ex);
-            removeDataSelectionDialog();
-        }
-    }
-
-    protected void removeDataSelectionDialog() {
-        selectionType = null;
-        removeIntegration();
-        if (dialogPlot != null) {
-            dialogPlot.setVisible(false);
-        }
-    }
-
-    JDialog dialogPlot;
-    PlotBase plot;
-    PlotSeries series;
-
-    protected void updatePlotData() {
-        Data data = renderer.getData();
-        BufferedImage img = renderer.getImage();
-        if ((selectionType != null) && (selectionOverlay != null) && (series != null)) {
-            double[] x = null;
-            double[] y = null;
-
-            Rectangle bounds = selectionOverlay.getBounds();
-            if (selectionOverlay.isFixed()) {
-                bounds = renderer.toImageCoord(bounds);
-            }
-
-            switch (selectionType) {
-                case Horizontal:
-                    x = data.getRowSelectionX(true);
-                    ((LinePlotBase) plot).getAxis(Plot.AxisId.X).setRange(data.getX(0), data.getX(img.getWidth() - 1));
-                    ((LinePlotSeries) series).setData(x, data.getRowSelection(bounds.y, true));
-                    break;
-                case Vertical:
-                    x = data.getColSelectionX(true);
-                    ((LinePlotBase) plot).getAxis(Plot.AxisId.X).setRange(data.getY(0), data.getY(img.getHeight() - 1));
-                    ((LinePlotSeries) series).setData(x, data.getColSelection(bounds.x, true));
-                    break;
-                case Line:
-                    ((LinePlotSeries) series).setData(data.getLineSelection(bounds.getLocation(), new Point(bounds.x + bounds.width, bounds.y + bounds.height), true));
-                    break;
-                case Rectangle:
-                    double minBoundsX = data.getX(bounds.x);
-                    double maxBoundsX = data.getX(bounds.x + bounds.width);
-                    double minBoundsY = data.getY(bounds.y);
-                    double maxBoundsY = data.getY(bounds.y + bounds.height);
-                    ((MatrixPlotSeries) series).setRangeX(minBoundsX, maxBoundsX);
-                    ((MatrixPlotSeries) series).setRangeY(minBoundsY, maxBoundsY);
-                    plot.getAxis(Plot.AxisId.X).setRange(minBoundsX, maxBoundsX);
-                    plot.getAxis(Plot.AxisId.Y).setRange(minBoundsY, maxBoundsY);
-                    ((MatrixPlotSeries) series).setData(data.getRectSelection(bounds, true));
-                    break;
-            }
-        } else if (integrationType != null) {
-            double[] x = null;
-            double[] y = null;
-            switch (integrationType) {
-                case Horizontal:
-                    x = data.getColSelectionX(true);
-                    double[] ih = (double[]) Convert.toDouble(data.integrateHorizontally(true));
-                    ((LinePlotBase) plot).getAxis(Plot.AxisId.X).setRange(data.getY(0), data.getY(ih.length - 1));
-                    ((LinePlotSeries) series).setData(x, ih);
-                    break;
-                case Vertical:
-                    x = data.getRowSelectionX(true);
-                    double[] iv = (double[]) Convert.toDouble(data.integrateVertically(true));
-                    ((LinePlotBase) plot).getAxis(Plot.AxisId.X).setRange(data.getX(0), data.getX(iv.length - 1));
-                    ((LinePlotSeries) series).setData(x, iv);
-                    break;
-            }
-        }
-    }
-
-    protected void updatePlotTitle() {
-        if ((selectionType != null) && (selectionOverlay != null) && (series != null)) {
-            String title = null;
-            Point p = selectionOverlay.getPosition();
-            Point u = selectionOverlay.getUtmost();
-            switch (selectionType) {
-                case Horizontal:
-                    title = "row: " + p.y;
-                    break;
-                case Vertical:
-                    title = "column: " + p.x;
-                    break;
-                case Line:
-                    title = "line: " + "[" + p.x + "," + p.y + "]" + " to " + "[" + u.x + "," + u.y + "]";
-                    break;
-                case Rectangle:
-                    Rectangle r = selectionOverlay.getBounds();
-                    title = "rectangle: " + "[" + r.x + "," + r.y + "]" + " to " + "[" + (r.x + r.width) + "," + (r.y + r.height) + "]";
-                    break;
-            }
-            if ((dialogPlot != null) && (title != null)) {
-                title = "Data Selection  (" + title + ")";
-            }
-            if (!title.equals(dialogPlot.getTitle())) {
-                dialogPlot.setTitle(title);
-            }
-        }
-    }
-
-    protected void cleanPlot() {
-        if (series != null) {
-            series.clear();
-        }
     }
 
 }

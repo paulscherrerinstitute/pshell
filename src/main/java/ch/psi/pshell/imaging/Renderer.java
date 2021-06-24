@@ -52,11 +52,26 @@ import ch.psi.pshell.core.ContextListener;
 import ch.psi.pshell.imaging.Overlays.Arrow;
 import ch.psi.pshell.imaging.Overlays.Text;
 import ch.psi.pshell.plot.ColormapPanel;
+import ch.psi.pshell.plot.LinePlotBase;
+import ch.psi.pshell.plot.LinePlotSeries;
+import ch.psi.pshell.plot.MatrixPlotBase;
+import ch.psi.pshell.plot.MatrixPlotSeries;
+import ch.psi.pshell.plot.Plot;
+import ch.psi.pshell.plot.PlotBase;
+import ch.psi.pshell.plot.PlotSeries;
+import ch.psi.pshell.swing.PlotPanel;
+import static ch.psi.pshell.swing.PlotPanel.getLinePlotImpl;
+import static ch.psi.pshell.swing.PlotPanel.getMatrixPlotImpl;
 import ch.psi.utils.Config;
 import ch.psi.utils.Config.ConfigListener;
 import ch.psi.utils.Range;
 import ch.psi.utils.Sys;
 import ch.psi.utils.Sys.OSFamily;
+import java.awt.Window;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import javax.swing.JDialog;
+import javax.swing.WindowConstants;
 
 /**
  */
@@ -75,6 +90,15 @@ public class Renderer extends MonitoredPanel implements ImageListener, ImageBuff
     final List<Overlay> overlays;
     Point currentMouseLocation;
     SnapshotDialog snapshotDialog;
+    Overlay selectionOverlay;    
+    SelectionType selectionType;   
+    
+    public enum SelectionType {
+        Line,
+        Horizontal,
+        Vertical,
+        Rectangle
+    }    
 
     final Object imageLock = new Object();
     final Object overlaysLock = new Object();
@@ -1046,6 +1070,7 @@ public class Renderer extends MonitoredPanel implements ImageListener, ImageBuff
         synchronized (imageLock) {
             setImage(getOrigin(), getImage(), getData());
         }
+        updateDataSelectionDialog();
     }
 
     boolean paused = false;
@@ -1352,6 +1377,21 @@ public class Renderer extends MonitoredPanel implements ImageListener, ImageBuff
     public Pen getPenMeasureTool() {
         return penMeasureTool;
     }
+    
+    public Pen getPenMouseSelecting() {
+        return new Pen(penSelectedOverlay.getColor(), 1, Pen.LineStyle.dotted);
+    }
+    
+    Pen penDataSelection = new Pen(penSelectedOverlay.getColor());
+            
+    public void setPenDataSelection(Pen pen) {
+        penDataSelection = pen;
+    }    
+    
+    public Pen getPenDataSelection() {
+        return penDataSelection;
+    }    
+    
 
     /**
      * Sets vertical/horizontal image profile (integration)
@@ -1375,6 +1415,9 @@ public class Renderer extends MonitoredPanel implements ImageListener, ImageBuff
     Profile profile = Profile.None;
 
     public void setProfile(Profile profile) {
+        if (profile==null){
+            profile = Profile.None;
+        }
         this.profile = profile;
         checkProfile();
     }
@@ -1862,6 +1905,364 @@ public class Renderer extends MonitoredPanel implements ImageListener, ImageBuff
         }
         painter.setCursor(cursor);
     }
+    
+    
+    //Data selections
+    
+    final RendererListener selectionListener = new RendererListener() {
+        @Override
+        public void onImage(Renderer renderer, Object origin, BufferedImage image, Data data) {
+            if (selectionOverlay != null) {
+                updateDataSelectionDialogPlot();
+            }
+        }
+
+        @Override
+        public void onError(Renderer renderer, Object origin, Exception ex) {
+            if (selectionOverlay != null) {
+                cleanPlot();
+            }
+        }
+
+        @Override
+        public void onMoveFinished(Renderer renderer, Overlay overlay) {
+            if (selectionOverlay != null) {
+                if (overlay == selectionOverlay) {
+                    updateDataSelectionDialog();
+                }
+            }
+        }
+
+        @Override
+        public void onDeleted(Renderer renderer, Overlay overlay) {
+            if (selectionOverlay != null) {
+                if (overlay == selectionOverlay) {
+                    removeDataSelection();
+                }
+            }
+        }
+
+    };    
+
+    protected void addDataSelectionOverlay(Overlay overlay) {
+        removeDataSelectionOverlay();
+        selectionOverlay = overlay;
+        selectionOverlay.setSelectable(true);
+        selectionOverlay.setMovable(true);
+        Pen pen = getPenDataSelection();
+        if (pen!=null){
+            selectionOverlay.setPen(getPenDataSelection());
+        }
+        addOverlay(selectionOverlay);
+        addListener(selectionListener);
+        
+    }
+
+    protected void removeDataSelectionOverlay() {
+        abortSelection();
+        removeListener(selectionListener);
+        if (selectionOverlay != null) {
+            removeOverlay(selectionOverlay);
+            selectionOverlay = null;
+        }
+    }
+    
+    protected void addDataSelectionDialog() {
+        if (dialogPlot == null) {
+            dialogPlot = new JDialog((Window) getTopLevelAncestor(), "Data Selection");
+            dialogPlot.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+            dialogPlot.addWindowListener(new WindowAdapter() {
+                @Override
+                public void windowClosing(WindowEvent e) {
+                    removeDataSelectionOverlay();
+                    removeIntegration();
+                }
+            });
+            dialogPlot.getContentPane().setLayout(new BorderLayout());
+            dialogPlot.setSize(480, 320);
+            SwingUtils.centerComponent(getTopLevelAncestor(), dialogPlot);
+        }
+        dialogPlot.getContentPane().removeAll();
+        try {
+            if (selectionType != null) {
+                Rectangle bounds = selectionOverlay.getBounds();
+                if (selectionOverlay.isFixed()) {
+                    bounds = toImageCoord(bounds);
+                }
+                double minX = bounds.x;
+                double maxX = bounds.x + bounds.width - 1;
+                int nX = bounds.width;
+                double minY = bounds.y;
+                double maxY = bounds.y + bounds.height - 1;
+                int nY = bounds.height;
+
+                switch (selectionType) {
+                    case Line:
+                    case Horizontal:
+                    case Vertical:
+                        plot = (PlotBase) Plot.newPlot(getLinePlotImpl());
+                        series = new LinePlotSeries("Selection");
+                        plot.getAxis(Plot.AxisId.X).setLabel(null);
+                        plot.getAxis(Plot.AxisId.Y).setLabel(null);
+                        break;
+                    case Rectangle:
+                        plot = (PlotBase) Plot.newPlot(getMatrixPlotImpl());
+                        plot.getAxis(Plot.AxisId.Y).setInverted(true);
+                        //Rectangle dataRect = getData().getInverseRect(rect);                        
+                        //series = new MatrixPlotSeries("Selection", minX, maxX, dataRect.width, minY, maxY, dataRect.height );
+                        series = new MatrixPlotSeries("Selection", minX, maxX, nX, minY, maxY, nY);
+                        PlotPanel.addSurfacePlotMenu((MatrixPlotBase) plot);
+                        break;
+                }
+            } else if (integration != null) {
+                plot = (PlotBase) Plot.newPlot(getLinePlotImpl());
+                series = new LinePlotSeries("Integration");
+                plot.getAxis(Plot.AxisId.X).setLabel(null);
+                plot.getAxis(Plot.AxisId.Y).setLabel(null);
+            }
+
+            plot.setTitle(null);
+            plot.addSeries(series);
+            plot.setQuality(PlotPanel.getQuality());
+            dialogPlot.getContentPane().add(plot);
+            dialogPlot.setVisible(true);
+            updateDataSelectionDialog();
+            painter.requestFocus();
+        } catch (Exception ex) {
+            showException(ex);
+            removeDataSelectionDialog();
+        }
+    }
+
+    protected void removeDataSelectionDialog() {
+        selectionType = null;
+        removeIntegration();
+        if (dialogPlot != null) {
+            dialogPlot.setVisible(false);
+        }
+    }
+     
+    
+
+    JDialog dialogPlot;
+    PlotBase plot;
+    PlotSeries series;
+    
+    protected void updateDataSelectionDialog() {
+        try{
+            updateDataSelectionDialogTitle();
+            updateDataSelectionDialogPlot();
+        } catch (Exception ex){            
+        } 
+    }
+
+    protected void updateDataSelectionDialogPlot() {
+        if ((selectionType != null) && (selectionOverlay != null) && (series != null)) {
+            Data data = getData();
+            BufferedImage img = getImage();
+            double[] x = null;
+            double[] y = null;
+
+            Rectangle bounds = selectionOverlay.getBounds();
+            if (selectionOverlay.isFixed()) {
+                bounds = toImageCoord(bounds);
+            }
+
+            switch (selectionType) {
+                case Horizontal:
+                    x = data.getRowSelectionX(true);
+                    ((LinePlotBase) plot).getAxis(Plot.AxisId.X).setRange(data.getX(0), data.getX(img.getWidth() - 1));
+                    ((LinePlotSeries) series).setData(x, data.getRowSelection(bounds.y, true));
+                    break;
+                case Vertical:
+                    x = data.getColSelectionX(true);
+                    ((LinePlotBase) plot).getAxis(Plot.AxisId.X).setRange(data.getY(0), data.getY(img.getHeight() - 1));
+                    ((LinePlotSeries) series).setData(x, data.getColSelection(bounds.x, true));
+                    break;
+                case Line:
+                    ((LinePlotSeries) series).setData(data.getLineSelection(bounds.getLocation(), new Point(bounds.x + bounds.width, bounds.y + bounds.height), true));
+                    break;
+                case Rectangle:
+                    MatrixPlotSeries mps = ((MatrixPlotSeries) series);
+                    if (bounds.width!= mps.getNumberOfBinsX()){
+                        mps.setNumberOfBinsX(bounds.width);                              
+                    }
+                    if (bounds.height!= mps.getNumberOfBinsY()){
+                        mps.setNumberOfBinsY(bounds.height);                              
+                    }                    
+                    double minBoundsX = data.getX(bounds.x);
+                    double maxBoundsX = data.getX(bounds.x + bounds.width);
+                    double minBoundsY = data.getY(bounds.y);
+                    double maxBoundsY = data.getY(bounds.y + bounds.height);
+                    mps.setRangeX(minBoundsX, maxBoundsX);
+                    mps.setRangeY(minBoundsY, maxBoundsY);
+                    plot.getAxis(Plot.AxisId.X).setRange(minBoundsX, maxBoundsX);
+                    plot.getAxis(Plot.AxisId.Y).setRange(minBoundsY, maxBoundsY);
+                    mps.setData(data.getRectSelection(bounds, true));
+                    break;
+            }
+        } else if (integration != null) {
+            Data data = getData();
+            double[] x = null;
+            double[] y = null;
+            
+            if (integration){
+                //vertical
+                x = data.getRowSelectionX(true);
+                double[] iv = (double[]) Convert.toDouble(data.integrateVertically(true));
+                ((LinePlotBase) plot).getAxis(Plot.AxisId.X).setRange(data.getX(0), data.getX(iv.length - 1));
+                ((LinePlotSeries) series).setData(x, iv);
+            } else {
+                //horizontal
+                x = data.getColSelectionX(true);
+                double[] ih = (double[]) Convert.toDouble(data.integrateHorizontally(true));
+                ((LinePlotBase) plot).getAxis(Plot.AxisId.X).setRange(data.getY(0), data.getY(ih.length - 1));
+                ((LinePlotSeries) series).setData(x, ih);
+            }
+        }
+    }
+
+    protected void updateDataSelectionDialogTitle() {
+        if ((selectionType != null) && (selectionOverlay != null) && (series != null)) {
+            String title = null;
+            Point p = selectionOverlay.getPosition();
+            Point u = selectionOverlay.getUtmost();
+            switch (selectionType) {
+                case Horizontal:
+                    title = "row: " + p.y;
+                    break;
+                case Vertical:
+                    title = "column: " + p.x;
+                    break;
+                case Line:
+                    title = "line: " + "[" + p.x + "," + p.y + "]" + " to " + "[" + u.x + "," + u.y + "]";
+                    break;
+                case Rectangle:
+                    Rectangle r = selectionOverlay.getBounds();
+                    title = "rectangle: " + "[" + r.x + "," + r.y + "]" + " to " + "[" + (r.x + r.width) + "," + (r.y + r.height) + "]";
+                    break;
+            }
+            if ((dialogPlot != null) && (title != null)) {
+                title = "Data Selection  (" + title + ")";
+            }
+            if (!title.equals(dialogPlot.getTitle())) {
+                dialogPlot.setTitle(title);
+            }
+        }
+    }
+
+    protected void cleanPlot() {
+        if (series != null) {
+            series.clear();
+        }
+    }
+            
+    RendererListener integrationListener = new RendererListener() {
+        @Override
+        public void onImage(Renderer renderer, Object origin, BufferedImage image, Data data) {
+            updateDataSelectionDialogPlot();
+        }
+    };
+    
+    //Starting data selection
+    public void startDataSelection(SelectionType type) {
+        Overlay selection = null;
+        selectionType = type;
+        removeIntegration();
+        switch (selectionType) {
+            case Line:
+                selection = new Overlays.Arrow(getPenMouseSelecting());
+                ((Overlays.Arrow) selection).setArrowType(Overlays.Arrow.ArrowType.end);
+                //selection = new Overlays.Line(PEN_MOVING_OVERLAY);
+                break;
+            case Horizontal:
+                selection = new Overlays.Crosshairs(getPenMouseSelecting(), new Dimension(-1, 1));
+                break;
+            case Vertical:
+                selection = new Overlays.Crosshairs(getPenMouseSelecting(), new Dimension(1, -1));
+                break;
+            case Rectangle:
+                selection = new Overlays.Rect(getPenMouseSelecting());
+                //selection.setSolid(true);
+                break;
+        }
+        if (selection != null) {
+            removeDataSelectionOverlay();
+            addListener(new RendererListener() {
+                @Override
+                public void onSelectionFinished(Renderer renderer, Overlay overlay) {
+                    try {
+                        if (overlay.getLength() > 0) {
+                            Overlay dataSelection = overlay.copy();                        
+                            addDataSelection(dataSelection);
+                        }
+                    } catch (Exception ex) {
+                        Logger.getLogger(RendererMenu.class.getName()).log(Level.SEVERE, null, ex);
+                    } finally {
+                        renderer.removeListener(this);
+                    }
+                }
+
+                @Override
+                public void onSelectionAborted(Renderer renderer, Overlay overlay) {
+                    renderer.removeListener(this);
+                    removeDataSelectionDialog();
+                }
+            });
+            selection.setPassive(false);
+            startSelection(selection);
+        }        
+    }    
+    
+    public void addDataSelection(Overlay dataSelection){
+        if (dataSelection!=null){
+            if (selectionType == null) {
+                if (dataSelection instanceof Overlays.Rect){
+                    selectionType = SelectionType.Rectangle;
+                } else if (dataSelection instanceof Overlays.Line){
+                    selectionType = SelectionType.Line;
+                } else if (dataSelection instanceof Overlays.Crosshairs){
+                    if (dataSelection.getSize().width<0){
+                        selectionType = SelectionType.Horizontal;
+                    }
+                    if (dataSelection.getSize().height<0){
+                        selectionType = SelectionType.Vertical;
+                    }
+                }  
+            }
+            if (selectionType!=null){
+                addDataSelectionOverlay(dataSelection);
+                addDataSelectionDialog();        
+                return;
+            }
+        }
+        removeDataSelection();        
+    }
+    
+    public void removeDataSelection(){
+        removeDataSelectionOverlay();
+        removeDataSelectionDialog();           
+    }
+    
+    public Overlay getDataSelection(){
+        return selectionOverlay;
+    }    
+    
+    //Integration
+    Boolean integration;
+    public void addIntegration(boolean vertical) {
+        selectionType = null;
+        removeDataSelectionOverlay();
+        integration = vertical;
+        addDataSelectionDialog();
+        addListener(integrationListener);
+        dialogPlot.setTitle((vertical ? "Vertical" : "Horizontal") + " Integration");
+    }
+
+    public void removeIntegration() {
+        removeListener(integrationListener);
+        integration = null;
+    }    
 
     //Callbacks & Listeners
     final ObservableBase<RendererListener> observableBridge;
