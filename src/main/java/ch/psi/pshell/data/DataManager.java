@@ -10,6 +10,7 @@ import ch.psi.pshell.scan.ScanRecord;
 import ch.psi.utils.Arr;
 import ch.psi.utils.Convert;
 import ch.psi.utils.IO;
+import ch.psi.utils.IO.FilePermissions;
 import ch.psi.utils.Str;
 import java.io.File;
 import java.io.IOException;
@@ -45,6 +46,7 @@ public class DataManager implements AutoCloseable {
     int fileSequentialNumber = -1;
     int daySequentialNumber = -1;
     final File outputFile;
+    FilePermissions filePermissions = FilePermissions.Default;
 
     class ProviderData {
 
@@ -60,9 +62,9 @@ public class DataManager implements AutoCloseable {
     public DataManager(Context context) {
         this.context = context;
         context.addScanListener(scanListener);
-        outputFile = null;        
+        outputFile = null;
     }
-    
+
     /**
      * Constructor for single file dump
      */
@@ -71,8 +73,8 @@ public class DataManager implements AutoCloseable {
         outputFile = file;
         setProvider(provider);
         outputFile.mkdirs();
-        getProvider().openOutput(outputFile);     
-    }    
+        getProvider().openOutput(outputFile);
+    }
 
     /**
      * Constructor for offline data access
@@ -104,6 +106,10 @@ public class DataManager implements AutoCloseable {
 
     public boolean isInitialized() {
         return initialized;
+    }
+
+    public void setFilePermissions(FilePermissions filePermissions) {
+        this.filePermissions = (filePermissions == null) ? FilePermissions.Default : filePermissions;
     }
 
     public static Class getProviderClass(String name) throws ClassNotFoundException {
@@ -544,6 +550,7 @@ public class DataManager implements AutoCloseable {
         if (dataPath != null) {
             getExecutionPars().setDataPath(dataPath);
             getProvider().openOutput(dataPath);
+            IO.setFilePermissions(dataPath, filePermissions);
             context.incrementSequentialNumbers();
             getLayout().onOpened(getExecutionPars().getOutputFile());
             if (getExecutionPars().getSave()) {
@@ -911,6 +918,10 @@ public class DataManager implements AutoCloseable {
         synchronized (providerData) {
             openOutput();
             getProvider().createGroup(path);
+            if (!getProvider().isPacked()){
+                File file = getProvider().getFilePath(path).toFile();
+                IO.setFilePermissions(file, filePermissions);
+            }            
         }
     }
 
@@ -944,7 +955,9 @@ public class DataManager implements AutoCloseable {
         createGroup(group);              
         getProvider().setDataset(path, data, type, rank, shape, unsigned, features);
         if (!getProvider().isPacked()){
-            Context.getInstance().addDetachedFileToSession(getProvider().getFilePath(path).toFile());
+            File file = getProvider().getFilePath(path).toFile();
+            Context.getInstance().addDetachedFileToSession(file);
+            IO.setFilePermissions(file, filePermissions);
         }
         flush();
     }
@@ -1006,9 +1019,11 @@ public class DataManager implements AutoCloseable {
 
         logger.finer(String.format("Create \"%s\" type = %s dims = %s", path, type.getSimpleName(), Str.toString(dimensions, 10)));
         getProvider().createDataset(path, type, dimensions, unsigned, features);
-                if (!getProvider().isPacked()){
-            Context.getInstance().addDetachedFileToSession(getProvider().getFilePath(path).toFile());
-        }        
+        if (!getProvider().isPacked()){
+            File file = getProvider().getFilePath(path).toFile();
+            Context.getInstance().addDetachedFileToSession(file);
+            IO.setFilePermissions(file, filePermissions);
+        }
         ProviderData pd = getProviderData();
     }
 
@@ -1045,7 +1060,9 @@ public class DataManager implements AutoCloseable {
         logger.finer(String.format("Create \"%s\"", path));
         getProvider().createDataset(path, names, types, lengths, features);
         if (!getProvider().isPacked()){
-            Context.getInstance().addDetachedFileToSession(getProvider().getFilePath(path).toFile());
+            File file = getProvider().getFilePath(path).toFile();
+            Context.getInstance().addDetachedFileToSession(file);
+            IO.setFilePermissions(file, filePermissions);
         }      
         flush();
     }
@@ -1122,6 +1139,11 @@ public class DataManager implements AutoCloseable {
         }
         logger.finer(String.format("Set attribute \"%s/%s\" value = %s", path, name, Str.toString(value, 10)));
         getProvider().setAttribute(path, name, value, type, unsigned);
+
+        if (!getProvider().isPacked()){
+            File file = getProvider().getAttributePath(path).toFile();
+            IO.setFilePermissions(file, filePermissions);
+        }
     }
 
     /**

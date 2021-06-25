@@ -1,7 +1,10 @@
 package ch.psi.utils.swing;
 
 import ch.psi.utils.Arr;
+import ch.psi.utils.IO;
+import ch.psi.utils.IO.FilePermissions;
 import ch.psi.utils.Convert;
+import ch.psi.utils.Reflection.Hidden;
 import ch.psi.utils.Serializer;
 import ch.psi.utils.Sys;
 import java.awt.Component;
@@ -114,6 +117,17 @@ public abstract class MainFrame extends JFrame {
         SwingUtils.enableFullScreen(this);  //This is for macos           
 
     }
+    
+    static FilePermissions persistenceFilesPermissions = FilePermissions.Default;
+    @Hidden
+    public static void setPersistenceFilesPermissions(FilePermissions permissions){
+        persistenceFilesPermissions = permissions;
+    }
+    
+    @Hidden
+    public static FilePermissions getPersistenceFilesPermissions(){
+        return persistenceFilesPermissions;
+    }     
 
     public Window getActiveWindow() {
         for (Window w : getOwnedWindows()) {
@@ -540,8 +554,9 @@ public abstract class MainFrame extends JFrame {
         }
         String fileName = "Windows." + sessionEncoder.toString();
         try {
-            Files.write(Paths.get(getSessionPath(), fileName),
-                    Serializer.encode(persistedWindowNames, sessionEncoder));
+            Path path = Paths.get(getSessionPath(), fileName);
+            Files.write(path, Serializer.encode(persistedWindowNames, sessionEncoder));    
+            IO.setFilePermissions(path.toString(), persistenceFilesPermissions);
         } catch (Exception ex) {
             logger.log(Level.INFO, null, ex);
         }
@@ -729,6 +744,7 @@ public abstract class MainFrame extends JFrame {
         path.toFile().getParentFile().mkdirs();
         try {
             Files.write(path, Serializer.encode(stateMap, sessionEncoder));
+            IO.setFilePermissions(path.toString(), persistenceFilesPermissions);
         } catch (Exception ex) {
             logger.log(Level.INFO, null, ex);
         }

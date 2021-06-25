@@ -1,5 +1,7 @@
 package ch.psi.utils.swing;
 
+import ch.psi.utils.IO;
+import ch.psi.utils.IO.FilePermissions;
 import ch.psi.utils.ObservableBase;
 import java.io.IOException;
 
@@ -13,6 +15,11 @@ public abstract class Document extends ObservableBase<DocumentListener> {
     abstract public void load(String fileName) throws IOException;
 
     abstract public void save(String fileName) throws IOException;
+
+    public void save(String fileName, FilePermissions filePermissions) throws IOException {
+        save(fileName);
+        IO.setFilePermissions(fileName, filePermissions);
+    }
 
     boolean changed;
 
@@ -35,4 +42,5 @@ public abstract class Document extends ObservableBase<DocumentListener> {
     public String getContents() {
         return "";
     }
+
 }

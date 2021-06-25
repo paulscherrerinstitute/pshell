@@ -1,7 +1,9 @@
 package ch.psi.pshell.swing;
 
+import ch.psi.pshell.core.Context;
 import ch.psi.pshell.core.SessionManager;
 import ch.psi.pshell.core.SessionManager.MetadataType;
+import ch.psi.utils.IO;
 import ch.psi.utils.OrderedProperties;
 import ch.psi.utils.SciCat;
 import ch.psi.utils.swing.Document;
@@ -126,6 +128,7 @@ public class MetadataEditor extends Editor {
             }
             try (FileOutputStream out = new FileOutputStream(fileName)) {
                 editor.properties.store(out, null);
+                IO.setFilePermissions(fileName, Context.getInstance().getConfig().filePermissionsConfig);                
             }            
             setChanged(false);
             editor.update();

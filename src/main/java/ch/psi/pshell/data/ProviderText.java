@@ -194,6 +194,18 @@ public class ProviderText implements Provider {
         return getFilePath(this.root, path);
     }
 
+    @Override
+    public Path getAttributePath (String path)  {
+        try {
+            if (!getEmbeddedAtributes() || !(new File(path).isFile())) {
+                return getAttributePath(root, path);
+            }
+        } catch (IOException ex){
+        }
+        return Provider.super.getAttributePath(path);
+    }
+
+
     public Path getFilePath(String path, boolean addExtension) {
         return getFilePath(this.root, path, addExtension);
     }
@@ -469,7 +481,7 @@ public class ProviderText implements Provider {
         return ret;
     }
 
-    protected Path getAttibutePath(String root, String path) throws IOException {
+    protected Path getAttributePath(String root, String path) throws IOException {
         return isGroup(root, path)
                 ? Paths.get(root, path, ATTR_FILE)
                 : Paths.get(root, path + "." + ATTR_FILE);
@@ -478,7 +490,7 @@ public class ProviderText implements Provider {
     @Override
     public Map<String, Object> getAttributes(String root, String path) throws IOException {
         HashMap<String, Object> ret = new HashMap<>();
-        Path filePath = getAttibutePath(root, path);
+        Path filePath = getAttributePath(root, path);
         File file = filePath.toFile();
         //attr file
         if ((file.exists()) && (file.isFile())) {
@@ -794,7 +806,7 @@ public class ProviderText implements Provider {
             }
         } else {
             synchronized (attributesLock) {
-                try (PrintWriter writer = new PrintWriter(new BufferedWriter(new FileWriter(getAttibutePath(root, path).toString(), true)))) {
+                try (PrintWriter writer = new PrintWriter(new BufferedWriter(new FileWriter(getAttributePath(root, path).toString(), true)))) {
                     writer.print(name + ATTR_VALUE_MARKER);
                     writeElement(writer, value);
                     writer.print(ATTR_CLASS_MARKER + type.getName());

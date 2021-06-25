@@ -4,6 +4,7 @@ import ch.psi.utils.Arr;
 import ch.psi.utils.Chrono;
 import ch.psi.utils.FileSystemWatch;
 import ch.psi.utils.IO;
+import ch.psi.utils.IO.FilePermissions;
 import ch.psi.utils.Reflection.Hidden;
 import ch.psi.utils.Str;
 import java.io.BufferedReader;
@@ -51,17 +52,19 @@ public class ScriptManager implements AutoCloseable {
     final static Logger logger = Logger.getLogger(ScriptManager.class.getName());
     final boolean threaded;
     final Library lib;
+    final FilePermissions scriptFilePermissions;
     String sessionFilePath;
     PrintWriter sessionOut;
     Object lastResult;
     final Map<Thread, Object> results;
     FileSystemWatch jythonClassFilePermissionFix;
         
-    public ScriptManager(ScriptType type, String[] libraryPath, HashMap<String, Object> injections, boolean dontWriteBytecode) {
+    public ScriptManager(ScriptType type, String[] libraryPath, HashMap<String, Object> injections, FilePermissions scriptFilePermissions,boolean dontWriteBytecode) {
         logger.info("Initializing " + getClass().getSimpleName());
         this.type = type;
         this.libraryPath = libraryPath;
         this.injections = injections;
+        this.scriptFilePermissions = scriptFilePermissions;
         results = new HashMap<>();
         
         if (type == ScriptType.py) {
@@ -73,7 +76,7 @@ public class ScriptManager implements AutoCloseable {
             if (!dontWriteBytecode) {
                 //TODO: remove this hack when Jython fixes this: https://github.com/jython/jython/issues/93
                 if (JythonUtils.getJythonVersion().equals("2.7.2")) { 
-                    jythonClassFilePermissionFix = new FileSystemWatch(Arr.append(libraryPath, "/Users/gobbo_a/dev/pshell/pshell/src/main/assembly/script"), 
+                    jythonClassFilePermissionFix = new FileSystemWatch( libraryPath, 
                             new String[]{"class"}, true, false, false, 5000, (path, kind) -> {
                         logger.info("Setting class file readable to all: " + path);
                         path.toFile().setReadable(true, false);
@@ -128,6 +131,7 @@ public class ScriptManager implements AutoCloseable {
             try {
                 File file = new File(sessionFilePath, Chrono.getTimeStr(System.currentTimeMillis(), "YYMMdd_HHmmss") + "." + type);
                 sessionOut = new PrintWriter(new BufferedWriter(new FileWriter(file, true)));
+                IO.setFilePermissions(file, scriptFilePermissions);
             } catch (IOException e) {
                 logger.log(Level.WARNING, null, e);
             }

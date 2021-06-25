@@ -15,6 +15,7 @@ import static ch.psi.pshell.data.Layout.ATTR_VERSION;
 import ch.psi.pshell.scan.Scan;
 import ch.psi.pshell.scripting.ViewPreference;
 import ch.psi.utils.Chrono;
+import ch.psi.utils.IO;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -97,6 +98,7 @@ public abstract class LayoutBase implements Layout {
                 Path path = ((ProviderText)dataManager.getProvider()).getFilePath(filename, false);
                 path.toFile().getParentFile().mkdirs();
                 Files.writeString(path, contents);
+                IO.setFilePermissions(path.toFile(), Context.getInstance().getConfig().filePermissionsData);
             } else {
                 dataManager.setDataset(filename, contents);
             }

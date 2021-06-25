@@ -6,9 +6,6 @@ package ch.psi.pshell.data;
 
 import ch.psi.pshell.core.Context;
 import ch.psi.pshell.core.ExecutionParameters;
-import static ch.psi.pshell.data.Provider.INFO_DIMENSIONS;
-import static ch.psi.pshell.data.Provider.INFO_FIELDS;
-import static ch.psi.pshell.data.ProviderText.COMMENT_MARKER;
 import ch.psi.utils.Convert;
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -30,7 +27,7 @@ public class ProviderFDA extends ProviderText{
         this.setItemSeparator("\t");
     }
     @Override
-    protected Path getAttibutePath(String root, String path) throws IOException {
+    protected Path getAttributePath(String root, String path) throws IOException {
         if (ADD_ATTRIBUTE_FILE_TIMESTAMP && LayoutFDA.isFlatStorage()){
             ExecutionParameters pars = Context.getInstance().getExecutionPars();
             if (pars != null) {
@@ -40,7 +37,7 @@ public class ProviderFDA extends ProviderText{
                 }
             }
         }
-        return super.getAttibutePath(root, path);
+        return super.getAttributePath(root, path);
     }
         
     @Override

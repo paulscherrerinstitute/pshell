@@ -1,5 +1,6 @@
 package ch.psi.pshell.ui;
 
+import ch.psi.pshell.core.Context;
 import java.awt.Font;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -31,6 +32,7 @@ import ch.psi.pshell.swing.CodeEditor;
 import ch.psi.pshell.swing.DeviceValueChart;
 import ch.psi.pshell.swing.HistogramGeneratorPanel;
 import ch.psi.pshell.swing.ScalerPanel;
+import ch.psi.utils.IO;
 import java.awt.Color;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
@@ -221,6 +223,7 @@ public class Preferences {
                 }
             }
             Files.write(file, Serializer.encode(map, Serializer.EncoderType.bin));
+            IO.setFilePermissions(file.toFile(), Context.getInstance().getConfig().filePermissionsConfig);
         } catch (Exception ex) {
             Logger.getLogger(Preferences.class.getName()).log(Level.WARNING, null, ex);
         }

@@ -3,6 +3,7 @@ package ch.psi.pshell.core;
 import ch.psi.utils.Chrono;
 import ch.psi.utils.Folder;
 import ch.psi.utils.IO;
+import ch.psi.utils.IO.FilePermissions;
 import ch.psi.utils.Str;
 import java.io.File;
 import java.io.PrintWriter;
@@ -35,7 +36,7 @@ import java.util.List;
  * Management of application logs.
  */
 public class LogManager {
-
+    final FilePermissions filePermissions;
     FileHandler logFile;
     public static final String ROOT_LOGGER = "ch.psi";
     public static final String FILE_SEPARATOR = " - ";
@@ -44,6 +45,11 @@ public class LogManager {
     ArrayList<String[]> lastLogs = new ArrayList();
 
     public LogManager() {
+        this(FilePermissions.Default);
+    }
+
+    public LogManager(FilePermissions permissions) {
+        this.filePermissions = (permissions==null) ? FilePermissions.Default : permissions;
         Logger globalLogger = Logger.getLogger("");
         Handler[] handlers = globalLogger.getHandlers();
         for (Handler handler : handlers) {
@@ -115,6 +121,7 @@ public class LogManager {
 
                 logFile = new FileHandler(fileName);
                 logFile.setFormatter(formatter);
+                IO.setFilePermissions(fileName, filePermissions);
                 addHandler(logFile);
                 if (daysToLive > 0) {
                     long millisToLive = ((long)daysToLive) * 24 * 3600 * 1000;

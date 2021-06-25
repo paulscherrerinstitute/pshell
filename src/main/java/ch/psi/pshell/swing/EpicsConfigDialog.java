@@ -1,7 +1,9 @@
 package ch.psi.pshell.swing;
 
+import ch.psi.pshell.core.Context;
 import ch.psi.pshell.epics.Epics;
 import ch.psi.utils.Config;
+import ch.psi.utils.IO;
 import ch.psi.utils.OrderedProperties;
 import ch.psi.utils.Str;
 import ch.psi.utils.swing.StandardDialog;
@@ -73,7 +75,8 @@ public class EpicsConfigDialog extends StandardDialog {
         properties.setProperty(keyUseShellVariables, String.valueOf(checkShellVatiables.isSelected()));
         properties.setProperty(keyLocalBroadcastInterfaces, String.valueOf(checkAddLocalBroadcast.isSelected()));
         try (FileOutputStream out = new FileOutputStream(Epics.getConfigFile())) {
-            properties.store(out, null);
+            properties.store(out, null);             
+           IO.setFilePermissions(Epics.getConfigFile(), Context.getInstance().getConfig().filePermissionsConfig);
         }
     }
 

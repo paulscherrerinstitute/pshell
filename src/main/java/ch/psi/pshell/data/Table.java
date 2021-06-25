@@ -1,11 +1,13 @@
 package ch.psi.pshell.data;
 
+import ch.psi.pshell.core.Context;
 import ch.psi.pshell.scripting.Subscriptable;
 import ch.psi.utils.Convert;
 import ch.psi.utils.IO;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -103,7 +105,9 @@ public class Table implements Subscriptable.MappedSequence<String, double[]>{
         for (int i = 0; i < getRows(); i++) {
             lines.add(String.join(separator, Convert.toStringArray(getRow(i))));
         }
-        Files.write(Paths.get(fileName), lines);
+        Path path = Paths.get(fileName);
+        Files.write(path, lines);
+        IO.setFilePermissions(path.toFile(), Context.getInstance().getConfig().filePermissionsData);
     }
 
     public static Table load(String fileName) throws IOException {

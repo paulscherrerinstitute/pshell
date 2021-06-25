@@ -9,6 +9,7 @@ import ch.psi.pshell.data.DataManager;
 import ch.psi.pshell.data.Provider;
 import ch.psi.pshell.data.RSync;
 import ch.psi.utils.Config;
+import ch.psi.utils.IO.FilePermissions;
 import ch.psi.utils.State;
 import ch.psi.utils.swing.StandardDialog;
 import ch.psi.utils.swing.SwingUtils;
@@ -51,9 +52,11 @@ public class DataFileDialog extends StandardDialog {
         } catch (Exception ex) {
             Logger.getLogger(DataFileDialog.class.getName()).log(Level.SEVERE, null, ex);
         }
+        
         defaultPath = new Configuration().dataPath;
         SwingUtils.setEnumCombo(comboTransferMode, Configuration.DataTransferMode.class);
         SwingUtils.setEnumCombo(comboNotification, Configuration.NotificationLevel.class);
+        SwingUtils.setEnumCombo(comboPermissions, FilePermissions.class);
         buttonUndoActionPerformed(null);
     }
 
@@ -138,6 +141,10 @@ public class DataFileDialog extends StandardDialog {
         return !String.valueOf(comboLayout.getSelectedItem()).trim().equals(config.dataLayout.trim());
     }
     
+    boolean changedPermissions() {
+        return !comboPermissions.getSelectedItem().equals(config.filePermissionsData);
+    }    
+  
     boolean changedDataLogs() {
         return  (checkDataLogs.isSelected() == config.disableDataFileLogs) ;
     }    
@@ -162,9 +169,9 @@ public class DataFileDialog extends StandardDialog {
     }
 
     boolean changedTransfer() {
-        return (config.getDataTransferMode() != comboTransferMode.getSelectedItem())
-                || !textTransferPath.getText().trim().equals(config.getDataTransferPath())
-                || !textTransferUser.getText().trim().equals(config.getDataTransferUser());
+        return (config.dataTransferMode != comboTransferMode.getSelectedItem())
+                || !textTransferPath.getText().trim().equals(config.dataTransferPath)
+                || !textTransferUser.getText().trim().equals(config.dataTransferUser);
     }
 
     boolean changedNotify() {
@@ -177,7 +184,7 @@ public class DataFileDialog extends StandardDialog {
     }
 
     boolean changedConfig() {
-        return changedLocation() || changedFormat() || changedScans() || changedTransfer() || changedNotify();
+        return changedLocation() || changedFormat() || changedScans() || changedTransfer() || changedNotify() || changedPermissions();
     }
 
     boolean changed() {
@@ -233,9 +240,9 @@ public class DataFileDialog extends StandardDialog {
     }
 
     void updateTransfer() {
-        comboTransferMode.setSelectedItem(config.getDataTransferMode());
-        textTransferPath.setText(config.getDataTransferPath());
-        textTransferUser.setText(config.getDataTransferUser());
+        comboTransferMode.setSelectedItem(config.dataTransferMode);
+        textTransferPath.setText(config.dataTransferPath);
+        textTransferUser.setText(config.dataTransferUser);
         new Thread(() -> {
             try {
                 Context.getInstance().waitStateNot(State.Initializing, 120000);
@@ -334,6 +341,8 @@ public class DataFileDialog extends StandardDialog {
         jLabel10 = new javax.swing.JLabel();
         checkEmbeddedAttrs = new javax.swing.JCheckBox();
         jLabel12 = new javax.swing.JLabel();
+        jLabel16 = new javax.swing.JLabel();
+        comboPermissions = new javax.swing.JComboBox<>();
         jPanel4 = new javax.swing.JPanel();
         ckAutoSave = new javax.swing.JCheckBox();
         ckConvert = new javax.swing.JCheckBox();
@@ -558,6 +567,16 @@ public class DataFileDialog extends StandardDialog {
 
         jLabel12.setText("(on text files)");
 
+        jLabel16.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
+        jLabel16.setText("File Permissions");
+
+        comboPermissions.setEditable(true);
+        comboPermissions.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                comboPermissionsActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout jPanel3Layout = new javax.swing.GroupLayout(jPanel3);
         jPanel3.setLayout(jPanel3Layout);
         jPanel3Layout.setHorizontalGroup(
@@ -569,7 +588,8 @@ public class DataFileDialog extends StandardDialog {
                     .addComponent(jLabel4, javax.swing.GroupLayout.Alignment.TRAILING)
                     .addComponent(jLabel7, javax.swing.GroupLayout.Alignment.TRAILING)
                     .addComponent(jLabel8, javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addComponent(jLabel10, javax.swing.GroupLayout.Alignment.TRAILING))
+                    .addComponent(jLabel10, javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addComponent(jLabel16, javax.swing.GroupLayout.Alignment.TRAILING))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(spinnerDepthDim, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -579,7 +599,8 @@ public class DataFileDialog extends StandardDialog {
                     .addGroup(jPanel3Layout.createSequentialGroup()
                         .addComponent(checkEmbeddedAttrs)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jLabel12)))
+                        .addComponent(jLabel12))
+                    .addComponent(comboPermissions, javax.swing.GroupLayout.PREFERRED_SIZE, 182, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addContainerGap())
         );
 
@@ -598,6 +619,10 @@ public class DataFileDialog extends StandardDialog {
                     .addComponent(comboLayout, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.CENTER)
+                    .addComponent(jLabel16)
+                    .addComponent(comboPermissions, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.CENTER)
                     .addComponent(jLabel8)
                     .addComponent(checkDataLogs))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -605,7 +630,7 @@ public class DataFileDialog extends StandardDialog {
                     .addComponent(jLabel10)
                     .addComponent(checkEmbeddedAttrs)
                     .addComponent(jLabel12))
-                .addGap(18, 18, 18)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel7)
                     .addComponent(spinnerDepthDim, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
@@ -955,9 +980,11 @@ public class DataFileDialog extends StandardDialog {
             }
             if (changedConfig()) {
                 boolean changedFormat = changedFormat();
+                boolean changedPermissions = changedPermissions();
                 config.dataPath = textPathConfig.getText().trim();
                 config.dataProvider = String.valueOf(comboProvider.getSelectedItem()).trim();
                 config.dataLayout = String.valueOf(comboLayout.getSelectedItem()).trim();
+                config.filePermissionsData= (FilePermissions)comboPermissions.getSelectedItem();
                 config.autoSaveScanData = ckAutoSave.isSelected();
                 config.dataScanPreserveTypes = !ckConvert.isSelected();
                 config.dataScanFlushRecords = ckFlush.isSelected();
@@ -977,6 +1004,9 @@ public class DataFileDialog extends StandardDialog {
                 if (changedFormat) {
                     Context.getInstance().getDataManager().initialize();
                 } 
+                if (changedPermissions){
+                    Context.getInstance().getDataManager().setFilePermissions((FilePermissions)comboPermissions.getSelectedItem());
+                }
             }
             if (changedNotificationManager()) {
                 String to = textRecipients.getText().trim();
@@ -1003,6 +1033,7 @@ public class DataFileDialog extends StandardDialog {
         comboProvider.setSelectedItem(config.dataProvider.trim());
         comboLayout.setSelectedItem(config.dataLayout.trim());
         spinnerSeq.setValue(Context.getInstance().getFileSequentialNumber());
+        comboPermissions.setSelectedItem(config.filePermissionsData);
         updateScans();
         updateTransfer();
         updateNotify();
@@ -1124,6 +1155,10 @@ public class DataFileDialog extends StandardDialog {
         update();
     }//GEN-LAST:event_checkEmbeddedAttrsActionPerformed
 
+    private void comboPermissionsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_comboPermissionsActionPerformed
+        update();
+    }//GEN-LAST:event_comboPermissionsActionPerformed
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton buttonApply;
     private javax.swing.JButton buttonCancel;
@@ -1146,6 +1181,7 @@ public class DataFileDialog extends StandardDialog {
     private javax.swing.JCheckBox ckSaveSetpoints;
     private javax.swing.JComboBox<String> comboLayout;
     private javax.swing.JComboBox<String> comboNotification;
+    private javax.swing.JComboBox<String> comboPermissions;
     private javax.swing.JComboBox<String> comboProvider;
     private javax.swing.JComboBox<String> comboTransferMode;
     private javax.swing.JLabel jLabel1;
@@ -1155,6 +1191,7 @@ public class DataFileDialog extends StandardDialog {
     private javax.swing.JLabel jLabel13;
     private javax.swing.JLabel jLabel14;
     private javax.swing.JLabel jLabel15;
+    private javax.swing.JLabel jLabel16;
     private javax.swing.JLabel jLabel18;
     private javax.swing.JLabel jLabel19;
     private javax.swing.JLabel jLabel2;

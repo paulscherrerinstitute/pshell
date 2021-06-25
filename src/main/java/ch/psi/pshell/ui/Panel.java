@@ -365,7 +365,8 @@ public class Panel extends MonitoredPanel implements Plugin {
     protected void saveComponentsState() {
         try {
             if ((persistedComponents != null) && (persistedComponents.length > 0)) {
-                XMLEncoder e = new XMLEncoder(new BufferedOutputStream(new FileOutputStream(getComponentsStatePath().toFile())));
+                File stateFile = getComponentsStatePath().toFile();
+                XMLEncoder e = new XMLEncoder(new BufferedOutputStream(new FileOutputStream(stateFile)));
                 //Don't want to print to stdout
                 e.setExceptionListener(new ExceptionListener() {
                     @Override
@@ -377,6 +378,7 @@ public class Panel extends MonitoredPanel implements Plugin {
                     e.writeObject(c);
                 }
                 e.close();
+                IO.setFilePermissions(stateFile, getContext().getConfig().filePermissionsConfig);
             } else {
                 clearComponentsState();
             }
@@ -393,7 +395,7 @@ public class Panel extends MonitoredPanel implements Plugin {
             }
             if ((persistedComponents != null) && (persistedComponents.length > 0)) {
 
-                XMLDecoder d = new XMLDecoder(new BufferedInputStream(new FileInputStream(getComponentsStatePath().toFile())));
+                XMLDecoder d = new XMLDecoder(new BufferedInputStream(new FileInputStream(stateFile)));
                 ArrayList<Component> state = new ArrayList<>();
                 while (true) {
                     try {

@@ -1,5 +1,6 @@
 package ch.psi.utils;
 
+import ch.psi.utils.IO.FilePermissions;
 import java.beans.Transient;
 import java.io.File;
 import java.io.FileInputStream;
@@ -43,8 +44,27 @@ public class Config extends ObservableBase<Config.ConfigListener> {
 
     public static final String ARRAY_SEPARATOR = "|";
     final Properties properties = new SortedProperties();
+    final FilePermissions permissions;
     String fileName;
     boolean fileSync;
+
+    public Config(){
+        this(defaultPermissions);
+    }
+    
+    public Config(FilePermissions permissions){
+        this.permissions=permissions;
+    }
+    
+    static FilePermissions defaultPermissions = FilePermissions.Default;
+    
+    public static void setDefaultPermissions(FilePermissions permissions){
+        defaultPermissions = permissions;
+    }
+    
+    public static FilePermissions getDefaultPermissions(){
+        return defaultPermissions;
+    }    
 
     protected Properties _getProperties(){
         return properties;
@@ -198,9 +218,10 @@ public class Config extends ObservableBase<Config.ConfigListener> {
                 for (ConfigListener listener : getListeners()) {
                     listener.onSaving(this);
                 }
-                try (FileOutputStream out = new FileOutputStream(fileName);) {
+                try (FileOutputStream out = new FileOutputStream(fileName)) {
                     properties.store(out, null);
                 }
+                IO.setFilePermissions(fileName, permissions);
                 for (ConfigListener listener : getListeners()) {
                     listener.onSave(this);
                 }

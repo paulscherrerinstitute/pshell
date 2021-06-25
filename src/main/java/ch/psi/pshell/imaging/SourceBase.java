@@ -1,15 +1,14 @@
 package ch.psi.pshell.imaging;
 
-import ch.psi.pshell.device.Device;
-import ch.psi.pshell.device.DummyRegister;
 import ch.psi.pshell.device.GenericDevice;
 import ch.psi.pshell.device.GenericDeviceBase;
 import ch.psi.pshell.device.Readable.ReadableMatrix;
 import ch.psi.pshell.device.ReadonlyAsyncRegisterBase;
 import ch.psi.pshell.device.ReadonlyRegister;
-import ch.psi.pshell.device.ReadonlyRegisterBase;
 import ch.psi.utils.Chrono;
+import ch.psi.utils.Config;
 import ch.psi.utils.Convert;
+import ch.psi.utils.IO;
 import ch.psi.utils.Serializer;
 import ch.psi.utils.State;
 import ch.psi.utils.Threading;
@@ -440,6 +439,7 @@ public class SourceBase extends GenericDeviceBase<ImageListener> implements Sour
             } else if (backgroundData != null) {
                 Files.write(file, Serializer.encode(backgroundData, Serializer.EncoderType.bin));
             }
+            IO.setFilePermissions(file.toFile(), Config.getDefaultPermissions());
         } catch (Exception ex) {
             getLogger().log(Level.SEVERE, null, ex);
         }

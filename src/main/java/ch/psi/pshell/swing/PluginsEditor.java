@@ -183,6 +183,7 @@ public class PluginsEditor extends Editor {
                 }
             }
             Files.write(Paths.get(fileName), lines);
+            IO.setFilePermissions(fileName, Context.getInstance().getConfig().filePermissionsConfig);
 
             /*
              Properties properties = new Properties();
@@ -193,6 +194,7 @@ public class PluginsEditor extends Editor {
              }
              try (FileOutputStream out = new FileOutputStream(fileName);) {
              properties.store(out, null);
+            IO.setFilePermissions(fileName, Context.getInstance().getConfig().filePermissionsConfig);                
              }
              */
             setChanged(false);
@@ -248,6 +250,7 @@ public class PluginsEditor extends Editor {
                 IO.replace(path, "public class DefaultPlugin", "public class " + name);
             }
 
+            IO.setFilePermissions(path, Context.getInstance().getConfig().filePermissionsScripts);
             showMessage("Plugin Creation", "Success creating plugin: " + name);
             //Reload table
             ((PluginsEditorDocument) getDocument()).load(Context.getInstance().getSetup().getPluginsConfigurationFile());

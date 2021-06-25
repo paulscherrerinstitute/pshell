@@ -8,6 +8,7 @@ import static ch.psi.pshell.core.Setup.TOKEN_MONTH;
 import static ch.psi.pshell.core.Setup.TOKEN_TIME;
 import static ch.psi.pshell.core.Setup.TOKEN_YEAR;
 import ch.psi.utils.Config;
+import ch.psi.utils.IO.FilePermissions;
 import ch.psi.utils.Str;
 
 import java.util.ArrayList;
@@ -44,6 +45,10 @@ public class Configuration extends Config {
     public String dataTransferUser = "";
     public boolean disableDataFileLogs = false;
     public boolean disableEmbeddedAttributes = false;
+    public FilePermissions filePermissionsData = FilePermissions.Default;
+    public FilePermissions filePermissionsLogs = FilePermissions.Default;
+    public FilePermissions filePermissionsScripts = FilePermissions.Default;
+    public FilePermissions filePermissionsConfig = FilePermissions.Default;
     public SessionHandling sessionHandling = SessionHandling.Off;
     public String hostName  = "";
     public boolean hideServerMessages = false;
@@ -100,7 +105,47 @@ public class Configuration extends Config {
         Files,
         Exclusive,
         On
-    }    
+    }
+
+
+    //Set fields mising from config file (backward compatibility)
+    @Override
+    public void updateFields() {
+        super.updateFields();
+        if (filePermissionsData==null){
+            filePermissionsData = FilePermissions.Default;
+        }
+        if (filePermissionsLogs==null){
+            filePermissionsLogs = FilePermissions.Default;
+        }
+        if (filePermissionsScripts==null){
+            filePermissionsScripts = FilePermissions.Default;
+        }
+        if (filePermissionsConfig==null){
+            filePermissionsConfig = FilePermissions.Default;
+        }
+        if (notificationLevel==null){
+            notificationLevel = NotificationLevel.Off;
+        }
+        if (dataTransferMode==null){
+            dataTransferMode = DataTransferMode.Off;
+        }
+        if (dataTransferPath==null){
+            dataTransferPath = "";
+        }   
+        if (dataTransferUser==null){
+            dataTransferUser = "";
+        }    
+        if (instanceName==null){
+            instanceName = "";
+        }          
+        if (sessionHandling==null){
+            sessionHandling = SessionHandling.Off;
+        }         
+        if (notifiedTasks==null){
+            notifiedTasks = "";
+        }                         
+    }
 
     public Level getLogLevel() {
         return Level.parse(logLevel.toString().toUpperCase());
@@ -122,53 +167,14 @@ public class Configuration extends Config {
         String layout = System.getProperty(PROPERTY_DATA_LAYOUT);
         return layout == null ? dataLayout : layout;
     }
-
-    NotificationLevel getNotificationLevel() {
-        if (Str.toString(notificationLevel).equals(Str.toString(null))) {
-            return NotificationLevel.Off;
-        }
-        return notificationLevel;
-    }
-
-    public DataTransferMode getDataTransferMode() {
-        if (Str.toString(dataTransferMode).equals(Str.toString(null))) {
-            return DataTransferMode.Off;
-        }
-        return dataTransferMode;
-    }
-
-    public String getDataTransferPath() {
-        if (Str.toString(dataTransferPath).equals(Str.toString(null))) {
-            return "";
-        }
-        return dataTransferPath.trim();
-    }
-
-    public String getDataTransferUser() {
-        if (Str.toString(dataTransferUser).equals(Str.toString(null))) {
-            return "";
-        }
-        return dataTransferUser.trim();
-    }
-    
-    public SessionHandling getSessionHandling() {
-        if (Str.toString(sessionHandling).equals(Str.toString(null))) {
-            return SessionHandling.Off;
-        }
-        return sessionHandling;
-    }
     
     public List<String> getNotifiedTasks() {
         List<String> ret = new ArrayList<>();
-        if (notifiedTasks != null) {
-            if (!Str.toString(null).equals(notifiedTasks)) {
-                String[] tokens = Str.split(notifiedTasks, new String[]{"|", ";", ","});
-                for (String str : tokens) {
-                    str = str.trim();
-                    if (!str.isEmpty()) {
-                        ret.add(str);
-                    }
-                }
+        String[] tokens = Str.split(notifiedTasks, new String[]{"|", ";", ","});
+        for (String str : tokens) {
+            str = str.trim();
+            if (!str.isEmpty()) {
+                ret.add(str);
             }
         }
         return ret;
@@ -193,12 +199,5 @@ public class Configuration extends Config {
             return Boolean.valueOf(prop);
         }
         return parallelInitialization;
-    }
-
-    public String getName() {
-        if (instanceName == null) {
-            return "";
-        }
-        return instanceName;
     }
 }

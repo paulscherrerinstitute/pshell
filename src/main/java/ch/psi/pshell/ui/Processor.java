@@ -4,6 +4,7 @@ import ch.psi.pshell.swing.Executor;
 import ch.psi.pshell.core.Context;
 import ch.psi.pshell.data.DataManager;
 import ch.psi.utils.IO;
+import ch.psi.utils.IO.FilePermissions;
 import ch.psi.utils.State;
 import ch.psi.utils.swing.SwingUtils;
 import java.io.File;
@@ -92,6 +93,10 @@ public interface Processor extends Executor {
     public void open(String fileName) throws IOException;
 
     default public void save() throws IOException {
+        save(null);
+    }
+
+    default public void save(FilePermissions filePermissions) throws IOException {
         String fileName = getFileName();
         if (fileName == null) {
             String home = Context.getInstance().getSetup().expandPath(getHomePath());
@@ -113,9 +118,17 @@ public interface Processor extends Executor {
             fileName = chooser.getSelectedFile().getAbsolutePath();
         }
         saveAs(fileName);
+        if (filePermissions!=null){
+            IO.setFilePermissions(fileName, filePermissions);
+        }
     }
 
     public void saveAs(String fileName) throws IOException;
+
+    default public void saveAs(String fileName, FilePermissions filePermissions) throws IOException{
+        saveAs(fileName);
+        IO.setFilePermissions(fileName, filePermissions);
+    }
 
     public default JPanel getPanel() {
         //Processors must be instances of JPanel

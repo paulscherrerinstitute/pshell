@@ -4,6 +4,7 @@ import ch.psi.pshell.core.CommandSource;
 import ch.psi.pshell.core.Context;
 import ch.psi.pshell.core.Setup;
 import ch.psi.utils.Arr;
+import ch.psi.utils.IO;
 import ch.psi.utils.ObservableBase;
 import ch.psi.utils.Serializer;
 import java.io.IOException;
@@ -127,7 +128,9 @@ public class UsersManager extends ObservableBase<UsersManagerListener> implement
         assertEnabled();
         this.users.clear();
         this.users.addAll(Arrays.asList(users));
-        Files.write(getUsersFile(), Serializer.encode(this.users, Serializer.EncoderType.bin));
+        Path path = getUsersFile();
+        Files.write(path, Serializer.encode(this.users, Serializer.EncoderType.bin));
+        IO.setFilePermissions(path.toFile(), Context.getInstance().getConfig().filePermissionsConfig);
     }
 
     public boolean selectUser(String name) throws IOException, InterruptedException {

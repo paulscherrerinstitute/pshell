@@ -6,18 +6,13 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.RandomAccessFile;
 import java.nio.channels.FileLock;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.nio.file.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.script.ScriptException;
@@ -28,6 +23,8 @@ import ch.psi.utils.Configurable;
 import ch.psi.utils.Convert;
 import ch.psi.utils.History;
 import ch.psi.utils.IO;
+import ch.psi.utils.IO.FilePermissions;
+import ch.psi.utils.NamedThreadFactory;
 import ch.psi.utils.ObservableBase;
 import ch.psi.utils.Reflection.Hidden;
 import ch.psi.utils.State;
@@ -68,6 +65,7 @@ import ch.psi.pshell.security.Rights;
 import ch.psi.pshell.security.UsersManagerListener;
 import ch.psi.pshell.security.User;
 import ch.psi.pshell.security.UserAccessException;
+import ch.psi.pshell.ui.App;
 import ch.psi.utils.Chrono;
 import ch.psi.utils.Condition;
 import ch.psi.utils.SortedProperties;
@@ -77,11 +75,8 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.net.InetAddress;
 import java.net.ServerSocket;
-import java.nio.file.Files;
-import java.nio.file.NoSuchFileException;
 import java.util.Enumeration;
 import java.util.Properties;
-import java.util.concurrent.TimeoutException;
 import java.util.jar.JarFile;
 import org.python.google.common.collect.Lists;
 
@@ -129,6 +124,10 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
     volatile String next;
     volatile boolean aborted;
     volatile Exception foregroundException;
+    volatile FilePermissions filePermissionsConfig;
+
+    WatchService watchService;
+    ScheduledExecutorService schedulerWatchService;
 
     int runCount;
 
@@ -233,8 +232,12 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
         } catch (IOException ex) {
             throw new RuntimeException("Cannot generate configuration file");
         }
-        String contextName = (config.getName().length() > 0) ? config.getName() : "unknown";
-        if (config.getName().length() > 0) {
+        
+        Config.setDefaultPermissions(config.filePermissionsConfig);
+        History.setDefaultPermissions(config.filePermissionsConfig);
+        
+        String contextName = (config.instanceName.length() > 0) ? config.instanceName : "unknown";
+        if (config.instanceName.length() > 0) {
             System.out.println("\n[" + contextName + "]\n");
         }
 
@@ -274,7 +277,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
             System.setProperty(ScriptManager.PROPERTY_PYTHON_HOME, setup.getScriptPath());
         }
 
-        logManager = new LogManager();
+        logManager = new LogManager(config.filePermissionsLogs);
         restartLogger();
 
         logger.info("Process: " + Sys.getProcessName());
@@ -558,7 +561,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
 
     public boolean isHandlingSessions(){
         if (handlingSessions){
-            switch(config.getSessionHandling()){
+            switch(config.sessionHandling){
                 case On:
                 case Files:
                     return true;
@@ -764,7 +767,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
         boolean error = (result instanceof Throwable) && !aborted;
 
         try {
-            if (config.getNotificationLevel() != NotificationLevel.Off) {
+            if (config.notificationLevel != NotificationLevel.Off) {
                 boolean notifyTask = true;
 
                 List<String> tasks = config.getNotifiedTasks();
@@ -779,9 +782,9 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
                 }
 
                 if (notifyTask) {
-                    if (error && config.getNotificationLevel() != NotificationLevel.User) {
+                    if (error && (config.notificationLevel != NotificationLevel.User)) {
                         this.notify("Execution error", "File: " + fileName + "\n" + ((Throwable) result).getMessage(), null);
-                    } else if (config.getNotificationLevel() == NotificationLevel.Completion) {
+                    } else if (config.notificationLevel == NotificationLevel.Completion) {
                         if (aborted) {
                             notify("Execution aborted", "File: " + fileName, null);
                         } else {
@@ -1047,7 +1050,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
         sb.append(" ");
         source.putLogTag(sb);
         logger.info(sb.toString());
-        //TODO: Could dadd security check here?
+        //TODO: Could add security check here?
     }
 
     void shutdown(final CommandSource source) {
@@ -1059,12 +1062,15 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
         onCommand(Command.restart, null, source);
         //A new file for each session
         boolean firstRun = (getState() == State.Invalid);
+        filePermissionsConfig = config.filePermissionsConfig;
+        Config.setDefaultPermissions(filePermissionsConfig);
 
         setState(State.Initializing);
         aborted = false;
         foregroundException = null;
 
-        for (AutoCloseable ac : new AutoCloseable[]{scanStreamer, dataStreamer, taskManager, notificationManager, scriptManager, devicePool, versioningManager}) {
+        for (AutoCloseable ac : new AutoCloseable[]{scanStreamer, dataStreamer, taskManager, notificationManager,
+                scriptManager, devicePool, versioningManager, watchService}) {
             try {
                 if (ac != null) {
                     ac.close();
@@ -1073,6 +1079,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
                 logger.log(Level.WARNING, null, ex);
             }
         }
+
         Nameable.clear();
         Interlock.clear();
 
@@ -1146,6 +1153,9 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
                     exit(ex);
                 }
             }
+
+            dataManager.setFilePermissions(config.filePermissionsData);
+
             if ((!firstRun) || (!dataManager.isInitialized())) {
                 dataManager.initialize();
             }
@@ -1207,7 +1217,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
 
             if (isInterpreterEnabled()) {
                 runInInterpreterThread(null, (Callable<InterpreterResult>) () -> {
-                    scriptManager = new ScriptManager(getScriptType(), setup.getLibraryPath(), injections, config.getNoBytecodeFiles());
+                    scriptManager = new ScriptManager(getScriptType(), setup.getLibraryPath(), injections, config.filePermissionsScripts, config.getNoBytecodeFiles());
                     scriptManager.setSessionFilePath((getConfig().saveConsoleSessionFiles && !isLocalMode()) ? setup.getConsoleSessionsPath() : null);
                     setStdioListener(scriptStdioListener);
                     String script = getStartupScript();
@@ -1243,7 +1253,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
             if (pluginManager != null) {
                 pluginManager.onInitialize(runCount);
             }
-            //Only instantiate it if state goes ready                
+            //Only instantiate it if state goes ready
             taskManager = new TaskManager();
             if (!isLocalMode()) {
                 taskManager.initialize();
@@ -2754,7 +2764,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
     }
 
     public void notify(String subject, String text, List<String> attachments, List<String> to) throws IOException {
-        if (config.getNotificationLevel() != NotificationLevel.Off) {
+        if (config.notificationLevel != NotificationLevel.Off) {
             File[] att = null;
             if (attachments != null) {
                 ArrayList<File> files = new ArrayList();
@@ -2801,6 +2811,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
         }
         try (FileOutputStream out = new FileOutputStream(filename)) {
             properties.store(out, null);
+            IO.setFilePermissions(filename, getConfig().filePermissionsConfig);
         }
     }
 
@@ -3013,6 +3024,50 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
         return logManager == null ? null : logManager.getLevel();
     }
 
+    public enum  PermissionType{
+        data,
+        logs,
+        scripts,
+        config
+    }
+    
+    public void restorePermissions(String type){
+        restorePermissions(PermissionType.valueOf(type));
+    }
+    
+    //Restore permissions
+    public void restorePermissions(PermissionType type){
+        String folder;
+        String[] ext;
+        switch(type){
+            case data:
+                setFilePermissions(setup.getDataPath(), null, config.filePermissionsData);
+                break;
+            case logs:
+                setFilePermissions(setup.getLogPath(), new String[]{"log"} ,config.filePermissionsLogs);
+                break;
+            case scripts:
+                setFilePermissions(setup.getScriptPath(),null,config.filePermissionsScripts);
+                setFilePermissions(setup.getPluginsPath(),null,config.filePermissionsScripts);
+                setFilePermissions(setup.getConsoleSessionsPath(), null, config.filePermissionsScripts);  
+                break;
+            case config:
+                setFilePermissions(setup.getConfigPath(), null, config.filePermissionsConfig);       
+                setFilePermissions(setup.getContextPath(), null, config.filePermissionsConfig);       
+                setFilePermissions(setup.getDevicesPath(), null, config.filePermissionsConfig);       
+                setFilePermissions(setup.getUserSessionsPath(), null, config.filePermissionsConfig);       
+                break;
+        }
+    }
+    
+    public void setFilePermissions(String folder, String[] ext, String perm){
+        setFilePermissions(folder, ext, FilePermissions.valueOf(perm));
+    }
+    
+    public void setFilePermissions(String folder, String[] ext, FilePermissions perm){
+        IO.setFilePermissions(IO.listFilesRecursive(folder,ext), perm);               
+    }            
+    
     //Session data
     public void writeSessionMetadata(String location, boolean attributes) throws IOException {
         if (isHandlingSessions()){
@@ -3155,6 +3210,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
                         }
                         lockFile.setLength(0);
                         lockFile.write(Sys.getProcessName().getBytes());
+                        IO.setFilePermissions(lockFilePath.toString(), getConfig().filePermissionsConfig);
                         lock.release();
                         lock = lockFile.getChannel().tryLock(0, Long.MAX_VALUE, true); //So other process can read active process
                     } catch (Exception ex) {
@@ -3248,6 +3304,9 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
                     logger.warning("Extracting script library folder");
                     try {
                         IO.extractZipFile(jarFile, setup.getHomePath(), "script");
+                        if (getConfig().filePermissionsScripts != FilePermissions.Default){
+                            IO.setFilePermissions(IO.listFilesRecursive(Paths.get(setup.getHomePath(),"script").toString()), getConfig().filePermissionsScripts);
+                        }
                     } catch (Exception ex) {
                         logger.log(Level.WARNING, null, ex);
                     }
@@ -3257,6 +3316,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
                         try {
                             logger.fine("Extracting: " + startupScript.getName());
                             IO.extractZipFileContent(jarFile, "script/Lib/" + startupScript.getName(), startupScript.getCanonicalPath());
+                            IO.setFilePermissions(startupScript, getConfig().filePermissionsScripts);
                         } catch (Exception ex) {
                             logger.log(Level.WARNING, null, ex);
                         }
@@ -3271,6 +3331,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
                                     if (!scriptFile.equals(startupScript)) {
                                         logger.fine("Extracting: " + name);
                                         IO.extractZipFileContent(jarFile, "script/Lib/" + name, scriptFile.getCanonicalPath());
+                                        IO.setFilePermissions(scriptFile, getConfig().filePermissionsScripts);
                                     }
                                 }
                             }
@@ -3697,7 +3758,8 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
 
         logger.info("Close");
 
-        for (AutoCloseable ac : new AutoCloseable[]{scanStreamer, taskManager, scriptManager, devicePool, versioningManager, pluginManager, dataManager, usersManager, server}) {
+        for (AutoCloseable ac : new AutoCloseable[]{scanStreamer, taskManager, scriptManager, devicePool, versioningManager,
+                pluginManager, dataManager, usersManager, server, watchService}) {
             try {
                 if (ac != null) {
                     ac.close();

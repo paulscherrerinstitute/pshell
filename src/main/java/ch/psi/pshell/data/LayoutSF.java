@@ -176,7 +176,7 @@ public class LayoutSF extends LayoutBase implements Layout {
         dataManager.setDataset(ATTR_DATASET_PROCESS, new String[]{Sys.getProcessName()});
         dataManager.setDataset(ATTR_DATASET_APP_NAME, new String[]{App.getApplicationName()});
         dataManager.setDataset(ATTR_DATASET_APP_VERSION, new String[]{App.getApplicationVersion()});
-        dataManager.setDataset(ATTR_DATASET_INSTRUMENT, new String[]{(context == null) ? "" : context.getConfig().getName()});
+        dataManager.setDataset(ATTR_DATASET_INSTRUMENT, new String[]{(context == null) ? "" : context.getConfig().instanceName});
         dataManager.setDataset(ATTR_DATASET_AUTHOR, new String[]{context.getUser().name});
         String script = dataManager.getExecutionPars().getScript();
         dataManager.setDataset(ATTR_DATASET_COMMAND, new String[]{(script==null) ? String.valueOf(dataManager.getExecutionPars().getStatement()): script});

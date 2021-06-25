@@ -3,6 +3,7 @@ package ch.psi.pshell.core;
 import ch.psi.pshell.scripting.InterpreterResult;
 import ch.psi.utils.Chrono;
 import ch.psi.utils.Config;
+import ch.psi.utils.IO;
 import ch.psi.utils.Str;
 import java.io.File;
 import java.io.IOException;
@@ -481,6 +482,7 @@ public class CommandManager implements AutoCloseable {
                 Files.write(path, String.join(";", header).getBytes());
             }
             Files.write(path, String.join(";", data).getBytes(), StandardOpenOption.APPEND);
+            IO.setFilePermissions(path.toFile(), Context.getInstance().getConfig().filePermissionsConfig);
         }
     }
 

@@ -1,5 +1,6 @@
 package ch.psi.utils;
 
+import ch.psi.utils.IO.FilePermissions;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
@@ -21,16 +22,32 @@ public class History {
     final int size;
     final boolean autoPersist;
     final String fileName;
+    final IO.FilePermissions permissions;
 
     public History(String fileName, int size, boolean autoPersist) {
+        this(fileName, size, autoPersist, defaultPermissions);
+    }
+    
+    public History(String fileName, int size, boolean autoPersist, FilePermissions permissions) {
         this.fileName = fileName;
         this.size = size;
         this.autoPersist = autoPersist;
+        this.permissions =permissions;
         if (autoPersist) {
             restore();
         }
     }
 
+    static FilePermissions defaultPermissions = FilePermissions.Default;
+    
+    public static void setDefaultPermissions(FilePermissions permissions){
+        defaultPermissions = permissions;
+    }
+    
+    public static FilePermissions getDefaultPermissions(){
+        return defaultPermissions;
+    } 
+    
     public int getSize() {
         return size;
     }
@@ -107,6 +124,7 @@ public class History {
                 buf = Serializer.encode(history);
             }
             Files.write(Paths.get(getFileName()), buf);
+            IO.setFilePermissions(getFileName(), permissions);
         } catch (IOException ex) {
             logger.log(Level.SEVERE, null, ex);
         }

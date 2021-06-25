@@ -208,13 +208,14 @@ public class View extends MainFrame {
             public void componentRemoved(ContainerEvent e) {
                 checkTabLeftVisibility();
             }
-        });
+        });        
         loggerPanel.setOutputLength(1000);
         //loggerPanel.setInverted(true);
         loggerPanel.start();
 
         context = Context.getInstance();
         context.addListener(contextListener);
+        MainFrame.setPersistenceFilesPermissions(context.getConfig().filePermissionsConfig);
         
         menuVersioning.setVisible(false);             
         menuSessions.setVisible(context.isHandlingSessions());        
@@ -571,14 +572,16 @@ public class View extends MainFrame {
 
     void onFirstStart() {
         //setupPanelsMenu()
-        if (context.getConfig().getName().length() > 0) {
-            setTitle(App.getApplicationTitle() + " [" + context.getConfig().getName() + "]");
+        if (context.getConfig().instanceName.length() > 0) {
+            setTitle(App.getApplicationTitle() + " [" + context.getConfig().instanceName + "]");
         }
         //In case openCmdLineFiles() in onStart didn't open because context was not instantiated
         openCmdLineFiles(true);
     }
 
     void onStart() {
+        MainFrame.setPersistenceFilesPermissions(context.getConfig().filePermissionsConfig);
+        
         //User menu
         menuChangeUser.setEnabled(context.isSecurityEnabled());
 
@@ -1451,6 +1454,7 @@ public class View extends MainFrame {
     ScriptEditor newScriptEditor(String file) throws IOException {
         final ScriptEditor editor = new ScriptEditor(!preferences.simpleEditor, !preferences.hideEditorLineNumbers, !preferences.hideEditorContextMenu);
         editor.addDocumentChangeListener(scriptChangeListener);
+        editor.getTextEditor().setFilePermissions(context.getConfig().filePermissionsScripts);
         if (file != null) {
             editor.load(file);
         }
@@ -1461,7 +1465,7 @@ public class View extends MainFrame {
         editor.setTextPaneFont(preferences.fontEditor);
         editor.setEditorForeground(preferences.getEditorForeground());
         editor.setEditorBackground(preferences.getEditorBackground());
-        editor.setReadOnly(context.getRights().denyEdit);
+        editor.setReadOnly(context.getRights().denyEdit);        
 
         //TODO: Why is not working if calling sync?
         SwingUtilities.invokeLater(() -> {
@@ -1515,6 +1519,7 @@ public class View extends MainFrame {
         }
 
         TextEditor editor = new TextEditor();
+        editor.setFilePermissions(context.getConfig().filePermissionsScripts);
         openComponent(new File(file).getName(), editor);
         editor.load(file);
         return editor;
@@ -1624,6 +1629,7 @@ public class View extends MainFrame {
                 if (sd.getResult()) {
                     try (FileOutputStream out = new FileOutputStream(fileName);) {
                         props.store(out, null);
+                        IO.setFilePermissions(fileName, Context.getInstance().getConfig().filePermissionsConfig);                
                     } catch (IOException ex) {
                         SwingUtils.showException(dlg, ex);
                     }
@@ -1993,6 +1999,7 @@ public class View extends MainFrame {
         };
         try (FileOutputStream out = new FileOutputStream(openedFilesFileName)) {
             openedFiles.store(out, null);
+            IO.setFilePermissions(openedFilesFileName, context.getConfig().filePermissionsConfig);
         } catch (Exception ex) {
             logger.log(Level.FINE, null, ex);
         }
@@ -3662,7 +3669,7 @@ public class View extends MainFrame {
                     if (processor.getFileName() == null) {
                         menuSaveAsActionPerformed(null);
                     } else {
-                        processor.save();
+                        processor.save(context.getConfig().filePermissionsScripts);
                         if (processor.getFileName() != null) {
                             if (processor.isTabNameUpdated()) {
                                 tabDoc.setTitleAt(tabDoc.getSelectedIndex(), new File(processor.getFileName()).getName());
@@ -3722,7 +3729,7 @@ public class View extends MainFrame {
                             String extension = "." + processor.getExtensions()[0];
                             fileName += extension;
                         }
-                        processor.saveAs(fileName);
+                        processor.saveAs(fileName, context.getConfig().filePermissionsScripts);
                         if (processor.getFileName() != null) {
                             fileHistory.put(processor.getFileName());
                             if (processor.isTabNameUpdated()) {
@@ -3857,6 +3864,7 @@ public class View extends MainFrame {
                 devicePoolEditor = new DevicePoolEditor();
                 devicePoolEditorDlg = devicePoolEditor.getDialog(this, false);
                 devicePoolEditorDlg.setSize(900, 400);
+                devicePoolEditor.setFilePermissions(context.getConfig().filePermissionsConfig);
                 devicePoolEditor.load(context.getSetup().getDevicePoolFile());
                 devicePoolEditor.setReadOnly(context.getRights().denyConfig);
                 devicePoolEditor.setTitle("Device Pool Definition");
@@ -3929,6 +3937,7 @@ public class View extends MainFrame {
         try {
             PluginsEditor editor = new PluginsEditor();  //new TextEditor();
             EditorDialog dlg = editor.getDialog(this, false);
+            editor.setFilePermissions(context.getConfig().filePermissionsConfig);
             editor.load(context.getSetup().getPluginsConfigurationFile());
             editor.setReadOnly(context.getRights().denyConfig);
             dlg.setContentPane(editor);
@@ -4043,7 +4052,8 @@ public class View extends MainFrame {
             EditorDialog dlg = editor.getDialog(this, false);
             dlg.setSize(480, 320);
             showChildWindow(dlg);
-            editor.load(context.getSetup().getTasksFile());
+            editor.setFilePermissions(context.getConfig().filePermissionsConfig);
+            editor.load(context.getSetup().getTasksFile());            
             editor.setReadOnly(context.getRights().denyConfig);
             editor.setTitle("Tasks");
         } catch (FileNotFoundException | NoSuchFileException ex) {
@@ -4159,10 +4169,11 @@ public class View extends MainFrame {
     private void menuUsersbuttonAbortActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuUsersbuttonAbortActionPerformed
         try {
             Editor editor = new UsersEditor(context.getUsersManager());
+            editor.setFilePermissions(context.getConfig().filePermissionsConfig);
             EditorDialog dlg = editor.getDialog(this, false);
             dlg.setSize(640, 360);
             showChildWindow(dlg);
-            editor.load(null);
+            editor.load(null);            
             editor.setReadOnly(context.getRights().denyConfig);
             editor.setTitle("Users");
         } catch (FileNotFoundException | NoSuchFileException ex) {
@@ -4274,6 +4285,7 @@ public class View extends MainFrame {
             Server server = context.getServer();
             String[][] entries = new String[][]{
                 {"Process", Sys.getProcessName()},
+                {"User", Sys.getUserName()},
                 {"Version", App.getApplicationBuildInfo()},
                 {"Java", /*System.getProperty("java.vendor") + " " + */
                     System.getProperty("java.vm.name") + " (" + System.getProperty("java.version") + ")"},
@@ -4846,6 +4858,7 @@ public class View extends MainFrame {
         try{
             MetadataEditor editor = new MetadataEditor(Convert.toStringArray(SessionManager.MetadataType.values()));  //new TextEditor();
             EditorDialog dlg = editor.getDialog(this, true);
+            editor.setFilePermissions(context.getConfig().filePermissionsConfig);
             editor.load(context.getSetup().getSessionMetadataDefinitionFile());
             editor.setReadOnly(context.getRights().denyConfig);
             dlg.setContentPane(editor);

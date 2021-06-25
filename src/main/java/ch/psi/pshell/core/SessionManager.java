@@ -132,7 +132,7 @@ public class SessionManager extends ObservableBase<SessionManager.SessionManager
     }
     
     public SessionHandling getMode(){
-        return Context.getInstance().getConfig().getSessionHandling();
+        return Context.getInstance().getConfig().sessionHandling;
     }
     
     int getNewSession() throws IOException{
@@ -418,6 +418,7 @@ public class SessionManager extends ObservableBase<SessionManager.SessionManager
     Path createSessionPath(int id) throws IOException {
         Path path = _getSessionPath(id);
         path.toFile().mkdirs();
+        IO.setFilePermissions(path.toString(),Context.getInstance().getConfig().filePermissionsConfig);
         return path;
     }
 
@@ -532,8 +533,8 @@ public class SessionManager extends ObservableBase<SessionManager.SessionManager
 
     String transferData(File from) throws Exception {
         IO.assertExists(from);
-        String path = Context.getInstance().config.getDataTransferPath();
-        String user = Context.getInstance().config.getDataTransferUser();
+        String path = Context.getInstance().config.dataTransferPath;
+        String user = Context.getInstance().config.dataTransferUser;
         if (path.isBlank()) {
             throw new IOException("Undefined target folder");
         }
@@ -548,7 +549,7 @@ public class SessionManager extends ObservableBase<SessionManager.SessionManager
             } else {
                 IO.copy(from.getCanonicalPath(), to.toFile().getCanonicalPath());
             }
-            if (Context.getInstance().config.getDataTransferMode() == DataTransferMode.Move) {
+            if (Context.getInstance().config.dataTransferMode == DataTransferMode.Move) {
                 IO.deleteRecursive(from);
             }
             return to.toFile().getCanonicalPath();
@@ -562,7 +563,7 @@ public class SessionManager extends ObservableBase<SessionManager.SessionManager
                 path = path.replaceFirst("&", "~");
             }
             Path to = Paths.get(path, from.getName());
-            boolean move = (Context.getInstance().config.getDataTransferMode() == DataTransferMode.Move);
+            boolean move = (Context.getInstance().config.dataTransferMode == DataTransferMode.Move);
             String ret = RSync.sync(user, from.getCanonicalPath(), path, move);
             //Thread.sleep(5000);
             return to.toString();
@@ -576,7 +577,7 @@ public class SessionManager extends ObservableBase<SessionManager.SessionManager
         final int sessionId = getCurrentSession();
         final boolean updateRun = saveRun;
 
-        boolean transfer = (Context.getInstance().config.getDataTransferMode() != DataTransferMode.Off);
+        boolean transfer = (Context.getInstance().config.dataTransferMode != DataTransferMode.Off);
         try {
             if (isStarted()) {
                 if (dataPath != null) {
@@ -758,7 +759,9 @@ public class SessionManager extends ObservableBase<SessionManager.SessionManager
 
     void setInfo(int id, Map<String, Object> info) throws IOException {
         String json = JsonSerializer.encode(info);
-        Files.writeString(Paths.get(getSessionPath(id).toString(), INFO_FILE), json);
+        Path path = Paths.get(getSessionPath(id).toString(), INFO_FILE);
+        Files.writeString(path, json);
+        IO.setFilePermissions(path.toString(),Context.getInstance().getConfig().filePermissionsConfig);
         if (id == getCurrentSession()) {
             triggerChanged(id, ChangeType.INFO);
         }
@@ -1176,7 +1179,9 @@ public class SessionManager extends ObservableBase<SessionManager.SessionManager
         }
 
         String json = JsonSerializer.encode(metadata);
-        Files.writeString(Paths.get(getSessionPath(id).toString(), METADATA_FILE), json);
+        Path path = Paths.get(getSessionPath(id).toString(), METADATA_FILE);
+        Files.writeString(path, json);
+        IO.setFilePermissions(path.toString(),Context.getInstance().getConfig().filePermissionsConfig);
         if (id == getCurrentSession()) {
             triggerChanged(id, ChangeType.METADATA);
         }

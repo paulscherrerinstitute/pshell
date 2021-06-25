@@ -1,6 +1,8 @@
 package ch.psi.pshell.data;
 
 import ch.psi.pshell.core.Context;
+import ch.psi.utils.IO.FilePermissions;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -107,8 +109,12 @@ public interface Provider {
             return 0;
         }
         return Context.getInstance().getDataManager().getDepthDimension();
-    }    
-    
+    }
+
+    default FilePermissions getFilePermissions(){
+        return Context.getInstance().getDataManager().filePermissions;
+    }
+
     default public void checkLogFile(String logFile) throws IOException{
     }    
     
@@ -120,6 +126,16 @@ public interface Provider {
         Context.assertInstantiated();
         return Paths.get(Context.getInstance().getDataManager().getRootFileName());
     }
+
+    /**
+     * Returns the actual file path for the relative location.
+     * The defualt implementation returns the File path (true for packed data and for embedded attributes).
+     */
+    default public Path getAttributePath(String path) {
+        return getFilePath(path);
+    }
+
+
     
     default public boolean getEmbeddedAtributes() {
         if (!Context.isDataManagerInstantiated()){

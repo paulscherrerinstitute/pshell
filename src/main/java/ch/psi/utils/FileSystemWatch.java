@@ -47,8 +47,9 @@ public class FileSystemWatch implements AutoCloseable{
         boolean registered = false;
         try {
             watchService = FileSystems.getDefault().newWatchService();
-            if (watchService != null) {
+            if (watchService != null) {                
                 for (String path : paths) {
+                    logger.info("Registering lib path: " + path);
                     try {
                         List<WatchEvent.Kind> kinds = new ArrayList<>();
                         if (create) {

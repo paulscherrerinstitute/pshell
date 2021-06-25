@@ -15,6 +15,7 @@ import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.attribute.PosixFilePermissions;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Enumeration;
@@ -131,7 +132,7 @@ public class IO {
             }
         }
     }
-    
+
     public static void createZipFile(File zip, List<File> files) throws IOException {
         createZipFile(zip, files, null);
     }
@@ -142,15 +143,15 @@ public class IO {
                 final int BUFFER_SIZE = 0x10000;
                 byte data[] = new byte[BUFFER_SIZE];
                 int count;
-                
+
                 for (File file : files) {
                     if (file.isFile()) {
                         try (FileInputStream fis = new FileInputStream(file)) {
-                            try (BufferedInputStream bis = new BufferedInputStream(fis, BUFFER_SIZE)) {                                
+                            try (BufferedInputStream bis = new BufferedInputStream(fis, BUFFER_SIZE)) {
                                 String zipPath = file.getName();
-                                if ((root!=null)&& (IO.isSubPath(file, root))){
+                                if ((root != null) && (IO.isSubPath(file, root))) {
                                     zipPath = IO.getRelativePath(file.toString(), root.toString());
-                                }                                                                
+                                }
                                 ZipEntry ze = new ZipEntry(zipPath);
                                 zos.putNextEntry(ze);
                                 while ((count = bis.read(data, 0, BUFFER_SIZE)) != -1) {
@@ -164,10 +165,10 @@ public class IO {
                         generateZipFileList(sourceFolder, file, fileList);
                         for (String f : fileList) {
                             String zipPath = file.getName();
-                             if ((root!=null)&& (IO.isSubPath(file, root))){
-                                 zipPath = IO.getRelativePath(file.toString(), root.toString());
-                             }                                 
-                            ZipEntry ze = new ZipEntry(zipPath + File.separator + f);                            
+                            if ((root != null) && (IO.isSubPath(file, root))) {
+                                zipPath = IO.getRelativePath(file.toString(), root.toString());
+                            }
+                            ZipEntry ze = new ZipEntry(zipPath + File.separator + f);
                             zos.putNextEntry(ze);
                             try (FileInputStream fis = new FileInputStream(sourceFolder + File.separator + f)) {
                                 try (BufferedInputStream bis = new BufferedInputStream(fis, BUFFER_SIZE)) {
@@ -182,7 +183,7 @@ public class IO {
             }
         }
     }
-        
+
     public static String[] getJarContents(String fileName) throws IOException {
         try (JarFile file = new JarFile(fileName)) {
             return getJarContents(file);
@@ -272,6 +273,9 @@ public class IO {
     }
 
     public static File[] listFiles(File path, final String[] extensions) {
+        if (extensions==null){
+            return listFiles(path);
+        }        
         StringBuilder filter = new StringBuilder();
         filter.append("*.{");
         filter.append(String.join(",", extensions)).append("}");
@@ -309,6 +313,50 @@ public class IO {
         return list.toArray(new File[0]);
     }
 
+    public static File[] listFilesRecursive(String pathName) {
+        return listFilesRecursive(new File(pathName));
+    }
+
+    public static File[] listFilesRecursive(File f) {
+        return listFilesRecursive(f, (String) null);
+    }
+
+    public static File[] listFilesRecursive(String pathName, final String[] extensions) {
+        return listFilesRecursive(new File(pathName), extensions);
+    }
+
+    public static File[] listFilesRecursive(File path, final String[] extensions) {
+        if (extensions==null){
+            return listFilesRecursive(path);
+        }
+        StringBuilder filter = new StringBuilder();
+        filter.append("*.{");
+        filter.append(String.join(",", extensions)).append("}");
+        return listFilesRecursive(path, filter.toString());
+    }
+
+    public static File[] listFilesRecursive(String pathName, final String filter){
+        return listFilesRecursive(new File(pathName), filter);
+    }
+
+    static public File[] listFilesRecursive(File path, DirectoryStream.Filter<Path> filter) {
+        ArrayList<File> ret = new ArrayList<>();
+        ret.addAll(Arrays.asList(listFiles(path, filter)));
+        for (File child : listSubFolders(path)){
+            ret.addAll(Arrays.asList(listFilesRecursive(child, filter)));
+        }
+        return ret.toArray(new File[0]);
+    }
+    
+    static public File[] listFilesRecursive(File path, String filter) {
+        ArrayList<File> ret = new ArrayList<>();
+        ret.addAll(Arrays.asList(listFiles(path, filter)));
+        for (File child : listSubFolders(path)){
+            ret.addAll(Arrays.asList(listFilesRecursive(child, filter)));
+        }
+        return ret.toArray(new File[0]);
+    }
+
     public static File[] listSubFolders(String pathName) {
         return listSubFolders(new File(pathName));
     }
@@ -325,6 +373,21 @@ public class IO {
         }
         return ret.toArray(new File[0]);
     }
+    
+    public static File[] listSubFoldersRecursive(String pathName) {
+        return listSubFoldersRecursive(new File(pathName));
+    }
+    
+    public static File[] listSubFoldersRecursive(File path) {
+        ArrayList<File> ret = new ArrayList<>();
+        for (File child : listFiles(path)) {
+            if (child.isDirectory()) {
+                ret.add(child);
+                ret.addAll(Arrays.asList(listSubFoldersRecursive(child)));
+            }
+        }
+        return ret.toArray(new File[0]);
+    }    
 
     public static void orderByName(File[] files) {
         Arrays.sort(files, (a, b) -> a.compareTo(b));
@@ -397,9 +460,9 @@ public class IO {
     private static void grep(File file, final String filter, Pattern pattern, boolean recursive, String[] ignored, GrepListener listener) throws IOException {
         for (File f : IO.listFiles(file, filter)) {
             if (!f.isDirectory()) {
-                try{
+                try {
                     grep(f, pattern, listener);
-                } catch(IOException ex){
+                } catch (IOException ex) {
                     Logger.getLogger(IO.class.getName()).log(Level.WARNING, null, ex);
                 }
             }
@@ -573,15 +636,14 @@ public class IO {
         }
         return false;
     }
-    
-    public static boolean isSubPath(File path,File referencePath) {
+
+    public static boolean isSubPath(File path, File referencePath) {
         try {
             return path.getCanonicalPath().startsWith(referencePath.getCanonicalPath());
         } catch (Exception ex) {
         }
         return false;
     }
-           
 
     public static String getRelativePath(String fileName, String referencePath) {
         try {
@@ -597,15 +659,15 @@ public class IO {
             }
             String ret = referenceFile.toURI().relativize(file.toURI()).getPath();
             //TODO: sometimes file.toURI() appends a slash  to the name
-            if (ret.endsWith("/") && !fileName.endsWith("/")){
-                ret = ret.substring(0, ret.length()-1);
+            if (ret.endsWith("/") && !fileName.endsWith("/")) {
+                ret = ret.substring(0, ret.length() - 1);
             }
             return ret;
         } catch (Exception ex) {
         }
         return fileName;
     }
-    
+
     //Asserting
     public static void assertExists(String path) throws FileNotFoundException {
         assertExists(new File(path));
@@ -652,9 +714,91 @@ public class IO {
             }
         });
     }
+
+    public enum FilePermissions {
+        Default,
+        Private,
+        Protected,
+        Group,
+        Public
+    }
+
+    static public void setFilePermissions(String file, FilePermissions perm) {
+        setFilePermissions(file, perm, true);
+    }
+   
+    static public void setFilePermissions(String file, FilePermissions perm, boolean onlyUserOwner) {
+        setFilePermissions(new File(file), perm, onlyUserOwner);
+    }
+
+    static public void setFilePermissions(File file, FilePermissions perm) {
+        setFilePermissions(file, perm, true);
+    }
+
+    public static void setFilePermissions(File file, FilePermissions perm, boolean onlyUserOwner) {
+        if ((perm != null) && (perm != FilePermissions.Default) && (file != null) && (file.exists())) {
+            if (!onlyUserOwner || isCurrentUserOwner(file)){
+                try {                
+                    switch (perm) {
+                        case Private:
+                            file.setReadable(false, false);
+                            file.setWritable(false, false);
+                            file.setReadable(true, true);
+                            file.setWritable(true, true);
+                            file.setExecutable(file.isDirectory(), false);
+                            break;
+                        case Protected:
+                            file.setReadable(true, false);
+                            file.setWritable(false, false);
+                            file.setWritable(true, true);
+                            file.setExecutable(file.isDirectory(), false);
+                            break;
+                        case Group:
+                            String str = file.isDirectory() ? "rwxrwxr-x" : "rw-rw-r--";
+                            Files.setPosixFilePermissions(file.toPath(), PosixFilePermissions.fromString(str));
+                            break;
+                        case Public:
+                            file.setReadable(true, false);
+                            file.setWritable(true, false);
+                            file.setExecutable(file.isDirectory(), false);
+                            break;
+                    }                    
+                } catch (Exception ex) {
+                    Logger.getLogger(IO.class.getName()).log(Level.WARNING, null, ex);
+                }
+            }
+        }
+    }
+
+    static public void setFilePermissions(String[] files, FilePermissions perm) {
+        setFilePermissions(files, perm, true);
+    }
     
-    public static void setFilePublic(File file){
-        file.setReadable(true, false);
-        file.setWritable(true, false);        
+    static public void setFilePermissions(String[] files, FilePermissions perm, boolean onlyUserOwner) {
+        for (String file : files) {
+            setFilePermissions(file, perm, onlyUserOwner);
+        }
+    }
+
+    static public void setFilePermissions(File[] files, FilePermissions perm) {
+        setFilePermissions(files, perm, true);
+    }
+
+    static public void setFilePermissions(File[] files, FilePermissions perm, boolean onlyUserOwner) {
+        for (File file : files) {
+            setFilePermissions(file, perm, onlyUserOwner);
+        }
+    }
+    
+    static public boolean isCurrentUserOwner(String file){
+        return isCurrentUserOwner(new File(file));
+    }
+    
+    static public boolean isCurrentUserOwner(File file){
+        try{
+            return Files.getOwner(file.toPath()).getName().equals(Sys.getUserName());
+        } catch (Exception ex){
+            return false;
+        }
     }
 }

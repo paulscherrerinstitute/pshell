@@ -64,6 +64,7 @@ import static ch.psi.pshell.swing.PlotPanel.getLinePlotImpl;
 import static ch.psi.pshell.swing.PlotPanel.getMatrixPlotImpl;
 import ch.psi.utils.Config;
 import ch.psi.utils.Config.ConfigListener;
+import ch.psi.utils.IO;
 import ch.psi.utils.Range;
 import ch.psi.utils.Sys;
 import ch.psi.utils.Sys.OSFamily;
@@ -2567,6 +2568,7 @@ public class Renderer extends MonitoredPanel implements ImageListener, ImageBuff
         state.formerMode = formerMode;
         try {
             Files.write(file, Serializer.encode(state, Serializer.EncoderType.bin));
+            IO.setFilePermissions(file.toFile(), Context.getInstance().getConfig().filePermissionsConfig);
         } catch (Exception ex) {
             Logger.getLogger(Renderer.class.getName()).log(Level.SEVERE, null, ex);
         }

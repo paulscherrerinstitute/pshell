@@ -17,6 +17,7 @@ import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
+import ch.psi.utils.IO.FilePermissions;
 
 /**
  * Implementations of this class perform edition on Document objects.
@@ -34,6 +35,8 @@ public abstract class Editor<T extends Document>
     String title = null;
     String fileName = null;
     String fileChooserFolder = null;
+
+    FilePermissions permissions = FilePermissions.Default;
 
     public void setFileChooserFolder(String value) {
         fileChooserFolder = value;;
@@ -77,6 +80,16 @@ public abstract class Editor<T extends Document>
             }
         }
     };
+
+    FilePermissions filePermissions = FilePermissions.Default;
+
+    public FilePermissions getFilePermissions(){
+        return filePermissions;
+    }
+
+    public void setFilePermissions(FilePermissions permissions){
+        this.filePermissions = permissions;
+    }
 
     public Document getDocument() {
         return document;
@@ -160,7 +173,7 @@ public abstract class Editor<T extends Document>
 
     public void saveAs(String fileName) throws IOException {
         setFileName(fileName);
-        document.save(fileName);
+        document.save(fileName, filePermissions);
     }
 
     public void saveAs() throws IOException {
