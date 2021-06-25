@@ -140,6 +140,7 @@ import ch.psi.utils.Config;
 import ch.psi.utils.Sys;
 import ch.psi.utils.Sys.OSFamily;
 import ch.psi.utils.swing.PropertiesDialog;
+import ch.psi.utils.swing.Terminal;
 import ch.psi.utils.swing.TextEditor;
 import java.awt.Color;
 import java.awt.Cursor;
@@ -2203,6 +2204,46 @@ public class View extends MainFrame {
             stop();
         }
     }
+    
+    Terminal terminal;
+    
+    
+    
+    public int getTerminalIndexTabStatus() {
+        for (int i = 0; i < tabStatus.getTabCount(); i++) {
+            Component c = tabStatus.getComponentAt(i);
+            if (c == terminal) {
+                return i;
+            }
+        }    
+        return -1;
+    }    
+    
+    boolean isTerminalVisible(){
+        return getTerminalIndexTabStatus()>=0;
+    }
+    
+    void showTerminal(){
+        if (isTerminalVisible()){
+            int index = getTerminalIndexTabStatus();
+            if (index>=0){
+                tabStatus.setSelectedComponent(terminal);
+                return;
+            }
+        }
+        terminal = new Terminal(context.getSetup().getHomePath(), 10.0f);
+        tabStatus.addTab("Terminal", terminal);
+        int index = tabStatus.getTabCount() - 1;
+        SwingUtils.setTabClosable(tabStatus, index);
+        tabStatus.setSelectedComponent(terminal);
+    }
+    
+    void hideTerminal(){
+        int index = getTerminalIndexTabStatus();
+        if (index>=0){
+            tabStatus.remove(terminal);
+        }
+    }
 
     /**
      * This method is called from within the constructor to initialize the form.
@@ -2360,6 +2401,7 @@ public class View extends MainFrame {
         menuPlotWindow = new javax.swing.JMenu();
         menuViewPlotWindow = new javax.swing.JCheckBoxMenuItem();
         menuPlotWindowDetached = new javax.swing.JCheckBoxMenuItem();
+        menuTerminal = new javax.swing.JCheckBoxMenuItem();
         jSeparator8 = new javax.swing.JPopupMenu.Separator();
         menuCloseAllPlots = new javax.swing.JMenuItem();
         menuCloseAll = new javax.swing.JMenuItem();
@@ -3422,6 +3464,15 @@ public class View extends MainFrame {
 
         menuView.add(menuPlotWindow);
 
+        menuTerminal.setText(bundle.getString("View.menuTerminal.text")); // NOI18N
+        menuTerminal.setName("menuTerminal"); // NOI18N
+        menuTerminal.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                menuTerminalActionPerformed(evt);
+            }
+        });
+        menuView.add(menuTerminal);
+
         jSeparator8.setName("jSeparator8"); // NOI18N
         menuView.add(jSeparator8);
 
@@ -3843,6 +3894,7 @@ public class View extends MainFrame {
             try {
                 menuViewPlotWindow.setSelected(isPlotsVisible());
                 menuFullScreen.setSelected(isFullScreen());
+                menuTerminal.setSelected(isTerminalVisible());
                 for (Component item : menuConsoleLocation.getMenuComponents()) {
                     ((JRadioButtonMenuItem) item).setSelected(((JRadioButtonMenuItem) item).getText().equals(consoleLocation.toString()));
                 }
@@ -4932,6 +4984,18 @@ public class View extends MainFrame {
         }        
     }//GEN-LAST:event_menuSessionCreateActionPerformed
 
+    private void menuTerminalActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuTerminalActionPerformed
+        try{
+            if (menuTerminal.isSelected()){
+                showTerminal();               
+            } else {
+                hideTerminal(); 
+            }
+        } catch (Exception ex) {
+            showException(ex);
+        }  
+    }//GEN-LAST:event_menuTerminalActionPerformed
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton buttonAbort;
     private javax.swing.JButton buttonAbout;
@@ -5050,6 +5114,7 @@ public class View extends MainFrame {
     private javax.swing.JMenuItem menuStopAll;
     private javax.swing.JMenuItem menuStripChart;
     private javax.swing.JMenuItem menuTasks;
+    private javax.swing.JCheckBoxMenuItem menuTerminal;
     private javax.swing.JMenuItem menuToggleComment;
     private javax.swing.JMenuItem menuUncomment;
     private javax.swing.JMenuItem menuUndo;

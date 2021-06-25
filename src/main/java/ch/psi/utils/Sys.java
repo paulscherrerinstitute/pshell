@@ -78,6 +78,10 @@ public class Sys {
         return String.valueOf(System.getProperty("user.home"));
     }
 
+    public static String getCurDir(){
+        return String.valueOf(System.getProperty("user.dir"));
+    }
+    
     public static String getCommand() {
         return String.valueOf(System.getProperty("sun.java.command"));
     }
