@@ -75,6 +75,7 @@ public class Preferences {
     public Font fontPlotLabel;
     public Font fontPlotTick;
     public Font fontPlotTitle;
+    public Float terminalFontSize=10.0f;
     public int tabSize = 4;
     public int contentWidth;
     public Color editorBackground;

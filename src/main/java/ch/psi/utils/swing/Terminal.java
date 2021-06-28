@@ -10,7 +10,6 @@ import com.jediterm.terminal.ui.settings.DefaultSettingsProvider;
 import com.pty4j.PtyProcess;
 import com.pty4j.PtyProcessBuilder;
 import java.awt.BorderLayout;
-import java.awt.Color;
 import java.awt.Dimension;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
@@ -34,7 +33,6 @@ public class Terminal extends MonitoredPanel implements AutoCloseable{
                 return MainFrame.isDark() ? new TextStyle(TerminalColor.WHITE, TerminalColor.rgb(43,43,43)) : super.getDefaultStyle();
             }
         });
-        connector = createTtyConnector();
         widget.setTtyConnector(connector);
         widget.start();
         this.setLayout(new BorderLayout());

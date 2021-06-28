@@ -2231,7 +2231,7 @@ public class View extends MainFrame {
                 return;
             }
         }
-        terminal = new Terminal(context.getSetup().getHomePath(), 10.0f);
+        terminal = new Terminal(context.getSetup().getHomePath(), preferences.terminalFontSize);
         tabStatus.addTab("Terminal", terminal);
         int index = tabStatus.getTabCount() - 1;
         SwingUtils.setTabClosable(tabStatus, index);
