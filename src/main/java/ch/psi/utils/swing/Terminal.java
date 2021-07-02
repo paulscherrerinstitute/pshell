@@ -33,7 +33,7 @@ public class Terminal extends MonitoredPanel implements AutoCloseable{
                 return MainFrame.isDark() ? new TextStyle(TerminalColor.WHITE, TerminalColor.rgb(43,43,43)) : super.getDefaultStyle();
             }
         });
-        widget.setTtyConnector(connector);
+        widget.setTtyConnector(createTtyConnector());        
         widget.start();
         this.setLayout(new BorderLayout());
         add(widget);
