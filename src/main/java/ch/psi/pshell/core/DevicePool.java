@@ -19,6 +19,7 @@ import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import ch.psi.pshell.device.GenericDevice;
+import ch.psi.pshell.device.GenericDeviceBase;
 import ch.psi.pshell.device.Readable;
 import ch.psi.pshell.device.Writable;
 import ch.psi.pshell.epics.Epics;
@@ -27,6 +28,7 @@ import ch.psi.utils.Str;
 import ch.psi.utils.Threading;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Parameter;
+import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 
@@ -204,15 +206,19 @@ public class DevicePool extends ObservableBase<DevicePoolListener> implements Au
             logger.log(Level.INFO, "Empty mode: bypassing device instantiation");
             return;
         }
-
+        synchronized (deviceList) {
+            deviceList.clear();
+            orderedDeviceNames.clear();
+            dependencies.clear();
+        }
+        loadFile(fileName);
+    }
+    
+    List<GenericDevice> loadFile(String fileName) throws FileNotFoundException, IOException {
+        List<GenericDevice> devices = new ArrayList<>();
         Properties properties = new Properties();
         try (FileInputStream in = new FileInputStream(fileName)) {
             properties.load(in);
-            synchronized (deviceList) {
-                deviceList.clear();
-                orderedDeviceNames.clear();
-                dependencies.clear();
-            }
 
             for (String deviceName : IO.getOrderedPropertyKeys(fileName)) {
                 String config = "Invalid device name";
@@ -241,6 +247,7 @@ public class DevicePool extends ObservableBase<DevicePoolListener> implements Au
                             device.setSimulated();
                         }
                         deviceAttributes.put(device, attr);
+                        devices.add(device);
                     }
 
                 } catch (Exception ex) {
@@ -249,6 +256,32 @@ public class DevicePool extends ObservableBase<DevicePoolListener> implements Au
                 }
             }
         }
+        return devices;
+    }
+    
+    public void initializeExtension(String fileName, String configFolder) throws FileNotFoundException, IOException {
+        logger.info("Initializing " + getClass().getSimpleName() + " extension: " + fileName);        
+        List<GenericDevice> extensionDevices;
+        try{
+            GenericDeviceBase.defaultConfigPath = configFolder;
+            extensionDevices = loadFile(fileName);
+        } finally{
+            GenericDeviceBase.defaultConfigPath = null;
+        }
+        try {
+            initializeDevices(extensionDevices.toArray(new GenericDevice[0]));
+        } catch (InterruptedException ex) {
+            Logger.getLogger(DevicePool.class.getName()).log(Level.WARNING, null, ex);
+        }
+        for (GenericDevice dev : extensionDevices) {
+            try {
+                applyDeviceAttributes(dev);
+            } catch (InterruptedException ex) {
+                Logger.getLogger(DevicePool.class.getName()).log(Level.WARNING, null, ex);
+            }
+            onNewDeviceAdded(dev);
+        }        
+        logger.info("Finished " + getClass().getSimpleName() + " extension initialization: " + fileName);
     }
 
     public static class AdjustedConstructor {
@@ -403,7 +436,7 @@ public class DevicePool extends ObservableBase<DevicePoolListener> implements Au
             deviceList.put(device.getName(), device);
         }
     }
-
+    
     public GenericDevice getByName(String name) {
         return getByName(name, null);
     }
@@ -535,10 +568,14 @@ public class DevicePool extends ObservableBase<DevicePoolListener> implements Au
     }
 
     public void initializeDevices() throws InterruptedException {
+        initializeDevices(getAllDevices());
+    }
+    
+    public void initializeDevices(GenericDevice[] devices) throws InterruptedException {
         if (parallelInitialization) {
             ArrayList<GenericDevice> processed = new ArrayList<>();
             ArrayList<Callable> callables = new ArrayList();
-            for (GenericDevice dev : getAllDevices()) {
+            for (GenericDevice dev : devices) {
                 callables.add((Callable) () -> {
                     try {
                         waitDependenciesInit(dev, processed);
@@ -630,9 +667,13 @@ public class DevicePool extends ObservableBase<DevicePoolListener> implements Au
         applyDeviceAttributes(device);
     }
 
-    public void applyDeviceAttributes() throws FileNotFoundException, IOException, InterruptedException {
+    public void applyDeviceAttributes() throws InterruptedException {
         for (GenericDevice dev : getAllDevices()) {
-            applyDeviceAttributes(dev);
+            try {
+                applyDeviceAttributes(dev);
+            } catch (IOException ex) {
+                Logger.getLogger(DevicePool.class.getName()).log(Level.WARNING, null, ex);
+            }
         }
     }
 
@@ -653,7 +694,7 @@ public class DevicePool extends ObservableBase<DevicePoolListener> implements Au
         } catch (Exception ex) {
             logger.log(Level.WARNING, null, ex);
         }
-    }
+    }            
 
     public boolean addDevice(GenericDevice device) {
         return addDevice(device, true);
@@ -678,7 +719,11 @@ public class DevicePool extends ObservableBase<DevicePoolListener> implements Au
                 }
             }
         }
-
+        onNewDeviceAdded(device);
+        return true;
+    }
+    
+    void onNewDeviceAdded(GenericDevice device){
         for (DevicePoolListener listener : getListeners()) {
             try {
                 listener.onDeviceAdded(device);
@@ -686,8 +731,21 @@ public class DevicePool extends ObservableBase<DevicePoolListener> implements Au
                 logger.log(Level.WARNING, null, ex);
             }
         }
-        return true;
     }
+    
+    public boolean addDevice(GenericDevice device, boolean force,  boolean initialize){
+        if (contains(device)){
+            return false;
+        }
+        if (force){
+            GenericDevice dev = getByName(device.getName());
+            if (dev != null){
+                removeDevice(dev);
+            }
+        }
+        return addDevice(device, initialize);
+    }
+    
 
     public boolean removeDevice(GenericDevice device) {
         return removeDevice(device, true);

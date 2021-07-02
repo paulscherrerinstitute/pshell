@@ -245,6 +245,10 @@
     <td>-p=[name]</td>
     <td>Load a plugin at startup.</td>
   </tr>
+  <tr>
+    <td>-m=[path]</td>
+    <td>Load a package at startup.</td>
+  </tr>
 </table>
 
 <!--

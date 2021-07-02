@@ -230,44 +230,45 @@ public class PluginManager implements AutoCloseable {
         
     
     void loadExtensionsFolder() {
-        loadExtensionsFolder(Context.getInstance().getSetup().getExtensionsPath());
-    }
-
-    public void loadExtensionsFolder(String folder) {
-        logger.info("Loading extensions folder: " + folder);
-        try {
-            addToLibraryPath(new File(folder));
-
-            String jar = Context.getInstance().getSetup().getJarFile();
-            if (jar != null) {
-                addToLibraryPath(new File(jar).getParentFile());
-            }
-
-            File[] extensionFolderContents = getExtensionsFolderContents(folder);
-            ArrayList<File> files = new ArrayList<>(Arrays.asList(extensionFolderContents));
-
-            if (jar != null) {
-                Path path = Paths.get(IO.getFolder(jar), JAR_EXTENSIONS_FOLDER);
-                if (path.toFile().exists()) {
-                    addToLibraryPath(path.toFile());
-                    for (File file : getFolderJarContents(path.toFile())) {
-                        boolean add = true;
-                        for (File f : files) {
-                            if (f.getName().equals(file.getName())) {
-                                add = false;
-                                break;
-                            }
-                        }
-                        if (add){
-                            files.add(file);
+        List<File> files = loadExtensionsFolder(Context.getInstance().getSetup().getExtensionsPath());
+        String jar = Context.getInstance().getSetup().getJarFile();
+        if (jar != null) {
+            addToLibraryPath(new File(jar).getParentFile());
+            //If file duplicated in jar ext folder, give priority to local ext folder.
+            File extFolder= Paths.get(IO.getFolder(jar), JAR_EXTENSIONS_FOLDER).toFile();
+            if (extFolder.exists() && extFolder.isDirectory()) {
+                addToLibraryPath(extFolder);
+                for (File file : getFolderJarContents(extFolder)) {
+                    boolean add = true;
+                    for (File f : files) {
+                        if (f.getName().equals(file.getName())) {
+                            add = false;
+                            break;
                         }
                     }
+                    if (add){
+                        addToClassPath(file);
+                    }
                 }
+            }                
+        }        
+    }
+
+    List<File> loadExtensionsFolder(String folder) {
+        File f = new File(folder);
+        if (f.exists() && f.isDirectory() && (f.listFiles().length>0)){
+            logger.info("Loading extensions folder: " + folder);
+            try {
+                addToLibraryPath(new File(folder));
+                File[] extensionFolderContents = getExtensionsFolderContents(folder);
+                ArrayList<File> files = new ArrayList<>(Arrays.asList(extensionFolderContents));
+                addToClassPath(files);
+                return files;
+            } catch (Exception ex) {
+                logger.log(Level.SEVERE, null, ex);
             }
-            addToClassPath(files);
-        } catch (Exception ex) {
-            logger.log(Level.SEVERE, null, ex);
         }
+        return new ArrayList<>();
     }
     
     public void addToClassPath(List<File> files){

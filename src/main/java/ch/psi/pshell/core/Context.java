@@ -121,6 +121,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
     ScanStreamer scanStreamer;
     DataServer dataStreamer;
     CommandManager commandManager;
+    PackageManager packageManager;
     volatile String next;
     volatile boolean aborted;
     volatile Exception foregroundException;
@@ -148,6 +149,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
     public static final String PROPERTY_ENABLE_EXTRACT = "ch.psi.pshell.force.extract";
     public static final String PROPERTY_ENABLE_VERSIONING = "ch.psi.pshell.force.versioning";
     public static final String PROPERTY_SIMULATION = "ch.psi.pshell.simulation";
+    public static final String PROPERTY_PACKAGES = "ch.psi.pshell.packages";
 
     private static Context instance;
 
@@ -343,6 +345,11 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
         });
 
         addScanListener(scanListener);
+        
+        if (System.getProperty(PROPERTY_PACKAGES) != null) {                
+            String[] packages =System.getProperty(PROPERTY_PACKAGES).split(";");
+            packageManager = new PackageManager(setup, packages);
+        }
 
         executionPars.put(null, new ExecutionParameters());
     }
@@ -354,6 +361,9 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
         if (instance == null) {
             instance = new Context();
             instance.pluginManager.loadExtensionsFolder();
+            if (instance.packageManager!=null){
+                instance.packageManager.loadExtensionsFolders();
+            }
             //To provide services even if context does not initialize all right (and in disabled mode).
             try {
                 instance.dataManager.initialize();
@@ -954,6 +964,10 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
         assertHandlingSessions();
         return sessionManager;
     }
+    
+    public PackageManager getPackageManager() throws IOException {
+        return packageManager;
+    }    
 
     public SessionManager getSessionManagerIfHandling() {
         if (!isHandlingSessions()){
@@ -990,6 +1004,11 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
     public DataServer getDataStreamer() {
         return (config.dataServerPort > 0) ? dataStreamer : null;
     }
+    
+    public List<String> getPackages(){
+        return (packageManager==null) ? new ArrayList<String>() : packageManager.getPackagePaths();
+    }
+    
 
     public Server getServer() {
         return server;
@@ -1069,8 +1088,8 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
         aborted = false;
         foregroundException = null;
 
-        for (AutoCloseable ac : new AutoCloseable[]{scanStreamer, dataStreamer, taskManager, notificationManager,
-                scriptManager, devicePool, versioningManager, watchService}) {
+        for (AutoCloseable ac : new AutoCloseable[]{scanStreamer, dataStreamer, packageManager, taskManager, notificationManager,
+                scriptManager, devicePool, versioningManager, watchService }) {
             try {
                 if (ac != null) {
                     ac.close();
@@ -1257,6 +1276,9 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
             taskManager = new TaskManager();
             if (!isLocalMode()) {
                 taskManager.initialize();
+            }           
+            if (packageManager!=null){
+                packageManager.initialize();
             }
             setState(State.Ready);
             triggerContextInitialized(runCount);
@@ -3456,7 +3478,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
     public void disable() {
         if (getState().isNormal()) {
             logger.warning("Setting offline mode");
-            for (AutoCloseable ac : new AutoCloseable[]{taskManager, scriptManager, devicePool, versioningManager}) {
+            for (AutoCloseable ac : new AutoCloseable[]{packageManager, taskManager, scriptManager, devicePool, versioningManager}) {
                 try {
                     if (ac != null) {
                         ac.close();
@@ -3758,7 +3780,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
 
         logger.info("Close");
 
-        for (AutoCloseable ac : new AutoCloseable[]{scanStreamer, taskManager, scriptManager, devicePool, versioningManager,
+        for (AutoCloseable ac : new AutoCloseable[]{scanStreamer, packageManager, taskManager, scriptManager, devicePool, versioningManager,
                 pluginManager, dataManager, usersManager, server, watchService}) {
             try {
                 if (ac != null) {

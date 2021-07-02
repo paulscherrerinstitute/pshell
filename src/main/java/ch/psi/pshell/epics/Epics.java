@@ -48,12 +48,10 @@ public class Epics {
         create("jcae.properties", parallelCreation);
     }
     
-    public static String getDefaultPropertyFiles(){
-        return "ch.psi.jcae.ContextFactory.autoAddressList=true\n" +
-                "ch.psi.jcae.ContextFactory.useShellVariables=true\n" +
-                "ch.psi.jcae.ContextFactory.maxArrayBytes=20000000\n" +
-                "ch.psi.jcae.ContextFactory.maxSendArrayBytes=100000";
-    }
+    public static String defaultPropertyFile =  "ch.psi.jcae.ContextFactory.autoAddressList=true\n" +
+                                                "ch.psi.jcae.ContextFactory.useShellVariables=true\n" +
+                                                "ch.psi.jcae.ContextFactory.maxArrayBytes=20000000\n" +
+                                                "ch.psi.jcae.ContextFactory.maxSendArrayBytes=100000";   
         
     public static void create(String configFile, boolean parallelCreation) {        
         destroy();        
@@ -63,7 +61,7 @@ public class Epics {
             //Manage defaults if volatile
             if (App.isVolatile()){
                 try {
-                    Files.writeString(file.toPath(), getDefaultPropertyFiles());
+                    Files.writeString(file.toPath(), defaultPropertyFile);
                 } catch (IOException ex) {
                     Logger.getLogger(Epics.class.getName()).log(Level.SEVERE, null, ex);
                 }

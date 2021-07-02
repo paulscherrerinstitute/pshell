@@ -21,6 +21,7 @@ import ch.psi.pshell.core.Setup;
 import ch.psi.pshell.core.UserInterface;
 import ch.psi.pshell.data.PlotDescriptor;
 import ch.psi.pshell.device.GenericDevice;
+import ch.psi.pshell.epics.Epics;
 import ch.psi.pshell.plot.Plot;
 import ch.psi.pshell.plotter.Client;
 import ch.psi.pshell.plotter.Plotter;
@@ -35,6 +36,7 @@ import ch.psi.pshell.swing.ScanEditorPanel;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import ch.psi.utils.Arr;
+import ch.psi.utils.Convert;
 import ch.psi.utils.IO;
 import ch.psi.utils.ObservableBase;
 import ch.psi.utils.Reflection.Hidden;
@@ -292,6 +294,15 @@ public class App extends ObservableBase<AppListener> {
             System.setProperty(Context.PROPERTY_ENABLE_VERSIONING, String.valueOf(enableVersioning));
         }
         
+        List<File> packages = getPackageArgs();
+        if (packages.size()>0){
+            System.setProperty(Context.PROPERTY_PACKAGES, String.join(";", Convert.toStringArray(packages)));
+        }
+        
+        if (isArgumentDefined("jcae")) {
+            Epics.defaultPropertyFile = getArgumentValue("jcae").replaceAll("\\|", "\n");
+        }
+        
         //Raise exception if wrong formatting;
         getTaskArgs();
 
@@ -397,6 +408,7 @@ public class App extends ObservableBase<AppListener> {
         sb.append("\n\t-f=<...>     \tFile to run (together with -c option) or open in file in editor");
         sb.append("\n\t-t=<...>     \tStart a task using the format script,delay,interval");
         sb.append("\n\t-p=<...>     \tLoad a plugin");
+        sb.append("\n\t-m=<...>     \tLoad a package");
 
         if (isStripChart()) {
             sb.append("\n\nStripChart arguments:");
@@ -614,6 +626,24 @@ public class App extends ObservableBase<AppListener> {
                     }
                 }
                 ret.add(file);
+            } catch (Exception ex) {
+                logger.log(Level.WARNING, null, ex);
+            }
+        }
+        return ret;
+    }
+    
+    static public List<File> getPackageArgs() {
+        ArrayList<File> ret = new ArrayList<File>();
+        for (String path : getArgumentValues("m")) {
+            try {
+                if (Context.getInstance() != null) {
+                    path = Context.getInstance().getSetup().expandPath(path);                    
+                }
+                File file = new File(path);
+                if (file.exists()  && file.isDirectory()){
+                    ret.add(file);
+                }
             } catch (Exception ex) {
                 logger.log(Level.WARNING, null, ex);
             }
@@ -1643,11 +1673,10 @@ public class App extends ObservableBase<AppListener> {
             if (arg.startsWith("-")) {
                 arg = arg.substring(1);
             }
-            String[] tokens = arg.split("=");
-            if ((tokens.length == 2) && (tokens[0].equals(name))) {
-                String ret = tokens[1].trim();
-                if (ret.length() >= 1) {
-                    argumentValues.add(ret);
+            int indexEq = arg.indexOf("=");
+            if (indexEq>0){
+                if (arg.substring(0, indexEq).trim().equals(name)) {
+                    argumentValues.add(arg.substring(indexEq + 1, arg.length()).trim());
                 }
             }
         }
@@ -1663,9 +1692,11 @@ public class App extends ObservableBase<AppListener> {
                 if (arg.equals(name)) {
                     return true;
                 }
-                String[] tokens = arg.split("=");
-                if ((tokens.length == 2) && (tokens[0].equals(name))) {
-                    return true;
+                int indexEq = arg.indexOf("=");
+                if (indexEq>0){
+                    if (arg.substring(0, indexEq).trim().equals(name)) {
+                        return true;
+                    }                    
                 }
             }
         }

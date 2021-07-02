@@ -1216,13 +1216,7 @@ def add_device(device, force = False):
     Returns:
         True if device was added, false if was already in the pool, or exception in case of name clash.
     """
-    if get_context().devicePool.contains(device):
-        return False
-    if force:
-        dev = get_context().devicePool.getByName(device.getName())
-        if dev is not None:
-            remove_device(dev)
-    return get_context().devicePool.addDevice(device)
+    return get_context().devicePool.addDevice(device, force, True)
 
 def remove_device(device):
     """Remove a device (or imaging source) from the device pool.

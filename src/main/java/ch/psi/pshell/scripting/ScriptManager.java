@@ -44,8 +44,7 @@ public class ScriptManager implements AutoCloseable {
     public static final String LAST_RESULT_VARIABLE = "_";
     public static final String THREAD_RESULT_VARIABLE = "__THREAD_EXEC_RESULT__";
 
-    final ScriptType type;
-    final String[] libraryPath;
+    final ScriptType type;    
     final Map<String, Object> injections;
     final ScriptEngine engine;
     final Interpreter interpreter;
@@ -53,6 +52,8 @@ public class ScriptManager implements AutoCloseable {
     final boolean threaded;
     final Library lib;
     final FilePermissions scriptFilePermissions;
+    final boolean dontWriteBytecode;
+    String[] libraryPath;
     String sessionFilePath;
     PrintWriter sessionOut;
     Object lastResult;
@@ -65,24 +66,15 @@ public class ScriptManager implements AutoCloseable {
         this.libraryPath = libraryPath;
         this.injections = injections;
         this.scriptFilePermissions = scriptFilePermissions;
+        this.dontWriteBytecode=dontWriteBytecode;
         results = new HashMap<>();
         
         if (type == ScriptType.py) {
-            setPythonPath(libraryPath);
             //TODO: This is a workaround to a bug in Jython 2.7.b3 (http://sourceforge.net/p/jython/mailman/message/32935831/)
             //TODO: The problem is solved in Jython 2.7.1, but this option makes startup 0.5s faster. Are there consequences?
             org.python.core.Options.importSite = false;
             org.python.core.Options.dont_write_bytecode = dontWriteBytecode;
-            if (!dontWriteBytecode) {
-                //TODO: remove this hack when Jython fixes this: https://github.com/jython/jython/issues/93
-                if (JythonUtils.getJythonVersion().equals("2.7.2")) { 
-                    jythonClassFilePermissionFix = new FileSystemWatch( libraryPath, 
-                            new String[]{"class"}, true, false, false, 5000, (path, kind) -> {
-                        logger.info("Setting class file readable to all: " + path);
-                        path.toFile().setReadable(true, false);
-                    });
-                }
-            }
+            setPythonPath(libraryPath);
         }
 
         engine = new ScriptEngineManager().getEngineByExtension(type.toString());
@@ -113,7 +105,7 @@ public class ScriptManager implements AutoCloseable {
         interpreter = new Interpreter(engine, type, null);
         logger.info("Finished " + getClass().getSimpleName() + " initialization");
     }
-    
+
     public ScriptEngine getEngine(){
         return engine;
     }
@@ -177,6 +169,32 @@ public class ScriptManager implements AutoCloseable {
         Properties props = new Properties();
         props.setProperty(PROPERTY_PYTHON_PATH, String.join(File.pathSeparator, folders));
         org.python.util.PythonInterpreter.initialize(System.getProperties(), props, new String[]{""});
+        
+        //TODO: remove this hack when Jython fixes this: https://github.com/jython/jython/issues/93
+        if (!dontWriteBytecode) {            
+            if (JythonUtils.getJythonVersion().equals("2.7.2")) { 
+                if (jythonClassFilePermissionFix!=null){
+                    try {
+                        jythonClassFilePermissionFix.close();
+                    } catch (Exception ex) {
+                        Logger.getLogger(ScriptManager.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }
+                jythonClassFilePermissionFix = new FileSystemWatch( libraryPath,  new String[]{"class"}, true, false, false, 5000, (path, kind) -> {
+                    logger.info("Setting class file readable to all: " + path);
+                    path.toFile().setReadable(true, false);
+                });
+            }
+        }
+        
+    }
+    
+    public void addPythonPath(String folder){        
+        if (!Arr.containsEqual(libraryPath, folder)){
+            libraryPath = Arr.append(libraryPath, folder);
+            setPythonPath(libraryPath);
+            lib.setPath(libraryPath);
+        }
     }
 
     public void setWriter(Writer writer) {
@@ -640,8 +658,8 @@ public class ScriptManager implements AutoCloseable {
     public void close() {
         for (AutoCloseable ac : new AutoCloseable[]{sessionOut, jythonClassFilePermissionFix}) {
             try {
-                if (sessionOut != null) {
-                    sessionOut.close();
+                if (ac != null) {
+                    ac.close();
                 }
             } catch (Exception ex) {
                 logger.log(Level.WARNING, null, ex);

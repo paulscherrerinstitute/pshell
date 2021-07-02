@@ -427,7 +427,7 @@ public class SourceBase extends GenericDeviceBase<ImageListener> implements Sour
 
     @Override
     public void saveBackground(String name) {
-        Path file = Paths.get(GenericDevice.getConfigPath(), ((name == null) ? getName() : name) + ".bkg");
+        Path file = Paths.get(getConfigPath(), ((name == null) ? getName() : name) + ".bkg");
         try {
             Files.delete(file);
         } catch (Exception ex) {
@@ -447,7 +447,7 @@ public class SourceBase extends GenericDeviceBase<ImageListener> implements Sour
 
     @Override
     public void loadBackground(String name) {
-        Path file = Paths.get(GenericDevice.getConfigPath(), ((name == null) ? getName() : name) + ".bkg");
+        Path file = Paths.get(getConfigPath(), ((name == null) ? getName() : name) + ".bkg");
         setBackgroundImage(null);
         try {
             setBackgroundData((Data) Serializer.decode(Files.readAllBytes(file)));

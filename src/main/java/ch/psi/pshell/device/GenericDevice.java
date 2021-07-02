@@ -93,17 +93,21 @@ public interface GenericDevice<T> extends Observable<T>, Timestamped, AutoClosea
     default CompletableFuture updateAsync() {
         return (CompletableFuture) Threading.getFuture(() -> update());
     }
-
+    
     public static String getConfigPath() {
         String path = System.getProperty(PROPERTY_CONFIG_PATH);
         if (path == null) {
             return Setup.DEFAULT_HOME_FOLDER + "/devices";
         }
         return path;
+    }      
+
+    public static String getConfigFileName(String name) {
+        return getConfigFileName(null, name);
     }
 
-    public static String getConfigFileName(String applianceName) {
-        return Paths.get(getConfigPath(), applianceName + ".properties").toString();
+    public static String getConfigFileName(String configPath, String name) {
+        return Paths.get((configPath==null) ? getConfigPath() : configPath, name + ".properties").toString();
     }
 
 }

@@ -34,6 +34,9 @@ public abstract class GenericDeviceBase<T> extends ObservableBase<T> implements 
     
     int waitSleep = 5;
     String alias;
+    
+    @Hidden 
+    static public String defaultConfigPath;
 
     //Construction 
     /**
@@ -71,15 +74,21 @@ public abstract class GenericDeviceBase<T> extends ObservableBase<T> implements 
         closed = new AtomicBoolean(false);
         updating = new AtomicBoolean(false);
         requesting = new AtomicBoolean(false);
+        configPath = defaultConfigPath;
     }
 
     public final String getConfigFileName() {
         if ((config != null) && (name != null)) {
-            return GenericDevice.getConfigFileName(name);
+            return GenericDevice.getConfigFileName(defaultConfigPath, name);
         }
         return null;
     }
-
+        
+    String configPath;
+    public String getConfigPath() {
+        return (configPath==null) ? GenericDevice.getConfigPath() : configPath;
+    }
+    
     //State
     volatile State state = State.Invalid;
 

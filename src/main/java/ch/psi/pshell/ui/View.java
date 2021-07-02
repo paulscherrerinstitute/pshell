@@ -4332,6 +4332,7 @@ public class View extends MainFrame {
             for (File f : context.getExtensions()) {
                 extensions.add(f.getName());
             }
+                        
 
             Setup setup = context.getSetup();
             Server server = context.getServer();
@@ -4344,8 +4345,9 @@ public class View extends MainFrame {
                 {"Jar file", String.valueOf(context.getSetup().getJarFile())},
                 {"HDF5", Convert.arrayToString(ProviderHDF5.getVersion(), ".")},
                 {"Arguments", String.join(" ", App.getArguments())},
-                {"Plugins", String.join("; ", plugins)},
+                {"Plugins", String.join("; ", plugins)},                
                 {"Extensions", String.join("; ", extensions)},
+                {"Packages", String.join("; ", context.getPackages())},                
                 {"Current folder", new File(".").getCanonicalPath()},
                 {"Home path", setup.getHomePath()},
                 {"Output path", setup.getOutputPath()},
