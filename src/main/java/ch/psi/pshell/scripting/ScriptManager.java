@@ -58,6 +58,8 @@ public class ScriptManager implements AutoCloseable {
     PrintWriter sessionOut;
     Object lastResult;
     final Map<Thread, Object> results;
+    
+    final int CLASS_FILE_CHECK_INTERVAL = 5000;
     FileSystemWatch jythonClassFilePermissionFix;
         
     public ScriptManager(ScriptType type, String[] libraryPath, HashMap<String, Object> injections, FilePermissions scriptFilePermissions,boolean dontWriteBytecode) {
@@ -180,13 +182,30 @@ public class ScriptManager implements AutoCloseable {
                         Logger.getLogger(ScriptManager.class.getName()).log(Level.SEVERE, null, ex);
                     }
                 }
-                jythonClassFilePermissionFix = new FileSystemWatch( libraryPath,  new String[]{"class"}, true, false, false, 5000, (path, kind) -> {
+                jythonClassFilePermissionFix = new FileSystemWatch( libraryPath,  new String[]{"class"}, true, false, false, -1 /*CLASS_FILE_CHECK_INTERVAL*/, (path, kind) -> {
                     logger.info("Setting class file readable to all: " + path);
                     path.toFile().setReadable(true, false);
                 });
             }
         }
         
+    }
+    
+    
+    void beforeEval(boolean background){
+        if (!background){
+            evalThread = Thread.currentThread();   
+        }
+    }
+    
+    
+    void afterEval(boolean background){
+        if (!background){
+            evalThread = null;            
+        }
+        if (jythonClassFilePermissionFix!=null){
+            jythonClassFilePermissionFix.check(CLASS_FILE_CHECK_INTERVAL);
+        }
     }
     
     public void addPythonPath(String folder){        
@@ -215,8 +234,8 @@ public class ScriptManager implements AutoCloseable {
             throw new FileNotFoundException(script);
         }
 
-        try {
-            evalThread = Thread.currentThread();
+        beforeEval(false);
+        try {            
             setVar(LAST_RESULT_VARIABLE, null);
             results.put(evalThread, null);
             Object ret = interpreter.evalFile(fileName);
@@ -224,10 +243,10 @@ public class ScriptManager implements AutoCloseable {
             if (ret == null) {
                 ret = results.get(evalThread);
             }
-            saveStatement("\n#Eval file:  " + script + "\n");
+            saveStatement("\n#Eval file:  " + script + "\n");            
             return ret;
-        } finally {
-            evalThread = null;
+        } finally {            
+            afterEval(false);
         }
     }
 
@@ -237,14 +256,19 @@ public class ScriptManager implements AutoCloseable {
             throw new FileNotFoundException(script);
         }        
         results.put(Thread.currentThread(), null);
-        Object ret = interpreter.evalFile(fileName);
-        if (ret == null) {
-            ret = results.get(Thread.currentThread());
-            results.remove(Thread.currentThread());
-        }
-        //In Jython, the output of last statement is not returned so we have to use a return variable
-        saveStatement("\n#Eval file background:  " + script + "\n");
-        return ret;
+        beforeEval(true);
+        try {            
+            Object ret = interpreter.evalFile(fileName);
+            if (ret == null) {
+                ret = results.get(Thread.currentThread());
+                results.remove(Thread.currentThread());
+            }
+            //In Jython, the output of last statement is not returned so we have to use a return variable
+            saveStatement("\n#Eval file background:  " + script + "\n");
+            return ret;
+        } finally {
+            afterEval(true);
+        }            
     }
 
     @Hidden
@@ -312,10 +336,10 @@ public class ScriptManager implements AutoCloseable {
 
     public Object eval(Statement[] statements, StatementsEvalListener listener) throws ScriptException, InterruptedException {
         InterpreterResult result = null;
-        evalThread = Thread.currentThread();
-        runningStatementList = true;
-        interpreter.lineNumber++;
+        beforeEval(false);
         try {
+            runningStatementList = true;
+            interpreter.lineNumber++;
             for (Statement statement : statements) {
                 runningStatement = statement;
                 if (listener != null) {
@@ -355,11 +379,11 @@ public class ScriptManager implements AutoCloseable {
             }
             return result.result;
         } finally {
-            evalThread = null;
+            afterEval(false);
             runningStatementList = false;
             stepStatementListExecutionFlag = false;
             statementListExecutionPaused = false;
-            runningStatement = null;
+            runningStatement = null;            
         }
     }
 
@@ -370,7 +394,7 @@ public class ScriptManager implements AutoCloseable {
      }
      */
     public InterpreterResult eval(String line) {
-        evalThread = Thread.currentThread();
+        beforeEval(false);
         try {
             InterpreterResult ret = interpreter.interpret(line);
 //            lastResult = ret.result;
@@ -387,7 +411,7 @@ public class ScriptManager implements AutoCloseable {
             }
             return ret;
         } finally {
-            evalThread = null;
+            afterEval(false);
         }
     }
 
@@ -396,7 +420,7 @@ public class ScriptManager implements AutoCloseable {
         if (statement == null) {
             return eval((String) null);
         }
-        evalThread = Thread.currentThread();
+        beforeEval(false);
         try {
             //TODO: could execute the compiled script directly
             InterpreterResult ret = interpreter.interpret(statement.text);
@@ -412,7 +436,7 @@ public class ScriptManager implements AutoCloseable {
             }
             return ret;
         } finally {
-            evalThread = null;
+            afterEval(false);
         }
     }
     
@@ -425,7 +449,7 @@ public class ScriptManager implements AutoCloseable {
             return null;
         }
         InterpreterResult ret = new InterpreterResult();
-
+        beforeEval(true);
         try {
             ret.result = engine.eval(statement);
             ret.correct = true;
@@ -434,6 +458,7 @@ public class ScriptManager implements AutoCloseable {
             ret.exception = ex;
         }
         saveStatement("\n#Eval background:  " + statement + "\n");
+        afterEval(true);
         return ret;
     }
 
