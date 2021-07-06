@@ -7,6 +7,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Logger;
 
 /**
  *
@@ -52,7 +53,13 @@ public class Package implements AutoCloseable {
         }
         if (Context.getInstance().isInterpreterEnabled()) {
             if (scriptPath.toFile().isDirectory()){
-                Context.getInstance().getScriptManager().addPythonPath(Context.getInstance().getSetup().expandPath(scriptPath.toString()));
+                Context.getInstance().getScriptManager().addPythonPath(Context.getInstance().getSetup().expandPath(scriptPath.toString()));                                
+                String scriptFile = Context.getInstance().getSetup().getLocalStartupScript() + "." + Context.getInstance().getSetup().getScriptType().toString();
+                Path startupScript = Paths.get(scriptPath.toString(), scriptFile);
+                if (startupScript.toFile().isFile()){
+                    Context.getInstance().getScriptManager().evalFile(startupScript.toString());
+                     Logger.getLogger(Package.class.getName()).info("Executed package startup script: " + startupScript);                    
+                }
             }
         }                   
         if (pluginPath.toFile().isDirectory()){
