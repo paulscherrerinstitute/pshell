@@ -222,6 +222,10 @@
     <td>Add to script path.</td>
   </tr>
   <tr>
+    <td>-jcae=[path]</td>
+    <td>Force EPICS configuration file (or, in volatile mode, EPICS configuration options separated by '|').</td>
+  </tr>
+  <tr>
     <td>-laf=[name]</td>
     <td>Set application Look and Feel: system (s), metal (m), nimbus (n), darcula (d), 
         flat (f), or dark (b).</td>

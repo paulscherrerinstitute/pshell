@@ -173,7 +173,7 @@ public class StripChart extends StandardDialog {
         chartElementProducer = new InvokingProducer<ChartElement>() {
             @Override
             protected void consume(ChartElement element) {
-                if (element.drag){
+                if (element.drag) {
                     element.plot.drag(element.seriesIndex, element.time, element.value);
                 } else {
                     element.plot.add(element.seriesIndex, element.time, element.value);
@@ -232,7 +232,7 @@ public class StripChart extends StandardDialog {
         comboLayout.setEnabled(false);
         textFileName.setText((Context.getInstance() != null) ? Context.getInstance().getConfig().dataPath : "");
         comboFormat.setSelectedItem(getInitFormat());
-        comboLayout.setSelectedItem(getInitLayout());        
+        comboLayout.setSelectedItem(getInitLayout());
         updateTitle();
         setCancelledOnEscape(false);
 
@@ -675,18 +675,18 @@ public class StripChart extends StandardDialog {
 
         //tableSeries.setEnabled(editing);
         //tableCharts.setEnabled(editing);
-        ckPersistence.setEnabled(editing && (Context.getInstance()!=null));
+        ckPersistence.setEnabled(editing && (Context.getInstance() != null));
         textFileName.setEnabled((ckPersistence.isSelected() && editing) || !ckPersistence.isSelected());
         comboFormat.setEnabled(textFileName.isEnabled());
         comboLayout.setEnabled(textFileName.isEnabled());
         textStreamFilter.setEnabled(editing);
         spinnerDragInterval.setEnabled(editing);
         spinnerUpdate.setEnabled(editing);
-        
+
         boolean saveButtonVisible = started && !ckPersistence.isSelected();
         if (saveButtonVisible && (saveButton == null)) {
             saveButton = new JButton("Save");
-            saveButton.setEnabled(Context.getInstance()!=null);
+            saveButton.setEnabled(Context.getInstance() != null);
             saveButton.addActionListener((ActionEvent e) -> {
                 try {
                     saveData();
@@ -798,7 +798,7 @@ public class StripChart extends StandardDialog {
         if (Context.getInstance() != null) {
             if (Context.getInstance().getDataManager().getProvider() instanceof ProviderCSV) {
                 return "csv";
-            }            
+            }
             if (Context.getInstance().getDataManager().getProvider() instanceof ProviderText) {
                 return "txt";
             }
@@ -856,27 +856,27 @@ public class StripChart extends StandardDialog {
         updateTitle();
     }
 
-    public void open(String json) throws IOException {        
+    public void open(String json) throws IOException {
         json = json.replace("'", "\"");
         Object[][][] state = null;
-        try{
+        try {
             //parse a complete configuration
-            state = (Object[][][]) JsonSerializer.decode(json, Object[][][].class);                        
-        } catch(Exception ex) {
+            state = (Object[][][]) JsonSerializer.decode(json, Object[][][].class);
+        } catch (Exception ex) {
             //parse list of channel names
-            List<String> channels = (List<String>) JsonSerializer.decode(json, List.class); 
+            List<String> channels = (List<String>) JsonSerializer.decode(json, List.class);
             state = new Object[1][channels.size()][];
-            for (int i=0; i<channels.size(); i++){
+            for (int i = 0; i < channels.size(); i++) {
                 Type type = Type.Channel;
                 String name = channels.get(i);
                 int plot = 1;
                 int axis = 1;
                 String color = null;
-                try{
+                try {
                     //Try parsing protocol/parameters
                     InlineDevice dev = new InlineDevice(name);
                     name = dev.getId();
-                    switch(dev.getProtocol()){
+                    switch (dev.getProtocol()) {
                         case "bs":
                             type = Type.Stream;
                             break;
@@ -891,19 +891,19 @@ public class StripChart extends StandardDialog {
                         default:
                             break;
                     }
-                    if (dev.getPars().keySet().contains("plot" )){
+                    if (dev.getPars().keySet().contains("plot")) {
                         plot = Integer.valueOf(String.valueOf(dev.getPars().get("plot")));
                     }
-                    if (dev.getPars().keySet().contains("axis" )){
+                    if (dev.getPars().keySet().contains("axis")) {
                         axis = Integer.valueOf(String.valueOf(dev.getPars().get("axis")));
                     }
-                    if (dev.getPars().keySet().contains("color" )){
+                    if (dev.getPars().keySet().contains("color")) {
                         color = String.valueOf(dev.getPars().get("color"));
                     }
-                } catch (Exception e){                    
-                }                
-                state[0][i] = new Object[] { true, name, type, plot, axis, color, null };
-            }            
+                } catch (Exception e) {
+                }
+                state[0][i] = new Object[]{true, name, type, plot, axis, color, null};
+            }
         }
         if (state.length > 0) {
             modelSeries.setDataVector((Object[][]) state[0], SwingUtils.getTableColumnNames(tableSeries));
@@ -943,9 +943,9 @@ public class StripChart extends StandardDialog {
                     textFileName.setText(fileName);
                 }
                 if (persistPars.length > 1) {
-                    if ((((String) persistPars[1]).equalsIgnoreCase("txt"))){
+                    if ((((String) persistPars[1]).equalsIgnoreCase("txt"))) {
                         comboFormat.setSelectedIndex(1);
-                    } else if ((((String) persistPars[1]).equalsIgnoreCase("csv"))){
+                    } else if ((((String) persistPars[1]).equalsIgnoreCase("csv"))) {
                         comboFormat.setSelectedIndex(2);
                     }
                 }
@@ -1068,7 +1068,7 @@ public class StripChart extends StandardDialog {
         update();
         if (streamDevices > 0) {
             if (dispatcher == null) {
-                    dispatcher = ch.psi.pshell.bs.Provider.getOrCreateDefault();
+                dispatcher = ch.psi.pshell.bs.Provider.getOrCreateDefault();
                 if (dispatcher != ch.psi.pshell.bs.Provider.getDefault()) {
                     synchronized (instantiatedDevices) {
                         instantiatedDevices.add(dispatcher);
@@ -1093,7 +1093,7 @@ public class StripChart extends StandardDialog {
             }
         }
 
-        if(Context.getInstance()!=null){
+        if (Context.getInstance() != null) {
             if (ckPersistence.isSelected()) {
                 String path = Context.getInstance().getSetup().expandPath(textFileName.getText().trim().replace("{name}", "StripChart"));
                 persistenceExecutor = new StripScanExecutor();
@@ -1171,7 +1171,7 @@ public class StripChart extends StandardDialog {
                 id = id.substring(0, id.indexOf(" "));
             }
         }
-        if (Context.getInstance()!=null){
+        if (Context.getInstance() != null) {
             if (!Context.getInstance().getDataManager().getProvider().isPacked()) { //Filenames don't support ':'
                 id = id.replace(":", "_");
             }
@@ -1240,13 +1240,13 @@ public class StripChart extends StandardDialog {
         if (alarming) {
             pulse = !pulse;
             if ((chronoDisableAlarmSound == null) || (chronoDisableAlarmSound.getEllapsed() > disableAlarmTimer)) {
-                try{
+                try {
                     if (alarmFile == null) {
                         Toolkit.getDefaultToolkit().beep();
                     } else {
                         Audio.playFile(alarmFile);
                     }
-                } catch (Throwable t){  
+                } catch (Throwable t) {
                     Logger.getLogger(StripChart.class.getName()).log(Level.FINEST, null, t);
                 }
                 buttonSound.setSelected(false);
@@ -1297,8 +1297,6 @@ public class StripChart extends StandardDialog {
             final StripChartAlarmConfig alarmConfig = (StripChartAlarmConfig) info.get(6);
             return (alarmConfig == null) ? false : alarmConfig.isAlarm(currentValue);
         }
-        
-        
 
         void add(Device device, Object value, Long timestamp, TimePlotBase plot, int seriesIndex, boolean dragging) {
             try {
@@ -1321,47 +1319,46 @@ public class StripChart extends StandardDialog {
                         }
                     }
                 }
-                
+
                 long time = (timestamp == null) ? now : timestamp;
                 double doubleValue;
                 boolean repeatCurrent = false;
-                if (value == null){
+                if (value == null) {
                     doubleValue = Double.NaN;
-                } else if (value instanceof Number){
+                } else if (value instanceof Number) {
                     doubleValue = ((Number) value).doubleValue();
-                } else if (value instanceof Boolean){
+                } else if (value instanceof Boolean) {
                     doubleValue = Boolean.TRUE.equals(value) ? 1.0 : 0;
                     repeatCurrent = true;
-                } else if (value.getClass().isEnum()){
-                    doubleValue = (double)Arrays.asList(value.getClass().getEnumConstants()).indexOf(value);
+                } else if (value.getClass().isEnum()) {
+                    doubleValue = (double) Arrays.asList(value.getClass().getEnumConstants()).indexOf(value);
                     repeatCurrent = true;
                 } else {
                     return;
                 }
-                
-                if ((time == currentTimestamp) && (currentValue == doubleValue)){
+
+                if ((time == currentTimestamp) && (currentValue == doubleValue)) {
                     return;
                 }
-                
-                if (repeatCurrent){
-                    if (!Double.isNaN(currentValue)){
-                        chartElementProducer.post(new ChartElement(plot, seriesIndex, time-1, currentValue, true)); //Don't store
+
+                if (repeatCurrent) {
+                    if (!Double.isNaN(currentValue)) {
+                        chartElementProducer.post(new ChartElement(plot, seriesIndex, time - 1, currentValue, true)); //Don't store
                     }
                 }
 
-                    
                 //plot.add(seriesIndex, time, doubleValue);
                 //Invoking event thread to prevent https://sourceforge.net/p/jfreechart/bugs/1009/ (JFreeChart is not thread safe)                
                 chartElementProducer.post(new ChartElement(plot, seriesIndex, time, doubleValue, dragging));
 
-                if (! dragging){
+                if (!dragging) {
                     appendTimestamps.put(device, now);
                     if (persisting) {
                         synchronized (persistLock) {
                             persistenceExecutor.append(id, doubleValue, now, time);
                             index++;
                         }
-                    }                    
+                    }
                     currentValue = doubleValue;
                     currentTimestamp = time;
                 }
@@ -1371,21 +1368,21 @@ public class StripChart extends StandardDialog {
         }
 
         int sleep_ms;
-        
-        void checkDrag(TimePlotBase plot, int seriesIndex, Device dev){
+
+        void checkDrag(TimePlotBase plot, int seriesIndex, Device dev) {
             long now = System.currentTimeMillis();
             Long appendTimestamp = appendTimestamps.get(dev);
             Long age = (appendTimestamp == null) ? null : now - appendTimestamp;
             if ((age == null) || (age >= sleep_ms)) {
                 Long devTimestamp = dev.getTimestamp();
-                if (devTimestamp != null)  {
+                if (devTimestamp != null) {
                     now = devTimestamp + age;
                 }
                 //System.out.println(seriesIndex + " | " + value + Chrono.getTimeStr(time, "dd/MM/YY HH:mm:ss.SSS"));
                 add(dev, dev.take(), now, plot, seriesIndex, true);
             }
-        }        
-        
+        }
+
         @Override
         public void run() {
             String name = ((String) info.get(1)).trim();
@@ -1567,7 +1564,7 @@ public class StripChart extends StandardDialog {
                 final int seriesIndex = seriesIndexes.get(info);
                 final TimePlotBase plot = plots.get(plotIndex);
                 id = getId(row);
-                
+
                 //TimestampedValue current = null;
                 Double current = null;
                 for (TimestampedValue<Double> item : plot.getSeriestData(seriesIndex)) {

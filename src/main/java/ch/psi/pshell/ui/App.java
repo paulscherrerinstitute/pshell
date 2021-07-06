@@ -5,6 +5,7 @@ import ch.psi.pshell.core.Configuration;
 import ch.psi.pshell.core.Configuration.LogLevel;
 import ch.psi.pshell.core.Context;
 import ch.psi.pshell.core.ContextAdapter;
+import ch.psi.pshell.core.DevicePool;
 import ch.psi.pshell.core.JsonSerializer;
 import ch.psi.pshell.core.LogManager;
 import ch.psi.pshell.swing.HelpContentsDialog;
@@ -299,10 +300,18 @@ public class App extends ObservableBase<AppListener> {
             System.setProperty(Context.PROPERTY_PACKAGES, String.join(";", Convert.toStringArray(packages)));
         }
         
-        if (isArgumentDefined("jcae")) {
-            Epics.defaultPropertyFile = getArgumentValue("jcae").replaceAll("\\|", "\n");
-        }
-        
+        if (isVolatile()){
+            System.setProperty(DevicePool.PROPERTY_EPICS_DEFAULT_CONFIG, defaultJcaeProperties);
+        }        
+        if (isArgumentDefined("jcae")) {            
+            String jcae = getArgumentValue("jcae");
+            String fileName = Setup.expand(jcae);
+            if (new File (fileName).isFile()){
+                System.setProperty(DevicePool.PROPERTY_EPICS_CONFIG_FILE, fileName);
+            } else if (isVolatile() && jcae.contains("=")){
+                System.setProperty(DevicePool.PROPERTY_EPICS_DEFAULT_CONFIG, jcae.replaceAll("\\|", "\n"));
+            }           
+        }                         
         //Raise exception if wrong formatting;
         getTaskArgs();
 
@@ -319,8 +328,13 @@ public class App extends ObservableBase<AppListener> {
                 System.exit(0);
             }
         }
-
     }
+
+    final static String defaultJcaeProperties=  "ch.psi.jcae.ContextFactory.autoAddressList=true\n" +
+                                                "ch.psi.jcae.ContextFactory.useShellVariables=true\n" +
+                                                "ch.psi.jcae.ContextFactory.maxArrayBytes=20000000\n" +
+                                                "ch.psi.jcae.ContextFactory.maxSendArrayBytes=100000";   
+    
 
     public State getState() {
         return context.getState();
@@ -402,6 +416,7 @@ public class App extends ObservableBase<AppListener> {
         sb.append("\n\t-libp=<path> \tAdd to library path");
         sb.append("\n\t-clsp=<path> \tAdd to class path");
         sb.append("\n\t-scrp=<path> \tAdd to script path");
+        sb.append("\n\t-jcae=<file> \tForce EPICS config file (or, in volatile mode, EPICS options separated by '|')");
         sb.append("\n\t-laf=<name>  \tLook and feel: system, metal, nimbus, darcula, flat, or dark");
         sb.append("\n\t-size=WxH    \tSet application window size if GUI state not persisted");
         sb.append("\n\t-args=<...>  \tProvide arguments to interpreter");

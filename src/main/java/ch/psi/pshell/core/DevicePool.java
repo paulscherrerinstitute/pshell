@@ -41,9 +41,10 @@ public class DevicePool extends ObservableBase<DevicePoolListener> implements Au
     static final HashMap<String, GenericDevice> deviceList = new HashMap<>();
     static final HashMap<GenericDevice, GenericDevice[]> dependencies = new HashMap<>();
     boolean parallelInitialization;
-
+    public static final String PROPERTY_EPICS_CONFIG_FILE  = "ch.psi.pshell.epics.config.file";    
+    public static final String PROPERTY_EPICS_DEFAULT_CONFIG  = "ch.psi.pshell.epics.default.config";    
     public static final String SIMULATED_FLAG = "$";
-
+                
     public void initialize() throws FileNotFoundException, IOException, InterruptedException {
         logger.info("Initializing " + getClass().getSimpleName());
         parallelInitialization = Context.getInstance().config.isParallelInitialization();
@@ -197,7 +198,12 @@ public class DevicePool extends ObservableBase<DevicePoolListener> implements Au
         String fileName = Context.getInstance().setup.getDevicePoolFile();
         String configPath = Context.getInstance().setup.getConfigPath();
         close();
-        Epics.create(Paths.get(configPath, "jcae.properties").toString(), parallelInitialization);
+        String jcaePropFile = System.getProperty(PROPERTY_EPICS_CONFIG_FILE);
+        String jcaeDefaultConfig= System.getProperty(PROPERTY_EPICS_DEFAULT_CONFIG);
+        if (jcaePropFile==null){
+            jcaePropFile = Paths.get(configPath, "jcae.properties").toString();
+        }
+        Epics.create(jcaePropFile, jcaeDefaultConfig, parallelInitialization);
         if (Context.getInstance().isSimulation()) {
             Epics.getChannelFactory().setDryrun(true);
         }
