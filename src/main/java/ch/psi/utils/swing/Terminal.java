@@ -11,6 +11,7 @@ import com.pty4j.PtyProcess;
 import com.pty4j.PtyProcessBuilder;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
@@ -18,12 +19,15 @@ import java.util.Map;
 public class Terminal extends MonitoredPanel implements AutoCloseable{
 
     final String home;
-    PtyProcess process;
-    TtyConnector connector;
+    final JediTermWidget widget;
+    final PtyProcess process;
+    final TtyConnector connector;
+    volatile boolean closed;
 
-    public Terminal(String home, Float size) {
+    public Terminal(String home, Float size) throws IOException {
         this.home = (home == null) ? Sys.getCurDir() : home;
-        JediTermWidget widget = new JediTermWidget(80, 24, new DefaultSettingsProvider() {
+        widget = new JediTermWidget(80, 24, new DefaultSettingsProvider() {
+            @Override
             public float getTerminalFontSize() {
                 return (size == null) ? super.getTerminalFontSize() : size;
             }
@@ -33,58 +37,56 @@ public class Terminal extends MonitoredPanel implements AutoCloseable{
                 return MainFrame.isDark() ? new TextStyle(TerminalColor.WHITE, TerminalColor.rgb(43,43,43)) : super.getDefaultStyle();
             }
         });
-        widget.setTtyConnector(createTtyConnector());        
-        widget.start();
+        
+        Map<String, String> envs = System.getenv();
+        String[] command;
+        if (Sys.isWindows()) {
+            command = new String[]{"cmd.exe"};
+        } else if (Sys.isMac()) {
+            command = new String[]{"zsh"};
+            envs = new HashMap<>(System.getenv());
+            envs.put("TERM", "xterm-256color");                
+        } else {
+            command = new String[]{"bash", "--login"};
+            envs = new HashMap<>(System.getenv());
+            envs.put("TERM", "xterm-256color");
+        }
+        process = new PtyProcessBuilder().setCommand(command).setEnvironment(envs).setDirectory(home).start();
+        connector = new PtyProcessTtyConnector(process, StandardCharsets.UTF_8);        
+       
+        widget.setTtyConnector(connector);        
+        widget.start();        
         this.setLayout(new BorderLayout());
         add(widget);
     }
 
-    private TtyConnector createTtyConnector() {
-        try {
-            Map<String, String> envs = System.getenv();
-            String[] command;
-            if (Sys.isWindows()) {
-                command = new String[]{"cmd.exe"};
-            } else if (Sys.isMac()) {
-                command = new String[]{"zsh"};
-                envs = new HashMap<>(System.getenv());
-                envs.put("TERM", "xterm-256color");                
-            } else {
-                command = new String[]{"bash", "--login"};
-                envs = new HashMap<>(System.getenv());
-                envs.put("TERM", "xterm-256color");
-            }
-            process = new PtyProcessBuilder().setCommand(command).setEnvironment(envs).setDirectory(home).start();
-            connector = new PtyProcessTtyConnector(process, StandardCharsets.UTF_8);
-            return connector;
-        } catch (Exception e) {
-            throw new IllegalStateException(e);
-        }
-    }
+
     
     @Override
     public void close(){
-        if (connector!=null){
+        if (! closed){
+            try{
+                widget.stop();
+            } catch (Exception ex){                
+            }
             try{
                 connector.close();
             } catch (Exception ex){                
             }
-            connector=null;
-        }
-        if (process!=null){
             try{
                 process.destroy();
             } catch (Exception ex){                
             }
-            process=null;
+            closed = true;
         }
     }    
     
+    @Override
     protected void onDesactive() {
         close();
     }    
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
         SwingUtils.showDialog(null, "Terminal", new Dimension(800, 600), new Terminal(null, 10.0f));
     }
 

@@ -2223,7 +2223,7 @@ public class View extends MainFrame {
         return getTerminalIndexTabStatus()>=0;
     }
     
-    void showTerminal(){
+    void showTerminal() throws IOException{
         if (isTerminalVisible()){
             int index = getTerminalIndexTabStatus();
             if (index>=0){
