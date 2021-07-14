@@ -180,7 +180,11 @@ public class DataFileDialog extends StandardDialog {
     }
 
     boolean changedNotificationManager() {
-        return !textRecipients.getText().trim().equals(Context.getInstance().getNotificationManager().getConfig().to);
+        try{
+            return !textRecipients.getText().trim().equals(Context.getInstance().getNotificationManager().getConfig().to);
+        } catch (Exception ex){
+            return false;
+        }
     }
 
     boolean changedConfig() {
@@ -260,7 +264,10 @@ public class DataFileDialog extends StandardDialog {
     void updateNotify() {
         comboNotification.setSelectedItem(config.notificationLevel);
         textTasks.setText(config.notifiedTasks);
-        textRecipients.setText(Context.getInstance().getNotificationManager().getConfig().to);
+        try {
+            textRecipients.setText(Context.getInstance().getNotificationManager().getConfig().to);
+        } catch (Exception ex) {            
+        }
     }
 
     JTable tableTokens;
