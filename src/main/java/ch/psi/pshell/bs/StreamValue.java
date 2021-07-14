@@ -2,6 +2,7 @@ package ch.psi.pshell.bs;
 
 import ch.psi.pshell.scripting.Subscriptable;
 import ch.psi.utils.Reflection.Hidden;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -52,12 +53,12 @@ public class StreamValue extends Number implements Subscriptable.MappedList<Stri
 
     @Override
     public java.util.List<String> getKeys(){
-        return identifiers;
+        return new ArrayList<>(identifiers);
     }  
     
     @Override
     public List getValues() {
-        return values;
+        return new ArrayList(values);
     }
 
     public Object getValue(String id) {
