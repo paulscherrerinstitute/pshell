@@ -63,7 +63,7 @@ public class Shell extends MonitoredPanel {
     public Shell() {
         initComponents();
         input.setFocusTraversalKeys(KeyboardFocusManager.FORWARD_TRAVERSAL_KEYS, Collections.EMPTY_SET);
-        commandExecutor = Executors.newSingleThreadExecutor(new NamedThreadFactory("Shell commnand executor"));
+        commandExecutor = Executors.newSingleThreadExecutor(new NamedThreadFactory("Shell command executor"));
     }
 
     public void initialize() {

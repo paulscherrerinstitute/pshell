@@ -1326,16 +1326,17 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
     long waitNewCommand(CompletableFuture cf) throws InterruptedException {
         long now = System.currentTimeMillis();
         if (cf instanceof VisibleCompletableFuture) {
-            Thread thread = ((VisibleCompletableFuture) cf).waitRunningThread(250);
+            Thread thread = ((VisibleCompletableFuture) cf).waitRunningThread(1000);
+            if (thread == null) {
+                return -1;
+            }
             CommandInfo current = commandManager.getThreadCommand(thread, false);
             if ((current != null) && (current.start >= now)) {
                 return current.id;
             }
-            if (thread != null) {
-                return waitNewCommand(thread, 250);
-            }
+            return waitNewCommand(thread, 1000);
         }
-        return 0;
+        return -2;
     }
 
     long waitNewCommand(Thread thread, int timeout) throws InterruptedException {
