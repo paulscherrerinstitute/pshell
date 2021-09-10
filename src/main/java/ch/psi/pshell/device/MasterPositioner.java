@@ -20,7 +20,7 @@ public class MasterPositioner extends PositionerBase {
         this.master = master;
         this.slaves = slaves;
         this.setReadback(master.getReadback());
-        if (slaves.length>6){
+        if (slaves.length > 6) {
             throw new RuntimeException("Maximum number of slave positioner is 6");
         }
         MotorGroup motorGroup = null;
@@ -105,30 +105,30 @@ public class MasterPositioner extends PositionerBase {
             motorGroup.initialize();
         }
     }
-    
+
     @Override
     protected void doUpdate() throws IOException, InterruptedException {
         super.doUpdate();
         for (Device d : getComponents()) {
-            d.update();            
-        }        
-    }    
+            d.update();
+        }
+    }
 
-    public Double[] getSlavePositions(Double masterPosition) throws IOException{
+    public Double[] getSlavePositions(Double masterPosition) throws IOException {
         Double[] ret = new Double[slaves.length];
 
         ArrayList<double[]> table = getInterpolationTable();
 
         int segment = getInterpolationSegment(masterPosition);
-        double m0 =table.get(segment)[0];
-        double m1 =table.get(segment+1)[0];
-        if (m0>m1){
+        double m0 = table.get(segment)[0];
+        double m1 = table.get(segment + 1)[0];
+        if (m0 > m1) {
             throw new IOException("Invalid interpolation table");
         }
-        for (int i=0; i<slaves.length; i++){
-            double s0 =table.get(segment)[i+1];
-            double s1 =table.get(segment+1)[i+1];
-            ret[i]=(((s1-s0)*(masterPosition-m0))/(m1-m0) + s0);
+        for (int i = 0; i < slaves.length; i++) {
+            double s0 = table.get(segment)[i + 1];
+            double s1 = table.get(segment + 1)[i + 1];
+            ret[i] = (((s1 - s0) * (masterPosition - m0)) / (m1 - m0) + s0);
         }
         return ret;
     }
@@ -147,8 +147,8 @@ public class MasterPositioner extends PositionerBase {
         if (!isMasterInMotorGroup()) {
             master.moveAsync(value);
         }
-        setState(State.Busy);        
-        
+        setState(State.Busy);
+
         if (motorGroup != null) {
             double[] positions = new double[motorGroup.getMotors().length];
             int index = 0;
@@ -173,7 +173,7 @@ public class MasterPositioner extends PositionerBase {
                     return ret;
                 });
             }
-        }        
+        }
     }
 
     @Override
@@ -210,7 +210,7 @@ public class MasterPositioner extends PositionerBase {
     public MotorGroup getMotorGroup() {
         return motorGroup;
     }
-        
+
     public ArrayList<double[]> getInterpolationTable() throws IOException {
         ArrayList<double[]> ret = new ArrayList<>();
         MasterPositionerConfig cfg = getConfig();
@@ -229,43 +229,43 @@ public class MasterPositioner extends PositionerBase {
                     ret.add(entry);
                 }
             }
-        } catch (Exception ex){
+        } catch (Exception ex) {
             getLogger().warning("Invalid interpolation table: resetting configuration entries.");
             setInterpolationTable(null);
         }
         return ret;
     }
-    
-    public void clearInterpolationTable() throws IOException{
+
+    public void clearInterpolationTable() throws IOException {
         setInterpolationTable(null);
     }
-    
-    public void gear() throws IOException, InterruptedException{
+
+    public void gear() throws IOException, InterruptedException {
         move(master.read());
     }
-    
-    public void setInterpolationTable(ArrayList<double[]> table) throws IOException{
+
+    public void setInterpolationTable(ArrayList<double[]> table) throws IOException {
         ArrayList<double[]> ret = new ArrayList<>();
         MasterPositionerConfig cfg = getConfig();
-        
-        double[] masterPos= new double[0];
+
+        double[] masterPos = new double[0];
         double[][] slavesPos = new double[6][0];
-        
-        if ((table!=null)&&(table.size()>0)){
+
+        if ((table != null) && (table.size() > 0)) {
             int points = table.size();
-            masterPos= new double[points];
-            for (int i=0; i<slaves.length; i++) {
+            masterPos = new double[points];
+            for (int i = 0; i < slaves.length; i++) {
                 slavesPos[i] = new double[points];
             }
 
-            for (int i=0; i< points; i++){
-                masterPos[i]=table.get(i)[0];
-                for (int j=0; j<slaves.length; j++){
-                    slavesPos[j][i]=table.get(i)[j+1];
+            for (int i = 0; i < points; i++) {
+                masterPos[i] = table.get(i)[0];
+                for (int j = 0; j < slaves.length; j++) {
+                    slavesPos[j][i] = table.get(i)[j + 1];
                 }
             }
-            
-        }             
+
+        }
         cfg.masterPositions = masterPos;
         cfg.slave1Positions = slavesPos[0];
         cfg.slave2Positions = slavesPos[1];
@@ -275,51 +275,49 @@ public class MasterPositioner extends PositionerBase {
         cfg.slave6Positions = slavesPos[5];
         cfg.save();
     }
-    
-    
-    public void addInterpolationTable(double[] values) throws IOException{
-        if (values.length != slaves.length+1){
+
+    public void addInterpolationTable(double[] values) throws IOException {
+        if (values.length != slaves.length + 1) {
             throw new RuntimeException("Invalid number of elements in interpolation table");
-        }        
+        }
         ArrayList<double[]> table = getInterpolationTable();
         double masterPos = values[0];
         int entryPos = 0;
-        for (int i =0; i<table.size(); i++){
+        for (int i = 0; i < table.size(); i++) {
             double pos = table.get(i)[0];
-            if (masterPos==pos){
-                for (int j=0; j<slaves.length; j++){
-                    table.get(i)[j+1] = values[j+1];
+            if (masterPos == pos) {
+                for (int j = 0; j < slaves.length; j++) {
+                    table.get(i)[j + 1] = values[j + 1];
                 }
-               setInterpolationTable(table);
-               return;
+                setInterpolationTable(table);
+                return;
             }
-            if (masterPos>pos){
-                entryPos = i+1; 
+            if (masterPos > pos) {
+                entryPos = i + 1;
             }
         }
         table.add(entryPos, values);
         setInterpolationTable(table);
     }
-    
 
-    public void addInterpolationTable() throws IOException, InterruptedException{
-        double[] values = new double[slaves.length+1];
-        values[0]=master.getPosition();
-        for (int i=0; i<slaves.length; i++){
-            values[i+1] = slaves[i].getPosition();
-        }    
+    public void addInterpolationTable() throws IOException, InterruptedException {
+        double[] values = new double[slaves.length + 1];
+        values[0] = master.getPosition();
+        for (int i = 0; i < slaves.length; i++) {
+            values[i + 1] = slaves[i].getPosition();
+        }
         addInterpolationTable(values);
     }
 
-    public void removeInterpolationTable(int index) throws IOException{
-         ArrayList<double[]> table = getInterpolationTable();
-         table.remove(index);
-         setInterpolationTable(table);
+    public void removeInterpolationTable(int index) throws IOException {
+        ArrayList<double[]> table = getInterpolationTable();
+        table.remove(index);
+        setInterpolationTable(table);
     }
 
-    public int getSlaveIndex(Positioner slave){
-        for (int i=0; i< slaves.length; i++){
-            if (slaves[i]==slave){
+    public int getSlaveIndex(Positioner slave) {
+        for (int i = 0; i < slaves.length; i++) {
+            if (slaves[i] == slave) {
                 return i;
             }
         }
@@ -328,11 +326,11 @@ public class MasterPositioner extends PositionerBase {
 
     public int getInterpolationSegment(double masterPosition) throws IOException {
         ArrayList<double[]> table = getInterpolationTable();
-        int segments = table.size()-1;
-        for (int i=0; i<segments; i++) {
+        int segments = table.size() - 1;
+        for (int i = 0; i < segments; i++) {
             double m0 = table.get(i)[0];
             double m1 = table.get(i + 1)[0];
-            if ((m0<=masterPosition) && (m1>=masterPosition)){
+            if ((m0 <= masterPosition) && (m1 >= masterPosition)) {
                 return i;
             }
         }
@@ -342,35 +340,35 @@ public class MasterPositioner extends PositionerBase {
     public ArrayList<double[]> getInterpolationPlot(Positioner slave, double resolution) throws IOException {
         ArrayList<double[]> table = getInterpolationTable();
         int index = getSlaveIndex(slave);
-        if (index<0){
+        if (index < 0) {
             throw new IOException("Invalid slave: " + slave.toString());
         }
         ArrayList<Double> x = new ArrayList<>();
         ArrayList<Double> y = new ArrayList<>();
-        int segments = table.size()-1;
+        int segments = table.size() - 1;
 
-        for (int i=0; i<segments; i++){
-            double m0 =table.get(i)[0];
-            double s0 =table.get(i)[index+1];
-            double m1 =table.get(i+1)[0];
-            double s1 =table.get(i+1)[index+1];
-            if (m0>m1){
+        for (int i = 0; i < segments; i++) {
+            double m0 = table.get(i)[0];
+            double s0 = table.get(i)[index + 1];
+            double m1 = table.get(i + 1)[0];
+            double s1 = table.get(i + 1)[index + 1];
+            if (m0 > m1) {
                 throw new IOException("Invalid interpolation table");
             }
             double m;
-            for (m=m0; m<m1; m+=resolution) {
+            for (m = m0; m < m1; m += resolution) {
                 x.add(m);
-                y.add(((s1-s0)*(m-m0))/(m1-m0) + s0);
+                y.add(((s1 - s0) * (m - m0)) / (m1 - m0) + s0);
             }
-            if (m<m1){
+            if (m < m1) {
                 x.add(m1);
                 y.add(s1);
             }
         }
 
         ArrayList<double[]> ret = new ArrayList<>();
-        ret.add((double[])Convert.toPrimitiveArray(x, Double.class));
-        ret.add((double[])Convert.toPrimitiveArray(y, Double.class));
+        ret.add((double[]) Convert.toPrimitiveArray(x, Double.class));
+        ret.add((double[]) Convert.toPrimitiveArray(y, Double.class));
         return ret;
     }
 }
