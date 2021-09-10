@@ -1,6 +1,7 @@
 package ch.psi.pshell.core;
 
-import ch.psi.pshell.device.AccessType;
+import ch.psi.pshell.device.*;
+import ch.psi.pshell.device.Readable;
 import ch.psi.utils.Arr;
 import ch.psi.utils.Config;
 import ch.psi.utils.IO;
@@ -18,10 +19,7 @@ import java.util.HashMap;
 import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import ch.psi.pshell.device.GenericDevice;
-import ch.psi.pshell.device.GenericDeviceBase;
-import ch.psi.pshell.device.Readable;
-import ch.psi.pshell.device.Writable;
+
 import ch.psi.pshell.epics.Epics;
 import ch.psi.utils.Convert;
 import ch.psi.utils.Str;
@@ -382,7 +380,10 @@ public class DevicePool extends ObservableBase<DevicePoolListener> implements Au
                 }
                 if (GenericDevice.class.isAssignableFrom(type)
                         || Readable.class.isAssignableFrom(type)
-                        || Writable.class.isAssignableFrom(type)) {
+                        || Writable.class.isAssignableFrom(type)
+                        || Positionable.class.isAssignableFrom(type)
+                        || Stoppable.class.isAssignableFrom(type)
+                ) {
                     if (deviceList != null) {
                         Class cls = deviceList.get(arg);
                         if ((cls == null) || !type.isAssignableFrom(cls)) {

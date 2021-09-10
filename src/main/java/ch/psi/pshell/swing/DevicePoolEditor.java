@@ -228,6 +228,7 @@ public class DevicePoolEditor extends Editor {
                 ch.psi.pshell.device.DummyPositioner.class.getName(),
                 ch.psi.pshell.device.DummyRegister.class.getName(),
                 ch.psi.pshell.device.HistogramGenerator.class.getName(),
+                ch.psi.pshell.device.MasterPositioner.class.getName(),
                 ch.psi.pshell.device.MotorGroupBase.class.getName(),
                 ch.psi.pshell.device.MotorGroupDiscretePositioner.class.getName(),
                 ch.psi.pshell.device.RegisterCache.class.getName(),
