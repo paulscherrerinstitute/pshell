@@ -64,6 +64,7 @@ import ch.psi.pshell.device.RegisterBase as RegisterBase
 import ch.psi.pshell.device.ProcessVariableBase as ProcessVariableBase
 import ch.psi.pshell.device.ControlledVariableBase as ControlledVariableBase
 import ch.psi.pshell.device.PositionerBase as PositionerBase
+import ch.psi.pshell.device.MasterPositioner as MasterPositioner
 import ch.psi.pshell.device.MotorBase as MotorBase
 import ch.psi.pshell.device.DiscretePositionerBase as DiscretePositionerBase
 import ch.psi.pshell.device.MotorGroupBase as MotorGroupBase
