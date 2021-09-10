@@ -251,6 +251,15 @@ public class Arr {
         return ret;
     }
 
+    public static <U, T extends U> U[] convert(T[] array,Class<U> type) {
+        if (array == null) {
+            return null;
+        }
+        U[] ret = (T[]) Array.newInstance(type, array.length);        
+        System.arraycopy(array, 0, ret, 0, array.length);
+        return ret;
+    }
+
     public static String[] sort(String[] data) {
         String[] array = copy(data);
         try {
