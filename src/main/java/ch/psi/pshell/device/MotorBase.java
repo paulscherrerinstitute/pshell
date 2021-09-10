@@ -406,7 +406,7 @@ public abstract class MotorBase extends PositionerBase implements Motor {
         simulatedPosition = 0.0;
 
         if (simulatedVelocity == null) {
-            simulatedVelocity = new DummyRegister(null, getPrecision());
+            simulatedVelocity = new DummyRegister(MotorBase.this.getName() + " simulated velocity", getPrecision());
             try {
                 simulatedVelocity.initialize();
                 simulatedVelocity.write(getDefaultSpeed());

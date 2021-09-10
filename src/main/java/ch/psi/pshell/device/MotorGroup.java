@@ -31,11 +31,11 @@ public interface MotorGroup extends Device, Readable<double[]>, Writable<double[
     }
 
     default CompletableFuture moveAsync(double[] destinations, MoveMode mode, double time) {
-        return Threading.getFuture(() -> move(destinations, mode, time));
+        return Threading.getPrivateThreadFuture(() -> move(destinations, mode, time));
     }
 
     default CompletableFuture moveRelAsync(double[] offset, int timeout) {
-        return Threading.getFuture(() -> moveRel(offset, timeout));
+        return Threading.getPrivateThreadFuture(() -> moveRel(offset, timeout));
     }
 
     default CompletableFuture moveRelAsync(double[] offset) {

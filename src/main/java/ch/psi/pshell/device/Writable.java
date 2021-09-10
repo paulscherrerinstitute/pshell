@@ -12,7 +12,7 @@ public interface Writable<T> extends Record {
     void write(T value) throws IOException, InterruptedException;
 
     default CompletableFuture writeAsync(T value) {
-        return Threading.getFuture(() -> write(value));
+        return Threading.getPrivateThreadFuture(() -> write(value));
     }
 
     public interface WritableNumber<T extends Number> extends Writable<T> {

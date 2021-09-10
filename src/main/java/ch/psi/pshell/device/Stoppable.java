@@ -12,6 +12,6 @@ public interface Stoppable {
     void stop() throws IOException, InterruptedException;
 
     default CompletableFuture stopAsync() {
-        return Threading.getFuture(() -> stop());
+        return Threading.getPrivateThreadFuture(() -> stop());
     }
 }

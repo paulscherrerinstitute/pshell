@@ -24,7 +24,7 @@ public interface Positioner extends Movable<Double> {
     }
 
     default CompletableFuture moveRelAsync(Double offset, int timeout) {
-        return Threading.getFuture(() -> moveRel(offset, timeout));
+        return Threading.getPrivateThreadFuture(() -> moveRel(offset, timeout));
     }
 
 }

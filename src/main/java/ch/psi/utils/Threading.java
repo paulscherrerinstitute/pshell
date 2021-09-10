@@ -181,6 +181,10 @@ public class Threading {
         return getFuture(supplier, ForkJoinPool.commonPool());
     }
 
+    public static CompletableFuture<?> getPrivateThreadFuture(final SupplierWithException<?> supplier) {
+        return getFuture(supplier, Executors.newSingleThreadExecutor());
+    }
+
     public static CompletableFuture<?> getFuture(final SupplierWithException<?> supplier, Executor executor) {
         VisibleCompletableFuture<Object> ret = new VisibleCompletableFuture<>();
         CompletableFuture.supplyAsync(() -> {
@@ -211,6 +215,10 @@ public class Threading {
         return getFuture(runnable, ForkJoinPool.commonPool());
     }
 
+    public static CompletableFuture<?> getPrivateThreadFuture(final RunnableWithException runnable) {
+        return getFuture(runnable, Executors.newSingleThreadExecutor());
+    }
+    
     public static CompletableFuture<?> getFuture(RunnableWithException runnable, Executor executor) {
         VisibleCompletableFuture<Object> ret = new VisibleCompletableFuture<>();
         CompletableFuture.runAsync(() -> {
