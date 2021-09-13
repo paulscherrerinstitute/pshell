@@ -633,6 +633,9 @@ public class ServerService {
             } catch (Exception ex) {
                 step = 0.0;
             }
+            if (!Context.getInstance().getExecutionPars().isScanDisplayed(scan)){
+                return;
+            }
             if (printScan) {
                 sendShell(CommandSource.server, scan.getHeader("\t"));
             }
@@ -645,7 +648,9 @@ public class ServerService {
         public void onNewRecord(Scan scan, ScanRecord record) {
             progress = Math.min(progress + step, 1.0);
             sendProgress(progress);
-
+            if (!Context.getInstance().getExecutionPars().isScanDisplayed(scan)){
+                return;
+            }
             if (printScan) {
                 sendShell(CommandSource.server, record.print("\t"));
             }

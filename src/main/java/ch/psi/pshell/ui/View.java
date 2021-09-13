@@ -661,6 +661,9 @@ public class View extends MainFrame {
             public void onScanStarted(Scan scan, final String plotTitle) {
                 synchronized (plotTitles) {
                     plotTitles.put(scan, plotTitle);
+                    if (!context.getExecutionPars().isScanDisplayed(scan)){
+                        return;
+                    }
                     PlotPanel plottingPanel = getPlotPanel(plotTitles.get(scan));
                     plottingActive = !isScanPlotDisabled();
                     plottingPanel.setPreferences(context.getPlotPreferences());

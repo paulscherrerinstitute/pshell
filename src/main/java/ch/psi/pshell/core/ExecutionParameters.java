@@ -59,10 +59,12 @@ public class ExecutionParameters {
 
         final int index;
         final boolean persisted;
+        final boolean displayed;
 
-        ScanInfo(int index, boolean persisted) {
+        ScanInfo(int index, boolean persisted, boolean displayed) {
             this.index = index;
             this.persisted = persisted;
+            this.displayed = displayed;
         }
     }
 
@@ -263,6 +265,16 @@ public class ExecutionParameters {
         }
         return false;
     }
+    
+    @Hidden
+    public boolean isScanDisplayed(Scan scan) {
+        synchronized (currentScans) {
+            if (currentScans.containsKey(scan)) {
+                return currentScans.get(scan).displayed;
+            }
+        }
+        return false;
+    }    
 
     @Hidden
     public int getScanIndex(Scan scan) {
@@ -278,7 +290,9 @@ public class ExecutionParameters {
     public void addScan(Scan scan) {
         synchronized (currentScans) {
             scanIndex++;
-            currentScans.put(scan, new ScanInfo(scanIndex, getSave()));
+            boolean displayed = true;
+            displayed = !(Boolean.FALSE.equals(getCommandOptions().getOrDefault("display", true)));
+            currentScans.put(scan, new ScanInfo(scanIndex, getSave(), displayed));
         }
     }
 
@@ -289,6 +303,13 @@ public class ExecutionParameters {
         }
         this.scriptOptions.putAll(options);
         checkOptions(options);
+        Object display = getOption("display");
+        if (Boolean.FALSE.equals(display)) {
+            setPlotPreference(ViewPreference.PLOT_DISABLED, true);
+            setPlotPreference(ViewPreference.TABLE_DISABLED, true);
+            setPlotPreference(ViewPreference.PRINT_SCAN, false);
+        }
+        
     }
     
     public Object getCommand(){
@@ -419,13 +440,6 @@ public class ExecutionParameters {
                 }
                 setPlotPreference(ViewPreference.valueOf(key.toString().toUpperCase()), val);
             }
-        }
-
-        Object display = getOption("display");
-        if (Boolean.FALSE.equals(display)) {
-            setPlotPreference(ViewPreference.PLOT_DISABLED, true);
-            setPlotPreference(ViewPreference.TABLE_DISABLED, true);
-            setPlotPreference(ViewPreference.PRINT_SCAN, false);
         }
     }
 

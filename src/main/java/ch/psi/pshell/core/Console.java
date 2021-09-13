@@ -154,11 +154,17 @@ public class Console {
     ScanListener scanListener = new ScanListener() {
         @Override
         public void onScanStarted(Scan scan, String plotTitle) {
+            if (!Context.getInstance().getExecutionPars().isScanDisplayed(scan)){
+                return;
+            }
             System.out.println(scan.getHeader("\t"));
         }
 
         @Override
         public void onNewRecord(Scan scan, ScanRecord record) {
+            if (!Context.getInstance().getExecutionPars().isScanDisplayed(scan)){
+                return;
+            }
             System.out.println(record.print("\t"));
         }
 

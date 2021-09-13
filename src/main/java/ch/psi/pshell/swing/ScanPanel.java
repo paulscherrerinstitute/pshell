@@ -55,6 +55,9 @@ public class ScanPanel extends MonitoredPanel {
             if (scan instanceof PlotScan) {
                 return;
             }
+            if (!Context.getInstance().getExecutionPars().isScanDisplayed(scan)){
+                return;
+            }
 
             ArrayList<String> columns = new ArrayList<>();
             columns.add("Time");

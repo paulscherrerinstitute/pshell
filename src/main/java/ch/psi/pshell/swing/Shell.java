@@ -264,11 +264,17 @@ public class Shell extends MonitoredPanel {
     final ScanListener printScanListener = new ScanListener() {
         @Override
         public void onScanStarted(Scan scan, final String plotTitle) {
+            if (!Context.getInstance().getExecutionPars().isScanDisplayed(scan)){
+                return;
+            }            
             output.append(scan.getHeader("\t") + "\n", STDOUT_COLOR);
         }
 
         @Override
         public void onNewRecord(Scan scan, ScanRecord record) {
+            if (!Context.getInstance().getExecutionPars().isScanDisplayed(scan)){
+                return;
+            }            
             output.append(record.print("\t") + "\n", STDOUT_COLOR);
         }
 
