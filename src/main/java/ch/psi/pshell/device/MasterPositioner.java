@@ -5,6 +5,8 @@ import ch.psi.utils.Convert;
 import ch.psi.utils.State;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Master-slave axis .
@@ -199,7 +201,7 @@ public class MasterPositioner extends PositionerBase {
         setState(State.Ready);
     }
 
-    public Positioner getMaster() {
+    public PositionerBase getMaster() {
         return master;
     }
 
@@ -211,7 +213,7 @@ public class MasterPositioner extends PositionerBase {
         return motorGroup;
     }
 
-    public ArrayList<double[]> getInterpolationTable() throws IOException {
+    public ArrayList<double[]> getInterpolationTable(){
         ArrayList<double[]> ret = new ArrayList<>();
         MasterPositionerConfig cfg = getConfig();
 
@@ -231,7 +233,11 @@ public class MasterPositioner extends PositionerBase {
             }
         } catch (Exception ex) {
             getLogger().warning("Invalid interpolation table: resetting configuration entries.");
-            setInterpolationTable(null);
+            try {
+                setInterpolationTable(null);
+            } catch (IOException ex1) {
+                Logger.getLogger(MasterPositioner.class.getName()).log(Level.SEVERE, null, ex1);
+            }
         }
         return ret;
     }
@@ -244,7 +250,12 @@ public class MasterPositioner extends PositionerBase {
         move(master.read());
     }
 
+    
     public void setInterpolationTable(ArrayList<double[]> table) throws IOException {
+        setInterpolationTable(table, true);
+    }
+    
+    public void setInterpolationTable(ArrayList<double[]> table, boolean save) throws IOException {
         ArrayList<double[]> ret = new ArrayList<>();
         MasterPositionerConfig cfg = getConfig();
 
@@ -273,10 +284,17 @@ public class MasterPositioner extends PositionerBase {
         cfg.slave4Positions = slavesPos[3];
         cfg.slave5Positions = slavesPos[4];
         cfg.slave6Positions = slavesPos[5];
-        cfg.save();
+        
+        if (save){
+            cfg.save();
+        }
     }
 
     public void addInterpolationTable(double[] values) throws IOException {
+        addInterpolationTable(values, true);
+    }
+    
+    public void addInterpolationTable(double[] values, boolean save) throws IOException {
         if (values.length != slaves.length + 1) {
             throw new RuntimeException("Invalid number of elements in interpolation table");
         }
@@ -289,7 +307,7 @@ public class MasterPositioner extends PositionerBase {
                 for (int j = 0; j < slaves.length; j++) {
                     table.get(i)[j + 1] = values[j + 1];
                 }
-                setInterpolationTable(table);
+                setInterpolationTable(table, save);
                 return;
             }
             if (masterPos > pos) {
@@ -297,16 +315,43 @@ public class MasterPositioner extends PositionerBase {
             }
         }
         table.add(entryPos, values);
-        setInterpolationTable(table);
+        setInterpolationTable(table, save);
     }
 
-    public void addInterpolationTable() throws IOException, InterruptedException {
-        double[] values = new double[slaves.length + 1];
-        values[0] = master.getPosition();
+    public double[] getSetpoints() throws IOException, InterruptedException {
+        double[] ret = new double[slaves.length + 1];
+        ret[0] = master.getValue();
         for (int i = 0; i < slaves.length; i++) {
-            values[i + 1] = slaves[i].getPosition();
+            ret[i + 1] = slaves[i].getValue();
         }
-        addInterpolationTable(values);
+        return ret;
+    }
+
+    public double[] getReadbacks() throws IOException, InterruptedException {
+        double[] ret = new double[slaves.length + 1];
+        ret[0] = master.getPosition();
+        for (int i = 0; i < slaves.length; i++) {
+            ret[i + 1] = slaves[i].getPosition();
+        }
+        return ret;
+    }
+
+    public void addInterpolationTable(boolean setpoints) throws IOException, InterruptedException {
+        addInterpolationTable(setpoints, true);
+    }
+
+    public void addInterpolationTable(boolean setpoints, boolean save) throws IOException, InterruptedException {
+        addInterpolationTable(setpoints ? getSetpoints() : getReadbacks(), save);
+    }
+
+    public void delInterpolationTable(int index) throws IOException, InterruptedException {
+        delInterpolationTable(index);
+    }
+    
+    public void delInterpolationTable(int index, boolean save) throws IOException, InterruptedException {
+        ArrayList<double[]> table = getInterpolationTable();
+        table.remove(index);
+        setInterpolationTable(table, save);        
     }
 
     public void removeInterpolationTable(int index) throws IOException {
@@ -336,12 +381,22 @@ public class MasterPositioner extends PositionerBase {
         }
         throw new IOException("Position not in interpolation table: " + masterPosition);
     }
+    
+    public int getInterpolationEntry(double masterPosition) throws IOException {
+        ArrayList<double[]> table = getInterpolationTable();
+        for (int i = 0; i < table.size(); i++) {
+            if (Math.abs(table.get(i)[0] - masterPosition) < 1e-8){
+                return i;
+            }
+        }        
+        return -1;
+    }        
 
     public ArrayList<double[]> getInterpolationPlot(Positioner slave, double resolution) throws IOException {
         ArrayList<double[]> table = getInterpolationTable();
         int index = getSlaveIndex(slave);
         if (index < 0) {
-            throw new IOException("Invalid slave: " + slave.toString());
+            throw new IOException("Invalid slave: " + ((slave == null) ? "null" : slave.getName()));
         }
         ArrayList<Double> x = new ArrayList<>();
         ArrayList<Double> y = new ArrayList<>();

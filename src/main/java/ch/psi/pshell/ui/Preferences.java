@@ -9,6 +9,7 @@ import ch.psi.utils.Serializer;
 import ch.psi.pshell.device.Camera;
 import ch.psi.pshell.device.DiscretePositioner;
 import ch.psi.pshell.device.HistogramGenerator;
+import ch.psi.pshell.device.MasterPositioner;
 import ch.psi.pshell.device.Motor;
 import ch.psi.pshell.device.MotorGroup;
 import ch.psi.pshell.device.ProcessVariable;
@@ -31,6 +32,7 @@ import ch.psi.pshell.imaging.Colormap;
 import ch.psi.pshell.swing.CodeEditor;
 import ch.psi.pshell.swing.DeviceValueChart;
 import ch.psi.pshell.swing.HistogramGeneratorPanel;
+import ch.psi.pshell.swing.MasterPositionerPanel;
 import ch.psi.pshell.swing.ScalerPanel;
 import ch.psi.utils.IO;
 import java.awt.Color;
@@ -178,6 +180,7 @@ public class Preferences {
             new DefaultPanel(Scaler.class.getName(), ScalerPanel.class.getName()),
             new DefaultPanel(Scienta.class.getName(), ScientaPanel.class.getName()),
             new DefaultPanel(Motor.class.getName(), MotorPanel.class.getName()),
+            new DefaultPanel(MasterPositioner.class.getName(), MasterPositionerPanel.class.getName()),
             new DefaultPanel(ProcessVariable.class.getName(), ProcessVariablePanel.class.getName()),
             new DefaultPanel(MotorGroup.class.getName(), MotorGroupPanel.class.getName()),
             new DefaultPanel(DiscretePositioner.class.getName(), DiscretePositionerPanel.class.getName()),

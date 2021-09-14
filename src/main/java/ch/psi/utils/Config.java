@@ -209,6 +209,10 @@ public class Config extends ObservableBase<Config.ConfigListener> {
             }
         }
     }
+    
+    public void load() throws IOException {
+        load(this.fileName);        
+    }
 
     public void save() throws IOException {
         if (fileName != null) {

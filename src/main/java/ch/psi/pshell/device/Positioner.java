@@ -11,7 +11,7 @@ import java.util.concurrent.CompletableFuture;
  * check compares against modulo 360. - move() will write to the closest modulo of destination. -
  * write() is not affected.
  */
-public interface Positioner extends Movable<Double> {
+public interface Positioner extends ControlledVariable, Movable<Double> {
 
     void moveRel(Double offset, int timeout) throws IOException, InterruptedException;
 

@@ -137,7 +137,7 @@ public class MonitoredPanel extends JPanel {
     }
     
     public JDialog showDialog(String title, Dimension size, JComponent content) {
-        return SwingUtils.showDialog(this, title, size, content);
+        return SwingUtils.showDialog(getWindow(), title, size, content);
     }
     
     public JFrame showFrame(String title, Dimension size, JComponent content) {

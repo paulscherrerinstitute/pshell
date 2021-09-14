@@ -1,12 +1,13 @@
 package ch.psi.pshell.device;
 
+import ch.psi.pshell.core.Nameable;
 import java.io.IOException;
 
 /**
  * Interface for devices that have a position value and are capable of knowing if are in position.
  */
-public interface Positionable<T> {        
-
+public interface Positionable<T> extends Nameable {        
+    
     public T getPosition() throws IOException, InterruptedException;
 
     public boolean isInPosition(T pos) throws IOException, InterruptedException;
