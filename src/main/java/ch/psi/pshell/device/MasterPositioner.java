@@ -2,6 +2,7 @@ package ch.psi.pshell.device;
 
 import ch.psi.utils.Arr;
 import ch.psi.utils.Convert;
+import ch.psi.utils.Range;
 import ch.psi.utils.State;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -391,6 +392,35 @@ public class MasterPositioner extends PositionerBase {
         }        
         return -1;
     }        
+    
+    public Range getRange()  {
+        ArrayList<double[]> table = getInterpolationTable();
+        if (table.size() <2){
+            return null;
+        }
+        return new Range(table.get(0)[0], table.get(table.size()-1)[0]);
+    }
+    
+    @Override
+    public double getMinValue() {
+        double min = getConfig().minValue;
+        Range range = getRange();
+        if (range!=null){
+            min = Math.max(min, range.min);
+        }
+        return adjustPrecision(min);
+    }
+
+    @Override
+    public double getMaxValue() {
+        double max = getConfig().maxValue;
+        Range range = getRange();
+        if (range!=null){
+            max = Math.min(max, range.max);
+        }
+        return adjustPrecision(max);
+    }
+    
 
     public ArrayList<double[]> getInterpolationPlot(Positioner slave, double resolution) throws IOException {
         ArrayList<double[]> table = getInterpolationTable();

@@ -113,7 +113,7 @@ public class MasterPositionerPanel extends DevicePanel {
             }
         });
     }
-    
+        
     boolean updating;
     void update(){
         updating = true;
@@ -145,6 +145,7 @@ public class MasterPositionerPanel extends DevicePanel {
         }
         comboSlaves.setSelectedItem(null);
         series.clear();
+        panelPv.setupValueSelection();
     }
 
     @Override
@@ -203,6 +204,7 @@ public class MasterPositionerPanel extends DevicePanel {
         setName("Form"); // NOI18N
 
         panelPv.setName("panelPv"); // NOI18N
+        panelPv.setShowLimitButtons(false);
 
         jPanel1.setName("jPanel1"); // NOI18N
 

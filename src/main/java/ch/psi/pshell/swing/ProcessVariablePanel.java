@@ -4,6 +4,8 @@ import ch.psi.pshell.device.Device;
 import ch.psi.pshell.device.ProcessVariable;
 import ch.psi.pshell.device.ReadbackDevice;
 import ch.psi.pshell.device.Stoppable;
+import ch.psi.utils.Config;
+import ch.psi.utils.Config.ConfigListener;
 import ch.psi.utils.Convert;
 import ch.psi.utils.State;
 import java.io.IOException;
@@ -133,7 +135,7 @@ public final class ProcessVariablePanel extends DevicePanel {
 
     public static Double getIdealStepIncrement(double step) {
         return step / 10;
-    }
+    }           
 
     @Override
     public void setDevice(Device device) {
@@ -159,15 +161,16 @@ public final class ProcessVariablePanel extends DevicePanel {
             }
             if (!Double.isNaN(stepIncrement)) {
                 model.setStepSize(stepIncrement);
-            }
-            valueSelection.setMinValue(pv.getMinValue());
-            valueSelection.setMaxValue(pv.getMaxValue());
-            valueSelection.setStep((Double) spinnerStep.getValue());
-            int decimals = Math.max(Math.min(getDecimals(), ((ProcessVariable) device).getPrecision()), 0);
-            valueSelection.setDecimals(decimals);
-            valueSelection.setUnit(((ProcessVariable) device).getUnit());
+            }            
+            device.getConfig().addListener(new ConfigListener() {
+                @Override
+                public void onSave(Config config) {
+                     setupValueSelection();
+                }                
+            });
         }
         super.setDevice(device);
+        setupValueSelection();
         updatingSlider = true;
         try {
             if (isRangeDefined()) {
@@ -183,6 +186,18 @@ public final class ProcessVariablePanel extends DevicePanel {
 
         textReadback.setVisible((device != null) && (device instanceof ReadbackDevice));
         buttonStop.setVisible(showStop && (device != null) && (device instanceof Stoppable));
+    }
+    
+    public void setupValueSelection(){        
+        ProcessVariable pv =  getDevice();
+        if (pv!=null){
+            valueSelection.setMinValue(pv.getMinValue());
+            valueSelection.setMaxValue(pv.getMaxValue());
+            valueSelection.setStep((Double) spinnerStep.getValue());
+            int decimals = Math.max(Math.min(getDecimals(), ((ProcessVariable) device).getPrecision()), 0);
+            valueSelection.setDecimals(decimals);
+            valueSelection.setUnit(((ProcessVariable) device).getUnit());        
+        }
     }
 
     boolean isRangeDefined() {
