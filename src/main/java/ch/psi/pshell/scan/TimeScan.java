@@ -26,7 +26,7 @@ public class TimeScan extends LineScan {
     }
 
     public TimeScan(Readable[] readables, int points, int interval_ms, int passes, boolean fixedRate) {
-        super(new Writable[0], readables, new double[]{0.0}, 
+        super(new Writable[0], (readables == null)? new  Readable[0] : readables, new double[]{0.0}, 
                 (points<0) ? new double[]{100.0} : new double[]{points - 1}, 
                 (points<0) ? Integer.MAX_VALUE : points - 1, 
                 false, 0, passes, false);
@@ -40,21 +40,27 @@ public class TimeScan extends LineScan {
         int steps = getNumberOfSteps()[0];
         Chrono chrono = new Chrono();
         int timeout = interval_ms;
-        for (int i = 0; (i <= steps) || (steps==Integer.MAX_VALUE); i++) {
-            if (!fixedRate) {
-                chrono = new Chrono();
-            }
-            processPosition(new double[0]);
-            if (i == steps) {
-                break;
-            }
-            if (fixedRate) {
-                if (!chrono.waitTimeout(timeout)) {
-                    getResult().errorCode++;
+        
+        if (getReadables().length==0){
+            //If not sampling anythin, just wait
+            chrono.waitTimeout(Math.max(steps,1) * interval_ms);
+        } else {        
+            for (int i = 0; (i <= steps) || (steps==Integer.MAX_VALUE); i++) {
+                if (!fixedRate) {
+                    chrono = new Chrono();
                 }
-                timeout += interval_ms;
-            } else {
-                chrono.waitTimeout(interval_ms);
+                processPosition(new double[0]);
+                if (i == steps) {
+                    break;
+                }
+                if (fixedRate) {
+                    if (!chrono.waitTimeout(timeout)) {
+                        getResult().errorCode++;
+                    }
+                    timeout += interval_ms;
+                } else {
+                    chrono.waitTimeout(interval_ms);
+                }
             }
         }
     }
