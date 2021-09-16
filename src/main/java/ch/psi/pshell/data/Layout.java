@@ -3,11 +3,15 @@ package ch.psi.pshell.data;
 import ch.psi.pshell.core.Context;
 import ch.psi.pshell.device.Device;
 import ch.psi.pshell.device.TimestampedValue;
+import ch.psi.pshell.scan.Otf;
 import ch.psi.pshell.scan.Scan;
 import ch.psi.pshell.scan.ScanRecord;
+import ch.psi.utils.Arr;
+import ch.psi.utils.Convert;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Array;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -61,11 +65,11 @@ public interface Layout {
     }
 
     default String getMonitorsPathName(Scan scan) {
-        return getCurrentGroup(scan) + "/monitors";
+        return getCurrentGroup(scan) + "monitors/";
     }
 
     default String getMonitorPathName(Scan scan, Device dev) {
-        return getMonitorsPathName(scan)+ "/" + dev.getAlias();
+        return getMonitorsPathName(scan)+ dev.getAlias();
     }
     default void onOpened(File output) throws IOException {
     }
@@ -79,7 +83,7 @@ public interface Layout {
 
 
     default void onInitMonitors(Scan scan) throws IOException{
-        for (Device dev : scan.getMonitors()){
+        for (Device dev : scan.getMonitorDevices()){
             try{
                 String path = getMonitorPathName(scan, dev);
                 dev.update();
@@ -104,7 +108,51 @@ public interface Layout {
             Logger.getLogger(Layout.class.getName()).log(Level.FINE, null, ex);
         }
     }
-
+    
+    default Object getMonitor(Scan scan, String device, DataManager dm) {
+        try{
+            DataManager.DataAddress scanPath = DataManager.getAddress(scan.getPath());
+            Device dev = scan.getMonitorDevices()[scan.getMonitorIndex(device)];
+            String path = getMonitorPathName(scan, dev);
+            dm = (dm == null) ? getDataManager() : dm;
+            Object sliceData = getDataManager().getData(scanPath.root, path).sliceData;  
+            try{
+                Object[][] data = (Object[][]) sliceData;  
+                if (data.length>0){
+                    long[] timestamps = new long[data.length];
+                    Object[] record = (Object[]) data[0];
+                    Object values = Array.newInstance(record[1].getClass(), data.length);
+                    for (int i=0;i< data.length; i++){
+                        timestamps[i] = (Long)data[i][0];
+                        Array.set(values, i, data[i][1]);
+                    }
+                    List ret = new ArrayList();
+                    ret.add(Arr.toList(timestamps));
+                    ret.add(Arr.toList(values));
+                    return ret;
+                }
+            } catch (Exception ex){
+                return sliceData;
+            }            
+        } catch (Exception ex){    
+            Logger.getLogger(Layout.class.getName()).log(Level.WARNING, null, ex);
+        }            
+        return null;
+    }
+    
+    default long[] getTimestamps(Scan scan, DataManager dm) {
+        try{
+            DataManager.DataAddress scanPath = DataManager.getAddress(scan.getPath());                    
+            String timestamps = getTimestampsDataset(scan.getPath());
+            if (timestamps != null) {
+                return (long[]) Convert.toPrimitiveArray(Context.getInstance().getDataManager().getData(timestamps).sliceData, Long.class);
+            }    
+        } catch (Exception ex){    
+            Logger.getLogger(Layout.class.getName()).log(Level.WARNING, null, ex);
+        }            
+        return null;
+    }
+    
     void onFinish(Scan scan) throws IOException;
 
 

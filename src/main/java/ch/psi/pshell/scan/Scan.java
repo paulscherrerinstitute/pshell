@@ -36,6 +36,8 @@ public interface Scan {
 
     public int getWritableIndex(Object obj);
 
+    public int getMonitorIndex(Object obj);
+
     public int getDeviceIndex(Object obj);
 
     public double[] getStart();
@@ -93,6 +95,10 @@ public interface Scan {
 
     public Object readData(String device);
     
+    public Object readMonitor(String device);
+    
+    public long[] readTimestamps();    
+    
     public String getTag();
     
     /**
@@ -131,6 +137,10 @@ public interface Scan {
     public void setCheckPositions(boolean value);
     
     public Device[] getMonitors();
+    
+    public Device[] getMonitorDevices();
+    
+    public String[] getMonitorNames();    
 
     public void setMonitors(Device[] monitors);
 

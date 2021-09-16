@@ -2,6 +2,7 @@ package ch.psi.pshell.scan;
 
 import ch.psi.pshell.core.Nameable;
 import ch.psi.pshell.data.LayoutDefault;
+import ch.psi.pshell.device.Device;
 import ch.psi.pshell.device.Writable;
 import ch.psi.pshell.device.Readable;
 import ch.psi.pshell.scripting.Subscriptable;
@@ -82,6 +83,18 @@ public class ScanResult implements SubscriptableList<ScanRecord>, Subscriptable.
             return  Arr.toList(scan.readData(scan.getWritableNames()[index]));
         }
     }
+    
+    public List<Object> getMonitor(Object id) {
+        int index = (id instanceof Number) ? ((Number)id).intValue() : scan.getMonitorIndex(id);
+        if ((index < 0) || (index >= getMonitors().size())) {
+            throw new IllegalArgumentException("Index");
+        }
+        return Arr.toList(scan.readMonitor(scan.getMonitorNames()[index]));
+    }
+    
+    public List<Long> getTimestamps() {
+        return Arr.toList(scan.readTimestamps());
+    }       
 
     public List getDevice(Object id) {
         int index = (id instanceof Number) ? ((Number)id).intValue() : scan.getDeviceIndex(id);
@@ -91,6 +104,10 @@ public class ScanResult implements SubscriptableList<ScanRecord>, Subscriptable.
         index-=getReadables().size();
         if (index<getWritables().size()) {
             return getPositions(index);
+        }
+        index-=getWritables().size();
+        if (index<getMonitors().size()) {
+            return getMonitor(index);
         }
         throw new IllegalArgumentException("Index");
     }
@@ -107,6 +124,11 @@ public class ScanResult implements SubscriptableList<ScanRecord>, Subscriptable.
     @Transient
     public List<Writable> getWritables() {
         return Arrays.asList(scan.getWritables());
+    }
+
+    @Transient
+    public List<Device> getMonitors() {
+        return Arrays.asList(scan.getMonitorDevices());
     }
 
     @Transient

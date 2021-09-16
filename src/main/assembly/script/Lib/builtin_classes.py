@@ -218,6 +218,7 @@ import ch.psi.pshell.scan.MonitorScan
 import ch.psi.pshell.scan.BinarySearch
 import ch.psi.pshell.scan.HillClimbingSearch
 import ch.psi.pshell.scan.ScanResult
+import ch.psi.pshell.scan.Otf as Otf
 
 import ch.psi.pshell.crlogic.CrlogicPositioner as CrlogicPositioner
 import ch.psi.pshell.crlogic.CrlogicSensor as CrlogicSensor

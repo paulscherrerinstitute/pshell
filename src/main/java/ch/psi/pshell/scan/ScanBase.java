@@ -132,16 +132,35 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
     
     
     @Override
-    public Device[] getMonitors(){
+    public Device[] getMonitors(){        
         return monitors;
     }
+    
+    @Override
+    public Device[] getMonitorDevices(){
+        if (monitors==null){
+            return null;
+        }
+        ArrayList<Device> ret = new ArrayList<>();
+        
+        for (Device dev : monitors){
+            if (dev instanceof Otf){
+                if (dev.getComponents().length>0){
+                    for (Device component: dev.getComponents()){
+                        ret.add(component);
+                    }
+                    continue;
+                }
+            } 
+            ret.add(dev);      
+        }        
+        return ret.toArray(new Device[0]);
+    }    
 
     @Override
     public void setMonitors(Device[] monitors){
         this.monitors = monitors;
-    }
-
-    
+    }    
 
     int settleTimeout = getScansSettleTimeout();
 
@@ -338,6 +357,16 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
         if (monitors != null){
             for (Device dev: monitors){
                 try {
+                    if (dev instanceof Otf){
+                        logger.info("Starting OTF: " + dev.getAlias());
+                        ((Otf) dev).start();
+                        if (dev.getComponents().length>0){
+                            for (Device component: dev.getComponents()){
+                                startMonitor(component);
+                            }
+                            continue;
+                        }
+                    }                    
                     startMonitor(dev);
                 } catch (Exception ex) {
                     logger.log(Level.WARNING, null, ex);
@@ -351,6 +380,13 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
         if (monitors != null){
             for (Device dev: monitors){
                 try {
+                    if (dev instanceof Otf){
+                        if (!isAborted()){
+                            logger.info("Waiting OTF to complete: " + dev.getAlias());
+                            dev.waitReady(-1);
+                            logger.info("OTF completed: " + dev.getAlias());
+                        }
+                    }
                     stopMonitor(dev);
                 } catch (Exception ex) {
                     logger.log(Level.WARNING, null, ex);
@@ -468,6 +504,20 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
                 logger.log(Level.WARNING, null, ex);
             }
         }
+        
+        if (monitors != null){
+            for (Device dev: monitors){
+                try {
+                    if (dev instanceof Otf){
+                        logger.info("Aborting OTF: " + dev.getAlias());
+                        ((Otf) dev).abort();
+                    }                    
+                } catch (Exception ex) {
+                    logger.log(Level.WARNING, null, ex);
+                }
+            }
+        }        
+        
     }
 
     /**
@@ -718,11 +768,30 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
         return scanPath;
     }
 
+    @Override
     public Object readData(String device){
         if (dataLayout!=null) {
             return dataLayout.getData(this, device, Context.getInstance().getDataManager());
         }
         return null;
+    }
+    
+    
+    @Override
+    public Object readMonitor(String device){
+        if (dataLayout!=null) {
+            return dataLayout.getMonitor(this, device, Context.getInstance().getDataManager());
+        }
+        return null;
+    }    
+    
+    
+    @Override
+    public long[] readTimestamps(){
+        if (dataLayout!=null) {
+            return dataLayout.getTimestamps(this,Context.getInstance().getDataManager());
+        }
+        return null;    
     }
 
     @Override
@@ -751,6 +820,9 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
         System.arraycopy(readables, 0, devices, 0, readables.length);
         if (writables!=null){
             devices = Arr.append(devices, writables);
+        }
+        if (monitors!=null){
+            devices = Arr.append(devices, getMonitorDevices());
         }
         return devices;
     }
@@ -791,6 +863,11 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
     }
 
     @Override
+    public int getMonitorIndex(Object obj) {
+        return getDeviceIndex(getMonitorDevices(), obj);
+    }
+    
+    @Override
     public int getDeviceIndex(Object obj){
         return getDeviceIndex(getDevices(), obj);
     }
@@ -809,6 +886,15 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
         ArrayList<String> names = new ArrayList();
         for (Readable readable : getReadables()) {
             names.add(readable.getAlias());
+        }
+        return names.toArray(new String[0]);
+    }
+    
+    @Override
+    public String[] getMonitorNames() {
+        ArrayList<String> names = new ArrayList();
+        for (Device monitor : getMonitorDevices()) {
+            names.add(monitor.getAlias());
         }
         return names.toArray(new String[0]);
     }

@@ -407,6 +407,24 @@ public abstract class DeviceBase extends GenericDeviceBase<DeviceListener> imple
     protected void setComponents(Device[] components) {
         this.components = components;
     }
+    
+    protected void addComponents(Device[] components) {
+        for (Device component : components) {
+            addComponent(component);
+        }
+    }
+    
+    protected void addComponent(Device component) {
+        if (components == null) {
+            components = new Device[0];
+        }
+        if (component != null) {
+            if (!Arr.contains(components, component)) {
+                components = Arr.append(components, component);
+            }
+        }
+        
+    }        
 
     @Override
     public Device[] getComponents() {
