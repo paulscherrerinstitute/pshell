@@ -1728,25 +1728,6 @@ def expand_path(path, timestamp=-1):
 
     return get_context().setup.expandPath(path, timestamp)
 
-def string_to_obj(o):
-    if is_string(o):
-        o=str(o)
-        if "://" in o:
-            return InlineDevice(o)
-        ret =  get_context().getInterpreterVariable(o)
-        if ret is None:
-            try:
-                return get_context().scriptManager.evalBackground(o).result
-            except:                        
-                return None
-        return ret
-    elif is_list(o):
-        ret = []
-        for i in o:
-            ret.append(string_to_obj(i))
-        return ret
-    return o
-
 ###################################################################################################
 #UI
 ###################################################################################################

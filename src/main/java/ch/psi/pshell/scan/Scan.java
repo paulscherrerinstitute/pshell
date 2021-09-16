@@ -3,6 +3,7 @@ package ch.psi.pshell.scan;
 import ch.psi.pshell.core.Context;
 import ch.psi.pshell.core.Nameable;
 import ch.psi.pshell.data.DataSlice;
+import ch.psi.pshell.device.Device;
 import ch.psi.pshell.device.Writable;
 import ch.psi.pshell.device.Readable;
 import ch.psi.utils.Reflection;
@@ -129,6 +130,10 @@ public interface Scan {
 
     public void setCheckPositions(boolean value);
     
+    public Device[] getMonitors();
+
+    public void setMonitors(Device[] monitors);
+
     public boolean getInitialMove();
 
     public void setInitialMove(boolean value);

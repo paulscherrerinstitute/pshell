@@ -1,11 +1,16 @@
 package ch.psi.pshell.data;
 
 import ch.psi.pshell.core.Context;
+import ch.psi.pshell.device.Device;
+import ch.psi.pshell.device.TimestampedValue;
 import ch.psi.pshell.scan.Scan;
 import ch.psi.pshell.scan.ScanRecord;
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Array;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Layout implementations define the structure of the acquired data on file.
@@ -55,7 +60,13 @@ public interface Layout {
         return getCurrentGroup(scan);
     }
 
+    default String getMonitorsPathName(Scan scan) {
+        return getCurrentGroup(scan) + "/monitors";
+    }
 
+    default String getMonitorPathName(Scan scan, Device dev) {
+        return getMonitorsPathName(scan)+ "/" + dev.getAlias();
+    }
     default void onOpened(File output) throws IOException {
     }
 
@@ -65,6 +76,34 @@ public interface Layout {
     void onStart(Scan scan) throws IOException;
 
     void onRecord(Scan scan, ScanRecord record) throws IOException;
+
+
+    default void onInitMonitors(Scan scan) throws IOException{
+        for (Device dev : scan.getMonitors()){
+            try{
+                String path = getMonitorPathName(scan, dev);
+                dev.update();
+                TimestampedValue v = dev.takeTimestamped();
+                Class type =  v.getValue().getClass();
+                getDataManager().createDataset(path, new String[]{"timestamp", "value"}, new Class[]{Long.class, type}, 
+                        new int[]{0,(type.isArray()) ? Array.getLength(v.getValue()): 0});
+                onMonitor(scan, dev, v.getValue(), v.getTimestamp());
+            } catch (Exception ex){        
+                appendLog("Error creating monitor dataset: " + dev.getAlias());
+                Logger.getLogger(Layout.class.getName()).log(Level.WARNING, null, ex);
+            }
+        }  
+    }
+
+    
+    default void onMonitor(Scan scan, Device dev, Object value, long timestamp) throws IOException{
+        try{
+            String path = getMonitorPathName(scan, dev);
+            getDataManager().appendItem(path, new Object[]{timestamp, value});
+        } catch (Exception ex){    
+            Logger.getLogger(Layout.class.getName()).log(Level.FINE, null, ex);
+        }
+    }
 
     void onFinish(Scan scan) throws IOException;
 

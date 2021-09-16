@@ -60,6 +60,7 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
     String name = "Scan";
     Layout dataLayout;
     Provider dataProvider;
+    Device[] monitors;
 
     boolean useWritableReadback = getScansUseWritableReadback();
     boolean restorePosition = getRestorePositionOnRelativeScans();
@@ -128,6 +129,19 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
         //    }
         //}
     }
+    
+    
+    @Override
+    public Device[] getMonitors(){
+        return monitors;
+    }
+
+    @Override
+    public void setMonitors(Device[] monitors){
+        this.monitors = monitors;
+    }
+
+    
 
     int settleTimeout = getScansSettleTimeout();
 
@@ -302,6 +316,48 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
         }
         return pos;
     }
+    
+    
+    DeviceListener monitorListener = new DeviceAdapter() {
+        @Override
+        public void onCacheChanged(Device device, Object value, Object former, long timestamp, boolean valueChange) {
+            triggerMonitor(device, value, timestamp);
+        }
+    };
+    
+    
+    protected void startMonitor(Device dev){
+        dev.addListener(monitorListener);
+    }
+    
+    protected void stopMonitor(Device dev){
+        dev.removeListener(monitorListener);
+    }
+    
+    protected void startMonitors(){
+        if (monitors != null){
+            for (Device dev: monitors){
+                try {
+                    startMonitor(dev);
+                } catch (Exception ex) {
+                    logger.log(Level.WARNING, null, ex);
+                }
+            }
+        }        
+    }
+  
+
+    protected void stopMonitors(){
+        if (monitors != null){
+            for (Device dev: monitors){
+                try {
+                    stopMonitor(dev);
+                } catch (Exception ex) {
+                    logger.log(Level.WARNING, null, ex);
+                }
+            }
+        }        
+    }
 
     @Override
     public void start() throws IOException, InterruptedException {
@@ -322,6 +378,7 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
                 }
                 try {
                     onBeforeScan();
+                    startMonitors();
                     try {
                         for (pass = 1; pass <= getNumberOfPasses(); pass++) {
                             passOffset = recordIndex;
@@ -336,6 +393,7 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
                             }
                         }
                     } finally {
+                        stopMonitors();
                         onAfterScan();
                     }
                     triggerEnded(null);
@@ -623,6 +681,16 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
         }
         currentRecord.sent = true;
     }
+    
+    protected void triggerMonitor(Device dev, Object value, long timestamp) {
+        for (ScanListener listener : getListeners()) {
+            try {
+                listener.onMonitor(ScanBase.this, dev, value, timestamp);
+            } catch (Exception ex) {
+                logger.log(Level.WARNING, null, ex);
+            }
+        }
+    }    
 
     protected void triggerEnded(Exception ex) {
         result.completed = true;
@@ -893,6 +961,25 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
                 readables[i] = (Readable) inlineDevice.getDevice();
             }
         }
+        if (monitors!=null){
+            for (int i = 0; i < monitors.length; i++) {
+                if (monitors[i] instanceof InlineDevice) {
+                    InlineDevice inlineDevice = (InlineDevice) monitors[i]; 
+                    if (inlineDevice.getProtocol().equals("bs")) {
+                        if (innerStream == null) {
+                            innerStream = new Stream("Scan devices stream");
+                            innerDevices.add(innerStream);
+                            innerStream.initialize();
+                        }
+                        inlineDevice.setParent(innerStream);
+                    }
+                    inlineDevice.initialize();
+                    innerDevices.add((InlineDevice) monitors[i]);
+                    monitors[i] = (Device) inlineDevice.getDevice();
+                }
+            }
+        }
+        
         if (innerStream != null) {
             innerStream.start(true);
             innerStream.waitCacheChange(10000);

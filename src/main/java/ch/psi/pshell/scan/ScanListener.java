@@ -1,5 +1,7 @@
 package ch.psi.pshell.scan;
 
+import ch.psi.pshell.device.Device;
+
 /**
  * The listener interface for receiving scan events.
  */
@@ -13,4 +15,7 @@ public interface ScanListener {
 
     default void onScanEnded(Scan scan, Exception ex) {
     }
+    
+    default void onMonitor(Scan scan, Device dev, Object value, long timestamp) {
+    }    
 }

@@ -178,10 +178,12 @@ public class ManualScan extends DiscreteScan {
             moveToStart();
         }
         onBeforeScan();
+        startMonitors();
     }
 
     public void end() throws IOException, InterruptedException {
         try {
+            stopMonitors();
             onAfterScan();
             triggerEnded(null);
             closeDevices();

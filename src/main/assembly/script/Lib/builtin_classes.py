@@ -253,6 +253,24 @@ import org.jfree.ui.RectangleAnchor as RectangleAnchor
 import org.jfree.ui.TextAnchor as TextAnchor
 
 
+def string_to_obj(o):
+    if is_string(o):
+        o=str(o)
+        if "://" in o:
+            return InlineDevice(o)
+        ret =  get_context().getInterpreterVariable(o)
+        if ret is None:
+            try:
+                return get_context().scriptManager.evalBackground(o).result
+            except:                        
+                return None
+        return ret
+    elif is_list(o):
+        ret = []
+        for i in o:
+            ret.append(string_to_obj(i))
+        return ret
+    return o
 
 ###################################################################################################
 #Scan classes
@@ -404,6 +422,7 @@ def processScanPars(scan, pars):
     scan.setAbortOnReadableError(pars.pop("abort_on_error",ScanBase.getAbortScansOnReadableError()))
     scan.setRestorePosition (pars.pop("restore_position",ScanBase.getRestorePositionOnRelativeScans()))
     scan.setCheckPositions(pars.pop("check_positions",ScanBase.getScansCheckPositions()))
+    scan.setMonitors(to_list(string_to_obj(pars.pop("monitors",None))))
     get_context().setCommandPars(scan, pars)
 
 

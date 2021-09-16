@@ -2,6 +2,7 @@ package ch.psi.pshell.data;
 
 import ch.psi.pshell.core.*;
 import ch.psi.pshell.device.ArrayCalibration;
+import ch.psi.pshell.device.Device;
 import ch.psi.pshell.device.MatrixCalibration;
 import ch.psi.pshell.scan.PlotScan;
 import ch.psi.pshell.scan.Scan;
@@ -421,6 +422,9 @@ public class DataManager implements AutoCloseable {
                         openOutput();
                         if (isOpen()) {
                             getLayout().onStart(scan);
+                            if (scan.getMonitors()!=null){
+                                getLayout().onInitMonitors(scan);
+                            }
                             appendLog(String.format("Scan %s started in: %s", getScanIndex(scan), getScanPath(scan)));
                         }
                     } catch (Exception ex) {
@@ -443,6 +447,18 @@ public class DataManager implements AutoCloseable {
                 }
             }
         }
+        
+        @Override
+        public void onMonitor(Scan scan, Device dev, Object value, long timestamp) {
+            if (getExecutionPars().isScanPersisted(scan)) {
+                try {
+                    getLayout().onMonitor(scan, dev, value, timestamp);
+                } catch (Exception e) {
+                    logger.log(Level.WARNING, null, e);
+                }
+            }
+            
+        }            
 
         @Override
         public void onScanEnded(Scan scan, Exception ex) {
@@ -636,6 +652,9 @@ public class DataManager implements AutoCloseable {
                 scan.setRecordIndexOffset(rec.getIndex()+1);
             }
             getLayout().onStart(scan);
+            if (scan.getMonitors()!=null){
+                getLayout().onInitMonitors(scan);
+            }            
             appendLog(String.format("Scan %s data was splitted with new index %s in: %s", index, getScanIndex(scan), getScanPath(scan)));
         }
     }
