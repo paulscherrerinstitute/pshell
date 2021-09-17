@@ -1,12 +1,16 @@
 package ch.psi.pshell.scripting;
 
+import ch.psi.pshell.core.Configuration;
+import ch.psi.pshell.core.LogManager;
 import ch.psi.utils.Arr;
 import ch.psi.utils.Chrono;
 import ch.psi.utils.FileSystemWatch;
 import ch.psi.utils.IO;
 import ch.psi.utils.IO.FilePermissions;
+import ch.psi.utils.ProcessFactory;
 import ch.psi.utils.Reflection.Hidden;
 import ch.psi.utils.Str;
+import ch.psi.utils.Sys;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -21,8 +25,11 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.script.CompiledScript;
@@ -44,7 +51,7 @@ public class ScriptManager implements AutoCloseable {
     public static final String LAST_RESULT_VARIABLE = "_";
     public static final String THREAD_RESULT_VARIABLE = "__THREAD_EXEC_RESULT__";
 
-    final ScriptType type;    
+    final ScriptType type;
     final Map<String, Object> injections;
     final ScriptEngine engine;
     final Interpreter interpreter;
@@ -58,19 +65,19 @@ public class ScriptManager implements AutoCloseable {
     PrintWriter sessionOut;
     Object lastResult;
     final Map<Thread, Object> results;
-    
+
     final int CLASS_FILE_CHECK_INTERVAL = 5000;
-    FileSystemWatch jythonClassFilePermissionFix;
-        
-    public ScriptManager(ScriptType type, String[] libraryPath, HashMap<String, Object> injections, FilePermissions scriptFilePermissions,boolean dontWriteBytecode) {
+    FileSystemWatch jythonClassFilePermissionMonitor;
+
+    public ScriptManager(ScriptType type, String[] libraryPath, HashMap<String, Object> injections, FilePermissions scriptFilePermissions, boolean dontWriteBytecode) {
         logger.info("Initializing " + getClass().getSimpleName());
         this.type = type;
         this.libraryPath = libraryPath;
         this.injections = injections;
         this.scriptFilePermissions = scriptFilePermissions;
-        this.dontWriteBytecode=dontWriteBytecode;
+        this.dontWriteBytecode = dontWriteBytecode;
         results = new HashMap<>();
-        
+
         if (type == ScriptType.py) {
             //TODO: This is a workaround to a bug in Jython 2.7.b3 (http://sourceforge.net/p/jython/mailman/message/32935831/)
             //TODO: The problem is solved in Jython 2.7.1, but this option makes startup 0.5s faster. Are there consequences?
@@ -85,36 +92,36 @@ public class ScriptManager implements AutoCloseable {
         }
 
         boolean threaded = false;
-        try{
+        try {
             threaded = ((engine.getFactory().getParameter("THREADING")) != null) || (type == ScriptType.js);
             // TODO: Nashorn is returning null. Even if it is not explicitly thread safe, 
             // blocking background calls will remove much functionality. Didn't found an issue so far.               
-        } catch (Exception ex){
+        } catch (Exception ex) {
             //graaljs raises excerption and don't accept threaded
             threaded = false;
         }
-        
+
         this.threaded = threaded;
         lib = new Library(engine);
         lib.setPath(libraryPath);
         injections.put("lib", lib);
-        if (threaded){
+        if (threaded) {
             injections.put(THREAD_RESULT_VARIABLE, results);
         }
-        
+
         injectVars();
 
         interpreter = new Interpreter(engine, type, null);
         logger.info("Finished " + getClass().getSimpleName() + " initialization");
     }
 
-    public ScriptEngine getEngine(){
+    public ScriptEngine getEngine() {
         return engine;
     }
-    
-    public Object getResult(Thread thread){
+
+    public Object getResult(Thread thread) {
         return results.get(thread);
-    }  
+    }
 
     public void setSessionFilePath(String sessionFilePath) {
         sessionFilePath = sessionFilePath;
@@ -171,45 +178,25 @@ public class ScriptManager implements AutoCloseable {
         Properties props = new Properties();
         props.setProperty(PROPERTY_PYTHON_PATH, String.join(File.pathSeparator, folders));
         org.python.util.PythonInterpreter.initialize(System.getProperties(), props, new String[]{""});
-        
-        //TODO: remove this hack when Jython fixes this: https://github.com/jython/jython/issues/93
-        if (!dontWriteBytecode) {            
-            if (JythonUtils.getJythonVersion().equals("2.7.2")) { 
-                if (jythonClassFilePermissionFix!=null){
-                    try {
-                        jythonClassFilePermissionFix.close();
-                    } catch (Exception ex) {
-                        Logger.getLogger(ScriptManager.class.getName()).log(Level.SEVERE, null, ex);
-                    }
-                }
-                jythonClassFilePermissionFix = new FileSystemWatch( libraryPath,  new String[]{"class"}, true, false, false, -1 /*CLASS_FILE_CHECK_INTERVAL*/, (path, kind) -> {
-                    logger.info("Setting class file readable to all: " + path);
-                    path.toFile().setReadable(true, false);
-                });
-            }
-        }
-        
     }
-    
-    
-    void beforeEval(boolean background){
-        if (!background){
-            evalThread = Thread.currentThread();   
+
+    void beforeEval(boolean background) {
+        if (!background) {
+            evalThread = Thread.currentThread();
         }
     }
-    
-    
-    void afterEval(boolean background){
-        if (!background){
-            evalThread = null;            
+
+    void afterEval(boolean background) {
+        if (!background) {
+            evalThread = null;
         }
-        if (jythonClassFilePermissionFix!=null){
-            jythonClassFilePermissionFix.check(CLASS_FILE_CHECK_INTERVAL);
+        if (jythonClassFilePermissionMonitor != null) {
+            jythonClassFilePermissionMonitor.check(CLASS_FILE_CHECK_INTERVAL);
         }
     }
-    
-    public void addPythonPath(String folder){        
-        if (!Arr.containsEqual(libraryPath, folder)){
+
+    public void addPythonPath(String folder) {
+        if (!Arr.containsEqual(libraryPath, folder)) {
             libraryPath = Arr.append(libraryPath, folder);
             setPythonPath(libraryPath);
             lib.setPath(libraryPath);
@@ -235,7 +222,7 @@ public class ScriptManager implements AutoCloseable {
         }
 
         beforeEval(false);
-        try {            
+        try {
             setVar(LAST_RESULT_VARIABLE, null);
             results.put(evalThread, null);
             Object ret = interpreter.evalFile(fileName);
@@ -243,9 +230,9 @@ public class ScriptManager implements AutoCloseable {
             if (ret == null) {
                 ret = results.get(evalThread);
             }
-            saveStatement("\n#Eval file:  " + script + "\n");            
+            saveStatement("\n#Eval file:  " + script + "\n");
             return ret;
-        } finally {            
+        } finally {
             afterEval(false);
         }
     }
@@ -254,10 +241,10 @@ public class ScriptManager implements AutoCloseable {
         String fileName = lib.resolveFile(script);
         if (fileName == null) {
             throw new FileNotFoundException(script);
-        }        
+        }
         results.put(Thread.currentThread(), null);
         beforeEval(true);
-        try {            
+        try {
             Object ret = interpreter.evalFile(fileName);
             if (ret == null) {
                 ret = results.get(Thread.currentThread());
@@ -268,7 +255,7 @@ public class ScriptManager implements AutoCloseable {
             return ret;
         } finally {
             afterEval(true);
-        }            
+        }
     }
 
     @Hidden
@@ -383,7 +370,7 @@ public class ScriptManager implements AutoCloseable {
             runningStatementList = false;
             stepStatementListExecutionFlag = false;
             statementListExecutionPaused = false;
-            runningStatement = null;            
+            runningStatement = null;
         }
     }
 
@@ -439,8 +426,8 @@ public class ScriptManager implements AutoCloseable {
             afterEval(false);
         }
     }
-    
-    public boolean isThreaded(){
+
+    public boolean isThreaded() {
         return threaded;
     }
 
@@ -681,7 +668,7 @@ public class ScriptManager implements AutoCloseable {
 
     @Override
     public void close() {
-        for (AutoCloseable ac : new AutoCloseable[]{sessionOut, jythonClassFilePermissionFix}) {
+        for (AutoCloseable ac : new AutoCloseable[]{sessionOut, jythonClassFilePermissionMonitor}) {
             try {
                 if (ac != null) {
                     ac.close();
@@ -691,4 +678,94 @@ public class ScriptManager implements AutoCloseable {
             }
         }
     }
+
+////////////////////////////////////////////////////////////////////////////////////////////////
+    //Class files permission handling
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    public void fixClassFilesPermissions() {
+        fixClassFilesPermissions(libraryPath, scriptFilePermissions);
+    }
+    
+    public static void  fixClassFilesPermissions(String[] path, FilePermissions permissions){
+        Set<String> fixedPath = new HashSet<>();        
+        for (String p: path){
+            boolean subpath = false;
+            for (String o: path){
+                if ((o!=p) && (IO.isSubPath(p, o))){
+                    subpath = true;
+                }
+            }
+            if (!subpath){
+                fixedPath.add(new File(p).getAbsolutePath());
+            }
+        }
+                        
+        Logger.getLogger(ScriptManager.class.getName()).warning("Fixing class files permissions to " + permissions + ": " + Str.toString(fixedPath));
+        for (String p : fixedPath) {
+            for (File file : IO.listFilesRecursive(p, new String[]{"class"})) {
+                fixClassFilePermissions(file, permissions);
+            }
+        }
+    }    
+
+    public void startClassFilesPermissionsMonitoring() {
+        Logger.getLogger(ScriptManager.class.getName()).warning("Starting class files permissions monitoring");
+        if (jythonClassFilePermissionMonitor != null) {
+            try {
+                jythonClassFilePermissionMonitor.close();
+            } catch (Exception ex) {
+                Logger.getLogger(ScriptManager.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+        jythonClassFilePermissionMonitor = new FileSystemWatch(libraryPath, new String[]{"class"}, true, false, false, -1 /*CLASS_FILE_CHECK_INTERVAL*/, (path, kind) -> {
+                    logger.info("Setting class file readable to all: " + path);
+                    fixClassFilePermissions(path.toFile());
+                });
+    }
+    
+    public void fixClassFilePermissions(File file) {
+        fixClassFilePermissions(file, scriptFilePermissions);
+    }
+
+    public static void fixClassFilePermissions(File file, FilePermissions permissions) {
+        try {
+            if (permissions == FilePermissions.Default) {
+                Logger.getLogger(ScriptManager.class.getName()).fine("Setting file readable: " + file.getAbsolutePath());
+                file.setReadable(true, false);
+            } else {
+                Logger.getLogger(ScriptManager.class.getName()).fine("Setting file permissions to " + permissions + ": " + file.getAbsolutePath());
+                IO.setFilePermissions( file, permissions);
+            }
+        } catch (Exception ex) {
+            Logger.getLogger(ScriptManager.class.getName()).log(Level.WARNING, null, ex);
+        }
+    }
+
+    /**
+     * Executes in different process so can be called when shutting down.
+     */
+    public void startFixClassFilesPermissions() {
+        Process p = ProcessFactory.createProcess(ScriptManager.class, Arr.insert(libraryPath, scriptFilePermissions.toString(),0));
+    }
+
+    /**
+     * This is for executing a push in a different process with ProcessFactory
+     */
+    public static void main(String[] args) {
+        //ProcessFactory
+        try {
+            /*
+            LogManager logManager = new LogManager(FilePermissions.Default);
+            String logFileName = Sys.getUserHome() + "/ScriptManager.log";
+            logManager.start(logFileName,-1);
+            logManager.setLevel(Level.FINE);
+            */            
+            FilePermissions permissions = FilePermissions.valueOf(args[0]);
+            String[] path = Arr.getSubArray(args, 1, args.length-1);
+            fixClassFilesPermissions(path, permissions);
+        } catch (Exception ex) {
+            logger.log(Level.SEVERE, null, ex);
+        }
+    }
+
 }
