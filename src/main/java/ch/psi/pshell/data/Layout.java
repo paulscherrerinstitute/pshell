@@ -93,8 +93,9 @@ public interface Layout {
                         new int[]{0,(type.isArray()) ? Array.getLength(v.getValue()): 0});
                 onMonitor(scan, dev, v.getValue(), v.getTimestamp());
             } catch (Exception ex){        
-                appendLog("Error creating monitor dataset: " + dev.getAlias());
-                Logger.getLogger(Layout.class.getName()).log(Level.WARNING, null, ex);
+                String msg = "Error creating monitor dataset for " + dev.getAlias() + ": " + ex.getMessage();
+                appendLog(msg);
+                Logger.getLogger(Layout.class.getName()).warning(msg);
             }
         }  
     }
