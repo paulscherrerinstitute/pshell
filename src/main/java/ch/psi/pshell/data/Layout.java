@@ -28,6 +28,7 @@ public interface Layout {
     public static final String ATTR_COMMAND = "Command";
     public static final String ATTR_LAYOUT = "Layout";
     public static final String ATTR_SCRIPT = "Script";
+    public static final String ATTR_ID = "ID";
 
     public static final String ATTR_START_TIMESTAMP = "Start";
     public static final String ATTR_END_TIMESTAMP = "End";

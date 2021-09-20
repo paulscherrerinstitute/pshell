@@ -22,6 +22,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.UUID;
 
 /**
  * Common layouts utilities
@@ -112,6 +113,7 @@ public abstract class LayoutBase implements Layout {
 
     @Override
     public void onOpened(File output) throws IOException {
+        setFileIdAttribute();
         setLayoutAttribute();
         setNameAttribute();
         setScriptFileAttibute();
@@ -175,6 +177,10 @@ public abstract class LayoutBase implements Layout {
         }
     }
 
+    protected void setFileIdAttribute() throws IOException {
+        getDataManager().setAttribute("/", ATTR_ID, UUID.randomUUID().toString());
+    }    
+    
     protected void setLayoutAttribute() throws IOException {
         getDataManager().setAttribute("/", ATTR_LAYOUT, getClass().getName());
     }    
