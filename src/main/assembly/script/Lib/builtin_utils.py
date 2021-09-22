@@ -67,30 +67,34 @@ def to_array(obj, type = None, primitive = True):
 
     def convert_1d_array(obj):
         try:
-            return jarray.array(obj,type)
+            if primitive:
+                #If primitive, first try converting with jarray.array
+                return jarray.array(obj,type)
         except:
-            if type == 'c':
-                ret = java.lang.reflect.Array.newInstance(element_type,len(obj))
-                for i in range(len(obj)): ret[i] = chr(obj[i])
-                return ret
-            if type == 'z':
-                ret = java.lang.reflect.Array.newInstance(element_type,len(obj))
-                for i in range(len(obj)):
-                    ret[i]= True if obj[i] else False
-                return ret
-            if type == 'o':
-                ret = java.lang.reflect.Array.newInstance(element_type,len(obj))
-                for i in range(len(obj)):
-                    ret[i]= obj[i] 
-                return ret
-            if type == "s":
-                return Convert.toStringArray(obj)   
-            if primitive:   
-                ret = Convert.toPrimitiveArray(obj, element_type)  
-            else:
-                ret = java.lang.reflect.Array.newInstance(element_type,len(obj))
-                for i in range(len(obj)): ret[i] = Convert.toType(obj[i],element_type)
+            pass    
+       
+        if type == 'c':
+            ret = java.lang.reflect.Array.newInstance(element_type,len(obj))
+            for i in range(len(obj)): ret[i] = chr(obj[i])
             return ret
+        if type == 'z':
+            ret = java.lang.reflect.Array.newInstance(element_type,len(obj))
+            for i in range(len(obj)):
+                ret[i]= True if obj[i] else False
+            return ret
+        if type == 'o':
+            ret = java.lang.reflect.Array.newInstance(element_type,len(obj))
+            for i in range(len(obj)):
+                ret[i]= obj[i] 
+            return ret
+        if type == "s":
+            return Convert.toStringArray(obj)   
+        if primitive:   
+            ret = Convert.toPrimitiveArray(obj, element_type)  
+        else:
+            ret = java.lang.reflect.Array.newInstance(element_type,len(obj))
+            for i in range(len(obj)): ret[i] = Convert.toType(obj[i],element_type)
+        return ret
                 
     if isinstance(obj,PyArray):
         if enforceArrayType:
