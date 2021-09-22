@@ -422,8 +422,11 @@ public class DataManager implements AutoCloseable {
                         openOutput();
                         if (isOpen()) {
                             getLayout().onStart(scan);
+                            if (scan.getSnapshots()!=null){
+                                getLayout().onInitSnapshots(scan);
+                            }
                             if (scan.getMonitors()!=null){
-                                getLayout().onInitMonitors(scan);
+                                getLayout().onInitMonitors(scan);                                
                             }
                             appendLog(String.format("Scan %s started in: %s", getScanIndex(scan), getScanPath(scan)));
                         }
@@ -652,6 +655,9 @@ public class DataManager implements AutoCloseable {
                 scan.setRecordIndexOffset(rec.getIndex()+1);
             }
             getLayout().onStart(scan);
+            if (scan.getSnapshots()!=null){
+                getLayout().onInitSnapshots(scan);
+            }            
             if (scan.getMonitors()!=null){
                 getLayout().onInitMonitors(scan);
             }            

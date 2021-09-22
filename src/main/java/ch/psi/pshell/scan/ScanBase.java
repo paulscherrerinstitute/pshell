@@ -18,6 +18,7 @@ import java.io.IOException;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
@@ -61,6 +62,7 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
     Layout dataLayout;
     Provider dataProvider;
     Device[] monitors;
+    Readable[] snapshots;
 
     boolean useWritableReadback = getScansUseWritableReadback();
     boolean restorePosition = getRestorePositionOnRelativeScans();
@@ -161,6 +163,16 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
     public void setMonitors(Device[] monitors){
         this.monitors = monitors;
     }    
+
+    @Override
+    public void setSnapshots(Readable[] snapshots){
+        this.snapshots = snapshots;
+    }    
+    
+    @Override
+    public Readable[] getSnapshots(){
+        return snapshots;
+    }        
 
     int settleTimeout = getScansSettleTimeout();
 
@@ -779,11 +791,36 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
     
     @Override
     public Object readMonitor(String device){
-        if (dataLayout!=null) {
-            return dataLayout.getMonitor(this, device, Context.getInstance().getDataManager());
+        if (getSnapshots()!=null){
+            if (dataLayout!=null) {
+                return dataLayout.getMonitor(this, device, Context.getInstance().getDataManager());
+            }
         }
         return null;
     }    
+    
+    @Override
+    public Map<Readable, Object> readSnapshots(){
+        Map<Readable, Object> ret = new LinkedHashMap<>();
+        if (getSnapshots()!=null){
+            for (Readable snapshot: getSnapshots()){
+                try{
+                    ret.put(snapshot, readSnapshot(getSnapshotName(snapshot)));
+                } catch(Exception ex){
+                    ret.put(snapshot, null);
+                }
+            }
+        }
+        return ret;
+    }
+    
+    @Override
+    public Object readSnapshot(String device){
+        if (dataLayout!=null) {
+            return dataLayout.getSnapshot(this, device, Context.getInstance().getDataManager());
+        }
+        return null;        
+    }        
     
     
     @Override
@@ -898,6 +935,20 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
         }
         return names.toArray(new String[0]);
     }
+    
+    @Override
+    public String getSnapshotName(Readable snapshot){
+        return (snapshot instanceof Device) ? ((Device)snapshot).getAlias() : snapshot.getName();
+    }
+    
+    @Override
+    public String[] getSnapshotNames() {
+        ArrayList<String> names = new ArrayList();
+        for (Readable snapshot : getSnapshots()) {
+            names.add(getSnapshotName(snapshot));
+        }
+        return names.toArray(new String[0]);
+    }    
 
     @Override
     public String[] getDeviceNames(){
@@ -1064,7 +1115,7 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
                     monitors[i] = (Device) inlineDevice.getDevice();
                 }
             }
-        }
+        }     
         
         if (innerStream != null) {
             innerStream.start(true);

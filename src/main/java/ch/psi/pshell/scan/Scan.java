@@ -10,6 +10,7 @@ import ch.psi.utils.Reflection;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  *
@@ -97,6 +98,10 @@ public interface Scan {
     
     public Object readMonitor(String device);
     
+    public Map<Readable, Object> readSnapshots();
+    
+    public Object readSnapshot(String device);
+    
     public long[] readTimestamps();    
     
     public String getTag();
@@ -143,6 +148,14 @@ public interface Scan {
     public String[] getMonitorNames();    
 
     public void setMonitors(Device[] monitors);
+
+    public Readable[] getSnapshots();
+    
+    public String[] getSnapshotNames(); 
+    
+    public String getSnapshotName(Readable snapshot);
+    
+    public void setSnapshots(Readable[] snapshots);
 
     public boolean getInitialMove();
 

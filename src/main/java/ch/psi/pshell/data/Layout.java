@@ -2,8 +2,8 @@ package ch.psi.pshell.data;
 
 import ch.psi.pshell.core.Context;
 import ch.psi.pshell.device.Device;
+import ch.psi.pshell.device.Readable;
 import ch.psi.pshell.device.TimestampedValue;
-import ch.psi.pshell.scan.Otf;
 import ch.psi.pshell.scan.Scan;
 import ch.psi.pshell.scan.ScanRecord;
 import ch.psi.utils.Arr;
@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
 
 /**
  * Layout implementations define the structure of the acquired data on file.
@@ -72,6 +73,19 @@ public interface Layout {
     default String getMonitorPathName(Scan scan, Device dev) {
         return getMonitorsPathName(scan)+ dev.getAlias();
     }
+        
+    default String getSnapshotsPathName(Scan scan) {
+        return getCurrentGroup(scan) + "snapshots/";
+    }
+
+    default String getSnapshotPathName(Scan scan, String name) {
+        return getSnapshotsPathName(scan)+ name;
+    }    
+
+    default String getSnapshotPathName(Scan scan, Readable snapshot) {
+        return getSnapshotPathName(scan, scan.getSnapshotName(snapshot));
+    }
+    
     default void onOpened(File output) throws IOException {
     }
 
@@ -83,6 +97,39 @@ public interface Layout {
     void onRecord(Scan scan, ScanRecord record) throws IOException;
 
 
+    default void onInitSnapshots(Scan scan) throws IOException{
+        for (Readable readable : scan.getSnapshots()){
+            try{
+                String path = getSnapshotPathName(scan, readable);
+                Object value = readable.read();
+                Class type =  value.getClass();
+                getDataManager().setDataset(path, value);
+            } catch (Exception ex){        
+                String msg = "Error creating monitor dataset for " + readable.getName()+ ": " + ex.getMessage();
+                appendLog(msg);
+                Logger.getLogger(Layout.class.getName()).warning(msg);
+            }
+        }  
+    }   
+    
+    default Object getSnapshot(Scan scan, String name, DataManager dm) {
+        try{
+            DataManager.DataAddress scanPath = DataManager.getAddress(scan.getPath());
+            String path = getSnapshotPathName(scan, name);
+            dm = (dm == null) ? getDataManager() : dm;
+            Object sliceData = getDataManager().getData(scanPath.root, path).sliceData;          
+            try{
+                return Array.get(sliceData, 0);
+            } catch (Exception ex){
+                return sliceData;
+            }            
+        } catch (Exception ex){    
+            Logger.getLogger(Layout.class.getName()).log(Level.WARNING, null, ex);
+        }            
+        return null;
+    }
+    
+    
     default void onInitMonitors(Scan scan) throws IOException{
         for (Device dev : scan.getMonitorDevices()){
             try{
@@ -99,7 +146,7 @@ public interface Layout {
                 Logger.getLogger(Layout.class.getName()).warning(msg);
             }
         }  
-    }
+    }       
 
     
     default void onMonitor(Scan scan, Device dev, Object value, long timestamp) throws IOException{

@@ -14,10 +14,10 @@ import java.beans.Transient;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import org.apache.commons.math3.util.MultidimensionalCounter;
-import org.python.core.Py;
-import org.python.google.common.collect.Lists;
 
 /**
  * ScanResult objects package all the acquired data during a scan.
@@ -130,6 +130,25 @@ public class ScanResult implements SubscriptableList<ScanRecord>, Subscriptable.
     public List<Device> getMonitors() {
         return Arrays.asList(scan.getMonitorDevices());
     }
+    
+    @Transient
+    public java.util.Map<Readable, Object> getSnapshots() {
+        java.util.Map<Readable, Object> ret = new HashMap <>();
+        if (scan.getSnapshots()!=null){
+            ret = scan.readSnapshots();
+        }
+        return ret;
+    }    
+    
+    @Transient
+    public Object getSnapshot(Object id) {
+        if (id instanceof Integer){
+            id = scan.getSnapshotNames()[(Integer)id];
+        }
+        String name = (id instanceof Readable) ? scan.getSnapshotName((Readable)id) : (String)id;
+        return scan.readSnapshot(name);
+    }    
+    
 
     @Transient
     public List<Nameable> getDevices() {
