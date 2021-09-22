@@ -41,6 +41,9 @@ public class GenericArray extends GenericChannel implements Register.RegisterArr
     @Override
     public int getSize() {
         if (register == null) {
+            if (isSimulated()){
+                return this.size;
+            }
             return UNDEFINED;
         }
         return register.getSize();

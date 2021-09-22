@@ -134,8 +134,9 @@ public class AreaDetector extends CameraBase {
             int height = sizeY.take();
             
             data.setType(type.getArrayType());
-            data.setSize(width * height);
-            Object array = Array.newInstance(type.getElementType(), data.getSize());
+            int arraySize = width * height;
+            data.setSize(arraySize);
+            Object array = Array.newInstance(type.getElementType(), arraySize);
             for (int i = 0; i < width; i++) {
                 int index = (i + simulationOffset) % width;
                 for (int j = 0; j < height; j++) {
@@ -144,7 +145,7 @@ public class AreaDetector extends CameraBase {
                 }
             }
             simulationOffset++;
-            this.setCache(data, array);
+            setCache(data, array);
         } catch (Exception ex) {
 
         }
@@ -625,6 +626,14 @@ public class AreaDetector extends CameraBase {
     public ChannelInteger getImageCounter() {
         return imageCounter;
     }
+    
+    public String getChannelCtrl() {
+        return channelCtrl;
+    }
+
+    public String getChannelData() {
+        return channelData;
+    }    
 
     //TODO: Shutter
     //TODO: Separate ArrayDetector and Camera classes
