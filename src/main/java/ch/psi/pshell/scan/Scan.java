@@ -36,7 +36,7 @@ public interface Scan {
 
     public int getMonitorIndex(Object obj);
     
-    public int getSnapshotIndex(Object obj);
+    public int getSnapIndex(Object obj);
 
     public int getDiagIndex(Object obj);
 
@@ -101,9 +101,9 @@ public interface Scan {
     
     public Object readDiag(String device);
     
-    public Map<Readable, Object> readSnapshots();
+    public Map<Readable, Object> readSnaps();
     
-    public Object readSnapshot(String device);
+    public Object readSnap(String device);
     
     public long[] readTimestamps();    
     
@@ -156,13 +156,13 @@ public interface Scan {
 
     public void setDiags(Readable[] diags);
 
-    public Readable[] getSnapshots();
+    public Readable[] getSnaps();
     
-    public String[] getSnapshotNames(); 
+    public String[] getSnapsNames(); 
     
-    public String getReadableName(Readable snapshot);
+    public String getReadableName(Readable readable);
     
-    public void setSnapshots(Readable[] snapshots);
+    public void setSnaps(Readable[] snaps);
 
     public boolean getInitialMove();
 

@@ -28,6 +28,11 @@ import java.util.UUID;
  * Common layouts utilities
  */
 public abstract class LayoutBase implements Layout {
+    //Default groups
+    public static String PATH_MONITORS = "monitors/";
+    public static String PATH_SNAPS = "snaps/";
+    public static String PATH_DIAGS = "diags/";
+    public static String PATH_LOGS = "logs/";    
 
     Boolean persistSetpoints;
     boolean writeSessionMetadata=true;
@@ -57,11 +62,26 @@ public abstract class LayoutBase implements Layout {
         sessionMetadataPath = path;
         sessionMetadataAttributes = attributes;
     }    
+    
+    @Override
+    public String getMonitorsPath(){
+        return PATH_MONITORS;        
+    }    
+    
+    @Override
+    public String getSnapsPath(){
+        return PATH_SNAPS;        
+    }    
 
     @Override
+    public String getDiagsPath(){
+        return PATH_DIAGS;        
+    }           
+    
+    @Override
     public String getLogsPath() {
-        return "logs/";
-    }
+        return PATH_LOGS;
+    }    
 
     @Override
     public String getLogFilePath() {
@@ -236,5 +256,6 @@ public abstract class LayoutBase implements Layout {
         synchronized(scanFiles){
             scanFiles.remove(scan);
         }        
-    }
+    }            
 }
+ 

@@ -100,12 +100,12 @@ public class ScanResult implements SubscriptableList<ScanRecord>, Subscriptable.
         return asList(scan.readDiag(scan.getDiagNames()[index]));
     }    
     
-    public Object getSnapshot(Object id) {
-        int index = (id instanceof Number) ? ((Number)id).intValue() : scan.getSnapshotIndex(id);
-        if ((index < 0) || (index >= getSnapshots().size())) {
+    public Object getSnap(Object id) {
+        int index = (id instanceof Number) ? ((Number)id).intValue() : scan.getSnapIndex(id);
+        if ((index < 0) || (index >= getSnaps().size())) {
             throw new IllegalArgumentException("Index");
         }
-        Object ret = scan.readSnapshot(scan.getSnapshotNames()[index]);
+        Object ret = scan.readSnap(scan.getSnapsNames()[index]);
         if (ret.getClass().isArray()){
             return asList(ret);
         }
@@ -134,8 +134,8 @@ public class ScanResult implements SubscriptableList<ScanRecord>, Subscriptable.
             return getDiag(index);
         }
         index-=getDiags().size();
-        if (index<getSnapshots().size()) {
-            Object ret = getSnapshot(index);
+        if (index<getSnaps().size()) {
+            Object ret = getSnap(index);
             if (ret instanceof List){
                 return (List)ret;
             }
@@ -182,15 +182,15 @@ public class ScanResult implements SubscriptableList<ScanRecord>, Subscriptable.
     }    
 
     @Transient
-    public List<Readable> getSnapshots() {
-        return asList(scan.getSnapshots());
+    public List<Readable> getSnaps() {
+        return asList(scan.getSnaps());
     }    
     
     @Transient
-    public java.util.Map<Readable, Object> getSnapshotValues() {
+    public java.util.Map<Readable, Object> getSnapValues() {
         java.util.Map<Readable, Object> ret = new HashMap <>();
-        if (scan.getSnapshots()!=null){
-            ret = scan.readSnapshots();
+        if (scan.getSnaps()!=null){
+            ret = scan.readSnaps();
         }
         return ret;
     }        

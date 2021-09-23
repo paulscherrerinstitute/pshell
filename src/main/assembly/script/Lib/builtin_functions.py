@@ -31,7 +31,9 @@ def lscan(writables, readables, start, end, steps, latency=0.0, relative=False, 
             - abort_on_error (bool, optional): if true then aborts scan in sensor failures. Default is false.
             - restore_position (bool, optional): if true (default) then restore initial position after relative scans.
             - check_positions (bool, optional): if true (default) verifies if in correct positions after move finishes.
-            - monitors (list of Device, optional): devices values are saved on every change event during the scan.
+            - monitors (list of Device, optional): device values are saved on every change event during the scan.
+            - snaps (list of Readable, optional): snapshot device values are saved before the scan.
+            - diags (list of Readable, optional): diagnostic device values are saved at each scan point.
             - Aditional arguments defined by set_exec_pars.
 
     Returns:
@@ -73,7 +75,9 @@ def vscan(writables, readables, vector, line = False, latency=0.0, relative=Fals
             - abort_on_error (bool, optional): if true then aborts scan in sensor failures. Default is false.
             - restore_position (bool, optional): if true (default) then restore initial position after relative scans.
             - check_positions (bool, optional): if true (default) verifies if in correct positions after move finishes.
-            - monitors (list of Device, optional): devices values are saved on every change event during the scan.
+            - monitors (list of Device, optional): device values are saved on every change event during the scan.
+            - snaps (list of Readable, optional): snapshot device values are saved before the scan.
+            - diags (list of Readable, optional): diagnostic device values are saved at each scan point.
             - Aditional arguments defined by set_exec_pars.
 
     Returns:
@@ -120,7 +124,9 @@ def ascan(writables, readables, start, end, steps, latency=0.0, relative=False, 
             - abort_on_error (bool, optional): if true then aborts scan in sensor failures. Default is false.
             - restore_position (bool, optional): if true (default) then restore initial position after relative scans.
             - check_positions (bool, optional): if true (default) verifies if in correct positions after move finishes.
-            - monitors (list of Device, optional): devices values are saved on every change event during the scan.
+            - monitors (list of Device, optional): device values are saved on every change event during the scan.
+            - snaps (list of Readable, optional): snapshot device values are saved before the scan.
+            - diags (list of Readable, optional): diagnostic device values are saved at each scan point.
             - Aditional arguments defined by set_exec_pars.
 
     Returns:
@@ -164,7 +170,9 @@ def rscan(writable, readables, regions, latency=0.0, relative=False, passes=1, z
             - abort_on_error (bool, optional): if true then aborts scan in sensor failures. Default is false.
             - restore_position (bool, optional): if true (default) then restore initial position after relative scans.
             - check_positions (bool, optional): if true (default) verifies if in correct positions after move finishes.
-            - monitors (list of Device, optional): devices values are saved on every change event during the scan.
+            - monitors (list of Device, optional): device values are saved on every change event during the scan.
+            - snaps (list of Readable, optional): snapshot device values are saved before the scan.
+            - diags (list of Readable, optional): diagnostic device values are saved at each scan point.
             - Aditional arguments defined by set_exec_pars.
 
     Returns:
@@ -210,7 +218,9 @@ def cscan(writables, readables, start, end, steps, latency=0.0, time=None, relat
             - after_pass (function(pass_num, scan), optional): callback after each pass.
             - abort_on_error (bool, optional): if true then aborts scan in sensor failures. Default is false.
             - restore_position (bool, optional): if true (default) then restore initial position after relative scans.
-            - monitors (list of Device, optional): devices values are saved on every change event during the scan.
+            - monitors (list of Device, optional): device values are saved on every change event during the scan.
+            - snaps (list of Readable, optional): snapshot device values are saved before the scan.
+            - diags (list of Readable, optional): diagnostic device values are saved at each scan point.
             - Aditional arguments defined by set_exec_pars.
 
     Returns:
@@ -253,8 +263,8 @@ def hscan(config, writable, readables, start, end, steps, passes=1, zigzag=False
             - before_pass (function(pass_num, scan), optional): callback before each scan pass execution.
             - after_pass (function(pass_num, scan), optional): callback after each scan pass execution.
             - abort_on_error (bool, optional): if true then aborts scan in sensor failures. Default is false.
-            - monitors (list of Device, optional): devices values are saved on every change event during the scan.
-            - Aditional arguments defined by set_exec_pars.
+            - monitors (list of Device, optional): device values are saved on every change event during the scan.
+            - snaps (list of Readable, optional): snapshot device values are saved before the scan.
 
     Returns:
         ScanResult.
@@ -290,7 +300,9 @@ def bscan(stream, records, timeout = None, passes=1, **pars):
             - after_read (function(record, scan), optional): called on each step, after sampling.
             - before_pass (function(pass_num, scan), optional): called before each pass.
             - after_pass (function(pass_num, scan), optional): callback after each pass.
-            - monitors (list of Device, optional): devices values are saved on every change event during the scan.
+            - monitors (list of Device, optional): device values are saved on every change event during the scan.
+            - snaps (list of Readable, optional): snapshot device values are saved before the scan.
+            - diags (list of Readable, optional): diagnostic device values are saved at each scan point.
             - Aditional arguments defined by set_exec_pars.
 
     Returns:
@@ -322,7 +334,9 @@ def tscan(readables, points, interval, passes=1, fixed_rate=True, **pars):
             - before_pass (function(pass_num, scan), optional): called before each pass.
             - after_pass (function(pass_num, scan), optional): callback after each pass.
             - abort_on_error (bool, optional): if true then aborts scan in sensor failures. Default is false.
-            - monitors (list of Device, optional): devices values are saved on every change event during the scan.
+            - monitors (list of Device, optional): device values are saved on every change event during the scan.
+            - snaps (list of Readable, optional): snapshot device values are saved before the scan.
+            - diags (list of Readable, optional): diagnostic device values are saved at each scan point.
             - Aditional arguments defined by set_exec_pars.
 
     Returns:
@@ -359,7 +373,9 @@ def mscan(trigger, readables, points=-1, timeout=None, async=True, take_initial=
             - before_pass (function(pass_num, scan), optional): called before each pass.
             - after_pass (function(pass_num, scan), optional): callback after each pass.
             - abort_on_error (bool, optional): if true then aborts scan in sensor failures. Default is false.
-            - monitors (list of Device, optional): devices values are saved on every change event during the scan.
+            - monitors (list of Device, optional): device values are saved on every change event during the scan.
+            - snaps (list of Readable, optional): snapshot device values are saved before the scan.
+            - diags (list of Readable, optional): diagnostic device values are saved at each scan point.
             - Aditional arguments defined by set_exec_pars.
 
     Returns:

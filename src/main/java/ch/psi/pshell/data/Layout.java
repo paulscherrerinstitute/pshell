@@ -22,11 +22,6 @@ import org.python.bouncycastle.util.Arrays;
  * Layout implementations define the structure of the acquired data on file.
  */
 public interface Layout {
-    //Default groups
-    public static String PATH_MONITORS = "monitors/";
-    public static String PATH_SNAPSHOTS = "snapshots/";
-    public static String PATH_DIAGS = "diags/";
-
     //Common attributes
     public static final String ATTR_NAME = "Name";
     public static final String ATTR_FILE = "File";
@@ -72,35 +67,35 @@ public interface Layout {
     }
 
     default String getMonitorsPathName(Scan scan) {
-        return getCurrentGroup(scan) + PATH_MONITORS;
+        return getCurrentGroup(scan) + getMonitorsPath();
     }
 
     default String getMonitorPathName(Scan scan, Device dev) {
         return getMonitorsPathName(scan)+ dev.getAlias();
     }
         
-    default String getSnapshotsPathName(Scan scan) {
-        return getCurrentGroup(scan) + PATH_SNAPSHOTS;
+    default String getSnapsPathName(Scan scan) {
+        return getCurrentGroup(scan) + getSnapsPath();
     }
 
-    default String getSnapshotPathName(Scan scan, String name) {
-        return getSnapshotsPathName(scan)+ name;
+    default String getSnapPathName(Scan scan, String name) {
+        return Layout.this.getSnapsPathName(scan)+ name;
     }    
 
-    default String getSnapshotPathName(Scan scan, Readable snapshot) {
-        return getSnapshotPathName(scan, scan.getReadableName(snapshot));
+    default String getSnapPathName(Scan scan, Readable snap) {
+        return Layout.this.getSnapPathName(scan, scan.getReadableName(snap));
     }
     
     default String getDiagsPathName(Scan scan) {
-        return getCurrentGroup(scan) + PATH_DIAGS;
+        return getCurrentGroup(scan) + getDiagsPath();
     }
 
     default String getDiagPathName(Scan scan, String name) {
         return getDiagsPathName(scan)+ name;
     }        
     
-    default String getDiagPathName(Scan scan, Readable snapshot) {
-        return getDiagPathName(scan, scan.getReadableName(snapshot));
+    default String getDiagPathName(Scan scan, Readable snap) {
+        return getDiagPathName(scan, scan.getReadableName(snap));
     }    
     
     default void onOpened(File output) throws IOException {
@@ -114,24 +109,24 @@ public interface Layout {
     void onRecord(Scan scan, ScanRecord record) throws IOException;
 
 
-    default void onInitSnapshots(Scan scan) throws IOException{
-        for (Readable readable : scan.getSnapshots()){
+    default void onInitSnaps(Scan scan) throws IOException{
+        for (Readable readable : scan.getSnaps()){
             try{
-                String path = getSnapshotPathName(scan, readable);
+                String path = getSnapPathName(scan, readable);
                 Object value = readable.read();
                 getDataManager().setDataset(path, value);
             } catch (Exception ex){        
-                String msg = "Error creating snapshot dataset for " + readable.getName()+ ": " + ex.getMessage();
+                String msg = "Error creating snap dataset for " + readable.getName()+ ": " + ex.getMessage();
                 appendLog(msg);
                 Logger.getLogger(Layout.class.getName()).warning(msg);
             }
         }  
     }   
     
-    default Object getSnapshot(Scan scan, String name, DataManager dm) {
+    default Object getSnap(Scan scan, String name, DataManager dm) {
         try{
             DataManager.DataAddress scanPath = DataManager.getAddress(scan.getPath());
-            String path = getSnapshotPathName(scan, name);
+            String path = Layout.this.getSnapPathName(scan, name);
             dm = (dm == null) ? getDataManager() : dm;
             Object sliceData = getDataManager().getData(scanPath.root, path).sliceData;  
             return sliceData;
@@ -327,7 +322,11 @@ public interface Layout {
 
     String getLogFilePath();
 
+    String getMonitorsPath();
+    
+    String getSnapsPath();
+
+    String getDiagsPath();
+
     String getOutputFilePath();
-
-
 }

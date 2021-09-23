@@ -6,8 +6,6 @@ import ch.psi.pshell.bs.Waveform;
 import ch.psi.pshell.core.Context;
 import ch.psi.pshell.core.ExecutionParameters;
 import ch.psi.pshell.core.Nameable;
-import ch.psi.pshell.data.DataManager;
-import ch.psi.pshell.data.DataSlice;
 import ch.psi.pshell.data.Layout;
 import ch.psi.pshell.data.Provider;
 import ch.psi.pshell.device.*;
@@ -63,7 +61,7 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
     Provider dataProvider;
     Device[] monitors;
     Readable[] diags;
-    Readable[] snapshots;
+    Readable[] snaps;
 
     boolean useWritableReadback = getScansUseWritableReadback();
     boolean restorePosition = getRestorePositionOnRelativeScans();
@@ -171,13 +169,13 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
     }    
     
     @Override
-    public void setSnapshots(Readable[] snapshots){
-        this.snapshots = snapshots;
+    public void setSnaps(Readable[] snaps){
+        this.snaps = snaps;
     }    
     
     @Override
-    public Readable[] getSnapshots(){
-        return snapshots;
+    public Readable[] getSnaps(){
+        return snaps;
     }        
 
     int settleTimeout = getScansSettleTimeout();
@@ -816,14 +814,14 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
     }       
     
     @Override
-    public Map<Readable, Object> readSnapshots(){
+    public Map<Readable, Object> readSnaps(){
         Map<Readable, Object> ret = new LinkedHashMap<>();
-        if (getSnapshots()!=null){
-            for (Readable snapshot: getSnapshots()){
+        if (getSnaps()!=null){
+            for (Readable snap: getSnaps()){
                 try{
-                    ret.put(snapshot, readSnapshot(getReadableName(snapshot)));
+                    ret.put(snap, readSnap(getReadableName(snap)));
                 } catch(Exception ex){
-                    ret.put(snapshot, null);
+                    ret.put(snap, null);
                 }
             }
         }
@@ -831,9 +829,9 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
     }
     
     @Override
-    public Object readSnapshot(String device){
+    public Object readSnap(String device){
         if (dataLayout!=null) {
-            return dataLayout.getSnapshot(this, device, Context.getInstance().getDataManager());
+            return dataLayout.getSnap(this, device, Context.getInstance().getDataManager());
         }
         return null;        
     }        
@@ -880,8 +878,8 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
         if (diags!=null){
             devices = Arr.append(devices, getDiags());
         }        
-        if (snapshots!=null){
-            devices = Arr.append(devices, getSnapshots());
+        if (snaps!=null){
+            devices = Arr.append(devices, getSnaps());
         }        
         return devices;
     }
@@ -929,8 +927,8 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
     }
     
     @Override
-    public int getSnapshotIndex(Object obj) {
-        return getDeviceIndex(getSnapshots(), obj);
+    public int getSnapIndex(Object obj) {
+        return getDeviceIndex(getSnaps(), obj);
     }    
     
     @Override
@@ -980,15 +978,15 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
     }    
     
     @Override
-    public String getReadableName(Readable snapshot){
-        return (snapshot instanceof Device) ? ((Device)snapshot).getAlias() : snapshot.getName();
+    public String getReadableName(Readable snap){
+        return (snap instanceof Device) ? ((Device)snap).getAlias() : snap.getName();
     }
     
     @Override
-    public String[] getSnapshotNames() {
+    public String[] getSnapsNames() {
         ArrayList<String> names = new ArrayList();
-        for (Readable snapshot : getSnapshots()) {
-            names.add(getReadableName(snapshot));
+        for (Readable snap : getSnaps()) {
+            names.add(getReadableName(snap));
         }
         return names.toArray(new String[0]);
     }    

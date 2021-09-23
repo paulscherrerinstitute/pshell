@@ -424,7 +424,7 @@ def processScanPars(scan, pars):
     scan.setRestorePosition (pars.pop("restore_position",ScanBase.getRestorePositionOnRelativeScans()))
     scan.setCheckPositions(pars.pop("check_positions",ScanBase.getScansCheckPositions()))
     scan.setMonitors(to_list(string_to_obj(pars.pop("monitors",None))))
-    scan.setSnapshots(to_list(string_to_obj(pars.pop("snapshots",None))))
+    scan.setSnaps(to_list(string_to_obj(pars.pop("snaps",None))))
     scan.setDiags(to_list(string_to_obj(pars.pop("diags",None))))
     get_context().setCommandPars(scan, pars)
 

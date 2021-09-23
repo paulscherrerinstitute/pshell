@@ -49,7 +49,7 @@ class OTF(Otf):
         
 add_device(OTF("otf"), True)
         
-ret = tscan(None, 0, 2.0, monitors=[otf])
+ret = tscan(None, 0, 2.0, monitors=[otf], display=False)
 #plot the otf value against its timestamp
 plot(ret[otf][1], xdata=ret[otf][0])
 
@@ -106,7 +106,7 @@ class OTF(Otf):
 
 add_device(OTF("otf"), True)
         
-ret = tscan(None, 0, 2.0, monitors=[otf])
+ret = tscan(None, 0, 2.0, monitors=[otf], display=False)
 
 #plot the otf values against their timestamps
 plot([ret[otf.c1][1],ret[otf.c2][1]], [otf.c1.name, otf.c2.name], xdata=[ret[otf.c1][0], ret[otf.c2][0]])
