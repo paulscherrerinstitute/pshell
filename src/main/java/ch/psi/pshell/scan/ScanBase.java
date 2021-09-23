@@ -62,6 +62,7 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
     Layout dataLayout;
     Provider dataProvider;
     Device[] monitors;
+    Readable[] diags;
     Readable[] snapshots;
 
     boolean useWritableReadback = getScansUseWritableReadback();
@@ -159,6 +160,16 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
         this.monitors = monitors;
     }    
 
+    @Override
+    public Readable[] getDiags(){        
+        return diags;
+    }    
+
+    @Override
+    public void setDiags(Readable[] diags){
+        this.diags = diags;
+    }    
+    
     @Override
     public void setSnapshots(Readable[] snapshots){
         this.snapshots = snapshots;
@@ -795,12 +806,22 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
     }    
     
     @Override
+    public Object readDiag(String device){
+        if (getDiags()!=null){
+            if (dataLayout!=null) {
+                return dataLayout.getDiag(this, device, Context.getInstance().getDataManager());
+            }
+        }
+        return null;
+    }       
+    
+    @Override
     public Map<Readable, Object> readSnapshots(){
         Map<Readable, Object> ret = new LinkedHashMap<>();
         if (getSnapshots()!=null){
             for (Readable snapshot: getSnapshots()){
                 try{
-                    ret.put(snapshot, readSnapshot(getSnapshotName(snapshot)));
+                    ret.put(snapshot, readSnapshot(getReadableName(snapshot)));
                 } catch(Exception ex){
                     ret.put(snapshot, null);
                 }
@@ -856,29 +877,37 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
         if (monitors!=null){
             devices = Arr.append(devices, getMonitors());
         }
+        if (diags!=null){
+            devices = Arr.append(devices, getDiags());
+        }        
+        if (snapshots!=null){
+            devices = Arr.append(devices, getSnapshots());
+        }        
         return devices;
     }
 
     int getDeviceIndex(Object arr, Object obj) {
-        if (obj instanceof Number){
-            return ((Number) obj).intValue();
-        }
-        for (int i=0;  i< Array.getLength(arr); i++) {
-            Nameable element = (Nameable) Array.get(arr,i);
-            if (obj== element){
-                return i;
+        if (arr!=null){
+            if (obj instanceof Number){
+                return ((Number) obj).intValue();
             }
-            if (obj instanceof String){
-                if ((((String)obj).equals(element.getAlias())) || ((((String)obj).equals(element.getName())))){
+            for (int i=0;  i< Array.getLength(arr); i++) {
+                Nameable element = (Nameable) Array.get(arr,i);
+                if (obj== element){
                     return i;
                 }
-            }
-            if (element instanceof Cacheable.CacheReadable) {
-                Cacheable parent = ((Cacheable.CacheReadable) element).getParent();
-                if (obj== parent){
-                    return i;
+                if (obj instanceof String){
+                    if ((((String)obj).equals(element.getAlias())) || ((((String)obj).equals(element.getName())))){
+                        return i;
+                    }
                 }
+                if (element instanceof Cacheable.CacheReadable) {
+                    Cacheable parent = ((Cacheable.CacheReadable) element).getParent();
+                    if (obj== parent){
+                        return i;
+                    }
 
+                }
             }
         }
         throw new RuntimeException("Invalid device: " + obj);
@@ -898,6 +927,16 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
     public int getMonitorIndex(Object obj) {
         return getDeviceIndex(getMonitors(), obj);
     }
+    
+    @Override
+    public int getSnapshotIndex(Object obj) {
+        return getDeviceIndex(getSnapshots(), obj);
+    }    
+    
+    @Override
+    public int getDiagIndex(Object obj) {
+        return getDeviceIndex(getDiags(), obj);
+    }    
     
     @Override
     public int getDeviceIndex(Object obj){
@@ -932,7 +971,16 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
     }
     
     @Override
-    public String getSnapshotName(Readable snapshot){
+    public String[] getDiagNames() {
+        ArrayList<String> names = new ArrayList();
+        for (Readable diag : getDiags()) {
+            names.add(getReadableName(diag));
+        }
+        return names.toArray(new String[0]);
+    }    
+    
+    @Override
+    public String getReadableName(Readable snapshot){
         return (snapshot instanceof Device) ? ((Device)snapshot).getAlias() : snapshot.getName();
     }
     
@@ -940,7 +988,7 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
     public String[] getSnapshotNames() {
         ArrayList<String> names = new ArrayList();
         for (Readable snapshot : getSnapshots()) {
-            names.add(getSnapshotName(snapshot));
+            names.add(getReadableName(snapshot));
         }
         return names.toArray(new String[0]);
     }    

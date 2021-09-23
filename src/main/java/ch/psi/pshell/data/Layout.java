@@ -15,12 +15,17 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.python.bouncycastle.util.Arrays;
 
 
 /**
  * Layout implementations define the structure of the acquired data on file.
  */
 public interface Layout {
+    //Default groups
+    public static String PATH_MONITORS = "monitors/";
+    public static String PATH_SNAPSHOTS = "snapshots/";
+    public static String PATH_DIAGS = "diags/";
 
     //Common attributes
     public static final String ATTR_NAME = "Name";
@@ -67,7 +72,7 @@ public interface Layout {
     }
 
     default String getMonitorsPathName(Scan scan) {
-        return getCurrentGroup(scan) + "monitors/";
+        return getCurrentGroup(scan) + PATH_MONITORS;
     }
 
     default String getMonitorPathName(Scan scan, Device dev) {
@@ -75,7 +80,7 @@ public interface Layout {
     }
         
     default String getSnapshotsPathName(Scan scan) {
-        return getCurrentGroup(scan) + "snapshots/";
+        return getCurrentGroup(scan) + PATH_SNAPSHOTS;
     }
 
     default String getSnapshotPathName(Scan scan, String name) {
@@ -83,8 +88,20 @@ public interface Layout {
     }    
 
     default String getSnapshotPathName(Scan scan, Readable snapshot) {
-        return getSnapshotPathName(scan, scan.getSnapshotName(snapshot));
+        return getSnapshotPathName(scan, scan.getReadableName(snapshot));
     }
+    
+    default String getDiagsPathName(Scan scan) {
+        return getCurrentGroup(scan) + PATH_DIAGS;
+    }
+
+    default String getDiagPathName(Scan scan, String name) {
+        return getDiagsPathName(scan)+ name;
+    }        
+    
+    default String getDiagPathName(Scan scan, Readable snapshot) {
+        return getDiagPathName(scan, scan.getReadableName(snapshot));
+    }    
     
     default void onOpened(File output) throws IOException {
     }
@@ -102,10 +119,9 @@ public interface Layout {
             try{
                 String path = getSnapshotPathName(scan, readable);
                 Object value = readable.read();
-                Class type =  value.getClass();
                 getDataManager().setDataset(path, value);
             } catch (Exception ex){        
-                String msg = "Error creating monitor dataset for " + readable.getName()+ ": " + ex.getMessage();
+                String msg = "Error creating snapshot dataset for " + readable.getName()+ ": " + ex.getMessage();
                 appendLog(msg);
                 Logger.getLogger(Layout.class.getName()).warning(msg);
             }
@@ -117,19 +133,65 @@ public interface Layout {
             DataManager.DataAddress scanPath = DataManager.getAddress(scan.getPath());
             String path = getSnapshotPathName(scan, name);
             dm = (dm == null) ? getDataManager() : dm;
-            Object sliceData = getDataManager().getData(scanPath.root, path).sliceData;          
-            try{
-                return Array.get(sliceData, 0);
-            } catch (Exception ex){
-                return sliceData;
-            }            
+            Object sliceData = getDataManager().getData(scanPath.root, path).sliceData;  
+            return sliceData;
         } catch (Exception ex){    
             Logger.getLogger(Layout.class.getName()).log(Level.WARNING, null, ex);
         }            
         return null;
     }
     
+    default void onInitDiags(Scan scan) throws IOException{
+        for (Readable diag : scan.getDiags()){
+            try{
+                String path = getDiagPathName(scan, diag);
+                Object value = diag.read();
+                Class type =  value.getClass();
+                
+                if (type.isArray()){
+                    type =  Arr.getComponentType(value) ;
+                    if (type.isPrimitive()) {
+                        type =  Convert.getWrapperClass(type);
+                    }
+                    int[] shape = Arr.getShape(value);
+                    shape = Arrays.copyOf(shape, shape.length + 1);                
+                    getDataManager().createDataset(path, type, shape);      
+                } else {    
+                    getDataManager().createDataset(path, type);      
+                }
+            } catch (Exception ex){        
+                String msg = "Error creating diag dataset for " + diag.getName()+ ": " + ex.getMessage();
+                appendLog(msg);
+                Logger.getLogger(Layout.class.getName()).warning(msg);
+            }
+        }  
+    }   
     
+    default void onDiags(Scan scan) throws IOException{
+        for (Readable diag : scan.getDiags()){
+            try{
+                String path = getDiagPathName(scan, diag);
+                Object value = diag.read();
+                getDataManager().appendItem(path, value);
+            } catch (Exception ex){        
+                String msg = "Error adding to diag dataset for " + scan.getReadableName(diag) + ": " + ex.getMessage();
+                Logger.getLogger(Layout.class.getName()).finer(msg);
+            }                    
+        }
+    }        
+    
+    default Object getDiag(Scan scan, String name, DataManager dm) {
+        try{
+            DataManager.DataAddress scanPath = DataManager.getAddress(scan.getPath());
+            String path = getDiagPathName(scan, name);
+            dm = (dm == null) ? getDataManager() : dm;
+            return getDataManager().getData(scanPath.root, path).sliceData;          
+        } catch (Exception ex){    
+            Logger.getLogger(Layout.class.getName()).log(Level.WARNING, null, ex);
+        }            
+        return null;
+    }
+        
     default void onInitMonitors(Scan scan) throws IOException{
         for (Device dev : scan.getMonitors()){
             try{
@@ -154,7 +216,8 @@ public interface Layout {
             String path = getMonitorPathName(scan, dev);
             getDataManager().appendItem(path, new Object[]{timestamp, value});
         } catch (Exception ex){    
-            Logger.getLogger(Layout.class.getName()).log(Level.FINE, null, ex);
+            String msg = "Error adding to monitor dataset for " + dev.getAlias() + ": " + ex.getMessage();
+            Logger.getLogger(Layout.class.getName()).finer(msg);
         }
     }
     

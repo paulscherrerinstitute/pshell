@@ -15,9 +15,9 @@ import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import org.apache.commons.math3.util.MultidimensionalCounter;
+import org.python.google.common.collect.Lists;
 
 /**
  * ScanResult objects package all the acquired data during a scan.
@@ -48,7 +48,7 @@ public class ScanResult implements SubscriptableList<ScanRecord>, Subscriptable.
             }
             return ret;
         } else {
-            return Arr.toList(scan.readData(scan.getReadableNames()[index]));
+            return asList(scan.readData(scan.getReadableNames()[index]));
         }
     }
 
@@ -64,7 +64,7 @@ public class ScanResult implements SubscriptableList<ScanRecord>, Subscriptable.
             }
             return ret;
         } else {
-            return Arr.toList(scan.readData(scan.getWritableNames()[index]+ LayoutDefault.SETPOINTS_DATASET_SUFFIX));
+            return asList(scan.readData(scan.getWritableNames()[index]+ LayoutDefault.SETPOINTS_DATASET_SUFFIX));
         }
     }
 
@@ -80,7 +80,7 @@ public class ScanResult implements SubscriptableList<ScanRecord>, Subscriptable.
             }
             return ret;
         } else {
-            return  Arr.toList(scan.readData(scan.getWritableNames()[index]));
+            return  asList(scan.readData(scan.getWritableNames()[index]));
         }
     }
     
@@ -89,11 +89,31 @@ public class ScanResult implements SubscriptableList<ScanRecord>, Subscriptable.
         if ((index < 0) || (index >= getMonitors().size())) {
             throw new IllegalArgumentException("Index");
         }
-        return Arr.toList(scan.readMonitor(scan.getMonitorNames()[index]));
+        return asList(scan.readMonitor(scan.getMonitorNames()[index]));
     }
     
+    public List<Object> getDiag(Object id) {
+        int index = (id instanceof Number) ? ((Number)id).intValue() : scan.getDiagIndex(id);
+        if ((index < 0) || (index >= getDiags().size())) {
+            throw new IllegalArgumentException("Index");
+        }
+        return asList(scan.readDiag(scan.getDiagNames()[index]));
+    }    
+    
+    public Object getSnapshot(Object id) {
+        int index = (id instanceof Number) ? ((Number)id).intValue() : scan.getSnapshotIndex(id);
+        if ((index < 0) || (index >= getSnapshots().size())) {
+            throw new IllegalArgumentException("Index");
+        }
+        Object ret = scan.readSnapshot(scan.getSnapshotNames()[index]);
+        if (ret.getClass().isArray()){
+            return asList(ret);
+        }
+        return ret;
+    }    
+
     public List<Long> getTimestamps() {
-        return Arr.toList(scan.readTimestamps());
+        return asList(scan.readTimestamps());
     }       
 
     public List getDevice(Object id) {
@@ -109,6 +129,18 @@ public class ScanResult implements SubscriptableList<ScanRecord>, Subscriptable.
         if (index<getMonitors().size()) {
             return getMonitor(index);
         }
+        index-=getMonitors().size();
+        if (index<getDiags().size()) {
+            return getDiag(index);
+        }
+        index-=getDiags().size();
+        if (index<getSnapshots().size()) {
+            Object ret = getSnapshot(index);
+            if (ret instanceof List){
+                return (List)ret;
+            }
+            return Lists.newArrayList(ret);
+        }        
         throw new IllegalArgumentException("Index");
     }
 
@@ -116,43 +148,56 @@ public class ScanResult implements SubscriptableList<ScanRecord>, Subscriptable.
         return records.size();
     }
 
+    private List asList(Object obj){
+        if (obj!=null){
+            if (obj instanceof List){
+                return (List)obj;
+            }
+            if (!obj.getClass().isArray()){
+                Lists.newArrayList(obj);
+            }
+            return Arr.toList(obj);        
+        }
+        return Lists.newArrayList();        
+    }
+    
     @Transient
     public List<Readable> getReadables() {
-        return Arrays.asList(scan.getReadables());
+        return asList(scan.getReadables());
     }
 
     @Transient
     public List<Writable> getWritables() {
-        return Arrays.asList(scan.getWritables());
+        return asList(scan.getWritables());
     }
 
     @Transient
     public List<Device> getMonitors() {
-        return Arrays.asList(scan.getMonitors());
+        return asList(scan.getMonitors());
     }
     
     @Transient
-    public java.util.Map<Readable, Object> getSnapshots() {
+    public List<Readable> getDiags() {
+        return asList(scan.getDiags());
+    }    
+
+    @Transient
+    public List<Readable> getSnapshots() {
+        return asList(scan.getSnapshots());
+    }    
+    
+    @Transient
+    public java.util.Map<Readable, Object> getSnapshotValues() {
         java.util.Map<Readable, Object> ret = new HashMap <>();
         if (scan.getSnapshots()!=null){
             ret = scan.readSnapshots();
         }
         return ret;
-    }    
+    }        
     
-    @Transient
-    public Object getSnapshot(Object id) {
-        if (id instanceof Integer){
-            id = scan.getSnapshotNames()[(Integer)id];
-        }
-        String name = (id instanceof Readable) ? scan.getSnapshotName((Readable)id) : (String)id;
-        return scan.readSnapshot(name);
-    }    
-    
-
     @Transient
     public List<Nameable> getDevices() {
-        return Arrays.asList(scan.getDevices());
+        return asList(scan.getDevices());
     }
 
     public int getIndex() {

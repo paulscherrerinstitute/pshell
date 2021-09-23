@@ -1,15 +1,12 @@
 package ch.psi.pshell.scan;
 
-import ch.psi.pshell.core.Context;
 import ch.psi.pshell.core.Nameable;
-import ch.psi.pshell.data.DataSlice;
 import ch.psi.pshell.device.Device;
 import ch.psi.pshell.device.Writable;
 import ch.psi.pshell.device.Readable;
 import ch.psi.utils.Reflection;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -38,6 +35,10 @@ public interface Scan {
     public int getWritableIndex(Object obj);
 
     public int getMonitorIndex(Object obj);
+    
+    public int getSnapshotIndex(Object obj);
+
+    public int getDiagIndex(Object obj);
 
     public int getDeviceIndex(Object obj);
 
@@ -98,6 +99,8 @@ public interface Scan {
     
     public Object readMonitor(String device);
     
+    public Object readDiag(String device);
+    
     public Map<Readable, Object> readSnapshots();
     
     public Object readSnapshot(String device);
@@ -147,11 +150,17 @@ public interface Scan {
 
     public void setMonitors(Device[] monitors);
 
+    public Readable[] getDiags();
+        
+    public String[] getDiagNames();    
+
+    public void setDiags(Readable[] diags);
+
     public Readable[] getSnapshots();
     
     public String[] getSnapshotNames(); 
     
-    public String getSnapshotName(Readable snapshot);
+    public String getReadableName(Readable snapshot);
     
     public void setSnapshots(Readable[] snapshots);
 
