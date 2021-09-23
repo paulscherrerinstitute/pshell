@@ -135,11 +135,6 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
     
     @Override
     public Device[] getMonitors(){        
-        return monitors;
-    }
-    
-    @Override
-    public Device[] getMonitorDevices(){
         if (monitors==null){
             return null;
         }
@@ -791,7 +786,7 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
     
     @Override
     public Object readMonitor(String device){
-        if (getSnapshots()!=null){
+        if (getMonitors()!=null){
             if (dataLayout!=null) {
                 return dataLayout.getMonitor(this, device, Context.getInstance().getDataManager());
             }
@@ -859,7 +854,7 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
             devices = Arr.append(devices, writables);
         }
         if (monitors!=null){
-            devices = Arr.append(devices, getMonitorDevices());
+            devices = Arr.append(devices, getMonitors());
         }
         return devices;
     }
@@ -901,7 +896,7 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
 
     @Override
     public int getMonitorIndex(Object obj) {
-        return getDeviceIndex(getMonitorDevices(), obj);
+        return getDeviceIndex(getMonitors(), obj);
     }
     
     @Override
@@ -930,7 +925,7 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
     @Override
     public String[] getMonitorNames() {
         ArrayList<String> names = new ArrayList();
-        for (Device monitor : getMonitorDevices()) {
+        for (Device monitor : getMonitors()) {
             names.add(monitor.getAlias());
         }
         return names.toArray(new String[0]);

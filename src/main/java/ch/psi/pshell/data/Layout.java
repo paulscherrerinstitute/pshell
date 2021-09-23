@@ -131,7 +131,7 @@ public interface Layout {
     
     
     default void onInitMonitors(Scan scan) throws IOException{
-        for (Device dev : scan.getMonitorDevices()){
+        for (Device dev : scan.getMonitors()){
             try{
                 String path = getMonitorPathName(scan, dev);
                 dev.update();
@@ -161,7 +161,7 @@ public interface Layout {
     default Object getMonitor(Scan scan, String device, DataManager dm) {
         try{
             DataManager.DataAddress scanPath = DataManager.getAddress(scan.getPath());
-            Device dev = scan.getMonitorDevices()[scan.getMonitorIndex(device)];
+            Device dev = scan.getMonitors()[scan.getMonitorIndex(device)];
             String path = getMonitorPathName(scan, dev);
             dm = (dm == null) ? getDataManager() : dm;
             Object sliceData = getDataManager().getData(scanPath.root, path).sliceData;  

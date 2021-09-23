@@ -128,7 +128,7 @@ public class ScanResult implements SubscriptableList<ScanRecord>, Subscriptable.
 
     @Transient
     public List<Device> getMonitors() {
-        return Arrays.asList(scan.getMonitorDevices());
+        return Arrays.asList(scan.getMonitors());
     }
     
     @Transient

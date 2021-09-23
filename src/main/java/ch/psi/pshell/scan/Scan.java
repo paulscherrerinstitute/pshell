@@ -142,9 +142,7 @@ public interface Scan {
     public void setCheckPositions(boolean value);
     
     public Device[] getMonitors();
-    
-    public Device[] getMonitorDevices();
-    
+        
     public String[] getMonitorNames();    
 
     public void setMonitors(Device[] monitors);
