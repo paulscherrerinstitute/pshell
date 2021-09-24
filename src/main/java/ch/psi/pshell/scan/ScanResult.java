@@ -17,7 +17,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import org.apache.commons.math3.util.MultidimensionalCounter;
-import org.python.google.common.collect.Lists;
 
 /**
  * ScanResult objects package all the acquired data during a scan.
@@ -139,7 +138,7 @@ public class ScanResult implements SubscriptableList<ScanRecord>, Subscriptable.
             if (ret instanceof List){
                 return (List)ret;
             }
-            return Lists.newArrayList(ret);
+            return asList(ret);
         }        
         throw new IllegalArgumentException("Index");
     }
@@ -154,11 +153,11 @@ public class ScanResult implements SubscriptableList<ScanRecord>, Subscriptable.
                 return (List)obj;
             }
             if (!obj.getClass().isArray()){
-                Lists.newArrayList(obj);
+                obj = new Object[]{obj};
             }
             return Arr.toList(obj);        
         }
-        return Lists.newArrayList();        
+        return new ArrayList();        
     }
     
     @Transient
