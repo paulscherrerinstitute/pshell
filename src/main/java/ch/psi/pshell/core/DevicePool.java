@@ -500,7 +500,7 @@ public class DevicePool extends ObservableBase<DevicePoolListener> implements Au
     public GenericDevice[] getAllDevices() {
         return getAllDevices(null);
     }
-
+    
     public <T extends GenericDevice> T[] getAllDevices(Class<T> type) {
         ArrayList<GenericDevice> ret = new ArrayList();
         if (type == null) {
@@ -552,6 +552,22 @@ public class DevicePool extends ObservableBase<DevicePoolListener> implements Au
         }
         return ret.toArray(new GenericDevice[0]);
     }
+    
+    public <T extends GenericDevice> T[] getAllDevicesOrderedByName(Class<T> type) {
+        String[] names = getAllNamesOrderedByName(type);
+        
+        ArrayList<GenericDevice> ret = new ArrayList();
+        synchronized (deviceList) {
+            for (String name : names) {
+                GenericDevice dev = deviceList.get(name);
+                if ((type == GenericDevice.class) || (type.isAssignableFrom(dev.getClass()))) {
+                    ret.add(dev);
+                }
+            }
+        }
+        return ret.toArray((T[]) Array.newInstance(type, 0));
+    }
+    
 
     public int getDeviceCount() {
         synchronized (deviceList) {
