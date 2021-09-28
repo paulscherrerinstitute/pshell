@@ -753,6 +753,10 @@ public class ExecutionParameters {
     public boolean isDebug() {
         return Context.getInstance().isRunningStatements();
     }
+    
+    public boolean isSimulation() {
+        return Context.getInstance().isSimulation();
+    }    
 
     @Override
     public String toString() {
