@@ -143,7 +143,13 @@ public abstract class TimePlotBase extends PlotBase<TimePlotSeries> implements T
     abstract public int getAxisSize();
 
     public boolean isSeriesHidden(TimePlotSeries series) {
-        return getSeriesColor(series).equals(TRANSPARENT);
+        if (series!=null){
+            Color color = getSeriesColor(series);
+            if (color!=null){
+                return getSeriesColor(series).equals(TRANSPARENT);
+            }
+        }
+        return false;
     }
 
     Color TRANSPARENT = new Color(1, 0, 0, 0);
