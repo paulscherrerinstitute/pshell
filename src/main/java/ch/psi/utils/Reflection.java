@@ -241,4 +241,12 @@ public class Reflection {
         return attibutesSignatures;
     }
 
+    public static Class getDeclaredClass(Class cls, String name){
+        for (Class c: cls.getDeclaredClasses()){
+            if (c.getSimpleName().equals(name)){
+                return c;
+            }
+        }
+        return null;
+    }
 }

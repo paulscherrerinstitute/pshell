@@ -130,14 +130,14 @@ public class Arr {
     public static <T> boolean containsEqual(T[] array, Object item) {
         return getIndexEqual(array, item) >= 0;
     }
-    
+
     public static <T> boolean containsClass(T[] array, Class cls) {
         return getIndexClass(array, cls) >= 0;
     }
-    
+
     public static <T> boolean containsAll(T[] array, Object[] items) {
-        for (Object item : items){
-            if (!contains(array, item)){
+        for (Object item : items) {
+            if (!contains(array, item)) {
                 return false;
             }
         }
@@ -145,17 +145,17 @@ public class Arr {
     }
 
     public static <T> boolean containsAllEqual(T[] array, Object[] items) {
-        for (Object item : items){
-            if (!containsEqual(array, item)){
+        for (Object item : items) {
+            if (!containsEqual(array, item)) {
                 return false;
             }
         }
         return true;
-    }        
+    }
 
     public static <T> boolean containsAny(T[] array, Object[] items) {
-        for (Object item : items){
-            if (contains(array, item)){
+        for (Object item : items) {
+            if (contains(array, item)) {
                 return true;
             }
         }
@@ -163,13 +163,25 @@ public class Arr {
     }
 
     public static <T> boolean containsAnyEqual(T[] array, Object[] items) {
-        for (Object item : items){
-            if (containsEqual(array, item)){
+        for (Object item : items) {
+            if (containsEqual(array, item)) {
                 return true;
             }
         }
         return false;
-    }        
+    }
+
+    public static <T> boolean equals(T[] array1, T[] array2) {
+        if ((array1 == null) || (array2 == null) || (array1.length != array2.length)) {
+            return false;
+        }
+        for (int i = 0; i < array1.length; i++) {
+            if (!array1[i].equals(array2[i])) {
+                return false;
+            }
+        }
+        return true;
+    }
 
     public static <T> int getIndex(T[] array, Object item) {
         if ((array == null) || (item == null)) {
@@ -194,20 +206,20 @@ public class Arr {
         }
         return -1;
     }
-    
+
     public static <T> int getIndexClass(T[] array, Class cls) {
         if ((array == null) || (cls == null)) {
             return -1;
         }
         for (int i = 0; i < array.length; i++) {
-            if (array[i]!=null){
+            if (array[i] != null) {
                 if (cls.isAssignableFrom(array[i].getClass())) {
                     return i;
                 }
             }
         }
         return -1;
-    }    
+    }
 
     public static <T> T[] getSubArray(T[] array, int index) {
         if (array == null) {
@@ -224,7 +236,7 @@ public class Arr {
         System.arraycopy(array, index, ret, 0, size);
         return ret;
     }
-    
+
     public static <T> T[] getSubArray(Object[] array, Class<T> type) {
         if (array == null) {
             return null;
@@ -240,7 +252,7 @@ public class Arr {
         T[] ret = (T[]) Array.newInstance(type, index);
         System.arraycopy(aux, 0, ret, 0, index);
         return ret;
-    }    
+    }
 
     public static <T> T[] copy(T[] array) {
         if (array == null) {
@@ -251,11 +263,11 @@ public class Arr {
         return ret;
     }
 
-    public static <U, T extends U> U[] convert(T[] array,Class<U> type) {
+    public static <U, T extends U> U[] convert(T[] array, Class<U> type) {
         if (array == null) {
             return null;
         }
-        U[] ret = (T[]) Array.newInstance(type, array.length);        
+        U[] ret = (T[]) Array.newInstance(type, array.length);
         System.arraycopy(array, 0, ret, 0, array.length);
         return ret;
     }
@@ -282,11 +294,11 @@ public class Arr {
     }
 
     public static <T> T[] getColumn(T[][] matrix, int index) {
-        if (matrix==null){
+        if (matrix == null) {
             return null;
         }
         T[] ret = newArray(matrix[0], matrix.length);
-        for(int i=0; i<ret.length; i++){
+        for (int i = 0; i < ret.length; i++) {
             ret[i] = matrix[i][index];
         }
         return ret;
@@ -385,7 +397,7 @@ public class Arr {
     }
 
     public static List toList(Object array) {
-        if (array instanceof List ){
+        if (array instanceof List) {
             return (List) array;
         }
         Class type = array.getClass().getComponentType();

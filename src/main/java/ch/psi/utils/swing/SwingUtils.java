@@ -890,6 +890,23 @@ public class SwingUtils {
             combo.setModel(model);
         }
     }
+    
+    public static void setEnumCombo(JComboBox combo, Class cls, boolean asString, boolean addEmptyString) {
+        if ((combo != null) & (cls != null) & (cls.isEnum())) {
+            DefaultComboBoxModel model = new DefaultComboBoxModel();
+            for (Object object : cls.getEnumConstants()) {
+                model.addElement(asString ? String.valueOf(object): object);
+            }
+            combo.setModel(model);
+        }
+    }    
+
+    public static void insertCombo(JComboBox combo, Object obj, int index) {
+        if (combo != null) {
+            DefaultComboBoxModel model = (DefaultComboBoxModel) combo.getModel();
+            model.insertElementAt(obj, index);
+        }
+    }        
 
     //JTextPane
     public static void appendToTextPane(final JTextPane textPane, final String msg, final Color c, final int textLength) {
