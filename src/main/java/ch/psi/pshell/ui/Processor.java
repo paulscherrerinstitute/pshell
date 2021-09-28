@@ -110,12 +110,12 @@ public interface Processor extends Executor {
             if (chooser.showSaveDialog(getPanel()) != JFileChooser.APPROVE_OPTION) {
                 return;
             }
-            if (IO.getExtension(chooser.getSelectedFile().getAbsolutePath()).isEmpty()) {
+            fileName = chooser.getSelectedFile().getAbsolutePath();
+            if (IO.getExtension(chooser.getSelectedFile().getAbsolutePath()).isEmpty()){          
                 if (getExtensions().length > 0) {
                     fileName += "." + getExtensions()[0];
                 }
             }
-            fileName = chooser.getSelectedFile().getAbsolutePath();
         }
         saveAs(fileName);
         if (filePermissions!=null){
