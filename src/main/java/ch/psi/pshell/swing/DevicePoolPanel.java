@@ -11,6 +11,7 @@ import ch.psi.pshell.device.GenericDevice;
 import ch.psi.pshell.device.ProcessVariable;
 import ch.psi.pshell.device.ReadbackDevice;
 import ch.psi.pshell.device.ReadbackDeviceAdapter;
+import ch.psi.pshell.device.ReadonlyProcessVariable;
 import ch.psi.pshell.device.Stoppable;
 import ch.psi.pshell.imaging.Source;
 import ch.psi.pshell.ui.App;
@@ -318,7 +319,7 @@ public class DevicePoolPanel extends MonitoredPanel implements UpdatablePanel {
         void setValue(Device device, Object value) {
             int row = getDeviceRow(device);
             if (row >= 0) {
-                String units = (device instanceof ProcessVariable) ? " " + ((ProcessVariable) device).getUnit() : "";
+                String units = (device instanceof ReadonlyProcessVariable) ? " " + ((ReadonlyProcessVariable) device).getUnit() : "";
                 model.setValueAt(Str.toString(value, 10) + units, row, 3);
                 model.setValueAt("00:00:00", row, 4);
             }

@@ -5,7 +5,7 @@ import ch.psi.utils.Reflection.Hidden;
 /**
  * Interface for devices containing a raw numeric or array value.
  */
-public interface Register<T> extends ReadonlyRegister<T>, Writable<T> {
+public interface Register<T> extends ReadonlyRegister<T>, ReadableWritable<T> {
 
     public void assertValidValue(T value) throws IllegalArgumentException;
 

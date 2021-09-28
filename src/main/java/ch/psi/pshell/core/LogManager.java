@@ -19,6 +19,7 @@ import java.util.logging.Logger;
 import ch.psi.pshell.device.GenericDevice;
 import ch.psi.pshell.device.ProcessVariable;
 import ch.psi.pshell.device.ReadbackDevice;
+import ch.psi.pshell.device.ReadonlyProcessVariable;
 import ch.psi.utils.Arr;
 import ch.psi.utils.Convert;
 import java.io.BufferedReader;
@@ -209,7 +210,7 @@ public class LogManager {
         } else if (dev.isPolled()) {
             info = "Polled";
         }
-        String units = (dev instanceof ProcessVariable) ? " " + ((ProcessVariable) dev).getUnit() : "";
+        String units = (dev instanceof ReadonlyProcessVariable) ? " " + ((ReadonlyProcessVariable) dev).getUnit() : "";
         try {
             if (dev instanceof ReadbackDevice) {
                 dev = ((ReadbackDevice) dev).getReadback();

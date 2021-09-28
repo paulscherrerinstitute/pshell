@@ -35,6 +35,10 @@ public interface Camera extends Device {
 
     public int getBinningY() throws IOException, InterruptedException;
 
+    default public void setROI(int[] roi) throws IOException, InterruptedException{
+        setROI(roi[0], roi[1], roi[2], roi[3]);
+    }
+    
     public void setROI(int x, int y, int w, int h) throws IOException, InterruptedException;
 
     public int[] getROI() throws IOException, InterruptedException;
