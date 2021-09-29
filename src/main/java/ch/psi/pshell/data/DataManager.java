@@ -1,6 +1,8 @@
 package ch.psi.pshell.data;
 
 import ch.psi.pshell.core.*;
+import static ch.psi.pshell.data.Layout.FIELD_TIMESTAMP;
+import static ch.psi.pshell.data.Layout.FIELD_VALUE;
 import ch.psi.pshell.device.ArrayCalibration;
 import ch.psi.pshell.device.Device;
 import ch.psi.pshell.device.MatrixCalibration;
@@ -1067,18 +1069,18 @@ public class DataManager implements AutoCloseable {
             throw new IllegalArgumentException();
         }
         openOutput();
-        int fileds = names.length;
+        int fields = names.length;
         if (types == null) {
-            types = new Class[fileds];
+            types = new Class[fields];
         }
         if (lengths == null) {
-            lengths = new int[fileds];
+            lengths = new int[fields];
         }
 
-        if ((fileds != types.length) || (fileds != lengths.length)) {
+        if ((fields != types.length) || (fields != lengths.length)) {
             throw new IllegalArgumentException();
         }
-        for (int i = 0; i < fileds; i++) {
+        for (int i = 0; i < fields; i++) {
             if (types[i] == null) {
                 types[i] = String.class;
             } else if (types[i].isPrimitive()) {
@@ -1185,7 +1187,6 @@ public class DataManager implements AutoCloseable {
         Map<String, Object> info = getInfo(root, path);
         if ((String.valueOf(info.get(Provider.INFO_TYPE)).equals(Provider.INFO_VAL_TYPE_DATASET))) {
             DataSlice slice = getData(root, path);
-
             if (info.get(Provider.INFO_DATA_TYPE) == Provider.INFO_VAL_DATA_TYPE_COMPOUND) {
                 Object[][] sliceData = (Object[][]) slice.sliceData;
                 String[] names = (String[]) info.get(Provider.INFO_FIELD_NAMES);
@@ -1201,9 +1202,15 @@ public class DataManager implements AutoCloseable {
                             data[j][i] = (sliceData[i][j]);
                         }
                     }
-                    for (int j = 0; j < fields; j++) {
-                        String name = names[j];
-                        ret.add(new PlotDescriptor(name, data[j]));
+                    if (Arr.equals(names,new String[]{FIELD_TIMESTAMP, FIELD_VALUE})){
+                        //Monitor plots values against timestamp
+                        String name = IO.getPrefix(path);
+                        ret.add(new PlotDescriptor(name, data[1], (double[])Convert.toDouble(data[0])));
+                    } else {
+                        for (int j = 0; j < fields; j++) {
+                            String name = names[j];
+                            ret.add(new PlotDescriptor(name, data[j]));                            
+                        }
                     }
                 }
 

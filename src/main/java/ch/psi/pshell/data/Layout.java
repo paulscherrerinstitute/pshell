@@ -41,6 +41,10 @@ public interface Layout {
     public static final String ATTR_PLOT_TYPES = "PlotTypes";
     public static final String ATTR_PLOT_TYPES_SEPARATOR = "; ";
 
+    public static final String FIELD_TIMESTAMP = "timestamp";
+    public static final String FIELD_VALUE = "value";
+    
+    
     void initialize();
 
     String getDefaultGroup(Scan scan);
@@ -194,7 +198,7 @@ public interface Layout {
                 dev.update();
                 TimestampedValue v = dev.takeTimestamped();
                 Class type =  v.getValue().getClass();
-                getDataManager().createDataset(path, new String[]{"timestamp", "value"}, new Class[]{Long.class, type}, 
+                getDataManager().createDataset(path, new String[]{FIELD_TIMESTAMP, FIELD_VALUE}, new Class[]{Long.class, type}, 
                         new int[]{0,(type.isArray()) ? Array.getLength(v.getValue()): 0});
                 onMonitor(scan, dev, v.getValue(), v.getTimestamp());
             } catch (Exception ex){        
