@@ -1,3 +1,4 @@
+
 import ch.psi.pshell.ui.Panel;
 import ch.psi.utils.State;
 
@@ -25,8 +26,21 @@ public class PanelPlugin extends Panel {
     public void onExecutedFile(String fileName, Object result) {
     }
 
-    
-    //Callback to perform update - in event thread
+    @Override
+    protected void onTimer() {
+    }
+
+    @Override
+    protected void onLoaded() {
+
+    }
+
+    @Override
+    protected void onUnloaded() {
+
+    }
+
+    //Invoked by 'update()' to update components in the event thread
     @Override
     protected void doUpdate() {
     }

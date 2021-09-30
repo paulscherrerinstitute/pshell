@@ -860,6 +860,8 @@ def get_exec_pars():
             scan (Scan): reference to current scan, if any
             source (CommandSource): return the source of the script or command.
             background (bool): return False if executing in main interpreter thread .
+            debug (bool): True if executing from statements in editor.
+            simulation (bool): global simulation flag.
             aborted (bool): True if execution has been aborted
     """
     return get_context().getExecutionPars()

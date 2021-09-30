@@ -202,7 +202,13 @@ public class PluginsEditor extends Editor {
         }
     }
 
-    void create(boolean panel) {
+    enum Type{
+        Standard,
+        Panel,
+        Processor
+    }
+    
+    void create(Type type) {
         try {
             String name = getString("Enter Plugin name:", "");
             if ((name == null) || (name.isEmpty())) {
@@ -226,29 +232,45 @@ public class PluginsEditor extends Editor {
                 jarFile = new File(jar);
             }
             String path = file.getCanonicalPath();
-            if (panel) {
-                if (jarFile != null) {
-                    IO.extractZipFileContent(jarFile, "templates/plugin/PanelPlugin.java", path);
-                } else {
-                    IO.copy(Paths.get(templatesFolder.getPath(), "PanelPlugin.java").toString(), path);
-                }
-                String formFilePath = path.substring(0, path.length() - 4) + "form";
-                if (jarFile != null) {
-                    IO.extractZipFileContent(jarFile, "templates/plugin/PanelPlugin.form", formFilePath);
-                } else {
-                    IO.copy(Paths.get(templatesFolder.getPath(), "PanelPlugin.form").toString(), formFilePath);
-                }
-                IO.replace(path, "public class PanelPlugin", "public class " + name);
-                IO.replace(path, "public PanelPlugin", "public " + name);
-
-            } else {
-                if (jarFile != null) {
-                    IO.extractZipFileContent(jarFile, "templates/plugin/DefaultPlugin.java", path);
-                } else {
-                    IO.copy(Paths.get(templatesFolder.getPath(), "DefaultPlugin.java").toString(), path);
-                }
-                IO.replace(path, "public class DefaultPlugin", "public class " + name);
+            switch (type) {
+                case Standard:
+                    if (jarFile != null) {
+                        IO.extractZipFileContent(jarFile, "templates/plugin/DefaultPlugin.java", path);
+                    } else {
+                        IO.copy(Paths.get(templatesFolder.getPath(), "DefaultPlugin.java").toString(), path);
+                    }
+                    IO.replace(path, "DefaultPlugin", name);                
+                    break;
+                case Panel:
+                    if (jarFile != null) {
+                        IO.extractZipFileContent(jarFile, "templates/plugin/PanelPlugin.java", path);
+                    } else {
+                        IO.copy(Paths.get(templatesFolder.getPath(), "PanelPlugin.java").toString(), path);
+                    }
+                    String formFilePath = path.substring(0, path.length() - 4) + "form";
+                    if (jarFile != null) {
+                        IO.extractZipFileContent(jarFile, "templates/plugin/PanelPlugin.form", formFilePath);
+                    } else {
+                        IO.copy(Paths.get(templatesFolder.getPath(), "PanelPlugin.form").toString(), formFilePath);
+                    }
+                    IO.replace(path, "PanelPlugin", name);
+                    break;
+                case Processor:
+                    if (jarFile != null) {
+                        IO.extractZipFileContent(jarFile, "templates/plugin/ProcessorPlugin.java", path);
+                    } else {
+                        IO.copy(Paths.get(templatesFolder.getPath(), "ProcessorPlugin.java").toString(), path);
+                    }
+                    String formPath = path.substring(0, path.length() - 4) + "form";
+                    if (jarFile != null) {
+                        IO.extractZipFileContent(jarFile, "templates/plugin/ProcessorPlugin.form", formPath);
+                    } else {
+                        IO.copy(Paths.get(templatesFolder.getPath(), "ProcessorPlugin.form").toString(), formPath);
+                    }
+                    IO.replace(path, "ProcessorPlugin", name);
+                    break;
             }
+            
 
             IO.setFilePermissions(path, Context.getInstance().getConfig().filePermissionsScripts);
             showMessage("Plugin Creation", "Success creating plugin: " + name);
@@ -320,6 +342,7 @@ public class PluginsEditor extends Editor {
         jPanel2 = new javax.swing.JPanel();
         buttonCreateStandard = new javax.swing.JButton();
         buttonCreatePanel = new javax.swing.JButton();
+        buttonCreatePanel1 = new javax.swing.JButton();
 
         jPanel3.setPreferredSize(new java.awt.Dimension(452, 300));
 
@@ -537,10 +560,17 @@ public class PluginsEditor extends Editor {
             }
         });
 
-        buttonCreatePanel.setText("Create Panel Plugin");
+        buttonCreatePanel.setText("Create Panel");
         buttonCreatePanel.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 buttonCreatePanelActionPerformed(evt);
+            }
+        });
+
+        buttonCreatePanel1.setText("Create Processor");
+        buttonCreatePanel1.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                buttonCreatePanel1ActionPerformed(evt);
             }
         });
 
@@ -552,11 +582,12 @@ public class PluginsEditor extends Editor {
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(buttonCreateStandard)
-                    .addComponent(buttonCreatePanel))
+                    .addComponent(buttonCreatePanel)
+                    .addComponent(buttonCreatePanel1))
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
-        jPanel2Layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {buttonCreatePanel, buttonCreateStandard});
+        jPanel2Layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {buttonCreatePanel, buttonCreatePanel1, buttonCreateStandard});
 
         jPanel2Layout.setVerticalGroup(
             jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -565,6 +596,8 @@ public class PluginsEditor extends Editor {
                 .addComponent(buttonCreateStandard)
                 .addGap(18, 18, 18)
                 .addComponent(buttonCreatePanel)
+                .addGap(18, 18, 18)
+                .addComponent(buttonCreatePanel1)
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
@@ -600,11 +633,11 @@ public class PluginsEditor extends Editor {
     }// </editor-fold>//GEN-END:initComponents
 
     private void buttonCreateStandardActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonCreateStandardActionPerformed
-        create(false);
+        create(Type.Standard);
     }//GEN-LAST:event_buttonCreateStandardActionPerformed
 
     private void buttonCreatePanelActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonCreatePanelActionPerformed
-        create(true);
+        create(Type.Panel);
     }//GEN-LAST:event_buttonCreatePanelActionPerformed
 
     private void buttonUpActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonUpActionPerformed
@@ -748,8 +781,13 @@ public class PluginsEditor extends Editor {
         }
     }//GEN-LAST:event_buttonStartActionPerformed
 
+    private void buttonCreatePanel1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonCreatePanel1ActionPerformed
+        create(Type.Processor);
+    }//GEN-LAST:event_buttonCreatePanel1ActionPerformed
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton buttonCreatePanel;
+    private javax.swing.JButton buttonCreatePanel1;
     private javax.swing.JButton buttonCreateStandard;
     private javax.swing.JButton buttonDown;
     private javax.swing.JButton buttonEdit;
