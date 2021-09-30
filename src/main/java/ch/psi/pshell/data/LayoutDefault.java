@@ -34,7 +34,6 @@ public class LayoutDefault extends LayoutBase implements Layout {
     public static final String ATTR_WRITABLE_INDEX = "Writable Index";
     public static final String ATTR_WRITABLE_DIMENSION = "Writable Dimension";
 
-    public static final String META_GROUP = "meta/";
     public static final String TIMESTAMPS_DATASET = "Timestamps";
     public static final String DEVICE_MIN_DATASET = "_min";
     public static final String DEVICE_MAX_DATASET = "_max";
@@ -87,7 +86,7 @@ public class LayoutDefault extends LayoutBase implements Layout {
                 dimension++;
             }
         }
-        dataManager.createDataset(getPath(scan, META_GROUP + TIMESTAMPS_DATASET), Long.class, new int[]{samples});
+        dataManager.createDataset(getPath(scan, getMetaPath() + TIMESTAMPS_DATASET), Long.class, new int[]{samples});
         ReadableArray a;
         index = 0;
         for (ch.psi.pshell.device.Readable readable : scan.getReadables()) {
@@ -114,9 +113,9 @@ public class LayoutDefault extends LayoutBase implements Layout {
                 }
             } else {
                 if (Averager.isAverager(readable)) {
-                    dataManager.createDataset(getPath(scan, META_GROUP + name + DEVICE_MIN_DATASET), Double.class, new int[]{samples});
-                    dataManager.createDataset(getPath(scan, META_GROUP + name + DEVICE_MAX_DATASET), Double.class, new int[]{samples});
-                    dataManager.createDataset(getPath(scan, META_GROUP + name + DEVICE_STDEV_DATASET), Double.class, new int[]{samples});
+                    dataManager.createDataset(getPath(scan, getMetaPath() + name + DEVICE_MIN_DATASET), Double.class, new int[]{samples});
+                    dataManager.createDataset(getPath(scan, getMetaPath() + name + DEVICE_MAX_DATASET), Double.class, new int[]{samples});
+                    dataManager.createDataset(getPath(scan, getMetaPath() + name + DEVICE_STDEV_DATASET), Double.class, new int[]{samples});
                 }
             }
             dataManager.setAttribute(getPath(scan, name), ATTR_READABLE_INDEX, index++);
@@ -152,12 +151,12 @@ public class LayoutDefault extends LayoutBase implements Layout {
             dataManager.setItem(path, value, index);
             if (Averager.isAverager(readable)) {
                 DescStatsDouble v = (DescStatsDouble) value;
-                dataManager.setItem(getPath(scan, META_GROUP + name + DEVICE_MIN_DATASET), (v == null) ? null : v.getMin(), index);
-                dataManager.setItem(getPath(scan, META_GROUP + name + DEVICE_MAX_DATASET), (v == null) ? null : v.getMax(), index);
-                dataManager.setItem(getPath(scan, META_GROUP + name + DEVICE_STDEV_DATASET), (v == null) ? null : v.getStdev(), index);
+                dataManager.setItem(getPath(scan, getMetaPath() + name + DEVICE_MIN_DATASET), (v == null) ? null : v.getMin(), index);
+                dataManager.setItem(getPath(scan, getMetaPath() + name + DEVICE_MAX_DATASET), (v == null) ? null : v.getMax(), index);
+                dataManager.setItem(getPath(scan, getMetaPath() + name + DEVICE_STDEV_DATASET), (v == null) ? null : v.getStdev(), index);
             }
         }
-        dataManager.setItem(getPath(scan, META_GROUP + TIMESTAMPS_DATASET), record.getTimestamp(), index);
+        dataManager.setItem(getPath(scan, getMetaPath() + TIMESTAMPS_DATASET), record.getTimestamp(), index);
     }
 
     @Override
@@ -167,7 +166,7 @@ public class LayoutDefault extends LayoutBase implements Layout {
                 try {
                     getDataManager().flush();
                     String name = readable.getAlias();
-                    double[] stdev = (double[]) getDataManager().getData(getPath(scan, META_GROUP + name + DEVICE_STDEV_DATASET)).sliceData;
+                    double[] stdev = (double[]) getDataManager().getData(getPath(scan, getMetaPath() + name + DEVICE_STDEV_DATASET)).sliceData;
                     getDataManager().setAttribute(getPath(scan, name), ATTR_ERROR_VECTOR, stdev);
                 } catch (Exception ex) {
                     Logger.getLogger(LayoutDefault.class.getName()).log(Level.WARNING, null, ex);
@@ -263,7 +262,7 @@ public class LayoutDefault extends LayoutBase implements Layout {
                     try {
                         //Getting stdev if available and error not yet set by DeviceManager(if error vector is too big for an attribute)
                         if (descriptor.error == null) {
-                            DataSlice data = dm.getData(root, child.substring(0, child.lastIndexOf("/") + 1) + META_GROUP + descriptor.name + DEVICE_STDEV_DATASET);
+                            DataSlice data = dm.getData(root, child.substring(0, child.lastIndexOf("/") + 1) + getMetaPath() + descriptor.name + DEVICE_STDEV_DATASET);
                             descriptor.error = (double[]) data.sliceData;
                         }
                     } catch (Exception ex) {
@@ -329,7 +328,7 @@ public class LayoutDefault extends LayoutBase implements Layout {
     
     @Override
     public String getTimestampsDataset(String scanPath){
-        return scanPath + "/" + META_GROUP + TIMESTAMPS_DATASET;
+        return scanPath + "/" + getMetaPath() + TIMESTAMPS_DATASET;
     }
 
 }

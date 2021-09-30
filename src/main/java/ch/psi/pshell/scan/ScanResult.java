@@ -186,6 +186,11 @@ public class ScanResult implements SubscriptableList<ScanRecord>, Subscriptable.
     }    
     
     @Transient
+    public java.util.Map<String, Object> getMeta() {        
+        return scan.getMeta();
+    }      
+        
+    @Transient
     public java.util.Map<Readable, Object> getSnapValues() {
         java.util.Map<Readable, Object> ret = new HashMap <>();
         if (scan.getSnaps()!=null){

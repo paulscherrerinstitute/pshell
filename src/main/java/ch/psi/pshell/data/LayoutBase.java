@@ -32,7 +32,8 @@ public abstract class LayoutBase implements Layout {
     public static String PATH_MONITORS = "monitors/";
     public static String PATH_SNAPS = "snaps/";
     public static String PATH_DIAGS = "diags/";
-    public static String PATH_LOGS = "logs/";    
+    public static String PATH_LOGS = "logs/";   
+    public static String PATH_META = "meta/";   
 
     Boolean persistSetpoints;
     boolean writeSessionMetadata=true;
@@ -61,6 +62,11 @@ public abstract class LayoutBase implements Layout {
         persistSetpoints = value;
         sessionMetadataPath = path;
         sessionMetadataAttributes = attributes;
+    }    
+    
+    @Override
+    public String getMetaPath(){
+        return PATH_META;        
     }    
     
     @Override

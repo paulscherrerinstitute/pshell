@@ -424,6 +424,10 @@ public class DataManager implements AutoCloseable {
                         openOutput();
                         if (isOpen()) {
                             getLayout().onStart(scan);
+                            
+                            if (scan.getMeta()!=null){
+                                getLayout().onInitMeta(scan);
+                            }
                             if (scan.getSnaps()!=null){
                                 getLayout().onInitSnaps(scan);
                             }

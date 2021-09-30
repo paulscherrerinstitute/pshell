@@ -426,6 +426,7 @@ def processScanPars(scan, pars):
     scan.setMonitors(to_list(string_to_obj(pars.pop("monitors",None))))
     scan.setSnaps(to_list(string_to_obj(pars.pop("snaps",None))))
     scan.setDiags(to_list(string_to_obj(pars.pop("diags",None))))
+    scan.setMeta(pars.pop("meta",None))
     get_context().setCommandPars(scan, pars)
 
 

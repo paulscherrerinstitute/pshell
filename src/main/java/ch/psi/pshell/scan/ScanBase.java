@@ -62,6 +62,7 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
     Device[] monitors;
     Readable[] diags;
     Readable[] snaps;
+    Map meta;
 
     boolean useWritableReadback = getScansUseWritableReadback();
     boolean restorePosition = getRestorePositionOnRelativeScans();
@@ -131,6 +132,13 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
         //}
     }
     
+    public void setMeta(Map meta){
+        this.meta = meta;
+    }
+    
+    public Map getMeta(){
+        return meta;
+    }
     
     @Override
     public Device[] getMonitors(){        
@@ -834,8 +842,7 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
             return dataLayout.getSnap(this, device, Context.getInstance().getDataManager());
         }
         return null;        
-    }        
-    
+    }              
     
     @Override
     public long[] readTimestamps(){

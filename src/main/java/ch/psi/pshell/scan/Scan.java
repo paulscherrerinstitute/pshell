@@ -104,7 +104,7 @@ public interface Scan {
     public Map<Readable, Object> readSnaps();
     
     public Object readSnap(String device);
-    
+       
     public long[] readTimestamps();    
     
     public String getTag();
@@ -144,6 +144,10 @@ public interface Scan {
 
     public void setCheckPositions(boolean value);
     
+    public void setMeta(Map meta);
+    
+    public Map getMeta();
+    
     public Device[] getMonitors();
         
     public String[] getMonitorNames();    
@@ -155,7 +159,7 @@ public interface Scan {
     public String[] getDiagNames();    
 
     public void setDiags(Readable[] diags);
-
+        
     public Readable[] getSnaps();
     
     public String[] getSnapsNames(); 

@@ -13,6 +13,7 @@ import java.io.IOException;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.python.bouncycastle.util.Arrays;
@@ -70,6 +71,14 @@ public interface Layout {
         return getCurrentGroup(scan);
     }
 
+    default String getMetaPathName(Scan scan) {
+        return getCurrentGroup(scan) + getMetaPath();
+    }
+    
+    default String getMetaPathName(Scan scan, String key) {
+        return getMetaPathName(scan) + key;
+    }    
+        
     default String getMonitorsPathName(Scan scan) {
         return getCurrentGroup(scan) + getMonitorsPath();
     }
@@ -112,7 +121,26 @@ public interface Layout {
 
     void onRecord(Scan scan, ScanRecord record) throws IOException;
 
-
+    default void onInitMeta(Scan scan) throws IOException{
+        String path = getMetaPathName(scan);
+        Map<String, Object> meta = scan.getMeta();
+        for (String key : meta.keySet()){
+            try{
+                Object value = meta.get(key);
+                getDataManager().setDataset(getMetaPathName(scan, key), value);
+            } catch (Exception ex){        
+                String msg = "Error creating meta dataset for " + key+ ": " + ex.getMessage();
+                appendLog(msg);
+                Logger.getLogger(Layout.class.getName()).warning(msg);
+            }
+        }          
+    }    
+    
+    default Map<String, Object> getMeta(Scan scan, DataManager dm) {
+        return scan.getMeta();
+    }
+    
+    
     default void onInitSnaps(Scan scan) throws IOException{
         for (Readable readable : scan.getSnaps()){
             try{
@@ -320,6 +348,8 @@ public interface Layout {
         return true;
     }
 
+    String getMetaPath();
+    
     String getLogsPath();
 
     String getScriptsPath();

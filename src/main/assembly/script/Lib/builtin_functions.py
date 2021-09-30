@@ -34,6 +34,7 @@ def lscan(writables, readables, start, end, steps, latency=0.0, relative=False, 
             - monitors (list of Device, optional): device values are saved on every change event during the scan.
             - snaps (list of Readable, optional): snapshot device values are saved before the scan.
             - diags (list of Readable, optional): diagnostic device values are saved at each scan point.
+            - meta (dict, optional): scan metadata.
             - Aditional arguments defined by set_exec_pars.
 
     Returns:
@@ -78,6 +79,7 @@ def vscan(writables, readables, vector, line = False, latency=0.0, relative=Fals
             - monitors (list of Device, optional): device values are saved on every change event during the scan.
             - snaps (list of Readable, optional): snapshot device values are saved before the scan.
             - diags (list of Readable, optional): diagnostic device values are saved at each scan point.
+            - meta (dict, optional): scan metadata.
             - Aditional arguments defined by set_exec_pars.
 
     Returns:
@@ -127,6 +129,7 @@ def ascan(writables, readables, start, end, steps, latency=0.0, relative=False, 
             - monitors (list of Device, optional): device values are saved on every change event during the scan.
             - snaps (list of Readable, optional): snapshot device values are saved before the scan.
             - diags (list of Readable, optional): diagnostic device values are saved at each scan point.
+            - meta (dict, optional): scan metadata.
             - Aditional arguments defined by set_exec_pars.
 
     Returns:
@@ -173,6 +176,7 @@ def rscan(writable, readables, regions, latency=0.0, relative=False, passes=1, z
             - monitors (list of Device, optional): device values are saved on every change event during the scan.
             - snaps (list of Readable, optional): snapshot device values are saved before the scan.
             - diags (list of Readable, optional): diagnostic device values are saved at each scan point.
+            - meta (dict, optional): scan metadata.
             - Aditional arguments defined by set_exec_pars.
 
     Returns:
@@ -221,6 +225,7 @@ def cscan(writables, readables, start, end, steps, latency=0.0, time=None, relat
             - monitors (list of Device, optional): device values are saved on every change event during the scan.
             - snaps (list of Readable, optional): snapshot device values are saved before the scan.
             - diags (list of Readable, optional): diagnostic device values are saved at each scan point.
+            - meta (dict, optional): scan metadata.
             - Aditional arguments defined by set_exec_pars.
 
     Returns:
@@ -265,6 +270,7 @@ def hscan(config, writable, readables, start, end, steps, passes=1, zigzag=False
             - abort_on_error (bool, optional): if true then aborts scan in sensor failures. Default is false.
             - monitors (list of Device, optional): device values are saved on every change event during the scan.
             - snaps (list of Readable, optional): snapshot device values are saved before the scan.
+            - meta (dict, optional): scan metadata.
 
     Returns:
         ScanResult.
@@ -303,6 +309,7 @@ def bscan(stream, records, timeout = None, passes=1, **pars):
             - monitors (list of Device, optional): device values are saved on every change event during the scan.
             - snaps (list of Readable, optional): snapshot device values are saved before the scan.
             - diags (list of Readable, optional): diagnostic device values are saved at each scan point.
+            - meta (dict, optional): scan metadata.
             - Aditional arguments defined by set_exec_pars.
 
     Returns:
@@ -337,6 +344,7 @@ def tscan(readables, points, interval, passes=1, fixed_rate=True, **pars):
             - monitors (list of Device, optional): device values are saved on every change event during the scan.
             - snaps (list of Readable, optional): snapshot device values are saved before the scan.
             - diags (list of Readable, optional): diagnostic device values are saved at each scan point.
+            - meta (dict, optional): scan metadata.
             - Aditional arguments defined by set_exec_pars.
 
     Returns:
@@ -376,6 +384,7 @@ def mscan(trigger, readables, points=-1, timeout=None, async=True, take_initial=
             - monitors (list of Device, optional): device values are saved on every change event during the scan.
             - snaps (list of Readable, optional): snapshot device values are saved before the scan.
             - diags (list of Readable, optional): diagnostic device values are saved at each scan point.
+            - meta (dict, optional): scan metadata.
             - Aditional arguments defined by set_exec_pars.
 
     Returns:
