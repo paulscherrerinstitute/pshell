@@ -1579,7 +1579,8 @@ public class View extends MainFrame {
             }
         }
         T processor = null;
-        if (PanelProcessor.class.isAssignableFrom(cls)) {
+        //QueueProcessorcan be loaded as a Processor (multiple instances in Workbench) or Plugin(single instance when detached)
+        if (PanelProcessor.class.isAssignableFrom(cls) && !QueueProcessor.class.isAssignableFrom(cls)) {
             for (Processor p : getProcessors()) {
                 if (p.getClass() == cls) {
                     processor = (T) p;

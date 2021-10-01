@@ -403,6 +403,7 @@ public class App extends ObservableBase<AppListener> {
         sb.append("\n\t-dspt        \tDisable scan plots");
         sb.append("\n\t-dspr        \tDisable printing scans to console");
         sb.append("\n\t-sbar        \tAppend status bar to detached windows");
+        sb.append("\n\t-tbar        \tAppend tool bar to detached processors");
         sb.append("\n\t-dplt        \tCreate plots for detached windows");
         sb.append("\n\t-strp        \tShow strip chart window (can be used together with -f)");
         sb.append("\n\t-dtpn        \tShow data panel window only (can be used together with -f)");
@@ -514,6 +515,10 @@ public class App extends ObservableBase<AppListener> {
     static public boolean isDetachedAppendStatusBar() {
         return isDetached() && getBoolArgumentValue("sbar");
     }
+    
+    static public boolean isDetachedAppendToolBar() {
+        return isDetached() && getBoolArgumentValue("tbar");
+    }    
 
     static public boolean isFullScreen() {
         return isGui() && getBoolArgumentValue("full");

@@ -7,7 +7,6 @@ import ch.psi.pshell.ui.Task.QueueTask;
 import ch.psi.utils.IO;
 import ch.psi.utils.State;
 import ch.psi.utils.swing.ExtensionFileFilter;
-import ch.psi.utils.swing.MonitoredPanel;
 import ch.psi.utils.swing.SwingUtils;
 import java.awt.Component;
 import java.awt.datatransfer.DataFlavor;
@@ -44,7 +43,7 @@ import javax.swing.table.TableCellEditor;
 /**
  *
  */
-public final class QueueProcessor extends MonitoredPanel implements Processor {
+public final class QueueProcessor extends PanelProcessor {
 
     String fileName;
     final DefaultTableModel model;
@@ -115,7 +114,7 @@ public final class QueueProcessor extends MonitoredPanel implements Processor {
         model.insertRow(index, data);
         model.fireTableDataChanged();        
         table.getSelectionModel().setSelectionInterval(index, index);
-        update();  
+        updateButtons();  
     }
     
     public void initializeTable() {
@@ -303,15 +302,15 @@ public final class QueueProcessor extends MonitoredPanel implements Processor {
         table.getColumnModel().getColumn(2).setCellEditor(new ParsEditor());        
         
         SwingUtils.setEnumTableColum(table, 3, Task.QueueTaskErrorAction.class);
-        update();
+        updateButtons();
     }
 
     @Override
     public void onStateChanged(State state, State former) {
-        update();
+        updateButtons();
     }
 
-    protected void update() {
+    protected void updateButtons() {
         boolean editing = !isExecuting(); //!Context.getInstance().getState().isProcessing();
         int rows = model.getRowCount();
         int cur = table.getSelectedRow();
@@ -381,7 +380,7 @@ public final class QueueProcessor extends MonitoredPanel implements Processor {
             public void onFinishedExecution(QueueTask task) {
                 table.getSelectionModel().clearSelection();
                 processingTask = null;
-                update();
+                updateButtons();
                 if (App.getInstance().getMainFrame() != null) {
                     App.getInstance().getMainFrame().updateButtons();
                 }
@@ -441,6 +440,12 @@ public final class QueueProcessor extends MonitoredPanel implements Processor {
         Files.write(Paths.get(fileName), json.getBytes());
         this.fileName = fileName;
         modified = false;
+    }
+    
+    @Override
+    public void clear() {
+        model.setRowCount(0);
+        updateButtons();
     }
 
     @Override
@@ -629,7 +634,7 @@ public final class QueueProcessor extends MonitoredPanel implements Processor {
             int cur = table.getSelectedRow();
             model.moveRow(cur, cur, cur - 1);
             table.setRowSelectionInterval(cur - 1, cur - 1);
-            update();
+            updateButtons();
         } catch (Exception ex) {
             showException(ex);
         }
@@ -641,7 +646,7 @@ public final class QueueProcessor extends MonitoredPanel implements Processor {
             int cur = table.getSelectedRow();
             model.moveRow(cur, cur, cur + 1);
             table.setRowSelectionInterval(cur + 1, cur + 1);
-            update();
+            updateButtons();
         } catch (Exception ex) {
             showException(ex);
         }
@@ -659,22 +664,22 @@ public final class QueueProcessor extends MonitoredPanel implements Processor {
         }
         model.fireTableDataChanged();
         table.getSelectionModel().setSelectionInterval(index, index);
-        update();
+        updateButtons();
     }//GEN-LAST:event_buttonInsertActionPerformed
 
     private void buttonDeleteActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonDeleteActionPerformed
         if (model.getRowCount() > 0) {
             model.removeRow(Math.max(table.getSelectedRow(), 0));
-            update();
+            updateButtons();
         }
     }//GEN-LAST:event_buttonDeleteActionPerformed
 
     private void tableKeyReleased(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_tableKeyReleased
-        update();
+        updateButtons();
     }//GEN-LAST:event_tableKeyReleased
 
     private void tableMouseReleased(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_tableMouseReleased
-        update();
+        updateButtons();
         checkPopup(evt);
     }//GEN-LAST:event_tableMouseReleased
 

@@ -136,7 +136,8 @@ public class ProcessorPlugin extends PanelProcessor {
     }
 
     //Component update 
-    void clear() {
+    public void clear() throws IOException {
+        currentFile=null;        
         //TODO
     }
 

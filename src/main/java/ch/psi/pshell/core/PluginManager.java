@@ -463,6 +463,13 @@ public class PluginManager implements AutoCloseable {
         propertiesMap.put(plugin.getClass().getName(), properties);
     }
 
+    public void loadPlugin(Plugin plugin, String name) {
+        PluginProperties properties = new PluginProperties();
+        properties.file = null;
+        properties.name = name;
+        propertiesMap.put(plugin.getClass().getName(), properties);
+    }
+    
     public void restartPlugins() {
         logger.info("Restart plugins");
         stopPlugins();

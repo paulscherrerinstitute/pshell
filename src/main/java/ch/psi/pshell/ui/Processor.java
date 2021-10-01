@@ -122,6 +122,36 @@ public interface Processor extends Executor {
             IO.setFilePermissions(fileName, filePermissions);
         }
     }
+    
+    default public void saveAs() throws IOException {
+        save(null);
+    }
+
+    default public void saveAs(FilePermissions filePermissions) throws IOException {       
+        JFileChooser chooser = new JFileChooser(Context.getInstance().getSetup().expandPath(getHomePath()));
+        FileNameExtensionFilter filter = new FileNameExtensionFilter(getDescription(), getExtensions());
+        chooser.setFileFilter(filter);
+        try {
+            String fileName = getFileName();
+            if (fileName != null) {
+                chooser.setSelectedFile(new File(fileName));
+            }
+        } catch (Exception ex) {
+            Logger.getLogger(Processor.class.getName()).log(Level.WARNING, null, ex);            
+        }
+        int rVal = chooser.showSaveDialog(getPanel());
+        if (rVal == JFileChooser.APPROVE_OPTION) {
+            String fileName = chooser.getSelectedFile().getAbsolutePath();
+            if (IO.getExtension(chooser.getSelectedFile().getAbsolutePath()).isEmpty()) {
+                fileName += "." + getExtensions()[0];
+            }
+            saveAs(fileName);
+            if (filePermissions!=null){
+                IO.setFilePermissions(fileName, filePermissions);
+            }
+        }
+    }
+    
 
     public void saveAs(String fileName) throws IOException;
 
@@ -130,6 +160,9 @@ public interface Processor extends Executor {
         IO.setFilePermissions(fileName, filePermissions);
     }
 
+    default public void clear() throws IOException{        
+    }
+    
     public default JPanel getPanel() {
         //Processors must be instances of JPanel
         return (JPanel) this;

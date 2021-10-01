@@ -10,11 +10,13 @@ import ch.psi.utils.swing.ConfigDialog;
 import ch.psi.utils.swing.StandardDialog;
 import ch.psi.utils.swing.SwingUtils;
 import java.awt.Frame;
+import java.awt.Toolkit;
 import java.awt.Window;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import javax.swing.SwingUtilities;
 import javax.swing.WindowConstants;
 
 /**
@@ -123,19 +125,26 @@ public interface Plugin extends ch.psi.pshell.core.Plugin {
     default void showWindow(Window window) {
         if (getView() != null) {
             getView().showChildWindow(window);
-            synchronized (windows) {
-                List<Window> list = windows.get(this);
-                if (list == null) {
-                    list = new ArrayList<>();
-                    windows.put(this, list);
-                }
-                for (Window w : list.toArray(new Window[0])) {
-                    if (!w.isShowing()) {
-                        list.remove(w);
-                    }
-                }
-                list.add(window);
+        } else{
+            SwingUtils.centerComponent(getTopLevel(), window);
+            SwingUtilities.updateComponentTreeUI(window);
+            window.setVisible(true);
+            if ((window.isDisplayable()) && (window.isShowing())) {
+                window.requestFocus();
+            }            
+        }
+        synchronized (windows) {
+            List<Window> list = windows.get(this);
+            if (list == null) {
+                list = new ArrayList<>();
+                windows.put(this, list);
             }
+            for (Window w : list.toArray(new Window[0])) {
+                if (!w.isShowing()) {
+                    list.remove(w);
+                }
+            }
+            list.add(window);
         }
     }
 
@@ -152,6 +161,11 @@ public interface Plugin extends ch.psi.pshell.core.Plugin {
             if (ret == null) {
                 return new Window[0];
             }
+            for (Window w : ret.toArray(new Window[0])) {
+                if (!w.isShowing()) {
+                    ret.remove(w);
+                }
+            }            
             return ret.toArray(new Window[0]);
         }
     }

@@ -1,7 +1,15 @@
 package ch.psi.pshell.ui;
 
+import ch.psi.pshell.core.CommandSource;
+import ch.psi.pshell.core.Context;
+import ch.psi.pshell.core.ContextAdapter;
+import ch.psi.pshell.core.ContextListener;
+import ch.psi.pshell.scripting.Statement;
+import ch.psi.pshell.scripting.ViewPreference;
+import ch.psi.utils.Configurable;
 import ch.psi.utils.Convert;
 import ch.psi.utils.IO;
+import ch.psi.utils.State;
 import ch.psi.utils.swing.MainFrame;
 import ch.psi.utils.swing.MonitoredPanel;
 import ch.psi.utils.swing.SwingUtils;
@@ -31,11 +39,17 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.ResourceBundle;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.swing.ImageIcon;
+import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
+import javax.swing.JToolBar;
+import javax.swing.JToolBar.Separator;
 import javax.swing.SwingUtilities;
 import javax.swing.Timer;
 
@@ -100,7 +114,7 @@ public class Panel extends MonitoredPanel implements Plugin {
         }
     }
 
-    boolean isLoaded() {
+    public boolean isLoaded() {
         if (isDetached()) {
             return isShowing();
         }
@@ -166,15 +180,18 @@ public class Panel extends MonitoredPanel implements Plugin {
                         SwingUtils.enableFullScreen(frame);
                     }
                     frame.setIconImage(App.getIconSmall());
-                    if (App.isDetachedAppendStatusBar()) {
-                        JPanel panel = new JPanel();
-                        panel.setLayout(new BorderLayout());
-                        panel.add(this, BorderLayout.CENTER);
-                        panel.add(new StatusBar(), BorderLayout.SOUTH);
-                        frame.setContentPane(panel);
-                    } else {
-                        frame.setContentPane(this);
+                    JPanel panel = new JPanel();
+                    panel.setLayout(new BorderLayout());
+                    if (App.isDetachedAppendToolBar()) {     
+                        if (this instanceof Processor){
+                            panel.add(getToolBar(), BorderLayout.NORTH);
+                        }
                     }
+                    panel.add(this, BorderLayout.CENTER);
+                    if (App.isDetachedAppendStatusBar()) {                    
+                        panel.add(new StatusBar(), BorderLayout.SOUTH);
+                    }                        
+                    frame.setContentPane(panel);
                     frame.setName(((getName() == null) ? getClass().getSimpleName() : getName()) + "Frame");
                     frame.pack();
 
@@ -511,4 +528,211 @@ public class Panel extends MonitoredPanel implements Plugin {
         return (Frame) getTopLevelAncestor();
     }
 
+    
+    JToolBar getToolBar(){
+        Processor p = (Processor) this;
+        JToolBar toolBar=new JToolBar();
+        JButton buttonNew = new JButton();
+        JButton buttonOpen = new JButton();
+        JButton buttonSave = new JButton();
+        Separator jSeparator5 = new Separator();
+        JButton buttonRestart = new JButton();
+        Separator jSeparator6 = new javax.swing.JToolBar.Separator();
+        JButton buttonRun = new JButton();
+        JButton buttonDebug = new JButton();
+        JButton buttonStep = new JButton();
+        JButton buttonPause = new JButton();
+        JButton buttonAbort = new JButton();
+        Separator separatorStopAll = new javax.swing.JToolBar.Separator();
+        JButton buttonStopAll = new JButton();
+        Separator separatorInfo = new javax.swing.JToolBar.Separator();
+        JButton buttonAbout = new JButton();
+        
+        toolBar.setRollover(true);
+        toolBar.setFloatable(false);
+        toolBar.setVisible(!getContext().getRights().hideToolbar);
+        
+        ResourceBundle bundle = ResourceBundle.getBundle("ch/psi/pshell/ui/View");
+        buttonNew.setIcon(new javax.swing.ImageIcon(getClass().getResource("/ch/psi/pshell/ui/New.png")));
+        buttonNew.setText(bundle.getString("View.buttonNew.text"));
+        buttonNew.setToolTipText(bundle.getString("View.buttonNew.toolTipText"));
+        buttonNew.setName("buttonNew");
+        buttonNew.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                try {
+                    p.clear();
+                } catch (Exception ex) {
+                    showException(ex);
+                }
+            }
+        });
+        toolBar.add(buttonNew);
+
+        buttonOpen.setIcon(new javax.swing.ImageIcon(getClass().getResource("/ch/psi/pshell/ui/Open.png")));
+        buttonOpen.setText(bundle.getString("View.buttonOpen.text"));
+        buttonOpen.setToolTipText(bundle.getString("View.buttonOpen.toolTipText"));
+        buttonOpen.setName("buttonOpen");
+        buttonOpen.addActionListener((java.awt.event.ActionEvent evt) -> {
+            try {
+                p.open();
+            } catch (Exception ex) {
+                showException(ex);
+            }
+        });
+        buttonOpen.setEnabled(p.canSave());
+        toolBar.add(buttonOpen);
+
+        buttonSave.setIcon(new javax.swing.ImageIcon(getClass().getResource("/ch/psi/pshell/ui/Save.png")));
+        buttonSave.setText(bundle.getString("View.buttonSave.text"));
+        buttonSave.setToolTipText(bundle.getString("View.buttonSave.toolTipText"));
+        buttonSave.setName("buttonSave");
+        buttonSave.addActionListener((java.awt.event.ActionEvent evt) -> {
+            try {
+                p.saveAs(Context.getInstance().getConfig().filePermissionsScripts);
+            } catch (Exception ex) {
+                showException(ex);
+            }
+        });
+        buttonSave.setEnabled(p.canSave());
+        toolBar.add(buttonSave);
+
+        jSeparator5.setMaximumSize(new java.awt.Dimension(20, 32767));
+        jSeparator5.setPreferredSize(new java.awt.Dimension(20, 0));
+        jSeparator5.setRequestFocusEnabled(false);
+        toolBar.add(jSeparator5);
+
+        buttonRestart.setIcon(new javax.swing.ImageIcon(getClass().getResource("/ch/psi/pshell/ui/Reset.png")));
+        buttonRestart.setText(bundle.getString("View.buttonRestart.text"));
+        buttonRestart.setToolTipText(bundle.getString("View.buttonRestart.toolTipText"));
+        buttonRestart.setName("buttonRestart");
+        buttonRestart.addActionListener((java.awt.event.ActionEvent evt) -> {
+            try {
+                getContext().startRestart();
+            } catch (Exception ex) {
+                showException(ex);
+            }            
+        });
+        toolBar.add(buttonRestart);
+
+        jSeparator6.setMaximumSize(new java.awt.Dimension(20, 32767));
+        jSeparator6.setPreferredSize(new java.awt.Dimension(20, 0));
+        toolBar.add(jSeparator6);
+
+        buttonRun.setIcon(new javax.swing.ImageIcon(getClass().getResource("/ch/psi/pshell/ui/Play.png")));
+        buttonRun.setText(bundle.getString("View.buttonRun.text"));
+        buttonRun.setToolTipText(bundle.getString("View.buttonRun.toolTipText"));
+        buttonRun.setName("buttonRun");
+        buttonRun.addActionListener((java.awt.event.ActionEvent evt) -> {
+            try {
+                p.execute();
+            } catch (Exception ex) {
+                showException(ex);
+            }            
+        });
+        toolBar.add(buttonRun);
+
+        /*
+        buttonDebug.setIcon(new javax.swing.ImageIcon(getClass().getResource("/ch/psi/pshell/ui/Step.png")));
+        buttonDebug.setText(bundle.getString("View.buttonDebug.text"));
+        buttonDebug.setToolTipText(bundle.getString("View.buttonDebug.toolTipText"));
+        buttonDebug.setName("buttonDebug");
+        buttonDebug.addActionListener((java.awt.event.ActionEvent evt) -> {
+            try {
+                p.step();
+            } catch (Exception ex) {
+                showException(ex);
+            }              
+        });
+        toolBar.add(buttonDebug);
+        */
+
+        buttonStep.setIcon(new javax.swing.ImageIcon(getClass().getResource("/ch/psi/pshell/ui/StepInto.png")));
+        buttonStep.setText(bundle.getString("View.buttonStep.text"));
+        buttonStep.setToolTipText(bundle.getString("View.buttonStep.toolTipText"));
+        buttonStep.setName("buttonStep");
+        buttonStep.addActionListener((java.awt.event.ActionEvent evt) -> {
+            try {
+                p.step();
+            } catch (Exception ex) {
+                showException(ex);
+            }              
+        });
+        buttonStep.setEnabled(p.canStep());
+        toolBar.add(buttonStep);
+        
+        buttonPause.setIcon(new javax.swing.ImageIcon(getClass().getResource("/ch/psi/pshell/ui/Pause.png")));
+        buttonPause.setText(bundle.getString("View.buttonPause.text"));
+        buttonPause.setToolTipText(bundle.getString("View.buttonPause.toolTipText"));
+        buttonPause.setName("buttonPause");
+        buttonPause.addActionListener((java.awt.event.ActionEvent evt) -> {
+            try {
+                p.pause();
+            } catch (Exception ex) {
+                showException(ex);
+            }                         
+        });
+        buttonPause.setEnabled(p.canPause());
+        toolBar.add(buttonPause);
+
+        buttonAbort.setIcon(new javax.swing.ImageIcon(getClass().getResource("/ch/psi/pshell/ui/Stop.png")));
+        buttonAbort.setText(bundle.getString("View.buttonAbort.text"));
+        buttonAbort.setToolTipText(bundle.getString("View.buttonAbort.toolTipText"));
+        buttonAbort.setName("buttonAbort");
+        buttonAbort.addActionListener((java.awt.event.ActionEvent evt) -> {
+            try {
+               getContext().abort();
+            } catch (Exception ex) {
+                showException(ex);
+            }              
+        });
+        toolBar.add(buttonAbort);
+
+        separatorInfo.setMaximumSize(new java.awt.Dimension(20, 32767));
+        separatorInfo.setName("separatorInfo");
+        separatorInfo.setPreferredSize(new java.awt.Dimension(20, 0));
+        toolBar.add(separatorInfo);
+
+        buttonAbout.setIcon(new javax.swing.ImageIcon(getClass().getResource("/ch/psi/pshell/ui/Info.png")));
+        buttonAbout.setText(bundle.getString("View.buttonAbout.text"));
+        buttonAbout.setToolTipText(bundle.getString("View.buttonAbout.toolTipText"));
+        buttonAbout.setName("buttonAbout");
+        buttonAbout.addActionListener((java.awt.event.ActionEvent evt) -> {
+            try {
+                AboutDialog aboutDialog = new AboutDialog(this.getTopLevel(), true);
+                aboutDialog.setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
+                showWindow(aboutDialog);
+            } catch (Exception ex) {
+                showException(ex);
+            }              
+        });
+        toolBar.add(buttonAbout);        
+                
+        for (Component b : SwingUtils.getComponentsByType(toolBar, JButton.class)) {
+            JButton button = ((JButton) b);
+            button.setFocusable(false);
+            button.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+            button.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);            
+            if (MainFrame.isDark()) {
+                button.setIcon(new ImageIcon(App.getResourceUrl("dark/" + new File(((JButton) b).getIcon().toString()).getName())));        
+            }            
+        }            
+        
+        Context.getInstance().addListener(new ContextAdapter() {
+            @Override
+            public void onContextStateChanged(State state, State former) {
+                boolean ready = (state == State.Ready);
+                boolean busy = (state == State.Busy);
+                boolean paused = (state == State.Paused);
+                Context context = Context.getInstance();
+
+                buttonRun.setEnabled(ready);
+                buttonDebug.setEnabled((ready) || (paused));
+                buttonPause.setEnabled(p.canPause() && context.canPause());
+                buttonAbort.setEnabled(busy || paused || (state == State.Initializing));                
+                buttonRestart.setEnabled((state != State.Initializing) && !App.isOffline());
+            }
+        });
+        
+        return toolBar;
+    }
 }

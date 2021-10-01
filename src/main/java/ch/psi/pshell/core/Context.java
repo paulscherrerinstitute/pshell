@@ -3522,6 +3522,17 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
     public void restart() throws ContextStateException {
         restart(getPublicCommandSource());
     }
+    
+    public void startRestart() throws ContextStateException {
+        new Thread(() -> {
+            try {
+                restart();
+            } catch (Exception ex) {
+                Logger.getLogger(Context.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }, "Restart task").start();
+        
+    }    
 
     public Object evalLine(String line) throws ScriptException, IOException, ContextStateException, InterruptedException {
         return evalLine(getPublicCommandSource(), line);
