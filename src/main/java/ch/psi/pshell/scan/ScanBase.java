@@ -134,11 +134,26 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
     
     public void setMeta(Map meta){
         this.meta = meta;
+        if (isStarted()){
+            try{
+                dataLayout.onMeta(this, meta);
+            } catch(Exception ex){
+                logger.log(Level.WARNING, null, ex);
+            }
+        }
     }
     
     public Map getMeta(){
         return meta;
     }
+
+    public void addMeta(Map<String, Object> meta) throws IOException{
+        if (dataLayout!=null) {
+            dataLayout.onMeta(this, meta);
+        }        
+        this.meta.putAll(meta);
+    }
+
     
     @Override
     public Device[] getMonitors(){        
@@ -1241,6 +1256,16 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
     public void setRecordIndexOffset(int value) {
         recordIndexOffset = Math.max(value, 0);
         updateTag(); //This is called to split the scan data, must update scan tag
+    }
+
+    @Override
+    public boolean isStarted() {
+        return (startTimestamp != 0);
+    }
+    
+    @Override
+    public boolean isRunning() {
+        return isStarted() && !isCompleted();
     }
 
     @Override

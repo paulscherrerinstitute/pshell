@@ -88,6 +88,10 @@ public interface Scan {
     public int getRecordIndexOffset();
 
     public void setRecordIndexOffset(int value);
+    
+    public boolean isStarted();
+
+    public boolean isRunning();    
 
     public boolean isCompleted();
 

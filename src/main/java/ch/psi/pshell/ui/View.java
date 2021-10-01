@@ -1596,6 +1596,7 @@ public class View extends MainFrame {
                 fileHistory.put(file);
             } else {
                 openComponent("Unknown", processor.getPanel());
+                processor.clear();
             }
         }
         return processor;

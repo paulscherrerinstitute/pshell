@@ -122,8 +122,11 @@ public interface Layout {
     void onRecord(Scan scan, ScanRecord record) throws IOException;
 
     default void onInitMeta(Scan scan) throws IOException{
+        onMeta(scan, scan.getMeta());
+    }    
+
+    default void onMeta(Scan scan, Map<String, Object> meta) throws IOException{
         String path = getMetaPathName(scan);
-        Map<String, Object> meta = scan.getMeta();
         for (String key : meta.keySet()){
             try{
                 Object value = meta.get(key);
