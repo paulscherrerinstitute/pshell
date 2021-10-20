@@ -473,15 +473,7 @@ public final class QueueProcessor extends PanelProcessor {
         if (processingTask != null) {
             processingTask.skip();
         }
-    }
-
-    @Override
-    public Object waitComplete(int timeout) throws Exception {
-        while (App.getInstance().getRunningTask() != null) {
-            Context.getInstance().waitStateNotProcessing(timeout);
-        }
-        return null;
-    }
+    }    
     
     
     private void checkPopup(MouseEvent e) {

@@ -264,7 +264,7 @@ public class App extends ObservableBase<AppListener> {
         if (isGenericMode()) {
             System.setProperty(Context.PROPERTY_GENERIC_MODE, "true");
         }
-        
+
         if (isDisabled()) {
             System.setProperty(Context.PROPERTY_DISABLED, "true");
         }
@@ -286,37 +286,37 @@ public class App extends ObservableBase<AppListener> {
         }
 
         Boolean enableExtract = isEnableExtract();
-        if (enableExtract!=null) {
+        if (enableExtract != null) {
             System.setProperty(Context.PROPERTY_ENABLE_EXTRACT, String.valueOf(enableExtract));
         }
 
         Boolean enableVersioning = isEnableVersioning();
-        if (enableVersioning!=null) {
+        if (enableVersioning != null) {
             System.setProperty(Context.PROPERTY_ENABLE_VERSIONING, String.valueOf(enableVersioning));
         }
-        
+
         List<File> packages = getPackageArgs();
-        if (packages.size()>0){
+        if (packages.size() > 0) {
             System.setProperty(Context.PROPERTY_PACKAGES, String.join(";", Convert.toStringArray(packages)));
         }
-        
-        if (isVolatile()){
+
+        if (isVolatile()) {
             System.setProperty(DevicePool.PROPERTY_EPICS_DEFAULT_CONFIG, defaultJcaeProperties);
-        }        
-        if (isArgumentDefined("jcae")) {            
+        }
+        if (isArgumentDefined("jcae")) {
             String jcae = getArgumentValue("jcae");
             String fileName = Setup.expand(jcae);
-            if (new File (fileName).isFile()){
+            if (new File(fileName).isFile()) {
                 System.setProperty(DevicePool.PROPERTY_EPICS_CONFIG_FILE, fileName);
-            } else if (isVolatile() && jcae.contains("=")){
+            } else if (isVolatile() && jcae.contains("=")) {
                 System.setProperty(DevicePool.PROPERTY_EPICS_DEFAULT_CONFIG, jcae.replaceAll("\\|", "\n"));
-            }           
-        }                         
+            }
+        }
         //Raise exception if wrong formatting;
         getTaskArgs();
 
-        System.setProperty(Context.PROPERTY_FILE_LOCK, isFileLock() ? "true" : "false");        
-        System.setProperty(Context.PROPERTY_SESSIONS_ENABLED, isHandlingSessions() ? "true" : "false" );
+        System.setProperty(Context.PROPERTY_FILE_LOCK, isFileLock() ? "true" : "false");
+        System.setProperty(Context.PROPERTY_SESSIONS_ENABLED, isHandlingSessions() ? "true" : "false");
 
         if (isVolatile()) {
             try {
@@ -330,11 +330,10 @@ public class App extends ObservableBase<AppListener> {
         }
     }
 
-    final static String defaultJcaeProperties=  "ch.psi.jcae.ContextFactory.autoAddressList=true\n" +
-                                                "ch.psi.jcae.ContextFactory.useShellVariables=true\n" +
-                                                "ch.psi.jcae.ContextFactory.maxArrayBytes=20000000\n" +
-                                                "ch.psi.jcae.ContextFactory.maxSendArrayBytes=100000";   
-    
+    final static String defaultJcaeProperties = "ch.psi.jcae.ContextFactory.autoAddressList=true\n"
+            + "ch.psi.jcae.ContextFactory.useShellVariables=true\n"
+            + "ch.psi.jcae.ContextFactory.maxArrayBytes=20000000\n"
+            + "ch.psi.jcae.ContextFactory.maxSendArrayBytes=100000";
 
     public State getState() {
         return context.getState();
@@ -383,7 +382,7 @@ public class App extends ObservableBase<AppListener> {
         sb.append("\n\t-q\tQuiet mode");
         sb.append("\n\t-a\tAuto close after executing file");
         sb.append("\n\t-y\tHeadless mode");
-        sb.append("\n\t-z\tHome folder is volatile (created in tmp folder)");        
+        sb.append("\n\t-z\tHome folder is volatile (created in tmp folder)");
         sb.append("\n\t-home=<path>\tSet the home folder (default is ./home)");
         sb.append("\n\t-outp=<path>\tSet the output folder (default is {home})");
         sb.append("\n\t-data=<path>\tSet the data folder (default is {home}/data)");
@@ -460,10 +459,10 @@ public class App extends ObservableBase<AppListener> {
     }
 
     static public boolean isHandlingSessions() {
-        boolean disableSessions =getBoolArgumentValue("j")  || isPlotOnly() || isHelpOnly() || isDataPanel() || isStripChart() || isVolatile() || isDetached();
+        boolean disableSessions = getBoolArgumentValue("j") || isPlotOnly() || isHelpOnly() || isDataPanel() || isStripChart() || isVolatile() || isDetached();
         return !disableSessions;
-    }    
-   
+    }
+
     static public boolean isFileLock() {
         return !getBoolArgumentValue("i");
     }
@@ -492,7 +491,7 @@ public class App extends ObservableBase<AppListener> {
         return isGui() && getBoolArgumentValue("dual");
     }
 
-    static public boolean isAttach() {       
+    static public boolean isAttach() {
         return isGui() && getBoolArgumentValue("attach");
     }
 
@@ -515,10 +514,10 @@ public class App extends ObservableBase<AppListener> {
     static public boolean isDetachedAppendStatusBar() {
         return isDetached() && getBoolArgumentValue("sbar");
     }
-    
+
     static public boolean isDetachedAppendToolBar() {
         return isDetached() && getBoolArgumentValue("tbar");
-    }    
+    }
 
     static public boolean isFullScreen() {
         return isGui() && getBoolArgumentValue("full");
@@ -587,32 +586,32 @@ public class App extends ObservableBase<AppListener> {
         return getBoolArgumentValue("dspr");
     }
 
-    static public Boolean isEnableExtract() {   
-        if (isDisabled()){
+    static public Boolean isEnableExtract() {
+        if (isDisabled()) {
             return false;
         }
-        if (hasArgument("extr")){
+        if (hasArgument("extr")) {
             return getBoolArgumentValue("extr");
         }
-        if (isVolatile()){
+        if (isVolatile()) {
             return true;
-        }        
+        }
         return null; //Default
     }
 
-    static public Boolean isEnableVersioning(){
-        if (hasArgument("vers")){
+    static public Boolean isEnableVersioning() {
+        if (hasArgument("vers")) {
             return getBoolArgumentValue("vers");
         }
         return null; //Default
     }
-   
+
     static public Dimension getSize() {
         try {
             String opt = getArgumentValue("size");
-            String[]tokens= opt.toLowerCase().split("x");
+            String[] tokens = opt.toLowerCase().split("x");
             return new Dimension(Integer.valueOf(tokens[0]), Integer.valueOf(tokens[1]));
-        } catch (Exception ex){
+        } catch (Exception ex) {
         }
         return null;
     }
@@ -652,16 +651,16 @@ public class App extends ObservableBase<AppListener> {
         }
         return ret;
     }
-    
+
     static public List<File> getPackageArgs() {
         ArrayList<File> ret = new ArrayList<File>();
         for (String path : getArgumentValues("m")) {
             try {
                 if (Context.getInstance() != null) {
-                    path = Context.getInstance().getSetup().expandPath(path);                    
+                    path = Context.getInstance().getSetup().expandPath(path);
                 }
                 File file = new File(path);
-                if (file.exists()  && file.isDirectory()){
+                if (file.exists() && file.isDirectory()) {
                     ret.add(file);
                 }
             } catch (Exception ex) {
@@ -670,16 +669,15 @@ public class App extends ObservableBase<AppListener> {
         }
         return ret;
     }
-    
+
     static public List<ch.psi.pshell.core.Task> getTaskArgs() {
         List<ch.psi.pshell.core.Task> ret = new ArrayList<>();
         //Check formatting
-        for (String str : getArgumentValues("t")){
+        for (String str : getArgumentValues("t")) {
             ret.add(ch.psi.pshell.core.Task.fromString(str));
         }
         return ret;
     }
-    
 
     static public String getPlotServer() {
         return App.getArgumentValue("psrv");
@@ -759,7 +757,7 @@ public class App extends ObservableBase<AppListener> {
     }
 
     static public boolean isForcedHeadless() {
-        return getBoolArgumentValue("y") || isHelpMessage() ;
+        return getBoolArgumentValue("y") || isHelpMessage();
     }
 
     //Resources
@@ -774,15 +772,15 @@ public class App extends ObservableBase<AppListener> {
     static public URL getResourceUrl(String name) {
         return App.class.getResource("/ch/psi/pshell/ui/" + name);
     }
-    
+
     static public Image getResourceImage(String name) {
         return Toolkit.getDefaultToolkit().getImage(getResourceUrl(name));
     }
-    
+
     public static ImageIcon searchIcon(String name) {
-        return MainFrame.searchIcon(name, App.class, "/ch/psi/pshell/ui/") ;     
+        return MainFrame.searchIcon(name, App.class, "/ch/psi/pshell/ui/");
     }
-    
+
     static public String getApplicationName() {
         return getResourceBundleValue("Application.name");
     }
@@ -885,8 +883,8 @@ public class App extends ObservableBase<AppListener> {
             @Override
             public void onContextStateChanged(State state, State former) {
                 try {
-                    if ((former == State.Initializing) && (state == State.Ready)){
-                        for (ch.psi.pshell.core.Task task: getTaskArgs()){
+                    if ((former == State.Initializing) && (state == State.Ready)) {
+                        for (ch.psi.pshell.core.Task task : getTaskArgs()) {
                             context.startTask(task);
                         }
                     }
@@ -899,7 +897,11 @@ public class App extends ObservableBase<AppListener> {
                     if (pcs != null) {
                         pcs.firePropertyChange("appstate", former, state);
                     }
-                    checkNext(state);
+                    if (state == State.Ready) {
+                        SwingUtilities.invokeLater(() -> {
+                            checkNext();
+                        });
+                    }
                 } catch (Exception ex) {
                     logger.log(Level.WARNING, null, ex);
                 }
@@ -1051,7 +1053,7 @@ public class App extends ObservableBase<AppListener> {
                             }
                         } else {
                             Dimension size = getSize();
-                            if (size!=null){
+                            if (size != null) {
                                 view.setSize(size);
                             }
                             SwingUtils.centerComponent(null, view);
@@ -1301,13 +1303,13 @@ public class App extends ObservableBase<AppListener> {
         if (getConsole() != null) {
             getConsole().setPrintScan(value);
         }
-        if (getShell()!=null){
+        if (getShell() != null) {
             getShell().setPrintScan(value);
         }
     }
 
-    public static Shell getShell(){
-        if (getInstance()!=null) {
+    public static Shell getShell() {
+        if (getInstance() != null) {
             if (getInstance().shell != null) {
                 return getInstance().shell;
             }
@@ -1318,8 +1320,8 @@ public class App extends ObservableBase<AppListener> {
         return null;
     }
 
-    public static  ch.psi.pshell.core.Console getConsole(){
-        if (getInstance()!=null) {
+    public static ch.psi.pshell.core.Console getConsole() {
+        if (getInstance() != null) {
             return (getInstance().console);
         }
         return null;
@@ -1433,11 +1435,11 @@ public class App extends ObservableBase<AppListener> {
             }
             return sb.toString();
         }
-        
+
         public String toString() {
-            if (file!=null){
+            if (file != null) {
                 String args = getArgsStr();
-                return file.toString() + ( args.isEmpty() ? " " :  "(" + args + ")") ;
+                return file.toString() + (args.isEmpty() ? " " : "(" + args + ")");
             } else {
                 return statement;
             }
@@ -1452,7 +1454,7 @@ public class App extends ObservableBase<AppListener> {
 
     public void evalFileNext(File file, Map<String, Object> args) throws State.StateException {
         Context.getInstance().getState().assertProcessing();
-        ExecutionStage stage = new ExecutionStage(file, args);        
+        ExecutionStage stage = new ExecutionStage(file, args);
         synchronized (executionQueue) {
             logger.info("Next stage: " + stage.toString());
             executionQueue.add(stage);
@@ -1463,7 +1465,7 @@ public class App extends ObservableBase<AppListener> {
 
     public void evalStatementNext(String statement) throws State.StateException {
         Context.getInstance().getState().assertProcessing();
-        ExecutionStage stage = new ExecutionStage(statement);        
+        ExecutionStage stage = new ExecutionStage(statement);
         synchronized (executionQueue) {
             logger.info("Next stage: " + stage.toString());
             executionQueue.add(stage);
@@ -1478,8 +1480,8 @@ public class App extends ObservableBase<AppListener> {
         }
     }
 
-    public void cancelExecutionStage(int index) {        
-        synchronized (executionQueue) {            
+    public void cancelExecutionStage(int index) {
+        synchronized (executionQueue) {
             if ((index >= 0) & (index < executionQueue.size())) {
                 logger.info("Cancel execution stage index: " + index + " - " + executionQueue.get(index).toString());
                 executionQueue.remove(index);
@@ -1488,7 +1490,7 @@ public class App extends ObservableBase<AppListener> {
         view.onExecQueueChanged(getExecutionQueue());
     }
 
-    public void cancelExecutionQueue() {        
+    public void cancelExecutionQueue() {
         synchronized (executionQueue) {
             logger.info("Cancel execution queue");
             executionQueue.clear();
@@ -1511,20 +1513,27 @@ public class App extends ObservableBase<AppListener> {
         }
     }
 
-    void checkNext(State state) {
-        if (state == State.Ready) {
-            ExecutionStage nextStage = popNextStage();
-            if (nextStage != null) {
-                //if (getContext().isSuccess()){                            
-                SwingUtilities.invokeLater(() -> {
+    volatile Task.ExecutorTask currentStage;
+    
+    void checkNext() {
+        if (hasNextStage()) {
+            State state = context.getState();
+            if ((state == State.Ready) && (currentTask==null) && (currentStage==null)) {
+                ExecutionStage nextStage =  popNextStage();
+                if (nextStage != null) {
                     try {
-                        view.onExecQueueChanged(getExecutionQueue());
-                        startTask(new Task.ExecutorTask(nextStage));
+                        if (view != null) {
+                            view.onExecQueueChanged(getExecutionQueue());
+                        }
+                        currentStage = new Task.ExecutorTask(nextStage);
+                        startTask(currentStage);
                     } catch (Exception ex) {
+                        currentStage=null;
                         logger.log(Level.SEVERE, null, ex);
                     };
-                });
-                //}                
+                }
+            } else {
+                SwingUtils.invokeDelayed(()->{checkNext();},1000);
             }
         }
     }
@@ -1614,7 +1623,7 @@ public class App extends ObservableBase<AppListener> {
         }
     }
 
-    Task currentTask;
+    volatile Task currentTask;
 
     public void startTask(Task task) throws State.StateException {
         task.addPropertyChangeListener(new PropertyChangeListener() {
@@ -1627,11 +1636,20 @@ public class App extends ObservableBase<AppListener> {
                         case STARTED:
                             break;
                         case DONE:
-                            if (view != null) {
-                                view.onTaskFinished(task);
+                            try{
+                                if (view != null) {
+                                    view.onTaskFinished(task);
+                                }
+                            } catch (Exception ex) {
+                                logger.log(Level.WARNING, null, ex);
                             }
                             task.removePropertyChangeListener(this);
-                            currentTask = null;
+                            if (task==currentStage){
+                                currentStage=null;
+                            }                            
+                            if (task==currentTask){
+                                currentTask = (currentStage!=null) ? currentStage : null;
+                            }
                             break;
                     }
                 }
@@ -1694,7 +1712,7 @@ public class App extends ObservableBase<AppListener> {
                 arg = arg.substring(1);
             }
             int indexEq = arg.indexOf("=");
-            if (indexEq>0){
+            if (indexEq > 0) {
                 if (arg.substring(0, indexEq).trim().equals(name)) {
                     argumentValues.add(arg.substring(indexEq + 1, arg.length()).trim());
                 }
@@ -1713,25 +1731,24 @@ public class App extends ObservableBase<AppListener> {
                     return true;
                 }
                 int indexEq = arg.indexOf("=");
-                if (indexEq>0){
+                if (indexEq > 0) {
                     if (arg.substring(0, indexEq).trim().equals(name)) {
                         return true;
-                    }                    
+                    }
                 }
             }
         }
         return false;
     }
-    
+
     //accepts -option as -option=true
-    static public boolean getBoolArgumentValue(String arg){
-        if (hasArgument(arg)){
+    static public boolean getBoolArgumentValue(String arg) {
+        if (hasArgument(arg)) {
             String val = Str.toString(getArgumentValue(arg));
             return !(val.equalsIgnoreCase("false")) && !(val.equalsIgnoreCase("0"));
         }
         return false;
-    } 
-    
+    }
 
     boolean contextPersisted = true;
 
@@ -1848,7 +1865,7 @@ public class App extends ObservableBase<AppListener> {
             UIManager.put("Tree.openIcon", new ImageIcon(getResourceImage("FolderOpen.png")));
             UIManager.put("Tree.closedIcon", new ImageIcon(getResourceImage("FolderClosed.png")));
             UIManager.put("Tree.leafIcon", new ImageIcon(getResourceImage("File.png")));
-        }        
+        }
     }
 
     static void appendLibraryPath() {
