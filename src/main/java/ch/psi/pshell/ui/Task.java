@@ -8,6 +8,8 @@ import ch.psi.pshell.core.CommandSource;
 import ch.psi.pshell.core.JsonSerializer;
 import ch.psi.pshell.swing.Executor;
 import ch.psi.pshell.ui.Preferences.ScriptPopupDialog;
+import ch.psi.utils.Chrono;
+import ch.psi.utils.Condition;
 import ch.psi.utils.IO;
 import ch.psi.utils.State;
 import ch.psi.utils.Str;
@@ -515,6 +517,7 @@ public abstract class Task extends SwingWorker<Object, Void> {
         QueueTask[] queue;
         boolean skipped;
         boolean aborted;
+        boolean paused;
 
         public QueueExecution(QueueTask[] queue, QueueExecutionListener listener) {
             this.queue = queue;
@@ -529,13 +532,26 @@ public abstract class Task extends SwingWorker<Object, Void> {
                     currentTask = task;
                     currentIndex++;
                     boolean retried = false;
+                    
                     while (!isDone() && !aborted) {
                         try {
                             skipped = false;
+                                                        
                             if (listener != null) {
                                 listener.onStartTask(task, currentIndex);
                             }
                             if (task.enabled) {
+                                Chrono chrono = new Chrono();
+                                chrono.waitCondition(new Condition() {
+                                    @Override
+                                    public boolean evaluate() throws InterruptedException {
+                                        return ((paused==false) || aborted);
+                                    }
+                                }, -1);     
+                                if (aborted){
+                                    break;
+                                }
+                                
                                 Context.getInstance().waitState(State.Ready, 5000); //Tries to keep up with some concurrent execution.
 
                                 Object ret = (task.file != null)
@@ -602,6 +618,12 @@ public abstract class Task extends SwingWorker<Object, Void> {
                             }
                         }
                     }
+                    if (aborted || Context.getInstance().isAborted() || skipped) {
+                        if (listener != null) {
+                            listener.onAborted(task, currentIndex, true, false);
+                        }
+                        return null;
+                    }
                 }
                 return "Success running queue";
             } finally {
@@ -629,6 +651,14 @@ public abstract class Task extends SwingWorker<Object, Void> {
                 Logger.getLogger(QueueExecution.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
+        
+        public void pause() {
+            paused = true;
+        }        
+
+        public void resume() {
+            paused = false;
+        }        
 
         public void abort() {
             aborted = true;
