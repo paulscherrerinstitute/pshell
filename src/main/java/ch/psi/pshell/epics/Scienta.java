@@ -5,12 +5,11 @@ import ch.psi.pshell.device.ArrayCalibration;
 import ch.psi.pshell.device.CameraImageDescriptor;
 import ch.psi.pshell.device.MatrixCalibration;
 import ch.psi.pshell.device.Device;
-import ch.psi.pshell.device.DeviceAdapter;
 import ch.psi.pshell.device.Readable.ReadableCalibratedArray;
+import ch.psi.utils.Arr;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Level;
 
 /**
  * Implementation of Scienta spectrometer analyser.
@@ -19,7 +18,7 @@ public class Scienta extends AreaDetector {
 
     final ChannelInteger slices, frames;
     final ChannelDouble lowEnergy, centerEnergy, highEnergy, stepSize, stepTime, energyWidth;
-    final ChannelDoubleArray spectrum, image, extio;
+    final ChannelDoubleArray spectrum, spectrumX, image, extio;
     final ChannelDouble currentChannel, totalPoints;
     final ChannelDouble channelBegin, channelEnd, sliceBegin, sliceEnd;
     final ChannelString lensMode, acquisitionMode, passEnergy;
@@ -59,33 +58,11 @@ public class Scienta extends AreaDetector {
         numChannels.setAccessType(AccessType.Read);
         numSlices = new ChannelInteger(name + " num slices", channelCtrl + ":SLICES_RBV", false);
         numSlices.setAccessType(AccessType.Read);
-        numChannels.addListener(new DeviceAdapter() {
-            @Override
-            public void onValueChanged(Device device, Object value, Object former) {
-                try {
-                    if (value != null) {
-                        spectrum.setSize((Integer) value);
-                    }
-                } catch (IOException ex) {
-                    getLogger().log(Level.WARNING, null, ex);
-                }
-            }
-        });
         acquisitionTime = new ChannelDouble(name + " acquire time", channelCtrl + ":TOTAL_ACQ_TIME_RBV", 3, false);
         acquisitionTime.setAccessType(AccessType.Read);
 
-
-        /*
-         spectrum = new ChannelDoubleArray(name + " spectrum", channelCtrl + ":INT_SPECTRUM", 8, 200, false) {
-         @Override
-         protected double[] doRead() throws IOException, InterruptedException {
-         numChannels.getValue();
-         return super.doRead();
-         }
-         };
-         spectrum.setAccessType(AccessType.Read);
-         */
         spectrum = new ScientaSpectrum();
+        spectrumX = new ChannelDoubleArray(Scienta.this.getName() + " spectrum x", channelCtrl + ":CHANNEL_SCALE_RBV");
         image = new ChannelDoubleArray(name + " image", channelCtrl + ":IMAGE", 8, EpicsRegister.SIZE_MAX, false);
         image.setAccessType(AccessType.Read);
         extio = new ChannelDoubleArray(name + " extio", channelCtrl + ":EXTIO", 8, EpicsRegister.SIZE_MAX, false);
@@ -98,7 +75,7 @@ public class Scienta extends AreaDetector {
 
         addChildren(new Device[]{slices, frames,
             lowEnergy, centerEnergy, highEnergy, stepSize, stepTime, energyWidth,
-            spectrum, image, extio,
+            spectrum, spectrumX, image, extio,
             currentChannel, totalPoints,
             channelBegin, channelEnd, sliceBegin, sliceEnd,
             passEnergy, lensMode, acquisitionMode,
@@ -117,13 +94,13 @@ public class Scienta extends AreaDetector {
     public class ScientaSpectrum extends ChannelDoubleArray implements ReadableCalibratedArray<double[]> {
 
         ScientaSpectrum() {
-            super(Scienta.this.getName() + " spectrum", channelCtrl + ":INT_SPECTRUM", 8, 200, false);
+            super(Scienta.this.getName() + " spectrum", getChannelCtrl() + ":INT_SPECTRUM", 8, 200, false);
             setAccessType(AccessType.Read);
         }
 
         @Override
         protected double[] doRead() throws IOException, InterruptedException {
-            numChannels.getValue();
+            setSizeToValidElements();
             return super.doRead();
         }
 
@@ -135,7 +112,8 @@ public class Scienta extends AreaDetector {
                 List<Double> channelRange = getChannelRange();
                 Double cb = channelRange.get(0);
                 Double ce = channelRange.get(1);
-                scale = (ce - cb) / Math.max(numChannels.getValue() - 1, 1);
+                setSizeToValidElements();
+                scale = (ce - cb) / Math.max(getSize() - 1, 1);
                 offset = cb;
             } catch (Exception ex) {
             }
@@ -153,6 +131,7 @@ public class Scienta extends AreaDetector {
         setCache(numChannels, 100);
         setCache(numSlices, 10);
         setCache(spectrum, new double[100]);
+        setCache(spectrumX, Arr.indexesDouble(spectrum.size));
         setCache(currentChannel, 0.0);
         setCache(totalPoints, 100.0);
         setCache(passEnergy, String.valueOf(PASS_ENERGY_VALUES[0]));
@@ -166,8 +145,15 @@ public class Scienta extends AreaDetector {
         //setSimulatedValue("ACQ_MODE", AcquisitionMode.Fixed.toString());
         //setSimulatedValue("LENS_MODE", LensMode.Angular45.toString());
         //setSimulatedValue("PASS_ENERGY", String.valueOf(PASS_ENERGY_VALUES[0]));
-
     }
+    
+    @Override
+    protected void doInitialize() throws IOException, InterruptedException {
+        super.doInitialize();
+        //spectrum.setSize(ChannelDoubleArray.KEEP_TO_VALID);
+        //spectrumX.setSize(ChannelDoubleArray.KEEP_TO_VALID);
+    }
+    
 
     @Override
     protected void doUpdate() throws IOException, InterruptedException {
@@ -186,10 +172,10 @@ public class Scienta extends AreaDetector {
         lensMode.update();
         acquisitionMode.update();
         acquisitionTime.update();
-        //channelBegin.update();
-        //channelEnd.update();
-        ///sliceBegin.update();
-        //sliceEnd.update();
+        channelBegin.update();
+        channelEnd.update();
+        sliceBegin.update();
+        sliceEnd.update();
     }
 
     @Override
@@ -209,32 +195,36 @@ public class Scienta extends AreaDetector {
         lensMode.setMonitored(value);
         acquisitionMode.setMonitored(value);
         acquisitionTime.setMonitored(value);
-        //channelBegin.setMonitored(value);
-        //channelEnd.setMonitored(value);
-        //sliceBegin.setMonitored(value);
-        //sliceEnd.setMonitored(value);
+        channelBegin.setMonitored(value);
+        channelEnd.setMonitored(value);
+        sliceBegin.setMonitored(value);
+        sliceEnd.setMonitored(value);
     }
 
     @Override
     protected CameraImageDescriptor doReadImageDescriptor() throws IOException, InterruptedException {
         CameraImageDescriptor ret = super.doReadImageDescriptor();
-        List<Double> channelRange = getChannelRange();
-        List<Double> sliceRange = getSliceRange();
+        try{
+            List<Double> channelRange = getChannelRange();        
+            Double cb = channelRange.get(0);
+            Double ce = channelRange.get(1);
 
-        Double cb = channelRange.get(0);
-        Double ce = channelRange.get(1);
-        Double sb = sliceRange.get(0);
-        Double se = sliceRange.get(1);
+            List<Double> sliceRange = getSliceRange();
+            Double sb = sliceRange.get(0);
+            Double se = sliceRange.get(1);
 
-        if ((cb == null) || (ce == null) || (sb == null) || (se == null) || (ret.width == 0) || (ret.height == 0)) {
+            if ((cb == null) || (ce == null) || (sb == null) || (se == null) || (ret.width == 0) || (ret.height == 0)) {
+                ret.calibration = null;
+            } else {
+                double scaleX = (ce - cb) / Math.max(ret.width - 1, 1);
+                double offsetX = cb;
+                double scaleY = (se - sb) / Math.max(ret.height - 1, 1);
+                double offsetY = sb;
+
+                ret.calibration = new MatrixCalibration(scaleX, scaleY, offsetX, offsetY);
+            }
+        } catch (Exception  ex){
             ret.calibration = null;
-        } else {
-            double scaleX = (ce - cb) / Math.max(ret.width - 1, 1);
-            double offsetX = cb;
-            double scaleY = (se - sb) / Math.max(ret.height - 1, 1);
-            double offsetY = sb;
-
-            ret.calibration = new MatrixCalibration(scaleX, scaleY, offsetX, offsetY);
         }
         return ret;
     }
@@ -351,20 +341,8 @@ public class Scienta extends AreaDetector {
     }
 
     public double[] getSpectrumX() throws IOException, InterruptedException {
-        List<Double> range = getChannelRange();
-        Double begin = range.get(0);
-        Double end = range.get(1);
-        double[] spectrum = getSpectrum().take();
-        if ((begin == null) || (end == null) || (spectrum == null)) {
-            return null;
-        }
-        int spectrumSize = spectrum.length;
-        double step = (end - begin) / (spectrumSize - 1);
-        double[] x = new double[spectrumSize];
-        for (int i = 0; i < spectrumSize; i++) {
-            x[i] = begin + step * i;
-        }
-        return x;
+        spectrumX.setSizeToValidElements();
+        return spectrumX.read();
     }
 
     //Direct register access
@@ -404,6 +382,10 @@ public class Scienta extends AreaDetector {
         return spectrum;
     }
 
+    public ChannelDoubleArray getSpectrumScale() {
+        return spectrumX;
+    }
+
     public ChannelDoubleArray getImage() {
         return image;
     }
@@ -434,52 +416,15 @@ public class Scienta extends AreaDetector {
 
     public List<Double> getChannelRange() throws IOException, InterruptedException {
         ArrayList<Double> ret = new ArrayList<>();
-        //ret.add(getChannelBegin().getValue());
-        //ret.add(getChannelEnd().getValue());
-        switch (getAcquisitionMode()) {
-            case Swept:
-                ret.add(lowEnergy.getValue());
-                ret.add(highEnergy.getValue());
-                break;
-            case Fixed:
-            default:
-                double eCenter = centerEnergy.getValue();
-                int ePass = getPassEnergy();
-                double xe = 0.04464;
-                double xn = 0.04464;
-                ret.add(eCenter - xe * ePass);
-                ret.add(eCenter + xn * ePass);
-                break;
-
-        }
+        ret.add(getChannelBegin().getValue());
+        ret.add(getChannelEnd().getValue());
         return ret;
     }
 
     public List<Double> getSliceRange() throws IOException, InterruptedException {
         ArrayList<Double> ret = new ArrayList<>();
-        //ret.add(sliceBegin.getValue());
-        //ret.add(sliceEnd.getValue()); 
-        try{
-            switch (getLensMode()) {
-                case Angular45:
-                    ret.add(-28.148);
-                    ret.add(27.649);
-                    break;
-                case Angular60:
-                    ret.add(-34.736);
-                    ret.add(34.119);
-                    break;
-                case Transmission:
-                default:
-                    ret.add(-2.332);
-                    ret.add(2.291);
-                    break;
-
-            }
-        } catch (Exception ex){
-            ret.add(Double.NaN);
-            ret.add(Double.NaN);
-        }
+        ret.add(sliceBegin.getValue());
+        ret.add(sliceEnd.getValue()); 
         return ret;
     }
 
@@ -509,9 +454,9 @@ public class Scienta extends AreaDetector {
         final ChannelInteger uid;
 
         Stats(String name, int index) {
-            super(name, channelCtrl.split(":")[0] + ":Stats" + index + ":Total_RBV", 3, false);
+            super(name, getChannelCtrl().split(":")[0] + ":Stats" + index + ":Total_RBV", 3, false);
             this.index = index;
-            uid = new ChannelInteger(name + " uid", channelCtrl.split(":")[0] + ":Stats" + index + ":UniqueId_RBV", false);
+            uid = new ChannelInteger(name + " uid", getChannelCtrl().split(":")[0] + ":Stats" + index + ":UniqueId_RBV", false);
             //setParent(Scienta.this);
             addChild(uid);
         }
