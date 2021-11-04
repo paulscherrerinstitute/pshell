@@ -240,7 +240,7 @@ public abstract class LayoutBase implements Layout {
     public String getScanPath(Scan scan) {
         synchronized(scanFiles){
             if (scanFiles.containsKey(scan)){
-                return  scanFiles.get(scan);
+                return scanFiles.get(scan);
             }
             //Map cleanup
             //for (Scan s : scanFiles.keySet().toArray(new Scan[0])) {

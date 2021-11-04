@@ -274,6 +274,17 @@ def string_to_obj(o):
         return ret
     return o
 
+def json_to_obj(o):
+    if is_string(o):
+        import json
+        return json.loads(o)
+    elif is_list(o):
+        ret = []
+        for i in o:
+            ret.append(json_to_obj(i))
+        return ret
+    return o
+
 ###################################################################################################
 #Scan classes
 ###################################################################################################

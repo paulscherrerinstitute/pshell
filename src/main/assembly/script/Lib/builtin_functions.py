@@ -517,6 +517,9 @@ def plot(data, name = None, xdata = None, ydata=None, title=None):
     Returns:
         ArrayList of Plot.
     """
+    data = json_to_obj(data)
+    xdata = json_to_obj(xdata)
+    ydata = json_to_obj(ydata)
     if isinstance(data, ch.psi.pshell.data.Table):
         if is_list(xdata):
             xdata = to_array(xdata, 'd')
@@ -1019,7 +1022,7 @@ def camon(name, type=None, size=None, wait = sys.maxint):
     finally:
         Epics.closeChannel(channel)
 
-def create_channel_device(channel_name, type=None, size=None, device_name=None):
+def create_channel_device(channel_name, type=None, size=None, device_name=None, monitored=False):
     """Create a device from an EPICS PV.
 
     Args:
@@ -1038,6 +1041,8 @@ def create_channel_device(channel_name, type=None, size=None, device_name=None):
     dev.initialize()
     if (size is not None):
         dev.setSize(size)
+    if (monitored):
+        dev.setMonitored(True)
     return dev
 
 
@@ -1263,6 +1268,7 @@ def remove_device(device):
     Returns:
         bool: true if device was removed.
     """
+    device=string_to_obj(device)
     return get_context().devicePool.removeDevice(device)
 
 def set_device_alias(device, alias):
@@ -1275,6 +1281,7 @@ def set_device_alias(device, alias):
     Returns:
         None
     """
+    device=string_to_obj(device)
     device.setAlias(alias)
 
 def stop():
@@ -1308,6 +1315,9 @@ def reinit(dev = None):
     Returns:
         List with devices not initialized.
     """
+    if dev is not None:
+        dev=string_to_obj(dev)
+        return get_context().reinit(dev)
     return to_list(get_context().reinit())
 
 def create_device(url, parent=None):
@@ -1320,6 +1330,8 @@ def create_device(url, parent=None):
     Returns:
         The created device (or list of devices)
     """
+    if parent is not None:
+        parent=string_to_obj(parent)
     return InlineDevice.create(url, parent)
 
 

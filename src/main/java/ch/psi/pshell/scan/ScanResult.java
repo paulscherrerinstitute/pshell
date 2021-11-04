@@ -34,13 +34,31 @@ public class ScanResult implements SubscriptableList<ScanRecord>, Subscriptable.
     public List<ScanRecord> getRecords() {
         return records;
     }
+    
+    public boolean getInMemory(){
+        return scan.getKeep();
+    }
+    
+    public String getDataProvider(){
+        if (scan.getDataProvider()== null){
+            return "";
+        }
+        return scan.getDataProvider().getClass().getName();
+    }    
+    
+    public String getDataLayout(){
+        if (scan.getDataLayout()== null){
+            return "";
+        }        
+        return scan.getDataLayout().getClass().getName();
+    }      
 
     public List<Object> getReadable(Object id) {
         int index = (id instanceof Number) ? ((Number)id).intValue() : scan.getReadableIndex(id);
         if ((index < 0) || (index >= getReadables().size())) {
             throw new IllegalArgumentException("Index");
         }
-        if(scan.getKeep()) {
+        if(getInMemory()) {
             List ret = new ArrayList<>();
             for (ScanRecord record : records) {
                 ret.add(record.values[index]);
@@ -56,7 +74,7 @@ public class ScanResult implements SubscriptableList<ScanRecord>, Subscriptable.
         if ((index < 0) || (index >= getWritables().size())) {
             throw new IllegalArgumentException("Index");
         }
-        if(scan.getKeep()) {
+        if(getInMemory()) {
             ArrayList<Number> ret = new ArrayList<>();
             for (ScanRecord record : records) {
                 ret.add(record.setpoints[index]);
@@ -72,7 +90,7 @@ public class ScanResult implements SubscriptableList<ScanRecord>, Subscriptable.
         if ((index < 0) || (index >= getWritables().size())) {
             throw new IllegalArgumentException("Index");
         }
-        if(scan.getKeep()) {
+        if(getInMemory()) {
             ArrayList<Number> ret = new ArrayList<>();
             for (ScanRecord record : records) {
                 ret.add(record.positions[index]);
@@ -190,7 +208,6 @@ public class ScanResult implements SubscriptableList<ScanRecord>, Subscriptable.
         return scan.getMeta();
     }      
         
-    @Transient
     public java.util.Map<Readable, Object> getSnapValues() {
         java.util.Map<Readable, Object> ret = new HashMap <>();
         if (scan.getSnaps()!=null){
@@ -203,6 +220,31 @@ public class ScanResult implements SubscriptableList<ScanRecord>, Subscriptable.
     public List<Nameable> getDevices() {
         return asList(scan.getDevices());
     }
+    
+    public List<Nameable> getWritableNames() {
+        return asList(scan.getWritableNames());
+    }
+    
+    public List<Nameable> getReadableNames() {
+        return asList(scan.getReadableNames());
+    }  
+    
+    public List<Nameable> getMonitorNames() {
+        return asList(scan.getMonitorNames());
+    }      
+    
+    public List<Nameable> getDiagNames() {
+        try{
+        return asList(scan.getDiagNames());
+        }catch (Exception ex){
+            ex.printStackTrace();
+        }
+        return new ArrayList<Nameable>();
+    }      
+    
+    public List<Nameable> getSnapsNames() {
+        return asList(scan.getSnapsNames());
+    }        
 
     public int getIndex() {
         return scan.getIndex();
@@ -219,7 +261,7 @@ public class ScanResult implements SubscriptableList<ScanRecord>, Subscriptable.
     public String getPath() {
         return scan.getPath();
     }
-
+    
     public int getDimensions() {
         return scan.getDimensions();
     }
@@ -257,7 +299,7 @@ public class ScanResult implements SubscriptableList<ScanRecord>, Subscriptable.
     }
 
     public long getTimeElapsed() {
-        return records.get(records.size() - 1).getTimestamp() - records.get(0).getTimestamp();
+        return scan.getEndTimestamp()- scan.getStartTimestamp();
     }
 
     @Transient
@@ -331,6 +373,7 @@ public class ScanResult implements SubscriptableList<ScanRecord>, Subscriptable.
     //SubscriptableArray interface
     @Hidden
     @Override
+    @Transient
     public List getValues() {
         return records;
     }

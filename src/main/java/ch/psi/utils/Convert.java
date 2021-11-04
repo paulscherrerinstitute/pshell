@@ -1084,6 +1084,14 @@ public class Convert {
             return null;
         }
         Class type = Arr.getComponentType(data);
+        if (type==Object.class){
+            Object aux = data;
+             for (int i=0; i< Arr.getRank(data); i++){
+                aux=Array.get(aux, 0);                
+             }
+             type = aux.getClass();
+             data = Convert.toPrimitiveArray(data, type);
+        } 
         if (Convert.isWrapperClass(type)) {
             type = Convert.getPrimitiveClass(type);
         }

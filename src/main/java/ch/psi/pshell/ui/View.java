@@ -944,7 +944,10 @@ public class View extends MainFrame {
         tabPlots.setSelectedComponent(plotPanel);
 
         int index = tabPlots.getTabCount() - 1;
-        SwingUtils.setTabClosable(tabPlots, index);
+        SwingUtils.setTabClosable(tabPlots, index, (JTabbedPane tabbedPane, int tabIndex) -> {
+            context.removePlotContext(tabbedPane.getTitleAt(tabIndex));
+            return true;
+        });
         setTabDetachable(tabPlots, index, detachedPlots);
         return plotPanel;
     }

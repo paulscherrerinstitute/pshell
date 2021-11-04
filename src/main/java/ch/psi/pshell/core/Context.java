@@ -24,7 +24,6 @@ import ch.psi.utils.Convert;
 import ch.psi.utils.History;
 import ch.psi.utils.IO;
 import ch.psi.utils.IO.FilePermissions;
-import ch.psi.utils.NamedThreadFactory;
 import ch.psi.utils.ObservableBase;
 import ch.psi.utils.Reflection.Hidden;
 import ch.psi.utils.State;
@@ -65,7 +64,6 @@ import ch.psi.pshell.security.Rights;
 import ch.psi.pshell.security.UsersManagerListener;
 import ch.psi.pshell.security.User;
 import ch.psi.pshell.security.UserAccessException;
-import ch.psi.pshell.ui.App;
 import ch.psi.utils.Chrono;
 import ch.psi.utils.Condition;
 import ch.psi.utils.SortedProperties;
@@ -76,9 +74,10 @@ import java.io.FileOutputStream;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.util.Enumeration;
+import java.util.HashSet;
 import java.util.Properties;
+import java.util.Set;
 import java.util.jar.JarFile;
-import org.python.google.common.collect.Lists;
 
 /**
  * Global singleton managing creation, disposal and holding the state of the
@@ -2491,6 +2490,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
 
     @Hidden
     public List plot(PlotDescriptor plots[], String title) throws Exception {
+        List ret = null;
         if (plots == null) {
             throw new IllegalArgumentException();
         }
@@ -2503,19 +2503,43 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
                 }
             }
             if (plotListener != null) {
-                return plotListener.plot(title, plots);
+                ret = plotListener.plot(title, plots);
+            }
+            synchronized(plotContexts){
+                plotContexts.add((title==null)? "" : title);
             }
         } catch (Exception ex) {
             logger.log(Level.WARNING, null, ex);
             throw ex;
         }
-        return null;
+        return ret;
     }
 
     @Hidden
     public List plot(PlotDescriptor plot, String title) throws Exception {
         return plot(new PlotDescriptor[]{plot}, title);
     }
+    
+    final Set<String> plotContexts = new HashSet<>(Arrays.asList(""));
+    
+    public List<String> getPlotContexts(){
+        synchronized(plotContexts){
+            return new ArrayList<>(plotContexts);
+        }
+    }
+    
+    public boolean  removePlotContext(String context){
+        if ((context!=null) && (!context.isEmpty())){
+            synchronized(plotContexts){
+                try{
+                    return plotContexts.remove(context);
+                } catch (Exception ex){                
+                }
+            }
+        }
+        return false;
+    }
+    
 
     //TODO: manage 2d & 3d scan plots
     @Hidden
@@ -3130,7 +3154,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
             }
         }
     }
-
+    
     //Scans
     final List<ScanListener> scanListeners = new ArrayList<>();
 
@@ -3206,7 +3230,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
             scanStreamer.sendEvent(type, data);
         }
     }
-
+       
     Thread restartThread;
     RandomAccessFile lockFile;
 

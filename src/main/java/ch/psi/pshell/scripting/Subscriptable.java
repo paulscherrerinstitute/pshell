@@ -2,6 +2,7 @@ package ch.psi.pshell.scripting;
 
 import ch.psi.utils.Arr;
 import ch.psi.utils.Reflection.Hidden;
+import java.beans.Transient;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -132,6 +133,7 @@ public interface Subscriptable {
                 
         //Backward compatibility
         @Hidden
+        @Transient
         default List<T> getItemsList(){
             return getValues();
         }

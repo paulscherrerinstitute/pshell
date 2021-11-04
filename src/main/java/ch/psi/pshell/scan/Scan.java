@@ -1,6 +1,8 @@
 package ch.psi.pshell.scan;
 
 import ch.psi.pshell.core.Nameable;
+import ch.psi.pshell.data.Layout;
+import ch.psi.pshell.data.Provider;
 import ch.psi.pshell.device.Device;
 import ch.psi.pshell.device.Writable;
 import ch.psi.pshell.device.Readable;
@@ -17,6 +19,10 @@ public interface Scan {
     public void start() throws IOException, InterruptedException;
 
     public ScanResult getResult();
+    
+    public Layout getDataLayout();
+    
+    public Provider getDataProvider();
 
     public Writable[] getWritables();
 

@@ -1,10 +1,13 @@
 package ch.psi.pshell.imaging;
 
 import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.util.concurrent.TimeoutException;
 import javax.imageio.ImageIO;
+import javax.imageio.stream.ImageOutputStream;
+import javax.imageio.stream.MemoryCacheImageOutputStream;
 
 /**
  *
@@ -34,4 +37,17 @@ public interface ImageBuffer {
             throw new IOException("Image format not supported: " + format);
         }
     }
+    
+    static public byte[] getImage(BufferedImage image, String format) throws IOException {
+        if (image == null) {
+            throw new IOException("No image available");
+        }
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        try (ImageOutputStream stream = new MemoryCacheImageOutputStream(baos)){
+            if (!ImageIO.write(image, format, stream)) {
+                throw new IOException("Image format not supported: " + format);
+            }
+        }
+        return baos.toByteArray();
+    }          
 }

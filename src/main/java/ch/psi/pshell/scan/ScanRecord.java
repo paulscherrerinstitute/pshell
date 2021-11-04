@@ -5,6 +5,7 @@ import ch.psi.utils.Arr;
 import ch.psi.utils.Chrono;
 import ch.psi.utils.Convert;
 import ch.psi.utils.Reflection.Hidden;
+import java.beans.Transient;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Arrays;
@@ -45,8 +46,9 @@ public class ScanRecord implements Subscriptable.MappedSequence<Object,Object>{
         return indexInPass;
     }      
     
+    @Transient
     public int getDimensions() {
-        return dimensions;
+        return scan.getDimensions();
     }
 
     public Number[] getSetpoints() {
@@ -65,6 +67,7 @@ public class ScanRecord implements Subscriptable.MappedSequence<Object,Object>{
     //Deprecated to avoid confusion with values() method of Dict class: ScanRecord.values is not valid any more
     @Hidden
     @Deprecated
+    @Transient
     public List getValues() { return values(); }
 
     public Number getSetpoint(Object index) {
@@ -108,6 +111,7 @@ public class ScanRecord implements Subscriptable.MappedSequence<Object,Object>{
         id = value;
     }   
     
+    @Transient
     public boolean isSent() {
         return sent;
     }    
@@ -119,7 +123,6 @@ public class ScanRecord implements Subscriptable.MappedSequence<Object,Object>{
         ret.index = index;
         ret.indexInPass = indexInPass;
         ret.pass = pass;
-        ret.dimensions = dimensions;
         ret.setpoints = Arr.copy(setpoints);
         ret.positions = Arr.copy(positions);
         ret.values = Arr.copy(values);
@@ -232,6 +235,7 @@ public class ScanRecord implements Subscriptable.MappedSequence<Object,Object>{
 
     @Hidden
     @Override
+    @Transient
     public int getLenght() {
         return scan.getDevices().length;
     }

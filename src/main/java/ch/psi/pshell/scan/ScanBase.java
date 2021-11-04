@@ -132,24 +132,36 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
         //}
     }
     
+    @Override
+    public Layout getDataLayout(){
+        return dataLayout;
+    }
+    
+    @Override
+    public Provider getDataProvider(){
+        return dataProvider;
+    }    
+    
+    @Override
     public void setMeta(Map meta){
         this.meta = meta;
         if (isStarted()){
             try{
-                dataLayout.onMeta(this, meta);
+                getDataLayout().onMeta(this, meta);
             } catch(Exception ex){
                 logger.log(Level.WARNING, null, ex);
             }
         }
     }
     
+    @Override
     public Map getMeta(){
         return meta;
     }
 
     public void addMeta(Map<String, Object> meta) throws IOException{
-        if (dataLayout!=null) {
-            dataLayout.onMeta(this, meta);
+        if (getDataLayout()!=null) {
+            getDataLayout().onMeta(this, meta);
         }        
         this.meta.putAll(meta);
     }
@@ -661,7 +673,6 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
         record.index = recordIndex;
         record.pass = getCurrentPass();
         record.indexInPass = getRecordIndexInPass();
-        record.dimensions = getDimensions();
         record.localTimestamp = System.currentTimeMillis();
         record.timestamp =  record.localTimestamp;
         recordIndex++;
@@ -809,8 +820,8 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
 
     @Override
     public Object readData(String device){
-        if (dataLayout!=null) {
-            return dataLayout.getData(this, device, Context.getInstance().getDataManager());
+        if (getDataLayout()!=null) {
+            return getDataLayout().getData(this, device, Context.getInstance().getDataManager());
         }
         return null;
     }
@@ -819,8 +830,8 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
     @Override
     public Object readMonitor(String device){
         if (getMonitors()!=null){
-            if (dataLayout!=null) {
-                return dataLayout.getMonitor(this, device, Context.getInstance().getDataManager());
+            if (getDataLayout()!=null) {
+                return getDataLayout().getMonitor(this, device, Context.getInstance().getDataManager());
             }
         }
         return null;
@@ -829,8 +840,8 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
     @Override
     public Object readDiag(String device){
         if (getDiags()!=null){
-            if (dataLayout!=null) {
-                return dataLayout.getDiag(this, device, Context.getInstance().getDataManager());
+            if (getDataLayout()!=null) {
+                return getDataLayout().getDiag(this, device, Context.getInstance().getDataManager());
             }
         }
         return null;
@@ -853,16 +864,16 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
     
     @Override
     public Object readSnap(String device){
-        if (dataLayout!=null) {
-            return dataLayout.getSnap(this, device, Context.getInstance().getDataManager());
+        if (getDataLayout()!=null) {
+            return getDataLayout().getSnap(this, device, Context.getInstance().getDataManager());
         }
         return null;        
     }              
     
     @Override
     public long[] readTimestamps(){
-        if (dataLayout!=null) {
-            return dataLayout.getTimestamps(this,Context.getInstance().getDataManager());
+        if (getDataLayout()!=null) {
+            return getDataLayout().getTimestamps(this,Context.getInstance().getDataManager());
         }
         return null;    
     }
@@ -984,8 +995,10 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
     @Override
     public String[] getMonitorNames() {
         ArrayList<String> names = new ArrayList();
-        for (Device monitor : getMonitors()) {
-            names.add(monitor.getAlias());
+        if (getMonitors()!=null){
+            for (Device monitor : getMonitors()) {
+                names.add(monitor.getAlias());
+            }
         }
         return names.toArray(new String[0]);
     }
@@ -993,8 +1006,10 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
     @Override
     public String[] getDiagNames() {
         ArrayList<String> names = new ArrayList();
-        for (Readable diag : getDiags()) {
-            names.add(getReadableName(diag));
+        if (getDiags()!=null){
+            for (Readable diag : getDiags()) {
+                names.add(getReadableName(diag));
+            }
         }
         return names.toArray(new String[0]);
     }    
@@ -1007,8 +1022,10 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
     @Override
     public String[] getSnapsNames() {
         ArrayList<String> names = new ArrayList();
-        for (Readable snap : getSnaps()) {
-            names.add(getReadableName(snap));
+        if (getSnaps()!=null){
+            for (Readable snap : getSnaps()) {
+                names.add(getReadableName(snap));
+            }
         }
         return names.toArray(new String[0]);
     }    

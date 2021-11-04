@@ -4,6 +4,7 @@ import ch.psi.pshell.core.Context;
 import ch.psi.pshell.device.Device;
 import ch.psi.pshell.device.Readable;
 import ch.psi.pshell.device.TimestampedValue;
+import ch.psi.pshell.scan.DataAccessDummyScan;
 import ch.psi.pshell.scan.Scan;
 import ch.psi.pshell.scan.ScanRecord;
 import ch.psi.utils.Arr;
@@ -52,6 +53,9 @@ public interface Layout {
 
     default String getCurrentGroup(Scan scan) {
         String ret;
+        if (scan instanceof DataAccessDummyScan){
+            return ((DataAccessDummyScan)scan).getGroup();
+        }
         Object group = getDataManager().getExecutionPars().getOption("group");
         if ((group != null) && (!group.toString().isEmpty())) {
             ret = Context.getInstance().getSetup().expandPath(group.toString());
