@@ -280,6 +280,31 @@ class PShellClient:
         """            
         statement = quote(statement)
         return int(self._get_response(self._get("evalAsync/"+statement), False))            
+    
+    def eval_json(self,statement):
+        """Evaluates a statement in the interpreter. 
+        Args:       
+            statement(str): input statement
+
+        Returns: 
+            Return object  decoded from JSON string
+        """             
+        statement = quote(statement)
+        return self._get_response(self._get("eval-json/"+statement), True)                      
+
+    def set_var(self,name, value):
+        """Sets interpreter variable. 
+        Args:       
+            name(str): variable name
+            value(obj): value - must be JSON compatible
+
+        Returns: 
+            
+        """             
+        data = {}
+        data["name"]=name
+        data["value"]=value
+        return self._get_response(self._put("set-var", data), False)           
 
     def start_run(self,script, pars=None, background=False):
         """Starts execution of a script in the interpreter.

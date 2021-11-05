@@ -175,7 +175,7 @@ public class ServerService {
             throw new ExecutionException(ex);
         }
     }
-
+    
     @GET
     @Path("evalAsync/{statement : .+}")
     @Consumes(MediaType.TEXT_PLAIN)
@@ -189,6 +189,35 @@ public class ServerService {
             throw new ExecutionException(ex);
         }
     }
+    
+    @GET
+    @Path("eval-json/{statement : .+}")
+    @Consumes(MediaType.TEXT_PLAIN)
+    @Produces(MediaType.APPLICATION_JSON)
+    public String evalJson(@PathParam("statement") final String statement) throws ExecutionException {
+        try {
+            String cmd = formatIncomingText(statement);
+            Object ret = context.evalLine(CommandSource.server, cmd.equals("\n") ? "" : cmd);
+            return mapper.writeValueAsString(ret);
+        } catch (Exception ex) {
+            throw new ExecutionException(ex);
+        }
+    }
+    
+    @PUT
+    @Path("set-var")
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response setVariable(final Map contents) throws ExecutionException {
+        try {
+            String name = (String) contents.get("name");
+            Object value = contents.get("value");
+            context.setInterpreterVariable(name, value);
+            return Response.ok().build();
+        } catch (Exception ex) {
+            throw new ExecutionException(ex);
+        }
+    }
+        
 
     @GET
     @Path("history/{index}")
@@ -611,7 +640,7 @@ public class ServerService {
             throw new ExecutionException(ex);
         }
     }
-
+    
     @GET
     @Path("abort")
     public void abort() throws ExecutionException {

@@ -298,6 +298,16 @@ class PShellProxy(PShellClient):
         ret=self.eval(self._get_cmd("__dev__=create_averager",  dev, count, interval, device_name, monitored))
         self.eval("add_device(__dev__,True)")
         return self.eval("__dev__.getName()")
+    
+    def write(self, dev, value):
+        r=self.set_var("__val__", value)
+        self.eval(dev+".write(__val__)")
+        
+    def read(self, dev):
+        return self.eval_json(dev+".read()")
+    
+    def take(self, dev):
+        return self.eval_json(dev+".read()")
 
 
     #Utilities
