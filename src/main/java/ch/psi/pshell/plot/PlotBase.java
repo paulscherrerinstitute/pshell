@@ -492,11 +492,11 @@ abstract public class PlotBase<T extends PlotSeries> extends MonitoredPanel impl
         if (series.updating.compareAndSet(false, true)) {
             invokeLater(() -> {
                 series.updating.set(false);
-                try {
-                    updateSeries(series);
-                } catch (Exception ex) {
-                    //Logger.getLogger(LinePlotBase.class.getName()).log(Level.SEVERE, null, ex);
-                }
+                    try {
+                        updateSeries(series);                        
+                    } catch (Exception ex) {
+                        //Logger.getLogger(LinePlotBase.class.getName()).log(Level.SEVERE, null, ex);
+                    }
             });
         }
     }

@@ -98,13 +98,15 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 public class SwingUtils {
 
     public static void invokeDelayed(final Runnable runnable, final int delayMillis) {
-        new Thread(() -> {
-            try {
-                Thread.sleep(delayMillis);
-                SwingUtilities.invokeLater(runnable);
-            } catch (Exception ex) {
+        Timer timer=new Timer(delayMillis, null);
+        timer.addActionListener((ActionEvent ae) -> {
+            timer.stop();            
+            try{
+                runnable.run();
+            } catch (Exception ex){                
             }
-        }).start();
+        });
+        timer.start();       
     }
 
     /**
