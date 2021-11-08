@@ -130,14 +130,13 @@
                 })
                 table.html(tbl_body);
             }
-
+            
             function onScanRecord(record) {
                 var index = record["index"]
                 var positions = record["positions"]
-                var values = record["values"]
-                var dimensions = record["dimensions"]
+                var values = record["readables"]
 
-                if (dimensions == 1) {
+                if (scanInfo["dimensions"] == 1) {
                     $("#graph1").show()
                     if (positions.length == 0) {
                         positions = [index, ]
@@ -156,15 +155,16 @@
                 //Todo: area plot
             }
 
-            function onScanStart(names) {
-                scanReadables = names
+            function onScanStart(info) {
+                scanInfo = info
                 scanData = new Array()
+                names = info["readableNames"]
                 for (i = 0; i < names.length; i++)
                     scanData.push({data: new Array(0), label: names[i]})
                 repaintLinePlot()
             }
 
-            var scanReadables = []
+            var scanInfo = []
             var scanData = [[], []];
             var scanPlotOptions = {
                 series: {
@@ -207,7 +207,7 @@
             }
 
             function clearScanPlots() {
-                scanReadables = []
+                scanInfo = []
                 scanData = [[], []]
                 repaintLinePlot()
                 $("#tooltip").hide();

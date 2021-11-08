@@ -800,7 +800,7 @@ public class ServerService {
     final ScanListener scanListener = new ScanListener() {
 
         void sendScanStart(Scan scan) {
-            sendEvent("scan", scan.getReadableNames());
+            sendEvent("scan", scan.getResult());
         }
 
         void sendScanRecord(Scan scan, ScanRecord record) {
