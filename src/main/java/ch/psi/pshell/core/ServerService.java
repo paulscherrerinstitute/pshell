@@ -492,7 +492,7 @@ public class ServerService {
     @Path("script/{path : .+}")
     @Consumes(MediaType.TEXT_PLAIN)
     @Produces(MediaType.TEXT_PLAIN)
-    public String script(@PathParam("path") final String path) throws ExecutionException {
+    public String getScript(@PathParam("path") final String path) throws ExecutionException {
         try {
             StringBuffer ret = new StringBuffer();
             File file = Paths.get(context.setup.getScriptPath(), path).toFile();
@@ -512,6 +512,30 @@ public class ServerService {
                 }
             }
             return ret.toString();
+        } catch (Exception ex) {
+            throw new ExecutionException(ex);
+        }
+    }
+
+    @PUT
+    @Path("script")
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response setScript(final Map data) throws ExecutionException {
+        try {
+            String path = (String) data.get("path");
+            String contents =  (String) data.get("contents");
+            File file = Paths.get(context.setup.getScriptPath(), path).toFile();
+            if (file.exists()) {
+                if (file.isDirectory()) {
+                    throw new Exception("Path is a directory: " + path);
+                }
+            } else {
+                file.getParentFile().mkdirs();
+            }
+            logger.warning("Saving script file: " + path);            
+            Files.writeString(file.toPath(), contents);
+            IO.setFilePermissions(file, context.getConfig().filePermissionsScripts);
+            return Response.ok().build();   
         } catch (Exception ex) {
             throw new ExecutionException(ex);
         }

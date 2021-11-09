@@ -558,16 +558,27 @@
                 $("#scriptlist").hide()
                 $("#scriptname").show()
             }
+            
+            function isEditingScript(){
+                return ($("#editscript").text() == 'Close')
+            }
 
             function editScript() {
-                if ($("#editscript").hasClass('active')) {
-                    $("#scriptcontents").prop("readonly", true);
-                    $("#scriptcontents").addClass('shadow_ro')
-                    $("#scriptcontents").removeClass('shadow')
-                    
+                if (isEditingScript()){
+                    disableEdition()                       
+                    var contents = $("#scriptcontents").val()
+                    if (contents){     
+                        uiEventName="WebSaveScript"
+                        $("#modalbuttonyes").show()
+                        $("#modalbuttonno").show()                                    
+                        $('#modaltext').text("Save the script?")                                                
+                        $('#modaltitle').text("Save")                    
+                        $("#myModal").modal('show');                    
+                    }
                 } else {
+                    $("#editscript").text('Close')
                     $("#scriptcontents").prop("readonly", false);
-                    $("#scriptname").val("");
+                    //$("#scriptname").val("");
                     $("#scriptcontents").removeClass('shadow_ro')
                     $("#scriptcontents").addClass('shadow')
                 }
@@ -578,10 +589,20 @@
 
             function disableEdition() {
                 $("#editscript").removeClass('active')
+                $("#editscript").text('Edit')
                 $("#scriptcontents").prop("readonly", true);
                 $("#scriptcontents").addClass('shadow_ro')
                 $("#scriptcontents").removeClass('shadow')
+                
             }
+            
+            function clearScript() {
+                disableEdition()
+                $("#scriptcontents").val("");
+                $("#scriptname").val("");               
+            }            
+            
+            
 
             function formatIncomingText(txt) {
                 txt = txt.replace(/\t/g, '    ');
@@ -610,7 +631,7 @@
                 closeScriptResult()
                 var script = $("#scriptname").val()
                 executing = true
-                if (script.length > 0) {
+                if ((script.length > 0) && (!isEditingScript())) {
                     $.get(base + '/run/' + script, function (data) {
                         executing = false
                         if ((data.length > 0) && (data != "null")) {
@@ -677,6 +698,20 @@
                 });
             }
 
+            function setScript(path, contents) {
+                $.ajax({
+                   url: base + '/script',
+                   type: 'PUT',
+                   contentType: "application/json",
+                   data: JSON.stringify({"path":path, "contents":contents}),
+                   success: function(response) {
+                     //...
+                   }
+                }).error(function (xhr, textStatus, errorThrown) {
+                    appendConsole(xhr.responseText)
+                });
+            }
+            
             function plotDataset(path) {
                 closeDataResult()
                 $.get(base + '/eval/plot(load_data("' + $('#data_path').val() + '"))', function (data) {
@@ -1037,7 +1072,8 @@
                 <div class="row borderless-container">                            
                     <button id="runscript" type="button" class="btn btn-default pull-right" onclick="runScript();this.blur()" style="width:60px; font-size:smaller;">Run</button>                                                   
                     <button id="abort" type="button" class="btn btn-default pull-right" onclick="abort();this.blur()" style="width:60px; font-size:smaller; margin-right:10px">Abort</button>                                                   
-                    <button id="editscript" type="button" class="btn btn-default pull-right" data-toggle="button" onclick="editScript()" style="width:60px; font-size:smaller; margin-right:10px">Edit</button>                                                   
+                    <button id="editscript" type="button" class="btn btn-default pull-right" data-toggle="button" onclick="editScript()" style="width:60px; font-size:smaller; margin-right:10px">Edit</button> 
+                    <button id="clearscript" type="button" class="btn btn-default pull-right" onclick="clearScript()" style="width:60px; font-size:smaller; margin-right:10px">Clear</button>                     
                     <button id="listscript" type="button" class="btn btn-default pull-right" data-toggle="button" onclick="listScript()" style="width:60px; font-size:smaller; margin-right:10px">Open</button>                                                   
                 </div>                
                 <input class="row text-container shadow_ro img-rounded" id="scriptname" readonly="readonly" placeholder="" type="text">
@@ -1219,6 +1255,34 @@
                             sendUI("\\z")
                         }
                         break;
+                    case "WebSaveScript":
+                        var contents = $("#scriptcontents").val()
+                        var name = '/' + $("#scriptname").val()
+                        if (name){
+                            if (uiEventResult == "Yes"){
+                                setScript(name, contents)
+                            } else {
+                                getScript(name)
+                            }
+                        } else {
+                            uiEventName="WebNewScript"
+                            $("#modalbuttonok").show()
+                            $("#modalbuttoncancel").show()
+                            $("#modalinput").show()  
+                            $("#modalinput").val("")
+                            $('#modaltext').text("Enter file name:")                                                
+                            $('#modaltitle').text("Save")                    
+                            $("#myModal").modal('show');                    
+                        }                        
+                        break
+                    case "WebNewScript":
+                        if (uiEventResult == "Yes"){
+                            var name = $("#modalinput").val()
+                            var contents = $("#scriptcontents").val()
+                            setScript(name, contents)
+                        } else {
+                            clearScript()
+                        }
                 }                
             })            
 
