@@ -203,7 +203,7 @@
                 var plot = $.plot($("#graph1"), scanData, scanPlotOptions);
                 plot.setData(scanData);
                 plot.setupGrid();
-                plot.draw();
+                plot.draw();             
             }
 
             function clearScanPlots() {
@@ -231,11 +231,12 @@
                         plotsData.push({data: plotData, label: plot.name})
                     }
                 }
-
+                onPlots();
                 var plot = $.plot($("#graph1"), plotsData, scanPlotOptions);
                 plot.setData(plotsData);
                 plot.setupGrid();
                 plot.draw();
+                
             }
 
             function setUser(user) {
@@ -400,15 +401,26 @@
             
             function onHome() {
                 $("#home").show()
+                $("#plots").hide()
                 $("#logs").hide()
                 $("#devices").hide()
                 $("#scripts").hide()
                 $("#data").hide()
                 $("#command").focus();
             }
+            
+            function onPlots() {
+                $("#home").hide()
+                $("#plots").show()
+                $("#logs").hide()
+                $("#devices").hide()
+                $("#scripts").hide()
+                $("#data").hide()
+            }            
 
             function onDevices() {
                 $("#home").hide()
+                $("#plots").hide()
                 $("#logs").hide()
                 $("#devices").show()
                 $("#scripts").hide()
@@ -418,6 +430,7 @@
 
             function onLogs() {
                 $("#home").hide()
+                $("#plots").hide()
                 $("#logs").show()
                 $("#devices").hide()
                 $("#scripts").hide()
@@ -427,6 +440,7 @@
 
             function onScripts() {
                 $("#home").hide()
+                $("#plots").hide()
                 $("#logs").hide()
                 $("#devices").hide()
                 $("#scripts").show()
@@ -437,6 +451,7 @@
 
             function onData() {
                 $("#home").hide()
+                $("#plots").hide()
                 $("#logs").hide()
                 $("#devices").hide()
                 $("#scripts").hide()
@@ -549,6 +564,7 @@
                     $("#scriptcontents").prop("readonly", true);
                     $("#scriptcontents").addClass('shadow_ro')
                     $("#scriptcontents").removeClass('shadow')
+                    
                 } else {
                     $("#scriptcontents").prop("readonly", false);
                     $("#scriptname").val("");
@@ -664,7 +680,7 @@
             function plotDataset(path) {
                 closeDataResult()
                 $.get(base + '/eval/plot(load_data("' + $('#data_path').val() + '"))', function (data) {
-                    onHome()
+                    onPlots()
                 }).error(function (xhr, textStatus, errorThrown) {
                     $("#dataerror").show()
                     $("#dataerror").text(xhr.responseText)                    
@@ -908,6 +924,7 @@
                     <div class="navbar-collapse collapse" id="myNavbar">
                         <ul class="nav navbar-nav">
                             <li><a href="#" onclick="onHome()">Console</a></li>
+                            <li><a href="#" onclick="onPlots()">Plots</a></li>
                             <li><a href="#" onclick="onDevices()">Devices</a></li>
                             <li><a href="#" onclick="onLogs()">Logs</a></li>
                             <li><a href="#" onclick="onScripts()">Scripts</a></li>                            
@@ -946,7 +963,7 @@
          
         <div id="home" class="container">
             <div class="row">
-                <textarea class="row text-container horizontalscroll shadow_ro img-rounded" id="txtarea" readonly="readonly" rows="12" ></textarea>                              
+                <textarea class="row text-container horizontalscroll shadow_ro img-rounded" id="txtarea" readonly="readonly" rows="26" ></textarea>                              
 
                 <input class="row text-container shadow img-rounded" id="command" placeholder="" type="text">                              
 
@@ -954,10 +971,14 @@
                     <ul  id="dropdownmenu"  class="dropdown-menu scrollable-menu" role="menu" aria-labelledby="dropdownMenu" style="display:block;position:absolute;margin-bottom:5px;">
                     </ul>
                 </div>                    
+            </div>
+        </div>
 
+        <div id="plots" class="container" style="display:none">
+            <div class="row">
                 <div id="graph1_container" class="graph-container shadow img-rounded">                        
                     <div id="graph1" class="graph-placeholder"></div>
-                </div>                                   
+                </div>                                                   
             </div>
         </div>
 
@@ -1051,7 +1072,7 @@
                 </div>
             </div>            
             <div class="rightalign statusBar" >
-                <font size="1">PShell <span id='version'></span> <span id='instancename'></span> <span id='username'></span></font>                                   
+                <font size="1">PShell <span id='version'></span> <span id='instancename'></span> <span id='username'> </span></font>                                   
             </div>
         </footer>        
 
