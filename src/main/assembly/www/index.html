@@ -213,8 +213,10 @@
                 $("#tooltip").hide();
             }
 
-            function setPlots(plots) {
+            function setPlots(info) {
                 clearScanPlots()
+                var context = info["context"]
+                var plots = info["plots"]
                 $("#graph1").show()
                 plotsData = new Array(0)
                 for (i = 0; i < plots.length; i++) {
