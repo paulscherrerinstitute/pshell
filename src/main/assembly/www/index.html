@@ -717,14 +717,66 @@
                 $.get(base + '/eval/plot(load_data("' + $('#data_path').val() + '"))', function (data) {
                     onPlots()
                 }).error(function (xhr, textStatus, errorThrown) {
-                    $("#dataerror").show()
-                    $("#dataerror").text(xhr.responseText)                    
+                    showDataResult(xhr.responseText)                    
                 });
             }
-            
+                        
+            function download() {
+                closeDataResult()
+            var saveData = (function () {
+                var a = document.createElement("a");
+                document.body.appendChild(a);
+                a.style = "display: none";
+                return function (data, fileName) {
+                    url = window.URL.createObjectURL(data);
+                    a.href = url;
+                    a.download = fileName;
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                };
+            }());         
+                
+                $('#download').prop('disabled', true);
+                path = $('#data_path').val().trim()                
+
+                var xhr = new XMLHttpRequest();
+                xhr.onreadystatechange = function(){
+                    $('#download').prop('disabled', false);
+                    if (this.status == 200){
+                        if (this.readyState == 4){
+                            closeDataResult()
+                            var name = path.substring(path.lastIndexOf('/') + 1)
+                            saveData(this.response, name)  
+                        }
+                    } else if (this.status){                        
+                        $('#download').prop('disabled', false);
+                        showDataResult("Error downloading file:" + this.status)  
+                        this.response.text().then(text =>
+                            showDataResult("Error downloading file: " +text) 
+                       );
+                    }
+                }
+                xhr.onerror = function () {
+                  $('#download').prop('disabled', false);
+                  showDataResult("Error downloading file " )                                      
+                };                              
+                if (path.startsWith("/")){
+                    xhr.open('GET', base + '/download' + path);
+                } else {
+                    xhr.open('GET', base + '/download/' + path);
+                }
+                xhr.responseType = 'blob';
+                xhr.send();         
+            }
+                
             function closeDataResult() {
                 $("#dataerror").hide()
             }
+            
+            function showDataResult(msg) {
+               $("#dataerror").show()
+                $("#dataerror").text(msg)        
+            }            
             
             var connection;
             function connect() {
@@ -821,8 +873,7 @@
                     $("#data_contents").val(data);
                 }).error(function (xhr, textStatus, errorThrown) {
                     $("#data_contents").val("");
-                    $("#dataerror").show()
-                    $("#dataerror").text(xhr.responseText)                                        
+                    showDataResult(xhr.responseText)                                        
                 });
             }
 
@@ -1090,6 +1141,7 @@
             <div class="row">
                 <div class="row borderless-container">                            
                     <button id="plotdata" type="button" class="btn btn-default pull-right" onclick="plotDataset()" style="width:60px; font-size:smaller;">Plot</button>                                                   
+                    <button id="download" type="button" class="btn btn-default pull-right" onclick="download()" style="width:60px; font-size:smaller; margin-right:10px">Save</button>                                                   
                 </div>                
                 <input class="row text-container shadow img-rounded" id="data_path" placeholder="" type="text">                              
                 <div class="row text-container horizontalscroll alert alert-danger fade in" id="dataerror"  style="display:none"> </div>                

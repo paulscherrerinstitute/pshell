@@ -425,9 +425,21 @@ public class ServerService {
             throw new ExecutionException(ex);
         }
     }    
-    
-    
-    
+        
+    @GET
+    @Path("/download{path : .+}")
+    @Produces(MediaType.APPLICATION_OCTET_STREAM)
+    public byte[] dataDownload(@PathParam("path") final String path) {
+        try{
+            File file = new File(context.getSetup().expandPath(((path.startsWith("/")) ? "{data}"+path : "{data}/"+path)).trim());
+            if (!file.isFile()){
+                throw new Exception("Invalid file name: " + path);
+            }
+            return Files.readAllBytes(file.toPath());
+        } catch (Exception ex) {
+            throw new ExecutionException(ex);
+        }        
+    }    
    
     @GET
     @Path("plot/{title}/{index}/{format}/{width}/{height}")
