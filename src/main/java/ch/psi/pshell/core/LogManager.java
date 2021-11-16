@@ -210,7 +210,13 @@ public class LogManager {
         } else if (dev.isPolled()) {
             info = "Polled";
         }
-        String units = (dev instanceof ReadonlyProcessVariable) ? " " + ((ReadonlyProcessVariable) dev).getUnit() : "";
+        String units = "";
+        if(dev instanceof ReadonlyProcessVariable){
+            try {
+                units = " " + ((ReadonlyProcessVariable) dev).getUnit();
+            } catch (Exception ex) {
+            }
+        }
         try {
             if (dev instanceof ReadbackDevice) {
                 dev = ((ReadbackDevice) dev).getReadback();
