@@ -653,7 +653,7 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
             onAfterReadout(record);
             if (record.invalidated) {
                 if (!resampleOnInvalidate){
-                    logger.warning("Record invalidated:  " + record.index);
+                    logger.finer("Record invalidated:  " + record.index);
                     record.index=-1;
                     recordIndex--;
                     return record;
