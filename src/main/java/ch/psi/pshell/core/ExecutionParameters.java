@@ -734,7 +734,36 @@ public class ExecutionParameters {
     public CommandInfo getCommandInfo() {
         return getCommand(true);
     }
+    
+    public Object getInnerArgs() {
+        CommandInfo cmd = getInnerCommandInfo();
+        return (cmd == null) ? null : cmd.args;
+    }
+    
+    public CommandSource getInnerSource() {
+        CommandInfo cmd = getInnerCommandInfo();
+        return (cmd == null) ? null : cmd.source;
+    }    
+    
+    public String getInnerStatement() {
+        CommandInfo cmd = getInnerCommandInfo();
+        return (cmd != null) ? cmd.command : null;
+    }
+    
+    public String getInnerScript() {
+        CommandInfo cmd = getInnerCommandInfo();
+        return (cmd != null) ? Context.getInstance().getRunningScriptName(cmd.script) : null;
+    }
 
+    public File getInnerScriptFile() {
+        CommandInfo cmd = getInnerCommandInfo();
+        return (cmd != null) ? Context.getInstance().getScriptFile(cmd.script) : null;
+    }
+    
+    public CommandInfo getInnerCommandInfo() {
+        return getCommand(false);
+    }
+    
     public CommandInfo getCommand(boolean parent) {
         CommandInfo ret = Context.getInstance().getCommandManager().getCurrentCommand(parent);
         //If not in background command, return foreground command
