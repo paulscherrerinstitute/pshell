@@ -42,7 +42,8 @@ public abstract class ColormapSource extends SourceBase {
     Range getCurrentColormapRange(){
         Range scale = getColormapRange();
         if (scale == null) {
-            scale = getData().getProperties();
+            Data data = getData();
+            scale = (data==null)? new Range(0.0, 255.0) : data.getProperties();
         }        
         return scale;
     }    
