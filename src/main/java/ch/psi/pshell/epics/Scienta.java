@@ -131,7 +131,7 @@ public class Scienta extends AreaDetector {
         setCache(numChannels, 100);
         setCache(numSlices, 10);
         setCache(spectrum, new double[100]);
-        setCache(spectrumX, Arr.indexesDouble(spectrum.size));
+        setCache(spectrumX, Arr.indexesDouble(100));
         setCache(currentChannel, 0.0);
         setCache(totalPoints, 100.0);
         setCache(passEnergy, String.valueOf(PASS_ENERGY_VALUES[0]));

@@ -15,6 +15,7 @@ import ch.psi.utils.State;
 import ch.psi.utils.swing.SwingUtils;
 import java.awt.Component;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.logging.Level;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JComboBox;
@@ -115,7 +116,6 @@ public final class ScientaPanel extends DevicePanel {
             stopTimer();
         } else {
             getDevice().getCurrentChannel().addListener(progressListener);
-            getDevice().getSpectrum().addListener(spectrumListener);
             //cameraPanel.startTimer(3000, 0);
             startTimer(3000, 0);
         }
@@ -127,15 +127,6 @@ public final class ScientaPanel extends DevicePanel {
             SwingUtilities.invokeLater(() -> {
                 valueCurrent.setValue((Double) value);
                 progress.setValue((int) (getDevice().getProgress() * 1000));
-            });
-        }
-    };
-
-    DeviceListener spectrumListener = new DeviceAdapter() {
-        @Override
-        public void onValueChanged(final Device device, final Object value, final Object former) {
-            SwingUtilities.invokeLater(() -> {
-                updateSpectrum();
             });
         }
     };
@@ -162,6 +153,7 @@ public final class ScientaPanel extends DevicePanel {
     public class DeviceData {
 
         double[] spectrum;
+        double[] spectrumX;
         LensMode lensMode;
         ElementSet elementSet;
         AcquisitionMode acquisitionMode;
@@ -186,15 +178,44 @@ public final class ScientaPanel extends DevicePanel {
     protected DeviceData doBackgroundUpdate() throws IOException, InterruptedException {
         DeviceData dd = new DeviceData();
         //read-once
+        try{
+            dd.spectrum = getDevice().getSpectrum().read();
+            dd.spectrumX = getDevice().getSpectrumX();
+        } catch (Exception ex){
+            dd.spectrum = null;
+            dd.spectrumX = null;
+        }
 
-        dd.spectrum = getDevice().getSpectrum().getValue();
-
-        dd.lensMode = getDevice().getLensMode();
-        dd.elementSet = getDevice().getElementSet();
-        dd.acquisitionMode = getDevice().getAcquisitionMode();
-        dd.energyMode = getDevice().getEnergyMode();
-        dd.detectorMode = getDevice().getDetectorMode();
-        dd.pass = getDevice().getPassEnergy();
+        try{
+            dd.lensMode = getDevice().getLensMode();
+        } catch (Exception ex){
+            dd.lensMode = null;
+        }
+        try{
+            dd.elementSet = getDevice().getElementSet();
+        } catch (Exception ex){
+            dd.elementSet = null;
+        }
+        try{
+            dd.acquisitionMode = getDevice().getAcquisitionMode();
+        } catch (Exception ex){
+            dd.acquisitionMode = null;
+        }
+        try{
+            dd.energyMode = getDevice().getEnergyMode();
+        } catch (Exception ex){
+            dd.energyMode = null;
+        }
+        try{
+            dd.detectorMode = getDevice().getDetectorMode();
+        } catch (Exception ex){
+            dd.detectorMode = null;
+        }
+        try{
+            dd.pass = getDevice().getPassEnergy();
+        } catch (Exception ex){
+            dd.pass = 0;
+        }
 
         dd.low = getDevice().getLowEnergy().getValue();
         dd.center = getDevice().getCenterEnergy().getValue();
@@ -233,8 +254,6 @@ public final class ScientaPanel extends DevicePanel {
     protected void onBackgroundUpdateFinished(Object data) {
         DeviceData dd = (DeviceData) data;
 
-        updateSpectrum();
-
         updateValueField(valueLow, dd.low);
         updateValueField(valueCenter, dd.center);
         updateValueField(valueHigh, dd.high);
@@ -253,26 +272,25 @@ public final class ScientaPanel extends DevicePanel {
         updateComboField(comboEnergy, dd.energyMode);
         updateComboField(comboElement, dd.elementSet);
         updateComboField(comboPass, dd.pass);
+        
+        try {            
+            if ((dd.spectrum == null)||(dd.spectrumX==null)) {
+                throw new Exception("Invalid spectrum");
+            }
+            int length = Math.min(dd.spectrumX.length, dd.spectrum.length);
+            spectrumSeries.setData( Arrays.copyOfRange(dd.spectrumX, 0, length),Arrays.copyOfRange(dd.spectrum, 0, length));
+            plot.updateSeries(spectrumSeries);
+        } catch (Exception ex) {
+            getLogger().log(Level.FINE, null, ex);
+            spectrumSeries.clear();
+        }
+                
 
         try {
             progress.setValue((int) (getDevice().getProgress() * 1000));
         } catch (Exception ex) {
             getLogger().log(Level.FINE, null, ex);
         }
-    }
-
-    void updateSpectrum() {
-        try {
-            double[] xSpectrum = getDevice().getSpectrumX();
-            if (xSpectrum != null) {
-                spectrumSeries.setData(xSpectrum, getDevice().getSpectrum().take());
-                plot.updateSeries(spectrumSeries);
-                return;
-            }
-        } catch (Exception ex) {
-            getLogger().log(Level.FINE, null, ex);
-        }
-        spectrumSeries.clear();
     }
 
     /**
