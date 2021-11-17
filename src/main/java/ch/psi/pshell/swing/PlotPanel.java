@@ -886,7 +886,7 @@ public class PlotPanel extends MonitoredPanel {
             }
             plot.setTitle(name);
             addPlot((PlotBase) plot);
-            plot.setUpdatesEnabled(false);
+            plot.setUpdatesEnabled(offscreen);
         }
         return plot;
     }
@@ -1126,8 +1126,8 @@ public class PlotPanel extends MonitoredPanel {
             }
 
             plot.update(true);
-            if (!offscreen) {
-                plot.setUpdatesEnabled(true);//This plot is user general-purpose so disable scan optimization
+            plot.setUpdatesEnabled(true);//This plot is user general-purpose so disable scan optimization
+            if (!offscreen) {                
                 validate();
                 repaint();
             }
