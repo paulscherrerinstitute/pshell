@@ -1219,6 +1219,20 @@ public class App extends ObservableBase<AppListener> {
                 }
                 return new ArrayList<Plot>();
             }
+            
+            @Override
+            public void onTitleClosed(String title){
+                if (isOffscreenPlotting()) {
+                    removePlotPanel(title);
+                    logger.info("Plot context closed: " + title);
+                }
+            }
+           
+            
+            @Override
+            public List<String> getTitles(){
+                return new ArrayList(plotPanels.keySet());
+            }
         });
 
     }
@@ -1282,7 +1296,7 @@ public class App extends ObservableBase<AppListener> {
 
     String checkPlotsTitle(String title) {
         if ((title == null) || (title.isEmpty())) {
-            title = "Plots";
+            title = PlotListener.DEFAULT_PLOT_TITLE;
         }
         return title;
     }

@@ -644,6 +644,16 @@ public class View extends MainFrame {
                 }
                 return new ArrayList<Plot>();
             }
+            
+            @Override
+            public List<String> getTitles(){
+                return getPlotTitles();
+            }       
+            
+            @Override
+            public  void onTitleClosed(String title){
+                //Do nothing... only close titles graphically
+            }            
         });
     }
 
@@ -913,8 +923,24 @@ public class View extends MainFrame {
         return getPlotPanel(plotTitle, true);
     }
 
+    public List<String> getPlotTitles() {
+        List<String> ret = new ArrayList<>();
+        ret.add(PlotListener.DEFAULT_PLOT_TITLE);
+        for (int i = 0; i < tabPlots.getTabCount(); i++) {
+            if (tabPlots.getComponentAt(i) != scanPlot) {
+                if (tabPlots.getComponentAt(i) instanceof PlotPanel) {
+                    ret.add(tabPlots.getTitleAt(i));
+                }
+            }
+        }
+        for (String key : detachedPlots.keySet()) {
+             ret.add(key);
+        }
+        return ret;
+    }
+    
     public PlotPanel getPlotPanel(String plotTitle, boolean create) {
-        if ((plotTitle == null) || (plotTitle.isEmpty())) {
+        if ((plotTitle == null) || (plotTitle.isEmpty()) || (plotTitle.equals(PlotListener.DEFAULT_PLOT_TITLE))) {
             return scanPlot;
         }
 

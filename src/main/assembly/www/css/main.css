@@ -104,6 +104,12 @@ textarea {
     border: 1px solid #cccccc;	
 }
 
+.plot {
+    display:block;
+    margin:auto;
+    margin-top: 18px;
+}
+
 .shadow_ro {
     background: #f5f5f5;
     background: linear-gradient(#eeeeee 0, #f5f5f5 50px);

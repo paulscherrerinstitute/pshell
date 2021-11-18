@@ -26,13 +26,11 @@
         <script src="js/vendor/modernizr-2.6.2-respond-1.1.0.min.js"></script>
         <script src="js/jquery-2.0.0.min.js"></script>
         <script src="js/jquery-ui.min.js"></script>
-        <script src="flot/jquery.flot.js"></script>
-        <script src="flot/jquery.flot.resize.js"></script>
-
 
         <script type='text/javascript'>
             var base = '..';
             var stream;
+            var number_plots=0;
 
             function getVersion() {
                 $.get(base + '/version', function (data) {
@@ -83,6 +81,10 @@
                     $('#'+buttons[button]).prop('disabled', !value);
                 }
             }
+            
+            function checkCloseContextButton(){
+                $('#close_context').prop('disabled', (getCurrentPlotContext()=="null"));
+            }
 
             var communicationOk = true
 
@@ -131,114 +133,26 @@
                 table.html(tbl_body);
             }
             
-            function onScanRecord(record) {
-                var index = record["index"]
-                var positions = record["positions"]
-                var values = record["readables"]
-
-                if (scanInfo["dimensions"] == 1) {
-                    $("#graph1").show()
-                    if (positions.length == 0) {
-                        positions = [index, ]
+            function updateCombo(combo, data) {
+                var cb_body = "";
+                $.each(data, function (k,v) {
+                    if (!v){
+                        v="Default"
                     }
-
-                    for (i = 0; i < values.length; i++) {
-                        scanData[i].data.push([positions[0], values[i]]);
-                        //if(scanData[i].length>MAXIMUM_SIZE){
-                        //    scanData[i] = scanData[i].splice(1);
-                    }
-                    repaintLinePlot()
-                } else {
-                    $("#graph1").hide()
-                    $("#tooltip").hide();
+                    var cb_row = '<option value="'+ v + '">' + v + '</option>';
+                    cb_body += cb_row;
+                })
+                combo.html(cb_body);
+            }
+             
+            function updateNumberOfPlots(n) {
+                var body = "";
+                for (i = 0; i < n; i++) {
+                    body += '<img id="plot' + i +'" src="" alt="" class="plot img-rounded" style="display:none">';
                 }
-                //Todo: area plot
+                $("#plots_container").html(body);
             }
-
-            function onScanStart(info) {
-                scanInfo = info
-                scanData = new Array()
-                names = info["readableNames"]
-                for (i = 0; i < names.length; i++)
-                    scanData.push({data: new Array(0), label: names[i]})
-                repaintLinePlot()
-            }
-
-            var scanInfo = []
-            var scanData = [[], []];
-            var scanPlotOptions = {
-                series: {
-                    shadowSize: 0	// Drawing is faster without shadows
-                    ,
-                    points: {
-                        show: true,
-                        radius: 3
-                                //symbol: "circle" 
-                    },
-                    lines: {
-                        show: true,
-                        lineWidth: 1,
-                        //fill: boolean or number
-                        //fillColor: null or color/gradient                            
-                    }
-                },
-                yaxis: {
-                    min: null,
-                    max: null,
-                    show: true,
-                },
-                xaxis: {
-                    // mode: "time"
-                    min: null,
-                    max: null,
-                    show: true,
-                },
-                grid: {
-                    hoverable: true,
-                    clickable: false
-                },
-            };
-
-            function repaintLinePlot() {
-                var plot = $.plot($("#graph1"), scanData, scanPlotOptions);
-                plot.setData(scanData);
-                plot.setupGrid();
-                plot.draw();             
-            }
-
-            function clearScanPlots() {
-                scanInfo = []
-                scanData = [[], []]
-                repaintLinePlot()
-                $("#tooltip").hide();
-            }
-
-            function setPlots(info) {
-                clearScanPlots()
-                var context = info["context"]
-                var plots = info["plots"]
-                $("#graph1").show()
-                plotsData = new Array(0)
-                for (i = 0; i < plots.length; i++) {
-                    plot = plots[i]
-                    if (plot.rank == 1) {
-                        var y = plot.data
-                        var x = plot.x
-                        plotData = []
-                        for (j = 0; j < y.length; j++) {
-                            plotData.push([((x == null) ? j : x[j]), y[j]])
-                        }
-                        plotsData.push({data: plotData, label: plot.name})
-                    }
-                }
-                onPlots();
-                var plot = $.plot($("#graph1"), plotsData, scanPlotOptions);
-                plot.setData(plotsData);
-                plot.setupGrid();
-                plot.draw();
-                
-            }
-
+            
             function setUser(user) {
                 var name = user[0];
                 var rights = user[1];
@@ -387,12 +301,6 @@
             }
 
             function abort() {
-                //$.ajax({
-                //    url: base + '/abort',
-                //    type: 'PUT',
-                //}).error(function (xhr, textStatus, errorThrown) {
-                //    appendConsole(xhr.responseText)
-                //});                
                 $.get(base + '/abort', function (data) {
                 }).error(function (xhr, textStatus, errorThrown) {
                     appendConsole(xhr.responseText)
@@ -409,13 +317,17 @@
                 $("#command").focus();
             }
             
-            function onPlots() {
+            function onPlots(no_refresh) {
+   
                 $("#home").hide()
                 $("#plots").show()
                 $("#logs").hide()
                 $("#devices").hide()
                 $("#scripts").hide()
                 $("#data").hide()
+                if (!no_refresh){
+                    getPlots();
+                }
             }            
 
             function onDevices() {
@@ -463,7 +375,7 @@
                 $.get(base + '/devices', function (data) {
                     updateTable($("#table_devices tbody"), data)
                 }, 'json').error(function (xhr, textStatus, errorThrown) {
-                    getState()
+                    appendConsole(xhr.responseText)
                 });
             }
 
@@ -487,12 +399,123 @@
                     appendConsole(xhr.responseText)
                 });                                
             }
+            
+            function close_context(){
+                var context = getCurrentPlotContext()
+                if (context=="null"){
+                    return 
+                }
+                $.ajax({
+                    url: base + '/plots/'+context,
+                    type: 'DELETE',
+                    success: function(result) {                        
+                    }
+                }).error(function (xhr, textStatus, errorThrown) {
+                    appendConsole(xhr.responseText)
+                }).complete(function(xhr, textStatus){
+                    getPlotsContexts("Default", true)
+                })                  
+            }
 
+            var contexts = ["Default"]
+            function getPlotsContexts(selection, force_repaint) {                
+                $.get(base + '/plots', function (data) {
+                    if (!selection){
+                        selection= $("#contexts").val()
+                    } 
+                    
+                    if (JSON.stringify(data)!=JSON.stringify(contexts)){
+                        contexts = data.slice();
+                        updateCombo($("#contexts"), contexts)                    
+                    }
+                    if (selection!=$("#contexts").val()){
+                        $("#contexts").val(selection)   
+                        if (!$("#contexts").val()){
+                            $("#contexts").val("Default")   
+                        }                        
+                        getPlots()
+                    } else {
+                        if (force_repaint){
+                            getPlots()
+                        }
+                    }                    
+                    checkCloseContextButton()
+                }, 'json').error(function (xhr, textStatus, errorThrown) {
+                    appendConsole(xhr.responseText)
+                });                
+            }
+            
+            function getPlot(title,index) {  
+                var plot = "#plot" + index
+                var format = "png"
+                var plotsize = $('#plotsize').val();
+                if (plotsize=="Small"){
+                    var width = 300
+                    var height = 200                
+                }else if (plotsize=="Big"){
+                    var width = 900
+                    var height =600                
+                }
+                else {
+                    var width = 600
+                    var height = 400                
+                }
+                var xhr = new XMLHttpRequest();
+                xhr.open("GET",  "/plot/"+title+"/"+index+"/"+format+"/"+width+"/"+height , true);
+                xhr.responseType = "arraybuffer";
+                $(plot).attr("alt",xhr.responseURL)   
+                xhr.onload = function(oEvent) {
+                   if (this.status == 200){                       
+                        var arrayBuffer = xhr.response;
+                        var blob = new Blob([arrayBuffer], {type: "image/png"});
+                        var url = URL.createObjectURL(blob);                        
+                        $(plot).attr("src",url)
+                        $(plot).show()
+                    } else {
+                       console.log("Error updating plot:  "+ xhr.responseURL)
+                       $(plot).attr("src","")       
+                       $(plot).hide()
+                    }
+                }          
+                xhr.send();                                                         
+            }
+            
+            function getCurrentPlotContext() {  
+                var title = $('#contexts').val();
+                if (title == "Default"){
+                    title = "null"
+                }
+                return title
+            }
+            var updating_context = ""
+            function getPlots() {
+                var context = getCurrentPlotContext()
+                if (updating_context == context){
+                    return
+                }
+                updating_context = context
+                $.get(base + '/plots/'+context, function (data) {
+                    if (number_plots!=data){
+                        number_plots = data
+                        updateNumberOfPlots(number_plots)
+                    }
+                    for (i = 0; i < number_plots; i++) {
+                        getPlot(context, i)    
+                    }                
+                }, 'json').error(function (xhr, textStatus, errorThrown) {
+                    appendConsole(xhr.responseText)
+                    updateNumberOfPlots(0)                    
+                }).complete(function(xhr, textStatus){
+                    updating_context = ""
+                })               
+            }
+
+    
             function getLogs() {
                 $.get(base + '/logs', function (data) {
                     updateTable($("#table_logs tbody"), data)
                 }, 'json').error(function (xhr, textStatus, errorThrown) {
-                    getState()
+                    appendConsole(xhr.responseText)
                 });
             }
 
@@ -791,25 +814,33 @@
                 connection.addEventListener('progress', function (e) {
                     jdata = JSON.parse(e.data)
                     updateProgress(jdata);
-                    if (jdata == 0) {
-                        clearScanPlots();
-                    }
-
                 }, false);
+                /*
                 connection.addEventListener('scan', function (e) {
-                    jdata = JSON.parse(e.data)
-                    onScanStart(jdata);
+                    //jdata = JSON.parse(e.data)
+                    //onScanStart(jdata);
 
                 }, false);
                 connection.addEventListener('record', function (e) {
-                    jdata = JSON.parse(e.data)
-                    onScanRecord(jdata);
+                    //jdata = JSON.parse(e.data)
+                    //onScanRecord(jdata);
 
                 }, false);
+                 */
                 connection.addEventListener('plot', function (e) {
                     jdata = JSON.parse(e.data)
-                    setPlots(jdata);
-
+                    var context = jdata["context"]
+                    if (!context){
+                        context = "Default"
+                    }
+                    if ($("#contexts").val()!=context){
+                         onPlots(true);
+                        setTimeout(function() {
+                            getPlotsContexts(context, true);                         
+                        }, 100);                                                  
+                    } else {
+                        onPlots();
+                    }
                 }, false);
                 connection.addEventListener('user', function (e) {
                     jdata = JSON.parse(e.data)
@@ -832,19 +863,20 @@
                 }
             }
             
+            var counter = 0
             function timer() {
+                counter = counter +1
                 if ($("#devices").is(":visible")) {
                     getDevices();
                 } else if ($("#logs").is(":visible")) {
                     getLogs();
-                } else {
-                    getState(); //In order to have a visual indication the server is offline: the state is erased
-                }
-
-                window.setTimeout(
-                        "timer()",
-                        1000
-                        );
+                } else if ($("#plots").is(":visible")) {
+                    if ((counter%2)==0){
+                        getPlotsContexts()
+                        getPlots();
+                    }
+                } 
+                getState(); //In order to have a visual indication the server is offline: the state is erased
             }
 
             var historyIndex = -1;
@@ -1060,11 +1092,23 @@
             </div>
         </div>
 
-        <div id="plots" class="container" style="display:none">
+        <div id="plots_ant" class="container" style="display:none">
             <div class="row">
-                <div id="graph1_container" class="graph-container shadow img-rounded">                        
-                    <div id="graph1" class="graph-placeholder"></div>
+                <div id="graph1_container_ant" class="graph-container shadow img-rounded">                        
+                    <div id="graph1_ant" class="graph-placeholder"></div>
                 </div>                                                   
+            </div>
+        </div>
+        
+        <div id="plots" class="container" style="display:none">            
+            <div class="row">
+                  <button id="close_context" type="button" class="btn btn-default pull-right" onclick="close_context()" style="width:60px; font-size:smaller">Close</button>                                            
+                  <select name="contexts" id="contexts" class="btn btn-secondary dropdown-toggle pull-right" style="margin-right:15px"> <option value="Default">Default</option> </select>            
+                  <label class="pull-right small text-muted" for="contexts" style="margin-top:5px">Title:</label>
+                  <select name="plotsize" id="plotsize" class="btn btn-secondary dropdown-toggle pull-right" style="margin-right:20px"> <option value="Small">Small</option><option value="Medium" selected="selected">Medium</option><option value="Big">Big</option> </select>            
+                  <label class="pull-right small text-muted" for="plotsize" style="margin-top:5px">Size:</label>
+            </div>                            
+            <div id="plots_container" class="row">
             </div>
         </div>
 
@@ -1168,42 +1212,10 @@
             //$("#progress").hide()
             if (!isBlocking()) {
                 $("#abortbutton").hide()
-            }
-
-            $("<div id='tooltip'></div>").css({
-                position: "absolute",
-                display: "none",
-                border: "1px solid #fdd",
-                padding: "2px",
-                "background-color": "#fee",
-                opacity: 0.80
-            }).appendTo("body");
-
-
-            $("#graph1").bind("plothover", function (e, pos, item) {
-                if (item) {
-                    var x = item.datapoint[0].toFixed(2),
-                            y = item.datapoint[1].toFixed(2);
-                    $("#tooltip").html(x + ", " + y)
-                            .css({top: item.pageY - ($("#tooltip").height()) - 5, left: item.pageX + 5})
-                            .fadeIn(200);
-                } else {
-                    $("#tooltip").hide();
-                }
-            });
-
-
-            $(".graph-container").resizable({
-                maxWidth: 1800,
-                maxHeight: 600,
-                minWidth: 300,
-                minHeight: 200
-            });
-
-            $(".graph-container").css("width", '100.00%');
-            $(".graph-container").css("margin-right", '0%');
+            }   
+            
             $(".row").css("width", '100%');
-
+            
             getState();
             getVersion();
             getInstanceName();
@@ -1338,8 +1350,17 @@
                 }                
             })            
 
+            $('#contexts').on('change', function() {
+              getPlots()
+              checkCloseContextButton()
+            });
+            $('#plotsize').on('change', function() {
+              getPlots()
+            });
+            checkCloseContextButton()
             connect();
             timer();
+            window.setInterval(timer, 1000)
 
         </script>
 

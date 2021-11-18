@@ -2505,9 +2505,6 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
             if (plotListener != null) {
                 ret = plotListener.plot(title, plots);
             }
-            synchronized(plotContexts){
-                plotContexts.add((title==null)? "" : title);
-            }
         } catch (Exception ex) {
             logger.log(Level.WARNING, null, ex);
             throw ex;
@@ -2520,22 +2517,38 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
         return plot(new PlotDescriptor[]{plot}, title);
     }
     
-    final Set<String> plotContexts = new HashSet<>(Arrays.asList(""));
-    
-    public List<String> getPlotContexts(){
-        synchronized(plotContexts){
-            return new ArrayList<>(plotContexts);
-        }
+   
+    public List<String> getPlotTitles(){
+        if (plotListener != null) {
+            try {
+                return plotListener.getTitles();
+            } catch (Exception ex) {
+                logger.log(Level.FINE, null, ex);
+            }
+        }           
+        return Arrays.asList(new String[]{PlotListener.DEFAULT_PLOT_TITLE});
     }
     
-    public boolean  removePlotContext(String context){
-        if ((context!=null) && (!context.isEmpty())){
-            synchronized(plotContexts){
-                try{
-                    return plotContexts.remove(context);
-                } catch (Exception ex){                
+    public boolean removePlotContext(String context){
+        if ((context!=null) && (!context.isEmpty()) && (!context.equals(PlotListener.DEFAULT_PLOT_TITLE))){
+            if (!getPlotTitles().contains(context)){
+                return false;
+            }
+            if (plotListener != null) {
+                try {
+                    plotListener.onTitleClosed(context);
+                } catch (Exception ex) {
+                    logger.log(Level.FINE, null, ex);
+                }
+            }                                        
+            if (serverPlotListener != null) {
+                try {
+                    serverPlotListener.onTitleClosed(context);
+                } catch (Exception ex) {
+                    logger.log(Level.FINE, null, ex);
                 }
             }
+            return true;
         }
         return false;
     }

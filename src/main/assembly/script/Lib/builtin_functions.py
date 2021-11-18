@@ -842,13 +842,21 @@ def set_exec_pars(**args):
         then, then_success, then_exception(str): Sets statement to be executed on the completion of current.
         defaults(bool): If true restore the original execution parameters.
 
-        Graphical preferences can also be set. Keys are equal to lowercase of Preference enum:
-        "plot_disabled", "plot_layout", "table_disabled", "enabled_plots", "plot_types", "print_scan", "auto_range",
-        "manual_range","manual_range_y", "domain_axis", "status". See set_preference for more information.
-
-        Shortcut entries: "line_plots": list of devices with enforced line plots.
-                          "range": "none", "auto", [min_x, max_x]  or [min_x, max_x, min_y, max_y]
-                          "display": if false disables scan data plotting and printing.
+        Graphical preferences:
+        line_plots(list): list of devices with enforced line plots.
+        range(str or list): "none", "auto", [min_x, max_x]  or [min_x, max_x, min_y, max_y]
+        display(bool): if false disables scan data plotting and printing.
+        print_scan(bool): Enable/disables scan data printing to console.
+        plot_disabled(bool): Enable/disable scan plot
+        plot_layout (str):"Horizontal", "Vertical" or "Grid"
+        table_disabled(bool): Enable/disable scan table 
+        enabled_plots (list of str or Readable): list of devices (Readables) to be plotted
+        plot_types(dict):  Dictionary - Plot name(Readable or String) : Plot type(String or int)
+        auto_range(bool): If true automatic range scan plots x-axis.
+        manual_range(tuple): : Set  range (min_x, max_x) or  (min_x, max_x, min_y, max_y). None sets fixed range.
+        manual_range_y(tuple): Set y range (min_y, max_y). None sets fixed range.
+        domain_axis(str): Set the domain axis source: "Time", "Index", or a readable name. Default: first positioner.
+        status(str): set application status
     """
     get_context().setExecutionPars(args)
 

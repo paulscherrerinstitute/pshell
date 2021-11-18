@@ -445,7 +445,7 @@ public class ServerService {
     @Path("plot/{title}/{index}/{format}/{width}/{height}")
     @Consumes(MediaType.TEXT_PLAIN)
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
-    public byte[] getPlots(@PathParam("title") final String title,
+    public byte[] getPlot(@PathParam("title") final String title,
             @PathParam("index") final int index,
             @PathParam("format") final String format,
             @PathParam("width") final int width,
@@ -491,9 +491,9 @@ public class ServerService {
     @GET
     @Path("plots")
     @Produces(MediaType.APPLICATION_JSON)
-    public String getPlotContexts() throws ExecutionException {
+    public String getPlotTitles() throws ExecutionException {
         try {
-            List<String> ret = context.getPlotContexts();
+            List<String> ret = context.getPlotTitles();
             return (ret == null) ? "" : mapper.writeValueAsString(ret);
         } catch (Exception ex) {
             throw new ExecutionException(ex);
