@@ -110,6 +110,11 @@ textarea {
     margin-top: 18px;
 }
 
+.header_button {
+    width:58px; 
+    font-size:smaller; 
+}
+
 .shadow_ro {
     background: #f5f5f5;
     background: linear-gradient(#eeeeee 0, #f5f5f5 50px);

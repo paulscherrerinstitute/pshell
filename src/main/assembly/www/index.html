@@ -83,7 +83,12 @@
             }
             
             function checkCloseContextButton(){
-                $('#close_context').prop('disabled', (getCurrentPlotContext()=="null"));
+                //$('#close_context').prop('disabled', (getCurrentPlotContext()=="null"));
+                if (getCurrentPlotContext()=="null"){
+                    $('#close_context').hide()
+                } else {
+                    $('#close_context').show()
+                }
             }
 
             var communicationOk = true
@@ -144,6 +149,58 @@
                 })
                 combo.html(cb_body);
             }
+            
+                        
+            function updateTab(data, selected) {
+                tabData = data 
+                tab = $("#plots_tab") 
+                var body = "";
+                var exists = false                
+                if (!selected){
+                    selected="Default"
+                }         
+                try{
+                    $.each(data, function (k,v) {
+                        if (!v){
+                            v="Default"
+                        }
+                        if (selected==v){
+                            body += '<li class="active" id="tab_'+ v + '"><a data-toggle="tab" href="#" onclick=onSelTab("'+v+'")>' + v + '</a></li>';
+                            exists = true
+                        } else {
+                            body += '<li id="tab_'+ v + '"><a data-toggle="tab" href="#" onclick=onSelTab("'+v+'")>' + v + '</a></li>';
+                        }
+                    })
+                } catch (e) {
+                    console.log("Error updating plot title tab: ",  e);
+                    selected="Default"
+                    body += '<li id="tab_'+ selected + '"><a data-toggle="tab" href="#" onclick=onSelTab("'+selected+'")>' + selected + '</a></li>';                    
+                }
+                tab.html(body);     
+                if (!exists){
+                    selectTab("Default")
+                } else {
+                    onSelTab(selected)
+                }
+            }
+            
+            function onSelTab(selected){
+                if (selectedTab != selected){
+                    selectedTab = selected
+                    checkCloseContextButton()
+                    getPlots();
+                }
+            }   
+            
+            var selectedTab="Default"
+            var tabData 
+            function selectTab(selected) {
+                if (tabData){
+                    updateTab(tabData, selected)
+                }
+            }
+            
+
              
             function updateNumberOfPlots(n) {
                 var body = "";
@@ -421,25 +478,20 @@
             function getPlotsContexts(selection, force_repaint) {                
                 $.get(base + '/plots', function (data) {
                     if (!selection){
-                        selection= $("#contexts").val()
-                    } 
-                    
+                        selection= selectedTab
+                    }                     
                     if (JSON.stringify(data)!=JSON.stringify(contexts)){
                         contexts = data.slice();
-                        updateCombo($("#contexts"), contexts)                    
-                    }
-                    if (selection!=$("#contexts").val()){
-                        $("#contexts").val(selection)   
-                        if (!$("#contexts").val()){
-                            $("#contexts").val("Default")   
-                        }                        
+                        updateTab(contexts, selection)
+                    }  
+                    if (selection!=selectedTab){
+                        selectTab(selection)
                         getPlots()
                     } else {
                         if (force_repaint){
                             getPlots()
                         }
-                    }                    
-                    checkCloseContextButton()
+                    }                                        
                 }, 'json').error(function (xhr, textStatus, errorThrown) {
                     appendConsole(xhr.responseText)
                 });                
@@ -449,12 +501,18 @@
                 var plot = "#plot" + index
                 var format = "png"
                 var plotsize = $('#plotsize').val();
-                if (plotsize=="Small"){
+                if (plotsize=="Tiny"){
                     var width = 300
                     var height = 200                
+                }else if (plotsize=="Small"){
+                    var width = 450
+                    var height = 300                
                 }else if (plotsize=="Big"){
                     var width = 900
                     var height =600                
+                }else if (plotsize=="Huge"){
+                    var width = 1200
+                    var height =800                
                 }
                 else {
                     var width = 600
@@ -481,7 +539,7 @@
             }
             
             function getCurrentPlotContext() {  
-                var title = $('#contexts').val();
+                var title = selectedTab
                 if (title == "Default"){
                     title = "null"
                 }
@@ -833,11 +891,11 @@
                     if (!context){
                         context = "Default"
                     }
-                    if ($("#contexts").val()!=context){
+                    if (selectedTab!=context){
                          onPlots(true);
-                        setTimeout(function() {
+                         //setTimeout(function() {
                             getPlotsContexts(context, true);                         
-                        }, 100);                                                  
+                         //}, 100);                                                  
                     } else {
                         onPlots();
                     }
@@ -1081,7 +1139,7 @@
          
         <div id="home" class="container">
             <div class="row">
-                <textarea class="row text-container horizontalscroll shadow_ro img-rounded" id="txtarea" readonly="readonly" rows="26" ></textarea>                              
+                <textarea class="row text-container horizontalscroll shadow_ro img-rounded" id="txtarea" readonly="readonly" rows="23" ></textarea>                              
 
                 <input class="row text-container shadow img-rounded" id="command" placeholder="" type="text">                              
 
@@ -1102,24 +1160,29 @@
         
         <div id="plots" class="container" style="display:none">            
             <div class="row">
-                  <button id="close_context" type="button" class="btn btn-default pull-right" onclick="close_context()" style="width:60px; font-size:smaller">Close</button>                                            
-                  <select name="contexts" id="contexts" class="btn btn-secondary dropdown-toggle pull-right" style="margin-right:15px"> <option value="Default">Default</option> </select>            
-                  <label class="pull-right small text-muted" for="contexts" style="margin-top:5px">Title:</label>
-                  <select name="plotsize" id="plotsize" class="btn btn-secondary dropdown-toggle pull-right" style="margin-right:20px"> <option value="Small">Small</option><option value="Medium" selected="selected">Medium</option><option value="Big">Big</option> </select>            
-                  <label class="pull-right small text-muted" for="plotsize" style="margin-top:5px">Size:</label>
-            </div>                            
+                  <select name="plotsize" id="plotsize" class="btn btn-secondary dropdown-toggle pull-right" style="font-size:smaller"> 
+                      <option value="Tiny">Tiny</option>
+                      <option value="Small">Small</option>
+                      <option value="Medium" selected="selected">Medium</option>
+                      <option value="Big">Big</option>      
+                      <option value="Huge">Huge</option> </select>            
+                  <!-- <label class="pull-right small text-muted header_combo" for="plotsize" style="margin-top:5px">Size:</label> -->
+            </div>                                        
+            
+            <ul id="plots_tab" class="nav nav-tabs" style="font-size:smaller">
+              <li class="active"><a data-toggle="tab" href="#">Default</a></li>
+            </ul>
+            <button id="close_context" type="button" class="btn btn-default btn-xs pull-right header_button" onclick="close_context()" style="display:none;margin-top:-24px;">Close</button>                                            
+            
             <div id="plots_container" class="row">
             </div>
         </div>
 
         <div id="devices" class="container" style="display:none">
             <div class="row borderless-container">                            
-                <button id="updatedevices" type="button" class="btn btn-default pull-right" onclick="updateDevices();
-                        this.blur()" style="width:60px; font-size:smaller">Update</button>                                                   
-                <button id="initdevices" type="button" class="btn btn-default pull-right" onclick="initDevices();
-                        this.blur()" style="width:60px; font-size:smaller; margin-right:10px">Init</button>                                                   
-                <button id="stopdevices" type="button" class="btn btn-default pull-right" onclick="stopDevices();
-                        this.blur()" style="width:60px; font-size:smaller; margin-right:10px">Stop</button>                                                   
+                <button id="updatedevices" type="button" class="btn btn-default pull-right header_button" onclick="updateDevices();this.blur()" style="">Update</button>                                                   
+                <button id="initdevices" type="button" class="btn btn-default pull-right header_button" onclick="initDevices();this.blur()" style="margin-right:10px">Init</button>                                                   
+                <button id="stopdevices" type="button" class="btn btn-default pull-right header_button" onclick="stopDevices();this.blur()" style="margin-right:10px">Stop</button>                                                   
             </div>                
 
             <div class="row table-container">
@@ -1140,7 +1203,7 @@
 
         <div id="logs" class="container" style="display:none">
             <div class="row borderless-container">                            
-                <button id="openlog" type="button" class="btn btn-default pull-right" data-toggle="button" onclick="openLog()" style="width:60px; font-size:smaller; margin-right:10px">Open</button>                                                   
+                <button id="openlog" type="button" class="btn btn-default pull-right header_button" data-toggle="button" onclick="openLog()">Open</button>                                                   
             </div>                
             <div class="row text-container shadow img-rounded single-line-list" id="openloglist" style="display:none; height:240px; overflow-y:scroll">
                 <ul id="openlogresults" class="list-group"></ul>
@@ -1165,17 +1228,17 @@
             <div class="row">
                 <!--  <p> -->                 
                 <div class="row borderless-container">                            
-                    <button id="runscript" type="button" class="btn btn-default pull-right" onclick="runScript();this.blur()" style="width:60px; font-size:smaller;">Run</button>                                                   
-                    <button id="abort" type="button" class="btn btn-default pull-right" onclick="abort();this.blur()" style="width:60px; font-size:smaller; margin-right:10px">Abort</button>                                                   
-                    <button id="editscript" type="button" class="btn btn-default pull-right" data-toggle="button" onclick="editScript()" style="width:60px; font-size:smaller; margin-right:10px">Edit</button> 
-                    <button id="clearscript" type="button" class="btn btn-default pull-right" onclick="clearScript()" style="width:60px; font-size:smaller; margin-right:10px">Clear</button>                     
-                    <button id="listscript" type="button" class="btn btn-default pull-right" data-toggle="button" onclick="listScript()" style="width:60px; font-size:smaller; margin-right:10px">Open</button>                                                   
+                    <button id="runscript" type="button" class="btn btn-default pull-right header_button" onclick="runScript();this.blur()">Run</button>                                                   
+                    <button id="abort" type="button" class="btn btn-default pull-right header_button" onclick="abort();this.blur()" style="margin-right:10px">Abort</button>                                                   
+                    <button id="editscript" type="button" class="btn btn-default pull-right header_button" data-toggle="button" onclick="editScript()" style="margin-right:10px">Edit</button> 
+                    <button id="clearscript" type="button" class="btn btn-default pull-right header_button" onclick="clearScript()" style="margin-right:10px">Clear</button>                     
+                    <button id="listscript" type="button" class="btn btn-default pull-right header_button" data-toggle="button" onclick="listScript()" style="margin-right:10px">Open</button>                                                   
                 </div>                
                 <input class="row text-container shadow_ro img-rounded" id="scriptname" readonly="readonly" placeholder="" type="text">
                 <div class="row text-container shadow img-rounded single-line-list" id="scriptlist" style="display:none; height:240px; overflow-y:scroll">
                     <ul id="scriptresults" class="list-group"></ul>
                 </div>                
-                <textarea class="row text-container horizontalscroll shadow_ro img-rounded" id="scriptcontents" readonly="readonly" rows="24" ></textarea>                              
+                <textarea class="row text-container horizontalscroll shadow_ro img-rounded" id="scriptcontents" readonly="readonly" rows="21" ></textarea>                              
                 <div class="row text-container horizontalscroll alert alert-success fade in" id="scriptreturn" style="display:none"> </div>
                 <div class="row text-container horizontalscroll alert alert-danger fade in" id="scripterror"  style="display:none"> </div>                
             </div>
@@ -1184,8 +1247,8 @@
         <div id="data" class="container" style="display:none">
             <div class="row">
                 <div class="row borderless-container">                            
-                    <button id="plotdata" type="button" class="btn btn-default pull-right" onclick="plotDataset()" style="width:60px; font-size:smaller;">Plot</button>                                                   
-                    <button id="download" type="button" class="btn btn-default pull-right" onclick="download()" style="width:60px; font-size:smaller; margin-right:10px">Save</button>                                                   
+                    <button id="plotdata" type="button" class="btn btn-default pull-right header_button" onclick="plotDataset()">Plot</button>                                                   
+                    <button id="download" type="button" class="btn btn-default pull-right header_button" onclick="download()" style="margin-right:10px">Save</button>                                                   
                 </div>                
                 <input class="row text-container shadow img-rounded" id="data_path" placeholder="" type="text">                              
                 <div class="row text-container horizontalscroll alert alert-danger fade in" id="dataerror"  style="display:none"> </div>                
@@ -1193,7 +1256,7 @@
                     <ul  id="datadropdownmenu"  class="dropdown-menu scrollable-menu" role="menu" aria-labelledby="dropdownMenu" style="display:block;position:absolute;margin-bottom:5px;">
                     </ul>
                 </div>                    
-                <textarea class="row text-container horizontalscroll shadow_ro img-rounded" id="data_contents" readonly="readonly" rows="26" ></textarea>                              
+                <textarea class="row text-container horizontalscroll shadow_ro img-rounded" id="data_contents" readonly="readonly" rows="21" ></textarea>                              
             </div>
         </div>
 
@@ -1349,11 +1412,6 @@
                         }
                 }                
             })            
-
-            $('#contexts').on('change', function() {
-              getPlots()
-              checkCloseContextButton()
-            });
             $('#plotsize').on('change', function() {
               getPlots()
             });
