@@ -1219,18 +1219,17 @@ public class App extends ObservableBase<AppListener> {
                 }
                 return new ArrayList<Plot>();
             }
-            
+
             @Override
-            public void onTitleClosed(String title){
+            public void onTitleClosed(String title) {
                 if (isOffscreenPlotting()) {
                     removePlotPanel(title);
                     logger.info("Plot context closed: " + title);
                 }
             }
-           
-            
+
             @Override
-            public List<String> getTitles(){
+            public List<String> getTitles() {
                 return new ArrayList(plotPanels.keySet());
             }
         });
@@ -1528,12 +1527,12 @@ public class App extends ObservableBase<AppListener> {
     }
 
     volatile Task.ExecutorTask currentStage;
-    
+
     void checkNext() {
         if (hasNextStage()) {
             State state = context.getState();
-            if ((state == State.Ready) && (currentTask==null) && (currentStage==null)) {
-                ExecutionStage nextStage =  popNextStage();
+            if ((state == State.Ready) && (currentTask == null) && (currentStage == null)) {
+                ExecutionStage nextStage = popNextStage();
                 if (nextStage != null) {
                     try {
                         if (view != null) {
@@ -1542,12 +1541,14 @@ public class App extends ObservableBase<AppListener> {
                         currentStage = new Task.ExecutorTask(nextStage);
                         startTask(currentStage);
                     } catch (Exception ex) {
-                        currentStage=null;
+                        currentStage = null;
                         logger.log(Level.SEVERE, null, ex);
                     };
                 }
             } else {
-                SwingUtils.invokeDelayed(()->{checkNext();},1000);
+                SwingUtils.invokeDelayed(() -> {
+                    checkNext();
+                }, 1000);
             }
         }
     }
@@ -1650,21 +1651,21 @@ public class App extends ObservableBase<AppListener> {
                         case STARTED:
                             break;
                         case DONE:
-                            try{
-                                if (view != null) {
-                                    view.onTaskFinished(task);
-                                }
-                            } catch (Exception ex) {
-                                logger.log(Level.WARNING, null, ex);
+                            try {
+                            if (view != null) {
+                                view.onTaskFinished(task);
                             }
-                            task.removePropertyChangeListener(this);
-                            if (task==currentStage){
-                                currentStage=null;
-                            }                            
-                            if (task==currentTask){
-                                currentTask = (currentStage!=null) ? currentStage : null;
-                            }
-                            break;
+                        } catch (Exception ex) {
+                            logger.log(Level.WARNING, null, ex);
+                        }
+                        task.removePropertyChangeListener(this);
+                        if (task == currentStage) {
+                            currentStage = null;
+                        }
+                        if (task == currentTask) {
+                            currentTask = (currentStage != null) ? currentStage : null;
+                        }
+                        break;
                     }
                 }
             }
@@ -1829,17 +1830,7 @@ public class App extends ObservableBase<AppListener> {
 
     }
 
-    static void applyLookAndFeel() {
-        if (isHeadless()) {
-            return;
-        }
-        if (Sys.getOSFamily() == OSFamily.Mac) {
-            try {
-                SwingUtils.setMacScreenMenuBar(getApplicationTitle());
-            } catch (Exception ex) {
-            }
-        }
-        //Look and feel: default is system
+    static String getLookAndFeel() {
         String laf = getArgumentValue("laf");
         if (laf == null) {
             LookAndFeelType type;
@@ -1864,21 +1855,42 @@ public class App extends ObservableBase<AppListener> {
             }
             laf = MainFrame.getLookAndFeel(type);
         }
-        MainFrame.setLookAndFeel(laf);
-        if (isDark()) {
-            UIManager.put("FileView.directoryIcon", new ImageIcon(getResourceImage("FolderClosed.png")));
-            UIManager.put("FileChooser.homeFolderIcon", new ImageIcon(getResourceImage("Home.png")));
-            UIManager.put("FileView.computerIcon", new ImageIcon(getResourceImage("Computer.png")));
-            UIManager.put("FileView.floppyDriveIcon", new ImageIcon(getResourceImage("Floppy.png")));
-            UIManager.put("FileView.hardDriveIcon", new ImageIcon(getResourceImage("HardDrive.png")));
-            UIManager.put("FileChooser.upFolderIcon", new ImageIcon(getResourceImage("FolderUp.png")));
-            UIManager.put("FileChooser.newFolderIcon", new ImageIcon(getResourceImage("FolderNew.png")));
-            UIManager.put("FileView.fileIcon", new ImageIcon(getResourceImage("File.png")));
-            UIManager.put("FileChooser.listViewIcon", new ImageIcon(getResourceImage("List.png")));
-            UIManager.put("FileChooser.detailsViewIcon", new ImageIcon(getResourceImage("Details.png")));
-            UIManager.put("Tree.openIcon", new ImageIcon(getResourceImage("FolderOpen.png")));
-            UIManager.put("Tree.closedIcon", new ImageIcon(getResourceImage("FolderClosed.png")));
-            UIManager.put("Tree.leafIcon", new ImageIcon(getResourceImage("File.png")));
+        return laf;
+    }
+
+    static void applyLookAndFeel() {
+        if (isHeadless()) {
+            try{
+                //Try setting LAF for offscreen plotting
+                MainFrame.setLookAndFeel(getLookAndFeel());
+            } catch(Throwable t){                
+            }
+            return;
+        }
+        
+        if (!isHeadless()) {
+            if (Sys.getOSFamily() == OSFamily.Mac) {
+                try {
+                    SwingUtils.setMacScreenMenuBar(getApplicationTitle());
+                } catch (Exception ex) {
+                }
+            }        
+            MainFrame.setLookAndFeel(getLookAndFeel());
+            if (isDark()) {
+                UIManager.put("FileView.directoryIcon", new ImageIcon(getResourceImage("FolderClosed.png")));
+                UIManager.put("FileChooser.homeFolderIcon", new ImageIcon(getResourceImage("Home.png")));
+                UIManager.put("FileView.computerIcon", new ImageIcon(getResourceImage("Computer.png")));
+                UIManager.put("FileView.floppyDriveIcon", new ImageIcon(getResourceImage("Floppy.png")));
+                UIManager.put("FileView.hardDriveIcon", new ImageIcon(getResourceImage("HardDrive.png")));
+                UIManager.put("FileChooser.upFolderIcon", new ImageIcon(getResourceImage("FolderUp.png")));
+                UIManager.put("FileChooser.newFolderIcon", new ImageIcon(getResourceImage("FolderNew.png")));
+                UIManager.put("FileView.fileIcon", new ImageIcon(getResourceImage("File.png")));
+                UIManager.put("FileChooser.listViewIcon", new ImageIcon(getResourceImage("List.png")));
+                UIManager.put("FileChooser.detailsViewIcon", new ImageIcon(getResourceImage("Details.png")));
+                UIManager.put("Tree.openIcon", new ImageIcon(getResourceImage("FolderOpen.png")));
+                UIManager.put("Tree.closedIcon", new ImageIcon(getResourceImage("FolderClosed.png")));
+                UIManager.put("Tree.leafIcon", new ImageIcon(getResourceImage("File.png")));
+            }
         }
     }
 
