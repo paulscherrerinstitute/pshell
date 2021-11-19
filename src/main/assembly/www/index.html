@@ -60,6 +60,7 @@
                 if (communicationOk) {
                     communicationOk = false
                     updateState("")
+                    updateProgress(0)
                     updateTable($("#table_devices tbody"), [])
                     updateTable($("#table_logs tbody"), [])
                     closeScriptMenu()
@@ -188,7 +189,7 @@
                 if (selectedTab != selected){
                     selectedTab = selected
                     checkCloseContextButton()
-                    getPlots();
+                    getPlots(true);
                 }
             }   
             
@@ -203,6 +204,7 @@
 
              
             function updateNumberOfPlots(n) {
+                number_plots = n
                 var body = "";
                 for (i = 0; i < n; i++) {
                     body += '<img id="plot' + i +'" src="" alt="" class="plot img-rounded" style="display:none">';
@@ -360,7 +362,7 @@
             function abort() {
                 $.get(base + '/abort', function (data) {
                 }).error(function (xhr, textStatus, errorThrown) {
-                    appendConsole(xhr.responseText)
+                    console.log("Error aborting: ", errorThrown)
                 });                  
             }
             
@@ -383,7 +385,7 @@
                 $("#scripts").hide()
                 $("#data").hide()
                 if (!no_refresh){
-                    getPlots();
+                    getPlots(true);
                 }
             }            
 
@@ -432,28 +434,28 @@
                 $.get(base + '/devices', function (data) {
                     updateTable($("#table_devices tbody"), data)
                 }, 'json').error(function (xhr, textStatus, errorThrown) {
-                    appendConsole(xhr.responseText)
+                    console.log("Error getting devices: ", errorThrown)
                 });
             }
 
             function updateDevices() {
                 $.get(base + '/update', function (data) {
                 }).error(function (xhr, textStatus, errorThrown) {
-                    appendConsole(xhr.responseText)
+                    console.log("Error updating devices: ", errorThrown)
                 });                                
             }
 
             function initDevices() {
                 $.get(base + '/reinit', function (data) {
                 }).error(function (xhr, textStatus, errorThrown) {
-                    appendConsole(xhr.responseText)
+                    console.log("Error reiniting devices: ", errorThrown)
                 });                                
             }
 
             function stopDevices() {
                 $.get(base + '/stop', function (data) {
                 }).error(function (xhr, textStatus, errorThrown) {
-                    appendConsole(xhr.responseText)
+                    console.log("Error stopping devices: ", errorThrown)
                 });                                
             }
             
@@ -468,7 +470,7 @@
                     success: function(result) {                        
                     }
                 }).error(function (xhr, textStatus, errorThrown) {
-                    appendConsole(xhr.responseText)
+                    console.log("Error closing plot title " , context, ": ", errorThrown)
                 }).complete(function(xhr, textStatus){
                     getPlotsContexts("Default", true)
                 })                  
@@ -486,16 +488,18 @@
                     }  
                     if (selection!=selectedTab){
                         selectTab(selection)
-                        getPlots()
+                        getPlots(true)
                     } else {
                         if (force_repaint){
-                            getPlots()
+                            getPlots(true)
                         }
                     }                                        
                 }, 'json').error(function (xhr, textStatus, errorThrown) {
-                    appendConsole(xhr.responseText)
+                    console.log("Error getting plotting titles: ", errorThrown)
                 });                
             }
+            
+            var TIMEOUT_PLOT =8000
             
             function getPlot(title,index) {  
                 var plot = "#plot" + index
@@ -521,6 +525,7 @@
                 var xhr = new XMLHttpRequest();
                 xhr.open("GET",  "/plot/"+title+"/"+index+"/"+format+"/"+width+"/"+height , true);
                 xhr.responseType = "arraybuffer";
+                xhr.timeout = TIMEOUT_PLOT
                 $(plot).attr("alt",xhr.responseURL)   
                 xhr.onload = function(oEvent) {
                    if (this.status == 200){                       
@@ -534,7 +539,16 @@
                        $(plot).attr("src","")       
                        $(plot).hide()
                     }
-                }          
+                    update_counter--
+                }       
+                xhr.onerror= function(e) {
+                    console.log("Error updating plot: ", xhr.responseURL, " - ",  e);
+                    update_counter--
+                };             
+                xhr.ontimeout = function () {
+                    console.log("Timeout updating plot:  "+ xhr.responseURL)
+                    update_counter--
+                };                
                 xhr.send();                                                         
             }
             
@@ -546,22 +560,29 @@
                 return title
             }
             var updating_context = ""
-            function getPlots() {
+            var update_counter = ""
+            function getPlots(force) {
                 var context = getCurrentPlotContext()
                 if (updating_context == context){
                     return
                 }
+                if ((update_counter>0) && (!force)){
+                    return
+                }
+                if (update_counter<0){
+                    console.log("Invalid update counter: ", update_counter);
+                }
                 updating_context = context
                 $.get(base + '/plots/'+context, function (data) {
-                    if (number_plots!=data){
-                        number_plots = data
-                        updateNumberOfPlots(number_plots)
+                    if (number_plots!=data){                        
+                        updateNumberOfPlots(data)
                     }
+                    update_counter = number_plots
                     for (i = 0; i < number_plots; i++) {
                         getPlot(context, i)    
                     }                
                 }, 'json').error(function (xhr, textStatus, errorThrown) {
-                    appendConsole(xhr.responseText)
+                    console.log("Error getting number of plots: ", errorThrown)                    
                     updateNumberOfPlots(0)                    
                 }).complete(function(xhr, textStatus){
                     updating_context = ""
@@ -573,7 +594,7 @@
                 $.get(base + '/logs', function (data) {
                     updateTable($("#table_logs tbody"), data)
                 }, 'json').error(function (xhr, textStatus, errorThrown) {
-                    appendConsole(xhr.responseText)
+                    console.log("Error getting logs ", errorThrown)
                 });
             }
 
@@ -789,7 +810,7 @@
                      //...
                    }
                 }).error(function (xhr, textStatus, errorThrown) {
-                    appendConsole(xhr.responseText)
+                    console.log("Error setting script ", path, ": ", errorThrown)
                 });
             }
             
@@ -914,27 +935,34 @@
                 }, false);
             }
 
-            function disconnect() {
+            function disconnect() {                
                 try {
                     connection.close();
                 } catch (e) {
-                }
+                }                
             }
             
             var counter = 0
             function timer() {
-                counter = counter +1
-                if ($("#devices").is(":visible")) {
-                    getDevices();
-                } else if ($("#logs").is(":visible")) {
-                    getLogs();
-                } else if ($("#plots").is(":visible")) {
-                    if ((counter%2)==0){
-                        getPlotsContexts()
-                        getPlots();
-                    }
-                } 
-                getState(); //In order to have a visual indication the server is offline: the state is erased
+                getState(); //In order to have a visual indication the server is offline: the state is erased                
+                if (communicationOk){
+                    counter = counter +1
+                    if ($("#devices").is(":visible")) {
+                        getDevices();
+                    } else if ($("#logs").is(":visible")) {
+                        getLogs();
+                    } else if ($("#plots").is(":visible")) {
+                        if ((counter%2)==0){
+                            getPlotsContexts()                        
+                        } 
+                        if ((counter%((TIMEOUT_PLOT/1000) + 2))==0){
+                            getPlots(true);
+                        }
+                        else {
+                            getPlots();
+                        }
+                    } 
+                }
             }
 
             var historyIndex = -1;
