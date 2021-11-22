@@ -28,7 +28,8 @@ import os
 import jep.Jep
 import jep.NDArray
 import java.lang.Thread
-from startup import to_array, get_context
+import org.python.core.PyArray as PyArray
+from startup import to_array, get_context, _get_caller, Convert, Arr
 
 __jep = {}
 
@@ -139,7 +140,7 @@ def call_jep(module, function, args = [], reload=False):
     try:
         if reload:
             eval_jep("import " + module)
-            eval_jep("reload(" + module+")")
+            eval_jep("_=reload(" + module+")")
         eval_jep("from " + module + " import " + function + " as " + f)    
         ret = j.invoke(f, args)
     finally:
@@ -147,7 +148,58 @@ def call_jep(module, function, args = [], reload=False):
     return ret
 
 #Converts pythonlist or Java array to numpy array
-def to_npa(data, dimensions = None, type = None):
-   
+def to_npa(data, dimensions = None, type = None):   
     data = to_array(data,'d' if type is None else type)
     return jep.NDArray(data, dimensions)    
+
+#recursivelly converts all NumPy arrays to Java arrys
+def rec_from_npa(obj):
+    if isinstance(obj, jep.NDArray):
+        ret = obj.data
+        if len(obj.dimensions)>1:
+            ret=Convert.reshape(ret, obj.dimensions)
+        return ret
+    if isinstance(obj, java.util.List) or isinstance(obj,tuple) or isinstance(obj,list):
+        ret=[]
+        for i in range(len(obj)):            
+            ret.append(rec_from_npa(obj[i]))
+        if isinstance(obj,tuple):
+            return type(ret)
+        return ret
+    return obj
+
+#recursivelly converts all Java arrays to NumPy arrys
+def rec_to_npa(obj):
+    if isinstance(obj, PyArray):
+        dimensions = Arr.getShape(obj)
+        if len(dimensions)>1:
+            obj = Convert.flatten(obj)
+        return to_npa(obj, dimensions = dimensions)
+    if isinstance(obj, java.util.List) or isinstance(obj,tuple) or isinstance(obj,list):
+        ret=[]
+        for i in range(len(obj)):            
+            ret.append(rec_to_npa(obj[i]))
+        if isinstance(obj,tuple):
+            return tuple(ret)
+        return ret
+    return obj  
+
+def call_py(module, function, *args):      
+    """
+    Calls a CPython function recursively crecursively converting Java arrays in arguments to NumPy,
+    and  NumPy arrays in return values to Java arrays.
+    """
+    ret =  call_jep(module, function, rec_to_npa(args), reload=True)
+    return rec_from_npa(ret)
+
+def import_py(module, function):  
+    """
+    Adds a CPython function  to globals, creating a proxy call to JEP, with 
+    recurvive convertion of Java arrays in arguments to NumPy arrays,
+    and  NumPy arrays in return values to Java arrays.
+    """
+    def jep_proxy_caller(*args):
+        return call_py(module, function, *args)
+    _get_caller().f_globals[function] = jep_proxy_caller    
+
+    
