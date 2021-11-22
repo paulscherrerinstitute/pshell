@@ -29,6 +29,13 @@ import jep.Jep
 import jep.NDArray
 import java.lang.Thread
 import org.python.core.PyArray as PyArray
+import java.lang.String as String
+import java.util.List
+import java.util.Map 
+import java.util.HashMap 
+import ch.psi.pshell.scripting.ScriptUtils as ScriptUtils
+
+
 from startup import to_array, get_context, _get_caller, Convert, Arr
 
 __jep = {}
@@ -119,7 +126,7 @@ def get_jep(var):
     j=__get_jep()  
     return j.getValue(var)
 
-def call_jep(module, function, args = [], reload=False):
+def call_jep(module, function, args = [], kwargs = {}, reload=False):
     j=__get_jep()
     if "/" in module: 
         script = get_context().scriptManager.library.resolveFile(module)       
@@ -142,7 +149,15 @@ def call_jep(module, function, args = [], reload=False):
             eval_jep("import " + module)
             eval_jep("_=reload(" + module+")")
         eval_jep("from " + module + " import " + function + " as " + f)    
-        ret = j.invoke(f, args)
+        if (kwargs is not None) and (len(kwargs)>0):
+            #invoke with kwargs only available in JEP>3.8
+            hm=java.util.HashMap()
+            hm.update(kwargs)            
+            #The only way to get the overloaded method...
+            m = j.getClass().getMethod("invoke", [String, ScriptUtils.getType("[o"), java.util.Map])
+            ret = m.invoke(j, [f, to_array(args,'o'), hm])
+        else:
+            ret = j.invoke(f, args)
     finally:
         __print_stdout()    
     return ret
@@ -166,6 +181,11 @@ def rec_from_npa(obj):
         if isinstance(obj,tuple):
             return type(ret)
         return ret
+    if isinstance(obj, java.util.Map) or isinstance(obj,dict):
+        ret = {} if isinstance(obj,dict) else java.util.HashMap()
+        for k in obj.keys():            
+            ret[k] = rec_from_npa(obj[k])    
+        return ret    
     return obj
 
 #recursivelly converts all Java arrays to NumPy arrys
@@ -182,24 +202,28 @@ def rec_to_npa(obj):
         if isinstance(obj,tuple):
             return tuple(ret)
         return ret
+    if isinstance(obj, java.util.Map) or isinstance(obj,dict):        
+        ret = {} if isinstance(obj,dict) else java.util.HashMap()
+        for k in obj.keys():            
+            ret[k] = rec_to_npa(obj[k])    
+        return ret    
     return obj  
 
-def call_py(module, function, *args):      
+def call_py(module, function, *args, **kwargs):      
     """
     Calls a CPython function recursively crecursively converting Java arrays in arguments to NumPy,
     and  NumPy arrays in return values to Java arrays.
     """
-    ret =  call_jep(module, function, rec_to_npa(args), reload=True)
+    ret =  call_jep(module, function, rec_to_npa(args), rec_to_npa(kwargs), reload=True)
     return rec_from_npa(ret)
-
+    
 def import_py(module, function):  
     """
-    Adds a CPython function  to globals, creating a proxy call to JEP, with 
+    Adds a CPython function  to globals, creating a wrapper call to JEP, with 
     recurvive convertion of Java arrays in arguments to NumPy arrays,
     and  NumPy arrays in return values to Java arrays.
     """
-    def jep_proxy_caller(*args):
-        return call_py(module, function, *args)
-    _get_caller().f_globals[function] = jep_proxy_caller    
-
+    def jep_wrapper(*args, **kwargs):
+        return call_py(module, function, *args, **kwargs)
+    _get_caller().f_globals[function] = jep_wrapper   
     
