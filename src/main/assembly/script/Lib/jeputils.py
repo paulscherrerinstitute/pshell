@@ -164,7 +164,8 @@ def call_jep(module, function, args = [], kwargs = {}, reload=False):
 
 #Converts pythonlist or Java array to numpy array
 def to_npa(data, dimensions = None, type = None):   
-    data = to_array(data,'d' if type is None else type)
+    if (not isinstance(data, PyArray)) or (type is not None):
+        data = to_array(data,'d' if type is None else type)
     return jep.NDArray(data, dimensions)    
 
 #recursivelly converts all NumPy arrays to Java arrys
@@ -214,7 +215,6 @@ def call_py(module, function, reload_function, *args, **kwargs):
     Calls a CPython function recursively crecursively converting Java arrays in arguments to NumPy,
     and  NumPy arrays in return values to Java arrays.
     """
-    print function, reload_function
     ret =  call_jep(module, function, rec_to_npa(args), rec_to_npa(kwargs), reload=reload_function)
     return rec_from_npa(ret)
     
