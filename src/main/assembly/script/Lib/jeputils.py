@@ -209,12 +209,13 @@ def rec_to_npa(obj):
         return ret    
     return obj  
 
-def call_py(module, function, *args, **kwargs):      
+def call_py(module, function, reload_function, *args, **kwargs):      
     """
     Calls a CPython function recursively crecursively converting Java arrays in arguments to NumPy,
     and  NumPy arrays in return values to Java arrays.
     """
-    ret =  call_jep(module, function, rec_to_npa(args), rec_to_npa(kwargs), reload=True)
+    print function, reload_function
+    ret =  call_jep(module, function, rec_to_npa(args), rec_to_npa(kwargs), reload=reload_function)
     return rec_from_npa(ret)
     
 def import_py(module, function):  
@@ -224,6 +225,9 @@ def import_py(module, function):
     and  NumPy arrays in return values to Java arrays.
     """
     def jep_wrapper(*args, **kwargs):
-        return call_py(module, function, *args, **kwargs)
+        reload_function =  jep_wrapper.reload
+        jep_wrapper.reload = False
+        return call_py(module, function, reload_function, *args, **kwargs)
+    jep_wrapper.reload=True
     _get_caller().f_globals[function] = jep_wrapper   
     
