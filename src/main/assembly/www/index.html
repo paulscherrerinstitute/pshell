@@ -786,6 +786,9 @@
             }
 
             function getScript(path) {
+                if (!path.startsWith("/")){
+                     path = '/' + path
+                 }                
                 $.get(base + '/script/' + path, function (data) {
                     data = formatIncomingText(data)
                     $("#scriptcontents").val(data);
@@ -801,6 +804,13 @@
             }
 
             function setScript(path, contents) {
+                if (!path.startsWith("/")){
+                     path = '/' + path
+                 }                
+                if (!path.endsWith(".py")){
+                     path = path + ".py"
+                }                
+                $("#scriptname").val(path.substring(1));
                 $.ajax({
                    url: base + '/script',
                    type: 'PUT',
@@ -1388,6 +1398,14 @@
             });
             
             $('#myModal').on('hidden.bs.modal', function (e) {
+                $("#modalinput").hide()
+                $("#modalpwd").hide()                   
+                $("#modalbuttoncancel").hide()
+                $("#modalbuttonok").hide()
+                $("#modalbuttonyes").hide()
+                $("#modalbuttonno").hide()
+                $("#modalselect").hide()                    
+                
                 switch (uiEventName){                    
                     case  "message":
                         sendUI("\\z")
@@ -1412,23 +1430,28 @@
                         break;
                     case "WebSaveScript":
                         var contents = $("#scriptcontents").val()
-                        var name = '/' + $("#scriptname").val()
-                        if (name){
-                            if (uiEventResult == "Yes"){
+                        var name = $("#scriptname").val()
+                        
+                        if (uiEventResult == "Yes"){
+                            if (name){
                                 setScript(name, contents)
                             } else {
-                                getScript(name)
-                            }
+                                uiEventName="WebNewScript"
+                                $("#modalbuttonok").show()
+                                $("#modalbuttoncancel").show()
+                                $("#modalinput").show()  
+                                $("#modalinput").val("")
+                                $('#modaltext').text("Enter file name:")                                                
+                                $('#modaltitle').text("Save")                    
+                                $("#myModal").modal('show');                    
+                            }                        
                         } else {
-                            uiEventName="WebNewScript"
-                            $("#modalbuttonok").show()
-                            $("#modalbuttoncancel").show()
-                            $("#modalinput").show()  
-                            $("#modalinput").val("")
-                            $('#modaltext').text("Enter file name:")                                                
-                            $('#modaltitle').text("Save")                    
-                            $("#myModal").modal('show');                    
-                        }                        
+                            if (name){
+                                getScript(name)
+                            } else {
+                                clearScript()
+                            }
+                        }
                         break
                     case "WebNewScript":
                         if (uiEventResult == "Yes"){
