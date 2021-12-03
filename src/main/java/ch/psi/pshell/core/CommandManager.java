@@ -293,9 +293,10 @@ public class CommandManager implements AutoCloseable {
 
     //Callbacks for triggering script handlers to command start/finish
     void onCommandStarted(CommandInfo info) {
+        
         try {
             String var_name = "_command_info_" + Thread.currentThread().getId();
-            if (Context.getInstance().scriptManager!=null) {
+            if ((Context.getInstance().scriptManager!=null) && (Context.getInstance().scriptManager.isThreaded())) {
                 Context.getInstance().scriptManager.getEngine().put(var_name, info);
                 Context.getInstance().scriptManager.getEngine().eval("on_command_started(" + var_name + ")");
             }
@@ -307,7 +308,7 @@ public class CommandManager implements AutoCloseable {
     void onCommandFinished(CommandInfo info) {
         try {
             String var_name = "_command_info_" + Thread.currentThread().getId();
-            if (Context.getInstance().scriptManager!=null) {
+            if ((Context.getInstance().scriptManager!=null) && (Context.getInstance().scriptManager.isThreaded())) {
                 Context.getInstance().scriptManager.getEngine().put(var_name, info);
                 Context.getInstance().scriptManager.getEngine().eval("on_command_finished(" + var_name + ")");
             }
@@ -332,7 +333,7 @@ public class CommandManager implements AutoCloseable {
     void onChangeDataPath(File dataPath) {
         try {
             String filename = (dataPath==null)? "None" : ("'" + dataPath.getCanonicalPath() + "'");
-            if (Context.getInstance().scriptManager!=null) {
+            if ((Context.getInstance().scriptManager!=null) && (Context.getInstance().scriptManager.isThreaded())) {
                 Context.getInstance().scriptManager.getEngine().eval("on_change_data_path(" + filename + ")");
             }
         } catch (Exception ex) {
@@ -342,7 +343,7 @@ public class CommandManager implements AutoCloseable {
 
     void onSessionStarted(int id) {
         try {
-            if (Context.getInstance().scriptManager!=null) {
+            if ((Context.getInstance().scriptManager!=null) && (Context.getInstance().scriptManager.isThreaded())) {
                 Context.getInstance().scriptManager.getEngine().eval("on_session_started(" + id + ")");
             }
         } catch (Exception ex) {
@@ -352,7 +353,7 @@ public class CommandManager implements AutoCloseable {
 
     void onSessionFinished(int id) {
         try {
-            if (Context.getInstance().scriptManager!=null) {
+            if ((Context.getInstance().scriptManager!=null) && (Context.getInstance().scriptManager.isThreaded())) {
                 Context.getInstance().scriptManager.getEngine().eval("on_session_finished(" + id + ")");
             }
         } catch (Exception ex) {
