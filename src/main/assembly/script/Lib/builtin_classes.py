@@ -349,12 +349,6 @@ class LineScan(ch.psi.pshell.scan.LineScan):
     def onBeforePass(self, num): __before_pass(self, num)
     def onAfterPass(self, num): __after_pass(self, num)
 
-class ContinuousScan(ch.psi.pshell.scan.ContinuousScan):
-    def onBeforeReadout(self, pos): __before_readout(self, pos)
-    def onAfterReadout(self, rec): __after_readout(self, rec)
-    def onBeforePass(self, num): __before_pass(self, num)
-    def onAfterPass(self, num): __after_pass(self, num)
-
 class AreaScan(ch.psi.pshell.scan.AreaScan):
     def onBeforeReadout(self, pos): __before_readout(self, pos)
     def onAfterReadout(self, rec): __after_readout(self, rec)

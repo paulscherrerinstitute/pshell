@@ -26,10 +26,10 @@ public class RSync {
                     host,
                     (move ? "True" : "False"));
             if (firstTransfer){
-                Context.getInstance().evalLineBackground("from rsync import sync_user_data");
+                Context.getInstance().tryEvalLineBackground("from rsync import sync_user_data");
                 firstTransfer = false;
             }
-            String ret = Str.toString(Context.getInstance().evalLineBackground(cmd));
+            String ret = Str.toString(Context.getInstance().tryEvalLineBackground(cmd));
             if (!Str.toString(ret).startsWith("Transferred")){
                 throw new  IOException(ret);
             }        
@@ -39,18 +39,18 @@ public class RSync {
     
     public static void authorize(String user, boolean fixPermissions) throws Exception{      
         removeAuthorization();
-        Context.getInstance().evalLineBackground("from rsync import authorize_user");
+        Context.getInstance().tryEvalLineBackground("from rsync import authorize_user");
         Context.getInstance().evalLine("authorize_user('" + user + "', fix_permissions=" + (fixPermissions?"True":"False") + ")");
     }
     
     public static void removeAuthorization() throws Exception{             
-        Context.getInstance().evalLineBackground("from rsync import remove_user_key");
-        Context.getInstance().evalLineBackground("remove_user_key()");
+        Context.getInstance().tryEvalLineBackground("from rsync import remove_user_key");
+        Context.getInstance().tryEvalLineBackground("remove_user_key()");
     }
     
     public static boolean isAuthorized() throws Exception{    
-        Context.getInstance().evalLineBackground("from rsync import is_authorized");
-        return (Boolean)Context.getInstance().evalLineBackground("is_authorized()");
+        Context.getInstance().tryEvalLineBackground("from rsync import is_authorized");
+        return (Boolean)Context.getInstance().tryEvalLineBackground("is_authorized()");
     }
         
 }

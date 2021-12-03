@@ -2,6 +2,7 @@ package ch.psi.pshell.scripting;
 
 import ch.psi.utils.Str;
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -127,15 +128,18 @@ public class Interpreter {
         }
         return ret;
     }
-
+    
     public Object evalFile(String fileName) throws ScriptException, IOException {
         reset();
         lineNumber++;
+        if (type==ScriptType.cpy){
+            return ((JepScriptEngine)engine).eval(new File(fileName));
+        }
         try (BufferedReader reader = Files.newBufferedReader(Paths.get(fileName))) {
             return engine.eval(reader);
         }
     }
-
+        
     public boolean isValidCompleteStatement(String string) {
         try {
             return (tryCompiling(string, true) != null);
@@ -166,7 +170,7 @@ public class Interpreter {
                 int lineCount = lines.length;
                 int line = se.getLineNumber();
                 int col = se.getColumnNumber();
-
+                
                 switch (type) {
                     case js:
                         Throwable cause = se.getCause();
@@ -188,7 +192,7 @@ public class Interpreter {
                         }
                         break;
                     case py:
-                        if (se.getCause() instanceof org.python.core.PySyntaxError) {
+                        if (se.getCause() instanceof org.python.core.PySyntaxError) {                           
                             org.python.core.PySyntaxError pex = (org.python.core.PySyntaxError) se.getCause();
                             int lastUsefulLine = 1;
                             for (int i = lines.length; i > 0; i--) {
@@ -197,7 +201,7 @@ public class Interpreter {
                                     lastUsefulLine = i;
                                     break;
                                 }
-                            }
+                            }        
                             if ((line == lastUsefulLine) || ((line == lines.length))) {
                                 String lastLine = Str.trimRight(lines[line - 1]);
                                 int indexComment = lastLine.indexOf("#");
@@ -232,6 +236,63 @@ public class Interpreter {
                             }
                         }
                         break;
+                    case cpy:
+                      if (se.getCause() instanceof jep.JepException) {   
+                            jep.JepException jex = (jep.JepException)se.getCause();                            
+                            String exm=se.getMessage();                           
+                            String m="'<stdin>',";
+                            String[] tokens = exm.substring(exm.indexOf(m)+m.length()).split(", ");
+                            
+                            try{
+                                //line = Integer.valueOf(tokens[0].trim());
+                                col = Integer.valueOf(tokens[1].trim());
+                            }catch (Exception ex){            
+                            }
+                            
+                                                     
+                         int lastUsefulLine = 1;
+                            for (int i = lines.length; i > 0; i--) {
+                                String aux = lines[i - 1].trim();
+                                if ((!aux.isEmpty()) && (!aux.startsWith("#"))) {
+                                    lastUsefulLine = i;
+                                    break;
+                                }
+                            }    
+                            if ((line == lastUsefulLine) || ((line == lines.length))|| ((line ==-1))) {
+                                if (line==-1){
+                                    line = lines.length;
+                                }
+                                String lastLine = Str.trimRight(lines[line - 1]);
+                                int indexComment = lastLine.indexOf("#");
+                                if (indexComment >= 0) {
+                                    lastLine = Str.trimRight(lastLine.substring(0, indexComment));
+                                }
+
+                                if (lastLine.endsWith("\\")) {       //Remove \ character if present
+                                    lastLine = Str.trimRight(lastLine.substring(0, lastLine.length() - 1));
+                                }
+                                //When find """ in the beggining of the line, then ignoring.
+                                String aux = lastLine.trim();
+                                if (aux.contains("\"\"\"") || aux.contains("'''") || aux.startsWith("@")) {
+                                    rethrow = false;
+                                }
+
+                                //Partial parsing exception will have col = length of last line of statement
+                                if (col >= (lastLine.length() - 1)) {
+                                    rethrow = false;
+                                } 
+                                else if (col > 1) {
+                                    if (lastLine.substring(0, col).trim().endsWith("=")) {
+                                        rethrow = false;
+                                    }
+                                }
+                                
+                                if (exm.contains("IndentationError")){
+                                    rethrow = false;
+                                }
+                            }
+                        }
+                        break;
                     case groovy:
                         if (se.getCause() instanceof org.codehaus.groovy.control.CompilationFailedException) {
                             org.codehaus.groovy.control.CompilationFailedException pex = (org.codehaus.groovy.control.CompilationFailedException) se.getCause();
@@ -254,5 +315,5 @@ public class Interpreter {
             }
         }
         return result;
-    }
+    }    
 }

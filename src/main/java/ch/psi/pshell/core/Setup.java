@@ -80,6 +80,7 @@ public class Setup extends Config {
     public static transient final String TOKEN_SESSION_NAME = "{session_name}";
 
     public static transient final String DEFAULT_HOME_FOLDER = "./home";
+    public static transient final String DEFAULT_LIB_FOLDER = TOKEN_SCRIPT + "/Lib";
 
     String homePath;
     String outputPath;
@@ -88,7 +89,7 @@ public class Setup extends Config {
     public String devicesPath = TOKEN_HOME + "/devices";
     public String pluginsPath = TOKEN_HOME + "/plugins";
     public String extensionsPath = TOKEN_HOME + "/extensions";
-    public String libraryPath = TOKEN_SCRIPT + "; " + TOKEN_SCRIPT + "/Lib";
+    public String libraryPath = TOKEN_SCRIPT + "; " + DEFAULT_LIB_FOLDER;
     public String configPath = TOKEN_HOME + "/config";
     public String wwwPath = TOKEN_HOME + "/www";
     public String contextPath = TOKEN_HOMEDATA + "/context";
@@ -485,6 +486,10 @@ public class Setup extends Config {
     public String getScriptPath() {
         return expandedPathNames.get(scriptPath);
     }
+    
+    public String getDefaultScriptLibPath() {
+        return expandPath(DEFAULT_LIB_FOLDER);
+    }
 
     public String getDataPath() {
         return expandedPathNames.get(dataPath);
@@ -691,12 +696,12 @@ public class Setup extends Config {
     }
 
     public String getDefaultStartupScript() {
-        String file = "startup." + getScriptType().toString();
+        String file = getScriptType().getDefaultStartupFile();
         return Paths.get(getStandardLibraryPath(), file).toString();
     }
 
     public String getStartupScript() {
-        String file = "startup." + getScriptType().toString();
+        String file = getScriptType().getDefaultStartupFile();
         Path ret = Paths.get(getStandardLibraryPath(), file);
         if (ret.toFile().exists()) {
             return ret.toString();

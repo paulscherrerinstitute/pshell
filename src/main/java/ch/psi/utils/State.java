@@ -26,8 +26,12 @@ public enum State {
         return (this != Invalid) && (this != Initializing) && (this != Closing);
     }
 
+    public boolean isReady() {
+        return (this == Ready);
+    }
+
     public boolean isActive() {
-        return (this == Ready) || isProcessing();
+        return isReady() || isProcessing();
     }
 
     public boolean isRunning() {

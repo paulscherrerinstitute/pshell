@@ -204,8 +204,9 @@ public class Shell extends MonitoredPanel {
 
     void onPopupAutoComp(String command) {
         command = command.trim();
-        if (truncateMenuContents && (command.lastIndexOf(" ") >= 0)) {
-            command = command.substring(0, command.lastIndexOf(" "));
+        String limitToken=Context.getInstance().getScriptType().getSignatureLimitToken();
+        if (truncateMenuContents && (command.lastIndexOf(limitToken) >= 0)) {
+            command = command.substring(0, command.lastIndexOf(limitToken));
         }
         int position = input.getCaretPosition();
         String text = input.getText();

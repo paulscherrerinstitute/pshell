@@ -1441,7 +1441,7 @@ public class StripChart extends StandardDialog {
                             try {
                                 dev = Context.getInstance().getDevicePool().getByName(name, Device.class);
                                 if (dev == null) {
-                                    dev = (Device) Context.getInstance().evalLineBackground(name);
+                                    dev = (Device) Context.getInstance().tryEvalLineBackground(name);
                                 }
                             } catch (Exception ex) {
                                 try {

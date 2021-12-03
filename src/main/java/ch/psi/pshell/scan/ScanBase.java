@@ -1203,7 +1203,7 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
         }
         for (Readable r : readables) {
             if (r instanceof Stream) {
-                if (((Stream) r).getState() == State.Ready) {
+                if (((Stream) r).getState().isReady()) {
                     ((Stream) r).start(true); //Start in asynchronous mode
                     startedStreams.add(((Stream) r));
                 }

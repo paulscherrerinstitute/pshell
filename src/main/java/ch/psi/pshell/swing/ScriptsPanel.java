@@ -222,7 +222,7 @@ public class ScriptsPanel extends MonitoredPanel implements UpdatablePanel {
                         String script = getSelectedScript();
                         if (script != null) {
                             boolean allowRun = !Context.getInstance().getRights().denyRun;
-                            menuRun.setEnabled(allowRun && (Context.getInstance().getState() == State.Ready));
+                            menuRun.setEnabled(allowRun && (Context.getInstance().getState().isReady()));
                             menuRevisionHistory.setEnabled(Context.getInstance().isVersioningEnabled());
 
                             try{
@@ -353,7 +353,7 @@ public class ScriptsPanel extends MonitoredPanel implements UpdatablePanel {
 
     public void initialize() {
         initialize(Context.getInstance().getSetup().getScriptPath(), new String[]{
-            Context.getInstance().getScriptType().toString(),
+            Context.getInstance().getScriptType().getExtension(),
             ScanEditorPanel.EXTENSION
         });
     }

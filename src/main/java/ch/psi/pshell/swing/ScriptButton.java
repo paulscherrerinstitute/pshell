@@ -29,11 +29,11 @@ public class ScriptButton extends MonitoredPanel {
         contextListener = new ContextAdapter() {
             @Override
             public void onContextStateChanged(State state, State former) {
-                button.setEnabled(state == State.Ready);
+                button.setEnabled(state.isReady());
             }
         };
         Context.getInstance().addListener(contextListener);
-        button.setEnabled(Context.getInstance().getState() == State.Ready);
+        button.setEnabled(Context.getInstance().getState().isReady());
     }
 
     @Override

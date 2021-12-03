@@ -371,7 +371,7 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
                 }                
                 String var = getString("Enter variable name:", null);
                 if ((var != null) && (!var.trim().isEmpty())) {
-                    context.evalLineBackground(var.trim() + "=load_data(\"" + root + "|" + dataPath + "\")");
+                    context.tryEvalLineBackground(var.trim() + "=load_data(\"" + root + "|" + dataPath + "\")");
                 }
             } catch (Exception ex) {
                 showException(ex);
@@ -1504,7 +1504,7 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
 
         @Override
         public void openFile(String fileName) throws Exception {
-            if (IO.getExtension(fileName).equalsIgnoreCase(Context.getInstance().getScriptType().toString())) {
+            if (IO.getExtension(fileName).equalsIgnoreCase(Context.getInstance().getScriptType().getExtension())) {
                 openScript(new String(Files.readAllBytes(Paths.get(fileName))), fileName);
             } else {
                 DataPanel panel = new DataPanel();

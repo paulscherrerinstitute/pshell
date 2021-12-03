@@ -3,6 +3,7 @@ package ch.psi.pshell.core;
 import ch.psi.pshell.scan.Scan;
 import ch.psi.pshell.scan.ScanListener;
 import ch.psi.pshell.scan.ScanRecord;
+import ch.psi.pshell.scripting.JepScriptEngine;
 import ch.psi.pshell.scripting.JythonUtils;
 import ch.psi.pshell.scripting.ScriptType;
 import ch.psi.pshell.scripting.ViewPreference;
@@ -79,6 +80,7 @@ public class Console {
         }
 
     }
+        
 
     //Uses JLine has JNI on Windows
     void runAdvancedConsole() throws IOException {
@@ -100,12 +102,12 @@ public class Console {
                     }
                     return i;
                 } else if (string.endsWith(".")) {
-                    List<String> methods = getSignatures(string, string.length() - 1, true);
-                    if (methods != null) {
-                        list.addAll(methods);
-                        return i;
+                        List<String> methods = getSignatures(string, string.length() - 1, true);
+                        if (methods != null) {
+                            list.addAll(methods);
+                            return i;
+                        }
                     }
-                }
                 list.add(string + "    ");
                 return 0;
             }
@@ -255,8 +257,17 @@ public class Console {
         context.start();
         new Console().run(System.in, System.out, true);
     }
+    
+    
+    static boolean canFetchSignatures(){
+        Context context = Context.getInstance();
+        return (context.getScriptManager().isThreaded() || context.getState().isReady());
+    }
 
     public static List<String> getSignatures(String str, int position, boolean propagate) {
+        if (!canFetchSignatures()){
+            return null;
+        }
         if (str.length() > 0) {
             String aux = str.toLowerCase();
             int i = position - 1;
@@ -298,17 +309,26 @@ public class Console {
                 }
             }
             if ((obj != null) && (Convert.getPrimitiveClass(obj.getClass()) == null)) {
-                return getSignatures(obj);
+                return getSignatures(obj, var);
             }
         }
         return null;
     }
 
-    static List<String> getSignatures(Object obj) {
+    static List<String> getSignatures(Object obj, String name) {
         if (obj instanceof org.python.core.PyObject) {
             //Not parsed as normal java objects, must "dir" them
             return JythonUtils.getSignatures((org.python.core.PyObject) obj, true);
-        } else {
+        } else if ((Context.getInstance().getScriptType()==ScriptType.cpy)  && 
+                (!(obj.getClass().getName().startsWith("ch.psi")))) {
+            if (!canFetchSignatures()){
+                return null;
+            }
+            if (name.endsWith(".")){
+                name = name.substring(0, name.length()-1);
+            }            
+            return ((JepScriptEngine)Context.getInstance().getScriptManager().getEngine()).getSignatures(obj, name);
+        } else {            
             Class[] excludeClasses = new Class[]{AutoCloseable.class, Observable.class, JPanel.class, JComponent.class, Container.class, Component.class};
             String[] excludeNames = new String[]{};
             if (Context.getInstance().getSetup().getScriptType() == ScriptType.py) {

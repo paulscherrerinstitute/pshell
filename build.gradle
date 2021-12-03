@@ -129,6 +129,8 @@ dependencies {
     compile 'javax.xml.bind:jaxb-api:2.3.0'
     compile 'org.jetbrains.jediterm:jediterm-pty:2.42'
     compile 'org.jetbrains.pty4j:pty4j:0.11.4'
+    compile 'black.ninia:jep:3.9.1'
+    
     //TIFF support for ImageIO can be added installing JAI, or one of the following dependencies:
     //compile 'com.twelvemonkeys'.imageio:imageio-tiff:3.4.1'    
     //compile 'com.tomgibara.imageio:imageio-tiff:1.0'   //maven { url "http://www.tomgibara.com/maven/repo/" }     

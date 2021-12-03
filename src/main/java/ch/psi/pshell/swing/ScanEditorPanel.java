@@ -650,14 +650,14 @@ public class ScanEditorPanel extends MonitoredPanel implements Processor {
 
     String getBoolValue(boolean value) {
         String ret = String.valueOf(value);
-        if (Context.getInstance().getSetup().getScriptType() == ScriptType.py) {
+        if (Context.getInstance().getSetup().getScriptType().isPython()) {
             return Str.capitalizeFirst(ret);
         }
         return ret;
     }
 
     String getNullValue() {
-        if (Context.getInstance().getSetup().getScriptType() == ScriptType.py) {
+        if (Context.getInstance().getSetup().getScriptType().isPython()) {
             return "None";
         }
         return "null";
@@ -718,7 +718,7 @@ public class ScanEditorPanel extends MonitoredPanel implements Processor {
         if (!textTitle.getText().trim().isEmpty()) {
             ret.add(getParName("title") + "'" + textTitle.getText() + "'");
         }
-        if (Context.getInstance().getSetup().getScriptType() == ScriptType.py) {
+        if (Context.getInstance().getSetup().getScriptType().isPython()) {
             ret.add(getParName("keep") + getBoolValue(false));
             if (!checkSave.isSelected()) {
                 ret.add(getParName("save") + getBoolValue(false));

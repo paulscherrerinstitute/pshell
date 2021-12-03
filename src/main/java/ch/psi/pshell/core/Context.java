@@ -126,6 +126,8 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
     volatile Exception foregroundException;
     volatile FilePermissions filePermissionsConfig;
     volatile boolean extractedUtilities;
+    private String[] builtinFunctionsNames;
+    private Map<String, String> builtinFunctionsDoc;
 
     WatchService watchService;
     ScheduledExecutorService schedulerWatchService;
@@ -352,6 +354,8 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
         }
 
         executionPars.put(null, new ExecutionParameters());
+        builtinFunctionsNames = new String[0];
+        builtinFunctionsDoc = new HashMap<>();
     }
 
     /**
@@ -1259,6 +1263,28 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
                             }
                         }
                     }
+                    try{    
+                        Object obj = scriptManager.eval("_getBuiltinFunctionNames()").result;
+                        Object[] array = null;
+                        if (obj instanceof List) {
+                            array = ((List) obj).toArray();
+                        } else if (obj instanceof Map) {
+                            array = ((Map) obj).values().toArray();
+                        } else {
+                            array = (Object[]) obj;
+                        }
+                        builtinFunctionsNames = (array == null) ? null : Convert.toStringArray(array);   
+                        if (!scriptManager.isThreaded()){
+                            for (String name: builtinFunctionsNames){
+                                String doc = String.valueOf(scriptManager.eval("_getFunctionDoc(" + name + ")").result);
+                                builtinFunctionsDoc.put(name, doc);
+                            }
+                        }
+                    } catch (Exception ex){
+                        logger.log(Level.SEVERE, null, ex);
+                        builtinFunctionsNames = new String[0];
+                        builtinFunctionsDoc.clear();
+                    }
                     return null;
                 });
                 if (scriptManager == null) {
@@ -1571,6 +1597,14 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
         } finally {
             disposeExecutionContext();
             commandManager.finishCommandInfo(info, result);
+        }
+    }
+    
+    Object tryEvalLineBackground(final CommandSource source, final String line) throws ScriptException, IOException, ContextStateException, InterruptedException {
+        if (scriptManager.isThreaded()){
+            return evalLineBackground(source, line);
+        } else {
+            return evalLine(source, line);
         }
     }
 
@@ -2811,22 +2845,28 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
     }
 
     @Hidden
-    public String[] getBuiltinFunctionsNames() throws ScriptException, IOException, ContextStateException, InterruptedException {
-        Object obj = evalLineBackground("_getBuiltinFunctionNames()");
-        Object[] array = null;
-        if (obj instanceof List) {
-            array = ((List) obj).toArray();
-        } else if (obj instanceof Map) {
-            array = ((Map) obj).values().toArray();
-        } else {
-            array = (Object[]) obj;
-        }
-        return (array == null) ? null : Convert.toStringArray(array);
+    public String[] getBuiltinFunctionsNames() {
+        return builtinFunctionsNames;
     }
 
     @Hidden
-    public String getBuiltinFunctionDoc(String name) throws ScriptException, IOException, ContextStateException, InterruptedException {
-        return (String) evalLineBackground("_getFunctionDoc(" + String.valueOf(name) + ")");
+    public String getBuiltinFunctionDoc(String name) {
+        if (scriptManager.isThreaded()){
+            if (Arr.containsEqual(builtinFunctionsNames, name)){
+                if (!builtinFunctionsDoc.containsKey(name)){
+                    try {
+                        builtinFunctionsDoc.put(name, (String)evalLineBackground("_getFunctionDoc(" + String.valueOf(name) + ")"));
+                    } catch (Exception ex) {
+                        Logger.getLogger(Context.class.getName()).log(Level.WARNING, null, ex);
+                    }                    
+                }                
+            }
+        }
+        if (builtinFunctionsDoc.containsKey(name)){
+            return builtinFunctionsDoc.get(name);
+        } else {
+            return "";
+        }
     }
 
     //Mailing
@@ -3401,7 +3441,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
                                 String ext = IO.getExtension(file);
                                 String prefix = IO.getPrefix(file);
                                 String name = prefix + "." + ext;
-                                if (ext.equalsIgnoreCase(getScriptType().toString())) {
+                                if (ext.equalsIgnoreCase(getScriptType().getExtension())) {
                                     File scriptFile = Paths.get(setup.getStandardLibraryPath(), name).toFile();
                                     if (!scriptFile.equals(startupScript)) {
                                         logger.fine("Extracting: " + name);
@@ -3583,6 +3623,10 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
         return evalLineBackground(getPublicCommandSource(), line);
     }
 
+    public Object tryEvalLineBackground(String line) throws ScriptException, IOException, ContextStateException, InterruptedException {
+        return tryEvalLineBackground(getPublicCommandSource(), line);
+    }
+    
     public CompletableFuture<?> evalLineBackgroundAsync(final String line) {
         return evalLineBackgroundAsync(getPublicCommandSource(), line);
     }

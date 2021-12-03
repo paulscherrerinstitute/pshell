@@ -127,7 +127,8 @@ public final class QueueProcessor extends PanelProcessor {
                 public void actionPerformed(ActionEvent e) {
                     try {
                         JFileChooser chooser = new JFileChooser(Context.getInstance().getSetup().getScriptPath());
-                        chooser.addChoosableFileFilter(new ExtensionFileFilter("Script files (*." + Context.getInstance().getScriptType() + ")", new String[]{String.valueOf(Context.getInstance().getScriptType())}));
+                        chooser.addChoosableFileFilter(new ExtensionFileFilter("Script files (*." + Context.getInstance().getScriptType().getExtension() + ")", 
+                                new String[]{String.valueOf(Context.getInstance().getScriptType().getExtension())}));
                         HashMap<FileNameExtensionFilter, Processor> processors = new HashMap<>();
                         for (Processor processor : Processor.getServiceProviders()) {
                             FileNameExtensionFilter filter = new FileNameExtensionFilter(processor.getDescription(), processor.getExtensions());

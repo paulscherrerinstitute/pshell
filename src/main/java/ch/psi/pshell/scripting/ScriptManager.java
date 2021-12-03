@@ -1,7 +1,5 @@
 package ch.psi.pshell.scripting;
 
-import ch.psi.pshell.core.Configuration;
-import ch.psi.pshell.core.LogManager;
 import ch.psi.utils.Arr;
 import ch.psi.utils.Chrono;
 import ch.psi.utils.FileSystemWatch;
@@ -10,7 +8,6 @@ import ch.psi.utils.IO.FilePermissions;
 import ch.psi.utils.ProcessFactory;
 import ch.psi.utils.Reflection.Hidden;
 import ch.psi.utils.Str;
-import ch.psi.utils.Sys;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -26,7 +23,6 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
@@ -34,9 +30,9 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.script.CompiledScript;
 import javax.script.ScriptEngine;
-import javax.script.ScriptEngineFactory;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
+
 
 /**
  *
@@ -86,7 +82,15 @@ public class ScriptManager implements AutoCloseable {
             setPythonPath(libraryPath);
         }
 
-        engine = new ScriptEngineManager().getEngineByExtension(type.toString());
+        //engine = new ScriptEngineManager().getEngineByExtension(type.toString());)
+        ScriptEngineManager manager = new ScriptEngineManager();
+        if (type==ScriptType.cpy){
+            manager.registerEngineName("jep", new JepScriptEngineFactory(libraryPath));
+            engine =  manager.getEngineByName("jep");
+        } else {
+            engine = manager.getEngineByExtension(type.toString());
+        }
+
         if (engine == null) {
             throw new RuntimeException("Error instantiating script engine");
         }
@@ -96,6 +100,8 @@ public class ScriptManager implements AutoCloseable {
             threaded = ((engine.getFactory().getParameter("THREADING")) != null) || (type == ScriptType.js);
             // TODO: Nashorn is returning null. Even if it is not explicitly thread safe, 
             // blocking background calls will remove much functionality. Didn't found an issue so far.               
+            
+            //TODO: JEP is single-threaded, mut all access are executed in private thread: functionality will be limited
         } catch (Exception ex) {
             //graaljs raises excerption and don't accept threaded
             threaded = false;
@@ -110,7 +116,7 @@ public class ScriptManager implements AutoCloseable {
         }
 
         injectVars();
-
+        
         interpreter = new Interpreter(engine, type, null);
         logger.info("Finished " + getClass().getSimpleName() + " initialization");
     }
@@ -238,6 +244,7 @@ public class ScriptManager implements AutoCloseable {
     }
 
     public Object evalFileBackground(String script) throws ScriptException, IOException {
+        assertThreaded();
         String fileName = lib.resolveFile(script);
         if (fileName == null) {
             throw new FileNotFoundException(script);
@@ -430,11 +437,16 @@ public class ScriptManager implements AutoCloseable {
     public boolean isThreaded() {
         return threaded;
     }
-
-    public InterpreterResult evalBackground(String statement) {
+    
+    public void assertThreaded() throws ScriptException{   
         if (!threaded) {
-            return null;
+            throw new ScriptException("Interpreter is single-threaded: background execution is disabled");
         }
+    }
+
+    public InterpreterResult evalBackground(String statement) throws ScriptException {
+        assertThreaded();
+        
         InterpreterResult ret = new InterpreterResult();
         beforeEval(true);
         try {
@@ -523,7 +535,7 @@ public class ScriptManager implements AutoCloseable {
 
                 sb.append(line);
                 String aux = line.trim();
-                if (type == ScriptType.py) {
+                if (type.isPython()) {
                     //Check if in commented line                    
                     //This is simplistic, not supporting block comment nesting
                     if (aux.contains("\"\"\"")) {

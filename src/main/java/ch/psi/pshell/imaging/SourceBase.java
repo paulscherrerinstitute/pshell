@@ -200,7 +200,7 @@ public class SourceBase extends GenericDeviceBase<ImageListener> implements Sour
     @Override
     public void refresh() {
         if (!isClosed()) {
-            if (getState() == State.Ready) {
+            if (getState().isReady()) {
                 BufferedImage image = applyTransformations(currentImage, currentData);
                 triggerImage(image, currentData);
             }

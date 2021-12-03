@@ -375,7 +375,7 @@ public abstract class Task extends SwingWorker<Object, Void> {
             }
             String ext = IO.getExtension(filename);
             if (ext.isEmpty()) {
-                filename = filename + "." + Context.getInstance().getScriptType().toString();
+                filename = filename + "." + Context.getInstance().getScriptType().getExtension();
             }
 
             File file = null;

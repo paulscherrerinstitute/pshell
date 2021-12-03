@@ -16,6 +16,10 @@ public class Arr {
         T[] ret = (T[]) Array.newInstance(original.getClass().getComponentType(), size);
         return ret;
     }
+    
+    public static Object newInstance(Class type, int... dimensions) {
+        return Array.newInstance(type, dimensions);
+    }        
 
     public static <T> T[] remove(T[] array, int index) {
         if ((array == null) || (index < 0) || (index >= array.length)) {

@@ -1470,7 +1470,8 @@ public class PreferencesDialog extends StandardDialog {
             Context context =Context.getInstance();
             JFileChooser chooser = new JFileChooser(context.getSetup().getScriptPath());
             chooser.setAcceptAllFileFilterUsed(false);
-            FileNameExtensionFilter filter = new FileNameExtensionFilter("Script files (*." + context.getScriptType() + ")", new String[]{String.valueOf(context.getScriptType())});
+            FileNameExtensionFilter filter = new FileNameExtensionFilter("Script files (*." + context.getScriptType().getExtension() + ")", 
+                    new String[]{String.valueOf(context.getScriptType().getExtension())});
             chooser.setFileFilter(filter);
             int rVal = chooser.showOpenDialog(this);
             if (rVal == JFileChooser.APPROVE_OPTION) {

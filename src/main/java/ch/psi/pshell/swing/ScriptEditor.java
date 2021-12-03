@@ -52,7 +52,7 @@ public class ScriptEditor extends MonitoredPanel implements Executor {
         if (syntaxHighlight) {
             CodeEditor codeEditor = new CodeEditor();
             codeEditor.setShowLineNumbers(showLineNumbers);
-            codeEditor.setType(Context.getInstance().getScriptType().toString());
+            codeEditor.setType(Context.getInstance().getScriptType().getExtension());
             javax.swing.GroupLayout layout = (javax.swing.GroupLayout) getLayout();
             layout.replace(editor, codeEditor);
             editor = codeEditor;
@@ -232,14 +232,14 @@ public class ScriptEditor extends MonitoredPanel implements Executor {
         textFilename.setText(filename);
         editor.saveAs(filename);
         setScriptName(new File(filename).getName());
-        isScript = Context.getInstance().getScriptType().toString().equals(IO.getExtension(filename));
+        isScript = Context.getInstance().getScriptType().getExtension().equals(IO.getExtension(filename));
     }
 
     public void load(String filename) throws IOException {
         textFilename.setText(filename);
         editor.load(filename);
         setScriptName(new File(filename).getName());
-        isScript = Context.getInstance().getScriptType().toString().equals(IO.getExtension(filename));
+        isScript = Context.getInstance().getScriptType().getExtension().equals(IO.getExtension(filename));
     }
 
     public void reload() throws IOException {
@@ -440,8 +440,9 @@ public class ScriptEditor extends MonitoredPanel implements Executor {
 
     void onPopupAutoComp(String command) {
         command = command.trim();
-        if (truncateMenuContents && (command.lastIndexOf(" ") >= 0)) {
-            command = command.substring(0, command.lastIndexOf(" "));
+        String limitToken=Context.getInstance().getScriptType().getSignatureLimitToken();
+        if (truncateMenuContents && (command.lastIndexOf(limitToken) >= 0)) {
+            command = command.substring(0, command.lastIndexOf(limitToken));
         }
         int position = editor.getEditor().getCaretPosition();
         try {

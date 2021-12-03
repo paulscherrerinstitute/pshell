@@ -1103,6 +1103,11 @@ public class DataManager implements AutoCloseable {
         }      
         flush();
     }
+    
+    //Overloaded methods are not seen by JEP so creating a proxy 
+    public void createTable(String path, String[] names, Class[] types, int[] lengths, Map features) throws IOException {
+        createDataset(path, names, types, lengths, features);
+    }
 
     public void setItem(String path, Object val, int index) throws IOException {
         if (path == null) {

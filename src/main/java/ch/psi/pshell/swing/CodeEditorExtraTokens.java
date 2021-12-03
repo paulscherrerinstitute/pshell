@@ -5,6 +5,7 @@ import ch.psi.pshell.core.ContextAdapter;
 import ch.psi.pshell.core.DevicePoolListener;
 import ch.psi.pshell.device.GenericDevice;
 import ch.psi.utils.State;
+import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.fife.ui.rsyntaxtextarea.TokenMap;
@@ -40,6 +41,7 @@ public class CodeEditorExtraTokens {
                 context.addListener(new ContextAdapter() {
                     @Override
                     public void onContextInitialized(int runCount) {
+                        functionNames=null;
                         update();
                         context.getDevicePool().addListener(devicePoolListener);
                     }
@@ -82,8 +84,13 @@ public class CodeEditorExtraTokens {
             for (GenericDevice dev : Context.getInstance().getDevicePool().getAllDevices()) {
                 map.put(dev.getName(), TokenTypes.VARIABLE);
             }
-            if ((functionNames == null) && (Context.getInstance().isInterpreterEnabled())) {
-                functionNames = Context.getInstance().getBuiltinFunctionsNames();
+            if ((functionNames == null) && (Context.getInstance().isInterpreterEnabled()))
+            {
+                try{
+                    functionNames = Context.getInstance().getBuiltinFunctionsNames();
+                } catch (Exception ex) {
+                    Logger.getLogger(CodeEditorExtraTokens.class.getName()).log(Level.INFO, null, ex);
+                }
             }
             if (functionNames != null) {
                 for (String function : functionNames) {

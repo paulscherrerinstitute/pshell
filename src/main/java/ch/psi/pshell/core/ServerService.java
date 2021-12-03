@@ -516,7 +516,7 @@ public class ServerService {
                             ret.append(f.getName()).append("/\n");
                         }
                     }
-                    for (File f : IO.listFiles(file, "*." + Context.getInstance().getScriptType().toString())) {
+                    for (File f : IO.listFiles(file, "*." + Context.getInstance().getScriptType().getExtension())) {
                         ret.append(f.getName()).append("\n");
                     }
                 } else {

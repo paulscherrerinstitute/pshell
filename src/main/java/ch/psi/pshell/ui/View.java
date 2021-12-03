@@ -801,7 +801,7 @@ public class View extends MainFrame {
 
         @Override
         public void openFile(String fileName) throws Exception {
-            if (IO.getExtension(fileName).equalsIgnoreCase(context.getScriptType().toString())) {
+            if (IO.getExtension(fileName).equalsIgnoreCase(context.getScriptType().getExtension())) {
                 View.this.openScript(fileName);
             } else {
                 View.this.openDataFile(fileName);
@@ -3607,7 +3607,8 @@ public class View extends MainFrame {
             JFileChooser chooser = new JFileChooser(context.getSetup().getScriptPath());
             //FileNameExtensionFilter filter = new FileNameExtensionFilter("Script files", "py", "groovy", "js");
             //chooser.setFileFilter(filter);
-            chooser.addChoosableFileFilter(new ExtensionFileFilter("Script files (*." + context.getScriptType() + ")", new String[]{String.valueOf(context.getScriptType())}));
+            chooser.addChoosableFileFilter(new ExtensionFileFilter("Script files (*." + context.getScriptType().getExtension() + ")", 
+                    new String[]{String.valueOf(context.getScriptType().getExtension())}));
             //chooser.addChoosableFileFilter(new ExtensionFileFilter("Script files (*.py, *.groovy, *.js)", new String[]{"py", "groovy", "js"}));
             chooser.addChoosableFileFilter(new ExtensionFileFilter("Java files (*.java)", new String[]{"java"}));
             chooser.addChoosableFileFilter(new ExtensionFileFilter("Text files (*.txt, *.csv, *.log)", textFileExtensions));
@@ -3692,7 +3693,7 @@ public class View extends MainFrame {
             if (runningProcessor != null) {
                 runningProcessor.step();
             } else {
-                if (context.getState() == State.Ready) {
+                if (context.getState().isReady()) {
                     debugScript(true);
                 } else {
                     context.step();
@@ -3774,7 +3775,7 @@ public class View extends MainFrame {
             ScriptEditor editor = getSelectedEditor();
             if (editor != null) {
                 JFileChooser chooser = new JFileChooser(context.getSetup().getScriptPath());
-                FileNameExtensionFilter filter = new FileNameExtensionFilter("Script file", context.getScriptType().toString());
+                FileNameExtensionFilter filter = new FileNameExtensionFilter("Script file", context.getScriptType().getExtension());
                 chooser.setFileFilter(filter);
                 if (editor.getFileName() != null) {
                     try {
@@ -3787,7 +3788,7 @@ public class View extends MainFrame {
                 if (rVal == JFileChooser.APPROVE_OPTION) {
                     String fileName = chooser.getSelectedFile().getAbsolutePath();
                     if ((IO.getExtension(fileName).isEmpty()) && (context.getScriptType() != null)) {
-                        String extension = "." + context.getScriptType().toString();
+                        String extension = "." + context.getScriptType().getExtension();
                         fileName += extension;
                     }
                     editor.saveAs(fileName);
@@ -4172,7 +4173,7 @@ public class View extends MainFrame {
                 String script = importer.importFile(file);
                 ScriptEditor editor = newScriptEditor(null);
                 editor.setText(script);
-                editor.setFileName(Paths.get(Context.getInstance().getSetup().getScriptPath(), IO.getPrefix(file) + "." + context.getScriptType()).toString());
+                editor.setFileName(Paths.get(Context.getInstance().getSetup().getScriptPath(), IO.getPrefix(file) + "." + context.getScriptType().getExtension()).toString());
                 tabDoc.setTitleAt(tabDoc.indexOfComponent(editor), editor.getScriptName() + "*");
             }
         } catch (Exception ex) {
@@ -4507,8 +4508,8 @@ public class View extends MainFrame {
             SwingUtils.requestFocusDeferred(findInFilesText);
 
             if ((showOption("Find in Files", panel, OptionType.OkCancel) == OptionResult.Yes) && (findInFilesText.getText().length() > 0)) {
-                String[] ignore = new String[]{context.getSetup().getScriptPath() + "/Lib"};
-                SearchPanel pn = new SearchPanel(context.getSetup().getScriptPath(), "*." + context.getScriptType(),
+                String[] ignore = new String[]{context.getSetup().getDefaultScriptLibPath()};
+                SearchPanel pn = new SearchPanel(context.getSetup().getScriptPath(), "*." + context.getScriptType().getExtension(),
                         findInFilesText.getText(), findInFilesCaseInsensitive.isSelected(), findInFilesWholeWords.isSelected(), ignore, true) {
                     @Override
                     protected void onDoubleClick(File file, int row, String text) throws IOException {
