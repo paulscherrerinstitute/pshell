@@ -629,11 +629,12 @@ public class View extends MainFrame {
         if (context.getRunCount() > 0) {
             dataPanel.initialize();
         }
-        context.setPlotListener(new PlotListener() {
-
+        context.setPlotListener(new PlotListener() {            
             @Override
-            public List<Plot> plot(String title, PlotDescriptor[] plots) throws Exception {
-                return View.this.plotData(title, plots);
+            public List<Plot> plot(String title, PlotDescriptor[] plots) throws Exception {    
+                return (List<Plot>) SwingUtils.invokeAndWait(() -> {
+                    return View.this.plotData(title, plots);
+                });
             }
 
             @Override
@@ -1155,7 +1156,7 @@ public class View extends MainFrame {
                 } catch (Exception ex) {
                     if (plot == null) {
                     } else {
-                        logger.warning("Error creating plot " + String.valueOf((plot != null) ? plot.name : null) + ": " + ex.getMessage());
+                        logger.log(Level.WARNING, null, ex);
                     }
                 }
             }

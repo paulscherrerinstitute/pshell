@@ -44,6 +44,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.Random;
+import java.util.concurrent.Callable;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.AbstractButton;
@@ -107,6 +108,28 @@ public class SwingUtils {
             }
         });
         timer.start();       
+    }
+    
+    public static <T> T invokeAndWait(final Callable<T> callable) throws Exception {   
+        if (!SwingUtilities.isEventDispatchThread()){
+            class CallReturn {
+                T ret;
+                Exception ex;
+            }                    
+            CallReturn ret = new CallReturn();
+            SwingUtilities.invokeAndWait(()->{
+                try {
+                    ret.ret = callable.call();
+                } catch (Exception ex) {
+                    ret.ex=ex;
+                }
+            });
+            if (ret.ex!=null){
+                throw ret.ex;
+            }    
+            return ret.ret;
+        }
+        return callable.call();
     }
 
     /**

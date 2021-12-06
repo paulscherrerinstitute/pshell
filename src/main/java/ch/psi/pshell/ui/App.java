@@ -1187,7 +1187,11 @@ public class App extends ObservableBase<AppListener> {
         Context.getInstance().setPlotListener(new PlotListener() {
             @Override
             public List<Plot> plot(String title, PlotDescriptor[] plots) throws Exception {
-
+                if (!SwingUtilities.isEventDispatchThread()){
+                    return SwingUtils.invokeAndWait(() -> {
+                        return plot(title, plots);
+                    });
+                }
                 ArrayList<Plot> ret = new ArrayList<>();
                 PlotPanel plotPanel = getPlotPanel(title, parent, true);
                 plotPanel.clear();
