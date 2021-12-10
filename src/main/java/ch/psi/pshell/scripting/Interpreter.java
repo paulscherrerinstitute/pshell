@@ -37,7 +37,7 @@ public class Interpreter {
         return engine;
     }
 
-    public void reset() {
+    public void reset() {        
         sb.setLength(0);
         statementLineCount = 0;
         statementException = null;

@@ -14,6 +14,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 import javax.script.Bindings;
 import javax.script.Compilable;
@@ -41,6 +43,7 @@ public class JepScriptEngine implements ScriptEngine, AutoCloseable, Compilable 
 
     Thread interpreterThread;
 
+    private final static int CTRL_CMD_PORT = 9587;
     /**
      * Make a new JepScriptEngineF
      *
@@ -59,12 +62,15 @@ public class JepScriptEngine implements ScriptEngine, AutoCloseable, Compilable 
                 this.jep = new SharedInterpreter();    
                 try {
                     //Reloading threading to set the main thread
-                    eval("__aux__=sys.stdout", this.context, this.bindings); //No reload messages
-                    eval("sys.stdout=None", this.context, this.bindings);
+                    eval("import sys", this.context, this.bindings); 
+                    eval("import os", this.context, this.bindings);  
+                    eval("__aux__=sys.stdout", this.context, this.bindings); 
+                    eval("sys.stdout=open(os.devnull, 'w')", this.context, this.bindings);//Don't show reload messages
                     eval("import threading", this.context, this.bindings);
                     eval("import importlib", this.context, this.bindings);
                     eval("importlib.reload(threading)", this.context, this.bindings);
                     eval("sys.stdout=__aux__", this.context, this.bindings);
+                    eval("CTRL_CMD_PORT="+CTRL_CMD_PORT, this.context, this.bindings);
                 } catch (Exception ex) {
                     Logger.getLogger(ScriptManager.class.getName()).log(Level.SEVERE, null, ex);
                 }
@@ -74,7 +80,7 @@ public class JepScriptEngine implements ScriptEngine, AutoCloseable, Compilable 
             throw (ScriptException) new ScriptException(e.getMessage()).initCause(e);
         }
     }
-
+    
     public boolean isInterpreterThread() {
         return (interpreterThread == Thread.currentThread());
     }
@@ -298,14 +304,43 @@ public class JepScriptEngine implements ScriptEngine, AutoCloseable, Compilable 
 
     @Override
     public void close() {
-        try {
+        Logger.getLogger(JepScriptEngine.class.getName()).info("Closing " + JepScriptEngine.class.getName());
+        try {                    
             if (interpreterExecutor != null) {
+                sendCtrCmd("close");
+    
+                try{
+                    interpreterExecutor.submit(() -> {
+                        try{
+                            this.jep.close();
+                        } catch (Exception ex){
+                           Logger.getLogger(JepScriptEngine.class.getName()).log(Level.SEVERE, null, ex);
+                        }                            
+                    }).get(3, TimeUnit.SECONDS);
+                } catch (Exception ex){
+                   Logger.getLogger(JepScriptEngine.class.getName()).log(Level.SEVERE, null, ex);
+                }
                 interpreterExecutor.shutdownNow();
                 Threading.stop(interpreterThread, true, 3000);
             }
-            this.jep.close();
+            
         } catch (Exception e) {
             throw new RuntimeException(e);
+        }
+    }
+    
+    public boolean abort(){
+        return sendCtrCmd("abort");
+    }
+    
+    public static boolean sendCtrCmd(String cmd){
+        try{
+            ch.psi.pshell.serial.UdpDevice pause_server = new ch.psi.pshell.serial.UdpDevice("pause_server","localhost", CTRL_CMD_PORT);
+            pause_server.initialize();
+            pause_server.write(cmd);        
+            return true;
+        } catch (Exception ex){
+            return false;
         }
     }
 
@@ -410,6 +445,11 @@ public class JepScriptEngine implements ScriptEngine, AutoCloseable, Compilable 
     @Override
     public CompiledScript compile(Reader reader) throws ScriptException {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+    
+    
+    public static void main(String[] args)  throws Exception{
+        sendCtrCmd("abort");
     }
 
 }

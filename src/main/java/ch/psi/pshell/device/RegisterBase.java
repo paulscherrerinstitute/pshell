@@ -16,7 +16,7 @@ public abstract class RegisterBase<T> extends ReadonlyRegisterBase<T> implements
      */
     protected RegisterBase(String name, RegisterConfig config) {
         super(name, config);
-    }
+    }   
 
     /*
      * Volatile configuration
@@ -112,7 +112,9 @@ public abstract class RegisterBase<T> extends ReadonlyRegisterBase<T> implements
 
     public void setSettlingCondition(SettlingCondition settlingCondition) {
         this.settlingCondition = settlingCondition;
-        settlingCondition.register = this;
+        if (settlingCondition!=null){
+            settlingCondition.register = this;
+        }
     }
 
     public SettlingCondition getSettlingCondition() {

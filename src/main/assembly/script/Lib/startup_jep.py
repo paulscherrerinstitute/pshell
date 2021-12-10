@@ -14,6 +14,8 @@ from array import array
 import types
 import threading
 import functools
+import socket
+from jep import jproxy
 
 #TODO
 #from jep import PyJArray
@@ -437,16 +439,19 @@ def string_to_obj(o):
         ret =  get_context().getInterpreterVariable(o)
         if ret is None:
             try:
-                return get_context().getScriptManager().evalBackground(o).result
+                ret = get_context().getScriptManager().evalBackground(o).result
             except:                        
                 return None
-        return ret
+        o=ret
     elif is_list(o):
         ret = []
         for i in o:
             ret.append(string_to_obj(i))
-        return ret
-    return o
+        o=ret
+    proxy_method = getattr(o, "get_proxy", None)
+    if callable(proxy_method):
+        return o.get_proxy()
+    return o    
 
 def json_to_obj(o):
     if is_string(o):
@@ -458,6 +463,97 @@ def json_to_obj(o):
             ret.append(json_to_obj(i))
         return ret
     return o
+
+###################################################################################################
+#Scan device interfaces
+###################################################################################################
+
+class Nameable():
+    def __init__(self, name=None, cls=[]):
+        self.name = name
+        self.proxy=jproxy(self, cls)
+            
+    def getName(self):        
+        if self.name:
+            return self.name
+        return self.__class__.__name__  
+
+    def get_proxy(self):
+        return self.proxy
+    
+class Writable(Nameable):
+    cls='ch.psi.pshell.device.Writable'
+    def __init__(self, name=None):
+        Nameable.__init__(self, name, [Writable.cls])
+    def write(self, value):
+        raise Exception ("Not implemented")
+        
+class Readable(Nameable):
+    cls='ch.psi.pshell.device.Readable'
+    def __init__(self, name=None):
+        Nameable.__init__(self, name, [Readable.cls])
+         
+    def read(self):   
+        raise Exception ("Not implemented")
+
+class ReadableArray(Readable):
+    cls='ch.psi.pshell.device.Readable$ReadableArray'
+    def __init__(self, name=None):
+        Nameable.__init__(self, name, [Readable.cls, ReadableArray.cls])
+            
+    def read(self):
+        raise Exception ("Not implemented")
+         
+    def getSize(self):
+        raise Exception ("Not implemented")
+
+class ReadableCalibratedArray(ReadableArray):
+    cls='ch.psi.pshell.device.Readable$ReadableCalibratedArray'
+    def __init__(self, name=None):
+         Nameable.__init__(self, name, [Readable.cls, ReadableArray.cls, ReadableCalibratedArray.cls])
+        
+    def read(self):
+        raise Exception ("Not implemented")
+        
+    def getSize(self):
+        raise Exception ("Not implemented")
+        
+    def getCalibration(self):
+        raise Exception ("Not implemented")
+                
+class ReadableMatrix(Readable):
+    cls='ch.psi.pshell.device.Readable$ReadableMatrix'
+    def __init__(self, name=None):
+        Nameable.__init__(self, name, [Readable.cls, ReadableMatrix.cls])
+            
+    def read(self):
+        raise Exception ("Not implemented")
+    
+    def getWidth(self):
+        raise Exception ("Not implemented")
+
+    def getHeight(self):
+        raise Exception ("Not implemented")
+   
+
+class ReadableCalibratedMatrix(ReadableMatrix):
+    cls='ch.psi.pshell.device.Readable$ReadableCalibratedMatrix'
+    def __init__(self, name=None):
+        Nameable.__init__(self, name, [Readable.cls, ReadableMatrix.cls, ReadableCalibratedMatrix.cls])
+        
+    def read(self):
+        raise Exception ("Not implemented")
+        
+    def getWidth(self):
+        raise Exception ("Not implemented")
+
+    def getHeight(self):
+        raise Exception ("Not implemented")
+
+    def getCalibration(self):
+        raise Exception ("Not implemented")   
+
+
 
 ###################################################################################################
 #Scan classes
@@ -972,14 +1068,15 @@ def lscan(writables, readables, start, end, steps, latency=0.0, relative=False, 
         ScanResult.
     """
     latency_ms=int(latency*1000)
-    #writables=to_list(string_to_obj(writables))
-    writables=string_to_obj(writables)
+    writables=to_list(string_to_obj(writables))
     readables=to_list(string_to_obj(readables))
-    #start=to_list(start)
-    #end=to_list(end)
+    start=to_list(start)
+    end=to_list(end)
     if type(steps) is float or is_list(steps):
         steps = to_list(steps)
-    scan = scans.LineScan(writables,readables, start, end , steps, relative, latency_ms, int(passes), zigzag)
+        scan = scans.LineScan.LineScanStepSize(writables,readables, start, end , steps, relative, latency_ms, int(passes), zigzag)
+    else:
+        scan = scans.LineScan.LineScanNumSteps(writables,readables, start, end , steps, relative, latency_ms, int(passes), zigzag)
     processScanPars(scan, pars)
     scan.start()
     return scan.getResult()
@@ -2749,5 +2846,40 @@ def show_panel(device, title=None):
 #Executed on startup
 ###################################################################################################
 
-if __name__ == "___main__":
+def on_ctrl_cmd(cmd):   
+    #print ("Control command: ", cmd)
     pass
+
+if __name__ == "__main__":
+    #Handle control command server   
+    if ("ctrl_cmd_socket" in globals()) and (ctrl_cmd_socket is not None):
+        if ("ctrl_cmd_task_thread" in globals()) and (ctrl_cmd_task_thread.is_alive()):
+            ctrl_cmd_socket.close()
+            ctrl_cmd_task_thread.join(5.0)
+            if ctrl_cmd_task_thread.is_alive():
+                raise Exception("Cannot stop control command task thread")
+
+    def ctlm_cmd_task(port,parent_thread, rc):
+        try:
+            global ctrl_cmd_socket
+            print ("Starting control command task")
+            quit=False
+            with socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM) as ctrl_cmd_socket:
+                ctrl_cmd_socket.bind(("127.0.0.1", port))
+                ctrl_cmd_socket.settimeout(2.0) 
+                while(quit==False) and (run_count==rc) and parent_thread.is_alive() and not ctrl_cmd_socket._closed:
+                    try:      
+                        msg,add = ctrl_cmd_socket.recvfrom(100) 
+                    except socket.timeout:
+                        continue                    
+                    cmd =msg.decode('UTF-8')
+                    on_ctrl_cmd(cmd)
+                    if cmd=="exit":
+                        quit=True            
+                    ctrl_cmd_socket.sendto("ack".encode('UTF-8'), add)
+        finally:
+            print("Quitting control command task")
+
+    ctrl_cmd_task_thread = threading.Thread(target=functools.partial(ctlm_cmd_task, CTRL_CMD_PORT, threading.currentThread(), run_count))
+    ctrl_cmd_task_thread.setDaemon(True)
+    ctrl_cmd_task_thread.start()   

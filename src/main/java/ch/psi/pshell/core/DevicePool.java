@@ -769,7 +769,10 @@ public class DevicePool extends ObservableBase<DevicePoolListener> implements Au
         return addDevice(device, initialize);
     }
     
-
+    public boolean removeDevice(String name) {
+        return removeDevice(getByName(name));
+    }
+    
     public boolean removeDevice(GenericDevice device) {
         return removeDevice(device, true);
     }

@@ -8,6 +8,7 @@ import ch.psi.pshell.plot.MatrixPlotSeries;
 import ch.psi.pshell.plot.Plot;
 import ch.psi.pshell.plot.PlotBase;
 import ch.psi.pshell.core.Context;
+import ch.psi.pshell.core.Nameable;
 import ch.psi.pshell.data.DataSlice;
 import ch.psi.pshell.data.PlotDescriptor;
 import ch.psi.pshell.device.ArrayCalibration;
@@ -48,6 +49,7 @@ import java.awt.LayoutManager;
 import java.awt.event.ActionEvent;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -262,13 +264,14 @@ public class PlotPanel extends MonitoredPanel {
         }
         volatile Scan currentScan;
         volatile int currentPass;
-
-        void startPlot(final Scan scan) {
+                 
+        void startPlot(final Scan scan, Map pars) {
             clear();
             readableIndexes.clear();
             writableIndexes.clear();
             currentPass = 1;
             changedScaleX = false;
+            boolean accessDevice = Context.getInstance().getScriptManager().isThreaded();
 
             try {
 
@@ -297,7 +300,9 @@ public class PlotPanel extends MonitoredPanel {
                     }
                 }
                 if (labelX == null) {
-                    labelX = (scan.getWritables().length >= 1) ? (scan.getWritables()[0]).getAlias() : null;
+                    if (scan.getWritables().length >= 1){
+                        labelX = accessDevice ? (scan.getWritables()[0]).getAlias() : ((String[])pars.get("writables"))[0];                        
+                    }
                 } else {
                     prefs.autoRange = (prefs.range == null) ? true : false;
                 }
@@ -307,18 +312,19 @@ public class PlotPanel extends MonitoredPanel {
                     Writable[] writables = scan.getWritables();
                     for (int i = 0; i < writables.length; i++) {
                         Writable w = writables[i];
-                        String name = w.getAlias();
+                        String name = accessDevice ? w.getAlias() : ((String[])pars.get("writables"))[i];
                         if (prefs.enabledPlots.contains(name)) {
                             addPlot(name, true, "Time", 1, null, null, null, null, w.getClass());
                             writableIndexes.add(i);
                         }
                     }
                 }
+                
                 //Single plot                          
                 Readable[] readables = scan.getReadables();
                 for (int i = 0; i < readables.length; i++) {
                     Readable r = readables[i];
-                    String name = r.getAlias();
+                    String name = accessDevice ? r.getAlias() : ((String[])pars.get("readables"))[i];
                     if (((prefs.enabledPlots == null) || (prefs.enabledPlots.contains(name))) && (domainAxisReadableIndex != i)) {
                         double[] start = new double[scan.getStart().length];
                         System.arraycopy(scan.getStart(), 0, start, 0, start.length);
@@ -336,27 +342,30 @@ public class PlotPanel extends MonitoredPanel {
                         }
                         int[] recordSize = null;
                         if (r instanceof Readable.ReadableMatrix) {
-                            recordSize = new int[]{((Readable.ReadableMatrix) r).getWidth(), ((Readable.ReadableMatrix) r).getHeight()};
+                            int width = accessDevice ? ((Readable.ReadableMatrix) r).getWidth() : (int)((Map<String,Map>)pars.get("attrs")).get(name).get("width");
+                            int height = accessDevice ? ((Readable.ReadableMatrix) r).getHeight() : (int)((Map<String,Map>)pars.get("attrs")).get(name).get("height");
+                            recordSize = new int[]{width, height};
                             start = null;
                             end = null;
                             if (r instanceof ReadableCalibratedMatrix) {
-                                MatrixCalibration cal = ((ReadableCalibratedMatrix) r).getCalibration();
+                                MatrixCalibration cal =accessDevice ?((ReadableCalibratedMatrix) r).getCalibration() :  (MatrixCalibration)((Map<String,Map>)pars.get("attrs")).get(name).get("calibration");
                                 if (cal != null) {
                                     double startX = cal.getValueX(0);
-                                    double endX = cal.getValueX(((Readable.ReadableMatrix) r).getWidth() - 1);
+                                    double endX = cal.getValueX(width - 1);
                                     double startY = cal.getValueY(0);
-                                    double endY = cal.getValueY(((Readable.ReadableMatrix) r).getHeight() - 1);
+                                    double endY = cal.getValueY(height - 1);
                                     start = new double[]{startX, startY};
                                     end = new double[]{endX, endY};
                                 }
                             }
                         } else if (r instanceof Readable.ReadableArray) {
-                            recordSize = new int[]{((Readable.ReadableArray) r).getSize()};
+                            int size = accessDevice ?((Readable.ReadableArray) r).getSize() : (int)((Map<String,Map>)pars.get("attrs")).get(name).get("size");
+                            recordSize = new int[]{size};
                             if (r instanceof Readable.ReadableCalibratedArray) {
-                                ArrayCalibration cal = ((Readable.ReadableCalibratedArray) r).getCalibration();
+                                ArrayCalibration cal = accessDevice ? ((Readable.ReadableCalibratedArray) r).getCalibration() :  (ArrayCalibration)((Map<String,Map>)pars.get("attrs")).get(name).get("calibration");
                                 if (cal != null) {
                                     double startVal = cal.getValue(0);
-                                    double endVal = cal.getValue(((Readable.ReadableCalibratedArray) r).getSize() - 1);
+                                    double endVal = cal.getValue(size - 1);
                                     if (start.length == 1) {
                                         start = new double[]{start[0], startVal};
                                         end = new double[]{end[0], endVal};
@@ -389,16 +398,39 @@ public class PlotPanel extends MonitoredPanel {
         public void onScanStarted(final Scan scan, final String plotTitle) {
             if (isPlotting(plotTitle)) {
                 currentScan = scan;
+                Map pars = new HashMap<>();
                 synchronized (scanRecordBuffer) {
                     scanRecordBuffer.clear();
                     updating.set(false);
                 }
+                if (!Context.getInstance().getScriptManager().isThreaded()){
+                    pars.put("writables", scan.getWritableNames());
+                    pars.put("readables", scan.getReadableNames());
+                    Map<String,Map> attrs = new HashMap<>();
+                    for (Readable r : scan.getReadables()){
+                         Map<String,Object> attr = new HashMap<>();
+                         if (r instanceof Readable.ReadableArray){
+                            attr.put("size", ((Readable.ReadableArray)r).getSize());
+                            if (r instanceof Readable.ReadableCalibratedArray) {
+                                attr.put("calibration", ((Readable.ReadableCalibratedArray) r).getCalibration());
+                            }
+                         } else if (r instanceof Readable.ReadableMatrix){
+                             attr.put("width", ((Readable.ReadableMatrix)r).getWidth());
+                             attr.put("height", ((Readable.ReadableMatrix)r).getHeight());
+                             if (r instanceof Readable.ReadableCalibratedMatrix) {
+                                 attr.put("calibration", ((Readable.ReadableCalibratedMatrix) r).getCalibration());
+                             }
+                         }
+                         attrs.put(r.getAlias(), attr);
+                    }
+                    pars.put("attrs", attrs);
+                }
                 if (!offscreen && !SwingUtilities.isEventDispatchThread()) {
                     SwingUtilities.invokeLater(() -> {
-                        startPlot(scan);
+                        startPlot(scan, pars);
                     });
                 } else {
-                    startPlot(scan);
+                    startPlot(scan, pars);
                 }
             }
         }

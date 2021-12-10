@@ -469,6 +469,9 @@ public class ScriptManager implements AutoCloseable {
 
     public void abort() {
         logger.fine("Aborting");
+        if (engine instanceof JepScriptEngine){
+            ((JepScriptEngine)engine).abort();
+        }
         try {
             if ((evalThread != null) && (evalThread != Thread.currentThread())) {
                 evalThread.interrupt();
@@ -680,6 +683,13 @@ public class ScriptManager implements AutoCloseable {
 
     @Override
     public void close() {
+        try {
+            if (engine instanceof JepScriptEngine){
+                ((JepScriptEngine)engine).close();
+            }   
+        } catch (Exception ex) {
+            logger.log(Level.WARNING, null, ex);
+        }            
         for (AutoCloseable ac : new AutoCloseable[]{sessionOut, jythonClassFilePermissionMonitor}) {
             try {
                 if (ac != null) {
