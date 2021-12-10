@@ -216,6 +216,10 @@ public class App extends ObservableBase<AppListener> {
         if (isArgumentDefined("type")) {
             System.setProperty(Setup.PROPERTY_SCRIPT_TYPE, getArgumentValue("type"));
         }
+        
+        if (isArgumentDefined("loca")) {
+            System.setProperty(Setup.PROPERTY_LOCAL_STARTUP_SCRIPT, getArgumentValue("loca"));
+        }        
 
         if (isArgumentDefined("dfmt")) {
             System.setProperty(Configuration.PROPERTY_DATA_PROVIDER, getArgumentValue("dfmt"));
@@ -397,6 +401,7 @@ public class App extends ObservableBase<AppListener> {
         sb.append("\n\t-clog=<level>\tSet the console logging level");
         sb.append("\n\t-user=<name>\tSet the startup user");
         sb.append("\n\t-type=<ext>\tSet the script type, overriding the setup");
+        sb.append("\n\t-loca=<file>\tSet the local startup script");
         sb.append("\n\t-dfmt=<format>\tSet the data format, overriding the configuration: h5, txt, csv or fda");
         sb.append("\n\t-dlay=<layout>\tSet the data layout, overriding the configuration: default, table, sf or fda");
         sb.append("\n\t-dspt        \tDisable scan plots");

@@ -54,7 +54,7 @@ public class Package implements AutoCloseable {
         if (Context.getInstance().isInterpreterEnabled()) {
             if (scriptPath.toFile().isDirectory()){
                 Context.getInstance().getScriptManager().addPythonPath(Context.getInstance().getSetup().expandPath(scriptPath.toString()));                                
-                String scriptFile = Context.getInstance().getSetup().getLocalStartupScript() + "." + Context.getInstance().getSetup().getScriptType().getExtension();
+                String scriptFile = Context.getInstance().getSetup().getLocalStartupScript();
                 Path startupScript = Paths.get(scriptPath.toString(), scriptFile);
                 if (startupScript.toFile().isFile()){
                     Context.getInstance().getScriptManager().evalFile(startupScript.toString());

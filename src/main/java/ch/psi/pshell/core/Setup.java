@@ -41,6 +41,7 @@ public class Setup extends Config {
     public static transient final String PROPERTY_TASKS_FILE = "ch.psi.pshell.tasks.file";
     public static transient final String PROPERTY_SETTINGS_FILE = "ch.psi.pshell.settings.file";
     public static transient final String PROPERTY_SCRIPT_TYPE = "ch.psi.pshell.type";
+    public static transient final String PROPERTY_LOCAL_STARTUP_SCRIPT = "ch.psi.pshell.local.startup";
     public static transient final String PROPERTY_PARALLEL_INIT = "ch.psi.pshell.parallel.init";
     public static transient final String PROPERTY_EXT_SCRIPT_PATH = "ch.psi.pshell.ext_script";
 
@@ -80,7 +81,8 @@ public class Setup extends Config {
     public static transient final String TOKEN_SESSION_NAME = "{session_name}";
 
     public static transient final String DEFAULT_HOME_FOLDER = "./home";
-    public static transient final String DEFAULT_LIB_FOLDER = TOKEN_SCRIPT + "/Lib";
+    public static transient final String DEFAULT_LIB_FOLDER = TOKEN_SCRIPT + "/Lib";    
+    public static transient final String DEFAULT_LOCAL_STARTUP_FILE_PREFIX  = "local";
 
     String homePath;
     String outputPath;
@@ -107,7 +109,7 @@ public class Setup extends Config {
     public String configFileSessions = TOKEN_CONFIG + "/sessions.properties";
     
     public String userSessionsPath = TOKEN_SESSIONS + "/user";
-    public String consoleSessionsPath = TOKEN_SESSIONS + "/console";
+    public String consoleSessionsPath = TOKEN_SESSIONS + "/console";        
     
     
 
@@ -716,9 +718,16 @@ public class Setup extends Config {
     }
 
     public String getLocalStartupScript() {
-        return "local";
+        String ret = DEFAULT_LOCAL_STARTUP_FILE_PREFIX;        
+        if (System.getProperty(PROPERTY_LOCAL_STARTUP_SCRIPT) != null) {
+            ret = System.getProperty(PROPERTY_LOCAL_STARTUP_SCRIPT);
+        }                        
+        if (!ret.endsWith(getScriptType().getExtension())){
+            ret = ret + "." + getScriptType().getExtension();
+        }
+        return ret;
     }
-
+        
     public String getCommandHistoryFile() {
         return Paths.get(getContextPath(), "CommandHistory.dat").toString();
     }

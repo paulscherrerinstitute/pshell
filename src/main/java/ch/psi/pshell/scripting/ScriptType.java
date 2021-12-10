@@ -33,7 +33,7 @@ public enum ScriptType {
     }
     
     public String getDefaultStartupFile(){
-        String prefix = (this==cpy) ? "startup_jep" : "startup";
+        String prefix = (this==cpy) ? "startup_c" : "startup";
         return prefix + "." + getExtension();
     }
     

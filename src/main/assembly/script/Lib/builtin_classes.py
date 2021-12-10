@@ -248,6 +248,8 @@ import ch.psi.pshell.ui.App as App
 
 import ch.psi.pshell.scripting.ViewPreference as Preference
 import ch.psi.pshell.scripting.ScriptUtils as ScriptUtils
+import ch.psi.pshell.scripting.ScriptType as ScriptType
+
 from ch.psi.pshell.device.Record import *
 from javax.swing.SwingUtilities import invokeLater, invokeAndWait
 

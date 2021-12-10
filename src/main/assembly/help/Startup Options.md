@@ -150,6 +150,10 @@
     <td>Set the script type, overriding the setup. Allowed values:  py, js or groovy.</td>
   </tr>
   <tr>
+    <td>-loca=[file]</td>
+    <td>Set local startup file.</td>
+  </tr>
+  <tr>
     <td>-dfmt=[format]</td>
     <td>Set the data format, overriding the configuration: h5, txt, csv or fda.</td>
   </tr>

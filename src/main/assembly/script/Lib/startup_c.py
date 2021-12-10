@@ -47,6 +47,7 @@ from java.lang import Boolean, Integer, Float, Double, Short, Byte, Long, String
 
 from ch.psi.pshell import core as _core
 from ch.psi.pshell.scripting import ScriptUtils
+from ch.psi.pshell.scripting import ScriptType
 from ch.psi.utils import Convert
 from ch.psi.utils import Arr
 
