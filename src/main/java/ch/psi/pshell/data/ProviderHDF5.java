@@ -1072,7 +1072,7 @@ public class ProviderHDF5 implements Provider {
 
     @Override
     public void setItem(String path, Object data, Class type, int index) {       
-        assertOpenOutput();
+        assertOpenOutput();     
         if (type == null) {
             //For float types don't leave default '0' when writing null: set NaN instead.
             HDF5DataSetInformation info = writer.object().getDataSetInformation(path);
@@ -1126,7 +1126,7 @@ public class ProviderHDF5 implements Provider {
                 return;
             }
         }
-        
+          
         if (type.isArray() && (data!=null)){
             Class cls = Arr.getComponentType(data);
             if ((cls!=null) && (Number.class.isAssignableFrom(cls))){

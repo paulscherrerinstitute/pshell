@@ -33,9 +33,11 @@ import java.lang.reflect.Array;
 import java.util.Arrays;
 import ch.psi.pshell.device.Readable;
 import ch.psi.pshell.device.Readable.ReadableMatrix;
+import ch.psi.pshell.scripting.JepUtils;
 import ch.psi.utils.Reflection.Hidden;
 import java.util.List;
 import java.util.Map;
+import jep.NDArray;
 
 /**
  * Manages the automatic persistence of DAQ scritps.
@@ -980,6 +982,9 @@ public class DataManager implements AutoCloseable {
         String group = path.substring(0, index + 1);
         String name = path.substring(index + 1);
 
+        if (data instanceof NDArray){
+            data = JepUtils.toJavaArray((NDArray)data);
+        }
         Class type = data.getClass().isArray() ? Arr.getComponentType(data) : data.getClass();
         if (type.isPrimitive()) {
             type = Convert.getWrapperClass(type);
@@ -1108,23 +1113,26 @@ public class DataManager implements AutoCloseable {
     public void createTable(String path, String[] names, Class[] types, int[] lengths, Map features) throws IOException {
         createDataset(path, names, types, lengths, features);
     }
-
-    public void setItem(String path, Object val, int index) throws IOException {
+    
+    public void setItem(String path, Object value, int index) throws IOException {
         if (path == null) {
             return;
         }
         Class type = null;
-        if (val != null) {
-            type = val.getClass();
+        if (value != null) {
+            if (value instanceof NDArray){
+                value = JepUtils.toJavaArray((NDArray)value);
+            }
+            type = value.getClass();
             if (type.isPrimitive()) {
                 type = Convert.getWrapperClass(type);
             }
         }
         if (logger.isLoggable(Level.FINEST)) {
-            logger.finest(String.format("Append  \"%s:%d\" = %s", path, index, LogManager.getLogForValue(val)));
+            logger.finest(String.format("Append  \"%s:%d\" = %s", path, index, LogManager.getLogForValue(value)));
         }
         assertOpen(); //Avoid NullPointerException if don't have rights to data folder
-        getProvider().setItem(path, val, type, index);
+        getProvider().setItem(path, value, type, index);
     }
 
     /**
@@ -1175,6 +1183,9 @@ public class DataManager implements AutoCloseable {
             throw new IllegalArgumentException();
         }
         openOutput();
+        if (value instanceof NDArray){
+            value = JepUtils.toJavaArray((NDArray)value);
+        }
         Class type = value.getClass();
         if (type.isPrimitive()) {
             type = Convert.getWrapperClass(type);

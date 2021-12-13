@@ -10,6 +10,7 @@ import ch.psi.pshell.data.Layout;
 import ch.psi.pshell.data.Provider;
 import ch.psi.pshell.device.*;
 import ch.psi.pshell.device.Readable;
+import ch.psi.pshell.scripting.JepUtils;
 import ch.psi.utils.*;
 
 import java.io.IOException;
@@ -660,7 +661,9 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
                     } else if (val instanceof Map) { //JS Lists
                         val = Convert.toArray((Map) val);
                         val = Convert.toDouble(val); //TODO: let Data manager make this transformation based on getPreserveTypes()
-                    }
+                    } else if (val instanceof jep.NDArray){ //Numpy array
+                        val = JepUtils.toJavaArray((jep.NDArray)val);
+                    }                    
                     record.values[j] = val;
                 } catch (InterruptedException ex) {
                     throw ex;
@@ -880,7 +883,7 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
         if (getSnaps()!=null){
             for (Readable snap: getSnaps()){
                 try{
-                    ret.put(snap, readSnap(getReadableName(snap)));
+                    ret.put(snap, readSnap(getDeviceName(snap)));
                 } catch(Exception ex){
                     ret.put(snap, null);
                 }
@@ -1005,7 +1008,11 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
     public String[] getWritableNames() {
         ArrayList<String> names = new ArrayList();
         for (Writable writable : getWritables()) {
-            names.add(writable.getAlias());
+            try{
+                names.add(getDeviceName(writable));
+            } catch (Exception es) {
+                names.add("?");
+            }
         }
         return names.toArray(new String[0]);
     }
@@ -1014,7 +1021,11 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
     public String[] getReadableNames() {
         ArrayList<String> names = new ArrayList();
         for (Readable readable : getReadables()) {
-            names.add(readable.getAlias());
+            try{
+                names.add(getDeviceName(readable));
+            } catch (Exception es) {
+                names.add("?");
+            }   
         }
         return names.toArray(new String[0]);
     }
@@ -1024,7 +1035,11 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
         ArrayList<String> names = new ArrayList();
         if (getMonitors()!=null){
             for (Device monitor : getMonitors()) {
-                names.add(monitor.getAlias());
+                try{
+                    names.add(getDeviceName(monitor));
+                } catch (Exception es) {
+                    names.add("?");
+                }
             }
         }
         return names.toArray(new String[0]);
@@ -1035,15 +1050,21 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
         ArrayList<String> names = new ArrayList();
         if (getDiags()!=null){
             for (Readable diag : getDiags()) {
-                names.add(getReadableName(diag));
-            }
+                names.add(getDeviceName(diag));
+            }                
         }
         return names.toArray(new String[0]);
     }    
     
     @Override
-    public String getReadableName(Readable snap){
-        return (snap instanceof Device) ? ((Device)snap).getAlias() : snap.getName();
+    public String getDeviceName(Nameable device){
+        try{
+            //return (device instanceof Device) ? ((Device)readable).getAlias() : device.getName();
+            return device.getAlias();
+        } catch (Exception es) {
+            //TODO: Error in single-threaded interpreter when accessing device in different thread
+            return ("?");
+        }            
     }
     
     @Override
@@ -1051,7 +1072,7 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
         ArrayList<String> names = new ArrayList();
         if (getSnaps()!=null){
             for (Readable snap : getSnaps()) {
-                names.add(getReadableName(snap));
+                names.add(getDeviceName(snap));
             }
         }
         return names.toArray(new String[0]);
@@ -1061,7 +1082,7 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
     public String[] getDeviceNames(){
         ArrayList<String> names = new ArrayList();
         for (Nameable device : getDevices()) {
-            names.add(device.getAlias());
+            names.add(getDeviceName(device));
         }
         return names.toArray(new String[0]);
     }

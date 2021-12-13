@@ -1,5 +1,6 @@
 package ch.psi.pshell.scan;
 
+import ch.psi.pshell.core.Context;
 import ch.psi.pshell.core.Nameable;
 import ch.psi.pshell.data.LayoutDefault;
 import ch.psi.pshell.device.Device;
@@ -221,28 +222,28 @@ public class ScanResult implements SubscriptableList<ScanRecord>, Subscriptable.
         return asList(scan.getDevices());
     }
     
-    public List<Nameable> getWritableNames() {
+    public List<String> getWritableNames() {
         return asList(scan.getWritableNames());
     }
     
-    public List<Nameable> getReadableNames() {
+    public List<String> getReadableNames() {
         return asList(scan.getReadableNames());
     }  
     
-    public List<Nameable> getMonitorNames() {
+    public List<String> getMonitorNames() {
         return asList(scan.getMonitorNames());
     }      
     
-    public List<Nameable> getDiagNames() {
+    public List<String> getDiagNames() {
         try{
         return asList(scan.getDiagNames());
         }catch (Exception ex){
             ex.printStackTrace();
         }
-        return new ArrayList<Nameable>();
+        return new ArrayList<String>();
     }      
     
-    public List<Nameable> getSnapsNames() {
+    public List<String> getSnapsNames() {
         return asList(scan.getSnapsNames());
     }        
 
@@ -353,20 +354,13 @@ public class ScanResult implements SubscriptableList<ScanRecord>, Subscriptable.
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        sb.append(scan.toString() + ": ");
         if (scan != null) {
-            ArrayList<String> names = new ArrayList<>();
-            for (Nameable nameable : scan.getWritables()) {
-                names.add(nameable.getName());
-            }
-            sb.append("positioners=[").append(String.join(",", names)).append("], ");
-            names.clear();
-            for (Nameable nameable : scan.getReadables()) {
-                names.add(nameable.getName());
-            }
-            sb.append("sensors=[").append(String.join(",", names)).append("], ");
+            sb.append(scan.toString() + ": ");
+            sb.append("records=").append(getSize()).append("/").append(scan.getNumberOfRecords());
+             //TODO: Cannot get names in single thread interpreters
+            sb.append(" positioners=[").append(String.join(",", getWritableNames())).append("],");
+            sb.append(" sensors=[").append(String.join(",", getReadableNames())).append("]");
         }
-        sb.append("records=").append(getSize()).append("/").append(scan.getNumberOfRecords());
         return sb.toString();
     }
 

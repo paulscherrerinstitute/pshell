@@ -178,7 +178,7 @@ public interface Scan {
     
     public String[] getSnapsNames(); 
     
-    public String getReadableName(Readable readable);
+    public String getDeviceName(Nameable device);
     
     public void setSnaps(Readable[] snaps);
 

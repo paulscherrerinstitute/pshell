@@ -100,7 +100,7 @@ public interface Layout {
     }    
 
     default String getSnapPathName(Scan scan, Readable snap) {
-        return Layout.this.getSnapPathName(scan, scan.getReadableName(snap));
+        return Layout.this.getSnapPathName(scan, scan.getDeviceName(snap));
     }
     
     default String getDiagsPathName(Scan scan) {
@@ -112,7 +112,7 @@ public interface Layout {
     }        
     
     default String getDiagPathName(Scan scan, Readable snap) {
-        return getDiagPathName(scan, scan.getReadableName(snap));
+        return getDiagPathName(scan, scan.getDeviceName(snap));
     }    
     
     default void onOpened(File output) throws IOException {
@@ -208,7 +208,7 @@ public interface Layout {
                 Object value = diag.read();
                 getDataManager().appendItem(path, value);
             } catch (Exception ex){        
-                String msg = "Error adding to diag dataset for " + scan.getReadableName(diag) + ": " + ex.getMessage();
+                String msg = "Error adding to diag dataset for " + scan.getDeviceName(diag) + ": " + ex.getMessage();
                 Logger.getLogger(Layout.class.getName()).finer(msg);
             }                    
         }

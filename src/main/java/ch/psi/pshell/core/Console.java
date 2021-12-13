@@ -259,13 +259,13 @@ public class Console {
     }
     
     
-    static boolean canFetchSignatures(){
+    static boolean canCallInterpreter(){
         Context context = Context.getInstance();
         return (context.getScriptManager().isThreaded() || context.getState().isReady());
     }
 
     public static List<String> getSignatures(String str, int position, boolean propagate) {
-        if (!canFetchSignatures()){
+        if (!canCallInterpreter()){
             return null;
         }
         if (str.length() > 0) {
@@ -321,7 +321,7 @@ public class Console {
             return JythonUtils.getSignatures((org.python.core.PyObject) obj, true);
         } else if ((Context.getInstance().getScriptType()==ScriptType.cpy)  && 
                 (!(obj.getClass().getName().startsWith("ch.psi")))) {
-            if (!canFetchSignatures()){
+            if (!canCallInterpreter()){
                 return null;
             }
             if (name.endsWith(".")){
