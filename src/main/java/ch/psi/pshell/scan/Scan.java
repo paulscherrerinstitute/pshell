@@ -23,7 +23,11 @@ public interface Scan {
     public Layout getDataLayout();
     
     public Provider getDataProvider();
+    
+    public void setCallbacks(ScanCallbacks callbacks);
 
+    public ScanCallbacks getCallbacks();
+    
     public Writable[] getWritables();
 
     public String[] getWritableNames();

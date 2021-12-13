@@ -82,7 +82,11 @@ public class CodeEditorExtraTokens {
         try {
             TokenMap map = new TokenMap();
             for (GenericDevice dev : Context.getInstance().getDevicePool().getAllDevices()) {
-                map.put(dev.getName(), TokenTypes.VARIABLE);
+                try {
+                    map.put(dev.getName(), TokenTypes.VARIABLE);
+                } catch (Exception ex) {
+                    Logger.getLogger(CodeEditorExtraTokens.class.getName()).log(Level.INFO, null, ex);
+                }
             }
             if ((functionNames == null) && (Context.getInstance().isInterpreterEnabled()))
             {

@@ -220,6 +220,7 @@ import ch.psi.pshell.scan.BinarySearch
 import ch.psi.pshell.scan.HillClimbingSearch
 import ch.psi.pshell.scan.ScanResult
 import ch.psi.pshell.scan.Otf as Otf
+import ch.psi.pshell.scan.ScanCallbacks as ScanCallbacks
 
 import ch.psi.pshell.crlogic.CrlogicPositioner as CrlogicPositioner
 import ch.psi.pshell.crlogic.CrlogicSensor as CrlogicSensor
@@ -395,9 +396,10 @@ class BsScan(ch.psi.pshell.bs.BsScan):
     def onAfterPass(self, num): __after_pass(self, num)
 
 class ManualScan (ch.psi.pshell.scan.ManualScan):
-    def __init__(self, writables, readables, start = None, end = None, steps = None, relative = False, dimensions = None):
+    def __init__(self, writables, readables, start = None, end = None, steps = None, relative = False, dimensions = None, **pars):
         ch.psi.pshell.scan.ManualScan.__init__(self, writables, readables, start, end, steps, relative)
         self._dimensions = dimensions
+        processScanPars(self, pars)
 
     def append(self,setpoints, positions, values, timestamps=None):
         ch.psi.pshell.scan.ManualScan.append(self, to_array(setpoints), to_array(positions), to_array(values), None if (timestamps is None) else to_array(timestamps))

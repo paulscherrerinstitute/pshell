@@ -40,6 +40,7 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
     final int passes;
     final boolean zigzag;
 
+    ScanCallbacks callbacks;
     ScanResult result;
     int recordIndex = 0;
     int recordIndexOffset = 0;
@@ -63,7 +64,7 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
     Readable[] diags;
     Readable[] snaps;
     Map meta;
-
+    
     boolean useWritableReadback = getScansUseWritableReadback();
     boolean restorePosition = getRestorePositionOnRelativeScans();
     boolean abortOnReadableError = getAbortScansOnReadableError();
@@ -130,6 +131,14 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
         //        addListener(listener);
         //    }
         //}
+    }
+    
+    public void setCallbacks(ScanCallbacks callbacks){
+        this.callbacks=callbacks;
+    }
+
+    public ScanCallbacks getCallbacks(){
+        return callbacks;
     }
     
     @Override
@@ -465,13 +474,22 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
                 }
                 try {
                     onBeforeScan();
+                    if (getCallbacks()!=null){
+                        getCallbacks().onBeforeScan(this);
+                    }
                     startMonitors();
                     try {
                         for (pass = 1; pass <= getNumberOfPasses(); pass++) {
                             passOffset = recordIndex;
                             onBeforePass(pass);
+                            if (getCallbacks()!=null){
+                                getCallbacks().onBeforePass(this, pass);
+                            }
                             doScan();
                             onAfterPass(pass);
+                            if (getCallbacks()!=null){
+                                getCallbacks().onAfterPass(this, pass);
+                            }
                             if (getSplitPasses()){
                                 if(pass < getNumberOfPasses()){
                                     Context.getInstance().getDataManager().splitScanData(this);
@@ -482,6 +500,9 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
                     } finally {
                         stopMonitors();
                         onAfterScan();
+                        if (getCallbacks()!=null){
+                            getCallbacks().onAfterScan(this);
+                        }  
                     }
                     triggerEnded(null);
                 } catch (Exception ex) {
@@ -606,6 +627,9 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
         do {
             assertNotAborted();
             onBeforeReadout(pos);
+            if (getCallbacks()!=null){
+                getCallbacks().onBeforeReadout(this, pos);
+            }
 
             record.invalidated = false;
             record.values = new Object[getReadables().length];
@@ -651,6 +675,9 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
             record.localTimestamp = System.currentTimeMillis();
             record.timestamp = timestamp;
             onAfterReadout(record);
+            if (getCallbacks()!=null){
+                getCallbacks().onAfterReadout(this, record);
+            }
             if (record.invalidated) {
                 if (!resampleOnInvalidate){
                     logger.finer("Record invalidated:  " + record.index);

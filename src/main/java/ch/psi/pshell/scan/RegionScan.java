@@ -36,6 +36,9 @@ public class RegionScan extends DiscreteScan {
         if (isCurrentPassBackwards()) {
             for (int region = getNumberOfSteps().length - 1; region >= 0; region--) {
                 onBeforeRegion(region);
+                if (getCallbacks()!=null){
+                    getCallbacks().onBeforeRegion(this, region);
+                }
                 for (int step = getNumberOfSteps()[region]; step >= 0; step--) {
                     double[] pos = new double[]{getWritablePosition(step, region)};
                     processPosition(pos);
@@ -44,7 +47,9 @@ public class RegionScan extends DiscreteScan {
 
         } else {
             for (int region = 0; region < getNumberOfSteps().length; region++) {
-                onBeforeRegion(region);
+                if (getCallbacks()!=null){
+                    getCallbacks().onBeforeRegion(this, region);
+                }
                 for (int step = 0; step <= getNumberOfSteps()[region]; step++) {
                     double[] pos = new double[]{getWritablePosition(step, region)};
                     processPosition(pos);

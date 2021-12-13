@@ -15,6 +15,8 @@ import types
 import threading
 import functools
 import socket
+import numpy
+import traceback
 from jep import jproxy
 
 #TODO
@@ -28,6 +30,7 @@ def is_array(obj):
 
 from java.lang import Class
 from java.lang import Object
+from java.lang import AutoCloseable
 from java.beans import PropertyChangeListener
 from java.util import concurrent
 from java.util import List
@@ -260,6 +263,8 @@ from ch.psi.pshell.device import MotorGroupDiscretePositioner as MotorGroupDiscr
 from ch.psi.pshell.device import ReadonlyRegisterBase as ReadonlyRegisterBase
 from ch.psi.pshell.device import ReadonlyAsyncRegisterBase as ReadonlyAsyncRegisterBase
 from ch.psi.pshell.device import Register as Register
+from ch.psi.pshell.device import Record as Record
+
 RegisterArray = Register.RegisterArray
 RegisterNumber = Register.RegisterNumber
 RegisterBoolean = Register.RegisterBoolean
@@ -398,6 +403,7 @@ from ch.psi.pshell.scan import ScanBase as ScanBase
 from ch.psi.pshell.scan import ScanResult
 from ch.psi.pshell.scan import Otf as Otf
 from ch.psi.pshell.scan import ScanAbortedException as ScanAbortedException
+from ch.psi.pshell.scan import ScanCallbacks 
 
 from ch.psi.pshell.crlogic import CrlogicPositioner as CrlogicPositioner
 from ch.psi.pshell.crlogic import CrlogicSensor as CrlogicSensor
@@ -623,7 +629,7 @@ ContinuousScan=scans.ContinuousScan
 TimeScan=scans.TimeScan
 MonitorScan=scans.MonitorScan
 BsScan=BsScan
-ManualScan=scans.ManualScan
+#ManualScan=scans.ManualScan
 BinarySearch=scans.BinarySearch
 HillClimbingSearcharySearch=scans.HillClimbingSearch
 
@@ -683,20 +689,6 @@ class BsScan(scans.BsScan):
     def onBeforePass(self, num): __before_pass(self, num)
     def onAfterPass(self, num): __after_pass(self, num)
 
-class ManualScan(scans.ManualScan):
-    def __init__(self, writables, readables, start = None, end = None, steps = None, relative = False, dimensions = None):
-        ManualScan.__init__(self, writables, readables, start, end, steps, relative)
-        self._dimensions = dimensions
-
-    def append(self,setpoints, positions, values, timestamps=None):
-        ManualScan.append(self, to_array(setpoints), to_array(positions), to_array(values), None if (timestamps is None) else to_array(timestamps))
-
-    def getDimensions(self):
-        if self._dimensions == None:
-            return ManualScan.getDimensions(self)
-        else:
-            return self._dimensions
-
 class BinarySearch(scans.BinarySearch):
     def onBeforeReadout(self, pos): __before_readout(self, pos)
     def onAfterReadout(self, rec): __after_readout(self, rec)
@@ -706,13 +698,96 @@ class HillClimbingSearch(scans.HillClimbingSearch):
     def onAfterReadout(self, rec): __after_readout(self, rec)
 """
 
+class ManualScan():
+    def __init__(self, writables, readables, start = None, end = None, steps = None, relative = False, dimensions = None, **pars):
+        start=to_list(start)
+        end=to_list(end)
+        steps=to_list(steps)
+        self.scan=scans.ManualScan.ManualScanStr(writables, readables, start, end, steps, relative)
+        self.dimensions = dimensions
+        processScanPars(self.scan, pars)
+
+    def start(self):
+        self.scan.start()
+
+    def end(self):
+        self.scan.end()
+
+    def append(self,setpoints, positions, values, timestamps=None):
+        self.scan.append(to_array(setpoints), to_array(positions), to_array(values), None if (timestamps is None) else to_array(timestamps))
+
+    def getDimensions(self):
+        if self._dimensions == None:
+            return self._scan.getDimensions()
+        else:
+            return self.dimensions
+
+def _no_args(f):
+    ret = f.__code__.co_argcount
+    return (ret-1) if isinstance(f, types.MethodType) else ret
+
+class Callbacks():
+    def __init__(self,pars):
+        self.pars=pars
+        self.before_read = pars.pop("before_read",None)
+        self.after_read = pars.pop("after_read",None)
+        self.before_pass = pars.pop("before_pass",None)
+        self.after_pass =  pars.pop("after_pass",None)
+        self.before_region= pars.pop("before_region",None)
+        self.proxy=jproxy(self, ["ch.psi.pshell.scan.ScanCallbacks"])
+    def onBeforeScan(self, scan):
+        pass
+    def onAfterScan(self, scan):
+        pass
+    def onBeforeReadout(self, scan, pos):
+        try:
+            if self.before_read is not None:
+                args = _no_args(self.before_read)
+                if   args==0: self.before_read()
+                elif args==1: self.before_read(list(pos))
+                elif args==2: self.before_read(list(pos), scan)
+        except:
+            traceback.print_exc()   
+    def onAfterReadout(self, scan, record):
+        try:
+            if self.after_read is not None:
+                args = _no_args(self.after_read)
+                if   args==0: self.after_read()
+                elif args==1: self.after_read(record)
+                elif args==2: self.after_read(record, scan)
+        except:
+            traceback.print_exc()   
+    def onBeforePass(self, scan, num_pass):
+        try:
+            if self.before_pass is not None:
+                args = _no_args(self.before_pass)
+                if   args==0:self.before_pass()
+                elif args==1:self.before_pass(num_pass)
+                elif args==2:self.before_pass(num_pass, scan)
+        except:
+            traceback.print_exc()    
+     
+    def onAfterPass(self, scan, num_pass):
+        try:
+            if self.after_pass is not None:
+                args = _no_args(self.after_pass)
+                if   args==0:self.after_pass()
+                elif args==1:self.after_pass(num_pass)
+                elif args==2:self.after_pass(num_pass, scan)
+        except:
+            traceback.print_exc()    
+    def onBeforeRegion(self, scan, num_region):  
+        try:
+            if self.before_region != None:
+                args = _no_args(self.before_region)
+                if   args==0:self.before_region()
+                elif args==1:self.before_region(num_region)
+                elif args==2:self.before_region(num_region, scan)
+        except:
+            traceback.print_exc()   
+
 def processScanPars(scan, pars):
-    #TODO
-    #scan.before_read = pars.pop("before_read",None)
-    #scan.after_read = pars.pop("after_read",None)
-    #scan.before_pass = pars.pop("before_pass",None)
-    #scan.after_pass =  pars.pop("after_pass",None)
-    #scan.before_region= pars.pop("before_region",None)
+    scan.setCallbacks(Callbacks(pars).proxy)
     scan.setPlotTitle(pars.pop("title",None))
     scan.setHidden(pars.pop("hidden",False))
     scan.setSettleTimeout (pars.pop("settle_timeout",ScanBase.getScansSettleTimeout()))
@@ -2254,6 +2329,9 @@ def add_device(device, force = False):
     Returns:
         True if device was added, false if was already in the pool, or exception in case of name clash.
     """
+    proxy_method = getattr(device, "get_proxy", None)
+    if callable(proxy_method):
+        device=device.get_proxy()
     return get_context().getDevicePool().addDevice(device, force, True)
 
 def remove_device(device):

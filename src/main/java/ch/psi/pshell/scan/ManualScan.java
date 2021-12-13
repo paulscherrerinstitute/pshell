@@ -2,8 +2,10 @@ package ch.psi.pshell.scan;
 
 import ch.psi.pshell.device.Readable;
 import ch.psi.pshell.device.Readable.ReadableArray;
+import ch.psi.pshell.device.Readable.ReadableMatrix;
 import ch.psi.pshell.device.TimestampedValue;
 import ch.psi.pshell.device.Writable;
+import ch.psi.utils.Str;
 import java.io.IOException;
 import java.lang.reflect.Array;
 import java.util.logging.Level;
@@ -23,6 +25,18 @@ public class ManualScan extends DiscreteScan {
                 end == null ? new double[writables.length] : end,
                 numberOfSteps == null ? new int[writables.length] : numberOfSteps, relative, 0, 1, false);
     }
+    
+    //This is just a hack for fixing the interface for JEP 
+    public static class ManualScanDev extends ManualScan{
+        public ManualScanDev(Writable[] writables, Readable[] readables, double[] start, double[] end, int numberOfSteps[], boolean relative) {
+            super(writables, readables,start, end, numberOfSteps, relative);
+        }        
+    } 
+    public static class ManualScanStr extends ManualScan{
+        public ManualScanStr(String[] writables, String[] readables, double[] start, double[] end, int numberOfSteps[], boolean relative) {
+            super(writables, readables,start, end, numberOfSteps, relative);
+        }        
+    }        
     
     public ManualScan(String[] writables, String[] readables) {
         this(writables, readables, null, null, null, false);
@@ -84,9 +98,7 @@ public class ManualScan extends DiscreteScan {
     }
 
     public static class DummyReadableArray extends DummyReadable implements ReadableArray {
-
         int size;
-
         DummyReadableArray(String name, int size) {
             super(name);
             this.size = size;
@@ -102,6 +114,31 @@ public class ManualScan extends DiscreteScan {
             return null;
         }
     }
+        
+    public static class DummyReadableMatrix extends DummyReadable implements ReadableMatrix {
+        int width;
+        int height;
+        DummyReadableMatrix(String name, int width, int height) {
+            super(name);
+            this.width = width;
+            this.height = height;
+        }
+
+        @Override
+        public int getWidth() {
+            return width;
+        }
+
+        @Override
+        public int getHeight() {
+            return height;
+        }
+        
+        @Override
+        public Object read() {
+            return null;
+        }
+    }    
 
     public static Writable[] getDummyWritables(String[] names) {
         Writable[] ret = new Writable[names.length];
@@ -116,9 +153,17 @@ public class ManualScan extends DiscreteScan {
         for (int i = 0; i < ret.length; i++) {
             if (names[i].contains("[")) {
                 try {
-                    String name = names[i].substring(0, names[i].indexOf("["));
-                    int size = Integer.valueOf(names[i].substring(names[i].indexOf("[") + 1, names[i].indexOf("]")));
-                    ret[i] = new DummyReadableArray(name, size);
+                    if (Str.count(names[i],"[") == 2){
+                        String name = names[i].substring(0, names[i].lastIndexOf("["));
+                        int height = Integer.valueOf(names[i].substring(names[i].lastIndexOf("[") + 1, names[i].lastIndexOf("]")));
+                        name = names[i].substring(0, names[i].indexOf("["));
+                        int width = Integer.valueOf(names[i].substring(names[i].indexOf("[") + 1, names[i].indexOf("]")));
+                        ret[i] = new DummyReadableMatrix(name, width, height);                   
+                    } else{
+                        String name = names[i].substring(0, names[i].indexOf("["));
+                        int size = Integer.valueOf(names[i].substring(names[i].indexOf("[") + 1, names[i].indexOf("]")));
+                        ret[i] = new DummyReadableArray(name, size);
+                    }
                     continue;
 
                 } catch (Exception ex) {
@@ -178,6 +223,9 @@ public class ManualScan extends DiscreteScan {
             moveToStart();
         }
         onBeforeScan();
+        if (getCallbacks()!=null){
+            getCallbacks().onBeforeScan(this);
+        }        
         startMonitors();
     }
 
@@ -185,6 +233,9 @@ public class ManualScan extends DiscreteScan {
         try {
             stopMonitors();
             onAfterScan();
+            if (getCallbacks()!=null){
+                getCallbacks().onAfterScan(this);
+            }
             triggerEnded(null);
             closeDevices();
         } finally {
