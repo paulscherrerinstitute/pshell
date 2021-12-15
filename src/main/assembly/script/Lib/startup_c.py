@@ -157,7 +157,7 @@ def to_list(obj):
     """
     if obj is None:
         return None
-    if isinstance(obj,tuple) or is_java_instance(obj,ArrayList) :
+    if isinstance(obj,tuple) or is_java_instance(obj,List) :
         return list(obj)
     #if is_array(obj):
     #    return obj.tolist()
@@ -166,7 +166,12 @@ def to_list(obj):
     return obj
 
 def is_list(obj):
-    return isinstance(obj,tuple) or isinstance(obj,list) or is_java_instance (obj, ArrayList)
+    try:
+        if obj.__class__.__name__=="PyJList":
+            return True
+    except:
+        pass
+    return isinstance(obj,tuple) or isinstance(obj,list) or is_java_instance (obj, List)
 
 def is_string(obj):
     return (type(obj) is str)
@@ -245,6 +250,7 @@ from ch.psi.pshell.data import LayoutSF as LayoutSF
 from ch.psi.pshell.device import Device as Device
 from ch.psi.pshell.device import DeviceBase as DeviceBase
 from ch.psi.pshell.device import DeviceConfig as DeviceConfig
+from ch.psi.pshell.device import GenericDevice as GenericDevice
 from ch.psi.pshell.device import PositionerConfig as PositionerConfig
 from ch.psi.pshell.device import RegisterConfig as RegisterConfig
 from ch.psi.pshell.device import ReadonlyProcessVariableConfig as ReadonlyProcessVariableConfig
@@ -365,6 +371,7 @@ from ch.psi.pshell.imaging import SourceBase as SourceBase
 from ch.psi.pshell.imaging import DirectSource as DirectSource
 from ch.psi.pshell.imaging import RegisterArraySource as RegisterArraySource
 from ch.psi.pshell.imaging import RegisterMatrixSource as RegisterMatrixSource
+ReadableMatrixSource=RegisterMatrixSource.ReadableMatrixSource
 from ch.psi.pshell.imaging import ImageListener as ImageListener
 from ch.psi.pshell.imaging import ImageMeasurement as ImageMeasurement
 from ch.psi.pshell.imaging import CameraSource as CameraSource
@@ -397,6 +404,8 @@ from ch.psi.pshell.plot import LinePlotErrorSeries as LinePlotErrorSeries
 from ch.psi.pshell.plot import MatrixPlotSeries as MatrixPlotSeries
 from ch.psi.pshell.plot import TimePlotSeries as TimePlotSeries
 from ch.psi.pshell.plot import SlicePlotSeries as SlicePlotSeries
+AxisId=Class.forName("ch.psi.pshell.plot.Plot$AxisId")
+LinePlotStyle=Class.forName("ch.psi.pshell.plot.LinePlot$Style")
 
 from ch.psi.pshell import scan as scans
 from ch.psi.pshell.scan import ScanBase as ScanBase
@@ -633,71 +642,6 @@ BsScan=BsScan
 BinarySearch=scans.BinarySearch
 HillClimbingSearcharySearch=scans.HillClimbingSearch
 
-"""
-class LineScan(scans.LineScan):
-    def onBeforeReadout(self, pos): __before_readout(self, pos)
-    def onAfterReadout(self, rec): __after_readout(self, rec)
-    def onBeforePass(self, num): __before_pass(self, num)
-    def onAfterPass(self, num): __after_pass(self, num)
-
-class ContinuousScan(scans.ContinuousScan):
-    def onBeforeReadout(self, pos): __before_readout(self, pos)
-    def onAfterReadout(self, rec): __after_readout(self, rec)
-    def onBeforePass(self, num): __before_pass(self, num)
-    def onAfterPass(self, num): __after_pass(self, num)
-
-class AreaScan(scans.AreaScan):
-    def onBeforeReadout(self, pos): __before_readout(self, pos)
-    def onAfterReadout(self, rec): __after_readout(self, rec)
-    def onBeforePass(self, num): __before_pass(self, num)
-    def onAfterPass(self, num): __after_pass(self, num)
-
-class RegionScan(scans.RegionScan):
-    def onBeforeReadout(self, pos): __before_readout(self, pos)
-    def onAfterReadout(self, rec): __after_readout(self, rec)
-    def onBeforePass(self, num): __before_pass(self, num)
-    def onAfterPass(self, num): __after_pass(self, num)
-    def onBeforeRegion(self, num): __before_region(self,num)
-
-class VectorScan(scans.VectorScan):
-    def onBeforeReadout(self, pos): __before_readout(self, pos)
-    def onAfterReadout(self, rec): __after_readout(self, rec)
-    def onBeforePass(self, num): __before_pass(self, num)
-    def onAfterPass(self, num): __after_pass(self, num)
-
-class ContinuousScan(scans.ContinuousScan):
-    def onBeforeReadout(self, pos): __before_readout(self, pos)
-    def onAfterReadout(self, rec): __after_readout(self, rec)
-    def onBeforePass(self, num): __before_pass(self, num)
-    def onAfterPass(self, num): __after_pass(self, num)
-
-class TimeScan(scans.TimeScan):
-    def onBeforeReadout(self, pos): __before_readout(self, pos)
-    def onAfterReadout(self, rec): __after_readout(self, rec)
-    def onBeforePass(self, num): __before_pass(self, num)
-    def onAfterPass(self, num): __after_pass(self, num)
-
-class MonitorScan(scans.MonitorScan):
-    def onBeforeReadout(self, pos): __before_readout(self, pos)
-    def onAfterReadout(self, rec): __after_readout(self, rec)
-    def onBeforePass(self, num): __before_pass(self, num)
-    def onAfterPass(self, num): __after_pass(self, num)
-
-class BsScan(scans.BsScan):
-    def onBeforeReadout(self, pos): __before_readout(self, pos)
-    def onAfterReadout(self, rec): __after_readout(self, rec)
-    def onBeforePass(self, num): __before_pass(self, num)
-    def onAfterPass(self, num): __after_pass(self, num)
-
-class BinarySearch(scans.BinarySearch):
-    def onBeforeReadout(self, pos): __before_readout(self, pos)
-    def onAfterReadout(self, rec): __after_readout(self, rec)
-
-class HillClimbingSearch(scans.HillClimbingSearch):
-    def onBeforeReadout(self, pos): __before_readout(self, pos)
-    def onAfterReadout(self, rec): __after_readout(self, rec)
-"""
-
 class ManualScan():
     def __init__(self, writables, readables, start = None, end = None, steps = None, relative = False, dimensions = None, **pars):
         start=to_list(start)
@@ -806,146 +750,12 @@ def processScanPars(scan, pars):
 
 
 ###################################################################################################
-#Simple EPICS Channel abstraction
+#EPICS Channela abstraction
 ###################################################################################################
 
 def create_channel(name, type=None, size=None):
     return Epics.newChannel(name, Epics.getChannelType(type), size)
 
-
-#Not using finalizer: closing channels in garbage collection generate errors
-class Channel(): #TODO (PropertyChangeListener, Writable, Readable, DeviceBase):
-    def __init__(self, channel_name, type = None, size = None, callback=None, alias = None, monitored=None, name = None):
-        """ Create an object that encapsulates an Epics PV connection.
-        Args:
-            channel_name(str):name of the channel
-            type(str, optional): type of PV. By default gets the PV standard field type.
-                Scalar values: 'b', 'i', 'l', 'd', 's'.
-                Array values: '[b', '[i,', '[l', '[d', '[s'.
-            size(int, optional): the size of the channel
-            callback(function, optional): The monitor callback.
-            alias(str): name to be used on scans.
-        """
-        super(DeviceBase, self).__init__(name if (name is not None) else channel_name.replace(":","_").replace(".","_"))
-        self.channel = create_channel(channel_name, type, size)
-        self.callback = callback
-        self._alias = alias
-        if monitored is not None:self.setMonitored(monitored)
-        self.initialize()
-
-    def get_channel_name(self):
-        """Return the name of the channel.
-        """
-        return self.channel.getName()
-
-    def get_size(self):
-        """Return the size of the channel.
-        """
-        return self.channel.size
-
-    def set_size(self, size):
-        """Set the size of the channel.
-        """
-        self.channel.size = size
-
-    def is_connected(self):
-        """Return True if channel is connected.
-        """
-        return self.channel.connected
-
-    def doSetMonitored(self, value):
-        self.channel.monitored = value
-        if (value):
-            self.channel.addPropertyChangeListener(self)
-        else:
-            self.channel.removePropertyChangeListener(self)    
-        
-        
-    def is_monitored(self):
-        """Return True if channel is monitored
-        """
-        return self.channel.monitored
-
-    def set_monitored(self, value):
-        """Set a channel monitor to trigger the callback function defined in the constructor.
-        """
-        self.setMonitored(value)
-
-    def propertyChange(self, pce):
-        if pce.getPropertyName() == "value":
-            value=pce.getNewValue()
-            self.setCache(value, None)        
-            if self.callback is not None:
-                self.callback(value)
-
-    def put(self, value, timeout=None):
-        """Write to channel and wait value change. In the case of a timeout throws a TimeoutException.
-        Args:
-            value(obj): value to be written
-            timeout(float, optional): timeout in seconds. If none waits forever.
-        """
-        if (timeout==None):
-            self.channel.setValue(value)
-        else:
-            self.channel.setValueAsync(value).get(int(timeout*1000), java.util.concurrent.TimeUnit.MILLISECONDS)
-        self.setCache(value, None)
-
-    def putq(self, value):
-        """Write to channel and don't wait.
-        """
-        self.channel.setValueNoWait(value)
-
-    def get(self, force = False):
-        """Get channel value.
-        """
-        ret = self.channel.getValue(force)
-        self.setCache(ret, None)
-        return ret
-
-    def wait_for_value(self, value, timeout=None, comparator=None):
-        """Wait channel to reach a value, using a given comparator. In the case of a timeout throws a TimeoutException.
-        Args:
-            value(obj): value to be verified.
-            timeout(float, optional): timeout in seconds. If None waits forever.
-            comparator (java.util.Comparator, optional). If None, uses Object.equals.
-        """
-        if comparator is None:
-            if timeout is None:
-                self.channel.waitForValue(value)
-            else:
-                self.channel.waitForValue(value, int(timeout*1000))
-            self.setCache(value, None)
-        else:
-            if timeout is None:
-                self.channel.waitForValue(value, comparator)
-            else:
-                self.channel.waitForValue(value, comparator, int(timeout*1000))
-
-    def doUpdate(self):
-        self.get()
-        
-    def close(self):
-        """Close the channel.
-        """
-        Epics.closeChannel(self.channel)
-
-    def setAlias(self, alias):
-        self._alias = alias
-
-    def getAlias(self):
-        return self._alias if self._alias else self.getName()
-
-    def write(self, value):
-        self.put(value)
-
-    def read(self):
-        return self.get()
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, *args):
-        self.close()
 
 ###################################################################################################
 #Help and access to function documentation
@@ -1150,9 +960,9 @@ def lscan(writables, readables, start, end, steps, latency=0.0, relative=False, 
     end=to_list(end)
     if type(steps) is float or is_list(steps):
         steps = to_list(steps)
-        scan = scans.LineScan.LineScanStepSize(writables,readables, start, end , steps, relative, latency_ms, int(passes), zigzag)
+        scan = LineScan.LineScanStepSize(writables,readables, start, end , steps, relative, latency_ms, int(passes), zigzag)
     else:
-        scan = scans.LineScan.LineScanNumSteps(writables,readables, start, end , steps, relative, latency_ms, int(passes), zigzag)
+        scan = LineScan.LineScanNumSteps(writables,readables, start, end , steps, relative, latency_ms, int(passes), zigzag)
     processScanPars(scan, pars)
     scan.start()
     return scan.getResult()
@@ -1245,9 +1055,11 @@ def ascan(writables, readables, start, end, steps, latency=0.0, relative=False, 
     readables=to_list(string_to_obj(readables))
     start=to_list(start)
     end=to_list(end)
-    if is_list(steps):
-        steps = to_list(steps)
-    scan = AreaScan(writables,readables, start, end , steps, relative, latency_ms, int(passes), zigzag)
+    steps = to_list(steps)
+    if type(steps[0]) is int:
+        scan = AreaScan.AreaScanNumSteps(writables,readables, start, end , steps, relative, latency_ms, int(passes), zigzag)
+    else:
+        scan = AreaScan.AreaScanStepSize(writables,readables, start, end , steps, relative, latency_ms, int(passes), zigzag)   
     processScanPars(scan, pars)
     scan.start()
     return scan.getResult()
@@ -1299,8 +1111,11 @@ def rscan(writable, readables, regions, latency=0.0, relative=False, passes=1, z
     readables=to_list(string_to_obj(readables))
     start=to_list(start)
     end=to_list(end)
-    steps = to_list(steps)
-    scan = RegionScan(writable,readables, start, end , steps, relative, latency_ms, int(passes), zigzag)
+    if type(steps[0]) is float:
+        scan = RegionScan.RegionScanStepSize(writable,readables, start, end , steps, relative, latency_ms, int(passes), zigzag)
+    else:
+        scan = RegionScan.RegionScanNumSteps(writable,readables, start, end , steps, relative, latency_ms, int(passes), zigzag)
+        
     processScanPars(scan, pars)
     scan.start()
     return scan.getResult()
@@ -1344,12 +1159,16 @@ def cscan(writables, readables, start, end, steps, latency=0.0, time=None, relat
     #A single Writable with fixed speed
     if time is None:
         if is_list(steps): steps=steps[0]
-        scan = ContinuousScan(writables[0],readables, start[0], end[0] , int(steps), relative, latency_ms, int(passes), zigzag)
+        scan = ContinuousScan.ContinuousScanSingle(writables[0],readables, start[0], end[0] , int(steps), relative, latency_ms, int(passes), zigzag)
     #A set of Writables with speed configurable
     else:
         if type(steps) is float or is_list(steps):
             steps = to_list(steps)
-        scan = ContinuousScan(writables,readables, start, end , steps, time, relative, latency_ms, int(passes), zigzag)
+        if type(steps) is int:
+            scan = ContinuousScan.ContinuousScanNumSteps(writables,readables, start, end , steps, time, relative, latency_ms, int(passes), zigzag)       
+        else:
+            steps = to_list(steps)            
+            scan = ContinuousScan.ContinuousScanStepSize(writables,readables, start, end , steps, time, relative, latency_ms, int(passes), zigzag)
 
     processScanPars(scan, pars)
     scan.start()
@@ -1382,18 +1201,8 @@ def hscan(config, writable, readables, start, end, steps, passes=1, zigzag=False
         ScanResult.
     """
     cls = Class.forName(config["class"])
-    class HardwareScan(cls):
-        def __init__(self, config, writable, readables, start, end, stepSize, passes, zigzag):
-            cls.__init__(self, config, writable, readables, start, end, stepSize, passes, zigzag)
-        def onAfterReadout(self, record):
-            __after_readout(self, record)
-        def onBeforePass(self, num_pass):
-            __before_pass(self, num_pass)
-        def onAfterPass(self, num_pass):
-            __after_pass(self, num_pass)
-
     readables=to_list(string_to_obj(readables))
-    scan = HardwareScan(config, writable,readables, start, end , steps, int(passes), zigzag)
+    scan = cls(config, writable,readables, start, end , steps, int(passes), zigzag)
     processScanPars(scan, pars)
     scan.start()
     return scan.getResult()
@@ -1459,7 +1268,7 @@ def tscan(readables, points, interval, passes=1, fixed_rate=True, **pars):
     interval= max(interval, 0.001)   #Minimum temporization is 1ms
     interval_ms=int(interval*1000)
     readables=to_list(string_to_obj(readables))
-    scan = scans.TimeScan(readables, points, interval_ms, int(passes), bool(fixed_rate))
+    scan = TimeScan(readables, points, interval_ms, int(passes), bool(fixed_rate))
     processScanPars(scan, pars)
     scan.start()
     return scan.getResult()
@@ -1496,6 +1305,7 @@ def mscan(trigger, readables, points=-1, timeout=None, asynchronous=True, take_i
     Returns:
         ScanResult.
     """
+    raise Exception("Not implemented")
     timeout_ms=int(timeout*1000) if ((timeout is not None) and (timeout>=0)) else -1
     trigger = string_to_obj(trigger)
     readables=to_list(string_to_obj(readables))

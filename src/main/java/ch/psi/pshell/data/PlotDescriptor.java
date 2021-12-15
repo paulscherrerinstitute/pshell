@@ -1,7 +1,9 @@
 package ch.psi.pshell.data;
 
+import ch.psi.pshell.scripting.JepUtils;
 import ch.psi.utils.Arr;
 import ch.psi.utils.Convert;
+import jep.NDArray;
 
 /**
  * Entity class containing information of a plot generated from persisted data.
@@ -54,6 +56,9 @@ public class PlotDescriptor {
 
     private PlotDescriptor(String name, String root, String path, Object data, double[] x, double[] y, double[] z, int rank) {
         this.name = (name == null) ? "" : name;
+        if (data instanceof NDArray){
+            data = JepUtils.toJavaArray((NDArray)data);
+        }
         this.data = data;
         this.root = root;
         this.path = path;

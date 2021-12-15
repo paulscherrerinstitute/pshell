@@ -56,6 +56,29 @@ public abstract class ContinuousScan extends ScanBase {
         super(getWritables(writable), readables, start, end, stepSize, relative, latency, passes, zigzag);
         this.time = time;
     }
+    
+    
+    //This is just a hack for JEP interpreter have access to other prototypes
+    public static class ContinuousScanStepSize extends ContinuousScan{
+        public ContinuousScanStepSize(ControlledSpeedable[] writable, Readable[] readables, double[] start, double[] end, double stepSize[], double time,
+                boolean relative, int latency, int passes, boolean zigzag) {
+            super(writable, readables, start, end, stepSize, time, relative, latency, passes, zigzag);
+        }
+    }
+    
+    public static class ContinuousScanNumSteps extends ContinuousScan{
+        public ContinuousScanNumSteps(ControlledSpeedable[] writable, Readable[] readables, double[] start, double[] end, int numberOfSteps, double time,
+                boolean relative, int latency, int passes, boolean zigzag) {
+            super(writable, readables, start, end, numberOfSteps, time, relative, latency, passes, zigzag);
+        }
+    }
+        
+    public static class ContinuousScanSingle extends ContinuousScan{
+        public ContinuousScanSingle(Speedable writable, Readable[] readables, double start, double end, int numberOfSteps,
+                boolean relative, int latency, int passes, boolean zigzag) {
+            super(writable, readables, start, end, numberOfSteps, relative, latency, passes, zigzag);
+        }
+    }    
 
     public static Writable[] getWritables(ControlledSpeedable[] cs) {
         Writable[] ret = new Writable[cs.length];

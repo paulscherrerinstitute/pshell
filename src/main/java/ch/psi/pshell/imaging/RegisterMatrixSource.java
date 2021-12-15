@@ -30,6 +30,13 @@ public class RegisterMatrixSource extends DeviceSource {
             Logger.getLogger(RegisterMatrixSource.class.getName()).log(Level.WARNING, null, ex);
         }
     }
+    
+    //Hack for JEP to access second constructor
+    public static class ReadableMatrixSource extends RegisterMatrixSource{
+        public ReadableMatrixSource(String name, ReadableMatrix readable) {
+            super(name, readable);
+        }        
+    }
 
     static class WrapperRegister extends ReadonlyRegisterBase implements ReadonlyRegisterMatrix {
 

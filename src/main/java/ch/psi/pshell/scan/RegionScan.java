@@ -20,7 +20,20 @@ public class RegionScan extends DiscreteScan {
     public RegionScan(Writable writable, Readable[] readables, double[] start, double[] end, int[] steps, boolean relative, int latency, int passes, boolean zigzag) {
         super(new Writable[]{writable}, readables, start, end, steps, relative, latency, passes, zigzag);
     }
-
+    
+    //This is just a hack for JEP interpreter have access to 2 prototypes
+    public static class RegionScanNumSteps extends RegionScan{
+        public RegionScanNumSteps(Writable writable, Readable[] readables, double[] start, double[] end, int[] steps, boolean relative, int latency, int passes, boolean zigzag) {
+            super(writable, readables, start, end, steps, relative, latency, passes, zigzag);
+        }    
+    }    
+    
+    public static class RegionScanStepSize extends RegionScan{
+        public RegionScanStepSize(Writable writable, Readable[] readables, double[] start, double[] end, double[] stepSize, boolean relative, int latency, int passes, boolean zigzag) {
+            super(writable, readables, start, end, stepSize, relative, latency, passes, zigzag);
+        }    
+    }  
+    
     @Override
     public int getNumberOfRecords() {
         int[] steps = getNumberOfSteps();

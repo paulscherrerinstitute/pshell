@@ -984,7 +984,7 @@ public class DataManager implements AutoCloseable {
 
         if (data instanceof NDArray){
             data = JepUtils.toJavaArray((NDArray)data);
-        }
+        } 
         Class type = data.getClass().isArray() ? Arr.getComponentType(data) : data.getClass();
         if (type.isPrimitive()) {
             type = Convert.getWrapperClass(type);
@@ -1120,10 +1120,11 @@ public class DataManager implements AutoCloseable {
         }
         Class type = null;
         if (value != null) {
-            if (value instanceof NDArray){
-                value = JepUtils.toJavaArray((NDArray)value);
-            }
             type = value.getClass();
+            if (type ==  NDArray.class){
+                value = JepUtils.toJavaArray((NDArray)value);
+                type = value.getClass();
+            }            
             if (type.isPrimitive()) {
                 type = Convert.getWrapperClass(type);
             }
@@ -1145,6 +1146,10 @@ public class DataManager implements AutoCloseable {
         Class type = null;
         if (val != null) {
             type = val.getClass();
+            if (type ==  NDArray.class){
+                val = JepUtils.toJavaArray((NDArray)val);
+                type = val.getClass();
+            }            
             if ((!type.isArray()) || (!type.getComponentType().isPrimitive())) {
                 throw new IllegalArgumentException("Value must be a 1d array of primitive type");
             }
@@ -1183,10 +1188,11 @@ public class DataManager implements AutoCloseable {
             throw new IllegalArgumentException();
         }
         openOutput();
-        if (value instanceof NDArray){
-            value = JepUtils.toJavaArray((NDArray)value);
-        }
         Class type = value.getClass();
+        if (type ==  NDArray.class){
+            value = JepUtils.toJavaArray((NDArray)value);
+            type = value.getClass();
+        }          
         if (type.isPrimitive()) {
             type = Convert.getWrapperClass(type);
         }

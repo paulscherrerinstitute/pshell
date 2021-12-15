@@ -7,6 +7,7 @@ import ch.psi.pshell.device.TimestampedValue;
 import ch.psi.pshell.scan.DataAccessDummyScan;
 import ch.psi.pshell.scan.Scan;
 import ch.psi.pshell.scan.ScanRecord;
+import ch.psi.pshell.scripting.JepUtils;
 import ch.psi.utils.Arr;
 import ch.psi.utils.Convert;
 import java.io.File;
@@ -17,7 +18,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.python.bouncycastle.util.Arrays;
+import jep.NDArray;
 
 
 /**
@@ -181,14 +182,21 @@ public interface Layout {
                 String path = getDiagPathName(scan, diag);
                 Object value = diag.read();
                 Class type =  value.getClass();
+                if (value instanceof NDArray){
+                    value = JepUtils.toJavaArray((NDArray)value);
+                    type =  value.getClass();
+                }
                 
                 if (type.isArray()){
                     type =  Arr.getComponentType(value) ;
                     if (type.isPrimitive()) {
                         type =  Convert.getWrapperClass(type);
                     }
-                    int[] shape = Arr.getShape(value);
-                    shape = Arrays.copyOf(shape, shape.length + 1);                
+                    int[] sh = Arr.getShape(value);
+                    int[] shape = new int[sh.length+1];
+                    for (int i=0; i<sh.length; i++){
+                        shape[i+1] = sh[i];
+                    }
                     getDataManager().createDataset(path, type, shape);      
                 } else {    
                     getDataManager().createDataset(path, type);      

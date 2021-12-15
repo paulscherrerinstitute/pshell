@@ -19,6 +19,20 @@ public class AreaScan extends DiscreteScan {
             boolean relative, int latency, int passes, boolean zigzag) {
         super(writables, readables, start, end, stepSize, relative, latency, passes, zigzag);
     }
+    
+    //This is just a hack for JEP interpreter have access to 2 prototypes
+    public static class AreaScanStepSize extends AreaScan{
+         public AreaScanStepSize(Writable[] writables, Readable[] readables, double[] start, double[] end, double stepSize[],
+            boolean relative, int latency, int passes, boolean zigzag) {
+            super(writables, readables, start, end, stepSize, relative, latency, passes, zigzag);
+        }        
+    }
+    public static class AreaScanNumSteps extends AreaScan{
+        public AreaScanNumSteps(Writable[] writables, Readable[] readables, double[] start, double[] end, int numberOfSteps[],
+            boolean relative, int latency, int passes, boolean zigzag) {
+            super(writables, readables, start, end, numberOfSteps, relative, latency, passes, zigzag);
+        }        
+    }    
 
     @Override
     protected void doScan() throws IOException, InterruptedException {
