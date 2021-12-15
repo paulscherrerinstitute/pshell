@@ -17,8 +17,8 @@ def plot_spectrum(signal, sampling_freq, plots = None):
     freq_vector = [x * sampling_freq / float(number_of_samples) for x in frange(0, len(spectrum) , 1)]
     if plots is None:
         plots = plot([signal,spectrum], ["signal", "spectrum"],[time_vector, freq_vector], title = "Spectrum")
-        plots[0].getAxis(plots[0].AxisId.Y).setRange(-1.5,2.5)
-        plots[1].getAxis(plots[1].AxisId.Y).setRange(0.0,1.1)
+        plots[0].getAxis(AxisId.Y).setRange(-1.5,2.5)
+        plots[1].getAxis(AxisId.Y).setRange(0.0,1.1)
     else:
         plots[0].getSeries(0).setData(time_vector,signal)
         plots[1].getSeries(0).setData(freq_vector,spectrum)

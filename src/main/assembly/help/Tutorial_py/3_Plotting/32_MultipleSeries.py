@@ -14,8 +14,8 @@ p.addMarker(35.0, None, "This is the answer", Color.BLACK)
 
 #2 series in the same plot, setting range & appending point by point
 p = plot(None,name="Data 1", title = "Plot 2")[0]
-p.getAxis(p.AxisId.X).setRange(0.0,80.0)
-p.getAxis(p.AxisId.Y).setRange(0.0,7.0)
+p.getAxis(AxisId.X).setRange(0.0,80.0)
+p.getAxis(AxisId.Y).setRange(0.0,7.0)
 p.addSeries(LinePlotSeries("Data2"))
 for i in range(len(x)):
     p.getSeries(0).appendData(x[i], i)    

@@ -9,8 +9,8 @@ def add_convex_hull_plot(title, x,y, name=None, clear = False):
     p = None
     if len(plots)==0:
         p = plot(None,name=name, title = title)[0]        
-        p.getAxis(p.AxisId.X).setRange(-50,150)
-        p.getAxis(p.AxisId.Y).setRange(-50,150)
+        p.getAxis(AxisId.X).setRange(-50,150)
+        p.getAxis(AxisId.Y).setRange(-50,150)
         p.setLegendVisible(True)        
     else:
         p = plots[0]    

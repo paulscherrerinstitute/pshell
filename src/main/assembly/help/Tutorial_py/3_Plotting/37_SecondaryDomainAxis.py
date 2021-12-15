@@ -4,7 +4,7 @@
 
 p = plot([1,2,3,4,5])[0]
 
-p.getAxis(p.AxisId.X2).setRange(0.1, 100)
+p.getAxis(AxisId.X2).setRange(0.1, 100)
 
 
 
