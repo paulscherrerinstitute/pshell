@@ -5,9 +5,9 @@
 ################################################################################################### 
 
 
-print "Initial position = " + str(m1.position)
+print ("Initial position = " + str(m1.getPosition()))
 
 r1 = lscan(m1, (ai1,ai2,wf1), start = -2, end =2, steps = 20, relative = True)
 
 
-print "Final position = " +  str(m1.position)
+print ("Final position = " +  str(m1.getPosition()))

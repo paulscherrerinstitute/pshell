@@ -9,9 +9,9 @@
 
 p = plot(None, title="1d Plot")[0]
 def after_read(record, scan):
-    if record.setpoints[1] == scan.getStart()[1]:
-        p.addSeries(LinePlotSeries(str(record[ao1])))
-    p.getSeries(p.numberOfSeries-1).appendData(record[ao2], record[ai1])
+    if record.getSetpoints()[1] == scan.getStart()[1]:
+        p.addSeries(LinePlotSeries(str(record.getPosition("ao1"))))
+    p.getSeries(p.getNumberOfSeries()-1).appendData(record.getPosition("ao2"), record.getReadable("ai1"))
 
 
 ascan((ao1,ao2), (ai1), (0,10), (20,30), (20,20), 0.1, after_read=after_read)

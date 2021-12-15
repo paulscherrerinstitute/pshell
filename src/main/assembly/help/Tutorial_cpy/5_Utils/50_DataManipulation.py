@@ -9,8 +9,8 @@ data1d = [1.0, 2.0, 3.0, 4.0, 5.0]
 save_dataset(path, data1d)
 #Reading ii back
 read =load_data(path)
-print read.tolist()
-assert data1d==read.tolist()
+print (list(read))
+assert data1d==list(read)
 plot(read)
 
 #Creating a 2D dataset from an array with some attributes
@@ -23,7 +23,7 @@ set_attribute(path, "AttrDouble", 2.0)
 set_attribute(path, "AttrBoolean", True)
 #Reading it back
 read =load_data(path)
-print read.tolist()
+print (list(read))
 plot(read)
 
 #Creating a 3D dataset from an array
@@ -32,9 +32,9 @@ path="group/data3"
 save_dataset(path, data3d)
 #Reading it back
 read =load_data(path,0)
-print read.tolist()
+print (list(read))
 read =load_data(path,1)
-print read.tolist()
+print (list(read))
 
 #Creating a INT dataset adding elements one by one
 path = "group/data4"
@@ -64,15 +64,15 @@ for row in table:
 flush_data() 
 #Read it back
 read =load_data(path)
-print read
+print (read)
 
 
 #Writing scalars (datasets with rank 0)
 save_dataset("group/val1", 1)
 save_dataset("group/val2", 3.14)
 save_dataset("group/val3", "test")
-print load_data("group/val1")
-print load_data("group/val2")
-print load_data("group/val3")
+print (load_data("group/val1"))
+print (load_data("group/val2"))
+print (load_data("group/val3"))
 
 

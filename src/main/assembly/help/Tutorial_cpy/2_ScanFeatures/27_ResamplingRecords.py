@@ -6,7 +6,7 @@
 index=0 
 
 def after_read(rec):
-    if rec[ai2] < 0:
+    if rec.getReadable("ai1") < 0.5:
         time.sleep(1.0)
         rec.invalidate()
 

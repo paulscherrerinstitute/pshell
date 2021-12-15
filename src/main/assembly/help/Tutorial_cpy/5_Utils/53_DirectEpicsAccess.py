@@ -17,18 +17,14 @@ print (caget(channel_name))
 #waiting for a channel value
 cawait(channel_name, 0.0, timeout = 10.0)
 
-#If many IO it is better to keep the same CA connection
-channel = Channel(channel_name, 'd')
-for i in range(100):
-    print channel.get(),
-print ""
 
-#The channel class implements Readable and Writable and therefore can be used in scans
-lscan(channel, ai2, 0, 10, 0.1)
-channel.close()
+#If many IO it is better to use a Device
+ch1=create_channel_device(channel_name, type='d', size=None, device_name="ch1", monitored=False)
+add_device(ch1, True)
+lscan(ch1, ai2, 0, 10, 0.1)
 
 
-#Or else we can use a Device
+#Or:
 channel = ChannelDouble("My Channel", channel_name)
 channel.initialize()
 lscan(channel, ai2, 0, 10, 0.1)
@@ -48,7 +44,7 @@ attrs_lenghts = [0,0,0,10]
 def after_read(rec):
     global attrs_dataset, attrs_names, attrs_type, attrs_lenghts
     if attrs_dataset is None:
-        attrs_dataset = get_exec_pars().group + "attributes"
+        attrs_dataset = get_exec_pars().getGroup() + "attributes"
         create_table(attrs_dataset, attrs_names, attrs_types, attrs_lenghts)    
     record = []
     for i in range(len(attrs_names)):
@@ -65,20 +61,13 @@ a = lscan(m1, (ai1, ai2), 0, 0.1, 20, 0.01, after_read=after_read)
 #The following scan is performed waiting "TESTIOC:TESTCALCOUT:Input" value to be 0 after every write.
 #A readback is used with with no dependency on the setpoint (the in-position band is set to infinity).
 
-caput("TESTIOC:TESTCALCOUT:Input", 0)
+caput("TESTIOC:TESTCALCOUT:Input", 0.0)
+
 positioner = ControlledVariable("positioner", "TESTIOC:TESTCALCOUT:Output", "TESTIOC:TESTSINUS:SinCalc")
-positioner.config.resolution = float('inf') 
+positioner.getConfig().resolution=float('inf') 
 positioner.initialize()
-positioner.setSettlingCondition(ChannelSettlingCondition("TESTIOC:TESTCALCOUT:Input", 0))
-positioner.settlingCondition.latency = 100
+positioner.setSettlingCondition(ChannelSettlingCondition("TESTIOC:TESTCALCOUT:Input", 0.0))
+positioner.getSettlingCondition().setLatency(100)
 
 lscan(positioner, [ai1], 1.0, 1.5, 0.05 , latency= 0.1, range="auto")
 
-
-#A custom SettlingCondition:
-class MySettlingCondition(SettlingCondition):
-    def doWait(self):
-            time.sleep(0.1)
-            cawait('TESTIOC:TESTCALCOUT:Output', self.getValue(), timeout = 3600.0)    
-positioner.setSettlingCondition(MySettlingCondition())
-lscan(positioner, [ai1], 1.0, 1.5, 0.05 , latency= 0.1, range="auto")

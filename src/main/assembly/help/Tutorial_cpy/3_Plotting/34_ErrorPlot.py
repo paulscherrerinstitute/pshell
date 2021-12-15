@@ -6,7 +6,7 @@
 [py, px, pxy]=plot([None,None,None],["y","x", "xy"])
 
 #Y error plot
-py.setStyle(py.Style.ErrorY)
+py.setStyle(LinePlotStyle.ErrorY)
 py.setLegendVisible(True)
 
 sy1 = LinePlotErrorSeries("F1")
@@ -23,7 +23,7 @@ sy2.appendData(13.0, 13.0, 2.0);
 sy2.appendData(24.0, 16.1, 1.0);
 
 #X error plot
-px.setStyle(px.Style.ErrorX)
+px.setStyle(LinePlotStyle.ErrorX)
 px.setLegendVisible(True)
 sx = LinePlotErrorSeries("F3")
 px.addSeries(sx)
@@ -39,7 +39,7 @@ sx2.appendData(10.0, 5.1, 1.0)
 sx2.appendData(17.8, 7.5, 0.5)
 
 #XY error plot
-pxy.setStyle(pxy.Style.ErrorXY)
+pxy.setStyle(LinePlotStyle.ErrorXY)
 pxy.setLegendVisible(True)
 sxy = LinePlotErrorSeries("F5")
 pxy.addSeries(sxy)

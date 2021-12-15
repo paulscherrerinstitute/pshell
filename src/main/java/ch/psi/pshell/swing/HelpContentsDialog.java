@@ -204,7 +204,7 @@ public class HelpContentsDialog extends StandardDialog {
     }
 
     public String getScriptType() {
-        return Context.getInstance().getSetup().getScriptType().getExtension();
+        return Context.getInstance().getSetup().getScriptType().toString();
     }
 
     public String getTutorialRoot() {
