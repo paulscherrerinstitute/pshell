@@ -8,15 +8,15 @@ import java.awt.Color as Color
 #interpolation
 y = [0, 1, 4,10,50,25,12, 5, 3, 0] 
 x = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
-types = "linear", "cubic",  "akima", "loess", "neville", "newton"
-functions = [interpolate(y,x,t) for t in types]
+interp_types = "linear", "cubic",  "akima", "loess", "neville", "newton"
+functions = [interpolate(y,x,t) for t in interp_types]
 
 plot_x = frange (0,9,0.01)
 values = [get_values(f,plot_x) for f in functions]
-plots=plot(values,types,plot_x)
+plots=plot(values,interp_types,plot_x)
 
 #derivative
-for i in range(len(types)):
+for i in range(len(interp_types)):
     try:
         d = deriv(functions[i])
         plots[i].addSeries(LinePlotSeries("derivative"))
@@ -26,7 +26,7 @@ for i in range(len(types)):
         pass
 
 #integration
-for i in range(len(types)):
+for i in range(len(interp_types)):
     s = integrate(functions[i],x)
     plots[i].addMarker(x[-1]+0.1, None, "Integral=" + str(round(s,4)), plots[i].background).setLabelPaint(Color.BLACK)
 

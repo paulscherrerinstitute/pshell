@@ -99,24 +99,3 @@ wf1 = MyReadableArray("wf1")
 wf2 = MyReadableArrayNumpy("wf2")
 im1 = MyReadableMatrix("im1")
 im2 = MyReadableMatrixNumpy("im2")
-
-
-####################################################################################################
-# Imaging
-####################################################################################################
-
-configured = os.path.exists(GenericDevice.getConfigFileName("src1"))
-
-add_device(RegisterMatrixSource("src1", im1.proxy), True)
-add_device(RegisterMatrixSource("src2", im2.proxy), True)
-
-#src1.setPolling(100)
-#src2.setPolling(100)
-
-#Some configuration for so the imaging will work out of the box
-if not configured:    
-    src1.getConfig().colormapAutomatic = True
-    src1.getConfig().colormap = Colormap.Temperature
-    src1.getConfig().save()
-    src2.getConfig().colormapAutomatic = True
-    src2.getConfig().save()

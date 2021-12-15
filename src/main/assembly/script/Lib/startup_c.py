@@ -224,6 +224,8 @@ from ch.psi.utils import Reflection as Reflection
 from ch.psi.utils import Serializer as Serializer
 from ch.psi.utils import Windows as Windows
 from ch.psi.utils import NumberComparator as NumberComparator
+from java.util import Iterator as Iterator
+from java.util import NoSuchElementException as NoSuchElementException
 
 
 from ch.psi.pshell.core import CommandSource as CommandSource
@@ -485,9 +487,9 @@ def json_to_obj(o):
 ###################################################################################################
 
 class Nameable():
-    def __init__(self, name=None, cls=[]):
+    def __init__(self, name=None, interfaces=[]):
         self.name = name
-        self.proxy=jproxy(self, cls)
+        self.proxy=jproxy(self, interfaces)
             
     def getName(self):        
         if self.name:
@@ -498,24 +500,24 @@ class Nameable():
         return self.proxy
     
 class Writable(Nameable):
-    cls='ch.psi.pshell.device.Writable'
+    __interfaces__=['ch.psi.pshell.device.Writable']
     def __init__(self, name=None):
-        Nameable.__init__(self, name, [Writable.cls])
+        Nameable.__init__(self, name, Writable.__interfaces__)
     def write(self, value):
         raise Exception ("Not implemented")
         
 class Readable(Nameable):
-    cls='ch.psi.pshell.device.Readable'
+    __interfaces__=['ch.psi.pshell.device.Readable']
     def __init__(self, name=None):
-        Nameable.__init__(self, name, [Readable.cls])
+        Nameable.__init__(self, name, Readable.__interfaces__)
          
     def read(self):   
         raise Exception ("Not implemented")
 
 class ReadableArray(Readable):
-    cls='ch.psi.pshell.device.Readable$ReadableArray'
+    __interfaces__=['ch.psi.pshell.device.Readable$ReadableArray']
     def __init__(self, name=None):
-        Nameable.__init__(self, name, [Readable.cls, ReadableArray.cls])
+        Nameable.__init__(self, name, Readable.__interfaces__ + ReadableArray.__interfaces__)
             
     def read(self):
         raise Exception ("Not implemented")
@@ -524,9 +526,9 @@ class ReadableArray(Readable):
         raise Exception ("Not implemented")
 
 class ReadableCalibratedArray(ReadableArray):
-    cls='ch.psi.pshell.device.Readable$ReadableCalibratedArray'
+    __interfaces__=['ch.psi.pshell.device.Readable$ReadableCalibratedArray']
     def __init__(self, name=None):
-         Nameable.__init__(self, name, [Readable.cls, ReadableArray.cls, ReadableCalibratedArray.cls])
+         Nameable.__init__(self, name, Readable.__interfaces__ + ReadableArray.__interfaces__ +  ReadableCalibratedArray.__interfaces__)
         
     def read(self):
         raise Exception ("Not implemented")
@@ -538,9 +540,9 @@ class ReadableCalibratedArray(ReadableArray):
         raise Exception ("Not implemented")
                 
 class ReadableMatrix(Readable):
-    cls='ch.psi.pshell.device.Readable$ReadableMatrix'
+    __interfaces__=['ch.psi.pshell.device.Readable$ReadableMatrix']
     def __init__(self, name=None):
-        Nameable.__init__(self, name, [Readable.cls, ReadableMatrix.cls])
+        Nameable.__init__(self, name, Readable.__interfaces__ + ReadableMatrix.__interfaces__)
             
     def read(self):
         raise Exception ("Not implemented")
@@ -553,9 +555,9 @@ class ReadableMatrix(Readable):
    
 
 class ReadableCalibratedMatrix(ReadableMatrix):
-    cls='ch.psi.pshell.device.Readable$ReadableCalibratedMatrix'
+    __interfaces__=['ch.psi.pshell.device.Readable$ReadableCalibratedMatrix']
     def __init__(self, name=None):
-        Nameable.__init__(self, name, [Readable.cls, ReadableMatrix.cls, ReadableCalibratedMatrix.cls])
+        Nameable.__init__(self, name, Readable.__interfaces__ + ReadableMatrix.__interfaces__ + ReadableCalibratedMatrix.__interfaces__)
         
     def read(self):
         raise Exception ("Not implemented")
@@ -570,6 +572,42 @@ class ReadableCalibratedMatrix(ReadableMatrix):
         raise Exception ("Not implemented")   
 
 
+###################################################################################################
+#Other Java interfaces
+###################################################################################################
+
+        
+class GenIterator(Nameable):
+    __interfaces__ = ['java.util.Iterator']
+    def __init__(self, gen):
+        Nameable.__init__(self, None, GenIterator.__interfaces__)
+        self.gen = gen
+        self.cache=self
+
+    def remove():
+        pass
+
+    def forEachRemaining(action):
+        pass
+
+    def hasNext(self):
+        if self.cache != self:
+            return True
+        try:
+            self.cache=self.gen.__next__()
+            return True
+        except:
+            self.cache = self
+            return False
+
+    def next(self):
+        try:
+            if self.hasNext():
+                return self.cache
+            else:
+                raise NoSuchElementException()
+        finally:
+             self.cache = self
 
 ###################################################################################################
 #Scan classes
@@ -1003,7 +1041,8 @@ def vscan(writables, readables, vector, line = False, latency=0.0, relative=Fals
     latency_ms=int(latency*1000)
     writables=to_list(string_to_obj(writables))
     readables=to_list(string_to_obj(readables))
-    if inspect.isgeneratorfunction(vector):
+    if inspect.isgenerator(vector):
+        vector = GenIterator(vector).proxy
         scan = VectorScan(writables,readables, vector, line, relative, latency_ms)
     else:
         if len(vector) == 0:

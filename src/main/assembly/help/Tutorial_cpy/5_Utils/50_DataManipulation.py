@@ -53,12 +53,12 @@ for row in data2d:
 #Creating a Table (compund type)
 path = "group/data6"
 names = ["a", "b", "c", "d"]
-types = ["d", "d", "d", "[d"]
+table_types = ["d", "d", "d", "[d"]
 lenghts = [0,0,0,5]
 table = [    [1,2,3,[0,1,2,3,4]],  
             [2,3,4,[3,4,5,6,7]],  
             [3,4,5,[6,7,8,9,4]]    ]
-create_table(path, names, types, lenghts)
+create_table(path, names, table_types, lenghts)
 for row in table:
     append_table(path, row)   
 flush_data() 

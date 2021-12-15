@@ -31,4 +31,4 @@ class MyReadableCalibratedMatrix(ReadableCalibratedMatrix):
 wfc1 = MyReadableCalibratedArray("wfc1")
 imc1 = MyReadableCalibratedMatrix("imc1")
 
-a= lscan(ao1, [wf1, wfc1, im1, imc1, wfc2], 0, 40, 50, 0.02)    
+a= lscan(ao1, [wf1, wfc1, im1, imc1], 0, 40, 50, 0.02)    
