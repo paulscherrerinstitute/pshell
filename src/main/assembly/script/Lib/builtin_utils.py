@@ -12,6 +12,7 @@ import java.lang.Object as Object
 import java.beans.PropertyChangeListener
 import java.util.concurrent.Callable
 import java.util.List
+import java.util.ArrayList
 import java.lang.reflect.Array
 import java.lang.Thread
 import java.awt.image.BufferedImage as BufferedImage
@@ -138,14 +139,14 @@ def to_list(obj):
     """Convert an object into a Python List.
 
     Args:
-        obj(tuple or array or ArrayList): Original data.
+        obj(tuple or array or List): Original data.
     
     Returns:
         List.
     """
     if obj is None:
         return None
-    if isinstance(obj,tuple) or isinstance(obj,java.util.ArrayList) :
+    if isinstance(obj,tuple) or isinstance(obj,java.util.List) :
         return list(obj)
     #if isinstance(obj,PyArray):
     #    return obj.tolist()
@@ -154,7 +155,7 @@ def to_list(obj):
     return obj
 
 def is_list(obj):
-    return isinstance(obj,tuple) or isinstance(obj,list) or isinstance (obj, java.util.ArrayList)
+    return isinstance(obj,tuple) or isinstance(obj,list) or isinstance (obj, java.util.List)
 
 def is_string(obj):
     return (type(obj) is str) or (type(obj) is unicode)

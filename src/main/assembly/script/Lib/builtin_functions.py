@@ -515,7 +515,7 @@ def plot(data, name = None, xdata = None, ydata=None, title=None):
         title(str, optional): plotting window name.
 
     Returns:
-        ArrayList of Plot.
+        List of Plot.
     """
     data = json_to_obj(data)
     xdata = json_to_obj(xdata)
@@ -558,7 +558,7 @@ def get_plots(title=None):
         title(str, optional): plotting window name.
 
     Returns:
-        ArrayList of Plot.
+        List of Plot.
     """
     return get_context().getPlots(title)
 
@@ -1555,7 +1555,7 @@ def histogram(data, range_min = None, range_max = None, bin = 1.0):
     """Creates histogram on data.
 
     Args:
-        data (tuple, array, ArrayList or Array): input  data can be multi-dimensional or nested.
+        data (tuple, array, List or Array): input  data can be multi-dimensional or nested.
         range_min (int, optional): minimum histogram value. Default is floor(min(data))
         range_max (int, optional): maximul histogram value. Default is ceil(max(data))
         bin(int or float, optional): if int means number of bins. If float means bin size. Default = 1.0.
@@ -1720,7 +1720,7 @@ def flatten(data):
     """Flattens multi-dimentional or nested data.
 
     Args:
-        data (tuple, array, ArrayList or Array): input data
+        data (tuple, array, List or Array): input data
     Returns:
         Iterator on the flattened data.
     """

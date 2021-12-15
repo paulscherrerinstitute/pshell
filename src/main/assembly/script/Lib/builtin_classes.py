@@ -53,6 +53,7 @@ import  ch.psi.pshell.data.LayoutSF as LayoutSF
 
 import ch.psi.pshell.device.Device as Device
 import ch.psi.pshell.device.DeviceBase as DeviceBase
+import ch.psi.pshell.device.GenericDevice as GenericDevice 
 import ch.psi.pshell.device.DeviceConfig as DeviceConfig
 import ch.psi.pshell.device.PositionerConfig as PositionerConfig
 import ch.psi.pshell.device.RegisterConfig as RegisterConfig
@@ -188,6 +189,9 @@ import ch.psi.pshell.imaging.Colormap as Colormap
 import ch.psi.pshell.imaging.Renderer as Renderer
 
 
+import ch.psi.pshell.plot.Plot as Plot
+import ch.psi.pshell.plot.Plot.AxisId as AxisId
+import ch.psi.pshell.plot.LinePlot.Style as LinePlotStyle
 import ch.psi.pshell.plot.RangeSelectionPlot as RangeSelectionPlot
 import ch.psi.pshell.plot.RangeSelectionPlot.RangeSelectionPlotListener as RangeSelectionPlotListener
 import ch.psi.pshell.plot.LinePlot as LinePlot
