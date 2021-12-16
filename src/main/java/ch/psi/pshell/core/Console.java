@@ -186,11 +186,12 @@ public class Console {
 
         @Override
         public void onShellResult(CommandSource source, Object result) {
-            if (source.isRemote() && !Context.getInstance().getConfig().hideServerMessages) {
-                if (result != null) {
-                    System.out.println(result.toString());
+            Context context = Context.getInstance();
+            if (source.isRemote() && !context.getConfig().hideServerMessages) {
+                if (result != null) {                    
+                    System.out.println(context.interpreterVariableToString(result));
                 }
-                System.out.print(Context.getInstance().getCursor());
+                System.out.print(context.getCursor());
             }
         }
 
@@ -237,18 +238,22 @@ public class Console {
     }
 
     public static String getPrintableMessage(Throwable ex) {
-        if (ex instanceof ScriptException) {
-            String ret = ex.getMessage();
-            if (ret != null) {
-                //Filtering duplicate exception class name 
-                String[] tokens = ret.split(":");
-                if ((tokens.length >= 3) && (tokens[0].trim().equals(tokens[1].trim()))) {
-                    ret = ret.substring(ret.indexOf(":") + 1).trim();
+        try{
+            if (ex instanceof ScriptException) {
+                String ret = ex.getMessage();
+                if (ret != null) {
+                    //Filtering duplicate exception class name 
+                    String[] tokens = ret.split(":");
+                    if ((tokens.length >= 3) && (tokens[0].trim().equals(tokens[1].trim()))) {
+                        ret = ret.substring(ret.indexOf(":") + 1).trim();
+                    }
+                    return ret;
                 }
-                return ret;
             }
+            return ex.toString();
+        } catch (Throwable f){
+            return "Error getting error message: " + f.getMessage();
         }
-        return ex.toString();
     }
 
     public static void main(String args[]) throws IOException {

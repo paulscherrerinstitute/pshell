@@ -102,7 +102,7 @@ public class Shell extends MonitoredPanel {
                     if (result instanceof Throwable) {
                         output.append(Console.getPrintableMessage((Throwable) result) + "\n", ERROR_COLOR);
                     } else {
-                        output.append(String.valueOf(result) + "\n", (source == CommandSource.ui) ? OUTPUT_COLOR : REMOTE_COLOR);
+                        output.append(Context.getInstance().interpreterVariableToString(result) + "\n", (source == CommandSource.ui) ? OUTPUT_COLOR : REMOTE_COLOR);
                     }
                 }
             }

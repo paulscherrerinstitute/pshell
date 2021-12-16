@@ -781,11 +781,11 @@ public class ServerService {
 
         @Override
         public void onShellResult(CommandSource source, Object result) {
-            if (result != null) {
+            if (result != null) {                
                 if (result instanceof Throwable) {
                     sendShell(source, Console.getPrintableMessage((Throwable) result));
                 } else {
-                    sendShell(source, String.valueOf(result));
+                    sendShell(source, context.interpreterVariableToString(result));
                 }
             }
         }

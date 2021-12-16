@@ -16,7 +16,7 @@ public interface ContextListener {
 
     void onShellCommand(CommandSource source, String command);
 
-    void onShellResult(CommandSource source, Object result);
+    void onShellResult(CommandSource source, Object ret);
 
     void onShellStdout(String str);
 

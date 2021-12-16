@@ -179,6 +179,21 @@ public class ScriptManager implements AutoCloseable {
             return null;
         }
     }
+    
+    public String varToString(Object obj){
+        try {
+            if (obj==null){
+                return null;
+            }
+            if (type==ScriptType.cpy){
+                return ((JepScriptEngine)engine).varToString(obj);
+            }        
+            return obj.toString();
+        } catch (Exception ex) {
+            return null;
+        }            
+    }    
+    
 
     private void setPythonPath(String[] folders) {
         Properties props = new Properties();

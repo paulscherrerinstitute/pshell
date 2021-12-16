@@ -1963,6 +1963,11 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
             scriptManager.setVar(name, value);
         }
     }
+    
+    
+    public String interpreterVariableToString(Object obj){
+        return scriptManager.varToString(obj);
+    }    
 
     void injectVars(final CommandSource source) {
         onCommand(Command.injectVars, null, source);

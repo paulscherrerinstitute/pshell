@@ -74,7 +74,7 @@ public class JepScriptEngineFactory implements ScriptEngineFactory {
 
     @Override
     public String getOutputStatement(String o) {
-        return "print(o)";
+        return "print("+ o + ")";
     }
 
     @Override

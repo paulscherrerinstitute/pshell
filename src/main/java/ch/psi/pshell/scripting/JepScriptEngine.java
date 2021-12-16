@@ -223,6 +223,16 @@ public class JepScriptEngine implements ScriptEngine, AutoCloseable, Compilable 
             }
         });
     }
+    
+    public String varToString(Object obj) throws ScriptException{
+        return (String) runInInterpreterThread((Callable<String>)() ->{
+            try{
+                return obj.toString();
+            } catch (Exception e) {
+                return null;
+            }
+        });        
+    }
 
     @Override
     public ScriptEngineFactory getFactory() {
