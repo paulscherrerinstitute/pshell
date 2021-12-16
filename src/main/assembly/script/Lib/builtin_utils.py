@@ -160,9 +160,8 @@ def is_list(obj):
 def is_string(obj):
     return (type(obj) is str) or (type(obj) is unicode)
 
-
 def is_interpreter_thread():
-    return java.lang.Thread.currentThread().name == "Interpreter Thread"
+    return java.lang.Thread.currentThread().name == "MainThread"
 
 ###################################################################################################
 #Access to context singleton

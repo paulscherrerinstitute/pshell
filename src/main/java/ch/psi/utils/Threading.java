@@ -236,4 +236,20 @@ public class Threading {
         }, executor);
         return ret;
     }
+    
+    public static void printStackTrace(Thread thread, int limit){
+        if (thread==null){
+            thread = Thread.currentThread();
+        }
+        System.out.println("Stack trace for thread " + thread.getName()+ ":");
+        StackTraceElement[] elements =thread .getStackTrace();
+        for (int i = 2; i < elements.length; i++) {                     
+             StackTraceElement s = elements[i];
+             System.out.println("\tat " + s.getClassName() + "." + s.getMethodName() + "(" + s.getFileName() + ":" + s.getLineNumber() + ")");
+             if ((limit>=0) && (i>=limit)){
+                 break;
+             }
+        }        
+    }
+   
 }

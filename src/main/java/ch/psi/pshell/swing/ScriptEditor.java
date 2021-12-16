@@ -181,7 +181,7 @@ public class ScriptEditor extends MonitoredPanel implements Executor {
         return statements;
     }
 
-    public Statement[] parse() throws ScriptException, IOException {
+    public Statement[] parse() throws ScriptException, IOException, InterruptedException {
         statements = Context.getInstance().parseString(getText(), getScriptName());
         return statements;
     }

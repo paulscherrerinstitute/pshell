@@ -147,13 +147,17 @@ public class ScriptManager implements AutoCloseable {
 
     public void injectVars() {
         for (String var : injections.keySet()) {
-            engine.put(var, injections.get(var));
+            setVar(var, injections.get(var));
         }
     }
 
     public void addInjection(String name, Object value) {
         injections.put(name, value);
-        engine.put(name, value);
+        try{
+            setVar(name, value);
+        } catch (Exception ex){
+            logger.warning("Cannot set variable: " + name);
+        }
     }
 
     public void removeInjection(String name) {
@@ -178,22 +182,7 @@ public class ScriptManager implements AutoCloseable {
         } catch (Exception ex) {
             return null;
         }
-    }
-    
-    public String varToString(Object obj){
-        try {
-            if (obj==null){
-                return null;
-            }
-            if (type==ScriptType.cpy){
-                return ((JepScriptEngine)engine).varToString(obj);
-            }        
-            return obj.toString();
-        } catch (Exception ex) {
-            return null;
-        }            
     }    
-    
 
     private void setPythonPath(String[] folders) {
         Properties props = new Properties();

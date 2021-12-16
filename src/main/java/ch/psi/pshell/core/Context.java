@@ -152,6 +152,8 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
     public static final String PROPERTY_ENABLE_VERSIONING = "ch.psi.pshell.force.versioning";
     public static final String PROPERTY_SIMULATION = "ch.psi.pshell.simulation";
     public static final String PROPERTY_PACKAGES = "ch.psi.pshell.packages";
+    
+    public static final String INTERPRETER_THREAD = "MainThread";
 
     private static Context instance;
 
@@ -1234,7 +1236,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
             injections.put("run_count", runCount);
 
             interpreterExecutor = Executors.newSingleThreadExecutor((Runnable runnable) -> {
-                interpreterThread = new Thread(Thread.currentThread().getThreadGroup(), runnable, "Interpreter Thread");
+                interpreterThread = new Thread(Thread.currentThread().getThreadGroup(), runnable, INTERPRETER_THREAD);
                 return interpreterThread;
             });
 
@@ -1721,16 +1723,27 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
     public File getScriptFile(String script) {
         if ((script != null) && (scriptManager != null)) {
             if (scriptManager.getLibrary() != null) {
-                script = scriptManager.getLibrary().resolveFile(script);
-                if (script != null) {
-                    File ret = new File(script);
-                    if (ret.exists()) {
-                        try {
-                            ret = ret.getCanonicalFile();
-                        } catch (Exception ex) {
-                        }
-                        return ret;
+                try{
+                    if (!scriptManager.isThreaded()){        
+                        String aux = script;
+                        script = (String) runInInterpreterThread(null,(Callable<String>)() ->{
+                            return scriptManager.getLibrary().resolveFile(aux);
+                        });  
+                    } else {
+                        script = scriptManager.getLibrary().resolveFile(script);
                     }
+                    if (script != null) {
+                        File ret = new File(script);
+                        if (ret.exists()) {
+                            try {
+                                ret = ret.getCanonicalFile();
+                            } catch (Exception ex) {
+                            }
+                            return ret;
+                        }
+                    }
+                } catch (Exception ex){
+                    logger.warning("Error getting script file: " + ex.getMessage());
                 }
             }
         }
@@ -1951,22 +1964,68 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
     }
 
     public Object getLastEvalResult() {
-        return (scriptManager == null) ? null : scriptManager.getLastResult();
-    }
+        if (scriptManager == null){
+            return null;
+        }
+        try {
+            if (!scriptManager.isThreaded()){        
+                return runInInterpreterThread(null,(Callable<Object>)() ->{
+                    return scriptManager.getLastResult();
+                }); 
+            }            
+            return scriptManager.getLastResult();
+            } catch (Exception ex) {
+            return null;
+        }
+}
 
     public Object getInterpreterVariable(String name) {
-        return (scriptManager == null) ? null : scriptManager.getVar(name);
+        if (scriptManager == null){
+            return null;
+        }
+        try{
+            if (!scriptManager.isThreaded()){        
+                return runInInterpreterThread(null,(Callable<Object>)() ->{
+                    return scriptManager.getVar(name);
+                }); 
+            }            
+            return scriptManager.getVar(name);
+        } catch (Exception ex) {
+            return null;
+        }
     }
 
     public void setInterpreterVariable(String name, Object value) {
         if (scriptManager != null) {
-            scriptManager.setVar(name, value);
+            try{
+                if (!scriptManager.isThreaded()){        
+                        runInInterpreterThread(null,() ->{
+                            scriptManager.setVar(name, value);
+                            return null;
+                        }); 
+                } else {        
+                    scriptManager.setVar(name, value);
+                }
+            } catch (Exception ex){
+                logger.warning("Error setting interpreter variable: " + name);
+            }
         }
     }
-    
-    
+        
     public String interpreterVariableToString(Object obj){
-        return scriptManager.varToString(obj);
+        if (obj==null){
+            return null;
+        }        
+        try {
+                if (!scriptManager.isThreaded()){        
+                    return (String) runInInterpreterThread(null,(Callable<String>)() ->{
+                        return obj.toString();
+                    }); 
+                }    
+                return obj.toString();
+        } catch (Exception ex) {
+            return null;
+        }
     }    
 
     void injectVars(final CommandSource source) {
@@ -2721,14 +2780,24 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
 
     //File parsing
     @Hidden
-    public Statement[] parseFile(String fileName) throws ScriptException, IOException {
+    public Statement[] parseFile(String fileName) throws ScriptException, IOException, InterruptedException {
         assertInterpreterEnabled();
+        if (!scriptManager.isThreaded()){        
+            return (Statement[]) runInInterpreterThread(null,(Callable<Statement[]>)() ->{
+                return scriptManager.parse(fileName);
+            });  
+        }
         return scriptManager.parse(fileName);
     }
 
     @Hidden
-    public Statement[] parseString(String script, String name) throws ScriptException, IOException {
+    public Statement[] parseString(String script, String name) throws ScriptException, IOException, InterruptedException {
         assertInterpreterEnabled();
+        if (!scriptManager.isThreaded()){        
+            return (Statement[]) runInInterpreterThread(null,(Callable<Statement[]>)() ->{
+                return scriptManager.parse(script, name);
+            });  
+        }
         return scriptManager.parse(script, name);
     }
 

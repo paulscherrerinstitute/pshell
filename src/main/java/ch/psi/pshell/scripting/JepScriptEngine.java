@@ -14,7 +14,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import javax.script.Bindings;
@@ -42,23 +41,31 @@ public class JepScriptEngine implements ScriptEngine, AutoCloseable, Compilable 
     private ScriptEngineFactory factory = null;
 
     Thread interpreterThread;
+    final boolean spawnThread;
 
     private final static int CTRL_CMD_PORT = 9587;
-    /**
-     * Make a new JepScriptEngineF
-     *
-     * @throws ScriptException if an error occurs
-     */
+    
+    public Thread getInterpreterThread(){
+        return interpreterThread;
+    }
+
     public JepScriptEngine() throws ScriptException {
-        try {
-            // make interactive because javax.script sucks           
-            interpreterExecutor = Executors.newSingleThreadExecutor((Runnable runnable) -> {
-                interpreterThread = new Thread(Thread.currentThread().getThreadGroup(), runnable, "MainThread");
-                return interpreterThread;
-            });            
+        this(false);
+    }
+    
+    public JepScriptEngine(boolean spawnThread) throws ScriptException {
+        try {            
+            this.spawnThread = spawnThread;
+            if (spawnThread){
+                interpreterExecutor = Executors.newSingleThreadExecutor((Runnable runnable) -> {
+                    interpreterThread = new Thread(Thread.currentThread().getThreadGroup(), runnable, "MainThread");
+                    return interpreterThread;
+                });         
+            } else {
+                interpreterThread =  Thread.currentThread();
+            }
+            
             runInInterpreterThread(() -> {
-                //this.jep = new Jep(new JepConfig().setInteractive(false));
-                //this.jep.setClassLoader(Thread.currentThread().getContextClassLoader());
                 this.jep = new SharedInterpreter();    
                 try {
                     //Reloading threading to set the main thread
@@ -93,6 +100,10 @@ public class JepScriptEngine implements ScriptEngine, AutoCloseable, Compilable 
             if (isInterpreterThread()) {
                 result = callable.call();
             } else {
+                if (!spawnThread){
+                    Threading.printStackTrace(null,-1);    
+                    throw new IOException("Invalid thread access to script engine");
+                }
                 try {
                     synchronized (interpreterExecutor) {
                         result = interpreterExecutor.submit(callable).get();
@@ -122,19 +133,12 @@ public class JepScriptEngine implements ScriptEngine, AutoCloseable, Compilable 
         }
     }
 
-    /**
-     * Describe createBindings method here.
-     *
-     * @see javax.script.ScriptEngine#createBindings()
-     *
-     * @return a Bindings value
-     */
+
     @Override
     public Bindings createBindings() {
         return new SimpleBindings();
     }
 
-    // me: lazy
     private void _setContext(ScriptContext c) throws ScriptException {
         try {
             this.jep.set("context", c);
@@ -222,16 +226,6 @@ public class JepScriptEngine implements ScriptEngine, AutoCloseable, Compilable 
                 throw (ScriptException) new ScriptException(e.getMessage()).initCause(e);
             }
         });
-    }
-    
-    public String varToString(Object obj) throws ScriptException{
-        return (String) runInInterpreterThread((Callable<String>)() ->{
-            try{
-                return obj.toString();
-            } catch (Exception e) {
-                return null;
-            }
-        });        
     }
 
     @Override
@@ -378,16 +372,6 @@ public class JepScriptEngine implements ScriptEngine, AutoCloseable, Compilable 
                         getEngine().eval("eval(__comp__, globals(), globals())");
                         return null;
                     }
-                    /*
-                    try{
-                        getEngine().eval("__ret__=eval(__code__, globals(), globals())");
-                        Object ret = getEngine().get("__ret__");
-                        return ret;
-                    } catch (ScriptException ex){
-                        getEngine().eval("eval(__comp__, globals(), globals())");
-                        return null;
-                    }
-                    */
                 }
                 @Override
                 public ScriptEngine getEngine() {
@@ -401,14 +385,10 @@ public class JepScriptEngine implements ScriptEngine, AutoCloseable, Compilable 
         try {      
             return (List) runInInterpreterThread((Callable<List>)() -> {          
                 List<String> ret = new ArrayList<>();
-                //jep.python.PyCallable dir = (jep.python.PyCallable) ((jep.python.PyObject)obj).getAttr("__dir__");
-                //List<String> attrs = (List<String>) dir.call();
                 List<String> attrs = (List<String>) this.jep.getValue("dir("+name+")");
                 for (String s: attrs){
                     try{
                         if (!s.startsWith("_")){
-                            //jep.python.PyCallable f = (jep.python.PyCallable) ((jep.python.PyObject)obj).getAttr(s);
-                            //String signature = getSignature(f);
                             String signature = getSignature(name, s);
                             if ((signature!=null) && !signature.startsWith("_")){
                                 ret.add(signature);
@@ -456,8 +436,7 @@ public class JepScriptEngine implements ScriptEngine, AutoCloseable, Compilable 
     public CompiledScript compile(Reader reader) throws ScriptException {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
-    
-    
+        
     public static void main(String[] args)  throws Exception{
         sendCtrCmd("abort");
     }
