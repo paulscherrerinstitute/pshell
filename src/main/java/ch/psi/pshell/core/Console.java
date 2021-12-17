@@ -25,8 +25,11 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.util.List;
+import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.script.ScriptException;
 import javax.swing.JComponent;
 import javax.swing.JPanel;
@@ -319,20 +322,28 @@ public class Console {
         }
         return null;
     }
-
+    
     static List<String> getSignatures(Object obj, String name) {
         if (obj instanceof org.python.core.PyObject) {
             //Not parsed as normal java objects, must "dir" them
             return JythonUtils.getSignatures((org.python.core.PyObject) obj, true);
-        } else if ((Context.getInstance().getScriptType()==ScriptType.cpy)  && 
+        } else if ((Context.getInstance().getScriptType()==ScriptType.cpy)   &&  
                 (!(obj.getClass().getName().startsWith("ch.psi")))) {
-            if (!canCallInterpreter()){
-                return null;
+            //TODO: JepScriptEngine.getSignatures does not work for java objects, and 
+            //wrapped objects as java.* and jep.* woll show different signatures then the python counbterpars.
+            //Therefore decided to remove autocompletion of them (JepScriptEngine.getSignatures will fail). 
+            //Use standard auto-complention for internal (ch.psi) objects because they match Python's.
+            try {
+                if (canCallInterpreter()){                                                 
+                    return (List<String>)Context.getInstance().runInInterpreterThread(null,(Callable<List<String>>)() ->{
+                        return ((JepScriptEngine)Context.getInstance().getScriptManager().getEngine()).getSignatures(
+                                obj, (name.endsWith(".")) ? name.substring(0, name.length()-1)  : name);
+                    });
+                }
+            } catch (Exception ex) {
+                Logger.getLogger(Console.class.getName()).log(Level.SEVERE, null, ex);
             }
-            if (name.endsWith(".")){
-                name = name.substring(0, name.length()-1);
-            }            
-            return ((JepScriptEngine)Context.getInstance().getScriptManager().getEngine()).getSignatures(obj, name);
+            return null;
         } else {            
             Class[] excludeClasses = new Class[]{AutoCloseable.class, Observable.class, JPanel.class, JComponent.class, Container.class, Component.class};
             String[] excludeNames = new String[]{};

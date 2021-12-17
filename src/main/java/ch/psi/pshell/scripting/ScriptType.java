@@ -39,16 +39,6 @@ public enum ScriptType {
     
     public boolean isPython(){
         return (this==py) || (this==cpy);
-    }    
-    
-    public String getSignatureLimitToken(){
-        switch (this) {
-            case cpy:
-                return " ->";
-            default:
-                return " ";
-        }        
-    }
-    
+    }            
             
 }

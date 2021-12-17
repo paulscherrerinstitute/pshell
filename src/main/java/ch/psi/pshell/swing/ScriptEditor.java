@@ -440,7 +440,7 @@ public class ScriptEditor extends MonitoredPanel implements Executor {
 
     void onPopupAutoComp(String command) {
         command = command.trim();
-        String limitToken=Context.getInstance().getScriptType().getSignatureLimitToken();
+        String limitToken=" ";
         if (truncateMenuContents && (command.lastIndexOf(limitToken) >= 0)) {
             command = command.substring(0, command.lastIndexOf(limitToken));
         }

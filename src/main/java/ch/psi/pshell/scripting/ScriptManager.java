@@ -157,7 +157,7 @@ public class ScriptManager implements AutoCloseable {
             setVar(name, value);
         } catch (Exception ex){
             logger.warning("Cannot set variable: " + name);
-        }
+        }        
     }
 
     public void removeInjection(String name) {

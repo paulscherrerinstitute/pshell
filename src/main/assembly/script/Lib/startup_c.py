@@ -30,6 +30,7 @@ def is_array(obj):
 
 from java.lang import Class
 from java.lang import Object
+from java.lang import System
 from java.lang import AutoCloseable
 from java.beans import PropertyChangeListener
 from java.util import concurrent

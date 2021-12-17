@@ -394,7 +394,8 @@ public class JepScriptEngine implements ScriptEngine, AutoCloseable, Compilable 
                                 ret.add(signature);
                             }
                         }
-                    } catch (Exception ex) {                        
+                    } catch (Exception ex) {       
+                        Logger.getLogger(JepScriptEngine.class.getName()).log(Level.FINER, null, ex);
                     }
                 }
                 Collections.sort(ret);
@@ -407,10 +408,13 @@ public class JepScriptEngine implements ScriptEngine, AutoCloseable, Compilable 
         }
     }
     
+    //TODO: Java objects (java.*, jep.*, ch.*) are not supported by inspect.signature
     String getSignature(String object, String method){
         String ret = method;
         try {         
-            return ret + this.jep.getValue("str(inspect.signature("+object+"."+method+"))");
+            ret= ret + this.jep.getValue("str(inspect.signature("+object+"."+method+"))") + " ";
+            ret = ret.replaceAll(" -> ", " ");
+            return ret;
         } catch (Exception ex) {
             return null;
         }                    
@@ -422,7 +426,8 @@ public class JepScriptEngine implements ScriptEngine, AutoCloseable, Compilable 
                 ret = (String) f.getAttr("__name__");
                 put("__obj__", f);
                 try {         
-                    ret = ret + this.jep.getValue("str(inspect.signature(__obj__))");
+                    ret = ret + this.jep.getValue("str(inspect.signature(__obj__))") + " ";
+                    ret = ret.replaceAll(" -> ", " ");
                 } catch (Exception ex) {
                     ex.printStackTrace();
                 }                    
