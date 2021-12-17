@@ -136,8 +136,14 @@ public class JepScriptEngineFactory implements ScriptEngineFactory {
                 public void setReader(Reader reader) {
                     super.setReader(reader);
                     try {
-                        e.put("jep_stdout", reader);
-                        e.eval("sys.stdout=jep_stdout");
+                        e.put("jep_stdin", reader);                       
+                        e.eval("class JepStdinWrapper():\n" + 
+                               "    def __init__(self, stdin):\n" +
+                               "        self.stdin=stdin\n" + 
+                               "    def readline(self):\n" +
+                               "        return self.stdin.readLine()");
+                        e.eval("jep_stdin=JepStdinWrapper(jep_stdin)");
+                        e.eval("sys.stdin=jep_stdin");
                     } catch (Exception ex) {
                         Logger.getLogger(ScriptManager.class.getName()).log(Level.SEVERE, null, ex);
                     }
