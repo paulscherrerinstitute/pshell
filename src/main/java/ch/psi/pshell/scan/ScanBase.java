@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import jep.NDArray;
 
 /**
  *
@@ -798,6 +799,13 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
     }
         
     protected void triggerNewRecord(ScanRecord record) {
+        if (record.values!=null){
+            for (int i=0; i<record.values.length; i++){
+                if ((record.values[i]!=null) && (record.values[i] instanceof NDArray)){
+                    record.values[i] = JepUtils.toJavaArray((NDArray)record.values[i]);
+                }
+            } 
+        }
         if (keep) {
             result.records.add(record);
         }
