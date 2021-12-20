@@ -622,7 +622,9 @@ public abstract class Task extends SwingWorker<Object, Void> {
                         if (listener != null) {
                             listener.onAborted(task, currentIndex, true, false);
                         }
-                        return null;
+                        if (aborted){
+                            return null;
+                        }
                     }
                 }
                 return "Success running queue";
