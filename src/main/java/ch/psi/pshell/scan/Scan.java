@@ -77,7 +77,15 @@ public interface Scan {
     public boolean isArray(int readableIndex);
 
     public void abort() throws InterruptedException;
+    
+    public boolean isAborted();
 
+    public void pause() throws InterruptedException;
+    
+    public void resume() throws InterruptedException;
+    
+    public boolean isPaused();
+   
     public int getSettleTimeout();
 
     public void setSettleTimeout(int value);

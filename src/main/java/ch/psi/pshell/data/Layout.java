@@ -210,15 +210,17 @@ public interface Layout {
     }   
     
     default void onDiags(Scan scan) throws IOException{
-        for (Readable diag : scan.getDiags()){
-            try{
-                String path = getDiagPathName(scan, diag);
-                Object value = diag.read();
-                getDataManager().appendItem(path, value);
-            } catch (Exception ex){        
-                String msg = "Error adding to diag dataset for " + scan.getDeviceName(diag) + ": " + ex.getMessage();
-                Logger.getLogger(Layout.class.getName()).finer(msg);
-            }                    
+        if (!scan.isPaused()){
+            for (Readable diag : scan.getDiags()){
+                try{
+                    String path = getDiagPathName(scan, diag);
+                    Object value = diag.read();
+                    getDataManager().appendItem(path, value);
+                } catch (Exception ex){        
+                    String msg = "Error adding to diag dataset for " + scan.getDeviceName(diag) + ": " + ex.getMessage();
+                    Logger.getLogger(Layout.class.getName()).finer(msg);
+                }                    
+            }
         }
     }        
     
@@ -255,8 +257,10 @@ public interface Layout {
     
     default void onMonitor(Scan scan, Device dev, Object value, long timestamp) throws IOException{
         try{
-            String path = getMonitorPathName(scan, dev);
-            getDataManager().appendItem(path, new Object[]{timestamp, value});
+            if (!scan.isPaused()){
+                String path = getMonitorPathName(scan, dev);
+                getDataManager().appendItem(path, new Object[]{timestamp, value});
+            }
         } catch (Exception ex){    
             String msg = "Error adding to monitor dataset for " + dev.getAlias() + ": " + ex.getMessage();
             Logger.getLogger(Layout.class.getName()).finer(msg);

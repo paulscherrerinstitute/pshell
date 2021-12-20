@@ -1557,7 +1557,7 @@ public class App extends ObservableBase<AppListener> {
             } else {
                 SwingUtils.invokeDelayed(() -> {
                     checkNext();
-                }, 1000);
+                }, 100);
             }
         }
     }

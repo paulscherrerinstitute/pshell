@@ -2094,47 +2094,53 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
         return foregroundException;
     }
 
-    void pause(final CommandSource source) {
+    void pause(final CommandSource source) throws InterruptedException {
         onCommand(Command.pause, null, source);
-        if (canPause()) {
+        for (Scan scan : getRunningScans()) {
+            scan.pause();
+        }     
+        if (getState()==State.Busy){
             try {
-                scriptManager.pauseStatementListExecution();
-                setState(State.Paused);
+                setState(State.Paused);                   
+            } catch (ContextStateException ex) {
+            }
+        }        
+        if (isRunningStatements()) {
+            scriptManager.pauseStatementListExecution();
+        }
+    }
+
+    void resume(final CommandSource source) throws InterruptedException {
+        onCommand(Command.resume, null, source);
+        for (Scan scan : getRunningScans()) {
+            scan.resume();
+        }   
+        if (getState()==State.Paused){
+            try {
+                setState(State.Busy);                   
             } catch (ContextStateException ex) {
             }
         }
-    }
-
-    void resume(final CommandSource source) {
-        onCommand(Command.resume, null, source);
         if (isRunningStatements()) {
             if (scriptManager.isStatementListExecutionPaused()) {
-                try {
-                    setState(State.Busy);
-                    scriptManager.resumeStatementListExecution();
-                } catch (ContextStateException ex) {
+                scriptManager.resumeStatementListExecution();
+            }
+        }
+    }
+
+    void step(final CommandSource source) throws InterruptedException {
+        onCommand(Command.step, null, source);
+        if (isRunningStatements()) {
+            if (hasPausedScan()){
+                for (Scan scan : getRunningScans()) {
+                    scan.resume();
+                }          
+            } else {      
+                if (scriptManager.isStatementListExecutionPaused()) {
+                    scriptManager.stepStatementListExecution();
                 }
             }
         }
-    }
-
-    void step(final CommandSource source) {
-        onCommand(Command.step, null, source);
-        if (isRunningStatements()) {
-            if (scriptManager.isStatementListExecutionPaused()) {
-                scriptManager.stepStatementListExecution();
-            }
-        }
-    }
-
-    @Hidden
-    public boolean canPause() {
-        if (isRunningStatements()) {
-            if (!scriptManager.isStatementListExecutionPaused()) {
-                return true;
-            }
-        }
-        return false;
     }
 
     //These methods are made public in order to plugins control state
@@ -2731,9 +2737,46 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
     }
 
     //Public properties
+    
     @Hidden
-    public boolean canStep() {
+    public boolean hasPausedScan() {
+        for (Scan scan : getRunningScans()) {
+            if (scan.isPaused() && !scan.isAborted()){
+                return true;
+            }
+        }             
+        return false;
+    }    
+    
+    @Hidden
+    public boolean hasRunningScan() {
+        for (Scan scan : getRunningScans()) {
+            if (!scan.isPaused() && !scan.isAborted()){
+                return true;
+            }
+        }             
+        return false;
+    }       
+        
+    
+    @Hidden
+    public boolean canPause() {
+        if (hasRunningScan()){
+            return true;
+        }
         if (isRunningStatements()) {
+            if (!scriptManager.isStatementListExecutionPaused()) {
+                return true;
+            }
+        }
+        return false;
+    }        
+    @Hidden
+    public boolean canStep() {    
+        if (isRunningStatements()) {
+            if (hasPausedScan()){
+                return true;
+            }            
             if (scriptManager.isStatementListExecutionPaused()) {
                 if (!isExecutingStatement()) {
                     return true;
@@ -3789,15 +3832,15 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
         stop(getPublicCommandSource(), device);
     }
 
-    public void pause() {
+    public void pause() throws InterruptedException {
         pause(getPublicCommandSource());
     }
 
-    public void resume() {
+    public void resume() throws InterruptedException {
         resume(getPublicCommandSource());
     }
 
-    public void step() {
+    public void step() throws InterruptedException {
         step(getPublicCommandSource());
     }
 

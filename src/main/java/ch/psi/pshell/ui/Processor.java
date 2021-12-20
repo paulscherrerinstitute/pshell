@@ -253,6 +253,9 @@ public interface Processor extends Executor {
 
     default void pause() {
     }
+    
+    default void resume() {
+    }    
 
     default void onStateChanged(State state, State former) {
 

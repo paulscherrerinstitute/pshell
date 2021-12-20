@@ -146,8 +146,10 @@ public abstract class ContinuousScan extends ScanBase {
 
         for (int i = 0; i <= getNumberOfSteps()[0]; i++) {
             Chrono chrono = new Chrono();
-            double[] pos = getWritablesPositions(i);
-            processPosition(pos);
+            if (!this.isPaused()){
+                double[] pos = getWritablesPositions(i);
+                processPosition(pos);
+            }
             if (i < (getNumberOfSteps()[0])) {
                 if (!chrono.waitTimeout(stepTimeMs)) {
                     if (getCheckPositions()){

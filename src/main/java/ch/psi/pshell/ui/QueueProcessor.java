@@ -20,6 +20,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.EventObject;
 import java.util.HashMap;
+import java.util.logging.Logger;
 import javax.swing.AbstractAction;
 import javax.swing.AbstractCellEditor;
 import javax.swing.Action;
@@ -463,6 +464,7 @@ public final class QueueProcessor extends PanelProcessor {
     public boolean createMenuNew() {
         return true;
     }
+    
 
     @Override
     public boolean canStep() {
@@ -472,8 +474,10 @@ public final class QueueProcessor extends PanelProcessor {
     @Override
     public void step() {
         if (processingTask != null) {
+            Logger.getLogger(QueueProcessor.class.getName()).warning("Skipping task: " + processingTask.getCurrentIndex());
             processingTask.skip();
-        }
+ 
+       }
     }    
     
     

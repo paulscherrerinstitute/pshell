@@ -540,9 +540,9 @@ public class View extends MainFrame {
             boolean ready = (state == State.Ready);
             boolean busy = (state == State.Busy);
             boolean paused = (state == State.Paused);
-
-            buttonRun.setEnabled(ready && showingExecutor && allowRun);
-            buttonDebug.setEnabled((ready && showingScript && allowRun) || (paused));
+            
+            buttonRun.setEnabled(allowRun && (((ready && showingExecutor) || (paused && !context.isRunningStatements()))));
+            buttonDebug.setEnabled((ready && showingScript && allowRun) || (paused && context.isRunningStatements()));
             buttonPause.setEnabled(context.canPause() || ((runningProcessor != null) && (runningProcessor.canPause())));
             buttonStep.setEnabled(((ready && showingScript) || context.canStep() || ((runningProcessor != null) && (runningProcessor.canStep()))) && allowRun);
             buttonAbort.setEnabled(busy || paused || (state == State.Initializing));
@@ -554,7 +554,7 @@ public class View extends MainFrame {
 
             menuCheckSyntax.setEnabled(showingScript);
 
-            buttonStopAll.setEnabled(state.isInitialized() && !busy);
+            buttonStopAll.setEnabled(state.isInitialized() && !state.isProcessing());
             menuStopAll.setEnabled(buttonStopAll.isEnabled());
 
             menuNew.setEnabled(allowEdit);
@@ -687,6 +687,7 @@ public class View extends MainFrame {
                         }
                     }
                 }
+                updateButtons();
             }
 
             @Override
@@ -714,8 +715,9 @@ public class View extends MainFrame {
                         plottingPanel.triggerScanEnded(scan, ex);
                     }
                 }
+                updateButtons();
                 //Request repaint of current file tree in Data viewer to update scan contents
-                dataPanel.onScanEnded();
+                dataPanel.onScanEnded();                
             }
         });
 
@@ -828,7 +830,7 @@ public class View extends MainFrame {
 
         @Override
         public void onContextStateChanged(State state, State former) {
-            if (state == State.Busy) {
+            if ((state == State.Busy)&&(!former.isProcessing())) {
                 synchronized (plotTitles) {
                     plotTitles.clear();
                 }
@@ -2758,7 +2760,7 @@ public class View extends MainFrame {
             }
         });
 
-        menuNew.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_N, java.awt.event.InputEvent.CTRL_MASK));
+        menuNew.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_N, java.awt.event.InputEvent.CTRL_DOWN_MASK));
         menuNew.setText(bundle.getString("View.menuNew.text")); // NOI18N
         menuNew.setName("menuNew"); // NOI18N
         menuNew.addActionListener(new java.awt.event.ActionListener() {
@@ -2770,7 +2772,7 @@ public class View extends MainFrame {
 
         menuFile.add(menuFileNew);
 
-        menuOpen.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_O, java.awt.event.InputEvent.CTRL_MASK));
+        menuOpen.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_O, java.awt.event.InputEvent.CTRL_DOWN_MASK));
         menuOpen.setText(bundle.getString("View.menuOpen.text")); // NOI18N
         menuOpen.setName("menuOpen"); // NOI18N
         menuOpen.addActionListener(new java.awt.event.ActionListener() {
@@ -2780,7 +2782,7 @@ public class View extends MainFrame {
         });
         menuFile.add(menuOpen);
 
-        menuSave.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_S, java.awt.event.InputEvent.CTRL_MASK));
+        menuSave.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_S, java.awt.event.InputEvent.CTRL_DOWN_MASK));
         menuSave.setText(bundle.getString("View.menuSave.text")); // NOI18N
         menuSave.setName("menuSave"); // NOI18N
         menuSave.addActionListener(new java.awt.event.ActionListener() {
@@ -2891,7 +2893,7 @@ public class View extends MainFrame {
         jSeparator11.setName("jSeparator11"); // NOI18N
         menuFile.add(jSeparator11);
 
-        menuExit.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_Q, java.awt.event.InputEvent.CTRL_MASK));
+        menuExit.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_Q, java.awt.event.InputEvent.CTRL_DOWN_MASK));
         menuExit.setText(bundle.getString("View.menuExit.text")); // NOI18N
         menuExit.setName("menuExit"); // NOI18N
         menuExit.addActionListener(new java.awt.event.ActionListener() {
@@ -2911,7 +2913,7 @@ public class View extends MainFrame {
             }
         });
 
-        menuUndo.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_Z, java.awt.event.InputEvent.CTRL_MASK));
+        menuUndo.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_Z, java.awt.event.InputEvent.CTRL_DOWN_MASK));
         menuUndo.setText(bundle.getString("View.menuUndo.text")); // NOI18N
         menuUndo.setName("menuUndo"); // NOI18N
         menuUndo.addActionListener(new java.awt.event.ActionListener() {
@@ -2921,7 +2923,7 @@ public class View extends MainFrame {
         });
         menuEdit.add(menuUndo);
 
-        menuRedo.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_Y, java.awt.event.InputEvent.CTRL_MASK));
+        menuRedo.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_Y, java.awt.event.InputEvent.CTRL_DOWN_MASK));
         menuRedo.setText(bundle.getString("View.menuRedo.text")); // NOI18N
         menuRedo.setName("menuRedo"); // NOI18N
         menuRedo.addActionListener(new java.awt.event.ActionListener() {
@@ -2934,7 +2936,7 @@ public class View extends MainFrame {
         jSeparator17.setName("jSeparator17"); // NOI18N
         menuEdit.add(jSeparator17);
 
-        menuCut.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_X, java.awt.event.InputEvent.CTRL_MASK));
+        menuCut.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_X, java.awt.event.InputEvent.CTRL_DOWN_MASK));
         menuCut.setText(bundle.getString("View.menuCut.text")); // NOI18N
         menuCut.setName("menuCut"); // NOI18N
         menuCut.addActionListener(new java.awt.event.ActionListener() {
@@ -2944,7 +2946,7 @@ public class View extends MainFrame {
         });
         menuEdit.add(menuCut);
 
-        menuCopy.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_C, java.awt.event.InputEvent.CTRL_MASK));
+        menuCopy.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_C, java.awt.event.InputEvent.CTRL_DOWN_MASK));
         menuCopy.setText(bundle.getString("View.menuCopy.text")); // NOI18N
         menuCopy.setName("menuCopy"); // NOI18N
         menuCopy.addActionListener(new java.awt.event.ActionListener() {
@@ -2954,7 +2956,7 @@ public class View extends MainFrame {
         });
         menuEdit.add(menuCopy);
 
-        menuPaste.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_V, java.awt.event.InputEvent.CTRL_MASK));
+        menuPaste.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_V, java.awt.event.InputEvent.CTRL_DOWN_MASK));
         menuPaste.setText(bundle.getString("View.menuPaste.text")); // NOI18N
         menuPaste.setName("menuPaste"); // NOI18N
         menuPaste.addActionListener(new java.awt.event.ActionListener() {
@@ -2967,7 +2969,7 @@ public class View extends MainFrame {
         menuBlock.setText(bundle.getString("View.menuBlock.text_1")); // NOI18N
         menuBlock.setName("menuBlock"); // NOI18N
 
-        menuIndent.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_PERIOD, java.awt.event.InputEvent.CTRL_MASK));
+        menuIndent.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_PERIOD, java.awt.event.InputEvent.CTRL_DOWN_MASK));
         menuIndent.setText(bundle.getString("View.menuIndent.text")); // NOI18N
         menuIndent.setName("menuIndent"); // NOI18N
         menuIndent.addActionListener(new java.awt.event.ActionListener() {
@@ -2977,7 +2979,7 @@ public class View extends MainFrame {
         });
         menuBlock.add(menuIndent);
 
-        menuUnindent.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_COMMA, java.awt.event.InputEvent.CTRL_MASK));
+        menuUnindent.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_COMMA, java.awt.event.InputEvent.CTRL_DOWN_MASK));
         menuUnindent.setText(bundle.getString("View.menuUnindent.text")); // NOI18N
         menuUnindent.setName("menuUnindent"); // NOI18N
         menuUnindent.addActionListener(new java.awt.event.ActionListener() {
@@ -2990,7 +2992,7 @@ public class View extends MainFrame {
         jSeparator21.setName("jSeparator21"); // NOI18N
         menuBlock.add(jSeparator21);
 
-        menuComment.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_PERIOD, java.awt.event.InputEvent.SHIFT_MASK | java.awt.event.InputEvent.CTRL_MASK));
+        menuComment.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_PERIOD, java.awt.event.InputEvent.SHIFT_DOWN_MASK | java.awt.event.InputEvent.CTRL_DOWN_MASK));
         menuComment.setText(bundle.getString("View.menuComment.text")); // NOI18N
         menuComment.setName("menuComment"); // NOI18N
         menuComment.addActionListener(new java.awt.event.ActionListener() {
@@ -3000,7 +3002,7 @@ public class View extends MainFrame {
         });
         menuBlock.add(menuComment);
 
-        menuUncomment.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_COMMA, java.awt.event.InputEvent.SHIFT_MASK | java.awt.event.InputEvent.CTRL_MASK));
+        menuUncomment.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_COMMA, java.awt.event.InputEvent.SHIFT_DOWN_MASK | java.awt.event.InputEvent.CTRL_DOWN_MASK));
         menuUncomment.setText(bundle.getString("View.menuUncomment.text")); // NOI18N
         menuUncomment.setName("menuUncomment"); // NOI18N
         menuUncomment.addActionListener(new java.awt.event.ActionListener() {
@@ -3010,7 +3012,7 @@ public class View extends MainFrame {
         });
         menuBlock.add(menuUncomment);
 
-        menuToggleComment.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_SLASH, java.awt.event.InputEvent.CTRL_MASK));
+        menuToggleComment.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_SLASH, java.awt.event.InputEvent.CTRL_DOWN_MASK));
         menuToggleComment.setText(bundle.getString("View.menuToggleComment.text")); // NOI18N
         menuToggleComment.setName("menuToggleComment"); // NOI18N
         menuToggleComment.addActionListener(new java.awt.event.ActionListener() {
@@ -3025,7 +3027,7 @@ public class View extends MainFrame {
         jSeparator18.setName("jSeparator18"); // NOI18N
         menuEdit.add(jSeparator18);
 
-        menuFind.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_F, java.awt.event.InputEvent.CTRL_MASK));
+        menuFind.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_F, java.awt.event.InputEvent.CTRL_DOWN_MASK));
         menuFind.setText(bundle.getString("View.menuFind.text")); // NOI18N
         menuFind.setName("menuFind"); // NOI18N
         menuFind.addActionListener(new java.awt.event.ActionListener() {
@@ -3045,7 +3047,7 @@ public class View extends MainFrame {
         });
         menuEdit.add(menuFindNext);
 
-        menuFindInFiles.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_F, java.awt.event.InputEvent.SHIFT_MASK | java.awt.event.InputEvent.CTRL_MASK));
+        menuFindInFiles.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_F, java.awt.event.InputEvent.SHIFT_DOWN_MASK | java.awt.event.InputEvent.CTRL_DOWN_MASK));
         menuFindInFiles.setText(bundle.getString("View.menuFindInFiles.text")); // NOI18N
         menuFindInFiles.setName("menuFindInFiles"); // NOI18N
         menuFindInFiles.addActionListener(new java.awt.event.ActionListener() {
@@ -3090,7 +3092,7 @@ public class View extends MainFrame {
         });
         menuShell.add(menuSettings);
 
-        menuChangeUser.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_L, java.awt.event.InputEvent.CTRL_MASK));
+        menuChangeUser.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_L, java.awt.event.InputEvent.CTRL_DOWN_MASK));
         menuChangeUser.setText(bundle.getString("View.menuChangeUser.text")); // NOI18N
         menuChangeUser.setEnabled(false);
         menuChangeUser.setName("menuChangeUser"); // NOI18N
@@ -3126,7 +3128,7 @@ public class View extends MainFrame {
         });
         menuShell.add(menuRun);
 
-        menuRunNext.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_F5, java.awt.event.InputEvent.ALT_MASK));
+        menuRunNext.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_F5, java.awt.event.InputEvent.ALT_DOWN_MASK));
         menuRunNext.setText(bundle.getString("View.menuRunNext.text")); // NOI18N
         menuRunNext.setName("menuRunNext"); // NOI18N
         menuRunNext.addActionListener(new java.awt.event.ActionListener() {
@@ -3136,7 +3138,7 @@ public class View extends MainFrame {
         });
         menuShell.add(menuRunNext);
 
-        menuDebug.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_F5, java.awt.event.InputEvent.CTRL_MASK));
+        menuDebug.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_F5, java.awt.event.InputEvent.CTRL_DOWN_MASK));
         menuDebug.setText(bundle.getString("View.menuDebug.text")); // NOI18N
         menuDebug.setName("menuDebug"); // NOI18N
         menuDebug.addActionListener(new java.awt.event.ActionListener() {
@@ -3165,7 +3167,7 @@ public class View extends MainFrame {
         });
         menuShell.add(menuPause);
 
-        menuAbort.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_X, java.awt.event.InputEvent.CTRL_MASK));
+        menuAbort.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_X, java.awt.event.InputEvent.CTRL_DOWN_MASK));
         menuAbort.setText(bundle.getString("View.menuAbort.text")); // NOI18N
         menuAbort.setName("menuAbort"); // NOI18N
         menuAbort.addActionListener(new java.awt.event.ActionListener() {
@@ -3205,7 +3207,7 @@ public class View extends MainFrame {
         jSeparator10.setName("jSeparator10"); // NOI18N
         menuDevices.add(jSeparator10);
 
-        menuUpdateAll.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_U, java.awt.event.InputEvent.CTRL_MASK));
+        menuUpdateAll.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_U, java.awt.event.InputEvent.CTRL_DOWN_MASK));
         menuUpdateAll.setText(bundle.getString("View.menuUpdateAll.text")); // NOI18N
         menuUpdateAll.setName("menuUpdateAll"); // NOI18N
         menuUpdateAll.addActionListener(new java.awt.event.ActionListener() {
@@ -3448,7 +3450,7 @@ public class View extends MainFrame {
             }
         });
 
-        menuFullScreen.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_F, java.awt.event.InputEvent.ALT_MASK | java.awt.event.InputEvent.CTRL_MASK));
+        menuFullScreen.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_F, java.awt.event.InputEvent.ALT_DOWN_MASK | java.awt.event.InputEvent.CTRL_DOWN_MASK));
         menuFullScreen.setSelected(true);
         menuFullScreen.setText(bundle.getString("View.menuFullScreen.text")); // NOI18N
         menuFullScreen.setName("menuFullScreen"); // NOI18N
@@ -3676,12 +3678,11 @@ public class View extends MainFrame {
 
     private void buttonPauseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonPauseActionPerformed
         try {
+            context.pause();
             Processor runningProcessor = getRunningProcessor();
             if (runningProcessor != null) {
                 runningProcessor.pause();
-            } else {
-                context.pause();
-            }
+            } 
             updateButtons();
         } catch (Exception ex) {
             showException(ex);
@@ -3992,7 +3993,15 @@ public class View extends MainFrame {
 
     private void buttonRunActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonRunActionPerformed
         try {
-            runScript();
+            if (context.getState()==State.Paused){
+                context.resume();
+                Processor runningProcessor = getRunningProcessor();
+                if ((runningProcessor != null) && runningProcessor.canPause()){
+                    runningProcessor.resume();
+                }
+            } else {
+                runScript();
+            }
         } catch (Exception ex) {
             showException(ex);
         }

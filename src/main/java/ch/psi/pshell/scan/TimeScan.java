@@ -49,7 +49,9 @@ public class TimeScan extends LineScan {
                 if (!fixedRate) {
                     chrono = new Chrono();
                 }
-                processPosition(new double[0]);
+                if (!isPaused()){
+                    processPosition(new double[0]);
+                }
                 if (i == steps) {
                     break;
                 }

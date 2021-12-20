@@ -178,11 +178,11 @@ public class ManualScan extends DiscreteScan {
     protected void doScan() throws IOException, InterruptedException {
     }
     
-    public void append(Object setpoints, Object positions, Object values) throws InterruptedException {
+    public void append(Object setpoints, Object positions, Object values) throws InterruptedException, ScanAbortedException {
          append(setpoints, positions, values, null);
     }
 
-    public void append(Object setpoints, Object positions, Object values, Long timestamp) throws InterruptedException {
+    public void append(Object setpoints, Object positions, Object values, Long timestamp) throws InterruptedException, ScanAbortedException {
         checkInterrupted();
         try {
             ScanRecord record = newRecord();
@@ -205,10 +205,11 @@ public class ManualScan extends DiscreteScan {
             }
             record.localTimestamp = System.currentTimeMillis();
             record.timestamp = timestamp;
-            triggerNewRecord(record);
+            triggerNewRecord(record);            
         } catch (Exception ex) {
             logger.log(Level.WARNING, null, ex);
         }
+        waitPauseDone();
     }
 
     @Override

@@ -554,7 +554,7 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
         aborted = true;
         doAbort();
     }
-
+     
     protected void doAbort() throws InterruptedException {
         //Not stopping relative moves because it affects recovering position
         if (!relative || !restorePosition) {
@@ -568,6 +568,44 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
         }
     }
 
+    boolean paused;
+
+    @Override
+    public boolean isPaused() {
+        return paused;
+    }
+
+    @Override
+    final public void pause() throws InterruptedException {
+        if (!isPaused() && !isAborted()){
+            logger.info("Pausing: " + toString());
+            paused = true;
+            doPause();
+        }
+    }  
+    
+    @Override
+    final public void resume() throws InterruptedException {
+        if (isPaused() && !isAborted()){
+            logger.info("Resuming: " + toString());
+            paused = false;
+            doResume();
+        }
+    }      
+    
+    protected void doPause() throws InterruptedException {
+    }       
+    
+    protected void doResume() throws InterruptedException {
+    }    
+    
+    protected void waitPauseDone() throws ScanAbortedException, InterruptedException{
+         while (isPaused()){
+             assertNotAborted();
+             Thread.sleep(10);
+         }
+    }        
+    
     public void stopAll() {
         for (Writable w : getWritables()) {
             try {
@@ -612,6 +650,7 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
     protected ScanRecord processPosition(double[] pos, Long timestamp, long id) throws IOException, InterruptedException {
         checkInterrupted();
         assertNotAborted();
+        waitPauseDone();
 
         ScanRecord record = newRecord();
         record.id = id;
