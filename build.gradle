@@ -128,7 +128,7 @@ dependencies {
     compile 'com.formdev:flatlaf:1.6'
     compile 'javax.xml.bind:jaxb-api:2.3.0'
     compile 'org.jetbrains.jediterm:jediterm-pty:2.42'
-    compile 'org.jetbrains.pty4j:pty4j:0.11.4'
+    compile 'org.jetbrains.pty4j:pty4j:0.12.5'
     compile 'black.ninia:jep:3.9.1'
     
     //TIFF support for ImageIO can be added installing JAI, or one of the following dependencies:
