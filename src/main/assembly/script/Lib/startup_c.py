@@ -191,6 +191,8 @@ def is_java_instance(obj, cls):
 #Access to context singleton
 ###################################################################################################
 def get_context():
+    if not is_main_thread():
+        raise Exception("Application context can only be accessed by the scripting main thread")
     return _core.Context.getInstance()
 
 ###################################################################################################
