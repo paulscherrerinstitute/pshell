@@ -49,6 +49,7 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
     int passOffset = 0;
     long startTimestamp;
     long endTimestamp;
+    boolean canPause=true;
     
     String plotTitle;
     boolean hidden;
@@ -599,8 +600,18 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
     protected void doResume() throws InterruptedException {
     }    
     
+    @Override
+    public boolean canPause(){
+        return canPause;
+    }
+    
+    @Override
+    public void setCanPause(boolean value){
+        canPause = value;
+    }
+    
     protected void waitPauseDone() throws ScanAbortedException, InterruptedException{
-         while (isPaused()){
+         while (isPaused() && canPause()){
              assertNotAborted();
              Thread.sleep(10);
          }

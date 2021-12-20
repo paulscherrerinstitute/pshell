@@ -80,6 +80,10 @@ public interface Scan {
     
     public boolean isAborted();
 
+    public boolean canPause();
+    
+    public void setCanPause(boolean value);
+    
     public void pause() throws InterruptedException;
     
     public void resume() throws InterruptedException;

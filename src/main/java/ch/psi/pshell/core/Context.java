@@ -2758,10 +2758,18 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
         return false;
     }       
         
+    public boolean hasPausableScan() {
+        for (Scan scan : getRunningScans()) {
+            if (!scan.isPaused() && !scan.isAborted() && scan.canPause()){
+                return true;
+            }
+        }             
+        return false;
+    }       
     
     @Hidden
     public boolean canPause() {
-        if (hasRunningScan()){
+        if (hasPausableScan()){
             return true;
         }
         if (isRunningStatements()) {
