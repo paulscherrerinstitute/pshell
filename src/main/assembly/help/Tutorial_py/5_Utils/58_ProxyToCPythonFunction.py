@@ -8,12 +8,8 @@
 
 from jeputils import import_py
 import_py("cpython", "calc")
-import_py("cpython", "double_arr")
-
-
-r1=  double_arr([1,2,3,4,5,6,7,8])
-print r1
 
 data = Convert.reshape(to_array([1,2,3,4,5,6,7,8,9,0],'d'), [2,5])
-r2 = calc(data)
-print r2
+ret= calc(data)
+print ret
+plot((data,ret),name=("data","ret"))
