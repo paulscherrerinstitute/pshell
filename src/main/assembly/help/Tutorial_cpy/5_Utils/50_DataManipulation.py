@@ -23,7 +23,7 @@ set_attribute(path, "AttrDouble", 2.0)
 set_attribute(path, "AttrBoolean", True)
 #Reading it back
 read =load_data(path)
-print (list(read))
+print ([list(a) for a in read])
 plot(read)
 
 #Creating a 3D dataset from an array
@@ -32,9 +32,9 @@ path="group/data3"
 save_dataset(path, data3d)
 #Reading it back
 read =load_data(path,0)
-print (list(read))
+print ([list(a) for a in read])
 read =load_data(path,1)
-print (list(read))
+print ([list(a) for a in read])
 
 #Creating a INT dataset adding elements one by one
 path = "group/data4"

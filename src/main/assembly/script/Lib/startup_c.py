@@ -1760,7 +1760,7 @@ def set_attribute(path, name, value, unsigned = False):
     """
     if is_list(value):
         value = Convert.toStringArray(to_array(value))
-    elif type(ovaluebj) == numpy.ndarray:
+    elif type(value) == numpy.ndarray:
         value = np_to_java(value)
     get_context().getDataManager().setAttribute(path, name, value, unsigned)
 
