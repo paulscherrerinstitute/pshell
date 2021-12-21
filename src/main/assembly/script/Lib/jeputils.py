@@ -26,6 +26,7 @@
 import sys
 import os
 import jep.Jep
+import jep.SharedInterpreter
 import jep.NDArray
 import java.lang.Thread
 import org.python.core.PyArray as PyArray
@@ -54,7 +55,7 @@ def __close_jep():
 def init_jep():    
     #TODO: Should do it but generates errors
     #__close_jep()
-    j = jep.Jep(False)
+    j = jep.SharedInterpreter()
     #Faster, but statements must be complete
     j.setInteractive(False) 
     __jep[java.lang.Thread.currentThread()] = j
@@ -88,10 +89,15 @@ def init_jep():
 
 def __print_stdout():
     j=__get_jep()
-    output = j.getValue("sys.stdout.str")
-    err = j.getValue("sys.stderr.str")
-    j.eval("sys.stdout.clear()")
-    j.eval("sys.stderr.clear()")
+    output = None
+    err = None
+    try:
+        output = j.getValue("sys.stdout.str")
+        err = j.getValue("sys.stderr.str")
+        j.eval("sys.stdout.clear()")
+        j.eval("sys.stderr.clear()")
+    except:
+        pass
     if (output is not None) and len(output)>0:
         print output
     if (err is not None) and len(err)>0:
