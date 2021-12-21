@@ -52,6 +52,7 @@ from java.lang import Boolean, Integer, Float, Double, Short, Byte, Long, String
 from ch.psi.pshell import core as _core
 from ch.psi.pshell.scripting import ScriptUtils
 from ch.psi.pshell.scripting import ScriptType
+from ch.psi.pshell.scripting import JepUtils
 from ch.psi.utils import Convert
 from ch.psi.utils import Arr
 
@@ -145,6 +146,21 @@ def to_array(obj, type = None, primitive = True):
             obj=ret
         else:
          obj= convert_1d_array(obj)
+    return obj
+
+def np_to_java(obj, dtype=None):
+    """Convert a numpy array into a java array, preserving dimensionality.
+
+    Args:
+        obj(numpy array): Original data.
+
+    Returns:
+        Java array
+    """
+    if type(obj) == numpy.ndarray:
+        if dtype is not None:
+            obj=obj.astype(dtype, copy=False)
+        return JepUtils.toJavaArray(obj)
     return obj
 
 def to_list(obj):
@@ -699,7 +715,8 @@ class ManualScan():
         self.scan.end()
 
     def append(self,setpoints, positions, values, timestamps=None):
-        self.scan.append(to_array(setpoints), to_array(positions), to_array(values), None if (timestamps is None) else to_array(timestamps))
+        self.scan.append(np_to_java(to_array(setpoints)), np_to_java(to_array(positions)), np_to_java(to_array(values)), \
+                        None if (timestamps is None) else np_to_java(to_array(timestamps)))
 
     def getDimensions(self):
         if self._dimensions == None:
@@ -1052,7 +1069,7 @@ def vscan(writables, readables, vector, line = False, latency=0.0, relative=Fals
             vector.append([])
         elif (not is_list(vector[0])) and (not is_array(vector[0])):
             vector = [[x,] for x in vector]
-        vector = to_array(vector, 'd')
+        vector = np_to_java(to_array(vector, 'd'),'d')
         scan = VectorScan(writables,readables, vector, line, relative, latency_ms, int(passes), zigzag)
     processScanPars(scan, pars)
     scan.start()
@@ -1480,7 +1497,7 @@ def plot(data, name = None, xdata = None, ydata=None, title=None):
     ydata = json_to_obj(ydata)
     if is_java_instance(data, Table):
         if is_list(xdata):
-            xdata = to_array(xdata, 'd')
+            xdata = np_to_java(to_array(xdata, 'd'), 'd')
         return get_context().plot(data,xdata,name,title)
 
     if is_java_instance(data, ScanResult):
@@ -1503,10 +1520,10 @@ def plot(data, name = None, xdata = None, ydata=None, title=None):
             y = ydata
             if is_list(y) and len(y)>0 and (is_list(y[i]) or is_java_instance(y[i] , List) or is_array(y[i])):
                 y = y[i]
-            plots[i] =  PlotDescriptor(plotName , to_array(data[i], 'd'), to_array(x, 'd'), to_array(y, 'd'))
+            plots[i] =  PlotDescriptor(plotName , np_to_java(to_array(data[i], 'd'), 'd'), np_to_java(to_array(x, 'd'), 'd'), np_to_java(to_array(y, 'd'), 'd'))
         return get_context().plot(plots,title)
     else:
-        plot = PlotDescriptor(name, to_array(data, 'd'), to_array(xdata, 'd'), to_array(ydata, 'd'))
+        plot = PlotDescriptor(name, np_to_java(to_array(data, 'd'), 'd'), np_to_java(to_array(xdata, 'd'), 'd'), np_to_java(to_array(ydata, 'd'), 'd'))
         return get_context().plot(plot,title)
 
 def get_plots(title=None):
@@ -1620,7 +1637,7 @@ def save_dataset(path, data, type='d', unsigned=False, features=None):
     Returns:
         Dictionary
     """
-    data = to_array(data, type)
+    data = np_to_java(to_array(data, type), type)
     get_context().getDataManager().setDataset(path, data, unsigned, features)
 
 def create_group(path):
@@ -1690,7 +1707,7 @@ def append_dataset(path, data, index=None, type='d', shape=None):
     Returns:
         None
     """
-    data = to_array(data, type)
+    data = np_to_java(to_array(data, type))
     if index is None:
         get_context().getDataManager().appendItem(path, data)
     else:
@@ -1716,7 +1733,7 @@ def append_table(path, data):
             if is_list(data[i]):
                 arr[i] = to_array(data[i], 'd')
             else:
-                arr[i] = data[i]
+                arr[i] = np_to_java(data[i])
         data=arr
     get_context().getDataManager().appendItem(path, data)
 
@@ -1735,7 +1752,7 @@ def set_attribute(path, name, value, unsigned = False):
 
     Args:
         path(str): Path to dataset relative to the current persistence context root.
-        name(str): name of the atttribute
+        name(str): name of the attribute
         value(Object): the attribute value
         unsigned(bool, optional):  if applies, indicate if  value is unsigned.
     Returns:
@@ -1743,6 +1760,8 @@ def set_attribute(path, name, value, unsigned = False):
     """
     if is_list(value):
         value = Convert.toStringArray(to_array(value))
+    elif type(ovaluebj) == numpy.ndarray:
+        value = np_to_java(value)
     get_context().getDataManager().setAttribute(path, name, value, unsigned)
 
 def log(log, data_file=None):
@@ -2796,6 +2815,7 @@ if __name__ == "__main__":
             print ("Starting control command task")
             quit=False
             with socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM) as ctrl_cmd_socket:
+                ctrl_cmd_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
                 ctrl_cmd_socket.bind(("127.0.0.1", port))
                 ctrl_cmd_socket.settimeout(2.0) 
                 while(quit==False) and (run_count==rc) and parent_thread.is_alive() and not ctrl_cmd_socket._closed:
