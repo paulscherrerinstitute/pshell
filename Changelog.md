@@ -1,5 +1,54 @@
 # Changelog
 
+## 1.17.0
+
+### Added
+ 
+* Configuration of file permissions (data, scripts, config and logs).
+
+* Terminal tab.
+
+* Packages (modules containing factorized scripts, devices and plugins).
+
+* MasterPositioner (interpolation of slave motors).
+
+* New scan arguments: monitors, diags, snaps and meta.
+
+* UUID to data file attributes.
+
+* Template for processor plugins.
+
+* Option -tbar to add toolbars to detached panels.
+
+* Ability to pause/resume scans and queues.
+
+* Pause/resume control commands.
+
+* Python proxy.
+
+* jeputils.import_py for transparently calling CPython functions.
+
+* Ability to use JEP as scripting engine (-type=cpy): can run directly CPython (and NumPy/SciPy).
+
+### Changed
+
+* Futures for writting/moving/stopping devices run on private threads.
+
+* QueueProcessor extends PanelProcessor so that it can be loaded as a plugin.
+
+* API improvements.
+
+* Web UI layout improvements: data file download, script edition and plots.
+
+* Use jep.SharedInterpreter (instead of jep.Jep) not to run CPython in sub-interpreter.
+
+### Fixed
+
+* Workaround to .class files permissions bug (Jython 2.7.2).
+
+* Web UI plotting now is complete, based on offscreen rendering on server.
+
+
 ## 1.16.0
 
 ### Added
