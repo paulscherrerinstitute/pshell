@@ -442,8 +442,11 @@ public class Shell extends MonitoredPanel {
                 }
                 if ((keyCode == KeyEvent.VK_X) && (evt.isControlDown())) {
                     Context.getInstance().abort();
-                }
-                if ((keyCode == KeyEvent.VK_Z) && (evt.isControlDown())) {
+                } else if ((keyCode == KeyEvent.VK_P) && (evt.isControlDown())) {
+                    Context.getInstance().pause();
+                } else if ((keyCode == KeyEvent.VK_R) && (evt.isControlDown())) {
+                    Context.getInstance().resume();
+                } else if ((keyCode == KeyEvent.VK_Z) && (evt.isControlDown())) {
                     if (Context.getInstance().waitingStdin()) {
                         try {
                             submit(ScriptStdio.END_OF_LINES, true);

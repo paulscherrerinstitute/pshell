@@ -207,6 +207,27 @@ class PShellClient:
         else:
             return self._get("abort/"+str(command_id)) 
     
+    def pause(self):
+        """Pause execution of command
+
+        Args:
+           
+        Returns:
+
+        """          
+        self._get("pause") 
+
+    def resume(self):
+        """Resume execution of command
+
+        Args:
+           
+        Returns:
+
+        """          
+        self._get("resume") 
+
+
     def reinit(self):
         """Reinitialize the software.
  

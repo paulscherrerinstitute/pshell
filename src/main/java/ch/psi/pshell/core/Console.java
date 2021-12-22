@@ -132,9 +132,19 @@ public class Console {
                     CompletableFuture cf = context.evalLineAsync(CommandSource.console, statement);
                     while (!cf.isDone()) {
                         int key = ((jline.internal.NonBlockingInputStream) console.getInput()).read(10);
-                        if (key == jline.console.KeyMap.CTRL_X) {
-                            context.abort(CommandSource.console);
-                            break;
+                        if (key>0){
+                            char CTRL_P = '\u0010';
+                            if (key == jline.console.KeyMap.CTRL_X) {
+                                System.out.println("\nControl command: abort");
+                                context.abort(CommandSource.console);
+                                break;
+                            } else if (key == CTRL_P) {
+                                System.out.println("\nControl command: pause");
+                                context.pause(CommandSource.console);
+                            } else if (key == jline.console.KeyMap.CTRL_R) {
+                                System.out.println("\nControl command: resume");
+                                context.resume(CommandSource.console);
+                            }
                         }
                     }
                     Object ret = cf.get();

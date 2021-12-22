@@ -688,6 +688,26 @@ public class ServerService {
     }
 
     @GET
+    @Path("pause")
+    public void pause() throws ExecutionException {
+        try {
+            context.pause(CommandSource.server);
+        } catch (Exception ex) {
+            throw new ExecutionException(ex);
+        }
+    }   
+    
+    @GET
+    @Path("resume")
+    public void resume() throws ExecutionException {
+        try {
+            context.resume(CommandSource.server);
+        } catch (Exception ex) {
+            throw new ExecutionException(ex);
+        }
+    }    
+
+    @GET
     @Path("abort/{commandId}")
     public boolean abort(@PathParam("commandId") final Integer commandId) throws ExecutionException {
         try {

@@ -2885,6 +2885,12 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
             case abort:
                 abort(source);
                 return null;
+            case pause:
+                pause(source);
+                return null;
+            case resume:
+                resume(source);
+                return null;
             case restart:
                 assertNotRunning();
                 restart(source);
