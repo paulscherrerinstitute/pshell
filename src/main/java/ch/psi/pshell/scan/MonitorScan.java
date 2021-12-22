@@ -215,28 +215,31 @@ public class MonitorScan extends LineScan {
     }
 
     ScanRecord appendSample() throws IOException, InterruptedException {
-        Long timestamp = trigger.getTimestamp();
-        if (timestamp == null) {
-            timestamp =  0L;
-        }
-        long id = 0;
-        Stream stream = getStream();
-        if (stream != null){
-            StreamValue val = stream.take();
-            if (val!=null){
-                id = val.getPulseId();
+        if (!isPaused()){
+            Long timestamp = trigger.getTimestamp();
+            if (timestamp == null) {
+                timestamp =  0L;
+            }
+            long id = 0;
+            Stream stream = getStream();
+            if (stream != null){
+                StreamValue val = stream.take();
+                if (val!=null){
+                    id = val.getPulseId();
+                }
+            }
+            if (getRecordIndexInPass()==0) {
+                initialTimestamp = timestamp - chrono.getEllapsed();
+            }
+            if (timeBased){
+                //Based on time
+                return processPosition(new double[]{ (double)(timestamp - initialTimestamp)}, timestamp, id);
+            } else {
+                //Based on index
+                return processPosition(new double[0], timestamp, id);
             }
         }
-        if (getRecordIndexInPass()==0) {
-            initialTimestamp = timestamp - chrono.getEllapsed();
-        }
-        if (timeBased){
-            //Based on time
-            return processPosition(new double[]{ (double)(timestamp - initialTimestamp)}, timestamp, id);
-        } else {
-            //Based on index
-            return processPosition(new double[0], timestamp, id);
-        }
+        return null;
     }
 
     @Override
@@ -279,7 +282,7 @@ public class MonitorScan extends LineScan {
                                 trigger.waitCacheChange(0);
                             }
                             ret = appendSample();
-                            if (!ret.invalidated) {
+                            if ((ret!=null) && !ret.invalidated) {
                                 if (i == steps) {
                                     break;
                                 }
@@ -289,7 +292,7 @@ public class MonitorScan extends LineScan {
                                     }
                                 }
                             }
-                        } while (ret.invalidated);
+                        } while ((ret==null) || (ret.invalidated));
                     }
                 } else {
                     boolean start = true;

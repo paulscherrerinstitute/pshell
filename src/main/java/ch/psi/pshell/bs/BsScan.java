@@ -89,26 +89,28 @@ public class BsScan extends LineScan {
     final DeviceAdapter listener = new DeviceAdapter() {
         @Override
         public void onValueChanged(Device device, Object value, Object former) {
-            if (!finished()) {          
-                int index = getRecordIndexInPass();                 
-                onBeforeReadout(new double[]{index});
-                StreamValue val = (StreamValue) value;   
-                if (index==0) {
-                    initialTimestamp = val.getTimestamp() - chrono.getEllapsed();
-                }                  
-                Number[] setpoints = (records < 0) ? new Number[]{Double.NaN} : new Number[0];
-                Number[] positions = (records < 0) ? new Number[]{val.getTimestamp()     - initialTimestamp} :new Number[0];
-                int offset = (addPid ? 1 : 0);
-                Object[] values = new Object[val.values.size() + offset];
-                Long[] deviceTimestamps = new Long[values.length];
-                if (addPid){
-                    values[0] = val.pulseId;
+            if (!finished()) {        
+                if (!isPaused()){
+                    int index = getRecordIndexInPass();                 
+                    onBeforeReadout(new double[]{index});
+                    StreamValue val = (StreamValue) value;   
+                    if (index==0) {
+                        initialTimestamp = val.getTimestamp() - chrono.getEllapsed();
+                    }                  
+                    Number[] setpoints = (records < 0) ? new Number[]{Double.NaN} : new Number[0];
+                    Number[] positions = (records < 0) ? new Number[]{val.getTimestamp()     - initialTimestamp} :new Number[0];
+                    int offset = (addPid ? 1 : 0);
+                    Object[] values = new Object[val.values.size() + offset];
+                    Long[] deviceTimestamps = new Long[values.length];
+                    if (addPid){
+                        values[0] = val.pulseId;
+                    }
+                    System.arraycopy(val.values.toArray(), 0, values, offset , val.values.size());
+                    Arrays.fill(deviceTimestamps, val.getTimestamp());
+                    ScanRecord record = newRecord(setpoints, positions, values, val.pulseId, val.getTimestamp(), deviceTimestamps);
+                    onAfterReadout(record);
+                    triggerNewRecord(record);
                 }
-                System.arraycopy(val.values.toArray(), 0, values, offset , val.values.size());
-                Arrays.fill(deviceTimestamps, val.getTimestamp());
-                ScanRecord record = newRecord(setpoints, positions, values, val.pulseId, val.getTimestamp(), deviceTimestamps);
-                onAfterReadout(record);
-                triggerNewRecord(record);
             }
             synchronized (listener) {
                 listener.notifyAll();
