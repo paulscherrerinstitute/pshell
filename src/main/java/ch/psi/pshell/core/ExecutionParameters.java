@@ -1,6 +1,3 @@
-/*
- * Copyright (c) 2014 Paul Scherrer Institute. All rights reserved.
- */
 package ch.psi.pshell.core;
 
 import ch.psi.pshell.core.VersioningManager.Revision;
