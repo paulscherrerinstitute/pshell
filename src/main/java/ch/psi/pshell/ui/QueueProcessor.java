@@ -104,6 +104,14 @@ public final class QueueProcessor extends PanelProcessor {
     }
     
     public void addNewFile(String filename, int index){
+       addNewFile(filename,"", index);       
+    }
+    
+    public void addNewFile(String filename, String args){
+        addNewFile(filename,args, model.getRowCount());
+    }
+    
+    public void addNewFile(String filename, String args, int index){
         for (String path : new String[]{Context.getInstance().getSetup().getScriptPath(), 
                                         Context.getInstance().getSetup().getHomePath()}) {
             if (IO.isSubPath(filename, path)) {
@@ -111,12 +119,12 @@ public final class QueueProcessor extends PanelProcessor {
                 break;
             }
         }        
-        Object[] data = new Object[]{true, filename, "", Task.QueueTaskErrorAction.Resume, ""};
+        Object[] data = new Object[]{true, filename, args, Task.QueueTaskErrorAction.Resume, ""};
         model.insertRow(index, data);
         model.fireTableDataChanged();        
         table.getSelectionModel().setSelectionInterval(index, index);
         updateButtons();  
-    }
+    }    
     
     public void initializeTable() {
 
