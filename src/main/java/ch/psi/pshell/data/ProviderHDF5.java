@@ -117,8 +117,13 @@ public class ProviderHDF5 implements Provider {
         writer.file().flush();
     }
 
+    //Access to writer
+    public IHDF5Writer getWriter(){
+        return writer;
+    }
+        
     //Data reading    
-    IHDF5Reader openInputFile(String file) {
+    public IHDF5Reader openReadOnly(String file) {
         if ((writer != null) && (writerFile != null) && IO.isSubPath(file, writerFile.getPath())) {
             return writer;
         }
@@ -127,6 +132,17 @@ public class ProviderHDF5 implements Provider {
         }
         return HDF5Factory.openForReading(file);
     }
+    
+    //Data writing    
+    public IHDF5Writer openReadWrite(String file) {
+        if ((writer != null) && (writerFile != null) && IO.isSubPath(file, writerFile.getPath())) {
+            return writer;
+        }
+        if (!file.endsWith(getFileType())) {
+            file += "." + getFileType();
+        }
+        return HDF5Factory.open(file);
+    }    
 
     Object[] getGroupStructure(IHDF5Reader reader, String group) {
         List<String> elements = reader.getGroupMembers(group);
@@ -149,7 +165,7 @@ public class ProviderHDF5 implements Provider {
     @Override
     public Object[] getStructure(String root) {
         Object[] ret;
-        IHDF5Reader reader = openInputFile(root);
+        IHDF5Reader reader = openReadOnly(root);
         try {
             ret = getGroupStructure(reader, "/");
         } finally {
@@ -162,7 +178,7 @@ public class ProviderHDF5 implements Provider {
 
     @Override
     public String[] getChildren(String root, String path) throws IOException {
-        IHDF5Reader reader = openInputFile(root);
+        IHDF5Reader reader = openReadOnly(root);
         ArrayList<String> ret = new ArrayList<>();
         try {
             if (!path.endsWith("/")) {
@@ -181,7 +197,7 @@ public class ProviderHDF5 implements Provider {
 
     @Override
     public boolean isDataset(String root, String path) {
-        IHDF5Reader reader = openInputFile(root);
+        IHDF5Reader reader = openReadOnly(root);
         try {
             HDF5LinkInformation info = reader.object().getLinkInformation(path);
             return info.isDataSet();
@@ -195,7 +211,7 @@ public class ProviderHDF5 implements Provider {
 
     @Override
     public boolean isGroup(String root, String path) {
-        IHDF5Reader reader = openInputFile(root);
+        IHDF5Reader reader = openReadOnly(root);
         try {
             HDF5LinkInformation info = reader.object().getLinkInformation(path);
             return info.isGroup();
@@ -207,7 +223,7 @@ public class ProviderHDF5 implements Provider {
     }
     
     public DataSlice getData(String root, String path,  long[] index, int[] shape) throws IOException {        
-        IHDF5Reader reader = openInputFile(root);
+        IHDF5Reader reader = openReadOnly(root);
         try {
             HDF5LinkInformation info = reader.object().getLinkInformation(path);
             if (!info.isDataSet()) {
@@ -275,7 +291,7 @@ public class ProviderHDF5 implements Provider {
 
     @Override
     public DataSlice getData(String root, String path, int index) throws IOException {
-        IHDF5Reader reader = openInputFile(root);
+        IHDF5Reader reader = openReadOnly(root);
         DataSlice ret = null;
         try {
             HDF5LinkInformation info = reader.object().getLinkInformation(path);
@@ -456,7 +472,7 @@ public class ProviderHDF5 implements Provider {
     @Override
     public Map<String, Object> getInfo(String root, String path) {
         HashMap<String, Object> ret = new HashMap<>();
-        IHDF5Reader reader = openInputFile(root);
+        IHDF5Reader reader = openReadOnly(root);
         try {
             HDF5LinkInformation info = reader.object().getLinkInformation(path);
             HDF5ObjectType type = info.getType();
@@ -508,7 +524,7 @@ public class ProviderHDF5 implements Provider {
 
     @Override
     public Map<String, Object> getAttributes(String root, String path) {
-        IHDF5Reader reader = openInputFile(root);
+        IHDF5Reader reader = openReadOnly(root);
         try {
             return getAttributes(reader, path);
         } finally {
