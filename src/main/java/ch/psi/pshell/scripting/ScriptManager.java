@@ -60,6 +60,7 @@ public class ScriptManager implements AutoCloseable {
     String sessionFilePath;
     PrintWriter sessionOut;
     Object lastResult;
+    Object lastScriptResult;
     final Map<Thread, Object> results;
 
     final int CLASS_FILE_CHECK_INTERVAL = 5000;
@@ -226,11 +227,11 @@ public class ScriptManager implements AutoCloseable {
     }
 
     public Object evalFile(String script) throws ScriptException, IOException {
+        lastScriptResult= null;
         String fileName = lib.resolveFile(script);
         if (fileName == null) {
             throw new FileNotFoundException(script);
         }
-
         beforeEval(false);
         try {
             setVar(LAST_RESULT_VARIABLE, null);
@@ -240,8 +241,12 @@ public class ScriptManager implements AutoCloseable {
             if (ret == null) {
                 ret = results.get(evalThread);
             }
+            lastScriptResult = ret;
             saveStatement("\n#Eval file:  " + script + "\n");
             return ret;
+        } catch (Exception ex) {
+            lastScriptResult = ex;
+            throw ex;
         } finally {
             afterEval(false);
         }
@@ -502,6 +507,10 @@ public class ScriptManager implements AutoCloseable {
         return lastResult;
     }
 
+    public Object getScriptResult() {
+        return lastScriptResult;
+    }
+    
     public Statement[] parse(String fileName) throws FileNotFoundException, ScriptException, IOException {
         fileName = lib.resolveFile(fileName);
         IO.assertExistsFile(fileName);

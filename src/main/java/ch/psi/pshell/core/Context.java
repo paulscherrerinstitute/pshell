@@ -636,6 +636,11 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
         return thread == interpreterThread;
     }
 
+    
+    public Thread getInterpreterThread() {
+        return interpreterThread;
+    }
+
     //
     public class InterpreterThreadException extends Exception {
 
@@ -1357,8 +1362,12 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
         return commandManager.isRunning(commandId);
     }
 
-    Map getResult(long commandId) throws Exception {
+    public Map getResult(long commandId) throws Exception {
         return commandManager.getResult(commandId);
+    }
+    
+    public Map getResult() throws Exception {
+        return getResult(-1);
     }
 
     long waitNewCommand(CompletableFuture cf) throws InterruptedException {
@@ -1435,7 +1444,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
             }
         }
     }
-
+    
     Object evalLine(final CommandSource source, final String command) throws ScriptException, IOException, ContextStateException, InterruptedException {
         assertInterpreterEnabled();
         synchronized (stdinInput) {
@@ -1977,7 +1986,23 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
             } catch (Exception ex) {
             return null;
         }
-}
+    }
+    
+    public Object getLastScriptResult() {
+        if (scriptManager == null){
+            return null;
+        }
+        try {
+            if (!scriptManager.isThreaded()){        
+                return runInInterpreterThread(null,(Callable<Object>)() ->{
+                    return scriptManager.getScriptResult();
+                }); 
+            }            
+            return scriptManager.getScriptResult();
+            } catch (Exception ex) {
+            return null;
+        }
+    }    
 
     public Object getInterpreterVariable(String name) {
         if (scriptManager == null){
@@ -2366,6 +2391,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
         }
     }
 
+    @Hidden
     public void commit(final CommandSource source, String message, boolean force) throws IOException {
         onCommand(Command.commit, new Object[]{message}, source);
         assertVersioningEnabled(source);
@@ -2497,14 +2523,17 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
     }
 
     //User & Rights
+    @Hidden
     public User getUser(CommandSource source) {
         return usersManager.getCurrentUser(source.isRemote());
     }
 
+    @Hidden
     public AccessLevel getLevel(CommandSource source) {
         return usersManager.getCurrentLevel(source.isRemote());
     }
 
+    @Hidden
     public Rights getRights(CommandSource source) {
         return usersManager.getCurrentRights(source.isRemote());
     }
