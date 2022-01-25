@@ -1314,14 +1314,18 @@ public class DataManager implements AutoCloseable {
     }
 
     public List<PlotDescriptor> getScanPlots(String root, String path) throws Exception {
-        String layout = (String) getAttribute(root, "/", Layout.ATTR_LAYOUT);
-        if ((layout != null) && (!layout.equals(getLayout().getClass().getName()))) {
-            DataManager aux = new DataManager(context, getProvider().getClass().getName(), layout);
-            try {
-                return aux.doGetScanPlots(root, path);
-            } finally {
-                aux.close();
+        try{
+            String layout = (String) getAttribute(root, "/", Layout.ATTR_LAYOUT);
+            if ((layout != null) && (!layout.equals(getLayout().getClass().getName()))) {
+                DataManager aux = new DataManager(context, getProvider().getClass().getName(), layout);
+                try {
+                    return aux.doGetScanPlots(root, path);
+                } finally {
+                    aux.close();
+                }
             }
+        } catch (Exception ex){
+            logger.log(Level.INFO, null, ex);
         }
         return doGetScanPlots(root, path);
     }
