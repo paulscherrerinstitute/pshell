@@ -363,22 +363,22 @@ public class AreaDetector extends CameraBase {
         if (size1 == null) {
             size1 = 0;
         }
+        Integer size2 = arraySize2.getValue();
+        if (size2 == null) {
+            size2 = 0;
+        }
+        
 
         switch (mode) {
             case Mono:
+                if (size2>0){
+                    return new int[]{size0, size1, size2};
+                }
                 return new int[]{size0, size1};
             case RGB1: {
-                Integer size2 = arraySize2.getValue();
-                if (size2 == null) {
-                    size2 = 0;
-                }
                 return new int[]{size1, size2};
             }
             case RGB2: {
-                Integer size2 = arraySize2.getValue();
-                if (size2 == null) {
-                    size2 = 0;
-                }
                 return new int[]{size0, size2};
             }
             case RGB3:
@@ -386,7 +386,7 @@ public class AreaDetector extends CameraBase {
                 return new int[]{size0, size1};
         }
     }
-
+    
     @Override
     public void setGain(double value) throws IOException, InterruptedException {
         writeCtrl("Gain", value);

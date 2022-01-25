@@ -109,13 +109,13 @@ public abstract class CameraBase extends DeviceBase implements Camera {
     }
 
     protected CameraImageDescriptor doReadImageDescriptor() throws IOException, InterruptedException {
-        CameraImageDescriptor ret = new CameraImageDescriptor();
-        ret.dataType = getDataType();
-        ret.colorMode = getColorMode(); //Must be before image size, because image size register changes according to color mode
+        DataType dataType = getDataType();
+        ColorMode colorMode = getColorMode(); //Must be before image size, because image size register changes according to color mode
         int[] size = getImageSize();
-        ret.width = size[0];
-        ret.height = size[1];
-        return ret;
+        int width = size[0];
+        int height = size[1];
+        int stack = (size.length>2) ? size[2]:  1;
+        return new CameraImageDescriptor(colorMode, dataType, width, height, stack);
     }
 
     class BidimentionalImageRegister extends ReadonlyRegisterBase implements ReadonlyRegisterMatrix, ReadableCalibratedMatrix {

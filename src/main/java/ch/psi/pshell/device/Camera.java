@@ -2,6 +2,7 @@ package ch.psi.pshell.device;
 
 import ch.psi.pshell.device.Readable.ReadableMatrix;
 import ch.psi.pshell.device.ReadonlyRegister.ReadonlyRegisterArray;
+import ch.psi.utils.Convert;
 import java.io.IOException;
 
 /**
@@ -228,5 +229,12 @@ public interface Camera extends Device {
     public void stop() throws IOException, InterruptedException;
 
     public boolean isStarted() throws IOException, InterruptedException; //triggers state change events
-
+    
+    
+    public default Object takeStack() throws Exception {    
+        int[] size = getImageSize();
+        int depth = (size.length>2) ? size[2] : 1; 
+        Object array = getDataArray().take();
+        return Convert.reshape(array, new int[]{depth,size[1],size[0]});
+    }
 }
