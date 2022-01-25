@@ -16,6 +16,12 @@
 
 * UUID to data file attributes.
 
+* ProviderHDF5 gives access to JHDF5 Writer object.
+
+* Support HDF5 soft links
+
+* Support stack of images on AreaDetector
+
 * Template for processor plugins.
 
 * Option -tbar to add toolbars to detached panels.
