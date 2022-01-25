@@ -425,7 +425,7 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
                                         break;
                                     }
                                 }
-                            } else if (type.equals(Provider.INFO_VAL_TYPE_DATASET)) {
+                            } else if (type.equals(Provider.INFO_VAL_TYPE_DATASET) || type.equals(Provider.INFO_VAL_TYPE_SOFTLINK)) {
                                 menuAssign.setVisible(Context.getInstance().getScriptManager() != null);
                                 if (dataManager.isDisplayablePlot(info)) {
                                     menuConvert.removeAll();

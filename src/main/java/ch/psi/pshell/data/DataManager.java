@@ -1211,7 +1211,8 @@ public class DataManager implements AutoCloseable {
     public List<PlotDescriptor> getPlots(String root, String path) throws IOException {
         ArrayList<PlotDescriptor> ret = new ArrayList<>();
         Map<String, Object> info = getInfo(root, path);
-        if ((String.valueOf(info.get(Provider.INFO_TYPE)).equals(Provider.INFO_VAL_TYPE_DATASET))) {
+        String infoType = String.valueOf(info.get(Provider.INFO_TYPE));
+        if (infoType.equals(Provider.INFO_VAL_TYPE_DATASET) || infoType.equals(Provider.INFO_VAL_TYPE_SOFTLINK)) {
             DataSlice slice = getData(root, path);
             if (info.get(Provider.INFO_DATA_TYPE) == Provider.INFO_VAL_DATA_TYPE_COMPOUND) {
                 Object[][] sliceData = (Object[][]) slice.sliceData;
@@ -1424,18 +1425,20 @@ public class DataManager implements AutoCloseable {
     }
 
     public boolean isDisplayablePlot(Map<String, Object> info) {
-        if ((info != null)
-                && (String.valueOf(info.get(Provider.INFO_TYPE)).equals(Provider.INFO_VAL_TYPE_DATASET))
-                && (((Integer) info.get(Provider.INFO_RANK)) > 0)) {
-            String dataType = (String) info.get(Provider.INFO_DATA_TYPE);
-            if (dataType != null) {
-                switch (dataType) {
-                    case Provider.INFO_VAL_DATA_TYPE_COMPOUND:
-                    case Provider.INFO_VAL_DATA_TYPE_FLOAT:
-                    case Provider.INFO_VAL_DATA_TYPE_INTEGER:
-                    case Provider.INFO_VAL_DATA_TYPE_BITFIELD:
-                    case Provider.INFO_VAL_DATA_TYPE_BOOLEAN:
-                        return true;
+        if (info != null){
+            String infoType = String.valueOf(info.get(Provider.INFO_TYPE));
+            boolean isDataset = infoType.equals(Provider.INFO_VAL_TYPE_DATASET) || infoType.equals(Provider.INFO_VAL_TYPE_SOFTLINK);
+            if (isDataset && (((Integer) info.get(Provider.INFO_RANK)) > 0)) {
+                String dataType = (String) info.get(Provider.INFO_DATA_TYPE);
+                if (dataType != null) {
+                    switch (dataType) {
+                        case Provider.INFO_VAL_DATA_TYPE_COMPOUND:
+                        case Provider.INFO_VAL_DATA_TYPE_FLOAT:
+                        case Provider.INFO_VAL_DATA_TYPE_INTEGER:
+                        case Provider.INFO_VAL_DATA_TYPE_BITFIELD:
+                        case Provider.INFO_VAL_DATA_TYPE_BOOLEAN:
+                            return true;
+                    }
                 }
             }
         }

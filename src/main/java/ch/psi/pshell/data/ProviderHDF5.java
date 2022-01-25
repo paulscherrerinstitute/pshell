@@ -200,7 +200,10 @@ public class ProviderHDF5 implements Provider {
         IHDF5Reader reader = openReadOnly(root);
         try {
             HDF5LinkInformation info = reader.object().getLinkInformation(path);
-            return info.isDataSet();
+            if (info.isSoftLink()){
+                        
+            }
+            return info.isDataSet()|| info.isSoftLink();
         } finally {
             if ((reader != null) && (reader != writer)) {
                 reader.close();
@@ -226,7 +229,7 @@ public class ProviderHDF5 implements Provider {
         IHDF5Reader reader = openReadOnly(root);
         try {
             HDF5LinkInformation info = reader.object().getLinkInformation(path);
-            if (!info.isDataSet()) {
+            if (!info.isDataSet() && !info.isSoftLink()) {
                 return null;
             }
             HDF5DataSetInformation dsinfo = reader.object().getDataSetInformation(path);
@@ -295,7 +298,7 @@ public class ProviderHDF5 implements Provider {
         DataSlice ret = null;
         try {
             HDF5LinkInformation info = reader.object().getLinkInformation(path);
-            if (!info.isDataSet()) {
+            if (!info.isDataSet() && !info.isSoftLink()) {
                 return null;
             }
             HDF5DataSetInformation dsinfo = reader.object().getDataSetInformation(path);
@@ -478,8 +481,7 @@ public class ProviderHDF5 implements Provider {
             HDF5ObjectType type = info.getType();
             ret.put("Type", type);
             //ret.put("Size", reader.object().getSize(path));
-
-            if (info.isDataSet()) {
+            if (info.isDataSet()|| info.isSoftLink()) {
                 HDF5ObjectInformation objinfo = reader.object().getObjectInformation(path);
                 ret.put("Creation", Chrono.getTimeStr(objinfo.getCreationTime() * 1000, "dd/MM/YY HH:mm:ss"));
 

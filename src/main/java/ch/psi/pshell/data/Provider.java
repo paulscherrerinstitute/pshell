@@ -28,6 +28,7 @@ public interface Provider {
     public static final String INFO_VAL_TYPE_GROUP = "GROUP";
     public static final String INFO_VAL_TYPE_DATASET = "DATASET";
     public static final String INFO_VAL_TYPE_UNDEFINED = "NONEXISTENT";
+    public static final String INFO_VAL_TYPE_SOFTLINK = "SOFT_LINK";
 
     public static final String INFO_VAL_DATA_TYPE_STRING = "STRING";
     public static final String INFO_VAL_DATA_TYPE_FLOAT = "FLOAT";
