@@ -377,7 +377,7 @@ public class VersioningManager implements AutoCloseable {
 
     }
 
-    void commit(String message) {
+    public void commit(String message) {
         try {
             logger.info("Commit: " + message);
             git.commit().setMessage(message).call();
@@ -386,7 +386,7 @@ public class VersioningManager implements AutoCloseable {
         }
     }
 
-    void commitAll(String message) {
+    public void commitAll(String message) {
         try {
             logger.info("Commit all: " + message);
             git.commit().setAll(true).setMessage(message).call();
@@ -395,7 +395,7 @@ public class VersioningManager implements AutoCloseable {
         }
     }
 
-    void push(boolean allBranches, boolean force) {
+    public void push(boolean allBranches, boolean force) {
         try {
             logger.info("Push: allBranches=" + allBranches + " force=" + force);
             pushToUpstream(allBranches, force);
@@ -404,11 +404,11 @@ public class VersioningManager implements AutoCloseable {
         }
     }
 
-    void trackMaster() {
+    public void trackMaster() {
         trackBranch(MASTER_BRANCH);
     }
 
-    void trackBranch(String branch) {
+    public void trackBranch(String branch) {
         try {
             if (hasRemoteRepo()) {
                 logger.info("Branch create: " + branch);
@@ -421,7 +421,7 @@ public class VersioningManager implements AutoCloseable {
         }
     }
 
-    void cleanupRepository() throws Exception {
+    public void cleanupRepository() throws Exception {
         try {
             logger.info("Cleanup repository");
             Properties p = git.gc().call();
@@ -431,7 +431,7 @@ public class VersioningManager implements AutoCloseable {
         }
     }
 
-    List<DiffEntry> diff(ObjectId oldRevision, ObjectId newRevision) {
+    public List<DiffEntry> diff(ObjectId oldRevision, ObjectId newRevision) {
         try {
             ObjectReader reader = localRepo.newObjectReader();
             CanonicalTreeParser parser1 = new CanonicalTreeParser();
@@ -450,7 +450,7 @@ public class VersioningManager implements AutoCloseable {
         }
     }
 
-    List<DiffEntry> diff() {
+    public List<DiffEntry> diff() {
         try {
             //#This eventually fails returning empty
             //List<DiffEntry> diffs = git.diff().call();
@@ -470,7 +470,7 @@ public class VersioningManager implements AutoCloseable {
         }
     }
 
-    List<DiffEntry> diff(String file, ObjectId oldRevision, ObjectId newRevision) {
+    public List<DiffEntry> diff(String file, ObjectId oldRevision, ObjectId newRevision) {
 
         try {
             ObjectReader reader = localRepo.newObjectReader();
@@ -489,7 +489,7 @@ public class VersioningManager implements AutoCloseable {
         }
     }
 
-    List<DiffEntry> diffFile(String file) {
+    public List<DiffEntry> diffFile(String file) {
 
         try {
             List<DiffEntry> diffs = git.diff().setPathFilter(PathFilter.create(file)).call();
@@ -527,7 +527,7 @@ public class VersioningManager implements AutoCloseable {
         return oldTreeParser;
     }
 
-    String diffFile(String path, String oldRevision, String newRevision) throws Exception {
+    public String diffFile(String path, String oldRevision, String newRevision) throws Exception {
         try (OutputStream out = new ByteArrayOutputStream()) {
             AbstractTreeIterator oldTreeParser = prepareTreeParser(oldRevision);
             AbstractTreeIterator newTreeParser = prepareTreeParser(newRevision);
@@ -550,7 +550,7 @@ public class VersioningManager implements AutoCloseable {
         return localRepo.resolve(revision + "^{tree}");
     }
 
-    String getHeadRevisionNumber() throws Exception {
+    public String getHeadRevisionNumber() throws Exception {
         ArrayList<Revision> ret = new ArrayList<>();
         Iterable<RevCommit> logs = git.log().call();
 
@@ -613,7 +613,7 @@ public class VersioningManager implements AutoCloseable {
         });
     }
 
-    void startPush(final boolean allBranches, final boolean force) {
+    public void startPush(final boolean allBranches, final boolean force) {
         executorService.execute(() -> {
             push(allBranches, force);
         });
