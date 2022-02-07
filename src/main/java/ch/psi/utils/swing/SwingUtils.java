@@ -82,6 +82,7 @@ import javax.swing.event.AncestorEvent;
 import javax.swing.event.AncestorListener;
 import javax.swing.plaf.basic.BasicButtonUI;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.JTableHeader;
 import javax.swing.table.TableColumn;
 import javax.swing.text.AttributeSet;
 import javax.swing.text.Element;
@@ -1123,6 +1124,10 @@ public class SwingUtils {
     public static void setTabClosable(final JTabbedPane tabbedPane, int index, CloseableTabListener listener) {
         tabbedPane.setTabComponentAt(index, new CloseButtonTabComponent(tabbedPane, listener));
     }
+    
+    public static boolean isTabClosable(final JTabbedPane tabbedPane, int index) {
+        return (tabbedPane.getTabComponentAt(index) instanceof CloseButtonTabComponent);
+    }    
 
     //JTable
     public static boolean isCellVisible(JTable table, int rowIndex, int colIndex) {
@@ -1243,7 +1248,14 @@ public class SwingUtils {
             col.setCellEditor(cellEditor);            
         }
     }    
-
+    
+    public static void setColumTitle(JTable table, int columnIndex, String title) {
+        JTableHeader th = table.getTableHeader();
+        TableColumn tc = th.getColumnModel().getColumn(columnIndex);
+        tc.setHeaderValue(title);
+        th.repaint();    
+    }
+        
     //JTree
     public static void expandAll(JTree tree) {
         setAllTreeItemState(tree, new TreePath(tree.getModel().getRoot()), true);

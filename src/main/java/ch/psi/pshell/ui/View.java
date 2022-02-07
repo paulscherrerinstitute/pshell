@@ -1362,9 +1362,17 @@ public class View extends MainFrame {
         return null;
     }
 
-    Processor getRunningProcessor() {
-        return ((topLevelProcessor != null) && (topLevelProcessor.isExecuting())) ? topLevelProcessor : null;
+    public Processor getRunningProcessor() {
+        return getRunningProcessor(true);
     }
+
+    public Processor getRunningProcessor(boolean toplevel) {
+        if (toplevel){
+            return ((topLevelProcessor != null) && (topLevelProcessor.isExecuting())) ? topLevelProcessor : null;
+        } else {
+           return  ((currentProcessor != null) && (currentProcessor.isExecuting())) ? currentProcessor : null;
+        }
+    }   
 
     boolean isShowingExecutor() {
         Component selectedDocument = tabDoc.getSelectedComponent();
@@ -4354,11 +4362,15 @@ public class View extends MainFrame {
                 }
             }
             for (Processor processor : getProcessors()) {
-                if (tabDoc.indexOfComponent(processor.getPanel()) >= 0) {
-                    tabDoc.remove(processor.getPanel());
+                JPanel panel = processor.getPanel();
+                int index = tabDoc.indexOfComponent(panel);
+                if (index >= 0) {
+                    if (SwingUtils.isTabClosable(tabDoc, index)){
+                        tabDoc.remove(processor.getPanel());
+                    }
                 } else if (detachedScripts.containsValue(processor)) {
                     detachedScripts.values().removeIf(val -> val == processor);
-                    processor.getPanel().getTopLevelAncestor().setVisible(false);
+                    panel.getTopLevelAncestor().setVisible(false);
                 }
             }
         } catch (Exception ex) {

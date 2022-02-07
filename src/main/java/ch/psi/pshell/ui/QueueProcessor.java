@@ -4,6 +4,7 @@ import ch.psi.pshell.core.Context;
 import ch.psi.pshell.core.JsonSerializer;
 import ch.psi.pshell.ui.Task.QueueExecution;
 import ch.psi.pshell.ui.Task.QueueTask;
+import ch.psi.utils.Arr;
 import ch.psi.utils.IO;
 import ch.psi.utils.State;
 import ch.psi.utils.swing.ExtensionFileFilter;
@@ -46,11 +47,39 @@ import javax.swing.table.TableCellEditor;
  */
 public final class QueueProcessor extends PanelProcessor {
 
+    public static String DEFAULT_INFO_COLUMN = null;
+    
     String fileName;
-    final DefaultTableModel model;
+    DefaultTableModel model;
     boolean modified;
     Task.QueueExecution processingTask;
-    final int INDEX_STATUS = 4;  
+    public final int INDEX_ENABLED = 0;
+    public final int INDEX_FILE = 1;
+    public final int INDEX_ARGS = 2;
+    public final int INDEX_ON_ERROR = 3;
+    public final int INDEX_STATUS = 4;
+    public final int INDEX_INFO = 5;
+
+    String infoColumn;
+
+    DefaultTableModel createModel(String infoColumn) {
+        this.infoColumn = infoColumn;
+        String[] tit = new String[]{"Enabled", "File ", "Arguments", "On Error", "Status"};
+        Class[] types = new Class[]{java.lang.Boolean.class, java.lang.String.class, java.lang.String.class, java.lang.Object.class, java.lang.String.class, java.lang.String.class};
+        Boolean[] canEdit = new Boolean[]{true, true, true, true, false, false};
+        if (infoColumn != null) {
+            tit = Arr.append(tit, infoColumn);
+        }
+        return new DefaultTableModel(new Object[][]{}, tit) {
+            public Class getColumnClass(int columnIndex) {
+                return types[columnIndex];
+            }
+
+            public boolean isCellEditable(int rowIndex, int columnIndex) {
+                return canEdit[columnIndex];
+            }
+        };
+    }
 
     public QueueProcessor() {
         initComponents();
@@ -83,51 +112,106 @@ public final class QueueProcessor extends PanelProcessor {
 
                 if (!canImport(support)) {
                     return false;
-                }                      
+                }
 
                 try {
-                    JTable.DropLocation dl = (JTable.DropLocation)support.getDropLocation();
-                    String filename = (String) support.getTransferable().getTransferData(DataFlavor.stringFlavor);         
-                    addNewFile(filename, dl.getRow());                  
+                    JTable.DropLocation dl = (JTable.DropLocation) support.getDropLocation();
+                    String filename = (String) support.getTransferable().getTransferData(DataFlavor.stringFlavor);
+                    addNewFile(filename, dl.getRow());
                 } catch (Exception ex) {
                     return false;
-                }                
+                }
                 return true;
             }
 
         });
-               
+    }        
+
+    public void setTableInfoCol(String name) {
+        table.setModel(createModel(name));
+        model = (DefaultTableModel) table.getModel();
+        TableModelListener modelChartsListener = (TableModelEvent e) -> {
+            modified = true;
+        };
+        model.addTableModelListener(modelChartsListener);
+        initializeTable();
+        clear();
     }
-    
-    public void addNewFile(String filename){
+
+    public String getTableInfoCol() {
+        return infoColumn;
+    }
+
+    public void addNewFile(String filename) {
         addNewFile(filename, model.getRowCount());
     }
-    
-    public void addNewFile(String filename, int index){
-       addNewFile(filename,"", index);       
-    }
-    
-    public void addNewFile(String filename, String args){
-        addNewFile(filename,args, model.getRowCount());
-    }
-    
-    public void addNewFile(String filename, String args, int index){
-        for (String path : new String[]{Context.getInstance().getSetup().getScriptPath(), 
-                                        Context.getInstance().getSetup().getHomePath()}) {
-            if (IO.isSubPath(filename, path)) {
-                filename = IO.getRelativePath(filename, path);
-                break;
-            }
-        }        
-        Object[] data = new Object[]{true, filename, args, Task.QueueTaskErrorAction.Resume, ""};
-        model.insertRow(index, data);
-        model.fireTableDataChanged();        
-        table.getSelectionModel().setSelectionInterval(index, index);
-        updateButtons();  
-    }    
-    
-    public void initializeTable() {
 
+    public void addNewFile(String filename, int index) {
+        addNewFile(filename, "", index);
+    }
+
+    public void addNewFile(String filename, String args) {
+        addNewFile(filename, args, model.getRowCount());
+    }
+
+    public void addNewFile(String filename, String args, int index) {
+        addNewFile(filename, args, index, null);
+    }
+
+    public void addNewFile(String filename, String args, String info) {
+        addNewFile(filename, args, model.getRowCount(), info);
+    }
+
+    public void addNewFile(String filename, String args, int index, String info) {
+        if (filename != null) {
+            for (String path : new String[]{Context.getInstance().getSetup().getScriptPath(),
+                Context.getInstance().getSetup().getHomePath()}) {
+                if (IO.isSubPath(filename, path)) {
+                    filename = IO.getRelativePath(filename, path);
+                    break;
+                }
+            }
+        }
+        Object[] data = new Object[]{true, filename, args, Task.QueueTaskErrorAction.Resume, ""};
+        if ((info != null) && (getTableInfoCol() != null)) {
+            data = Arr.append(data, info);
+        }
+        model.insertRow(index, data);
+        model.fireTableDataChanged();
+        table.getSelectionModel().setSelectionInterval(index, index);
+        updateButtons();
+    }
+
+    public JTable getTable() {
+        return table;
+    }
+
+    public DefaultTableModel getModel() {
+        return model;
+    }
+
+    public void setTableTitle(int column, String title) {
+        SwingUtils.setColumTitle(table, column, title);
+    }
+
+    public String getTableTitle(int column) {
+        return model.getColumnName(column);
+    }
+    
+    public String getRowInfo(int row){
+        if (getTableInfoCol()==null){
+            return null;
+        }
+        return (String) model.getValueAt(row, INDEX_INFO);
+    }
+
+    public void setRowInfo(int row, String info){
+        if (getTableInfoCol()!=null){
+            model.setValueAt(info, row, INDEX_INFO);
+        }
+    }
+
+    public void initializeTable() {
         class FileEditorPanel extends JPanel {
 
             private final JTextField field = new JTextField();
@@ -136,7 +220,7 @@ public final class QueueProcessor extends PanelProcessor {
                 public void actionPerformed(ActionEvent e) {
                     try {
                         JFileChooser chooser = new JFileChooser(Context.getInstance().getSetup().getScriptPath());
-                        chooser.addChoosableFileFilter(new ExtensionFileFilter("Script files (*." + Context.getInstance().getScriptType().getExtension() + ")", 
+                        chooser.addChoosableFileFilter(new ExtensionFileFilter("Script files (*." + Context.getInstance().getScriptType().getExtension() + ")",
                                 new String[]{String.valueOf(Context.getInstance().getScriptType().getExtension())}));
                         HashMap<FileNameExtensionFilter, Processor> processors = new HashMap<>();
                         for (Processor processor : Processor.getServiceProviders()) {
@@ -147,7 +231,7 @@ public final class QueueProcessor extends PanelProcessor {
                         chooser.setAcceptAllFileFilterUsed(true);
                         String filename = field.getText().trim();
                         File file = QueueTask.getFile(filename);
-                        if (filename!=null) {
+                        if (filename != null) {
                             chooser.setSelectedFile(file);
                         }
                         int rVal = chooser.showOpenDialog(QueueProcessor.this);
@@ -221,9 +305,8 @@ public final class QueueProcessor extends PanelProcessor {
                 return false;
             }
         }
-        table.getColumnModel().getColumn(1).setCellEditor(new FileEditor());
+        table.getColumnModel().getColumn(INDEX_FILE).setCellEditor(new FileEditor());
 
-        
         class ParsEditorPanel extends JPanel {
 
             private final JTextField field = new JTextField();
@@ -231,20 +314,20 @@ public final class QueueProcessor extends PanelProcessor {
                 @Override
                 public void actionPerformed(ActionEvent e) {
                     try {
-                        QueueParsDialog dlg = new QueueParsDialog(getFrame(),true);
+                        QueueParsDialog dlg = new QueueParsDialog(getFrame(), true);
                         dlg.setLocationRelativeTo(QueueProcessor.this);
                         dlg.setText(field.getText());
                         dlg.setVisible(true);
                         if (dlg.getResult()) {
                             field.setText(dlg.getText());
-                            
+
                             TableCellEditor editor = table.getCellEditor();
                             if (editor != null) {
                                 editor.stopCellEditing();
                             }
                             model.fireTableDataChanged();
-                        }                            
-                        
+                        }
+
                     } catch (Exception ex) {
                         showException(ex);
                     }
@@ -286,7 +369,7 @@ public final class QueueProcessor extends PanelProcessor {
             @Override
             public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
                 editor.field.setText((String) value);
-                editor.button.setVisible(!(String.valueOf(model.getValueAt(row, 1))).trim().isEmpty());                
+                editor.button.setVisible(!(String.valueOf(model.getValueAt(row, INDEX_FILE))).trim().isEmpty());
                 return editor;
             }
 
@@ -309,9 +392,9 @@ public final class QueueProcessor extends PanelProcessor {
                 return false;
             }
         }
-        table.getColumnModel().getColumn(2).setCellEditor(new ParsEditor());        
-        
-        SwingUtils.setEnumTableColum(table, 3, Task.QueueTaskErrorAction.class);
+        table.getColumnModel().getColumn(INDEX_ARGS).setCellEditor(new ParsEditor());
+
+        SwingUtils.setEnumTableColum(table, INDEX_ON_ERROR, Task.QueueTaskErrorAction.class);
         updateButtons();
     }
 
@@ -350,10 +433,10 @@ public final class QueueProcessor extends PanelProcessor {
     public void execute() throws Exception {
         ArrayList<QueueTask> queue = new ArrayList<>();
         for (int i = 0; i < model.getRowCount(); i++) {
-            Boolean enabled = (Boolean) model.getValueAt(i, 0);
-            String filename = (String) model.getValueAt(i, 1);
-            String args = (String) model.getValueAt(i, 2);
-            Task.QueueTaskErrorAction errorAction = Task.QueueTaskErrorAction.valueOf(String.valueOf(model.getValueAt(i, 3)));
+            Boolean enabled = (Boolean) model.getValueAt(i, INDEX_ENABLED);
+            String filename = (String) model.getValueAt(i, INDEX_FILE);
+            String args = (String) model.getValueAt(i, INDEX_ARGS);
+            Task.QueueTaskErrorAction errorAction = Task.QueueTaskErrorAction.valueOf(String.valueOf(model.getValueAt(i, INDEX_ON_ERROR)));
             queue.add(QueueTask.newInstance(enabled, filename, args, errorAction));
 
         }
@@ -361,7 +444,7 @@ public final class QueueProcessor extends PanelProcessor {
             @Override
             public void onStartTask(QueueTask task, int index) {
                 if ((index >= 0) && (index < model.getRowCount())) {
-                    table.getColumnModel().getColumn(1).getCellEditor().cancelCellEditing();
+                    table.getColumnModel().getColumn(INDEX_FILE).getCellEditor().cancelCellEditing();
                     table.getSelectionModel().setSelectionInterval(index, index);
                     model.setValueAt(task.enabled ? "Running" : "Disabled", index, INDEX_STATUS);
                 }
@@ -407,7 +490,7 @@ public final class QueueProcessor extends PanelProcessor {
     public void abort() throws InterruptedException {
         if (processingTask != null) {
             processingTask.abort();
-        }        
+        }
         Context.getInstance().abort();
     }
 
@@ -427,13 +510,17 @@ public final class QueueProcessor extends PanelProcessor {
         Object[][][] vector = (Object[][][]) JsonSerializer.decode(json, Object[][][].class);
 
         Object[][] tableData = vector[0];
-        for (int i = 0; i < tableData.length; i++) {            
+        for (int i = 0; i < tableData.length; i++) {
+            Object info = (tableData[i].length > 5) ? tableData[i][5] : null;
             tableData[i] = new Object[]{
                 tableData[i][0],
                 tableData[i][1],
                 tableData[i][2],
                 Task.QueueTaskErrorAction.valueOf(String.valueOf(tableData[i][3])),
                 ""};
+            if ((info!=null) && (getTableInfoCol()!=null)){
+                tableData[i] = Arr.append(tableData[i], info);
+            }
 
         }
         model.setDataVector(tableData, SwingUtils.getTableColumnNames(table));
@@ -451,7 +538,7 @@ public final class QueueProcessor extends PanelProcessor {
         this.fileName = fileName;
         modified = false;
     }
-    
+
     @Override
     public void clear() {
         model.setRowCount(0);
@@ -472,7 +559,6 @@ public final class QueueProcessor extends PanelProcessor {
     public boolean createMenuNew() {
         return true;
     }
-    
 
     @Override
     public boolean canStep() {
@@ -484,29 +570,28 @@ public final class QueueProcessor extends PanelProcessor {
         if (processingTask != null) {
             Logger.getLogger(QueueProcessor.class.getName()).warning("Skipping task: " + processingTask.getCurrentIndex());
             processingTask.skip();
- 
-       }
-    }    
-    
-    
+
+        }
+    }
+
     private void checkPopup(MouseEvent e) {
         try {
             if (e.isPopupTrigger()) {
                 int row = table.rowAtPoint(e.getPoint());
                 if (row >= 0 && row < table.getRowCount()) {
                     table.setRowSelectionInterval(row, row);
-                    File file = QueueTask.getFile(String.valueOf(model.getValueAt(table.getSelectedRow(), 1)));                      
+                    File file = QueueTask.getFile(String.valueOf(model.getValueAt(table.getSelectedRow(), 1)));
                     JPopupMenu popupMenu = new JPopupMenu();
-                    JMenuItem menuOpen = new JMenuItem("Open File");            
-                    menuOpen.addActionListener((evt)->{
-                       try {
+                    JMenuItem menuOpen = new JMenuItem("Open File");
+                    menuOpen.addActionListener((evt) -> {
+                        try {
                             App.getInstance().getMainFrame().openScriptOrProcessor(file.getCanonicalPath());
-                       } catch (Exception ex) {
-                           showException(ex);
-                       }
+                        } catch (Exception ex) {
+                            showException(ex);
+                        }
                     });
-                    popupMenu.add(menuOpen);                                            
-                    menuOpen.setEnabled((file!=null) && (file.exists()));
+                    popupMenu.add(menuOpen);
+                    menuOpen.setEnabled((file != null) && (file.exists()));
                     popupMenu.show(e.getComponent(), e.getX(), e.getY());
                 }
             }
@@ -514,7 +599,7 @@ public final class QueueProcessor extends PanelProcessor {
             showException(ex);
         }
 
-    } 
+    }
 
     /**
      * This method is called from within the constructor to initialize the form.
@@ -532,29 +617,7 @@ public final class QueueProcessor extends PanelProcessor {
         buttonInsert = new javax.swing.JButton();
         buttonDelete = new javax.swing.JButton();
 
-        table.setModel(new javax.swing.table.DefaultTableModel(
-            new Object [][] {
-
-            },
-            new String [] {
-                "Enabled", "File ", "Arguments", "On Error", "Status"
-            }
-        ) {
-            Class[] types = new Class [] {
-                java.lang.Boolean.class, java.lang.String.class, java.lang.String.class, java.lang.Object.class, java.lang.String.class
-            };
-            boolean[] canEdit = new boolean [] {
-                true, true, true, true, false
-            };
-
-            public Class getColumnClass(int columnIndex) {
-                return types [columnIndex];
-            }
-
-            public boolean isCellEditable(int rowIndex, int columnIndex) {
-                return canEdit [columnIndex];
-            }
-        });
+        table.setModel(createModel(DEFAULT_INFO_COLUMN));
         table.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
         table.getTableHeader().setReorderingAllowed(false);
         table.addMouseListener(new java.awt.event.MouseAdapter() {
@@ -662,7 +725,7 @@ public final class QueueProcessor extends PanelProcessor {
         int index;
         if (table.getSelectedRow() >= 0) {
             index = table.getSelectedRow() + 1;
-            model.insertRow(index, data);            
+            model.insertRow(index, data);
         } else {
             model.addRow(data);
             index = model.getRowCount();
