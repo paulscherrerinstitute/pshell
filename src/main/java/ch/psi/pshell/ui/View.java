@@ -4933,7 +4933,18 @@ public class View extends MainFrame {
                 String session = name.isBlank() ? String.valueOf(id) : String.valueOf(id) + "-" + name;
                 
                 //If no session data cancels this session instead of completing
-                if (context.getSessionManager().getNumberRuns()==0){
+                int numberRuns=0;
+                try{
+                    numberRuns = context.getSessionManager().getNumberRuns();
+                } catch (IOException ex) {
+                    String msg = String.format("Cannot access current session folder to close it consistently.\nAbort the current session?", session);
+                    if (SwingUtils.showOption(this, "Session", msg , OptionType.YesNo) == OptionResult.Yes) {
+                        context.getSessionManager().abort();                    
+                    }
+                    return;
+                }
+                
+                if (numberRuns==0){
                     String msg = String.format("Do you want to cancel session %s with no runs?", session);
                     if (SwingUtils.showOption(this, "Session", msg , OptionType.YesNo) == OptionResult.Yes) {
                         context.getSessionManager().cancel();                    

@@ -222,6 +222,7 @@ public class SessionManager extends ObservableBase<SessionManager.SessionManager
         }
     }
 
+    //Stop current session and restore previous session id (i f no run has been executed)
     public void cancel() throws IOException {
         if (isStarted() && (getNumberRuns() == 0)) {
             int sessionId = getCurrentSession();
@@ -236,6 +237,14 @@ public class SessionManager extends ObservableBase<SessionManager.SessionManager
         }
     }
     
+    //Stop current session leaving the database in inconsistent state
+    public void abort() throws IOException {
+        if (isStarted()) {
+            setCurrentSession(null);
+            triggerChanged(getCurrentSession(), ChangeType.STATE);
+        }
+    }
+
     public void move(int id, List<String> data, int destination) throws IOException { 
         Map<String, Object> metadata = getMetadata(id);
         Map<String, Object> info = getMetadata(id);
