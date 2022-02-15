@@ -5,6 +5,7 @@ import ch.psi.pshell.core.Context;
 import ch.psi.pshell.data.DataManager;
 import ch.psi.utils.IO;
 import ch.psi.utils.IO.FilePermissions;
+import ch.psi.utils.Sys;
 import ch.psi.utils.State;
 import ch.psi.utils.swing.SwingUtils;
 import java.io.File;
@@ -207,9 +208,9 @@ public interface Processor extends Executor {
                 Logger.getLogger(Processor.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
-        for (Processor processor : ServiceLoader.load(Processor.class)) {
+        for (Processor processor : ServiceLoader.load(Processor.class, Sys.getClassLoader())) {
             ret.add(processor);
-        }
+        }        
         return ret;
 
     }

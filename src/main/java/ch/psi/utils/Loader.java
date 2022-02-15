@@ -1,22 +1,17 @@
 package ch.psi.utils;
 
-import java.io.File;
-import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.URLClassLoader;
 import java.util.ArrayList;
 
 /**
  * Dynamic loading of .class or .jar files.
  */
-public class Loader {
-
-    public static Class loadClass(URLClassLoader classLoader, String className) throws ClassNotFoundException {
+public class Loader {          
+    
+    public static Class loadClass(ClassLoader classLoader, String className) throws ClassNotFoundException {
         return classLoader.loadClass(className);
     }
 
-    public static Class loadClass(String fileName) throws IllegalArgumentException, MalformedURLException, ClassNotFoundException {
+    public static Class loadClass(String fileName) throws Exception {
         String extension = IO.getExtension(fileName);
         String cls = IO.getPrefix(fileName);
         String folder = IO.getFolder(fileName);
@@ -24,12 +19,11 @@ public class Loader {
         if (!extension.toLowerCase().equals("class")) {
             throw new IllegalArgumentException(fileName);
         }
-
-        URLClassLoader classLoader = newClassLoader(new String[]{folder});
-        return loadClass(classLoader, cls);
+        Sys.addToClassPath(folder);
+        return loadClass(Sys.getClassLoader(), cls);
     }
 
-    public static Class[] loadJar(String fileName) throws MalformedURLException, ClassNotFoundException, IOException {
+    public static Class[] loadJar(String fileName) throws Exception {
         String extension = IO.getExtension(fileName);
 
         if (!extension.toLowerCase().equals("jar")) {
@@ -45,20 +39,11 @@ public class Loader {
                 classes.add(file);
             }
         }
-        URLClassLoader classLoader = newClassLoader(new String[]{fileName});
+        Sys.addToClassPath(fileName);
         Class[] ret = new Class[classes.size()];
         for (int i = 0; i < classes.size(); i++) {
-            ret[i] = loadClass(classLoader, classes.get(i));
+            ret[i] = loadClass(Sys.getClassLoader(), classes.get(i));
         }
         return ret;
-    }
-
-    public static URLClassLoader newClassLoader(String[] folderNames) throws MalformedURLException {
-        URL[] urls = new URL[folderNames.length];
-        for (int i = 0; i < folderNames.length; i++) {
-            urls[i] = new File(folderNames[i]).toURI().toURL();
-        }
-        URLClassLoader classLoader = new URLClassLoader(urls);
-        return classLoader;
     }
 }

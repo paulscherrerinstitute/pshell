@@ -8,6 +8,7 @@ import java.lang.management.ManagementFactory;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.net.InetAddress;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
@@ -150,32 +151,70 @@ public class Sys {
         }
     }    
  
+        
+    public static MyClassLoader newClassLoader(String[] folderNames) throws MalformedURLException {
+        URL[] urls = new URL[folderNames.length];
+        for (int i = 0; i < folderNames.length; i++) {
+            urls[i] = new File(folderNames[i]).toURI().toURL();
+        }
+        MyClassLoader classLoader = new  MyClassLoader(urls);
+        return classLoader;
+    }
+    
+    static class MyClassLoader extends URLClassLoader {
+        public MyClassLoader(URL[] urls) {
+            super(urls);
+        }
+        
+        public MyClassLoader(URL[] urls, ClassLoader parent) {
+            super(urls, parent);
+        }
+
+        @Override
+        public void addURL(URL url) {
+            super.addURL(url);
+        }
+    }
+    static final ClassLoader classLoader =  (Sys.getJavaVersion()>=14) ? new MyClassLoader(new URL[0]) : ClassLoader.getSystemClassLoader();
+    
+    public static ClassLoader getClassLoader(){        
+        return classLoader;       
+    }
+    
+    public static void addToClassPath(File file)  throws Exception {        
+        addToClassPath(file.getPath());
+    }
 
     public static void addToClassPath(String path) throws Exception {        
         String[] classPath = getClassPath();
         if (!Arr.containsEqual(classPath, path)){  
             File f = new File(path);
-            URL u = f.toURI().toURL();
-            if (Sys.getJavaVersion()>=10){                
-                try{
-                    Field field = ClassLoader.getSystemClassLoader().getClass().getDeclaredField("ucp");
-                    field.setAccessible(true);
-                    final Object ucp = field.get(ClassLoader.getSystemClassLoader());
-                    Method method = ucp.getClass().getDeclaredMethod("addFile", new Class[]{String.class});
+            if (f.exists()){
+                URL u = f.toURI().toURL();
+                if (Sys.getJavaVersion()<10){
+                    URLClassLoader urlClassLoader = (URLClassLoader) ClassLoader.getSystemClassLoader();
+                    Class urlClass = URLClassLoader.class;
+                    Method method = urlClass.getDeclaredMethod("addURL", new Class[]{URL.class});
                     method.setAccessible(true);
-                    method.invoke(ucp, new Object[]{path});        
-                    
-                     //Just to keep track, java.class.path is not parsed again by classloader.
+                    method.invoke(urlClassLoader, new Object[]{u});                     
+                } else {                    
+                    if (Sys.getJavaVersion()>=14){   
+                        ((MyClassLoader)classLoader).addURL(u);
+                    } else {                
+                        try{
+                            Field field = ClassLoader.getSystemClassLoader().getClass().getDeclaredField("ucp");
+                            field.setAccessible(true);
+                            final Object ucp = field.get(ClassLoader.getSystemClassLoader());
+                            Method method = ucp.getClass().getDeclaredMethod("addFile", new Class[]{String.class});
+                            method.setAccessible(true);
+                            method.invoke(ucp, new Object[]{path});        
+                        } catch (RuntimeException ex){
+                            System.err.println("Java>=10 requires the option '--add-opens java.base/jdk.internal.loader=ALL-UNNAMED' to add to classpath: " + path);
+                        }
+                    } 
+                    //Just to keep track, java.class.path is not parsed again by classloader.
                     System.setProperty("java.class.path", String.join(File.pathSeparator, Arr.append(classPath, path)));
-                } catch (RuntimeException ex){
-                    System.err.println("Java>=10 requires the option '--add-opens java.base/jdk.internal.loader=ALL-UNNAMED' to add to classpath: " + path);
                 }
-            } else {      
-                URLClassLoader urlClassLoader = (URLClassLoader) ClassLoader.getSystemClassLoader();
-                Class urlClass = URLClassLoader.class;
-                Method method = urlClass.getDeclaredMethod("addURL", new Class[]{URL.class});
-                method.setAccessible(true);
-                method.invoke(urlClassLoader, new Object[]{u});         
             }
         }
     }

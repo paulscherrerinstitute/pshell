@@ -3673,7 +3673,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
     @Hidden
     public Class getClassByName(String className) throws ClassNotFoundException {
         try {
-            return Class.forName(className);
+            return Class.forName(className, true, Sys.getClassLoader());
         } catch (ClassNotFoundException ex) {
             if (pluginManager != null) {
                 Class cls = pluginManager.getDynamicClass(className);

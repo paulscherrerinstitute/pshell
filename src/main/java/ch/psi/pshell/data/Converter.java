@@ -2,6 +2,7 @@ package ch.psi.pshell.data;
 
 import ch.psi.pshell.core.Context;
 import ch.psi.utils.IO;
+import ch.psi.utils.Sys;
 import ch.psi.utils.Threading;
 import ch.psi.utils.swing.ExtensionFileFilter;
 import java.awt.Component;
@@ -82,7 +83,7 @@ public interface Converter {
                 Logger.getLogger(Converter.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
-        for (Converter importer : ServiceLoader.load(Converter.class)) {
+        for (Converter importer : ServiceLoader.load(Converter.class, Sys.getClassLoader())) {
             ret.add(importer);
         }
         return ret;

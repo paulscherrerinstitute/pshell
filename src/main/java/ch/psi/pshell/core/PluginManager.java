@@ -10,10 +10,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.lang.reflect.Modifier;
-import java.net.URL;
-import java.net.URLClassLoader;
 import java.nio.file.NoSuchFileException;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -107,7 +104,7 @@ public class PluginManager implements AutoCloseable {
     //Public interface: adding plugins before context starts
     public Plugin loadPluginClass(String className) {
         try {
-            Class c = Class.forName(className);
+            Class c = Class.forName(className, true, Sys.getClassLoader());
             return loadPluginClass(c, null);
         } catch (Exception ex) {
             logger.warning("Error resolving plugin class: " + className + " - " + ex.getMessage());
@@ -374,12 +371,13 @@ public class PluginManager implements AutoCloseable {
             JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
             if (compiler == null) {
                 throw new Exception("Java compiler is not present");
-            }
+            }            
             if (compiler.run(null, System.out, System.err, file.getPath()) == 0) {
                 // Load and instantiate compiled class.
                 File location = (file.getParentFile() == null) ? new File(".") : file.getParentFile();
-                URLClassLoader classLoader = URLClassLoader.newInstance(new URL[]{location.toURI().toURL()});
-                cls = Class.forName(IO.getPrefix(file), true, classLoader);
+                //URLClassLoader classLoader = URLClassLoader.newInstance(new URL[]{location.toURI().toURL()});
+                Sys.addToClassPath(location);
+                cls = Class.forName(IO.getPrefix(file), true, Sys.getClassLoader());
             } else {
                 throw new Exception("Error compiling plugin: " + file);
             }

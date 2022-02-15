@@ -1,5 +1,6 @@
 package ch.psi.pshell.ui;
 
+import ch.psi.utils.Sys;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.ServiceLoader;
@@ -38,7 +39,7 @@ public interface Importer {
                 Logger.getLogger(Importer.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
-        for (Importer importer : ServiceLoader.load(Importer.class)) {
+        for (Importer importer : ServiceLoader.load(Importer.class, Sys.getClassLoader())) {
             ret.add(importer);
         }
         return ret;
