@@ -20,7 +20,8 @@ public class DispatcherAPI extends DataAPI{
         super(url);
     }
 
-    public List<Map<String, Object>> queryNames(String regex, String[] backends, Ordering ordering, Boolean reload) throws IOException {
+    //public List<Map<String, Object>> queryNames(String regex, String[] backends, Ordering ordering, Boolean reload) throws IOException {
+    public List<String> queryNames(String regex, String[] backends, Ordering ordering, Boolean reload) throws IOException {
         Map<String, Object> data = new HashMap<>();
         data.put("regex", regex);
         if (ordering != null) {
@@ -36,12 +37,7 @@ public class DispatcherAPI extends DataAPI{
         WebTarget resource = client.target(url + "/channels/live");
         Response r = resource.request().accept(MediaType.APPLICATION_JSON).post(Entity.json(json));
         json = r.readEntity(String.class);
-        List<Map<String, Object>> ret = (List) JsonSerializer.decode(json, List.class);
-        return ret;
-    }
-
-    public List<String> queryNames(String regex, String backend, Ordering ordering, Boolean reload) throws IOException {
-        List<Map<String, Object>> query = queryNames(regex, (backend == null) ? null : new String[]{backend}, ordering, reload);
+        List<Map<String, Object>> query = (List) JsonSerializer.decode(json, List.class);
         List<Map> list = (List<Map>) query.get(0).get("channels");
         List<String> ret = new ArrayList<>();
         for (Map map : list){
@@ -49,6 +45,9 @@ public class DispatcherAPI extends DataAPI{
         }
         return ret;
     }
-    
+
+    public List<String> queryNames(String regex, String backend, Ordering ordering, Boolean reload) throws IOException {
+        return queryNames(regex, (backend == null) ? null : new String[]{backend}, ordering, reload);
+    }    
     
 }

@@ -13,21 +13,16 @@ import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.jackson.JacksonFeature;
 
 /**
- * Access to EPICS Boot info
- * https://intranet.psi.ch/wiki/bin/viewauth/Controls_IT/EpicsBootInfo
+ * Access to IOC info
+ * http://iocinfo.psi.ch/swagger-ui.html#!/iocinfo45query45controller/findRecordsUsingGET
  */
-public class EpicsBootInfoAPI implements ChannelQueryAPI{
+public class IocInfoAPI implements ChannelQueryAPI{
 
     final String url;
     final Client client;
 
-    public enum Ordering {
-        none,
-        asc,
-        desc
-    }
-
-    public EpicsBootInfoAPI(String url) {
+    
+    public IocInfoAPI(String url) {
         if (!url.contains("://")) {
             url = "http://" + url;
         }       
@@ -43,29 +38,30 @@ public class EpicsBootInfoAPI implements ChannelQueryAPI{
         return url;
     }
 
-    public List<Map<String, Object>> query(String text, String facility, String match, Integer limit) throws IOException {
+    public List<Map<String, Object>> query(String text, String facility, boolean regex, Integer limit) throws IOException {
         
-        WebTarget resource = client.target(url + "/find-channel.aspx/" + text);
-        if (match != null) {
-            resource = resource.queryParam("match", match); //exact, regex, substring
-        }        
+        WebTarget resource = client.target(url + "/records");
         if (facility != null) {
             resource = resource.queryParam("facility", facility); //"swissfel", "sls" ...
         }
         if (limit != null) {
             resource = resource.queryParam("limit", limit);
         }        
+        if (!regex){
+            text=".*" +text + ".*";
+        }
+        resource = resource.queryParam("pattern", text);
         Response r = resource.request().accept(MediaType.APPLICATION_JSON).get();
         String json = r.readEntity(String.class);
         List<Map<String, Object>> ret = (List) JsonSerializer.decode(json, List.class);
         return ret;
     }
     
-    public List<String> queryNames(String regex, String facility, String match, Integer limit) throws IOException {
-        List list = query(regex, facility, match, limit);
+    public List<String> queryNames(String text, String facility, boolean regex, Integer limit) throws IOException {
+        List list = query(text, facility, regex, limit);
         for (int i =0; i< list.size(); i++){
             try{
-                list.set(i, ((Map)list.get(i)).get("Channel"));
+                list.set(i, ((Map)list.get(i)).get("name"));
             } catch (Exception ex){
                 
             }
@@ -75,6 +71,7 @@ public class EpicsBootInfoAPI implements ChannelQueryAPI{
 
     @Override
     public List<String> queryChannels(String text, String backend, int limit) throws IOException {
-        return queryNames(text, backend, "substring", limit);
+        return queryNames(text, backend, false, limit);
     }
+    
 }

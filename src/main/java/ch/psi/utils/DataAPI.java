@@ -17,11 +17,11 @@ import org.glassfish.jersey.jackson.JacksonFeature;
 /**
  * Access to DataAPI service, which performs queries on the DataBuffer
  */
-public class DataAPI {
+public class DataAPI implements ChannelQueryAPI {
 
     final String url;
     final Client client;
-
+    
     public enum Ordering {
         none,
         asc,
@@ -44,7 +44,8 @@ public class DataAPI {
         return url;
     }
 
-    public List<Map<String, Object>> queryNames(String regex, String[] backends, Ordering ordering, Boolean reload) throws IOException {
+    //public List<Map<String, Object>> queryNames(String regex, String[] backends, Ordering ordering, Boolean reload) throws IOException {
+    public List<String> queryNames(String regex, String[] backends, Ordering ordering, Boolean reload) throws IOException {
         Map<String, Object> data = new HashMap<>();
         data.put("regex", regex);
         if (ordering != null) {
@@ -60,13 +61,15 @@ public class DataAPI {
         WebTarget resource = client.target(url + "/channels");
         Response r = resource.request().accept(MediaType.APPLICATION_JSON).post(Entity.json(json));
         json = r.readEntity(String.class);
-        List<Map<String, Object>> ret = (List) JsonSerializer.decode(json, List.class);
+        //List<Map<String, Object>> ret = (List) JsonSerializer.decode(json, List.class);
+        List<String> ret = (List) JsonSerializer.decode(json, List.class);
         return ret;
     }
 
     public List<String> queryNames(String regex, String backend, Ordering ordering, Boolean reload) throws IOException {
-        List<Map<String, Object>> ret = queryNames(regex, (backend == null) ? null : new String[]{backend}, ordering, reload);
-        return (List<String>) ret.get(0).get("channels");
+        //List<Map<String, Object>> ret = queryNames(regex, (backend == null) ? null : new String[]{backend}, ordering, reload);
+        //return (List<String>) ret.get(0).get("channels");
+        return  queryNames(regex, (backend == null) ? null : new String[]{backend}, ordering, reload);
     }
     
 
@@ -99,6 +102,13 @@ public class DataAPI {
         json = r.readEntity(String.class);
         List<Map<String, Object>> ret = (List) JsonSerializer.decode(json, List.class);
         return ret;
+    }
+    
+    
+
+    @Override
+    public List<String> queryChannels(String text, String backend, int limit) throws IOException{
+        return queryNames(text, backend, DataAPI.Ordering.desc, Boolean.FALSE);
     }
     
 }

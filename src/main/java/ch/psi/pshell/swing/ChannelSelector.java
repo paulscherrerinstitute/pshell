@@ -8,6 +8,7 @@ import ch.psi.pshell.ui.App;
 import ch.psi.utils.EpicsBootInfoAPI;
 import ch.psi.utils.Arr;
 import ch.psi.utils.History;
+import ch.psi.utils.IocInfoAPI;
 import ch.psi.utils.Sys;
 import ch.psi.utils.swing.MonitoredPanel;
 import ch.psi.utils.swing.SwingUtils;
@@ -16,6 +17,7 @@ import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Collections;
 import java.util.List;
@@ -28,14 +30,16 @@ import javax.swing.JFrame;
 import javax.swing.JList;
 import javax.swing.JScrollPane;
 import javax.swing.text.JTextComponent;
+import ch.psi.utils.ChannelQueryAPI;
 
 /**
  *
  */
 public class ChannelSelector extends MonitoredPanel {
 
-    DataAPI dataApi;
-    EpicsBootInfoAPI epicsApi;
+    //DataAPI dataApi;
+    //EpicsBootInfoAPI epicsApi;
+    ChannelQueryAPI channelNameSource;
     PipelineServer pipelineServer;
     final AtomicBoolean updating;
     int historySize;
@@ -55,6 +59,7 @@ public class ChannelSelector extends MonitoredPanel {
         DataAPI,
         DispatcherAPI,
         Epics,
+        IocInfo,
         Camera
     }
 
@@ -90,18 +95,29 @@ public class ChannelSelector extends MonitoredPanel {
     }
 
     public void configure(Type type, String url, String backend, int limit) {
-        dataApi = null;
-        epicsApi = null;
+        channelNameSource = null;
         this.url = url;
         this.backend = backend;
         this.limit = limit;
         this.type = type;
         if (type == Type.Epics) {
-            epicsApi = new EpicsBootInfoAPI(url);
+            channelNameSource = new EpicsBootInfoAPI(url);
+        } else if (type == Type.IocInfo) {
+            channelNameSource = new IocInfoAPI( url);
         } else if (type == Type.Camera) {
             pipelineServer = new PipelineServer(null, url);
+            channelNameSource = new ChannelQueryAPI() {
+                @Override
+                public List<String> queryChannels(String text, String backend, int limit) throws IOException {
+                     List<String> ret = pipelineServer.getInstances();
+                    Collections.sort(ret);
+                    return ret;
+
+                }
+            };
+            
         } else {
-            dataApi = (type == Type.DataAPI) ? new DataAPI(url) : new DispatcherAPI(url);
+            channelNameSource = (type == Type.DataAPI) ? new DataAPI(url) : new DispatcherAPI(url);
         }
     }
 
@@ -302,20 +318,10 @@ public class ChannelSelector extends MonitoredPanel {
                 setData(null);
             } else {
                 try {
-                    List<String> ret = null;
-                    if (type == Type.Epics) {
-                        ret = epicsApi.queryNames(str, backend, "substring", limit);
-                    } else if (type == Type.Camera) {
-                        ret = pipelineServer.getInstances();
-                        Collections.sort(ret);
-                    } else {
-                        ret = dataApi.queryNames(str, backend, DataAPI.Ordering.desc, Boolean.FALSE);
-                    }
-                    if (limit > 0) {
-                        if (ret.size() > limit) {
-                            ret = ret.subList(0, limit);
-                        }
-                    }
+                    List<String> ret = channelNameSource.queryChannels(str, backend, limit);
+                    if ((limit > 0)&&(ret.size() > limit)) {
+                        ret = ret.subList(0, limit);
+                    }                    
                     setData(ret);
                 } catch (Exception ex) {
                     setData(null);
@@ -403,9 +409,10 @@ public class ChannelSelector extends MonitoredPanel {
         //java.awt.EventQueue.invokeLater(() -> {
         //sf-imagebuffer, sf-databuffer, sf-archiverappliance
         ChannelSelector cs = new ChannelSelector();
-        cs.configure(Type.DataAPI, "https://data-api.psi.ch/sf", "sf-databuffer", 5000);
+        //cs.configure(Type.DataAPI, "https://data-api.psi.ch/sf", "sf-databuffer", 5000);
         //cs.configure(Type.DispatcherAPI,"https://dispatcher-api.psi.ch/sf", "sf-databuffer", 5000);
-        //cs.configure(Type.Epics, "http://epics-boot-info.psi.ch", "swissfel", 5000);
+        //cs.configure(Type.Epics, "https://epics-boot-info.psi.ch", "swissfel", 5000);
+        cs.configure(Type.IocInfo, "http://gfa-app-07.psi.ch:9090/api/v2", "swissfel", 5000);
         cs.setName("Test");
         cs.setHistorySize(10);
         cs.setListMode(ListMode.Popup);
