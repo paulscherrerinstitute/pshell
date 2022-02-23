@@ -117,7 +117,6 @@ public class DevicePool extends ObservableBase<DevicePoolListener> implements Au
     public static DeviceAttributes parseConfigEntry(String line) {
         DeviceAttributes attr = null;
         line = line.trim();
-        String[] tokens = line.split("=");
         if (line.contains("=")) {
             String deviceName = line.substring(0, line.indexOf("=")).trim().replace("\\u0020", " ");
             String config = line.substring(line.indexOf("=") + 1).trim();

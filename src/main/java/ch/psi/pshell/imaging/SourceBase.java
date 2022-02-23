@@ -565,7 +565,7 @@ public class SourceBase extends GenericDeviceBase<ImageListener> implements Sour
     protected void onTimeout() {
     }
 
-    class SourceTrigger extends ReadonlyAsyncRegisterBase {
+    public class SourceTrigger extends ReadonlyAsyncRegisterBase {
 
         SourceTrigger() {
             super(SourceBase.this.getName() + " trigger");

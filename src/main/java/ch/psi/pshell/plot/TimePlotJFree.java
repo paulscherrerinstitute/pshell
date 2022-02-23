@@ -333,13 +333,14 @@ public class TimePlotJFree extends TimePlotBase {
     @Override
     protected void onRemovedSeries(TimePlotSeries series) {
         int index = getSeriesIndex(series);
+        TimeSeries ts = getTimeSeries(series);
         TimeSeriesCollection dataset = data;
         if (series.axis == 2) {
             createY2();
             dataset = dataY2;
         }
         dataset.removeSeries(index);
-        this.series.remove(series);
+        this.series.remove(ts);
     }
 
     @Override

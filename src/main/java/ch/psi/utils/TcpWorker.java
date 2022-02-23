@@ -10,7 +10,7 @@ import java.util.logging.Logger;
 /**
  * Worker thread for TcpServer and TcpClient.
  */
-abstract class TcpWorker extends Thread {
+public abstract class TcpWorker extends Thread {
 
     private final Socket socket;
     private boolean alive = true;

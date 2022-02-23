@@ -524,8 +524,10 @@ public class InlineDevice extends DeviceBase implements Readable, Writable {
                 for (Device id : instantiatedDevices) {
                     id.close();
                     instantiatedDevices.remove(id);
-                    if (cameraStreams.contains(id)) {
-                        cameraStreams.remove(id);
+                    if (id instanceof Stream){
+                        if (cameraStreams.contains((Stream)id)) {
+                            cameraStreams.remove((Stream)id);
+                        }
                     }
                 }
             } catch (Exception ex) {

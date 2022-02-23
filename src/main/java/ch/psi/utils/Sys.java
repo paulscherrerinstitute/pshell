@@ -152,21 +152,21 @@ public class Sys {
     }    
  
         
-    public static MyClassLoader newClassLoader(String[] folderNames) throws MalformedURLException {
+    public static DynamicClassLoader newClassLoader(String[] folderNames) throws MalformedURLException {
         URL[] urls = new URL[folderNames.length];
         for (int i = 0; i < folderNames.length; i++) {
             urls[i] = new File(folderNames[i]).toURI().toURL();
         }
-        MyClassLoader classLoader = new  MyClassLoader(urls);
+        DynamicClassLoader classLoader = new  DynamicClassLoader(urls);
         return classLoader;
     }
     
-    static class MyClassLoader extends URLClassLoader {
-        public MyClassLoader(URL[] urls) {
+    public static class DynamicClassLoader extends URLClassLoader {
+        public DynamicClassLoader(URL[] urls) {
             super(urls);
         }
         
-        public MyClassLoader(URL[] urls, ClassLoader parent) {
+        public DynamicClassLoader(URL[] urls, ClassLoader parent) {
             super(urls, parent);
         }
 
@@ -175,7 +175,7 @@ public class Sys {
             super.addURL(url);
         }
     }
-    static final ClassLoader classLoader =  (Sys.getJavaVersion()>=14) ? new MyClassLoader(new URL[0]) : ClassLoader.getSystemClassLoader();
+    static final ClassLoader classLoader =  (Sys.getJavaVersion()>=14) ? new DynamicClassLoader(new URL[0]) : ClassLoader.getSystemClassLoader();
     
     public static ClassLoader getClassLoader(){        
         return classLoader;       
@@ -199,7 +199,7 @@ public class Sys {
                     method.invoke(urlClassLoader, new Object[]{u});                     
                 } else {                    
                     if (Sys.getJavaVersion()>=14){   
-                        ((MyClassLoader)classLoader).addURL(u);
+                        ((DynamicClassLoader)classLoader).addURL(u);
                     } else {                
                         try{
                             Field field = ClassLoader.getSystemClassLoader().getClass().getDeclaredField("ucp");

@@ -346,7 +346,7 @@ public class MasterPositioner extends PositionerBase {
     }
 
     public void delInterpolationTable(int index) throws IOException, InterruptedException {
-        delInterpolationTable(index);
+        delInterpolationTable(index, true);
     }
     
     public void delInterpolationTable(int index, boolean save) throws IOException, InterruptedException {

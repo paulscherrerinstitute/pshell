@@ -414,13 +414,13 @@ public class DataManager implements AutoCloseable {
     }
 
     final ScanListener scanListener = new ScanListener() {
-
+        final Object lock = new Object();
         @Override
         public void onScanStarted(Scan scan, String plotTitle) {
             if (scan instanceof PlotScan) {
                 return;
             }
-            synchronized (this) {
+            synchronized (lock) {
                 if (getExecutionPars().isScanPersisted(scan)) {
                     try {
                         openOutput();

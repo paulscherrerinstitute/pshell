@@ -778,7 +778,7 @@ public class Slicer implements PlugIn, TextListener, ItemListener {
         if (roi != null) {
             Rectangle r = roi.getBounds();
             width = r.width;
-            width = r.height;
+            height = r.height;
         }
         int type = roi != null ? roi.getType() : 0;
         int stackSize = imp.getStackSize();

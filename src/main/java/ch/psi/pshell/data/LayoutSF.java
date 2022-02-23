@@ -388,8 +388,8 @@ public class LayoutSF extends LayoutBase implements Layout {
                     getDataManager().flush();
                     String name = readable.getAlias();
                     String path = getDataPath(scan, name);
-                    double[] stdev = (double[]) getDataManager().getData(path + DATASET_STDEV).sliceData;
                     //Not using error vector, but stde dataset 
+                    //double[] stdev = (double[]) getDataManager().getData(path + DATASET_STDEV).sliceData;                    
                     //getDataManager().setAttribute(path + DATASET_VALUE, ATTR_ERROR_VECTOR, stdev);
                 } catch (Exception ex) {
                     Logger.getLogger(LayoutSF.class.getName()).log(Level.WARNING, null, ex);

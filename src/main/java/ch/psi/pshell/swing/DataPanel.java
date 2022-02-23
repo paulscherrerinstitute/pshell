@@ -893,7 +893,7 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
         public int getIndexOfChild(Object parent, Object child) {
             File[] children = getChildren(parent);
             for (int i = 0; i < children.length; i++) {
-                if (((File) child).getName().equals(children[i])) {
+                if (((File) child).getName().equals(children[i].getName())) {
                     return i;
                 }
             }

@@ -135,7 +135,6 @@ public class Preferences {
         preferences.fontPlotLabel = fonts[4];
         preferences.fontPlotTick = fonts[5];
         preferences.fontPlotTitle= fonts[6];
-        new Font(Font.SANS_SERIF, Font.BOLD, 13);
         preferences.processingScripts = new String[0];
         preferences.defaultPanels = getDefaultPanels();
         preferences.consoleLocation = DEFAULT_CONSOLE_LOCATION;

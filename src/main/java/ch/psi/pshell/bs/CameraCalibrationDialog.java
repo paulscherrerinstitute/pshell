@@ -81,7 +81,6 @@ public class CameraCalibrationDialog extends StandardDialog {
         renderer.addOverlays(calibrationOverlays);                        
 
         try{
-            Rectangle r = new Rectangle();
             ovLeft.update(new Point(Math.max(refMarker.get(0), 0), 0));                
             ovTop.update(new Point(0, Math.max(refMarker.get(1), 0)));
             ovRight.update(new Point(Math.max(refMarker.get(2), 0), 0));                

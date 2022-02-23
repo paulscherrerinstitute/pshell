@@ -2061,8 +2061,7 @@ public class Renderer extends MonitoredPanel implements ImageListener, ImageBuff
         if ((selectionType != null) && (selectionOverlay != null) && (series != null)) {
             Data data = getData();
             BufferedImage img = getImage();
-            double[] x = null;
-            double[] y = null;
+            double[] x;
 
             Rectangle bounds = selectionOverlay.getBounds();
             if (selectionOverlay.isFixed()) {
@@ -2104,8 +2103,7 @@ public class Renderer extends MonitoredPanel implements ImageListener, ImageBuff
             }
         } else if (integration != null) {
             Data data = getData();
-            double[] x = null;
-            double[] y = null;
+            double[] x;
             
             if (integration){
                 //vertical

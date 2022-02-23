@@ -1441,7 +1441,7 @@ public class App extends ObservableBase<AppListener> {
         public String getArgsStr() {
             StringBuilder sb = new StringBuilder();
             if (args != null) {
-                for (Object key : args.keySet()) {
+                for (String key : args.keySet()) {
                     if (sb.length() > 0) {
                         sb.append(", ");
                     }

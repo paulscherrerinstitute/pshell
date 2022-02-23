@@ -781,6 +781,6 @@ public class MatrixPlotJFree extends MatrixPlotBase {
         if (size == null) {
             size = new Dimension(SNAPSHOT_WIDTH, SNAPSHOT_HEIGHT);
         }
-        return chart.createBufferedImage(size.width, size.width);
+        return chart.createBufferedImage(size.width, size.height);
     }
 }

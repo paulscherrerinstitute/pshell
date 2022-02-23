@@ -86,7 +86,7 @@ public class PropertiesDialog extends StandardDialog {
     /**
      * The listener interface for receiving edition events.
      */
-    static interface EditionListener {
+    public static interface EditionListener {
 
         void onChangedEditedRows(ArrayList<Integer> editedRows);
     }

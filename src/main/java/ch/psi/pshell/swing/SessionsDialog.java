@@ -1121,7 +1121,6 @@ public class SessionsDialog extends StandardDialog implements SessionManagerList
 
     private void buttonDetachActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonDetachActionPerformed
         try {
-            int[] row = tableRuns.getSelectedRows();
             List<String> data = new ArrayList<>();
             for (int i : tableRuns.getSelectedRows()){
                 data.add(Str.toString(modelRuns.getValueAt(i, 4)));
@@ -1139,7 +1138,6 @@ public class SessionsDialog extends StandardDialog implements SessionManagerList
 
     private void buttonMoveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonMoveActionPerformed
         try {
-            int[] row = tableRuns.getSelectedRows();
             List<String> data = new ArrayList<>();
             for (int i : tableRuns.getSelectedRows()){
                 data.add(Str.toString(modelRuns.getValueAt(i, 4)));

@@ -1409,7 +1409,6 @@ public class StreamCameraViewer extends MonitoredPanel {
                 if (p == null) {
                     p = (d == null) ? new Point(renderer.getWidth() / 2, renderer.getHeight() / 2) : new Point(d.width / 2, d.height / 2);
                 }
-                Overlay ov = null;
                 marker = new Overlays.Crosshairs(renderer.getPenMarker(), p, new Dimension(100, 100));
                 marker.setMovable(true);
                 marker.setPassive(false);
@@ -1894,8 +1893,6 @@ public class StreamCameraViewer extends MonitoredPanel {
 
                 if ((id != null) && (id.goodRegion)) {
                     try {
-                        double[] x = id.gr_x_axis;
-                        double[] y = id.gr_y_axis;
                         Overlays.Rect goodRegionOv = new Overlays.Rect(new Pen(penFit.getColor(), 0, Pen.LineStyle.dotted));
                         goodRegionOv.setCalibration(renderer.getCalibration());
                         goodRegionOv.setPosition(new Point(id.gr_pos_x, id.gr_pos_y));
@@ -2601,7 +2598,6 @@ public class StreamCameraViewer extends MonitoredPanel {
             if (!paused) {
                 setPaused(true);
             }
-            String snapshotFile = null;
             synchronized (imageBuffer) {
                 Frame frame = getCurrentFrame();
                 if (frame == null) {
@@ -2609,7 +2605,7 @@ public class StreamCameraViewer extends MonitoredPanel {
                 }
                 ArrayList<Frame> frames = new ArrayList<>();
                 frames.add(frame);
-                snapshotFile = this.saveFrames(getDisplayName() + "_snapshot", frames, null);
+                String snapshotFile = this.saveFrames(getDisplayName() + "_snapshot", frames, null);
                 if (snapshotFile != null) {
                     //renderer.saveSnapshot(snapshotFile, "png", true);
                     ImageBuffer.saveImage(SwingUtils.createImage(renderer), snapshotFile + ".png", "png");

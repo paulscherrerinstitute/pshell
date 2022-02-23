@@ -161,6 +161,7 @@ import javax.swing.JOptionPane;
 import javax.swing.KeyStroke;
 import javax.swing.MenuSelectionManager;
 import javax.swing.WindowConstants;
+import javax.swing.filechooser.FileFilter;
 
 /**
  * The main dialog of the Workbench.
@@ -3627,7 +3628,7 @@ public class View extends MainFrame {
             chooser.addChoosableFileFilter(new ExtensionFileFilter("Strip Chart definition file (*." + StripChart.FILE_EXTENSION + ")", StripChart.FILE_EXTENSION));
             chooser.addChoosableFileFilter(new ExtensionFileFilter("Image files (*.png, *.bmp, *.gif, *.jpg)", imageFileExtensions));
 
-            HashMap<FileNameExtensionFilter, Processor> processors = new HashMap<>();
+            HashMap<FileFilter, Processor> processors = new HashMap<>();
             for (Processor processor : Processor.getServiceProviders()) {
                 if ((processor.getExtensions().length > 0) & processor.canSave()) {
                     FileNameExtensionFilter filter = new FileNameExtensionFilter(processor.getDescription(), processor.getExtensions());
@@ -4171,7 +4172,7 @@ public class View extends MainFrame {
         try {
             JFileChooser chooser = new JFileChooser(context.getSetup().getScriptPath());
             chooser.setAcceptAllFileFilterUsed(false);
-            HashMap<FileNameExtensionFilter, Importer> importers = new HashMap<>();
+            HashMap<FileFilter, Importer> importers = new HashMap<>();
             for (Importer importer : Importer.getServiceProviders()) {
                 FileNameExtensionFilter filter = new FileNameExtensionFilter(importer.getDescription(), importer.getExtensions());
                 chooser.addChoosableFileFilter(filter);
@@ -4368,8 +4369,8 @@ public class View extends MainFrame {
                     if (SwingUtils.isTabClosable(tabDoc, index)){
                         tabDoc.remove(processor.getPanel());
                     }
-                } else if (detachedScripts.containsValue(processor)) {
-                    detachedScripts.values().removeIf(val -> val == processor);
+                } else if (detachedScripts.containsValue(processor.getPanel())) {
+                    detachedScripts.values().removeIf(val -> val == processor.getPanel());
                     panel.getTopLevelAncestor().setVisible(false);
                 }
             }

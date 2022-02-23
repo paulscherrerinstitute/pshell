@@ -151,8 +151,7 @@ public class Encoder {
         return addValue(name, data, false, Compression.none);
     }
 
-    public DataChannel addValue(String name, Object data, boolean unsigned, Compression compression){
-        DataChannel channel = null;      
+    public DataChannel addValue(String name, Object data, boolean unsigned, Compression compression){      
         Class cls = data.getClass();        
         Type type = classToType(cls, unsigned);
         int[] shape = {1};
@@ -161,7 +160,7 @@ public class Encoder {
         }
         int numberDimensions = shape.length;
 
-        channel = new DataChannel(new ChannelConfig(name, type, shape, 1, 0, ChannelConfig.DEFAULT_ENCODING, compression)) {
+        DataChannel channel = new DataChannel(new ChannelConfig(name, type, shape, 1, 0, ChannelConfig.DEFAULT_ENCODING, compression)) {
             @Override
             public Object getValue(long pulseId) {
                 if (numberDimensions>1){

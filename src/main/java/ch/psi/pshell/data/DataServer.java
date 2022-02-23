@@ -167,7 +167,6 @@ public class DataServer extends Replier {
         DataManager dm = Context.getInstance().getDataManager();
         DataContent ret = new DataContent();
         if (path.contains(".")) {
-            String[] tokens = path.split(".");
             try{
                 ret.index = Integer.valueOf(path.substring(path.lastIndexOf(".")+1));
                 path = path.substring(0, path.lastIndexOf("."));

@@ -412,7 +412,7 @@ public class ChannelSelector extends MonitoredPanel {
         //cs.configure(Type.DataAPI, "https://data-api.psi.ch/sf", "sf-databuffer", 5000);
         //cs.configure(Type.DispatcherAPI,"https://dispatcher-api.psi.ch/sf", "sf-databuffer", 5000);
         //cs.configure(Type.Epics, "https://epics-boot-info.psi.ch", "swissfel", 5000);
-        cs.configure(Type.IocInfo, "http://gfa-app-07.psi.ch:9090/api/v2", "swissfel", 5000);
+        cs.configure(Type.IocInfo, "http://iocinfo.psi.ch/api/v2", "swissfel", 5000);
         cs.setName("Test");
         cs.setHistorySize(10);
         cs.setListMode(ListMode.Popup);

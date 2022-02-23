@@ -615,7 +615,6 @@ public class TextEditor extends Editor {
 
     protected void setEditorPaneEnabled(boolean value) {
         if (value != editorPane.isEnabled()) {
-            Color bg = editorPane.getBackground();
             editorPane.setEnabled(value);
             if (value) {
                 doSetEditorBackground(editorBackground);

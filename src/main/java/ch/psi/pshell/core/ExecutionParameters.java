@@ -52,7 +52,7 @@ public class ExecutionParameters {
     Layout dataLayout;
     Provider dataProvider;
 
-    static class ScanInfo {
+    public static class ScanInfo {
 
         final int index;
         final boolean persisted;
@@ -287,8 +287,7 @@ public class ExecutionParameters {
     public void addScan(Scan scan) {
         synchronized (currentScans) {
             scanIndex++;
-            boolean displayed = true;
-            displayed = !(Boolean.FALSE.equals(getCommandOptions().getOrDefault("display", true)));
+            boolean displayed = !(Boolean.FALSE.equals(getCommandOptions().getOrDefault("display", true)));
             currentScans.put(scan, new ScanInfo(scanIndex, getSave(), displayed));
         }
     }

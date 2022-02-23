@@ -194,8 +194,6 @@ public class DeviceValueChart extends DevicePanel {
                 }
                 ((LinePlotSeries) series).setData(x, y);
             } else if (device instanceof ReadonlyRegisterMatrix) {
-                double[] x = null;
-                double[] y = null;
                 double[][] z = (double[][]) Convert.toDouble(device.take());
                 if (z != null) {
                     int[] shape = Arr.getShape(z);

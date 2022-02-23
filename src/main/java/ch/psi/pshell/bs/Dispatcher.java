@@ -109,7 +109,7 @@ public class Dispatcher extends Provider {
     }
 
     public String addStream(List channels) throws IOException {
-        return addStream(null);
+        return addStream(channels, null);
     }
     
     public String addStream(List channels, Stream stream) throws IOException {
@@ -216,7 +216,7 @@ public class Dispatcher extends Provider {
         try {
             String socket = streamSockets.get(stream);
             if (socket != null) {
-                streamSockets.remove(socket);
+                streamSockets.remove(stream);
                 removeStream(socket);
             }
         } catch (IOException ex) {
