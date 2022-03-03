@@ -1405,7 +1405,7 @@ function fork() {
         *functions(functions references)
      
      Returns:
-        List of callable objects
+        List of future objects
      */
     var callables = []
     for( var i =0; i<arguments.length; i++){
@@ -1426,7 +1426,7 @@ function join(futures) {
      Wait parallel execution of methods.
      
      Args:
-        callables(list of Callables) : as returned from fork
+        callables(list of Future) : as returned from fork
      
      Returns:
         None

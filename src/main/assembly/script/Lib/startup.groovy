@@ -1019,7 +1019,7 @@ def fork(Closure[] closures){
         *functions(function references)
 
     Returns:
-        List of callable objects
+        List of future objects
     """      
     //callables = []
     //for m in functions:

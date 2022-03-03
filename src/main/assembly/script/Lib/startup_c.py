@@ -2035,7 +2035,7 @@ def fork(*functions):
         *functions(function references)
 
     Returns:
-        List of callable
+        List of future objects
     """
     raise Exception("Not implemented")
 
