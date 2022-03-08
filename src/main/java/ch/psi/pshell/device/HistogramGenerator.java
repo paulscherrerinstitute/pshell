@@ -163,14 +163,16 @@ public class HistogramGenerator extends ReadonlyRegisterBase<Histogram> implemen
         }
         lastSampleCount = sampleCount;
         Object data;
-        if (currentSample instanceof Number) {
-            data = samples;
-        } else if (currentSample.getClass().isArray()) {
-            data = currentSample;
-        } else {
-            return;
+        if (currentSample != null) {
+            if (currentSample instanceof Number) {
+                data = samples;
+            } else if (currentSample.getClass().isArray()) {
+                data = currentSample;
+            } else {
+                return;
+            }
+            setCache( Histogram.calc((double[]) Convert.toPrimitiveArray(data, Double.class), getMin(), getMax(), getBins()));
         }
-        setCache( Histogram.calc((double[]) Convert.toPrimitiveArray(data, Double.class), getMin(), getMax(), getBins()));
     }
 
     @Override
