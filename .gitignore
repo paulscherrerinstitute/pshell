@@ -13,5 +13,6 @@ gradle.properties
 nbactions.xml
 **/*.class
 /lib/
-/src/main/python/pshell/__pycache__/
 /src/main/python/pshell/test.py
+/src/main/python/pshell/__pycache__/
+/src/main/assembly/script/Lib/__pycache__/
