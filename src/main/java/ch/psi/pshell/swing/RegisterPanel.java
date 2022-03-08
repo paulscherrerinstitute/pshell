@@ -131,14 +131,14 @@ public final class RegisterPanel extends DevicePanel {
         txtRegisterReadout = new javax.swing.JTextField();
 
         txtRegisterReadout.setHorizontalAlignment(javax.swing.JTextField.CENTER);
-        txtRegisterReadout.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mouseEntered(java.awt.event.MouseEvent evt) {
-                txtRegisterReadoutMouseEntered(evt);
-            }
-        });
         txtRegisterReadout.addFocusListener(new java.awt.event.FocusAdapter() {
             public void focusLost(java.awt.event.FocusEvent evt) {
                 txtRegisterReadoutFocusLost(evt);
+            }
+        });
+        txtRegisterReadout.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseEntered(java.awt.event.MouseEvent evt) {
+                txtRegisterReadoutMouseEntered(evt);
             }
         });
         txtRegisterReadout.addKeyListener(new java.awt.event.KeyAdapter() {
@@ -154,7 +154,9 @@ public final class RegisterPanel extends DevicePanel {
         this.setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(txtRegisterReadout, javax.swing.GroupLayout.DEFAULT_SIZE, 52, Short.MAX_VALUE)
+            .addGroup(layout.createSequentialGroup()
+                .addComponent(txtRegisterReadout, javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(0, 0, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
