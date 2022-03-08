@@ -1408,7 +1408,7 @@
                         <EventHandler event="stateChanged" listener="javax.swing.event.ChangeListener" parameters="javax.swing.event.ChangeEvent" handler="tabDocStateChanged"/>
                       </Events>
                       <AuxValues>
-                        <AuxValue name="JavaCodeGenerator_CreateCodeCustom" type="java.lang.String" value="    &#xa;new javax.swing.JTabbedPane() {&#xa;    @Override&#xa;    public void paintComponent(Graphics g)&#xa;    {&#xa;        super.paintComponent(g);&#xa;&#x9;if (dropping){&#xa;            g.setColor(new Color(44, 144, 254));&#xa;            g.drawRect(0, 0, getWidth() - 1, getHeight() - 1);&#xa;&#x9;}&#xa;    }&#xa;}"/>
+                        <AuxValue name="JavaCodeGenerator_CreateCodeCustom" type="java.lang.String" value="    &#xa;new javax.swing.JTabbedPane() {&#xa;    @Override&#xa;    public void paintComponent(Graphics g){   &#xa;        try{&#xa;            super.paintComponent(g);&#xa;            if (dropping){&#xa;                g.setColor(new Color(44, 144, 254));&#xa;                g.drawRect(0, 0, getWidth() - 1, getHeight() - 1);&#xa;            }&#xa;        } catch (Exception ex){&#xa;        }&#xa;    }&#xa;}"/>
                       </AuxValues>
                       <Constraints>
                         <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.support.JSplitPaneSupportLayout" value="org.netbeans.modules.form.compat2.layouts.support.JSplitPaneSupportLayout$JSplitPaneConstraintsDescription">

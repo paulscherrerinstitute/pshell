@@ -2316,12 +2316,14 @@ public class View extends MainFrame {
         tabDoc =
         new javax.swing.JTabbedPane() {
             @Override
-            public void paintComponent(Graphics g)
-            {
-                super.paintComponent(g);
-                if (dropping){
-                    g.setColor(new Color(44, 144, 254));
-                    g.drawRect(0, 0, getWidth() - 1, getHeight() - 1);
+            public void paintComponent(Graphics g){
+                try{
+                    super.paintComponent(g);
+                    if (dropping){
+                        g.setColor(new Color(44, 144, 254));
+                        g.drawRect(0, 0, getWidth() - 1, getHeight() - 1);
+                    }
+                } catch (Exception ex){
                 }
             }
         };
