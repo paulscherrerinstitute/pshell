@@ -110,6 +110,33 @@
     <td>Set the script folder (default is {home}/script).<br>The token '~', is replaced by the system home folder.</td>
   </tr>
   <tr>
+    <td>-devp=[path]</td>
+    <td>Set the devices configuration folder (default is {home}/devices).</td>
+  </tr>  
+  <tr>
+    <td>-plgp=[path]</td>
+    <td>Set the plugin folder (default is {home}/plugins).</td>
+  </tr> 
+  <tr>
+    <td>-extp=[path]</td>
+    <td>Set the extensions folder (default is {home}/extensions)r.</td>
+  </tr>  
+  <tr>
+    <td>-logp=[path]</td>
+    <td>Set the log folder (default is {home}/logs).</td>
+  </tr>  
+  <tr>
+    <td>-ctxp=[path]</td>
+    <td>ctcp=<path>\tSet the context folder (default is {home}/context).</td>
+  </tr>  
+  <tr>
+    <td>-imgp=[path]</td>
+    <td>Set the image folder (default is {home}/image).</td>
+  </tr>  <tr>
+    <td>-sesp=[path]</td>
+    <td>Set the  sessions folder (default is {home}/sessions).</td>
+  </tr>
+  <tr>
     <td>-setp=[path]</td>
     <td>Override the setup file, which contains all path definitions (default is {config}/setup.properties).</td>
   </tr>

@@ -1,6 +1,5 @@
 package ch.psi.pshell.ui;
 
-import ch.psi.pshell.core.CommandSource;
 import ch.psi.pshell.core.Configuration;
 import ch.psi.pshell.core.Configuration.LogLevel;
 import ch.psi.pshell.core.Context;
@@ -22,7 +21,6 @@ import ch.psi.pshell.core.Setup;
 import ch.psi.pshell.core.UserInterface;
 import ch.psi.pshell.data.PlotDescriptor;
 import ch.psi.pshell.device.GenericDevice;
-import ch.psi.pshell.epics.Epics;
 import ch.psi.pshell.plot.Plot;
 import ch.psi.pshell.plotter.Client;
 import ch.psi.pshell.plotter.Plotter;
@@ -104,17 +102,12 @@ public class App extends ObservableBase<AppListener> {
         if (isForcedHeadless()) {
             System.setProperty("java.awt.headless", "true");
         }
-
         Level consoleLogLevel = Level.WARNING;
         try {
             consoleLogLevel = Level.parse(getArgumentValue("clog"));
         } catch (Exception ex) {
         }
-        LogManager.setConsoleLoggerLevel(consoleLogLevel);
-
-        appendLibraryPath();
-        appendClassPath();
-        applyLookAndFeel();
+        LogManager.setConsoleLoggerLevel(consoleLogLevel);                
 
         //Parse arguments to set system properties
         if (Setup.getJarFile() != null) {
@@ -136,6 +129,14 @@ public class App extends ObservableBase<AppListener> {
                 ex.printStackTrace();
             }
         }
+        
+        if (isVersionMessage() || isHelpMessage()){
+            return;
+        }        
+
+        appendLibraryPath();
+        appendClassPath();
+        applyLookAndFeel();
 
         PshellProperties pshellProperties = new PshellProperties();
         File propertiesFile = new File("pshell.properties");
@@ -212,7 +213,49 @@ public class App extends ObservableBase<AppListener> {
         } else if (pshellProperties.pool != null) {
             System.setProperty(Setup.PROPERTY_DEVICES_FILE, pshellProperties.pool.toString());
         }
-
+        
+        if (isArgumentDefined("devp")) {
+            System.setProperty(Setup.PROPERTY_DEVICES_PATH, getArgumentValue("devp"));
+        } else if (pshellProperties.devp != null) {
+            System.setProperty(Setup.PROPERTY_DEVICES_PATH, pshellProperties.devp.toString());
+        }
+        
+        if (isArgumentDefined("plgp")) {
+            System.setProperty(Setup.PROPERTY_PLUGINS_PATH, getArgumentValue("plgp"));
+        } else if (pshellProperties.plgp != null) {
+            System.setProperty(Setup.PROPERTY_PLUGINS_PATH, pshellProperties.plgp.toString());
+        } 
+        
+        if (isArgumentDefined("extp")) {
+            System.setProperty(Setup.PROPERTY_EXTENSIONS_PATH, getArgumentValue("extp"));
+        } else if (pshellProperties.extp != null) {
+            System.setProperty(Setup.PROPERTY_EXTENSIONS_PATH, pshellProperties.extp.toString());
+        }    
+        
+        if (isArgumentDefined("ctxp")) {
+            System.setProperty(Setup.PROPERTY_CONTEXT_PATH, getArgumentValue("ctxp"));
+        } else if (pshellProperties.ctxp != null) {
+            System.setProperty(Setup.PROPERTY_CONTEXT_PATH, pshellProperties.ctxp.toString());
+        } 
+        
+        if (isArgumentDefined("sesp")) {
+            System.setProperty(Setup.PROPERTY_SESSIONS_PATH, getArgumentValue("sesp"));
+        } else if (pshellProperties.sesp != null) {
+            System.setProperty(Setup.PROPERTY_SESSIONS_PATH, pshellProperties.sesp.toString());
+        }   
+        
+        if (isArgumentDefined("logp")) {
+            System.setProperty(Setup.PROPERTY_LOGS_PATH, getArgumentValue("logp"));
+        } else if (pshellProperties.logp != null) {
+            System.setProperty(Setup.PROPERTY_LOGS_PATH, pshellProperties.logp.toString());
+        }  
+        
+        if (isArgumentDefined("imgp")) {
+            System.setProperty(Setup.PROPERTY_IMAGE_PATH, getArgumentValue("imgp"));
+        } else if (pshellProperties.imgp != null) {
+            System.setProperty(Setup.PROPERTY_IMAGE_PATH, pshellProperties.imgp.toString());
+        }             
+        
         if (isArgumentDefined("type")) {
             System.setProperty(Setup.PROPERTY_SCRIPT_TYPE, getArgumentValue("type"));
         }
@@ -391,6 +434,13 @@ public class App extends ObservableBase<AppListener> {
         sb.append("\n\t-outp=<path>\tSet the output folder (default is {home})");
         sb.append("\n\t-data=<path>\tSet the data folder (default is {home}/data)");
         sb.append("\n\t-scpt=<path>\tSet the script folder (default is {home}/script)");
+        sb.append("\n\t-devp=<path>\tSet the devices configuration folder (default is {home}/devices)");
+        sb.append("\n\t-plgp=<path>\tSet the plugin folder (default is {home}/plugins)");
+        sb.append("\n\t-extp=<path>\tSet the extensions folder (default is {home}/extensions)");
+        sb.append("\n\t-logp=<path>\tSet the log folder (default is {home}/logs)");
+        sb.append("\n\t-ctxp=<path>\tSet the context folder (default is {home}/context)");
+        sb.append("\n\t-imgp=<path>\tSet the image folder (default is {home}/image)");
+        sb.append("\n\t-sesp=<path>\tSet the sessions folder (default is {home}/sessions)");
         sb.append("\n\t-setp=<path>\tOverride the setup file(default is {config}/setup.properties)");
         sb.append("\n\t-conf=<path>\tOverride the config file(default is {config}/config.properties)");
         sb.append("\n\t-pool=<path>\tOverride the device pool configuration file");
@@ -753,16 +803,20 @@ public class App extends ObservableBase<AppListener> {
         return getBoolArgumentValue("n");
     }
 
+    static public boolean isVersionMessage() {
+        return hasArgument("?");
+    }
+
     static public boolean isHelpMessage() {
         return hasArgument("h");
     }
-
+    
     static public boolean isHeadless() {
         return GraphicsEnvironment.isHeadless();
     }
 
     static public boolean isForcedHeadless() {
-        return getBoolArgumentValue("y") || isHelpMessage();
+        return getBoolArgumentValue("y") || isHelpMessage() || isVersionMessage();
     }
 
     //Resources
@@ -845,6 +899,13 @@ public class App extends ObservableBase<AppListener> {
         public String plug;
         public String task;
         public String pool;
+        public String devp;
+        public String plgp;
+        public String sesp;
+        public String ctxp;
+        public String extp;
+        public String imgp;
+        public String logp;
         public String sets;
         public String pini;
         public LogLevel consoleLog;
@@ -854,6 +915,10 @@ public class App extends ObservableBase<AppListener> {
 
     protected void startup() {
         System.out.println("Version " + getApplicationBuildInfo());
+        
+        if (isVersionMessage()) {
+            return;
+        }
 
         if (isHelpMessage()) {
             System.out.println(getHelpMessage());

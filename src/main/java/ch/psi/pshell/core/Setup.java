@@ -31,10 +31,18 @@ import javax.imageio.ImageIO;
  */
 public class Setup extends Config {
 
-    public static transient final String PROPERTY_HOME_PATH = "ch.psi.pshell.home";
-    public static transient final String PROPERTY_OUTPUT_PATH = "ch.psi.pshell.output";
-    public static transient final String PROPERTY_DATA_PATH = "ch.psi.pshell.data";
-    public static transient final String PROPERTY_SCRIPT_PATH = "ch.psi.pshell.script";
+    public static transient final String PROPERTY_HOME_PATH = "ch.psi.pshell.home.path";
+    public static transient final String PROPERTY_OUTPUT_PATH = "ch.psi.pshell.output.path";
+    public static transient final String PROPERTY_DATA_PATH = "ch.psi.pshell.data.path";
+    public static transient final String PROPERTY_SCRIPT_PATH = "ch.psi.pshell.script.path";
+    public static transient final String PROPERTY_EXT_SCRIPT_PATH = "ch.psi.pshell.ext_script.path";
+    public static transient final String PROPERTY_DEVICES_PATH = "ch.psi.pshell.devices.path";
+    public static transient final String PROPERTY_PLUGINS_PATH = "ch.psi.pshell.plugins.path";
+    public static transient final String PROPERTY_EXTENSIONS_PATH  = "ch.psi.pshell.exensions.path";
+    public static transient final String PROPERTY_CONTEXT_PATH  = "ch.psi.pshell.context.path";
+    public static transient final String PROPERTY_SESSIONS_PATH  = "ch.psi.pshell.sessions.path";
+    public static transient final String PROPERTY_LOGS_PATH  = "ch.psi.pshell.logs.path";
+    public static transient final String PROPERTY_IMAGE_PATH  = "ch.psi.pshell.image.path";
     public static transient final String PROPERTY_CONFIG_FILE = "ch.psi.pshell.config.file";
     public static transient final String PROPERTY_DEVICES_FILE = "ch.psi.pshell.devices.file";
     public static transient final String PROPERTY_PLUGINS_FILE = "ch.psi.pshell.plugins.file";
@@ -43,7 +51,6 @@ public class Setup extends Config {
     public static transient final String PROPERTY_SCRIPT_TYPE = "ch.psi.pshell.type";
     public static transient final String PROPERTY_LOCAL_STARTUP_SCRIPT = "ch.psi.pshell.local.startup";
     public static transient final String PROPERTY_PARALLEL_INIT = "ch.psi.pshell.parallel.init";
-    public static transient final String PROPERTY_EXT_SCRIPT_PATH = "ch.psi.pshell.ext_script";
 
     //Fixed tokens
     public static transient final String TOKEN_HOME = "{home}";
@@ -190,7 +197,35 @@ public class Setup extends Config {
         if (System.getProperty(PROPERTY_SCRIPT_PATH) != null) {
             scriptPath = System.getProperty(PROPERTY_SCRIPT_PATH);
         }
+        
+        if (System.getProperty(PROPERTY_DEVICES_PATH) != null) {
+            devicesPath = System.getProperty(PROPERTY_DEVICES_PATH);
+        }  
+        
+        if (System.getProperty(PROPERTY_PLUGINS_PATH) != null) {
+            pluginsPath = System.getProperty(PROPERTY_PLUGINS_PATH);
+        }   
+        
+        if (System.getProperty(PROPERTY_IMAGE_PATH) != null) {
+            imagesPath = System.getProperty(PROPERTY_IMAGE_PATH);
+        }   
 
+        if (System.getProperty(PROPERTY_EXTENSIONS_PATH) != null) {
+            extensionsPath = System.getProperty(PROPERTY_EXTENSIONS_PATH);
+        }   
+
+        if (System.getProperty(PROPERTY_CONTEXT_PATH) != null) {
+            contextPath = System.getProperty(PROPERTY_CONTEXT_PATH);
+        }   
+
+        if (System.getProperty(PROPERTY_SESSIONS_PATH) != null) {
+            sessionsPath = System.getProperty(PROPERTY_SESSIONS_PATH);
+        }   
+
+        if (System.getProperty(PROPERTY_LOGS_PATH) != null) {
+            logPath = System.getProperty(PROPERTY_LOGS_PATH);
+        }           
+        
         initPaths();
 
         if (System.getProperty(PROPERTY_CONFIG_FILE) != null) {
