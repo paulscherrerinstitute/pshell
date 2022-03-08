@@ -614,7 +614,7 @@ public class LinePlotJFree extends LinePlotBase {
         XYPlot plot = (XYPlot) chart.getPlot();        
         plot.getDomainAxis().setLabelFont(f);
         plot.getRangeAxis().setLabelFont(f);
-        if (dataY2 == null) {
+        if (dataY2 != null) {
             plot.getRangeAxis(1).setLabelFont(f);
         }
     }
@@ -626,7 +626,7 @@ public class LinePlotJFree extends LinePlotBase {
         chart.getLegend().setItemFont(f);
         plot.getDomainAxis().setTickLabelFont(f);
         plot.getRangeAxis().setTickLabelFont(f);
-        if (dataY2 == null) {
+        if (dataY2 != null) {
             plot.getRangeAxis(1).setTickLabelFont(f);
         }
     }
