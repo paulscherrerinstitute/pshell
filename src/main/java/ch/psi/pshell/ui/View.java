@@ -338,8 +338,9 @@ public class View extends MainFrame {
             splitterVert.setVisible(false);
             splitterHoriz.setDividerSize(0);
             menuBar.setVisible(false);
+            Component[] visible = new Component[]{buttonAbort, buttonPause, buttonRun, buttonAbout, separatorInfo};
             for (Component c : toolBar.getComponents()) {
-                if ((c != buttonAbort) && (c != buttonAbout) && (c != separatorInfo)) {
+                if (!Arr.contains(visible, c)) {
                     toolBar.remove(c);
                 }
             }
@@ -4009,6 +4010,11 @@ public class View extends MainFrame {
                 Processor runningProcessor = getRunningProcessor();
                 if ((runningProcessor != null) && runningProcessor.canPause()){
                     runningProcessor.resume();
+                }
+            } else if (App.isPlotOnly()) {
+                File file = App.getFileArg();
+                if (file != null) {
+                    context.evalFileAsync(file.toString(), App.getInterpreterArgs());
                 }
             } else {
                 runScript();
