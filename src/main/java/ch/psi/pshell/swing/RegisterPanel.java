@@ -1,5 +1,6 @@
 package ch.psi.pshell.swing;
 
+import ch.psi.pshell.device.Device;
 import ch.psi.pshell.device.RegisterBase;
 import ch.psi.pshell.device.ReadonlyRegisterBase;
 import ch.psi.pshell.device.ProcessVariableBase;
@@ -8,6 +9,7 @@ import ch.psi.utils.State;
 import ch.psi.utils.Str;
 import java.awt.event.KeyEvent;
 import java.io.IOException;
+import javax.swing.JTextField;
 
 /**
  *
@@ -18,6 +20,10 @@ public final class RegisterPanel extends DevicePanel {
         initComponents();
     }
 
+    public JTextField getTextField(){
+        return txtRegisterReadout;
+    }
+    
     @Override
     public ReadonlyRegisterBase getDevice() {
         return (ReadonlyRegisterBase) super.getDevice();
@@ -42,6 +48,13 @@ public final class RegisterPanel extends DevicePanel {
     protected void onDeviceValueChanged(Object value, Object former) {
         update();
     }
+    
+    @Override
+    public void setDevice(Device device) {        
+        super.setDevice(device);
+        update();
+    }
+    
 
     private boolean editing;
 
@@ -155,8 +168,8 @@ public final class RegisterPanel extends DevicePanel {
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
-                .addComponent(txtRegisterReadout, javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(0, 0, Short.MAX_VALUE))
+                .addComponent(txtRegisterReadout, javax.swing.GroupLayout.DEFAULT_SIZE, 175, Short.MAX_VALUE)
+                .addGap(0, 0, 0))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -166,10 +179,10 @@ public final class RegisterPanel extends DevicePanel {
 
     private void txtRegisterReadoutMouseEntered(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtRegisterReadoutMouseEntered
         if (getDevice() == null){
-            txtRegisterReadout.setToolTipText("");
+            txtRegisterReadout.setToolTipText(null);
         } else if (getDevice() instanceof ProcessVariableBase){
             ProcessVariableBase pv = (ProcessVariableBase)getDevice();
-            txtRegisterReadout.setToolTipText(getDevice().getName() + "\nRange: " + pv.getMinValue() + " to " + pv.getMaxValue() + " " + pv.getUnit());
+            txtRegisterReadout.setToolTipText(getDevice().getName() + " range: " + pv.getMinValue() + " to " + pv.getMaxValue() + " " + pv.getUnit());
         } else {
             txtRegisterReadout.setToolTipText(getDevice().getName());
         }

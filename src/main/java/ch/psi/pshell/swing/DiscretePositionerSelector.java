@@ -5,7 +5,8 @@ import ch.psi.pshell.device.DiscretePositioner;
 import ch.psi.utils.State;
 import java.io.IOException;
 import javax.swing.DefaultComboBoxModel;
-
+import javax.swing.JComboBox;
+        
 /**
  */
 public class DiscretePositionerSelector extends DevicePanel{
@@ -15,6 +16,9 @@ public class DiscretePositionerSelector extends DevicePanel{
         initComponents();
     }
 
+    public JComboBox getComboBox(){
+        return combo;
+    }    
     
     @Override
     public DiscretePositioner getDevice() {
@@ -44,7 +48,7 @@ public class DiscretePositionerSelector extends DevicePanel{
         this.setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(combo, 0, 140, Short.MAX_VALUE)
+            .addComponent(combo, 0, 175, Short.MAX_VALUE)
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -82,6 +86,7 @@ public class DiscretePositionerSelector extends DevicePanel{
                 showException(ex);
             }
         }
+        combo.setToolTipText((device==null) ? null : device.getName());
         super.setDevice(device);
     }
 

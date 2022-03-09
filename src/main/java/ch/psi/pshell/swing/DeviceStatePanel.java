@@ -2,6 +2,7 @@ package ch.psi.pshell.swing;
 
 import ch.psi.pshell.device.Device;
 import ch.psi.utils.State;
+import javax.swing.JLabel;
 
 /**
  *
@@ -11,6 +12,11 @@ public final class DeviceStatePanel extends DevicePanel {
     public DeviceStatePanel() {
         initComponents();
     }
+    
+
+    public JLabel getLabel() {
+        return labelState;
+    }    
 
     @Override
     protected void onDeviceStateChanged(State state, State former) {
@@ -23,6 +29,7 @@ public final class DeviceStatePanel extends DevicePanel {
         if (device == null) {
             labelState.setText(" ");
         }
+        labelState.setToolTipText((device==null) ? null : device.getName());
     }
 
     /**

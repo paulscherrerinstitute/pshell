@@ -45,6 +45,14 @@ public final class SlitPanel extends DevicePanel {
             }
         });
     }
+    
+    public ValueSelection getValueSelectionCenter(){
+        return valueCenter;
+    }
+
+    public ValueSelection getValueSelectionSize(){
+        return valueSize;
+    }
 
     @Override
     public Slit getDevice() {

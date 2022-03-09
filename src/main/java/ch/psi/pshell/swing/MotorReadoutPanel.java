@@ -5,6 +5,7 @@ import ch.psi.utils.Convert;
 import ch.psi.utils.State;
 import java.awt.event.KeyEvent;
 import java.io.IOException;
+import javax.swing.JTextField;
 
 /**
  *
@@ -14,6 +15,10 @@ public final class MotorReadoutPanel extends DevicePanel {
     public MotorReadoutPanel() {
         initComponents();
     }
+    
+    public JTextField getTextField(){
+        return txtMotorReadout;
+    }    
 
     @Override
     public Motor getDevice() {
@@ -152,9 +157,9 @@ public final class MotorReadoutPanel extends DevicePanel {
 
     private void txtMotorReadoutMouseEntered(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtMotorReadoutMouseEntered
         if (getDevice() == null) {
-            txtMotorReadout.setToolTipText("");
+            txtMotorReadout.setToolTipText(null);
         } else {
-            txtMotorReadout.setToolTipText("Range: " + getDevice().getMinValue() + " to " + getDevice().getMaxValue() + " " + getDevice().getUnit());
+            txtMotorReadout.setToolTipText(getDevice().getName()+ " range: " + getDevice().getMinValue() + " to " + getDevice().getMaxValue() + " " + getDevice().getUnit());
         }
     }//GEN-LAST:event_txtMotorReadoutMouseEntered
 

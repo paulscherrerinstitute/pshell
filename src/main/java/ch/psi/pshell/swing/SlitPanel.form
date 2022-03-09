@@ -16,7 +16,7 @@
   <Layout>
     <DimensionLayout dim="0">
       <Group type="103" groupAlignment="0" attributes="0">
-          <Component id="valueSize" pref="221" max="32767" attributes="0"/>
+          <Component id="valueSize" max="32767" attributes="0"/>
           <Component id="valueCenter" max="32767" attributes="0"/>
       </Group>
     </DimensionLayout>
