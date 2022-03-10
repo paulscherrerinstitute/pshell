@@ -1,17 +1,29 @@
 package ch.psi.utils;
 
+import java.io.File;
 import java.util.ArrayList;
+import java.util.logging.Logger;
+import javax.tools.JavaCompiler;
+import javax.tools.ToolProvider;
 
 /**
  * Dynamic loading of .class or .jar files.
  */
 public class Loader {          
+    static final Logger logger = Logger.getLogger(Loader.class.getName());
     
     public static Class loadClass(ClassLoader classLoader, String className) throws ClassNotFoundException {
+        boolean sys_cl = classLoader == Sys.getClassLoader();
+        logger.finer("Loading class: " + className + (sys_cl ? " (sys class loader)" : ""));
         return classLoader.loadClass(className);
     }
 
-    public static Class loadClass(String fileName) throws Exception {
+    public static Class loadClass(File file) throws Exception {
+        return loadClass(file, false);
+    }
+    
+    public static Class loadClass(File file, boolean reloadable) throws Exception {
+        String fileName = file.getAbsolutePath();
         String extension = IO.getExtension(fileName);
         String cls = IO.getPrefix(fileName);
         String folder = IO.getFolder(fileName);
@@ -19,9 +31,28 @@ public class Loader {
         if (!extension.toLowerCase().equals("class")) {
             throw new IllegalArgumentException(fileName);
         }
-        Sys.addToClassPath(folder);
-        return loadClass(Sys.getClassLoader(), cls);
-    }
+        if (reloadable){            
+            return loadClass(Sys.newClassLoader(new String[]{folder}), cls);            
+        } else {
+            Sys.addToClassPath(folder, false);
+            return loadClass(Sys.getClassLoader(), cls);
+        }
+    }    
+    
+    public static Class compileClass(File file, boolean reloadable) throws Exception {
+        logger.info("Compiling class file: " + file.getPath());
+        JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();                     
+        if (compiler == null) {
+            throw new Exception("Java compiler is not present");
+        }                  
+        if (compiler.run(null, System.out, System.err, file.getPath()) == 0) {
+            File location = (file.getParentFile() == null) ? new File(".") : file.getParentFile();
+            File classFile = new File(file.getPath().replace(".java", ".class"));
+            return Loader.loadClass(classFile, reloadable);
+        } else {
+            throw new Exception("Error compiling plugin: " + file);
+        }        
+    }    
 
     public static Class[] loadJar(String fileName) throws Exception {
         String extension = IO.getExtension(fileName);

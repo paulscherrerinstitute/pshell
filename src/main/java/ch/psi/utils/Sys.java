@@ -14,6 +14,8 @@ import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * System utilities.
@@ -174,8 +176,16 @@ public class Sys {
         public void addURL(URL url) {
             super.addURL(url);
         }
+        
+        public void addClass(Class cls) {
+            try {
+                loadClass(cls.getName());
+            } catch (ClassNotFoundException ex) {
+                Logger.getLogger(Sys.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
     }
-    static final ClassLoader classLoader =  (Sys.getJavaVersion()>=14) ? new DynamicClassLoader(new URL[0]) : ClassLoader.getSystemClassLoader();
+    static final ClassLoader classLoader =  (Sys.getJavaVersion()>=10) ? new DynamicClassLoader(new URL[0]) : ClassLoader.getSystemClassLoader();
     
     public static ClassLoader getClassLoader(){        
         return classLoader;       
@@ -186,6 +196,10 @@ public class Sys {
     }
 
     public static void addToClassPath(String path) throws Exception {        
+        addToClassPath(path, true);
+    }
+    
+    static void addToClassPath(String path, boolean asExtension) throws Exception {        
         String[] classPath = getClassPath();
         if (!Arr.containsEqual(classPath, path)){  
             File f = new File(path);
@@ -198,20 +212,22 @@ public class Sys {
                     method.setAccessible(true);
                     method.invoke(urlClassLoader, new Object[]{u});                     
                 } else {                    
-                    if (Sys.getJavaVersion()>=14){   
-                        ((DynamicClassLoader)classLoader).addURL(u);
-                    } else {                
-                        try{
-                            Field field = ClassLoader.getSystemClassLoader().getClass().getDeclaredField("ucp");
-                            field.setAccessible(true);
-                            final Object ucp = field.get(ClassLoader.getSystemClassLoader());
-                            Method method = ucp.getClass().getDeclaredMethod("addFile", new Class[]{String.class});
-                            method.setAccessible(true);
-                            method.invoke(ucp, new Object[]{path});        
-                        } catch (RuntimeException ex){
-                            System.err.println("Java>=10 requires the option '--add-opens java.base/jdk.internal.loader=ALL-UNNAMED' to add to classpath: " + path);
-                        }
-                    } 
+                    ((DynamicClassLoader)classLoader).addURL(u);
+                    //Dynamic classes should not set global class loader otherwise plugins that reference them are not reloadable
+                    if (asExtension){
+                        if (Sys.getJavaVersion()<14){   
+                            try{
+                                Field field = ClassLoader.getSystemClassLoader().getClass().getDeclaredField("ucp");
+                                field.setAccessible(true);
+                                final Object ucp = field.get(ClassLoader.getSystemClassLoader());
+                                Method method = ucp.getClass().getDeclaredMethod("addFile", new Class[]{String.class});
+                                method.setAccessible(true);
+                                method.invoke(ucp, new Object[]{path});        
+                            } catch (RuntimeException ex){
+                                System.err.println("Java>=10 requires the option '--add-opens java.base/jdk.internal.loader=ALL-UNNAMED' to add to classpath: " + path);
+                            }
+                        } 
+                    }
                     //Just to keep track, java.class.path is not parsed again by classloader.
                     System.setProperty("java.class.path", String.join(File.pathSeparator, Arr.append(classPath, path)));
                 }

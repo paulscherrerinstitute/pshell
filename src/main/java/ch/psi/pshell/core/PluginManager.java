@@ -9,7 +9,11 @@ import groovy.lang.GroovyClassLoader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -277,7 +281,7 @@ public class PluginManager implements AutoCloseable {
     public static void addToClassPath(File file){
         try {
             String path =  file.getCanonicalPath();
-            Sys.addToClassPath(path);
+            Sys.addToClassPath(path);                        
             if (!extensions.contains(file)) {
                 extensions.add(file);
             }
@@ -359,7 +363,7 @@ public class PluginManager implements AutoCloseable {
         //Check if has been compiled and is more recent. In this case load .class        
         if ((classFile.exists()) && (classFile.lastModified() > file.lastModified())) {
             try {
-                cls = Loader.loadClass(classFile.getPath());
+                cls = Loader.loadClass(classFile, true);
             } catch (Exception ex) {
                 //Let's recompile then
                 logger.info("Error loading class file: " + ex.getMessage());
@@ -367,21 +371,8 @@ public class PluginManager implements AutoCloseable {
         }
         if (cls == null) {
             // Compile source file.       
-            logger.info("Compiling class file: " + file.getPath());
-            JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
-            if (compiler == null) {
-                throw new Exception("Java compiler is not present");
-            }            
-            if (compiler.run(null, System.out, System.err, file.getPath()) == 0) {
-                // Load and instantiate compiled class.
-                File location = (file.getParentFile() == null) ? new File(".") : file.getParentFile();
-                //URLClassLoader classLoader = URLClassLoader.newInstance(new URL[]{location.toURI().toURL()});
-                Sys.addToClassPath(location);
-                cls = Class.forName(IO.getPrefix(file), true, Sys.getClassLoader());
-            } else {
-                throw new Exception("Error compiling plugin: " + file);
-            }
-        }
+            cls = Loader.compileClass(file, true);
+        }         
         return cls;
     }
 
@@ -390,9 +381,12 @@ public class PluginManager implements AutoCloseable {
         if (Plugin.class.isAssignableFrom(cls)) {
             Plugin plugin = (Plugin) cls.newInstance();
             initPlugin(plugin, file);
-            plugins.add(plugin);
+            plugins.add(plugin);            
             return plugin;
         } else {
+            //Make dynamic class avilable in system class loader
+            File classFile = new File(file.getPath().replace(".java", ".class"));
+            Loader.loadClass(classFile);
             addDynamicClass(cls);
             return null;
         }
