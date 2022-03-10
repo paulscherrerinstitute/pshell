@@ -159,7 +159,7 @@ public class PluginManager implements AutoCloseable {
             }
             switch (IO.getExtension(file)) {
                 case "jar":
-                    for (Class cls : Loader.loadJar(fileName)) {
+                    for (Class cls : Loader.loadJar(fileName, true)) {
                         if (Modifier.isPublic(cls.getModifiers())) {
                             if (Plugin.class.isAssignableFrom(cls)) {
                                 //Only 1 plugin per jar file

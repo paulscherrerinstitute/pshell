@@ -53,8 +53,12 @@ public class Loader {
             throw new Exception("Error compiling plugin: " + file);
         }        
     }    
-
+    
     public static Class[] loadJar(String fileName) throws Exception {
+        return loadJar(fileName, false);
+    }    
+
+    public static Class[] loadJar(String fileName, boolean reloadable) throws Exception {
         String extension = IO.getExtension(fileName);
 
         if (!extension.toLowerCase().equals("jar")) {
@@ -70,11 +74,18 @@ public class Loader {
                 classes.add(file);
             }
         }
-        Sys.addToClassPath(fileName);
         Class[] ret = new Class[classes.size()];
-        for (int i = 0; i < classes.size(); i++) {
-            ret[i] = loadClass(Sys.getClassLoader(), classes.get(i));
+        ClassLoader cl;
+        if (reloadable){            
+            cl = Sys.newClassLoader(new String[]{fileName});
+        } else {
+            Sys.addToClassPath(fileName);            
+            cl = Sys.getClassLoader();
         }
+        for (int i = 0; i < classes.size(); i++) {
+            ret[i] = loadClass(cl, classes.get(i));
+        }
+        
         return ret;
     }
 }
