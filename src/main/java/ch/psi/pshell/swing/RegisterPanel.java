@@ -3,6 +3,7 @@ package ch.psi.pshell.swing;
 import ch.psi.pshell.device.Device;
 import ch.psi.pshell.device.RegisterBase;
 import ch.psi.pshell.device.ReadonlyRegisterBase;
+import ch.psi.pshell.device.Register.RegisterString;
 import ch.psi.pshell.device.ProcessVariableBase;
 import ch.psi.utils.Convert;
 import ch.psi.utils.State;
@@ -24,6 +25,14 @@ public final class RegisterPanel extends DevicePanel {
         return txtRegisterReadout;
     }
     
+    public String getText(){
+        return getTextField().getText();
+    }
+    
+    public void setText(String text){
+        getTextField().setText(text);
+    }
+
     @Override
     public ReadonlyRegisterBase getDevice() {
         return (ReadonlyRegisterBase) super.getDevice();
@@ -105,16 +114,20 @@ public final class RegisterPanel extends DevicePanel {
                 txtRegisterReadout.setText("");
             } else if (isEditing() == false) {
                 Object val = getDevice().take();                
-                int decimals = Math.min(getDecimals(), getDevice().getPrecision());
-                decimals = Math.max(decimals, 0);
-                if (! (val instanceof Number)){
-                    throw new Exception();
-                }
-                if ((val instanceof Float) || (val instanceof Double)){
-                    Double position = Convert.roundDouble(((Double)val).doubleValue(), decimals);
-                    txtRegisterReadout.setText((position == null) ? "" : String.format("%1." + decimals + "f", position));
+                if (val instanceof String){
+                    txtRegisterReadout.setText((String)val);
                 } else {
-                    txtRegisterReadout.setText(Str.toString(val));
+                    if (! (val instanceof Number)){
+                        throw new Exception();
+                    }
+                    int decimals = Math.min(getDecimals(), getDevice().getPrecision());
+                    decimals = Math.max(decimals, 0);
+                    if ((val instanceof Float) || (val instanceof Double)){
+                        Double position = Convert.roundDouble(((Double)val).doubleValue(), decimals);
+                        txtRegisterReadout.setText((position == null) ? "" : String.format("%1." + decimals + "f", position));
+                    } else {
+                        txtRegisterReadout.setText(Str.toString(val));
+                    }
                 }
             }
         } catch (Exception ex) {
@@ -122,11 +135,13 @@ public final class RegisterPanel extends DevicePanel {
         }
     }
 
-    protected void write(Number value) throws IOException {
+    public void write(Object value, boolean showException) throws IOException {
         if (!isReadonlyRegister()){
             ((RegisterBase)getDevice()).writeAsync(value).handle((ok, ex) -> {
-                if ((ex != null) && (ex instanceof IOException)) {
-                    showException((Exception) ex);
+                if (showException){
+                    if ((ex != null) && ((ex instanceof IOException) || (ex instanceof IllegalArgumentException))) {
+                        showException((Exception) ex);
+                    }
                 }
                 return ok;
             });
@@ -214,8 +229,12 @@ public final class RegisterPanel extends DevicePanel {
                 setEditing(false);
             } else if (c == KeyEvent.VK_ENTER) {
                 try {
-                    Double destination = Double.valueOf(txtRegisterReadout.getText());
-                    write(destination);
+                    String text = txtRegisterReadout.getText();
+                    if (getDevice() instanceof RegisterString){
+                        write(text, true);
+                    } else {
+                        write(Double.valueOf(text), true);
+                    }
                 } catch (Exception ex) {
                     throw ex;
                 } finally {

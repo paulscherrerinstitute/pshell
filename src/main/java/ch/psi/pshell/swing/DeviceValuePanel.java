@@ -48,6 +48,11 @@ public final class DeviceValuePanel extends DevicePanel {
     public JLabel getLabel() {
         return labelValue;
     }
+    
+    public String getText(){
+        return getLabel().getText();
+    }
+    
 
     /**
      * This method is called from within the constructor to initialize the form. WARNING: Do NOT

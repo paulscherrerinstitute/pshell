@@ -17,7 +17,7 @@ public final class SlitPanel extends DevicePanel {
             try {
                 if (editing) {
                     getDevice().getCenterReg().writeAsync(value).handle((ok, ex) -> {
-                        if ((ex != null) && (ex instanceof IOException)) {
+                        if ((ex != null) && ((ex instanceof IOException) || (ex instanceof IllegalArgumentException))) {
                             showException((Exception) ex);
                             onDeviceValueChanged(getDevice().take(), getDevice().take());
                         }
@@ -33,7 +33,7 @@ public final class SlitPanel extends DevicePanel {
             try {
                 if (editing) {
                     getDevice().getSizeReg().writeAsync(value).handle((ok, ex) -> {
-                        if ((ex != null) && (ex instanceof IOException)) {
+                        if ((ex != null) && ((ex instanceof IOException) || (ex instanceof IllegalArgumentException))) {
                             showException((Exception) ex);
                             onDeviceValueChanged(getDevice().take(), getDevice().take());
                         }

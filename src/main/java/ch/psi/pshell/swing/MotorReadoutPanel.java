@@ -19,6 +19,10 @@ public final class MotorReadoutPanel extends DevicePanel {
     public JTextField getTextField(){
         return txtMotorReadout;
     }    
+    
+    public String getText(){
+        return getTextField().getText();
+    }    
 
     @Override
     public Motor getDevice() {
@@ -106,7 +110,7 @@ public final class MotorReadoutPanel extends DevicePanel {
 
     protected void move(double value) throws IOException {
         getDevice().writeAsync(value).handle((ok, ex) -> {
-            if ((ex != null) && (ex instanceof IOException)) {
+            if ((ex != null) && ((ex instanceof IOException) || (ex instanceof IllegalArgumentException))) {
                 showException((Exception) ex);
             }
             return ok;

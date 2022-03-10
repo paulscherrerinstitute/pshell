@@ -38,6 +38,10 @@ public class MotorPanel extends DevicePanel {
         }        
         //textState.setBackground(TEXT_READONLY_BACKGROUND_COLOR);        
     }
+    
+    public MotorReadoutPanel getReadoutPanel(){
+        return readout;
+    }
 
     private static boolean defaultShowHoming = true;
     

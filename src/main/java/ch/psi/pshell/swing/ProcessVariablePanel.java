@@ -34,7 +34,7 @@ public final class ProcessVariablePanel extends DevicePanel {
 
     void write(double value) {
         getDevice().writeAsync(value).handle((ok, ex) -> {
-            if ((ex != null) && (ex instanceof IOException)) {
+            if ((ex != null) && ((ex instanceof IOException) || (ex instanceof IllegalArgumentException))) {
                 showException((Exception) ex);
                 onDeviceValueChanged(getDevice().take(), getDevice().take());
             }

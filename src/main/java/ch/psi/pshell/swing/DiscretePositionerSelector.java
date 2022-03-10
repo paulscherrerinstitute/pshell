@@ -20,9 +20,30 @@ public class DiscretePositionerSelector extends DevicePanel{
         return combo;
     }    
     
+    public String getText(){
+        Object selection = combo.getSelectedItem();
+        return (selection==null) ? null : selection.toString();
+    }    
+
+    public void setText(String text){
+        combo.setSelectedItem(text);
+    }    
+    
     @Override
     public DiscretePositioner getDevice() {
         return (DiscretePositioner) super.getDevice();
+    }
+
+    public void write(String value, boolean showException){
+        getDevice().writeAsync(value).handle((ok, ex) -> {
+            if (showException){
+                if ((ex != null) && ((ex instanceof IOException) || (ex instanceof IllegalArgumentException))) {
+                    showException((Exception) ex);
+                }
+            }
+            return ok;
+        });
+        
     }
 
     /**
@@ -62,12 +83,7 @@ public class DiscretePositionerSelector extends DevicePanel{
         try {
             if (!updating){
                 String position = combo.getSelectedItem().toString();
-                getDevice().writeAsync(position).handle((ok, ex) -> {
-                    if ((ex != null) && (ex instanceof IOException)) {
-                        showException((Exception) ex);
-                    }
-                    return ok;
-                });
+                write(position, true);
             }
         } catch (Exception ex) {
             showException(ex);

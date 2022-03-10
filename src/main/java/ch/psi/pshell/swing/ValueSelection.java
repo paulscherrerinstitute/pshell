@@ -62,7 +62,11 @@ public class ValueSelection extends MonitoredPanel implements Observable<ValueSe
     public JTextField getTextField(){
         return text;
     }
-
+    
+    public String getText(){
+        return getTextField().getText();
+    }
+        
     boolean acceptEmpty;
 
     public boolean getAcceptEmpty() {
