@@ -3667,10 +3667,8 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
     }
 
     /**
-     * Browse dynamically loaded classes in add ition to forName on current
-     * ClassLoader
+     * Search class in system class loader and plugins
      */
-    @Hidden
     public Class getClassByName(String className) throws ClassNotFoundException {
         try {
             return Class.forName(className, true, Sys.getClassLoader());
@@ -3679,6 +3677,11 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
                 Class cls = pluginManager.getDynamicClass(className);
                 if (cls != null) {
                     return cls;
+                }
+                for (Plugin p: pluginManager.getLoadedPlugins()){
+                    if (p.getClass().getName().equals(className)){
+                        return p.getClass();
+                    }
                 }
             }
             try {
