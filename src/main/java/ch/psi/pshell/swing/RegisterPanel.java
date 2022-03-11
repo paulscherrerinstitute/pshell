@@ -32,7 +32,11 @@ public final class RegisterPanel extends DevicePanel {
     public void setText(String text){
         getTextField().setText(text);
     }
-
+    
+    public Object getValue(){
+        return getDevice().take();
+    }
+    
     @Override
     public ReadonlyRegisterBase getDevice() {
         return (ReadonlyRegisterBase) super.getDevice();
@@ -113,7 +117,7 @@ public final class RegisterPanel extends DevicePanel {
             if (getDevice() == null) {
                 txtRegisterReadout.setText("");
             } else if (isEditing() == false) {
-                Object val = getDevice().take();                
+                Object val = getValue();                
                 if (val instanceof String){
                     txtRegisterReadout.setText((String)val);
                 } else {
@@ -135,6 +139,10 @@ public final class RegisterPanel extends DevicePanel {
         }
     }
 
+    public void write(Object value) throws IOException {
+        write(value, true);
+    }
+    
     public void write(Object value, boolean showException) throws IOException {
         if (!isReadonlyRegister()){
             ((RegisterBase)getDevice()).writeAsync(value).handle((ok, ex) -> {
@@ -231,9 +239,9 @@ public final class RegisterPanel extends DevicePanel {
                 try {
                     String text = txtRegisterReadout.getText();
                     if (getDevice() instanceof RegisterString){
-                        write(text, true);
+                        write(text);
                     } else {
-                        write(Double.valueOf(text), true);
+                        write(Double.valueOf(text));
                     }
                 } catch (Exception ex) {
                     throw ex;

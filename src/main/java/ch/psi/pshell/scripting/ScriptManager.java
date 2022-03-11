@@ -8,6 +8,7 @@ import ch.psi.utils.IO.FilePermissions;
 import ch.psi.utils.ProcessFactory;
 import ch.psi.utils.Reflection.Hidden;
 import ch.psi.utils.Str;
+import ch.psi.utils.Sys;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -84,8 +85,16 @@ public class ScriptManager implements AutoCloseable {
         }
 
         //engine = new ScriptEngineManager().getEngineByExtension(type.toString());)
-        ScriptEngineManager manager = new ScriptEngineManager();
+        ScriptEngineManager manager = new ScriptEngineManager(Sys.getClassLoader());
         if (type==ScriptType.cpy){
+            try {
+                String jar = IO.getExecutingJar(ScriptManager.class);
+                if (jar!=null){
+                    Sys.addToClassPath(new File(jar).getCanonicalFile()); 
+                }
+            } catch (Exception ex) {
+                logger.log(Level.SEVERE, null, ex);
+            }            
             manager.registerEngineName("jep", new JepScriptEngineFactory(libraryPath));
             engine =  manager.getEngineByName("jep");
         } else {
