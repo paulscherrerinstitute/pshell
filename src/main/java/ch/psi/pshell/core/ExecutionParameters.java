@@ -143,7 +143,7 @@ public class ExecutionParameters {
 
     public Scan getCurrentScan() {
         synchronized (currentScans) {
-            for (Scan scan : getCurrentScans()) {
+            for (Scan scan : getCurrentScans()) {                
                 if (currentScans.get(scan).index == getIndex()) {
                     return scan;
                 }
@@ -365,6 +365,7 @@ public class ExecutionParameters {
                 }
             } else if ((Boolean.FALSE.equals(open)) && (Context.getInstance().dataManager.isOpen())) {
                 Context.getInstance().dataManager.closeOutput();
+                currentScans.clear();
                 scanIndex = 0;      
                 lastOutputFile = null;
                 pathName = null;
