@@ -29,11 +29,11 @@ renderer = show_panel(src1)
 #Overlays
 plots = None
 size = renderer.getImageSize() ; 
-ov_text = Overlays.Text(Pen(java.awt.Color.GREEN.darker()), "Ploting Histogram", 
-    java.awt.Font("Verdana", java.awt.Font.PLAIN, 12), java.awt.Point(20,20))
-ov_line = Overlays.Line(Pen(java.awt.Color.DARK_GRAY), java.awt.Point(0,size.height/2), java.awt.Point( size.width ,size.height/2))
-ov_rect = Overlays.Rect(Pen(java.awt.Color.DARK_GRAY), java.awt.Point(size.width/2 -15,size.height/2+10), java.awt.Dimension(30,30))
-ov_cross = Overlays.Crosshairs(Pen(java.awt.Color.DARK_GRAY),  java.awt.Point(size.width/2 ,size.height/3), java.awt.Dimension(15,15))
+ov_text = Overlays.Text(Pen(Color.GREEN.darker()), "Ploting Histogram", 
+    Font("Verdana", Font.PLAIN, 12), Point(20,20))
+ov_line = Overlays.Line(Pen(Color.DARK_GRAY), Point(0,size.height/2), Point( size.width ,size.height/2))
+ov_rect = Overlays.Rect(Pen(Color.DARK_GRAY), Point(size.width/2 -15,size.height/2+10), Dimension(30,30))
+ov_cross = Overlays.Crosshairs(Pen(Color.DARK_GRAY),  Point(size.width/2 ,size.height/3), Dimension(15,15))
 ov_rect.setSolid(True)
 ov_rect.setMovable(True)
 
@@ -55,7 +55,7 @@ try:
     
         if plots[0].displayable == False: 
             break
-        ov_cross.update(java.awt.Point((ov_cross.position.x+1) % size.width ,(ov_cross.position.y+1) % size.height))
+        ov_cross.update(Point((ov_cross.position.x+1) % size.width ,(ov_cross.position.y+1) % size.height))
         time.sleep(0.1)
 finally:      
     renderer.removeOverlays([ov_text,ov_line, ov_rect, ov_cross])

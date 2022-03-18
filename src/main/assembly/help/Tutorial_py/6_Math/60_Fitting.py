@@ -5,7 +5,6 @@
 
 from mathutils import fit_polynomial,fit_gaussian, fit_harmonic, calculate_peaks
 from mathutils import PolynomialFunction, Gaussian, HarmonicOscillator
-import java.awt.Color as Color
 import math
 
 start = 0

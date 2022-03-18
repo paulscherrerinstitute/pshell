@@ -6,8 +6,8 @@ from ijutils import get_measurement, load_array
 
 class MeasurementsFilter(Filter):
     def __init__(self, measurements):
-        self.overlay = Overlays.Text(Pen(java.awt.Color.GREEN.darker()), "", \
-            java.awt.Font("Verdana", java.awt.Font.PLAIN, 12), java.awt.Point(20,20))
+        self.overlay = Overlays.Text(Pen(Color.GREEN.darker()), "", \
+            Font("Verdana", Font.PLAIN, 12), Point(20,20))
         self.measurements = measurements
         self.source = None
         self.renderer = None

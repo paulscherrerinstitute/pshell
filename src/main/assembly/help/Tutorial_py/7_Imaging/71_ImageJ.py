@@ -3,7 +3,7 @@
 ################################################################################################### 
 
 from ijutils import *
-import java.awt.Color as Color
+
 
 #Image Loading
 ip = load_image("images/img.png", title="Image")

@@ -4,7 +4,6 @@
 
 
 from mathutils import estimate_peak_indexes, fit_gaussians, create_fit_point_list
-import java.awt.Color as Color
 
 start = 0
 end = 50
