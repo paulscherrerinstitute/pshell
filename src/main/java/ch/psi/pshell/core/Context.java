@@ -3658,6 +3658,15 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
         }
         return new Plugin[0];
     }
+    
+    public Plugin getPlugin(String name) {
+        for (Plugin p: getPlugins()) {
+            if (IO.getPrefix(p.getPluginName()).equals(name)){
+                return p;
+            }
+        }
+        return null;
+    }    
 
     public File[] getExtensions() {
         if (pluginManager != null) {
