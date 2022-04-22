@@ -4,9 +4,7 @@ import ch.psi.pshell.core.Context;
 import ch.psi.pshell.core.JsonSerializer;
 import ch.psi.pshell.core.SessionManager;
 import ch.psi.pshell.core.SessionManager.MetadataType;
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -366,37 +364,17 @@ public class SciCat {
             if (!par.isBlank()) {
                 pars.add(par.trim());
             }
-        }
+        }               
         //pars.add("metadata.json");
         //pars.add("filelisting.txt");
         pars.add(jsonFile);
-        pars.add(fileListingFile);
+        pars.add(fileListingFile);        
 
-        ProcessBuilder pb = new ProcessBuilder(pars);
-        //pb.redirectErrorStream(true);
-        Process p = pb.start();
-        p.waitFor();
-
-        BufferedReader reader;
-        StringBuilder builder;
-        String line = null;
-        
-        reader = new BufferedReader(new InputStreamReader(p.getErrorStream()));
-        builder = new StringBuilder();
-        while ( (line = reader.readLine()) != null) {
-            builder.append(line).append(Sys.getLineSeparator());
-        }
-        String output = builder.toString();
-         
-        reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
-        builder = new StringBuilder();
-        while ((line = reader.readLine()) != null) {
-            if (!line.isBlank()) {
-                builder.append(line).append(Sys.getLineSeparator());
-            }
-        }
-        String datasetId = builder.toString().trim();
-        return new IngestOutput(!datasetId.isEmpty(), output, datasetId, datasetName);
+        String[] ret = ch.psi.utils.Processing.run(pars);        
+        String out = ret[0];
+        String err = ret[1];
+        String datasetId = out.trim();
+        return new IngestOutput(!datasetId.isEmpty(), err, datasetId, datasetName);
     }
         
     public IngestOutput ingest(int sessionId, Map<String, Object> metadata) throws IOException, InterruptedException {

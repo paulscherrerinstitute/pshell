@@ -5,6 +5,8 @@ import ch.psi.pshell.core.JsonSerializer;
 import ch.psi.pshell.core.SessionManager;
 import ch.psi.pshell.core.SessionManager.MetadataType;
 import ch.psi.pshell.core.SessionManager.SessionManagerListener;
+import ch.psi.pshell.ui.App;
+import ch.psi.pshell.ui.Task;
 import ch.psi.utils.IO;
 import ch.psi.utils.SciCat;
 import ch.psi.utils.Str;
@@ -419,6 +421,96 @@ public class SessionsDialog extends StandardDialog implements SessionManagerList
         updateButtons();
     }   
    
+    
+    
+    
+    /**
+     * Task to ingest session data into SciCat.
+     */
+    public class ScicatIngest extends Task {
+
+        @Override
+        protected String doInBackground() throws Exception {
+            String msg = "Ingesting session data to Scicat";
+            setMessage(msg);
+            setProgress(0);
+            buttonScicatIngestion.setEnabled(false);
+            try {
+                App.getInstance().sendTaskInit(msg);
+                
+                SciCat.IngestOutput result = null;
+                JDialog splash = SwingUtils.showSplash(App.getInstance().getMainFrame(), "Archive", new Dimension(400,200), "Ingesting SciCat dataset...");
+                try{
+                    result  = sciCat.ingest(currentSession, null);
+                } finally{
+                    splash.setVisible(false);
+                }
+                msg = result.success ?
+                    "Success ingesting SciCat dataset " + result.datasetName + "\nId: " + result.datasetId :
+                    "Error ingesting SciCat dataset " + result.datasetName;
+                
+                SwingUtils.showScrollableMessage(App.getInstance().getMainFrame(),"SciCat Ingestion", msg, result.output);
+                Logger.getLogger(SessionPanel.class.getName()).info(msg + "\n" + result.output);
+                                
+                msg = "Success ingesting to Scicat";
+                App.getInstance().sendOutput(msg);
+                setMessage(msg);
+                setProgress(100);
+                return msg;
+            } catch (Exception ex) {
+                setMessage("Error ingesting to Scicat");
+                App.getInstance().sendError(ex.toString());
+                throw ex;
+            } finally {
+                buttonScicatIngestion.setEnabled(true);
+                App.getInstance().sendTaskFinish(msg);                
+            }
+        }
+    }
+    
+    /**
+     * Task to archive session data into ZIP file.
+     */
+    public class ZipSession extends Task {
+        final File file;
+        ZipSession(File file){
+            this.file=file;
+        }
+
+        @Override
+        protected String doInBackground() throws Exception {
+            SessionManager manager = Context.getInstance().getSessionManager();
+            String msg = "Archiving session data to zip file";
+            setMessage(msg);
+            setProgress(0);
+            buttonZIP.setEnabled(false);
+            try {
+                App.getInstance().sendTaskInit(msg);
+                
+                JDialog splash = SwingUtils.showSplash(App.getInstance().getMainFrame(),"Archive", new Dimension(400,200), "Generating ZIP file...");
+                try{
+                    manager.createZipFile(currentSession, file, checkPreserveDirectoryStructure.isSelected());                    
+                } finally{
+                    splash.setVisible(false);
+                }                                                
+                msg = "Success creating ZIP file: " + file.getName();               
+                SwingUtils.showMessage(App.getInstance().getMainFrame(),"Archive", msg);
+                App.getInstance().sendOutput(msg);
+                setMessage(msg);
+                setProgress(100);
+                return msg;
+            } catch (Exception ex) {
+                setMessage("Error ingesting to Scicat");
+                App.getInstance().sendError(ex.toString());
+                throw ex;
+            } finally {
+                buttonZIP.setEnabled(true);
+                App.getInstance().sendTaskFinish(msg);
+            }
+        }
+    }    
+    
+    
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -1008,6 +1100,7 @@ public class SessionsDialog extends StandardDialog implements SessionManagerList
 
     private void buttonZIPActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonZIPActionPerformed
         try {
+            App.getInstance().getState().assertReady();
             JFileChooser chooser = new JFileChooser();
             FileNameExtensionFilter filter = new FileNameExtensionFilter("ZIP files", "zip");
             String name = manager.getName(currentSession);
@@ -1027,14 +1120,7 @@ public class SessionsDialog extends StandardDialog implements SessionManagerList
                         return;
                     }
                 }
-                
-                JDialog splash = showSplash("Archive", new Dimension(400,200), "Generating ZIP file...");
-                try{
-                    manager.createZipFile(currentSession, file, checkPreserveDirectoryStructure.isSelected());                    
-                } finally{
-                    splash.setVisible(false);
-                }
-                showMessage("Archive", "Success creating ZIP file: " + file.getName());
+                App.getInstance().startTask(new ZipSession(file));
             }
         } catch (Exception ex) {
             showException(ex);
@@ -1051,18 +1137,8 @@ public class SessionsDialog extends StandardDialog implements SessionManagerList
 
     private void buttonScicatIngestionActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonScicatIngestionActionPerformed
         try {
-            SciCat.IngestOutput result = null;
-            JDialog splash = showSplash("Archive", new Dimension(400,200), "Ingesting SciCat dataset...");
-            try{
-                result  = sciCat.ingest(currentSession, null);
-            } finally{
-                splash.setVisible(false);
-            }
-            String msg = result.success ?
-            "Success ingesting SciCat dataset " + result.datasetName + "\nId: " + result.datasetId :
-            "Error ingesting SciCat dataset " + result.datasetName;
-            showScrollableMessage("SciCat Ingestion", msg, result.output);
-            Logger.getLogger(SessionPanel.class.getName()).info(msg + "\n" + result.output);
+            App.getInstance().getState().assertReady();
+            App.getInstance().startTask(new ScicatIngest());
         } catch (Exception ex) {
             showException(ex);
             Logger.getLogger(SessionPanel.class.getName()).log(Level.WARNING, null, ex);
