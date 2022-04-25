@@ -608,7 +608,7 @@ public class AreaDetector extends CameraBase {
     }
 
     public ChannelInteger getMinY() {
-        return minX;
+        return minY;
     }
 
     public ChannelInteger getSizeX() {
