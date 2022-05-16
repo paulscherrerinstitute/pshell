@@ -520,7 +520,7 @@ public class View extends MainFrame {
         }
     }
 
-    void updateButtons() {
+    public void updateButtons() {
         if (!SwingUtilities.isEventDispatchThread()) {
             SwingUtilities.invokeLater(() -> {
                 updateButtons();
@@ -654,7 +654,7 @@ public class View extends MainFrame {
             }       
             
             @Override
-            public  void onTitleClosed(String title){
+            public void onTitleClosed(String title){
                 //Do nothing... only close titles graphically
             }            
         });
@@ -984,6 +984,15 @@ public class View extends MainFrame {
     }
     HashMap<String, Component> detachedPlots = new HashMap<>();
     HashMap<String, Component> detachedScripts = new HashMap<>();
+    
+    
+    public HashMap<String, Component> getDetachedPlots(){
+        return detachedPlots;
+    }
+    
+    public HashMap<String, Component> getDetachedScripts(){
+        return detachedScripts;
+    }    
 
     boolean canDetach(Component c) {
         if (c == currentScriptEditor) {
@@ -1300,6 +1309,22 @@ public class View extends MainFrame {
         }
         return ret;
     }
+    
+    public List<DataPanel> getDataFilePanels() {
+        ArrayList<DataPanel> ret = new ArrayList();
+        for (int i = 0; i < tabDoc.getTabCount(); i++) {
+            Component c = tabDoc.getComponentAt(i);
+            if (c instanceof DataPanel) {
+                ret.add((DataPanel) c);
+            }
+        }
+        for (String key : detachedScripts.keySet()) {
+            if (detachedScripts.get(key) instanceof DataPanel) {
+                ret.add((DataPanel) detachedScripts.get(key));
+            }
+        }
+        return ret;
+    }    
 
     public List<QueueProcessor> getQueues() {
         ArrayList<QueueProcessor> ret = new ArrayList();
