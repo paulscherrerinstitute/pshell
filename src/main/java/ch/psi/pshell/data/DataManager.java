@@ -1,8 +1,10 @@
 package ch.psi.pshell.data;
 
-import ch.psi.pshell.core.*;
-import static ch.psi.pshell.data.Layout.FIELD_TIMESTAMP;
-import static ch.psi.pshell.data.Layout.FIELD_VALUE;
+import ch.psi.pshell.core.Context;
+import ch.psi.pshell.core.ContextAdapter;
+import ch.psi.pshell.core.ExecutionParameters;
+import ch.psi.pshell.core.LogManager;
+import ch.psi.pshell.core.Nameable;
 import ch.psi.pshell.device.ArrayCalibration;
 import ch.psi.pshell.device.Device;
 import ch.psi.pshell.device.MatrixCalibration;
@@ -734,6 +736,7 @@ public class DataManager implements AutoCloseable {
     }
 
     public String[] getChildren(String path) throws IOException {
+        path=adjustPath(path);
         DataAddress address = getAddress(path);
         if (address != null) {
             return getChildren(address.root, address.path);
@@ -743,6 +746,7 @@ public class DataManager implements AutoCloseable {
 
     public String[] getChildren(String root, String path) throws IOException {
         root = adjustRoot(root);
+        path=adjustPath(path);
         try {
             if (isGroup(root, path)) {
                 return getProvider().getChildren(root, path);
@@ -757,11 +761,12 @@ public class DataManager implements AutoCloseable {
         if (address != null) {
             return isDataset(address.root, address.path);
         }
-        return getProvider().isDataset(getOutput(), path);
+        return isDataset(getOutput(), path);
     }
 
     public boolean isDataset(String root, String path) throws IOException {
         root = adjustRoot(root);
+        path=adjustPath(path);
         return getProvider().isDataset(root, path);
     }
 
@@ -770,11 +775,12 @@ public class DataManager implements AutoCloseable {
         if (address != null) {
             return isGroup(address.root, address.path);
         }
-        return getProvider().isGroup(getOutput(), path);
+        return isGroup(getOutput(), path);
     }
 
-    public boolean isGroup(String root, String path) throws IOException {
+    public boolean isGroup(String root, String path) throws IOException {        
         root = adjustRoot(root);
+        path=adjustPath(path);
         return getProvider().isGroup(root, path);
     }
 
@@ -788,11 +794,13 @@ public class DataManager implements AutoCloseable {
     }
 
     public static DataAddress getAddress(String path) {
-        String[] rootDelimitors = new String[]{"|", " /"};
-        for (String delimitor : rootDelimitors) {
-            if (path.contains(delimitor)) {
-                int index = path.indexOf(delimitor);
-                return new DataAddress(path.substring(0, index).trim(), path.substring(index + delimitor.length()).trim());
+        if (path!=null){
+            String[] rootDelimitors = new String[]{"|", " /"};
+            for (String delimitor : rootDelimitors) {
+                if (path.contains(delimitor)) {
+                    int index = path.indexOf(delimitor);
+                    return new DataAddress(path.substring(0, index).trim(), path.substring(index + delimitor.length()).trim());
+                }
             }
         }
         return null;
@@ -817,7 +825,7 @@ public class DataManager implements AutoCloseable {
         return getData(getOutput(), path, index);
     }
 
-    public DataSlice getData(String root, String path) throws IOException {
+    public DataSlice getData(String root, String path) throws IOException {        
         return getData(root, path, 0);
     }
 
@@ -826,6 +834,7 @@ public class DataManager implements AutoCloseable {
      */
     public DataSlice getData(String root, String path, int index) throws IOException {
         root = adjustRoot(root);
+        path=adjustPath(path);
 
         DataSlice ret = getProvider().getData(root, path, index);
         if (ret == null) {
@@ -848,6 +857,7 @@ public class DataManager implements AutoCloseable {
 
     public DataSlice getData(String root, String path, long[] index, int[] shape) throws IOException {
         root = adjustRoot(root);
+        path=adjustPath(path);
 
         DataSlice ret = getProvider().getData(root, path, index, shape);
         if (ret == null) {
@@ -869,6 +879,16 @@ public class DataManager implements AutoCloseable {
         }
         return root;
     }
+    
+    String adjustPath(String path) {
+        if (path==null){
+            throw new IllegalArgumentException();
+        }
+        if (!path.contains("/")){
+            path = "/" + path;
+        }
+        return path;
+    }
 
     public Map<String, Object> getInfo(String path) {
         DataAddress address = getAddress(path);
@@ -880,6 +900,7 @@ public class DataManager implements AutoCloseable {
 
     public Map<String, Object> getInfo(String root, String path) {
         root = adjustRoot(root);
+        path=adjustPath(path);      
 
         Map<String, Object> ret;
         try {
@@ -901,6 +922,7 @@ public class DataManager implements AutoCloseable {
 
     public Map<String, Object> getAttributes(String root, String path) {
         root = adjustRoot(root);
+        path=adjustPath(path);      
 
         Map<String, Object> ret;
         try {
@@ -923,6 +945,7 @@ public class DataManager implements AutoCloseable {
     }
 
     public boolean exists(String path) {
+        path=adjustPath(path);
         DataAddress address = getAddress(path);
         if (address != null) {
             return exists(address.root, address.path);
@@ -932,6 +955,7 @@ public class DataManager implements AutoCloseable {
 
     public boolean exists(String root, String path) {
         root = adjustRoot(root);
+        path=adjustPath(path);      
         try {
             Map<String, Object> info = getProvider().getInfo(root, path);
             if ((info == null) || (String.valueOf(info.get(Provider.INFO_TYPE)).equals(Provider.INFO_VAL_TYPE_UNDEFINED))) {
@@ -973,9 +997,10 @@ public class DataManager implements AutoCloseable {
     }
 
     public void setDataset(String path, Object data, boolean unsigned, Map features) throws IOException {
-        if ((data == null) || (path == null) || (!path.contains("/"))) {
+        if (data == null) {
             throw new IllegalArgumentException();
         }
+        path=adjustPath(path);
         openOutput();
 
         int index = path.lastIndexOf("/");
@@ -1042,9 +1067,10 @@ public class DataManager implements AutoCloseable {
     }
 
     public void createDataset(String path, Class type, Boolean unsigned, int[] dimensions, Map features) throws IOException {
-        if ((type == null) || (path == null) || (!path.contains("/"))) {
+        if (type == null) {
             throw new IllegalArgumentException();
         }
+        path=adjustPath(path);        
         if (unsigned == null) {
             unsigned = ((type == Byte.class) || (type == Short.class)); //Default unsigned for byte and shortt
         }
@@ -1074,9 +1100,10 @@ public class DataManager implements AutoCloseable {
     }
 
     public void createDataset(String path, String[] names, Class[] types, int[] lengths, Map features) throws IOException {
-        if ((names == null) || (path == null) || (!path.contains("/"))) {
+        if (names == null) {
             throw new IllegalArgumentException();
         }
+        path=adjustPath(path);
         openOutput();
         int fields = names.length;
         if (types == null) {
@@ -1115,9 +1142,8 @@ public class DataManager implements AutoCloseable {
     }
     
     public void setItem(String path, Object value, int index) throws IOException {
-        if (path == null) {
-            return;
-        }
+        path=adjustPath(path);        
+        
         Class type = null;
         if (value != null) {
             type = value.getClass();
@@ -1140,9 +1166,8 @@ public class DataManager implements AutoCloseable {
      * Write to multi-dimensional dataset. val must be a 1d array
      */
     public void setItem(String path, Object val, long[] index, int[] shape) throws IOException {
-        if (path == null) {
-            return;
-        }
+        path=adjustPath(path);
+        
         Class type = null;
         if (val != null) {
             type = val.getClass();
@@ -1184,9 +1209,10 @@ public class DataManager implements AutoCloseable {
     }
 
     public void setAttribute(String path, String name, Object value, boolean unsigned) throws IOException {
-        if ((name == null) || (name.isEmpty()) || (path == null) || (!path.contains("/")) || (value == null)) {
+        if ((name == null) || (name.isEmpty()) || (value == null)) {
             throw new IllegalArgumentException();
         }
+        path=adjustPath(path);
         openOutput();
         Class type = value.getClass();
         if (type ==  NDArray.class){
@@ -1229,7 +1255,7 @@ public class DataManager implements AutoCloseable {
                             data[j][i] = (sliceData[i][j]);
                         }
                     }
-                    if (Arr.equals(names,new String[]{FIELD_TIMESTAMP, FIELD_VALUE})){
+                    if (Arr.equals(names,new String[]{Layout.FIELD_TIMESTAMP, Layout.FIELD_VALUE})){
                         //Monitor plots values against timestamp
                         String name = IO.getPrefix(path);
                         ret.add(new PlotDescriptor(name, data[1], (double[])Convert.toDouble(data[0])));
