@@ -1457,6 +1457,10 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
         setCurrentPath(file);
     }
 
+    public String getFileName(){
+        return fileName;
+    }
+    
     class DefaultDataPanelListener implements DataPanelListener {
 
         Window getParent() {
