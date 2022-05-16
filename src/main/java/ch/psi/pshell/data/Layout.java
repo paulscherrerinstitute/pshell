@@ -91,6 +91,10 @@ public interface Layout {
     default String getMonitorPathName(Scan scan, Device dev) {
         return getMonitorsPathName(scan)+ dev.getAlias();
     }
+    
+    default String getMonitorPathName(Scan scan, String name) {
+        return getMonitorsPathName(scan)+ name;
+    }
         
     default String getSnapsPathName(Scan scan) {
         return getCurrentGroup(scan) + getSnapsPath();
