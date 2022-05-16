@@ -2835,9 +2835,11 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
 
     @Hidden
     public boolean isRunningStatements() {
-        if ((scriptManager != null) && (getState() == State.Busy) || (getState() == State.Paused)) {
-            if (scriptManager.isRunningStatementList()) {
-                return true;
+        if (scriptManager != null){
+            if ((getState() == State.Busy) || (getState() == State.Paused)) {
+                if (scriptManager.isRunningStatementList()) {
+                    return true;
+                }
             }
         }
         return false;
