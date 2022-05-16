@@ -25,8 +25,7 @@ public class DataAPITest {
         DataAPI.Ordering ordering = null;
         Boolean reload = null;
         DataAPI instance = new DataAPI("https://data-api.psi.ch/sf");
-        List<Map<String, Object>> expResult =   null;
-        List<Map<String, Object>> result = instance.queryNames(regex, backends, ordering, reload);
+        List result = instance.queryNames(regex, backends, ordering, reload);
         assertEquals(result.size(), 3);
     }
 

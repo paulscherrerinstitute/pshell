@@ -10,6 +10,7 @@ public class NamedThreadFactory implements ThreadFactory {
 
     final String name;
     int count;
+    volatile Thread last;
 
     public NamedThreadFactory(String name) {
         this.name = name;
@@ -23,6 +24,14 @@ public class NamedThreadFactory implements ThreadFactory {
         } else {
             thread.setName(name);
         }
+        last=thread;
         return thread;
+    }
+    
+    public void onCreateThread(Thread thread){        
+    }
+    
+    public Thread getLast(){
+        return last;
     }
 }

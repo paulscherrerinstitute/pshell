@@ -1,0 +1,548 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema targetNamespace="http://www.psi.ch/~ebner/models/scan/1.0" version="1.0" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="http://www.psi.ch/~ebner/models/scan/1.0" elementFormDefault="qualified">
+
+    <xsd:complexType name="Visualization" abstract="true">
+    	<xsd:attribute name="title" type="xsd:string" use="optional" default=" "></xsd:attribute>
+    </xsd:complexType>
+
+    <xsd:complexType name="LinePlot">
+    	<xsd:complexContent>
+    		<xsd:extension base="Visualization">
+    			<xsd:attribute name="x" type="xsd:IDREF" use="required"></xsd:attribute>
+    			<xsd:attribute name="y" type="xsd:IDREFS" use="required"></xsd:attribute>
+    		</xsd:extension>
+    	</xsd:complexContent>
+    </xsd:complexType>
+
+    <xsd:complexType name="MatrixPlot">
+    	<xsd:complexContent>
+    		<xsd:extension base="Visualization">
+    			<xsd:attribute name="x" type="xsd:IDREF" use="required"></xsd:attribute>
+    			<xsd:attribute name="y" type="xsd:IDREF" use="required"></xsd:attribute>
+    			<xsd:attribute name="z" type="xsd:IDREF" use="required"></xsd:attribute>
+    			<xsd:attribute name="type" default="2D"
+    				use="optional">
+    				<xsd:simpleType>
+    					<xsd:restriction base="xsd:string">
+    						<xsd:enumeration value="2D"></xsd:enumeration>
+    						<xsd:enumeration value="3D"></xsd:enumeration>
+    					</xsd:restriction>
+    				</xsd:simpleType>
+    			</xsd:attribute>
+                        
+    		</xsd:extension>
+    	</xsd:complexContent>
+    </xsd:complexType>
+
+    <xsd:complexType name="Action" abstract="true"></xsd:complexType>
+
+    <xsd:complexType name="ChannelAction">
+    	<xsd:complexContent>
+    		<xsd:extension base="Action">
+    			<xsd:attribute name="channel" type="xsd:string"
+    				use="required">
+    			</xsd:attribute>
+    			<xsd:attribute name="value" type="xsd:string"
+    				use="required">
+    			</xsd:attribute>
+    			<xsd:attribute name="operation" default="put"
+    				use="optional">
+    				<xsd:simpleType>
+    					<xsd:restriction base="xsd:string">
+    						<xsd:enumeration value="put"></xsd:enumeration>
+    						<xsd:enumeration value="putq"></xsd:enumeration>
+    						<xsd:enumeration value="wait"></xsd:enumeration>
+    						<xsd:enumeration value="waitOR"></xsd:enumeration>
+    						<xsd:enumeration value="waitAND"></xsd:enumeration>
+    						<xsd:enumeration value="waitREGEX"></xsd:enumeration>
+    					</xsd:restriction>
+    				</xsd:simpleType>
+    			</xsd:attribute>
+    			<xsd:attribute name="type" default="String"
+    				use="optional">
+    				<xsd:simpleType>
+    					<xsd:restriction base="xsd:string">
+    						<xsd:enumeration value="String"></xsd:enumeration>
+    						<xsd:enumeration value="Integer"></xsd:enumeration>
+    						<xsd:enumeration value="Double"></xsd:enumeration>
+    					</xsd:restriction>
+    				</xsd:simpleType>
+    			</xsd:attribute>
+    			<xsd:attribute name="timeout" type="xsd:double" use="optional"></xsd:attribute>
+    			<xsd:attribute name="delay" type="xsd:double"
+    				use="optional">
+    			</xsd:attribute>
+    		</xsd:extension>
+    	</xsd:complexContent>
+    </xsd:complexType>
+
+
+    <xsd:complexType name="Positioner" abstract="true">
+    	<xsd:attribute name="id" type="xsd:ID" use="required"></xsd:attribute>
+    </xsd:complexType>
+
+    <xsd:complexType name="ContinuousPositioner">
+    	<xsd:complexContent>
+    		<xsd:extension base="Positioner">
+    			<xsd:sequence>
+    				<xsd:element name="start" type="xsd:double"
+    					maxOccurs="1" minOccurs="1">
+    				</xsd:element>
+    				<xsd:element name="end" type="xsd:double"
+    					maxOccurs="1" minOccurs="1">
+    				</xsd:element>
+    				<xsd:element name="stepSize" type="xsd:double"
+    					maxOccurs="1" minOccurs="1">
+    				</xsd:element>
+    				<xsd:element name="integrationTime"
+    					type="xsd:double" maxOccurs="1" minOccurs="1">
+    				</xsd:element>
+    				<xsd:element name="additionalBacklash"
+    					type="xsd:double" maxOccurs="1" minOccurs="0">
+    				</xsd:element>
+    			</xsd:sequence>
+    			<xsd:attribute name="name" type="xsd:string"
+    				use="required">
+    			</xsd:attribute>
+    			<xsd:attribute name="readback" type="xsd:string" use="optional"></xsd:attribute>
+    		</xsd:extension>
+    	</xsd:complexContent>
+    </xsd:complexType>
+
+    <xsd:complexType name="DiscreteStepPositioner" abstract="true">
+    	<xsd:complexContent>
+    		<xsd:extension base="Positioner">
+    			<xsd:attribute name="name" type="xsd:string" use="optional"></xsd:attribute>
+    			<xsd:attribute name="readback" type="xsd:string" use="optional"></xsd:attribute>
+    			<xsd:attribute name="settlingTime" default="0" use="optional">
+    				<xsd:simpleType>
+    					<xsd:restriction base="xsd:double">
+    						<xsd:minInclusive value="0"></xsd:minInclusive>
+    					</xsd:restriction>
+    				</xsd:simpleType>
+    			</xsd:attribute>
+    			<xsd:attribute name="done" type="xsd:string" use="optional"></xsd:attribute>
+    			<xsd:attribute name="doneValue" type="xsd:string" use="optional" default="1"></xsd:attribute>
+    			<xsd:attribute name="type" default="Integer" use="optional">
+    				<xsd:simpleType>
+    					<xsd:restriction base="xsd:string">
+    						<xsd:enumeration value="String"></xsd:enumeration>
+    						<xsd:enumeration value="Integer"></xsd:enumeration>
+    						<xsd:enumeration value="Double"></xsd:enumeration>
+    					</xsd:restriction>
+    				</xsd:simpleType>
+    			</xsd:attribute>
+    			<xsd:attribute name="doneDelay" default="0">
+    				<xsd:simpleType>
+    					<xsd:restriction base="xsd:double">
+    						<xsd:minInclusive value="0"></xsd:minInclusive>
+    					</xsd:restriction>
+    				</xsd:simpleType>
+    			</xsd:attribute>
+    			<xsd:attribute name="asynchronous" type="xsd:boolean" default="false"></xsd:attribute>
+    		</xsd:extension>
+    	</xsd:complexContent>
+    </xsd:complexType>
+
+    <xsd:complexType name="LinearPositioner">
+    	<xsd:complexContent>
+    		<xsd:extension base="DiscreteStepPositioner">
+    			<xsd:sequence>
+    				<xsd:element name="start" type="xsd:double"></xsd:element>
+    				<xsd:element name="end" type="xsd:double"></xsd:element>
+    				<xsd:element name="stepSize" type="xsd:double"></xsd:element>
+    			</xsd:sequence>
+    		</xsd:extension>
+    	</xsd:complexContent>
+    </xsd:complexType>
+
+    <xsd:complexType name="ArrayPositioner">
+    	<xsd:complexContent>
+    		<xsd:extension base="DiscreteStepPositioner">
+    			<xsd:sequence>
+    				<xsd:element name="positions" type="xsd:string"></xsd:element>
+    			</xsd:sequence>
+    		</xsd:extension>
+    	</xsd:complexContent>
+    </xsd:complexType>
+
+    <xsd:complexType name="RegionPositioner">
+    	<xsd:complexContent>
+    		<xsd:extension base="DiscreteStepPositioner">
+    			<xsd:sequence>
+    				<xsd:element name="region" type="Region" maxOccurs="unbounded" minOccurs="1"></xsd:element>
+    			</xsd:sequence>
+    		</xsd:extension>
+    	</xsd:complexContent>
+    </xsd:complexType>
+    
+    <xsd:complexType name="Region">
+    	<xsd:sequence>
+    		<xsd:element name="preAction" type="Action" maxOccurs="unbounded" minOccurs="0"></xsd:element>
+    		<xsd:element name="start" type="xsd:double" maxOccurs="1" minOccurs="1"></xsd:element>
+    		<xsd:element name="end" type="xsd:double" maxOccurs="1" minOccurs="1"></xsd:element>
+    		<xsd:element name="stepSize" type="xsd:double" maxOccurs="1" minOccurs="1"></xsd:element>
+    		<xsd:element name="function" type="Function" minOccurs="0" maxOccurs="1"></xsd:element>
+    	</xsd:sequence>
+    </xsd:complexType>
+
+
+    <xsd:complexType name="Data">
+    	<xsd:attribute name="format" use="optional" default="txt">
+    		<xsd:simpleType>
+    			<xsd:restriction base="xsd:string">
+    				<xsd:enumeration value="txt"></xsd:enumeration>
+    				<xsd:enumeration value="mat"></xsd:enumeration>
+    			</xsd:restriction>
+    		</xsd:simpleType>
+    	</xsd:attribute>
+    	<xsd:attribute name="fileName" type="xsd:string" use="optional"></xsd:attribute>
+    </xsd:complexType>
+
+    <xsd:complexType name="Dimension" abstract="true">
+    	<xsd:attribute name="zigzag" type="xsd:boolean" use="optional" default="false"></xsd:attribute>
+    	<xsd:attribute name="dataGroup" type="xsd:boolean" use="optional" default="false"></xsd:attribute>
+    </xsd:complexType>
+
+    <xsd:complexType name="ShellAction">
+    	<xsd:complexContent>
+    		<xsd:extension base="Action">
+    			<xsd:attribute name="command" type="xsd:string"
+    				use="required">
+    			</xsd:attribute>
+    			<xsd:attribute name="exitValue" type="xsd:int" default="0"></xsd:attribute>
+    			<xsd:attribute name="checkExitValue"
+    				type="xsd:boolean" default="true">
+    			</xsd:attribute>
+    		</xsd:extension>
+    	</xsd:complexContent>
+    </xsd:complexType>
+
+    <xsd:complexType name="Detector" abstract="true">
+    	<xsd:attribute name="id" type="xsd:ID" use="required"></xsd:attribute>
+    </xsd:complexType>
+    
+    <xsd:complexType name="SimpleDetector" abstract="true">
+    	<xsd:complexContent>
+    		<xsd:extension base="Detector"></xsd:extension>
+    	</xsd:complexContent>
+    </xsd:complexType>
+
+    <xsd:complexType name="ComplexDetector">
+    	<xsd:complexContent>
+    		<xsd:extension base="Detector">
+    			<xsd:sequence>
+    				<xsd:element name="preAction" type="Action" maxOccurs="unbounded" minOccurs="0"></xsd:element>
+    			</xsd:sequence>
+    			<xsd:attribute name="name" type="xsd:string" use="required"></xsd:attribute>
+    		</xsd:extension>
+    	</xsd:complexContent>
+    </xsd:complexType>
+
+    <xsd:complexType name="ArrayDetector">
+    	<xsd:complexContent>
+    		<xsd:extension base="ComplexDetector">
+    			<xsd:attribute name="arraySize" type="xsd:int" use="required"></xsd:attribute>
+    		</xsd:extension>
+    	</xsd:complexContent>
+    </xsd:complexType>
+
+    <xsd:complexType name="ScalarDetector">
+    	<xsd:complexContent>
+    		<xsd:extension base="ComplexDetector">
+    			<xsd:attribute name="type" use="optional" default="Double">
+    				<xsd:simpleType>
+    					<xsd:restriction base="xsd:string">
+    						<xsd:enumeration value="Double"></xsd:enumeration>
+    						<xsd:enumeration value="String"></xsd:enumeration>
+    					</xsd:restriction>
+    				</xsd:simpleType>
+    			</xsd:attribute>
+    		</xsd:extension>
+    	</xsd:complexContent>
+    </xsd:complexType>
+
+    <xsd:complexType name="Timestamp">
+    	<xsd:complexContent>
+    		<xsd:extension base="SimpleDetector"></xsd:extension>
+    	</xsd:complexContent>
+    </xsd:complexType>
+
+    <xsd:complexType name="SimpleScalarDetector">
+    	<xsd:complexContent>
+    		<xsd:extension base="SimpleDetector">
+    			<xsd:attribute name="name" type="xsd:string" use="required"></xsd:attribute>
+    			<xsd:attribute name="scr" type="xsd:boolean" default="false" use="optional"></xsd:attribute>
+    		</xsd:extension>
+    	</xsd:complexContent>
+    </xsd:complexType>
+
+    <xsd:complexType name="ScalerChannel">
+    	<xsd:complexContent>
+    		<xsd:extension base="SimpleDetector">
+    			<xsd:attribute name="channel" use="required">
+    				<xsd:simpleType>
+    					<xsd:restriction base="xsd:int">
+    						<xsd:maxInclusive value="15"></xsd:maxInclusive>
+    						<xsd:minInclusive value="0"></xsd:minInclusive>
+    					</xsd:restriction>
+    				</xsd:simpleType>
+    			</xsd:attribute>
+    		</xsd:extension>
+    	</xsd:complexContent>
+    </xsd:complexType>
+
+    <xsd:complexType name="DiscreteStepDimension">
+    	<xsd:complexContent>
+    		<xsd:extension base="Dimension">
+    			<xsd:sequence>
+    				<xsd:element name="preAction" type="Action" minOccurs="0" maxOccurs="unbounded"></xsd:element>
+    				<xsd:element name="positioner" type="DiscreteStepPositioner" maxOccurs="unbounded" minOccurs="0"></xsd:element>
+    				<xsd:element name="action" type="Action" minOccurs="0" maxOccurs="unbounded"></xsd:element>
+    				<xsd:element name="guard" type="Guard" maxOccurs="1" minOccurs="0"></xsd:element>
+    				<xsd:element name="detector" type="Detector" maxOccurs="unbounded" minOccurs="0"></xsd:element>
+    				<xsd:element name="postAction" type="Action" minOccurs="0" maxOccurs="unbounded"></xsd:element>
+    			</xsd:sequence>
+    		</xsd:extension>
+    	</xsd:complexContent>
+    </xsd:complexType>
+
+    <xsd:complexType name="ContinuousDimension">
+    	<xsd:complexContent>
+    		<xsd:extension base="Dimension">
+    			<xsd:sequence>
+    				<xsd:element name="preAction" type="Action" minOccurs="0" maxOccurs="unbounded"></xsd:element>
+    				<xsd:element name="positioner" type="ContinuousPositioner" maxOccurs="1" minOccurs="1"></xsd:element>
+    				<xsd:element name="detector" type="SimpleScalarDetector" maxOccurs="unbounded" minOccurs="0"></xsd:element>
+    				<xsd:element name="scaler" type="ScalerChannel" maxOccurs="unbounded" minOccurs="0"></xsd:element>
+    				<xsd:element name="timestamp" type="Timestamp" maxOccurs="1" minOccurs="0"></xsd:element>
+    				<xsd:element name="postAction" type="Action" minOccurs="0" maxOccurs="unbounded"></xsd:element>
+    			</xsd:sequence>
+    			<xsd:attribute name="rasterize" type="xsd:boolean" use="optional" default="false"></xsd:attribute>
+    		</xsd:extension>
+    	</xsd:complexContent>
+    </xsd:complexType>
+
+    <xsd:complexType name="Scan">
+    	<xsd:sequence>
+    		<xsd:element name="preAction" type="Action"
+    			maxOccurs="unbounded" minOccurs="0">
+    		</xsd:element>
+    		<xsd:element name="cdimension" type="ContinuousDimension"
+    			maxOccurs="1" minOccurs="0">
+    		</xsd:element>
+    		<xsd:element name="dimension" type="DiscreteStepDimension"
+    			maxOccurs="unbounded" minOccurs="0">
+    		</xsd:element>
+    		<xsd:element name="postAction" type="Action"
+    			maxOccurs="unbounded" minOccurs="0">
+    		</xsd:element>
+    		<xsd:element name="manipulation" type="Manipulation" maxOccurs="unbounded" minOccurs="0"></xsd:element>
+    	</xsd:sequence>
+    	<xsd:attribute name="id" type="xsd:string" use="optional"></xsd:attribute>
+    </xsd:complexType>
+
+    <xsd:complexType name="Configuration">
+    	<xsd:sequence>
+    		<xsd:element name="notification" type="Notification" minOccurs="0" maxOccurs="1"></xsd:element>
+    		<xsd:element name="data" type="Data" maxOccurs="1" minOccurs="0"></xsd:element>
+    		<xsd:element name="description" type="xsd:string" maxOccurs="1" minOccurs="0"></xsd:element>
+    		<xsd:element name="variable" type="Variable" maxOccurs="unbounded" minOccurs="0"></xsd:element>
+    		<xsd:element name="scan" type="Scan" maxOccurs="1" minOccurs="1"></xsd:element>
+    		<xsd:element name="visualization" type="Visualization" maxOccurs="unbounded" minOccurs="0"></xsd:element>
+    	</xsd:sequence>
+    	<xsd:attribute name="numberOfExecution" type="xsd:int" use="optional" default="1"></xsd:attribute>
+    	<xsd:attribute name="failOnSensorError" type="xsd:boolean" default="true" use="optional"></xsd:attribute>
+    </xsd:complexType>
+
+    <xsd:element name="configuration" type="Configuration"></xsd:element>
+
+    <xsd:complexType name="DetectorOfDetectors">
+    	<xsd:complexContent>
+			<xsd:extension base="ComplexDetector">
+		    	<xsd:sequence>
+		    		<xsd:element name="detector" type="ScalarDetector" maxOccurs="unbounded" minOccurs="0"></xsd:element>
+		    	</xsd:sequence>
+	    	</xsd:extension>
+    	</xsd:complexContent>
+    </xsd:complexType>
+
+    <xsd:complexType name="ParameterMapping">
+    	<xsd:attribute name="variable" type="xsd:string"
+    		use="required">
+    	</xsd:attribute>
+    </xsd:complexType>
+
+    <xsd:complexType name="Manipulation" abstract="true">
+    	<xsd:attribute name="id" type="xsd:ID" use="required"></xsd:attribute>
+    </xsd:complexType>
+
+    <xsd:complexType name="ScriptManipulation">
+    	<xsd:complexContent>
+    		<xsd:extension base="Manipulation">
+    			<xsd:sequence>
+    				<xsd:element name="mapping" type="ParameterMapping" maxOccurs="unbounded" minOccurs="0"></xsd:element>
+    				<xsd:element name="script" type="xsd:string" maxOccurs="1" minOccurs="1"></xsd:element>
+    			</xsd:sequence>
+    			<xsd:attribute name="returnArray" type="xsd:boolean" default="false"></xsd:attribute>
+    		</xsd:extension>
+    	</xsd:complexContent>
+    </xsd:complexType>
+
+    <xsd:complexType name="PseudoPositioner">
+    	<xsd:complexContent>
+    		<xsd:extension base="DiscreteStepPositioner">
+    			<xsd:sequence>
+    				<xsd:element name="counts" type="xsd:int" maxOccurs="1" minOccurs="1"></xsd:element>
+    			</xsd:sequence>
+    		</xsd:extension>
+    	</xsd:complexContent>
+    </xsd:complexType>
+
+    <xsd:complexType name="IDParameterMapping">
+    	<xsd:complexContent>
+    		<xsd:extension base="ParameterMapping">
+    			<xsd:attribute name="refid" type="xsd:IDREF"></xsd:attribute>
+    		</xsd:extension>
+    	</xsd:complexContent>
+    </xsd:complexType>
+
+    <xsd:complexType name="ChannelParameterMapping">
+    	<xsd:complexContent>
+    		<xsd:extension base="ParameterMapping">
+    			<xsd:attribute name="channel" type="xsd:string"></xsd:attribute>
+    			<xsd:attribute name="type" default="Double" use="optional">
+    				<xsd:simpleType>
+    					<xsd:restriction base="xsd:string">
+    						<xsd:enumeration value="Double"></xsd:enumeration>
+    						<xsd:enumeration value="Integer"></xsd:enumeration>
+    						<xsd:enumeration value="String"></xsd:enumeration>
+    					</xsd:restriction>
+    				</xsd:simpleType>
+    			</xsd:attribute>
+    		</xsd:extension>
+    	</xsd:complexContent>
+    </xsd:complexType>
+
+
+
+    <xsd:complexType name="ScriptAction">
+    	<xsd:complexContent>
+    		<xsd:extension base="Action">
+    			<xsd:sequence>
+    				<xsd:element name="mapping" type="ChannelParameterMapping" maxOccurs="unbounded" minOccurs="0"></xsd:element>
+    				<xsd:element name="script" type="xsd:string"
+    					maxOccurs="1" minOccurs="1">
+    				</xsd:element>
+    			</xsd:sequence>
+
+    		</xsd:extension>
+    	</xsd:complexContent>
+    </xsd:complexType>
+
+    <xsd:complexType name="GuardCondition">
+    	<xsd:attribute name="channel" type="xsd:string"
+    		use="required">
+    	</xsd:attribute>
+    	<xsd:attribute name="value" type="xsd:string" use="required"></xsd:attribute>
+    	<xsd:attribute name="type" default="Integer">
+    		<xsd:simpleType>
+    			<xsd:restriction base="xsd:string">
+    				<xsd:enumeration value="Double"></xsd:enumeration>
+    				<xsd:enumeration value="Integer"></xsd:enumeration>
+    				<xsd:enumeration value="String"></xsd:enumeration>
+    			</xsd:restriction>
+    		</xsd:simpleType>
+    	</xsd:attribute>
+    </xsd:complexType>
+
+    <xsd:complexType name="Guard">
+    	<xsd:sequence>
+    		<xsd:element name="condition" type="GuardCondition" maxOccurs="unbounded" minOccurs="1"></xsd:element>
+    	</xsd:sequence>
+    </xsd:complexType>
+
+
+
+    <xsd:complexType name="Notification">
+    	<xsd:sequence>
+    		<xsd:element name="recipient" type="Recipient" minOccurs="0" maxOccurs="unbounded"></xsd:element>
+    	</xsd:sequence>
+    </xsd:complexType>
+
+    <xsd:complexType name="Recipient">
+    	<xsd:simpleContent>
+    		<xsd:extension base="xsd:string">
+    			<xsd:attribute name="error" type="xsd:boolean" default="true"></xsd:attribute>
+    			<xsd:attribute name="success" type="xsd:boolean" default="false" use="optional"></xsd:attribute>
+    		</xsd:extension>
+    	</xsd:simpleContent>
+    </xsd:complexType>
+
+    <xsd:complexType name="FunctionPositioner">
+    	<xsd:complexContent>
+    		<xsd:extension base="DiscreteStepPositioner">
+    			<xsd:sequence>
+    				<xsd:element name="start" type="xsd:double" maxOccurs="1" minOccurs="1"></xsd:element>
+    				<xsd:element name="end" type="xsd:double" maxOccurs="1" minOccurs="1"></xsd:element>
+    				<xsd:element name="stepSize" type="xsd:double" maxOccurs="1" minOccurs="1"></xsd:element>
+    				<xsd:element name="function" type="Function" maxOccurs="1" minOccurs="1"></xsd:element>
+    			</xsd:sequence>
+    		</xsd:extension>
+    	</xsd:complexContent>
+    </xsd:complexType>
+
+
+
+    <xsd:complexType name="LinePlotArray">
+    	<xsd:complexContent>
+    		<xsd:extension base="Visualization">
+    			<xsd:attribute name="y" type="xsd:IDREFS" use="required"></xsd:attribute>
+    			<xsd:attribute name="maxSeries" type="xsd:int" default="1" use="optional"></xsd:attribute>
+    			<xsd:attribute name="offset" type="xsd:int" use="optional" default="0"></xsd:attribute>
+    			<xsd:attribute name="size" type="xsd:int" use="optional" default="0"></xsd:attribute>
+    		</xsd:extension>
+    	</xsd:complexContent>
+    </xsd:complexType>
+
+    <xsd:complexType name="MatrixPlotArray">
+    	<xsd:complexContent>
+    		<xsd:extension base="Visualization">
+    			<xsd:attribute name="y" type="xsd:IDREF" use="required"></xsd:attribute>
+    			<xsd:attribute name="z" type="xsd:IDREF" use="required"></xsd:attribute>
+    			<xsd:attribute name="offset" type="xsd:int" use="optional" default="0"></xsd:attribute>
+    			<xsd:attribute name="size" type="xsd:int" use="optional" default="0"></xsd:attribute>
+    			<xsd:attribute name="type" default="2D"
+    				use="optional">
+    				<xsd:simpleType>
+    					<xsd:restriction base="xsd:string">
+    						<xsd:enumeration value="2D"></xsd:enumeration>
+    						<xsd:enumeration value="3D"></xsd:enumeration>
+    					</xsd:restriction>
+    				</xsd:simpleType>
+    			</xsd:attribute>                                                
+    		</xsd:extension>
+    	</xsd:complexContent>
+    </xsd:complexType>
+
+    <xsd:complexType name="Function">
+    	<xsd:sequence>
+            <xsd:element name="mapping" type="ParameterMapping" minOccurs="0" maxOccurs="unbounded"></xsd:element>
+            <xsd:element name="script" type="xsd:string" minOccurs="1" maxOccurs="1"></xsd:element>
+    	</xsd:sequence>
+    </xsd:complexType>
+
+    <xsd:complexType name="Variable">
+    	<xsd:attribute name="name" type="xsd:ID" use="required"></xsd:attribute>
+    	<xsd:attribute name="value" type="xsd:double" use="required"></xsd:attribute>
+    	<xsd:attribute name="description" type="xsd:string" use="optional"></xsd:attribute>
+    </xsd:complexType>
+
+    <xsd:complexType name="VariableParameterMapping">
+    	<xsd:complexContent>
+    		<xsd:extension base="ParameterMapping">
+    			<xsd:attribute name="name" type="xsd:IDREF" use="required"></xsd:attribute>
+    		</xsd:extension>
+    	</xsd:complexContent>
+    </xsd:complexType>
+</xsd:schema>
