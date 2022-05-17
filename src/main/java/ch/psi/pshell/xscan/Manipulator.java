@@ -52,6 +52,5 @@ public class Manipulator implements EventBusListener{
 			}
 		}                
 		bus.post(message);
-                //System.out.println(Thread.currentThread());
 	}
 }

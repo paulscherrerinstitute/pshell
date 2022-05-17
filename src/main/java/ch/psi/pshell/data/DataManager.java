@@ -884,7 +884,7 @@ public class DataManager implements AutoCloseable {
         if (path==null){
             throw new IllegalArgumentException();
         }
-        if (!path.contains("/")){
+        if (!path.startsWith("/")){
             path = "/" + path;
         }
         return path;
@@ -1235,6 +1235,7 @@ public class DataManager implements AutoCloseable {
      * Retrieve plots from dataset
      */
     public List<PlotDescriptor> getPlots(String root, String path) throws IOException {
+        path=adjustPath(path);
         ArrayList<PlotDescriptor> ret = new ArrayList<>();
         Map<String, Object> info = getInfo(root, path);
         String infoType = String.valueOf(info.get(Provider.INFO_TYPE));
@@ -1333,6 +1334,7 @@ public class DataManager implements AutoCloseable {
     }
     
     void checkLogFile(String logFile) throws IOException {
+        logFile=adjustPath(logFile);
         if (!exists(logFile)) {
             createDataset(logFile, String.class);
         } 
@@ -1341,6 +1343,7 @@ public class DataManager implements AutoCloseable {
 
     public List<PlotDescriptor> getScanPlots(String root, String path) throws Exception {
         try{
+            path=adjustPath(path);
             String layout = (String) getAttribute(root, "/", Layout.ATTR_LAYOUT);
             if ((layout != null) && (!layout.equals(getLayout().getClass().getName()))) {
                 DataManager aux = new DataManager(context, getProvider().getClass().getName(), layout);
@@ -1357,7 +1360,6 @@ public class DataManager implements AutoCloseable {
     }
 
     List<PlotDescriptor> doGetScanPlots(String root, String path) throws Exception {
-
         PlotPreferences plotPreferences = getPlotPreferences(root, path);
         List<PlotDescriptor> plots = getLayout().getScanPlots(root, path, this);
         if (plots == null) {

@@ -196,6 +196,8 @@ public class Acquisition {
                     //Priority to Type field
                     datafile = new File(fprefix+".txt");
                     this.serializer = new SerializerTXT(datafile, configuration.getAppendSuffix());                    
+                    executionParameters = Context.getInstance().getExecutionPars();
+                    executionParameters.setDataPath(xmlfile.getParentFile()); //Create base dir and trigger callbacks
                     
                 } else {
                     this.serializer = new SerializerPShell(fprefix);
@@ -203,8 +205,6 @@ public class Acquisition {
                 } 
 
 		// Create required directories
-                executionParameters = Context.getInstance().getExecutionPars();
-                executionParameters.setDataPath(xmlfile.getParentFile()); //Create base dir and trigger callbacks
                 DataManager dm = Context.getInstance().getDataManager();
                 		
 		try{
@@ -229,7 +229,8 @@ public class Acquisition {
                                             String[] tokens = LogManager.parseLogRecord(rec);
                                             String log = String.join(" - ", tokens);
                                             dm.appendItem(logDataset, log);                              
-                                            //String log =  tokens[3] + " - " + tokens[4] + "[" + tokens[2] + "]";
+                                           
+                                            //String log =  tokens[3] + " - " + tokens[4] + " [" + tokens[2] + "]";
                                             //dm.appendLog(log);
                                         }
                                     } catch (Exception ex) {

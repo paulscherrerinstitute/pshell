@@ -42,7 +42,6 @@ public class SerializerPShell implements EventBusListener {
             dm.openOutput();
             this.basename = IO.getPrefix(dm.getRootFileName());	
             dm.setAttribute("/", ATTR_FILE,this.basename+".xml");            
-            System.out.print(Thread.currentThread());
         } catch (Exception ex) {
             Logger.getLogger(SerializerPShell.class.getName()).log(Level.SEVERE, null, ex);
         }
