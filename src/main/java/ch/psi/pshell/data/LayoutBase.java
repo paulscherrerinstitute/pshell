@@ -154,6 +154,7 @@ public abstract class LayoutBase implements Layout {
     public void onStart(Scan scan) throws IOException {
         setStartTimestampAttibute(scan);
         setPlotPreferencesAttibutes(scan);
+        setScanType(scan);
     }
     
     @Override
@@ -176,6 +177,13 @@ public abstract class LayoutBase implements Layout {
             getDataManager().setAttribute(scanPath, ATTR_END_TIMESTAMP, System.currentTimeMillis());
         }
     }
+    
+    protected void setScanType(Scan scan) throws IOException {
+        String scanPath = getScanPath(scan);
+        if (scanPath != null) {
+            getDataManager().setAttribute(getScanPathName(scan), ATTR_TYPE, scan.getClass().getSimpleName());  
+        }
+    }   
 
     protected void setPlotPreferencesAttibutes(Scan scan) throws IOException {
         String scanPath = getScanPath(scan);

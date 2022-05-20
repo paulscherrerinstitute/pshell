@@ -3,12 +3,12 @@ package ch.psi.pshell.xscan;
 import ch.psi.utils.Message;
 import ch.psi.pshell.core.Context;
 import ch.psi.pshell.data.DataManager;
-import static ch.psi.pshell.data.Layout.ATTR_FILE;
-import static ch.psi.pshell.data.Layout.ATTR_LAYOUT;
+import ch.psi.pshell.data.Layout;
+import ch.psi.pshell.data.LayoutDefault;
+import ch.psi.pshell.data.LayoutTable;
 import ch.psi.utils.Arr;
 import ch.psi.utils.EventBusListener;
 import ch.psi.utils.Convert;
-import ch.psi.utils.IO;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.List;
@@ -22,12 +22,18 @@ public class SerializerPShell implements EventBusListener {
 
     private static final Logger logger = Logger.getLogger(SerializerPShell.class.getName());
 
-    String basename;
-    String dataset = null;
+    private String dataset = null;
     private boolean newfile = true;
     private int icount = 1;
     private boolean dataInBetween = false;
-    final DataManager dm;
+    private boolean table;
+    private final DataManager dm;
+    
+    private List<String> names;
+    private List<Class> types;
+    private List<Integer> lenghts;
+    private List<Integer> dims;  
+    
 
     public SerializerPShell() {
        this(null); 
@@ -40,8 +46,8 @@ public class SerializerPShell implements EventBusListener {
                 Context.getInstance().setExecutionPar("path", basename);
             }
             dm.openOutput();
-            this.basename = IO.getPrefix(dm.getRootFileName());	
-            dm.setAttribute("/", ATTR_FILE,this.basename+".xml");            
+            dm.setAttribute("/", Layout.ATTR_FILE,basename+".xml");         
+            table = LayoutTable.class.isAssignableFrom(dm.getLayout().getClass());
         } catch (Exception ex) {
             Logger.getLogger(SerializerPShell.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -56,39 +62,69 @@ public class SerializerPShell implements EventBusListener {
             if (newfile) {
                 dataset = String.format("/scan% d", icount);
                 dm.appendLog(String.format("Xscan execution started: %s", dataset));
-                List<String> names = new ArrayList<>();
-                List<Class> types = new ArrayList<>();
-                List<Integer> lenghts = new ArrayList<>();
-                List<Integer> dims = new ArrayList<>();
+                names = new ArrayList<>();
+                types = new ArrayList<>();
+                lenghts = new ArrayList<>();
+                dims = new ArrayList<>();
 
                 for (Metadata c : ((DataMessage) message).getMetadata()) {
                     names.add(c.getId());
                     dims.add(c.getDimension());
                     types.add(Double.class);
-                    lenghts.add(1);
+                    lenghts.add(0);
                 }
                 for (int i = 0; i < data.size(); i++) {
                     Object o = data.get(i);
                     Class type = o.getClass();
-                    if (o.getClass().isArray()) {
+                    if (type.isArray()) {
                         lenghts.set(i, Array.getLength(o));
-                        type = Arr.getComponentType(data);
+                        type = Arr.getComponentType(o);
+                        if (table){
+                            if (Convert.isWrapperClass(type)){
+                                type = Convert.getPrimitiveClass(type);
+                            }
+                            type = Array.newInstance(type, 0).getClass();
+                        }
                     }
-                    if ((type != Double.class) && (type != double.class)) {
-                        types.set(i, type);
+                    types.set(i, type);
+                }
+                if (table){
+                    
+                    dm.createDataset(dataset,
+                            names.toArray(new String[0]),
+                            types.toArray(new Class[0]),
+                            (int[]) Convert.toPrimitiveArray(lenghts.toArray(new Integer[0])));
+                } else {
+                    dm.createGroup(dataset);
+                    for (int i=0; i< names.size(); i++){
+                        try{
+                            if (lenghts.get(i)>0) {
+                                dm.createDataset(dataset+"/"+names.get(i), types.get(i), new int[]{0, lenghts.get(i)});
+                            } else {
+                                dm.createDataset(dataset+"/"+names.get(i), types.get(i));
+                            }
+                        } catch (Exception ex) {
+                            Logger.getLogger(SerializerPShell.class.getName()).log(Level.SEVERE, null, ex);
+                        }
                     }
                 }
-                dm.createDataset(dataset,
-                        names.toArray(new String[0]),
-                        types.toArray(new Class[0]),
-                        (int[]) Convert.toPrimitiveArray(lenghts.toArray(new Integer[0])));
                 
-                dm.setAttribute(dataset, ATTR_LAYOUT,"fda");
+                dm.setAttribute(dataset, Layout.ATTR_TYPE, ProcessorXscan.SCAN_TYPE);
                 dm.setAttribute(dataset, "dims", (int[]) Convert.toPrimitiveArray(dims.toArray(new Integer[0])));
                 dm.setAttribute(dataset, "names", names.toArray(new String[0]));
                 newfile = false;
             }
-            dm.appendItem(dataset, data.toArray());
+            if (table){
+                dm.appendItem(dataset, data.toArray());
+            } else {
+                for (int i=0; i< names.size(); i++){
+                    try{
+                        dm.appendItem(dataset+"/"+names.get(i), data.get(i));
+                    } catch (Exception ex) {
+                        Logger.getLogger(SerializerPShell.class.getName()).log(Level.FINE, null, ex);
+                    }
+               }
+            }
         } else if (message instanceof StreamDelimiterMessage) {
             StreamDelimiterMessage m = (StreamDelimiterMessage) message;
             logger.finer("Delimiter - number: " + m.getNumber() + " iflag: " + m.isIflag());

@@ -411,6 +411,9 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
                         TreePath path = treeFile.getPathForLocation(e.getX(), e.getY());
                         treeFile.setSelectionPath(path);
                         String dataPath = getDataPath(path);
+                        if (dataPath==null){
+                            return;
+                        }
                         Map<String, Object> info = dataManager.getInfo(currentFile.getPath(), dataPath);
                         menuPlotData.setVisible(false);
                         menuAssign.setVisible(false);

@@ -63,6 +63,7 @@ import javax.swing.filechooser.FileNameExtensionFilter;
  */
 public final class ProcessorXscan extends MonitoredPanel implements Processor {
 
+    public static final String SCAN_TYPE = "XScan";
     public static final String BROWSER_TITLE = "Xscan Browser";
 
     static {
@@ -671,7 +672,7 @@ public final class ProcessorXscan extends MonitoredPanel implements Processor {
     }
 
     @Override
-    public void plotDataFile(final File file) {
+    public void plotDataFile(final File file, String path) {
 
         Logger.getLogger(ProcessorXscan.class.getName()).log(Level.INFO, "Visualize file: {0}", file.getAbsolutePath());
         Thread t = new Thread(new Runnable() {
@@ -684,7 +685,9 @@ public final class ProcessorXscan extends MonitoredPanel implements Processor {
                     String name = file.getName();
                     name = name.replaceAll("_[0-9]*.txt$", "");
                     //If no suffix
-                    name = name.replaceAll(".txt$", "");
+                    if (file.isFile()){
+                        name = IO.getPrefix(file);
+                    }
                     File cfile = new File(dir, name + ".xml");
 
                     // Check existence of files
@@ -696,7 +699,7 @@ public final class ProcessorXscan extends MonitoredPanel implements Processor {
                     }
 
                     EventBus ebus = new EventBus(AcquisitionConfiguration.eventBusModePlot);
-                    DeserializerTXT deserializer = new DeserializerTXT(ebus, file);
+                    Deserializer deserializer = (path==null) ? new DeserializerTXT(ebus, file) : new DeserializerPShell(ebus, file, path);
 
                     Configuration c = load(cfile);
                     VDescriptor vdescriptor = Acquisition.mapVisualizations(c.getVisualization());

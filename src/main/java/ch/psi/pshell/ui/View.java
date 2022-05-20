@@ -154,6 +154,8 @@ import java.awt.dnd.DropTarget;
 import java.awt.dnd.DropTargetDragEvent;
 import java.awt.dnd.DropTargetDropEvent;
 import java.awt.dnd.DropTargetEvent;
+import java.util.HashSet;
+import java.util.Set;
 import javax.swing.BoxLayout;
 import javax.swing.DefaultCellEditor;
 import javax.swing.JComboBox;
@@ -806,8 +808,11 @@ public class View extends MainFrame {
 
         @Override
         public void openFile(String fileName) throws Exception {
-            if (IO.getExtension(fileName).equalsIgnoreCase(context.getScriptType().getExtension())) {
+            String ext=IO.getExtension(fileName);
+            if (ext.equalsIgnoreCase(context.getScriptType().getExtension())) {
                 View.this.openScript(fileName);
+            } else if (getProcessorExtensions().contains(ext)) {
+                View.this.openScriptOrProcessor(fileName);
             } else {
                 View.this.openDataFile(fileName);
             }
@@ -1682,6 +1687,18 @@ public class View extends MainFrame {
         }
         openScript(file);
     }
+    
+    
+    public Set<String> getProcessorExtensions() throws IOException, InstantiationException, IllegalAccessException {
+        Set<String>ret = new HashSet<>();
+        for (Processor processor : Processor.getServiceProviders()) {
+           for (String ext:processor.getExtensions()){
+               ret.add(ext);
+           }
+        }
+        return ret;
+    }
+    
 
     public static PropertiesDialog showSettingsEditor(Frame parent, boolean modal, boolean readOnly) {
         return showPropertiesEditor("Settings", parent, Context.getInstance().getSettingsFile(), modal, readOnly);

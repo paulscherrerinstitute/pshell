@@ -217,19 +217,24 @@ public interface Processor extends Executor {
 
     public static boolean checkProcessorsPlotting(String root, String path, DataManager dm) {
         HashMap<FileNameExtensionFilter, Processor> processors = new HashMap<>();
+        File rootFile = new File(root);
         for (Processor processor : Processor.getServiceProviders()) {
             try {
-                processor.plotDataFile(Paths.get(root, path + "." + dm.getProvider().getFileType()).toFile());
+                processor.plotDataFile(rootFile, path);
                 return true;
             } catch (Exception e) {
             }
         }
         return false;
     }
-
+    
     default void plotDataFile(File file) throws Exception {
-        throw new Exception("Not implemented");
+        plotDataFile(file, null);
     }
+    
+    default void plotDataFile(File file, String path) throws Exception {
+        throw new Exception("Not implemented");
+    }   
 
     default boolean createFilePanel() {
         return false;

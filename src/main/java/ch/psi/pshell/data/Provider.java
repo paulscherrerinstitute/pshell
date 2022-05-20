@@ -15,11 +15,17 @@ import java.util.Map;
 public interface Provider {
 
     public static final String INFO_TYPE = "Type";
+    public static final String INFO_CREATION = "Creation";
     public static final String INFO_DATA_TYPE = "Data Type";
     public static final String INFO_CLASS = "Class";
     public static final String INFO_DIMENSIONS = "Dimensions";
     public static final String INFO_RANK = "Rank";
+    public static final String INFO_ELEMENTS = "Elements";
     public static final String INFO_ELEMENT_SIZE = "Element Size";
+    public static final String INFO_LAYOUT = "Layout";
+    public static final String INFO_SIZE = "Size";
+    public static final String INFO_SIGNED= "Signed";
+    public static final String INFO_CHUNK_SIZES = "Chunk Sizes";
     public static final String INFO_FIELDS = "Fields";
     public static final String INFO_FIELD_NAMES = "Field Names";
     public static final String INFO_FIELD_TYPES = "Field Types";

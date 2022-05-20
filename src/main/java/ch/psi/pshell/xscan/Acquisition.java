@@ -219,19 +219,19 @@ public class Acquisition {
                             logHandler = new FileHandler(logfile.getAbsolutePath());
                             logHandler.setFormatter(new SimpleFormatter());
                         } else{
-                            String logDataset = "/logs/xscan";
-                            dm.createDataset(logDataset, String.class);
+                            //String logDataset = "/logs/xscan";
+                            //dm.createDataset(logDataset, String.class);
                             logHandler = new Handler() {
                                 @Override
                                 public void publish(LogRecord rec) {
                                     try {
                                         if (dm.isOpen()){
                                             String[] tokens = LogManager.parseLogRecord(rec);
-                                            String log = String.join(" - ", tokens);
-                                            dm.appendItem(logDataset, log);                              
+                                            //String log = String.join(" - ", tokens);
+                                            //dm.appendItem(logDataset, log);                              
                                            
-                                            //String log =  tokens[3] + " - " + tokens[4] + " [" + tokens[2] + "]";
-                                            //dm.appendLog(log);
+                                            String log =  tokens[3] + " - " + tokens[4] + " [" + tokens[2] + "]";
+                                            dm.appendLog(log);
                                         }
                                     } catch (Exception ex) {
                                           ex.printStackTrace();
