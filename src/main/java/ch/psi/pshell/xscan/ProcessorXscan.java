@@ -524,32 +524,32 @@ public final class ProcessorXscan extends MonitoredPanel implements Processor {
         //    App.getInstance().abort();
         //}
     }
-    
+
     @Override
     public boolean canPause() {
         return (acquisition != null) && (!acquisition.canPause());
-    }  
+    }
 
     @Override
-    public  void pause() {
+    public void pause() {
         if (acquisition != null) {
             try {
                 acquisition.pause();
             } catch (Exception e) {
                 Logger.getLogger(ProcessorXscan.class.getName()).log(Level.WARNING, null, e);
             }
-        }        
+        }
     }
-    
-    public  void resume() {
+
+    public void resume() {
         if (acquisition != null) {
             try {
                 acquisition.resume();
             } catch (Exception e) {
                 Logger.getLogger(ProcessorXscan.class.getName()).log(Level.WARNING, null, e);
             }
-        }        
-    }        
+        }
+    }
 
     @Override
     public boolean createFilePanel() {
@@ -609,7 +609,7 @@ public final class ProcessorXscan extends MonitoredPanel implements Processor {
         try {
             setProgress(25);
             ModelUtil.getInstance().setConfigurationPanel(panelConfig);
-            EventBus ebus = new EventBus(AcquisitionConfiguration.eventBusModeAcq);                        
+            EventBus ebus = new EventBus(AcquisitionConfiguration.eventBusModeAcq);
             acquisition = new Acquisition(channelService, getConfiguration(), vars);
             App.getInstance().getMainFrame().updateButtons();   //Update pause button state
             Configuration c = panelConfig.getObject();
@@ -626,7 +626,7 @@ public final class ProcessorXscan extends MonitoredPanel implements Processor {
                 ebus.register(visualizer);
                 ProcessorXscan.setPlots(visualizer.getPlotPanels(), null);
             }
-            if (Context.getInstance().getState()==State.Paused){
+            if (Context.getInstance().getState() == State.Paused) {
                 acquisition.pause();
             }
             acquisition.execute();
@@ -685,7 +685,7 @@ public final class ProcessorXscan extends MonitoredPanel implements Processor {
                     String name = file.getName();
                     name = name.replaceAll("_[0-9]*.txt$", "");
                     //If no suffix
-                    if (file.isFile()){
+                    if (file.isFile()) {
                         name = IO.getPrefix(file);
                     }
                     File cfile = new File(dir, name + ".xml");
@@ -699,7 +699,7 @@ public final class ProcessorXscan extends MonitoredPanel implements Processor {
                     }
 
                     EventBus ebus = new EventBus(AcquisitionConfiguration.eventBusModePlot);
-                    Deserializer deserializer = (path==null) ? new DeserializerTXT(ebus, file) : new DeserializerPShell(ebus, file, path);
+                    Deserializer deserializer = (path == null) ? new DeserializerTXT(ebus, file) : new DeserializerPShell(ebus, file, path);
 
                     Configuration c = load(cfile);
                     VDescriptor vdescriptor = Acquisition.mapVisualizations(c.getVisualization());
@@ -805,7 +805,6 @@ public final class ProcessorXscan extends MonitoredPanel implements Processor {
             }
         }
     }//GEN-LAST:event_formMouseExited
-
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JPanel jPanel1;

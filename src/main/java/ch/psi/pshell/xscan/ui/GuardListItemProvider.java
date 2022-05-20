@@ -16,25 +16,25 @@ public class GuardListItemProvider implements ListItemProvider<GuardCondition> {
 
     private final String[] positioners = new String[]{"Guard"};
 
-    public GuardListItemProvider(DiscreteStepDimension dimension){
+    public GuardListItemProvider(DiscreteStepDimension dimension) {
         this.dimension = dimension;
     }
 
     @Override
     public String[] getItemKeys() {
-        return(positioners);
+        return (positioners);
     }
 
     @Override
     public Component newItem(String key) {
-        if(dimension.getGuard()== null){
+        if (dimension.getGuard() == null) {
             dimension.setGuard(new Guard());
         }
 
-        if(key.equals(positioners[0])){
+        if (key.equals(positioners[0])) {
             GuardCondition gc = new GuardCondition();
             dimension.getGuard().getCondition().add(gc);
-            return(getItem(gc));
+            return (getItem(gc));
         }
         return null;
     }
@@ -42,8 +42,8 @@ public class GuardListItemProvider implements ListItemProvider<GuardCondition> {
     @Override
     public List<Component> getItems() {
         List<Component> l = new ArrayList<Component>();
-        if(dimension.getGuard()!=null){
-            for(GuardCondition c: dimension.getGuard().getCondition()){
+        if (dimension.getGuard() != null) {
+            for (GuardCondition c : dimension.getGuard().getCondition()) {
                 l.add(getItem(c));
             }
         }
@@ -51,23 +51,23 @@ public class GuardListItemProvider implements ListItemProvider<GuardCondition> {
     }
 
     private Component getItem(GuardCondition object) {
-        if(object instanceof GuardCondition){
+        if (object instanceof GuardCondition) {
             GuardConditionPanel p = new GuardConditionPanel(object);
             p.setName("Guard");
-            return(p);
+            return (p);
         }
         return null;
     }
 
     @Override
     public void removeItem(Component component) {
-        if(component instanceof GuardConditionPanel){
-            GuardCondition c = ((GuardConditionPanel)component).getObject();
-            if(dimension.getGuard()!=null){
+        if (component instanceof GuardConditionPanel) {
+            GuardCondition c = ((GuardConditionPanel) component).getObject();
+            if (dimension.getGuard() != null) {
                 dimension.getGuard().getCondition().remove(c);
 
                 // Remove guard from dimension if there is no condition left
-                if(dimension.getGuard().getCondition().isEmpty()){
+                if (dimension.getGuard().getCondition().isEmpty()) {
                     dimension.setGuard(null);
                 }
             }
@@ -77,7 +77,7 @@ public class GuardListItemProvider implements ListItemProvider<GuardCondition> {
 
     @Override
     public boolean isEmpty() {
-        if(dimension.getGuard()!=null){
+        if (dimension.getGuard() != null) {
             return dimension.getGuard().getCondition().isEmpty();
         }
         return true;
@@ -85,7 +85,7 @@ public class GuardListItemProvider implements ListItemProvider<GuardCondition> {
 
     @Override
     public int size() {
-        if(dimension.getGuard()!=null){
+        if (dimension.getGuard() != null) {
             return dimension.getGuard().getCondition().size();
         }
         return 0;
@@ -101,9 +101,9 @@ public class GuardListItemProvider implements ListItemProvider<GuardCondition> {
         ListUtil.moveItemDown(dimension.getGuard().getCondition(), getObject(component));
     }
 
-    private Object getObject(Component component){
-        if(component instanceof GuardConditionPanel){
-            return ((GuardConditionPanel)component).getObject();
+    private Object getObject(Component component) {
+        if (component instanceof GuardConditionPanel) {
+            return ((GuardConditionPanel) component).getObject();
         }
         return null;
     }

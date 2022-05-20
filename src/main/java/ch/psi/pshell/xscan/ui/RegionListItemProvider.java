@@ -14,21 +14,21 @@ public class RegionListItemProvider implements ListItemProvider<Region> {
 
     private final String[] actions = new String[]{"Region"};
 
-    public RegionListItemProvider(List<Region> list){
+    public RegionListItemProvider(List<Region> list) {
         this.list = list;
     }
 
     @Override
     public String[] getItemKeys() {
-        return(actions);
+        return (actions);
     }
 
     @Override
     public Component newItem(String key) {
-        if(key.equals(actions[0])){
+        if (key.equals(actions[0])) {
             Region r = new Region();
             list.add(r);
-            return(getItem(r));
+            return (getItem(r));
         }
         return null;
     }
@@ -36,7 +36,7 @@ public class RegionListItemProvider implements ListItemProvider<Region> {
     @Override
     public List<Component> getItems() {
         List<Component> l = new ArrayList<Component>();
-        for(Region r: list){
+        for (Region r : list) {
             l.add(getItem(r));
         }
         return l;
@@ -50,8 +50,8 @@ public class RegionListItemProvider implements ListItemProvider<Region> {
 
     @Override
     public void removeItem(Component component) {
-        if(component instanceof RegionPanel){
-            list.remove(((RegionPanel)component).getObject());
+        if (component instanceof RegionPanel) {
+            list.remove(((RegionPanel) component).getObject());
         }
     }
 
@@ -75,9 +75,9 @@ public class RegionListItemProvider implements ListItemProvider<Region> {
         ListUtil.moveItemDown(list, getObject(component));
     }
 
-    private Object getObject(Component component){
-        if(component instanceof RegionPanel){
-            return (((RegionPanel)component).getObject());
+    private Object getObject(Component component) {
+        if (component instanceof RegionPanel) {
+            return (((RegionPanel) component).getObject());
         }
         return null;
     }

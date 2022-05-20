@@ -52,7 +52,7 @@ public class ConverterMat2dZigZag implements Converter {
 
         int last = -1;
         int maxdim = 0;
-        for (int i =0; i< dims.length; i++){     
+        for (int i = 0; i < dims.length; i++) {
             if (dims[i] > maxdim) {
                 maxdim = dims[i];
             }
@@ -89,21 +89,20 @@ public class ConverterMat2dZigZag implements Converter {
                 firstF = false;
             }
 
-            
             // Put data into data list
             for (int j = 0; j < recordSize; j++) {
-                Object object = Array.get(record, j);                
+                Object object = Array.get(record, j);
                 dlistTmp.get(j).add(object);
                 Object former = higherDimensionValues.get(j);
                 if (former != null) {
-                    if (!former.equals(object)){
+                    if (!former.equals(object)) {
                         changedHigerDimension = true;
                     }
                     higherDimensionValues.set(j, object);
-                }                
+                }
             }
-            
-            if (changedHigerDimension || (i==(shape[0]-1))) {
+
+            if (changedHigerDimension || (i == (shape[0] - 1))) {
                 if (dsize < dcount) {
                     dsize = dcount;
                 }
@@ -124,8 +123,6 @@ public class ConverterMat2dZigZag implements Converter {
                 changedHigerDimension = false;
             }
 
-
-            
             dcount++;
         }
 

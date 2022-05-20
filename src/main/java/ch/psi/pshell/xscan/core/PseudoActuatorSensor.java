@@ -5,67 +5,66 @@ package ch.psi.pshell.xscan.core;
  */
 public class PseudoActuatorSensor implements Actor, Sensor {
 
-	/**
-	 * Execution count of actuator.
-	 */
-	private int count;
-	
-	/**
-	 * Number of counts for this actuator
-	 */
-	private final int counts;
-	
-	private final String id;
-	
-	/**
-	 * @param counts
-	 * @param id		Id of the Actor/Sensor
-	 */
-	public PseudoActuatorSensor(String id, int counts){
-		if(counts < 1){
-			throw new IllegalArgumentException("Count ["+counts+"] must be > 0");
-		}
-		this.id = id;
-		this.counts = counts;
-		
-		init();
-	}
-	
-	
-	@Override
-	public void set() {
-		if(!hasNext()){
-			throw new IllegalStateException("The actuator does not have any next step.");
-		}
-		
-		count++;
-	}
+    /**
+     * Execution count of actuator.
+     */
+    private int count;
 
-	@Override
-	public boolean hasNext() {
-		return (count<counts);
-	}
+    /**
+     * Number of counts for this actuator
+     */
+    private final int counts;
 
-	@Override
-	public void init() {
-		count=0;
-	}
+    private final String id;
 
-	@Override
-	public void reverse() {
-	}
+    /**
+     * @param counts
+     * @param id	Id of the Actor/Sensor
+     */
+    public PseudoActuatorSensor(String id, int counts) {
+        if (counts < 1) {
+            throw new IllegalArgumentException("Count [" + counts + "] must be > 0");
+        }
+        this.id = id;
+        this.counts = counts;
 
-	@Override
-	public void reset() {
-	}
+        init();
+    }
 
-	@Override
-	public Object read() {
-		return new Double(count); // Return actual count
-	}
+    @Override
+    public void set() {
+        if (!hasNext()) {
+            throw new IllegalStateException("The actuator does not have any next step.");
+        }
 
-	@Override
-	public String getId() {
-		return this.id;
-	}
+        count++;
+    }
+
+    @Override
+    public boolean hasNext() {
+        return (count < counts);
+    }
+
+    @Override
+    public void init() {
+        count = 0;
+    }
+
+    @Override
+    public void reverse() {
+    }
+
+    @Override
+    public void reset() {
+    }
+
+    @Override
+    public Object read() {
+        return new Double(count); // Return actual count
+    }
+
+    @Override
+    public String getId() {
+        return this.id;
+    }
 }

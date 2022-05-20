@@ -93,35 +93,35 @@ public final class DataBrowser extends MonitoredPanel {
         filePopupMenu.add(menuOpen);
 
         JMenu menuConvert = new JMenu("Convert");
-        for (Converter converter : new Converter[]{new ConverterMat(), new ConverterMat2d()}){
-            JMenuItem item = new JMenuItem(converter.getName());                                        
-            item.addActionListener((a)->{    
-                try{
+        for (Converter converter : new Converter[]{new ConverterMat(), new ConverterMat2d()}) {
+            JMenuItem item = new JMenuItem(converter.getName());
+            item.addActionListener((a) -> {
+                try {
                     File file = (File) treeFolder.getLastSelectedPathComponent();
                     TreePath path = treeFolder.getSelectionPath();
                     if ((file != null) && (file.exists()) && file.isFile()) {
                         DataManager dataManager = new DataManager(Context.getInstance(), "fda", "fda");
-                        String output = file.getParent() + "/" +IO.getPrefix(file) + "_" + converter.getName().replaceAll("\\s+","") + "." + converter.getExtension();
-                        converter.startConvert(dataManager, file.getParent(), file.getName(), new File(output)).handle((ret,ex)->{
-                            if (ex != null){
+                        String output = file.getParent() + "/" + IO.getPrefix(file) + "_" + converter.getName().replaceAll("\\s+", "") + "." + converter.getExtension();
+                        converter.startConvert(dataManager, file.getParent(), file.getName(), new File(output)).handle((ret, ex) -> {
+                            if (ex != null) {
                                 SwingUtils.showException(DataBrowser.this, (Exception) ex);
-                            } else{
+                            } else {
                                 try {
                                     repaintTreePath(path.getParentPath(), true);
                                 } catch (Exception e) {
                                 }
-                                SwingUtils.showMessage(DataBrowser.this, "Success", "Success creating:\n" + String.valueOf(output));                                
+                                SwingUtils.showMessage(DataBrowser.this, "Success", "Success creating:\n" + String.valueOf(output));
                             }
                             return ret;
                         });
                     }
                 } catch (Exception ex) {
                     SwingUtils.showException(DataBrowser.this, ex);
-                }                    
+                }
             });
             menuConvert.add(item);
         }
-        
+
         filePopupMenu.add(menuConvert);
 
         JMenuItem menuBrowse = new JMenuItem("Browse folder");
@@ -230,7 +230,7 @@ public final class DataBrowser extends MonitoredPanel {
     WatchService watchService;
     FileSystemModel treeFolderModel;
     String baseFolder;
-    
+
     /*
     boolean isDataFile(File file){
         if ((file != null) && file.exists() &&  file.isFile()){
@@ -248,9 +248,7 @@ public final class DataBrowser extends MonitoredPanel {
         }
         return false;
     }
-    */
-                
-
+     */
     void onFileDoubleClick(File file) {
         if ((file != null) && (file.exists() && (file.isFile()))) {
             try {
@@ -284,8 +282,8 @@ public final class DataBrowser extends MonitoredPanel {
                     App.getInstance().getMainFrame().openScriptOrProcessor(filename);
                     break;
                 case "h5":
-                    for (DataPanel pn : App.getInstance().getMainFrame().getDataFilePanels()){
-                        if (file.equals(new File(pn.getFileName()))){
+                    for (DataPanel pn : App.getInstance().getMainFrame().getDataFilePanels()) {
+                        if (file.equals(new File(pn.getFileName()))) {
                             if (App.getInstance().getMainFrame().getDocumentsTab().indexOfComponent(pn) >= 0) {
                                 App.getInstance().getMainFrame().getDocumentsTab().setSelectedComponent(pn);
                             } else if (App.getInstance().getMainFrame().getDetachedScripts().containsValue(pn)) {
@@ -296,21 +294,21 @@ public final class DataBrowser extends MonitoredPanel {
                         }
                     }
                     App.getInstance().getMainFrame().openDataFile(filename.toString());
-                    break;                    
+                    break;
                 case "txt":
                     Editor ed = App.getInstance().getMainFrame().openTextFile(filename);
                     ed.setReadOnly(true);
             }
         }
     }
-    
+
     void plotFile(File file) throws Exception {
         if ((file != null) && (file.exists() && (file.isFile())) && (IO.getExtension(file).equalsIgnoreCase("txt"))) {
             ProcessorXscan processor = new ProcessorXscan();
             processor.plotDataFile(file);
-            
+
         }
-    }    
+    }
 
     @Override
     protected void onShow() {

@@ -5,13 +5,14 @@ import java.awt.dnd.DropTargetDragEvent;
 import java.awt.dnd.DropTargetDropEvent;
 import java.awt.dnd.DropTargetEvent;
 import java.awt.dnd.DropTargetListener;
+
 /**
  *
  */
 public class ListContainerDropTargetListener implements DropTargetListener {
 
     private final ListContainer panel;
-    private  DataFlavor flavor;
+    private DataFlavor flavor;
 
     public ListContainerDropTargetListener(ListContainer targetPanel) {
 
@@ -43,7 +44,9 @@ public class ListContainerDropTargetListener implements DropTargetListener {
     }
 
     /**
-     * <p>The user drops the item. Performs the drag and drop calculations and layout.</p>
+     * <p>
+     * The user drops the item. Performs the drag and drop calculations and layout.</p>
+     *
      * @param dtde
      */
     public void drop(DropTargetDropEvent dtde) {

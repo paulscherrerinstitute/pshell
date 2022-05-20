@@ -14,21 +14,21 @@ public class DiscreteStepScalarDetectorListItemProvider implements ListItemProvi
 
     private final String[] detectors = new String[]{"Scalar Detector"};
 
-    public DiscreteStepScalarDetectorListItemProvider(List<ScalarDetector> list){
+    public DiscreteStepScalarDetectorListItemProvider(List<ScalarDetector> list) {
         this.list = list;
     }
 
     @Override
     public String[] getItemKeys() {
-        return(detectors);
+        return (detectors);
     }
 
     @Override
     public Component newItem(String key) {
-        if(key.equals(detectors[0])){
+        if (key.equals(detectors[0])) {
             ScalarDetector sd = new ScalarDetector();
             list.add(sd);
-            return(getItem(sd));
+            return (getItem(sd));
         }
         return null;
     }
@@ -36,17 +36,17 @@ public class DiscreteStepScalarDetectorListItemProvider implements ListItemProvi
     @Override
     public List<Component> getItems() {
         List<Component> l = new ArrayList<Component>();
-        for(ScalarDetector s: list){
+        for (ScalarDetector s : list) {
             l.add(getItem(s));
         }
         return l;
     }
 
     private Component getItem(ScalarDetector object) {
-        if(object instanceof ScalarDetector){
+        if (object instanceof ScalarDetector) {
             ScalarDetectorPanel p = new ScalarDetectorPanel(object);
             p.setName("Scalar D");
-            return(p);
+            return (p);
         }
 
         return null;
@@ -54,8 +54,8 @@ public class DiscreteStepScalarDetectorListItemProvider implements ListItemProvi
 
     @Override
     public void removeItem(Component component) {
-        if(component instanceof ScalarDetectorPanel){
-            list.remove(((ScalarDetectorPanel)component).getObject());
+        if (component instanceof ScalarDetectorPanel) {
+            list.remove(((ScalarDetectorPanel) component).getObject());
         }
     }
 
@@ -79,9 +79,9 @@ public class DiscreteStepScalarDetectorListItemProvider implements ListItemProvi
         ListUtil.moveItemDown(list, getObject(component));
     }
 
-    private Object getObject(Component component){
-        if(component instanceof ScalarDetectorPanel){
-            return (((ScalarDetectorPanel)component).getObject());
+    private Object getObject(Component component) {
+        if (component instanceof ScalarDetectorPanel) {
+            return (((ScalarDetectorPanel) component).getObject());
         }
         return null;
     }

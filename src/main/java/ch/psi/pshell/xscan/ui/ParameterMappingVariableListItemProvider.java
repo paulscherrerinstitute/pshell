@@ -16,57 +16,57 @@ public class ParameterMappingVariableListItemProvider implements ListItemProvide
 
     private final String[] names = new String[]{"Variable Mapping", "Channel Mapping"};
 
-    public ParameterMappingVariableListItemProvider(List<ParameterMapping> list){
+    public ParameterMappingVariableListItemProvider(List<ParameterMapping> list) {
         this.list = list;
     }
 
     @Override
     public String[] getItemKeys() {
-        return(names);
+        return (names);
     }
 
     @Override
     public Component newItem(String key) {
-        if(key.equals(names[0])){
+        if (key.equals(names[0])) {
             VariableParameterMapping pm = new VariableParameterMapping();
             list.add(pm);
-            return(getItem(pm));
+            return (getItem(pm));
         }
-        if(key.equals(names[1])){
+        if (key.equals(names[1])) {
             ChannelParameterMapping cpm = new ChannelParameterMapping();
             list.add(cpm);
-            return(getItem(cpm));
-        }    
+            return (getItem(cpm));
+        }
         return null;
     }
 
     @Override
     public List<Component> getItems() {
         List<Component> l = new ArrayList<Component>();
-        for(ParameterMapping m: list){
+        for (ParameterMapping m : list) {
             l.add(getItem(m));
         }
         return l;
     }
 
     private Component getItem(ParameterMapping object) {
-        if(object instanceof VariableParameterMapping){
-            GlobalVariableParameterMappingPanel p = new GlobalVariableParameterMappingPanel((VariableParameterMapping)object);
+        if (object instanceof VariableParameterMapping) {
+            GlobalVariableParameterMappingPanel p = new GlobalVariableParameterMappingPanel((VariableParameterMapping) object);
             p.setName("Variable Mapping");
-            return(p);
+            return (p);
         }
-        if(object instanceof ChannelParameterMapping){
-            ChannelParameterMappingPanel p = new ChannelParameterMappingPanel((ChannelParameterMapping)object);
+        if (object instanceof ChannelParameterMapping) {
+            ChannelParameterMappingPanel p = new ChannelParameterMappingPanel((ChannelParameterMapping) object);
             p.setName("Channel Mapping");
-            return(p);
-        }           
+            return (p);
+        }
         return null;
     }
 
     @Override
     public void removeItem(Component component) {
-        if(component instanceof GlobalVariableParameterMappingPanel){
-            list.remove(((GlobalVariableParameterMappingPanel)component).getObject());
+        if (component instanceof GlobalVariableParameterMappingPanel) {
+            list.remove(((GlobalVariableParameterMappingPanel) component).getObject());
         }
     }
 
@@ -90,9 +90,9 @@ public class ParameterMappingVariableListItemProvider implements ListItemProvide
         ListUtil.moveItemDown(list, getObject(component));
     }
 
-    private Object getObject(Component component){
-        if(component instanceof GlobalVariableParameterMappingPanel){
-            return(((GlobalVariableParameterMappingPanel)component).getObject());
+    private Object getObject(Component component) {
+        if (component instanceof GlobalVariableParameterMappingPanel) {
+            return (((GlobalVariableParameterMappingPanel) component).getObject());
         }
         return null;
     }

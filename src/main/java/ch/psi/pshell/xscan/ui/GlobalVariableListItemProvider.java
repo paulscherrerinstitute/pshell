@@ -14,21 +14,21 @@ public class GlobalVariableListItemProvider implements ListItemProvider<Variable
 
     private final String[] actions = new String[]{"Variable"};
 
-    public GlobalVariableListItemProvider(List<Variable> list){
+    public GlobalVariableListItemProvider(List<Variable> list) {
         this.list = list;
     }
 
     @Override
     public String[] getItemKeys() {
-        return(actions);
+        return (actions);
     }
 
     @Override
     public Component newItem(String key) {
-        if(key.equals(actions[0])){
+        if (key.equals(actions[0])) {
             Variable r = new Variable();
             list.add(r);
-            return(getItem(r));
+            return (getItem(r));
         }
         return null;
     }
@@ -36,7 +36,7 @@ public class GlobalVariableListItemProvider implements ListItemProvider<Variable
     @Override
     public List<Component> getItems() {
         List<Component> l = new ArrayList<Component>();
-        for(Variable r: list){
+        for (Variable r : list) {
             l.add(getItem(r));
         }
         return l;
@@ -50,8 +50,8 @@ public class GlobalVariableListItemProvider implements ListItemProvider<Variable
 
     @Override
     public void removeItem(Component component) {
-        if(component instanceof GlobalVariablePanel){
-            list.remove(((GlobalVariablePanel)component).getObject());
+        if (component instanceof GlobalVariablePanel) {
+            list.remove(((GlobalVariablePanel) component).getObject());
         }
     }
 
@@ -75,9 +75,9 @@ public class GlobalVariableListItemProvider implements ListItemProvider<Variable
         ListUtil.moveItemDown(list, getObject(component));
     }
 
-    private Object getObject(Component component){
-        if(component instanceof GlobalVariablePanel){
-            return (((GlobalVariablePanel)component).getObject());
+    private Object getObject(Component component) {
+        if (component instanceof GlobalVariablePanel) {
+            return (((GlobalVariablePanel) component).getObject());
         }
         return null;
     }

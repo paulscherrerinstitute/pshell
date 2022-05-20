@@ -23,12 +23,10 @@ import javax.swing.JTextField;
 import javax.swing.border.Border;
 
 /**
- * PanelSupport class that adds the dynamic behaviour of text fields, optional
- * fields and the add button of the panel.
+ * PanelSupport class that adds the dynamic behaviour of text fields, optional fields and the add button of the panel.
  *
- * If an optional field has a label (JLabel), the <em>labelFor</em> attribute of the JLable
- * need to be set to "inherit" the dynamic behaviour of the optional text field to
- * the label.
+ * If an optional field has a label (JLabel), the <em>labelFor</em> attribute of the JLable need to be set to "inherit"
+ * the dynamic behaviour of the optional text field to the label.
  *
  */
 public class PanelSupport {
@@ -42,12 +40,10 @@ public class PanelSupport {
      */
     private HashMap<Component, ComponentMetadata> optionalFields;
 
-
     private HashMap<Component, String> fieldLabels = new HashMap<Component, String>();
 
     /**
-     * Map holding original border of the TextFields
-     * Map will be filled when manageTextFields() is called
+     * Map holding original border of the TextFields Map will be filled when manageTextFields() is called
      */
     private HashMap<Component, Border> bordermap = new HashMap<Component, Border>();
 
@@ -62,33 +58,32 @@ public class PanelSupport {
      */
     private JPanel panel;
 
-    public PanelSupport(){
+    public PanelSupport() {
 
     }
 
     /**
      * Constructor
-     * @param panel     Panel this support class belongs to
-     * @param fields    Map of fields that this support class manages. Specify true in the map
-     *                  if the field is mandatory and false if the field is optional.
-     * @param button    Button to use to add additional components
+     *
+     * @param panel Panel this support class belongs to
+     * @param fields Map of fields that this support class manages. Specify true in the map if the field is mandatory
+     * and false if the field is optional.
+     * @param button Button to use to add additional components
      */
-    public void manage(JPanel panel, HashMap<Component, ComponentMetadata> fields, JButton button){
+    public void manage(JPanel panel, HashMap<Component, ComponentMetadata> fields, JButton button) {
 
         // Save panel this support is attached to
         this.panel = panel;
         this.button = button;
 
-
         // Determine optional and mandatory fields
         this.mandatoryFields = new ArrayList<Component>();
         this.optionalFields = new HashMap<Component, ComponentMetadata>();
 
-        for(Component f: fields.keySet()){
-            if(fields.get(f).isMandatory()){
+        for (Component f : fields.keySet()) {
+            if (fields.get(f).isMandatory()) {
                 this.mandatoryFields.add(f);
-            }
-            else{
+            } else {
                 this.optionalFields.put(f, fields.get(f));
             }
         }
@@ -98,9 +93,8 @@ public class PanelSupport {
         // Add activate/deactivate support to fields
         addActivateDeactivateSupport(fields);
 
-        
         // Add popup to button
-        if(button != null){
+        if (button != null) {
             this.popup = new JPopupMenu();
             button.addMouseListener(new java.awt.event.MouseAdapter() {
                 @Override
@@ -111,20 +105,19 @@ public class PanelSupport {
         }
     }
 
-    public void analyze(HashMap<Component, ComponentMetadata> fields){
-        for(Component field: fields.keySet()){
+    public void analyze(HashMap<Component, ComponentMetadata> fields) {
+        for (Component field : fields.keySet()) {
             if (field instanceof JTextField) {
                 JTextField f = ((JTextField) field);
                 String label = f.getText();
-                if(label!=null && !label.trim().equals("")){
-                   fieldLabels.put(field, label);
+                if (label != null && !label.trim().equals("")) {
+                    fieldLabels.put(field, label);
                 }
-            }
-            else if (field instanceof JFormattedTextField) {
+            } else if (field instanceof JFormattedTextField) {
                 JFormattedTextField f = ((JFormattedTextField) field);
                 String label = f.getText();
-                if(label != null && !label.trim().equals("")){
-                   fieldLabels.put(field, label);
+                if (label != null && !label.trim().equals("")) {
+                    fieldLabels.put(field, label);
                 }
             }
         }
@@ -132,16 +125,18 @@ public class PanelSupport {
 
     /**
      * Add text field gray label support to a (formatted) text fields
+     *
      * @param fields
      */
-    private void addTextFieldNameSupport(HashMap<Component, String> fields){
-        for(Component field: fields.keySet()){
+    private void addTextFieldNameSupport(HashMap<Component, String> fields) {
+        for (Component field : fields.keySet()) {
             addTextFieldNameSupport(field, fields.get(field));
         }
     }
 
     /**
      * Add text field gray label support to a (formatted) text field
+     *
      * @param field
      */
     private void addTextFieldNameSupport(final Component field, final String label) {
@@ -152,170 +147,167 @@ public class PanelSupport {
             final JTextField f = ((JTextField) field);
 
             // Set label if current text is empty
-            if(f.getText().trim().equals("")){
+            if (f.getText().trim().equals("")) {
                 f.setText(label);
             }
 
-            if(f.getText().equals(label)){
+            if (f.getText().equals(label)) {
                 f.setForeground(colorGray);
-            }
-            else{
+            } else {
                 f.setForeground(baseColor);
             }
 
-                f.addFocusListener(new java.awt.event.FocusAdapter() {
+            f.addFocusListener(new java.awt.event.FocusAdapter() {
 
-                    @Override
-                    public void focusGained(java.awt.event.FocusEvent evt) {
-                        if (f.getText().equals(label)) {
-                            f.setText("");
-                        }
-                        f.setForeground(baseColor);
+                @Override
+                public void focusGained(java.awt.event.FocusEvent evt) {
+                    if (f.getText().equals(label)) {
+                        f.setText("");
                     }
+                    f.setForeground(baseColor);
+                }
 
-                    @Override
-                    public void focusLost(java.awt.event.FocusEvent evt) {
-                        String t = f.getText().trim();
-                        if (t.equals("")) {
-                            f.setText(label);
-                            f.setForeground(colorGray);
-                        }
+                @Override
+                public void focusLost(java.awt.event.FocusEvent evt) {
+                    String t = f.getText().trim();
+                    if (t.equals("")) {
+                        f.setText(label);
+                        f.setForeground(colorGray);
                     }
-                });
-            
+                }
+            });
 
         } else if (field instanceof JFormattedTextField) {
             final JFormattedTextField f = ((JFormattedTextField) field);
 
             // Set label if current text is empty
-            if(f.getText().trim().equals("")){
+            if (f.getText().trim().equals("")) {
                 f.setText(label);
             }
 
-            if(f.getText().equals(label)){
+            if (f.getText().equals(label)) {
                 f.setForeground(colorGray);
-            }
-            else{
+            } else {
                 f.setForeground(baseColor);
             }
 
-                f.addFocusListener(new java.awt.event.FocusAdapter() {
+            f.addFocusListener(new java.awt.event.FocusAdapter() {
 
-                    @Override
-                    public void focusGained(java.awt.event.FocusEvent evt) {
-                        if (f.getText().equals(label)) {
-                            f.setText("");
-                        }
-                        f.setForeground(baseColor);
+                @Override
+                public void focusGained(java.awt.event.FocusEvent evt) {
+                    if (f.getText().equals(label)) {
+                        f.setText("");
                     }
+                    f.setForeground(baseColor);
+                }
 
-                    @Override
-                    public void focusLost(java.awt.event.FocusEvent evt) {
-                        String t = f.getText().trim();
-                        if (t.equals("")) {
-                            f.setText(label);
-                            f.setForeground(colorGray);
-                        }
+                @Override
+                public void focusLost(java.awt.event.FocusEvent evt) {
+                    String t = f.getText().trim();
+                    if (t.equals("")) {
+                        f.setText(label);
+                        f.setForeground(colorGray);
                     }
-                });
-            
+                }
+            });
 
         }
     }
 
-    private void addActivateDeactivateSupport(final Component field, final ComponentMetadata metadata){
+    private void addActivateDeactivateSupport(final Component field, final ComponentMetadata metadata) {
         // Save original border for text fields
-            if(field instanceof JTextField){
-                JTextField f =(JTextField) field;
-                bordermap.put(f, f.getBorder());
-            }
-            else if (field instanceof JFormattedTextField){
-                JFormattedTextField f =(JFormattedTextField) field;
-                bordermap.put(f, f.getBorder());
-            }
+        if (field instanceof JTextField) {
+            JTextField f = (JTextField) field;
+            bordermap.put(f, f.getBorder());
+        } else if (field instanceof JFormattedTextField) {
+            JFormattedTextField f = (JFormattedTextField) field;
+            bordermap.put(f, f.getBorder());
+        }
 
-            if(metadata.isMandatory()){
-                // Mandatory field
+        if (metadata.isMandatory()) {
+            // Mandatory field
+            field.addFocusListener(new java.awt.event.FocusAdapter() {
+                @Override
+                public void focusGained(java.awt.event.FocusEvent evt) {
+                    activateComponent(field);
+                }
+
+                @Override
+                public void focusLost(java.awt.event.FocusEvent evt) {
+                    deactivateComponent(field);
+                }
+            });
+        } else {
+            // Optional field
+            if (CollapsibleListContainer.class.isInstance(field)) {
+                field.addMouseListener(new MouseListener() {
+
+                    @Override
+                    public void mouseClicked(MouseEvent me) {
+                    }
+
+                    @Override
+                    public void mousePressed(MouseEvent me) {
+                    }
+
+                    @Override
+                    public void mouseReleased(MouseEvent me) {
+                    }
+
+                    @Override
+                    public void mouseEntered(MouseEvent me) {
+                        activateComponent(field);
+                    }
+
+                    @Override
+                    public void mouseExited(MouseEvent me) {
+                        deactivateComponent(field);
+                        // Check visibility
+                        checkVisibility(field, metadata.getDefaultValue());
+                    }
+                });
+            } else {
                 field.addFocusListener(new java.awt.event.FocusAdapter() {
                     @Override
                     public void focusGained(java.awt.event.FocusEvent evt) {
                         activateComponent(field);
                     }
+
                     @Override
                     public void focusLost(java.awt.event.FocusEvent evt) {
                         deactivateComponent(field);
+                        // Check visibility
+                        checkVisibility(field, metadata.getDefaultValue());
                     }
                 });
             }
-            else{
-                // Optional field
-                if(CollapsibleListContainer.class.isInstance(field)){
-                    field.addMouseListener(new MouseListener() {
 
-                        @Override
-                        public void mouseClicked(MouseEvent me) {
-                        }
+            // Check visibility (do not show up optional fields at startup)
+            checkVisibility(field, metadata.getDefaultValue());
+        }
 
-                        @Override
-                        public void mousePressed(MouseEvent me) {
-                        }
-
-                        @Override
-                        public void mouseReleased(MouseEvent me) {
-                        }
-
-                        @Override
-                        public void mouseEntered(MouseEvent me) {
-                            activateComponent(field);
-                        }
-
-                        @Override
-                        public void mouseExited(MouseEvent me) {
-                            deactivateComponent(field);
-                            // Check visibility
-                            checkVisibility(field, metadata.getDefaultValue());
-                        }
-                    });
-                }
-                else {
-                    field.addFocusListener(new java.awt.event.FocusAdapter() {
-                        @Override
-                        public void focusGained(java.awt.event.FocusEvent evt) {
-                            activateComponent(field);
-                        }
-                        @Override
-                        public void focusLost(java.awt.event.FocusEvent evt) {
-                            deactivateComponent(field);
-                            // Check visibility
-                            checkVisibility(field, metadata.getDefaultValue());
-                        }
-                    });
-                }
-
-                // Check visibility (do not show up optional fields at startup)
-                checkVisibility(field, metadata.getDefaultValue());
-            }
-
-            // Deactivate field - default
-            deactivateComponent(field);
+        // Deactivate field - default
+        deactivateComponent(field);
     }
 
     /**
      * Add activate/deactivate support to passed text fields
+     *
      * @param fields
      */
-    private void addActivateDeactivateSupport(HashMap<Component, ComponentMetadata> fields){
-        for(final Component field: fields.keySet()){
+    private void addActivateDeactivateSupport(HashMap<Component, ComponentMetadata> fields) {
+        for (final Component field : fields.keySet()) {
             addActivateDeactivateSupport(field, fields.get(field));
         }
     }
 
     /**
      * Deactivate a text field.
-     * @param field     Text field to deactivate
+     *
+     * @param field Text field to deactivate
      */
     private void deactivateComponent(Component field) {
-        if(field instanceof JTextField){
+        if (field instanceof JTextField) {
 //            JTextField f =(JTextField) field;
 //
 ////          // Resize text element
@@ -328,24 +320,22 @@ public class PanelSupport {
 //
 //            // Remove border
 //            f.setBorder(null);
-        }
-        else if (field instanceof JFormattedTextField){
+        } else if (field instanceof JFormattedTextField) {
 
-        }
-        else if(field instanceof JComboBox){
+        } else if (field instanceof JComboBox) {
 //            JComboBox b = (JComboBox) field;
-        }
-        else if(field instanceof JTextArea){
+        } else if (field instanceof JTextArea) {
 //            JTextArea f =(JTextArea) field;
         }
     }
 
     /**
      * Activate text field.
-     * @param field     Text field to deactivate
+     *
+     * @param field Text field to deactivate
      */
     private void activateComponent(Component field) {
-        if(field instanceof JTextField){
+        if (field instanceof JTextField) {
 //            JTextField f =(JTextField) field;
 //
 //            // Set background color to white
@@ -355,20 +345,18 @@ public class PanelSupport {
 //            if (bordermap.get(f) != null) {
 //                f.setBorder(bordermap.get(f));
 //            }
-        }
-        else if(field instanceof JFormattedTextField){
+        } else if (field instanceof JFormattedTextField) {
 
-        }
-        else if(field instanceof JComboBox){
+        } else if (field instanceof JComboBox) {
 //            JComboBox b = (JComboBox) field;
-        }
-        else if(field instanceof JTextArea){
+        } else if (field instanceof JTextArea) {
 //            JTextArea f =(JTextArea) field;
         }
     }
 
     /**
      * Determine whether an optional field should be visible or not
+     *
      * @param component
      */
     private void checkVisibility(Component field, String defaultValue) {
@@ -399,10 +387,9 @@ public class PanelSupport {
             if (c.isEmpty()) {
                 hide = true;
             }
-        }
-        else if(field instanceof JCheckBox){
+        } else if (field instanceof JCheckBox) {
             JCheckBox box = (JCheckBox) field;
-            if(!box.isSelected()){
+            if (!box.isSelected()) {
                 hide = true;
             }
         }
@@ -420,9 +407,8 @@ public class PanelSupport {
                     }
                 }
             }
-        }
-        else{
-            if(!field.isVisible()){
+        } else {
+            if (!field.isVisible()) {
                 field.setVisible(true);
             }
             // Show all related lable fields as well
@@ -443,24 +429,23 @@ public class PanelSupport {
     /**
      * Validate whether the add button should be shown
      */
-    private void validateAddButton(){
+    private void validateAddButton() {
 
-        if(button!=null){
+        if (button != null) {
             boolean visible = false;
-            if (optionalFields!=null) {
-                for(Component c: this.optionalFields.keySet()){
-                    if(!c.isVisible()){
-                        visible=true;
+            if (optionalFields != null) {
+                for (Component c : this.optionalFields.keySet()) {
+                    if (!c.isVisible()) {
+                        visible = true;
                         break;
                     }
                 }
             }
 
             // Set button visible/invisible
-            if(visible){
+            if (visible) {
                 button.setVisible(true);
-            }
-            else{
+            } else {
                 button.setVisible(false);
             }
         }
@@ -474,19 +459,19 @@ public class PanelSupport {
      */
     private void showPopup() {
         popup.removeAll();
-        int cnt=0;
-        if (optionalFields==null){
+        int cnt = 0;
+        if (optionalFields == null) {
             return;
         }
-        for(final Component c: this.optionalFields.keySet()){
-            if(!c.isVisible()){
+        for (final Component c : this.optionalFields.keySet()) {
+            if (!c.isVisible()) {
 
-                if(CollapsibleListContainer.class.isInstance(c)){
+                if (CollapsibleListContainer.class.isInstance(c)) {
 
                     JMenu menu = new JMenu(c.getName());
                     final CollapsibleListContainer<?> clc = (CollapsibleListContainer<?>) c;
 
-                    for(final String k: clc.getItemKeys()){
+                    for (final String k : clc.getItemKeys()) {
 
 //                        String itemName = c.getName()+"-"+k;
                         String itemName = k;
@@ -498,15 +483,15 @@ public class PanelSupport {
                             public void actionPerformed(ActionEvent ae) {
                                 clc.newItem(k);
                                 clc.setCollapsed(false);
-                                
+
                                 c.setVisible(true);
 
                                 // Show all related label fields as well
-                                for(Component comp: c.getParent().getComponents()){
+                                for (Component comp : c.getParent().getComponents()) {
 
-                                    if(comp instanceof JLabel){
+                                    if (comp instanceof JLabel) {
                                         JLabel l = (JLabel) comp;
-                                        if( c.equals(l.getLabelFor())){
+                                        if (c.equals(l.getLabelFor())) {
                                             l.setVisible(true);
                                         }
                                     }
@@ -527,8 +512,7 @@ public class PanelSupport {
                     }
 
                     popup.add(menu);
-                }
-                else{
+                } else {
                     String itemName = c.getName();
 
                     JMenuItem item = new JMenuItem(itemName);
@@ -540,21 +524,20 @@ public class PanelSupport {
 
                             // If the component is a checkbox also activate or deactivate checkbox
                             // depending on its default value (always the opposite of the default)
-                            if(c instanceof JCheckBox){
-                                if("true".equalsIgnoreCase(optionalFields.get(c).getDefaultValue())){
-                                     ((JCheckBox)c).setSelected(false);
-                                }
-                                else if ("false".equalsIgnoreCase(optionalFields.get(c).getDefaultValue())){
-                                    ((JCheckBox)c).setSelected(true);
+                            if (c instanceof JCheckBox) {
+                                if ("true".equalsIgnoreCase(optionalFields.get(c).getDefaultValue())) {
+                                    ((JCheckBox) c).setSelected(false);
+                                } else if ("false".equalsIgnoreCase(optionalFields.get(c).getDefaultValue())) {
+                                    ((JCheckBox) c).setSelected(true);
                                 }
                             }
 
                             // Show all related label fields as well
-                            for(Component comp: c.getParent().getComponents()){
+                            for (Component comp : c.getParent().getComponents()) {
 
-                                if(comp instanceof JLabel){
+                                if (comp instanceof JLabel) {
                                     JLabel l = (JLabel) comp;
-                                    if( c.equals(l.getLabelFor())){
+                                    if (c.equals(l.getLabelFor())) {
                                         l.setVisible(true);
                                     }
                                 }
@@ -572,21 +555,21 @@ public class PanelSupport {
                     popup.add(item);
                     cnt++;
                 }
-                
+
             }
         }
 
         // Show popup menu for button
-        if(cnt>0){
+        if (cnt > 0) {
 //            popup.show(button, button.getWidth()/2, button.getHeight()/2);
-            popup.show(button, button.getWidth(), button.getHeight()/2);
+            popup.show(button, button.getWidth(), button.getHeight() / 2);
         }
     }
 
     /**
      * Revalidate and repaint the parent panel
      */
-    public void updatePanel(){
+    public void updatePanel() {
 //        Component c = panel;
 //        while (c != null){
 //            if(c.getParent()!=null){
@@ -607,20 +590,20 @@ public class PanelSupport {
 //        }
     }
 
-
     /**
      * Add an additional component to this panel support object
+     *
      * @param component
      * @param mandatory
      */
     public void addComponent(Component component, ComponentMetadata metadata) {
 
         if (metadata.isMandatory()) {
-            if (mandatoryFields!=null){
+            if (mandatoryFields != null) {
                 this.mandatoryFields.add(component);
             }
         } else {
-            if (optionalFields!=null){
+            if (optionalFields != null) {
                 this.optionalFields.put(component, metadata);
             }
         }
@@ -629,42 +612,41 @@ public class PanelSupport {
         addActivateDeactivateSupport(component, metadata);
 
     }
-    
-    public boolean isOptionalField(Component component){
-        if (optionalFields!=null){
+
+    public boolean isOptionalField(Component component) {
+        if (optionalFields != null) {
             return optionalFields.containsKey(component);
         }
         return false;
     }
 
-    public boolean isMandatoryField(Component component){
-        if (mandatoryFields!=null){
-            return mandatoryFields.contains(component); 
+    public boolean isMandatoryField(Component component) {
+        if (mandatoryFields != null) {
+            return mandatoryFields.contains(component);
         }
         return false;
     }
 
-    public boolean isField(Component component){
-       return isOptionalField(component) || isMandatoryField(component); 
+    public boolean isField(Component component) {
+        return isOptionalField(component) || isMandatoryField(component);
     }
 
-    
     /**
      * Check the visibility of the the optional fields
      */
-    public void checkVisibility(){
-        if (optionalFields!=null){
-            for(Component c: optionalFields.keySet()){
+    public void checkVisibility() {
+        if (optionalFields != null) {
+            for (Component c : optionalFields.keySet()) {
                 checkVisibility(c, optionalFields.get(c).getDefaultValue());
             }
         }
     }
 
-
     /**
-     * For fields with in field labels use this method to get the real value of the field
-     * The method checks whether the field had/has an in field label and then checks whether the
-     * actual value is is the label. If this is the case, the method will return an empty String.
+     * For fields with in field labels use this method to get the real value of the field The method checks whether the
+     * field had/has an in field label and then checks whether the actual value is is the label. If this is the case,
+     * the method will return an empty String.
+     *
      * @param field
      * @return
      */
@@ -688,14 +670,13 @@ public class PanelSupport {
         return (value);
     }
 
-    public String getValue(Component field){
+    public String getValue(Component field) {
         String s = getRealFieldValue(field);
 
-        if((optionalFields!=null) && (optionalFields.containsKey(field))){
-            if(s.trim().equals("")){
+        if ((optionalFields != null) && (optionalFields.containsKey(field))) {
+            if (s.trim().equals("")) {
                 return null;
-            }
-            else if(s.equals(optionalFields.get(field).getDefaultValue())){
+            } else if (s.equals(optionalFields.get(field).getDefaultValue())) {
                 return null;
             }
         }

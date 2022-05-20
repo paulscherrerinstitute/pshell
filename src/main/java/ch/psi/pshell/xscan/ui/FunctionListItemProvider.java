@@ -15,7 +15,7 @@ public class FunctionListItemProvider implements ListItemProvider<Function> {
 
     private Region region;
 
-    public FunctionListItemProvider(Region region){
+    public FunctionListItemProvider(Region region) {
         this.region = region;
     }
 
@@ -24,20 +24,19 @@ public class FunctionListItemProvider implements ListItemProvider<Function> {
 
         // If no continuous dimension is specified return its key. Otherwise return no key
         // (Ensures that only one continuous dimension can be added)
-        if(region.getFunction()==null){
-            return(items);
-        }
-        else{
-            return new String[] {};
+        if (region.getFunction() == null) {
+            return (items);
+        } else {
+            return new String[]{};
         }
     }
 
     @Override
     public Component newItem(String key) {
-        if(key.equals(items[0])){
+        if (key.equals(items[0])) {
             Function d = new Function();
             region.setFunction(d);
-            return(getItem(d));
+            return (getItem(d));
         }
         return null;
     }
@@ -45,36 +44,36 @@ public class FunctionListItemProvider implements ListItemProvider<Function> {
     @Override
     public List<Component> getItems() {
         List<Component> l = new ArrayList<Component>();
-        if(region.getFunction()!=null){
+        if (region.getFunction() != null) {
             l.add(getItem(region.getFunction()));
         }
         return l;
     }
 
     private Component getItem(Function object) {
-        if(object instanceof Function){
+        if (object instanceof Function) {
             FunctionPanel p = new FunctionPanel(object);
             p.setName("");
-            return(p);
+            return (p);
         }
         return null;
     }
 
     @Override
     public void removeItem(Component component) {
-        if(component instanceof FunctionPanel){
+        if (component instanceof FunctionPanel) {
             region.setFunction(null); // Remove function from region
         }
     }
 
     @Override
     public boolean isEmpty() {
-        return (region.getFunction()==null);
+        return (region.getFunction() == null);
     }
 
     @Override
     public int size() {
-        if(region.getFunction()==null){
+        if (region.getFunction() == null) {
             return 0;
         }
         return 1;

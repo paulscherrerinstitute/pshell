@@ -14,7 +14,7 @@ public class DescriptionListItemProvider implements ListItemProvider<String> {
 
     private Configuration configuration;
 
-    public DescriptionListItemProvider(Configuration c){
+    public DescriptionListItemProvider(Configuration c) {
         this.configuration = c;
     }
 
@@ -23,18 +23,17 @@ public class DescriptionListItemProvider implements ListItemProvider<String> {
 
         // If no continuous dimension is specified return its key. Otherwise return no key
         // (Ensures that only one continuous dimension can be added)
-        if(configuration.getDescription()==null){
-            return(items);
-        }
-        else{
-            return new String[] {};
+        if (configuration.getDescription() == null) {
+            return (items);
+        } else {
+            return new String[]{};
         }
     }
 
     @Override
     public Component newItem(String key) {
-        if(key.equals(items[0])){
-            return(getItem(configuration));
+        if (key.equals(items[0])) {
+            return (getItem(configuration));
         }
         return null;
     }
@@ -42,36 +41,36 @@ public class DescriptionListItemProvider implements ListItemProvider<String> {
     @Override
     public List<Component> getItems() {
         List<Component> l = new ArrayList<Component>();
-        if(configuration.getDescription()!=null){
+        if (configuration.getDescription() != null) {
             l.add(getItem(configuration));
         }
         return l;
     }
 
     private Component getItem(Configuration object) {
-        if(object instanceof Configuration){
+        if (object instanceof Configuration) {
             DescriptionPanel p = new DescriptionPanel(object);
             p.setName("");
-            return(p);
+            return (p);
         }
         return null;
     }
 
     @Override
     public void removeItem(Component component) {
-        if(component instanceof DescriptionPanel){
+        if (component instanceof DescriptionPanel) {
             configuration.setDescription(null); // Remove description
         }
     }
 
     @Override
     public boolean isEmpty() {
-        return (configuration.getDescription()==null);
+        return (configuration.getDescription() == null);
     }
 
     @Override
     public int size() {
-        if(configuration.getDescription()==null){
+        if (configuration.getDescription() == null) {
             return 0;
         }
         return 1;

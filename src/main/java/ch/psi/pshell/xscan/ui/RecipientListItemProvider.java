@@ -16,24 +16,24 @@ public class RecipientListItemProvider implements ListItemProvider<String> {
 
     private final String[] actions = new String[]{"Recipient"};
 
-    public RecipientListItemProvider(Configuration configuration){
+    public RecipientListItemProvider(Configuration configuration) {
         this.configuration = configuration;
     }
 
     @Override
     public String[] getItemKeys() {
-        return(actions);
+        return (actions);
     }
 
     @Override
     public Component newItem(String key) {
-        if(configuration.getNotification()==null){
+        if (configuration.getNotification() == null) {
             configuration.setNotification(new Notification());
         }
-        if(key.equals(actions[0])){
+        if (key.equals(actions[0])) {
             Recipient s = new Recipient();
             configuration.getNotification().getRecipient().add(s);
-            return(getItem(s));
+            return (getItem(s));
         }
         return null;
     }
@@ -41,29 +41,29 @@ public class RecipientListItemProvider implements ListItemProvider<String> {
     @Override
     public List<Component> getItems() {
         List<Component> l = new ArrayList<Component>();
-        if(configuration.getNotification()!=null){
-            for(Recipient s: configuration.getNotification().getRecipient()){
+        if (configuration.getNotification() != null) {
+            for (Recipient s : configuration.getNotification().getRecipient()) {
                 l.add(getItem(s));
             }
         }
         return l;
     }
-    
+
     private Component getItem(Recipient object) {
         RecipientPanel p = new RecipientPanel(object);
         p.setName("Recipient");
-        return(p);
+        return (p);
     }
 
     @Override
     public void removeItem(Component component) {
-        if(component instanceof RecipientPanel){
-            Recipient c = ((RecipientPanel)component).getObject();
-            if(configuration.getNotification()!= null){
+        if (component instanceof RecipientPanel) {
+            Recipient c = ((RecipientPanel) component).getObject();
+            if (configuration.getNotification() != null) {
                 configuration.getNotification().getRecipient().remove(c);
-                
+
                 // Remove notification object if there are no recipients left
-                if(configuration.getNotification().getRecipient().isEmpty()){
+                if (configuration.getNotification().getRecipient().isEmpty()) {
                     configuration.setNotification(null);
                 }
             }
@@ -73,7 +73,7 @@ public class RecipientListItemProvider implements ListItemProvider<String> {
 
     @Override
     public boolean isEmpty() {
-        if(configuration.getNotification() != null){
+        if (configuration.getNotification() != null) {
             return configuration.getNotification().getRecipient().isEmpty();
         }
         return true;
@@ -81,7 +81,7 @@ public class RecipientListItemProvider implements ListItemProvider<String> {
 
     @Override
     public int size() {
-        if(configuration.getNotification() != null){
+        if (configuration.getNotification() != null) {
             return configuration.getNotification().getRecipient().size();
         }
         return 0;
@@ -97,9 +97,9 @@ public class RecipientListItemProvider implements ListItemProvider<String> {
         ListUtil.moveItemDown(configuration.getNotification().getRecipient(), getObject(component));
     }
 
-    private Object getObject(Component component){
-        if(component instanceof RecipientPanel){
-            return ((RecipientPanel)component).getObject();
+    private Object getObject(Component component) {
+        if (component instanceof RecipientPanel) {
+            return ((RecipientPanel) component).getObject();
         }
         return null;
     }

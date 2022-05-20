@@ -14,21 +14,21 @@ public class DiscreteStepDimensionListItemProvider implements ListItemProvider<D
 
     private final String[] dimensions = new String[]{"Dimension"};
 
-    public DiscreteStepDimensionListItemProvider(List<DiscreteStepDimension> list){
+    public DiscreteStepDimensionListItemProvider(List<DiscreteStepDimension> list) {
         this.list = list;
     }
 
     @Override
     public String[] getItemKeys() {
-        return(dimensions);
+        return (dimensions);
     }
 
     @Override
     public Component newItem(String key) {
-        if(key.equals(dimensions[0])){
+        if (key.equals(dimensions[0])) {
             DiscreteStepDimension dsd = new DiscreteStepDimension();
             list.add(dsd);
-            return(getItem(dsd));
+            return (getItem(dsd));
         }
         return null;
     }
@@ -36,25 +36,25 @@ public class DiscreteStepDimensionListItemProvider implements ListItemProvider<D
     @Override
     public List<Component> getItems() {
         List<Component> l = new ArrayList<Component>();
-        for(DiscreteStepDimension d: list){
+        for (DiscreteStepDimension d : list) {
             l.add(getItem(d));
         }
         return l;
     }
 
     private Component getItem(DiscreteStepDimension object) {
-        if(object instanceof DiscreteStepDimension){
+        if (object instanceof DiscreteStepDimension) {
             DiscreteStepDimensionPanel p = new DiscreteStepDimensionPanel(object);
             p.setName("D");
-            return(p);
+            return (p);
         }
         return null;
     }
 
     @Override
     public void removeItem(Component component) {
-        if(component instanceof DiscreteStepDimensionPanel){
-            list.remove(((DiscreteStepDimensionPanel)component).getObject());
+        if (component instanceof DiscreteStepDimensionPanel) {
+            list.remove(((DiscreteStepDimensionPanel) component).getObject());
         }
     }
 
@@ -78,9 +78,9 @@ public class DiscreteStepDimensionListItemProvider implements ListItemProvider<D
         ListUtil.moveItemDown(list, getObject(component));
     }
 
-    private Object getObject(Component component){
-        if(component instanceof DiscreteStepDimensionPanel){
-            return (((DiscreteStepDimensionPanel)component).getObject());
+    private Object getObject(Component component) {
+        if (component instanceof DiscreteStepDimensionPanel) {
+            return (((DiscreteStepDimensionPanel) component).getObject());
         }
         return null;
     }

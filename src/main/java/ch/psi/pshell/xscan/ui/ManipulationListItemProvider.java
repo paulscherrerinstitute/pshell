@@ -15,21 +15,21 @@ public class ManipulationListItemProvider implements ListItemProvider<Manipulati
 
     private final String[] names = new String[]{"Script Manipulation"};
 
-    public ManipulationListItemProvider(List<Manipulation> list){
+    public ManipulationListItemProvider(List<Manipulation> list) {
         this.list = list;
     }
 
     @Override
     public String[] getItemKeys() {
-        return(names);
+        return (names);
     }
 
     @Override
     public Component newItem(String key) {
-        if(key.equals(names[0])){
+        if (key.equals(names[0])) {
             ScriptManipulation sm = new ScriptManipulation();
             list.add(sm);
-            return(getItem(sm));
+            return (getItem(sm));
         }
         return null;
     }
@@ -37,25 +37,25 @@ public class ManipulationListItemProvider implements ListItemProvider<Manipulati
     @Override
     public List<Component> getItems() {
         List<Component> l = new ArrayList<Component>();
-        for(Manipulation m: list){
+        for (Manipulation m : list) {
             l.add(getItem(m));
         }
         return l;
     }
 
     private Component getItem(Manipulation object) {
-        if(object instanceof ScriptManipulation){
-            ScriptManipulationPanel p = new ScriptManipulationPanel((ScriptManipulation)object);
+        if (object instanceof ScriptManipulation) {
+            ScriptManipulationPanel p = new ScriptManipulationPanel((ScriptManipulation) object);
             p.setName("Manipulation");
-            return(p);
+            return (p);
         }
         return null;
     }
 
     @Override
     public void removeItem(Component component) {
-        if(component instanceof ScriptManipulationPanel){
-            ScriptManipulation o = ((ScriptManipulationPanel)component).getObject();
+        if (component instanceof ScriptManipulationPanel) {
+            ScriptManipulation o = ((ScriptManipulationPanel) component).getObject();
             list.remove(o);
             ModelUtil.getInstance().findInMappingAndRemove(o);
         }
@@ -81,9 +81,9 @@ public class ManipulationListItemProvider implements ListItemProvider<Manipulati
         ListUtil.moveItemDown(list, getObject(component));
     }
 
-    private Object getObject(Component component){
-        if(component instanceof ScriptManipulationPanel){
-            return ((ScriptManipulationPanel)component).getObject();
+    private Object getObject(Component component) {
+        if (component instanceof ScriptManipulationPanel) {
+            return ((ScriptManipulationPanel) component).getObject();
         }
         return null;
     }

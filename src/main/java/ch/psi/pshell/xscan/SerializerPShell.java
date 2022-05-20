@@ -28,25 +28,24 @@ public class SerializerPShell implements EventBusListener {
     private boolean dataInBetween = false;
     private boolean table;
     private final DataManager dm;
-    
+
     private List<String> names;
     private List<Class> types;
     private List<Integer> lenghts;
-    private List<Integer> dims;  
-    
+    private List<Integer> dims;
 
     public SerializerPShell() {
-       this(null); 
+        this(null);
     }
-    
-    public SerializerPShell(String basename ) {
-        dm=Context.getInstance().getDataManager();
+
+    public SerializerPShell(String basename) {
+        dm = Context.getInstance().getDataManager();
         try {
-            if (basename!=null){
+            if (basename != null) {
                 Context.getInstance().setExecutionPar("path", basename);
             }
             dm.openOutput();
-            dm.setAttribute("/", Layout.ATTR_FILE,basename+".xml");         
+            dm.setAttribute("/", Layout.ATTR_FILE, basename + ".xml");
             table = LayoutTable.class.isAssignableFrom(dm.getLayout().getClass());
         } catch (Exception ex) {
             Logger.getLogger(SerializerPShell.class.getName()).log(Level.SEVERE, null, ex);
@@ -79,8 +78,8 @@ public class SerializerPShell implements EventBusListener {
                     if (type.isArray()) {
                         lenghts.set(i, Array.getLength(o));
                         type = Arr.getComponentType(o);
-                        if (table){
-                            if (Convert.isWrapperClass(type)){
+                        if (table) {
+                            if (Convert.isWrapperClass(type)) {
                                 type = Convert.getPrimitiveClass(type);
                             }
                             type = Array.newInstance(type, 0).getClass();
@@ -88,42 +87,42 @@ public class SerializerPShell implements EventBusListener {
                     }
                     types.set(i, type);
                 }
-                if (table){
-                    
+                if (table) {
+
                     dm.createDataset(dataset,
                             names.toArray(new String[0]),
                             types.toArray(new Class[0]),
                             (int[]) Convert.toPrimitiveArray(lenghts.toArray(new Integer[0])));
                 } else {
                     dm.createGroup(dataset);
-                    for (int i=0; i< names.size(); i++){
-                        try{
-                            if (lenghts.get(i)>0) {
-                                dm.createDataset(dataset+"/"+names.get(i), types.get(i), new int[]{0, lenghts.get(i)});
+                    for (int i = 0; i < names.size(); i++) {
+                        try {
+                            if (lenghts.get(i) > 0) {
+                                dm.createDataset(dataset + "/" + names.get(i), types.get(i), new int[]{0, lenghts.get(i)});
                             } else {
-                                dm.createDataset(dataset+"/"+names.get(i), types.get(i));
+                                dm.createDataset(dataset + "/" + names.get(i), types.get(i));
                             }
                         } catch (Exception ex) {
                             Logger.getLogger(SerializerPShell.class.getName()).log(Level.SEVERE, null, ex);
                         }
                     }
                 }
-                
+
                 dm.setAttribute(dataset, Layout.ATTR_TYPE, ProcessorXscan.SCAN_TYPE);
                 dm.setAttribute(dataset, "dims", (int[]) Convert.toPrimitiveArray(dims.toArray(new Integer[0])));
                 dm.setAttribute(dataset, "names", names.toArray(new String[0]));
                 newfile = false;
             }
-            if (table){
+            if (table) {
                 dm.appendItem(dataset, data.toArray());
             } else {
-                for (int i=0; i< names.size(); i++){
-                    try{
-                        dm.appendItem(dataset+"/"+names.get(i), data.get(i));
+                for (int i = 0; i < names.size(); i++) {
+                    try {
+                        dm.appendItem(dataset + "/" + names.get(i), data.get(i));
                     } catch (Exception ex) {
                         Logger.getLogger(SerializerPShell.class.getName()).log(Level.FINE, null, ex);
                     }
-               }
+                }
             }
         } else if (message instanceof StreamDelimiterMessage) {
             StreamDelimiterMessage m = (StreamDelimiterMessage) message;

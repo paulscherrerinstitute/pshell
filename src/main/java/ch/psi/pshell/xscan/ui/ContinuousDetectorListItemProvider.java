@@ -26,34 +26,32 @@ public class ContinuousDetectorListItemProvider implements ListItemProvider<Dete
     public String[] getItemKeys() {
         // Only support up to 1 timestamp, 16 scaler channels and 8 detectors
         List<String> keys = new ArrayList<String>();
-        if(dimension.getTimestamp()==null){
+        if (dimension.getTimestamp() == null) {
             keys.add(detectors[2]);
         }
-        if(dimension.getScaler().size()<16){
+        if (dimension.getScaler().size() < 16) {
             keys.add(detectors[1]);
         }
-        if(dimension.getDetector().size()<100){
+        if (dimension.getDetector().size() < 100) {
             keys.add(detectors[0]);
         }
-        return(keys.toArray(new String[keys.size()]));
+        return (keys.toArray(new String[keys.size()]));
     }
 
     @Override
     public Component newItem(String key) {
-        if(key.equals(detectors[0])){
+        if (key.equals(detectors[0])) {
             SimpleScalarDetector ssd = new SimpleScalarDetector();
             dimension.getDetector().add(ssd);
-            return(getItem(ssd));
-        }
-        else if(key.equals(detectors[1])){
+            return (getItem(ssd));
+        } else if (key.equals(detectors[1])) {
             ScalerChannel sc = new ScalerChannel();
             dimension.getScaler().add(sc);
-            return(getItem(sc));
-        }
-         else if(key.equals(detectors[2])){
+            return (getItem(sc));
+        } else if (key.equals(detectors[2])) {
             Timestamp td = new Timestamp();
             dimension.setTimestamp(td);
-            return(getItem(td));
+            return (getItem(td));
         }
         return null;
     }
@@ -62,36 +60,34 @@ public class ContinuousDetectorListItemProvider implements ListItemProvider<Dete
     public List<Component> getItems() {
         List<Component> l = new ArrayList<Component>();
 
-        for(SimpleScalarDetector sd: dimension.getDetector()){
+        for (SimpleScalarDetector sd : dimension.getDetector()) {
             l.add(getItem(sd));
         }
 
-        for(ScalerChannel sd: dimension.getScaler()){
+        for (ScalerChannel sd : dimension.getScaler()) {
             l.add(getItem(sd));
         }
 
-        if(dimension.getTimestamp()!=null){
+        if (dimension.getTimestamp() != null) {
             l.add(getItem(dimension.getTimestamp()));
         }
         return l;
     }
 
-    private Component getItem(Detector detector){
+    private Component getItem(Detector detector) {
 
-        if(detector instanceof SimpleScalarDetector){
-            SimpleScalarDetectorPanel p = new SimpleScalarDetectorPanel((SimpleScalarDetector)detector);
+        if (detector instanceof SimpleScalarDetector) {
+            SimpleScalarDetectorPanel p = new SimpleScalarDetectorPanel((SimpleScalarDetector) detector);
             p.setName("Scalar Detector");
-            return(p);
-        }
-        else if(detector instanceof ScalerChannel){
-            ScalerChannelPanel p = new ScalerChannelPanel((ScalerChannel)detector);
+            return (p);
+        } else if (detector instanceof ScalerChannel) {
+            ScalerChannelPanel p = new ScalerChannelPanel((ScalerChannel) detector);
             p.setName("Scaler");
-            return(p);
-        }
-        else if(detector instanceof Timestamp){
-            TimestampDetectorPanel p = new TimestampDetectorPanel((Timestamp)detector);
+            return (p);
+        } else if (detector instanceof Timestamp) {
+            TimestampDetectorPanel p = new TimestampDetectorPanel((Timestamp) detector);
             p.setName("Timestamp");
-            return(p);
+            return (p);
         }
 
         return null;
@@ -99,20 +95,18 @@ public class ContinuousDetectorListItemProvider implements ListItemProvider<Dete
 
     @Override
     public void removeItem(Component component) {
-        if(component instanceof SimpleScalarDetectorPanel){
-            SimpleScalarDetector o = ((SimpleScalarDetectorPanel)component).getObject();
+        if (component instanceof SimpleScalarDetectorPanel) {
+            SimpleScalarDetector o = ((SimpleScalarDetectorPanel) component).getObject();
             dimension.getDetector().remove(o);
             ModelUtil.getInstance().findInMappingAndRemove(o);
             ModelUtil.getInstance().refreshAll();
-        }
-        else if(component instanceof ScalerChannelPanel){
-            ScalerChannel o = ((ScalerChannelPanel)component).getObject();
+        } else if (component instanceof ScalerChannelPanel) {
+            ScalerChannel o = ((ScalerChannelPanel) component).getObject();
             dimension.getScaler().remove(o);
             ModelUtil.getInstance().findInMappingAndRemove(o);
             ModelUtil.getInstance().refreshAll();
-        }
-        else if(component instanceof TimestampDetectorPanel){
-            Timestamp o = ((TimestampDetectorPanel)component).getObject();
+        } else if (component instanceof TimestampDetectorPanel) {
+            Timestamp o = ((TimestampDetectorPanel) component).getObject();
             dimension.setTimestamp(null); // Remove timestamp
             ModelUtil.getInstance().findInMappingAndRemove(o);
             ModelUtil.getInstance().refreshAll();
@@ -124,17 +118,17 @@ public class ContinuousDetectorListItemProvider implements ListItemProvider<Dete
         boolean a = dimension.getDetector().isEmpty();
         boolean b = dimension.getScaler().isEmpty();
         boolean c = dimension.getTimestamp() == null;
-        return  a & b & c;
+        return a & b & c;
 //        return (getItemKeys().length==0);
     }
 
     @Override
     public int size() {
         int size = 0;
-        size = size+dimension.getDetector().size();
-        size = size+dimension.getScaler().size();
-        if(dimension.getTimestamp()!= null){
-            size = size+1;
+        size = size + dimension.getDetector().size();
+        size = size + dimension.getScaler().size();
+        if (dimension.getTimestamp() != null) {
+            size = size + 1;
         }
         return size;
 //        return getItemKeys().length;
@@ -142,15 +136,13 @@ public class ContinuousDetectorListItemProvider implements ListItemProvider<Dete
 
     @Override
     public void moveItemUp(Component component) {
-        if(component instanceof SimpleScalarDetectorPanel){
-            Object a = ((SimpleScalarDetectorPanel)component).getObject();
+        if (component instanceof SimpleScalarDetectorPanel) {
+            Object a = ((SimpleScalarDetectorPanel) component).getObject();
             ListUtil.moveItemUp(dimension.getDetector(), a);
-        }
-        else if(component instanceof ScalerChannelPanel){
-            Object a=  ((ScalerChannelPanel)component).getObject();
+        } else if (component instanceof ScalerChannelPanel) {
+            Object a = ((ScalerChannelPanel) component).getObject();
             ListUtil.moveItemUp(dimension.getScaler(), a);
-        }
-        else if(component instanceof TimestampDetectorPanel){
+        } else if (component instanceof TimestampDetectorPanel) {
             // ignore
         }
 
@@ -158,17 +150,15 @@ public class ContinuousDetectorListItemProvider implements ListItemProvider<Dete
 
     @Override
     public void moveItemDown(Component component) {
-        if(component instanceof SimpleScalarDetectorPanel){
-            Object a = ((SimpleScalarDetectorPanel)component).getObject();
+        if (component instanceof SimpleScalarDetectorPanel) {
+            Object a = ((SimpleScalarDetectorPanel) component).getObject();
             ListUtil.moveItemDown(dimension.getDetector(), a);
-        }
-        else if(component instanceof ScalerChannelPanel){
-            Object a=  ((ScalerChannelPanel)component).getObject();
+        } else if (component instanceof ScalerChannelPanel) {
+            Object a = ((ScalerChannelPanel) component).getObject();
             ListUtil.moveItemDown(dimension.getScaler(), a);
-        }
-        else if(component instanceof TimestampDetectorPanel){
+        } else if (component instanceof TimestampDetectorPanel) {
             // ignore
         }
     }
-    
+
 }

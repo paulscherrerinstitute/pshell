@@ -18,36 +18,33 @@ public class DiscreteStepDetectorListItemProvider implements ListItemProvider<De
 
     private final String[] detectors = new String[]{"Scalar Detector", "Array Detector", "Timestamp", "Detector of Detectors"};
 
-    public DiscreteStepDetectorListItemProvider(List<Detector> list){
+    public DiscreteStepDetectorListItemProvider(List<Detector> list) {
         this.list = list;
     }
 
     @Override
     public String[] getItemKeys() {
-        return(detectors);
+        return (detectors);
     }
 
     @Override
     public Component newItem(String key) {
-        if(key.equals(detectors[0])){
+        if (key.equals(detectors[0])) {
             ScalarDetector sd = new ScalarDetector();
             list.add(sd);
-            return(getItem(sd));
-        }
-        else if(key.equals(detectors[1])){
+            return (getItem(sd));
+        } else if (key.equals(detectors[1])) {
             ArrayDetector ad = new ArrayDetector();
             list.add(ad);
-            return(getItem(ad));
-        }
-         else if(key.equals(detectors[2])){
-             Timestamp t = new Timestamp();
-             list.add(t);
-            return(getItem(t));
-        }
-        else if(key.equals(detectors[3])){
+            return (getItem(ad));
+        } else if (key.equals(detectors[2])) {
+            Timestamp t = new Timestamp();
+            list.add(t);
+            return (getItem(t));
+        } else if (key.equals(detectors[3])) {
             DetectorOfDetectors dod = new DetectorOfDetectors();
             list.add(dod);
-            return(getItem(dod));
+            return (getItem(dod));
         }
         return null;
     }
@@ -55,32 +52,29 @@ public class DiscreteStepDetectorListItemProvider implements ListItemProvider<De
     @Override
     public List<Component> getItems() {
         List<Component> l = new ArrayList<Component>();
-        for(Detector d: list){
+        for (Detector d : list) {
             l.add(getItem(d));
         }
         return l;
     }
 
     private Component getItem(Detector object) {
-        if(object instanceof ScalarDetector){
-            ScalarDetectorPanel p = new ScalarDetectorPanel((ScalarDetector)object);
+        if (object instanceof ScalarDetector) {
+            ScalarDetectorPanel p = new ScalarDetectorPanel((ScalarDetector) object);
             p.setName("Scalar D");
-            return(p);
-        }
-        else if(object instanceof ArrayDetector){
-            ArrayDetectorPanel p = new ArrayDetectorPanel((ArrayDetector)object);
+            return (p);
+        } else if (object instanceof ArrayDetector) {
+            ArrayDetectorPanel p = new ArrayDetectorPanel((ArrayDetector) object);
             p.setName("Array D");
-            return(p);
-        }
-        else if(object instanceof Timestamp){
-            TimestampDetectorPanel p = new TimestampDetectorPanel((Timestamp)object);
+            return (p);
+        } else if (object instanceof Timestamp) {
+            TimestampDetectorPanel p = new TimestampDetectorPanel((Timestamp) object);
             p.setName("Timestamp");
-            return(p);
-        }
-        else if(object instanceof DetectorOfDetectors){
-            DetectorOfDetectorsPanel p = new DetectorOfDetectorsPanel((DetectorOfDetectors)object);
+            return (p);
+        } else if (object instanceof DetectorOfDetectors) {
+            DetectorOfDetectorsPanel p = new DetectorOfDetectorsPanel((DetectorOfDetectors) object);
             p.setName("D of D");
-            return(p);
+            return (p);
         }
 
         return null;
@@ -89,25 +83,22 @@ public class DiscreteStepDetectorListItemProvider implements ListItemProvider<De
     @Override
     public void removeItem(Component component) {
         Detector o = null;
-        if(component instanceof ScalarDetectorPanel){
-            o = ((ScalarDetectorPanel)component).getObject();
+        if (component instanceof ScalarDetectorPanel) {
+            o = ((ScalarDetectorPanel) component).getObject();
             list.remove(o);
-        }
-        else if(component instanceof ArrayDetectorPanel){
-            o = ((ArrayDetectorPanel)component).getObject();
+        } else if (component instanceof ArrayDetectorPanel) {
+            o = ((ArrayDetectorPanel) component).getObject();
             list.remove(o);
-        }
-        else if(component instanceof TimestampDetectorPanel){
-            o = ((TimestampDetectorPanel)component).getObject();
+        } else if (component instanceof TimestampDetectorPanel) {
+            o = ((TimestampDetectorPanel) component).getObject();
             list.remove(o);
-        }
-        else if(component instanceof DetectorOfDetectorsPanel){
-            o = ((DetectorOfDetectorsPanel)component).getObject();
+        } else if (component instanceof DetectorOfDetectorsPanel) {
+            o = ((DetectorOfDetectorsPanel) component).getObject();
             list.remove(o);
         }
 
         // Find references to this object and remove the reference
-        if(o != null){
+        if (o != null) {
             ModelUtil.getInstance().findInMappingAndRemove(o);
             ModelUtil.getInstance().refreshAll();
         }
@@ -133,18 +124,15 @@ public class DiscreteStepDetectorListItemProvider implements ListItemProvider<De
         ListUtil.moveItemDown(list, getObject(component));
     }
 
-    private Object getObject(Component component){
-        if(component instanceof ScalarDetectorPanel){
-            return ((ScalarDetectorPanel)component).getObject();
-        }
-        else if(component instanceof ArrayDetectorPanel){
-            return ((ArrayDetectorPanel)component).getObject();
-        }
-        else if(component instanceof TimestampDetectorPanel){
-            return ((TimestampDetectorPanel)component).getObject();
-        }
-        else if(component instanceof DetectorOfDetectorsPanel){
-            return ((DetectorOfDetectorsPanel)component).getObject();
+    private Object getObject(Component component) {
+        if (component instanceof ScalarDetectorPanel) {
+            return ((ScalarDetectorPanel) component).getObject();
+        } else if (component instanceof ArrayDetectorPanel) {
+            return ((ArrayDetectorPanel) component).getObject();
+        } else if (component instanceof TimestampDetectorPanel) {
+            return ((TimestampDetectorPanel) component).getObject();
+        } else if (component instanceof DetectorOfDetectorsPanel) {
+            return ((DetectorOfDetectorsPanel) component).getObject();
         }
         return null;
     }

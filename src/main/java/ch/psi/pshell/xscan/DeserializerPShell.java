@@ -89,7 +89,7 @@ public class DeserializerPShell implements Deserializer {
                     data[i] = dm.getData(filename, path + "/" + ids[i]).sliceData;
                 }
             }
-            int records =  table ? data.length : Array.getLength(data[0]);
+            int records = table ? data.length : Array.getLength(data[0]);
             // Read file
             for (int i = 0; i < records; i++) {
                 // Create and populate new data message

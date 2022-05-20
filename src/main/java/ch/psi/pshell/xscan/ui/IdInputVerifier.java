@@ -6,8 +6,7 @@ import javax.swing.JComponent;
 import javax.swing.JTextField;
 
 /**
- * Input verifier for JTextFields holding ids
- * If the id contains wrong characters a dialog box will be shown
+ * Input verifier for JTextFields holding ids If the id contains wrong characters a dialog box will be shown
  */
 public class IdInputVerifier extends InputVerifier {
 
@@ -26,12 +25,11 @@ public class IdInputVerifier extends InputVerifier {
                 d = new NotifyDescriptor.Message("Invalid characters in Id - only accepting a-z,A-Z,0-9,-,_", NotifyDescriptor.WARNING_MESSAGE);
             }
             DialogDisplayer.getDefault().notify(d);
-            */
+             */
             String message = null;
-            if(!tf.getText().matches("^[a-zA-Z].*")){
+            if (!tf.getText().matches("^[a-zA-Z].*")) {
                 message = "Id need to start with an character";
-            }
-            else{
+            } else {
                 message = "Invalid characters in Id - only accepting a-z,A-Z,0-9,-,_";
             }
             App.getInstance().getMainFrame().showMessage("Error", message);

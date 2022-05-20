@@ -16,7 +16,7 @@ public class ContinuousDimensionListItemProvider implements ListItemProvider<Con
 
     private Scan scan;
 
-    public ContinuousDimensionListItemProvider(Scan scan){
+    public ContinuousDimensionListItemProvider(Scan scan) {
         this.scan = scan;
     }
 
@@ -29,23 +29,21 @@ public class ContinuousDimensionListItemProvider implements ListItemProvider<Con
         //if(eservice != null && ! eservice.supportsFeature("ch.psi.aq.feature.otfscan")){
         //    return new String[]{};
         //}
-
         // If no continuous dimension is specified return its key. Otherwise return no key
         // (Ensures that only one continuous dimension can be added)
-        if(scan.getCdimension()==null){
-            return(dimensions);
-        }
-        else{
-            return new String[] {};
+        if (scan.getCdimension() == null) {
+            return (dimensions);
+        } else {
+            return new String[]{};
         }
     }
 
     @Override
     public Component newItem(String key) {
-        if(key.equals(dimensions[0])){
+        if (key.equals(dimensions[0])) {
             ContinuousDimension d = new ContinuousDimension();
             scan.setCdimension(d);
-            return(getItem(d));
+            return (getItem(d));
         }
         return null;
     }
@@ -53,25 +51,25 @@ public class ContinuousDimensionListItemProvider implements ListItemProvider<Con
     @Override
     public List<Component> getItems() {
         List<Component> l = new ArrayList<Component>();
-        if(scan.getCdimension()!=null){
+        if (scan.getCdimension() != null) {
             l.add(getItem(scan.getCdimension()));
         }
         return l;
     }
 
     private Component getItem(ContinuousDimension object) {
-        if(object instanceof ContinuousDimension){
+        if (object instanceof ContinuousDimension) {
             ContinuousDimensionPanel p = new ContinuousDimensionPanel(object);
             p.setName("D");
-            return(p);
+            return (p);
         }
         return null;
     }
 
     @Override
     public void removeItem(Component component) {
-        if(component instanceof ContinuousDimensionPanel){
-            ContinuousDimension d = ((ContinuousDimensionPanel)component).getObject();
+        if (component instanceof ContinuousDimensionPanel) {
+            ContinuousDimension d = ((ContinuousDimensionPanel) component).getObject();
             ModelUtil.getInstance().findInMappingAndRemove(d.getPositioner());
             scan.setCdimension(null); // Remove continuous dimension from scan
         }
@@ -79,12 +77,12 @@ public class ContinuousDimensionListItemProvider implements ListItemProvider<Con
 
     @Override
     public boolean isEmpty() {
-        return (scan.getCdimension()==null);
+        return (scan.getCdimension() == null);
     }
 
     @Override
     public int size() {
-        if(scan.getCdimension()==null){
+        if (scan.getCdimension() == null) {
             return 0;
         }
         return 1;

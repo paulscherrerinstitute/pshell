@@ -14,21 +14,21 @@ public class ChannelParameterMappingListItemProvider implements ListItemProvider
 
     private final String[] names = new String[]{"Channel Mapping"};
 
-    public ChannelParameterMappingListItemProvider(List<ChannelParameterMapping> list){
+    public ChannelParameterMappingListItemProvider(List<ChannelParameterMapping> list) {
         this.list = list;
     }
 
     @Override
     public String[] getItemKeys() {
-        return(names);
+        return (names);
     }
 
     @Override
     public Component newItem(String key) {
-        if(key.equals(names[0])){
+        if (key.equals(names[0])) {
             ChannelParameterMapping mapping = new ChannelParameterMapping();
             list.add(mapping);
-            return(getItem(mapping));
+            return (getItem(mapping));
         }
         return null;
     }
@@ -36,25 +36,25 @@ public class ChannelParameterMappingListItemProvider implements ListItemProvider
     @Override
     public List<Component> getItems() {
         List<Component> l = new ArrayList<Component>();
-        for(ChannelParameterMapping m: list){
+        for (ChannelParameterMapping m : list) {
             l.add(getItem(m));
         }
-        return(l);
+        return (l);
     }
 
-    private Component getItem(ChannelParameterMapping mapping){
-        if(mapping instanceof ChannelParameterMapping){
+    private Component getItem(ChannelParameterMapping mapping) {
+        if (mapping instanceof ChannelParameterMapping) {
             ChannelParameterMappingPanel p = new ChannelParameterMappingPanel(mapping);
             p.setName("Channel Mapping");
-            return(p);
+            return (p);
         }
         return null;
     }
 
     @Override
     public void removeItem(Component component) {
-        if(component instanceof ChannelParameterMappingPanel){
-            list.remove(((ChannelParameterMappingPanel)component).getObject());
+        if (component instanceof ChannelParameterMappingPanel) {
+            list.remove(((ChannelParameterMappingPanel) component).getObject());
         }
     }
 
@@ -78,9 +78,9 @@ public class ChannelParameterMappingListItemProvider implements ListItemProvider
         ListUtil.moveItemDown(list, getObject(component));
     }
 
-    private Object getObject(Component component){
-        if(component instanceof ChannelParameterMappingPanel){
-            return (((ChannelParameterMappingPanel)component).getObject());
+    private Object getObject(Component component) {
+        if (component instanceof ChannelParameterMappingPanel) {
+            return (((ChannelParameterMappingPanel) component).getObject());
         }
         return null;
     }

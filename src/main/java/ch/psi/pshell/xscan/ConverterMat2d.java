@@ -40,15 +40,15 @@ public class ConverterMat2d implements Converter {
         Class type = slice.dataType;
         String[] fieldNames = (String[]) info.get(Provider.INFO_FIELD_NAMES);
         int[] dims = (int[]) info.get(ProviderFDA.INFO_FIELD_DIMENSIONS);
-        
+
         int last = -1;
-        int maxdim=0;
-        if (dims!=null){
-            for (int i =0; i< dims.length; i++){            
-                if (dims[i]>maxdim){
+        int maxdim = 0;
+        if (dims != null) {
+            for (int i = 0; i < dims.length; i++) {
+                if (dims[i] > maxdim) {
                     maxdim = dims[i];
-                }                
-                if ((dims[i]>0) && (dims[i]!=last)){
+                }
+                if ((dims[i] > 0) && (dims[i] != last)) {
                     higherDimensionValues.add(new Object());
                 } else {
                     higherDimensionValues.add(null);
@@ -56,10 +56,10 @@ public class ConverterMat2d implements Converter {
                 last = dims[i];
             }
         }
-        if(maxdim!=1){
+        if (maxdim != 1) {
             throw new RuntimeException("Converter only supports 2D data");
         }
-        							                
+
         boolean changedHigerDimension = false;
         for (int i = 0; i < shape[0]; i++) {
             Object record = Array.get(slice.sliceData, i);
@@ -71,17 +71,17 @@ public class ConverterMat2d implements Converter {
                     dlist.add(l);
                     clist.add(Array.get(record, j).getClass());
                 }
-            } else{
-                for (int j = 0; j < recordSize; j++) {     
+            } else {
+                for (int j = 0; j < recordSize; j++) {
                     Object object = Array.get(record, j);
                     Object former = higherDimensionValues.get(j);
-                    if ((former!=null) && (!former.equals(object))){
+                    if ((former != null) && (!former.equals(object))) {
                         changedHigerDimension = true;
                     }
                 }
-                
-            }            
-            if (changedHigerDimension){
+
+            }
+            if (changedHigerDimension) {
                 if (dsize < dcount) {
                     dsize = dcount;
                 }
@@ -92,15 +92,15 @@ public class ConverterMat2d implements Converter {
                 }
                 dcount = 0;
                 changedHigerDimension = false;
-            }            
-            
+            }
+
             // Put data into data list
-            for (int j = 0; j < recordSize; j++) {                
+            for (int j = 0; j < recordSize; j++) {
                 Object object = Array.get(record, j);
                 List<List<Object>> lo = dlist.get(j);
                 lo.get(lo.size() - 1).add(object); // add data to latest list
-                if ( higherDimensionValues.get(j) != null){
-                     higherDimensionValues.set(j, object);
+                if (higherDimensionValues.get(j) != null) {
+                    higherDimensionValues.set(j, object);
                 }
             }
             dcount++;
@@ -112,7 +112,6 @@ public class ConverterMat2d implements Converter {
             // Combine all lists to one big list (pad if there are data points missing)
             List<Object> list = new ArrayList<Object>();
             List<List<Object>> ol = dlist.get(t);
-
 
             for (List<Object> li : ol) {
                 list.addAll(li);
@@ -135,5 +134,5 @@ public class ConverterMat2d implements Converter {
         // Write Matlab file
         MatFileWriter writerr = new MatFileWriter();
         writerr.write(output, matlablist);
-    }  
+    }
 }

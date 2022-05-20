@@ -17,76 +17,68 @@ public class ActionListItemProvider implements ListItemProvider<Action> {
 
     private List<Action> list;
 
-    public ActionListItemProvider(List<Action> list){
+    public ActionListItemProvider(List<Action> list) {
         this.list = list;
     }
 
     @Override
     public String[] getItemKeys() {
-        return(actions);
+        return (actions);
     }
 
     @Override
     public Component newItem(String key) {
-        if(key.equals(actions[0])){
+        if (key.equals(actions[0])) {
             ShellAction action = new ShellAction();
             list.add(action);
             return (getItem(action));
-        }
-        else if(key.equals(actions[1])){
+        } else if (key.equals(actions[1])) {
             ChannelAction action = new ChannelAction();
             list.add(action);
             return (getItem(action));
-        }
-        else if(key.equals(actions[2])){
+        } else if (key.equals(actions[2])) {
             ScriptAction action = new ScriptAction();
             list.add(action);
             return (getItem(action));
         }
-        
+
         return null;
     }
 
-
-
-     @Override
+    @Override
     public List<Component> getItems() {
         List<Component> l = new ArrayList<Component>();
-        for(Action a: list){
+        for (Action a : list) {
             l.add(getItem(a));
         }
         return l;
     }
 
-    private Component getItem(Action object){
-        if(object instanceof ShellAction){
-            ShellActionPanel p = new ShellActionPanel((ShellAction)object);
+    private Component getItem(Action object) {
+        if (object instanceof ShellAction) {
+            ShellActionPanel p = new ShellActionPanel((ShellAction) object);
             p.setName("Shell Action");
-            return(p);
-        }
-        else if(object instanceof ChannelAction){
-            ChannelActionPanel p = new ChannelActionPanel((ChannelAction)object);
+            return (p);
+        } else if (object instanceof ChannelAction) {
+            ChannelActionPanel p = new ChannelActionPanel((ChannelAction) object);
             p.setName("Channel Action");
-            return(p);
-        }
-        else if(object instanceof ScriptAction){
-            ScriptActionPanel p = new ScriptActionPanel((ScriptAction)object);
+            return (p);
+        } else if (object instanceof ScriptAction) {
+            ScriptActionPanel p = new ScriptActionPanel((ScriptAction) object);
             p.setName("Script Action");
-            return(p);
+            return (p);
         }
         return null;
     }
 
     @Override
     public void removeItem(Component component) {
-        if(component instanceof ShellActionPanel){
-            list.remove(((ShellActionPanel)component).getObject());
-        }
-        else if(component instanceof ChannelActionPanel){
-            list.remove(((ChannelActionPanel)component).getObject());
-        }
-        else if(component instanceof ScriptActionPanel){
-            list.remove(((ScriptActionPanel)component).getObject());
+        if (component instanceof ShellActionPanel) {
+            list.remove(((ShellActionPanel) component).getObject());
+        } else if (component instanceof ChannelActionPanel) {
+            list.remove(((ChannelActionPanel) component).getObject());
+        } else if (component instanceof ScriptActionPanel) {
+            list.remove(((ScriptActionPanel) component).getObject());
         }
     }
 
@@ -110,15 +102,13 @@ public class ActionListItemProvider implements ListItemProvider<Action> {
         ListUtil.moveItemDown(list, getObject(component));
     }
 
-    private Object getObject(Component component){
-        if(component instanceof ShellActionPanel){
-            return (((ShellActionPanel)component).getObject());
-        }
-        else if(component instanceof ChannelActionPanel){
-            return (((ChannelActionPanel)component).getObject());
-        }
-        else if(component instanceof ScriptActionPanel){
-            return (((ScriptActionPanel)component).getObject());
+    private Object getObject(Component component) {
+        if (component instanceof ShellActionPanel) {
+            return (((ShellActionPanel) component).getObject());
+        } else if (component instanceof ChannelActionPanel) {
+            return (((ChannelActionPanel) component).getObject());
+        } else if (component instanceof ScriptActionPanel) {
+            return (((ScriptActionPanel) component).getObject());
         }
         return null;
     }

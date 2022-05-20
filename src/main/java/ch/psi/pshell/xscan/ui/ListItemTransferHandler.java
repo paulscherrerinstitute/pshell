@@ -12,7 +12,7 @@ public class ListItemTransferHandler extends TransferHandler {
     @Override()
     public Transferable createTransferable(JComponent c) {
         if (c instanceof ListItem) {
-            return((Transferable) c); // RandomDragAndDropPanel implements Transferable
+            return ((Transferable) c); // RandomDragAndDropPanel implements Transferable
         }
 
         // Not found

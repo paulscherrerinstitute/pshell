@@ -7,15 +7,15 @@ import java.util.concurrent.Callable;
  */
 public class ActorSetCallable implements Callable<Object> {
 
-	private Actor actor;
-	
-	public ActorSetCallable(Actor actor){
-		this.actor = actor;
-	}
-	
-	@Override
-	public Object call() throws Exception {
-		actor.set();
-		return null;
-	}
+    private Actor actor;
+
+    public ActorSetCallable(Actor actor) {
+        this.actor = actor;
+    }
+
+    @Override
+    public Object call() throws Exception {
+        actor.set();
+        return null;
+    }
 }

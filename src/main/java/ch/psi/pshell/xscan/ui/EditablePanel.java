@@ -27,19 +27,19 @@ import javax.swing.text.JTextComponent;
  *
  */
 public class EditablePanel<T> extends javax.swing.JPanel implements EditableComponent, ObjectProvider<T> {
-    
+
     final T target;
     protected boolean modified = false;
     private final List<PanelSupport> panelSupportList = new ArrayList<>();
     private static Object DEFAULT_VALUE_ON_ERROR = new Object();
-    
-    protected EditablePanel(){
+
+    protected EditablePanel() {
         this(null);
     }
-    
-    protected EditablePanel(T target){
+
+    protected EditablePanel(T target) {
         super();
-        this.target=target;
+        this.target = target;
     }
 
     public PanelSupport getPanelSupport() {
@@ -85,7 +85,7 @@ public class EditablePanel<T> extends javax.swing.JPanel implements EditableComp
     }
 
     protected void setManagedFields(JButton button, Component[] mandatory, Component[] optional, String[] defaultOptionalValues) {
-        if (button!=null){
+        if (button != null) {
             ProcessorXscan.setIcon(button, getClass().getResource("/ch/psi/pshell/xscan/ui/icons/plus.png"));
         }
         PanelSupport panelSupport = getPanelSupport(true); //If already had called it, creates a new
@@ -122,7 +122,7 @@ public class EditablePanel<T> extends javax.swing.JPanel implements EditableComp
         });
         return bindEditor(editor, "id");
     }
-   
+
     protected boolean bindEditor(Component editor, String property) {
         return bindEditor(editor, property, false);
     }
@@ -131,9 +131,9 @@ public class EditablePanel<T> extends javax.swing.JPanel implements EditableComp
         return bindEditor(editor, property, realFieldValue, DEFAULT_VALUE_ON_ERROR);
     }
 
-    protected boolean bindEditor(Component editor,  String property, boolean realFieldValue, Object valueOnError) {
+    protected boolean bindEditor(Component editor, String property, boolean realFieldValue, Object valueOnError) {
         return bindEditor(editor, target, property, realFieldValue, valueOnError);
-    }    
+    }
 
     protected boolean bindEditor(Component editor, Object obj, String property) {
         return bindEditor(editor, obj, property, false);
@@ -142,9 +142,9 @@ public class EditablePanel<T> extends javax.swing.JPanel implements EditableComp
     protected boolean bindEditor(Component editor, Object obj, String property, boolean realFieldValue) {
         return bindEditor(editor, obj, property, realFieldValue, DEFAULT_VALUE_ON_ERROR);
     }
-    
+
     protected boolean bindEditor(Component editor, Object obj, String property, boolean realFieldValue, Object valueOnError) {
-        if (obj!=null){
+        if (obj != null) {
             try {
                 Method _getter;
                 try {
@@ -169,7 +169,7 @@ public class EditablePanel<T> extends javax.swing.JPanel implements EditableComp
                 }
                 if (editor instanceof JComboBox) {
                     JComboBox combo = (JComboBox) editor;
-                    combo.setSelectedItem(value);  
+                    combo.setSelectedItem(value);
 
                     combo.addItemListener(new ItemListener() {
                         @Override
@@ -182,7 +182,7 @@ public class EditablePanel<T> extends javax.swing.JPanel implements EditableComp
                                         sel = modelObject;
                                     }
                                 }
-                                if (hasChanged(sel, getter.invoke(obj))){
+                                if (hasChanged(sel, getter.invoke(obj))) {
                                     setter.invoke(obj, sel);
                                     modified = true;
                                 }
@@ -190,7 +190,7 @@ public class EditablePanel<T> extends javax.swing.JPanel implements EditableComp
                                 Logger.getLogger(EditableComponent.class.getName()).log(Level.SEVERE, null, ex);
                             }
                         }
-                    });        
+                    });
                 } else if (editor instanceof JCheckBox) {
                     JCheckBox check = (JCheckBox) editor;
                     check.setSelected((boolean) value);
@@ -257,7 +257,7 @@ public class EditablePanel<T> extends javax.swing.JPanel implements EditableComp
         }
         return true;
     }
-    
+
     private boolean hasChanged(Object value, Object former) {
         if (former == null) {
             return (value != null);
@@ -266,8 +266,8 @@ public class EditablePanel<T> extends javax.swing.JPanel implements EditableComp
             return false;
         }
         return !former.equals(value);
-    }    
-    
+    }
+
     @Override
     public T getObject() {
         return target;
