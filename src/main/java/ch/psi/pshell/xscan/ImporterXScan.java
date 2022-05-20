@@ -16,7 +16,7 @@ import org.apache.commons.lang3.ArrayUtils;
 /**
  * 
  */
-public class ImporterXscan implements Importer {
+public class ImporterXScan implements Importer {
 
     StringBuilder sb;
 
@@ -43,7 +43,7 @@ public class ImporterXscan implements Importer {
 
     @Override
     public String getDescription(){
-        return "Xscan files";
+        return "XScan files";
     }
     
     @Override
@@ -889,7 +889,7 @@ public class ImporterXscan implements Importer {
 
     public void main(String[] args) throws Exception {
         String fileName = args[0];
-        String script = new ImporterXscan().importFile(new File(fileName));
+        String script = new ImporterXScan().importFile(new File(fileName));
         System.out.println(script);
 
     }

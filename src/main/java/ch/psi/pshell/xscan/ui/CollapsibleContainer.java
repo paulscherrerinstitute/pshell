@@ -1,6 +1,6 @@
 package ch.psi.pshell.xscan.ui;
 
-import ch.psi.pshell.xscan.ProcessorXscan;
+import ch.psi.pshell.xscan.ProcessorXScan;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
@@ -61,11 +61,11 @@ public class CollapsibleContainer extends javax.swing.JPanel {
             setHeader(header);
         }
 
-        ProcessorXscan.setIcon(jLabel2, getClass().getResource("/ch/psi/pshell/xscan/ui/icons/wrench.png"));
-        ProcessorXscan.setIcon(jButton1, getClass().getResource("/ch/psi/pshell/xscan/ui/icons/sq_up.png"));
-        ProcessorXscan.setIcon(jButton2, getClass().getResource("/ch/psi/pshell/xscan/ui/icons/plus.png"));
+        ProcessorXScan.setIcon(jLabel2, getClass().getResource("/ch/psi/pshell/xscan/ui/icons/wrench.png"));
+        ProcessorXScan.setIcon(jButton1, getClass().getResource("/ch/psi/pshell/xscan/ui/icons/sq_up.png"));
+        ProcessorXScan.setIcon(jButton2, getClass().getResource("/ch/psi/pshell/xscan/ui/icons/plus.png"));
         if ((icon != null) && !icon.isEmpty()) {
-            ProcessorXscan.setIcon(jLabel2, getClass().getResource("/ch/psi/pshell/xscan/ui/icons/" + icon + ".png"));
+            ProcessorXScan.setIcon(jLabel2, getClass().getResource("/ch/psi/pshell/xscan/ui/icons/" + icon + ".png"));
         }
 
         // Add component to collapsible panel
@@ -271,14 +271,14 @@ public class CollapsibleContainer extends javax.swing.JPanel {
     private void collapse() {
         if (collapsed) {
             jPanel2.setVisible(true);
-            ProcessorXscan.setIcon(jButton1, getClass().getResource("/ch/psi/pshell/xscan/ui/icons/sq_up.png"));
+            ProcessorXScan.setIcon(jButton1, getClass().getResource("/ch/psi/pshell/xscan/ui/icons/sq_up.png"));
 
             jLabelAdditionalHeader.setText("");
             collapsed = false;
 
         } else {
             jPanel2.setVisible(false);
-            ProcessorXscan.setIcon(jButton1, getClass().getResource("/ch/psi/pshell/xscan/ui/icons/sq_down.png"));
+            ProcessorXScan.setIcon(jButton1, getClass().getResource("/ch/psi/pshell/xscan/ui/icons/sq_down.png"));
 
             if (childContainer != null) {
                 int size = childContainer.getListSize();
@@ -347,7 +347,7 @@ public class CollapsibleContainer extends javax.swing.JPanel {
 
     public void setIcon(String icon) {
         if ((icon != null) && !icon.isEmpty()) {
-            ProcessorXscan.setIcon(jLabel2, getClass().getResource("/ch/psi/pshell/xscan/ui/icons/" + icon + ".png"));
+            ProcessorXScan.setIcon(jLabel2, getClass().getResource("/ch/psi/pshell/xscan/ui/icons/" + icon + ".png"));
         }
     }
 

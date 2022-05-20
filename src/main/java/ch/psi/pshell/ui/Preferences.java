@@ -98,7 +98,9 @@ public class Preferences {
     public boolean showEmergencyStop;
     public boolean showHomingButtons;
     public boolean showJogButtons;
-
+    public boolean showXScanDataViewer;
+    public boolean showXScanFileBrowser;
+    
     public boolean backgroundRendering;
     public boolean showImageStatusBar = true;
     public boolean persistRendererWindows;

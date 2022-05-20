@@ -1,6 +1,6 @@
 package ch.psi.pshell.xscan.ui;
 
-import ch.psi.pshell.xscan.ProcessorXscan;
+import ch.psi.pshell.xscan.ProcessorXScan;
 import ch.psi.utils.Convert;
 import ch.psi.utils.Str;
 import java.awt.Component;
@@ -86,7 +86,7 @@ public class EditablePanel<T> extends javax.swing.JPanel implements EditableComp
 
     protected void setManagedFields(JButton button, Component[] mandatory, Component[] optional, String[] defaultOptionalValues) {
         if (button != null) {
-            ProcessorXscan.setIcon(button, getClass().getResource("/ch/psi/pshell/xscan/ui/icons/plus.png"));
+            ProcessorXScan.setIcon(button, getClass().getResource("/ch/psi/pshell/xscan/ui/icons/plus.png"));
         }
         PanelSupport panelSupport = getPanelSupport(true); //If already had called it, creates a new
         HashMap<Component, ComponentMetadata> managedFields = new HashMap<>();

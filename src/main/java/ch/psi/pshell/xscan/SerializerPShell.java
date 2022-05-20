@@ -60,7 +60,7 @@ public class SerializerPShell implements EventBusListener {
             List data = m.getData();
             if (newfile) {
                 dataset = String.format("/scan% d", icount);
-                dm.appendLog(String.format("Xscan execution started: %s", dataset));
+                dm.appendLog(String.format("XScan execution started: %s", dataset));
                 names = new ArrayList<>();
                 types = new ArrayList<>();
                 lenghts = new ArrayList<>();
@@ -108,7 +108,7 @@ public class SerializerPShell implements EventBusListener {
                     }
                 }
 
-                dm.setAttribute(dataset, Layout.ATTR_TYPE, ProcessorXscan.SCAN_TYPE);
+                dm.setAttribute(dataset, Layout.ATTR_TYPE, ProcessorXScan.SCAN_TYPE);
                 dm.setAttribute(dataset, "dims", (int[]) Convert.toPrimitiveArray(dims.toArray(new Integer[0])));
                 dm.setAttribute(dataset, "names", names.toArray(new String[0]));
                 newfile = false;
@@ -141,7 +141,7 @@ public class SerializerPShell implements EventBusListener {
         } else if (message instanceof EndOfStreamMessage) {
             try {
                 //dm.closeOutput();
-                dm.appendLog(String.format("Xscan completed"));
+                dm.appendLog(String.format("XScan completed"));
             } catch (Exception ex) {
                 Logger.getLogger(SerializerPShell.class.getName()).log(Level.FINE, null, ex);
             }

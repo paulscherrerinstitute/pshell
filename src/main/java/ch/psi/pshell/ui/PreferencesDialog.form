@@ -1244,57 +1244,44 @@
           <Layout>
             <DimensionLayout dim="0">
               <Group type="103" groupAlignment="0" attributes="0">
-                  <Group type="102" alignment="0" attributes="0">
-                      <EmptySpace min="-2" pref="24" max="-2" attributes="0"/>
+                  <Group type="102" alignment="1" attributes="0">
+                      <EmptySpace min="-2" pref="47" max="-2" attributes="0"/>
+                      <Component id="jPanel9" min="-2" max="-2" attributes="0"/>
+                      <EmptySpace pref="49" max="32767" attributes="0"/>
                       <Group type="103" groupAlignment="0" attributes="0">
-                          <Component id="ckAsyncUpdate" alignment="0" min="-2" max="-2" attributes="0"/>
-                          <Component id="checkShowHomingButtons" linkSize="20" alignment="0" min="-2" max="-2" attributes="0"/>
-                          <Component id="checkShowJogButtons" linkSize="20" alignment="0" min="-2" max="-2" attributes="0"/>
-                          <Component id="checkShowEmergencyStop" min="-2" max="-2" attributes="0"/>
-                          <Component id="ckScanPlotDisabled" min="-2" max="-2" attributes="0"/>
-                          <Component id="ckScanTableDisabled" min="-2" max="-2" attributes="0"/>
+                          <Component id="ckAsyncUpdate" min="-2" max="-2" attributes="0"/>
+                          <Group type="102" attributes="0">
+                              <Group type="103" groupAlignment="0" attributes="0">
+                                  <Component id="jLabel21" linkSize="17" alignment="0" min="-2" max="-2" attributes="0"/>
+                                  <Component id="jLabel14" linkSize="17" alignment="0" min="-2" max="-2" attributes="0"/>
+                                  <Component id="jLabel20" linkSize="17" alignment="0" min="-2" max="-2" attributes="0"/>
+                                  <Component id="jLabel28" linkSize="17" alignment="0" min="-2" max="-2" attributes="0"/>
+                              </Group>
+                              <EmptySpace max="-2" attributes="0"/>
+                              <Group type="103" groupAlignment="0" attributes="0">
+                                  <Component id="comboScriptPopup" linkSize="18" alignment="0" min="-2" max="-2" attributes="0"/>
+                                  <Component id="comboConsoleLocation" linkSize="18" alignment="0" min="-2" max="-2" attributes="0"/>
+                                  <Component id="comboPlotsLocation" linkSize="18" alignment="0" min="-2" max="-2" attributes="0"/>
+                                  <Component id="spinnerTerminalFontSize" alignment="0" min="-2" max="-2" attributes="0"/>
+                              </Group>
+                          </Group>
                       </Group>
-                      <EmptySpace type="unrelated" max="32767" attributes="0"/>
-                      <Group type="103" groupAlignment="0" attributes="0">
-                          <Component id="jLabel21" linkSize="17" alignment="0" min="-2" max="-2" attributes="0"/>
-                          <Component id="jLabel14" linkSize="17" alignment="0" min="-2" max="-2" attributes="0"/>
-                          <Component id="jLabel20" linkSize="17" alignment="0" min="-2" max="-2" attributes="0"/>
-                          <Component id="jLabel28" linkSize="17" alignment="0" min="-2" max="-2" attributes="0"/>
-                      </Group>
-                      <EmptySpace max="-2" attributes="0"/>
-                      <Group type="103" groupAlignment="0" attributes="0">
-                          <Component id="comboScriptPopup" linkSize="18" alignment="0" min="-2" max="-2" attributes="0"/>
-                          <Component id="comboConsoleLocation" linkSize="18" alignment="0" min="-2" max="-2" attributes="0"/>
-                          <Component id="comboPlotsLocation" linkSize="18" alignment="0" min="-2" max="-2" attributes="0"/>
-                          <Component id="spinnerTerminalFontSize" alignment="0" min="-2" max="-2" attributes="0"/>
-                      </Group>
-                      <EmptySpace max="32767" attributes="0"/>
+                      <EmptySpace min="-2" pref="41" max="-2" attributes="0"/>
                   </Group>
               </Group>
             </DimensionLayout>
             <DimensionLayout dim="1">
               <Group type="103" groupAlignment="0" attributes="0">
                   <Group type="102" alignment="0" attributes="0">
-                      <EmptySpace min="-2" pref="17" max="-2" attributes="0"/>
+                      <EmptySpace min="-2" pref="18" max="-2" attributes="0"/>
                       <Group type="103" groupAlignment="0" attributes="0">
-                          <Group type="103" alignment="0" groupAlignment="3" attributes="0">
-                              <Component id="comboScriptPopup" linkSize="19" alignment="3" min="-2" max="-2" attributes="0"/>
-                              <Component id="jLabel21" linkSize="19" alignment="3" min="-2" max="-2" attributes="0"/>
-                          </Group>
-                          <Component id="ckAsyncUpdate" linkSize="19" min="-2" max="-2" attributes="0"/>
-                      </Group>
-                      <EmptySpace max="-2" attributes="0"/>
-                      <Group type="103" groupAlignment="0" attributes="0">
+                          <Component id="jPanel9" min="-2" max="-2" attributes="0"/>
                           <Group type="102" attributes="0">
-                              <Component id="checkShowHomingButtons" min="-2" max="-2" attributes="0"/>
+                              <Group type="103" groupAlignment="3" attributes="0">
+                                  <Component id="comboScriptPopup" alignment="3" min="-2" max="-2" attributes="0"/>
+                                  <Component id="jLabel21" alignment="3" min="-2" max="-2" attributes="0"/>
+                              </Group>
                               <EmptySpace max="-2" attributes="0"/>
-                              <Component id="checkShowJogButtons" min="-2" max="-2" attributes="0"/>
-                              <EmptySpace max="-2" attributes="0"/>
-                              <Component id="checkShowEmergencyStop" min="-2" max="-2" attributes="0"/>
-                              <EmptySpace max="-2" attributes="0"/>
-                              <Component id="ckScanPlotDisabled" linkSize="19" min="-2" max="-2" attributes="0"/>
-                          </Group>
-                          <Group type="102" attributes="0">
                               <Group type="103" groupAlignment="3" attributes="0">
                                   <Component id="comboConsoleLocation" alignment="3" min="-2" max="-2" attributes="0"/>
                                   <Component id="jLabel14" alignment="3" min="-2" max="-2" attributes="0"/>
@@ -1309,11 +1296,11 @@
                                   <Component id="jLabel28" alignment="3" min="-2" max="-2" attributes="0"/>
                                   <Component id="spinnerTerminalFontSize" alignment="3" min="-2" max="-2" attributes="0"/>
                               </Group>
+                              <EmptySpace type="separate" max="-2" attributes="0"/>
+                              <Component id="ckAsyncUpdate" min="-2" max="-2" attributes="0"/>
                           </Group>
                       </Group>
-                      <EmptySpace max="-2" attributes="0"/>
-                      <Component id="ckScanTableDisabled" linkSize="19" min="-2" max="-2" attributes="0"/>
-                      <EmptySpace pref="34" max="32767" attributes="0"/>
+                      <EmptySpace max="32767" attributes="0"/>
                   </Group>
               </Group>
             </DimensionLayout>
@@ -1321,17 +1308,7 @@
           <SubComponents>
             <Component class="javax.swing.JCheckBox" name="ckAsyncUpdate">
               <Properties>
-                <Property name="text" type="java.lang.String" value="Asynchronous update"/>
-              </Properties>
-            </Component>
-            <Component class="javax.swing.JCheckBox" name="ckScanPlotDisabled">
-              <Properties>
-                <Property name="text" type="java.lang.String" value="Scan plots disabled"/>
-              </Properties>
-            </Component>
-            <Component class="javax.swing.JCheckBox" name="ckScanTableDisabled">
-              <Properties>
-                <Property name="text" type="java.lang.String" value="Scan table disabled"/>
+                <Property name="text" type="java.lang.String" value="Asynchronous widget updates"/>
               </Properties>
             </Component>
             <Component class="javax.swing.JLabel" name="jLabel21">
@@ -1345,21 +1322,6 @@
                 <Property name="model" type="javax.swing.ComboBoxModel" editor="org.netbeans.modules.form.editors2.ComboBoxModelEditor">
                   <StringArray count="0"/>
                 </Property>
-              </Properties>
-            </Component>
-            <Component class="javax.swing.JCheckBox" name="checkShowEmergencyStop">
-              <Properties>
-                <Property name="text" type="java.lang.String" value="Show emergency stop"/>
-              </Properties>
-            </Component>
-            <Component class="javax.swing.JCheckBox" name="checkShowJogButtons">
-              <Properties>
-                <Property name="text" type="java.lang.String" value="Show jog buttons"/>
-              </Properties>
-            </Component>
-            <Component class="javax.swing.JCheckBox" name="checkShowHomingButtons">
-              <Properties>
-                <Property name="text" type="java.lang.String" value="Show  homing buttons"/>
               </Properties>
             </Component>
             <Component class="javax.swing.JLabel" name="jLabel14">
@@ -1404,6 +1366,99 @@
                 </Property>
               </Properties>
             </Component>
+            <Container class="javax.swing.JPanel" name="jPanel9">
+              <Properties>
+                <Property name="border" type="javax.swing.border.Border" editor="org.netbeans.modules.form.editors2.BorderEditor">
+                  <Border info="org.netbeans.modules.form.compat2.border.TitledBorderInfo">
+                    <TitledBorder title="Widget Enabling"/>
+                  </Border>
+                </Property>
+              </Properties>
+              <AccessibilityProperties>
+                <Property name="AccessibleContext.accessibleName" type="java.lang.String" value="Widget Enabling"/>
+              </AccessibilityProperties>
+
+              <Layout>
+                <DimensionLayout dim="0">
+                  <Group type="103" groupAlignment="0" attributes="0">
+                      <Group type="102" attributes="0">
+                          <EmptySpace max="-2" attributes="0"/>
+                          <Group type="103" groupAlignment="0" attributes="0">
+                              <Component id="checkShowHomingButtons" linkSize="20" alignment="0" min="-2" max="-2" attributes="0"/>
+                              <Component id="checkShowJogButtons" linkSize="20" alignment="0" min="-2" max="-2" attributes="0"/>
+                              <Component id="checkShowEmergencyStop" alignment="0" min="-2" max="-2" attributes="0"/>
+                              <Component id="ckScanPlotEnabled" alignment="0" min="-2" max="-2" attributes="0"/>
+                              <Component id="ckScanTableEnabled" alignment="0" min="-2" max="-2" attributes="0"/>
+                              <Component id="checkXScanBrowser" alignment="0" min="-2" max="-2" attributes="0"/>
+                              <Component id="checkXScanDataViewer" alignment="0" min="-2" max="-2" attributes="0"/>
+                          </Group>
+                          <EmptySpace max="-2" attributes="0"/>
+                      </Group>
+                  </Group>
+                </DimensionLayout>
+                <DimensionLayout dim="1">
+                  <Group type="103" groupAlignment="0" attributes="0">
+                      <Group type="102" alignment="1" attributes="0">
+                          <EmptySpace max="-2" attributes="0"/>
+                          <Component id="ckScanPlotEnabled" min="-2" max="-2" attributes="0"/>
+                          <EmptySpace min="0" pref="0" max="-2" attributes="0"/>
+                          <Component id="ckScanTableEnabled" min="-2" max="-2" attributes="0"/>
+                          <EmptySpace min="0" pref="0" max="-2" attributes="0"/>
+                          <Component id="checkShowHomingButtons" min="-2" max="-2" attributes="0"/>
+                          <EmptySpace min="0" pref="0" max="-2" attributes="0"/>
+                          <Component id="checkShowJogButtons" min="-2" max="-2" attributes="0"/>
+                          <EmptySpace min="0" pref="0" max="-2" attributes="0"/>
+                          <Component id="checkShowEmergencyStop" min="-2" max="-2" attributes="0"/>
+                          <EmptySpace min="0" pref="0" max="-2" attributes="0"/>
+                          <Component id="checkXScanBrowser" min="-2" max="-2" attributes="0"/>
+                          <EmptySpace min="0" pref="0" max="-2" attributes="0"/>
+                          <Component id="checkXScanDataViewer" min="-2" max="-2" attributes="0"/>
+                          <EmptySpace max="32767" attributes="0"/>
+                      </Group>
+                  </Group>
+                </DimensionLayout>
+              </Layout>
+              <SubComponents>
+                <Component class="javax.swing.JCheckBox" name="ckScanTableEnabled">
+                  <Properties>
+                    <Property name="text" type="java.lang.String" value="Scan table"/>
+                  </Properties>
+                </Component>
+                <Component class="javax.swing.JCheckBox" name="checkXScanBrowser">
+                  <Properties>
+                    <Property name="text" type="java.lang.String" value="XScan File Browser"/>
+                  </Properties>
+                </Component>
+                <Component class="javax.swing.JCheckBox" name="ckScanPlotEnabled">
+                  <Properties>
+                    <Property name="text" type="java.lang.String" value="Scan plots"/>
+                  </Properties>
+                </Component>
+                <Component class="javax.swing.JCheckBox" name="checkXScanDataViewer">
+                  <Properties>
+                    <Property name="text" type="java.lang.String" value="XScan Data Viewer"/>
+                  </Properties>
+                </Component>
+                <Component class="javax.swing.JCheckBox" name="checkShowJogButtons">
+                  <Properties>
+                    <Property name="text" type="java.lang.String" value="Jog buttons"/>
+                  </Properties>
+                </Component>
+                <Component class="javax.swing.JCheckBox" name="checkShowEmergencyStop">
+                  <Properties>
+                    <Property name="text" type="java.lang.String" value="Emergency stop button"/>
+                  </Properties>
+                </Component>
+                <Component class="javax.swing.JCheckBox" name="checkShowHomingButtons">
+                  <Properties>
+                    <Property name="text" type="java.lang.String" value="Homing buttons"/>
+                  </Properties>
+                  <Events>
+                    <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="checkShowHomingButtonsActionPerformed"/>
+                  </Events>
+                </Component>
+              </SubComponents>
+            </Container>
           </SubComponents>
         </Container>
       </SubComponents>

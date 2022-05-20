@@ -1,6 +1,6 @@
 package ch.psi.pshell.xscan.ui;
 
-import ch.psi.pshell.xscan.ProcessorXscan;
+import ch.psi.pshell.xscan.ProcessorXScan;
 import java.awt.Component;
 import java.awt.dnd.DropTarget;
 import java.awt.event.ActionEvent;
@@ -43,7 +43,7 @@ public class ListContainer<T> extends EditablePanel<Object> {
 
         initComponents();
 
-        ProcessorXscan.setIcon(jButton1, getClass().getResource("/ch/psi/pshell/xscan/ui/icons/plus.png"));
+        ProcessorXScan.setIcon(jButton1, getClass().getResource("/ch/psi/pshell/xscan/ui/icons/plus.png"));
 
         // BEGIN Drag and Drop
         // Again, needs to negotiate with the draggable object

@@ -1,6 +1,6 @@
 package ch.psi.pshell.xscan.ui;
 
-import ch.psi.pshell.xscan.ProcessorXscan;
+import ch.psi.pshell.xscan.ProcessorXScan;
 import ch.psi.pshell.xscan.model.LinePlotArray;
 import java.awt.Component;
 import java.awt.event.ItemEvent;
@@ -33,7 +33,7 @@ public class LinePlotArrayPanel extends EditablePanel<LinePlotArray> {
 
         initComponents();
 
-        ProcessorXscan.setIcon(jButton2, getClass().getResource("/ch/psi/pshell/xscan/ui/icons/plus-gray.png"));
+        ProcessorXScan.setIcon(jButton2, getClass().getResource("/ch/psi/pshell/xscan/ui/icons/plus-gray.png"));
 
         setManagedFields(jButton1,
                 new Component[]{jComboBoxY},

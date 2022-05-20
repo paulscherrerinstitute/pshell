@@ -44,8 +44,8 @@ public class DeserializerPShell implements Deserializer {
         try {
             // Read metadata
             dm = new DataManager(Context.getInstance(), file.isDirectory() ? "txt" : "h5", Context.getInstance().getConfig().getDataLayout());
-            if (!ProcessorXscan.SCAN_TYPE.toString().equalsIgnoreCase(String.valueOf(dm.getAttribute(filename, path, Layout.ATTR_TYPE)))) {
-                throw new RuntimeException("Not Xscan data");
+            if (!ProcessorXScan.SCAN_TYPE.toString().equalsIgnoreCase(String.valueOf(dm.getAttribute(filename, path, Layout.ATTR_TYPE)))) {
+                throw new RuntimeException("Not XScan data");
             }
             dimensions = (int[]) dm.getAttribute(filename, path, "dims");
             ids = (String[]) dm.getAttribute(filename, path, "names");

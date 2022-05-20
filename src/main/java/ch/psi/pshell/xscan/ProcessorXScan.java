@@ -19,7 +19,6 @@ import ch.psi.pshell.ui.App;
 import ch.psi.pshell.ui.Preferences;
 import ch.psi.pshell.ui.Processor;
 import ch.psi.pshell.ui.Task;
-import ch.psi.pshell.ui.View;
 import ch.psi.utils.EventBus;
 import ch.psi.utils.IO;
 import ch.psi.utils.State;
@@ -31,8 +30,6 @@ import ch.psi.utils.swing.SwingUtils.OptionType;
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Toolkit;
-import java.awt.event.InputEvent;
-import java.awt.event.KeyEvent;
 import java.awt.event.MouseListener;
 import java.io.File;
 import java.io.IOException;
@@ -46,26 +43,24 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
-import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JFileChooser;
 import javax.swing.JLabel;
-import javax.swing.JMenu;
-import javax.swing.JMenuBar;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
-import javax.swing.KeyStroke;
 import javax.swing.SwingUtilities;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
 /**
  * Loops can be executed from script as: ProcessorXScan().execute("test1.xml")
  */
-public final class ProcessorXscan extends MonitoredPanel implements Processor {
+public final class ProcessorXScan extends MonitoredPanel implements Processor {
 
+    public static final String EXTENSION = "xml";
     public static final String SCAN_TYPE = "XScan";
-    public static final String BROWSER_TITLE = "Xscan Browser";
+    public static final String BROWSER_TITLE = "XScan Data";
 
+    /*
     static {
         View view = App.getInstance().getMainFrame();
         if (view != null) {
@@ -99,13 +94,14 @@ public final class ProcessorXscan extends MonitoredPanel implements Processor {
             }
         }
     }
+    */
 
     public static boolean isDataBrowserVisible() {
         if (App.getInstance().getMainFrame() != null) {
             JTabbedPane tab = App.getInstance().getMainFrame().getLeftTab();
             for (int i = 0; i < tab.getTabCount(); i++) {
                 Component c = tab.getComponentAt(i);
-                if (c instanceof DataBrowser) {
+                if (c instanceof DataViewer) {
                     return true;
                 }
             }
@@ -118,21 +114,15 @@ public final class ProcessorXscan extends MonitoredPanel implements Processor {
             JTabbedPane tab = App.getInstance().getMainFrame().getLeftTab();
             for (int i = 0; i < tab.getTabCount(); i++) {
                 Component c = tab.getComponentAt(i);
-                if (c instanceof DataBrowser) {
+                if (c instanceof DataViewer) {
                     tab.setSelectedComponent(c);
                     return;
                 }
             }
-            DataBrowser panel = new DataBrowser();
+            DataViewer panel = new DataViewer();
             panel.setCached(App.getInstance().getMainFrame().getPreferences().cachedDataPanel);
             panel.initialize(null);
             App.getInstance().getMainFrame().openComponent(BROWSER_TITLE, panel, tab);
-            if (!App.isLocalMode()) {
-                try {
-                    Context.getInstance().setSetting("FdaBrowser", true);
-                } catch (IOException ex) {
-                }
-            }
             setDataBrowserFixed();
         }
     }
@@ -160,12 +150,6 @@ public final class ProcessorXscan extends MonitoredPanel implements Processor {
 
     public static void closeDataBrowser() {
         if (App.getInstance().getMainFrame() != null) {
-            if (!App.isLocalMode()) {
-                try {
-                    Context.getInstance().setSetting("FdaBrowser", false);
-                } catch (IOException ex) {
-                }
-            }
             for (int i = 0; i < App.getInstance().getMainFrame().getLeftTab().getTabCount(); i++) {
                 Component t = App.getInstance().getMainFrame().getLeftTab().getTabComponentAt(i);
                 if (isDataBrowser(t)) {
@@ -179,7 +163,7 @@ public final class ProcessorXscan extends MonitoredPanel implements Processor {
     final AcquisitionConfiguration configuration;
     final String homePath;
 
-    public ProcessorXscan() {
+    public ProcessorXScan() {
         initComponents();
         configuration = new AcquisitionConfiguration();
         jScrollPane1.getVerticalScrollBar().setUnitIncrement(16);
@@ -191,7 +175,7 @@ public final class ProcessorXscan extends MonitoredPanel implements Processor {
         }
     }
 
-    public ProcessorXscan(File file) throws IOException {
+    public ProcessorXScan(File file) throws IOException {
         this();
         if (file != null) {
             open(file.getAbsolutePath());
@@ -200,10 +184,10 @@ public final class ProcessorXscan extends MonitoredPanel implements Processor {
         ModelUtil.getInstance().clearModified();
     }
 
-    public static ProcessorXscan getCurrent() {
+    public static ProcessorXScan getCurrent() {
         Processor p = App.getInstance().getMainFrame().getSelectedProcessor();
-        if ((p != null) && (p instanceof ProcessorXscan)) {
-            return (ProcessorXscan) p;
+        if ((p != null) && (p instanceof ProcessorXScan)) {
+            return (ProcessorXScan) p;
         }
         return null;
     }
@@ -214,17 +198,17 @@ public final class ProcessorXscan extends MonitoredPanel implements Processor {
 
     @Override
     public String getType() {
-        return "Xscan";
+        return "XScan";
     }
 
     @Override
     public String getDescription() {
-        return "Xscan configuration file  (*.xml)";
+        return "XScan configuration file  (*." + EXTENSION + ")";
     }
 
     @Override
     public String[] getExtensions() {
-        return new String[]{"xml"};
+        return new String[]{EXTENSION};
     }
 
     @Override
@@ -235,8 +219,8 @@ public final class ProcessorXscan extends MonitoredPanel implements Processor {
     @Override
     public void open(String fileName) throws IOException {
         File file = new File(fileName);
-        if (!file.getName().endsWith("." + getExtensions()[0])) {
-            file = new File(file.getAbsolutePath() + "." + getExtensions()[0]);
+        if (!file.getName().endsWith("." + EXTENSION)) {
+            file = new File(file.getAbsolutePath() + "." + EXTENSION);
         }
         setFile(file);
         Configuration c = null;
@@ -283,8 +267,8 @@ public final class ProcessorXscan extends MonitoredPanel implements Processor {
 
             try {
                 File f = chooser.getSelectedFile();
-                if (!String.valueOf(IO.getExtension(f)).toLowerCase().equals("xml")) {
-                    f = new File(f.getCanonicalPath() + ".xml");
+                if (!String.valueOf(IO.getExtension(f)).toLowerCase().equals(EXTENSION)) {
+                    f = new File(f.getCanonicalPath() + "." + EXTENSION);
                 }
                 if (f.exists()) {
                     throw new RuntimeException("File already exists");
@@ -513,7 +497,7 @@ public final class ProcessorXscan extends MonitoredPanel implements Processor {
             try {
                 acquisition.abort();
             } catch (Exception e) {
-                Logger.getLogger(ProcessorXscan.class.getName()).log(Level.WARNING, null, e);
+                Logger.getLogger(ProcessorXScan.class.getName()).log(Level.WARNING, null, e);
             }
         }
 
@@ -536,7 +520,7 @@ public final class ProcessorXscan extends MonitoredPanel implements Processor {
             try {
                 acquisition.pause();
             } catch (Exception e) {
-                Logger.getLogger(ProcessorXscan.class.getName()).log(Level.WARNING, null, e);
+                Logger.getLogger(ProcessorXScan.class.getName()).log(Level.WARNING, null, e);
             }
         }
     }
@@ -546,14 +530,14 @@ public final class ProcessorXscan extends MonitoredPanel implements Processor {
             try {
                 acquisition.resume();
             } catch (Exception e) {
-                Logger.getLogger(ProcessorXscan.class.getName()).log(Level.WARNING, null, e);
+                Logger.getLogger(ProcessorXScan.class.getName()).log(Level.WARNING, null, e);
             }
         }
     }
 
     @Override
     public boolean createFilePanel() {
-        return true;
+        return App.getInstance().getMainFrame().getPreferences().showXScanFileBrowser;
     }
 
     public AcquisitionConfiguration getConfiguration() {
@@ -624,7 +608,7 @@ public final class ProcessorXscan extends MonitoredPanel implements Processor {
                     visualizer.setUpdateAtEndOfStream(false);
                 }
                 ebus.register(visualizer);
-                ProcessorXscan.setPlots(visualizer.getPlotPanels(), null);
+                ProcessorXScan.setPlots(visualizer.getPlotPanels(), null);
             }
             if (Context.getInstance().getState() == State.Paused) {
                 acquisition.pause();
@@ -633,24 +617,24 @@ public final class ProcessorXscan extends MonitoredPanel implements Processor {
         } catch (InterruptedException ex) {
             throw ex;
         } catch (Throwable t) {
-            Logger.getLogger(ProcessorXscan.class.getName()).log(Level.WARNING, null, t);
+            Logger.getLogger(ProcessorXScan.class.getName()).log(Level.WARNING, null, t);
             t.printStackTrace();
             throw t;
         } finally {
             ModelUtil.getInstance().setConfigurationPanel(null);
-            Logger.getLogger(ProcessorXscan.class.getName()).log(Level.FINER, "Destroy acquisition");
+            Logger.getLogger(ProcessorXScan.class.getName()).log(Level.FINER, "Destroy acquisition");
             if (acquisition != null) {
                 acquisition.destroy();
                 acquisition = null;
             }
-            Logger.getLogger(ProcessorXscan.class.getName()).log(Level.FINER, "Destroy channel service");
+            Logger.getLogger(ProcessorXScan.class.getName()).log(Level.FINER, "Destroy channel service");
             try {
                 channelService.destroy();
             } catch (Exception e) {
-                Logger.getLogger(ProcessorXscan.class.getName()).log(Level.FINER, "Unable to destroy channel access service", e);
+                Logger.getLogger(ProcessorXScan.class.getName()).log(Level.FINER, "Unable to destroy channel access service", e);
             }
 
-            Logger.getLogger(ProcessorXscan.class.getName()).log(Level.FINER, "Stop visualizer");
+            Logger.getLogger(ProcessorXScan.class.getName()).log(Level.FINER, "Stop visualizer");
 
             //TODO: giving more time to gert latest events. Is there a better way to know the event bus is empty?
             new Thread(new Runnable() {
@@ -663,7 +647,7 @@ public final class ProcessorXscan extends MonitoredPanel implements Processor {
                     try {
                         executor.shutdown();
                     } catch (Exception e) {
-                        Logger.getLogger(ProcessorXscan.class.getName()).log(Level.FINER, "Unable to stop executor service", e);
+                        Logger.getLogger(ProcessorXScan.class.getName()).log(Level.FINER, "Unable to stop executor service", e);
                     }
                 }
             }).start();
@@ -674,7 +658,7 @@ public final class ProcessorXscan extends MonitoredPanel implements Processor {
     @Override
     public void plotDataFile(final File file, String path) {
 
-        Logger.getLogger(ProcessorXscan.class.getName()).log(Level.INFO, "Visualize file: {0}", file.getAbsolutePath());
+        Logger.getLogger(ProcessorXScan.class.getName()).log(Level.INFO, "Visualize file: {0}", file.getAbsolutePath());
         Thread t = new Thread(new Runnable() {
 
             @Override
@@ -688,7 +672,7 @@ public final class ProcessorXscan extends MonitoredPanel implements Processor {
                     if (file.isFile()) {
                         name = IO.getPrefix(file);
                     }
-                    File cfile = new File(dir, name + ".xml");
+                    File cfile = new File(dir, name + "." + EXTENSION);
 
                     // Check existence of files
                     if (!file.exists()) {
@@ -712,7 +696,7 @@ public final class ProcessorXscan extends MonitoredPanel implements Processor {
                     ebus.register(visualizer);
 
                     //tc.updatePanel(visualizer.getPlotPanels());
-                    ProcessorXscan.setPlots(visualizer.getPlotPanels(), "Data");
+                    ProcessorXScan.setPlots(visualizer.getPlotPanels(), "Data");
 
                     deserializer.read();
 
@@ -740,7 +724,7 @@ public final class ProcessorXscan extends MonitoredPanel implements Processor {
         // Set data file name
         // Determine name used for the data file
         String name = file.getName();
-        name = name.replaceAll("\\.xml$", "");
+        name = name.replaceAll("\\." + EXTENSION + "$", "");
 
         // Check if scan name exists, if not, replace with name of the file
         if (c.getData() == null) {

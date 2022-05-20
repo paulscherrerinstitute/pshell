@@ -136,6 +136,7 @@ import ch.psi.pshell.swing.MetadataEditor;
 import ch.psi.pshell.swing.MotorPanel;
 import ch.psi.pshell.swing.RepositoryChangesDialog;
 import ch.psi.pshell.swing.NextStagesPanel;
+import ch.psi.pshell.xscan.ProcessorXScan;
 import ch.psi.utils.Config;
 import ch.psi.utils.Sys;
 import ch.psi.utils.Sys.OSFamily;
@@ -2061,6 +2062,11 @@ public class View extends MainFrame {
         }
         if (preferences.defaultPlotColormap != null) {
             PlotBase.setDefaultColormap(preferences.defaultPlotColormap);
+        }
+        if (preferences.showXScanDataViewer){
+             ProcessorXScan.showDataBrowser();
+        } else {
+             ProcessorXScan.closeDataBrowser();
         }
         System.setProperty(PlotBase.PROPERTY_PLOT_MARKER_SIZE, String.valueOf(preferences.markerSize));
 

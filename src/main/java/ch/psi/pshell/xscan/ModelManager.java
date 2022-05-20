@@ -17,12 +17,12 @@ import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
 
 /**
- * Manage the serialization and deserialization of the Xscan data model
+ * Manage the serialization and deserialization of the XScan data model
  */
 public class ModelManager {
 
     /**
-     * De-serialize an instance of the Xscan data model
+     * De-serialize an instance of the XScan data model
      *
      * @param file	File to deserialize
      * @throws JAXBException	Something went wrong while unmarshalling
@@ -52,7 +52,7 @@ public class ModelManager {
     }
 
     /**
-     * Serialize an instance of the Xscan data model
+     * Serialize an instance of the XScan data model
      *
      * @param model	Model datastructure
      * @param file	File to write the model data into

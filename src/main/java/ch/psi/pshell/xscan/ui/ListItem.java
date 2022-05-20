@@ -1,6 +1,6 @@
 package ch.psi.pshell.xscan.ui;
 
-import ch.psi.pshell.xscan.ProcessorXscan;
+import ch.psi.pshell.xscan.ProcessorXScan;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
@@ -70,8 +70,8 @@ public class ListItem extends javax.swing.JPanel implements Transferable {
         // END Drag and Drop
         initComponents();
 
-        ProcessorXscan.setIcon(jButton2, getClass().getResource("/ch/psi/pshell/xscan/ui/icons/up.png"));
-        ProcessorXscan.setIcon(jButton3, getClass().getResource("/ch/psi/pshell/xscan/ui/icons/down.png"));
+        ProcessorXScan.setIcon(jButton2, getClass().getResource("/ch/psi/pshell/xscan/ui/icons/up.png"));
+        ProcessorXScan.setIcon(jButton3, getClass().getResource("/ch/psi/pshell/xscan/ui/icons/down.png"));
 
         this.component = component;
         this.container = container;
@@ -250,7 +250,7 @@ public class ListItem extends javax.swing.JPanel implements Transferable {
         out = false;
 //        jButton4.setVisible(true);
 //        jButton4.setEnabled(true);
-        ProcessorXscan.setIcon(jButton4, getClass().getResource("/ch/psi/pshell/xscan/ui/icons/close-gray.png"));
+        ProcessorXScan.setIcon(jButton4, getClass().getResource("/ch/psi/pshell/xscan/ui/icons/close-gray.png"));
         Timer timer = new Timer(5000, new ActionListener() {
 
             @Override
@@ -284,12 +284,12 @@ public class ListItem extends javax.swing.JPanel implements Transferable {
     }//GEN-LAST:event_jLabel1MousePressed
 
     private void jButton4MouseEntered(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jButton4MouseEntered
-        ProcessorXscan.setIcon(jButton4, getClass().getResource("/ch/psi/pshell/xscan/ui/icons/close.png"));
+        ProcessorXScan.setIcon(jButton4, getClass().getResource("/ch/psi/pshell/xscan/ui/icons/close.png"));
         out = false;
     }//GEN-LAST:event_jButton4MouseEntered
 
     private void jButton4MouseExited(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jButton4MouseExited
-        ProcessorXscan.setIcon(jButton4, getClass().getResource("/ch/psi/pshell/xscan/ui/icons/close-gray.png"));
+        ProcessorXScan.setIcon(jButton4, getClass().getResource("/ch/psi/pshell/xscan/ui/icons/close-gray.png"));
         out = true;
     }//GEN-LAST:event_jButton4MouseExited
 

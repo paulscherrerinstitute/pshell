@@ -36,7 +36,7 @@ import java.util.Arrays;
 import ch.psi.pshell.device.Readable;
 import ch.psi.pshell.device.Readable.ReadableMatrix;
 import ch.psi.pshell.scripting.JepUtils;
-import ch.psi.pshell.xscan.ProcessorXscan;
+import ch.psi.pshell.xscan.ProcessorXScan;
 import ch.psi.utils.Reflection.Hidden;
 import java.util.List;
 import java.util.Map;
@@ -1365,7 +1365,7 @@ public class DataManager implements AutoCloseable {
         Map<String, Object> attrs = getAttributes(root, path);
         if (attrs.containsKey(Layout.ATTR_TYPE)) {
            String type = (String) attrs.get(Layout.ATTR_TYPE);
-           if (type.equalsIgnoreCase(ProcessorXscan.SCAN_TYPE)){
+           if (type.equalsIgnoreCase(ProcessorXScan.SCAN_TYPE)){
                throw new IOException(); //Let processor make the drawing
            }
         }        

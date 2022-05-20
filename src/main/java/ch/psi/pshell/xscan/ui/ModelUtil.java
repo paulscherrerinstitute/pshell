@@ -1,6 +1,6 @@
 package ch.psi.pshell.xscan.ui;
 
-import ch.psi.pshell.xscan.ProcessorXscan;
+import ch.psi.pshell.xscan.ProcessorXScan;
 import ch.psi.pshell.xscan.model.Configuration;
 import ch.psi.pshell.xscan.model.ContinuousDimension;
 import ch.psi.pshell.xscan.model.Detector;
@@ -56,7 +56,7 @@ public class ModelUtil {
         if (configurationPanel != null) {
             return configurationPanel;
         }
-        ProcessorXscan cur = ProcessorXscan.getCurrent();
+        ProcessorXScan cur = ProcessorXScan.getCurrent();
         return (cur == null) ? null : cur.getConfigPanel();
     }
 

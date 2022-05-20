@@ -159,12 +159,14 @@ public class PreferencesDialog extends StandardDialog {
         textPL.setText(getFontDesc(preferences.fontPlotLabel));
         textPT.setText(getFontDesc(preferences.fontPlotTick));
         ckAsyncUpdate.setSelected(preferences.asyncViewersUpdate);
-        ckScanPlotDisabled.setSelected(preferences.scanPlotDisabled);
-        ckScanTableDisabled.setSelected(preferences.scanTableDisabled);
+        ckScanPlotEnabled.setSelected(!preferences.scanPlotDisabled);
+        ckScanTableEnabled.setSelected(!preferences.scanTableDisabled);
         checkCachedDataPanel.setSelected(preferences.cachedDataPanel);
         checkShowEmergencyStop.setSelected(preferences.showEmergencyStop);
         checkShowHomingButtons.setSelected(preferences.showHomingButtons);
-        checkShowJogButtons.setSelected(preferences.showJogButtons);      
+        checkShowJogButtons.setSelected(preferences.showJogButtons); 
+        checkXScanBrowser.setSelected(preferences.showXScanFileBrowser);     
+        checkXScanDataViewer.setSelected(preferences.showXScanDataViewer);     
         comboLinePlot.setSelectedItem(preferences.linePlot);
         comboMatrixPlot.setSelectedItem(preferences.matrixPlot);
         comboSurfacePlot.setSelectedItem(preferences.surfacePlot);
@@ -319,19 +321,22 @@ public class PreferencesDialog extends StandardDialog {
         buttonDefaultPanels = new javax.swing.JButton();
         jPanel3 = new javax.swing.JPanel();
         ckAsyncUpdate = new javax.swing.JCheckBox();
-        ckScanPlotDisabled = new javax.swing.JCheckBox();
-        ckScanTableDisabled = new javax.swing.JCheckBox();
         jLabel21 = new javax.swing.JLabel();
         comboScriptPopup = new javax.swing.JComboBox();
-        checkShowEmergencyStop = new javax.swing.JCheckBox();
-        checkShowJogButtons = new javax.swing.JCheckBox();
-        checkShowHomingButtons = new javax.swing.JCheckBox();
         jLabel14 = new javax.swing.JLabel();
         comboConsoleLocation = new javax.swing.JComboBox();
         jLabel20 = new javax.swing.JLabel();
         comboPlotsLocation = new javax.swing.JComboBox();
         jLabel28 = new javax.swing.JLabel();
         spinnerTerminalFontSize = new javax.swing.JSpinner();
+        jPanel9 = new javax.swing.JPanel();
+        ckScanTableEnabled = new javax.swing.JCheckBox();
+        checkXScanBrowser = new javax.swing.JCheckBox();
+        ckScanPlotEnabled = new javax.swing.JCheckBox();
+        checkXScanDataViewer = new javax.swing.JCheckBox();
+        checkShowJogButtons = new javax.swing.JCheckBox();
+        checkShowEmergencyStop = new javax.swing.JCheckBox();
+        checkShowHomingButtons = new javax.swing.JCheckBox();
         buttonOk = new javax.swing.JButton();
         buttonCancel = new javax.swing.JButton();
 
@@ -1113,20 +1118,10 @@ public class PreferencesDialog extends StandardDialog {
 
         jTabbedPane1.addTab("Panels", jPanel6);
 
-        ckAsyncUpdate.setText("Asynchronous update");
-
-        ckScanPlotDisabled.setText("Scan plots disabled");
-
-        ckScanTableDisabled.setText("Scan table disabled");
+        ckAsyncUpdate.setText("Asynchronous widget updates");
 
         jLabel21.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
         jLabel21.setText("Script popup dialog:");
-
-        checkShowEmergencyStop.setText("Show emergency stop");
-
-        checkShowJogButtons.setText("Show jog buttons");
-
-        checkShowHomingButtons.setText("Show  homing buttons");
 
         jLabel14.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
         jLabel14.setText("Console Location:");
@@ -1141,60 +1136,106 @@ public class PreferencesDialog extends StandardDialog {
 
         spinnerTerminalFontSize.setModel(new javax.swing.SpinnerNumberModel(Float.valueOf(10.0f), Float.valueOf(8.0f), Float.valueOf(24.0f), Float.valueOf(1.0f)));
 
+        jPanel9.setBorder(javax.swing.BorderFactory.createTitledBorder("Widget Enabling"));
+
+        ckScanTableEnabled.setText("Scan table");
+
+        checkXScanBrowser.setText("XScan File Browser");
+
+        ckScanPlotEnabled.setText("Scan plots");
+
+        checkXScanDataViewer.setText("XScan Data Viewer");
+
+        checkShowJogButtons.setText("Jog buttons");
+
+        checkShowEmergencyStop.setText("Emergency stop button");
+
+        checkShowHomingButtons.setText("Homing buttons");
+        checkShowHomingButtons.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                checkShowHomingButtonsActionPerformed(evt);
+            }
+        });
+
+        javax.swing.GroupLayout jPanel9Layout = new javax.swing.GroupLayout(jPanel9);
+        jPanel9.setLayout(jPanel9Layout);
+        jPanel9Layout.setHorizontalGroup(
+            jPanel9Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel9Layout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(jPanel9Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(checkShowHomingButtons)
+                    .addComponent(checkShowJogButtons)
+                    .addComponent(checkShowEmergencyStop)
+                    .addComponent(ckScanPlotEnabled)
+                    .addComponent(ckScanTableEnabled)
+                    .addComponent(checkXScanBrowser)
+                    .addComponent(checkXScanDataViewer))
+                .addContainerGap())
+        );
+
+        jPanel9Layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {checkShowHomingButtons, checkShowJogButtons});
+
+        jPanel9Layout.setVerticalGroup(
+            jPanel9Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel9Layout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(ckScanPlotEnabled)
+                .addGap(0, 0, 0)
+                .addComponent(ckScanTableEnabled)
+                .addGap(0, 0, 0)
+                .addComponent(checkShowHomingButtons)
+                .addGap(0, 0, 0)
+                .addComponent(checkShowJogButtons)
+                .addGap(0, 0, 0)
+                .addComponent(checkShowEmergencyStop)
+                .addGap(0, 0, 0)
+                .addComponent(checkXScanBrowser)
+                .addGap(0, 0, 0)
+                .addComponent(checkXScanDataViewer)
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+        );
+
         javax.swing.GroupLayout jPanel3Layout = new javax.swing.GroupLayout(jPanel3);
         jPanel3.setLayout(jPanel3Layout);
         jPanel3Layout.setHorizontalGroup(
             jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel3Layout.createSequentialGroup()
-                .addGap(24, 24, 24)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel3Layout.createSequentialGroup()
+                .addGap(47, 47, 47)
+                .addComponent(jPanel9, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 49, Short.MAX_VALUE)
                 .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(ckAsyncUpdate)
-                    .addComponent(checkShowHomingButtons)
-                    .addComponent(checkShowJogButtons)
-                    .addComponent(checkShowEmergencyStop)
-                    .addComponent(ckScanPlotDisabled)
-                    .addComponent(ckScanTableDisabled))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jLabel21)
-                    .addComponent(jLabel14)
-                    .addComponent(jLabel20)
-                    .addComponent(jLabel28))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(comboScriptPopup, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(comboConsoleLocation, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(comboPlotsLocation, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(spinnerTerminalFontSize, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                    .addGroup(jPanel3Layout.createSequentialGroup()
+                        .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(jLabel21)
+                            .addComponent(jLabel14)
+                            .addComponent(jLabel20)
+                            .addComponent(jLabel28))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(comboScriptPopup, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(comboConsoleLocation, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(comboPlotsLocation, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(spinnerTerminalFontSize, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))))
+                .addGap(41, 41, 41))
         );
 
         jPanel3Layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {jLabel14, jLabel20, jLabel21, jLabel28});
 
         jPanel3Layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {comboConsoleLocation, comboPlotsLocation, comboScriptPopup});
 
-        jPanel3Layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {checkShowHomingButtons, checkShowJogButtons});
-
         jPanel3Layout.setVerticalGroup(
             jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel3Layout.createSequentialGroup()
-                .addGap(17, 17, 17)
+                .addGap(18, 18, 18)
                 .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                        .addComponent(comboScriptPopup, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addComponent(jLabel21))
-                    .addComponent(ckAsyncUpdate))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jPanel9, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addGroup(jPanel3Layout.createSequentialGroup()
-                        .addComponent(checkShowHomingButtons)
+                        .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(comboScriptPopup, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(jLabel21))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(checkShowJogButtons)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(checkShowEmergencyStop)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(ckScanPlotDisabled))
-                    .addGroup(jPanel3Layout.createSequentialGroup()
                         .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(comboConsoleLocation, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                             .addComponent(jLabel14))
@@ -1205,13 +1246,13 @@ public class PreferencesDialog extends StandardDialog {
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(jLabel28)
-                            .addComponent(spinnerTerminalFontSize, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(ckScanTableDisabled)
-                .addContainerGap(34, Short.MAX_VALUE))
+                            .addComponent(spinnerTerminalFontSize, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addGap(18, 18, 18)
+                        .addComponent(ckAsyncUpdate)))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
-        jPanel3Layout.linkSize(javax.swing.SwingConstants.VERTICAL, new java.awt.Component[] {ckAsyncUpdate, ckScanPlotDisabled, ckScanTableDisabled, comboScriptPopup, jLabel21});
+        jPanel9.getAccessibleContext().setAccessibleName("Widget Enabling");
 
         jTabbedPane1.addTab("General", jPanel3);
 
@@ -1299,12 +1340,14 @@ public class PreferencesDialog extends StandardDialog {
 
                 preferences.consoleLocation = (PanelLocation) comboConsoleLocation.getSelectedItem();
                 preferences.asyncViewersUpdate = ckAsyncUpdate.isSelected();
-                preferences.scanPlotDisabled = ckScanPlotDisabled.isSelected();
-                preferences.scanTableDisabled = ckScanTableDisabled.isSelected();
+                preferences.scanPlotDisabled = !ckScanPlotEnabled.isSelected();
+                preferences.scanTableDisabled = !ckScanTableEnabled.isSelected();
                 preferences.cachedDataPanel = checkCachedDataPanel.isSelected();
                 preferences.showEmergencyStop = checkShowEmergencyStop.isSelected();
                 preferences.showHomingButtons = checkShowHomingButtons.isSelected();
                 preferences.showJogButtons = checkShowJogButtons.isSelected();
+                preferences.showXScanFileBrowser = checkXScanBrowser.isSelected();
+                preferences.showXScanDataViewer = checkXScanDataViewer.isSelected();
                 preferences.linePlot = String.valueOf(comboLinePlot.getSelectedItem());
                 preferences.matrixPlot = String.valueOf(comboMatrixPlot.getSelectedItem());
                 preferences.surfacePlot = String.valueOf(comboSurfacePlot.getSelectedItem());
@@ -1501,6 +1544,10 @@ public class PreferencesDialog extends StandardDialog {
         }
     }//GEN-LAST:event_buttonRemoveProcScriptActionPerformed
 
+    private void checkShowHomingButtonsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_checkShowHomingButtonsActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_checkShowHomingButtonsActionPerformed
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton buttonCancel;
     private javax.swing.JButton buttonDefaultEditorColors;
@@ -1532,9 +1579,11 @@ public class PreferencesDialog extends StandardDialog {
     private javax.swing.JCheckBox checkShowRowNumbers;
     private javax.swing.JCheckBox checkStatusBar;
     private javax.swing.JCheckBox checkSyntaxHighlight;
+    private javax.swing.JCheckBox checkXScanBrowser;
+    private javax.swing.JCheckBox checkXScanDataViewer;
     private javax.swing.JCheckBox ckAsyncUpdate;
-    private javax.swing.JCheckBox ckScanPlotDisabled;
-    private javax.swing.JCheckBox ckScanTableDisabled;
+    private javax.swing.JCheckBox ckScanPlotEnabled;
+    private javax.swing.JCheckBox ckScanTableEnabled;
     private javax.swing.JCheckBox ckeckBackgroundRendering;
     private javax.swing.JComboBox comboColormapPlot;
     private javax.swing.JComboBox comboConsoleLocation;
@@ -1586,6 +1635,7 @@ public class PreferencesDialog extends StandardDialog {
     private javax.swing.JPanel jPanel6;
     private javax.swing.JPanel jPanel7;
     private javax.swing.JPanel jPanel8;
+    private javax.swing.JPanel jPanel9;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JTabbedPane jTabbedPane1;

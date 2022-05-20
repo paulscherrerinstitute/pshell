@@ -1,6 +1,6 @@
 package ch.psi.pshell.xscan.ui;
 
-import ch.psi.pshell.xscan.ProcessorXscan;
+import ch.psi.pshell.xscan.ProcessorXScan;
 import ch.psi.pshell.xscan.model.Recipient;
 import java.awt.Component;
 
@@ -102,7 +102,7 @@ public class RecipientPanel extends EditablePanel<Recipient> {
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
         //ExecutionService service = Lookup.getDefault().lookup(ExecutionService.class);
         //service.testNotification(recipient.getValue());                
-        ProcessorXscan cur = ProcessorXscan.getCurrent();
+        ProcessorXScan cur = ProcessorXScan.getCurrent();
         if (cur != null) {
             cur.testNotification(getObject().getValue());
         }

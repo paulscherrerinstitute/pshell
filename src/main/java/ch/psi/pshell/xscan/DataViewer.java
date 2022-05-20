@@ -54,11 +54,11 @@ import javax.swing.tree.TreePath;
 /**
  *
  */
-public final class DataBrowser extends MonitoredPanel {
+public final class DataViewer extends MonitoredPanel {
 
     final Timer timer1s;
 
-    public DataBrowser() {
+    public DataViewer() {
         initComponents();
         if (MainFrame.isDark()) {
             treeFolder.setBorder(BorderFactory.createEmptyBorder(0, 5, 0, 0));
@@ -74,7 +74,7 @@ public final class DataBrowser extends MonitoredPanel {
                     plotFile(file);
                 }
             } catch (Exception ex) {
-                SwingUtils.showException(DataBrowser.this, ex);
+                SwingUtils.showException(DataViewer.this, ex);
             }
         });
         filePopupMenu.add(menuPlot);
@@ -87,7 +87,7 @@ public final class DataBrowser extends MonitoredPanel {
                     openFile(file);
                 }
             } catch (Exception ex) {
-                SwingUtils.showException(DataBrowser.this, ex);
+                SwingUtils.showException(DataViewer.this, ex);
             }
         });
         filePopupMenu.add(menuOpen);
@@ -104,19 +104,19 @@ public final class DataBrowser extends MonitoredPanel {
                         String output = file.getParent() + "/" + IO.getPrefix(file) + "_" + converter.getName().replaceAll("\\s+", "") + "." + converter.getExtension();
                         converter.startConvert(dataManager, file.getParent(), file.getName(), new File(output)).handle((ret, ex) -> {
                             if (ex != null) {
-                                SwingUtils.showException(DataBrowser.this, (Exception) ex);
+                                SwingUtils.showException(DataViewer.this, (Exception) ex);
                             } else {
                                 try {
                                     repaintTreePath(path.getParentPath(), true);
                                 } catch (Exception e) {
                                 }
-                                SwingUtils.showMessage(DataBrowser.this, "Success", "Success creating:\n" + String.valueOf(output));
+                                SwingUtils.showMessage(DataViewer.this, "Success", "Success creating:\n" + String.valueOf(output));
                             }
                             return ret;
                         });
                     }
                 } catch (Exception ex) {
-                    SwingUtils.showException(DataBrowser.this, ex);
+                    SwingUtils.showException(DataViewer.this, ex);
                 }
             });
             menuConvert.add(item);
@@ -133,7 +133,7 @@ public final class DataBrowser extends MonitoredPanel {
                     Desktop.getDesktop().open(file.isDirectory() ? file : file.getParentFile());
                 }
             } catch (Exception ex) {
-                SwingUtils.showException(DataBrowser.this, ex);
+                SwingUtils.showException(DataViewer.this, ex);
             }
         });
         filePopupMenu.add(menuBrowse);
@@ -175,7 +175,7 @@ public final class DataBrowser extends MonitoredPanel {
             try {
                 repaintTreePath(treeFolder.getSelectionPath(), true);
             } catch (Exception ex) {
-                SwingUtils.showException(DataBrowser.this, ex);
+                SwingUtils.showException(DataViewer.this, ex);
             }
         });
         filePopupMenu.add(menuRefresh);
@@ -211,7 +211,7 @@ public final class DataBrowser extends MonitoredPanel {
                         }
                     }
                 } catch (Exception ex) {
-                    SwingUtils.showException(DataBrowser.this, ex);
+                    SwingUtils.showException(DataViewer.this, ex);
                 }
             }
 
@@ -222,7 +222,7 @@ public final class DataBrowser extends MonitoredPanel {
             try {
                 onTimer();
             } catch (Exception ex) {
-                Logger.getLogger(DataBrowser.class.getName()).log(Level.INFO, null, ex);
+                Logger.getLogger(DataViewer.class.getName()).log(Level.INFO, null, ex);
             }
         });
         setFileOrder(FileOrder.Name);
@@ -304,7 +304,7 @@ public final class DataBrowser extends MonitoredPanel {
 
     void plotFile(File file) throws Exception {
         if ((file != null) && (file.exists() && (file.isFile())) && (IO.getExtension(file).equalsIgnoreCase("txt"))) {
-            ProcessorXscan processor = new ProcessorXscan();
+            ProcessorXScan processor = new ProcessorXScan();
             processor.plotDataFile(file);
 
         }
@@ -332,7 +332,7 @@ public final class DataBrowser extends MonitoredPanel {
             setBaseFolder(folder);
             update(true);
         } catch (IOException ex) {
-            Logger.getLogger(DataBrowser.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(DataViewer.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
@@ -351,7 +351,7 @@ public final class DataBrowser extends MonitoredPanel {
                 );
             }
         } catch (Exception ex) {
-            Logger.getLogger(DataBrowser.class.getName()).log(Level.WARNING, null, ex);
+            Logger.getLogger(DataViewer.class.getName()).log(Level.WARNING, null, ex);
         }
     }
 
@@ -391,7 +391,7 @@ public final class DataBrowser extends MonitoredPanel {
                 repaintTreeFolder(dir, true);
             }
         } catch (Exception ex) {
-            Logger.getLogger(DataBrowser.class.getName()).log(Level.WARNING, null, ex);
+            Logger.getLogger(DataViewer.class.getName()).log(Level.WARNING, null, ex);
         }
         watchKey.reset();
     }
@@ -404,7 +404,7 @@ public final class DataBrowser extends MonitoredPanel {
                     watchService = null;
                 }
             } catch (Exception ex) {
-                Logger.getLogger(DataBrowser.class.getName()).log(Level.WARNING, null, ex);
+                Logger.getLogger(DataViewer.class.getName()).log(Level.WARNING, null, ex);
             }
             baseFolder = path;
             treeFolderModel = null;
@@ -419,7 +419,7 @@ public final class DataBrowser extends MonitoredPanel {
 
                 } catch (Exception ex) {
                     baseFolder = null;
-                    Logger.getLogger(DataBrowser.class.getName()).log(Level.WARNING, null, ex);
+                    Logger.getLogger(DataViewer.class.getName()).log(Level.WARNING, null, ex);
                 }
             }
         }
@@ -707,9 +707,9 @@ public final class DataBrowser extends MonitoredPanel {
     public static void createPanel(String path) {
         java.awt.EventQueue.invokeLater(() -> {
             JFrame frame = new JFrame(App.getApplicationTitle());
-            frame.setTitle("Xscan Data Browser");
+            frame.setTitle("XScan Data Browser");
             frame.setIconImage(App.getIconSmall());
-            DataBrowser panel = new DataBrowser();
+            DataViewer panel = new DataViewer();
             frame.add(panel);
             frame.setSize(1000, 800);
             SwingUtils.centerComponent(null, frame);
