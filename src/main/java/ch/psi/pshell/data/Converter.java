@@ -21,6 +21,21 @@ public interface Converter {
     public String getName();
 
     public String getExtension();
+    
+    default boolean canConvert(DataSlice slice, Map<String, Object> info, Map<String, Object> attrs){
+        return true;
+    }    
+    
+    default boolean canConvert(DataManager dataManager, String root, String path){
+        try{
+            DataSlice slice = dataManager.getData(root, path);
+            Map<String, Object> info = dataManager.getInfo(root, path);
+            Map<String, Object> attrs = dataManager.getAttributes(root, path);
+            return canConvert(slice, info, attrs);
+            } catch (Exception ex) {
+                return false;
+            }  
+    }
 
     void convert(DataSlice slice, Map<String, Object> info, Map<String, Object> attrs, File output) throws Exception;
 

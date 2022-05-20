@@ -23,6 +23,16 @@ public class ConverterMat implements Converter {
     public String getExtension() {
         return "mat";
     }
+    
+    @Override
+    public boolean canConvert(DataSlice slice, Map<String, Object> info, Map<String, Object> attrs){
+        try{
+            String[] fieldNames = (String[]) info.get(Provider.INFO_FIELD_NAMES);     
+            return true;
+        } catch (Exception ex){
+            return false;
+        }
+    }
 
     @Override
     public void convert(DataSlice slice, Map<String, Object> info, Map<String, Object> attrs, File output) throws Exception {

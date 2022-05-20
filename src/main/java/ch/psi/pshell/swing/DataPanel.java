@@ -433,19 +433,21 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
                                 if (dataManager.isDisplayablePlot(info)) {
                                     menuConvert.removeAll();
                                     for (Converter converter : Converter.getServiceProviders()){
-                                        JMenuItem item = new JMenuItem(converter.getName());                                        
-                                        item.addActionListener((a)->{    
-                                            TreePath tp = treeFile.getSelectionPath();
-                                            converter.startConvert(dataManager, currentFile.getPath(),  getDataPath(tp), DataPanel.this).handle((ret,ex)->{
-                                                if (ex != null){
-                                                    showException((Exception) ex);
-                                                } else{
-                                                    showMessage("Success", "Success creating:\n" + String.valueOf(ret));
-                                                }
-                                                return ret;
+                                        TreePath tp = treeFile.getSelectionPath();
+                                        if (converter.canConvert(dataManager, currentFile.getPath(),  getDataPath(tp))){
+                                            JMenuItem item = new JMenuItem(converter.getName());                                        
+                                            item.addActionListener((a)->{    
+                                                converter.startConvert(dataManager, currentFile.getPath(),  getDataPath(tp), DataPanel.this).handle((ret,ex)->{
+                                                    if (ex != null){
+                                                        showException((Exception) ex);
+                                                    } else{
+                                                        showMessage("Success", "Success creating:\n" + String.valueOf(ret));
+                                                    }
+                                                    return ret;
+                                                });
                                             });
-                                        });
-                                        menuConvert.add(item);
+                                            menuConvert.add(item);
+                                        }
                                     }
                                     
                                     menuPlotData.setVisible(true);
