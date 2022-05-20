@@ -2161,7 +2161,7 @@ public class View extends MainFrame {
     }
 
     void openFile(File f, Processor processor) throws Exception {
-        String fileName = f.getPath();
+        String fileName = f.getPath().trim();
         String ext = IO.getExtension(f);
         if (ext != null) {
             ext = ext.toLowerCase();
@@ -2174,7 +2174,7 @@ public class View extends MainFrame {
             openDataFile(fileName);
         } else if (StripChart.FILE_EXTENSION.equals(ext)) {
             StripChart stripChart = new StripChart(View.this, false, App.getStripChartFolderArg());
-            openComponent(f.getName(), stripChart.getPlotPanel());
+            openComponent(f.getName().trim(), stripChart.getPlotPanel());
             stripChart.open(f);
             stripChart.start();
         } else {

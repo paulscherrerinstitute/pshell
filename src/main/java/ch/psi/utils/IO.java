@@ -586,7 +586,7 @@ public class IO {
         if (!short_name.contains(".")) {
             return "";
         }
-        return short_name.substring(short_name.lastIndexOf('.') + 1);
+        return short_name.substring(short_name.lastIndexOf('.') + 1).trim();
     }
 
     public static String getExtension(String fileName) {
