@@ -281,16 +281,29 @@ public class View extends MainFrame {
                 }
             });
             menuConsoleLocation.add(item);
+            
+            
+            item = new JRadioButtonMenuItem(location.toString());
+            item.addActionListener((java.awt.event.ActionEvent evt) -> {
+                if (!App.isLocalMode()) {
+                    preferences.dataPanelLocation = location;
+                    preferences.save();
+                    applyPreferences();
+                } else {
+                    setDataPanelLocation(location);
+                }
+            });
+            menuDataPanelLocation.add(item);
         }
         context.getUsersManager().addListener(new UsersManagerListener() {
             @Override
             public void onUserChange(User user, User former) {
                 closeSearchPanels();
                 setConsoleLocation(consoleLocation);//User may have no rights
+                setDataPanelLocation(dataPanelLocation);//User may have no rights  
                 setStatusTabVisible(devicesPanel, !context.getRights().hideDevices);
                 setStatusTabVisible(imagingPanel, !context.getRights().hideDevices);
                 setStatusTabVisible(scriptsPanel, !context.getRights().hideScripts);
-                setStatusTabVisible(dataPanel, !context.getRights().hideData);
                 toolBar.setVisible(!context.getRights().hideToolbar);
 
                 labelUser.setText((context.isSecurityEnabled() && !User.DEFAULT_USER_NAME.equals(user.name)) ? user.name : "");
@@ -485,8 +498,9 @@ public class View extends MainFrame {
         }
         if (processor.createFilePanel()) {
             ScriptsPanel pn = new ScriptsPanel();
-            int index = tabStatus.getTabCount() - 1;
-            tabStatus.add(pn, index);
+            int index = SwingUtils.getComponentIndex(tabStatus, scriptsPanel);
+            index =  (index <0 ) ? tabStatus.getTabCount() : index +1;
+            tabStatus.add(pn, index); 
             tabStatus.setTitleAt(index, processor.getType());
             pn.initialize(processor.getHomePath(), processor.getExtensions());
             pn.setListener((File file) -> {
@@ -1846,6 +1860,7 @@ public class View extends MainFrame {
     }
 
     PanelLocation consoleLocation = Preferences.DEFAULT_CONSOLE_LOCATION;
+    PanelLocation dataPanelLocation = Preferences.DEFAULT_DATA_PANEL_LOCATION;
 
     void setConsoleLocation(PanelLocation location) {
         if (App.isPlotOnly()) {
@@ -1909,7 +1924,77 @@ public class View extends MainFrame {
             checkTabLeftVisibility();
         }
     }
+//setStatusTabVisible(dataPanel, !context.getRights().hideData);
+    void setDataPanelLocation(PanelLocation location) {
+        if (App.isPlotOnly()) {
+            return;
+        }
+        dataPanelLocation = location;
 
+        if (context.getRights().hideData) {
+            location = PanelLocation.Hidden;
+        }
+
+        PanelLocation current = getLocation(dataPanel);
+        if (current != location) {
+            Container topLevel = dataPanel.getTopLevelAncestor();
+            Container parent = dataPanel.getParent();
+            if (parent != null) {
+                parent.remove(dataPanel);
+            }
+            if (topLevel instanceof Window) {
+                if ((topLevel != this) && (Arr.contains(getPersistedWindows(), topLevel))) {
+                    removePersistedWindow((Window) topLevel);
+                    ((Window) topLevel).dispose();
+                }
+            }
+
+            java.util.ResourceBundle bundle = java.util.ResourceBundle.getBundle("ch/psi/pshell/ui/View");
+            String title = bundle.getString("View.dataPanel.TabConstraints.tabTitle");
+
+            switch (location) {
+                case Document:
+                    int index = 0;
+                    for (index = 0; index < tabDoc.getTabCount(); index++) {
+                        if (!(tabDoc.getComponentAt(index) instanceof Panel)) {
+                            break;
+                        }
+                    }
+                    tabDoc.add(dataPanel, index);
+                    tabDoc.setTitleAt(index, title);
+                    break;
+                case Status:
+                    for (index = tabStatus.getTabCount()-1; index >=0; index--) {
+                        if (!SwingUtils.isTabClosable(tabStatus, index)) {
+                            break;
+                        }
+                    }                    
+                    tabStatus.add(dataPanel, index+1);
+                    tabStatus.setTitleAt(index+1, title);
+                    break;
+                case Left:
+                    tabLeft.add(dataPanel,tabLeft.getTabCount());
+                    tabLeft.setTitleAt(tabLeft.getTabCount()-1, title);
+                    break;
+                case Plot:
+                    tabPlots.add(dataPanel, 0);
+                    tabPlots.setTitleAt(0, title);
+                    break;
+                case Detached:
+                    JDialog dlg = new JDialog(this, title, false);
+                    dlg.setName(title);
+                    dlg.setSize(800, 600);
+                    dlg.add(dataPanel);
+                    showChildWindow(dlg);
+                    dlg.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
+                    addPersistedWindow(dlg);
+                    break;
+            }
+            checkTabLeftVisibility();
+        }
+    }
+    
+    
     void checkTabLeftVisibility() {
         boolean tabLeftVisible = tabLeft.getTabCount() > 0;
         if (tabLeftVisible != tabLeft.isVisible()) {
@@ -2073,8 +2158,10 @@ public class View extends MainFrame {
         if (!App.isLocalMode()) {
             setScanPlotDetached(preferences.plotsDetached);
             setConsoleLocation(preferences.consoleLocation);
+            setDataPanelLocation(preferences.dataPanelLocation);
         }
-
+        dataPanel.setEmbedded(!preferences.openDataFilesInDocTab);
+        
         statusBar.setShowDataFileName(!preferences.hideFileName);
     }
 
@@ -2495,6 +2582,7 @@ public class View extends MainFrame {
         jSeparator13 = new javax.swing.JPopupMenu.Separator();
         menuViewPanels = new javax.swing.JMenu();
         menuConsoleLocation = new javax.swing.JMenu();
+        menuDataPanelLocation = new javax.swing.JMenu();
         menuPlotWindow = new javax.swing.JMenu();
         menuViewPlotWindow = new javax.swing.JCheckBoxMenuItem();
         menuPlotWindowDetached = new javax.swing.JCheckBoxMenuItem();
@@ -3537,6 +3625,10 @@ public class View extends MainFrame {
         menuConsoleLocation.setName("menuConsoleLocation"); // NOI18N
         menuView.add(menuConsoleLocation);
 
+        menuDataPanelLocation.setText(bundle.getString("View.menuDataPanelLocation.text")); // NOI18N
+        menuDataPanelLocation.setName("menuDataPanelLocation"); // NOI18N
+        menuView.add(menuDataPanelLocation);
+
         menuPlotWindow.setText(bundle.getString("View.menuPlotWindow.text")); // NOI18N
         menuPlotWindow.setName("menuPlotWindow"); // NOI18N
 
@@ -3995,6 +4087,10 @@ public class View extends MainFrame {
                 for (Component item : menuConsoleLocation.getMenuComponents()) {
                     ((JRadioButtonMenuItem) item).setSelected(((JRadioButtonMenuItem) item).getText().equals(consoleLocation.toString()));
                 }
+                for (Component item : menuDataPanelLocation.getMenuComponents()) {
+                    ((JRadioButtonMenuItem) item).setSelected(((JRadioButtonMenuItem) item).getText().equals(dataPanelLocation.toString()));
+                }
+                
             } catch (Exception ex) {
             }
         }
@@ -5186,6 +5282,7 @@ public class View extends MainFrame {
     private javax.swing.JMenuItem menuCreateTag;
     private javax.swing.JMenuItem menuCut;
     private javax.swing.JMenuItem menuDataFile;
+    private javax.swing.JMenu menuDataPanelLocation;
     private javax.swing.JMenuItem menuDebug;
     private javax.swing.JMenuItem menuDeleteBranch;
     private javax.swing.JMenuItem menuDeleteTag;

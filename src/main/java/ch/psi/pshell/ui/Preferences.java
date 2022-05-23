@@ -52,6 +52,7 @@ public class Preferences {
     static final String PREFERENCES_FILENAME = "Preferences.dat";
     
     static final PanelLocation DEFAULT_CONSOLE_LOCATION = PanelLocation.Document;
+    static final PanelLocation DEFAULT_DATA_PANEL_LOCATION = PanelLocation.Status;
 
     public enum PanelLocation {
 
@@ -87,6 +88,8 @@ public class Preferences {
     public boolean hideEditorContextMenu;
 
     public PanelLocation consoleLocation;
+    public PanelLocation dataPanelLocation;
+    public boolean openDataFilesInDocTab;
     public boolean noVariableEvaluationPropagation;
     public String[] processingScripts;
 
@@ -140,6 +143,7 @@ public class Preferences {
         preferences.processingScripts = new String[0];
         preferences.defaultPanels = getDefaultPanels();
         preferences.consoleLocation = DEFAULT_CONSOLE_LOCATION;
+        preferences.dataPanelLocation = DEFAULT_DATA_PANEL_LOCATION;
         //preferences.propagateVariableEvaluation = true;
         preferences.defaultPlotColormap = Colormap.Temperature;
         preferences.defaultRendererColormap = Colormap.Grayscale;

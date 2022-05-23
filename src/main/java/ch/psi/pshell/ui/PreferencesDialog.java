@@ -87,6 +87,7 @@ public class PreferencesDialog extends StandardDialog {
         SwingUtils.setEnumCombo(comboQuality, Quality.class);
         SwingUtils.setEnumCombo(comboLayout, PlotLayout.class);
         SwingUtils.setEnumCombo(comboConsoleLocation, PanelLocation.class);
+        SwingUtils.setEnumCombo(comboDataPanelLocation, PanelLocation.class);
         SwingUtils.setEnumCombo(comboColormapPlot, Colormap.class);
         SwingUtils.setEnumCombo(comboScriptPopup, ScriptPopupDialog.class);
 
@@ -151,6 +152,8 @@ public class PreferencesDialog extends StandardDialog {
                                     preferences.fontPlotTitle
                                   };
         comboConsoleLocation.setSelectedItem(preferences.consoleLocation);
+        comboDataPanelLocation.setSelectedItem(preferences.dataPanelLocation);
+        checkDataFilesInDocTab.setSelected(preferences.openDataFilesInDocTab);
         textSP.setText(getFontDesc(preferences.fontShellPanel));
         textSC.setText(getFontDesc(preferences.fontShellCommand));
         textOP.setText(getFontDesc(preferences.fontOutput));
@@ -338,6 +341,10 @@ public class PreferencesDialog extends StandardDialog {
         comboPlotsLocation = new javax.swing.JComboBox();
         jLabel28 = new javax.swing.JLabel();
         jLabel14 = new javax.swing.JLabel();
+        jLabel27 = new javax.swing.JLabel();
+        comboDataPanelLocation = new javax.swing.JComboBox();
+        jLabel29 = new javax.swing.JLabel();
+        checkDataFilesInDocTab = new javax.swing.JCheckBox();
         buttonOk = new javax.swing.JButton();
         buttonCancel = new javax.swing.JButton();
 
@@ -720,7 +727,7 @@ public class PreferencesDialog extends StandardDialog {
                             .addGroup(jPanel2Layout.createSequentialGroup()
                                 .addGap(44, 44, 44)
                                 .addComponent(jPanel11, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 23, Short.MAX_VALUE)))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 68, Short.MAX_VALUE)))
                 .addGap(30, 30, 30)
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(jPanel10, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -821,7 +828,7 @@ public class PreferencesDialog extends StandardDialog {
                 .addGap(0, 0, Short.MAX_VALUE))
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel12Layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 557, Short.MAX_VALUE)
+                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 602, Short.MAX_VALUE)
                 .addContainerGap())
         );
         jPanel12Layout.setVerticalGroup(
@@ -966,7 +973,7 @@ public class PreferencesDialog extends StandardDialog {
                         .addGroup(panelPlotsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
                             .addComponent(comboQuality, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                             .addComponent(comboLayout, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addGap(18, 36, Short.MAX_VALUE)
+                        .addGap(18, 58, Short.MAX_VALUE)
                         .addGroup(panelPlotsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(jLabel26, javax.swing.GroupLayout.Alignment.TRAILING)
                             .addComponent(jLabel15, javax.swing.GroupLayout.Alignment.TRAILING)
@@ -976,7 +983,7 @@ public class PreferencesDialog extends StandardDialog {
                             .addComponent(jPanel4, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                             .addComponent(spinnerMarkerSize, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                             .addComponent(checkOffscreenBuffers))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 20, Short.MAX_VALUE))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 43, Short.MAX_VALUE))
                     .addGroup(panelPlotsLayout.createSequentialGroup()
                         .addComponent(comboColormapPlot, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addGap(0, 0, Short.MAX_VALUE)))
@@ -1051,7 +1058,7 @@ public class PreferencesDialog extends StandardDialog {
                     .addComponent(checkStatusBar)
                     .addComponent(checkPersistRendererWindows)
                     .addComponent(ckeckBackgroundRendering))
-                .addContainerGap(374, Short.MAX_VALUE))
+                .addContainerGap(419, Short.MAX_VALUE))
         );
         jPanel5Layout.setVerticalGroup(
             jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -1115,7 +1122,7 @@ public class PreferencesDialog extends StandardDialog {
             .addGroup(jPanel6Layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 575, Short.MAX_VALUE)
+                    .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 620, Short.MAX_VALUE)
                     .addGroup(jPanel6Layout.createSequentialGroup()
                         .addComponent(buttonDefaultPanels)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
@@ -1216,6 +1223,12 @@ public class PreferencesDialog extends StandardDialog {
         jLabel14.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
         jLabel14.setText("Console Location:");
 
+        jLabel27.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
+        jLabel27.setText("Data Panel Location:");
+
+        jLabel29.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
+        jLabel29.setText("Open data files in doc tab:");
+
         javax.swing.GroupLayout jPanel15Layout = new javax.swing.GroupLayout(jPanel15);
         jPanel15.setLayout(jPanel15Layout);
         jPanel15Layout.setHorizontalGroup(
@@ -1225,18 +1238,22 @@ public class PreferencesDialog extends StandardDialog {
                 .addGroup(jPanel15Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(jLabel14)
                     .addComponent(jLabel20)
-                    .addComponent(jLabel28))
+                    .addComponent(jLabel28)
+                    .addComponent(jLabel27)
+                    .addComponent(jLabel29))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel15Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(comboConsoleLocation, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(comboPlotsLocation, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(spinnerTerminalFontSize, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(checkDataFilesInDocTab)
+                    .addComponent(spinnerTerminalFontSize, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(comboPlotsLocation, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(comboDataPanelLocation, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(comboConsoleLocation, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addContainerGap())
         );
 
-        jPanel15Layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {jLabel14, jLabel20, jLabel28});
-
         jPanel15Layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {comboConsoleLocation, comboPlotsLocation});
+
+        jPanel15Layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {jLabel14, jLabel20, jLabel27, jLabel28, jLabel29});
 
         jPanel15Layout.setVerticalGroup(
             jPanel15Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -1245,14 +1262,22 @@ public class PreferencesDialog extends StandardDialog {
                 .addGroup(jPanel15Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(comboConsoleLocation, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jLabel14))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGap(0, 0, 0)
+                .addGroup(jPanel15Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(comboDataPanelLocation, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jLabel27))
+                .addGap(0, 0, 0)
                 .addGroup(jPanel15Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(comboPlotsLocation, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jLabel20))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGap(0, 0, 0)
                 .addGroup(jPanel15Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel28)
                     .addComponent(spinnerTerminalFontSize, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(1, 1, 1)
+                .addGroup(jPanel15Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.CENTER)
+                    .addComponent(jLabel29)
+                    .addComponent(checkDataFilesInDocTab))
                 .addContainerGap())
         );
 
@@ -1367,6 +1392,8 @@ public class PreferencesDialog extends StandardDialog {
                 preferences.hideEditorContextMenu = !checkEditorContextMenu.isSelected();
 
                 preferences.consoleLocation = (PanelLocation) comboConsoleLocation.getSelectedItem();
+                preferences.dataPanelLocation = (PanelLocation) comboDataPanelLocation.getSelectedItem();
+                preferences.openDataFilesInDocTab = checkDataFilesInDocTab.isSelected();
                 preferences.asyncViewersUpdate = ckAsyncUpdate.isSelected();
                 preferences.scanPlotDisabled = !ckScanPlotEnabled.isSelected();
                 preferences.scanTableDisabled = !ckScanTableEnabled.isSelected();
@@ -1598,6 +1625,7 @@ public class PreferencesDialog extends StandardDialog {
     private javax.swing.JButton buttonSetEditorBackground;
     private javax.swing.JButton buttonSetEditorForeground;
     private javax.swing.JCheckBox checkCachedDataPanel;
+    private javax.swing.JCheckBox checkDataFilesInDocTab;
     private javax.swing.JCheckBox checkEditorContextMenu;
     private javax.swing.JCheckBox checkOffscreenBuffers;
     private javax.swing.JCheckBox checkPersistRendererWindows;
@@ -1615,6 +1643,7 @@ public class PreferencesDialog extends StandardDialog {
     private javax.swing.JCheckBox ckeckBackgroundRendering;
     private javax.swing.JComboBox comboColormapPlot;
     private javax.swing.JComboBox comboConsoleLocation;
+    private javax.swing.JComboBox comboDataPanelLocation;
     private javax.swing.JComboBox comboLayout;
     private javax.swing.JComboBox comboLinePlot;
     private javax.swing.JComboBox comboMatrixPlot;
@@ -1643,7 +1672,9 @@ public class PreferencesDialog extends StandardDialog {
     private javax.swing.JLabel jLabel24;
     private javax.swing.JLabel jLabel25;
     private javax.swing.JLabel jLabel26;
+    private javax.swing.JLabel jLabel27;
     private javax.swing.JLabel jLabel28;
+    private javax.swing.JLabel jLabel29;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
     private javax.swing.JLabel jLabel5;

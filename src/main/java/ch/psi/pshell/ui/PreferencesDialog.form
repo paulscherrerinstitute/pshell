@@ -355,7 +355,7 @@
                                       <Component id="jPanel11" min="-2" max="-2" attributes="0"/>
                                   </Group>
                               </Group>
-                              <EmptySpace pref="23" max="32767" attributes="0"/>
+                              <EmptySpace pref="68" max="32767" attributes="0"/>
                           </Group>
                       </Group>
                       <EmptySpace min="-2" pref="30" max="-2" attributes="0"/>
@@ -737,7 +737,7 @@
                       </Group>
                       <Group type="102" alignment="1" attributes="0">
                           <EmptySpace max="-2" attributes="0"/>
-                          <Component id="jScrollPane2" pref="557" max="32767" attributes="0"/>
+                          <Component id="jScrollPane2" pref="602" max="32767" attributes="0"/>
                           <EmptySpace max="-2" attributes="0"/>
                       </Group>
                   </Group>
@@ -856,7 +856,7 @@
                                   <Component id="comboQuality" linkSize="7" alignment="1" min="-2" max="-2" attributes="0"/>
                                   <Component id="comboLayout" linkSize="7" alignment="1" min="-2" max="-2" attributes="0"/>
                               </Group>
-                              <EmptySpace type="separate" pref="36" max="32767" attributes="0"/>
+                              <EmptySpace type="separate" pref="58" max="32767" attributes="0"/>
                               <Group type="103" groupAlignment="0" attributes="0">
                                   <Component id="jLabel26" linkSize="15" alignment="1" min="-2" max="-2" attributes="0"/>
                                   <Component id="jLabel15" linkSize="15" alignment="1" min="-2" max="-2" attributes="0"/>
@@ -868,7 +868,7 @@
                                   <Component id="spinnerMarkerSize" alignment="0" min="-2" max="-2" attributes="0"/>
                                   <Component id="checkOffscreenBuffers" alignment="0" min="-2" max="-2" attributes="0"/>
                               </Group>
-                              <EmptySpace pref="20" max="32767" attributes="0"/>
+                              <EmptySpace pref="43" max="32767" attributes="0"/>
                           </Group>
                           <Group type="102" alignment="0" attributes="0">
                               <Component id="comboColormapPlot" linkSize="7" min="-2" max="-2" attributes="0"/>
@@ -1137,7 +1137,7 @@
                           <Component id="checkPersistRendererWindows" min="-2" max="-2" attributes="0"/>
                           <Component id="ckeckBackgroundRendering" min="-2" max="-2" attributes="0"/>
                       </Group>
-                      <EmptySpace pref="374" max="32767" attributes="0"/>
+                      <EmptySpace pref="419" max="32767" attributes="0"/>
                   </Group>
               </Group>
             </DimensionLayout>
@@ -1188,7 +1188,7 @@
                   <Group type="102" attributes="0">
                       <EmptySpace min="-2" max="-2" attributes="0"/>
                       <Group type="103" groupAlignment="0" attributes="0">
-                          <Component id="jScrollPane1" pref="575" max="32767" attributes="0"/>
+                          <Component id="jScrollPane1" pref="620" max="32767" attributes="0"/>
                           <Group type="102" alignment="0" attributes="0">
                               <Component id="buttonDefaultPanels" min="-2" max="-2" attributes="0"/>
                               <EmptySpace max="32767" attributes="0"/>
@@ -1421,15 +1421,19 @@
                       <Group type="102" attributes="0">
                           <EmptySpace max="-2" attributes="0"/>
                           <Group type="103" groupAlignment="0" attributes="0">
-                              <Component id="jLabel14" linkSize="17" alignment="0" min="-2" max="-2" attributes="0"/>
-                              <Component id="jLabel20" linkSize="17" alignment="0" min="-2" max="-2" attributes="0"/>
-                              <Component id="jLabel28" linkSize="17" alignment="0" min="-2" max="-2" attributes="0"/>
+                              <Component id="jLabel14" linkSize="21" alignment="0" min="-2" max="-2" attributes="0"/>
+                              <Component id="jLabel20" linkSize="21" alignment="0" min="-2" max="-2" attributes="0"/>
+                              <Component id="jLabel28" linkSize="21" alignment="0" min="-2" max="-2" attributes="0"/>
+                              <Component id="jLabel27" linkSize="21" alignment="0" min="-2" max="-2" attributes="0"/>
+                              <Component id="jLabel29" linkSize="21" alignment="0" min="-2" max="-2" attributes="0"/>
                           </Group>
                           <EmptySpace max="-2" attributes="0"/>
                           <Group type="103" groupAlignment="0" attributes="0">
-                              <Component id="comboConsoleLocation" linkSize="18" alignment="0" min="-2" max="-2" attributes="0"/>
-                              <Component id="comboPlotsLocation" linkSize="18" alignment="0" min="-2" max="-2" attributes="0"/>
+                              <Component id="checkDataFilesInDocTab" alignment="0" min="-2" max="-2" attributes="0"/>
                               <Component id="spinnerTerminalFontSize" alignment="0" min="-2" max="-2" attributes="0"/>
+                              <Component id="comboPlotsLocation" linkSize="18" alignment="0" max="32767" attributes="0"/>
+                              <Component id="comboDataPanelLocation" alignment="0" max="32767" attributes="0"/>
+                              <Component id="comboConsoleLocation" linkSize="18" alignment="0" max="32767" attributes="0"/>
                           </Group>
                           <EmptySpace max="-2" attributes="0"/>
                       </Group>
@@ -1443,15 +1447,25 @@
                               <Component id="comboConsoleLocation" alignment="3" min="-2" max="-2" attributes="0"/>
                               <Component id="jLabel14" alignment="3" min="-2" max="-2" attributes="0"/>
                           </Group>
-                          <EmptySpace max="-2" attributes="0"/>
+                          <EmptySpace min="0" pref="0" max="-2" attributes="0"/>
+                          <Group type="103" groupAlignment="3" attributes="0">
+                              <Component id="comboDataPanelLocation" alignment="3" min="-2" max="-2" attributes="0"/>
+                              <Component id="jLabel27" alignment="3" min="-2" max="-2" attributes="0"/>
+                          </Group>
+                          <EmptySpace min="0" pref="0" max="-2" attributes="0"/>
                           <Group type="103" groupAlignment="3" attributes="0">
                               <Component id="comboPlotsLocation" alignment="3" min="-2" max="-2" attributes="0"/>
                               <Component id="jLabel20" alignment="3" min="-2" max="-2" attributes="0"/>
                           </Group>
-                          <EmptySpace max="-2" attributes="0"/>
+                          <EmptySpace min="0" pref="0" max="-2" attributes="0"/>
                           <Group type="103" groupAlignment="3" attributes="0">
                               <Component id="jLabel28" alignment="3" min="-2" max="-2" attributes="0"/>
                               <Component id="spinnerTerminalFontSize" alignment="3" min="-2" max="-2" attributes="0"/>
+                          </Group>
+                          <EmptySpace min="1" pref="1" max="-2" attributes="0"/>
+                          <Group type="103" groupAlignment="2" attributes="0">
+                              <Component id="jLabel29" alignment="2" min="-2" max="-2" attributes="0"/>
+                              <Component id="checkDataFilesInDocTab" alignment="2" min="-2" max="-2" attributes="0"/>
                           </Group>
                           <EmptySpace max="-2" attributes="0"/>
                       </Group>
@@ -1500,6 +1514,27 @@
                     <Property name="horizontalAlignment" type="int" value="11"/>
                     <Property name="text" type="java.lang.String" value="Console Location:"/>
                   </Properties>
+                </Component>
+                <Component class="javax.swing.JLabel" name="jLabel27">
+                  <Properties>
+                    <Property name="horizontalAlignment" type="int" value="11"/>
+                    <Property name="text" type="java.lang.String" value="Data Panel Location:"/>
+                  </Properties>
+                </Component>
+                <Component class="javax.swing.JComboBox" name="comboDataPanelLocation">
+                  <Properties>
+                    <Property name="model" type="javax.swing.ComboBoxModel" editor="org.netbeans.modules.form.editors2.ComboBoxModelEditor">
+                      <StringArray count="0"/>
+                    </Property>
+                  </Properties>
+                </Component>
+                <Component class="javax.swing.JLabel" name="jLabel29">
+                  <Properties>
+                    <Property name="horizontalAlignment" type="int" value="11"/>
+                    <Property name="text" type="java.lang.String" value="Open data files in doc tab:"/>
+                  </Properties>
+                </Component>
+                <Component class="javax.swing.JCheckBox" name="checkDataFilesInDocTab">
                 </Component>
               </SubComponents>
             </Container>

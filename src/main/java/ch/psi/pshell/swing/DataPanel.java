@@ -238,6 +238,24 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
             @Override
             public void mousePressed(MouseEvent e) {
                 checkPopup(e);
+                try {
+                    if (e.getClickCount() == 2) {
+                        if (!embedded){
+                            if (currentFile != null) {
+                                Logger.getLogger(DataPanel.class.getName()).fine("Opening: " + String.valueOf(currentFile));
+                                if (listener != null) {
+                                    try {
+                                        listener.openFile(currentFile.getCanonicalPath());
+                                    } catch (Exception ex) {
+                                        Logger.getLogger(DataPanel.class.getName()).log(Level.SEVERE, null, ex);
+                                    }
+                                }
+                            }
+                        } 
+                    }
+                } catch (Exception ex) {
+                    showException(ex);
+                }
             }
 
             @Override
@@ -511,6 +529,28 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
         ((DefaultTreeCellRenderer) treeFile.getCellRenderer()).setLeafIcon(new ImageIcon(App.getResourceImage("Data.png")));
     }
     
+    
+    boolean embedded = true;
+    
+    public boolean getEmbedded(){
+        return embedded;
+    }
+    
+    public void setEmbedded(boolean value){
+        if (embedded != value){
+            embedded = value;
+            dataPanel.setVisible(false);
+            splitFile.setVisible(false);
+            splitSource.setDividerSize(value ? splitFile.getDividerSize() : 0);
+            splitFolder.setDividerSize(value ? splitFile.getDividerSize() : 0);
+            if ((splitSource.getDividerLocation() >= splitSource.getWidth() - splitSource.getDividerSize() - 10)) {
+                splitSource.setDividerLocation(0.70);
+            }      
+              if ((splitFolder.getDividerLocation() >= splitFolder.getWidth() - splitFolder.getDividerSize() - 10)) {
+                splitFolder.setDividerLocation(0.70);
+            }            
+        }
+    }    
     
     void setupProcessMenu(JMenuItem menuItem){
         List<ImmutablePair<String,String>> scripts = new ArrayList<>();
@@ -1002,7 +1042,9 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
     void setCurrentPath(File f) throws IOException {
         if ((currentFile != f) || (f == null)) {
             currentFile = f;
-            updateFileTree();
+            if (embedded){
+                updateFileTree();
+            } 
         }
     }
 
