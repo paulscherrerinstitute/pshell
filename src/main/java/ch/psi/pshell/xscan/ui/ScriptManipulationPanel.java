@@ -3,6 +3,7 @@ package ch.psi.pshell.xscan.ui;
 import ch.psi.pshell.xscan.model.ParameterMapping;
 import ch.psi.pshell.xscan.model.ScriptManipulation;
 import java.awt.Component;
+import javax.swing.text.JTextComponent;
 
 /**
  *
@@ -37,9 +38,11 @@ public class ScriptManipulationPanel extends EditablePanel<ScriptManipulation> {
         manipulation.setScript(script);
 
         initComponents();
+        
+        JTextComponent textScript = formatScriptEditor(jTextAreaScript);
 
         setManagedFields(jButton1,
-                new Component[]{jTextFieldId, jTextAreaScript},
+                new Component[]{jTextFieldId, textScript},
                 new Component[]{jCheckBoxArray, collapsibleListContainerMapping},
                 new String[]{"false", null}
         );
@@ -49,7 +52,7 @@ public class ScriptManipulationPanel extends EditablePanel<ScriptManipulation> {
 
         // Update view
         bindIdEditor(jTextFieldId);
-        bindEditor(jTextAreaScript, "script");
+        bindEditor(textScript, "script");
         bindEditor(jCheckBoxArray, "returnArray");
     }
 

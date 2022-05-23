@@ -1551,7 +1551,12 @@ public class View extends MainFrame {
         }
 
         openComponent(editor.getScriptName(), editor);
-
+        formatScriptEditor(editor);
+        return editor;
+    }
+    
+    
+    public void formatScriptEditor(ScriptEditor editor){
         editor.setTabSize(preferences.tabSize);
         editor.setTextPaneFont(preferences.fontEditor);
         editor.setEditorForeground(preferences.getEditorForeground());
@@ -1562,8 +1567,6 @@ public class View extends MainFrame {
         SwingUtilities.invokeLater(() -> {
             editor.setContentWidth((preferences.contentWidth <= 0) ? DEFAULT_CONTENT_WIDTH : preferences.contentWidth);
         });
-
-        return editor;
     }
 
     public ScriptEditor openScript(String file) throws IOException {

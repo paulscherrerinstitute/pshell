@@ -1,5 +1,7 @@
 package ch.psi.pshell.xscan.ui;
 
+import ch.psi.pshell.swing.CodeEditor;
+import ch.psi.pshell.swing.ScriptEditor;
 import ch.psi.pshell.xscan.ProcessorXScan;
 import ch.psi.utils.Convert;
 import ch.psi.utils.Str;
@@ -17,6 +19,7 @@ import java.util.logging.Logger;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
+import javax.swing.JTextArea;
 import javax.swing.SwingUtilities;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
@@ -266,6 +269,22 @@ public class EditablePanel<T> extends javax.swing.JPanel implements EditableComp
             return false;
         }
         return !former.equals(value);
+    }
+    
+    
+    protected JTextComponent formatScriptEditor(JTextArea text){
+        JTextComponent ret = text;
+        boolean simpleEditor = ProcessorXScan.isSimpleCodeEditor();
+        if (!simpleEditor){
+            ScriptEditor editor= new ScriptEditor(true, false, true);
+            editor.setTabSize(text.getTabSize());
+            editor.setTextPaneFont(text.getFont());
+            editor.setEditorBackground(text.getBackground());
+            ret = editor.getTextEditor().getEditor();
+            ((CodeEditor)editor.getTextEditor()).setHighlightCurrentLine(false);
+            ret.setSelectionColor(text.getSelectionColor());
+        }
+        return ret;
     }
 
     @Override

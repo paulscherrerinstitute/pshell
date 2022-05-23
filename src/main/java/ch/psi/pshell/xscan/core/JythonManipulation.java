@@ -2,6 +2,7 @@ package ch.psi.pshell.xscan.core;
 
 import ch.psi.pshell.xscan.DataMessage;
 import ch.psi.pshell.xscan.Metadata;
+import ch.psi.pshell.xscan.ProcessorXScan;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -10,9 +11,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import javax.script.ScriptEngine;
-import javax.script.ScriptEngineManager;
-import javax.script.ScriptException;
 
 public class JythonManipulation implements Manipulation {
 
@@ -52,7 +50,7 @@ public class JythonManipulation implements Manipulation {
     /**
      * Script engine of the manipulator
      */
-    private ScriptEngine engine;
+    //private ScriptEngine engine;
     /**
      * Component index of the script parameter. The sequence of the indexes in this array correspond to the script
      * parameter position, i.e. the first index corresponds to the first parameter.
@@ -115,12 +113,6 @@ public class JythonManipulation implements Manipulation {
         // http://blog.hillbrecht.de/2009/07/11/jython-memory-leakout-of-memory-problem/
         System.setProperty("python.options.internalTablesImpl", "weak");
 
-        // Create new script engine
-        this.engine = new ScriptEngineManager().getEngineByName("python");
-        if (this.engine == null) {
-            logger.severe("Error instantiating script engine");
-            throw new RuntimeException("Error instantiating script engine");
-        }
 
         // Determine script entry function and the function parameters
         Pattern pattern = Pattern.compile(entryFunctionPattern);
@@ -138,8 +130,8 @@ public class JythonManipulation implements Manipulation {
 
         // Load manipulation script
         try {
-            engine.eval(this.script);
-        } catch (ScriptException e) {
+            ProcessorXScan.eval(this.script);
+        } catch (Exception e) {
             throw new RuntimeException("Unable to load manipulation script", e);
         }
 
@@ -163,13 +155,15 @@ public class JythonManipulation implements Manipulation {
                         JythonParameterMappingChannel<?> pm = (JythonParameterMappingChannel<?>) jpm;
 //						parameterIndex[i] = null;
                         parameterIds.add(null);
-                        engine.put(pm.getVariable(), pm.getChannel());
+                        //engine.put(pm.getVariable(), pm.getChannel());
+                       ProcessorXScan.setVariable(pm.getVariable(), pm.getChannel());
                     } else if (jpm instanceof JythonParameterMappingGlobalVariable) {
                         JythonParameterMappingGlobalVariable pm = (JythonParameterMappingGlobalVariable) jpm;
                         parameterIds.add(null);
 //						parameterIndex[i] = null;
 
-                        engine.put(pm.getVariable(), pm.getGlobalVariable());
+                        //engine.put(pm.getVariable(), pm.getGlobalVariable());
+                        ProcessorXScan.setVariable(pm.getVariable(), pm.getGlobalVariable());
                     }
                     found = true;
                     break;
@@ -207,35 +201,34 @@ public class JythonManipulation implements Manipulation {
         // of this manipulation will get the same value (i.e. to prevent inconsistent behaviour
         // if variable was changed during an execution of the manipulation)
         for (String k : gvariables.keySet()) {
-            engine.put(k, gvariables.get(k));
+            ProcessorXScan.setVariable(k, gvariables.get(k));
         }
 
         // Manipulate data
         for (int i = 0; i < parameterIds.size(); i++) {
             if (parameterIds.get(i) != null) {
-                engine.put(parameter[i], message.getData(parameterIds.get(i)));
+                 ProcessorXScan.setVariable(parameter[i], message.getData(parameterIds.get(i)));
             }
         }
 
         try {
             if (returnArray) {
-                return ((double[]) engine.eval(jythonCall));
+                //return ((double[]) engine.eval(jythonCall));
+                return ProcessorXScan.eval(jythonCall);
             } else {
                 // Due to the typeless nature of Python an Integer of Float/Double might be returned from the 
                 // Python code (e.g. depending on the factors in a calculation)
                 // Always return the return value to a double. If this cannot be done return NaN
-                Object r = engine.eval(jythonCall);
+                Object r = ProcessorXScan.eval(jythonCall);
                 if (r instanceof Double) {
                     return ((Double) r);
                 } else if (r instanceof Integer) {
                     return (((Integer) r).doubleValue());
                 } else {
-//					return Double.NaN;
                     return r;
                 }
             }
-        } catch (ScriptException e) {
-//			throw new RuntimeException("Data manipulaton [id: "+id+"] failed while executing the manipulation script",e);
+        } catch (Exception e) {
             logger.log(Level.WARNING, "Data manipulaton [id: " + id + "] failed: " + e.getMessage());
             return Double.NaN;
         }

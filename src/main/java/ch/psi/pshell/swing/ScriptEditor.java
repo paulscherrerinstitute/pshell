@@ -80,7 +80,6 @@ public class ScriptEditor extends MonitoredPanel implements Executor {
         });
         
         editor.setFileChooserFolder(Context.getInstance().getSetup().getScriptPath());
-        
 
         if (showContextMenu) {
             editor.getEditor().setFocusTraversalKeys(KeyboardFocusManager.FORWARD_TRAVERSAL_KEYS, Collections.EMPTY_SET);

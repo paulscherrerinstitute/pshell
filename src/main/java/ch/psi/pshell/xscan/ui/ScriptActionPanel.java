@@ -3,6 +3,7 @@ package ch.psi.pshell.xscan.ui;
 import ch.psi.pshell.xscan.model.ChannelParameterMapping;
 import ch.psi.pshell.xscan.model.ScriptAction;
 import java.awt.Component;
+import javax.swing.text.JTextComponent;
 
 /**
  *
@@ -22,9 +23,12 @@ public class ScriptActionPanel extends EditablePanel<ScriptAction> {
         super(action);
         this.action = action;
         initComponents();
-
+        
+        JTextComponent textScript = formatScriptEditor(jTextArea1);
+        jScrollPane1.setViewportView(textScript);
+        
         setManagedFields(jButton1,
-                new Component[]{jTextArea1},
+                new Component[]{textScript},
                 new Component[]{collapsibleListContainerMapping}
         );
 

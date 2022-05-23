@@ -15,6 +15,7 @@ import ch.psi.pshell.core.CommandSource;
 import ch.psi.pshell.core.Context;
 import ch.psi.pshell.plot.PlotBase;
 import ch.psi.pshell.swing.PlotPanel;
+import ch.psi.pshell.swing.ScriptEditor;
 import ch.psi.pshell.ui.App;
 import ch.psi.pshell.ui.Preferences;
 import ch.psi.pshell.ui.Processor;
@@ -41,6 +42,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.script.ScriptException;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
@@ -742,6 +744,21 @@ public final class ProcessorXScan extends MonitoredPanel implements Processor {
         return c;
     }
 
+    
+    public static Object eval(String script) throws Exception{
+        return Context.getInstance().evalLineBackground(script);
+    }
+    
+    public static void setVariable(String name, Object value){
+        Context.getInstance().setInterpreterVariable(name, value);
+    }    
+    
+    public static boolean isSimpleCodeEditor(){
+        return App.getInstance().getMainFrame().getPreferences().simpleEditor;
+    }   
+    
+    
+    
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
