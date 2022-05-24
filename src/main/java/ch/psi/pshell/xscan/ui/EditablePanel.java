@@ -201,8 +201,10 @@ public class EditablePanel<T> extends javax.swing.JPanel implements EditableComp
                         @Override
                         public void stateChanged(ChangeEvent ce) {
                             try {
-                                setter.invoke(obj, check.isSelected());
-                                modified = true;
+                                if (hasChanged(check.isSelected(), getter.invoke(obj))){
+                                    setter.invoke(obj, check.isSelected());
+                                    modified = true;
+                                }
                             } catch (Exception ex) {
                                 Logger.getLogger(EditableComponent.class.getName()).log(Level.SEVERE, null, ex);
                             }
@@ -231,8 +233,7 @@ public class EditablePanel<T> extends javax.swing.JPanel implements EditableComp
                                         Double editedDouble = Double.valueOf(str.trim());
                                         edited = Convert.toType(editedDouble, type);
                                     }
-                                    changed = !edited.equals(cur);
-                                    if (changed) {
+                                    if (hasChanged(edited, cur)) {
                                         setter.invoke(obj, edited);
                                         modified = true;
                                     }
