@@ -40,7 +40,8 @@ public class ScriptManipulationPanel extends EditablePanel<ScriptManipulation> {
         initComponents();
         
         JTextComponent textScript = formatScriptEditor(jTextAreaScript);
-
+        jScrollPane1.setViewportView(textScript);    
+        
         setManagedFields(jButton1,
                 new Component[]{jTextFieldId, textScript},
                 new Component[]{jCheckBoxArray, collapsibleListContainerMapping},
