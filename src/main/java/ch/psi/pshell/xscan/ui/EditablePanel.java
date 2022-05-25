@@ -14,6 +14,7 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JButton;
@@ -261,6 +262,28 @@ public class EditablePanel<T> extends javax.swing.JPanel implements EditableComp
         }
         return true;
     }
+        
+    public ProcessorXScan getProcessor(){
+        Component c = this;
+        while ((c=c.getParent()) != null) {
+            if (c instanceof ProcessorXScan) {
+                 return (ProcessorXScan) c;
+            }
+        }        
+        return null;
+    }      
+    
+    public Map<String, Double> getVariables(){
+        try{
+            return getProcessor().getVariables();
+        } catch (Exception ex){
+            return new HashMap<>();
+        }
+    }
+    
+    public Double getVariable(String name){
+        return getVariables().get(name);
+    }        
 
     private boolean hasChanged(Object value, Object former) {
         if (former == null) {

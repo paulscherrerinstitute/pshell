@@ -749,7 +749,7 @@ public final class ProcessorXScan extends MonitoredPanel implements Processor {
         return Context.getInstance().evalLineBackground(script);
     }
     
-    public static void setVariable(String name, Object value){
+    public static void setInterpreterVariable(String name, Object value){
         Context.getInstance().setInterpreterVariable(name, value);
     }    
     
@@ -757,6 +757,10 @@ public final class ProcessorXScan extends MonitoredPanel implements Processor {
         return App.getInstance().getMainFrame().getPreferences().simpleEditor;
     }   
     
+    
+    public Map<String, Double> getVariables(){
+        return acquisition.getVariables();
+    }
     
     
     /**

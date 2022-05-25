@@ -156,14 +156,14 @@ public class JythonManipulation implements Manipulation {
 //						parameterIndex[i] = null;
                         parameterIds.add(null);
                         //engine.put(pm.getVariable(), pm.getChannel());
-                       ProcessorXScan.setVariable(pm.getVariable(), pm.getChannel());
+                       ProcessorXScan.setInterpreterVariable(pm.getVariable(), pm.getChannel());
                     } else if (jpm instanceof JythonParameterMappingGlobalVariable) {
                         JythonParameterMappingGlobalVariable pm = (JythonParameterMappingGlobalVariable) jpm;
                         parameterIds.add(null);
 //						parameterIndex[i] = null;
 
                         //engine.put(pm.getVariable(), pm.getGlobalVariable());
-                        ProcessorXScan.setVariable(pm.getVariable(), pm.getGlobalVariable());
+                        ProcessorXScan.setInterpreterVariable(pm.getVariable(), pm.getGlobalVariable());
                     }
                     found = true;
                     break;
@@ -201,13 +201,13 @@ public class JythonManipulation implements Manipulation {
         // of this manipulation will get the same value (i.e. to prevent inconsistent behaviour
         // if variable was changed during an execution of the manipulation)
         for (String k : gvariables.keySet()) {
-            ProcessorXScan.setVariable(k, gvariables.get(k));
+            ProcessorXScan.setInterpreterVariable(k, gvariables.get(k));
         }
 
         // Manipulate data
         for (int i = 0; i < parameterIds.size(); i++) {
             if (parameterIds.get(i) != null) {
-                 ProcessorXScan.setVariable(parameter[i], message.getData(parameterIds.get(i)));
+                 ProcessorXScan.setInterpreterVariable(parameter[i], message.getData(parameterIds.get(i)));
             }
         }
 
