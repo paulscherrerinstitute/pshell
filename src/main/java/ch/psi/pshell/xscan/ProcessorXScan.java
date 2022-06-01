@@ -15,11 +15,11 @@ import ch.psi.pshell.core.CommandSource;
 import ch.psi.pshell.core.Context;
 import ch.psi.pshell.plot.PlotBase;
 import ch.psi.pshell.swing.PlotPanel;
-import ch.psi.pshell.swing.ScriptEditor;
 import ch.psi.pshell.ui.App;
 import ch.psi.pshell.ui.Preferences;
 import ch.psi.pshell.ui.Processor;
 import ch.psi.pshell.ui.Task;
+import ch.psi.pshell.xscan.model.Variable;
 import ch.psi.utils.EventBus;
 import ch.psi.utils.IO;
 import ch.psi.utils.State;
@@ -36,13 +36,13 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.nio.file.Paths;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.script.ScriptException;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
@@ -585,6 +585,17 @@ public final class ProcessorXScan extends MonitoredPanel implements Processor {
 
     Thread executionThread;
     Acquisition acquisition;
+    Configuration config;
+    
+    public  Map<String, Double> getVariables(){
+        Map<String, Double> variables = new HashMap<>();
+        Configuration model = panelConfig.getObject();
+        for(Variable v: model.getVariable()){
+            variables.put(v.getName(), v.getValue());
+        }
+        return variables;
+    }
+    
 
     void doExecution(boolean batch, Map<String, Object> vars) throws Exception {
         executionThread = Thread.currentThread();
@@ -598,11 +609,17 @@ public final class ProcessorXScan extends MonitoredPanel implements Processor {
             EventBus ebus = new EventBus(AcquisitionConfiguration.eventBusModeAcq);
             acquisition = new Acquisition(channelService, getConfiguration(), vars);
             App.getInstance().getMainFrame().updateButtons();   //Update pause button state
-            Configuration c = panelConfig.getObject();
-            acquisition.initalize(ebus, c);
+            config = panelConfig.getObject();
+            
+            
+            for(Map.Entry<String, Double> entry : getVariables().entrySet()){
+                setInterpreterVariable(entry.getKey(), entry.getValue());
+            }            
+            
+            acquisition.initalize(ebus, config);
             if (!batch && App.isScanPlottingActive()) {
-                visualizer = new Visualizer(Acquisition.mapVisualizations(c.getVisualization()));
-                if (c.getScan() != null && c.getScan().getCdimension() != null) {
+                visualizer = new Visualizer(Acquisition.mapVisualizations(config.getVisualization()));
+                if (config.getScan() != null && config.getScan().getCdimension() != null) {
                     // If there is a continuous dimension only update the plot a the end of a line.
                     // Improvement of performance
                     visualizer.setUpdateAtStreamElement(false);
@@ -610,7 +627,7 @@ public final class ProcessorXScan extends MonitoredPanel implements Processor {
                     visualizer.setUpdateAtEndOfStream(false);
                 }
                 ebus.register(visualizer);
-                ProcessorXScan.setPlots(visualizer.getPlotPanels(), null);
+                setPlots(visualizer.getPlotPanels(), null);
             }
             if (Context.getInstance().getState() == State.Paused) {
                 acquisition.pause();
@@ -751,17 +768,15 @@ public final class ProcessorXScan extends MonitoredPanel implements Processor {
     
     public static void setInterpreterVariable(String name, Object value){
         Context.getInstance().setInterpreterVariable(name, value);
-    }    
+    } 
+    
+    public static Object getInterpreterVariable(String name){
+        return Context.getInstance().getInterpreterVariable(name);
+    }     
     
     public static boolean isSimpleCodeEditor(){
         return App.getInstance().getMainFrame().getPreferences().simpleEditor;
     }   
-    
-    
-    public Map<String, Double> getVariables(){
-        return acquisition.getVariables();
-    }
-    
     
     /**
      * This method is called from within the constructor to initialize the form.

@@ -136,13 +136,7 @@ public class Acquisition {
 	private Configuration configModel;
 	
 	private HashMap<String, JythonGlobalVariable> jVariableDictionary = new HashMap<String, JythonGlobalVariable>();
-       
-       
-        static Map<String, Double> variables = new HashMap<>();
-        public static Map<String, Double> getVariables(){
-            return variables;
-        }
-        
+                      
         
         private final Map<String, Object> vars;
 	
@@ -513,16 +507,9 @@ public class Acquisition {
 			var.setName(v.getName());
 			var.setValue(v.getValue());
 			jVariableDictionary.put(v.getName(), var);
-			v.getValue();
-                        
-                        ProcessorXScan.setInterpreterVariable(v.getName(), v.getValue());
+			v.getValue();                        
 		}
-                variables = new HashMap<>();
-                for (String key : jVariableDictionary.keySet()){
-                    JythonGlobalVariable v = jVariableDictionary.get(key);
-                    variables.put(key, v.getValue());
-                }                
-                
+                                
 		// Map continuous dimension
 		if(scan.getCdimension() != null){
 			ActionLoop aLoop = mapContinuousDimension(scan.getCdimension());
