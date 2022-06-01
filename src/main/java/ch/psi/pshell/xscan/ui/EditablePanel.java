@@ -10,6 +10,9 @@ import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -20,6 +23,7 @@ import java.util.logging.Logger;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
+import javax.swing.JFormattedTextField;
 import javax.swing.JTextArea;
 import javax.swing.SwingUtilities;
 import javax.swing.event.ChangeEvent;
@@ -166,6 +170,20 @@ public class EditablePanel<T> extends javax.swing.JPanel implements EditableComp
                     _setter = obj.getClass().getMethod("set" + Str.capitalizeFirst(property), new Class[]{altType});
                 }
                 Method setter = _setter;
+                
+                Method _getterVar,_setterVar;
+                String var = null;
+                try {
+                    _getterVar = obj.getClass().getMethod("get" + Str.capitalizeFirst(property)+"Var", new Class[0]);
+                    _setterVar = obj.getClass().getMethod("set" + Str.capitalizeFirst(property)+"Var", new Class[]{String.class});
+                    var =  (String) _getterVar.invoke(obj);
+                } catch (Exception ex) {
+                    _getterVar = null;
+                    _setterVar = null;
+                }                
+                Method getterVar = _getterVar;
+                Method setterVar = _setterVar;
+                
                 Object value = getter.invoke(obj);
                 String id = ModelUtil.getInstance().getId(value);
                 if (id != null) {
@@ -212,8 +230,33 @@ public class EditablePanel<T> extends javax.swing.JPanel implements EditableComp
                         }
                     });
                 } else {
-                    JTextComponent textComponent = (JTextComponent) editor;
-                    textComponent.setText((value == null) ? "" : (value + ""));
+                    JTextComponent textComponent = (JTextComponent) editor;    
+                    if (textComponent instanceof JFormattedTextField){
+                        JFormattedTextField.AbstractFormatterFactory formatFactory=((JFormattedTextField)textComponent).getFormatterFactory();
+                        textComponent.addKeyListener(new KeyAdapter() {
+                            @Override
+                            public void keyTyped(KeyEvent arg0) {
+                                String str = textComponent.getText();
+                                if ((getterVar!=null) && ((getVariable(str)!=null) || (getInterpreterVariable(str)!=null))){
+                                    ((JFormattedTextField)textComponent).setFormatterFactory(null);
+                                } else {                                
+                                    if (formatFactory != ((JFormattedTextField)textComponent).getFormatterFactory()){
+                                        String text = textComponent.getText();
+                                        ((JFormattedTextField)textComponent).setFormatterFactory(formatFactory);
+                                        textComponent.setText(text);
+                                    }
+                                }                                
+                            }                         
+                        });
+                    }
+                    
+                    if ((var!=null) && (!var.isBlank())){
+                        ((JFormattedTextField)textComponent).setFormatterFactory(null);
+                        textComponent.setText(var);
+                    } else {
+                        textComponent.setText((value == null) ? "" : (value + ""));
+                    }
+                    
                     textComponent.getDocument().addDocumentListener(new DocumentAdapter() {
                         @Override
                         public void valueChange(DocumentEvent de) {
@@ -222,21 +265,41 @@ public class EditablePanel<T> extends javax.swing.JPanel implements EditableComp
                                 return;
                             }
                             try {
-                                Object cur = getter.invoke(obj);
-                                String str = realFieldValue ? getPanelSupport(editor).getValue(editor) : textComponent.getText();
-                                Object edited;
-                                if (str != null) {
-                                    if (type == String.class) {
-                                        edited = str;
-                                    } else if ((type == Boolean.class) || (type == boolean.class)) {
-                                        edited = Boolean.valueOf(str.trim());
-                                    } else {
-                                        Double editedDouble = Double.valueOf(str.trim());
-                                        edited = Convert.toType(editedDouble, type);
+                                Object cur = getter.invoke(obj);                                
+                                String str = realFieldValue ? getPanelSupport(editor).getValue(editor) : textComponent.getText();                                
+                                String var=(getterVar!=null) ? (String)getterVar.invoke(obj): null;
+                                Object edited=null;
+                                Object editedVar=null;
+                                if (str != null) {                                    
+                                    if ((getterVar!=null) && ((getVariable(str)!=null) || (getInterpreterVariable(str)!=null))){
+                                        editedVar = str;
+                                    } else {                                
+                                        if (type == String.class) {
+                                            edited = str;
+                                        } else if ((type == Boolean.class) || (type == boolean.class)) {
+                                            edited = Boolean.valueOf(str.trim());
+                                        } else {
+                                            Double editedDouble;
+                                            editedDouble = Double.valueOf(str.trim());
+                                            edited = Convert.toType(editedDouble, type);
+                                        }
+                                        //if (var!=null){
+                                        //    modified = true;
+                                        //}                                                             
                                     }
-                                    if (hasChanged(edited, cur)) {
-                                        setter.invoke(obj, edited);
-                                        modified = true;
+                                    if (editedVar!=null){
+                                        if (hasChanged(editedVar, var)) {
+                                            setterVar.invoke(obj, editedVar);
+                                            modified = true;
+                                        }                                        
+                                    } else {
+                                        if (hasChanged(edited, cur)) {
+                                            setter.invoke(obj, edited);
+                                            if (setterVar!=null){
+                                                setterVar.invoke(obj, (String)null);
+                                            }
+                                            modified = true;
+                                        }
                                     }
                                 }
                             } catch (Exception e) {
@@ -253,7 +316,7 @@ public class EditablePanel<T> extends javax.swing.JPanel implements EditableComp
                                 }
                             }
                         }
-                    });
+                    });                           
                 }
             } catch (Exception ex) {
                 Logger.getLogger(EditableComponent.class.getName()).log(Level.SEVERE, null, ex);
@@ -284,7 +347,15 @@ public class EditablePanel<T> extends javax.swing.JPanel implements EditableComp
     public Double getVariable(String name){
         return getVariables().get(name);
     }        
-
+    
+    public Object getInterpreterVariable(String name){
+        try{
+            return getProcessor().getInterpreterVariable(name);
+        } catch (Exception ex){
+            return null;
+        }
+    }
+        
     private boolean hasChanged(Object value, Object former) {
         if (former == null) {
             return (value != null);
