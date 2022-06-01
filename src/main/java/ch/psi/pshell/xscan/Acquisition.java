@@ -339,7 +339,7 @@ public class Acquisition {
 //			col = collector;
 			logger.fine("ActionLoop and Collector initialized");
 	
-			
+	
 	
 			// Add manipulator into processing chain
 			this.manipulator = new Manipulator(bus, this.manipulations);
@@ -415,9 +415,10 @@ public class Acquisition {
 		
 		// Clear global variables Jython
 		jVariableDictionary.clear();
+                if (executionParameters!=null){
+                    executionParameters.setDataPath(null);
+                }
                 
-                executionParameters.setDataPath(null);
-		
 		// Remove log handler
 		if(logHandler!=null){
 			logger.fine("Close log handler");

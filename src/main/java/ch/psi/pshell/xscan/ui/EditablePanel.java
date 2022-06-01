@@ -261,9 +261,6 @@ public class EditablePanel<T> extends javax.swing.JPanel implements EditableComp
                         @Override
                         public void valueChange(DocumentEvent de) {
                             boolean changed;
-                            if (de.getType() == DocumentEvent.EventType.REMOVE) {
-                                return;
-                            }
                             try {
                                 Object cur = getter.invoke(obj);                                
                                 String str = realFieldValue ? getPanelSupport(editor).getValue(editor) : textComponent.getText();                                
