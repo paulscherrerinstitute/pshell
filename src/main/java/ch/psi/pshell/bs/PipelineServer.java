@@ -1,6 +1,8 @@
 package ch.psi.pshell.bs;
 
 import ch.psi.pshell.core.JsonSerializer;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -9,6 +11,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import javax.imageio.ImageIO;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
@@ -368,6 +371,26 @@ public class PipelineServer extends StreamCamera {
         checkReturn(map);
         return (String) map.get("background_id");
     }
+    
+    public List<String> getBackgrounds(String cameraName) throws IOException {
+        checkName(cameraName);
+        WebTarget resource = client.target(prefix + "/camera/" + cameraName + "/backgrounds");
+        String json = resource.request().accept(MediaType.TEXT_HTML).get(String.class);
+        Map<String, Object> map = (Map) JsonSerializer.decode(json, Map.class);
+        checkReturn(map);
+        return (List) map.get("background_ids");
+    }    
+    
+    public BufferedImage getLastBackgroundImage(String cameraName) throws IOException {
+        return getBackgroundImage(getLastBackground(cameraName));
+    }
+    
+    public BufferedImage getBackgroundImage(String name) throws IOException {
+        WebTarget resource = client.target(prefix + "/background/" + name + "/image");
+        byte[] ret = resource.request().accept(MediaType.APPLICATION_OCTET_STREAM).get(byte[].class);
+        return ImageIO.read(new ByteArrayInputStream(ret));
+    }    
+       
 
     /**
      * Start pipeline streaming, creating a private instance, and set the stream endpoint to the
