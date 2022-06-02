@@ -8,6 +8,7 @@
 
 package ch.psi.pshell.xscan.model;
 
+import ch.psi.pshell.xscan.VariableSolver;
 import java.io.Serializable;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -35,22 +36,24 @@ import javax.xml.bind.annotation.XmlType;
  */
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "PseudoPositioner", propOrder = {
-    "counts"
+    "counts",
+    "countsVar"
 })
 public class PseudoPositioner
     extends DiscreteStepPositioner
-    implements Serializable
+    implements Serializable, VariableSolver
 {
 
     private final static long serialVersionUID = 1L;
     protected int counts;
+    protected String countsVar;
 
     /**
      * Gets the value of the counts property.
      * 
      */
     public int getCounts() {
-        return counts;
+        return getInt(countsVar, counts);
     }
 
     /**
@@ -61,4 +64,19 @@ public class PseudoPositioner
         this.counts = value;
     }
 
+    /**
+     * Gets the value of the countsVar property.
+     * 
+     */
+    public String getCountsVar() {
+        return countsVar;
+    }
+
+    /**
+     * Sets the value of the countsVar property.
+     * 
+     */
+    public void setCountsVar(String value) {
+        this.countsVar = value;
+    }    
 }

@@ -8,6 +8,7 @@
 
 package ch.psi.pshell.xscan.model;
 
+import ch.psi.pshell.xscan.VariableSolver;
 import java.io.Serializable;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -43,19 +44,21 @@ import javax.xml.bind.annotation.XmlType;
 @XmlType(name = "ScalerChannel")
 public class ScalerChannel
     extends SimpleDetector
-    implements Serializable
+    implements Serializable, VariableSolver
 {
 
     private final static long serialVersionUID = 1L;
     @XmlAttribute(name = "channel", required = true)
     protected int channel;
+    @XmlAttribute(name = "channelVar")
+    protected String channelVar;     
 
     /**
      * Gets the value of the channel property.
      * 
      */
     public int getChannel() {
-        return channel;
+        return getInt(channelVar, channel);
     }
 
     /**
@@ -66,4 +69,19 @@ public class ScalerChannel
         this.channel = value;
     }
 
+    /**
+     * Gets the value of the channel property.
+     * 
+     */
+    public String getChannelVar() {
+        return channelVar;
+    }
+
+    /**
+     * Sets the value of the channel property.
+     * 
+     */
+    public void setChannelVar(String value) {
+        this.channelVar = value;
+    }
 }

@@ -8,6 +8,7 @@
 
 package ch.psi.pshell.xscan.model;
 
+import ch.psi.pshell.xscan.VariableSolver;
 import java.io.Serializable;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -37,7 +38,7 @@ import javax.xml.bind.annotation.XmlType;
 @XmlType(name = "SimpleScalarDetector")
 public class SimpleScalarDetector
     extends SimpleDetector
-    implements Serializable
+    implements Serializable, VariableSolver
 {
 
     private final static long serialVersionUID = 1L;
@@ -55,7 +56,7 @@ public class SimpleScalarDetector
      *     
      */
     public String getName() {
-        return name;
+        return getString(name);
     }
 
     /**

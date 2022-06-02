@@ -21,6 +21,7 @@ import javax.swing.JPopupMenu;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.border.Border;
+import javax.swing.text.JTextComponent;
 
 /**
  * PanelSupport class that adds the dynamic behaviour of text fields, optional fields and the add button of the panel.
@@ -530,8 +531,10 @@ public class PanelSupport {
                                 } else if ("false".equalsIgnoreCase(optionalFields.get(c).getDefaultValue())) {
                                     ((JCheckBox) c).setSelected(true);
                                 }
+                            } else if (c instanceof JTextComponent){
+                                ((JTextComponent)c).setText(optionalFields.get(c).getDefaultValue());
                             }
-
+                            
                             // Show all related label fields as well
                             for (Component comp : c.getParent().getComponents()) {
 

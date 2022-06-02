@@ -11,51 +11,51 @@ public class ChannelAccessFunctionActuator<T> implements Actor {
 
     private static Logger logger = Logger.getLogger(ChannelAccessFunctionActuator.class.getName());
 
-    private boolean asynchronous = false;
-    private double start;
-    private double end;
-    private double stepSize;
-    private int direction; // Move direction (start&lt;end = 1, start&gt;end = -1)
+    boolean asynchronous = false;
+    double start;
+    double end;
+    double stepSize;
+    int direction; // Move direction (start&lt;end = 1, start&gt;end = -1)
 
     /**
      * Execution count of actuator. This variable is used to minimize the floating point rounding errors for calculating
      * the next step.
      */
-    private int count;
+    int count;
 
     /**
      * Flag that indicates whether there is a next set value for the Actor
      */
-    private boolean next;
+    boolean next;
 
     /**
      * Value to set at next @see ch.psi.pshell.xscan.engine.Actor#set() call
      */
-    private double value;
+    double value;
 
     /**
      * Level of accuracy the positioner need to have (e.g. if a positioner is set to 1 the readback set value of the
      * positioner need to have at lease 1+/-accuracy) Default is stepSize/2
      */
-    private double accuracy;
+    double accuracy;
 
     /**
      * Move timeout
      */
-    private Long timeout;
+    Long timeout;
 
-    private final T doneValue;
-    private final long doneDelay;
+    final T doneValue;
+    final long doneDelay;
 
-    private final double originalStart;
-    private final double originalEnd;
-    private final int originalDirection;
+    final double originalStart;
+    final double originalEnd;
+    final int originalDirection;
 
-    private Channel<Double> channel;
-    private Channel<T> doneChannel = null;
+    Channel<Double> channel;
+    Channel<T> doneChannel = null;
 
-    private final Function function;
-    private boolean checkActorSet = true;
+    final Function function;
+    boolean checkActorSet = true;
 
     /**
      * Constructor - Initialize actor

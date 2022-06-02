@@ -8,6 +8,7 @@
 
 package ch.psi.pshell.xscan.model;
 
+import ch.psi.pshell.xscan.VariableSolver;
 import java.io.Serializable;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -60,7 +61,7 @@ import javax.xml.bind.annotation.XmlType;
 @XmlType(name = "ChannelAction")
 public class ChannelAction
     extends Action
-    implements Serializable
+    implements Serializable, VariableSolver
 {
 
     private final static long serialVersionUID = 1L;
@@ -76,6 +77,10 @@ public class ChannelAction
     protected Double timeout;
     @XmlAttribute(name = "delay")
     protected Double delay;
+    @XmlAttribute(name = "timeoutVar")
+    protected String timeoutVar;
+    @XmlAttribute(name = "delayVar")
+    protected String delayVar;    
 
     /**
      * Gets the value of the channel property.
@@ -86,7 +91,7 @@ public class ChannelAction
      *     
      */
     public String getChannel() {
-        return channel;
+        return getString(channel);
     }
 
     /**
@@ -110,7 +115,7 @@ public class ChannelAction
      *     
      */
     public String getValue() {
-        return value;
+        return getString(value);
     }
 
     /**
@@ -134,11 +139,7 @@ public class ChannelAction
      *     
      */
     public String getOperation() {
-        if (operation == null) {
-            return "put";
-        } else {
-            return operation;
-        }
+        return getString(operation,"put");
     }
 
     /**
@@ -190,7 +191,7 @@ public class ChannelAction
      *     
      */
     public Double getTimeout() {
-        return timeout;
+        return getDouble(timeoutVar,  timeout); 
     }
 
     /**
@@ -214,7 +215,7 @@ public class ChannelAction
      *     
      */
     public Double getDelay() {
-        return delay;
+        return getDouble(delayVar,  delay);
     }
 
     /**
@@ -228,5 +229,53 @@ public class ChannelAction
     public void setDelay(Double value) {
         this.delay = value;
     }
+    
+    /*
+     * Gets the value of the timeout property.
+     * 
+     * @return
+     *     possible object is
+     *     {@link Double }
+     *     
+     */
+    public String getTimeoutVar() {
+        return timeoutVar;
+    }
+
+    /**
+     * Sets the value of the timeout property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link Double }
+     *     
+     */
+    public void setTimeoutVar(String value) {
+        this.timeoutVar = value;
+    }
+
+    /**
+     * Gets the value of the delay property.
+     * 
+     * @return
+     *     possible object is
+     *     {@link Double }
+     *     
+     */
+    public String getDelayVar() {
+        return delayVar;
+    }
+
+    /**
+     * Sets the value of the delay property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link Double }
+     *     
+     */
+    public void setDelayVar(String value) {
+        this.delayVar = value;
+    }    
 
 }

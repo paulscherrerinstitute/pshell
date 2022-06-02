@@ -587,8 +587,8 @@ public final class ProcessorXScan extends MonitoredPanel implements Processor {
     Acquisition acquisition;
     Configuration config;
     
-    public  Map<String, Double> getVariables(){
-        Map<String, Double> variables = new HashMap<>();
+    public  Map<String, Object> getVariables(){
+        Map<String, Object> variables = new HashMap<>();
         Configuration model = panelConfig.getObject();
         for(Variable v: model.getVariable()){
             variables.put(v.getName(), v.getValue());
@@ -612,7 +612,7 @@ public final class ProcessorXScan extends MonitoredPanel implements Processor {
             config = panelConfig.getObject();
             
             
-            for(Map.Entry<String, Double> entry : getVariables().entrySet()){
+            for(Map.Entry<String, Object> entry : getVariables().entrySet()){
                 setInterpreterVariable(entry.getKey(), entry.getValue());
             }            
             

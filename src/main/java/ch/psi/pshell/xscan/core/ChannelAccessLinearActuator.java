@@ -14,48 +14,48 @@ public class ChannelAccessLinearActuator<T> implements Actor {
 
     private static Logger logger = Logger.getLogger(ChannelAccessLinearActuator.class.getName());
 
-    private boolean asynchronous = false;
+    boolean asynchronous = false;
 
-    private double start;
-    private double end;
-    private double stepSize;
-    private int direction;
+    double start;
+    double end;
+    double stepSize;
+    int direction;
 
     /**
      * Execution count of actuator. This variable is used to minimize the floating point rounding errors for calculating
      * the next step.
      */
-    private int count;
+    int count;
 
     /**
      * Flag that indicates whether there is a next set value for the Actor
      */
-    private boolean next;
+    boolean next;
 
     /**
      * Value to set at next @see ch.psi.pshell.xscan.engine.Actor#set() call
      */
-    private double value;
+    double value;
 
     /**
      * Level of accuracy the positioner need to have (e.g. if a positioner is set to 1 the readback set value of the
      * positioner need to have at lease 1+/-accuracy) Default is stepSize/2
      */
-    private double accuracy;
+    double accuracy;
 
-    private final T doneValue;
-    private final long doneDelay;
+    final T doneValue;
+    final long doneDelay;
 
-    private final double originalStart;
-    private final double originalEnd;
-    private final int originalDirection;
+    final double originalStart;
+    final double originalEnd;
+    final int originalDirection;
 
-    private Long timeout; // Set timeout
+    Long timeout; // Set timeout
 
-    private final Channel<Double> channel;
-    private final Channel<T> doneChannel;
+    final Channel<Double> channel;
+    final Channel<T> doneChannel;
 
-    private boolean checkActorSet = true;
+    boolean checkActorSet = true;
 
     /**
      * Constructor

@@ -235,10 +235,12 @@ public class EditablePanel<T> extends javax.swing.JPanel implements EditableComp
                         JFormattedTextField.AbstractFormatterFactory formatFactory=((JFormattedTextField)textComponent).getFormatterFactory();
                         textComponent.addKeyListener(new KeyAdapter() {
                             @Override
-                            public void keyTyped(KeyEvent arg0) {
+                            public void keyReleased(KeyEvent arg0) {
                                 String str = textComponent.getText();
                                 if ((getterVar!=null) && ((getVariable(str)!=null) || (getInterpreterVariable(str)!=null))){
-                                    ((JFormattedTextField)textComponent).setFormatterFactory(null);
+                                    if (((JFormattedTextField)textComponent).getFormatterFactory() != null){
+                                        ((JFormattedTextField)textComponent).setFormatterFactory(null);
+                                    }
                                 } else {                                
                                     if (formatFactory != ((JFormattedTextField)textComponent).getFormatterFactory()){
                                         String text = textComponent.getText();
@@ -267,11 +269,11 @@ public class EditablePanel<T> extends javax.swing.JPanel implements EditableComp
                                 String var=(getterVar!=null) ? (String)getterVar.invoke(obj): null;
                                 Object edited=null;
                                 Object editedVar=null;
-                                if (str != null) {                                    
+                                if (str != null) {     
                                     if ((getterVar!=null) && ((getVariable(str)!=null) || (getInterpreterVariable(str)!=null))){
                                         editedVar = str;
                                     } else {                                
-                                        if (type == String.class) {
+                                        if ((type == String.class)||(type == Object.class)) {
                                             edited = str;
                                         } else if ((type == Boolean.class) || (type == boolean.class)) {
                                             edited = Boolean.valueOf(str.trim());
@@ -333,7 +335,7 @@ public class EditablePanel<T> extends javax.swing.JPanel implements EditableComp
         return null;
     }      
     
-    public Map<String, Double> getVariables(){
+    public Map<String, Object> getVariables(){
         try{
             return getProcessor().getVariables();
         } catch (Exception ex){
@@ -341,7 +343,7 @@ public class EditablePanel<T> extends javax.swing.JPanel implements EditableComp
         }
     }
     
-    public Double getVariable(String name){
+    public Object getVariable(String name){
         return getVariables().get(name);
     }        
     

@@ -8,6 +8,7 @@
 
 package ch.psi.pshell.xscan.model;
 
+import ch.psi.pshell.xscan.VariableSolver;
 import java.io.Serializable;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -71,7 +72,7 @@ import javax.xml.bind.annotation.XmlType;
 })
 public abstract class DiscreteStepPositioner
     extends Positioner
-    implements Serializable
+    implements Serializable, VariableSolver
 {
 
     private final static long serialVersionUID = 1L;
@@ -91,6 +92,13 @@ public abstract class DiscreteStepPositioner
     protected Double doneDelay;
     @XmlAttribute(name = "asynchronous")
     protected Boolean asynchronous;
+    @XmlAttribute(name = "settlingTimeVar")
+    protected String settlingTimeVar;        
+    @XmlAttribute(name = "doneDelayVar")
+    protected String doneDelayVar;
+    @XmlAttribute(name = "asynchronousVar")
+    protected String asynchronousVar;
+    
 
     /**
      * Gets the value of the name property.
@@ -101,7 +109,7 @@ public abstract class DiscreteStepPositioner
      *     
      */
     public String getName() {
-        return name;
+        return getString(name);
     }
 
     /**
@@ -125,7 +133,7 @@ public abstract class DiscreteStepPositioner
      *     
      */
     public String getReadback() {
-        return readback;
+        return getString(readback);
     }
 
     /**
@@ -148,12 +156,8 @@ public abstract class DiscreteStepPositioner
      *     {@link Double }
      *     
      */
-    public double getSettlingTime() {
-        if (settlingTime == null) {
-            return  0.0D;
-        } else {
-            return settlingTime;
-        }
+    public double getSettlingTime() {   
+        return getDouble(doneDelayVar,  (doneDelay == null) ? 0.0D : doneDelay);
     }
 
     /**
@@ -177,7 +181,7 @@ public abstract class DiscreteStepPositioner
      *     
      */
     public String getDone() {
-        return done;
+        return getString(done);
     }
 
     /**
@@ -201,11 +205,7 @@ public abstract class DiscreteStepPositioner
      *     
      */
     public String getDoneValue() {
-        if (doneValue == null) {
-            return "1";
-        } else {
-            return doneValue;
-        }
+        return getString(doneValue);
     }
 
     /**
@@ -257,11 +257,7 @@ public abstract class DiscreteStepPositioner
      *     
      */
     public double getDoneDelay() {
-        if (doneDelay == null) {
-            return  0.0D;
-        } else {
-            return doneDelay;
-        }
+        return getDouble(doneDelayVar,  (doneDelay == null) ? 0.0D : doneDelay);
     }
 
     /**
@@ -285,11 +281,7 @@ public abstract class DiscreteStepPositioner
      *     
      */
     public boolean isAsynchronous() {
-        if (asynchronous == null) {
-            return false;
-        } else {
-            return asynchronous;
-        }
+        return getBoolean(asynchronousVar,  (asynchronous == null) ? false : asynchronous);
     }
 
     /**
@@ -304,4 +296,77 @@ public abstract class DiscreteStepPositioner
         this.asynchronous = value;
     }
 
+    
+    /**
+     * Gets the value of the settlingTimeVar property.
+     * 
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
+     */
+    public String getSettlingTimeVar() {
+        return settlingTimeVar;
+    }
+
+    /**
+     * Sets the value of the settlingTimVar property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
+     */
+    public void setSettlingTimeVar(String value) {
+        this.settlingTimeVar = value;
+    }    
+    
+    
+    /**
+     * Gets the value of the doneDelayVar property.
+     * 
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
+     */
+    public String getDoneDelayVar() {
+        return doneDelayVar;
+    }
+
+    /**
+     * Sets the value of the doneDelayVar property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
+     */
+    public void setDoneDelayVar(String value) {
+        this.doneDelayVar = value;
+    }    
+    
+    /**
+     * Gets the value of the asynchronousVar property.
+     * 
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
+     */    
+    public String getAsynchronousVar() {
+        return asynchronousVar;
+    }
+
+    /**
+     * Sets the value of the asynchronouVar property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
+     */
+    public void setAsynchronousVar(String value) {
+        this.asynchronousVar = value;
+    }    
 }

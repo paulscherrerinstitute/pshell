@@ -3,7 +3,7 @@ package ch.psi.pshell.xscan.core;
 public class JythonGlobalVariable {
 
     private String name;
-    private double value;
+    private Object value;
 
     /**
      * @return the name
@@ -22,15 +22,36 @@ public class JythonGlobalVariable {
     /**
      * @return the value
      */
-    public double getValue() {
+    public Object getValue() {
         return value;
     }
 
     /**
      * @param value the value to set
      */
-    public void setValue(double value) {
+    public void setValue(Object value) {
         this.value = value;
     }
 
+    
+    public static class DoubleVar extends JythonGlobalVariable{
+        public Double getValue() {
+            return (Double) super.getValue();
+        }
+
+        public void setValue(double value) {
+            super.setValue(value);
+        }
+    }
+    
+    
+    public static class StringVar extends JythonGlobalVariable{
+        public String getValue() {
+            return (String) super.getValue();
+        }
+
+        public void setValue(String value) {
+            super.setValue(value);
+        }
+    }    
 }

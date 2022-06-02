@@ -51,7 +51,7 @@ public class Variable
     @XmlSchemaType(name = "ID")
     protected String name;
     @XmlAttribute(name = "value", required = true)
-    protected double value;
+    protected String value;
     @XmlAttribute(name = "description")
     protected String description;
 
@@ -83,7 +83,24 @@ public class Variable
      * Gets the value of the value property.
      * 
      */
-    public double getValue() {
+    public double getValueDouble() {
+        try{
+            return Double.parseDouble(value);
+        } catch (Exception ex){
+            return 0.0;
+        }
+    }
+
+    /**
+     * Sets the value of the value property.
+     * 
+     */
+    public void setValueDouble(double value) {
+        this.value = String.valueOf(value);
+    }
+    
+    
+     public String getValueStr() {
         return value;
     }
 
@@ -91,8 +108,28 @@ public class Variable
      * Sets the value of the value property.
      * 
      */
-    public void setValue(double value) {
+    public void setValueStr(String value) {
         this.value = value;
+    }   
+    
+        /**
+     * Gets the value of the value property.
+     * 
+     */
+    public Object getValue() {
+        try{
+            return Double.parseDouble(value);
+        } catch (Exception ex){
+            return this.value;
+        }
+    }
+
+    /**
+     * Sets the value of the value property.
+     * 
+     */
+    public void setValue(Object value) {
+        this.value = String.valueOf(value);
     }
 
     /**

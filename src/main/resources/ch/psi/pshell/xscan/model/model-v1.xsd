@@ -69,9 +69,9 @@
     				</xsd:simpleType>
     			</xsd:attribute>
     			<xsd:attribute name="timeout" type="xsd:double" use="optional"></xsd:attribute>
-    			<xsd:attribute name="delay" type="xsd:double"
-    				use="optional">
-    			</xsd:attribute>
+    			<xsd:attribute name="delay" type="xsd:double" use="optional"></xsd:attribute>
+                        <xsd:attribute name="timeoutVar" type="xsd:string" use="optional"></xsd:attribute>
+                        <xsd:attribute name="delayVar" type="xsd:string" use="optional"></xsd:attribute>
     		</xsd:extension>
     	</xsd:complexContent>
     </xsd:complexType>
@@ -140,6 +140,9 @@
     				</xsd:simpleType>
     			</xsd:attribute>
     			<xsd:attribute name="asynchronous" type="xsd:boolean" default="false"></xsd:attribute>
+                        <xsd:attribute name="settlingTimeVar" type="xsd:string"  use="optional"></xsd:attribute>
+                        <xsd:attribute name="doneDelayVar" type="xsd:string" use="optional"></xsd:attribute>
+                        <xsd:attribute name="asynchronousVar" type="xsd:string" use="optional"></xsd:attribute>
     		</xsd:extension>
     	</xsd:complexContent>
     </xsd:complexType>
@@ -148,10 +151,13 @@
     	<xsd:complexContent>
     		<xsd:extension base="DiscreteStepPositioner">
     			<xsd:sequence>
-    				<xsd:element name="start" type="xsd:double"></xsd:element>
-    				<xsd:element name="end" type="xsd:double"></xsd:element>
-    				<xsd:element name="stepSize" type="xsd:double"></xsd:element>
-    			</xsd:sequence>
+    				<xsd:element name="start" type="xsd:double" minOccurs="0" maxOccurs="1"></xsd:element>
+    				<xsd:element name="end" type="xsd:double" minOccurs="0" maxOccurs="1"></xsd:element>
+    				<xsd:element name="stepSize" type="xsd:double" minOccurs="0" maxOccurs="1"></xsd:element>
+    				<xsd:element name="startVar" type="xsd:string" minOccurs="0" maxOccurs="1"></xsd:element>
+    				<xsd:element name="endVar" type="xsd:string" minOccurs="0" maxOccurs="1"></xsd:element>
+    				<xsd:element name="stepSizeVar" type="xsd:string" minOccurs="0" maxOccurs="1"></xsd:element>
+    			</xsd:sequence>                   
     		</xsd:extension>
     	</xsd:complexContent>
     </xsd:complexType>
@@ -183,6 +189,9 @@
     		<xsd:element name="end" type="xsd:double" maxOccurs="1" minOccurs="1"></xsd:element>
     		<xsd:element name="stepSize" type="xsd:double" maxOccurs="1" minOccurs="1"></xsd:element>
     		<xsd:element name="function" type="Function" minOccurs="0" maxOccurs="1"></xsd:element>
+                <xsd:element name="startVar" type="xsd:string" minOccurs="0" maxOccurs="1"></xsd:element>
+                <xsd:element name="endVar" type="xsd:string" minOccurs="0" maxOccurs="1"></xsd:element>
+                <xsd:element name="stepSizeVar" type="xsd:string" minOccurs="0" maxOccurs="1"></xsd:element>                
     	</xsd:sequence>
     </xsd:complexType>
 
@@ -243,6 +252,7 @@
     	<xsd:complexContent>
     		<xsd:extension base="ComplexDetector">
     			<xsd:attribute name="arraySize" type="xsd:int" use="required"></xsd:attribute>
+                        <xsd:attribute name="arraySizeVar" type="xsd:string" use="optional"></xsd:attribute>
     		</xsd:extension>
     	</xsd:complexContent>
     </xsd:complexType>
@@ -288,6 +298,7 @@
     					</xsd:restriction>
     				</xsd:simpleType>
     			</xsd:attribute>
+                        <xsd:attribute name="channelVar" type="xsd:string" use="optional"></xsd:attribute>
     		</xsd:extension>
     	</xsd:complexContent>
     </xsd:complexType>
@@ -394,6 +405,7 @@
     		<xsd:extension base="DiscreteStepPositioner">
     			<xsd:sequence>
     				<xsd:element name="counts" type="xsd:int" maxOccurs="1" minOccurs="1"></xsd:element>
+                                <xsd:element name="countsVar" type="xsd:string" minOccurs="0" maxOccurs="1"></xsd:element>
     			</xsd:sequence>
     		</xsd:extension>
     	</xsd:complexContent>
@@ -487,6 +499,9 @@
     				<xsd:element name="end" type="xsd:double" maxOccurs="1" minOccurs="1"></xsd:element>
     				<xsd:element name="stepSize" type="xsd:double" maxOccurs="1" minOccurs="1"></xsd:element>
     				<xsd:element name="function" type="Function" maxOccurs="1" minOccurs="1"></xsd:element>
+    				<xsd:element name="startVar" type="xsd:string" minOccurs="0" maxOccurs="1"></xsd:element>
+    				<xsd:element name="endVar" type="xsd:string" minOccurs="0" maxOccurs="1"></xsd:element>
+    				<xsd:element name="stepSizeVar" type="xsd:string" minOccurs="0" maxOccurs="1"></xsd:element>
     			</xsd:sequence>
     		</xsd:extension>
     	</xsd:complexContent>
@@ -534,10 +549,10 @@
 
     <xsd:complexType name="Variable">
     	<xsd:attribute name="name" type="xsd:ID" use="required"></xsd:attribute>
-    	<xsd:attribute name="value" type="xsd:double" use="required"></xsd:attribute>
+    	<xsd:attribute name="value" type="xsd:string" use="required"></xsd:attribute>
     	<xsd:attribute name="description" type="xsd:string" use="optional"></xsd:attribute>
     </xsd:complexType>
-
+    
     <xsd:complexType name="VariableParameterMapping">
     	<xsd:complexContent>
     		<xsd:extension base="ParameterMapping">

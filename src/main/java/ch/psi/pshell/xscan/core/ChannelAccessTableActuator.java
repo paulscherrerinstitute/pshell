@@ -14,48 +14,48 @@ public class ChannelAccessTableActuator<T> implements Actor {
 
     private static Logger logger = Logger.getLogger(ChannelAccessTableActuator.class.getName());
 
-    private boolean asynchronous = false;
+    boolean asynchronous = false;
 
     /**
      * Position table
      */
-    private final double[] table;
+    final double[] table;
 
     /**
      * Level of accuracy the positioner need to have (e.g. if a positioner is set to 1 the readback set value of the
      * positioner need to have at lease 1+/-accuracy)
      */
-    private double accuracy = 0.1;
+    double accuracy = 0.1;
 
     /**
      * Execution count of actuator. This variable is used to minimize the floating point rounding errors for calculating
      * the next step.
      */
-    private int count;
+    int count;
 
     /**
      * Flag that indicates whether there is a next set value for the Actor
      */
-    private boolean next;
+    boolean next;
 
-    private Channel<Double> channel;
-    private Channel<T> doneChannel = null;
+    Channel<Double> channel;
+    Channel<T> doneChannel = null;
 
-    private final T doneValue;
-    private final long doneDelay;
+    final T doneValue;
+    final long doneDelay;
 
     /**
      * Flag that indicates whether the actor moves in the positive direction
      */
-    private boolean positiveDirection = true;
-    private final boolean originalPositiveDirection;
+    boolean positiveDirection = true;
+    final boolean originalPositiveDirection;
 
     /**
      * Maximum move time (in milliseconds)
      */
-    private Long timeout = null;
+    Long timeout = null;
 
-    private boolean checkActorSet = true;
+    boolean checkActorSet = true;
 
     /**
      * Constructor - Initialize actor

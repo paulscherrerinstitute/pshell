@@ -8,6 +8,7 @@
 
 package ch.psi.pshell.xscan.model;
 
+import ch.psi.pshell.xscan.VariableSolver;
 import java.io.Serializable;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -37,10 +38,10 @@ import javax.xml.bind.annotation.XmlType;
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "ArrayPositioner", propOrder = {
     "positions"
-})
+}) 
 public class ArrayPositioner
     extends DiscreteStepPositioner
-    implements Serializable
+    implements Serializable, VariableSolver
 {
 
     private final static long serialVersionUID = 1L;
@@ -56,6 +57,10 @@ public class ArrayPositioner
      *     
      */
     public String getPositions() {
+        String[] var = getStringArray(positions, null);
+        if (var!=null){
+            return String.join(" ", var);
+        }
         return positions;
     }
 

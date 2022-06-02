@@ -8,6 +8,7 @@
 
 package ch.psi.pshell.xscan.model;
 
+import ch.psi.pshell.xscan.VariableSolver;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
@@ -49,7 +50,7 @@ import javax.xml.bind.annotation.XmlType;
 })
 public class ComplexDetector
     extends Detector
-    implements Serializable
+    implements Serializable, VariableSolver
 {
 
     private final static long serialVersionUID = 1L;
@@ -95,7 +96,7 @@ public class ComplexDetector
      *     
      */
     public String getName() {
-        return name;
+        return getString(name);
     }
 
     /**

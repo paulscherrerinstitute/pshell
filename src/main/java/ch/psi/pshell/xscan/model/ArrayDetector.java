@@ -8,6 +8,7 @@
 
 package ch.psi.pshell.xscan.model;
 
+import ch.psi.pshell.xscan.VariableSolver;
 import java.io.Serializable;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -36,19 +37,21 @@ import javax.xml.bind.annotation.XmlType;
 @XmlType(name = "ArrayDetector")
 public class ArrayDetector
     extends ComplexDetector
-    implements Serializable
+    implements Serializable, VariableSolver
 {
 
     private final static long serialVersionUID = 1L;
     @XmlAttribute(name = "arraySize", required = true)
     protected int arraySize;
+    @XmlAttribute(name = "arraySizeVar")
+    protected String arraySizeVar;    
 
     /**
      * Gets the value of the arraySize property.
      * 
      */
     public int getArraySize() {
-        return arraySize;
+        return getInt(arraySizeVar,  arraySize);
     }
 
     /**
@@ -58,5 +61,21 @@ public class ArrayDetector
     public void setArraySize(int value) {
         this.arraySize = value;
     }
+    
+     /**
+     * Gets the value of the arraySizeVar property.
+     * 
+     */
+    public String getArraySizeVar() {
+        return arraySizeVar;
+    }
+
+    /**
+     * Sets the value of the arraySizeVa property.
+     * 
+     */
+    public void setArraySizeVar(String value) {
+        this.arraySizeVar = value;
+    }   
 
 }

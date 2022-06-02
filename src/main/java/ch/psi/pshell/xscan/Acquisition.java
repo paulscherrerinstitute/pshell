@@ -17,6 +17,7 @@ import ch.psi.pshell.xscan.core.ComplexActuator;
 import ch.psi.pshell.xscan.core.CrlogicLoopStream;
 import ch.psi.pshell.xscan.core.CrlogicResource;
 import ch.psi.pshell.xscan.core.Delay;
+import ch.psi.pshell.xscan.core.DeviceLinearActuator;
 import ch.psi.pshell.xscan.core.JythonFunction;
 import ch.psi.pshell.xscan.core.JythonGlobalVariable;
 import ch.psi.pshell.xscan.core.JythonManipulation;
@@ -85,6 +86,10 @@ import ch.psi.pshell.core.ExecutionParameters;
 import ch.psi.pshell.core.LogManager;
 import ch.psi.pshell.core.Setup;
 import ch.psi.pshell.data.DataManager;
+import ch.psi.pshell.device.Device;
+import ch.psi.pshell.xscan.core.DeviceFunctionActuator;
+import ch.psi.pshell.xscan.core.DeviceSensor;
+import ch.psi.pshell.xscan.core.DeviceTableActuator;
 import ch.psi.utils.Str;
 import java.io.File;
 import java.lang.reflect.Array;
@@ -316,9 +321,9 @@ public class Acquisition {
                             } else {
                                 Object obj = ModelUtil.getInstance().getObject(id);
                                 if (obj instanceof Variable){
-                                    ((Variable)obj).setValue((Double) value);
+                                    ((Variable)obj).setValue(value);
+                                    }
                                 }
-                            } 
                         } catch (Exception ex){
                             throw new RuntimeException("Bad parameter value: " + var);
                         }
@@ -507,8 +512,7 @@ public class Acquisition {
 			JythonGlobalVariable var = new JythonGlobalVariable();
 			var.setName(v.getName());
 			var.setValue(v.getValue());
-			jVariableDictionary.put(v.getName(), var);
-			v.getValue();                        
+			jVariableDictionary.put(v.getName(), var);                      
 		}
                                 
 		// Map continuous dimension
@@ -775,63 +779,58 @@ public class Acquisition {
 			
 			if(p instanceof LinearPositioner){
 				LinearPositioner lp =(LinearPositioner) p;
-				ChannelAccessLinearActuator<?> a;
-				if(lp.getType().equals("String")){
-					a = new ChannelAccessLinearActuator<String>(createChannel(Double.class, lp.getName()), createChannel(String.class, lp.getDone()), lp.getDoneValue(), lp.getDoneDelay(), lp.getStart(), lp.getEnd(), lp.getStepSize(), moveTimeout);
-				}
-				else if(lp.getType().equals("Double")){
-					a = new ChannelAccessLinearActuator<Double>(createChannel(Double.class, lp.getName()), createChannel(Double.class,lp.getDone()), Double.parseDouble(lp.getDoneValue()), lp.getDoneDelay(), lp.getStart(), lp.getEnd(), lp.getStepSize(), moveTimeout);
-				}
-				else{
-					// Default
-					a = new ChannelAccessLinearActuator<Integer>(createChannel(Double.class, lp.getName()), createChannel(Integer.class,lp.getDone()), Integer.parseInt(lp.getDoneValue()), lp.getDoneDelay(), lp.getStart(), lp.getEnd(), lp.getStepSize(), moveTimeout);
-				}
-				
-				a.setAsynchronous(lp.isAsynchronous());
-				Actor actuator = a;
-				
+                                Actor actuator;
+                                Sensor sensor;
+                                Device dev = Context.getInstance().getDevicePool().getByName(lp.getName(), Device.class);
+                                ChannelAccessLinearActuator<?> a;
+                                if (dev != null){
+                                    a = new DeviceLinearActuator(dev, createChannel(String.class, lp.getDone()), lp.getDoneValue(), lp.getDoneDelay(), lp.getStart(), lp.getEnd(), lp.getStepSize(), moveTimeout);
+                                    sensor = new DeviceSensor(lp.getId(), dev, configModel.isFailOnSensorError());
+                                } else {
+                                   a = new ChannelAccessLinearActuator(createChannel(Double.class, lp.getName()), createDoneChannel(lp), lp.getDoneValue(), lp.getDoneDelay(), lp.getStart(), lp.getEnd(), lp.getStepSize(), moveTimeout);
+                                    // Add a sensor for the readback
+                                    String name = lp.getReadback();
+                                    if((name==null)||name.isBlank()){
+                                            name = lp.getName();
+                                    }
+                                    sensor = new ChannelAccessSensor<Double>(lp.getId(), createChannel(Double.class, name), configModel.isFailOnSensorError());
+                                }
+                                a.setAsynchronous(lp.isAsynchronous());
+                                actuator = a;
+			
 				aLoop.getActors().add(actuator);
-				
-				// Add a sensor for the readback
-				String name = lp.getReadback();
-				if((name==null)||name.isBlank()){
-					name = lp.getName();
-				}
-				ChannelAccessSensor<Double> sensor = new ChannelAccessSensor<Double>(lp.getId(), createChannel(Double.class, name), configModel.isFailOnSensorError());
 				aLoop.getSensors().add(sensor);
 			}
 			else if(p instanceof FunctionPositioner){
 				FunctionPositioner lp =(FunctionPositioner) p;
 				
+                                
 				// Create function object
 				JythonFunction function = mapFunction(lp.getFunction());
 				
-				
-				// Create actuator
-				ChannelAccessFunctionActuator<?> a;
-				if(lp.getType().equals("String")){
-					a = new ChannelAccessFunctionActuator<String>(createChannel(Double.class,lp.getName()), createChannel(String.class,lp.getDone()), lp.getDoneValue(), lp.getDoneDelay(), function, lp.getStart(), lp.getEnd(), lp.getStepSize(), moveTimeout);
-				}
-				else if(lp.getType().equals("Double")){
-					a = new ChannelAccessFunctionActuator<Double>(createChannel(Double.class, lp.getName()), createChannel(Double.class, lp.getDone()), Double.parseDouble(lp.getDoneValue()), lp.getDoneDelay(), function, lp.getStart(), lp.getEnd(), lp.getStepSize(), moveTimeout);
-				}
-				else{
-					// Default
-					a = new ChannelAccessFunctionActuator<Integer>(createChannel(Double.class, lp.getName()), createChannel(Integer.class, lp.getDone()), Integer.parseInt(lp.getDoneValue()), lp.getDoneDelay(), function, lp.getStart(), lp.getEnd(), lp.getStepSize(), moveTimeout);
-				}
+                                Device dev = Context.getInstance().getDevicePool().getByName(lp.getName(), Device.class);
+                                ChannelAccessFunctionActuator<?> a;
+                                Sensor sensor;
+                                if (dev != null){                                                            
+                                     a = new DeviceFunctionActuator(dev, createDoneChannel(lp), lp.getDoneValue(), lp.getDoneDelay(), function, lp.getStart(), lp.getEnd(), lp.getStepSize(), moveTimeout);
+                                     sensor = new DeviceSensor(lp.getId(), dev, configModel.isFailOnSensorError());
+                                } else {
+                                    // Create actuator
+                                     a = new ChannelAccessFunctionActuator(createChannel(Double.class,lp.getName()), createDoneChannel(lp), lp.getDoneValue(), lp.getDoneDelay(), function, lp.getStart(), lp.getEnd(), lp.getStepSize(), moveTimeout);       
+                                    // Add a sensor for the readback
+                                    String name = lp.getReadback();
+                                    if((name==null)||name.isBlank()){
+                                            name = lp.getName();
+                                    }
+                                    sensor = new ChannelAccessSensor<Double>(lp.getId(), createChannel(Double.class, name), configModel.isFailOnSensorError());
+
+                                }
 				
 				a.setAsynchronous(lp.isAsynchronous());
 				Actor actuator = a;
 				
 				aLoop.getActors().add(actuator);
-				
-				// Add a sensor for the readback
-				String name = lp.getReadback();
-				if((name==null)||name.isBlank()){
-					name = lp.getName();
-				}
-				ChannelAccessSensor<Double> sensor = new ChannelAccessSensor<Double>(lp.getId(), createChannel(Double.class, name), configModel.isFailOnSensorError());
-				aLoop.getSensors().add(sensor);
+                                aLoop.getSensors().add(sensor);
 			}
 			else if (p instanceof ArrayPositioner){
 				ArrayPositioner ap = (ArrayPositioner) p;
@@ -842,28 +841,24 @@ public class Acquisition {
 				}
 				
 				ChannelAccessTableActuator<?> a;
-				if(p.getType().equals("String")){
-					a = new ChannelAccessTableActuator<String>(createChannel(Double.class, p.getName()), createChannel(String.class, p.getDone()), p.getDoneValue(), p.getDoneDelay(), table, moveTimeout);
-				}
-				else if(p.getType().equals("Double")){
-					a = new ChannelAccessTableActuator<Double>(createChannel(Double.class, p.getName()), createChannel(Double.class, p.getDone()), Double.parseDouble(p.getDoneValue()), p.getDoneDelay(), table, moveTimeout);
-				}
-				else{
-					// Default
-					a = new ChannelAccessTableActuator<Integer>(createChannel(Double.class, p.getName()), createChannel(Integer.class, p.getDone()), Integer.parseInt(p.getDoneValue()), p.getDoneDelay(), table, moveTimeout);
-				}
-				
+                                Device dev = Context.getInstance().getDevicePool().getByName(p.getName(), Device.class);
+                                Sensor sensor;
+                                if (dev != null){                                                            
+                                     a = new DeviceTableActuator(dev, createDoneChannel(p), p.getDoneValue(), p.getDoneDelay(), table, moveTimeout);
+                                     sensor = new DeviceSensor(p.getId(), dev, configModel.isFailOnSensorError());
+                                } else {
+                                    a = new ChannelAccessTableActuator<String>(createChannel(Double.class, p.getName()),  createDoneChannel(p), p.getDoneValue(), p.getDoneDelay(), table, moveTimeout);
+                                    // Add a sensor for the readback
+                                    String name = ap.getReadback();
+                                    if((name==null)||name.isBlank()){
+                                            name = ap.getName();
+                                    }
+                                    sensor = new ChannelAccessSensor<Double>(ap.getId(), createChannel(Double.class, name), configModel.isFailOnSensorError());
+                                }
 				a.setAsynchronous(p.isAsynchronous());
 				Actor actuator = a;
 				
 				aLoop.getActors().add(actuator);
-				
-				// Add a sensor for the readback
-				String name = ap.getReadback();
-				if((name==null)||name.isBlank()){
-					name = ap.getName();
-				}
-				ChannelAccessSensor<Double> sensor = new ChannelAccessSensor<Double>(ap.getId(), createChannel(Double.class, name), configModel.isFailOnSensorError());
 				aLoop.getSensors().add(sensor);
 			}
 			else if (p instanceof RegionPositioner){
@@ -894,19 +889,16 @@ public class Acquisition {
 						}
 						
 						// Create actuator
-						ChannelAccessLinearActuator<?> act;
-						if(rp.getType().equals("String")){
-							act = new ChannelAccessLinearActuator<String>(createChannel(Double.class, rp.getName()), createChannel(String.class, rp.getDone()), rp.getDoneValue(), rp.getDoneDelay(), start, r.getEnd(), r.getStepSize(), moveTimeout);
-						}
-						else if(rp.getType().equals("Double")){
-							act = new ChannelAccessLinearActuator<Double>(createChannel(Double.class, rp.getName()), createChannel(Double.class, rp.getDone()), Double.parseDouble(rp.getDoneValue()), rp.getDoneDelay(), start, r.getEnd(), r.getStepSize(), moveTimeout);
-						}
-						else{
-							act = new ChannelAccessLinearActuator<Integer>(createChannel(Double.class, rp.getName()), createChannel(Integer.class, rp.getDone()), Integer.parseInt(rp.getDoneValue()), rp.getDoneDelay(), start, r.getEnd(), r.getStepSize(), moveTimeout);
-						}
-						
-						act.setAsynchronous(rp.isAsynchronous());
-						Actor a = act;
+                                                Actor a;
+                                                ChannelAccessLinearActuator<?> act;
+                                                Device dev = Context.getInstance().getDevicePool().getByName(rp.getName(), Device.class);
+                                                if (dev != null){
+                                                    act = new DeviceLinearActuator(dev, createDoneChannel(rp), rp.getDoneValue(), rp.getDoneDelay(), r.getStart(), r.getEnd(), r.getStepSize(), moveTimeout);
+                                                } else {                                                
+                                                    act = new ChannelAccessLinearActuator(createChannel(Double.class, rp.getName()), createDoneChannel(rp), rp.getDoneValue(), rp.getDoneDelay(), start, r.getEnd(), r.getStepSize(), moveTimeout);                 
+                                                }
+                                                act.setAsynchronous(rp.isAsynchronous());
+                                                a=act;
 						
 						ComplexActuator ca = new ComplexActuator();
 						ca.getActors().add(a);
@@ -922,17 +914,12 @@ public class Acquisition {
 						// [THIS LIMITATION NEEDS TO BE SOMEHOW RESOLVED IN THE NEXT VERSIONS]
 						JythonFunction function = mapFunction(r.getFunction());
 						ChannelAccessFunctionActuator<?> act;
-						if(rp.getType().equals("String")){
-							act = new ChannelAccessFunctionActuator<String>(createChannel(Double.class,rp.getName()), createChannel(String.class,rp.getDone()), rp.getDoneValue(), rp.getDoneDelay(), function, r.getStart(), r.getEnd(), r.getStepSize(), moveTimeout);
-						}
-						else if(rp.getType().equals("Double")){
-							act = new ChannelAccessFunctionActuator<Double>(createChannel(Double.class, rp.getName()), createChannel(Double.class, rp.getDone()), Double.parseDouble(rp.getDoneValue()), rp.getDoneDelay(), function, r.getStart(), r.getEnd(), r.getStepSize(), moveTimeout);
-						}
-						else{
-							// Default
-							act = new ChannelAccessFunctionActuator<Integer>(createChannel(Double.class, rp.getName()), createChannel(Integer.class, rp.getDone()), Integer.parseInt(rp.getDoneValue()), rp.getDoneDelay(), function, r.getStart(), r.getEnd(), r.getStepSize(), moveTimeout);
-						}
-						
+                                                Device dev = Context.getInstance().getDevicePool().getByName(rp.getName(), Device.class);
+                                                if (dev != null){
+                                                    act = new DeviceFunctionActuator(dev, createDoneChannel(rp), rp.getDoneValue(), rp.getDoneDelay(), function, r.getStart(), r.getEnd(), r.getStepSize(), moveTimeout);
+                                                } else {  
+                                                    act = new ChannelAccessFunctionActuator(createChannel(Double.class,rp.getName()), createDoneChannel(rp), rp.getDoneValue(), rp.getDoneDelay(), function, r.getStart(), r.getEnd(), r.getStepSize(), moveTimeout);
+                                                }
 						act.setAsynchronous(rp.isAsynchronous());
 						Actor a = act;
 						
@@ -944,13 +931,19 @@ public class Acquisition {
 					}
 				}
 				aLoop.getActors().add(actuator);
-				
-				// Add a sensor for the readback
-				String name = rp.getReadback();
-				if((name==null)||name.isBlank()){
-					name = rp.getName();
-				}
-				ChannelAccessSensor<Double> sensor = new ChannelAccessSensor<Double>(rp.getId(), createChannel(Double.class, name), configModel.isFailOnSensorError());
+                               
+                                Sensor sensor;
+                                Device dev = Context.getInstance().getDevicePool().getByName(rp.getName(), Device.class);
+                                if (dev != null){
+                                    sensor = new DeviceSensor(rp.getId(), dev, configModel.isFailOnSensorError());
+                                } else {
+                                    // Add a sensor for the readback
+                                    String name = rp.getReadback();
+                                    if((name==null)||name.isBlank()){
+                                            name = rp.getName();
+                                    }
+                                    sensor = new ChannelAccessSensor<Double>(rp.getId(), createChannel(Double.class, name), configModel.isFailOnSensorError());
+                                }
 				aLoop.getSensors().add(sensor);
 			}
 			else if(p instanceof PseudoPositioner){
@@ -1060,12 +1053,17 @@ public class Acquisition {
 			
 			// Add sensor
 			Sensor sensor;
-			if(sd.getType().equals("String")){
-				sensor = new ChannelAccessSensor<>(sd.getId(), createChannel(String.class,sd.getName()), configModel.isFailOnSensorError());
-			}
-			else{
-				sensor = new ChannelAccessSensor<>(sd.getId(), createChannel(Double.class,sd.getName()), configModel.isFailOnSensorError());
-			}
+                        Device dev = Context.getInstance().getDevicePool().getByName(sd.getName(), Device.class);
+                        if (dev != null){
+                            sensor = new DeviceSensor(sd.getId(), dev, configModel.isFailOnSensorError());
+                        } else {                      
+                            if(sd.getType().equals("String")){
+                                    sensor = new ChannelAccessSensor<>(sd.getId(), createChannel(String.class,sd.getName()), configModel.isFailOnSensorError());
+                            }
+                            else{
+                                    sensor = new ChannelAccessSensor<>(sd.getId(), createChannel(Double.class,sd.getName()), configModel.isFailOnSensorError());
+                            }
+                        }
 			
 			aLoop.getSensors().add(sensor);
 		}
@@ -1074,10 +1072,15 @@ public class Acquisition {
 			
 			// Add pre actions
 			aLoop.getPreSensorActions().addAll(mapActions(ad.getPreAction()));
-			
-			// Ad sensor
-			Sensor sensor = new ChannelAccessSensor<>(ad.getId(), createChannel(double[].class, ad.getName(), ad.getArraySize()), configModel.isFailOnSensorError());
-			aLoop.getSensors().add(sensor);
+			Sensor sensor;
+			// Add sensor
+                        Device dev = Context.getInstance().getDevicePool().getByName(ad.getName(), Device.class);
+                        if (dev != null){
+                            sensor = new DeviceSensor(ad.getId(), dev, configModel.isFailOnSensorError());
+                        } else {     
+                            sensor = new ChannelAccessSensor<>(ad.getId(), createChannel(double[].class, ad.getName(), ad.getArraySize()), configModel.isFailOnSensorError());
+                        }
+                        aLoop.getSensors().add(sensor);
 		}
 		else if (detector instanceof DetectorOfDetectors){
 			DetectorOfDetectors dd = (DetectorOfDetectors) detector;
@@ -1182,6 +1185,19 @@ public class Acquisition {
 		return aLoop;
 	}
 	
+        private Channel createDoneChannel(DiscreteStepPositioner p){
+            
+            if(p.getType().equals("String")){
+                    return createChannel(String.class, p.getDone());
+            }
+            else if(p.getType().equals("Double")){
+                    return  createChannel(Double.class,p.getDone());
+            }
+            // Default
+            return createChannel(Integer.class, p.getDone());
+        }
+
+        
 	private <T> Channel<T> createChannel(Class<T> type, String name, boolean monitor){
 		try {
 			if(name== null){
