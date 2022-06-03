@@ -34,11 +34,6 @@ public class DeviceLinearActuator<T> extends ChannelAccessLinearActuator {
         if (! (device instanceof Writable)){
             throw new IllegalStateException("Device " + device.getName() +  " is not Writable");
         }
-        if ((!asynchronous) && (timeout != null)) {
-            if (! (device instanceof Movable)){
-                throw new IllegalStateException("Device " + device.getName() +  " must be Movable for synchronous option with timeout");
-            } 
-        }
         if (checkActorSet) {
             if (device instanceof ReadbackDevice) {
                 readback = ((ReadbackDevice) device).getReadback();
@@ -63,14 +58,22 @@ public class DeviceLinearActuator<T> extends ChannelAccessLinearActuator {
         logger.finest("Set device " + device.getName() + " to value: " + value);
         try {
 
-            if (!asynchronous) {
-                if (timeout == null) {
+            if (asynchronous) {
+                if (! (device instanceof Movable)){
+                    ((Writable)device).writeAsync(value);
+                } else {
+                     ((Movable)device).moveAsync(value);
+                }
+             } else {    
+                if (! (device instanceof Movable)){
                     ((Writable)device).write(value);
                 } else {
-                    ((Movable)device).move(value, timeout.intValue());
+                    if (timeout == null){
+                         ((Movable)device).move(value);
+                    } else {
+                        ((Movable)device).move(value, timeout.intValue());
+                    }
                 }
-            } else {
-                ((Writable)device).writeAsync(value);
             }
 
             if (doneChannel != null) {

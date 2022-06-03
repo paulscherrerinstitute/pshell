@@ -157,7 +157,7 @@ public abstract class DiscreteStepPositioner
      *     
      */
     public double getSettlingTime() {   
-        return getDouble(doneDelayVar,  (doneDelay == null) ? 0.0D : doneDelay);
+        return getDouble(settlingTimeVar,  (settlingTime == null) ? 0.0D : settlingTime);
     }
 
     /**

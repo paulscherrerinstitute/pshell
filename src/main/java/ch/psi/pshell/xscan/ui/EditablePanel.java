@@ -40,6 +40,7 @@ public class EditablePanel<T> extends javax.swing.JPanel implements EditableComp
     protected boolean modified = false;
     private final List<PanelSupport> panelSupportList = new ArrayList<>();
     private static Object DEFAULT_VALUE_ON_ERROR = new Object();
+    private boolean updating = false;
 
     protected EditablePanel() {
         this(null);
@@ -83,6 +84,11 @@ public class EditablePanel<T> extends javax.swing.JPanel implements EditableComp
     public void clearModified() {
         modified = false;
     }
+    
+    @Override
+    public void setModified() {
+        modified = true;
+    }    
 
     protected void setManagedFields(JButton button, Component[] mandatory) {
         setManagedFields(button, mandatory, new Component[0]);
@@ -206,7 +212,7 @@ public class EditablePanel<T> extends javax.swing.JPanel implements EditableComp
                                 }
                                 if (hasChanged(sel, getter.invoke(obj))) {
                                     setter.invoke(obj, sel);
-                                    modified = true;
+                                    setModified();
                                 }
                             } catch (Exception ex) {
                                 Logger.getLogger(EditableComponent.class.getName()).log(Level.SEVERE, null, ex);
@@ -222,7 +228,7 @@ public class EditablePanel<T> extends javax.swing.JPanel implements EditableComp
                             try {
                                 if (hasChanged(check.isSelected(), getter.invoke(obj))){
                                     setter.invoke(obj, check.isSelected());
-                                    modified = true;
+                                    setModified();
                                 }
                             } catch (Exception ex) {
                                 Logger.getLogger(EditableComponent.class.getName()).log(Level.SEVERE, null, ex);
@@ -262,57 +268,64 @@ public class EditablePanel<T> extends javax.swing.JPanel implements EditableComp
                     textComponent.getDocument().addDocumentListener(new DocumentAdapter() {
                         @Override
                         public void valueChange(DocumentEvent de) {
-                            boolean changed;
-                            try {
-                                Object cur = getter.invoke(obj);                                
-                                String str = realFieldValue ? getPanelSupport(editor).getValue(editor) : textComponent.getText();                                
-                                String var=(getterVar!=null) ? (String)getterVar.invoke(obj): null;
-                                Object edited=null;
-                                Object editedVar=null;
-                                if (str != null) {     
-                                    if ((getterVar!=null) && ((getVariable(str)!=null) || (getInterpreterVariable(str)!=null))){
-                                        editedVar = str;
-                                    } else {                                
-                                        if ((type == String.class)||(type == Object.class)) {
-                                            edited = str;
-                                        } else if ((type == Boolean.class) || (type == boolean.class)) {
-                                            edited = Boolean.valueOf(str.trim());
-                                        } else {
-                                            Double editedDouble;
-                                            editedDouble = Double.valueOf(str.trim());
-                                            edited = Convert.toType(editedDouble, type);
-                                        }
-                                        //if (var!=null){
-                                        //    modified = true;
-                                        //}                                                             
-                                    }
-                                    if (editedVar!=null){
-                                        if (hasChanged(editedVar, var)) {
-                                            setterVar.invoke(obj, editedVar);
-                                            modified = true;
-                                        }                                        
-                                    } else {
-                                        if (hasChanged(edited, cur)) {
-                                            setter.invoke(obj, edited);
-                                            if (setterVar!=null){
-                                                setterVar.invoke(obj, (String)null);
+                            if (!updating){
+                                updating=true;
+                                //Must invoke because doc updating to current value generate 1 remove + 1 insert, and doc is marked as changed if checked in between
+                                SwingUtilities.invokeLater(()->{
+                                    updating=false;
+                                    boolean changed;
+                                    try {
+                                        Object cur = getter.invoke(obj);                                
+                                        String str = realFieldValue ? getPanelSupport(editor).getValue(editor) : textComponent.getText();                                
+                                        String var=(getterVar!=null) ? (String)getterVar.invoke(obj): null;
+                                        Object edited=null;
+                                        Object editedVar=null;
+                                        if (str != null) {     
+                                            if ((getterVar!=null) && ((getVariable(str)!=null) || (getInterpreterVariable(str)!=null))){
+                                                editedVar = str;
+                                            } else {                                
+                                                if ((type == String.class)||(type == Object.class)) {
+                                                    edited = str;
+                                                } else if ((type == Boolean.class) || (type == boolean.class)) {
+                                                    edited = Boolean.valueOf(str.trim());
+                                                } else {
+                                                    Double editedDouble;
+                                                    editedDouble = Double.valueOf(str.trim());
+                                                    edited = Convert.toType(editedDouble, type);
+                                                }
+                                                //if (var!=null){
+                                                //    setModified();
+                                                //}                                                             
                                             }
-                                            modified = true;
+                                            if (editedVar!=null){
+                                                if (hasChanged(editedVar, var)) {
+                                                    setterVar.invoke(obj, editedVar);
+                                                    setModified();
+                                                }                                        
+                                            } else {
+                                                if (hasChanged(edited, cur)) {
+                                                    setter.invoke(obj, edited);
+                                                    if (setterVar!=null){
+                                                        setterVar.invoke(obj, (String)null);
+                                                    }
+                                                    setModified();
+                                                }
+                                            }
+                                        }
+                                    } catch (Exception e) {
+                                        try {
+                                            if (type == String.class) {
+                                                setter.invoke(obj, (valueOnError == DEFAULT_VALUE_ON_ERROR) ? "" : valueOnError);
+                                            } else if ((type == Boolean.class) || (type == boolean.class)) {
+                                                setter.invoke(obj, (valueOnError == DEFAULT_VALUE_ON_ERROR) ? false : valueOnError);
+                                            } else {
+                                                setter.invoke(obj, Convert.toType((valueOnError == DEFAULT_VALUE_ON_ERROR) ? 0.0 : (Number) valueOnError, type));
+                                            }
+                                        } catch (Exception ex) {
+                                            Logger.getLogger(EditableComponent.class.getName()).log(Level.SEVERE, null, ex);
                                         }
                                     }
-                                }
-                            } catch (Exception e) {
-                                try {
-                                    if (type == String.class) {
-                                        setter.invoke(obj, (valueOnError == DEFAULT_VALUE_ON_ERROR) ? "" : valueOnError);
-                                    } else if ((type == Boolean.class) || (type == boolean.class)) {
-                                        setter.invoke(obj, (valueOnError == DEFAULT_VALUE_ON_ERROR) ? false : valueOnError);
-                                    } else {
-                                        setter.invoke(obj, Convert.toType((valueOnError == DEFAULT_VALUE_ON_ERROR) ? 0.0 : (Number) valueOnError, type));
-                                    }
-                                } catch (Exception ex) {
-                                    Logger.getLogger(EditableComponent.class.getName()).log(Level.SEVERE, null, ex);
-                                }
+                                });
                             }
                         }
                     });                           

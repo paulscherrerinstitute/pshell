@@ -11,5 +11,7 @@ public interface EditableComponent {
     public boolean modified();
 
     public void clearModified();
+    
+    public void setModified();
 
 }

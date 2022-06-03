@@ -9,8 +9,10 @@
 package ch.psi.pshell.xscan.model;
 
 import java.io.Serializable;
+import ch.psi.pshell.xscan.VariableSolver;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlType;
 
 
@@ -39,24 +41,30 @@ import javax.xml.bind.annotation.XmlType;
 @XmlType(name = "LinearPositioner", propOrder = {
     "start",
     "end",
-    "stepSize"
+    "stepSize",
+    "startVar",
+    "endVar",
+    "stepSizeVar"    
 })
+
 public class LinearPositioner
     extends DiscreteStepPositioner
-    implements Serializable
+    implements Serializable, VariableSolver
 {
 
     private final static long serialVersionUID = 1L;
     protected double start;
     protected double end;
     protected double stepSize;
-
+    protected String startVar;
+    protected String endVar;
+    protected String stepSizeVar;
     /**
      * Gets the value of the start property.
      * 
      */
     public double getStart() {
-        return start;
+        return getDouble(startVar, start);
     }
 
     /**
@@ -72,7 +80,7 @@ public class LinearPositioner
      * 
      */
     public double getEnd() {
-        return end;
+        return getDouble(endVar, end);
     }
 
     /**
@@ -88,7 +96,7 @@ public class LinearPositioner
      * 
      */
     public double getStepSize() {
-        return stepSize;
+        return getDouble(stepSizeVar, stepSize);
     }
 
     /**
@@ -99,4 +107,51 @@ public class LinearPositioner
         this.stepSize = value;
     }
 
+    /**
+     * Gets the value of the startVar property.
+     * 
+     */
+    public String getStartVar() {
+        return startVar;
+    }
+
+    /**
+     * Sets the value of the startVar property.
+     * 
+     */
+    public void setStartVar(String value) {
+        this.startVar = value;
+    }
+
+    /**
+     * Gets the value of the endVar property.
+     * 
+     */
+    public String getEndVar() {
+        return endVar;
+    }
+
+    /**
+     * Sets the value of the endVar property.
+     * 
+     */
+    public void setEndVar(String value) {
+        this.endVar = value;
+    }
+
+    /**
+     * Gets the value of the stepSizeVar property.
+     * 
+     */
+    public String getStepSizeVar() {
+        return stepSizeVar;
+    }
+
+    /**
+     * Sets the value of the stepSizeVar property.
+     * 
+     */
+    public void setStepSizeVar(String value) {
+        this.stepSizeVar = value;
+    }
 }

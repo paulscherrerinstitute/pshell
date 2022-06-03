@@ -37,11 +37,6 @@ public class DeviceTableActuator<T> extends ChannelAccessTableActuator {
         if (! (device instanceof Writable)){
             throw new IllegalStateException("Device " + device.getName() +  " is not Writable");
         }
-        if ((!asynchronous) && (timeout != null)) {
-            if (! (device instanceof Movable)){
-                throw new IllegalStateException("Device " + device.getName() +  " must be Movable for synchronous option with timeout");
-            } 
-        }
         if (checkActorSet) {
             if (device instanceof ReadbackDevice) {
                 readback = ((ReadbackDevice) device).getReadback();
@@ -68,19 +63,22 @@ public class DeviceTableActuator<T> extends ChannelAccessTableActuator {
         
         
         try {
-            if (!asynchronous) {
-                if (timeout == null) {
+            if (asynchronous) {
+                if (! (device instanceof Movable)){
+                    ((Writable)device).writeAsync(fvalue);
+                } else {
+                     ((Movable)device).moveAsync(fvalue);
+                }
+             } else {    
+                if (! (device instanceof Movable)){
                     ((Writable)device).write(fvalue);
                 } else {
-                    ((Movable)device).move(fvalue, timeout.intValue());
+                    if (timeout == null){
+                         ((Movable)device).move(fvalue);
+                    } else {
+                        ((Movable)device).move(fvalue, timeout.intValue());
+                    }
                 }
-            } else {
-                ((Writable)device).writeAsync(fvalue);
-            }
-
-            if (doneChannel != null) {
-                Thread.sleep(doneDelay);
-                doneChannel.waitForValue(doneValue);
             }
 
             // Check whether the set value is really on the value that was set before.
