@@ -83,6 +83,7 @@ import ch.psi.jcae.util.ComparatorOR;
 import ch.psi.jcae.util.ComparatorREGEX;
 import ch.psi.pshell.core.Context;
 import ch.psi.pshell.core.ExecutionParameters;
+import ch.psi.pshell.core.InlineDevice;
 import ch.psi.pshell.core.LogManager;
 import ch.psi.pshell.core.Setup;
 import ch.psi.pshell.data.DataManager;
@@ -753,6 +754,20 @@ public class Acquisition {
 		}
 		return(alist);
 	}
+        
+        
+        Device getDevice(String name){
+            Device dev = Context.getInstance().getDevicePool().getByName(name, Device.class);
+            if (dev!=null){
+                return dev;
+            }
+            try{
+                return InlineDevice.create(name, null);
+            } catch (Exception ex){
+                
+            }
+            return null;
+        }
 	
 	/**
 	 * Map a discrete step dimension onto a actor sensor loop
@@ -781,7 +796,7 @@ public class Acquisition {
 				LinearPositioner lp =(LinearPositioner) p;
                                 Actor actuator;
                                 Sensor sensor;
-                                Device dev = Context.getInstance().getDevicePool().getByName(lp.getName(), Device.class);
+                                Device dev = getDevice(lp.getName());
                                 ChannelAccessLinearActuator<?> a;
                                 if (dev != null){
                                     a = new DeviceLinearActuator(dev, createChannel(String.class, lp.getDone()), lp.getDoneValue(), lp.getDoneDelay(), lp.getStart(), lp.getEnd(), lp.getStepSize(), moveTimeout);
@@ -808,7 +823,7 @@ public class Acquisition {
 				// Create function object
 				JythonFunction function = mapFunction(lp.getFunction());
 				
-                                Device dev = Context.getInstance().getDevicePool().getByName(lp.getName(), Device.class);
+                                Device dev = getDevice(lp.getName());
                                 ChannelAccessFunctionActuator<?> a;
                                 Sensor sensor;
                                 if (dev != null){                                                            
@@ -841,7 +856,7 @@ public class Acquisition {
 				}
 				
 				ChannelAccessTableActuator<?> a;
-                                Device dev = Context.getInstance().getDevicePool().getByName(p.getName(), Device.class);
+                                Device dev = getDevice(p.getName());
                                 Sensor sensor;
                                 if (dev != null){                                                            
                                      a = new DeviceTableActuator(dev, createDoneChannel(p), p.getDoneValue(), p.getDoneDelay(), table, moveTimeout);
@@ -933,7 +948,7 @@ public class Acquisition {
 				aLoop.getActors().add(actuator);
                                
                                 Sensor sensor;
-                                Device dev = Context.getInstance().getDevicePool().getByName(rp.getName(), Device.class);
+                                Device dev = getDevice(rp.getName());
                                 if (dev != null){
                                     sensor = new DeviceSensor(rp.getId(), dev, configModel.isFailOnSensorError());
                                 } else {
@@ -1053,7 +1068,7 @@ public class Acquisition {
 			
 			// Add sensor
 			Sensor sensor;
-                        Device dev = Context.getInstance().getDevicePool().getByName(sd.getName(), Device.class);
+                        Device dev = getDevice(sd.getName());
                         if (dev != null){
                             sensor = new DeviceSensor(sd.getId(), dev, configModel.isFailOnSensorError());
                         } else {                      
@@ -1074,7 +1089,7 @@ public class Acquisition {
 			aLoop.getPreSensorActions().addAll(mapActions(ad.getPreAction()));
 			Sensor sensor;
 			// Add sensor
-                        Device dev = Context.getInstance().getDevicePool().getByName(ad.getName(), Device.class);
+                        Device dev = getDevice(ad.getName());
                         if (dev != null){
                             sensor = new DeviceSensor(ad.getId(), dev, configModel.isFailOnSensorError());
                         } else {     

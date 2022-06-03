@@ -6,6 +6,7 @@ import ch.psi.pshell.data.DataManager;
 import ch.psi.pshell.data.Layout;
 import ch.psi.pshell.data.LayoutDefault;
 import ch.psi.pshell.data.LayoutTable;
+import ch.psi.pshell.device.DescStatsDouble;
 import ch.psi.utils.Arr;
 import ch.psi.utils.EventBusListener;
 import ch.psi.utils.Convert;
@@ -84,6 +85,9 @@ public class SerializerPShell implements EventBusListener {
                             }
                             type = Array.newInstance(type, 0).getClass();
                         }
+                    }
+                    if (type == DescStatsDouble.class){
+                        type=Double.class;
                     }
                     types.set(i, type);
                 }

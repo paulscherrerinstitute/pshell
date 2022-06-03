@@ -1,6 +1,7 @@
 package ch.psi.pshell.xscan.core;
 
 import ch.psi.utils.Str;
+import ch.psi.pshell.device.DescStatsDouble;
 import ch.psi.pshell.device.Device;
 import ch.psi.pshell.device.ReadbackDevice;
 import ch.psi.pshell.device.Readable;
@@ -43,6 +44,9 @@ public class DeviceSensor implements Sensor {
             }
                 
             v = readback.read();
+            if (v instanceof DescStatsDouble){
+                v=((DescStatsDouble)v).doubleValue();
+            }
             if (logger.isLoggable(Level.FINEST)) {
                 logger.finest("Read device [" + device.getName() + "]: " + Str.toString(v, 10));
             }
