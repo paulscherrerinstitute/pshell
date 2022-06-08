@@ -102,7 +102,7 @@ public class DiscretePositionerSelector extends DevicePanel{
                 showException(ex);
             }
         }
-        combo.setToolTipText((device==null) ? null : device.getName());
+        combo.setToolTipText(getDeviceTooltip());
         super.setDevice(device);
     }
 

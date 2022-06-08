@@ -29,7 +29,7 @@ public final class DeviceStatePanel extends DevicePanel {
         if (device == null) {
             labelState.setText(" ");
         }
-        labelState.setToolTipText((device==null) ? null : device.getName());
+        labelState.setToolTipText(getDeviceTooltip());
     }
 
     /**

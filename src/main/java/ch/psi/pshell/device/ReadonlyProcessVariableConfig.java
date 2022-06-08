@@ -13,7 +13,7 @@ public class ReadonlyProcessVariableConfig extends RegisterConfig {
     public boolean hasDefinedUnit() {
         return isStringDefined(unit);
     }
-
+      
     public double applySign(Double value) {
         if (sign_bit <= 0) {
             return value;
@@ -25,5 +25,10 @@ public class ReadonlyProcessVariableConfig extends RegisterConfig {
         }
         return l;
     }
-
+    
+    @Override
+    public boolean isUndefined(){
+        return !hasDefinedUnit();
+    }    
+      
 }

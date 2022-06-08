@@ -59,4 +59,8 @@ public interface Device extends GenericDevice<DeviceListener> {
         }
         return false;
     }
+    
+    default String getDescription(){
+        return "";
+    }
 };

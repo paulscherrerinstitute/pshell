@@ -2,6 +2,10 @@ package ch.psi.pshell.data;
 
 import ch.psi.pshell.core.Context;
 import ch.psi.pshell.core.ExecutionParameters;
+import ch.psi.pshell.core.InlineDevice;
+import static ch.psi.pshell.data.Layout.ATTR_DEVICE_CHANNEL;
+import static ch.psi.pshell.data.Layout.ATTR_DEVICE_DESC;
+import static ch.psi.pshell.data.Layout.ATTR_DEVICE_UNIT;
 import static ch.psi.pshell.data.Layout.ATTR_END_TIMESTAMP;
 import static ch.psi.pshell.data.Layout.ATTR_FILE;
 import static ch.psi.pshell.data.Layout.ATTR_NAME;
@@ -12,6 +16,8 @@ import static ch.psi.pshell.data.Layout.ATTR_PLOT_TYPES;
 import static ch.psi.pshell.data.Layout.ATTR_PLOT_TYPES_SEPARATOR;
 import static ch.psi.pshell.data.Layout.ATTR_START_TIMESTAMP;
 import static ch.psi.pshell.data.Layout.ATTR_VERSION;
+import ch.psi.pshell.device.Device;
+import ch.psi.pshell.device.ReadonlyRegister;
 import ch.psi.pshell.scan.Scan;
 import ch.psi.pshell.scripting.ViewPreference;
 import ch.psi.utils.Chrono;
@@ -271,5 +277,42 @@ public abstract class LayoutBase implements Layout {
             scanFiles.remove(scan);
         }        
     }            
+    
+    
+    public void writeDeviceMetadataAttrs(String dataset, Object dev) throws IOException{
+        if (dev instanceof Device){    
+            try{
+                String desc = ((Device)dev).getDescription();
+                if ((desc!=null)&&(!desc.isBlank())){
+                    getDataManager().setAttribute(dataset, ATTR_DEVICE_DESC, desc.trim());
+                }       
+            } catch (Exception ex){
+            }  
+            try{
+                String channel = InlineDevice.getChannelName((Device)dev);
+                if (channel!=null){
+                    getDataManager().setAttribute(dataset, ATTR_DEVICE_CHANNEL, channel);
+                }      
+            } catch (Exception ex){
+            } 
+            if (dev instanceof ReadonlyRegister){
+                ReadonlyRegister reg = (ReadonlyRegister)dev;
+                try{
+                    String unit = reg.getUnit();
+                    if((unit!=null)&&(!unit.isBlank())){
+                        getDataManager().setAttribute(dataset, ATTR_DEVICE_UNIT, unit.trim());
+                    }                
+                } catch (Exception ex){
+                }          
+                try{
+                    int precision = reg.getPrecision();
+                    if (precision!=ReadonlyRegister.UNDEFINED_PRECISION){
+                        getDataManager().setAttribute(dataset, ATTR_DEVICE_PREC, precision);
+                    }       
+                } catch (Exception ex){
+                }   
+            }
+        }
+    }    
 }
  

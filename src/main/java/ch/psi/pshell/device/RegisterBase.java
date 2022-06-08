@@ -35,7 +35,7 @@ public abstract class RegisterBase<T> extends ReadonlyRegisterBase<T> implements
 
     protected void initializeAccessType() {
     }
-
+    
 
     @Override
     public void assertValidValue(T value) throws IllegalArgumentException {
@@ -120,6 +120,6 @@ public abstract class RegisterBase<T> extends ReadonlyRegisterBase<T> implements
     public SettlingCondition getSettlingCondition() {
         return settlingCondition;
     }
-
+    
     abstract protected void doWrite(T value) throws IOException, InterruptedException;
 }

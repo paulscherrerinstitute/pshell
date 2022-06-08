@@ -376,4 +376,15 @@ public class DevicePanel extends MonitoredPanel {
         return showConfigEditor(this, getDevice(), modal, readOnly);
     }        
     
+    protected String getDeviceTooltip(){
+        if (device==null){
+            return null;
+        }
+        String tooltip = device.getName();
+        String desc = device.getDescription();
+        if ((desc!=null) && (!desc.isBlank())){
+            tooltip  = tooltip + " (" + desc.trim() + ")";
+        }
+        return tooltip;
+    }
 }

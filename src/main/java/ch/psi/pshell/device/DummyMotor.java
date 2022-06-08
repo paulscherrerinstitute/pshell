@@ -16,7 +16,7 @@ public class DummyMotor extends MotorBase {
     protected void doInitialize() throws IOException, InterruptedException {
         super.doInitialize();
         //If units not set assumes it is first execution 
-        if (!getConfig().hasDefinedUnit()) {
+        if (getConfig().isUndefined()) {
             MotorConfig cfg = getConfig();
             cfg.minValue = -10.0;
             cfg.maxValue = 10.0;

@@ -49,7 +49,7 @@ public class LayoutDefault extends LayoutBase implements Layout {
     public String getDefaultGroup(Scan scan) {
         return scan.getTag();
     }
-
+    
     @Override
     public void onStart(Scan scan) throws IOException {
         DataManager dataManager = getDataManager();
@@ -85,6 +85,7 @@ public class LayoutDefault extends LayoutBase implements Layout {
                 //TODO: assuming for area scan one Writable for each dimension
                 dimension++;
             }
+            writeDeviceMetadataAttrs(getPath(scan, name), writable);
         }
         dataManager.createDataset(getPath(scan, getMetaPath() + TIMESTAMPS_DATASET), Long.class, new int[]{samples});
         ReadableArray a;
@@ -119,6 +120,7 @@ public class LayoutDefault extends LayoutBase implements Layout {
                 }
             }
             dataManager.setAttribute(getPath(scan, name), ATTR_READABLE_INDEX, index++);
+            writeDeviceMetadataAttrs(getPath(scan, name), readable);
         }
         dataManager.setAttribute(group, ATTR_SCAN_DIMENSION, scan.getDimensions());
         dataManager.setAttribute(group, ATTR_SCAN_STEPS, (scan.getNumberOfSteps().length > 0) ? scan.getNumberOfSteps() : new int[]{-1});

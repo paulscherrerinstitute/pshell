@@ -42,7 +42,7 @@ public final class DeviceValuePanel extends DevicePanel {
         if (device == null) {
             setText(null);
         }
-        labelValue.setToolTipText((device==null) ? null : device.getName());
+        labelValue.setToolTipText(getDeviceTooltip());
     }
 
     public JLabel getLabel() {

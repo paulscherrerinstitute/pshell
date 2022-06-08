@@ -11,7 +11,6 @@ public interface ReadonlyRegister<T> extends Device, Readable<T>, Cacheable<T> {
 
     //public boolean isArray();
     //public int getMaximumSize();
-    int getPrecision();
 
     @Hidden
     default boolean isReadonlyRegister() { return true; }
@@ -64,4 +63,13 @@ public interface ReadonlyRegister<T> extends Device, Readable<T>, Cacheable<T> {
     T getValue() throws IOException, InterruptedException;
 
     void waitValueInRange(T value, T range, int timeout) throws IOException, InterruptedException;
+    
+    
+    default String getUnit(){
+        return "";
+    }    
+    
+    default int getPrecision(){
+        return UNDEFINED_PRECISION;
+    }
 }

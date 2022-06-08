@@ -1,6 +1,7 @@
 package ch.psi.pshell.device;
 
 import ch.psi.utils.Reflection.Hidden;
+import java.io.IOException;
 
 /**
  * Base class for ProcessVariable implementations.
@@ -50,7 +51,15 @@ public abstract class ProcessVariableBase extends RegisterBase<Double> implement
         }
         return getConfig().unit;
     }
-
+    
+    @Override
+    public String getDescription() {
+        if (!getConfig().hasDefinedDescription()) {
+            return "";
+        }
+        return getConfig().description;
+    }
+    
     @Override
     public double getMinValue() {
         return adjustPrecision(getConfig().minValue);

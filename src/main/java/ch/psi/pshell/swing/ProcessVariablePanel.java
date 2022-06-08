@@ -184,7 +184,7 @@ public final class ProcessVariablePanel extends DevicePanel {
             updatingSlider = false;
         }
 
-        textReadback.setToolTipText((device==null) ? null : device.getName());
+        textReadback.setToolTipText(getDeviceTooltip());
         textReadback.setVisible((device != null) && (device instanceof ReadbackDevice));
         buttonStop.setVisible(showStop && (device != null) && (device instanceof Stoppable));
     }
