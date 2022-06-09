@@ -694,9 +694,7 @@ public final class ProcessorXScan extends MonitoredPanel implements Processor {
                     String name = file.getName();
                     name = name.replaceAll("_[0-9]*.txt$", "");
                     //If no suffix
-                    if (file.isFile()) {
-                        name = IO.getPrefix(file);
-                    }
+                    name = name.replaceAll(".txt$", "");
                     File cfile = new File(dir, name + "." + EXTENSION);
 
                     // Check existence of files

@@ -165,6 +165,7 @@ public class PreferencesDialog extends StandardDialog {
         ckScanPlotEnabled.setSelected(!preferences.scanPlotDisabled);
         ckScanTableEnabled.setSelected(!preferences.scanTableDisabled);
         checkCachedDataPanel.setSelected(preferences.cachedDataPanel);
+        textDataExtensions.setText((preferences.dataExtensions==null) ? "" : preferences.dataExtensions);
         checkShowEmergencyStop.setSelected(preferences.showEmergencyStop);
         checkShowHomingButtons.setSelected(preferences.showHomingButtons);
         checkShowJogButtons.setSelected(preferences.showJogButtons); 
@@ -290,6 +291,8 @@ public class PreferencesDialog extends StandardDialog {
         tableProcessingScripts = new javax.swing.JTable();
         buttonRemoveProcScript = new javax.swing.JButton();
         checkCachedDataPanel = new javax.swing.JCheckBox();
+        jLabel30 = new javax.swing.JLabel();
+        textDataExtensions = new javax.swing.JTextField();
         panelPlots = new javax.swing.JPanel();
         jLabel6 = new javax.swing.JLabel();
         jLabel7 = new javax.swing.JLabel();
@@ -835,7 +838,7 @@ public class PreferencesDialog extends StandardDialog {
             jPanel12Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel12Layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 126, Short.MAX_VALUE)
+                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 123, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel12Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(buttonRemoveProcScript)
@@ -843,6 +846,8 @@ public class PreferencesDialog extends StandardDialog {
         );
 
         checkCachedDataPanel.setText("Data panel cached");
+
+        jLabel30.setText("Aditional visible extensions:");
 
         javax.swing.GroupLayout jPanel13Layout = new javax.swing.GroupLayout(jPanel13);
         jPanel13.setLayout(jPanel13Layout);
@@ -854,14 +859,21 @@ public class PreferencesDialog extends StandardDialog {
                     .addComponent(jPanel12, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addGroup(jPanel13Layout.createSequentialGroup()
                         .addComponent(checkCachedDataPanel)
-                        .addGap(0, 0, Short.MAX_VALUE))))
+                        .addGap(43, 43, 43)
+                        .addComponent(jLabel30)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(textDataExtensions)
+                        .addContainerGap())))
         );
         jPanel13Layout.setVerticalGroup(
             jPanel13Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel13Layout.createSequentialGroup()
                 .addComponent(jPanel12, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(checkCachedDataPanel)
+                .addGroup(jPanel13Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(checkCachedDataPanel)
+                    .addComponent(jLabel30)
+                    .addComponent(textDataExtensions, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addContainerGap())
         );
 
@@ -1398,6 +1410,7 @@ public class PreferencesDialog extends StandardDialog {
                 preferences.scanPlotDisabled = !ckScanPlotEnabled.isSelected();
                 preferences.scanTableDisabled = !ckScanTableEnabled.isSelected();
                 preferences.cachedDataPanel = checkCachedDataPanel.isSelected();
+                preferences.dataExtensions = textDataExtensions.getText();
                 preferences.showEmergencyStop = checkShowEmergencyStop.isSelected();
                 preferences.showHomingButtons = checkShowHomingButtons.isSelected();
                 preferences.showJogButtons = checkShowJogButtons.isSelected();
@@ -1676,6 +1689,7 @@ public class PreferencesDialog extends StandardDialog {
     private javax.swing.JLabel jLabel28;
     private javax.swing.JLabel jLabel29;
     private javax.swing.JLabel jLabel3;
+    private javax.swing.JLabel jLabel30;
     private javax.swing.JLabel jLabel4;
     private javax.swing.JLabel jLabel5;
     private javax.swing.JLabel jLabel6;
@@ -1709,6 +1723,7 @@ public class PreferencesDialog extends StandardDialog {
     private javax.swing.JSpinner spinnerTerminalFontSize;
     private javax.swing.JTable tablePanels;
     private javax.swing.JTable tableProcessingScripts;
+    private javax.swing.JTextField textDataExtensions;
     private javax.swing.JTextField textOP;
     private javax.swing.JTextField textPL;
     private javax.swing.JTextField textPT;

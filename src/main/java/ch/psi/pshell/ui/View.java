@@ -828,8 +828,10 @@ public class View extends MainFrame {
                 View.this.openScript(fileName);
             } else if (getProcessorExtensions().contains(ext)) {
                 View.this.openScriptOrProcessor(fileName);
-            } else {
+            } else if (ext.equals("h5") || context.getDataManager().isRoot(fileName)){
                 View.this.openDataFile(fileName);
+            }  else {
+                View.this.openTextFile(fileName);
             }
         }
 
@@ -1622,6 +1624,19 @@ public class View extends MainFrame {
     public DataPanel openDataFile(String file) throws Exception {
         if (file == null) {
             return null;
+        }
+        
+        for (ScriptEditor se : getEditors()) {
+            if (se.getFileName() != null) {
+                if ((new File(file).getCanonicalFile()).equals((new File(se.getFileName()).getCanonicalFile()))) {
+                    if (tabDoc.indexOfComponent(se) >= 0) {
+                        tabDoc.setSelectedComponent(se);
+                    } else if (detachedScripts.containsValue(se)) {
+                        se.getTopLevelAncestor().requestFocus();
+                    }
+                    //return se;
+                }
+            }
         }
         DataPanel panel = new DataPanel();
         openComponent(new File(file).getName(), panel);

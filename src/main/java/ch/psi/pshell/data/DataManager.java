@@ -341,6 +341,9 @@ public class DataManager implements AutoCloseable {
     }
 
     public DirectoryStream.Filter getFileFilter() {
+         return getFileFilter(new String[0]);
+    }
+    public DirectoryStream.Filter getFileFilter(final String[] additionalExtensions) {
         ProviderData pd = getProviderData();
         if (pd == null) {
             return null;
@@ -356,13 +359,16 @@ public class DataManager implements AutoCloseable {
                     }
                     return true;
                 } else {
+                    String ext = IO.getExtension(file);
                     if (isDataPacked()) {
                         if (getDataFileType() != null) {
-                            String ext = IO.getExtension(file);
                             if (ext.equals(getDataFileType())) {
                                 return true;
                             }
                         }
+                    }
+                    if (Arr.containsEqual(additionalExtensions, ext)){
+                        return true;
                     }
                 }
                 return false;

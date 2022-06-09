@@ -36,8 +36,6 @@ public class AcquisitionConfiguration {
         
         private boolean appendSuffix = true;
         
-        private boolean serializationTXT = false;
-        
         
         public static EventBus.Mode eventBusModeAcq = EventBus.Mode.SYNC;
         public static EventBus.Mode eventBusModePlot = EventBus.Mode.ASYNC;
@@ -60,7 +58,7 @@ public class AcquisitionConfiguration {
         
         public String getDataFileNameDefault(){
             String ret = Context.getInstance().getConfig().dataPath;
-            if (serializationTXT){                            
+            if (Context.getInstance().getConfig().fdaSerialization){                            
                 ret = ret.replaceAll("./$", "");
                 return  ret + "/" + LayoutFDA.getFilePrefix();
             }
@@ -125,13 +123,5 @@ public class AcquisitionConfiguration {
         public boolean getAppendSuffix(){
             return appendSuffix;
         }
-        
-        public void setSerializationTXT(boolean value){
-            serializationTXT = value;
-        }
-
-        public boolean getSerializationTXT(){
-            return serializationTXT;
-        }        
         
 }

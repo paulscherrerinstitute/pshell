@@ -245,7 +245,7 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
                                 Logger.getLogger(DataPanel.class.getName()).fine("Opening: " + String.valueOf(currentFile));
                                 if (listener != null) {
                                     try {
-                                        listener.openFile(currentFile.getCanonicalPath());
+                                          listener.openFile(currentFile.getCanonicalPath());
                                     } catch (Exception ex) {
                                         Logger.getLogger(DataPanel.class.getName()).log(Level.SEVERE, null, ex);
                                     }
@@ -900,7 +900,12 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
             }
             File[] ret = new File[0];
             if (f.isDirectory() && (dataManager != null)) {
-                File[] files = IO.listFiles(f, dataManager.getFileFilter());
+                String[] add = new String[0];
+                try{
+                   add = App.getInstance().getMainFrame().getPreferences().getDataPanelAdditionalExtensions();
+                } catch (Exception ex){
+                }
+                File[] files = IO.listFiles(f, dataManager.getFileFilter(add));
 
                 switch (fileOrder) {
                     case Modified:

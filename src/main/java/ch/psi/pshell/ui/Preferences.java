@@ -35,6 +35,8 @@ import ch.psi.pshell.swing.HistogramGeneratorPanel;
 import ch.psi.pshell.swing.MasterPositionerPanel;
 import ch.psi.pshell.swing.ScalerPanel;
 import ch.psi.utils.IO;
+import ch.psi.utils.Str;
+import ch.psi.utils.Arr;
 import java.awt.Color;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
@@ -97,6 +99,7 @@ public class Preferences {
     public boolean scanPlotDisabled;
     public boolean scanTableDisabled;
     public boolean cachedDataPanel;
+    public String dataExtensions;
     public boolean hideFileName;
     public boolean showEmergencyStop;
     public boolean showHomingButtons;
@@ -257,5 +260,14 @@ public class Preferences {
             return ScriptPopupDialog.None;
         }
         return scriptPopupDialog;
+    }
+    
+    public String[] getDataPanelAdditionalExtensions(){
+        if (dataExtensions!=null){
+            String[] ret = Str.split(dataExtensions.trim(), new String[]{"|", ";", ",", " "});
+            ret = Arr.removeEquals(ret, "");
+            return ret;
+        }
+        return new String[0];
     }
 }

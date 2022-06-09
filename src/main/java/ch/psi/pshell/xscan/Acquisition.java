@@ -116,7 +116,6 @@ import java.util.logging.SimpleFormatter;
 public class Acquisition {
 	
 	private static Logger logger = Logger.getLogger(Acquisition.class.getName());
-        boolean serializationTXT = false;
 
 	private final AcquisitionConfiguration configuration;
 	
@@ -198,13 +197,14 @@ public class Acquisition {
                 fprefix = Context.getInstance().getSetup().expandPath(fprefix);
 		// Construct filenames
 		File xmlfile = new File(fprefix+".xml");
+               
                 
-                if (serializationTXT){
+                if (Context.getInstance().getConfig().fdaSerialization){
                     //Priority to Type field
                     datafile = new File(fprefix+".txt");
                     this.serializer = new SerializerTXT(datafile, configuration.getAppendSuffix());                    
                     executionParameters = Context.getInstance().getExecutionPars();
-                    executionParameters.setDataPath(xmlfile.getParentFile()); //Create base dir and trigger callbacks
+                    executionParameters.setDataPath(datafile.getParentFile()); //Create base dir and trigger callbacks
                     
                 } else {
                     this.serializer = new SerializerPShell(fprefix);
@@ -221,7 +221,7 @@ public class Acquisition {
                             Logger.getLogger("ch.psi.pshell.xscan").removeHandler(logHandler);
 			}
 			
-			if (serializationTXT){
+			if (Context.getInstance().getConfig().fdaSerialization){
                             File logfile = new File(fprefix+".log");
                             logHandler = new FileHandler(logfile.getAbsolutePath());
                             logHandler.setFormatter(new SimpleFormatter());
