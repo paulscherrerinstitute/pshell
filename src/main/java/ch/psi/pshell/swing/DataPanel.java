@@ -260,9 +260,10 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
             public void mousePressed(MouseEvent e) {
                 checkPopup(e);
                 try {
-                    if (e.getClickCount() == 2) {
-                        if (!embedded){
-                            if (currentFile != null) {
+                    if (e.getClickCount() == 2) {                                                                      
+                        if (currentFile != null) {
+                            boolean isAdditionaExtension =  currentFile.isFile() && (Arr.containsEqual(additionalExtensions,IO.getExtension(currentFile)));      
+                            if ((!embedded) || isAdditionaExtension){
                                 Logger.getLogger(DataPanel.class.getName()).fine("Opening: " + String.valueOf(currentFile));
                                 if (listener != null) {
                                     try {
