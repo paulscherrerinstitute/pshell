@@ -20,6 +20,10 @@ public class FileSource extends SourceBase {
         super(name, new SourceConfig());
         this.url = url;
     }
+    
+    public String getUrl(){
+        return url;
+    }
 
     @Override
     public void doInitialize() throws IOException, InterruptedException {

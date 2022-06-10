@@ -110,6 +110,7 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
     String[] fieldNames = null;
     DataPanelListener listener;
     String[] processingScripts;
+    String[] additionalExtensions = new String[0];
 
     public DataPanel() {
         initComponents();
@@ -124,20 +125,24 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
             File file = (File) treeFolder.getLastSelectedPathComponent();
             showFileProps(file, false);
             if (file != null) {
-                try {
-                    if (dataManager.isDataPacked()) {
-                        if (file.isFile()) {
-                            setCurrentPath(file);
-                        } else {
-                            setCurrentPath(null);
-                        }
+                try {    
+                    if (file.isFile() && (Arr.containsEqual(additionalExtensions,IO.getExtension(file)))) {
+                        setCurrentPath(file);
                     } else {
-                        //String pathName = file.getCanonicalPath();
-                        String pathName = file.getPath();
-                        if ((dataManager.isRoot(pathName))) { // || (IO.listFiles(pathName, "*." + dataManager.getDataFileType()).length > 0) 
-                            setCurrentPath(file);
+                        if (dataManager.isDataPacked()) {
+                            if (file.isFile()) {
+                                setCurrentPath(file);
+                            } else {
+                                setCurrentPath(null);
+                            }
                         } else {
-                            setCurrentPath(null);
+                            //String pathName = file.getCanonicalPath();
+                            String pathName = file.getPath();
+                            if ((dataManager.isRoot(pathName))) { // || (IO.listFiles(pathName, "*." + dataManager.getDataFileType()).length > 0) 
+                                setCurrentPath(file);
+                            } else {
+                                setCurrentPath(null);
+                            }
                         }
                     }
                 } catch (Exception ex) {
@@ -163,6 +168,22 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
             }
         });
         filePopupMenu.add(menuOpen);
+        
+        JMenuItem menuPlot = new JMenuItem("Plot");
+        menuPlot.addActionListener((ActionEvent e) -> {
+            try {
+                File selected = getFolderTreeSelectedFile();
+                if (selected != null) {
+                    Logger.getLogger(DataPanel.class.getName()).fine("Plotting: " + String.valueOf(selected));
+                    if (listener != null) {
+                        listener.plotData(dataManager, selected.getAbsolutePath(), null);
+                    }
+                }
+            } catch (Exception ex) {
+                showException(ex);
+            }
+        });
+        filePopupMenu.add(menuPlot);        
 
         JMenuItem menuBrowse = new JMenuItem("");
         menuBrowse.addActionListener((ActionEvent e) -> {
@@ -245,7 +266,11 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
                                 Logger.getLogger(DataPanel.class.getName()).fine("Opening: " + String.valueOf(currentFile));
                                 if (listener != null) {
                                     try {
-                                          listener.openFile(currentFile.getCanonicalPath());
+                                        if (Processor.canProcessorsPlot(currentFile.getAbsolutePath(), null, dataManager)){
+                                            listener.plotData(dataManager, currentFile.getAbsolutePath(), null);
+                                        } else {
+                                            listener.openFile(currentFile.getCanonicalPath());   
+                                        }
                                     } catch (Exception ex) {
                                         Logger.getLogger(DataPanel.class.getName()).log(Level.SEVERE, null, ex);
                                     }
@@ -280,7 +305,10 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
                         }
                         File selected = getFolderTreeSelectedFile();
                         if (selected != null) {
-                            menuOpen.setVisible(isRoot);
+                            boolean isAdditionaExtension =  file.isFile() && (Arr.containsEqual(additionalExtensions,IO.getExtension(file)));
+                            boolean isProcessorDataFile = Processor.canProcessorsPlot(file.getAbsolutePath(), null, dataManager);
+                            menuOpen.setVisible(isRoot || isAdditionaExtension);
+                            menuPlot.setVisible(isProcessorDataFile);
                             menuBrowse.setText(selected.isDirectory() ? "Browse folder" : "Open external editor");
                             menuBrowse.setVisible(isRoot || selected.isDirectory());
                             menuCalcSize.setVisible(selected.isDirectory() && (path.getPathCount() > 1));
@@ -667,6 +695,11 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
 
     public void initialize() {
         dataManager = Context.getInstance().getDataManager();
+        try{
+            additionalExtensions = App.getInstance().getMainFrame().getPreferences().getDataPanelAdditionalExtensions();
+        } catch (Exception ex) {
+            additionalExtensions = new String[0];
+        }        
         setBaseFolder(dataManager.getDataFolder());
         try {
             setCurrentPath(null);
@@ -799,8 +832,8 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
     }
 
     public void repaintTreePath(TreePath path, boolean invalidate) {
-        if (invalidate) {
-            treeFolderModel.invalidate((File) path.getLastPathComponent());
+        if (invalidate) {            
+            treeFolderModel.invalidate((File) path.getLastPathComponent());         
         }
         int childrenCount = treeFolderModel.getChildCount(path.getLastPathComponent());
         int[] changedChildrenIndices = new int[childrenCount];
@@ -900,12 +933,7 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
             }
             File[] ret = new File[0];
             if (f.isDirectory() && (dataManager != null)) {
-                String[] add = new String[0];
-                try{
-                   add = App.getInstance().getMainFrame().getPreferences().getDataPanelAdditionalExtensions();
-                } catch (Exception ex){
-                }
-                File[] files = IO.listFiles(f, dataManager.getFileFilter(add));
+                File[] files = IO.listFiles(f, dataManager.getFileFilter(additionalExtensions));
 
                 switch (fileOrder) {
                     case Modified:
@@ -1504,8 +1532,8 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
         scrollFolder.setVisible(false);
         splitFolder.setDividerSize(0);
         initialize();
-        String textProvider = Context.getInstance().getConfig().getDataProvider().equalsIgnoreCase("csv") ? "csv" : "txt";
-        dataManager = new DataManager(Context.getInstance(), file.isDirectory() ? textProvider : IO.getExtension(file), Context.getInstance().getConfig().getDataLayout());
+        String provider = Context.getInstance().getConfig().getDataProvider();
+        dataManager = new DataManager(Context.getInstance(), file.isDirectory() ? provider : IO.getExtension(file), Context.getInstance().getConfig().getDataLayout());
         setCurrentPath(file);
     }
 
@@ -1526,7 +1554,7 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
                 plot(getParent(), dataManager.getFullPath(root, path), dataManager.getScanPlots(root, path).toArray(new PlotDescriptor[0]), prefs);
             } catch (IOException ex) {
                 //If cannot open file, try with external processors
-                if (!Processor.checkProcessorsPlotting(root, path, dataManager)){
+                if (!Processor.tryProcessorsPlot(root, path, dataManager)){
                     throw ex;
                 }
             }

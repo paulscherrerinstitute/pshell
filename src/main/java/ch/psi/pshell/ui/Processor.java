@@ -215,14 +215,27 @@ public interface Processor extends Executor {
 
     }
 
-    public static boolean checkProcessorsPlotting(String root, String path, DataManager dm) {
+    public static boolean canProcessorsPlot(String root, String path, DataManager dm) {
         HashMap<FileNameExtensionFilter, Processor> processors = new HashMap<>();
         File rootFile = new File(root);
         for (Processor processor : Processor.getServiceProviders()) {
-            try {
-                processor.plotDataFile(rootFile, path);
+            if (processor.isPlottable(rootFile, path, dm)){
                 return true;
-            } catch (Exception e) {
+            }
+        }
+        return false;
+    }
+    
+    public static boolean tryProcessorsPlot(String root, String path, DataManager dm) {
+        HashMap<FileNameExtensionFilter, Processor> processors = new HashMap<>();
+        File rootFile = new File(root);
+        for (Processor processor : Processor.getServiceProviders()) {
+            if (processor.isPlottable(rootFile, path, dm)){
+                try {
+                    processor.plotDataFile(rootFile, path, dm);
+                    return true;
+                } catch (Exception e) {
+                }
             }
         }
         return false;
@@ -232,10 +245,26 @@ public interface Processor extends Executor {
         plotDataFile(file, null);
     }
     
-    default void plotDataFile(File file, String path) throws Exception {
+    default void plotDataFile(File file, DataManager dm) throws Exception {
+        plotDataFile(file, null, dm);
+    }
+    
+    default void plotDataFile(File file, String path, DataManager dm) throws Exception {
         throw new Exception("Not implemented");
     }   
-
+    
+    default boolean isPlottable(File file) {
+        return isPlottable (file, null);
+    } 
+    
+    default boolean isPlottable(File file, DataManager dm) {
+        return isPlottable (file, null, dm);
+    } 
+    
+    default boolean isPlottable(File file, String path, DataManager dm) {
+        return false;
+    }     
+    
     default boolean createFilePanel() {
         return false;
     }

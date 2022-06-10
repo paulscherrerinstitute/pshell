@@ -160,6 +160,7 @@ import java.util.Set;
 import javax.swing.BoxLayout;
 import javax.swing.DefaultCellEditor;
 import javax.swing.JComboBox;
+import javax.swing.JComponent;
 import javax.swing.JOptionPane;
 import javax.swing.KeyStroke;
 import javax.swing.MenuSelectionManager;
@@ -326,7 +327,7 @@ public class View extends MainFrame {
                         }
                     }
 
-                    for (ScriptEditor editor : getEditors()) {
+                    for (ScriptEditor editor : getScriptEditors()) {
                         editor.setReadOnly(context.getRights().denyEdit);
                     }
                 }
@@ -791,7 +792,7 @@ public class View extends MainFrame {
     final DataPanelListener dataPanelListener = new DataPanelListener() {
         @Override
         public void plotData(DataManager dataManager, String root, String path) throws Exception {
-            PlotPreferences prefs = dataManager.getPlotPreferences(root, path);
+            PlotPreferences prefs = (path==null) ? null : dataManager.getPlotPreferences(root, path);
             View.this.plotData("Data", root, path, prefs, dataManager);
         }
 
@@ -906,7 +907,7 @@ public class View extends MainFrame {
 
         @Override
         public void onBranchChange(String branch) {
-            for (ScriptEditor se : getEditors()) {
+            for (ScriptEditor se : getScriptEditors()) {
                 if (se.getFileName() != null) {
                     try {
                         se.reload();
@@ -1210,9 +1211,9 @@ public class View extends MainFrame {
     public void plotData(String contextName, String root, String path, PlotPreferences preferences, DataManager dm) throws Exception {
         try {
             plotData(contextName, dm.getScanPlots(root, path).toArray(new PlotDescriptor[0]), preferences);
-        } catch (IOException ex) {
+        } catch (Exception ex) {
             //If cannot open file, try with external processors
-            if (!Processor.checkProcessorsPlotting(root, path, dm)) {
+            if (!Processor.tryProcessorsPlot(root, path, dm)) {
                 throw ex;
             }
         }
@@ -1300,54 +1301,59 @@ public class View extends MainFrame {
         }
     }
 
-    public List<ScriptEditor> getEditors() {
-        ArrayList<ScriptEditor> ret = new ArrayList();
-        for (int i = 0; i < tabDoc.getTabCount(); i++) {
-            Component c = tabDoc.getComponentAt(i);
-            if (c instanceof ScriptEditor) {
-                ret.add((ScriptEditor) c);
-            }
-        }
-        for (String key : detachedScripts.keySet()) {
-            if (detachedScripts.get(key) instanceof ScriptEditor) {
-                ret.add((ScriptEditor) detachedScripts.get(key));
-            }
-        }
-        return ret;
+    public List<ScriptEditor> getScriptEditors() {
+        return getPanels(ScriptEditor.class);
     }
 
     public List<Processor> getProcessors() {
-        ArrayList<Processor> ret = new ArrayList();
-        for (int i = 0; i < tabDoc.getTabCount(); i++) {
-            Component c = tabDoc.getComponentAt(i);
-            if (c instanceof Processor) {
-                ret.add((Processor) c);
-            }
-        }
-        for (String key : detachedScripts.keySet()) {
-            if (detachedScripts.get(key) instanceof Processor) {
-                ret.add((Processor) detachedScripts.get(key));
-            }
-        }
-        return ret;
+        return getPanels(Processor.class);
     }
     
     public List<DataPanel> getDataFilePanels() {
-        ArrayList<DataPanel> ret = new ArrayList();
+        return getPanels(DataPanel.class);
+    }    
+    
+    public List<Editor> getEditors() {
+        return getPanels(Editor.class);
+    }
+
+    public List<Renderer> getRenderers() {
+        return getPanels(Renderer.class);
+    }
+
+            
+    public <T> List<T> getPanels(Class<T> type) {
+        ArrayList<T> ret = new ArrayList();
         for (int i = 0; i < tabDoc.getTabCount(); i++) {
             Component c = tabDoc.getComponentAt(i);
-            if (c instanceof DataPanel) {
-                ret.add((DataPanel) c);
+            if (type.isAssignableFrom(c.getClass())) {
+                ret.add((T) c);
             }
         }
         for (String key : detachedScripts.keySet()) {
-            if (detachedScripts.get(key) instanceof DataPanel) {
-                ret.add((DataPanel) detachedScripts.get(key));
+            if (type.isAssignableFrom(detachedScripts.get(key).getClass())) {
+                ret.add((T) detachedScripts.get(key));
             }
         }
-        return ret;
-    }    
-
+        return ret; 
+    }
+    
+    public void  selectPanel(JComponent panel){
+        if (tabDoc.indexOfComponent(panel) >= 0) {
+            tabDoc.setSelectedComponent(panel);
+        } else if (detachedScripts.containsValue(panel)) {
+            panel.getTopLevelAncestor().requestFocus();
+        }
+    }
+    
+    boolean sameFile(String f1, String f2) throws IOException{
+        if ((f1==null) || (f2==null)){
+            return false;
+        }
+        return(new File(f1).getCanonicalFile()).equals((new File(f2).getCanonicalFile()));
+    }
+    
+            
     public List<QueueProcessor> getQueues() {
         ArrayList<QueueProcessor> ret = new ArrayList();
         for (Processor processor : getProcessors()) {
@@ -1576,14 +1582,10 @@ public class View extends MainFrame {
             return null;
         }
 
-        for (ScriptEditor se : getEditors()) {
+        for (ScriptEditor se : getScriptEditors()) {
             if (se.getFileName() != null) {
-                if ((new File(file).getCanonicalFile()).equals((new File(se.getFileName()).getCanonicalFile()))) {
-                    if (tabDoc.indexOfComponent(se) >= 0) {
-                        tabDoc.setSelectedComponent(se);
-                    } else if (detachedScripts.containsValue(se)) {
-                        se.getTopLevelAncestor().requestFocus();
-                    }
+                if (sameFile(file, se.getFileName())){
+                    selectPanel(se);
                     return se;
                 }
             }
@@ -1613,7 +1615,14 @@ public class View extends MainFrame {
         if (file == null) {
             return null;
         }
-
+        for (Editor ed : getEditors()) {
+            if (ed.getFileName() != null) {
+               if (sameFile(file, ed.getFileName())){
+                    selectPanel(ed);
+                    return ed;
+                }
+            }
+        }
         TextEditor editor = new TextEditor();
         editor.setFilePermissions(context.getConfig().filePermissionsScripts);
         openComponent(new File(file).getName(), editor);
@@ -1625,16 +1634,12 @@ public class View extends MainFrame {
         if (file == null) {
             return null;
         }
-        
-        for (ScriptEditor se : getEditors()) {
-            if (se.getFileName() != null) {
-                if ((new File(file).getCanonicalFile()).equals((new File(se.getFileName()).getCanonicalFile()))) {
-                    if (tabDoc.indexOfComponent(se) >= 0) {
-                        tabDoc.setSelectedComponent(se);
-                    } else if (detachedScripts.containsValue(se)) {
-                        se.getTopLevelAncestor().requestFocus();
-                    }
-                    //return se;
+
+        for (DataPanel dp : getDataFilePanels()) {
+            if (dp.getFileName() != null) {
+               if (sameFile(file, dp.getFileName())){
+                    selectPanel(dp);
+                    return dp;
                 }
             }
         }
@@ -1649,6 +1654,19 @@ public class View extends MainFrame {
         if (file == null) {
             return null;
         }
+        
+        for (Renderer renderer : getRenderers()) {
+            try{
+                String filename = ((FileSource)renderer.getDevice()).getUrl();
+                if (filename != null) {
+                    if (sameFile(file, filename)){
+                        selectPanel(renderer);
+                        return renderer;
+                    }
+                }
+            } catch (Exception ex){                
+            }
+        }        
         Renderer renderer = new Renderer();
         openComponent(new File(file).getName(), renderer);
         FileSource source = new FileSource(new File(file).getName(), file);
@@ -1670,12 +1688,8 @@ public class View extends MainFrame {
             for (Processor p : getProcessors()) {
                 if ((p.getClass().isAssignableFrom(cls)) && p.getFileName() != null) {
                     try {
-                        if ((new File(p.resolveFile(file)).getCanonicalFile()).equals((new File(p.getFileName()).getCanonicalFile()))) {
-                            if (tabDoc.indexOfComponent(p.getPanel()) >= 0) {
-                                tabDoc.setSelectedComponent(p.getPanel());
-                            } else if (detachedScripts.containsValue(p.getPanel())) {
-                                p.getPanel().getTopLevelAncestor().requestFocus();
-                            }
+                        if (sameFile(file, p.getFileName())){
+                            selectPanel(p.getPanel());
                             return (T) p;
                         }
                     } catch (Exception ex) {
@@ -4524,7 +4538,7 @@ public class View extends MainFrame {
     private void menuCloseAllActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuCloseAllActionPerformed
         try {
             closeSearchPanels();
-            for (ScriptEditor editor : getEditors()) {
+            for (ScriptEditor editor : getScriptEditors()) {
                 if (tabDoc.indexOfComponent(editor) >= 0) {
                     tabDoc.remove(editor);
                 } else if (detachedScripts.containsValue(editor)) {

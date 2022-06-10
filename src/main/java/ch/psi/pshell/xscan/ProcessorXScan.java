@@ -13,6 +13,8 @@ import ch.psi.jcae.impl.DefaultChannelService;
 import ch.psi.pshell.core.CommandInfo;
 import ch.psi.pshell.core.CommandSource;
 import ch.psi.pshell.core.Context;
+import ch.psi.pshell.data.DataManager;
+import ch.psi.pshell.data.Layout;
 import ch.psi.pshell.plot.PlotBase;
 import ch.psi.pshell.swing.PlotPanel;
 import ch.psi.pshell.ui.App;
@@ -43,7 +45,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.script.ScriptException;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
@@ -679,53 +680,107 @@ public final class ProcessorXScan extends MonitoredPanel implements Processor {
             executionThread = null;
         }
     }
+    
+    @Override
+    public boolean isPlottable(File file, String path, DataManager dm){
+        try{
+            if ((file!=null)  && file.exists() ) {
+                
+                if (path!=null){
+                    //Within data root
+                    if (ProcessorXScan.SCAN_TYPE.toString().equalsIgnoreCase(String.valueOf(dm.getAttribute(file.getAbsolutePath(), path, Layout.ATTR_TYPE)))) {
+                        return true;
+                    }
+                   file = Paths.get(file.toString(), path+".txt").toFile();
+                    
+                }     
+
+                //Isolated file
+                if (file.exists() && file.isFile()){
+                    if (IO.getExtension(file).equals("txt")) {      
+                        File dir = file.getParentFile();  
+                        String name = file.getName();
+                        name = name.replaceAll("_[0-9]*.txt$", "");
+                        name = name.replaceAll(".txt$", "");
+                        File cfile = new File(dir, name + "." + EXTENSION);
+                        if (cfile.exists()) {
+                            return true;
+                        } else {
+                            cfile = new File(dir.toString() + "." + EXTENSION);
+                            if (cfile.exists()) {
+                                return true;
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (Exception ex){
+        }
+        return false;
+    }
 
     @Override
-    public void plotDataFile(final File file, String path) {
+    public void plotDataFile(File file, String path, DataManager dm) {
+        // Try to determine configuration file from data file name
+        boolean deserializerTXT= (path == null);
+        File dir = file.getParentFile();
+        String name = file.getName();
+        name = name.replaceAll("_[0-9]*.txt$", "");
+        String ext =IO.getExtension(name);
+        if (!ext.isBlank()){
+            name = name.replaceAll("." + IO.getExtension(name) + "$", "");
+        }
+        File cfile = new File(dir, name + "." + EXTENSION);
 
+        // Check existence of files 
+        if (!file.exists()) {
+            throw new IllegalArgumentException("Data file [" + file.getAbsolutePath() + "] does not exist");
+        }
+        if (!cfile.exists()) {
+            File cf = new File(dir.toString() +"." + EXTENSION);
+            if (cf.exists()) {
+                //Reading a text file in file browser generated with PShell setializer
+                cfile = cf;
+                deserializerTXT  = false;
+            } else {                
+                cf = Paths.get(dir.toString(), name, name + "." + EXTENSION).toFile();
+                if (file.isDirectory() && cf.exists()) {
+                    //Reading with DataPanel inside a dolder generated with text serializer
+                    cfile = cf;
+                    file = new File(file,path + ".txt");
+                    deserializerTXT  = true;
+                } else {
+                    throw new IllegalArgumentException("Configuration file [" + cfile.getAbsolutePath() + "] does not exist");   
+                }
+            }
+        }                     
+
+        EventBus ebus = new EventBus(AcquisitionConfiguration.eventBusModePlot);
+        Deserializer deserializer = deserializerTXT ? new DeserializerTXT(ebus, file) : new DeserializerPShell(ebus, file, path, dm);
+
+        Configuration c = load(cfile);
+        VDescriptor vdescriptor = Acquisition.mapVisualizations(c.getVisualization());
+
+        Visualizer visualizer = new Visualizer(vdescriptor);
+        visualizer.setUpdateAtStreamElement(false);
+        visualizer.setUpdateAtStreamDelimiter(false);
+        visualizer.setUpdateAtEndOfStream(true);
+
+        ebus.register(visualizer);
+
+        //tc.updatePanel(visualizer.getPlotPanels());
+        ProcessorXScan.setPlots(visualizer.getPlotPanels(), "Data");
+        
         Logger.getLogger(ProcessorXScan.class.getName()).log(Level.INFO, "Visualize file: {0}", file.getAbsolutePath());
+        String filename = file.getName();
         Thread t = new Thread(new Runnable() {
-
             @Override
             public void run() {
                 try {
-                    // Try to determine configuration file from data file name
-                    File dir = file.getParentFile();
-                    String name = file.getName();
-                    name = name.replaceAll("_[0-9]*.txt$", "");
-                    //If no suffix
-                    name = name.replaceAll(".txt$", "");
-                    File cfile = new File(dir, name + "." + EXTENSION);
-
-                    // Check existence of files
-                    if (!file.exists()) {
-                        throw new IllegalArgumentException("Data file [" + file.getAbsolutePath() + "] does not exist");
-                    }
-                    if (!cfile.exists()) {
-                        throw new IllegalArgumentException("Configuration file [" + cfile.getAbsolutePath() + "] does not exist");
-                    }
-
-                    EventBus ebus = new EventBus(AcquisitionConfiguration.eventBusModePlot);
-                    Deserializer deserializer = (path == null) ? new DeserializerTXT(ebus, file) : new DeserializerPShell(ebus, file, path);
-
-                    Configuration c = load(cfile);
-                    VDescriptor vdescriptor = Acquisition.mapVisualizations(c.getVisualization());
-
-                    Visualizer visualizer = new Visualizer(vdescriptor);
-                    visualizer.setUpdateAtStreamElement(false);
-                    visualizer.setUpdateAtStreamDelimiter(false);
-                    visualizer.setUpdateAtEndOfStream(true);
-
-                    ebus.register(visualizer);
-
-                    //tc.updatePanel(visualizer.getPlotPanels());
-                    ProcessorXScan.setPlots(visualizer.getPlotPanels(), "Data");
-
                     deserializer.read();
-
                 } catch (Exception ex) {
                     ex.printStackTrace();
-                    SwingUtils.showMessage(App.getInstance().getMainFrame(), "Error", "An error occured while visualizing '" + file.getName() + "':\n" + ex.getMessage());
+                    SwingUtils.showMessage(App.getInstance().getMainFrame(), "Error", "An error occured while visualizing '" + filename + "':\n" + ex.getMessage());
                 }
             }
         });

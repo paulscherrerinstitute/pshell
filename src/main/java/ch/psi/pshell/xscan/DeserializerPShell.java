@@ -1,11 +1,10 @@
 package ch.psi.pshell.xscan;
 
-import ch.psi.pshell.core.Context;
 import ch.psi.pshell.data.DataManager;
 import ch.psi.pshell.data.Layout;
 import ch.psi.pshell.data.LayoutTable;
-import ch.psi.pshell.data.Provider;
 import ch.psi.utils.EventBus;
+import ch.psi.utils.IO;
 import java.io.File;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
@@ -32,7 +31,12 @@ public class DeserializerPShell implements Deserializer {
     int[] dimensions;
     String[] ids;
 
-    public DeserializerPShell(EventBus b, File file, String path) {
+    public DeserializerPShell(EventBus b, File file, String path, DataManager dm) {
+        if (path==null){
+            path = "/" + IO.getPrefix(file);
+            file = file.getParentFile();
+        }
+        this.dm=dm;
         this.bus = b;
         this.file = file;
         this.dindex = new ArrayList<Integer>();
@@ -43,13 +47,17 @@ public class DeserializerPShell implements Deserializer {
         this.metadata = new ArrayList<>();
         try {
             // Read metadata
-            dm = new DataManager(Context.getInstance(), file.isDirectory() ? "txt" : "h5", Context.getInstance().getConfig().getDataLayout());
+            //dm = new DataManager(Context.getInstance(), file.isDirectory() ? "txt" : "h5", Context.getInstance().getConfig().getDataLayout());
             if (!ProcessorXScan.SCAN_TYPE.toString().equalsIgnoreCase(String.valueOf(dm.getAttribute(filename, path, Layout.ATTR_TYPE)))) {
                 throw new RuntimeException("Not XScan data");
             }
             dimensions = (int[]) dm.getAttribute(filename, path, "dims");
             ids = (String[]) dm.getAttribute(filename, path, "names");
-            table = LayoutTable.class.getName().equals(dm.getAttribute(filename, "/", Layout.ATTR_LAYOUT));
+            String layoutName = (String) dm.getAttribute(filename, "/", Layout.ATTR_LAYOUT);
+            try{
+                table = LayoutTable.class.isAssignableFrom(Class.forName(layoutName));
+            } catch (Exception ex){
+            }
 
             // Create data message metadata
             Integer d = -1;
