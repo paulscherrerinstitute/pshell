@@ -2,6 +2,7 @@ package ch.psi.pshell.swing;
 
 import ch.psi.pshell.core.Context;
 import ch.psi.pshell.ui.App;
+import ch.psi.pshell.ui.QueueProcessor;
 import ch.psi.pshell.xscan.ProcessorXScan;
 import ch.psi.utils.Arr;
 import ch.psi.utils.Chrono;
@@ -362,6 +363,10 @@ public class ScriptsPanel extends MonitoredPanel implements UpdatablePanel {
         if (!App.getInstance().getMainFrame().getPreferences().showXScanFileBrowser) {
             extensions = Arr.append(extensions, ProcessorXScan.EXTENSION);
         } 
+        if (!App.getInstance().getMainFrame().getPreferences().showQueueBrowser) {
+            extensions = Arr.append(extensions, QueueProcessor.EXTENSION);
+        } 
+                
         initialize(Context.getInstance().getSetup().getScriptPath(),extensions);
     }
 

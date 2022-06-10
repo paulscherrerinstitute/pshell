@@ -171,10 +171,10 @@ public final class ProcessorXScan extends MonitoredPanel implements Processor {
         configuration = new AcquisitionConfiguration();
         jScrollPane1.getVerticalScrollBar().setUnitIncrement(16);
         jScrollPane1.getHorizontalScrollBar().setUnitIncrement(16);
-        if ((App.getInstance() != null) && (App.hasArgument("fdahome"))) {
-            homePath = Context.getInstance().getSetup().expandPath(App.getArgumentValue("fdahome"));
+        if ((App.getInstance() != null) && (App.hasArgument("xpath"))) {
+            homePath = Context.getInstance().getSetup().expandPath(App.getArgumentValue("xpath"));
         } else {
-            homePath = Context.getInstance().getSetup().getScriptPath();
+            homePath = Context.getInstance().getSetup().getXScanPath();
         }
     }
 

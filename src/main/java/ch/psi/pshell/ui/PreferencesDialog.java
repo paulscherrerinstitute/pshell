@@ -170,7 +170,7 @@ public class PreferencesDialog extends StandardDialog {
         checkShowHomingButtons.setSelected(preferences.showHomingButtons);
         checkShowJogButtons.setSelected(preferences.showJogButtons); 
         checkXScanBrowser.setSelected(preferences.showXScanFileBrowser);     
-        checkXScanDataViewer.setSelected(preferences.showXScanDataViewer);     
+        checkQueueBrowser.setSelected(preferences.showQueueBrowser);     
         comboLinePlot.setSelectedItem(preferences.linePlot);
         comboMatrixPlot.setSelectedItem(preferences.matrixPlot);
         comboSurfacePlot.setSelectedItem(preferences.surfacePlot);
@@ -333,7 +333,7 @@ public class PreferencesDialog extends StandardDialog {
         ckScanTableEnabled = new javax.swing.JCheckBox();
         checkXScanBrowser = new javax.swing.JCheckBox();
         ckScanPlotEnabled = new javax.swing.JCheckBox();
-        checkXScanDataViewer = new javax.swing.JCheckBox();
+        checkQueueBrowser = new javax.swing.JCheckBox();
         checkShowJogButtons = new javax.swing.JCheckBox();
         checkShowEmergencyStop = new javax.swing.JCheckBox();
         checkShowHomingButtons = new javax.swing.JCheckBox();
@@ -1168,7 +1168,7 @@ public class PreferencesDialog extends StandardDialog {
 
         ckScanPlotEnabled.setText("Scan plots");
 
-        checkXScanDataViewer.setText("XScan Data Viewer");
+        checkQueueBrowser.setText("Queue File Browser");
 
         checkShowJogButtons.setText("Jog buttons");
 
@@ -1194,7 +1194,7 @@ public class PreferencesDialog extends StandardDialog {
                     .addComponent(ckScanPlotEnabled)
                     .addComponent(ckScanTableEnabled)
                     .addComponent(checkXScanBrowser)
-                    .addComponent(checkXScanDataViewer))
+                    .addComponent(checkQueueBrowser))
                 .addContainerGap())
         );
 
@@ -1216,7 +1216,7 @@ public class PreferencesDialog extends StandardDialog {
                 .addGap(0, 0, 0)
                 .addComponent(checkXScanBrowser)
                 .addGap(0, 0, 0)
-                .addComponent(checkXScanDataViewer)
+                .addComponent(checkQueueBrowser)
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
@@ -1415,7 +1415,7 @@ public class PreferencesDialog extends StandardDialog {
                 preferences.showHomingButtons = checkShowHomingButtons.isSelected();
                 preferences.showJogButtons = checkShowJogButtons.isSelected();
                 preferences.showXScanFileBrowser = checkXScanBrowser.isSelected();
-                preferences.showXScanDataViewer = checkXScanDataViewer.isSelected();
+                preferences.showQueueBrowser = checkQueueBrowser.isSelected();
                 preferences.linePlot = String.valueOf(comboLinePlot.getSelectedItem());
                 preferences.matrixPlot = String.valueOf(comboMatrixPlot.getSelectedItem());
                 preferences.surfacePlot = String.valueOf(comboSurfacePlot.getSelectedItem());
@@ -1642,6 +1642,7 @@ public class PreferencesDialog extends StandardDialog {
     private javax.swing.JCheckBox checkEditorContextMenu;
     private javax.swing.JCheckBox checkOffscreenBuffers;
     private javax.swing.JCheckBox checkPersistRendererWindows;
+    private javax.swing.JCheckBox checkQueueBrowser;
     private javax.swing.JCheckBox checkShowEmergencyStop;
     private javax.swing.JCheckBox checkShowHomingButtons;
     private javax.swing.JCheckBox checkShowJogButtons;
@@ -1649,7 +1650,6 @@ public class PreferencesDialog extends StandardDialog {
     private javax.swing.JCheckBox checkStatusBar;
     private javax.swing.JCheckBox checkSyntaxHighlight;
     private javax.swing.JCheckBox checkXScanBrowser;
-    private javax.swing.JCheckBox checkXScanDataViewer;
     private javax.swing.JCheckBox ckAsyncUpdate;
     private javax.swing.JCheckBox ckScanPlotEnabled;
     private javax.swing.JCheckBox ckScanTableEnabled;

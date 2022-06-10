@@ -47,6 +47,7 @@ import javax.swing.table.TableCellEditor;
  */
 public final class QueueProcessor extends PanelProcessor {
 
+    public static final String  EXTENSION = "que";
     public static String DEFAULT_INFO_COLUMN = null;
     
     String fileName;
@@ -80,6 +81,8 @@ public final class QueueProcessor extends PanelProcessor {
             }
         };
     }
+    
+    final String homePath;
 
     public QueueProcessor() {
         initComponents();
@@ -125,6 +128,12 @@ public final class QueueProcessor extends PanelProcessor {
             }
 
         });
+        
+        if ((App.getInstance() != null) && (App.hasArgument("qpath"))) {
+            homePath = Context.getInstance().getSetup().expandPath(App.getArgumentValue("qpath"));
+        } else {
+            homePath = Context.getInstance().getSetup().getQueuePath();
+        }      
     }        
 
     public void setTableInfoCol(String name) {
@@ -421,13 +430,18 @@ public final class QueueProcessor extends PanelProcessor {
 
     @Override
     public String getDescription() {
-        return "Execution queue (*.que)";
+        return "Execution queue (*." + EXTENSION + ")";
     }
 
     @Override
     public String[] getExtensions() {
-        return new String[]{"que"};
+        return new String[]{EXTENSION};
     }
+    
+    @Override
+    public boolean createFilePanel() {
+        return App.getInstance().getMainFrame().getPreferences().showQueueBrowser;
+    }    
 
     @Override
     public void execute() throws Exception {
@@ -496,7 +510,7 @@ public final class QueueProcessor extends PanelProcessor {
 
     @Override
     public String getHomePath() {
-        return Context.getInstance().getSetup().getScriptPath();
+        return homePath;
     }
 
     @Override

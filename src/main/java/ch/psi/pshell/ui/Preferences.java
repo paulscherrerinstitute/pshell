@@ -106,6 +106,7 @@ public class Preferences {
     public boolean showJogButtons;
     public boolean showXScanDataViewer;
     public boolean showXScanFileBrowser;
+    public boolean showQueueBrowser;
     
     public boolean backgroundRendering;
     public boolean showImageStatusBar = true;

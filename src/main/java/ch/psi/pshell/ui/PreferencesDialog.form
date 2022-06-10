@@ -1352,7 +1352,7 @@
                               <Component id="ckScanPlotEnabled" alignment="0" min="-2" max="-2" attributes="0"/>
                               <Component id="ckScanTableEnabled" alignment="0" min="-2" max="-2" attributes="0"/>
                               <Component id="checkXScanBrowser" alignment="0" min="-2" max="-2" attributes="0"/>
-                              <Component id="checkXScanDataViewer" alignment="0" min="-2" max="-2" attributes="0"/>
+                              <Component id="checkQueueBrowser" alignment="0" min="-2" max="-2" attributes="0"/>
                           </Group>
                           <EmptySpace max="-2" attributes="0"/>
                       </Group>
@@ -1374,7 +1374,7 @@
                           <EmptySpace min="0" pref="0" max="-2" attributes="0"/>
                           <Component id="checkXScanBrowser" min="-2" max="-2" attributes="0"/>
                           <EmptySpace min="0" pref="0" max="-2" attributes="0"/>
-                          <Component id="checkXScanDataViewer" min="-2" max="-2" attributes="0"/>
+                          <Component id="checkQueueBrowser" min="-2" max="-2" attributes="0"/>
                           <EmptySpace max="32767" attributes="0"/>
                       </Group>
                   </Group>
@@ -1396,9 +1396,9 @@
                     <Property name="text" type="java.lang.String" value="Scan plots"/>
                   </Properties>
                 </Component>
-                <Component class="javax.swing.JCheckBox" name="checkXScanDataViewer">
+                <Component class="javax.swing.JCheckBox" name="checkQueueBrowser">
                   <Properties>
-                    <Property name="text" type="java.lang.String" value="XScan Data Viewer"/>
+                    <Property name="text" type="java.lang.String" value="Queue File Browser"/>
                   </Properties>
                 </Component>
                 <Component class="javax.swing.JCheckBox" name="checkShowJogButtons">
