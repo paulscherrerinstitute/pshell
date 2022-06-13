@@ -1,5 +1,6 @@
 package ch.psi.pshell.xscan.ui;
 
+import ch.psi.pshell.core.Context;
 import ch.psi.pshell.xscan.model.Configuration;
 import ch.psi.pshell.xscan.model.Data;
 import ch.psi.pshell.xscan.model.Variable;
@@ -22,7 +23,7 @@ public class ConfigurationPanel extends EditablePanel<Configuration> {
      * Creates new form ConfiguratioPanel
      */
     public ConfigurationPanel(final Configuration configuration) {
-        super(configuration);
+        super(configuration);        
         this.configuration = configuration;
         if (configuration.getScan() == null) {
             configuration.setScan(configuration.getScan());
@@ -46,6 +47,14 @@ public class ConfigurationPanel extends EditablePanel<Configuration> {
         bindEditor(jCheckBoxFailOnSensorError, "failOnSensorError");
         bindEditor(jTextFieldFileName, configuration.getData(), "fileName");
         bindEditor(jComboBoxFormat, configuration.getData(), "format");
+        
+        try{
+            if (!Context.getInstance().getConfig().fdaSerialization){
+                jComboBoxFormat.setVisible(false);
+                labelFormat.setVisible(false);
+            }
+        } catch (Exception ex){            
+        }
 
         collapsibleListContainerVisualization.setHeader("Visualizations");
         collapsibleListContainerVisualization.setName("Visualizations");
@@ -75,7 +84,7 @@ public class ConfigurationPanel extends EditablePanel<Configuration> {
         jFormattedTextFieldNumber = new JFormattedTextField(FieldUtilities.getIntegerFormat());
         jLabel3 = new javax.swing.JLabel();
         jTextFieldFileName = new javax.swing.JTextField();
-        jLabel2 = new javax.swing.JLabel();
+        labelFormat = new javax.swing.JLabel();
         jComboBoxFormat = new javax.swing.JComboBox();
         jCheckBoxFailOnSensorError = new javax.swing.JCheckBox();
         scanPanel1 = new ScanPanel(configuration.getScan());
@@ -90,7 +99,7 @@ public class ConfigurationPanel extends EditablePanel<Configuration> {
 
         jPanel3.setLayout(new java.awt.FlowLayout(java.awt.FlowLayout.LEFT, 5, 0));
 
-        jLabel1.setFont(new java.awt.Font("Lucida Grande", 1, 13));
+        jLabel1.setFont(new java.awt.Font("Lucida Grande", 1, 13)); // NOI18N
         jLabel1.setLabelFor(jFormattedTextFieldNumber);
         jLabel1.setText("Number of Execution:");
         jPanel3.add(jLabel1);
@@ -100,7 +109,7 @@ public class ConfigurationPanel extends EditablePanel<Configuration> {
         jFormattedTextFieldNumber.setPreferredSize(new java.awt.Dimension(40, 28));
         jPanel3.add(jFormattedTextFieldNumber);
 
-        jLabel3.setFont(new java.awt.Font("Lucida Grande", 1, 13));
+        jLabel3.setFont(new java.awt.Font("Lucida Grande", 1, 13)); // NOI18N
         jLabel3.setLabelFor(jTextFieldFileName);
         jLabel3.setText("Type:");
         jPanel3.add(jLabel3);
@@ -108,14 +117,15 @@ public class ConfigurationPanel extends EditablePanel<Configuration> {
         jTextFieldFileName.setPreferredSize(new java.awt.Dimension(120, 28));
         jPanel3.add(jTextFieldFileName);
 
-        jLabel2.setFont(new java.awt.Font("Lucida Grande", 1, 13));
-        jLabel2.setText("Value:");
-        jPanel3.add(jLabel2);
+        labelFormat.setFont(new java.awt.Font("Lucida Grande", 1, 13)); // NOI18N
+        java.util.ResourceBundle bundle = java.util.ResourceBundle.getBundle("ch/psi/pshell/xscan/ui/Bundle"); // NOI18N
+        labelFormat.setText(bundle.getString("ConfigurationPanel.labelFormat.text")); // NOI18N
+        jPanel3.add(labelFormat);
 
         jComboBoxFormat.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "txt" }));
         jPanel3.add(jComboBoxFormat);
 
-        jCheckBoxFailOnSensorError.setFont(new java.awt.Font("Lucida Grande", 1, 13));
+        jCheckBoxFailOnSensorError.setFont(new java.awt.Font("Lucida Grande", 1, 13)); // NOI18N
         jCheckBoxFailOnSensorError.setText("Fail on Sensor Error");
         jPanel3.add(jCheckBoxFailOnSensorError);
 
@@ -182,12 +192,12 @@ public class ConfigurationPanel extends EditablePanel<Configuration> {
     private javax.swing.JComboBox jComboBoxFormat;
     private javax.swing.JFormattedTextField jFormattedTextFieldNumber;
     private javax.swing.JLabel jLabel1;
-    private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel3;
     private javax.swing.JPanel jPanelOptionalNotificaton;
     private javax.swing.JTextField jTextFieldFileName;
+    private javax.swing.JLabel labelFormat;
     private ch.psi.pshell.xscan.ui.ScanPanel scanPanel1;
     // End of variables declaration//GEN-END:variables
 
