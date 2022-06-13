@@ -50,7 +50,7 @@ public class Visualizer implements EventBusListener {
         if (App.getInstance().getMainFrame() != null) {
             preferences = App.getInstance().getMainFrame().getPreferences();
         } else {
-            preferences = Preferences.load(Context.getInstance().getSetup().getContextPath());
+            preferences = Preferences.load();
         }
         String linePlotImpl = preferences.linePlot;
         String matrixPlotImpl = preferences.matrixPlot;

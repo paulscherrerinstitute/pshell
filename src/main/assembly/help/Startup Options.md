@@ -145,6 +145,10 @@
     <td>Override the config file, which stors user options (default is {config}/config.properties).</td>
   </tr>
   <tr>
+    <td>-pref=[path]</td>
+    <td>Override the view preferences file.</td>
+  </tr>
+  <tr>
     <td>-pool=[path]</td>
     <td>Set the device pool configuration file (default is {config}/devices.properties).</td>
   </tr>

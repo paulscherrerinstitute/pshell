@@ -39,6 +39,8 @@ import ch.psi.utils.Str;
 import ch.psi.utils.Arr;
 import ch.psi.utils.swing.Terminal;
 import java.awt.Color;
+import java.io.File;
+import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.HashMap;
@@ -52,7 +54,7 @@ public class Preferences {
 
     static final long serialVersionUID = 1;
 
-    static final String PREFERENCES_FILENAME = "Preferences.dat";
+    static final String PREFERENCES_FILENAME = "preferences.bin";
     
     static final PanelLocation DEFAULT_CONSOLE_LOCATION = PanelLocation.Document;
     static final PanelLocation DEFAULT_DATA_PANEL_LOCATION = PanelLocation.Status;
@@ -136,7 +138,25 @@ public class Preferences {
 
     Path file;
 
-    public static Preferences load(String path) {
+    public static Preferences load() {
+        String pref = App.getArgumentValue("pref");
+        Path file;
+        if ((pref!=null) && (!pref.isBlank())){
+            file =Paths.get(Context.getInstance().getSetup().expandPath(pref.trim()));
+        } else {
+            file = Paths.get(Context.getInstance().getSetup().getConfigPath(), PREFERENCES_FILENAME);
+            if (!file.toFile().exists()){
+                Path back_comp = Paths.get(Context.getInstance().getSetup().getContextPath(), "Preferences.dat");
+                if (back_comp.toFile().exists()){
+                    try {
+                        IO.copy(back_comp.toString(), file.toString());
+                    } catch (IOException ex) {
+                        Logger.getLogger(Preferences.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }
+            }
+        }
+        
         Preferences preferences = new Preferences();
         //Defaults
         Font[] fonts = getDefaultFonts();
@@ -154,12 +174,11 @@ public class Preferences {
         preferences.dataPanelLocation = DEFAULT_DATA_PANEL_LOCATION;
         //preferences.propagateVariableEvaluation = true;
         preferences.defaultPlotColormap = Colormap.Temperature;
-        preferences.defaultRendererColormap = Colormap.Grayscale;
-        Path file = Paths.get(path, PREFERENCES_FILENAME);
+        preferences.defaultRendererColormap = Colormap.Grayscale;        
         preferences.file = file;
 
         try {
-            HashMap<String, Object> map = (HashMap) Serializer.decode(Files.readAllBytes(file));
+            HashMap<String, Object> map = (HashMap) Serializer.decode(file);
             for (String name : map.keySet()) {
                 try {
                     Field f = Preferences.class.getField(name);
@@ -241,7 +260,7 @@ public class Preferences {
                     }
                 }
             }
-            Files.write(file, Serializer.encode(map, Serializer.EncoderType.bin));
+            Serializer.encode(map, file);
             IO.setFilePermissions(file.toFile(), Context.getInstance().getConfig().filePermissionsConfig);
         } catch (Exception ex) {
             Logger.getLogger(Preferences.class.getName()).log(Level.WARNING, null, ex);

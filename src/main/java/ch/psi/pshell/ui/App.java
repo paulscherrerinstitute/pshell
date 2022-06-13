@@ -443,6 +443,7 @@ public class App extends ObservableBase<AppListener> {
         sb.append("\n\t-sesp=<path>\tSet the sessions folder (default is {home}/sessions)");
         sb.append("\n\t-setp=<path>\tOverride the setup file(default is {config}/setup.properties)");
         sb.append("\n\t-conf=<path>\tOverride the config file(default is {config}/config.properties)");
+        sb.append("\n\t-pref=<path>\tOverride the view preferences file");
         sb.append("\n\t-pool=<path>\tOverride the device pool configuration file");
         sb.append("\n\t-plug=<path>\tOverride the plugin definition file (default is {config}/plugins.properties)");
         sb.append("\n\t-task=<path>\tOverride the task definition file (default is {config}/tasks.properties)");

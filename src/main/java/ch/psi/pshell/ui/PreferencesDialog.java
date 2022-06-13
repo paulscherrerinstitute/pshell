@@ -1233,7 +1233,7 @@ public class PreferencesDialog extends StandardDialog {
                 .addGap(0, 0, 0))
         );
 
-        jPanel14.setBorder(javax.swing.BorderFactory.createTitledBorder("Toolbar Visibility"));
+        jPanel14.setBorder(javax.swing.BorderFactory.createTitledBorder("Panel Visibility"));
 
         checkXScanBrowser.setText("XScan File Browser");
 

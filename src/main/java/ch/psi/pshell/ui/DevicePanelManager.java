@@ -35,7 +35,7 @@ public class DevicePanelManager {
         this.view = view;
         this.deviceDialogs = new HashMap<>();
         if (view == null) {
-            preferences = Preferences.load(Context.getInstance().getSetup().getContextPath());
+            preferences = Preferences.load();
         } else {
             preferences = view.getPreferences();
         }

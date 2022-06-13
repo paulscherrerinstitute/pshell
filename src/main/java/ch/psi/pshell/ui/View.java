@@ -2157,7 +2157,7 @@ public class View extends MainFrame {
     }
 
     public void restorePreferences() {
-        preferences = Preferences.load(context.getSetup().getContextPath());
+        preferences = Preferences.load();
         applyPreferences();
         if (App.getInstance().isContextPersisted()) {
             for (String file : openedFiles.stringPropertyNames()) {
