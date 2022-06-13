@@ -11,6 +11,7 @@ import com.pty4j.PtyProcess;
 import com.pty4j.PtyProcessBuilder;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
+import java.awt.Font;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
@@ -23,13 +24,21 @@ public class Terminal extends MonitoredPanel implements AutoCloseable{
     final PtyProcess process;
     final TtyConnector connector;
     volatile boolean closed;
+    
+    public static Font getDefaultFont(){
+        return new DefaultSettingsProvider().getTerminalFont();
+    }
+    
+    public Terminal(String home) throws IOException {
+        this(home, getDefaultFont());
+    }
 
-    public Terminal(String home, Float size) throws IOException {
+    public Terminal(String home, Font font) throws IOException {
         this.home = (home == null) ? Sys.getCurDir() : home;
         widget = new JediTermWidget(80, 24, new DefaultSettingsProvider() {
             @Override
-            public float getTerminalFontSize() {
-                return (size == null) ? super.getTerminalFontSize() : size;
+            public Font getTerminalFont() {
+                return font;
             }
 
             @Override
@@ -87,7 +96,7 @@ public class Terminal extends MonitoredPanel implements AutoCloseable{
     }    
 
     public static void main(String[] args) throws IOException {
-        SwingUtils.showDialog(null, "Terminal", new Dimension(800, 600), new Terminal(null, 10.0f));
+        SwingUtils.showDialog(null, "Terminal", new Dimension(800, 600), new Terminal(null));
     }
 
 }

@@ -1139,8 +1139,8 @@ public class View extends MainFrame {
         }
     }
 
-    public void setScanTableDisabled(boolean value) {
-        scanPanel.setActive(!value);
+    public void setScanTableDisabled(boolean value) {     
+        scanPanel.setActive(preferences.hideScanPanel ||  !value);
     }
 
     public boolean isScanTableDisabled() {
@@ -1231,7 +1231,11 @@ public class View extends MainFrame {
                 boolean isSelected = tabStatus.getSelectedComponent() == nextStagesPanel;
                 tabStatus.remove(nextStagesPanel);
                 if (isSelected) {
-                    tabStatus.setSelectedComponent(outputPanel);
+                    if (outputPanel.isDisplayable()) {
+                        tabStatus.setSelectedComponent(outputPanel);
+                    } else {
+                        tabStatus.setSelectedComponent(loggerPanel);
+                    }
                 }
             }
         } else {
@@ -1870,6 +1874,43 @@ public class View extends MainFrame {
             menuPlotWindowDetached.setSelected(value);
         }
     }
+    
+    void setScanPanelVisible(boolean value){
+        if (!App.isOffline()) {
+            
+            if (preferences.hideScanPanel != (tabStatus.indexOfComponent(scanPanel)<0)){
+                if (preferences.hideScanPanel){
+                    tabStatus.remove(scanPanel);
+                } else {
+                    int index = Math.min(3, tabStatus.getTabCount());
+                    tabStatus.add(scanPanel, index); 
+                    tabStatus.setTitleAt(index, App.getResourceBundleValue(View.class, "View.scanPanel.TabConstraints.tabTitle"));                    
+                }
+            }
+        }                
+    }
+    
+    boolean isScanPanelVisible(){
+        return (tabStatus.indexOfComponent(scanPanel)>=0);
+    }
+
+    void setOutputPanelVisible(boolean value){
+        if (!App.isOffline()) {
+            if (preferences.hideOutputPanel != (tabStatus.indexOfComponent(outputPanel)<0)){
+                if (preferences.hideOutputPanel) {
+                    tabStatus.remove(outputPanel);
+                } else {
+                    int index = Math.min(isScanPanelVisible()?4:3, tabStatus.getTabCount());
+                    tabStatus.add(outputPanel, index); 
+                    tabStatus.setTitleAt(index, App.getResourceBundleValue(View.class, "View.outputPanel.TabConstraints.tabTitle"));                    
+                }
+            }
+        }           
+    }
+    
+    boolean isOutputPanelVisible(){
+        return (tabStatus.indexOfComponent(outputPanel)>=0);
+    }    
 
     PanelLocation getLocation(JPanel panel) {
         if (!panel.isDisplayable()) {
@@ -2195,6 +2236,9 @@ public class View extends MainFrame {
         dataPanel.setEmbedded(!preferences.openDataFilesInDocTab);
         
         statusBar.setShowDataFileName(!preferences.hideFileName);
+        
+        setScanPanelVisible(!preferences.hideScanPanel);
+        setOutputPanelVisible(!preferences.hideOutputPanel);        
     }
 
     void saveOpenedFiles() {
@@ -2445,7 +2489,7 @@ public class View extends MainFrame {
                 return;
             }
         }
-        terminal = new Terminal(context.getSetup().getHomePath(), preferences.terminalFontSize);
+        terminal = new Terminal(context.getSetup().getHomePath(), preferences.fontTerminal);
         tabStatus.addTab("Terminal", terminal);
         int index = tabStatus.getTabCount() - 1;
         SwingUtils.setTabClosable(tabStatus, index);
@@ -2619,6 +2663,8 @@ public class View extends MainFrame {
         menuViewPlotWindow = new javax.swing.JCheckBoxMenuItem();
         menuPlotWindowDetached = new javax.swing.JCheckBoxMenuItem();
         menuTerminal = new javax.swing.JCheckBoxMenuItem();
+        menuScanPanel = new javax.swing.JCheckBoxMenuItem();
+        menuOutput = new javax.swing.JCheckBoxMenuItem();
         jSeparator8 = new javax.swing.JPopupMenu.Separator();
         menuCloseAllPlots = new javax.swing.JMenuItem();
         menuCloseAll = new javax.swing.JMenuItem();
@@ -3694,6 +3740,24 @@ public class View extends MainFrame {
         });
         menuView.add(menuTerminal);
 
+        menuScanPanel.setText(bundle.getString("View.menuScanPanel.text")); // NOI18N
+        menuScanPanel.setName("menuScanPanel"); // NOI18N
+        menuScanPanel.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                menuScanPanelActionPerformed(evt);
+            }
+        });
+        menuView.add(menuScanPanel);
+
+        menuOutput.setText(bundle.getString("View.menuOutput.text")); // NOI18N
+        menuOutput.setName("menuOutput"); // NOI18N
+        menuOutput.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                menuOutputActionPerformed(evt);
+            }
+        });
+        menuView.add(menuOutput);
+
         jSeparator8.setName("jSeparator8"); // NOI18N
         menuView.add(jSeparator8);
 
@@ -4116,6 +4180,8 @@ public class View extends MainFrame {
                 menuViewPlotWindow.setSelected(isPlotsVisible());
                 menuFullScreen.setSelected(isFullScreen());
                 menuTerminal.setSelected(isTerminalVisible());
+                menuScanPanel.setSelected(isScanPanelVisible());
+                menuOutput.setSelected(isOutputPanelVisible());
                 for (Component item : menuConsoleLocation.getMenuComponents()) {
                     ((JRadioButtonMenuItem) item).setSelected(((JRadioButtonMenuItem) item).getText().equals(consoleLocation.toString()));
                 }
@@ -5251,6 +5317,30 @@ public class View extends MainFrame {
         }  
     }//GEN-LAST:event_menuTerminalActionPerformed
 
+    private void menuScanPanelActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuScanPanelActionPerformed
+        try {
+            if (!App.isLocalMode()) {
+                preferences.hideScanPanel = !menuScanPanel.isSelected();
+                preferences.save();
+            }
+            setScanPanelVisible(menuScanPanel.isSelected());
+        } catch (Exception ex) {
+            showException(ex);
+        }
+    }//GEN-LAST:event_menuScanPanelActionPerformed
+
+    private void menuOutputActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuOutputActionPerformed
+        try {
+            if (!App.isLocalMode()) {
+                preferences.hideOutputPanel = !menuOutput.isSelected();
+                preferences.save();
+            }
+            setOutputPanelVisible(menuOutput.isSelected());
+        } catch (Exception ex) {
+            showException(ex);
+        }
+    }//GEN-LAST:event_menuOutputActionPerformed
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton buttonAbort;
     private javax.swing.JButton buttonAbout;
@@ -5337,6 +5427,7 @@ public class View extends MainFrame {
     private javax.swing.JMenuItem menuOpen;
     private javax.swing.JMenuItem menuOpenLogFile;
     private javax.swing.JMenu menuOpenRecent;
+    private javax.swing.JCheckBoxMenuItem menuOutput;
     private javax.swing.JMenuItem menuPaste;
     private javax.swing.JMenuItem menuPause;
     private javax.swing.JMenu menuPlotWindow;
@@ -5352,6 +5443,7 @@ public class View extends MainFrame {
     private javax.swing.JMenuItem menuRunNext;
     private javax.swing.JMenuItem menuSave;
     private javax.swing.JMenuItem menuSaveAs;
+    private javax.swing.JCheckBoxMenuItem menuScanPanel;
     private javax.swing.JMenuItem menuSessionCreate;
     private javax.swing.JMenuItem menuSessionHistory;
     private javax.swing.JMenuItem menuSessionPause;

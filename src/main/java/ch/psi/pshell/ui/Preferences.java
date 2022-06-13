@@ -37,6 +37,7 @@ import ch.psi.pshell.swing.ScalerPanel;
 import ch.psi.utils.IO;
 import ch.psi.utils.Str;
 import ch.psi.utils.Arr;
+import ch.psi.utils.swing.Terminal;
 import java.awt.Color;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
@@ -80,7 +81,7 @@ public class Preferences {
     public Font fontPlotLabel;
     public Font fontPlotTick;
     public Font fontPlotTitle;
-    public Float terminalFontSize=10.0f;
+    public Font fontTerminal;
     public int tabSize = 4;
     public int contentWidth;
     public Color editorBackground;
@@ -104,8 +105,10 @@ public class Preferences {
     public boolean showEmergencyStop;
     public boolean showHomingButtons;
     public boolean showJogButtons;
-    public boolean showXScanDataViewer;
+    public boolean hideScanPanel;
+    public boolean hideOutputPanel;
     public boolean showXScanFileBrowser;
+    public boolean showXScanDataViewer;
     public boolean showQueueBrowser;
     
     public boolean backgroundRendering;
@@ -144,6 +147,7 @@ public class Preferences {
         preferences.fontPlotLabel = fonts[4];
         preferences.fontPlotTick = fonts[5];
         preferences.fontPlotTitle= fonts[6];
+        preferences.fontTerminal= fonts[7];
         preferences.processingScripts = new String[0];
         preferences.defaultPanels = getDefaultPanels();
         preferences.consoleLocation = DEFAULT_CONSOLE_LOCATION;
@@ -209,6 +213,7 @@ public class Preferences {
         Font plotLabelFont = new Font(Font.SANS_SERIF, 0, 11);        
         Font plotTickFont = new Font(Font.SANS_SERIF, 0, 10); 
         Font plotTitleFont =  new Font(Font.SANS_SERIF, Font.BOLD, 13);
+        Font terminalFont = Terminal.getDefaultFont();
 
         return new Font[]{
             editorFont,
@@ -217,7 +222,8 @@ public class Preferences {
             commandFont,
             plotLabelFont,
             plotTickFont,
-            plotTitleFont
+            plotTitleFont,
+            terminalFont
         };
     }
 

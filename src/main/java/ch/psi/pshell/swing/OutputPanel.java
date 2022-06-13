@@ -53,15 +53,18 @@ public class OutputPanel extends MonitoredPanel {
     }
 
     public void initialize() {
-        Context.getInstance().addListener(contextListener);
+        
     }
 
     @Override
     protected void onShow() {
+        Context.getInstance().addListener(contextListener);
     }
 
     @Override
     protected void onHide() {
+        outputTextPane.clear();
+        Context.getInstance().removeListener(contextListener);
     }
 
     final ContextListener contextListener = new ContextAdapter() {
