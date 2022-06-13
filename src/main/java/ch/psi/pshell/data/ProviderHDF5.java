@@ -479,11 +479,11 @@ public class ProviderHDF5 implements Provider {
         try {
             HDF5LinkInformation info = reader.object().getLinkInformation(path);
             HDF5ObjectType type = info.getType();
-            ret.put("Type", type);
+            ret.put(INFO_TYPE, type);
             //ret.put("Size", reader.object().getSize(path));
             if (info.isDataSet()|| info.isSoftLink()) {
                 HDF5ObjectInformation objinfo = reader.object().getObjectInformation(path);
-                ret.put("Creation", Chrono.getTimeStr(objinfo.getCreationTime() * 1000, "dd/MM/YY HH:mm:ss"));
+                ret.put(INFO_CREATION, Chrono.getTimeStr(objinfo.getCreationTime() * 1000, "dd/MM/YY HH:mm:ss"));
 
                 HDF5DataSetInformation dsinfo = reader.object().getDataSetInformation(path);
 
@@ -492,17 +492,17 @@ public class ProviderHDF5 implements Provider {
                 for (int i = 0; i < dims.length; i++) {
                     idims[i] = (int) dims[i];
                 }
-                ret.put("Dimensions", idims);
-                ret.put("Elements", dsinfo.getNumberOfElements());
-                ret.put("Element Size", dsinfo.getTypeInformation().getElementSize());
-                ret.put("Rank", dsinfo.getRank());
-                ret.put("Size", dsinfo.getSize());
-                ret.put("Layout", dsinfo.getStorageLayout().name());
-                ret.put("Data Type", dsinfo.getTypeInformation().getDataClass().toString());
-                ret.put("Signed", dsinfo.getTypeInformation().isSigned());
+                ret.put(INFO_DIMENSIONS, idims);
+                ret.put(INFO_ELEMENTS, dsinfo.getNumberOfElements());
+                ret.put(INFO_ELEMENT_SIZE, dsinfo.getTypeInformation().getElementSize());
+                ret.put(INFO_RANK, dsinfo.getRank());
+                ret.put(INFO_SIZE, dsinfo.getSize());
+                ret.put(INFO_LAYOUT, dsinfo.getStorageLayout().name());
+                ret.put(INFO_DATA_TYPE, dsinfo.getTypeInformation().getDataClass().toString());
+                ret.put(INFO_SIGNED, dsinfo.getTypeInformation().isSigned());
                 int[] chunk_sizes = dsinfo.tryGetChunkSizes();
                 if ((chunk_sizes!=null) && (chunk_sizes.length>0)){
-                    ret.put("Chunk Sizes", chunk_sizes);
+                    ret.put(INFO_CHUNK_SIZES, chunk_sizes);
                 }
 
                 if (dsinfo.getTypeInformation().getDataClass() == HDF5DataClass.COMPOUND) {

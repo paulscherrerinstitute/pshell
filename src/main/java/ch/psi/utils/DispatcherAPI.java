@@ -1,6 +1,5 @@
 package ch.psi.utils;
 
-import ch.psi.pshell.core.JsonSerializer;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -33,11 +32,11 @@ public class DispatcherAPI extends DataAPI{
         if (reload != null) {
             data.put("reload", reload);
         }
-        String json = JsonSerializer.encode(data);
+        String json = EncoderJson.encode(data, false);
         WebTarget resource = client.target(url + "/channels/live");
         Response r = resource.request().accept(MediaType.APPLICATION_JSON).post(Entity.json(json));
         json = r.readEntity(String.class);
-        List<Map<String, Object>> query = (List) JsonSerializer.decode(json, List.class);
+        List<Map<String, Object>> query = (List) EncoderJson.decode(json, List.class);
         List<Map> list = (List<Map>) query.get(0).get("channels");
         List<String> ret = new ArrayList<>();
         for (Map map : list){

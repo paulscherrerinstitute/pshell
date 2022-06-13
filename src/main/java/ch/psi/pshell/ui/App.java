@@ -5,7 +5,6 @@ import ch.psi.pshell.core.Configuration.LogLevel;
 import ch.psi.pshell.core.Context;
 import ch.psi.pshell.core.ContextAdapter;
 import ch.psi.pshell.core.DevicePool;
-import ch.psi.pshell.core.JsonSerializer;
 import ch.psi.pshell.core.LogManager;
 import ch.psi.pshell.swing.HelpContentsDialog;
 import ch.psi.pshell.swing.OutputPanel;
@@ -36,6 +35,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import ch.psi.utils.Arr;
 import ch.psi.utils.Convert;
+import ch.psi.utils.EncoderJson;
 import ch.psi.utils.IO;
 import ch.psi.utils.ObservableBase;
 import ch.psi.utils.Reflection.Hidden;
@@ -443,6 +443,7 @@ public class App extends ObservableBase<AppListener> {
         sb.append("\n\t-sesp=<path>\tSet the sessions folder (default is {home}/sessions)");
         sb.append("\n\t-setp=<path>\tOverride the setup file(default is {config}/setup.properties)");
         sb.append("\n\t-conf=<path>\tOverride the config file(default is {config}/config.properties)");
+        sb.append("\n\t-pref=<path>\tOverride the view preferences file");
         sb.append("\n\t-pool=<path>\tOverride the device pool configuration file");
         sb.append("\n\t-plug=<path>\tOverride the plugin definition file (default is {config}/plugins.properties)");
         sb.append("\n\t-task=<path>\tOverride the task definition file (default is {config}/tasks.properties)");
@@ -1513,7 +1514,7 @@ public class App extends ObservableBase<AppListener> {
                     Object value = args.get(key);
                     String text;
                     try {
-                        text = JsonSerializer.encode(value);
+                        text = EncoderJson.encode(value, false);
                     } catch (Exception ex) {
                         text = String.valueOf(value);
                     }

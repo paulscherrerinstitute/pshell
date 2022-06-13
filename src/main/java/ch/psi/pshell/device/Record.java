@@ -11,6 +11,8 @@ public interface Record extends Nameable {
     public static final int KEEP_TO_VALID = -3;    
     
     public static final int UNDEFINED_PRECISION = -1;    
+    public static final int RESOLVE_PRECISION = -2;
+    
     public static final int TIMEOUT_INFINITE = -1;
     public static final int UNDEFINED = -1;    
 }

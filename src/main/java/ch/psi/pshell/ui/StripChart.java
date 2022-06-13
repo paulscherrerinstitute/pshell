@@ -6,7 +6,6 @@ import ch.psi.pshell.bs.Stream;
 import ch.psi.pshell.core.Context;
 import ch.psi.pshell.core.ContextAdapter;
 import ch.psi.pshell.core.InlineDevice;
-import ch.psi.pshell.core.JsonSerializer;
 import ch.psi.pshell.core.Setup;
 import ch.psi.pshell.data.ProviderCSV;
 import ch.psi.pshell.data.ProviderText;
@@ -28,6 +27,7 @@ import ch.psi.pshell.swing.PlotPanel;
 import ch.psi.pshell.ui.StripChartAlarmEditor.StripChartAlarmConfig;
 import ch.psi.utils.Audio;
 import ch.psi.utils.Chrono;
+import ch.psi.utils.EncoderJson;
 import ch.psi.utils.IO;
 import ch.psi.utils.InvokingProducer;
 import ch.psi.utils.State;
@@ -760,7 +760,7 @@ public class StripChart extends StandardDialog {
         state.add(new Object[][]{new Object[]{textStreamFilter.getText().trim(), spinnerDragInterval.getValue(), spinnerUpdate.getValue()},
         new Object[]{background, grid}});
 
-        String json = JsonSerializer.encode(state, true);
+        String json = EncoderJson.encode(state, true);
         //This is to make easy to access the file in text editor.
         json = json.replace("] ] ]", "] ]  \n]").replace("[ [ [", "[ \n    [ [").replace("],", "],\n   ").replace("  [ [", "[ [");
         Files.write(file.toPath(), json.getBytes());
@@ -861,10 +861,10 @@ public class StripChart extends StandardDialog {
         Object[][][] state = null;
         try {
             //parse a complete configuration
-            state = (Object[][][]) JsonSerializer.decode(json, Object[][][].class);
+            state = (Object[][][]) EncoderJson.decode(json, Object[][][].class);
         } catch (Exception ex) {
             //parse list of channel names
-            List<String> channels = (List<String>) JsonSerializer.decode(json, List.class);
+            List<String> channels = (List<String>) EncoderJson.decode(json, List.class);
             state = new Object[1][channels.size()][];
             for (int i = 0; i < channels.size(); i++) {
                 Type type = Type.Channel;

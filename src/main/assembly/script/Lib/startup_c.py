@@ -467,6 +467,7 @@ from javax.swing import SwingUtilities
 from org.jfree.ui import RectangleAnchor as RectangleAnchor
 from org.jfree.ui import TextAnchor as TextAnchor
 
+from ch.psi.pshell.xscan import ProcessorXScan as ProcessorXScan
 
 def string_to_obj(o):
     if is_string(o):
@@ -1390,6 +1391,17 @@ def escan(name, **pars):
     processScanPars(scan, pars)
     scan.start()
     return scan.getResult()
+
+def xscan(file_name, arguments={}):
+    """ Run FDA's XScan (devined in XML file)
+
+    Args:
+        file_name(string): Name of the file (relative to XScan base folder)
+        arguments(dict):  map of of XScan variables 
+                          E.g: in a linear positioner  {"idXXXX.start":0.0, "idXXXX.end":5.0, "idXXXX.step_size":0.1})
+        
+    """    
+    ProcessorXScan().startExecute(file_name,arguments)
 
 
 def bsearch(writables, readable, start, end, steps, maximum = True, strategy = "Normal", latency=0.0, relative=False, **pars):

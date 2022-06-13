@@ -1,6 +1,6 @@
 package ch.psi.pshell.ui;
 
-import ch.psi.pshell.core.JsonSerializer;
+import ch.psi.utils.EncoderJson;
 import ch.psi.utils.Sys;
 import ch.psi.utils.swing.SwingUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -181,7 +181,7 @@ public class StripChartServer implements AutoCloseable {
         @Consumes(MediaType.APPLICATION_JSON)
         public String openJson(final List cfg) throws ExecutionException{
             try {
-                StripChart.create(null, JsonSerializer.encode(cfg, true), App.getStripChartFolderArg(), false, false);
+                StripChart.create(null, EncoderJson.encode(cfg, true), App.getStripChartFolderArg(), false, false);
                 return Sys.getProcessName();
             } catch (Exception ex) {
                 throw new ExecutionException(ex);
@@ -195,7 +195,7 @@ public class StripChartServer implements AutoCloseable {
         @Consumes(MediaType.APPLICATION_JSON)
         public String runJson(final List cfg) throws ExecutionException{
             try {
-                StripChart.create(null, JsonSerializer.encode(cfg, true), App.getStripChartFolderArg(), true, false);
+                StripChart.create(null, EncoderJson.encode(cfg, true), App.getStripChartFolderArg(), true, false);
                 return Sys.getProcessName();
             } catch (Exception ex) {
                 throw new ExecutionException(ex);

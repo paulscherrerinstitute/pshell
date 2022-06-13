@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.nio.file.Paths;
 import ch.psi.pshell.imaging.ImageListener;
 import ch.psi.utils.swing.SwingUtils;
-import ch.psi.pshell.core.JsonSerializer;
 import ch.psi.pshell.core.Setup;
 import ch.psi.pshell.data.DataManager;
 import ch.psi.pshell.device.Device;
@@ -37,6 +36,7 @@ import ch.psi.utils.ArrayProperties;
 import ch.psi.utils.Chrono;
 import ch.psi.utils.Config;
 import ch.psi.utils.Convert;
+import ch.psi.utils.EncoderJson;
 import ch.psi.utils.Str;
 import ch.psi.utils.Sys;
 import ch.psi.utils.swing.Editor;
@@ -187,7 +187,7 @@ public class StreamCameraViewer extends MonitoredPanel {
                         try (CameraServer srv = new CameraServer("CamServer", App.getArgumentValue("camera_server"))) {
                             srv.initialize();
                             //TODO: replace into encodeMultiline
-                            cameraConfigJson = JsonSerializer.encode(srv.getConfig(cameraName), true);
+                            cameraConfigJson = EncoderJson.encode(srv.getConfig(cameraName), true);
                         }
                         TextEditor configEditor = new TextEditor();
                         configEditor.setText(cameraConfigJson);
@@ -1032,7 +1032,7 @@ public class StreamCameraViewer extends MonitoredPanel {
     }
 
     public String setStream(Map<String, Object> stream) throws IOException, InterruptedException {
-        String json = JsonSerializer.encode(stream);        
+        String json = EncoderJson.encode(stream, false);        
         return setStream(json);
     }
     
@@ -1070,7 +1070,7 @@ public class StreamCameraViewer extends MonitoredPanel {
         
         Map<String, Object> cfg = null;
         if ((stream!=null) && (stream.startsWith("{") && stream.endsWith("}"))){
-            cfg =  (Map<String, Object>) JsonSerializer.decode(stream, Map.class);        
+            cfg =  (Map<String, Object>) EncoderJson.decode(stream, Map.class);        
             textStream.setText((String) cfg.get("camera_name"));            
         } else {
             textStream.setText((stream == null) ? "" : stream);
@@ -2200,7 +2200,7 @@ public class StreamCameraViewer extends MonitoredPanel {
     }
 
     public static Map<String, Object> getProcessingParameters(StreamValue value) throws IOException {
-        return (Map) JsonSerializer.decode(value.getValue("processing_parameters").toString(), Map.class);
+        return (Map) EncoderJson.decode(value.getValue("processing_parameters").toString(), Map.class);
     }
     
     

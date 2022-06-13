@@ -1,5 +1,7 @@
 package ch.psi.pshell.device;
 
+import java.io.IOException;
+
 
 /**
  * Base class for ProcessVariable implementations.
@@ -31,6 +33,14 @@ public abstract class ReadonlyProcessVariableBase extends ReadonlyRegisterBase<D
             return "units";
         }
         return getConfig().unit;
+    }
+    
+    @Override
+    public String getDescription(){
+        if (!getConfig().hasDefinedDescription()) {
+            return "";
+        }
+        return getConfig().description;
     }
     
     @Override

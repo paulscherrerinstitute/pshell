@@ -116,7 +116,10 @@ public class Setup extends Config {
     public String configFileSessions = TOKEN_CONFIG + "/sessions.properties";
     
     public String userSessionsPath = TOKEN_SESSIONS + "/user";
-    public String consoleSessionsPath = TOKEN_SESSIONS + "/console";        
+    public String consoleSessionsPath = TOKEN_SESSIONS + "/console";    
+
+    public String xscanPath = TOKEN_SCRIPT;   
+    public String queuePath = TOKEN_SCRIPT;   
     
     
 
@@ -189,6 +192,15 @@ public class Setup extends Config {
             userSessionsPath = TOKEN_SESSIONS + "/user";
             save();
         }
+        if (Str.toString(xscanPath).equals((Str.toString(null)))) {
+            xscanPath = TOKEN_SCRIPT;
+            save();
+        }        
+        if (Str.toString(queuePath).equals((Str.toString(null)))) {
+            queuePath = TOKEN_SCRIPT;
+            save();
+        }        
+        
  
         if (System.getProperty(PROPERTY_DATA_PATH) != null) {
             dataPath = System.getProperty(PROPERTY_DATA_PATH);
@@ -800,6 +812,14 @@ public class Setup extends Config {
         return expandPath(configFileVariables);
     }
 
+    public String getXScanPath() {
+        return expandPath(xscanPath);
+    }
+    
+    public String getQueuePath() {
+        return expandPath(queuePath);
+    }    
+    
     public static String getSourceAssemblyFolder() {
         return Paths.get("src", "main", "assembly").toString();
     }

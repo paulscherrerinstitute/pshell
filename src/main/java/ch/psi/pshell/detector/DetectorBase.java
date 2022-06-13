@@ -1,7 +1,7 @@
 package ch.psi.pshell.detector;
 
-import ch.psi.pshell.core.JsonSerializer;
 import ch.psi.pshell.device.DeviceBase;
+import ch.psi.utils.EncoderJson;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -67,7 +67,7 @@ public class DetectorBase extends DeviceBase {
         assertInitialized();
         SettingsWrapper obj = new SettingsWrapper();
         obj.settings = getConfig();
-        String json = JsonSerializer.encode(obj);
+        String json = EncoderJson.encode(obj, false);
         Response r = target.path("state").path("configure").request().
                 accept(MediaType.APPLICATION_JSON).post(Entity.json(json));
     }

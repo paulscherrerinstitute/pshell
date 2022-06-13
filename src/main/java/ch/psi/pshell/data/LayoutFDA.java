@@ -93,7 +93,7 @@ public class LayoutFDA extends LayoutTable {
         return false;
     }
     
-    
+    /*
     //FDA layout doesn' save global attributes
     @Override
     public void onOpened(File output) throws IOException {
@@ -102,5 +102,6 @@ public class LayoutFDA extends LayoutTable {
     @Override
     public void onClosed(File output) throws IOException {
     }     
+    */
 }
 

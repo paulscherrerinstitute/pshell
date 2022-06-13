@@ -75,6 +75,7 @@ public class Configuration extends Config {
     public String instanceName = "";
     public boolean saveCommandStatistics;
     public boolean parallelInitialization;
+    public boolean fdaSerialization;
 
     public enum LogLevel {
 

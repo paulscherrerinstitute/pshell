@@ -1,6 +1,6 @@
 package ch.psi.pshell.ui;
 
-import ch.psi.pshell.core.JsonSerializer;
+import ch.psi.utils.EncoderJson;
 import ch.psi.utils.swing.StandardDialog;
 import java.io.IOException;
 import java.util.LinkedHashMap;
@@ -34,7 +34,7 @@ public class QueueParsDialog extends StandardDialog {
             Object value = data.get(key);
             String text;
             try{
-                text =  JsonSerializer.encode(value);
+                text =  EncoderJson.encode(value, false);
             } catch (Exception ex){
                 text = String.valueOf(value);
             }

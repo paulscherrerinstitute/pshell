@@ -36,6 +36,7 @@ import java.util.Arrays;
 import ch.psi.pshell.device.Readable;
 import ch.psi.pshell.device.Readable.ReadableMatrix;
 import ch.psi.pshell.scripting.JepUtils;
+import ch.psi.pshell.xscan.ProcessorXScan;
 import ch.psi.utils.Reflection.Hidden;
 import java.util.List;
 import java.util.Map;
@@ -340,6 +341,9 @@ public class DataManager implements AutoCloseable {
     }
 
     public DirectoryStream.Filter getFileFilter() {
+         return getFileFilter(new String[0]);
+    }
+    public DirectoryStream.Filter getFileFilter(final String[] additionalExtensions) {
         ProviderData pd = getProviderData();
         if (pd == null) {
             return null;
@@ -355,13 +359,16 @@ public class DataManager implements AutoCloseable {
                     }
                     return true;
                 } else {
+                    String ext = IO.getExtension(file);
                     if (isDataPacked()) {
                         if (getDataFileType() != null) {
-                            String ext = IO.getExtension(file);
                             if (ext.equals(getDataFileType())) {
                                 return true;
                             }
                         }
+                    }
+                    if (Arr.containsEqual(additionalExtensions, ext)){
+                        return true;
                     }
                 }
                 return false;
@@ -884,7 +891,7 @@ public class DataManager implements AutoCloseable {
         if (path==null){
             throw new IllegalArgumentException();
         }
-        if (!path.contains("/")){
+        if (!path.startsWith("/")){
             path = "/" + path;
         }
         return path;
@@ -1235,6 +1242,7 @@ public class DataManager implements AutoCloseable {
      * Retrieve plots from dataset
      */
     public List<PlotDescriptor> getPlots(String root, String path) throws IOException {
+        path=adjustPath(path);
         ArrayList<PlotDescriptor> ret = new ArrayList<>();
         Map<String, Object> info = getInfo(root, path);
         String infoType = String.valueOf(info.get(Provider.INFO_TYPE));
@@ -1333,6 +1341,7 @@ public class DataManager implements AutoCloseable {
     }
     
     void checkLogFile(String logFile) throws IOException {
+        logFile=adjustPath(logFile);
         if (!exists(logFile)) {
             createDataset(logFile, String.class);
         } 
@@ -1341,6 +1350,7 @@ public class DataManager implements AutoCloseable {
 
     public List<PlotDescriptor> getScanPlots(String root, String path) throws Exception {
         try{
+            path=adjustPath(path);
             String layout = (String) getAttribute(root, "/", Layout.ATTR_LAYOUT);
             if ((layout != null) && (!layout.equals(getLayout().getClass().getName()))) {
                 DataManager aux = new DataManager(context, getProvider().getClass().getName(), layout);
@@ -1357,8 +1367,14 @@ public class DataManager implements AutoCloseable {
     }
 
     List<PlotDescriptor> doGetScanPlots(String root, String path) throws Exception {
-
         PlotPreferences plotPreferences = getPlotPreferences(root, path);
+        Map<String, Object> attrs = getAttributes(root, path);
+        if (attrs.containsKey(Layout.ATTR_TYPE)) {
+           String type = (String) attrs.get(Layout.ATTR_TYPE);
+           if (type.equalsIgnoreCase(ProcessorXScan.SCAN_TYPE)){
+               throw new IOException(); //Let processor make the drawing
+           }
+        }        
         List<PlotDescriptor> plots = getLayout().getScanPlots(root, path, this);
         if (plots == null) {
             plots = new ArrayList<>();
@@ -1474,7 +1490,7 @@ public class DataManager implements AutoCloseable {
         }
         return false;
     }
-
+    
     @Override
     public void close() throws Exception {
         closeOutput();

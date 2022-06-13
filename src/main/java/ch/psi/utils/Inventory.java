@@ -1,6 +1,5 @@
 package ch.psi.utils;
 
-import ch.psi.pshell.core.JsonSerializer;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -23,7 +22,7 @@ public class Inventory {
     
 
     public static <T> T inventoryRequest(String url, Map attributes, Class<T> type) throws IOException {
-        String json = JsonSerializer.encode(attributes);
+        String json = EncoderJson.encode(attributes, false);
         Client client = ClientBuilder.newClient(new ClientConfig().register(JacksonFeature.class));
         try {
             WebTarget resource = client.target(url);
@@ -32,7 +31,7 @@ public class Inventory {
             if (r.getStatus() != Response.Status.OK.getStatusCode()) {
                 throw new IOException("Inventory returned error: " + json);
             }
-            Map ret = (Map) JsonSerializer.decode(json, Map.class);
+            Map ret = (Map) EncoderJson.decode(json, Map.class);
             return (T) ret.get("d");
         } finally {
             client.close();

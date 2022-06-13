@@ -35,7 +35,12 @@ import ch.psi.pshell.swing.HistogramGeneratorPanel;
 import ch.psi.pshell.swing.MasterPositionerPanel;
 import ch.psi.pshell.swing.ScalerPanel;
 import ch.psi.utils.IO;
+import ch.psi.utils.Str;
+import ch.psi.utils.Arr;
+import ch.psi.utils.swing.Terminal;
 import java.awt.Color;
+import java.io.File;
+import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.HashMap;
@@ -49,9 +54,10 @@ public class Preferences {
 
     static final long serialVersionUID = 1;
 
-    static final String PREFERENCES_FILENAME = "Preferences.dat";
+    static final String PREFERENCES_FILENAME = "preferences.bin";
     
     static final PanelLocation DEFAULT_CONSOLE_LOCATION = PanelLocation.Document;
+    static final PanelLocation DEFAULT_DATA_PANEL_LOCATION = PanelLocation.Status;
 
     public enum PanelLocation {
 
@@ -77,7 +83,7 @@ public class Preferences {
     public Font fontPlotLabel;
     public Font fontPlotTick;
     public Font fontPlotTitle;
-    public Float terminalFontSize=10.0f;
+    public Font fontTerminal;
     public int tabSize = 4;
     public int contentWidth;
     public Color editorBackground;
@@ -87,6 +93,8 @@ public class Preferences {
     public boolean hideEditorContextMenu;
 
     public PanelLocation consoleLocation;
+    public PanelLocation dataPanelLocation;
+    public boolean openDataFilesInDocTab;
     public boolean noVariableEvaluationPropagation;
     public String[] processingScripts;
 
@@ -94,11 +102,17 @@ public class Preferences {
     public boolean scanPlotDisabled;
     public boolean scanTableDisabled;
     public boolean cachedDataPanel;
+    public String dataExtensions;
     public boolean hideFileName;
     public boolean showEmergencyStop;
     public boolean showHomingButtons;
     public boolean showJogButtons;
-
+    public boolean hideScanPanel;
+    public boolean hideOutputPanel;
+    public boolean showXScanFileBrowser;
+    public boolean showXScanDataViewer;
+    public boolean showQueueBrowser;
+    
     public boolean backgroundRendering;
     public boolean showImageStatusBar = true;
     public boolean persistRendererWindows;
@@ -124,7 +138,25 @@ public class Preferences {
 
     Path file;
 
-    public static Preferences load(String path) {
+    public static Preferences load() {
+        String pref = App.getArgumentValue("pref");
+        Path file;
+        if ((pref!=null) && (!pref.isBlank())){
+            file =Paths.get(Context.getInstance().getSetup().expandPath(pref.trim()));
+        } else {
+            file = Paths.get(Context.getInstance().getSetup().getConfigPath(), PREFERENCES_FILENAME);
+            if (!file.toFile().exists()){
+                Path back_comp = Paths.get(Context.getInstance().getSetup().getContextPath(), "Preferences.dat");
+                if (back_comp.toFile().exists()){
+                    try {
+                        IO.copy(back_comp.toString(), file.toString());
+                    } catch (IOException ex) {
+                        Logger.getLogger(Preferences.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }
+            }
+        }
+        
         Preferences preferences = new Preferences();
         //Defaults
         Font[] fonts = getDefaultFonts();
@@ -135,17 +167,18 @@ public class Preferences {
         preferences.fontPlotLabel = fonts[4];
         preferences.fontPlotTick = fonts[5];
         preferences.fontPlotTitle= fonts[6];
+        preferences.fontTerminal= fonts[7];
         preferences.processingScripts = new String[0];
         preferences.defaultPanels = getDefaultPanels();
         preferences.consoleLocation = DEFAULT_CONSOLE_LOCATION;
+        preferences.dataPanelLocation = DEFAULT_DATA_PANEL_LOCATION;
         //preferences.propagateVariableEvaluation = true;
         preferences.defaultPlotColormap = Colormap.Temperature;
-        preferences.defaultRendererColormap = Colormap.Grayscale;
-        Path file = Paths.get(path, PREFERENCES_FILENAME);
+        preferences.defaultRendererColormap = Colormap.Grayscale;        
         preferences.file = file;
 
         try {
-            HashMap<String, Object> map = (HashMap) Serializer.decode(Files.readAllBytes(file));
+            HashMap<String, Object> map = (HashMap) Serializer.decode(file);
             for (String name : map.keySet()) {
                 try {
                     Field f = Preferences.class.getField(name);
@@ -199,6 +232,7 @@ public class Preferences {
         Font plotLabelFont = new Font(Font.SANS_SERIF, 0, 11);        
         Font plotTickFont = new Font(Font.SANS_SERIF, 0, 10); 
         Font plotTitleFont =  new Font(Font.SANS_SERIF, Font.BOLD, 13);
+        Font terminalFont = Terminal.getDefaultFont();
 
         return new Font[]{
             editorFont,
@@ -207,7 +241,8 @@ public class Preferences {
             commandFont,
             plotLabelFont,
             plotTickFont,
-            plotTitleFont
+            plotTitleFont,
+            terminalFont
         };
     }
 
@@ -225,7 +260,7 @@ public class Preferences {
                     }
                 }
             }
-            Files.write(file, Serializer.encode(map, Serializer.EncoderType.bin));
+            Serializer.encode(map, file);
             IO.setFilePermissions(file.toFile(), Context.getInstance().getConfig().filePermissionsConfig);
         } catch (Exception ex) {
             Logger.getLogger(Preferences.class.getName()).log(Level.WARNING, null, ex);
@@ -251,5 +286,14 @@ public class Preferences {
             return ScriptPopupDialog.None;
         }
         return scriptPopupDialog;
+    }
+    
+    public String[] getDataPanelAdditionalExtensions(){
+        if (dataExtensions!=null){
+            String[] ret = Str.split(dataExtensions.trim(), new String[]{"|", ";", ",", " "});
+            ret = Arr.removeEquals(ret, "");
+            return ret;
+        }
+        return new String[0];
     }
 }

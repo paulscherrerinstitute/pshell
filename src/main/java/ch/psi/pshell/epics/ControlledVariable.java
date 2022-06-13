@@ -61,7 +61,7 @@ public class ControlledVariable extends ControlledVariableBase {
         super.doInitialize();
 
         //If units not set assumes it is first execution and uploads config from motor record
-        if (!getConfig().hasDefinedUnit()) {
+         if (getConfig().isUndefined()) {
             uploadConfig();
         }
     }

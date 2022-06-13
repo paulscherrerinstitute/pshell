@@ -30,7 +30,7 @@ public abstract class ReadonlyRegisterBase<T> extends DeviceBase implements Read
         }
 
     }
-
+    
     @Override
     public Class getElementType() {
         if (elementType != null) {
@@ -93,7 +93,7 @@ public abstract class ReadonlyRegisterBase<T> extends DeviceBase implements Read
     }
 
     @Override
-    public int getPrecision() {
+    public int getPrecision(){
         return precision;
     }
 

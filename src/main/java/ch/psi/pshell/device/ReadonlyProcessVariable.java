@@ -17,6 +17,7 @@ public interface ReadonlyProcessVariable extends ReadonlyRegister.ReadonlyRegist
 
     public int getSignBit();
 
+    @Override
     public String getUnit();
    
 

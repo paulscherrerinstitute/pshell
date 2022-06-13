@@ -26,6 +26,7 @@ import jep.NDArray;
  */
 public interface Layout {
     //Common attributes
+    public static final String ATTR_TYPE = "Type";
     public static final String ATTR_NAME = "Name";
     public static final String ATTR_FILE = "File";
     public static final String ATTR_VERSION = "Version";
@@ -46,6 +47,11 @@ public interface Layout {
 
     public static final String FIELD_TIMESTAMP = "timestamp";
     public static final String FIELD_VALUE = "value";
+    
+    public static final String ATTR_DEVICE_CHANNEL = "channel";   
+    public static final String ATTR_DEVICE_UNIT= "unit";  
+    public static final String ATTR_DEVICE_DESC= "description";  
+    public static final String ATTR_DEVICE_PREC= "precision";  
     
     
     void initialize();

@@ -1,6 +1,9 @@
 package ch.psi.pshell.swing;
 
 import ch.psi.pshell.core.Context;
+import ch.psi.pshell.ui.App;
+import ch.psi.pshell.ui.QueueProcessor;
+import ch.psi.pshell.xscan.ProcessorXScan;
 import ch.psi.utils.Arr;
 import ch.psi.utils.Chrono;
 import ch.psi.utils.IO;
@@ -352,10 +355,19 @@ public class ScriptsPanel extends MonitoredPanel implements UpdatablePanel {
     String[] extensions;
 
     public void initialize() {
-        initialize(Context.getInstance().getSetup().getScriptPath(), new String[]{
-            Context.getInstance().getScriptType().getExtension(),
-            ScanEditorPanel.EXTENSION
-        });
+        
+        String[] extensions = new String[]{
+                   Context.getInstance().getScriptType().getExtension(),
+                   ScanEditorPanel.EXTENSION
+               };
+        if (!App.getInstance().getMainFrame().getPreferences().showXScanFileBrowser) {
+            extensions = Arr.append(extensions, ProcessorXScan.EXTENSION);
+        } 
+        if (!App.getInstance().getMainFrame().getPreferences().showQueueBrowser) {
+            extensions = Arr.append(extensions, QueueProcessor.EXTENSION);
+        } 
+                
+        initialize(Context.getInstance().getSetup().getScriptPath(),extensions);
     }
 
     public void initialize(String homePath, String[] extensions) {

@@ -14,7 +14,8 @@ import java.io.IOException;
 /**
  * Base for all EPICS register classes.
  */
-public abstract class EpicsRegister<T> extends RegisterBase<T> {    
+public abstract class EpicsRegister<T> extends RegisterBase<T> {
+
     Channel<T> channel;
     int maximumSize = UNDEFINED;
     final String channelName;
@@ -22,6 +23,7 @@ public abstract class EpicsRegister<T> extends RegisterBase<T> {
     final protected Boolean requestMetadata;
     final protected InvalidValueAction invalidAction;
     volatile Severity severity;
+    String description, unit;
 
     public static class EpicsRegisterConfig extends RegisterConfig {
 
@@ -222,19 +224,84 @@ public abstract class EpicsRegister<T> extends RegisterBase<T> {
             if (!isSimulated()) {
                 channel = (Channel<T>) Epics.newChannel(getChannelName(), getType());
                 maximumSize = channel.getSize();
-            }            
+                
+                if (getPrecision() == RESOLVE_PRECISION) {
+                    try {
+                        setPrecision(readPrecision());
+                    } catch (Exception ex) {
+                        getLogger().log(Level.WARNING, null, ex);
+                        setPrecision(UNDEFINED_PRECISION);
+                    }
+                }
+                try {
+                    description = readDescription();
+                } catch (Exception ex) {
+                    getLogger().log(Level.WARNING, null, ex);
+                }
+                if (Number.class.isAssignableFrom(getType())){
+                    try {
+                        unit = readUnit();
+                    } catch (Exception ex) {
+                        getLogger().log(Level.WARNING, null, ex);
+                    }    
+                }            
+            } else {
+                if (getPrecision() == RESOLVE_PRECISION) {
+                    setPrecision(UNDEFINED_PRECISION);
+                }
+            }
             if (isMonitored()) {
                 //If this is an array then sets monitor after the size is initialized.            
-                if (! (this instanceof EpicsRegisterArray)) {
+                if (!(this instanceof EpicsRegisterArray)) {
                     doSetMonitored(true);
                 }
-            }            
+            }
         } catch (InterruptedException ex) {
             throw ex;
         } catch (java.util.concurrent.TimeoutException ex) {
             throw new DeviceTimeoutException("Timeout on channel creation:" + getChannelName());
         } catch (Exception ex) {
             throw new DeviceException("Error creating channel: " + getChannelName(), ex);
+        }
+    }
+
+    @Override
+    public String getDescription() {
+        return description;
+    }
+
+    @Override
+    public String getUnit() {
+        return unit;
+    }
+
+    public int readPrecision() throws DeviceException, InterruptedException {
+        try {
+            return Epics.get(channelName + ".PREC", Integer.class);
+        } catch (InterruptedException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            throw new DeviceException("Error reading precision: " + getChannelName(), ex);
+        }
+    }
+
+    public String readDescription() throws DeviceException, InterruptedException {
+        try {
+            return Epics.get(channelName + ".DESC", String.class);
+        } catch (InterruptedException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            throw new DeviceException("Error reading description: " + getChannelName(), ex);
+        }
+    }
+
+    public String readUnit() throws DeviceException, InterruptedException {
+        try {
+            return Epics.get(channelName + ".EGU", String.class);
+        } catch (InterruptedException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            throw new DeviceException("Error reading unit: " + getChannelName(), ex);
         }
     }
 

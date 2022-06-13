@@ -1,6 +1,6 @@
 package ch.psi.pshell.plotter;
 
-import ch.psi.pshell.core.JsonSerializer;
+import ch.psi.utils.EncoderJson;
 import ch.psi.utils.Str;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationHandler;
@@ -39,7 +39,7 @@ public class Client implements AutoCloseable {
 
     Object execute(Command command) throws Exception {
         String commandType = command.getClass().getSimpleName();
-        String commandData = JsonSerializer.encode(command);
+        String commandData = EncoderJson.encode(command, false);
         socket.sendMore(commandType);
         socket.send(commandData);
 
@@ -49,7 +49,7 @@ public class Client implements AutoCloseable {
             createSocket();
             throw new TimeoutException();
         }
-        Response response = (Response) JsonSerializer.decode(rx, Response.class);
+        Response response = (Response) EncoderJson.decode(rx, Response.class);
         if ((response.error != null) && (!response.error.isEmpty())) {
             throw new Exception(response.error);
         }

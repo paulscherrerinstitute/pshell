@@ -1,6 +1,8 @@
 package ch.psi.pshell.bs;
 
-import ch.psi.pshell.core.JsonSerializer;
+import ch.psi.utils.EncoderJson;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -9,6 +11,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import javax.imageio.ImageIO;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
@@ -137,7 +140,7 @@ public class PipelineServer extends StreamCamera {
     public Map<String, Object> getInfo() throws IOException {
         WebTarget resource = client.target(prefix + "/info");
         String json = resource.request().accept(MediaType.TEXT_HTML).get(String.class);
-        Map<String, Object> map = (Map) JsonSerializer.decode(json, Map.class);
+        Map<String, Object> map = (Map) EncoderJson.decode(json, Map.class);
         checkReturn(map);
         return (Map<String, Object>) map.get("info");
     }
@@ -148,7 +151,7 @@ public class PipelineServer extends StreamCamera {
     public List<String> getCameras() throws IOException {
         WebTarget resource = client.target(prefix + "/camera");
         String json = resource.request().accept(MediaType.TEXT_HTML).get(String.class);
-        Map<String, Object> map = (Map) JsonSerializer.decode(json, Map.class);
+        Map<String, Object> map = (Map) EncoderJson.decode(json, Map.class);
         checkReturn(map);
         return (List<String>) map.get("cameras");
     }
@@ -159,7 +162,7 @@ public class PipelineServer extends StreamCamera {
     public List<String> getPipelines() throws IOException {
         WebTarget resource = client.target(prefix);
         String json = resource.request().accept(MediaType.TEXT_HTML).get(String.class);
-        Map<String, Object> map = (Map) JsonSerializer.decode(json, Map.class);
+        Map<String, Object> map = (Map) EncoderJson.decode(json, Map.class);
         checkReturn(map);
         return (List<String>) map.get("pipelines");
     }
@@ -180,7 +183,7 @@ public class PipelineServer extends StreamCamera {
         checkName(pipelineName);
         WebTarget resource = client.target(prefix + "/" + pipelineName + "/config");
         String json = resource.request().accept(MediaType.TEXT_HTML).get(String.class);
-        Map<String, Object> map = (Map) JsonSerializer.decode(json, Map.class);
+        Map<String, Object> map = (Map) EncoderJson.decode(json, Map.class);
         checkReturn(map);
         return (Map<String, Object>) map.get("config");
     }
@@ -190,11 +193,11 @@ public class PipelineServer extends StreamCamera {
      */
     public void setConfig(String pipelineName, Map<String, Object> config) throws IOException {
         checkName(pipelineName);
-        String json = JsonSerializer.encode(config);
+        String json = EncoderJson.encode(config, false);
         WebTarget resource = client.target(prefix + "/" + pipelineName + "/config");
         Response r = resource.request().accept(MediaType.TEXT_HTML).post(Entity.json(json));
         json = r.readEntity(String.class);
-        Map<String, Object> map = (Map) JsonSerializer.decode(json, Map.class);
+        Map<String, Object> map = (Map) EncoderJson.decode(json, Map.class);
         checkReturn(map);
     }
 
@@ -205,7 +208,7 @@ public class PipelineServer extends StreamCamera {
         checkName(pipelineName);
         WebTarget resource = client.target(prefix + "/" + pipelineName + "/config");
         String json = resource.request().accept(MediaType.TEXT_HTML).delete(String.class);
-        Map<String, Object> map = (Map) JsonSerializer.decode(json, Map.class);
+        Map<String, Object> map = (Map) EncoderJson.decode(json, Map.class);
         checkReturn(map);
     }
 
@@ -216,7 +219,7 @@ public class PipelineServer extends StreamCamera {
         checkName(instanceId);
         WebTarget resource = client.target(prefix + "/instance/" + instanceId + "/config");
         String json = resource.request().accept(MediaType.TEXT_HTML).get(String.class);
-        Map<String, Object> map = (Map) JsonSerializer.decode(json, Map.class);
+        Map<String, Object> map = (Map) EncoderJson.decode(json, Map.class);
         checkReturn(map);
         return (Map<String, Object>) map.get("config");
     }
@@ -231,11 +234,11 @@ public class PipelineServer extends StreamCamera {
      */
     public void setInstanceConfig(String instanceId, Map<String, Object> config) throws IOException {
         checkName(instanceId);
-        String json = JsonSerializer.encode(config);
+        String json = EncoderJson.encode(config, false);
         WebTarget resource = client.target(prefix + "/instance/" + instanceId + "/config");
         Response r = resource.request().accept(MediaType.TEXT_HTML).post(Entity.json(json));
         json = r.readEntity(String.class);
-        Map<String, Object> map = (Map) JsonSerializer.decode(json, Map.class);
+        Map<String, Object> map = (Map) EncoderJson.decode(json, Map.class);
         checkReturn(map);
         if (pipelineServerListener!=null){
             if (instanceId.equals(currentInstance)){        
@@ -257,7 +260,7 @@ public class PipelineServer extends StreamCamera {
         checkName(instanceId);
         WebTarget resource = client.target(prefix + "/instance/" + instanceId + "/info");
         String json = resource.request().accept(MediaType.TEXT_HTML).get(String.class);
-        Map<String, Object> map = (Map) JsonSerializer.decode(json, Map.class);
+        Map<String, Object> map = (Map) EncoderJson.decode(json, Map.class);
         checkReturn(map);
         return (Map<String, Object>) map.get("info");
     }
@@ -270,7 +273,7 @@ public class PipelineServer extends StreamCamera {
         checkName(instanceId);
         WebTarget resource = client.target(prefix + "/instance/" + instanceId);
         String json = resource.request().accept(MediaType.TEXT_HTML).get(String.class);
-        Map<String, Object> map = (Map) JsonSerializer.decode(json, Map.class);
+        Map<String, Object> map = (Map) EncoderJson.decode(json, Map.class);
         checkReturn(map);
         return (String) map.get("stream");
     }
@@ -287,7 +290,7 @@ public class PipelineServer extends StreamCamera {
         }
         Response r = resource.request().accept(MediaType.TEXT_HTML).post(null);
         String json = r.readEntity(String.class);
-        Map<String, Object> map = (Map) JsonSerializer.decode(json, Map.class);
+        Map<String, Object> map = (Map) EncoderJson.decode(json, Map.class);
         checkReturn(map);
         return Arrays.asList(new String[]{(String) map.get("instance_id"), (String) map.get("stream")});
     }
@@ -297,14 +300,14 @@ public class PipelineServer extends StreamCamera {
      * instance id and instance stream in a list.
      */
     public List<String> createFromConfig(Map<String, Object> config, String id) throws IOException {
-        String json = JsonSerializer.encode(config);
+        String json = EncoderJson.encode(config, false);
         WebTarget resource = client.target(prefix);
         if (id != null) {
             resource = resource.queryParam("instance_id", id);
         }
         Response r = resource.request().accept(MediaType.TEXT_HTML).post(Entity.json(json));
         json = r.readEntity(String.class);
-        Map<String, Object> map = (Map) JsonSerializer.decode(json, Map.class);
+        Map<String, Object> map = (Map) EncoderJson.decode(json, Map.class);
         checkReturn(map);
         return Arrays.asList(new String[]{(String) map.get("instance_id"), (String) map.get("stream")});
     }
@@ -314,11 +317,11 @@ public class PipelineServer extends StreamCamera {
      */
     public String savePipelineConfig(String pipelineName, Map<String, Object> config) throws IOException {
         checkName(pipelineName);
-        String json = JsonSerializer.encode(config);
+        String json = EncoderJson.encode(config, false);
         WebTarget resource = client.target(prefix + "/" + pipelineName + "/config");
         Response r = resource.request().accept(MediaType.TEXT_HTML).post(Entity.json(json));
         json = r.readEntity(String.class);
-        Map<String, Object> map = (Map) JsonSerializer.decode(json, Map.class);
+        Map<String, Object> map = (Map) EncoderJson.decode(json, Map.class);
         checkReturn(map);
         return (String) map.get("stream");
     }
@@ -330,7 +333,7 @@ public class PipelineServer extends StreamCamera {
         checkName(instanceId);
         WebTarget resource = client.target(prefix + "/" + instanceId);
         String json = resource.request().accept(MediaType.TEXT_HTML).delete(String.class);
-        Map<String, Object> map = (Map) JsonSerializer.decode(json, Map.class);
+        Map<String, Object> map = (Map) EncoderJson.decode(json, Map.class);
         checkReturn(map);
     }
 
@@ -340,7 +343,7 @@ public class PipelineServer extends StreamCamera {
     public void stopAllInstances() throws IOException {
         WebTarget resource = client.target(prefix);
         String json = resource.request().accept(MediaType.TEXT_HTML).delete(String.class);
-        Map<String, Object> map = (Map) JsonSerializer.decode(json, Map.class);
+        Map<String, Object> map = (Map) EncoderJson.decode(json, Map.class);
         checkReturn(map);
     }
 
@@ -355,7 +358,7 @@ public class PipelineServer extends StreamCamera {
         }
         Response r = resource.request().accept(MediaType.TEXT_HTML).post(null);
         String json = r.readEntity(String.class);
-        Map<String, Object> map = (Map) JsonSerializer.decode(json, Map.class);
+        Map<String, Object> map = (Map) EncoderJson.decode(json, Map.class);
         checkReturn(map);
         return (String) map.get("background_id");
     }
@@ -364,10 +367,30 @@ public class PipelineServer extends StreamCamera {
         checkName(cameraName);
         WebTarget resource = client.target(prefix + "/camera/" + cameraName + "/background");
         String json = resource.request().accept(MediaType.TEXT_HTML).get(String.class);
-        Map<String, Object> map = (Map) JsonSerializer.decode(json, Map.class);
+        Map<String, Object> map = (Map) EncoderJson.decode(json, Map.class);
         checkReturn(map);
         return (String) map.get("background_id");
     }
+    
+    public List<String> getBackgrounds(String cameraName) throws IOException {
+        checkName(cameraName);
+        WebTarget resource = client.target(prefix + "/camera/" + cameraName + "/backgrounds");
+        String json = resource.request().accept(MediaType.TEXT_HTML).get(String.class);
+        Map<String, Object> map = (Map) EncoderJson.decode(json, Map.class);
+        checkReturn(map);
+        return (List) map.get("background_ids");
+    }    
+    
+    public BufferedImage getLastBackgroundImage(String cameraName) throws IOException {
+        return getBackgroundImage(getLastBackground(cameraName));
+    }
+    
+    public BufferedImage getBackgroundImage(String name) throws IOException {
+        WebTarget resource = client.target(prefix + "/background/" + name + "/image");
+        byte[] ret = resource.request().accept(MediaType.APPLICATION_OCTET_STREAM).get(byte[].class);
+        return ImageIO.read(new ByteArrayInputStream(ret));
+    }    
+       
 
     /**
      * Start pipeline streaming, creating a private instance, and set the stream endpoint to the
@@ -442,7 +465,7 @@ public class PipelineServer extends StreamCamera {
         if (val == null) {
             return null;
         }
-        return (Map) JsonSerializer.decode(val.toString(), Map.class);
+        return (Map) EncoderJson.decode(val.toString(), Map.class);
     }
 
     /**
@@ -684,7 +707,7 @@ public class PipelineServer extends StreamCamera {
         WebTarget resource = client.target(prefix + "/script/" + name + "/script_bytes");
         Response r = resource.request().accept(MediaType.TEXT_HTML).put(Entity.text(function));
         String json = r.readEntity(String.class);
-        Map<String, Object> map = (Map) JsonSerializer.decode(json, Map.class);
+        Map<String, Object> map = (Map) EncoderJson.decode(json, Map.class);
         checkReturn(map);                       
     }     
     

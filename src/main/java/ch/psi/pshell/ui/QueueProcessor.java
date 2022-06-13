@@ -1,10 +1,10 @@
 package ch.psi.pshell.ui;
 
 import ch.psi.pshell.core.Context;
-import ch.psi.pshell.core.JsonSerializer;
 import ch.psi.pshell.ui.Task.QueueExecution;
 import ch.psi.pshell.ui.Task.QueueTask;
 import ch.psi.utils.Arr;
+import ch.psi.utils.EncoderJson;
 import ch.psi.utils.IO;
 import ch.psi.utils.State;
 import ch.psi.utils.swing.ExtensionFileFilter;
@@ -47,6 +47,7 @@ import javax.swing.table.TableCellEditor;
  */
 public final class QueueProcessor extends PanelProcessor {
 
+    public static final String  EXTENSION = "que";
     public static String DEFAULT_INFO_COLUMN = null;
     
     String fileName;
@@ -80,6 +81,8 @@ public final class QueueProcessor extends PanelProcessor {
             }
         };
     }
+    
+    final String homePath;
 
     public QueueProcessor() {
         initComponents();
@@ -125,6 +128,12 @@ public final class QueueProcessor extends PanelProcessor {
             }
 
         });
+        
+        if ((App.getInstance() != null) && (App.hasArgument("qpath"))) {
+            homePath = Context.getInstance().getSetup().expandPath(App.getArgumentValue("qpath"));
+        } else {
+            homePath = Context.getInstance().getSetup().getQueuePath();
+        }      
     }        
 
     public void setTableInfoCol(String name) {
@@ -421,13 +430,18 @@ public final class QueueProcessor extends PanelProcessor {
 
     @Override
     public String getDescription() {
-        return "Execution queue (*.que)";
+        return "Execution queue (*." + EXTENSION + ")";
     }
 
     @Override
     public String[] getExtensions() {
-        return new String[]{"que"};
+        return new String[]{EXTENSION};
     }
+    
+    @Override
+    public boolean createFilePanel() {
+        return App.getInstance().getMainFrame().getPreferences().showQueueBrowser;
+    }    
 
     @Override
     public void execute() throws Exception {
@@ -496,7 +510,7 @@ public final class QueueProcessor extends PanelProcessor {
 
     @Override
     public String getHomePath() {
-        return Context.getInstance().getSetup().getScriptPath();
+        return homePath;
     }
 
     @Override
@@ -507,7 +521,7 @@ public final class QueueProcessor extends PanelProcessor {
     @Override
     public void open(String fileName) throws IOException {
         String json = new String(Files.readAllBytes(Paths.get(fileName)));
-        Object[][][] vector = (Object[][][]) JsonSerializer.decode(json, Object[][][].class);
+        Object[][][] vector = (Object[][][]) EncoderJson.decode(json, Object[][][].class);
 
         Object[][] tableData = vector[0];
         for (int i = 0; i < tableData.length; i++) {
@@ -533,7 +547,7 @@ public final class QueueProcessor extends PanelProcessor {
     public void saveAs(String fileName) throws IOException {
         ArrayList data = new ArrayList();
         data.add(model.getDataVector());
-        String json = JsonSerializer.encode(data, true);
+        String json = EncoderJson.encode(data, true);
         Files.write(Paths.get(fileName), json.getBytes());
         this.fileName = fileName;
         modified = false;

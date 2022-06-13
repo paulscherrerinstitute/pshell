@@ -207,7 +207,7 @@ public final class RegisterPanel extends DevicePanel {
             ProcessVariableBase pv = (ProcessVariableBase)getDevice();
             txtRegisterReadout.setToolTipText(getDevice().getName() + " range: " + pv.getMinValue() + " to " + pv.getMaxValue() + " " + pv.getUnit());
         } else {
-            txtRegisterReadout.setToolTipText(getDevice().getName());
+            txtRegisterReadout.setToolTipText(getDeviceTooltip());
         }
     }//GEN-LAST:event_txtRegisterReadoutMouseEntered
 

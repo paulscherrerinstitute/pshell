@@ -51,6 +51,8 @@ import  ch.psi.pshell.data.LayoutTable as LayoutTable
 import  ch.psi.pshell.data.LayoutFDA as LayoutFDA
 import  ch.psi.pshell.data.LayoutSF as LayoutSF
 
+import ch.psi.pshell.device.Camera as Camera
+import ch.psi.pshell.device.CameraBase as CameraBase
 import ch.psi.pshell.device.Device as Device
 import ch.psi.pshell.device.DeviceBase as DeviceBase
 import ch.psi.pshell.device.GenericDevice as GenericDevice 
@@ -260,6 +262,8 @@ from javax.swing.SwingUtilities import invokeLater, invokeAndWait
 
 import org.jfree.ui.RectangleAnchor as RectangleAnchor
 import org.jfree.ui.TextAnchor as TextAnchor
+
+import ch.psi.pshell.xscan.ProcessorXScan as ProcessorXScan
 
 
 def string_to_obj(o):

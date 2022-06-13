@@ -1,11 +1,11 @@
 package ch.psi.pshell.swing;
 
 import ch.psi.pshell.core.Context;
-import ch.psi.pshell.core.JsonSerializer;
 import ch.psi.pshell.core.InlineDevice;
 import ch.psi.pshell.scripting.ScriptType;
 import ch.psi.pshell.ui.Processor;
 import ch.psi.utils.Arr;
+import ch.psi.utils.EncoderJson;
 import ch.psi.utils.IO;
 import ch.psi.utils.Str;
 import ch.psi.utils.swing.MonitoredPanel;
@@ -204,7 +204,7 @@ public class ScanEditorPanel extends MonitoredPanel implements Processor {
     @Override
     public void open(String fileName) throws IOException {
         String json = new String(Files.readAllBytes(new File(fileName).toPath()));
-        List state = (List) JsonSerializer.decode(json, List.class);
+        List state = (List) EncoderJson.decode(json, List.class);
         comboType.setSelectedItem(getStateElement(state, 0, null));
         modelPositioners.setDataVector(toObjectArray((List) getStateElement(state, 1, List.class)), SwingUtils.getTableColumnNames(tablePositioners));
         modelSensors.setDataVector(toObjectArray((List) getStateElement(state, 2, List.class)), SwingUtils.getTableColumnNames(tableSensors));
@@ -305,7 +305,7 @@ public class ScanEditorPanel extends MonitoredPanel implements Processor {
         state.add(comboDomain.getSelectedItem());
         state.add(checkSteps.isSelected());
         state.add(checkFollowingError.isSelected());
-        String json = JsonSerializer.encode(state, true);
+        String json = EncoderJson.encode(state, true);
         Files.write(new File(fileName).toPath(), json.getBytes());
         this.fileName = fileName;
         changed = false;

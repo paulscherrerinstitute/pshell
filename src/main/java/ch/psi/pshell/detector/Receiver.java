@@ -1,7 +1,7 @@
 package ch.psi.pshell.detector;
 
-import ch.psi.pshell.core.JsonSerializer;
 import ch.psi.pshell.imaging.StreamSource;
+import ch.psi.utils.EncoderJson;
 import java.io.IOException;
 import org.zeromq.ZMQ;
 
@@ -19,7 +19,7 @@ public class Receiver extends StreamSource {
     protected Frame getFrame(ZMQ.Socket socket) throws IOException {
         Frame frame = new Frame();
         String json = socket.recvStr();
-        FrameInfo info = (FrameInfo) JsonSerializer.decode(json, FrameInfo.class);
+        FrameInfo info = (FrameInfo) EncoderJson.decode(json, FrameInfo.class);
         frame.shape = info.shape;
         frame.data = socket.recv();
         switch (info.dtype) {

@@ -5,7 +5,7 @@ plugins {
     id "nebula.ospackage" version "8.1.0" 
 }
 
-version = '1.17.0'
+version = '1.18.0'
 group = 'ch.psi'
 ext.timestamp = new Date().format("yyMMddHHmm")
 
@@ -142,6 +142,14 @@ dependencies {
     compile 'org.jetbrains.jediterm:jediterm-pty:2.42'
     compile 'org.jetbrains.pty4j:pty4j:0.12.5'
     compile 'black.ninia:jep:3.9.1'
+    
+    //XScan dependencies
+    compile 'javax.xml.bind:jaxb-api:2.3.1'
+    compile 'org.glassfish.jaxb:jaxb-runtime:2.3.1'
+    compile 'com.sun.xml.bind:jaxb-core:2.3.0'
+    compile 'com.sun.xml.bind:jaxb-impl:2.3.1'
+    compile 'com.sun.xml.messaging.saaj:saaj-impl:1.5.1'
+    compile 'net.sourceforge.jmatio:jmatio:1.0'
     
     //TIFF support for ImageIO can be added installing JAI, or one of the following dependencies:
     //compile 'com.twelvemonkeys'.imageio:imageio-tiff:3.4.1'    

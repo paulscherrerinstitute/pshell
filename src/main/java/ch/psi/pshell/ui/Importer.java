@@ -8,8 +8,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * An interface for the workbench to import DAQ definition files (as user defined scripts or FDA
- * XMLs) as Python scripts.
+ * An interface for the workbench to import DAQ definition files as Python scripts.
  */
 public interface Importer {
 

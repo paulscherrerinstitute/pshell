@@ -15,6 +15,7 @@ import ch.psi.pshell.device.Readable.ReadableCalibratedArray;
 import ch.psi.pshell.device.Readable.ReadableMatrix;
 import ch.psi.pshell.device.Readable.ReadableCalibratedMatrix;
 import ch.psi.pshell.device.ReadonlyProcessVariableConfig;
+import ch.psi.pshell.device.ReadonlyRegister;
 import ch.psi.pshell.device.Writable;
 import ch.psi.pshell.device.Writable.WritableArray;
 import ch.psi.pshell.scan.AreaScan;
@@ -86,8 +87,6 @@ public class LayoutSF extends LayoutBase implements Layout {
     public static final String ATTR_DATASET_RECORDS = ATTR_GROUP_METHOD + "records";
     public static final String ATTR_DATASET_DIMENSIONS = ATTR_GROUP_METHOD + "dimensions";
     public static final String ATTR_DATASET_BACKGROND = ATTR_GROUP_METHOD + "background";
-    public static final String ATTR_DEVICE_CHANNEL = "channel";   
-    public static final String ATTR_DEVICE_UNIT= "unit";  
 
     public static final String DATASET_READBACK = "readback";
     public static final String DATASET_SETPOINT = "setpoint";
@@ -164,7 +163,7 @@ public class LayoutSF extends LayoutBase implements Layout {
     @Override
     public void initialize() {
     }
-
+    
     @Override
     public void onOpened(File output) throws IOException {
         super.onOpened(output);
@@ -184,7 +183,7 @@ public class LayoutSF extends LayoutBase implements Layout {
          
         dataManager.createDataset(ATTR_DATASET_LOG_DESCRIPTION, String.class);
         dataManager.createDataset(ATTR_DATASET_LOG_TIMESTAMP, Long.class);
-
+ 
         for (Readable r : getExperimentArguments()) {
             try {
                 Object val = r.read();
@@ -198,17 +197,7 @@ public class LayoutSF extends LayoutBase implements Layout {
                 }
                 String datasetName =ATTR_GROUP_EXPERIMENT + r.getName();
                 dataManager.setDataset(datasetName, val);
-                if (r instanceof Device){
-                    Config c = ((Device)r).getConfig();
-                    if ((c!=null) && (c instanceof ReadonlyProcessVariableConfig)){
-                        String unit = String.valueOf(((ReadonlyProcessVariableConfig)c).unit);
-                        dataManager.setAttribute(datasetName, ATTR_DEVICE_UNIT, unit);
-                    }
-                    String channel = InlineDevice.getChannelName((Device)r);
-                    if (channel!=null){
-                        dataManager.setAttribute(datasetName, ATTR_DEVICE_CHANNEL, channel);
-                    }                       
-                }
+                writeDeviceMetadataAttrs(datasetName, r);
             } catch (InterruptedException ex) {
                 Thread.currentThread().interrupt();
             } catch (Exception ex) {
@@ -289,10 +278,7 @@ public class LayoutSF extends LayoutBase implements Layout {
             } else {
                 dataManager.createDataset(groupDev + DATASET_SETPOINT, Double.class, new int[]{samples});
             }
-            String channel = InlineDevice.getChannelName(writable);
-            if (channel!=null){
-                dataManager.setAttribute(groupDev, ATTR_DEVICE_CHANNEL, channel);
-            }        
+            writeDeviceMetadataAttrs(groupDev, writable);    
         }
         
         dataManager.createDataset(group + DATASET_TIMESTAMP, Long.class, new int[]{samples});
@@ -330,11 +316,7 @@ public class LayoutSF extends LayoutBase implements Layout {
                     dataManager.createDataset(groupDev + DATASET_STDEV, Double.class, new int[]{samples});
                 }
             }
-            String channel = InlineDevice.getChannelName(readable);
-            if (channel!=null){
-                dataManager.setAttribute(groupDev, ATTR_DEVICE_CHANNEL, channel);
-            }   
-            
+            writeDeviceMetadataAttrs(groupDev, readable);              
             dataManager.createDataset(groupDev + DATASET_TIMESTAMP, Long.class, new int[]{samples});
         }
 

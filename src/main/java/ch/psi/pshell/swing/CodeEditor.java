@@ -47,7 +47,7 @@ public class CodeEditor extends TextEditor {
         boolean dark = MainFrame.isDark();
         editorPane = new RSyntaxTextArea(20, 60);
         editorPane.setAnimateBracketMatching(false);
-        editorPane.setHighlightCurrentLine(true);
+        editorPane.setHighlightCurrentLine(highlightCurrentLine);
         //editorPane.setCurrentLineHighlightColor(dark ? new Color(30, 30, 35) : new Color(233, 239, 248));
         editorPane.setCurrentLineHighlightColor(dark ? new Color(47, 47, 47) : new Color(233, 239, 248));
         editorPane.setMatchedBracketBorderColor(null);
@@ -187,6 +187,18 @@ public class CodeEditor extends TextEditor {
         return showLineNumbers;
     }
 
+    boolean highlightCurrentLine=true;
+    public void setHighlightCurrentLine(boolean value) {
+        if (value !=  highlightCurrentLine){
+            highlightCurrentLine = value;
+            editorPane.setHighlightCurrentLine(highlightCurrentLine);
+        }
+    }
+
+    public boolean getHighlightCurrentLine() {
+        return highlightCurrentLine;
+    }
+    
     @Override
     public void setFileName(String fileName) {
         super.setFileName(fileName);
@@ -274,7 +286,7 @@ public class CodeEditor extends TextEditor {
     protected void setEditorPaneEnabled(boolean value) {
         super.setEditorPaneEnabled(value);
         editorPane.setBracketMatchingEnabled(value);
-        editorPane.setHighlightCurrentLine(value);
+        editorPane.setHighlightCurrentLine(highlightCurrentLine && value);
     }
 
     class LineHighlighter extends RSyntaxTextAreaHighlighter {

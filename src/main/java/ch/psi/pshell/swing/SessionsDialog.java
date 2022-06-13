@@ -1,12 +1,12 @@
 package ch.psi.pshell.swing;
 
 import ch.psi.pshell.core.Context;
-import ch.psi.pshell.core.JsonSerializer;
 import ch.psi.pshell.core.SessionManager;
 import ch.psi.pshell.core.SessionManager.MetadataType;
 import ch.psi.pshell.core.SessionManager.SessionManagerListener;
 import ch.psi.pshell.ui.App;
 import ch.psi.pshell.ui.Task;
+import ch.psi.utils.EncoderJson;
 import ch.psi.utils.IO;
 import ch.psi.utils.SciCat;
 import ch.psi.utils.Str;
@@ -112,7 +112,7 @@ public class SessionsDialog extends StandardDialog implements SessionManagerList
                             Map<String, Object> info = manager.getInfo(currentSession);                           
                             info.put("metadata", manager.getMetadata(currentSession));  
                             showScrollableMessage("Session Info",  
-                                    "Session id: " + currentSession, JsonSerializer.encode(info, true));
+                                    "Session id: " + currentSession, EncoderJson.encode(info, true));
                         }
                     }
                 } catch (Exception ex) {

@@ -1,6 +1,5 @@
 package ch.psi.utils;
 
-import ch.psi.pshell.core.JsonSerializer;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
@@ -57,7 +56,7 @@ public class EpicsBootInfoAPI implements ChannelQueryAPI{
         }        
         Response r = resource.request().accept(MediaType.APPLICATION_JSON).get();
         String json = r.readEntity(String.class);
-        List<Map<String, Object>> ret = (List) JsonSerializer.decode(json, List.class);
+        List<Map<String, Object>> ret = (List) EncoderJson.decode(json, List.class);
         return ret;
     }
     

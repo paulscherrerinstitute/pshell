@@ -164,6 +164,7 @@ public class DataFileDialog extends StandardDialog {
                 || (ckSaveConsole.isSelected() != config.dataScanSaveOutput)
                 || (ckSaveScript.isSelected() != config.dataScanSaveScript)
                 || (ckSaveSetpoints.isSelected() != config.dataScanSaveSetpoints)
+                || (ckXscanUsesFDASerialization.isSelected() != config.fdaSerialization)
                 || (ckConvert.isSelected() == config.dataScanPreserveTypes);
 
     }
@@ -238,6 +239,7 @@ public class DataFileDialog extends StandardDialog {
         ckSaveConsole.setSelected(config.dataScanSaveOutput);
         ckSaveScript.setSelected(config.dataScanSaveScript);
         ckSaveSetpoints.setSelected(config.dataScanSaveSetpoints);
+        ckXscanUsesFDASerialization.setSelected(config.fdaSerialization);
         spinnerDepthDim.setValue((config.depthDimension > 2) ? 0 : Math.max(config.depthDimension, 0));
         checkDataLogs.setSelected(!config.disableDataFileLogs);
         checkEmbeddedAttrs.setSelected(!config.disableEmbeddedAttributes);
@@ -358,6 +360,7 @@ public class DataFileDialog extends StandardDialog {
         ckFlush = new javax.swing.JCheckBox();
         ckSaveSetpoints = new javax.swing.JCheckBox();
         ckSaveScript = new javax.swing.JCheckBox();
+        ckXscanUsesFDASerialization = new javax.swing.JCheckBox();
         jPanel5 = new javax.swing.JPanel();
         jLabel18 = new javax.swing.JLabel();
         textTransferPath = new javax.swing.JTextField();
@@ -697,6 +700,13 @@ public class DataFileDialog extends StandardDialog {
             }
         });
 
+        ckXscanUsesFDASerialization.setText("XScan uses FDA serialization");
+        ckXscanUsesFDASerialization.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                ckAutoSaveActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout jPanel4Layout = new javax.swing.GroupLayout(jPanel4);
         jPanel4.setLayout(jPanel4Layout);
         jPanel4Layout.setHorizontalGroup(
@@ -710,7 +720,8 @@ public class DataFileDialog extends StandardDialog {
                     .addComponent(ckSaveConsole)
                     .addComponent(ckFlush)
                     .addComponent(ckSaveSetpoints)
-                    .addComponent(ckAutoSave))
+                    .addComponent(ckAutoSave)
+                    .addComponent(ckXscanUsesFDASerialization))
                 .addContainerGap(26, Short.MAX_VALUE))
         );
         jPanel4Layout.setVerticalGroup(
@@ -718,18 +729,20 @@ public class DataFileDialog extends StandardDialog {
             .addGroup(jPanel4Layout.createSequentialGroup()
                 .addContainerGap()
                 .addComponent(ckAutoSave)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGap(0, 0, 0)
                 .addComponent(ckKeep)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGap(0, 0, 0)
                 .addComponent(ckFlush)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGap(0, 0, 0)
                 .addComponent(ckConvert)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGap(0, 0, 0)
                 .addComponent(ckSaveScript)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGap(0, 0, 0)
                 .addComponent(ckSaveConsole)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGap(0, 0, 0)
                 .addComponent(ckSaveSetpoints)
+                .addGap(0, 0, 0)
+                .addComponent(ckXscanUsesFDASerialization)
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
@@ -999,6 +1012,7 @@ public class DataFileDialog extends StandardDialog {
                 config.dataScanSaveOutput = ckSaveConsole.isSelected();
                 config.dataScanSaveScript = ckSaveScript.isSelected();
                 config.dataScanSaveSetpoints = ckSaveSetpoints.isSelected();
+                config.fdaSerialization = ckXscanUsesFDASerialization.isSelected();
                 config.depthDimension = (Integer) spinnerDepthDim.getValue();
                 config.disableDataFileLogs = !checkDataLogs.isSelected();
                 config.disableEmbeddedAttributes = !checkEmbeddedAttrs.isSelected();                
@@ -1186,6 +1200,7 @@ public class DataFileDialog extends StandardDialog {
     private javax.swing.JCheckBox ckSaveConsole;
     private javax.swing.JCheckBox ckSaveScript;
     private javax.swing.JCheckBox ckSaveSetpoints;
+    private javax.swing.JCheckBox ckXscanUsesFDASerialization;
     private javax.swing.JComboBox<String> comboLayout;
     private javax.swing.JComboBox<String> comboNotification;
     private javax.swing.JComboBox<String> comboPermissions;

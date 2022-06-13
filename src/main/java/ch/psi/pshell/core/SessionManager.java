@@ -5,6 +5,7 @@ import ch.psi.pshell.core.Configuration.SessionHandling;
 import ch.psi.pshell.data.RSync;
 import ch.psi.pshell.swing.MetadataEditor;
 import ch.psi.utils.Arr;
+import ch.psi.utils.EncoderJson;
 import ch.psi.utils.Folder;
 import ch.psi.utils.IO;
 import ch.psi.utils.ObservableBase;
@@ -767,7 +768,7 @@ public class SessionManager extends ObservableBase<SessionManager.SessionManager
     }
 
     void setInfo(int id, Map<String, Object> info) throws IOException {
-        String json = JsonSerializer.encode(info);
+        String json = EncoderJson.encode(info, false);
         Path path = Paths.get(getSessionPath(id).toString(), INFO_FILE);
         Files.writeString(path, json);
         IO.setFilePermissions(path.toString(),Context.getInstance().getConfig().filePermissionsConfig);
@@ -1136,7 +1137,7 @@ public class SessionManager extends ObservableBase<SessionManager.SessionManager
 
     public Map<String, Object> getInfo(int id) throws IOException {
         String json = Files.readString(Paths.get(getSessionPath(id).toString(), INFO_FILE));
-        Map<String, Object> ret = (Map) JsonSerializer.decode(json, Map.class);
+        Map<String, Object> ret = (Map) EncoderJson.decode(json, Map.class);
         return ret;
     }
     
@@ -1146,7 +1147,7 @@ public class SessionManager extends ObservableBase<SessionManager.SessionManager
             return "";
         }
         if ((obj instanceof Map) || (obj instanceof List)) {
-            return JsonSerializer.encode(obj);
+            return EncoderJson.encode(obj, false);
         }
         return obj.toString();
     }
@@ -1161,9 +1162,9 @@ public class SessionManager extends ObservableBase<SessionManager.SessionManager
             case Boolean:
                 return Boolean.valueOf(str);
             case List:
-                return JsonSerializer.decode(str, List.class);
+                return EncoderJson.decode(str, List.class);
             case Map:
-                return JsonSerializer.decode(str, Map.class);
+                return EncoderJson.decode(str, Map.class);
             default:
                 return str;
         }
@@ -1187,7 +1188,7 @@ public class SessionManager extends ObservableBase<SessionManager.SessionManager
             metadata.put(key, value);
         }
 
-        String json = JsonSerializer.encode(metadata);
+        String json = EncoderJson.encode(metadata, false);
         Path path = Paths.get(getSessionPath(id).toString(), METADATA_FILE);
         Files.writeString(path, json);
         IO.setFilePermissions(path.toString(),Context.getInstance().getConfig().filePermissionsConfig);
@@ -1234,7 +1235,7 @@ public class SessionManager extends ObservableBase<SessionManager.SessionManager
 
     public Map<String, Object> getMetadata(int id, boolean asString) throws IOException {
         String json = Files.readString(Paths.get(getSessionPath(id).toString(), METADATA_FILE));
-        Map<String, Object> ret = (Map) JsonSerializer.decode(json, Map.class);
+        Map<String, Object> ret = (Map) EncoderJson.decode(json, Map.class);
         if (asString) {
             for (String key : ret.keySet()) {
                 Object value = ret.get(key);

@@ -136,6 +136,7 @@ import ch.psi.pshell.swing.MetadataEditor;
 import ch.psi.pshell.swing.MotorPanel;
 import ch.psi.pshell.swing.RepositoryChangesDialog;
 import ch.psi.pshell.swing.NextStagesPanel;
+import ch.psi.pshell.xscan.ProcessorXScan;
 import ch.psi.utils.Config;
 import ch.psi.utils.Sys;
 import ch.psi.utils.Sys.OSFamily;
@@ -154,9 +155,12 @@ import java.awt.dnd.DropTarget;
 import java.awt.dnd.DropTargetDragEvent;
 import java.awt.dnd.DropTargetDropEvent;
 import java.awt.dnd.DropTargetEvent;
+import java.util.HashSet;
+import java.util.Set;
 import javax.swing.BoxLayout;
 import javax.swing.DefaultCellEditor;
 import javax.swing.JComboBox;
+import javax.swing.JComponent;
 import javax.swing.JOptionPane;
 import javax.swing.KeyStroke;
 import javax.swing.MenuSelectionManager;
@@ -278,16 +282,29 @@ public class View extends MainFrame {
                 }
             });
             menuConsoleLocation.add(item);
+            
+            
+            item = new JRadioButtonMenuItem(location.toString());
+            item.addActionListener((java.awt.event.ActionEvent evt) -> {
+                if (!App.isLocalMode()) {
+                    preferences.dataPanelLocation = location;
+                    preferences.save();
+                    applyPreferences();
+                } else {
+                    setDataPanelLocation(location);
+                }
+            });
+            menuDataPanelLocation.add(item);
         }
         context.getUsersManager().addListener(new UsersManagerListener() {
             @Override
             public void onUserChange(User user, User former) {
                 closeSearchPanels();
                 setConsoleLocation(consoleLocation);//User may have no rights
+                setDataPanelLocation(dataPanelLocation);//User may have no rights  
                 setStatusTabVisible(devicesPanel, !context.getRights().hideDevices);
                 setStatusTabVisible(imagingPanel, !context.getRights().hideDevices);
                 setStatusTabVisible(scriptsPanel, !context.getRights().hideScripts);
-                setStatusTabVisible(dataPanel, !context.getRights().hideData);
                 toolBar.setVisible(!context.getRights().hideToolbar);
 
                 labelUser.setText((context.isSecurityEnabled() && !User.DEFAULT_USER_NAME.equals(user.name)) ? user.name : "");
@@ -310,7 +327,7 @@ public class View extends MainFrame {
                         }
                     }
 
-                    for (ScriptEditor editor : getEditors()) {
+                    for (ScriptEditor editor : getScriptEditors()) {
                         editor.setReadOnly(context.getRights().denyEdit);
                     }
                 }
@@ -482,8 +499,9 @@ public class View extends MainFrame {
         }
         if (processor.createFilePanel()) {
             ScriptsPanel pn = new ScriptsPanel();
-            int index = tabStatus.getTabCount() - 1;
-            tabStatus.add(pn, index);
+            int index = SwingUtils.getComponentIndex(tabStatus, scriptsPanel);
+            index =  (index <0 ) ? tabStatus.getTabCount() : index +1;
+            tabStatus.add(pn, index); 
             tabStatus.setTitleAt(index, processor.getType());
             pn.initialize(processor.getHomePath(), processor.getExtensions());
             pn.setListener((File file) -> {
@@ -774,7 +792,7 @@ public class View extends MainFrame {
     final DataPanelListener dataPanelListener = new DataPanelListener() {
         @Override
         public void plotData(DataManager dataManager, String root, String path) throws Exception {
-            PlotPreferences prefs = dataManager.getPlotPreferences(root, path);
+            PlotPreferences prefs = (path==null) ? null : dataManager.getPlotPreferences(root, path);
             View.this.plotData("Data", root, path, prefs, dataManager);
         }
 
@@ -806,10 +824,15 @@ public class View extends MainFrame {
 
         @Override
         public void openFile(String fileName) throws Exception {
-            if (IO.getExtension(fileName).equalsIgnoreCase(context.getScriptType().getExtension())) {
+            String ext=IO.getExtension(fileName);
+            if (ext.equalsIgnoreCase(context.getScriptType().getExtension())) {
                 View.this.openScript(fileName);
-            } else {
+            } else if (getProcessorExtensions().contains(ext)) {
+                View.this.openScriptOrProcessor(fileName);
+            } else if (ext.equals("h5") || context.getDataManager().isRoot(fileName)){
                 View.this.openDataFile(fileName);
+            }  else {
+                View.this.openTextFile(fileName);
             }
         }
 
@@ -884,7 +907,7 @@ public class View extends MainFrame {
 
         @Override
         public void onBranchChange(String branch) {
-            for (ScriptEditor se : getEditors()) {
+            for (ScriptEditor se : getScriptEditors()) {
                 if (se.getFileName() != null) {
                     try {
                         se.reload();
@@ -1116,8 +1139,8 @@ public class View extends MainFrame {
         }
     }
 
-    public void setScanTableDisabled(boolean value) {
-        scanPanel.setActive(!value);
+    public void setScanTableDisabled(boolean value) {     
+        scanPanel.setActive(preferences.hideScanPanel ||  !value);
     }
 
     public boolean isScanTableDisabled() {
@@ -1188,9 +1211,9 @@ public class View extends MainFrame {
     public void plotData(String contextName, String root, String path, PlotPreferences preferences, DataManager dm) throws Exception {
         try {
             plotData(contextName, dm.getScanPlots(root, path).toArray(new PlotDescriptor[0]), preferences);
-        } catch (IOException ex) {
+        } catch (Exception ex) {
             //If cannot open file, try with external processors
-            if (!Processor.checkProcessorsPlotting(root, path, dm)) {
+            if (!Processor.tryProcessorsPlot(root, path, dm)) {
                 throw ex;
             }
         }
@@ -1208,7 +1231,11 @@ public class View extends MainFrame {
                 boolean isSelected = tabStatus.getSelectedComponent() == nextStagesPanel;
                 tabStatus.remove(nextStagesPanel);
                 if (isSelected) {
-                    tabStatus.setSelectedComponent(outputPanel);
+                    if (outputPanel.isDisplayable()) {
+                        tabStatus.setSelectedComponent(outputPanel);
+                    } else {
+                        tabStatus.setSelectedComponent(loggerPanel);
+                    }
                 }
             }
         } else {
@@ -1278,54 +1305,59 @@ public class View extends MainFrame {
         }
     }
 
-    public List<ScriptEditor> getEditors() {
-        ArrayList<ScriptEditor> ret = new ArrayList();
-        for (int i = 0; i < tabDoc.getTabCount(); i++) {
-            Component c = tabDoc.getComponentAt(i);
-            if (c instanceof ScriptEditor) {
-                ret.add((ScriptEditor) c);
-            }
-        }
-        for (String key : detachedScripts.keySet()) {
-            if (detachedScripts.get(key) instanceof ScriptEditor) {
-                ret.add((ScriptEditor) detachedScripts.get(key));
-            }
-        }
-        return ret;
+    public List<ScriptEditor> getScriptEditors() {
+        return getPanels(ScriptEditor.class);
     }
 
     public List<Processor> getProcessors() {
-        ArrayList<Processor> ret = new ArrayList();
-        for (int i = 0; i < tabDoc.getTabCount(); i++) {
-            Component c = tabDoc.getComponentAt(i);
-            if (c instanceof Processor) {
-                ret.add((Processor) c);
-            }
-        }
-        for (String key : detachedScripts.keySet()) {
-            if (detachedScripts.get(key) instanceof Processor) {
-                ret.add((Processor) detachedScripts.get(key));
-            }
-        }
-        return ret;
+        return getPanels(Processor.class);
     }
     
     public List<DataPanel> getDataFilePanels() {
-        ArrayList<DataPanel> ret = new ArrayList();
+        return getPanels(DataPanel.class);
+    }    
+    
+    public List<Editor> getEditors() {
+        return getPanels(Editor.class);
+    }
+
+    public List<Renderer> getRenderers() {
+        return getPanels(Renderer.class);
+    }
+
+            
+    public <T> List<T> getPanels(Class<T> type) {
+        ArrayList<T> ret = new ArrayList();
         for (int i = 0; i < tabDoc.getTabCount(); i++) {
             Component c = tabDoc.getComponentAt(i);
-            if (c instanceof DataPanel) {
-                ret.add((DataPanel) c);
+            if (type.isAssignableFrom(c.getClass())) {
+                ret.add((T) c);
             }
         }
         for (String key : detachedScripts.keySet()) {
-            if (detachedScripts.get(key) instanceof DataPanel) {
-                ret.add((DataPanel) detachedScripts.get(key));
+            if (type.isAssignableFrom(detachedScripts.get(key).getClass())) {
+                ret.add((T) detachedScripts.get(key));
             }
         }
-        return ret;
-    }    
-
+        return ret; 
+    }
+    
+    public void  selectPanel(JComponent panel){
+        if (tabDoc.indexOfComponent(panel) >= 0) {
+            tabDoc.setSelectedComponent(panel);
+        } else if (detachedScripts.containsValue(panel)) {
+            panel.getTopLevelAncestor().requestFocus();
+        }
+    }
+    
+    boolean sameFile(String f1, String f2) throws IOException{
+        if ((f1==null) || (f2==null)){
+            return false;
+        }
+        return(new File(f1).getCanonicalFile()).equals((new File(f2).getCanonicalFile()));
+    }
+    
+            
     public List<QueueProcessor> getQueues() {
         ArrayList<QueueProcessor> ret = new ArrayList();
         for (Processor processor : getProcessors()) {
@@ -1531,7 +1563,12 @@ public class View extends MainFrame {
         }
 
         openComponent(editor.getScriptName(), editor);
-
+        formatScriptEditor(editor);
+        return editor;
+    }
+    
+    
+    public void formatScriptEditor(ScriptEditor editor){
         editor.setTabSize(preferences.tabSize);
         editor.setTextPaneFont(preferences.fontEditor);
         editor.setEditorForeground(preferences.getEditorForeground());
@@ -1542,8 +1579,6 @@ public class View extends MainFrame {
         SwingUtilities.invokeLater(() -> {
             editor.setContentWidth((preferences.contentWidth <= 0) ? DEFAULT_CONTENT_WIDTH : preferences.contentWidth);
         });
-
-        return editor;
     }
 
     public ScriptEditor openScript(String file) throws IOException {
@@ -1551,14 +1586,10 @@ public class View extends MainFrame {
             return null;
         }
 
-        for (ScriptEditor se : getEditors()) {
+        for (ScriptEditor se : getScriptEditors()) {
             if (se.getFileName() != null) {
-                if ((new File(file).getCanonicalFile()).equals((new File(se.getFileName()).getCanonicalFile()))) {
-                    if (tabDoc.indexOfComponent(se) >= 0) {
-                        tabDoc.setSelectedComponent(se);
-                    } else if (detachedScripts.containsValue(se)) {
-                        se.getTopLevelAncestor().requestFocus();
-                    }
+                if (sameFile(file, se.getFileName())){
+                    selectPanel(se);
                     return se;
                 }
             }
@@ -1588,7 +1619,14 @@ public class View extends MainFrame {
         if (file == null) {
             return null;
         }
-
+        for (Editor ed : getEditors()) {
+            if (ed.getFileName() != null) {
+               if (sameFile(file, ed.getFileName())){
+                    selectPanel(ed);
+                    return ed;
+                }
+            }
+        }
         TextEditor editor = new TextEditor();
         editor.setFilePermissions(context.getConfig().filePermissionsScripts);
         openComponent(new File(file).getName(), editor);
@@ -1599,6 +1637,15 @@ public class View extends MainFrame {
     public DataPanel openDataFile(String file) throws Exception {
         if (file == null) {
             return null;
+        }
+
+        for (DataPanel dp : getDataFilePanels()) {
+            if (dp.getFileName() != null) {
+               if (sameFile(file, dp.getFileName())){
+                    selectPanel(dp);
+                    return dp;
+                }
+            }
         }
         DataPanel panel = new DataPanel();
         openComponent(new File(file).getName(), panel);
@@ -1611,6 +1658,19 @@ public class View extends MainFrame {
         if (file == null) {
             return null;
         }
+        
+        for (Renderer renderer : getRenderers()) {
+            try{
+                String filename = ((FileSource)renderer.getDevice()).getUrl();
+                if (filename != null) {
+                    if (sameFile(file, filename)){
+                        selectPanel(renderer);
+                        return renderer;
+                    }
+                }
+            } catch (Exception ex){                
+            }
+        }        
         Renderer renderer = new Renderer();
         openComponent(new File(file).getName(), renderer);
         FileSource source = new FileSource(new File(file).getName(), file);
@@ -1632,12 +1692,8 @@ public class View extends MainFrame {
             for (Processor p : getProcessors()) {
                 if ((p.getClass().isAssignableFrom(cls)) && p.getFileName() != null) {
                     try {
-                        if ((new File(p.resolveFile(file)).getCanonicalFile()).equals((new File(p.getFileName()).getCanonicalFile()))) {
-                            if (tabDoc.indexOfComponent(p.getPanel()) >= 0) {
-                                tabDoc.setSelectedComponent(p.getPanel());
-                            } else if (detachedScripts.containsValue(p.getPanel())) {
-                                p.getPanel().getTopLevelAncestor().requestFocus();
-                            }
+                        if (sameFile(file, p.getFileName())){
+                            selectPanel(p.getPanel());
                             return (T) p;
                         }
                     } catch (Exception ex) {
@@ -1682,6 +1738,18 @@ public class View extends MainFrame {
         }
         openScript(file);
     }
+    
+    
+    public Set<String> getProcessorExtensions() throws IOException, InstantiationException, IllegalAccessException {
+        Set<String>ret = new HashSet<>();
+        for (Processor processor : Processor.getServiceProviders()) {
+           for (String ext:processor.getExtensions()){
+               ret.add(ext);
+           }
+        }
+        return ret;
+    }
+    
 
     public static PropertiesDialog showSettingsEditor(Frame parent, boolean modal, boolean readOnly) {
         return showPropertiesEditor("Settings", parent, Context.getInstance().getSettingsFile(), modal, readOnly);
@@ -1806,6 +1874,43 @@ public class View extends MainFrame {
             menuPlotWindowDetached.setSelected(value);
         }
     }
+    
+    void setScanPanelVisible(boolean value){
+        if (!App.isOffline()) {
+            
+            if (preferences.hideScanPanel != (tabStatus.indexOfComponent(scanPanel)<0)){
+                if (preferences.hideScanPanel){
+                    tabStatus.remove(scanPanel);
+                } else {
+                    int index = Math.min(3, tabStatus.getTabCount());
+                    tabStatus.add(scanPanel, index); 
+                    tabStatus.setTitleAt(index, App.getResourceBundleValue(View.class, "View.scanPanel.TabConstraints.tabTitle"));                    
+                }
+            }
+        }                
+    }
+    
+    boolean isScanPanelVisible(){
+        return (tabStatus.indexOfComponent(scanPanel)>=0);
+    }
+
+    void setOutputPanelVisible(boolean value){
+        if (!App.isOffline()) {
+            if (preferences.hideOutputPanel != (tabStatus.indexOfComponent(outputPanel)<0)){
+                if (preferences.hideOutputPanel) {
+                    tabStatus.remove(outputPanel);
+                } else {
+                    int index = Math.min(isScanPanelVisible()?4:3, tabStatus.getTabCount());
+                    tabStatus.add(outputPanel, index); 
+                    tabStatus.setTitleAt(index, App.getResourceBundleValue(View.class, "View.outputPanel.TabConstraints.tabTitle"));                    
+                }
+            }
+        }           
+    }
+    
+    boolean isOutputPanelVisible(){
+        return (tabStatus.indexOfComponent(outputPanel)>=0);
+    }    
 
     PanelLocation getLocation(JPanel panel) {
         if (!panel.isDisplayable()) {
@@ -1828,6 +1933,7 @@ public class View extends MainFrame {
     }
 
     PanelLocation consoleLocation = Preferences.DEFAULT_CONSOLE_LOCATION;
+    PanelLocation dataPanelLocation = Preferences.DEFAULT_DATA_PANEL_LOCATION;
 
     void setConsoleLocation(PanelLocation location) {
         if (App.isPlotOnly()) {
@@ -1891,7 +1997,77 @@ public class View extends MainFrame {
             checkTabLeftVisibility();
         }
     }
+//setStatusTabVisible(dataPanel, !context.getRights().hideData);
+    void setDataPanelLocation(PanelLocation location) {
+        if (App.isPlotOnly()) {
+            return;
+        }
+        dataPanelLocation = location;
 
+        if (context.getRights().hideData) {
+            location = PanelLocation.Hidden;
+        }
+
+        PanelLocation current = getLocation(dataPanel);
+        if (current != location) {
+            Container topLevel = dataPanel.getTopLevelAncestor();
+            Container parent = dataPanel.getParent();
+            if (parent != null) {
+                parent.remove(dataPanel);
+            }
+            if (topLevel instanceof Window) {
+                if ((topLevel != this) && (Arr.contains(getPersistedWindows(), topLevel))) {
+                    removePersistedWindow((Window) topLevel);
+                    ((Window) topLevel).dispose();
+                }
+            }
+
+            java.util.ResourceBundle bundle = java.util.ResourceBundle.getBundle("ch/psi/pshell/ui/View");
+            String title = bundle.getString("View.dataPanel.TabConstraints.tabTitle");
+
+            switch (location) {
+                case Document:
+                    int index = 0;
+                    for (index = 0; index < tabDoc.getTabCount(); index++) {
+                        if (!(tabDoc.getComponentAt(index) instanceof Panel)) {
+                            break;
+                        }
+                    }
+                    tabDoc.add(dataPanel, index);
+                    tabDoc.setTitleAt(index, title);
+                    break;
+                case Status:
+                    for (index = tabStatus.getTabCount()-1; index >=0; index--) {
+                        if (!SwingUtils.isTabClosable(tabStatus, index)) {
+                            break;
+                        }
+                    }                    
+                    tabStatus.add(dataPanel, index+1);
+                    tabStatus.setTitleAt(index+1, title);
+                    break;
+                case Left:
+                    tabLeft.add(dataPanel,tabLeft.getTabCount());
+                    tabLeft.setTitleAt(tabLeft.getTabCount()-1, title);
+                    break;
+                case Plot:
+                    tabPlots.add(dataPanel, 0);
+                    tabPlots.setTitleAt(0, title);
+                    break;
+                case Detached:
+                    JDialog dlg = new JDialog(this, title, false);
+                    dlg.setName(title);
+                    dlg.setSize(800, 600);
+                    dlg.add(dataPanel);
+                    showChildWindow(dlg);
+                    dlg.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
+                    addPersistedWindow(dlg);
+                    break;
+            }
+            checkTabLeftVisibility();
+        }
+    }
+    
+    
     void checkTabLeftVisibility() {
         boolean tabLeftVisible = tabLeft.getTabCount() > 0;
         if (tabLeftVisible != tabLeft.isVisible()) {
@@ -1981,7 +2157,7 @@ public class View extends MainFrame {
     }
 
     public void restorePreferences() {
-        preferences = Preferences.load(context.getSetup().getContextPath());
+        preferences = Preferences.load();
         applyPreferences();
         if (App.getInstance().isContextPersisted()) {
             for (String file : openedFiles.stringPropertyNames()) {
@@ -2045,14 +2221,24 @@ public class View extends MainFrame {
         if (preferences.defaultPlotColormap != null) {
             PlotBase.setDefaultColormap(preferences.defaultPlotColormap);
         }
+        if (preferences.showXScanDataViewer){
+             ProcessorXScan.showDataBrowser();
+        } else {
+             ProcessorXScan.closeDataBrowser();
+        }
         System.setProperty(PlotBase.PROPERTY_PLOT_MARKER_SIZE, String.valueOf(preferences.markerSize));
 
         if (!App.isLocalMode()) {
             setScanPlotDetached(preferences.plotsDetached);
             setConsoleLocation(preferences.consoleLocation);
+            setDataPanelLocation(preferences.dataPanelLocation);
         }
-
+        dataPanel.setEmbedded(!preferences.openDataFilesInDocTab);
+        
         statusBar.setShowDataFileName(!preferences.hideFileName);
+        
+        setScanPanelVisible(!preferences.hideScanPanel);
+        setOutputPanelVisible(!preferences.hideOutputPanel);        
     }
 
     void saveOpenedFiles() {
@@ -2138,7 +2324,7 @@ public class View extends MainFrame {
     }
 
     void openFile(File f, Processor processor) throws Exception {
-        String fileName = f.getPath();
+        String fileName = f.getPath().trim();
         String ext = IO.getExtension(f);
         if (ext != null) {
             ext = ext.toLowerCase();
@@ -2151,7 +2337,7 @@ public class View extends MainFrame {
             openDataFile(fileName);
         } else if (StripChart.FILE_EXTENSION.equals(ext)) {
             StripChart stripChart = new StripChart(View.this, false, App.getStripChartFolderArg());
-            openComponent(f.getName(), stripChart.getPlotPanel());
+            openComponent(f.getName().trim(), stripChart.getPlotPanel());
             stripChart.open(f);
             stripChart.start();
         } else {
@@ -2303,7 +2489,7 @@ public class View extends MainFrame {
                 return;
             }
         }
-        terminal = new Terminal(context.getSetup().getHomePath(), preferences.terminalFontSize);
+        terminal = new Terminal(context.getSetup().getHomePath(), preferences.fontTerminal);
         tabStatus.addTab("Terminal", terminal);
         int index = tabStatus.getTabCount() - 1;
         SwingUtils.setTabClosable(tabStatus, index);
@@ -2472,10 +2658,13 @@ public class View extends MainFrame {
         jSeparator13 = new javax.swing.JPopupMenu.Separator();
         menuViewPanels = new javax.swing.JMenu();
         menuConsoleLocation = new javax.swing.JMenu();
+        menuDataPanelLocation = new javax.swing.JMenu();
         menuPlotWindow = new javax.swing.JMenu();
         menuViewPlotWindow = new javax.swing.JCheckBoxMenuItem();
         menuPlotWindowDetached = new javax.swing.JCheckBoxMenuItem();
         menuTerminal = new javax.swing.JCheckBoxMenuItem();
+        menuScanPanel = new javax.swing.JCheckBoxMenuItem();
+        menuOutput = new javax.swing.JCheckBoxMenuItem();
         jSeparator8 = new javax.swing.JPopupMenu.Separator();
         menuCloseAllPlots = new javax.swing.JMenuItem();
         menuCloseAll = new javax.swing.JMenuItem();
@@ -3514,6 +3703,10 @@ public class View extends MainFrame {
         menuConsoleLocation.setName("menuConsoleLocation"); // NOI18N
         menuView.add(menuConsoleLocation);
 
+        menuDataPanelLocation.setText(bundle.getString("View.menuDataPanelLocation.text")); // NOI18N
+        menuDataPanelLocation.setName("menuDataPanelLocation"); // NOI18N
+        menuView.add(menuDataPanelLocation);
+
         menuPlotWindow.setText(bundle.getString("View.menuPlotWindow.text")); // NOI18N
         menuPlotWindow.setName("menuPlotWindow"); // NOI18N
 
@@ -3546,6 +3739,24 @@ public class View extends MainFrame {
             }
         });
         menuView.add(menuTerminal);
+
+        menuScanPanel.setText(bundle.getString("View.menuScanPanel.text")); // NOI18N
+        menuScanPanel.setName("menuScanPanel"); // NOI18N
+        menuScanPanel.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                menuScanPanelActionPerformed(evt);
+            }
+        });
+        menuView.add(menuScanPanel);
+
+        menuOutput.setText(bundle.getString("View.menuOutput.text")); // NOI18N
+        menuOutput.setName("menuOutput"); // NOI18N
+        menuOutput.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                menuOutputActionPerformed(evt);
+            }
+        });
+        menuView.add(menuOutput);
 
         jSeparator8.setName("jSeparator8"); // NOI18N
         menuView.add(jSeparator8);
@@ -3969,9 +4180,15 @@ public class View extends MainFrame {
                 menuViewPlotWindow.setSelected(isPlotsVisible());
                 menuFullScreen.setSelected(isFullScreen());
                 menuTerminal.setSelected(isTerminalVisible());
+                menuScanPanel.setSelected(isScanPanelVisible());
+                menuOutput.setSelected(isOutputPanelVisible());
                 for (Component item : menuConsoleLocation.getMenuComponents()) {
                     ((JRadioButtonMenuItem) item).setSelected(((JRadioButtonMenuItem) item).getText().equals(consoleLocation.toString()));
                 }
+                for (Component item : menuDataPanelLocation.getMenuComponents()) {
+                    ((JRadioButtonMenuItem) item).setSelected(((JRadioButtonMenuItem) item).getText().equals(dataPanelLocation.toString()));
+                }
+                
             } catch (Exception ex) {
             }
         }
@@ -4387,7 +4604,7 @@ public class View extends MainFrame {
     private void menuCloseAllActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuCloseAllActionPerformed
         try {
             closeSearchPanels();
-            for (ScriptEditor editor : getEditors()) {
+            for (ScriptEditor editor : getScriptEditors()) {
                 if (tabDoc.indexOfComponent(editor) >= 0) {
                     tabDoc.remove(editor);
                 } else if (detachedScripts.containsValue(editor)) {
@@ -5100,6 +5317,30 @@ public class View extends MainFrame {
         }  
     }//GEN-LAST:event_menuTerminalActionPerformed
 
+    private void menuScanPanelActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuScanPanelActionPerformed
+        try {
+            if (!App.isLocalMode()) {
+                preferences.hideScanPanel = !menuScanPanel.isSelected();
+                preferences.save();
+            }
+            setScanPanelVisible(menuScanPanel.isSelected());
+        } catch (Exception ex) {
+            showException(ex);
+        }
+    }//GEN-LAST:event_menuScanPanelActionPerformed
+
+    private void menuOutputActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuOutputActionPerformed
+        try {
+            if (!App.isLocalMode()) {
+                preferences.hideOutputPanel = !menuOutput.isSelected();
+                preferences.save();
+            }
+            setOutputPanelVisible(menuOutput.isSelected());
+        } catch (Exception ex) {
+            showException(ex);
+        }
+    }//GEN-LAST:event_menuOutputActionPerformed
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton buttonAbort;
     private javax.swing.JButton buttonAbout;
@@ -5163,6 +5404,7 @@ public class View extends MainFrame {
     private javax.swing.JMenuItem menuCreateTag;
     private javax.swing.JMenuItem menuCut;
     private javax.swing.JMenuItem menuDataFile;
+    private javax.swing.JMenu menuDataPanelLocation;
     private javax.swing.JMenuItem menuDebug;
     private javax.swing.JMenuItem menuDeleteBranch;
     private javax.swing.JMenuItem menuDeleteTag;
@@ -5185,6 +5427,7 @@ public class View extends MainFrame {
     private javax.swing.JMenuItem menuOpen;
     private javax.swing.JMenuItem menuOpenLogFile;
     private javax.swing.JMenu menuOpenRecent;
+    private javax.swing.JCheckBoxMenuItem menuOutput;
     private javax.swing.JMenuItem menuPaste;
     private javax.swing.JMenuItem menuPause;
     private javax.swing.JMenu menuPlotWindow;
@@ -5200,6 +5443,7 @@ public class View extends MainFrame {
     private javax.swing.JMenuItem menuRunNext;
     private javax.swing.JMenuItem menuSave;
     private javax.swing.JMenuItem menuSaveAs;
+    private javax.swing.JCheckBoxMenuItem menuScanPanel;
     private javax.swing.JMenuItem menuSessionCreate;
     private javax.swing.JMenuItem menuSessionHistory;
     private javax.swing.JMenuItem menuSessionPause;

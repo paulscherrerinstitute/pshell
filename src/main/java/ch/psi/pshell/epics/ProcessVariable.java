@@ -45,7 +45,7 @@ public class ProcessVariable extends ProcessVariableBase {
         super.doInitialize();
 
         //If units not set assumes it is first execution and uploads config from motor record
-        if (!getConfig().hasDefinedUnit()) {
+        if (getConfig().isUndefined()) {
             uploadConfig();
         }
     }
@@ -71,6 +71,11 @@ public class ProcessVariable extends ProcessVariableBase {
         } catch (ChannelException | java.util.concurrent.TimeoutException | java.util.concurrent.ExecutionException ex) {
             logger.log(Level.WARNING, null, ex);
         }
+        try {
+            cfg.description = (String) Epics.get(channelName + ".DESC", String.class);
+        } catch (ChannelException | java.util.concurrent.TimeoutException | java.util.concurrent.ExecutionException ex) {
+            logger.log(Level.WARNING, null, ex);
+        }         
         cfg.save();
     }
 

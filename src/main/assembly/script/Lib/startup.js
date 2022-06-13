@@ -92,6 +92,7 @@ Arr =  Java.type('ch.psi.utils.Arr')
 Chrono =  Java.type('ch.psi.utils.Chrono')
 State =  Java.type('ch.psi.utils.State')
 ScriptingUtils = Java.type('ch.psi.pshell.scripting.ScriptUtils')
+ProcessorXScan = Java.type('ch.psi.pshell.xscan.ProcessorXScan')
 
 
 function get_context() {
@@ -719,6 +720,22 @@ function escan(name, title) {
     scan.setPlotTitle(title)
     scan.start()
     return scan.getResult()
+}
+
+function xscan(file_name, arguments) {
+    /*
+     Run FDA's XScan (devined in XML file)
+
+    Args:
+        file_name(string): Name of the file (relative to XScan base folder)
+        arguments(dict):  map of of XScan variables 
+                          E.g: in a linear positioner  {"idXXXX.start":0.0, "idXXXX.end":5.0, "idXXXX.step_size":0.1})
+     */
+    var scan = new ProcessorXScan()
+    if (is_defined(arguments)){ 
+        arguments = null;
+    }
+    scan.execute(file_name,arguments)
 }
 
 function bsearch(writables, readable, start, end, steps, maximum, strategy, latency, relative, before_read, after_read, title){

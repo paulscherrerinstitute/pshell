@@ -417,6 +417,18 @@ def escan(name, **pars):
     return scan.getResult()
 
 
+def xscan(file_name, arguments={}):
+    """ Run FDA's XScan (devined in XML file)
+
+    Args:
+        file_name(string): Name of the file (relative to XScan base folder)
+        arguments(dict):  map of of XScan variables 
+                          E.g: in a linear positioner  {"idXXXX.start":0.0, "idXXXX.end":5.0, "idXXXX.step_size":0.1})
+        
+    """    
+    ProcessorXScan().execute(file_name,arguments)
+
+
 def bsearch(writables, readable, start, end, steps, maximum = True, strategy = "Normal", latency=0.0, relative=False, **pars):
     """Binary search: searches writables in a binary search fashion to find a local maximum for the readable.
 
