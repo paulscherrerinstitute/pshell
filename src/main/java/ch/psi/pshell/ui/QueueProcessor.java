@@ -1,10 +1,10 @@
 package ch.psi.pshell.ui;
 
 import ch.psi.pshell.core.Context;
-import ch.psi.pshell.core.JsonSerializer;
 import ch.psi.pshell.ui.Task.QueueExecution;
 import ch.psi.pshell.ui.Task.QueueTask;
 import ch.psi.utils.Arr;
+import ch.psi.utils.EncoderJson;
 import ch.psi.utils.IO;
 import ch.psi.utils.State;
 import ch.psi.utils.swing.ExtensionFileFilter;
@@ -521,7 +521,7 @@ public final class QueueProcessor extends PanelProcessor {
     @Override
     public void open(String fileName) throws IOException {
         String json = new String(Files.readAllBytes(Paths.get(fileName)));
-        Object[][][] vector = (Object[][][]) JsonSerializer.decode(json, Object[][][].class);
+        Object[][][] vector = (Object[][][]) EncoderJson.decode(json, Object[][][].class);
 
         Object[][] tableData = vector[0];
         for (int i = 0; i < tableData.length; i++) {
@@ -547,7 +547,7 @@ public final class QueueProcessor extends PanelProcessor {
     public void saveAs(String fileName) throws IOException {
         ArrayList data = new ArrayList();
         data.add(model.getDataVector());
-        String json = JsonSerializer.encode(data, true);
+        String json = EncoderJson.encode(data, true);
         Files.write(Paths.get(fileName), json.getBytes());
         this.fileName = fileName;
         modified = false;

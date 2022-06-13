@@ -1,20 +1,16 @@
 package ch.psi.pshell.core;
 
+import ch.psi.utils.EncoderJson;
 import java.io.IOException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * Utility class providing JSON serialization.
  */
+@Deprecated
 public class JsonSerializer {
 
-    final static private ObjectMapper mapper = new ObjectMapper();
-
     public static String encode(Object obj, boolean pretty) throws IOException {
-        if (pretty) {
-            return mapper.writerWithDefaultPrettyPrinter().writeValueAsString(obj);
-        }
-        return mapper.writeValueAsString(obj);
+        return EncoderJson.encode(obj, pretty);
     }
 
     public static String encode(Object obj) throws IOException {
@@ -22,6 +18,6 @@ public class JsonSerializer {
     }
 
     public static Object decode(String json, Class cls) throws IOException {
-        return mapper.readValue(json, cls);
+        return EncoderJson.decode(json, cls);
     }
 }

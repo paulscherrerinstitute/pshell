@@ -1,6 +1,6 @@
 package ch.psi.pshell.plotter;
 
-import ch.psi.pshell.core.JsonSerializer;
+import ch.psi.utils.EncoderJson;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.zeromq.ZMQ;
@@ -69,7 +69,7 @@ public class PlotServer implements AutoCloseable {
                     String error = null;
                     try {
                         Class type = Class.forName(ch.psi.pshell.plotter.Command.class.getName() + "$" + commandType);
-                        Command command = (Command) JsonSerializer.decode(commandData, type);
+                        Command command = (Command) EncoderJson.decode(commandData, type);
                         //commandProducer.post(command);                                                
                         ret = process(command);
                         //socket.send(String.valueOf(response));
@@ -85,7 +85,7 @@ public class PlotServer implements AutoCloseable {
                     }
                     String tx;
                     try {
-                        tx = JsonSerializer.encode(new Response(ret, error));
+                        tx = EncoderJson.encode(new Response(ret, error), false);
                     } catch (Exception ex) {
                         Logger.getLogger(PlotServer.class.getName()).log(Level.WARNING, null, ex);
                         continue;

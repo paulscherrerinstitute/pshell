@@ -1,7 +1,7 @@
 
-import ch.psi.pshell.core.JsonSerializer;
 import ch.psi.pshell.ui.PanelProcessor;
 import ch.psi.pshell.ui.Task;
+import ch.psi.utils.EncoderJson;
 import ch.psi.utils.State;
 import java.io.File;
 import java.io.IOException;
@@ -119,7 +119,7 @@ public class ProcessorPlugin extends PanelProcessor {
     public void saveAs(String fileName) throws IOException {
         currentFile = new File(fileName);
         Map config = getConfig();
-        String json = JsonSerializer.encode(config, true);
+        String json = EncoderJson.encode(config, true);
         Files.write(currentFile.toPath(), json.getBytes());
     }
 
@@ -129,7 +129,7 @@ public class ProcessorPlugin extends PanelProcessor {
         if (fileName != null) {
             Path path = Paths.get(fileName);
             String json = new String(Files.readAllBytes(path));
-            Map config = (Map) JsonSerializer.decode(json, Map.class);
+            Map config = (Map) EncoderJson.decode(json, Map.class);
             currentFile = path.toFile();
             setConfig(config);
         }

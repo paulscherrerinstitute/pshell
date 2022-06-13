@@ -1,7 +1,6 @@
 package ch.psi.utils;
 
 import ch.psi.pshell.core.Context;
-import ch.psi.pshell.core.JsonSerializer;
 import ch.psi.pshell.core.SessionManager;
 import ch.psi.pshell.core.SessionManager.MetadataType;
 import java.io.IOException;
@@ -325,7 +324,7 @@ public class SciCat {
     }
 
     public String getJson() throws IOException {
-        return JsonSerializer.encode(getJsonMap());
+        return EncoderJson.encode(getJsonMap(), false);
     }
 
     public String getFileListing() throws IOException {

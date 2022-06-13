@@ -5,11 +5,11 @@ import ch.psi.pshell.core.Context;
 import ch.psi.pshell.core.ContextAdapter;
 import ch.psi.pshell.scripting.Statement;
 import ch.psi.pshell.core.CommandSource;
-import ch.psi.pshell.core.JsonSerializer;
 import ch.psi.pshell.swing.Executor;
 import ch.psi.pshell.ui.Preferences.ScriptPopupDialog;
 import ch.psi.utils.Chrono;
 import ch.psi.utils.Condition;
+import ch.psi.utils.EncoderJson;
 import ch.psi.utils.IO;
 import ch.psi.utils.State;
 import ch.psi.utils.Str;
@@ -447,7 +447,7 @@ public abstract class Task extends SwingWorker<Object, Void> {
                     if (!args.startsWith("{")) {
                         sb.append("}");
                     }
-                    ret = (Map) JsonSerializer.decode(sb.toString(), Map.class);
+                    ret = (Map) EncoderJson.decode(sb.toString(), Map.class);
                 } catch (Exception ex) {
                     //Then parses the string: support script variables but not nested brackets.
                     originalException = ex;
@@ -469,7 +469,7 @@ public abstract class Task extends SwingWorker<Object, Void> {
 
                             String value = token.substring(token.indexOf(":") + 1).trim();
                             try {
-                                ret.put(name, JsonSerializer.decode(value, Object.class));
+                                ret.put(name, EncoderJson.decode(value, Object.class));
                             } catch (Exception e) {
                                 Object var = Context.getInstance().getInterpreterVariable(value);
                                 ret.put(name, (var == null) ? value

@@ -1,7 +1,7 @@
 package ch.psi.pshell.bs;
 
-import ch.psi.pshell.core.JsonSerializer;
 import ch.psi.pshell.imaging.Utils;
+import ch.psi.utils.EncoderJson;
 import java.awt.Dimension;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
@@ -96,7 +96,7 @@ public class CameraServer extends StreamCamera {
     public Map<String, Object> getInfo() throws IOException {
         WebTarget resource = client.target(prefix + "/info");
         String json = resource.request().accept(MediaType.TEXT_HTML).get(String.class);
-        Map<String, Object> map = (Map) JsonSerializer.decode(json, Map.class);
+        Map<String, Object> map = (Map) EncoderJson.decode(json, Map.class);
         checkReturn(map);
         return (Map<String, Object>) map.get("info");
     }
@@ -107,7 +107,7 @@ public class CameraServer extends StreamCamera {
     public List<String> getCameras() throws IOException {
         WebTarget resource = client.target(prefix);
         String json = resource.request().accept(MediaType.TEXT_HTML).get(String.class);
-        Map<String, Object> map = (Map) JsonSerializer.decode(json, Map.class);
+        Map<String, Object> map = (Map) EncoderJson.decode(json, Map.class);
         checkReturn(map);
         return (List<String>) map.get("cameras");
     }
@@ -118,7 +118,7 @@ public class CameraServer extends StreamCamera {
     public Map<String,String> getCameraAliases() throws IOException {
         WebTarget resource = client.target(prefix+ "/aliases");
         String json = resource.request().accept(MediaType.TEXT_HTML).get(String.class);
-        Map<String, Object> map = (Map) JsonSerializer.decode(json, Map.class);
+        Map<String, Object> map = (Map) EncoderJson.decode(json, Map.class);
         checkReturn(map);
         return (Map<String,String>) map.get("aliases");
     }
@@ -129,7 +129,7 @@ public class CameraServer extends StreamCamera {
     public Map<String,List<String>> getCameraGroups() throws IOException {
         WebTarget resource = client.target(prefix+ "/groups");
         String json = resource.request().accept(MediaType.TEXT_HTML).get(String.class);
-        Map<String, Object> map = (Map) JsonSerializer.decode(json, Map.class);
+        Map<String, Object> map = (Map) EncoderJson.decode(json, Map.class);
         checkReturn(map);
         return (Map<String,List<String>>) map.get("groups");
     }
@@ -141,7 +141,7 @@ public class CameraServer extends StreamCamera {
         checkName(cameraName);
         WebTarget resource = client.target(prefix + "/" + cameraName + "/config");
         String json = resource.request().accept(MediaType.TEXT_HTML).get(String.class);
-        Map<String, Object> map = (Map) JsonSerializer.decode(json, Map.class);
+        Map<String, Object> map = (Map) EncoderJson.decode(json, Map.class);
         checkReturn(map);
         return (Map<String, Object>) map.get("config");
     }
@@ -151,11 +151,11 @@ public class CameraServer extends StreamCamera {
      */
     public void setConfig(String cameraName, Map<String, Object> config) throws IOException {
         checkName(cameraName);
-        String json = JsonSerializer.encode(config);
+        String json = EncoderJson.encode(config, false);
         WebTarget resource = client.target(prefix + "/" + cameraName + "/config");
         Response r = resource.request().accept(MediaType.TEXT_HTML).post(Entity.json(json));
         json = r.readEntity(String.class);
-        Map<String, Object> map = (Map) JsonSerializer.decode(json, Map.class);
+        Map<String, Object> map = (Map) EncoderJson.decode(json, Map.class);
         checkReturn(map);
     }
 
@@ -166,7 +166,7 @@ public class CameraServer extends StreamCamera {
         checkName(cameraName);
         WebTarget resource = client.target(prefix + "/" + cameraName + "/config");
         String json = resource.request().accept(MediaType.TEXT_HTML).delete(String.class);
-        Map<String, Object> map = (Map) JsonSerializer.decode(json, Map.class);
+        Map<String, Object> map = (Map) EncoderJson.decode(json, Map.class);
         checkReturn(map);
     }
 
@@ -177,7 +177,7 @@ public class CameraServer extends StreamCamera {
         checkName(cameraName);
         WebTarget resource = client.target(prefix + "/" + cameraName + "/geometry");
         String json = resource.request().accept(MediaType.TEXT_HTML).get(String.class);
-        Map<String, Object> map = (Map) JsonSerializer.decode(json, Map.class);
+        Map<String, Object> map = (Map) EncoderJson.decode(json, Map.class);
         checkReturn(map);
         List geometry = (List) map.get("geometry");
         int width = ((Number) geometry.get(0)).intValue();
@@ -202,7 +202,7 @@ public class CameraServer extends StreamCamera {
         checkName(cameraName);
         WebTarget resource = client.target(prefix + "/" + cameraName);
         String json = resource.request().accept(MediaType.TEXT_HTML).get(String.class);
-        Map<String, Object> map = (Map) JsonSerializer.decode(json, Map.class);
+        Map<String, Object> map = (Map) EncoderJson.decode(json, Map.class);
         checkReturn(map);
         return (String) map.get("stream");
     }
@@ -214,7 +214,7 @@ public class CameraServer extends StreamCamera {
         checkName(cameraName);
         WebTarget resource = client.target(prefix + "/" + cameraName);
         String json = resource.request().accept(MediaType.TEXT_HTML).delete(String.class);
-        Map<String, Object> map = (Map) JsonSerializer.decode(json, Map.class);
+        Map<String, Object> map = (Map) EncoderJson.decode(json, Map.class);
         checkReturn(map);
     }
 
@@ -224,7 +224,7 @@ public class CameraServer extends StreamCamera {
     public void stopAllCameras() throws IOException {
         WebTarget resource = client.target(prefix);
         String json = resource.request().accept(MediaType.TEXT_HTML).delete(String.class);
-        Map<String, Object> map = (Map) JsonSerializer.decode(json, Map.class);
+        Map<String, Object> map = (Map) EncoderJson.decode(json, Map.class);
         checkReturn(map);
     }
 

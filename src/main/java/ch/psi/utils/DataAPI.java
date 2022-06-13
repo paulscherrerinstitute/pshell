@@ -1,6 +1,5 @@
 package ch.psi.utils;
 
-import ch.psi.pshell.core.JsonSerializer;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
@@ -57,12 +56,12 @@ public class DataAPI implements ChannelQueryAPI {
         if (reload != null) {
             data.put("reload", reload);
         }
-        String json = JsonSerializer.encode(data);
+        String json = EncoderJson.encode(data, false);
         WebTarget resource = client.target(url + "/channels");
         Response r = resource.request().accept(MediaType.APPLICATION_JSON).post(Entity.json(json));
         json = r.readEntity(String.class);
-        //List<Map<String, Object>> ret = (List) JsonSerializer.decode(json, List.class);
-        List<String> ret = (List) JsonSerializer.decode(json, List.class);
+        //List<Map<String, Object>> ret = (List) EncoderJson.decode(json, List.class);
+        List<String> ret = (List) EncoderJson.decode(json, List.class);
         return ret;
     }
 
@@ -96,11 +95,11 @@ public class DataAPI implements ChannelQueryAPI {
         data.put("configFields", new String[]{"globalDate",  "type", "shape"});
         data.put("eventFields", new String[]{"pulseId", "globalDate",  "value"});
         
-        String json = JsonSerializer.encode(data);
+        String json = EncoderJson.encode(data, false);
         WebTarget resource = client.target(url + "/query");
         Response r = resource.request().accept(MediaType.APPLICATION_JSON).post(Entity.json(json));
         json = r.readEntity(String.class);
-        List<Map<String, Object>> ret = (List) JsonSerializer.decode(json, List.class);
+        List<Map<String, Object>> ret = (List) EncoderJson.decode(json, List.class);
         return ret;
     }
     

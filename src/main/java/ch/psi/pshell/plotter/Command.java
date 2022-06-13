@@ -1,10 +1,10 @@
 package ch.psi.pshell.plotter;
 
-import ch.psi.pshell.core.JsonSerializer;
 import ch.psi.pshell.imaging.Colormap;
 import ch.psi.pshell.plot.LinePlot;
 import ch.psi.pshell.plot.MatrixPlot;
 import ch.psi.pshell.plot.Plot;
+import ch.psi.utils.EncoderJson;
 import java.awt.Dimension;
 import java.io.IOException;
 
@@ -24,7 +24,7 @@ public abstract class Command {
         if ((returnType == String.class) || (rx == null)) {
             return rx;
         }
-        return JsonSerializer.decode(rx, returnType);
+        return EncoderJson.decode(rx, returnType);
     }
 
     public static class AddIntervalMarker extends Command {
@@ -455,7 +455,7 @@ public abstract class Command {
         //public String dummy;
         @Override
         public String invoke(Plotter pm) throws IOException {
-            return JsonSerializer.encode(pm.getContexts());
+            return EncoderJson.encode(pm.getContexts(), false);
         }
     }
 
@@ -816,7 +816,7 @@ public abstract class Command {
             byte[] ret = pm.getPlotSnapshot(plot, type, width, height);
             //return new String(ret);
             //return new String(ret, "UTF-8"); 
-            return JsonSerializer.encode(ret);
+            return EncoderJson.encode(ret, false);
         }
     }
 

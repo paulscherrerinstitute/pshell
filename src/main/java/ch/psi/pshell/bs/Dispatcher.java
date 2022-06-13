@@ -1,7 +1,7 @@
 package ch.psi.pshell.bs;
 
 import ch.psi.pshell.bs.ProviderConfig.SocketType;
-import ch.psi.pshell.core.JsonSerializer;
+import ch.psi.utils.EncoderJson;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -81,7 +81,7 @@ public class Dispatcher extends Provider {
         WebTarget resource = client.target(getAddress() + "/sources");
         HashMap map = new HashMap();
         map.put("sources", sources);
-        String json = JsonSerializer.encode(map);
+        String json = EncoderJson.encode(map, false);
         Response r = resource.request().accept(MediaType.APPLICATION_JSON).post(Entity.json(json));
     }
 
@@ -89,7 +89,7 @@ public class Dispatcher extends Provider {
         WebTarget resource = client.target(getAddress() + "/sources");
         HashMap map = new HashMap();
         map.put("sources", sources);
-        String json = JsonSerializer.encode(map);
+        String json = EncoderJson.encode(map, false);
         Response r = resource.request().accept(MediaType.TEXT_PLAIN).method("DELETE", Entity.json(json));
     }
 
@@ -177,7 +177,7 @@ public class Dispatcher extends Provider {
         }
 
         WebTarget resource = client.target(getAddress() + "/stream");
-        String json = JsonSerializer.encode(config);
+        String json = EncoderJson.encode(config, false);
         Response r = resource.request().accept(MediaType.APPLICATION_JSON).post(Entity.json(json));
         Map streamData = r.readEntity(Map.class);
         Object url = streamData.get("stream");
