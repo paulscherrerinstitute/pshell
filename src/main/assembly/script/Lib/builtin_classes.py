@@ -263,6 +263,8 @@ from javax.swing.SwingUtilities import invokeLater, invokeAndWait
 import org.jfree.ui.RectangleAnchor as RectangleAnchor
 import org.jfree.ui.TextAnchor as TextAnchor
 
+import ch.psi.pshell.xscan.ProcessorXScan as ProcessorXScan
+
 
 def string_to_obj(o):
     if is_string(o):

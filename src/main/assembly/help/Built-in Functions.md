@@ -16,6 +16,7 @@ These functions provide the script API to many aspects of PShell:
     - tscan
     - mscan
     - escan
+    - xscan
     - bsearch
     - hsearch
 

@@ -573,6 +573,16 @@ public final class ProcessorXScan extends MonitoredPanel implements Processor {
             }
         }
     }
+    
+    public void startExecute(String file, Map<String, Object> vars) throws Exception {
+        new Thread(()->{
+            try {
+                execute(file, vars);
+            } catch (Exception ex) {
+                Logger.getLogger(ProcessorXScan.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }).start();
+    }    
 
     public void testNotification(String recipient) {
         NotificationAgent a = new NotificationAgent(getConfiguration().getSmptServer(), "pshell.test.notification@psi.ch");
