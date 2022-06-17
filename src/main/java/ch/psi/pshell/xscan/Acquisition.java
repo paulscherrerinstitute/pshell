@@ -224,19 +224,14 @@ public class Acquisition {
 			if (Context.getInstance().getConfig().fdaSerialization){
                             File logfile = new File(fprefix+".log");
                             logHandler = new FileHandler(logfile.getAbsolutePath());
-                            logHandler.setFormatter(new SimpleFormatter());
+                            logHandler.setFormatter(LogManager.formatter);
                         } else{
-                            //String logDataset = "/logs/xscan";
-                            //dm.createDataset(logDataset, String.class);
                             logHandler = new Handler() {
                                 @Override
                                 public void publish(LogRecord rec) {
                                     try {
                                         if (dm.isOpen()){
-                                            String[] tokens = LogManager.parseLogRecord(rec);
-                                            //String log = String.join(" - ", tokens);
-                                            //dm.appendItem(logDataset, log);                              
-                                           
+                                            String[] tokens = LogManager.parseLogRecord(rec);                            
                                             String log =  tokens[3] + " - " + tokens[4] + " [" + tokens[2] + "]";
                                             dm.appendLog(log);
                                         }

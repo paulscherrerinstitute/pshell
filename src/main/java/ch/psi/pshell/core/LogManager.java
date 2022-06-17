@@ -68,7 +68,7 @@ public class LogManager {
         return Logger.getLogger(ROOT_LOGGER).getLevel();
     }
 
-    final Formatter formatter = new Formatter() {
+    public static final Formatter formatter = new Formatter() {
         @Override
         public String format(LogRecord record) {
             String date = Chrono.getTimeStr(record.getMillis(), "dd/MM/YY");
