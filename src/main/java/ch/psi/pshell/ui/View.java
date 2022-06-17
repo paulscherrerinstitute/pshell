@@ -1643,6 +1643,7 @@ public class View extends MainFrame {
             if (dp.getFileName() != null) {
                if (sameFile(file, dp.getFileName())){
                     selectPanel(dp);
+                    dp.load(file);
                     return dp;
                 }
             }
