@@ -692,8 +692,9 @@ def create_dataset(path, type, unsigned=False, dimensions=None, features=None):
 
     Args:
         path(str): Path to dataset relative to the current persistence context root.
-        type(str): array type 'b' = byte, 'h' = short, 'i' = int, 'l' = long,  'f' = float,
-                              'd' = double, 'c' = char, 's' = String, 'z'=bool, 'o' = Object
+        type(str or class or Readable):  array type 'b' = byte, 'h' = short, 'i' = int, 'l' = long,  'f' = float,
+                                       'd' = double, 'c' = char, 's' = String, 'z'=bool, 'o' = Object
+                                       if Readable then create a dataset appropriete for store readable data
         unsigned(boolean, optional)
         dimensions(tuple of int, optional): a 0 value means variable length in that dimension.
         features(dictionary, optional): storage features for the dataset, format specific.
@@ -705,7 +706,11 @@ def create_dataset(path, type, unsigned=False, dimensions=None, features=None):
     Returns:
         None
     """
-    get_context().dataManager.createDataset(path, ScriptUtils.getType(type), unsigned, dimensions, features)
+    if isinstance (type,Readable):
+        get_context().dataManager.createDataset(path, type,dimensions, features)
+    else:
+        cls =  ScriptUtils.getType(type) if is_string(type) else type
+        get_context().dataManager.createDataset(path, cls, unsigned, dimensions, features)
 
 def create_table(path, names, types=None, lengths=None, features=None):
     """Create an empty table (dataset of compound type) within the current persistence context.

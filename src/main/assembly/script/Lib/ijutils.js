@@ -108,7 +108,7 @@ function load_array(array, width, height, title){
     }else{
         if (array.length > width*height)
             array = array.slice[0, width*height]
-        if (array.typecode == 'b') proc = new yteProcessor(width, height, array)
+        if (array.typecode == 'b') proc = new ByteProcessor(width, height, array)
         else if (array.typecode == 'h') proc = new ShortProcessor(width, height, array, null)
         else if (array.typecode == 'i') proc = new FloatProcessor(width, height, array)
         else if (array.typecode == 'f') proc = new FloatProcessor(width, height, array)
