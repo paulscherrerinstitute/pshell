@@ -48,7 +48,7 @@ public enum Colormap {
                     g = 1 + 4 * (min + 0.75 * range - val) / range;
                     b = 0.0;
                 }
-                return new Color(new Double(255.0 * r).intValue(), new Double(255.0 * g).intValue(), new Double(255.0 * b).intValue());
+                return new Color((int)(255.0 * r), (int)(255.0 * g), (int)(255.0 * b));
             case Flame:
                 //Taken from http://www.pyqtgraph.org/documentation/_modules/pyqtgraph/graphicsItems/GradientEditorItem.html#GradientEditorItem
                 //Linear ranges:

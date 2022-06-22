@@ -14,7 +14,7 @@ public class TimestampSensor implements Sensor {
     @Override
     public Object read() {
         // Return current time in milliseconds
-        return new Double(System.currentTimeMillis());
+        return Double.valueOf(System.currentTimeMillis());
     }
 
     @Override

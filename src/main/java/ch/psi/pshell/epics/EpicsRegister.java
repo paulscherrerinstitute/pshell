@@ -21,6 +21,8 @@ public abstract class EpicsRegister<T> extends RegisterBase<T> {
     final String channelName;
     final protected Boolean timestamped;
     final protected Boolean requestMetadata;
+    final private Object requestMetadataLock=new Object();
+    
     final protected InvalidValueAction invalidAction;
     volatile Severity severity;
     String description, unit;
@@ -176,7 +178,7 @@ public abstract class EpicsRegister<T> extends RegisterBase<T> {
                 TimestampValue<T> tv = ((TimestampValue<T>) value);
                 T val = tv.getValue();
                 int severityIndex = tv.getSeverity();
-                synchronized (requestMetadata) {
+                synchronized (requestMetadataLock) {
                     severity = ((severityIndex >= 0) && (severityIndex < Severity.values().length)) ? Severity.values()[tv.getSeverity()] : null;
                     if (timestamped) {
                         setCache(convertFromRead(val), tv.getTimestampPrimitive(), tv.getNanosecondOffset());
@@ -195,7 +197,7 @@ public abstract class EpicsRegister<T> extends RegisterBase<T> {
     @Override
     public TimestampedValue takeTimestamped() {
         if (requestMetadata) {
-            synchronized (requestMetadata) {
+            synchronized (requestMetadataLock) {
                 TimestampedValue val = super.takeTimestamped();
                 return (val == null) ? null : new EpicsTimestampedValue(val.getValue(), val.getTimestamp(), val.getNanosOffset(), severity);
             }

@@ -626,10 +626,10 @@ public class Acquisition {
 						alist.add(new ChannelAccessPut<String>(createChannel(String.class, ca.getChannel()), ca.getValue(), false, timeout));
 					}
 					else if(type.equals("Integer")){
-						alist.add(new ChannelAccessPut<Integer>(createChannel(Integer.class, ca.getChannel()), new Integer(ca.getValue()), false, timeout));
+						alist.add(new ChannelAccessPut<Integer>(createChannel(Integer.class, ca.getChannel()), Integer.parseInt(ca.getValue()), false, timeout));
 					}
 					else if(type.equals("Double")){
-						alist.add(new ChannelAccessPut<Double>(createChannel(Double.class,ca.getChannel()), new Double(ca.getValue()), false, timeout));
+						alist.add(new ChannelAccessPut<Double>(createChannel(Double.class,ca.getChannel()), Double.parseDouble(ca.getValue()), false, timeout));
 					}
 				}
 				else if(operation.equals("putq")){
@@ -637,10 +637,10 @@ public class Acquisition {
 						alist.add(new ChannelAccessPut<String>(createChannel(String.class,ca.getChannel()), ca.getValue(), true, null));
 					}
 					else if(type.equals("Integer")){
-						alist.add(new ChannelAccessPut<Integer>(createChannel(Integer.class,ca.getChannel()), new Integer(ca.getValue()), true, null));
+						alist.add(new ChannelAccessPut<Integer>(createChannel(Integer.class,ca.getChannel()), Integer.parseInt(ca.getValue()), true, null));
 					}
 					else if(type.equals("Double")){
-						alist.add(new ChannelAccessPut<Double>(createChannel(Double.class,ca.getChannel()), new Double(ca.getValue()), true, null));
+						alist.add(new ChannelAccessPut<Double>(createChannel(Double.class,ca.getChannel()), Double.parseDouble(ca.getValue()), true, null));
 					}
 				}
 				else if(operation.equals("wait")){
@@ -652,10 +652,10 @@ public class Acquisition {
 						alist.add(new ChannelAccessCondition<String>(createChannel(String.class,ca.getChannel()), ca.getValue(), timeout));
 					}
 					else if(type.equals("Integer")){
-						alist.add(new ChannelAccessCondition<Integer>(createChannel(Integer.class,ca.getChannel()), new Integer(ca.getValue()), timeout));
+						alist.add(new ChannelAccessCondition<Integer>(createChannel(Integer.class,ca.getChannel()), Integer.parseInt(ca.getValue()), timeout));
 					}
 					else if(type.equals("Double")){
-						alist.add(new ChannelAccessCondition<Double>(createChannel(Double.class,ca.getChannel()), new Double(ca.getValue()), timeout));
+						alist.add(new ChannelAccessCondition<Double>(createChannel(Double.class,ca.getChannel()), Double.parseDouble(ca.getValue()), timeout));
 					}
 				}
 				else if(operation.equals("waitREGEX")){
@@ -677,7 +677,7 @@ public class Acquisition {
 					}
 					
 					if(type.equals("Integer")){
-						alist.add(new ChannelAccessCondition<>(createChannel(Integer.class,ca.getChannel()), new Integer(ca.getValue()), new ComparatorOR(), timeout));
+						alist.add(new ChannelAccessCondition<>(createChannel(Integer.class,ca.getChannel()), Integer.parseInt(ca.getValue()), new ComparatorOR(), timeout));
 					}
 					else{
 						logger.warning("Operation "+operation+" wity type "+type+" for action is not supported");
@@ -689,7 +689,7 @@ public class Acquisition {
 						timeout = Math.round(ca.getTimeout()*1000);
 					}
 					if(type.equals("Integer")){
-						alist.add(new ChannelAccessCondition<>(createChannel(Integer.class,ca.getChannel()), new Integer(ca.getValue()), new ComparatorAND(), timeout));
+						alist.add(new ChannelAccessCondition<>(createChannel(Integer.class,ca.getChannel()),Integer.parseInt(ca.getValue()), new ComparatorAND(), timeout));
 					}
 					else {
 						logger.warning("Operation "+operation+" wity type "+type+" for action is not supported");
@@ -990,10 +990,10 @@ public class Acquisition {
 			List<ChannelAccessGuardCondition<?>> conditions = new ArrayList<>();
 			for(GuardCondition con: g.getCondition()){
 				if(con.getType().equals("Integer")){
-					conditions.add(new ChannelAccessGuardCondition<Integer>(createChannel(Integer.class, con.getChannel()), new Integer(con.getValue())));
+					conditions.add(new ChannelAccessGuardCondition<Integer>(createChannel(Integer.class, con.getChannel()), Integer.parseInt(con.getValue())));
 				}
 				else if(con.getType().equals("Double")){
-					conditions.add(new ChannelAccessGuardCondition<Double>(createChannel(Double.class, con.getChannel()), new Double(con.getValue())));
+					conditions.add(new ChannelAccessGuardCondition<Double>(createChannel(Double.class, con.getChannel()), Double.parseDouble(con.getValue())));
 				}
 				else{
 					conditions.add(new ChannelAccessGuardCondition<String>(createChannel(String.class, con.getChannel()), con.getValue()));
@@ -1289,8 +1289,8 @@ public class Acquisition {
 					String idY = getId(o);
 					
 					// TODO Need to actually check if minX of 
-					lineplot.setMinX(new Double(lp.getOffset()));
-					lineplot.setMaxX(new Double(lp.getOffset()+lp.getSize()));
+					lineplot.setMinX((double)lp.getOffset());
+					lineplot.setMaxX((double)(lp.getOffset()+lp.getSize()));
                                         lineplot.setMaxSeries(lp.getMaxSeries());
 					lineplot.getData().add(new YSeries(idY));
 				}

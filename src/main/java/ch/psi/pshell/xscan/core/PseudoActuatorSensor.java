@@ -60,7 +60,7 @@ public class PseudoActuatorSensor implements Actor, Sensor {
 
     @Override
     public Object read() {
-        return new Double(count); // Return actual count
+        return Double.valueOf(count); // Return actual count
     }
 
     @Override

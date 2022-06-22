@@ -143,7 +143,7 @@ public abstract class SerialDeviceBase extends DeviceBase implements SerialDevic
             if (chrono.isTimeout(timeout)) {
                 throw new DeviceTimeoutException();
             }
-            yield();
+            sleep();
         }
     }
 
@@ -212,7 +212,7 @@ public abstract class SerialDeviceBase extends DeviceBase implements SerialDevic
             if (chrono.isTimeout(timeout)) {
                 throw new DeviceTimeoutException();
             }
-            yield();
+            sleep();
         }
     }
 
@@ -269,7 +269,7 @@ public abstract class SerialDeviceBase extends DeviceBase implements SerialDevic
             if (chrono.isTimeout(timeout)) {
                 throw new DeviceTimeoutException();
             }
-            yield();
+            sleep();
         }
     }
 
@@ -366,7 +366,7 @@ public abstract class SerialDeviceBase extends DeviceBase implements SerialDevic
     }
 
     //Tools
-    private void yield() throws InterruptedException {
+    private void sleep() throws InterruptedException {
         Thread.sleep(1);
     }
     

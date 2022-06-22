@@ -24,7 +24,6 @@ public class UsersManager extends ObservableBase<UsersManagerListener> implement
 
     final String configFolder;
     final HashMap<AccessLevel, Rights> rights = new HashMap<>();
-    final boolean USE_SECURITY_MANEGER = false; //Too expensive.
 
     boolean enabled;
     String userAuthenticatorConfig;
@@ -56,9 +55,6 @@ public class UsersManager extends ObservableBase<UsersManagerListener> implement
     public UsersManager(Setup setup) {
         this.configFolder = setup.getConfigPath();
         users = new ArrayList<>();
-        if (USE_SECURITY_MANEGER) {
-            System.setSecurityManager(new SecurityManager(rights, setup));
-        }
     }
 
     void assertEnabled() throws IOException {
@@ -229,7 +225,6 @@ public class UsersManager extends ObservableBase<UsersManagerListener> implement
     }
 
     void triggerUserChange(User user, User former) {
-        SecurityManager.user = user;
         for (UsersManagerListener listener : getListeners()) {
             try {
                 listener.onUserChange(user, former);

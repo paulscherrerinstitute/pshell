@@ -110,7 +110,7 @@ public class DeserializerTXT implements Deserializer {
 
                         Object value;
                         try {
-                            value = new Double(d);
+                            value = Double.valueOf(d);
                         } catch (NumberFormatException e) {
                             // We treat it as a String
                             // TODO Need to find a way to treat other data formats
@@ -125,7 +125,7 @@ public class DeserializerTXT implements Deserializer {
                             String[] values = d.split(" ");
                             double[] dv = new double[values.length];
                             for (int i = 0; i < values.length; i++) {
-                                dv[i] = new Double(values[i]);
+                                dv[i] = Double.valueOf(values[i]);
                             }
                             // Add data to message
                             message.getData().add(dv);

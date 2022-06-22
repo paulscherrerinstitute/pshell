@@ -26,7 +26,6 @@ import javax.swing.Timer;
 import javax.swing.WindowConstants;
 import ch.psi.utils.swing.SwingUtils.OptionResult;
 import ch.psi.utils.swing.SwingUtils.OptionType;
-import java.applet.Applet;
 import java.awt.Frame;
 import java.awt.GraphicsConfiguration;
 import java.awt.GraphicsDevice;
@@ -845,7 +844,7 @@ public abstract class MainFrame extends JFrame {
         }
         StringJoiner path = new StringJoiner("/");
         path.add(name);
-        while ((c.getParent() != null) && !(c instanceof Window) && !(c instanceof Applet)) {
+        while ((c.getParent() != null) && !(c instanceof Window)) {
             c = c.getParent();
             name = getComponentName(c);
             if (name == null) {

@@ -265,7 +265,7 @@ public class ScanEditorPanel extends MonitoredPanel implements Processor {
         } else if (type == String.class) {
             return "";
         } else if (Number.class.isAssignableFrom(type)) {
-            return new Integer(0);
+            return Integer.valueOf(0);
         }
         try {
             return type.newInstance();

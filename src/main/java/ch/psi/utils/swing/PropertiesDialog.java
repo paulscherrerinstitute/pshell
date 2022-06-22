@@ -402,12 +402,13 @@ public class PropertiesDialog extends StandardDialog {
 
         public void setEditorAt(int row, DefaultCellEditor editor) {
             editor.setClickCountToStart(1);
-            editors.put(new Integer(row), editor);
+            editors.put(row, editor);
         }
 
+        @Override
         public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
             Component defaultComponent = defaultEditor.getTableCellEditorComponent(table, value, isSelected, row, column);
-            editor = editors.get(new Integer(row));
+            editor = editors.get(row);
             if (editor == null) {
                 editor = defaultEditor;
             }
@@ -474,7 +475,7 @@ public class PropertiesDialog extends StandardDialog {
             } else {
                 row = table.rowAtPoint(e.getPoint());
             }
-            editor = editors.get(new Integer(row));
+            editor = editors.get(row);
             if (editor == null) {
                 editor = defaultEditor;
             }
