@@ -191,7 +191,11 @@ public class ChannelAction
      *     
      */
     public Double getTimeout() {
-        return getDouble(timeoutVar,  timeout); 
+        try{
+            return getDouble(timeoutVar,  timeout); 
+        } catch (Exception ex){
+            return null;
+        }        
     }
 
     /**
@@ -215,7 +219,11 @@ public class ChannelAction
      *     
      */
     public Double getDelay() {
-        return getDouble(delayVar,  delay);
+        try{
+            return getDouble(delayVar,  delay);
+        } catch (Exception ex){
+            return null;
+        }
     }
 
     /**

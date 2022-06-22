@@ -9,11 +9,7 @@ import groovy.lang.GroovyClassLoader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.net.URL;
-import java.net.URLClassLoader;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -23,8 +19,6 @@ import java.util.List;
 import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.tools.JavaCompiler;
-import javax.tools.ToolProvider;
 
 /**
  * Manages the loading of plugins, both dynamic (.java files) and compiled
