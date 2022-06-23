@@ -1,8 +1,9 @@
 plugins {
+    //id 'application'
     id 'java-library'
     id "eclipse"
     id "maven-publish"
-    id "nebula.ospackage" version "8.1.0" 
+    id "nebula.ospackage" version "9.1.1"
 }
 
 version = '1.18.0'
@@ -21,6 +22,16 @@ ext.hdf5 = '1.10' // '1.10' or '1.8
 if (!hasProperty('mainClass')) {
     ext.mainClass = 'ch.psi.pshell.ui.App' 
 }
+ext.main_class = ext.mainClass
+
+
+if (hasProperty('java_exec_jdk')) {
+    ext.java_exec_jdk= java_exec_jdk
+    if (java_exec_jdk!=null) System.out.println "Execution JDK:" + java_exec_jdk
+} else {
+    ext.java_exec_jdk = null
+}
+
 
 if (!hasProperty('runArgs')) {
     ext.arguments = ''
@@ -63,18 +74,18 @@ sourceSets {
     
 if (ext.type == 'all'){
     dependencies {
-        compile 'org.python:jython-standalone:2.7.2'
-        compile 'org.codehaus.groovy:groovy-all:2.4.8'
+        implementation 'org.python:jython-standalone:2.7.2'
+        implementation 'org.codehaus.groovy:groovy-all:2.4.8'
     }
 } else if (ext.type == 'py'){
     dependencies {
-        compile 'org.python:jython-standalone:2.7.2'
+        implementation 'org.python:jython-standalone:2.7.2'
         provided 'org.codehaus.groovy:groovy-all:2.4.8'
     }    
 } else if (ext.type == 'groovy'){    
     dependencies {
         provided 'org.python:jython-standalone:2.7.2'
-        compile 'org.codehaus.groovy:groovy-all:2.4.8'
+        implementation 'org.codehaus.groovy:groovy-all:2.4.8'
     }    
 } else if (ext.type == 'js'){    
     dependencies {
@@ -85,13 +96,13 @@ if (ext.type == 'all'){
 
 if (ext.hdf5 == '1.10'){
     dependencies {
-        compile 'cisd:jhdf5:19.04.0'
-        compile 'cisd:base:18.09.0'
-        compile 'commons-io:commons-io:2.8.0'
+        implementation 'cisd:jhdf5:19.04.0'
+        implementation 'cisd:base:18.09.0'
+        implementation 'commons-io:commons-io:2.8.0'
     }
 } else {
     dependencies {
-        compile 'cisd:jhdf5:14.12.6'
+        implementation 'cisd:jhdf5:14.12.6'
     }
 }
 
@@ -112,53 +123,53 @@ def urlFile = { url, name ->
 
 
 dependencies {
-    //compile fileTree(dir: './lib', include: '*.jar')
-    compile 'ch.psi:jcae:3.0.0'
-    compile 'org.glassfish.jersey.media:jersey-media-json-jackson:2.27'
-    compile 'org.glassfish.jersey.containers:jersey-container-grizzly2-http:2.27'
-    compile 'org.glassfish.jersey.media:jersey-media-sse:2.27'
-    compile 'org.glassfish.jersey.inject:jersey-hk2:2.27'
-    compile 'org.jfree:jfreechart:1.0.19'
-    compile 'org.eclipse.jgit:org.eclipse.jgit:4.6.1.201703071140-r'
-    compile 'org.slf4j:slf4j-nop:1.7.25'
-    compile 'org.apache.commons:commons-math3:3.6.1'
-    compile 'com.github.rjeschke:txtmark:0.13'
-    //compile 'org.rxtx:rxtx:2.1.7'
-    compile 'com.neuronrobotics:nrjavaserial:5.2.1'
-    compile 'net.wimpi:jamod:1.2'
-    compile 'net.java.dev.jna:jna:4.4.0'
-    compile 'com.fifesoft:rsyntaxtextarea:3.1.3'
-    compile 'jline:jline:2.14.6'
-    //compile 'org.zeromq:jeromq:0.5.1' #On BSREAD 4.0.4
-    compile 'ch.psi:bsread:4.0.4'
-    compile 'net.imagej:ij:1.53j'
-    compile 'javax.mail:javax.mail-api:1.6.2'
-    compile 'com.sun.mail:javax.mail:1.6.2'
-    compile 'com.github.sarxos:webcam-capture:0.3.12'
-    compile 'org.clojars.nakkaya:darcula:1.0.0'   //Netbeans darcula
-    //compile 'com.bulenkov:darcula:2018.2'    //Original darcula  
-    compile 'com.formdev:flatlaf:1.6'
-    compile 'javax.xml.bind:jaxb-api:2.3.0'
-    compile 'org.jetbrains.jediterm:jediterm-pty:2.42'
-    compile 'org.jetbrains.pty4j:pty4j:0.12.5'
-    compile 'black.ninia:jep:3.9.1'
+    //implementation fileTree(dir: './lib', include: '*.jar')
+    implementation 'ch.psi:jcae:3.0.0'
+    implementation 'org.glassfish.jersey.media:jersey-media-json-jackson:2.27'
+    implementation 'org.glassfish.jersey.containers:jersey-container-grizzly2-http:2.27'
+    implementation 'org.glassfish.jersey.media:jersey-media-sse:2.27'
+    implementation 'org.glassfish.jersey.inject:jersey-hk2:2.27'
+    implementation 'org.jfree:jfreechart:1.0.19'
+    implementation 'org.eclipse.jgit:org.eclipse.jgit:4.6.1.201703071140-r'
+    implementation 'org.slf4j:slf4j-nop:1.7.25'
+    implementation 'org.apache.commons:commons-math3:3.6.1'
+    implementation 'com.github.rjeschke:txtmark:0.13'
+    //implementation 'org.rxtx:rxtx:2.1.7'
+    implementation 'com.neuronrobotics:nrjavaserial:5.2.1'
+    implementation 'net.wimpi:jamod:1.2'
+    implementation 'net.java.dev.jna:jna:4.4.0'
+    implementation 'com.fifesoft:rsyntaxtextarea:3.1.3'
+    implementation 'jline:jline:2.14.6'
+    //implementation 'org.zeromq:jeromq:0.5.1' #On BSREAD 4.0.4
+    implementation 'ch.psi:bsread:4.0.4'
+    implementation 'net.imagej:ij:1.53j'
+    implementation 'javax.mail:javax.mail-api:1.6.2'
+    implementation 'com.sun.mail:javax.mail:1.6.2'
+    implementation 'com.github.sarxos:webcam-capture:0.3.12'
+    implementation 'org.clojars.nakkaya:darcula:1.0.0'   //Netbeans darcula
+    //implementation 'com.bulenkov:darcula:2018.2'    //Original darcula  
+    implementation 'com.formdev:flatlaf:1.6'
+    implementation 'javax.xml.bind:jaxb-api:2.3.0'
+    implementation 'org.jetbrains.jediterm:jediterm-pty:2.42'
+    implementation 'org.jetbrains.pty4j:pty4j:0.12.5'
+    implementation 'black.ninia:jep:3.9.1'
     
     //XScan dependencies
-    compile 'javax.xml.bind:jaxb-api:2.3.1'
-    compile 'org.glassfish.jaxb:jaxb-runtime:2.3.1'
-    compile 'com.sun.xml.bind:jaxb-core:2.3.0'
-    compile 'com.sun.xml.bind:jaxb-impl:2.3.1'
-    compile 'com.sun.xml.messaging.saaj:saaj-impl:1.5.1'
-    compile 'net.sourceforge.jmatio:jmatio:1.0'
+    implementation 'javax.xml.bind:jaxb-api:2.3.1'
+    implementation 'org.glassfish.jaxb:jaxb-runtime:2.3.1'
+    implementation 'com.sun.xml.bind:jaxb-core:2.3.0'
+    implementation 'com.sun.xml.bind:jaxb-impl:2.3.1'
+    implementation 'com.sun.xml.messaging.saaj:saaj-impl:1.5.1'
+    implementation 'net.sourceforge.jmatio:jmatio:1.0'
     
     //TIFF support for ImageIO can be added installing JAI, or one of the following dependencies:
-    //compile 'com.twelvemonkeys'.imageio:imageio-tiff:3.4.1'    
-    //compile 'com.tomgibara.imageio:imageio-tiff:1.0'   //maven { url "http://www.tomgibara.com/maven/repo/" }     
-    //compile 'com.github.jai-imageio:jai-imageio-core:1.4.0'
+    //implementation 'com.twelvemonkeys'.imageio:imageio-tiff:3.4.1'    
+    //implementation 'com.tomgibara.imageio:imageio-tiff:1.0'   //maven { url "http://www.tomgibara.com/maven/repo/" }     
+    //implementation 'com.github.jai-imageio:jai-imageio-core:1.4.0'
     //Or else adding to extensions folder:
     //https://github.com/jai-imageio/jai-imageio-core/releases/download/jai-imageio-core-1.4.0/jai-imageio-core-1.4.0.jar
 
-    testCompile group: 'junit', name: 'junit', version: '4.10'
+    testImplementation group: 'junit', name: 'junit', version: '4.10'
 }
 
 task sourcesJar(type: Jar, dependsOn: classes) {
@@ -185,7 +196,7 @@ task fatJar(type: Jar, dependsOn: jar) {
         )
     }    
     doFirst {
-        from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } } 
+        from { configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) } } 
     }
     exclude 'META-INF/*.RSA', 'META-INF/*.SF','META-INF/*.DSA', 'MANIFEST.MF', '*.INFO' , 'LICENSE'   
         
@@ -285,11 +296,12 @@ task(debug, dependsOn: 'classes', type: JavaExec) {
     //systemProperty 'java.awt.headless' ,true        
     systemProperty 'pshell.build.time', timestamp
     systemProperty 'pshell.build.type', type    
-    main = mainClass
+    main = main_class
     classpath = sourceSets.main.runtimeClasspath
     args arguments
     ignoreExitValue = true
     debug true
+    executable=java_exec_jdk
     jvmArgs = [
         "--add-opens", run_addopens
     ]
@@ -298,11 +310,12 @@ task(debug, dependsOn: 'classes', type: JavaExec) {
 task(run, dependsOn: 'classes', type: JavaExec) {      
     systemProperty 'pshell.build.time', timestamp
     systemProperty 'pshell.build.type', type
-    main = mainClass
+    main = main_class
     classpath = sourceSets.main.runtimeClasspath
     args arguments 
     ignoreExitValue = true
     debug false
+    executable=java_exec_jdk
     jvmArgs = [
         "--add-opens", run_addopens
     ]
