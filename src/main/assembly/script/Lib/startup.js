@@ -4,14 +4,19 @@
 
 load("nashorn:mozilla_compat.js");
 
-importClass(Packages.jdk.nashorn.api.scripting.ScriptUtils);
-importClass(java.beans.PropertyChangeListener)
-importClass(java.lang.Thread)
-importClass(java.awt.image.BufferedImage)
-importClass(java.awt.Color)
-importClass(java.awt.Font)
-importClass(java.awt.Dimension)
-importClass(java.io.File)
+try{
+     ScriptUtils = Java.type("org.openjdk.nashorn.api.scripting.ScriptUtils")
+ } catch(err){    
+     ScriptUtils = Java.type("jdk.nashorn.api.scripting.ScriptUtils") //Java11 with builtin Nasshorn
+ }
+
+PropertyChangeListener = Java.type('java.beans.PropertyChangeListener')
+Thread = Java.type('java.lang.Thread')
+BufferedImage = Java.type('java.awt.image.BufferedImage')
+Color = Java.type('java.awt.Color')
+Font = Java.type('java.awt.Font')
+Dimension = Java.type('java.awt.Dimension')
+File = Java.type('java.io.File')
 
 CommandSource = Java.type('ch.psi.pshell.core.CommandSource')
 ContextListener = Java.type('ch.psi.pshell.core.ContextAdapter')
@@ -141,7 +146,7 @@ function assert(condition, message) {
 
 //TODO: this is wrong: returns false for 1.0
 function is_float(n) {
-    if (n == null){
+    if (n === null){
         return false;
     }
     if (get_rank(n) == 1) {
@@ -175,7 +180,7 @@ function is_java_list(obj){
 function to_array(obj, type) {
     //var javaObjectArray = Java.to(obj);
 
-    if (obj == null) {
+    if (obj === null) {
         return null;
     }
     if (!is_defined(type)) {
@@ -227,6 +232,18 @@ function to_array(obj, type) {
     }
 
     return ScriptUtils.convert(obj, java.lang.Class.forName(name))
+    /*
+    //return Java.to(obj,java.lang.Class.forName(name))
+    var cls = java.lang.Class.forName(name)    
+    var linker = Bootstrap.getLinkerServices();
+    var converter = linker.getTypeConverter(obj.getClass(),  cls);
+    if (converter === null) {
+        // no supported conversion!
+           throw "Conversion not supported"
+       }
+  
+    return converter.invoke(obj);
+    */
 }
 
 
@@ -497,7 +514,7 @@ function  cscan(writables, readables, start, end, steps, latency, time, relative
     var readables = to_array(string_to_obj(readables), "ch.psi.pshell.device.Readable")    
     var scanClass = Java.extend(ContinuousScan)
     //A single Writable with fixed speed
-    if (time == null) {    	  
+    if (time === null) {    	  
         var scan = new scanClass(writables, readables, start, end, steps, relative, latency_ms, passes, zigzag){
             onBeforeReadout: function (pos) {
                 if (is_defined(before_read))
@@ -515,7 +532,7 @@ function  cscan(writables, readables, start, end, steps, latency, time, relative
         //A set of Writables with speed configurable
         var start = to_array(start, 'd')
         var end = to_array(end, 'd')    
-        if ((steps.length!=null) && is_float(steps)){
+        if ((steps.length!==null) && is_float(steps)){
         	steps = to_array(steps, 'd')
         }
         var scan = new ContinuousScan(writables, readables, start, end, steps, time, relative, latency_ms, passes, zigzag){
@@ -866,7 +883,7 @@ function plot(data, name, xdata, ydata, title) {
     if (!is_defined(ydata))  ydata = null;
     if (!is_defined(title))  title = null;
 
-    if (name != null) {
+    if (name !== null) {
         if( typeof name === 'string' ) {
             name = [name]
             data =  [data]
@@ -880,7 +897,7 @@ function plot(data, name, xdata, ydata, title) {
                     data.push([]);
                 }
             }
-        }
+        }        
         var plots = java.lang.reflect.Array.newInstance(java.lang.Class.forName("ch.psi.pshell.data.PlotDescriptor"), data.length)
         for (var i = 0; i < data.length; i++) {
             var plotName = name ? name[i] : null;
@@ -894,6 +911,7 @@ function plot(data, name, xdata, ydata, title) {
             }
             plots[i] = new PlotDescriptor(plotName, to_array(data[i], 'd'), to_array(x, 'd'), to_array(y, 'd'));
         }
+        print (title)
         return get_context().plot(plots, title);
     } else {
         var plot = new PlotDescriptor(name, to_array(data, 'd'), to_array(xdata, 'd'), to_array(ydata, 'd'));
@@ -968,7 +986,7 @@ function load_data(path, index, shape) {
     if (!is_defined(shape))
         shape = null;
 
-    if ((shape!=null) && (is_array(index)))
+    if ((shape!==null) && (is_array(index)))
         var slice = get_context().dataManager.getData(path, index, shape)
     else
         var slice = get_context().dataManager.getData(path, index)
@@ -1081,7 +1099,7 @@ function create_table(path, names, types, lengths, features) {
     if (!is_defined(features))
         features = null;
     var new_types = null
-    if (types != null) {
+    if (types !== null) {
         new_types = []
         for (var i = 0; i < types.length; i++){
             new_types.push(ScriptingUtils.getType(types[i]))
@@ -1118,7 +1136,7 @@ function append_dataset(path, data, index, type, shape) {
     if (is_array(data)){
         data = to_array(data, type)
     }
-    if (index == null)
+    if (index === null)
         get_context().dataManager.appendItem(path, data);
     else {
         if (is_array(index))
@@ -1482,11 +1500,11 @@ function run(script_name, args) {
         The script return value
     */
     var script = get_context().scriptManager.library.resolveFile(script_name)
-    var file = script!=null ? new File(script) : null
-    if ((file == null) ||  ( ! file.exists())) throw "Invalid script: " + script_name
+    var file = script!==null ? new File(script) : null
+    if ((file === null) ||  ( ! file.exists())) throw "Invalid script: " + script_name
     var info = get_context().startScriptExecution(script_name, args)
 
-    if (is_defined(args) &&  (args!=null)){
+    if (is_defined(args) &&  (args!==null)){
         if (is_array(args)){
             argv = args
         } else {
@@ -1718,7 +1736,7 @@ function add_device(device, force){
     }
     if (force){
         dev = get_context().devicePool.getByName(device.getName())
-        if (dev!=null) 
+        if (dev!==null) 
             remove_device(dev)
     }
     return get_context().devicePool.addDevice(device)
@@ -1829,9 +1847,9 @@ function create_averager(dev, count, interval, name, monitored){
     if (!is_defined(monitored))    monitored = false;
     dev = string_to_obj(dev)
     if (dev instanceof ReadableArray) {
-        var averager = (name == null) ? new ArrayAverager(dev, count, interval*1000) : new ArrayAverager(name, dev, count, interval*1000)
+        var averager = (name === null) ? new ArrayAverager(dev, count, interval*1000) : new ArrayAverager(name, dev, count, interval*1000)
     }else{
-        var averager = (name == null) ? new Averager(dev, count, interval*1000) : new Averager(name, dev, count, interval*1000)
+        var averager = (name === null) ? new Averager(dev, count, interval*1000) : new Averager(name, dev, count, interval*1000)
     }
     if (monitored){
         averager.setMonitored(true)
@@ -1924,11 +1942,11 @@ function histogram(data, range_min, range_max, bin){
 
     */
     flat = flatten(data)
-    if (!is_defined(range_min))    range_max = null
     if (!is_defined(range_max))    range_max = null
+    if (!is_defined(range_min))    range_min = null
     if (!is_defined(bin))    bin = 1.0    
-    if (range_min == null) range_min = Math.floor(Math.min.apply(null,flat))
-    if (range_max == null) range_max = Math.ceil(Math.max.apply(null,flat))
+    if (range_min === null) range_min = Math.floor(Math.min.apply(null,flat))
+    if (range_max === null) range_max = Math.ceil(Math.max.apply(null,flat))
     
     if (is_float(bin)){    	
         bin_size = bin
@@ -2031,7 +2049,7 @@ function get_setting(name){
         If name is None then returns map with all settings.
     */
     if (!is_defined(name))    name = null
-    if (name == null){
+    if (name === null){
         return get_context().getSettings()
     } else {
         return get_context().getSetting(name)
@@ -2099,7 +2117,7 @@ function exec_cpython(script_name, args, python_name){
             script_name += ".py"
     }
     script = get_context().scriptManager.library.resolveFile(script_name)
-    if (script == null){
+    if (script === null){
         script= os.path.abspath(script_name)
     }
     c = python_name + " " + script + " "
@@ -2377,7 +2395,7 @@ function get_string(msg, default_value, alternatives, password){
     if (password){
         return get_context().getPassword(msg, null)
     }
-    return get_context().getString(msg, (default_value==null) ? null: default_value.toString(), alternatives)
+    return get_context().getString(msg, (default_value===null) ? null: default_value.toString(), alternatives)
 }
 
 function get_option(msg, type ){

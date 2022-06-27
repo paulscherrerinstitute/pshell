@@ -71,26 +71,34 @@ sourceSets {
     test.runtimeClasspath += configurations.provided
 }
 
+
+ext.jython_lib = 'org.python:jython-standalone:2.7.2'
+ext.groovy_lib = 'org.codehaus.groovy:groovy-all:2.4.8'
+ext.js_lib = 'org.openjdk.nashorn:nashorn-core:15.4' 
     
 if (ext.type == 'all'){
     dependencies {
-        implementation 'org.python:jython-standalone:2.7.2'
-        implementation 'org.codehaus.groovy:groovy-all:2.4.8'
+        implementation jython_lib
+        implementation js_lib         //TODO: Error instantiating script managers other tat the first
+        implementation groovy_lib
     }
 } else if (ext.type == 'py'){
     dependencies {
-        implementation 'org.python:jython-standalone:2.7.2'
-        provided 'org.codehaus.groovy:groovy-all:2.4.8'
+        implementation jython_lib 
+        provided groovy_lib
+        provided js_lib
     }    
 } else if (ext.type == 'groovy'){    
     dependencies {
-        provided 'org.python:jython-standalone:2.7.2'
-        implementation 'org.codehaus.groovy:groovy-all:2.4.8'
+        implementation groovy_lib
+        implementation jython_lib //TODO: For lighter jar should remove direct dependency to Jython (org.python)
+        provided js_lib
     }    
 } else if (ext.type == 'js'){    
-    dependencies {
-        provided 'org.python:jython-standalone:2.7.2'
-        provided 'org.codehaus.groovy:groovy-all:2.4.8'
+    dependencies {              
+        implementation js_lib
+        implementation jython_lib   //TODO: For lighter jar should remove direct dependency to Jython (org.python)
+        provided groovy_lib
     }
 }
 
@@ -138,20 +146,19 @@ dependencies {
     implementation 'com.neuronrobotics:nrjavaserial:5.2.1'
     implementation 'net.wimpi:jamod:1.2'
     implementation 'net.java.dev.jna:jna:4.4.0'
-    implementation 'com.fifesoft:rsyntaxtextarea:3.1.3'
+    implementation 'com.fifesoft:rsyntaxtextarea:3.2.0'
     implementation 'jline:jline:2.14.6'
     //implementation 'org.zeromq:jeromq:0.5.1' #On BSREAD 4.0.4
     implementation 'ch.psi:bsread:4.0.4'
-    implementation 'net.imagej:ij:1.53j'
+    implementation 'net.imagej:ij:1.53s'
     implementation 'javax.mail:javax.mail-api:1.6.2'
     implementation 'com.sun.mail:javax.mail:1.6.2'
     implementation 'com.github.sarxos:webcam-capture:0.3.12'
     implementation 'org.clojars.nakkaya:darcula:1.0.0'   //Netbeans darcula
     //implementation 'com.bulenkov:darcula:2018.2'    //Original darcula  
-    implementation 'com.formdev:flatlaf:1.6'
-    implementation 'javax.xml.bind:jaxb-api:2.3.0'
+    implementation 'com.formdev:flatlaf:2.3'
     implementation 'org.jetbrains.jediterm:jediterm-pty:2.42'
-    implementation 'org.jetbrains.pty4j:pty4j:0.12.5'
+    implementation 'org.jetbrains.pty4j:pty4j:0.12.6'
     implementation 'black.ninia:jep:3.9.1'
     
     //XScan dependencies

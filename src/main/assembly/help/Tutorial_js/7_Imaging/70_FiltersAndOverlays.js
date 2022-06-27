@@ -67,17 +67,14 @@ try{
     renderer.addOverlays([ov_text,ov_line, ov_rect, ov_cross])
     
     while(true){    
-    	
-        var h = histogram(im1.read(), undefined, undefined, bin=0.1)     
+        var h = histogram(im1.read(), null, null, 0.1)    
         var hd=h[0]; var xd = h[1]
-        
         var image = Utils.grayscale(src1.getOutput())   
         var data = Convert.toUnsigned(image.getData().getDataBuffer().getData())
-        h = histogram(data, range_min=0, range_max=255)     
+        h = histogram(data, 0, 255)      
         var hi=h[0]; var xi = h[1]
-    
-        if (plots == null){
-            plots = plot([hd,hi], ["Data", "Image"],[xd, xi], title = "Histo")
+        if (plots == null){ 
+            plots = plot([hd,hi], ["Data", "Image"],[xd, xi], null, "Histo")
         } else{
             plots[0].getSeries(0).setData(xd,hd)
             plots[1].getSeries(0).setData(xi,hi)    
