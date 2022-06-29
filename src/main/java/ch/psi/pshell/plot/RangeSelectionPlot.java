@@ -19,6 +19,7 @@ import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -95,6 +96,10 @@ public class RangeSelectionPlot extends LinePlotJFree {
             return ((Math.abs(this.max - max) < EPSILON) && (Math.abs(this.min - min) < EPSILON));
         }
 
+        public boolean equals(RangeSelection r) {
+            return equals(r.min, r.max);
+        }
+
         @Override
         public String toString() {
             return min + " to " + max;
@@ -167,6 +172,13 @@ public class RangeSelectionPlot extends LinePlotJFree {
                     for (RangeSelection r : getSelectedRanges()) {
                         if (r.overlaps(range)) {
                             throw new IllegalArgumentException("Selection overlaps existing range");
+                        }
+                    }
+                }
+                if (!isDuplicateAllowed()) {
+                    for (RangeSelection r : getSelectedRanges()) {
+                        if (r.equals(range)) {
+                            throw new IllegalArgumentException("Selection matches existing range");
                         }
                     }
                 }
@@ -302,7 +314,7 @@ public class RangeSelectionPlot extends LinePlotJFree {
         }
     }
 
-    final HashMap<RangeSelection, Object> ranges = new HashMap<>();
+    final HashMap<RangeSelection, Object> ranges = new LinkedHashMap<>();
 
     public RangeSelection[] getSelectedRanges() {
         return ranges.keySet().toArray(new RangeSelection[0]);
@@ -311,7 +323,9 @@ public class RangeSelectionPlot extends LinePlotJFree {
     public RangeSelection[] getSelectedRangesOrdered() {
         ArrayList<RangeSelection> list = new ArrayList<>();
         list.addAll(ranges.keySet());
-        Collections.sort(list, (RangeSelection o1, RangeSelection o2) -> Double.valueOf(o1.center).compareTo(Double.valueOf(o2.center)));
+        if (autoReorder) {
+            Collections.sort(list, (RangeSelection o1, RangeSelection o2) -> Double.valueOf(o1.center).compareTo(Double.valueOf(o2.center)));
+        }
         return list.toArray(new RangeSelection[0]);
     }
 
@@ -363,6 +377,26 @@ public class RangeSelectionPlot extends LinePlotJFree {
 
     public void setOverlapAllowed(boolean value) {
         overlapAllowed = value;
+    }
+
+    boolean allowDuplicate;
+
+    public void setDuplicateAllowed(boolean value) {
+        allowDuplicate = value;
+    }
+
+    public boolean isDuplicateAllowed() {
+        return allowDuplicate;
+    }
+
+    boolean autoReorder;
+
+    public void setAutoReorder(boolean value) {
+        autoReorder = value;
+    }
+
+    public boolean isAutoReorder() {
+        return autoReorder;
     }
 
     @Override
@@ -581,7 +615,7 @@ public class RangeSelectionPlot extends LinePlotJFree {
         if (selectedMarker != null) {
             selectedMarker.setOutlineStroke(backStroke);
             selectedMarker.setOutlinePaint(backColor);
-            selectedMarker.setLabelPaint(backColor);
+            selectedMarker.setLabelPaint(MainFrame.isDark() ? backColor.brighter() : backColor);
             selectedMarker = null;
             if (listener != null) {
                 try {
@@ -604,7 +638,7 @@ public class RangeSelectionPlot extends LinePlotJFree {
             backColor = (Color) selectedMarker.getOutlinePaint();
             selectedMarker.setOutlineStroke(new BasicStroke(2f));
             selectedMarker.setOutlinePaint(MainFrame.isDark() ? backColor.brighter() : backColor.darker());
-            selectedMarker.setLabelPaint(selectedMarker.getOutlinePaint());
+            selectedMarker.setLabelPaint(MainFrame.isDark() ? backColor.brighter().brighter() : selectedMarker.getOutlinePaint());
             if (listener != null) {
                 try {
                     listener.onRangeSelected(range);
