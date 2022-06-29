@@ -9,5 +9,9 @@ public interface Encoder {
 
     byte[] encode(Object obj) throws IOException;
 
-    Object decode(byte[] buf) throws IOException;
+    default Object decode(byte[] buf) throws IOException{
+        return decode(buf, null);
+    }
+    
+    Object decode(byte[] buf, Class cls) throws IOException;
 }

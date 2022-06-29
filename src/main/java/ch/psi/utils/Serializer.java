@@ -50,8 +50,12 @@ public class Serializer {
     }
 
     public static Object decode(byte[] buf, EncoderType encoderType) throws IOException {
-        return encoderType.getEncoder().decode(buf);
+        return encoderType.getEncoder().decode(buf, null);
     }
+    
+    public static Object decode(byte[] buf, EncoderType encoderType, Class cls) throws IOException {
+        return encoderType.getEncoder().decode(buf, cls);
+    }    
 
     public static void encode(Object obj, Path path) throws IOException {
         EncoderType type = EncoderType.valueOf(IO.getExtension(path.toFile()));
@@ -60,9 +64,13 @@ public class Serializer {
     }
 
     public static Object decode(Path path) throws IOException {
+        return decode(path, null);
+    }
+    
+    public static Object decode(Path path, Class cls) throws IOException {
         EncoderType type = EncoderType.valueOf(IO.getExtension(path.toFile()));
         byte[] encoded =  Files.readAllBytes(path);
-        return decode(encoded, type);
+        return decode(encoded, type, cls);
     }
     
     public static void encode(Object obj, File file) throws IOException {
@@ -73,6 +81,9 @@ public class Serializer {
         return decode(file.toPath());
     }
     
+    public static Object decode(File file, Class cls) throws IOException {
+        return decode(file.toPath(), cls);
+    }    
 
     public static Object copy(Object obj) throws IOException {
         EncoderType type = EncoderType.bin;

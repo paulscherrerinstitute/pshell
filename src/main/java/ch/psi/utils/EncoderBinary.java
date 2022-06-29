@@ -25,7 +25,7 @@ public class EncoderBinary implements Encoder {
     }
 
     @Override
-    public Object decode(byte[] buf) throws IOException {
+    public Object decode(byte[] buf, Class cls) throws IOException {
         try (ByteArrayInputStream b = new ByteArrayInputStream(buf); ObjectInputStream o = new ObjectInputStream(b);) {
             return o.readObject();
         } catch (IOException ex) {

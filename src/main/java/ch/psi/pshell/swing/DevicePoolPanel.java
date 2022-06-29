@@ -8,7 +8,6 @@ import ch.psi.pshell.device.Device;
 import ch.psi.pshell.device.DeviceListener;
 import ch.psi.pshell.core.Nameable;
 import ch.psi.pshell.device.GenericDevice;
-import ch.psi.pshell.device.ProcessVariable;
 import ch.psi.pshell.device.ReadbackDevice;
 import ch.psi.pshell.device.ReadbackDeviceAdapter;
 import ch.psi.pshell.device.ReadonlyProcessVariable;
@@ -27,6 +26,7 @@ import java.awt.Frame;
 import java.awt.event.ActionEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.beans.Transient;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
@@ -238,6 +238,9 @@ public class DevicePoolPanel extends MonitoredPanel implements UpdatablePanel {
 
         private static final long serialVersionUID = 1L;
 
+        public DefaultPanel(){
+        }
+        
         public DefaultPanel(String deviceClassName, String panelClassName) {
             this.deviceClassName = deviceClassName;
             this.panelClassName = panelClassName;
@@ -245,10 +248,12 @@ public class DevicePoolPanel extends MonitoredPanel implements UpdatablePanel {
         public String deviceClassName;
         public String panelClassName;
 
+        @Transient
         public Class getDeviceClass() throws ClassNotFoundException {
             return Context.getInstance().getClassByName(deviceClassName);
         }
 
+        @Transient
         public Class getPanelClass() throws ClassNotFoundException {
             return Context.getInstance().getClassByName(panelClassName);
         }

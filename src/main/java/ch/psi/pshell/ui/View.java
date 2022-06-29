@@ -1570,7 +1570,7 @@ public class View extends MainFrame {
     
     public void formatScriptEditor(ScriptEditor editor){
         editor.setTabSize(preferences.tabSize);
-        editor.setTextPaneFont(preferences.fontEditor);
+        editor.setTextPaneFont(preferences.fontEditor.toFont());
         editor.setEditorForeground(preferences.getEditorForeground());
         editor.setEditorBackground(preferences.getEditorBackground());
         editor.setReadOnly(context.getRights().denyEdit);        
@@ -1937,7 +1937,7 @@ public class View extends MainFrame {
     PanelLocation dataPanelLocation = Preferences.DEFAULT_DATA_PANEL_LOCATION;
 
     void setConsoleLocation(PanelLocation location) {
-        if (App.isPlotOnly()) {
+        if (App.isPlotOnly()||(location==null)) {
             return;
         }
         consoleLocation = location;
@@ -2000,7 +2000,7 @@ public class View extends MainFrame {
     }
 //setStatusTabVisible(dataPanel, !context.getRights().hideData);
     void setDataPanelLocation(PanelLocation location) {
-        if (App.isPlotOnly()) {
+        if (App.isPlotOnly() || (location==null)) {
             return;
         }
         dataPanelLocation = location;
@@ -2172,11 +2172,11 @@ public class View extends MainFrame {
     }
 
     public void applyPreferences() {
-        shell.setTextPaneFont(preferences.fontShellPanel);
-        shell.setTextInputFont(preferences.fontShellCommand);
+        shell.setTextPaneFont(preferences.fontShellPanel.toFont());
+        shell.setTextInputFont(preferences.fontShellCommand.toFont());
         shell.setPropagateVariableEvaluation(!preferences.noVariableEvaluationPropagation);
         ScriptEditor.setPropagateVariableEvaluation(!preferences.noVariableEvaluationPropagation);
-        outputPanel.setTextPaneFont(preferences.fontOutput);
+        outputPanel.setTextPaneFont(preferences.fontOutput.toFont());
         devicesPanel.setAsyncUpdate(preferences.asyncViewersUpdate);
         dataPanel.setCached(preferences.cachedDataPanel);
         dataPanel.setPlottingScripts(preferences.processingScripts);
@@ -2185,20 +2185,20 @@ public class View extends MainFrame {
         for (int i = 0; i < tabDoc.getTabCount(); i++) {
             if (tabDoc.getComponentAt(i) instanceof ScriptEditor) {
                 ScriptEditor editor = ((ScriptEditor) tabDoc.getComponentAt(i));
-                editor.setTextPaneFont(preferences.fontEditor);
+                editor.setTextPaneFont(preferences.fontEditor.toFont());
                 editor.setContentWidth((preferences.contentWidth <= 0) ? DEFAULT_CONTENT_WIDTH : preferences.contentWidth);
                 editor.setEditorForeground(preferences.getEditorForeground());
                 editor.setEditorBackground(preferences.getEditorBackground());
             }
         }
         showEmergencyStop(preferences.showEmergencyStop && !App.isOffline());
-        PlotBase.setPlotBackground(preferences.plotBackground);
-        PlotBase.setGridColor(preferences.gridColor);
-        PlotBase.setOutlineColor(preferences.outlineColor);
-        PlotBase.setDefaultLabelFont(preferences.fontPlotLabel);
-        PlotBase.setDefaultTickFont(preferences.fontPlotTick);
+        PlotBase.setPlotBackground(preferences.getPlotBackground());
+        PlotBase.setGridColor(preferences.getGridColor());
+        PlotBase.setOutlineColor(preferences.getOutlineColor());
+        PlotBase.setDefaultLabelFont(preferences.fontPlotLabel.toFont());
+        PlotBase.setDefaultTickFont(preferences.fontPlotTick.toFont());
         PlotBase.setOffscreenBuffer(!preferences.disableOffscreenBuffer);
-        PlotPanel.setTitleFont(preferences.fontPlotTitle);
+        PlotPanel.setTitleFont(preferences.fontPlotTitle.toFont());
         HistoryChart.setDefaultAsync(preferences.asyncViewersUpdate);
 
         if (preferences.linePlot != null) {
@@ -2490,7 +2490,7 @@ public class View extends MainFrame {
                 return;
             }
         }
-        terminal = new Terminal(context.getSetup().getHomePath(), preferences.fontTerminal);
+        terminal = new Terminal(context.getSetup().getHomePath(), preferences.fontTerminal.toFont());
         tabStatus.addTab("Terminal", terminal);
         int index = tabStatus.getTabCount() - 1;
         SwingUtils.setTabClosable(tabStatus, index);

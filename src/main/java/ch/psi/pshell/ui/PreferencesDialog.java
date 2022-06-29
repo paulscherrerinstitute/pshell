@@ -9,6 +9,7 @@ import ch.psi.pshell.plot.SurfacePlot;
 import ch.psi.pshell.plot.TimePlot;
 import ch.psi.pshell.swing.DevicePoolPanel.DefaultPanel;
 import ch.psi.pshell.plotter.PlotLayout;
+import ch.psi.pshell.ui.Preferences.FontSpec;
 import ch.psi.pshell.ui.Preferences.PanelLocation;
 import ch.psi.pshell.ui.Preferences.ScriptPopupDialog;
 import ch.psi.utils.swing.FontDialog;
@@ -36,9 +37,9 @@ public class PreferencesDialog extends StandardDialog {
 
     final DefaultTableModel modelPanels;    
     final DefaultTableModel modelProcessingScripts;
-    Color selectedEditorBackground;
-    Color selectedEditorForeground;
-    Color selectedPlotBackground;
+    Integer selectedEditorBackground;
+    Integer selectedEditorForeground;
+    Integer selectedPlotBackground;
 
     public PreferencesDialog(java.awt.Frame parent, boolean modal) {
         super(parent, modal);
@@ -107,9 +108,11 @@ public class PreferencesDialog extends StandardDialog {
     }
 
     Preferences preferences;
-    Font[] selectedFonts = new Font[7];
+    FontSpec[] selectedFonts = new FontSpec[7];
 
-    String getFontDesc(Font f) {
+    
+    String getFontDesc(FontSpec fs) {
+        Font f = fs.toFont();
         StringBuilder sb = new StringBuilder();
         sb.append(f.getName());
         sb.append(" ").append(f.getSize());
@@ -137,13 +140,13 @@ public class PreferencesDialog extends StandardDialog {
         spinnerTab.setValue(Integer.valueOf(preferences.tabSize));
         spinnerContentWidth.setValue(Integer.valueOf(preferences.contentWidth));
         selectedEditorBackground = preferences.editorBackground;
-        panelEditorBackground.setBackground(selectedEditorBackground);
+        panelEditorBackground.setBackground((selectedEditorBackground==null) ? null : new Color(selectedEditorBackground));
         selectedEditorForeground = preferences.editorForeground;
         checkSyntaxHighlight.setSelected(!preferences.simpleEditor);
         checkShowRowNumbers.setSelected(!preferences.hideEditorLineNumbers);
         checkEditorContextMenu.setSelected(!preferences.hideEditorContextMenu);
-        panelEditorForeground.setBackground(selectedEditorForeground);
-        selectedFonts = new Font[]{ preferences.fontShellPanel, 
+        panelEditorForeground.setBackground((selectedEditorForeground==null) ? null : new Color(selectedEditorForeground));
+        selectedFonts = new FontSpec[]{ preferences.fontShellPanel, 
                                     preferences.fontEditor, 
                                     preferences.fontOutput, 
                                     preferences.fontShellCommand,
@@ -191,7 +194,7 @@ public class PreferencesDialog extends StandardDialog {
         }
         checkOffscreenBuffers.setSelected(!preferences.disableOffscreenBuffer);
         selectedPlotBackground = preferences.plotBackground;
-        panelBackground.setBackground(selectedPlotBackground);
+        panelBackground.setBackground((selectedPlotBackground==null) ? null : new Color(selectedPlotBackground));
         comboColormapPlot.setSelectedItem(preferences.defaultPlotColormap);
 
         ckeckBackgroundRendering.setSelected(preferences.backgroundRendering);
@@ -214,10 +217,10 @@ public class PreferencesDialog extends StandardDialog {
     }
 
     void getFont(int index, JTextField txt) {
-        FontDialog dlg = new FontDialog(getFrame(), true, selectedFonts[index]);
+        FontDialog dlg = new FontDialog(getFrame(), true, selectedFonts[index].toFont());
         dlg.setVisible(true);
         if (dlg.getResult()) {
-            selectedFonts[index] = dlg.getSelectedFont();
+            selectedFonts[index] = FontSpec.fromFont(dlg.getSelectedFont());
             txt.setText(getFontDesc(selectedFonts[index]));
         }
     }
@@ -1722,10 +1725,10 @@ public class PreferencesDialog extends StandardDialog {
 
     private void buttonSetBackgroundActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonSetBackgroundActionPerformed
         try {
-            Color c = JColorChooser.showDialog(null, "Choose a Color", selectedPlotBackground); //preferences.backgroundColor);            
+            Color c = JColorChooser.showDialog(null, "Choose a Color", (selectedPlotBackground==null) ? null : new Color(selectedPlotBackground));            
             if (c != null) {
-                selectedPlotBackground = c;
-                panelBackground.setBackground(selectedPlotBackground);
+                selectedPlotBackground = c.getRGB();
+                panelBackground.setBackground(c);
             }
         } catch (Exception ex) {
             showException(ex);
@@ -1734,10 +1737,10 @@ public class PreferencesDialog extends StandardDialog {
 
     private void buttonSetEditorBackgroundActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonSetEditorBackgroundActionPerformed
         try {
-            Color c = JColorChooser.showDialog(null, "Choose a Color", selectedEditorBackground);
+            Color c = JColorChooser.showDialog(null, "Choose a Color", (selectedEditorBackground==null) ? null : new Color(selectedEditorBackground));
             if (c != null) {
-                selectedEditorBackground = c;
-                panelEditorBackground.setBackground(selectedEditorBackground);
+                selectedEditorBackground =  c.getRGB();
+                panelEditorBackground.setBackground(c);
             }
         } catch (Exception ex) {
             showException(ex);
@@ -1746,10 +1749,10 @@ public class PreferencesDialog extends StandardDialog {
 
     private void buttonSetEditorForegroundActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonSetEditorForegroundActionPerformed
         try {
-            Color c = JColorChooser.showDialog(null, "Choose a Color", selectedEditorForeground);
+            Color c = JColorChooser.showDialog(null, "Choose a Color", (selectedEditorForeground==null) ? null : new Color(selectedEditorForeground));
             if (c != null) {
-                selectedEditorForeground = c;
-                panelEditorForeground.setBackground(selectedEditorForeground);
+                selectedEditorForeground = c.getRGB();
+                panelEditorForeground.setBackground(c);
             }
         } catch (Exception ex) {
             showException(ex);
@@ -1758,14 +1761,14 @@ public class PreferencesDialog extends StandardDialog {
 
     private void buttonDefaultEditorColorsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonDefaultEditorColorsActionPerformed
         selectedEditorBackground = null;
-        panelEditorBackground.setBackground(selectedEditorBackground);
+        panelEditorBackground.setBackground(null);
         selectedEditorForeground = null;
-        panelEditorForeground.setBackground(selectedEditorForeground);
+        panelEditorForeground.setBackground(null);
     }//GEN-LAST:event_buttonDefaultEditorColorsActionPerformed
 
     private void buttonResetBackgroundActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonResetBackgroundActionPerformed
         selectedPlotBackground = null;
-        panelBackground.setBackground(selectedPlotBackground);
+        panelBackground.setBackground(null);
     }//GEN-LAST:event_buttonResetBackgroundActionPerformed
 
     private void checkSyntaxHighlightActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_checkSyntaxHighlightActionPerformed

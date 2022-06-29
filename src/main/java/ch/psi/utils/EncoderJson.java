@@ -2,6 +2,7 @@ package ch.psi.utils;
 
 import java.io.IOException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import java.util.Map;
 
 /**
@@ -10,6 +11,10 @@ import java.util.Map;
 public class EncoderJson implements Encoder {
 
     final static private ObjectMapper mapper = new ObjectMapper();
+    
+    //static{
+    //    mapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
+    //}
 
     public static String encode(Object obj, boolean pretty) throws IOException {
         if (pretty) {
@@ -29,8 +34,8 @@ public class EncoderJson implements Encoder {
     }
 
     @Override
-    public Object decode(byte[] buf) throws IOException{
-        return decode(new String(buf), Map.class);
+    public Object decode(byte[] buf, Class cls) throws IOException{
+        return decode(new String(buf), cls);
     }
     
 }

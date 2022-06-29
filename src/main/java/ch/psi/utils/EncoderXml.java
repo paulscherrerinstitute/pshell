@@ -25,7 +25,7 @@ public class EncoderXml implements Encoder {
     }
 
     @Override
-    public Object decode(byte[] buf) throws IOException {
+    public Object decode(byte[] buf, Class cls) throws IOException {
         try (ByteArrayInputStream b = new ByteArrayInputStream(buf); XMLDecoder d = new XMLDecoder(new BufferedInputStream(b));) {
             Object result = d.readObject();
             return result;
