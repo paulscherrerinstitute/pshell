@@ -1256,6 +1256,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
                     }
                     Object ret = scriptManager.evalFile(script);
                     logger.info("Executed startup script");
+                    scriptManager.injectVars(); //Do it again because builtin classes in startup script may shadow a device name.
                     if (!isGenericMode()) {
                         try {
                             scriptManager.evalFile(getSetup().getLocalStartupScript());
