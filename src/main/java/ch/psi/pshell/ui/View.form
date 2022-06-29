@@ -1268,9 +1268,6 @@
           <SubComponents>
             <Container class="javax.swing.JSplitPane" name="splitterVert">
               <Properties>
-                <Property name="border" type="javax.swing.border.Border" editor="org.netbeans.modules.form.editors2.BorderEditor">
-                  <Border info="null"/>
-                </Property>
                 <Property name="dividerLocation" type="int" value="420"/>
                 <Property name="orientation" type="int" value="0"/>
                 <Property name="resizeWeight" type="double" value="1.0"/>
@@ -1404,9 +1401,6 @@
                 </Container>
                 <Container class="javax.swing.JSplitPane" name="splitterDoc">
                   <Properties>
-                    <Property name="border" type="javax.swing.border.Border" editor="org.netbeans.modules.form.editors2.BorderEditor">
-                      <Border info="null"/>
-                    </Property>
                     <Property name="dividerSize" type="int" value="0"/>
                     <Property name="name" type="java.lang.String" value="splitterDoc" noResource="true"/>
                   </Properties>
@@ -1520,7 +1514,6 @@
     </Component>
     <Container class="javax.swing.JToolBar" name="toolBar">
       <Properties>
-        <Property name="floatable" type="boolean" value="false"/>
         <Property name="name" type="java.lang.String" value="toolBar" noResource="true"/>
       </Properties>
 

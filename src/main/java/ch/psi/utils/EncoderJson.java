@@ -35,6 +35,9 @@ public class EncoderJson implements Encoder {
 
     @Override
     public Object decode(byte[] buf, Class cls) throws IOException{
+        if (cls==null){
+            cls = Map.class;
+        }
         return decode(new String(buf), cls);
     }
     

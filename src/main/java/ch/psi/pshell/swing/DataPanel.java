@@ -568,8 +568,8 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
     public void setEmbedded(boolean value){
         if (embedded != value){
             embedded = value;
-            dataPanel.setVisible(false);
-            splitFile.setVisible(false);
+            dataPanel.setVisible(embedded);
+            splitFile.setVisible(embedded);
             splitSource.setDividerSize(value ? splitFile.getDividerSize() : 0);
             splitFolder.setDividerSize(value ? splitFile.getDividerSize() : 0);
             if ((splitSource.getDividerLocation() >= splitSource.getWidth() - splitSource.getDividerSize() - 10)) {

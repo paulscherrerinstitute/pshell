@@ -296,6 +296,18 @@ public class View extends MainFrame {
             });
             menuDataPanelLocation.add(item);
         }
+        menuDataPanelLocation.addSeparator();
+        JCheckBoxMenuItem item = new JCheckBoxMenuItem("Open in Documents Tab");
+        item.addActionListener((java.awt.event.ActionEvent evt) -> {
+            if (!App.isLocalMode()) {
+                preferences.openDataFilesInDocTab = item.getState();
+                preferences.save();
+                applyPreferences();
+            } else {
+                dataPanel.setEmbedded(!preferences.openDataFilesInDocTab);
+            }
+        });        
+        menuDataPanelLocation.add(item);
         context.getUsersManager().addListener(new UsersManagerListener() {
             @Override
             public void onUserChange(User user, User former) {
@@ -4187,7 +4199,11 @@ public class View extends MainFrame {
                     ((JRadioButtonMenuItem) item).setSelected(((JRadioButtonMenuItem) item).getText().equals(consoleLocation.toString()));
                 }
                 for (Component item : menuDataPanelLocation.getMenuComponents()) {
-                    ((JRadioButtonMenuItem) item).setSelected(((JRadioButtonMenuItem) item).getText().equals(dataPanelLocation.toString()));
+                    if (item instanceof JRadioButtonMenuItem){
+                        ((JRadioButtonMenuItem) item).setSelected(((JRadioButtonMenuItem) item).getText().equals(dataPanelLocation.toString()));
+                    } else if (item instanceof JCheckBoxMenuItem){
+                        ((JCheckBoxMenuItem) item).setSelected(preferences.openDataFilesInDocTab);
+                    }
                 }
                 
             } catch (Exception ex) {
