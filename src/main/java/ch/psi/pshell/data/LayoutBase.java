@@ -204,6 +204,9 @@ public abstract class LayoutBase implements Layout {
             if (pp.range != null) {
                 getDataManager().setAttribute(scanPath, ATTR_PLOT_RANGE, new double[]{pp.range.min, pp.range.max});
             }
+            if (pp.rangeY != null) {
+                getDataManager().setAttribute(scanPath, ATTR_PLOT_RANGE_Y, new double[]{pp.rangeY.min, pp.rangeY.max});
+            }            
             if (pp.domainAxis != null) {
                 getDataManager().setAttribute(scanPath, ATTR_PLOT_DOMAIN, pp.domainAxis);
             }

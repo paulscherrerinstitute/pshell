@@ -905,6 +905,9 @@ public class PlotPanel extends MonitoredPanel {
                         plot.getAxis(Plot.AxisId.X).setRange(Math.min(start[0], end[0]), Math.max(start[0], end[0]));
                     }
                 }
+                if (prefs.rangeY != null) {
+                    plot.getAxis(Plot.AxisId.Y).setRange(prefs.rangeY.min, prefs.rangeY.max);
+                }                
                 plot.getAxis(Plot.AxisId.X).setLabel(labelX);
                 plot.getAxis(Plot.AxisId.Y).setLabel(null);
             }

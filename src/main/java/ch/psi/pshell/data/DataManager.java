@@ -1454,6 +1454,12 @@ public class DataManager implements AutoCloseable {
                     ret.range = new Range(range[0], range[1]);
                 }
             }
+            if (attrs.containsKey(Layout.ATTR_PLOT_RANGE_Y)) {
+                double[] range = (double[]) attrs.get(Layout.ATTR_PLOT_RANGE_Y);
+                if (!Double.isNaN(range[0])) {
+                    ret.rangeY = new Range(range[0], range[1]);
+                }
+            }
             if (attrs.containsKey(Layout.ATTR_PLOT_DOMAIN)) {
                 ret.domainAxis = (String) attrs.get(Layout.ATTR_PLOT_DOMAIN);
             }

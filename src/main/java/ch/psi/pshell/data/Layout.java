@@ -41,6 +41,7 @@ public interface Layout {
     public static final String ATTR_ERROR_VECTOR = "Error Vector";
     public static final String ATTR_PLOT_ENABLE = "PlotEnable";
     public static final String ATTR_PLOT_RANGE = "PlotRange";
+    public static final String ATTR_PLOT_RANGE_Y = "PlotRangeY";
     public static final String ATTR_PLOT_DOMAIN = "PlotDomain";
     public static final String ATTR_PLOT_TYPES = "PlotTypes";
     public static final String ATTR_PLOT_TYPES_SEPARATOR = "; ";
