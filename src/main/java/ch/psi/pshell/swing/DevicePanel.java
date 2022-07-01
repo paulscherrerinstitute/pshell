@@ -31,10 +31,19 @@ import java.awt.Component;
  */
 public class DevicePanel extends MonitoredPanel {
 
-    public final static Color TEXT_DISPLAY_BACKGROUND_COLOR = MainFrame.isDark() ? new Color(69, 73, 74) : new Color(236, 238, 244);
-    public final static Color TEXT_EDIT_BACKGROUND_COLOR = MainFrame.isDark() ? new Color(43, 43, 43) : Color.WHITE;
-    public final static Color TEXT_READONLY_BACKGROUND_COLOR = MainFrame.isDark() ? new Color(92, 92, 92) : new Color(237, 239, 242);
+    public Color getTextDisplayBackgroundColor(){
+        return MainFrame.isDark() ? ValueSelection.TEXT_DISPLAY_BACKGROUND_COLOR_DARK : ValueSelection.TEXT_DISPLAY_BACKGROUND_COLOR;
+    }
+        
+    public Color getTextEditBackgroundColor(){
+        return MainFrame.isDark() ? ValueSelection.TEXT_EDIT_BACKGROUND_COLOR_DARK : ValueSelection.TEXT_EDIT_BACKGROUND_COLOR;
+    }
 
+    public Color getTextReadonlyBackgroundColor(){
+        return MainFrame.isDark() ? ValueSelection.TEXT_READONLY_BACKGROUND_COLOR_DARK : ValueSelection.TEXT_READONLY_BACKGROUND_COLOR;
+    
+    }
+    
     public DevicePanel() {
     }
 
@@ -45,6 +54,11 @@ public class DevicePanel extends MonitoredPanel {
         }
         return Logger.getLogger(DevicePanel.class.getName() + "-" + dev.getName());
     }
+    
+    @Override
+    protected void onLafChange() {  
+        checkBackColor();
+    }    
 
     Device device;
 
@@ -90,6 +104,9 @@ public class DevicePanel extends MonitoredPanel {
                 updateUI();
             });
         }
+    }
+    
+    protected void checkBackColor() {        
     }
 
     void doInitialCallbacks() {

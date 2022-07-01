@@ -60,8 +60,19 @@ import javax.swing.undo.UndoManager;
  */
 public class TextEditor extends Editor {
     
-    public final static Color TEXT_EDIT_BACKGROUND_COLOR = MainFrame.isDark() ? new Color(43, 43, 43) : Color.WHITE;    
+    public static Color FOREGROUND_COLOR = Color.BLACK;
+    public static Color BACKGROUND_COLOR = Color.WHITE;
+    public static Color FOREGROUND_COLOR_DARK = new Color(187, 187, 187);
+    public static Color BACKGROUND_COLOR_DARK = new Color(43, 43, 43);
 
+        public static Color getForegroundColor(){
+        return MainFrame.isDark() ? FOREGROUND_COLOR_DARK : FOREGROUND_COLOR;
+    }
+    
+    public static Color getBackgroundColor(){
+        return MainFrame.isDark() ? BACKGROUND_COLOR_DARK : BACKGROUND_COLOR;    
+    }
+        
     //Undo manager knows when document returns to a saved state, so title can be updated
     class MyUndoManager extends UndoManager {
 
@@ -77,9 +88,7 @@ public class TextEditor extends Editor {
     }
 
     MyUndoManager undoManager;
-    Integer contentWidth;
-
-    public static final Color FOREGROUND_COLOR = MainFrame.isDark() ? new Color(187, 187, 187) : Color.BLACK;
+    Integer contentWidth;   
 
     /**
      * Representation of a text document.
@@ -341,7 +350,7 @@ public class TextEditor extends Editor {
                 KeyEvent.VK_Z, modifiers), JComponent.WHEN_FOCUSED);
         editorPane.registerKeyboardAction(redoAction, KeyStroke.getKeyStroke(
                 KeyEvent.VK_Y, modifiers), JComponent.WHEN_FOCUSED);
-        editorBackground = editorPane.isEnabled() ? editorPane.getBackground() : TEXT_EDIT_BACKGROUND_COLOR;
+        editorBackground = editorPane.isEnabled() ? editorPane.getBackground() : getBackgroundColor();
     }
 
     public void setScrollPane(JScrollPane pane) {
@@ -580,8 +589,9 @@ public class TextEditor extends Editor {
         }
     }
 
+    
     public void setEditorBackground(Color color) {
-        editorBackground = color == null ? TEXT_EDIT_BACKGROUND_COLOR : color;
+        editorBackground = color == null ? getBackgroundColor() : color;
         if (editorPane.isEnabled()) {
             doSetEditorBackground(editorBackground);
         }
@@ -606,7 +616,7 @@ public class TextEditor extends Editor {
     }
 
     public void setEditorForeground(Color color) {
-        editorPane.setForeground(color == null ? FOREGROUND_COLOR : color);
+        editorPane.setForeground(color == null ? getForegroundColor() : color);
     }
 
     public Color getEditorForeground() {
@@ -632,14 +642,14 @@ public class TextEditor extends Editor {
 
     public void disableMouseSelection() {
         setEditorPaneEnabled(false);
-        editorPane.setDisabledTextColor(FOREGROUND_COLOR);
+        editorPane.setDisabledTextColor(getForegroundColor());
         disabledTextColor = editorPane.getDisabledTextColor();
     }
 
     public void enableMouseSelection() {
         if (disabledTextColor != null) {
             setEditorPaneEnabled(true);
-            editorPane.setDisabledTextColor(FOREGROUND_COLOR);
+            editorPane.setDisabledTextColor(getForegroundColor());
         }
     }
 

@@ -60,7 +60,7 @@ public final class DataViewer extends MonitoredPanel {
 
     public DataViewer() {
         initComponents();
-        if (MainFrame.isDark()) {
+        if (MainFrame.isDarcula()) {
             treeFolder.setBorder(BorderFactory.createEmptyBorder(0, 5, 0, 0));
         }
 

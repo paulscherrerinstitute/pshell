@@ -3,6 +3,7 @@ package ch.psi.pshell.swing;
 import ch.psi.pshell.core.LogManager;
 import ch.psi.utils.Str;
 import ch.psi.utils.swing.MainFrame;
+import ch.psi.utils.swing.MonitoredPanel;
 import ch.psi.utils.swing.SwingUtils;
 import java.awt.Color;
 import java.awt.Component;
@@ -26,12 +27,20 @@ import javax.swing.table.TableColumn;
 /**
  *
  */
-public class LoggerPanel extends javax.swing.JPanel {
+public class LoggerPanel extends MonitoredPanel {
 
-    public static final Color INFO_COLOR = MainFrame.isDark() ? new Color(187, 187, 187) : Color.BLACK;
-    public static final Color WARNING_COLOR = Color.ORANGE;
-    public static final Color ERROR_COLOR = MainFrame.isDark() ? new Color(210, 21, 73) : Color.RED;
+    Color colorInfo ;
+    Color colorWarning;
+    Color colorError;
+    
     final DefaultTableModel model;
+    
+    @Override
+    protected final void onLafChange() {  
+        colorInfo = MainFrame.isDark() ? new Color(187, 187, 187) : Color.BLACK;
+        colorWarning = Color.ORANGE;
+        colorError = MainFrame.isDark() ? new Color(210, 21, 73) : Color.RED;                
+    }    
 
     boolean inverted;
 
@@ -41,6 +50,7 @@ public class LoggerPanel extends javax.swing.JPanel {
 
     public LoggerPanel() {
         initComponents();
+        onLafChange();
         model = (DefaultTableModel) table.getModel();
         for (int i = 0; i < model.getColumnCount(); i++) {
             TableColumn column = table.getColumnModel().getColumn(i);
@@ -48,12 +58,12 @@ public class LoggerPanel extends javax.swing.JPanel {
                 @Override
                 public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
                     Component comp = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
-                    comp.setForeground(INFO_COLOR);
+                    comp.setForeground(colorInfo);
                     String cell = (String) table.getModel().getValueAt(row, 3);
                     if (Level.SEVERE.toString().equalsIgnoreCase(cell)) {
-                        comp.setForeground(ERROR_COLOR);
+                        comp.setForeground(colorWarning);
                     } else if (Level.WARNING.toString().equalsIgnoreCase(cell)) {
-                        comp.setForeground(WARNING_COLOR);
+                        comp.setForeground(colorError);
                     }
                     return comp;
                 }

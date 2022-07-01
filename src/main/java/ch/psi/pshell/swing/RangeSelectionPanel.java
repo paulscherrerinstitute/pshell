@@ -12,6 +12,7 @@ import ch.psi.utils.swing.MonitoredPanel;
 import ch.psi.utils.swing.SwingUtils;
 import java.awt.Color;
 import java.util.ArrayList;
+import javax.swing.BorderFactory;
 import javax.swing.JSplitPane;
 import javax.swing.JTable;
 import javax.swing.event.ListSelectionEvent;
@@ -40,8 +41,13 @@ public class RangeSelectionPanel extends MonitoredPanel {
         initPlot();
         initModel();
         initTable();
-        plot.setSelectionColor(MainFrame.isDark() ? table.getSelectionBackground() : brighter(table.getSelectionBackground()));
+        onLafChange();
     }
+    
+    @Override
+    protected void onLafChange() {
+        plot.setSelectionColor(MainFrame.isDark() ? table.getSelectionBackground() : brighter(table.getSelectionBackground()));
+    }           
 
     public boolean getShowMiddle() {
         return showMiddle;

@@ -36,7 +36,6 @@ public class MotorPanel extends DevicePanel {
         if (!defaultShowJog){
             setShowJog(false);
         }        
-        //textState.setBackground(TEXT_READONLY_BACKGROUND_COLOR);        
     }
     
     public MotorReadoutPanel getReadoutPanel(){

@@ -199,14 +199,14 @@ public abstract class Task extends SwingWorker<Object, Void> {
                     ret = Context.getInstance().evalFile(fileName, args);
                 }
                 setProgress(100);
-                if (App.getInstance().getMainFrame().getPreferences().getScriptPopupDialog() == ScriptPopupDialog.Return) {
+                if (App.getInstance().getMainFrame().getPreferences().getScriptPopupDlg() == ScriptPopupDialog.Return) {
                     if ((!Context.getInstance().isAborted()) && (ret != null)) {
                         SwingUtils.showMessage(App.getInstance().getMainFrame(), "Script Return", String.valueOf(ret));
                     }
                 }
                 return ret;
             } catch (ScriptException ex) {
-                if (App.getInstance().getMainFrame().getPreferences().getScriptPopupDialog() != ScriptPopupDialog.None) {
+                if (App.getInstance().getMainFrame().getPreferences().getScriptPopupDlg() != ScriptPopupDialog.None) {
                     if (!Context.getInstance().isAborted()) {
                         SwingUtils.showMessage(App.getInstance().getMainFrame(), "Script Error", ex.getMessage(), -1, JOptionPane.ERROR_MESSAGE);
                     }
@@ -273,14 +273,14 @@ public abstract class Task extends SwingWorker<Object, Void> {
                     ret = App.getInstance().evalStatement(statement);
                 }
                 setProgress(100);
-                if (App.getInstance().getMainFrame().getPreferences().getScriptPopupDialog() == ScriptPopupDialog.Return) {
+                if (App.getInstance().getMainFrame().getPreferences().getScriptPopupDlg() == ScriptPopupDialog.Return) {
                     if ((!Context.getInstance().isAborted()) && (ret != null)) {
                         SwingUtils.showMessage(App.getInstance().getMainFrame(), "Script Return", String.valueOf(ret));
                     }
                 }
                 return ret;
             } catch (ScriptException ex) {
-                if (App.getInstance().getMainFrame().getPreferences().getScriptPopupDialog() != ScriptPopupDialog.None) {
+                if (App.getInstance().getMainFrame().getPreferences().getScriptPopupDlg() != ScriptPopupDialog.None) {
                     if (!Context.getInstance().isAborted()) {
                         SwingUtils.showMessage(App.getInstance().getMainFrame(), "Script Error", ex.getMessage(), -1, JOptionPane.ERROR_MESSAGE);
                     }

@@ -414,7 +414,7 @@ public final class ProcessorXScan extends MonitoredPanel implements Processor {
                 throw ex;
             } catch (Exception ex) {
                 App.getInstance().sendError(ex.toString());
-                if (App.getInstance().getMainFrame().getPreferences().getScriptPopupDialog() != Preferences.ScriptPopupDialog.None) {
+                if (App.getInstance().getMainFrame().getPreferences().getScriptPopupDlg() != Preferences.ScriptPopupDialog.None) {
                     if (!Context.getInstance().isAborted()) {
                         SwingUtils.showMessage(App.getInstance().getMainFrame(), "Script Error", ex.getMessage(), -1, JOptionPane.ERROR_MESSAGE);
                     }

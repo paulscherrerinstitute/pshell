@@ -33,58 +33,31 @@ import org.fife.ui.rtextarea.RTextScrollPane;
  */
 public class CodeEditor extends TextEditor {
 
-    public final static Color TEXT_FOREGROUND_COLOR = MainFrame.isDark() ? new Color(187, 187, 187) : Color.BLACK;
-    public final static Color TEXT_BACKGROUND_COLOR = DevicePanel.TEXT_EDIT_BACKGROUND_COLOR;
-    public final static Color TEXT_DISABLED_BACKGROUND_COLOR = MainFrame.isDark() ? new Color(60, 63, 65) : new Color(222, 225, 229);
-    public final static Color TEXT_DISABLED_BACKGROUND_COLOR_MAC = new Color(232,232,232);
-    public final static Color TEXT_SELECTION_BACKGROUND_COLOR = MainFrame.isDark() ? new Color(66, 70, 80) : new Color(184, 207, 229);
-
     final RTextScrollPane scrollPane;
     final RSyntaxTextArea editorPane;
-
-    public CodeEditor() {
-        super();
+    
+    
+    public static Color getForegroundColor(){
+        return TextEditor.getForegroundColor();
+    }
+    
+    public static Color getBackgroundColor(){
+        return TextEditor.getBackgroundColor();
+    }    
+    
+    public static Color getDisabledBackgroundColor(){
+        return MainFrame.isDark() ? new Color(60, 63, 65) : new Color(222, 225, 229);
+    }        
+    
+    @Override
+    protected final void onLafChange() {  
         boolean dark = MainFrame.isDark();
-        editorPane = new RSyntaxTextArea(20, 60);
-        editorPane.setAnimateBracketMatching(false);
-        editorPane.setHighlightCurrentLine(highlightCurrentLine);
-        //editorPane.setCurrentLineHighlightColor(dark ? new Color(30, 30, 35) : new Color(233, 239, 248));
+        
         editorPane.setCurrentLineHighlightColor(dark ? new Color(47, 47, 47) : new Color(233, 239, 248));
-        editorPane.setMatchedBracketBorderColor(null);
-        editorPane.setMatchedBracketBGColor(new Color(243, 255, 15));
-        editorPane.setBracketMatchingEnabled(true);
-        editorPane.setTabsEmulated(true);
-                
-        if (Sys.isLinux()){
-            //Comment toggle is disabled in RSyntaxTextArea by default on Linux because it is triggered not only KEY_PRESSED but also KEY_TYPED.
-            //This workaround filters the KEY_TYPED event.
-            //https://github.com/bobbylight/RSyntaxTextArea/blob/master/RSyntaxTextArea/src/main/java/org/fife/ui/rsyntaxtextarea/RSyntaxTextAreaDefaultInputMap.java
-            editorPane.addKeyListener(new java.awt.event.KeyAdapter() {              
-                @Override
-                public void keyTyped(KeyEvent evt) {
-                    char c = evt.getKeyChar();
-                    if (c == KeyEvent.VK_SLASH) {
-                        if (evt.isControlDown() ){
-                            evt.consume();
-                        }
-                    }
-                }                
-            });
-            editorPane.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_SLASH, CTRL_DOWN_MASK),RSyntaxTextAreaEditorKit.rstaToggleCommentAction);
-        }        
 
-        AbstractTokenMakerFactory atmf = (AbstractTokenMakerFactory) TokenMakerFactory.getDefaultInstance();
-        atmf.putMapping("text/custom_python", "ch.psi.pshell.swing.CodeEditorPythonMarker");
-        atmf.putMapping("text/custom_javascript", "ch.psi.pshell.swing.CodeEditorJavaScriptMarker");
-        atmf.putMapping("text/custom_groovy", "ch.psi.pshell.swing.CodeEditorGroovyMarker");
-        try{
-            String matlabMarker = "net.imagej.ui.swing.script.highliters.MatlabTokenMaker";
-            Class.forName(matlabMarker);
-            atmf.putMapping("text/matlab", "net.imagej.ui.swing.script.highliters.MatlabTokenMaker");
-        } catch (Exception ex){            
-        }
-
-        Color colorText = TEXT_FOREGROUND_COLOR;
+        Color disabledBackgroundColorMac = new Color(232,232,232);
+        Color selectionBackgroundColor = dark ? new Color(66, 70, 80) : new Color(184, 207, 229);     
+        Color colorText = getForegroundColor();
         Color colorString = new Color(206, 123, 0);
         Color colorComment = dark ? new Color(128, 128, 128) : new Color(150, 150, 150);
         Color colorReserved = dark ? new Color(70, 70, 255) : new Color(0, 0, 230);
@@ -92,8 +65,8 @@ public class CodeEditor extends TextEditor {
         Color colorSeparator = colorText; //Brackets, parenthesis...
         Color colorOperator = colorText;
         Color colorField = dark ? new Color(0, 200, 0) : new Color(0, 140, 0);
-        Color colorFunction = dark ? new Color(220, 0, 220) : new Color(128, 0, 128);
-
+        Color colorFunction = dark ? new Color(220, 0, 220) : new Color(128, 0, 128);        
+        
         boolean italicComments = true;
         boolean boldReserverd = false;
 
@@ -159,17 +132,65 @@ public class CodeEditor extends TextEditor {
         scheme.getStyle(Token.VARIABLE).font = null;
         scheme.getStyle(Token.FUNCTION).font = null;
         scheme.getStyle(Token.DATA_TYPE).font = null;        
-
-        scrollPane = new RTextScrollPane(editorPane);
-
         if (UIManager.getLookAndFeel().getName().equalsIgnoreCase("Mac OS X")) {
-            setEditorDisabledBackground(TEXT_DISABLED_BACKGROUND_COLOR_MAC);
+            setEditorDisabledBackground(disabledBackgroundColorMac);
         } else {
-            setEditorDisabledBackground(TEXT_DISABLED_BACKGROUND_COLOR);
+            setEditorDisabledBackground(getDisabledBackgroundColor());
         }
         editorPane.setCaretColor(colorText);
-        editorPane.setSelectionColor(TEXT_SELECTION_BACKGROUND_COLOR);
+        editorPane.setSelectionColor(selectionBackgroundColor);   
+        if (isDisplayable()){
+            editorPane.setBackground(getBackgroundColor());
+            scrollPane.getGutter().setBackground(getBackgroundColor());
+        }
+    }        
 
+    public CodeEditor() {
+        super();        
+        editorPane = new RSyntaxTextArea(20, 60);
+        editorPane.setAnimateBracketMatching(false);
+        editorPane.setHighlightCurrentLine(highlightCurrentLine);
+        //editorPane.setCurrentLineHighlightColor(dark ? new Color(30, 30, 35) : new Color(233, 239, 248));
+        
+        editorPane.setMatchedBracketBorderColor(null);
+        editorPane.setMatchedBracketBGColor(new Color(243, 255, 15));
+        editorPane.setBracketMatchingEnabled(true);
+        editorPane.setTabsEmulated(true);
+                
+        if (Sys.isLinux()){
+            //Comment toggle is disabled in RSyntaxTextArea by default on Linux because it is triggered not only KEY_PRESSED but also KEY_TYPED.
+            //This workaround filters the KEY_TYPED event.
+            //https://github.com/bobbylight/RSyntaxTextArea/blob/master/RSyntaxTextArea/src/main/java/org/fife/ui/rsyntaxtextarea/RSyntaxTextAreaDefaultInputMap.java
+            editorPane.addKeyListener(new java.awt.event.KeyAdapter() {              
+                @Override
+                public void keyTyped(KeyEvent evt) {
+                    char c = evt.getKeyChar();
+                    if (c == KeyEvent.VK_SLASH) {
+                        if (evt.isControlDown() ){
+                            evt.consume();
+                        }
+                    }
+                }                
+            });
+            editorPane.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_SLASH, CTRL_DOWN_MASK),RSyntaxTextAreaEditorKit.rstaToggleCommentAction);
+        }      
+        
+        onLafChange();
+
+        AbstractTokenMakerFactory atmf = (AbstractTokenMakerFactory) TokenMakerFactory.getDefaultInstance();
+        atmf.putMapping("text/custom_python", "ch.psi.pshell.swing.CodeEditorPythonMarker");
+        atmf.putMapping("text/custom_javascript", "ch.psi.pshell.swing.CodeEditorJavaScriptMarker");
+        atmf.putMapping("text/custom_groovy", "ch.psi.pshell.swing.CodeEditorGroovyMarker");
+        try{
+            String matlabMarker = "net.imagej.ui.swing.script.highliters.MatlabTokenMaker";
+            Class.forName(matlabMarker);
+            atmf.putMapping("text/matlab", "net.imagej.ui.swing.script.highliters.MatlabTokenMaker");
+        } catch (Exception ex){            
+        }
+
+
+
+        scrollPane = new RTextScrollPane(editorPane);
         editorPane.getMargin().left = 3;
         setShowLineNumbers(true);
         setScrollPane(scrollPane);

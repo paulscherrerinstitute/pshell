@@ -2,7 +2,9 @@ package ch.psi.pshell.swing;
 
 import ch.psi.utils.Convert;
 import ch.psi.utils.Observable;
+import ch.psi.utils.swing.MainFrame;
 import ch.psi.utils.swing.MonitoredPanel;
+import java.awt.Color;
 import java.awt.event.KeyEvent;
 import java.util.ArrayList;
 import java.util.List;
@@ -13,6 +15,14 @@ import javax.swing.JTextField;
  */
 public class ValueSelection extends MonitoredPanel implements Observable<ValueSelection.ValueSelectionListener> {
 
+    public final static Color TEXT_DISPLAY_BACKGROUND_COLOR =  new Color(236, 238, 244);
+    public final static Color TEXT_EDIT_BACKGROUND_COLOR =  Color.WHITE;
+    public final static Color TEXT_READONLY_BACKGROUND_COLOR =new  Color(237, 239, 242);
+
+    public final static Color TEXT_DISPLAY_BACKGROUND_COLOR_DARK = new Color(69, 73, 74);
+    public final static Color TEXT_EDIT_BACKGROUND_COLOR_DARK  = new Color(43, 43, 43);
+    public final static Color TEXT_READONLY_BACKGROUND_COLOR_DARK  =new Color(92, 92, 92);
+    
     public ValueSelection() {
         initComponents();
         showButtons = true;
@@ -24,6 +34,12 @@ public class ValueSelection extends MonitoredPanel implements Observable<ValueSe
         setUnit("");
     }
 
+    @Override
+    protected void onLafChange() {  
+        checkBackColor();
+    }    
+
+    
     boolean showButtons;
 
     public boolean getShowButtons() {
@@ -135,14 +151,15 @@ public class ValueSelection extends MonitoredPanel implements Observable<ValueSe
         checkBackColor();
     }
 
+    
     protected void checkBackColor() {
         if ((!isEnabled())) {
-            text.setBackground(DevicePanel.TEXT_READONLY_BACKGROUND_COLOR);
+            text.setBackground(MainFrame.isDark() ? ValueSelection.TEXT_DISPLAY_BACKGROUND_COLOR_DARK : ValueSelection.TEXT_DISPLAY_BACKGROUND_COLOR);
         } else {
             if (isEditing()) {
-                text.setBackground(DevicePanel.TEXT_EDIT_BACKGROUND_COLOR);
+                text.setBackground(MainFrame.isDark() ? ValueSelection.TEXT_EDIT_BACKGROUND_COLOR_DARK : ValueSelection.TEXT_EDIT_BACKGROUND_COLOR);
             } else {
-                text.setBackground(DevicePanel.TEXT_DISPLAY_BACKGROUND_COLOR);
+                text.setBackground(MainFrame.isDark() ? ValueSelection.TEXT_READONLY_BACKGROUND_COLOR_DARK : ValueSelection.TEXT_READONLY_BACKGROUND_COLOR);
             }
         }
     }

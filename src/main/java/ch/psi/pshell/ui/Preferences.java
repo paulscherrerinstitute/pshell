@@ -303,23 +303,23 @@ public class Preferences {
     }
 
     @Transient
-    public Color getEditorBackground() {
+    public Color getEditorBackgroundColor() {
         if (editorBackground == null) {
-            return CodeEditor.TEXT_BACKGROUND_COLOR;
+            return CodeEditor.getBackgroundColor();
         }
         return new Color(editorBackground);
     }
 
     @Transient
-    public Color getEditorForeground() {
+    public Color getEditorForegroundColor() {
         if (editorForeground == null) {
-            return CodeEditor.TEXT_FOREGROUND_COLOR;
+            return CodeEditor.getForegroundColor();
         }
        return new Color(editorForeground);
     }
     
     @Transient
-    public Color getPlotBackground() {
+    public Color getPlotBackgroundColor() {
         if (plotBackground == null) {
             return null;
         }
@@ -327,7 +327,7 @@ public class Preferences {
     }
 
     @Transient
-    public Color getGridColor() {
+    public Color getPlotGridColor() {
         if (gridColor == null) {
             return null;
         }
@@ -335,7 +335,7 @@ public class Preferences {
     }
 
     @Transient
-    public Color getOutlineColor() {
+    public Color getPlotOutlineColor() {
         if (gridColor == null) {
             return null;
         }
@@ -343,7 +343,7 @@ public class Preferences {
     }    
     
     @Transient
-    public ScriptPopupDialog getScriptPopupDialog() {
+    public ScriptPopupDialog getScriptPopupDlg() {
         if (scriptPopupDialog == null) {
             return ScriptPopupDialog.None;
         }

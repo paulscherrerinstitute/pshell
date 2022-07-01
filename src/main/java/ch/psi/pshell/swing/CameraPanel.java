@@ -26,12 +26,7 @@ public class CameraPanel extends DevicePanel {
 
     public CameraPanel() {
         initComponents();
-        if (MainFrame.isDark()) {
-            textSensorSize.setEnabled(true);
-            textImageSize.setEnabled(true);
-            textImageCount.setEnabled(true);
-            textInfo.setEnabled(true);
-        }
+        onLafChange();
 
         SwingUtils.setEnumCombo(comboColorMode, ColorMode.class);
         SwingUtils.setEnumCombo(comboDataType, DataType.class);
@@ -72,6 +67,15 @@ public class CameraPanel extends DevicePanel {
             }
         }
     }
+    
+    @Override
+    protected void onLafChange() {
+        boolean dark = MainFrame.isDark();
+        textSensorSize.setEnabled(dark);
+        textImageSize.setEnabled(dark);
+        textImageCount.setEnabled(dark);
+        textInfo.setEnabled(dark);
+    }       
 
     @Override
     public Camera getDevice() {

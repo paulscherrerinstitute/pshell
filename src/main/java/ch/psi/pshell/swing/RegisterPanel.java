@@ -90,14 +90,15 @@ public final class RegisterPanel extends DevicePanel {
         return editing;
     }
 
+    @Override
     protected void checkBackColor() {
         if (isReadOnly() || isReadonlyRegister() || !isEnabled()) {
-            txtRegisterReadout.setBackground(TEXT_READONLY_BACKGROUND_COLOR);
+            txtRegisterReadout.setBackground(getTextDisplayBackgroundColor());
         } else {
             if (isEditing()) {
-                txtRegisterReadout.setBackground(TEXT_EDIT_BACKGROUND_COLOR);
+                txtRegisterReadout.setBackground(getTextEditBackgroundColor());
             } else {
-                txtRegisterReadout.setBackground(TEXT_DISPLAY_BACKGROUND_COLOR);
+                txtRegisterReadout.setBackground(getTextReadonlyBackgroundColor());
             }
         }
     }

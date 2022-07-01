@@ -43,7 +43,6 @@ import ch.psi.utils.Str;
 import ch.psi.utils.swing.ConfigDialog;
 import ch.psi.utils.swing.MainFrame;
 import ch.psi.utils.swing.MainFrame.LookAndFeelType;
-import static ch.psi.utils.swing.MainFrame.isDark;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.GraphicsEnvironment;
@@ -1908,28 +1907,28 @@ public class App extends ObservableBase<AppListener> {
     static String getLookAndFeel() {
         String laf = getArgumentValue("laf");
         if (laf == null) {
-            LookAndFeelType type;
-            //Deprecated arguments
-            if (hasArgument("mlaf")) {
-                type = LookAndFeelType.metal;
-            } else if (hasArgument("slaf")) {
-                type = LookAndFeelType.system;
-            } else if (hasArgument("nlaf")) {
-                type = LookAndFeelType.nimbus;
-            } else if (hasArgument("blaf")) {
-                type = LookAndFeelType.dark;
+                LookAndFeelType type;
+                //Deprecated arguments
+                if (hasArgument("mlaf")) {
+                    type = LookAndFeelType.metal;
+                } else if (hasArgument("slaf")) {
+                    type = LookAndFeelType.system;
+                } else if (hasArgument("nlaf")) {
+                    type = LookAndFeelType.nimbus;
+                } else if (hasArgument("blaf")) {
+                    type = LookAndFeelType.dark;
             } else if (hasArgument("dlaf")) {
                 type = LookAndFeelType.darcula;
-            } else {
-                // Default is system laf (or Metal, if no system installed).
-                // However prefer Nimbus on Windows & Linux
-                type = LookAndFeelType.nimbus;
-                if (Sys.getOSFamily() == OSFamily.Mac) {
-                    type = LookAndFeelType.system;
+                } else {
+                    // Default is system laf (or Metal, if no system installed).
+                    // However prefer Nimbus on Windows & Linux
+                    type = LookAndFeelType.nimbus;
+                    if (Sys.getOSFamily() == OSFamily.Mac) {
+                        type = LookAndFeelType.system;
+                    }
                 }
+                laf = MainFrame.getLookAndFeel(type);
             }
-            laf = MainFrame.getLookAndFeel(type);
-        }
         return laf;
     }
 
@@ -1950,22 +1949,7 @@ public class App extends ObservableBase<AppListener> {
                 } catch (Exception ex) {
                 }
             }        
-            MainFrame.setLookAndFeel(getLookAndFeel());
-            if (isDark()) {
-                UIManager.put("FileView.directoryIcon", new ImageIcon(getResourceImage("FolderClosed.png")));
-                UIManager.put("FileChooser.homeFolderIcon", new ImageIcon(getResourceImage("Home.png")));
-                UIManager.put("FileView.computerIcon", new ImageIcon(getResourceImage("Computer.png")));
-                UIManager.put("FileView.floppyDriveIcon", new ImageIcon(getResourceImage("Floppy.png")));
-                UIManager.put("FileView.hardDriveIcon", new ImageIcon(getResourceImage("HardDrive.png")));
-                UIManager.put("FileChooser.upFolderIcon", new ImageIcon(getResourceImage("FolderUp.png")));
-                UIManager.put("FileChooser.newFolderIcon", new ImageIcon(getResourceImage("FolderNew.png")));
-                UIManager.put("FileView.fileIcon", new ImageIcon(getResourceImage("File.png")));
-                UIManager.put("FileChooser.listViewIcon", new ImageIcon(getResourceImage("List.png")));
-                UIManager.put("FileChooser.detailsViewIcon", new ImageIcon(getResourceImage("Details.png")));
-                UIManager.put("Tree.openIcon", new ImageIcon(getResourceImage("FolderOpen.png")));
-                UIManager.put("Tree.closedIcon", new ImageIcon(getResourceImage("FolderClosed.png")));
-                UIManager.put("Tree.leafIcon", new ImageIcon(getResourceImage("File.png")));
-            }
+            View.setLookAndFeel(getLookAndFeel());
         }
     }
 

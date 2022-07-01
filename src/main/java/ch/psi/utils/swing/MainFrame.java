@@ -1,5 +1,6 @@
 package ch.psi.utils.swing;
 
+import static ch.psi.pshell.ui.App.getResourceImage;
 import ch.psi.utils.Arr;
 import ch.psi.utils.IO;
 import ch.psi.utils.IO.FilePermissions;
@@ -220,12 +221,18 @@ public abstract class MainFrame extends JFrame {
     protected void onTimer() {
     }
 
-    /**
-     * Called when window is being closed
-     */
+//    /**
+//     * Called when window is being closed
+//     */
     protected void onClosing() {
     }
 
+//    /**
+//     * Called when look & feel changed
+//     */
+    protected void onLafChange() {
+    }
+    
     public void setIcon(URL url) {
         iconURL = url;
         Image icon = Toolkit.getDefaultToolkit().getImage(url);
@@ -399,17 +406,18 @@ public abstract class MainFrame extends JFrame {
         s, system,
         m, metal,
         n, nimbus,
-        d, darcula,
+        d, dark,
         f, flat,
-        b, dark;
+        @Deprecated
+        darcula;
         static public LookAndFeelType[] getFullNames(){
             return new LookAndFeelType[]{system, metal, nimbus, darcula, flat, dark};
         }
         static public LookAndFeelType[] getShortNames(){
-            return new LookAndFeelType[]{s, m, n, d, f, b};
+            return new LookAndFeelType[]{s, m, n, d, f};
         }
         public boolean hasTabHoverEffect(){
-            return Arr.contains(new LookAndFeelType[]{n, nimbus, f, flat, b, dark}, this);
+            return Arr.contains(new LookAndFeelType[]{n, nimbus, f, flat, d, dark}, this);
         }
     }
 
@@ -433,9 +441,9 @@ public abstract class MainFrame extends JFrame {
             case s: case system: return UIManager.getSystemLookAndFeelClassName();
             case m: case metal: return UIManager.getCrossPlatformLookAndFeelClassName();
             case n: case nimbus: return getNimbusLookAndFeel();
-            case d: case darcula: return MainFrame.getDarculaLookAndFeel();
             case f: case flat: return MainFrame.getFlatLookAndFeel();
-            case b: case dark: return MainFrame.getDarkLookAndFeel();
+            case d: case dark: return MainFrame.getDarkLookAndFeel();
+            case darcula: return MainFrame.getDarculaLookAndFeel();
         }
         return null;
     }
@@ -444,10 +452,14 @@ public abstract class MainFrame extends JFrame {
     public static boolean isDark() {
         if (dark==null){
             dark = SwingUtils.isDark();
-    }
+        }
         return dark;
     }
 
+    public static boolean isDarcula() {
+        return getLookAndFeelType()==LookAndFeelType.darcula;
+    }
+    
     public static boolean isNimbus() {
         return SwingUtils.isNimbus();
     }
@@ -462,7 +474,9 @@ public abstract class MainFrame extends JFrame {
         if (Arr.containsEqual(Convert.toStringArray(LookAndFeelType.values()), className)){
             className = getLookAndFeel(LookAndFeelType.valueOf(className));
         }
+        dark = null;
         SwingUtils.setLookAndFeel(className);
+        
     }
 
     //Window state persistence

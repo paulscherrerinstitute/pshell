@@ -226,6 +226,9 @@ public class StandardDialog extends JDialog {
     protected void onDesactive() {
     }
     
+    protected void onLafChange() {
+    }    
+    
     //Utils
     public void showMessage(String title, String message) {
         SwingUtils.showMessage(this, title, message);

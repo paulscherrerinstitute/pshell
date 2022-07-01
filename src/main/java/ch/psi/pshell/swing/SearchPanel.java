@@ -20,9 +20,7 @@ public class SearchPanel extends MonitoredPanel {
     public SearchPanel(String pathName, final String filter,
             String pattern, boolean caseInsensitive, boolean wholeWords, String[] ignores, boolean recursive) {
         initComponents();
-        if (MainFrame.isDark()) {
-            status.setEnabled(true);
-        }
+        onLafChange();
         model = (DefaultTableModel) table.getModel();
         table.getColumnModel().getColumn(0).setPreferredWidth(260);
         table.getColumnModel().getColumn(1).setPreferredWidth(40);
@@ -55,6 +53,13 @@ public class SearchPanel extends MonitoredPanel {
             }
         });
     }
+    
+    @Override
+    protected void onLafChange() {
+        status.setEnabled(MainFrame.isDark());
+    }           
+
+    
     IO.GrepListener grepListener = new IO.GrepListener() {
         @Override
         public void onMatch(File file, int i, String string) {

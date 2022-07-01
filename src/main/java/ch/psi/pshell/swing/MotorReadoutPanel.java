@@ -70,14 +70,15 @@ public final class MotorReadoutPanel extends DevicePanel {
         return editing;
     }
 
+    @Override
     protected void checkBackColor() {
         if ((isReadOnly()) || (!isEnabled())) {
-            txtMotorReadout.setBackground(TEXT_READONLY_BACKGROUND_COLOR);
+            txtMotorReadout.setBackground(getTextDisplayBackgroundColor());
         } else {
             if (isEditing()) {
-                txtMotorReadout.setBackground(TEXT_EDIT_BACKGROUND_COLOR);
+                txtMotorReadout.setBackground(getTextEditBackgroundColor());
             } else {
-                txtMotorReadout.setBackground(TEXT_DISPLAY_BACKGROUND_COLOR);
+                txtMotorReadout.setBackground(getTextReadonlyBackgroundColor());
             }
         }
     }

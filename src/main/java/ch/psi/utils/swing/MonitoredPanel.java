@@ -87,6 +87,9 @@ public class MonitoredPanel extends JPanel {
     protected void onParentChange() {
     }
     
+    protected void onLafChange() {
+    }
+    
     //Utils
     public void showMessage(String title, String message) {
         SwingUtils.showMessage(this, title, message);
@@ -151,4 +154,5 @@ public class MonitoredPanel extends JPanel {
     public Window getWindow() {
         return SwingUtils.getWindow(this);
     }
+    
 }

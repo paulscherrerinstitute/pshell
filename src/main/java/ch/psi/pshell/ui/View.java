@@ -136,6 +136,7 @@ import ch.psi.pshell.swing.MetadataEditor;
 import ch.psi.pshell.swing.MotorPanel;
 import ch.psi.pshell.swing.RepositoryChangesDialog;
 import ch.psi.pshell.swing.NextStagesPanel;
+import static ch.psi.pshell.ui.App.getResourceImage;
 import ch.psi.pshell.xscan.ProcessorXScan;
 import ch.psi.utils.Config;
 import ch.psi.utils.Sys;
@@ -164,6 +165,7 @@ import javax.swing.JComponent;
 import javax.swing.JOptionPane;
 import javax.swing.KeyStroke;
 import javax.swing.MenuSelectionManager;
+import javax.swing.UIManager;
 import javax.swing.WindowConstants;
 import javax.swing.filechooser.FileFilter;
 
@@ -197,12 +199,9 @@ public class View extends MainFrame {
         setTitle((title == null) ? App.getApplicationTitle() : title);
         setIcon(App.getResourceUrl("IconSmall.png"));
         if (MainFrame.isDark()) {
-            for (Component b : SwingUtils.getComponentsByType(toolBar, JButton.class)) {
-                //((JButton)b).setIcon(new ImageIcon(SwingUtils.invert(Toolkit.getDefaultToolkit().getImage(App.getResourceUrl(new File(((JButton)b).getIcon().toString()).getName())))));
-                //Using specific icons for dark. Could come up with icons that fit both.
-                ((JButton) b).setIcon(new ImageIcon(App.getResourceUrl("dark/" + new File(((JButton) b).getIcon().toString()).getName())));
-            }
-        }        
+            onLafChange();
+        }
+        
         tabLeft.setVisible(false);
         tabLeft.addContainerListener(new ContainerListener() {
             @Override
@@ -308,6 +307,28 @@ public class View extends MainFrame {
             }
         });        
         menuDataPanelLocation.add(item);
+        
+        for (LookAndFeelType laf : LookAndFeelType.getFullNames()) {
+            try{
+                if (LookAndFeelType.class.getField(laf.toString()).getAnnotation(Deprecated.class)!=null){
+                    continue;
+                }
+            } catch (Exception ex){                
+            }
+            JRadioButtonMenuItem lafItem = new JRadioButtonMenuItem(laf.toString());
+            lafItem.addActionListener((java.awt.event.ActionEvent evt) -> {
+                //if (!App.isLocalMode()) {
+                //    preferences.consoleLocation = location;
+                //    preferences.save();
+                //    applyPreferences();
+                //} else {
+                    setLookAndFeel(laf.toString());
+                //}
+            });
+            menuLaf.add(lafItem);
+        }
+                
+                
         context.getUsersManager().addListener(new UsersManagerListener() {
             @Override
             public void onUserChange(User user, User former) {
@@ -495,6 +516,20 @@ public class View extends MainFrame {
                 saveContext();
             }
         });
+    }
+    
+    @Override
+    protected void onLafChange() {        
+        for (Component b : SwingUtils.getComponentsByType(toolBar, JButton.class)) {
+            try{
+                if (MainFrame.isDark()) {
+                    ((JButton) b).setIcon(new ImageIcon(App.getResourceUrl("dark/" + new File(((JButton) b).getIcon().toString()).getName())));
+                } else {
+                    ((JButton) b).setIcon(new ImageIcon(App.getResourceUrl(new File(((JButton) b).getIcon().toString()).getName())));
+                }
+            } catch (Exception ex){                    
+            }
+        }        
     }
 
     void addProcessorComponents(Processor processor) {
@@ -1583,8 +1618,8 @@ public class View extends MainFrame {
     public void formatScriptEditor(ScriptEditor editor){
         editor.setTabSize(preferences.tabSize);
         editor.setTextPaneFont(preferences.fontEditor.toFont());
-        editor.setEditorForeground(preferences.getEditorForeground());
-        editor.setEditorBackground(preferences.getEditorBackground());
+        editor.setEditorForeground(preferences.getEditorForegroundColor());
+        editor.setEditorBackground(preferences.getEditorBackgroundColor());
         editor.setReadOnly(context.getRights().denyEdit);        
 
         //TODO: Why is not working if calling sync?
@@ -2080,6 +2115,33 @@ public class View extends MainFrame {
         }
     }
     
+
+    public static void setLookAndFeel(String laf){    
+        MainFrame.setLookAndFeel(laf);
+        if (isDark()) {
+            UIManager.put("FileView.directoryIcon", new ImageIcon(getResourceImage("FolderClosed.png")));
+            UIManager.put("FileChooser.homeFolderIcon", new ImageIcon(getResourceImage("Home.png")));
+            UIManager.put("FileView.computerIcon", new ImageIcon(getResourceImage("Computer.png")));
+            UIManager.put("FileView.floppyDriveIcon", new ImageIcon(getResourceImage("Floppy.png")));
+            UIManager.put("FileView.hardDriveIcon", new ImageIcon(getResourceImage("HardDrive.png")));
+            UIManager.put("FileChooser.upFolderIcon", new ImageIcon(getResourceImage("FolderUp.png")));
+            UIManager.put("FileChooser.newFolderIcon", new ImageIcon(getResourceImage("FolderNew.png")));
+            UIManager.put("FileView.fileIcon", new ImageIcon(getResourceImage("File.png")));
+            UIManager.put("FileChooser.listViewIcon", new ImageIcon(getResourceImage("List.png")));
+            UIManager.put("FileChooser.detailsViewIcon", new ImageIcon(getResourceImage("Details.png")));
+            UIManager.put("Tree.openIcon", new ImageIcon(getResourceImage("FolderOpen.png")));
+            UIManager.put("Tree.closedIcon", new ImageIcon(getResourceImage("FolderClosed.png")));
+            UIManager.put("Tree.leafIcon", new ImageIcon(getResourceImage("File.png")));
+        }            
+        try{
+            View view = App.getInstance().getMainFrame();
+            if (view.isVisible()){
+                App.getInstance().getMainFrame().applyPreferences();
+            }
+        } catch (Exception ex){            
+        }
+    }
+    
     
     void checkTabLeftVisibility() {
         boolean tabLeftVisible = tabLeft.getTabCount() > 0;
@@ -2199,14 +2261,14 @@ public class View extends MainFrame {
                 ScriptEditor editor = ((ScriptEditor) tabDoc.getComponentAt(i));
                 editor.setTextPaneFont(preferences.fontEditor.toFont());
                 editor.setContentWidth((preferences.contentWidth <= 0) ? DEFAULT_CONTENT_WIDTH : preferences.contentWidth);
-                editor.setEditorForeground(preferences.getEditorForeground());
-                editor.setEditorBackground(preferences.getEditorBackground());
+                editor.setEditorForeground(preferences.getEditorForegroundColor());
+                editor.setEditorBackground(preferences.getEditorBackgroundColor());
             }
         }
         showEmergencyStop(preferences.showEmergencyStop && !App.isOffline());
-        PlotBase.setPlotBackground(preferences.getPlotBackground());
-        PlotBase.setGridColor(preferences.getGridColor());
-        PlotBase.setOutlineColor(preferences.getOutlineColor());
+        PlotBase.setPlotBackground(preferences.getPlotBackgroundColor());
+        PlotBase.setGridColor(preferences.getPlotGridColor());
+        PlotBase.setOutlineColor(preferences.getPlotOutlineColor());
         PlotBase.setDefaultLabelFont(preferences.fontPlotLabel.toFont());
         PlotBase.setDefaultTickFont(preferences.fontPlotTick.toFont());
         PlotBase.setOffscreenBuffer(!preferences.disableOffscreenBuffer);
@@ -2668,6 +2730,7 @@ public class View extends MainFrame {
         menuPush = new javax.swing.JMenuItem();
         menuView = new javax.swing.JMenu();
         menuFullScreen = new javax.swing.JCheckBoxMenuItem();
+        menuLaf = new javax.swing.JMenu();
         jSeparator13 = new javax.swing.JPopupMenu.Separator();
         menuViewPanels = new javax.swing.JMenu();
         menuConsoleLocation = new javax.swing.JMenu();
@@ -2698,7 +2761,6 @@ public class View extends MainFrame {
         splitterHoriz.setResizeWeight(1.0);
         splitterHoriz.setName("splitterHoriz"); // NOI18N
 
-        splitterVert.setBorder(null);
         splitterVert.setDividerLocation(420);
         splitterVert.setOrientation(javax.swing.JSplitPane.VERTICAL_SPLIT);
         splitterVert.setResizeWeight(1.0);
@@ -2736,7 +2798,6 @@ public class View extends MainFrame {
 
         splitterVert.setBottomComponent(tabStatus);
 
-        splitterDoc.setBorder(null);
         splitterDoc.setDividerSize(0);
         splitterDoc.setName("splitterDoc"); // NOI18N
 
@@ -2791,7 +2852,6 @@ public class View extends MainFrame {
 
         statusBar.setName("statusBar"); // NOI18N
 
-        toolBar.setFloatable(false);
         toolBar.setName("toolBar"); // NOI18N
 
         buttonNew.setIcon(new javax.swing.ImageIcon(getClass().getResource("/ch/psi/pshell/ui/New.png"))); // NOI18N
@@ -3700,6 +3760,10 @@ public class View extends MainFrame {
         });
         menuView.add(menuFullScreen);
 
+        menuLaf.setText(bundle.getString("View.menuLaf.text_1")); // NOI18N
+        menuLaf.setName("menuLaf"); // NOI18N
+        menuView.add(menuLaf);
+
         jSeparator13.setName("jSeparator13"); // NOI18N
         menuView.add(jSeparator13);
 
@@ -4205,8 +4269,15 @@ public class View extends MainFrame {
                         ((JCheckBoxMenuItem) item).setSelected(preferences.openDataFilesInDocTab);
                     }
                 }
-                
+                for (Component item : menuLaf.getMenuComponents()) {
+                    try{
+                        ((JRadioButtonMenuItem) item).setSelected(((JRadioButtonMenuItem) item).getText().equals(getLookAndFeelType().toString()));
+                    } catch(Exception ex){
+                        
+                    }
+                }
             } catch (Exception ex) {
+                showException(ex);
             }
         }
     }//GEN-LAST:event_menuViewStateChanged
@@ -5439,6 +5510,7 @@ public class View extends MainFrame {
     private javax.swing.JMenuItem menuHelpContents;
     private javax.swing.JMenuItem menuImport;
     private javax.swing.JMenuItem menuIndent;
+    private javax.swing.JMenu menuLaf;
     private javax.swing.JMenuItem menuLogQuery;
     private javax.swing.JMenuItem menuNew;
     private javax.swing.JMenuItem menuOpen;

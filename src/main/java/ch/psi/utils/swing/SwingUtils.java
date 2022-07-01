@@ -405,13 +405,6 @@ public class SwingUtils {
             });
             return;
         }
-        for (Frame frame : Frame.getFrames()) {
-            try {
-                SwingUtilities.updateComponentTreeUI(frame);
-            } catch (Exception ex) {
-            }
-            frame.validate();
-        }
         for (Window window : JFrame.getWindows()) {
             try {
                 SwingUtilities.updateComponentTreeUI(window);
@@ -1449,16 +1442,21 @@ public class SwingUtils {
     public static String getFlatLookAndFeel() {
         return "com.formdev.flatlaf.FlatIntelliJLaf";
     }
-
     
     public static boolean isDark() {
+        return isDark(UIManager.getLookAndFeel().getClass());            
+    }    
+    
+    
+  
+    public static boolean isDark(Class laf) {
         return Arr.containsEqual(new String[]{
                     "com.bulenkov.darcula.DarculaLaf",
                     "com.formdev.flatlaf.FlatDarculaLaf",
                     "com.formdev.flatlaf.FlatDarkLaf",
                 },
-                UIManager.getLookAndFeel().getClass().getName() );            
-    }    
+                laf.getName() );            
+    }      
     
     public static boolean isNimbus() {
         return UIManager.getLookAndFeel().getClass().getName().equals(getNimbusLookAndFeel());
@@ -1469,12 +1467,50 @@ public class SwingUtils {
             return;
         }
         try {
-            if ((Sys.getOSFamily() == Sys.OSFamily.Linux) && (className.equals(getDarculaLookAndFeel()))) {
-                //TODO: workaround to https://github.com/bulenkov/Darcula/issues/29
-                //Not needed with netbeans darcula
-                UIManager.getFont("Label.font");
+            if (className.equals(getDarculaLookAndFeel())){
+               //Darcula LAF does not work on Java 14, it is deprecated
+                if (Sys.getJavaVersion()>=14){
+                    System.err.println("Darcula LAF is deprecated in Java>=14: use Dark instead");
+                }
+                if (Sys.getOSFamily() == Sys.OSFamily.Linux) {
+                    //TODO: workaround to https://github.com/bulenkov/Darcula/issues/29
+                    //Not needed with netbeans darcula
+                    UIManager.getFont("Label.font");
+                }
             }
-            UIManager.setLookAndFeel(className);            
+            UIManager.setLookAndFeel(className);   
+            
+            
+            for (Window window : JFrame.getWindows()) {
+                if (window instanceof MainFrame){
+                    try {
+                        ((MainFrame)window).onLafChange();
+                    } catch (Exception ex) {
+                    } 
+                }                  
+                if (window instanceof StandardDialog){
+                    try {
+                        ((StandardDialog)window).onLafChange();
+                    } catch (Exception ex) {
+                    } 
+                }                  
+                for (Component panel : SwingUtils.getComponentsByType(window, MonitoredPanel.class)){
+                    try {
+                        if (panel.isDisplayable()){
+                            ((MonitoredPanel)panel).onLafChange();
+                        }
+                    } catch (Exception ex) {
+                    } 
+                }
+                for (Component panel : SwingUtils.getComponentsByType(window, StandardDialog.class)){
+                    try {
+                        if (panel.isDisplayable()){
+                            ((StandardDialog)panel).onLafChange();
+                        }
+                    } catch (Exception ex) {
+                    } 
+                }  
+            }            
             SwingUtils.updateAllFrames();
         } catch (Exception ex) {
             Logger.getLogger(SwingUtils.class.getName()).log(Level.WARNING, null, ex);

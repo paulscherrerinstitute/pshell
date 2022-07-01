@@ -250,29 +250,30 @@ public class StripChart extends StandardDialog {
             @Override
             public void layoutContainer(Container parent) {
                 Insets insets = parent.getInsets();
+                boolean dlaf = MainFrame.isDarcula();
                 for (Component component : parent.getComponents()) {
                     if (component == buttonPause) {
                         Dimension ps = component.getPreferredSize();
                         int width = Math.min(ps.width, 30); //ps.width; //Math.max(ps.width, 60);
                         int height = Math.min(ps.height, 24);
-                        if (!MainFrame.isDark()) {
+                        if (!dlaf) {
                             try {
                                 height = Math.min(height, pnGraphs.getLocationOnScreen().y - tabPane.getLocationOnScreen().y - 5);
                             } catch (Exception ex) {
                             }
                         }
-                        component.setBounds(parent.getWidth() - insets.right - 2 - width, insets.top - (MainFrame.isDark() ? 2 : 0), width, height);
+                        component.setBounds(parent.getWidth() - insets.right - 2 - width, insets.top - (dlaf ? 2 : 0), width, height);
                     } else if (component == buttonSound) {
                         Dimension ps = component.getPreferredSize();
                         int width = Math.min(ps.width, 30); //ps.width; //Math.max(ps.width, 60);
                         int height = Math.min(ps.height, 24);
-                        if (!MainFrame.isDark()) {
+                        if (!dlaf) {
                             try {
                                 height = Math.min(height, pnGraphs.getLocationOnScreen().y - tabPane.getLocationOnScreen().y - 5);
                             } catch (Exception ex) {
                             }
                         }
-                        component.setBounds(parent.getWidth() - insets.right - 2 - 2 * width - 2, insets.top - (MainFrame.isDark() ? 2 : 0), width, height);
+                        component.setBounds(parent.getWidth() - insets.right - 2 - 2 * width - 2, insets.top - (dlaf ? 2 : 0), width, height);
                     } else {
                         component.setBounds(insets.left, insets.top, parent.getWidth() - insets.left - insets.right, parent.getHeight() - insets.top - insets.bottom);
                     }
@@ -318,7 +319,6 @@ public class StripChart extends StandardDialog {
         add(buttonPause, 0);
 
         buttonSound.setText("");
-        buttonSound.setIcon(new ImageIcon(App.getResourceUrl((MainFrame.isDark() ? "dark/" : "") + "Sound.png")));
         buttonSound.setFocusable(false);
         buttonSound.setHorizontalTextPosition(SwingConstants.CENTER);
         buttonSound.setVerticalTextPosition(SwingConstants.CENTER);
@@ -358,6 +358,7 @@ public class StripChart extends StandardDialog {
                 }
             });
         }
+        onLafChange();
     }
 
     //Access functions
@@ -376,8 +377,15 @@ public class StripChart extends StandardDialog {
     void setButtonPause(boolean paused) {
         buttonPause.setText("");
         buttonPause.setToolTipText(paused ? "Pause" : "Resume");
-        buttonPause.setIcon(new ImageIcon(App.getResourceUrl((MainFrame.isDark() ? "dark/" : "") + (paused ? "Pause.png" : "Play.png"))));
+        onLafChange();
     }
+    
+    @Override
+    protected void onLafChange() {
+        boolean paused = "Pause".equals(buttonPause.getToolTipText());
+        buttonPause.setIcon(new ImageIcon(App.getResourceUrl((MainFrame.isDark() ? "dark/" : "") + (paused ? "Pause.png" : "Play.png"))));
+        buttonSound.setIcon(new ImageIcon(App.getResourceUrl((MainFrame.isDark() ? "dark/" : "") + "Sound.png")));
+    }  
 
     void updateTooltip(JComponent text, int row) {
         String tooltip = "";
@@ -1626,7 +1634,7 @@ public class StripChart extends StandardDialog {
 
     @Override
     protected void onOpened() {
-        if (MainFrame.isDark()) {
+        if (MainFrame.isDarcula()) {
             //TODO: Repeating the model initialization as a workaround for the exception when spinner getting focus on Darcula LAF.
             spinnerDragInterval.setModel(new javax.swing.SpinnerNumberModel(1000, -1, 99999, 1));
             spinnerUpdate.setModel(new javax.swing.SpinnerNumberModel(0, 0, 60000, 1000));

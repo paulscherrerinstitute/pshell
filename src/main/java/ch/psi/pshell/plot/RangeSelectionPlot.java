@@ -349,10 +349,10 @@ public class RangeSelectionPlot extends LinePlotJFree {
         minimumLength = value;
     }
 
-    Color selectionColor = MainFrame.isDark() ? new Color(65, 81, 109) : new Color(240, 240, 240);
+    Color selectionColor;
 
     public Color getSelectionColor() {
-        return selectionColor;
+        return (selectionColor==null) ? MainFrame.isDark() ? new Color(65, 81, 109) : new Color(240, 240, 240) : selectionColor;
     }
 
     public void setSelectionColor(Color value) {

@@ -1,5 +1,6 @@
 package ch.psi.pshell.xscan.ui;
 
+import ch.psi.pshell.swing.CodeEditor;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.event.ActionEvent;
@@ -141,7 +142,7 @@ public class PanelSupport {
      * @param field
      */
     private void addTextFieldNameSupport(final Component field, final String label) {
-        final Color baseColor = ch.psi.utils.swing.TextEditor.FOREGROUND_COLOR;
+        final Color baseColor = CodeEditor.getForegroundColor();
         final Color colorGray = new Color(160, 160, 160);
 
         if (field instanceof JTextField) {

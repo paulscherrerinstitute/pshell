@@ -65,9 +65,18 @@ public class Terminal extends MonitoredPanel implements AutoCloseable{
        
         widget.setTtyConnector(connector);        
         widget.start();        
+        
         this.setLayout(new BorderLayout());
         add(widget);
     }
+    
+
+    @Override
+    protected void onLafChange() {
+      if (isVisible()){
+          //TODO: Cannot change TerminalPanel TextStyle dynamically: need do destroy/create terminal
+      }
+    }      
 
 
     

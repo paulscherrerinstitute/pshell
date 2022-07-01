@@ -43,7 +43,7 @@ public class HelpContentsDialog extends StandardDialog {
     public HelpContentsDialog(java.awt.Frame parent, boolean modal) {
         super(parent, modal);
         initComponents();
-        if (MainFrame.isDark()) {
+        if (MainFrame.isDarcula()) {
             tree.setBorder(BorderFactory.createEmptyBorder(0, 5, 0, 0));
         }
 
@@ -197,7 +197,7 @@ public class HelpContentsDialog extends StandardDialog {
 
         });
     }
-
+    
     public void clear() {
         tree.clearSelection();
         setText("", "");

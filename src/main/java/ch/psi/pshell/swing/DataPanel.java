@@ -19,6 +19,7 @@ import ch.psi.utils.Convert;
 import ch.psi.utils.IO;
 import ch.psi.utils.Str;
 import ch.psi.utils.swing.MainFrame;
+import ch.psi.utils.swing.MainFrame.LookAndFeelType;
 import ch.psi.utils.swing.MonitoredPanel;
 import ch.psi.utils.swing.SwingUtils;
 import ch.psi.utils.swing.TextEditor;
@@ -115,7 +116,7 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
     public DataPanel() {
         initComponents();
         setPlottingScripts(null);
-        if (MainFrame.isDark()) {
+        if (MainFrame.isDarcula()) {
             treeFolder.setBorder(BorderFactory.createEmptyBorder(0, 5, 0, 0));
             treeFile.setBorder(BorderFactory.createEmptyBorder(0, 5, 0, 0));
         }
@@ -557,8 +558,7 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
 
         ((DefaultTreeCellRenderer) treeFile.getCellRenderer()).setLeafIcon(new ImageIcon(App.getResourceImage("Data.png")));
     }
-    
-    
+        
     boolean embedded = true;
     
     public boolean getEmbedded(){

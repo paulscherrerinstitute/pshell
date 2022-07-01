@@ -41,13 +41,21 @@ import org.fife.ui.rsyntaxtextarea.RSyntaxTextAreaEditorKit;
  */
 public class ScriptEditor extends MonitoredPanel implements Executor {
 
-    static final Color STATEMENT_HIGHLIGHT = MainFrame.isDark() ? new Color(84, 84, 84) : new Color(200, 200, 200);
-    static final Color STATEMENT_HIGHLIGHT_MAC = new Color(208, 208, 208);
+    Color satementHighlight;
+    Color satementHighlightMac;
+    
+    @Override
+    protected final void onLafChange() {  
+        satementHighlight = MainFrame.isDark() ? new Color(84, 84, 84) : new Color(200, 200, 200);
+        satementHighlightMac = new Color(208, 208, 208);             
+    }    
+    
     boolean isScript = true;
     final boolean syntaxHighlight;
 
     public ScriptEditor(boolean syntaxHighlight, boolean showLineNumbers, boolean showContextMenu) {
         initComponents();
+        onLafChange();
         this.syntaxHighlight = syntaxHighlight;
         if (syntaxHighlight) {
             CodeEditor codeEditor = new CodeEditor();
@@ -138,7 +146,7 @@ public class ScriptEditor extends MonitoredPanel implements Executor {
             if (getTextEditor().isManualHighligting()) {
                 getTextEditor().removeAllHighlights();
                 Color highlight = (UIManager.getLookAndFeel().getName().equalsIgnoreCase("Mac OS X")) ?
-                        STATEMENT_HIGHLIGHT_MAC : STATEMENT_HIGHLIGHT;
+                        satementHighlightMac : satementHighlight;
                 getTextEditor().highlightLines(statement.lineNumber, statement.finalLineNumber, highlight);
                 setPosition(statement.lineNumber, 1);
             }

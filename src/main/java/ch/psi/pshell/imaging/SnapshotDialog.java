@@ -31,13 +31,16 @@ public class SnapshotDialog extends StandardDialog {
         this.renderer = renderer;
         setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
         SwingUtils.centerComponent(renderer, this);
-        if (MainFrame.isDark()) {
-            textFolder.setEnabled(true);
-        }
+        onLafChange();
     }
     volatile int index = 0;
     volatile Exception backgroungException;
 
+    @Override
+    protected void onLafChange() {
+         textFolder.setEnabled(MainFrame.isDark());
+    }    
+    
     @Override
     protected void onClosed() {
         abort();

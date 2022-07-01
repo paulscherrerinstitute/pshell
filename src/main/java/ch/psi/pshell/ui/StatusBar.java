@@ -61,21 +61,7 @@ public class StatusBar extends MonitoredPanel implements PropertyChangeListener 
         progressBar.setVisible(false);
         int animationRate = 30;
 
-        String name = "busyicons/idle.png";
-        Image image = Toolkit.getDefaultToolkit().getImage(App.getResourceUrl(name));
-        if (MainFrame.isDark()) {
-            image = SwingUtils.invert(image);
-        }
-        iconIdle = new ImageIcon(image);
-
-        for (int i = 0; i < iconsBusy.length; i++) {
-            name = "busyicons/" + String.format("%02d", i) + ".png";
-            image = Toolkit.getDefaultToolkit().getImage(App.getResourceUrl(name));
-            if (MainFrame.isDark()) {
-                image = SwingUtils.invert(image);
-            }
-            iconsBusy[i] = new ImageIcon(image);
-        }
+        onLafChange();
 
         timerStateIcon = new Timer(animationRate, (ActionEvent e) -> {
             busyIconIndex = (busyIconIndex + 1) % iconsBusy.length;
@@ -212,6 +198,29 @@ public class StatusBar extends MonitoredPanel implements PropertyChangeListener 
             addMouseListener(mouseAdapter);
         }
     }
+    
+    @Override
+    protected void onLafChange(){
+        String name = "busyicons/idle.png";
+        Image image = Toolkit.getDefaultToolkit().getImage(App.getResourceUrl(name));
+        if (MainFrame.isDark()) {
+            image = SwingUtils.invert(image);
+        }
+        iconIdle = new ImageIcon(image);
+
+        for (int i = 0; i < iconsBusy.length; i++) {
+            name = "busyicons/" + String.format("%02d", i) + ".png";
+            image = Toolkit.getDefaultToolkit().getImage(App.getResourceUrl(name));
+            if (MainFrame.isDark()) {
+                image = SwingUtils.invert(image);
+            }
+            iconsBusy[i] = new ImageIcon(image);
+        }  
+        App app = App.getInstance();
+        if (app!=null){
+            setApplicationStateIcon(app.getState());
+        }
+    }
 
     public JLabel getStatusLabel() {
         return statusMessage;
@@ -276,6 +285,8 @@ public class StatusBar extends MonitoredPanel implements PropertyChangeListener 
                     busyIconIndex = 0;
                     timerStateIcon.start();
                 }
+                break;
+            case Invalid:
                 break;
             default:
                 if (timerStateIcon.isRunning()) {

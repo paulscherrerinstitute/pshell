@@ -58,8 +58,8 @@ public class DevicePoolParametersEditor extends StandardDialog {
         textConstructors.setModel(model);
         textConstructors.setSelectionBackground(new JTable().getSelectionBackground());
         textConstructors.setSelectionForeground(new JTable().getSelectionForeground());
-        textConstructors.setBackground(CodeEditor.TEXT_DISABLED_BACKGROUND_COLOR);
-        textClass.setBackground(CodeEditor.TEXT_DISABLED_BACKGROUND_COLOR);
+        textConstructors.setBackground(CodeEditor.getDisabledBackgroundColor());
+        textClass.setBackground(CodeEditor.getDisabledBackgroundColor());
         SwingUtils.centerComponent(parent, this);
         update();
     }

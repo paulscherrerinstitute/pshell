@@ -663,37 +663,43 @@ abstract public class PlotBase<T extends PlotSeries> extends MonitoredPanel impl
         return plotBackground;
     }
 
-    static final Color DEFAULT_GRID_COLOR = MainFrame.isDark() ? new Color(187, 187, 187) : Color.LIGHT_GRAY;
-    static Color gridColor = DEFAULT_GRID_COLOR;
+    static final public Color DEFAULT_GRID_COLOR = Color.LIGHT_GRAY;
+    static final public Color DEFAULT_OUTLINE_COLOR = Color.GRAY;
+    static final public Color DEFAULT_AXIS_TEXT_COLOR = Color.DARK_GRAY;
+    static final public Color DEFAULT_GRID_COLOR_DARK = new Color(187, 187, 187); 
+    static final public Color DEFAULT_OUTLINE_COLOR_DARK = Color.GRAY;
+    static final public Color DEFAULT_AXIS_TEXT_COLOR_DARK = new Color(187, 187, 187);
+    
+    
+    static Color gridColor;
 
     public static void setGridColor(Color color) {
-        gridColor = (color == null) ? DEFAULT_GRID_COLOR : color;
+        gridColor = color;
     }
 
     public static Color getGridColor() {
 
-        return gridColor;
+        return (gridColor==null)? (MainFrame.isDark() ? DEFAULT_GRID_COLOR_DARK : DEFAULT_GRID_COLOR) : gridColor;
     }
-
-    static final Color DEFAULT_OUTLINE_COLOR = Color.GRAY;
-    static Color outlineColor = DEFAULT_OUTLINE_COLOR;
+    
+    static Color outlineColor;
 
     public static void setOutlineColor(Color color) {
-        outlineColor = (color == null) ? DEFAULT_OUTLINE_COLOR : color;
+        outlineColor =  color;
     }
 
     public static Color getOutlineColor() {
-        return outlineColor;
+        return (outlineColor==null)? (MainFrame.isDark() ? DEFAULT_OUTLINE_COLOR_DARK : DEFAULT_OUTLINE_COLOR) : outlineColor;
     }
-
-    static Color axisTextColor = MainFrame.isDark() ? new Color(187, 187, 187) : Color.DARK_GRAY;
-
+    
+    
+    static Color axisColor;
     public static void setAxisTextColor(Color color) {
-        axisTextColor = color;
+        axisColor = color;
     }
 
     public static Color getAxisTextColor() {
-        return axisTextColor;
+        return (axisColor==null)? (MainFrame.isDark() ? DEFAULT_AXIS_TEXT_COLOR_DARK : DEFAULT_AXIS_TEXT_COLOR) : axisColor;
     }
 
     static Colormap defaultColormap = Colormap.Temperature;
