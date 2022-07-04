@@ -94,6 +94,10 @@ public class Preferences {
         public static FontSpec fromFont(Font font){
             return new FontSpec(font.getName(), font.getStyle(), font.getSize());
         }
+        @Override
+        public String toString(){
+            return "Font - name:" + name + " style:" + style + " size:" + size;
+        }
     }   
     
 
@@ -230,6 +234,9 @@ public class Preferences {
             preferences.timePlot = ch.psi.pshell.plot.TimePlotJFree.class.getName();
             preferences.plotLayout = PlotLayout.Vertical;
             preferences.quality = Quality.High;
+        }
+        if (preferences.fontTerminal==null){
+            preferences.fontTerminal=getDefaultFonts()[7];
         }
         preferences.file = file;
         

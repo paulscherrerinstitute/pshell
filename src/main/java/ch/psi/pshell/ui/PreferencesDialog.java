@@ -239,7 +239,8 @@ public class PreferencesDialog extends StandardDialog {
     
     private void updateListProcFiles() {        
         buttonRemoveProcScript.setEnabled(modelProcessingScripts.getRowCount() > 0);
-    }    
+    }  
+    
 
     /**
      * This method is called from within the constructor to initialize the form. WARNING: Do NOT

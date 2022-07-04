@@ -2741,9 +2741,10 @@ public class View extends MainFrame {
         menuPlotWindow = new javax.swing.JMenu();
         menuViewPlotWindow = new javax.swing.JCheckBoxMenuItem();
         menuPlotWindowDetached = new javax.swing.JCheckBoxMenuItem();
-        menuTerminal = new javax.swing.JCheckBoxMenuItem();
-        menuScanPanel = new javax.swing.JCheckBoxMenuItem();
+        menuViewPanels1 = new javax.swing.JMenu();
         menuOutput = new javax.swing.JCheckBoxMenuItem();
+        menuScanPanel = new javax.swing.JCheckBoxMenuItem();
+        menuTerminal = new javax.swing.JCheckBoxMenuItem();
         jSeparator8 = new javax.swing.JPopupMenu.Separator();
         menuCloseAllPlots = new javax.swing.JMenuItem();
         menuCloseAll = new javax.swing.JMenuItem();
@@ -3811,23 +3812,13 @@ public class View extends MainFrame {
 
         menuView.add(menuPlotWindow);
 
-        menuTerminal.setText(bundle.getString("View.menuTerminal.text")); // NOI18N
-        menuTerminal.setName("menuTerminal"); // NOI18N
-        menuTerminal.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                menuTerminalActionPerformed(evt);
+        menuViewPanels1.setText(bundle.getString("View.menuViewPanels1.text")); // NOI18N
+        menuViewPanels1.setName("menuViewPanels1"); // NOI18N
+        menuViewPanels1.addChangeListener(new javax.swing.event.ChangeListener() {
+            public void stateChanged(javax.swing.event.ChangeEvent evt) {
+                menuViewPanels1StateChanged(evt);
             }
         });
-        menuView.add(menuTerminal);
-
-        menuScanPanel.setText(bundle.getString("View.menuScanPanel.text")); // NOI18N
-        menuScanPanel.setName("menuScanPanel"); // NOI18N
-        menuScanPanel.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                menuScanPanelActionPerformed(evt);
-            }
-        });
-        menuView.add(menuScanPanel);
 
         menuOutput.setText(bundle.getString("View.menuOutput.text")); // NOI18N
         menuOutput.setName("menuOutput"); // NOI18N
@@ -3836,7 +3827,27 @@ public class View extends MainFrame {
                 menuOutputActionPerformed(evt);
             }
         });
-        menuView.add(menuOutput);
+        menuViewPanels1.add(menuOutput);
+
+        menuScanPanel.setText(bundle.getString("View.menuScanPanel.text")); // NOI18N
+        menuScanPanel.setName("menuScanPanel"); // NOI18N
+        menuScanPanel.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                menuScanPanelActionPerformed(evt);
+            }
+        });
+        menuViewPanels1.add(menuScanPanel);
+
+        menuView.add(menuViewPanels1);
+
+        menuTerminal.setText(bundle.getString("View.menuTerminal.text")); // NOI18N
+        menuTerminal.setName("menuTerminal"); // NOI18N
+        menuTerminal.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                menuTerminalActionPerformed(evt);
+            }
+        });
+        menuView.add(menuTerminal);
 
         jSeparator8.setName("jSeparator8"); // NOI18N
         menuView.add(jSeparator8);
@@ -5432,6 +5443,10 @@ public class View extends MainFrame {
         }
     }//GEN-LAST:event_menuOutputActionPerformed
 
+    private void menuViewPanels1StateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_menuViewPanels1StateChanged
+        // TODO add your handling code here:
+    }//GEN-LAST:event_menuViewPanels1StateChanged
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton buttonAbort;
     private javax.swing.JButton buttonAbout;
@@ -5564,6 +5579,7 @@ public class View extends MainFrame {
     private javax.swing.JMenu menuVersioning;
     private javax.swing.JMenu menuView;
     private javax.swing.JMenu menuViewPanels;
+    private javax.swing.JMenu menuViewPanels1;
     private javax.swing.JCheckBoxMenuItem menuViewPlotWindow;
     private ch.psi.pshell.swing.OutputPanel outputPanel;
     private ch.psi.pshell.swing.ScanPanel scanPanel;
