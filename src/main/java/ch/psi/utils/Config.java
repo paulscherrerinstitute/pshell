@@ -47,6 +47,7 @@ public class Config extends ObservableBase<Config.ConfigListener> {
     final FilePermissions permissions;
     String fileName;
     boolean fileSync;
+    boolean persistNulls = true;
 
     public Config(){
         this(defaultPermissions);
@@ -70,6 +71,14 @@ public class Config extends ObservableBase<Config.ConfigListener> {
         return properties;
     }
     
+    public boolean getPersistNulls(){
+        return persistNulls;
+    }
+    
+    public void setPersistNulls(boolean value){
+        persistNulls = value;
+    }    
+    
     @Transient
     public Properties getProperties() {
         List<String> fieldNames = getFieldNames();
@@ -85,6 +94,11 @@ public class Config extends ObservableBase<Config.ConfigListener> {
         }
         return properties;
     }
+    
+
+    protected void setFileName(String fileName) {
+        this.fileName = fileName;
+    }    
 
     public String getFileName() {
         return fileName;
@@ -131,7 +145,11 @@ public class Config extends ObservableBase<Config.ConfigListener> {
 
                 String valStr = convertFieldToString(val);
                 if (!valStr.equals(properties.get(name))) {
-                    properties.put(name, valStr);
+                    if ((val!=null) || (persistNulls)){
+                        properties.put(name, valStr);
+                    } else {
+                        properties.remove(name);
+                    }
                     changed = true;
                 }
             } catch (Exception ex) {

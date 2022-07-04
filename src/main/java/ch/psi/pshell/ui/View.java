@@ -317,13 +317,16 @@ public class View extends MainFrame {
             }
             JRadioButtonMenuItem lafItem = new JRadioButtonMenuItem(laf.toString());
             lafItem.addActionListener((java.awt.event.ActionEvent evt) -> {
-                //if (!App.isLocalMode()) {
-                //    preferences.consoleLocation = location;
-                //    preferences.save();
-                //    applyPreferences();
-                //} else {
-                    setLookAndFeel(laf.toString());
-                //}
+                if (!App.isLocalMode()) {
+                   App.userOptions.laf = laf.toString();
+                    try {
+                        App.userOptions.save();
+                    } catch (IOException ex) {
+                        showException(ex);
+                    }
+                } 
+                setLookAndFeel(laf.toString());
+               
             });
             menuLaf.add(lafItem);
         }

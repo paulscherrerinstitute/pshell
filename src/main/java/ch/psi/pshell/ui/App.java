@@ -85,6 +85,7 @@ public class App extends ObservableBase<AppListener> {
     private static final Logger logger = Logger.getLogger(App.class.getName());
     private static String[] arguments;
     private SwingPropertyChangeSupport pcs;
+    static UserOptions userOptions;
 
     static public void main(String[] args) {
         try {
@@ -133,126 +134,119 @@ public class App extends ObservableBase<AppListener> {
             return;
         }        
 
+        userOptions = new UserOptions();
+        
         appendLibraryPath();
         appendClassPath();
         applyLookAndFeel();
 
-        PshellProperties pshellProperties = new PshellProperties();
-        File propertiesFile = new File("pshell.properties");
-        if (propertiesFile.exists()) {
-            try {
-                pshellProperties.load(propertiesFile.getPath());
-            } catch (Exception ex) {
-                throw new RuntimeException(ex);
-            }
-        }
 
         if (isArgumentDefined("setp")) {
             System.setProperty(Context.PROPERTY_SETUP_FILE, getArgumentValue("setp"));
-        } else if (Config.isStringDefined(pshellProperties.setp)) {
-            System.setProperty(Context.PROPERTY_SETUP_FILE, pshellProperties.setp);
+        } else if (Config.isStringDefined(userOptions.setp)) {
+            System.setProperty(Context.PROPERTY_SETUP_FILE, userOptions.setp);
         }
 
         if (isArgumentDefined("home")) {
             System.setProperty(Setup.PROPERTY_HOME_PATH, getArgumentValue("home"));
-        } else if (Config.isStringDefined(pshellProperties.home)) {
-            System.setProperty(Setup.PROPERTY_HOME_PATH, pshellProperties.home);
+        } else if (Config.isStringDefined(userOptions.home)) {
+            System.setProperty(Setup.PROPERTY_HOME_PATH, userOptions.home);
         }
 
         if (isArgumentDefined("conf")) {
             System.setProperty(Setup.PROPERTY_CONFIG_FILE, getArgumentValue("conf"));
-        } else if (Config.isStringDefined(pshellProperties.conf)) {
-            System.setProperty(Setup.PROPERTY_CONFIG_FILE, pshellProperties.conf);
+        } else if (Config.isStringDefined(userOptions.conf)) {
+            System.setProperty(Setup.PROPERTY_CONFIG_FILE, userOptions.conf);
         }
 
         if (isArgumentDefined("plug")) {
             System.setProperty(Setup.PROPERTY_PLUGINS_FILE, getArgumentValue("plug"));
-        } else if (Config.isStringDefined(pshellProperties.plug)) {
-            System.setProperty(Setup.PROPERTY_PLUGINS_FILE, pshellProperties.plug);
+        } else if (Config.isStringDefined(userOptions.plug)) {
+            System.setProperty(Setup.PROPERTY_PLUGINS_FILE, userOptions.plug);
         }
 
         if (isArgumentDefined("task")) {
             System.setProperty(Setup.PROPERTY_TASKS_FILE, getArgumentValue("task"));
-        } else if (Config.isStringDefined(pshellProperties.task)) {
-            System.setProperty(Setup.PROPERTY_TASKS_FILE, pshellProperties.task);
+        } else if (Config.isStringDefined(userOptions.task)) {
+            System.setProperty(Setup.PROPERTY_TASKS_FILE, userOptions.task);
         }
 
         if (isArgumentDefined("sets")) {
             System.setProperty(Setup.PROPERTY_SETTINGS_FILE, getArgumentValue("sets"));
-        } else if (Config.isStringDefined(pshellProperties.sets)) {
-            System.setProperty(Setup.PROPERTY_SETTINGS_FILE, pshellProperties.sets);
+        } else if (Config.isStringDefined(userOptions.sets)) {
+            System.setProperty(Setup.PROPERTY_SETTINGS_FILE, userOptions.sets);
         }
 
         if (isArgumentDefined("pini")) {
             System.setProperty(Setup.PROPERTY_PARALLEL_INIT, getArgumentValue("pini"));
-        } else if (Config.isStringDefined(pshellProperties.pini)) {
-            System.setProperty(Setup.PROPERTY_PARALLEL_INIT, pshellProperties.pini);
+        } else if (Config.isStringDefined(userOptions.pini)) {
+            System.setProperty(Setup.PROPERTY_PARALLEL_INIT, userOptions.pini);
         }
 
         if (isArgumentDefined("outp")) {
             System.setProperty(Setup.PROPERTY_OUTPUT_PATH, getArgumentValue("outp"));
-        } else if (Config.isStringDefined(pshellProperties.outp)) {
-            System.setProperty(Setup.PROPERTY_OUTPUT_PATH, pshellProperties.outp);
+        } else if (Config.isStringDefined(userOptions.outp)) {
+            System.setProperty(Setup.PROPERTY_OUTPUT_PATH, userOptions.outp);
         }
 
         if (isArgumentDefined("data")) {
             System.setProperty(Setup.PROPERTY_DATA_PATH, getArgumentValue("data"));
-        } else if (Config.isStringDefined(pshellProperties.data)) {
-            System.setProperty(Setup.PROPERTY_DATA_PATH, pshellProperties.data);
+        } else if (Config.isStringDefined(userOptions.data)) {
+            System.setProperty(Setup.PROPERTY_DATA_PATH, userOptions.data);
         }
 
         if (isArgumentDefined("scpt")) {
             System.setProperty(Setup.PROPERTY_SCRIPT_PATH, getArgumentValue("scpt"));
-        } else if (Config.isStringDefined(pshellProperties.scpt)) {
-            System.setProperty(Setup.PROPERTY_SCRIPT_PATH, pshellProperties.scpt);
+        } else if (Config.isStringDefined(userOptions.scpt)) {
+            System.setProperty(Setup.PROPERTY_SCRIPT_PATH, userOptions.scpt);
         }
 
         if (isArgumentDefined("pool")) {
             System.setProperty(Setup.PROPERTY_DEVICES_FILE, getArgumentValue("pool"));
-        } else if (pshellProperties.pool != null) {
-            System.setProperty(Setup.PROPERTY_DEVICES_FILE, pshellProperties.pool.toString());
+        } else if (userOptions.pool != null) {
+            System.setProperty(Setup.PROPERTY_DEVICES_FILE, userOptions.pool.toString());
         }
         
         if (isArgumentDefined("devp")) {
             System.setProperty(Setup.PROPERTY_DEVICES_PATH, getArgumentValue("devp"));
-        } else if (pshellProperties.devp != null) {
-            System.setProperty(Setup.PROPERTY_DEVICES_PATH, pshellProperties.devp.toString());
+        } else if (userOptions.devp != null) {
+            System.setProperty(Setup.PROPERTY_DEVICES_PATH, userOptions.devp.toString());
         }
         
         if (isArgumentDefined("plgp")) {
             System.setProperty(Setup.PROPERTY_PLUGINS_PATH, getArgumentValue("plgp"));
-        } else if (pshellProperties.plgp != null) {
-            System.setProperty(Setup.PROPERTY_PLUGINS_PATH, pshellProperties.plgp.toString());
+        } else if (userOptions.plgp != null) {
+            System.setProperty(Setup.PROPERTY_PLUGINS_PATH, userOptions.plgp.toString());
         } 
         
         if (isArgumentDefined("extp")) {
             System.setProperty(Setup.PROPERTY_EXTENSIONS_PATH, getArgumentValue("extp"));
-        } else if (pshellProperties.extp != null) {
-            System.setProperty(Setup.PROPERTY_EXTENSIONS_PATH, pshellProperties.extp.toString());
+        } else if (userOptions.extp != null) {
+            System.setProperty(Setup.PROPERTY_EXTENSIONS_PATH, userOptions.extp.toString());
         }    
         
         if (isArgumentDefined("ctxp")) {
             System.setProperty(Setup.PROPERTY_CONTEXT_PATH, getArgumentValue("ctxp"));
-        } else if (pshellProperties.ctxp != null) {
-            System.setProperty(Setup.PROPERTY_CONTEXT_PATH, pshellProperties.ctxp.toString());
+        } else if (userOptions.ctxp != null) {
+            System.setProperty(Setup.PROPERTY_CONTEXT_PATH, userOptions.ctxp.toString());
         } 
         
         if (isArgumentDefined("sesp")) {
             System.setProperty(Setup.PROPERTY_SESSIONS_PATH, getArgumentValue("sesp"));
-        } else if (pshellProperties.sesp != null) {
-            System.setProperty(Setup.PROPERTY_SESSIONS_PATH, pshellProperties.sesp.toString());
+        } else if (userOptions.sesp != null) {
+            System.setProperty(Setup.PROPERTY_SESSIONS_PATH, userOptions.sesp.toString());
         }   
         
         if (isArgumentDefined("logp")) {
             System.setProperty(Setup.PROPERTY_LOGS_PATH, getArgumentValue("logp"));
-        } else if (pshellProperties.logp != null) {
-            System.setProperty(Setup.PROPERTY_LOGS_PATH, pshellProperties.logp.toString());
+        } else if (userOptions.logp != null) {
+            System.setProperty(Setup.PROPERTY_LOGS_PATH, userOptions.logp.toString());
         }  
         
         if (isArgumentDefined("imgp")) {
             System.setProperty(Setup.PROPERTY_IMAGE_PATH, getArgumentValue("imgp"));
-        } else if (pshellProperties.imgp != null) {
-            System.setProperty(Setup.PROPERTY_IMAGE_PATH, pshellProperties.imgp.toString());
+        } else if (userOptions.imgp != null) {
+            System.setProperty(Setup.PROPERTY_IMAGE_PATH, userOptions.imgp.toString());
         }             
         
         if (isArgumentDefined("type")) {
@@ -277,13 +271,13 @@ public class App extends ObservableBase<AppListener> {
 
         if (isArgumentDefined("user")) {
             System.setProperty(Context.PROPERTY_USER, getArgumentValue("user"));
-        } else if (Config.isStringDefined(pshellProperties.user)) {
-            System.setProperty(Context.PROPERTY_USER, pshellProperties.user);
+        } else if (Config.isStringDefined(userOptions.user)) {
+            System.setProperty(Context.PROPERTY_USER, userOptions.user);
         }
         if (isArgumentDefined("clog")) {
             System.setProperty(Configuration.PROPERTY_CONSOLE_LOG, getArgumentValue("clog"));
-        } else if (pshellProperties.consoleLog != null) {
-            System.setProperty(Configuration.PROPERTY_CONSOLE_LOG, pshellProperties.consoleLog.toString());
+        } else if (userOptions.clog != null) {
+            System.setProperty(Configuration.PROPERTY_CONSOLE_LOG, userOptions.clog.toString());
         }
 
         //Only used if View is not instantiated
@@ -886,30 +880,6 @@ public class App extends ObservableBase<AppListener> {
         return getResourceImage("IconLarge.png");
     }
 
-    //Possibility to fix defaults for home folder & other command line options in properties file, if not in arguments        
-    static public class PshellProperties extends Config {
-
-        public String home;
-        public String outp;
-        public String scpt;
-        public String data;
-        public String user;
-        public String setp;
-        public String conf;
-        public String plug;
-        public String task;
-        public String pool;
-        public String devp;
-        public String plgp;
-        public String sesp;
-        public String ctxp;
-        public String extp;
-        public String imgp;
-        public String logp;
-        public String sets;
-        public String pini;
-        public LogLevel consoleLog;
-    }
 
     Object stripChartServer;
 
@@ -1907,18 +1877,21 @@ public class App extends ObservableBase<AppListener> {
     static String getLookAndFeel() {
         String laf = getArgumentValue("laf");
         if (laf == null) {
-                LookAndFeelType type;
-                //Deprecated arguments
-                if (hasArgument("mlaf")) {
-                    type = LookAndFeelType.metal;
-                } else if (hasArgument("slaf")) {
-                    type = LookAndFeelType.system;
-                } else if (hasArgument("nlaf")) {
-                    type = LookAndFeelType.nimbus;
-                } else if (hasArgument("blaf")) {
-                    type = LookAndFeelType.dark;
+            LookAndFeelType type;
+            //Deprecated arguments
+            if (hasArgument("mlaf")) {
+                type = LookAndFeelType.metal;
+            } else if (hasArgument("slaf")) {
+                type = LookAndFeelType.system;
+            } else if (hasArgument("nlaf")) {
+                type = LookAndFeelType.nimbus;
+            } else if (hasArgument("blaf")) {
+                type = LookAndFeelType.dark;
             } else if (hasArgument("dlaf")) {
                 type = LookAndFeelType.darcula;
+            } else {
+                if (Config.isStringDefined(userOptions.laf)) {
+                    laf = userOptions.laf;
                 } else {
                     // Default is system laf (or Metal, if no system installed).
                     // However prefer Nimbus on Windows & Linux
@@ -1926,9 +1899,10 @@ public class App extends ObservableBase<AppListener> {
                     if (Sys.getOSFamily() == OSFamily.Mac) {
                         type = LookAndFeelType.system;
                     }
+                    laf = MainFrame.getLookAndFeel(type);
                 }
-                laf = MainFrame.getLookAndFeel(type);
             }
+        }
         return laf;
     }
 
