@@ -9,7 +9,7 @@ import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-//Set user defaults for home folder & other command line options in properties file, if not specifiedin arguments
+//Set user defaults for home folder & other command line options in properties file, if not specified in arguments
 public class UserOptions extends Config {
     private static final String FILENAME = Setup.expand("~/.pshell.properties");
     
@@ -22,7 +22,7 @@ public class UserOptions extends Config {
             try {
                 load(FILENAME);
             } catch (IOException ex) {
-                ex.printStackTrace(System.err);
+                ex.printStackTrace();
                 Logger.getLogger(UserOptions.class.getName()).log(Level.SEVERE, null, ex);
             }
         }   
