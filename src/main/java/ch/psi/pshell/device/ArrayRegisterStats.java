@@ -1,6 +1,8 @@
 package ch.psi.pshell.device;
 
 import ch.psi.pshell.device.Readable.DoubleType;
+import ch.psi.pshell.device.ReadableRegister.ReadableRegisterArray;
+import ch.psi.pshell.device.ReadableRegister.ReadableRegisterMatrix;
 import ch.psi.pshell.device.ReadonlyRegister.ReadonlyRegisterNumber;
 import ch.psi.utils.Arr;
 import ch.psi.utils.Convert;
@@ -16,9 +18,10 @@ public class ArrayRegisterStats extends ReadonlyRegisterBase<DescStatsDouble> im
     int precision = UNDEFINED_PRECISION;
     DeviceListener sourceListener;
 
-    public ArrayRegisterStats(String name, ReadonlyRegisterArray source) {
+    public ArrayRegisterStats(String name, ReadableArray source) {
         super(name);
-        this.source = source;
+        this.source = (source instanceof ReadonlyRegisterArray) ? (ReadonlyRegisterArray) source :
+                new ReadableRegisterArray(source);
         if (source instanceof DeviceBase) {
             DeviceBase parent = ((DeviceBase) source);
             setParent(parent);
@@ -31,14 +34,16 @@ public class ArrayRegisterStats extends ReadonlyRegisterBase<DescStatsDouble> im
         } catch (Exception ex) {
         }
     }
-
-    public ArrayRegisterStats(ReadonlyRegisterArray source) {
+    
+    public ArrayRegisterStats(ReadableArray source) {
         this(source.getName() + " stats", source);
     }
 
-    public ArrayRegisterStats(String name, ReadonlyRegisterMatrix source) {
+    public ArrayRegisterStats(String name,  ReadableMatrix source) {
         super(name);
-        this.source = source;
+        this.source = (source instanceof ReadonlyRegisterMatrix) ? (ReadonlyRegisterMatrix) source :
+                new ReadableRegisterMatrix(source);        
+        
         if (source instanceof DeviceBase) {
             DeviceBase parent = ((DeviceBase) source);
             setParent(parent);
@@ -49,10 +54,10 @@ public class ArrayRegisterStats extends ReadonlyRegisterBase<DescStatsDouble> im
         }
     }
 
-    public ArrayRegisterStats(ReadonlyRegisterMatrix source) {
+    public ArrayRegisterStats(ReadableMatrix source) {
         this(source.getName() + " stats", source);
     }
-
+    
     @Override
     protected void doSetMonitored(boolean value) {
         if (value) {

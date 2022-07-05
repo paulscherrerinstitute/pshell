@@ -91,6 +91,8 @@ import ch.psi.pshell.device.Readable.ReadableArray as ReadableArray
 import ch.psi.pshell.device.Readable.ReadableMatrix as ReadableMatrix
 import ch.psi.pshell.device.Readable.ReadableCalibratedArray as ReadableCalibratedArray
 import ch.psi.pshell.device.Readable.ReadableCalibratedMatrix as ReadableCalibratedMatrix
+import ch.psi.pshell.device.ArrayRegisterStats as ArrayRegisterStats
+import ch.psi.pshell.device.DescStatsDouble as DescStatsDouble
 import ch.psi.pshell.device.ArrayCalibration as ArrayCalibration
 import ch.psi.pshell.device.MatrixCalibration as MatrixCalibration
 import ch.psi.pshell.device.Writable as Writable
