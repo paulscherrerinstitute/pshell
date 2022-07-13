@@ -640,7 +640,7 @@ public final class ProcessorXScan extends MonitoredPanel implements Processor {
                     // If there is a continuous dimension only update the plot a the end of a line.
                     // Improvement of performance
                     visualizer.setUpdateAtStreamElement(false);
-                    visualizer.setUpdateAtStreamDelimiter(false);
+                    visualizer.setUpdateAtStreamDelimiter(true);
                     visualizer.setUpdateAtEndOfStream(false);
                 }
                 ebus.register(visualizer);
