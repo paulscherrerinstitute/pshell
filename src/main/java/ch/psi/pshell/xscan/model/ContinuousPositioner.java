@@ -8,6 +8,7 @@
 
 package ch.psi.pshell.xscan.model;
 
+import ch.psi.pshell.xscan.VariableSolver;
 import java.io.Serializable;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -46,11 +47,16 @@ import javax.xml.bind.annotation.XmlType;
     "end",
     "stepSize",
     "integrationTime",
-    "additionalBacklash"
+    "additionalBacklash",
+    "startVar",
+    "endVar",
+    "stepSizeVar",
+    "integrationTimeVar",
+    "additionalBacklashVar",    
 })
 public class ContinuousPositioner
     extends Positioner
-    implements Serializable
+    implements Serializable, VariableSolver
 {
 
     private final static long serialVersionUID = 1L;
@@ -59,6 +65,12 @@ public class ContinuousPositioner
     protected double stepSize;
     protected double integrationTime;
     protected Double additionalBacklash;
+    protected String startVar;
+    protected String endVar;
+    protected String stepSizeVar;
+    protected String integrationTimeVar;
+    protected String additionalBacklashVar;
+    
     @XmlAttribute(name = "name", required = true)
     protected String name;
     @XmlAttribute(name = "readback")
@@ -69,7 +81,7 @@ public class ContinuousPositioner
      * 
      */
     public double getStart() {
-        return start;
+        return getDouble(startVar, start);
     }
 
     /**
@@ -85,7 +97,7 @@ public class ContinuousPositioner
      * 
      */
     public double getEnd() {
-        return end;
+        return getDouble(endVar, end);
     }
 
     /**
@@ -101,7 +113,7 @@ public class ContinuousPositioner
      * 
      */
     public double getStepSize() {
-        return stepSize;
+        return getDouble(stepSizeVar, stepSize);
     }
 
     /**
@@ -117,7 +129,7 @@ public class ContinuousPositioner
      * 
      */
     public double getIntegrationTime() {
-        return integrationTime;
+        return getDouble(integrationTimeVar, integrationTime);
     }
 
     /**
@@ -137,7 +149,10 @@ public class ContinuousPositioner
      *     
      */
     public Double getAdditionalBacklash() {
-        return additionalBacklash;
+        if ((additionalBacklashVar==null) && (additionalBacklash==null)){
+            return null;
+        }
+        return getDouble(additionalBacklashVar, (additionalBacklash == null) ? 0.0D : additionalBacklash);
     }
 
     /**
@@ -151,6 +166,89 @@ public class ContinuousPositioner
     public void setAdditionalBacklash(Double value) {
         this.additionalBacklash = value;
     }
+    
+    /**
+     * Gets the value of the startVar property.
+     * 
+     */
+    public String getStartVar() {
+        return startVar;
+    }
+
+    /**
+     * Sets the value of the startVar property.
+     * 
+     */
+    public void setStartVar(String value) {
+        this.startVar = value;
+    }
+
+    /**
+     * Gets the value of the endVar property.
+     * 
+     */
+    public String getEndVar() {
+        return endVar;
+    }
+
+    /**
+     * Sets the value of the endVar property.
+     * 
+     */
+    public void setEndVar(String value) {
+        this.endVar = value;
+    }
+
+    /**
+     * Gets the value of the stepSizeVar property.
+     * 
+     */
+    public String getStepSizeVar() {
+        return stepSizeVar;
+    }
+
+    /**
+     * Sets the value of the integrationTimeVar property.
+     * 
+     */
+    public void setStepSizeVar(String value) {
+        this.stepSizeVar = value;
+    }    
+    
+    
+
+    /**
+     * Gets the value of the stepSizeVar property.
+     * 
+     */
+    public String getIntegrationTimeVar() {
+        return integrationTimeVar;
+    }
+
+    /**
+     * Sets the value of the integrationTimeVar property.
+     * 
+     */
+    public void setIntegrationTimeVar(String value) {
+        this.integrationTimeVar = value;
+    }   
+
+
+    /**
+     * Gets the value of the additionalBacklashVar property.
+     * 
+     */
+    public String getAdditionalBacklashVar() {
+        return additionalBacklashVar;
+    }
+
+    /**
+     * Sets the value of the additionalBacklashVar property.
+     * 
+     */
+    public void setAdditionalBacklashVar(String value) {
+        this.additionalBacklashVar = value;
+    }       
 
     /**
      * Gets the value of the name property.
