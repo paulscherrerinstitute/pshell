@@ -87,7 +87,7 @@ public class Setup extends Config {
     public static transient final String TOKEN_SESSION_ID = "{session_id}";
     public static transient final String TOKEN_SESSION_NAME = "{session_name}";
 
-    public static transient final String DEFAULT_HOME_FOLDER = "./home";
+    public static transient final String DEFAULT_HOME_FOLDER = "~/pshell/home";
     public static transient final String DEFAULT_LIB_FOLDER = TOKEN_SCRIPT + "/Lib";    
     public static transient final String DEFAULT_LOCAL_STARTUP_FILE_PREFIX  = "local";
 

@@ -423,7 +423,7 @@ public class App extends ObservableBase<AppListener> {
         sb.append("\n\t-a\tAuto close after executing file");
         sb.append("\n\t-y\tHeadless mode");
         sb.append("\n\t-z\tHome folder is volatile (created in tmp folder)");
-        sb.append("\n\t-home=<path>\tSet the home folder (default is ./home)");
+        sb.append("\n\t-home=<path>\tSet the home folder (default is ~/pshell/home)");
         sb.append("\n\t-outp=<path>\tSet the output folder (default is {home})");
         sb.append("\n\t-data=<path>\tSet the data folder (default is {home}/data)");
         sb.append("\n\t-scpt=<path>\tSet the script folder (default is {home}/script)");
