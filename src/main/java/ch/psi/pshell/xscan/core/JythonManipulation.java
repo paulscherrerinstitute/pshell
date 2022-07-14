@@ -108,12 +108,6 @@ public class JythonManipulation implements Manipulation {
 
     @Override
     public void initialize(List<Metadata> metadata) {
-
-        // Workaround for Jython memory leak 
-        // http://blog.hillbrecht.de/2009/07/11/jython-memory-leakout-of-memory-problem/
-        System.setProperty("python.options.internalTablesImpl", "weak");
-
-
         // Determine script entry function and the function parameters
         Pattern pattern = Pattern.compile(entryFunctionPattern);
         Matcher matcher = pattern.matcher(this.script);

@@ -22,21 +22,35 @@ public class ScriptActionPanel extends EditablePanel<ScriptAction> {
     public ScriptActionPanel(final ScriptAction action) {
         super(action);
         this.action = action;
+        
+        // Cleanup script
+        String script = action.getScript();
+        if (script != null) {
+            // Remove empty lines at the begining and end
+            script = script.replaceAll("^[ ,\t,\n]*", "");
+            script = script.replaceAll("[ ,\t,\n]*$", "");
+        } else {
+            script = "def process():\n    return 0.0";
+        }
+        action.setScript(script);
+        
         initComponents();
         
         JTextComponent textScript = formatScriptEditor(jTextArea1);
-        jScrollPane1.setViewportView(textScript);
+        jScrollPane1.setViewportView(textScript);        
         
         setManagedFields(jButton1,
                 new Component[]{textScript},
-                new Component[]{collapsibleListContainerMapping}
+                new Component[]{collapsibleListContainerMapping},
+                new String[]{null}
         );
-
-        // Establish bindings
-        bindEditor(jTextArea1, "script");
 
         collapsibleListContainerMapping.setHeader("Mappings");
         collapsibleListContainerMapping.setName("Mappings");
+        
+        // Establish bindings
+        bindEditor(textScript, "script");
+        
     }
 
     /**

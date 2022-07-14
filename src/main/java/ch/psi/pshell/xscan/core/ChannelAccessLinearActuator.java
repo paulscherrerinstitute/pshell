@@ -133,7 +133,7 @@ public class ChannelAccessLinearActuator<T> implements Actor {
                 double c = channel.getValue(true);
                 double a = Math.abs(c - value);
                 if (a > accuracy) {
-                    throw new RuntimeException("Actor could not be set to the value " + value + " The readback of the set value does not match the value that was set [value: " + c + " delta: " + a + " accuracy: " + accuracy + "]");
+                    throw new RuntimeException("Actuator [channel: " + channel.getName() + "] could not be set to the value " + value + " The readback of the set value does not match the value that was set [value: " + c + " delta: " + a + " accuracy: " + accuracy + "]");
                 }
             }
 

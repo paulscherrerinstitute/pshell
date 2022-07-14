@@ -137,7 +137,7 @@ public class ChannelAccessTableActuator<T> implements Actor {
             // Check whether the set value is really on the value that was set before.
             if (doneChannel == null && !asynchronous && checkActorSet) {
                 if (Math.abs(channel.getValue() - table[count]) > accuracy) {
-                    throw new RuntimeException("Actor could not be set to the value " + table[count] + " The readback of the set value does not match the value that was set");
+                    throw new RuntimeException("Actuator [channel: " + channel.getName() + "] could not be set to the value " + table[count] + " The readback of the set value does not match the value that was set");
                 }
             }
 

@@ -1,13 +1,11 @@
 package ch.psi.pshell.xscan.core;
 
+import ch.psi.pshell.xscan.ProcessorXScan;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import javax.script.ScriptEngine;
-import javax.script.ScriptEngineManager;
-import javax.script.ScriptException;
 
 /**
  * Executes a python script inside a Jython interpreter
@@ -22,9 +20,8 @@ public class JythonAction implements Action {
     private static final String entryFunction = "process";
     private static final String entryFunctionPattern = "def " + entryFunction + "\\((.*)\\):";
 
-    private ScriptEngine engine;
-
     private String jythonCall; // entry call to script - including all parameters, etc.
+    private String script;
 
     private final Map<String, Object> globalObjects;
 
@@ -35,17 +32,7 @@ public class JythonAction implements Action {
     public JythonAction(String script, Map<String, ?> mapping, Map<String, Object> globalObjects) {
 
         this.globalObjects = globalObjects;
-
-        // Workaround for Jython memory leak 
-        // http://blog.hillbrecht.de/2009/07/11/jython-memory-leakout-of-memory-problem/
-        System.setProperty("python.options.internalTablesImpl", "weak");
-
-        // Create new script engine
-        this.engine = new ScriptEngineManager().getEngineByName("python");
-        if (this.engine == null) {
-            logger.severe("Error instantiating script engine");
-            throw new RuntimeException("Error instantiating script engine");
-        }
+        this.script=script;
 
         // Determine script entry function and the function parameters
         Pattern pattern = Pattern.compile(entryFunctionPattern);
@@ -60,7 +47,11 @@ public class JythonAction implements Action {
                 functionParameters = matcher.group(1).split(" *, *");
             }
         } else {
-            throw new IllegalArgumentException("Cannot determine entry function: " + entryFunctionPattern);
+            if (mapping.size()>0){
+                throw new IllegalArgumentException("Cannot determine entry function: " + entryFunctionPattern);
+            }
+            logger.finest("No entry function ");
+            return;
         }
 
         // Check whether all function parameters have a mapping
@@ -86,14 +77,14 @@ public class JythonAction implements Action {
 
         // Load manipulation script
         try {
-            engine.eval(script);
-        } catch (ScriptException e) {
-            throw new RuntimeException("Unable to load manipulation script", e);
+            ProcessorXScan.eval(script);
+        } catch (Exception e) {
+            throw new RuntimeException("Unable to load action script", e);
         }
 
         for (String b : mapping.keySet()) {
             // Assign channel bean to variable
-            engine.put(b, mapping.get(b));
+            ProcessorXScan.setInterpreterVariable(b, mapping.get(b));
         }
     }
 
@@ -105,16 +96,20 @@ public class JythonAction implements Action {
         // of this manipulation will get the same value (i.e. to prevent inconsistent behavior
         // if variable was changed during an execution of the manipulation)
         for (String k : globalObjects.keySet()) {
-            engine.put(k, globalObjects.get(k));
+            ProcessorXScan.setInterpreterVariable(k, globalObjects.get(k));
         }
 
         try {
-            engine.eval(jythonCall + "\n");
-        } catch (ScriptException e) {
+            if (jythonCall!=null){
+                ProcessorXScan.eval(jythonCall + "\n");
+            } else {
+                ProcessorXScan.eval(script);
+            }
+        } catch (Exception e) {
             if ((e.getMessage() != null) && (e.getMessage().startsWith("KeyboardInterrupt"))) {
                 throw new InterruptedException();
             }
-            throw new RuntimeException("Action failed while executing the Jython script", e);
+            throw new RuntimeException("Action failed while executing the action script", e);
         }
     }
 

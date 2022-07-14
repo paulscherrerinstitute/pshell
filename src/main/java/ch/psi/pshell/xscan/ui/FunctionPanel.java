@@ -3,6 +3,7 @@ package ch.psi.pshell.xscan.ui;
 import ch.psi.pshell.xscan.model.Function;
 import ch.psi.pshell.xscan.model.ParameterMapping;
 import java.awt.Component;
+import javax.swing.text.JTextComponent;
 
 /**
  *
@@ -21,14 +22,21 @@ public class FunctionPanel extends EditablePanel<Function> {
     public FunctionPanel(Function f) {
         super(f);
         function = f;
-        if (f.getScript() == null) {
-            f.setScript("def calculate(parameter):\n    return parameter");
+        String script = function.getScript();
+        if (script == null) {
+            script = "def calculate(parameter):\n    return parameter";
+        } else {
+            script = script.replaceAll("^[ ,\t,\n]*", "");
+            script = script.replaceAll("[ ,\t,\n]*$", "");
         }
+        f.setScript(script);
 
         initComponents();
-
+        JTextComponent textScript = formatScriptEditor(jTextAreaScript);
+        jScrollPane1.setViewportView(textScript);       
+        
         setManagedFields(jButton1,
-                new Component[]{jTextAreaScript},
+                new Component[]{textScript},
                 new Component[]{collapsibleListContainerMapping}
         );
 
@@ -36,14 +44,7 @@ public class FunctionPanel extends EditablePanel<Function> {
         collapsibleListContainerMapping.setName("Mappings");
 
         // Establish bindings
-        bindEditor(jTextAreaScript, "script");
-
-        // Update view
-        String p = f.getScript();
-        p = p.replaceAll("^[ ,\t,\n]*", "");
-        p = p.replaceAll("[ ,\t,\n]*$", "");
-        jTextAreaScript.setText(p);
-
+        bindEditor(textScript, "script");
     }
 
     /**

@@ -388,6 +388,10 @@ public class EditablePanel<T> extends javax.swing.JPanel implements EditableComp
             editor.setTextPaneFont(text.getFont());
             editor.setEditorBackground(text.getBackground());
             ret = editor.getTextEditor().getEditor();
+            if (ret instanceof JTextArea){
+                ((JTextArea)ret).setRows(text.getRows());
+                ((JTextArea)ret).setColumns(text.getColumns());
+            }
             ((CodeEditor)editor.getTextEditor()).setHighlightCurrentLine(false);
             ret.setSelectionColor(text.getSelectionColor());
         }
