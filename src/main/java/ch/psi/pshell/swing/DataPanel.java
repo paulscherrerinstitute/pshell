@@ -113,6 +113,7 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
     DataPanelListener listener;
     String[] processingScripts;
     String[] additionalExtensions = new String[0];
+    String[] additionalFiles = new String[0];
 
     public DataPanel() {
         initComponents();
@@ -704,7 +705,14 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
             additionalExtensions = App.getInstance().getMainFrame().getPreferences().getDataPanelAdditionalExtensions();
         } catch (Exception ex) {
             additionalExtensions = new String[0];
-        }        
+        }       
+        try{
+            additionalFiles = App.getInstance().getMainFrame().getPreferences().getDataPanelAdditionalFiles();
+        } catch (Exception ex) {
+            additionalFiles = new String[0];
+        }            
+        
+        
         setBaseFolder(dataManager.getDataFolder());
         try {
             setCurrentPath(null);
@@ -939,7 +947,6 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
             File[] ret = new File[0];
             if (f.isDirectory() && (dataManager != null)) {
                 File[] files = IO.listFiles(f, dataManager.getFileFilter(additionalExtensions));
-
                 switch (fileOrder) {
                     case Modified:
                         IO.orderByModified(files);
@@ -949,6 +956,12 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
                         break;
                 }
                 ret = files;
+                for (String subFolder : additionalFiles){
+                    File child = new File(f, subFolder);
+                    if (child.exists()){
+                        ret=Arr.append(ret, child);
+                    }
+                }
                 //TODO: Is there way to check if has been regestered already?
                 registerFolderEvents(((File) parent).getPath());
             }

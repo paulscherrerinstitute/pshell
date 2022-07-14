@@ -976,20 +976,25 @@
                       <EmptySpace max="-2" attributes="0"/>
                       <Group type="103" groupAlignment="0" attributes="0">
                           <Component id="jPanel12" max="32767" attributes="0"/>
-                          <Group type="102" alignment="0" attributes="0">
-                              <EmptySpace min="-2" pref="46" max="-2" attributes="0"/>
-                              <Group type="103" groupAlignment="0" attributes="0">
-                                  <Component id="jLabel33" linkSize="30" alignment="0" max="32767" attributes="0"/>
-                                  <Component id="jLabel30" linkSize="30" alignment="0" min="-2" max="-2" attributes="0"/>
-                              </Group>
+                          <Group type="102" attributes="0">
+                              <EmptySpace min="6" pref="6" max="-2" attributes="0"/>
+                              <Component id="jLabel33" min="-2" max="-2" attributes="0"/>
                               <EmptySpace max="-2" attributes="0"/>
-                              <Group type="103" groupAlignment="0" attributes="0">
-                                  <Component id="checkCachedDataPanel" alignment="0" min="-2" max="-2" attributes="0"/>
-                                  <Component id="textDataExtensions" alignment="0" max="32767" attributes="0"/>
-                              </Group>
+                              <Component id="checkCachedDataPanel" min="-2" max="-2" attributes="0"/>
                               <EmptySpace max="32767" attributes="0"/>
+                              <Component id="jLabel30" min="-2" max="-2" attributes="0"/>
+                              <EmptySpace max="-2" attributes="0"/>
+                              <Component id="textDataExtensions" min="-2" pref="175" max="-2" attributes="0"/>
+                              <EmptySpace max="-2" attributes="0"/>
                           </Group>
                       </Group>
+                  </Group>
+                  <Group type="102" alignment="1" attributes="0">
+                      <EmptySpace max="32767" attributes="0"/>
+                      <Component id="jLabel36" min="-2" max="-2" attributes="0"/>
+                      <EmptySpace max="-2" attributes="0"/>
+                      <Component id="textDataFiles" min="-2" pref="175" max="-2" attributes="0"/>
+                      <EmptySpace max="-2" attributes="0"/>
                   </Group>
               </Group>
             </DimensionLayout>
@@ -1001,13 +1006,15 @@
                       <Group type="103" groupAlignment="2" attributes="0">
                           <Component id="jLabel33" alignment="2" min="-2" max="-2" attributes="0"/>
                           <Component id="checkCachedDataPanel" linkSize="19" alignment="2" min="-2" max="-2" attributes="0"/>
-                      </Group>
-                      <EmptySpace max="-2" attributes="0"/>
-                      <Group type="103" groupAlignment="2" attributes="0">
                           <Component id="jLabel30" alignment="2" min="-2" max="-2" attributes="0"/>
                           <Component id="textDataExtensions" alignment="2" min="-2" max="-2" attributes="0"/>
                       </Group>
-                      <EmptySpace min="-2" max="-2" attributes="0"/>
+                      <EmptySpace min="-2" pref="5" max="-2" attributes="0"/>
+                      <Group type="103" groupAlignment="2" attributes="0">
+                          <Component id="jLabel36" alignment="2" min="-2" max="-2" attributes="0"/>
+                          <Component id="textDataFiles" alignment="2" min="-2" max="-2" attributes="0"/>
+                      </Group>
+                      <EmptySpace max="-2" attributes="0"/>
                   </Group>
               </Group>
             </DimensionLayout>
@@ -1034,7 +1041,7 @@
                       </Group>
                       <Group type="102" alignment="1" attributes="0">
                           <EmptySpace max="-2" attributes="0"/>
-                          <Component id="jScrollPane2" max="32767" attributes="0"/>
+                          <Component id="jScrollPane2" pref="497" max="32767" attributes="0"/>
                           <EmptySpace max="-2" attributes="0"/>
                       </Group>
                   </Group>
@@ -1043,7 +1050,7 @@
                   <Group type="103" groupAlignment="0" attributes="0">
                       <Group type="102" attributes="0">
                           <EmptySpace min="-2" max="-2" attributes="0"/>
-                          <Component id="jScrollPane2" pref="112" max="32767" attributes="0"/>
+                          <Component id="jScrollPane2" pref="106" max="32767" attributes="0"/>
                           <EmptySpace min="-2" max="-2" attributes="0"/>
                           <Group type="103" groupAlignment="3" attributes="0">
                               <Component id="buttonRemoveProcScript" alignment="3" min="-2" max="-2" attributes="0"/>
@@ -1110,7 +1117,7 @@
             <Component class="javax.swing.JLabel" name="jLabel30">
               <Properties>
                 <Property name="horizontalAlignment" type="int" value="11"/>
-                <Property name="text" type="java.lang.String" value="Additional visible file extensions:"/>
+                <Property name="text" type="java.lang.String" value="Visible file extensions:"/>
               </Properties>
             </Component>
             <Component class="javax.swing.JTextField" name="textDataExtensions">
@@ -1121,6 +1128,14 @@
               <Properties>
                 <Property name="horizontalAlignment" type="int" value="11"/>
                 <Property name="text" type="java.lang.String" value="Data panel cached:"/>
+              </Properties>
+            </Component>
+            <Component class="javax.swing.JTextField" name="textDataFiles">
+            </Component>
+            <Component class="javax.swing.JLabel" name="jLabel36">
+              <Properties>
+                <Property name="horizontalAlignment" type="int" value="11"/>
+                <Property name="text" type="java.lang.String" value="Visible files:"/>
               </Properties>
             </Component>
           </SubComponents>
@@ -1503,7 +1518,7 @@
                               <Component id="checkOutputPanel" alignment="0" min="-2" max="-2" attributes="0"/>
                               <Component id="checkScanPanel" alignment="0" min="-2" max="-2" attributes="0"/>
                           </Group>
-                          <EmptySpace pref="38" max="32767" attributes="0"/>
+                          <EmptySpace pref="43" max="32767" attributes="0"/>
                       </Group>
                   </Group>
                 </DimensionLayout>
@@ -1568,7 +1583,7 @@
                                   </Group>
                                   <EmptySpace min="-2" max="-2" attributes="0"/>
                                   <Group type="103" groupAlignment="0" attributes="0">
-                                      <Component id="comboConsoleLocation" max="32767" attributes="0"/>
+                                      <Component id="comboConsoleLocation" pref="108" max="32767" attributes="0"/>
                                       <Component id="comboPlotsLocation" pref="101" max="32767" attributes="0"/>
                                   </Group>
                               </Group>
@@ -1578,7 +1593,7 @@
                                   <Component id="comboDataPanelLocation" max="32767" attributes="0"/>
                               </Group>
                           </Group>
-                          <EmptySpace pref="17" max="32767" attributes="0"/>
+                          <EmptySpace pref="25" max="32767" attributes="0"/>
                       </Group>
                   </Group>
                 </DimensionLayout>
@@ -1671,7 +1686,7 @@
                               <Component id="radioDataDocTab" min="-2" max="-2" attributes="0"/>
                               <Component id="radioDataEmbedded" alignment="0" min="-2" max="-2" attributes="0"/>
                           </Group>
-                          <EmptySpace max="32767" attributes="0"/>
+                          <EmptySpace pref="10" max="32767" attributes="0"/>
                       </Group>
                   </Group>
                 </DimensionLayout>

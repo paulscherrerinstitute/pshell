@@ -128,6 +128,7 @@ public class Preferences {
     public boolean scanTableDisabled;
     public boolean cachedDataPanel;
     public String dataExtensions;
+    public String dataSubFiles;
     public boolean hideFileName;
     public boolean showEmergencyStop;
     public boolean showHomingButtons;
@@ -366,4 +367,15 @@ public class Preferences {
         }
         return new String[0];
     }
+    
+    @Transient
+    public String[] getDataPanelAdditionalFiles(){
+        if (dataSubFiles!=null){
+            String[] ret = Str.split(dataSubFiles.trim(), new String[]{"|", ";", ",", " "});
+            ret = Arr.removeEquals(ret, "");
+            return ret;
+        }
+        return new String[0];
+    }    
+    
 }
