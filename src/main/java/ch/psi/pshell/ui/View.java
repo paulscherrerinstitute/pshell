@@ -1320,7 +1320,7 @@ public class View extends MainFrame {
      */
     @Override
     protected void onTimer() {
-        updateStatusPanels();
+        updateSelectedPanels();
         Processor processor = getSelectedProcessor();
         if ((processor != null) && (processor.getPanel().isEnabled())) {
             updateProcessorTabTitle(processor, tabDoc.getSelectedIndex());
@@ -1344,10 +1344,17 @@ public class View extends MainFrame {
             p.onTaskFinished(task);
         }
     }
-
-    void updateStatusPanels() {
+    
+    void updateSelectedPanels() {
+        updateSelectedPanels(tabStatus);
+        updateSelectedPanels(tabLeft);
+        updateSelectedPanels(tabPlots);
+        updateSelectedPanels(tabDoc);
+    }
+    
+    void updateSelectedPanels(JTabbedPane tab) {
         try {
-            Component panel = tabStatus.getSelectedComponent();
+            Component panel = tab.getSelectedComponent();
             if (panel instanceof UpdatablePanel) {
                 ((UpdatablePanel) panel).update();
             }
@@ -2806,6 +2813,11 @@ public class View extends MainFrame {
         splitterDoc.setName("splitterDoc"); // NOI18N
 
         tabLeft.setName("tabLeft"); // NOI18N
+        tabLeft.addChangeListener(new javax.swing.event.ChangeListener() {
+            public void stateChanged(javax.swing.event.ChangeEvent evt) {
+                tabLeftStateChanged(evt);
+            }
+        });
         splitterDoc.setLeftComponent(tabLeft);
 
         tabDoc.setName("tabDoc"); // NOI18N
@@ -2825,6 +2837,11 @@ public class View extends MainFrame {
         splitterHoriz.setLeftComponent(splitterVert);
 
         tabPlots.setName("tabPlots"); // NOI18N
+        tabPlots.addChangeListener(new javax.swing.event.ChangeListener() {
+            public void stateChanged(javax.swing.event.ChangeEvent evt) {
+                tabPlotsStateChanged(evt);
+            }
+        });
 
         scanPlot.setName("scanPlot"); // NOI18N
 
@@ -3814,11 +3831,6 @@ public class View extends MainFrame {
 
         menuViewPanels1.setText(bundle.getString("View.menuViewPanels1.text")); // NOI18N
         menuViewPanels1.setName("menuViewPanels1"); // NOI18N
-        menuViewPanels1.addChangeListener(new javax.swing.event.ChangeListener() {
-            public void stateChanged(javax.swing.event.ChangeEvent evt) {
-                menuViewPanels1StateChanged(evt);
-            }
-        });
 
         menuOutput.setText(bundle.getString("View.menuOutput.text")); // NOI18N
         menuOutput.setName("menuOutput"); // NOI18N
@@ -4078,6 +4090,7 @@ public class View extends MainFrame {
                 }
             }
         }
+        updateSelectedPanels(tabDoc);
     }//GEN-LAST:event_tabDocStateChanged
 
     private void menuSaveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuSaveActionPerformed
@@ -4418,7 +4431,7 @@ public class View extends MainFrame {
     }//GEN-LAST:event_menuPluginsActionPerformed
 
     private void tabStatusStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_tabStatusStateChanged
-        updateStatusPanels();
+        updateSelectedPanels(tabStatus);
     }//GEN-LAST:event_tabStatusStateChanged
 
     private void menuUpdateAllActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuUpdateAllActionPerformed
@@ -5443,9 +5456,13 @@ public class View extends MainFrame {
         }
     }//GEN-LAST:event_menuOutputActionPerformed
 
-    private void menuViewPanels1StateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_menuViewPanels1StateChanged
-        // TODO add your handling code here:
-    }//GEN-LAST:event_menuViewPanels1StateChanged
+    private void tabPlotsStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_tabPlotsStateChanged
+            updateSelectedPanels(tabPlots);
+    }//GEN-LAST:event_tabPlotsStateChanged
+
+    private void tabLeftStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_tabLeftStateChanged
+         updateSelectedPanels(tabLeft);
+    }//GEN-LAST:event_tabLeftStateChanged
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton buttonAbort;
