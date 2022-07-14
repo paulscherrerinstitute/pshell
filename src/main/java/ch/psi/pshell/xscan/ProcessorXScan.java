@@ -796,6 +796,19 @@ public final class ProcessorXScan extends MonitoredPanel implements Processor {
         });
         t.start();
     }
+    
+    public static boolean isFdaSerializationFolder(File file){
+        if ((file!=null) && (file.isDirectory())){
+            if (new File(file, file.getName()+".xml").isFile()){
+                if (new File(file, file.getName()+".xml").isFile()){
+                    if (new File(file, file.getName()+".xml").isFile()){
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
 
     static Configuration load(File file) {
         if (!file.exists()) {

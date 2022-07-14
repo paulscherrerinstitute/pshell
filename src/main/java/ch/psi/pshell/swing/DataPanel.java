@@ -13,6 +13,7 @@ import ch.psi.utils.Range;
 import ch.psi.pshell.swing.DataPanel.DataPanelListener;
 import ch.psi.pshell.ui.App;
 import ch.psi.pshell.ui.Processor;
+import ch.psi.pshell.xscan.ProcessorXScan;
 import ch.psi.utils.Arr;
 import ch.psi.utils.Chrono;
 import ch.psi.utils.Convert;
@@ -271,7 +272,10 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
                                         if (Processor.canProcessorsPlot(currentFile.getAbsolutePath(), null, dataManager)){
                                             listener.plotData(dataManager, currentFile.getAbsolutePath(), null);
                                         } else {
-                                            listener.openFile(currentFile.getCanonicalPath());   
+                                            TreePath tp = treeFolder.getSelectionPath();
+                                            if ((treeFolderModel.getChildCount(currentFile)==0) || (!ProcessorXScan.isFdaSerializationFolder(currentFile))){
+                                                listener.openFile(currentFile.getCanonicalPath());   
+                                            }
                                         }
                                     } catch (Exception ex) {
                                         Logger.getLogger(DataPanel.class.getName()).log(Level.SEVERE, null, ex);
