@@ -177,7 +177,7 @@ public class Acquisition {
 	public void initalize(EventBus bus, Configuration smodel){            
 
 		// Create notification agent with globally configured recipients
-		notificationAgent = new NotificationAgent(configuration.getSmptServer(), "fda.notification@psi.ch");
+		notificationAgent = new NotificationAgent();
 		
 		// Update recipients list of the Notifiaction Agent
 		if(smodel.getNotification()!=null){

@@ -32,7 +32,6 @@ public class AcquisitionConfiguration {
 	 */
 	private Long actorMoveTimeout = 600000l; // 10 Minutes maximum move time 
 	
-	private String smptServer;
         
         private boolean appendSuffix = true;
         
@@ -49,7 +48,6 @@ public class AcquisitionConfiguration {
                 //Enforce PShell config insted
                 crlogicPrefix = App.hasArgument("crlogic.prefix") ? App.getArgumentValue("crlogic.prefix") : "";
                 crlogicIoc = App.hasArgument("crlogic.ioc") ? App.getArgumentValue("crlogic.ioc") : "";;		
-                smptServer= "mail.psi.ch";
                 actorMoveTimeout = App.hasArgument("move.timeout") ? Long.valueOf(App.getArgumentValue("move.timeout")): 600000l; // 10 Minutes maximum move time 
                 dataBaseDirectory = Context.getInstance().getSetup().getDataPath();
                 appendSuffix = App.hasArgument("fdanosuffix") ? false : true;
@@ -106,14 +104,6 @@ public class AcquisitionConfiguration {
 
 	public void setActorMoveTimeout(Long actorMoveTimeout) {
 		this.actorMoveTimeout = actorMoveTimeout;
-	}
-
-	public String getSmptServer() {
-		return smptServer;
-	}
-
-	public void setSmptServer(String smptServer) {
-		this.smptServer = smptServer;
 	}
         
         public void setAppendSuffix(boolean value){

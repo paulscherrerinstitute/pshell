@@ -585,13 +585,13 @@ public final class ProcessorXScan extends MonitoredPanel implements Processor {
     }    
 
     public void testNotification(String recipient) {
-        NotificationAgent a = new NotificationAgent(getConfiguration().getSmptServer(), "pshell.test.notification@psi.ch");
-        Recipient r = new Recipient();
-        r.setValue(recipient);
-        r.setError(true);
-        r.setSuccess(true);
-        a.getRecipients().add(r);
-        a.sendNotification("Test Notification", "This is a test notification", true, true);
+            NotificationAgent a = new NotificationAgent();
+            Recipient r = new Recipient();
+            r.setValue(recipient);
+            r.setError(true);
+            r.setSuccess(true);
+            a.getRecipients().add(r);
+            a.sendNotification("Test Notification", "This is a test notification", true, true);
     }
 
     Thread executionThread;
