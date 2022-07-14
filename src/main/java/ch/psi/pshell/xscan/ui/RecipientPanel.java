@@ -43,20 +43,20 @@ public class RecipientPanel extends EditablePanel<Recipient> {
     private void initComponents() {
 
         jTextFieldSms = new javax.swing.JTextField();
-        jButton1 = new javax.swing.JButton();
+        jButtonTest = new javax.swing.JButton();
         jCheckBoxError = new javax.swing.JCheckBox();
         jCheckBoxSuccess = new javax.swing.JCheckBox();
-        jButton2 = new javax.swing.JButton();
+        jButton1 = new javax.swing.JButton();
 
         jTextFieldSms.setText("SMS, E-Mail");
         jTextFieldSms.setToolTipText("email address or SMS number");
         jTextFieldSms.setPreferredSize(new java.awt.Dimension(200, 28));
 
-        jButton1.setText("Test");
-        jButton1.setToolTipText("Send test notification");
-        jButton1.addActionListener(new java.awt.event.ActionListener() {
+        jButtonTest.setText("Test");
+        jButtonTest.setToolTipText("Send test notification");
+        jButtonTest.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButton1ActionPerformed(evt);
+                jButtonTestActionPerformed(evt);
             }
         });
 
@@ -68,9 +68,9 @@ public class RecipientPanel extends EditablePanel<Recipient> {
         jCheckBoxSuccess.setText("Success");
         jCheckBoxSuccess.setName("Success"); // NOI18N
 
-        jButton2.setIcon(new javax.swing.ImageIcon(getClass().getResource("/ch/psi/pshell/xscan/ui/icons/plus.png"))); // NOI18N
-        jButton2.setBorderPainted(false);
-        jButton2.setContentAreaFilled(false);
+        jButton1.setIcon(new javax.swing.ImageIcon(getClass().getResource("/ch/psi/pshell/xscan/ui/icons/plus.png"))); // NOI18N
+        jButton1.setBorderPainted(false);
+        jButton1.setContentAreaFilled(false);
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
@@ -83,34 +83,32 @@ public class RecipientPanel extends EditablePanel<Recipient> {
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jCheckBoxSuccess)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jButton1)
+                .addComponent(jButtonTest)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jButton2)
+                .addComponent(jButton1)
                 .addContainerGap())
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                 .addComponent(jTextFieldSms, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addComponent(jButton1)
+                .addComponent(jButtonTest)
                 .addComponent(jCheckBoxSuccess)
                 .addComponent(jCheckBoxError)
-                .addComponent(jButton2))
+                .addComponent(jButton1))
         );
     }// </editor-fold>//GEN-END:initComponents
 
-    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
-        //ExecutionService service = Lookup.getDefault().lookup(ExecutionService.class);
-        //service.testNotification(recipient.getValue());                
+    private void jButtonTestActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonTestActionPerformed
         ProcessorXScan cur = ProcessorXScan.getCurrent();
         if (cur != null) {
             cur.testNotification(getObject().getValue());
         }
-    }//GEN-LAST:event_jButton1ActionPerformed
+    }//GEN-LAST:event_jButtonTestActionPerformed
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton jButton1;
-    private javax.swing.JButton jButton2;
+    private javax.swing.JButton jButtonTest;
     private javax.swing.JCheckBox jCheckBoxError;
     private javax.swing.JCheckBox jCheckBoxSuccess;
     private javax.swing.JTextField jTextFieldSms;
