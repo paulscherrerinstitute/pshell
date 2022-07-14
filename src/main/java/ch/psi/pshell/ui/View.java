@@ -879,13 +879,15 @@ public class View extends MainFrame {
                 View.this.openScript(fileName);
             } else if (getProcessorExtensions().contains(ext)) {
                 View.this.openScriptOrProcessor(fileName);
-            } else if (ext.equals("h5") || context.getDataManager().isRoot(fileName)){
+            } else if (Arr.containsEqual(dataFileExtensions, ext) || context.getDataManager().isRoot(fileName)){
                 View.this.openDataFile(fileName);
+            } else if (Arr.containsEqual(imageFileExtensions, ext)){
+                View.this.openImageFile(fileName);
             }  else {
                 View.this.openTextFile(fileName);
             }
         }
-
+        
         @Override
         public void openScript(String script, String name) throws Exception {
             ScriptEditor editor = newScript(script);
