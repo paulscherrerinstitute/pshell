@@ -636,6 +636,7 @@ public final class ProcessorXScan extends MonitoredPanel implements Processor {
             acquisition.initalize(ebus, config);
             if (!batch && App.isScanPlottingActive()) {
                 visualizer = new Visualizer(Acquisition.mapVisualizations(config.getVisualization()));
+                /*
                 if (config.getScan() != null && config.getScan().getCdimension() != null) {
                     // If there is a continuous dimension only update the plot a the end of a line.
                     // Improvement of performance
@@ -643,6 +644,7 @@ public final class ProcessorXScan extends MonitoredPanel implements Processor {
                     visualizer.setUpdateAtStreamDelimiter(true);
                     visualizer.setUpdateAtEndOfStream(false);
                 }
+                */
                 ebus.register(visualizer);
                 setPlots(visualizer.getPlotPanels(), null);
             }
