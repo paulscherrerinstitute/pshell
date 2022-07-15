@@ -172,7 +172,7 @@ dependencies {
     //TIFF support for ImageIO can be added installing JAI, or one of the following dependencies:
     //implementation 'com.twelvemonkeys'.imageio:imageio-tiff:3.4.1'    
     //implementation 'com.tomgibara.imageio:imageio-tiff:1.0'   //maven { url "http://www.tomgibara.com/maven/repo/" }     
-    //implementation 'com.github.jai-imageio:jai-imageio-core:1.4.0'
+    implementation 'com.github.jai-imageio:jai-imageio-core:1.4.0'
     //Or else adding to extensions folder:
     //https://github.com/jai-imageio/jai-imageio-core/releases/download/jai-imageio-core-1.4.0/jai-imageio-core-1.4.0.jar
 
