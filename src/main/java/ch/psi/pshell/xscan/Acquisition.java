@@ -1171,7 +1171,7 @@ public class Acquisition {
 		if (hcrOnly) {
 			// There are no additional channels to be read out while taking data
 			// via hcrlogic
-			// Therefore we just register the hcr loop as action loop
+			// Therefore we just  register the hcr loop as action loop
 
 			aLoop = actionLoop;
 		} else {

@@ -275,22 +275,47 @@ def hscan(config, writable, readables, start, end, steps, passes=1, zigzag=False
     Returns:
         ScanResult.
     """
-    cls = Class.forName(config["class"])
-    class HardwareScan(cls):
-        def __init__(self, config, writable, readables, start, end, stepSize, passes, zigzag):
-            cls.__init__(self, config, writable, readables, start, end, stepSize, passes, zigzag)
-        def onAfterReadout(self, record):
-            __after_readout(self, record)
-        def onBeforePass(self, num_pass):
-            __before_pass(self, num_pass)
-        def onAfterPass(self, num_pass):
-            __after_pass(self, num_pass)
-
     readables=to_list(string_to_obj(readables))
-    scan = HardwareScan(config, writable,readables, start, end , steps, int(passes), zigzag)
+    cls = getHardwareScanClass(config)
+    scan = cls(config, writable,readables, start, end , steps, int(passes), zigzag)
     processScanPars(scan, pars)
     scan.start()
     return scan.getResult()
+
+def oscan(ioc, prefix, writable, readables, start, end, steps, integration_time, additional_backlash=0, passes=1, zigzag=False, **pars):
+    """OTF scan based on crlogic
+
+    Args:
+        ioc(string): Crlogic ioc
+        prefix(string): Crlogic prefix 
+        writable(Writable): A cslogic positioner 
+        readables(list of Readable): List of crlogic sensors
+        start(float): start positions of writable.
+        end(float): final positions of writables.
+        steps(int or float): number of scan steps (int) or step size (float).
+        passes(int, optional): number of passes
+        integration_time(float)
+        additional_backlash(float, optional)
+        pars(keyworded variable length arguments, optional): scan optional named arguments:
+            - title(str, optional): plotting window name.
+            - after_read (function(record, scan), optional): callback on each step, after sampling.
+            - before_pass (function(pass_num, scan), optional): callback before each scan pass execution.
+            - after_pass (function(pass_num, scan), optional): callback after each scan pass execution.
+            - abort_on_error (bool, optional): if true then aborts scan in sensor failures. Default is false.
+            - monitors (list of Device, optional): device values are saved on every change event during the scan.
+            - snaps (list of Readable, optional): snapshot device values are saved before the scan.
+            - meta (dict, optional): scan metadata.
+
+    Returns:
+        ScanResult.
+    """
+    config = {}
+    config["class"] = "ch.psi.pshell.crlogic.CrlogicScan"
+    config["ioc"] = ioc
+    config["prefix"] = prefix
+    config["integrationTime"] = integration_time
+    config["additionalBacklash"] = additional_backlash
+    return hscan(config, writable, readables, start, end, steps, **pars)
 
 def bscan(stream, records, timeout = None, passes=1, **pars):
     """BS Scan: records all values in a beam synchronous stream.

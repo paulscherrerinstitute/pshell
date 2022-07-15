@@ -420,6 +420,20 @@ class ManualScan (ch.psi.pshell.scan.ManualScan):
         else:
             return self._dimensions
 
+def getHardwareScanClass(config):
+    cls = Class.forName(config["class"])
+    class HardwareScan(cls):
+        def __init__(self, config, writable, readables, start, end, stepSize, passes, zigzag):
+            cls.__init__(self, config, writable, readables, start, end, stepSize, passes, zigzag)
+        def onAfterReadout(self, record):
+            __after_readout(self, record)
+        def onBeforePass(self, num_pass):
+            __before_pass(self, num_pass)
+        def onAfterPass(self, num_pass):
+            __after_pass(self, num_pass)
+    return HardwareScan
+
+
 class BinarySearch(ch.psi.pshell.scan.BinarySearch):
     def onBeforeReadout(self, pos): __before_readout(self, pos)
     def onAfterReadout(self, rec): __after_readout(self, rec)

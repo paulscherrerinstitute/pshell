@@ -16,7 +16,7 @@ public class CrlogicSensor extends ReadonlyAsyncRegisterBase<Double> {
     }
 
     public CrlogicSensor(String name, String key) {
-        this(name.startsWith("%") ? name.substring(1) : name,
+        this(name.startsWith("% ") ? name.substring(1) : name,
                 key.startsWith("%") ? key.substring(1) : key, key.startsWith("%") ? true : false);
     }
 
@@ -59,4 +59,33 @@ public class CrlogicSensor extends ReadonlyAsyncRegisterBase<Double> {
             setCache(value);
         }
     }
+    
+    public static class Timestamp extends CrlogicSensor{
+        public Timestamp(){
+            this("Timestamp");
+        }
+
+        public Timestamp(String name){
+            super(name, "TIMESTAMP");
+        }
+    }
+    
+    public static class Scaler extends CrlogicSensor{
+        public Scaler(int scalerNumber){
+            this("Scaler"+scalerNumber, scalerNumber);
+        }
+
+        public Scaler(String name, int scalerNumber){
+            super(name, "SCALER"+scalerNumber);
+        }
+        
+        public Scaler(String name, int scalerNumber, boolean isDelta){
+            super(name, "SCALER"+scalerNumber, isDelta);
+        }
+        public Scaler(String name, int scalerNumber, boolean isDelta, int precision){
+            super(name, "SCALER"+scalerNumber, isDelta,precision);
+        }
+    }    
+    
+    //TODO: Implement SCR detectors
 }

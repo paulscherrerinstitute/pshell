@@ -12,6 +12,7 @@ These functions provide the script API to many aspects of PShell:
     - rscan
     - cscan
     - hscan
+    - oscan
     - bscan
     - tscan
     - mscan
