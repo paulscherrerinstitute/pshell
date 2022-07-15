@@ -63,7 +63,7 @@ public class JythonFunction implements Function {
             logger.fine("calculate( " + parameter + "" + additionalParameter + " )");
             return ((Double) ProcessorXScan.eval("calculate( " + parameter + "" + additionalParameter + " )"));
         } catch (Exception e) {
-            throw new RuntimeException("Calculating actuator step failed while executing the Jython script", e);
+            throw new RuntimeException("Calculating actuator step failed while executing the script: " + e.getMessage(), e);
         }
 
     }

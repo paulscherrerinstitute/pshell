@@ -8,6 +8,7 @@ import java.io.InputStreamReader;
 import java.io.Writer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.script.ScriptEngine;
 
 /**
  * Management of standard input and standard output of the interpreter.
@@ -97,7 +98,7 @@ public class ScriptStdio implements AutoCloseable {
         }
     }
 
-    ScriptStdio(final ScriptManager scriptManager) {
+    public ScriptStdio(final ScriptManager scriptManager) {
         try {
 
             stdinReader = new BufferedReader(new InputStreamReader(new InputStream() {
@@ -140,6 +141,19 @@ public class ScriptStdio implements AutoCloseable {
 
             stderrWriter = new StdioWriter(true);
             scriptManager.setErrorWriter(stderrWriter);
+
+        } catch (Exception ex) {
+            logger.log(Level.SEVERE, null, ex);
+        }
+    }
+    
+    public ScriptStdio(final ScriptEngine engine) {
+        try {
+            stdoutWriter = new StdioWriter(false);
+            engine.getContext().setWriter(stdoutWriter);
+
+            stderrWriter = new StdioWriter(true);
+            engine.getContext().setErrorWriter(stderrWriter);
 
         } catch (Exception ex) {
             logger.log(Level.SEVERE, null, ex);

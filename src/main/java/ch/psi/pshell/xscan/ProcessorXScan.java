@@ -13,6 +13,7 @@ import ch.psi.jcae.impl.DefaultChannelService;
 import ch.psi.pshell.core.CommandInfo;
 import ch.psi.pshell.core.CommandSource;
 import ch.psi.pshell.core.Context;
+import ch.psi.pshell.core.ScriptStdio;
 import ch.psi.pshell.data.DataManager;
 import ch.psi.pshell.data.Layout;
 import ch.psi.pshell.plot.PlotBase;
@@ -36,9 +37,11 @@ import java.awt.Toolkit;
 import java.awt.event.MouseListener;
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.net.URL;
 import java.nio.file.Paths;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
@@ -54,6 +57,9 @@ import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
 import javax.swing.SwingUtilities;
 import javax.swing.filechooser.FileNameExtensionFilter;
+import javax.script.ScriptEngine;
+import javax.script.ScriptEngineManager;
+import javax.script.ScriptException;
 
 /**
  * Loops can be executed from script as: ProcessorXScan().execute("test1.xml")
@@ -599,7 +605,7 @@ public final class ProcessorXScan extends MonitoredPanel implements Processor {
     Configuration config;
 
     public Map<String, Object> getVariables() {
-        Map<String, Object> variables = new HashMap<>();
+        Map<String, Object> variables = new LinkedHashMap<>();
         Configuration model = panelConfig.getObject();
         for (Variable v : model.getVariable()) {
             variables.put(v.getName(), v.getValue());
@@ -625,7 +631,7 @@ public final class ProcessorXScan extends MonitoredPanel implements Processor {
                 try {
                     Object value = entry.getValue();
                     if ((value instanceof String) && ((String) value).startsWith("=")) {
-                        value = Context.getInstance().evalLineBackground(((String) value).substring(1).trim());
+                        value = eval(((String) value).substring(1).trim());
                     }
                     setInterpreterVariable(entry.getKey(), value);
                 } catch (Exception ex) {
@@ -845,16 +851,51 @@ public final class ProcessorXScan extends MonitoredPanel implements Processor {
         return c;
     }
 
+    private static ScriptEngine engine;
+    
+    private static void createPrivateEngine(){
+        if (engine == null) {
+            engine = new ScriptEngineManager().getEngineByName("python");
+            if (engine == null) {
+                Logger.getLogger(ProcessorXScan.class.getName()).severe("Error instantiating script engine in XScan");
+                throw new RuntimeException("Error instantiating script engine in XScan");
+            }  
+            
+            try{
+                ScriptStdio stdio = new ScriptStdio(engine);
+                Context.getInstance().addScriptStdio(stdio);
+            } catch (Exception ex){
+                engine.getContext().setWriter(new PrintWriter(System.out));
+                engine.getContext().setErrorWriter(new PrintWriter(System.err));    
+            }
+        }
+    }
+    
     public static Object eval(String script) throws Exception {
-        return Context.getInstance().evalLineBackground(script);
+        if (Context.getInstance().isInterpreterEnabled()){
+            return Context.getInstance().evalLineBackground(script);
+        } else {
+            createPrivateEngine();
+            return engine.eval(script);          
+        }
     }
 
     public static void setInterpreterVariable(String name, Object value) {
-        Context.getInstance().setInterpreterVariable(name, value);
+        if (Context.getInstance().isInterpreterEnabled()){
+            Context.getInstance().setInterpreterVariable(name, value);
+        } else {
+            createPrivateEngine();
+            engine.put(name, value);       
+        }
     }
 
     public static Object getInterpreterVariable(String name) {
-        return Context.getInstance().getInterpreterVariable(name);
+        if (Context.getInstance().isInterpreterEnabled()){
+            return Context.getInstance().getInterpreterVariable(name);
+        } else {
+            createPrivateEngine();
+            return engine.get(name);
+        }
     }
 
     public static boolean isSimpleCodeEditor() {

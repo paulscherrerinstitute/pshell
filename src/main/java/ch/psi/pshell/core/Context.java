@@ -930,6 +930,12 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
             }
         }
     }
+    
+    public void addScriptStdio(ScriptStdio scriptStdio) {
+        if (scriptStdioListener != null) {
+            scriptStdio.setListener(scriptStdioListener);
+        }
+    }
 
     //Access methods
     public DevicePool getDevicePool() {

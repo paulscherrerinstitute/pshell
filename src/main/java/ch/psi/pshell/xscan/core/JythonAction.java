@@ -109,7 +109,7 @@ public class JythonAction implements Action {
             if ((e.getMessage() != null) && (e.getMessage().startsWith("KeyboardInterrupt"))) {
                 throw new InterruptedException();
             }
-            throw new RuntimeException("Action failed while executing the action script", e);
+            throw new RuntimeException("Action failed while executing the script: " + e.getMessage(), e);
         }
     }
 
