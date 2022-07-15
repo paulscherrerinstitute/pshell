@@ -60,7 +60,7 @@ public class GlobalVariablePanel extends EditablePanel<Variable> {
         jLabel1.setText("Name:");
         add(jLabel1);
 
-        jTextFieldName.setPreferredSize(new java.awt.Dimension(80, 28));
+        jTextFieldName.setPreferredSize(new java.awt.Dimension(120, 28));
         add(jTextFieldName);
 
         jLabel2.setFont(new java.awt.Font("Lucida Grande", 1, 13)); // NOI18N
@@ -68,7 +68,7 @@ public class GlobalVariablePanel extends EditablePanel<Variable> {
         jLabel2.setText("Value:");
         add(jLabel2);
 
-        jTextFieldValue.setPreferredSize(new java.awt.Dimension(80, 28));
+        jTextFieldValue.setPreferredSize(new java.awt.Dimension(120, 28));
         add(jTextFieldValue);
 
         jTextFieldDescription.setText("Description");
