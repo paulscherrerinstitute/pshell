@@ -235,18 +235,21 @@ public abstract class EpicsRegister<T> extends RegisterBase<T> {
                         setPrecision(UNDEFINED_PRECISION);
                     }
                 }
-                try {
-                    description = readDescription();
-                } catch (Exception ex) {
-                    getLogger().log(Level.WARNING, null, ex);
-                }
-                if (Number.class.isAssignableFrom(getType())){
+                //Only read description/units from top-level 
+                if (getParent()==null){
                     try {
-                        unit = readUnit();
+                        description = readDescription();
                     } catch (Exception ex) {
                         getLogger().log(Level.WARNING, null, ex);
+                    }
+                    if (this instanceof EpicsRegisterNumber){
+                        try {
+                            unit = readUnit();
+                        } catch (Exception ex) {
+                            getLogger().log(Level.WARNING, null, ex);
+                        }    
                     }    
-                }            
+                }
             } else {
                 if (getPrecision() == RESOLVE_PRECISION) {
                     setPrecision(UNDEFINED_PRECISION);
