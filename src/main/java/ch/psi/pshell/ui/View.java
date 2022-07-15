@@ -879,10 +879,12 @@ public class View extends MainFrame {
                 View.this.openScript(fileName);
             } else if (getProcessorExtensions().contains(ext)) {
                 View.this.openScriptOrProcessor(fileName);
-            } else if (Arr.containsEqual(dataFileExtensions, ext) || context.getDataManager().isRoot(fileName)){
+            } else if (Arr.containsEqual(dataFileExtensions, ext)){
                 View.this.openDataFile(fileName);
             } else if (Arr.containsEqual(imageFileExtensions, ext)){
                 View.this.openImageFile(fileName);
+            } else if ((new File(fileName).isDirectory()) && context.getDataManager().isRoot(fileName)){
+                View.this.openDataFile(fileName);
             }  else {
                 View.this.openTextFile(fileName);
             }
