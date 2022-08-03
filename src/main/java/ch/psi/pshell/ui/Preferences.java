@@ -38,6 +38,7 @@ import ch.psi.utils.IO;
 import ch.psi.utils.Str;
 import ch.psi.utils.Arr;
 import ch.psi.utils.swing.Terminal;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.awt.Color;
 import java.beans.Transient;
 import java.io.IOException;
@@ -50,6 +51,7 @@ import java.util.logging.Logger;
 /**
  * Entity class holder user Workbench displaying preferences.
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class Preferences {
 
     static final long serialVersionUID = 1;
@@ -136,7 +138,7 @@ public class Preferences {
     public boolean hideScanPanel;
     public boolean hideOutputPanel;
     public boolean showXScanFileBrowser;
-    public boolean showXScanDataViewer;
+    //public boolean showXScanDataViewer;
     public boolean showQueueBrowser;
     
     public boolean backgroundRendering;

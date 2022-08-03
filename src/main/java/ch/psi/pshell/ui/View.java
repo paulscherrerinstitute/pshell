@@ -2310,18 +2310,21 @@ public class View extends MainFrame {
         if (preferences.defaultPlotColormap != null) {
             PlotBase.setDefaultColormap(preferences.defaultPlotColormap);
         }
+        /*
         if (preferences.showXScanDataViewer){
              ProcessorXScan.showDataBrowser();
         } else {
              ProcessorXScan.closeDataBrowser();
         }
+        */
         System.setProperty(PlotBase.PROPERTY_PLOT_MARKER_SIZE, String.valueOf(preferences.markerSize));
 
-        if (!App.isLocalMode()) {
+        //if (!App.isLocalMode()) {
             setScanPlotDetached(preferences.plotsDetached);
             setConsoleLocation(preferences.consoleLocation);
-            setDataPanelLocation(preferences.dataPanelLocation);
-        }
+        //}
+        
+        setDataPanelLocation(preferences.dataPanelLocation);
         dataPanel.setEmbedded(!preferences.openDataFilesInDocTab);
         
         statusBar.setShowDataFileName(!preferences.hideFileName);
