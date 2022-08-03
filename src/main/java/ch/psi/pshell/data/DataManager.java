@@ -1480,7 +1480,7 @@ public class DataManager implements AutoCloseable {
         if (info != null){
             String infoType = String.valueOf(info.get(Provider.INFO_TYPE));
             boolean isDataset = infoType.equals(Provider.INFO_VAL_TYPE_DATASET) || infoType.equals(Provider.INFO_VAL_TYPE_SOFTLINK);
-            if (isDataset && (((Integer) info.get(Provider.INFO_RANK)) > 0)) {
+            if (isDataset && (((Integer) info.getOrDefault(Provider.INFO_RANK, 0)) > 0)) {
                 String dataType = (String) info.get(Provider.INFO_DATA_TYPE);
                 if (dataType != null) {
                     switch (dataType) {
