@@ -37,7 +37,7 @@ public class ContinuousPositionerPanel extends EditablePanel<ContinuousPositione
         bindEditor(jFormattedTextFieldStart, "start", true, 0);
         bindEditor(jFormattedTextFieldEnd, "end", true, 0);
         bindEditor(jFormattedTextFieldStepSize, "stepSize", true, 0);
-        bindEditor(jFormattedTextFieldIntegrationTime, "stepSize", true, 0);
+        bindEditor(jFormattedTextFieldIntegrationTime, "integrationTime", true, 0);
         bindEditor(jFormattedTextFieldBacklash, "additionalBacklash", true, null);
 
         manager = new WrapLayout(WrapLayout.LEADING);
