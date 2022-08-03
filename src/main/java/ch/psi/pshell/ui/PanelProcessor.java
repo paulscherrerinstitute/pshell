@@ -88,7 +88,7 @@ public abstract class PanelProcessor extends Panel implements Processor{
     @Override
     public boolean hasChanged() {
         return false;
-    }
+    }      
     
     // Variables declaration - do not modify//GEN-BEGIN:variables
     // End of variables declaration//GEN-END:variables

@@ -282,7 +282,13 @@ public interface Processor extends Executor {
     default boolean canPause() {
         return false;
     }  
-
+    
+    @Override
+    default boolean canSave() {
+        String[] extensions = getExtensions();
+        return (extensions!=null) && (extensions.length>0);
+    }   
+    
     default void step() {
     }
 
@@ -299,5 +305,5 @@ public interface Processor extends Executor {
     default void onTaskFinished(Task task) {
 
     }
-
+    
 }

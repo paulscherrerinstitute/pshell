@@ -27,6 +27,7 @@ import java.util.HashMap;
 import java.nio.file.NoSuchFileException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -628,9 +629,10 @@ public class View extends MainFrame {
             menuStopAll.setEnabled(buttonStopAll.isEnabled());
 
             menuNew.setEnabled(allowEdit);
-            menuSave.setEnabled(showingExecutor && allowEdit);
-            menuSaveAs.setEnabled(showingExecutor && allowEdit);
-            buttonSave.setEnabled(showingExecutor && getSelectedExecutor().canSave() && allowEdit);
+            
+            menuSave.setEnabled(showingExecutor && getSelectedExecutor().canSave() && allowEdit);
+            menuSaveAs.setEnabled(menuSave.isEnabled());
+            buttonSave.setEnabled(menuSave.isEnabled());
 
             if (context.getState().isProcessing()) {
                 menuRunNext.setVisible(true);
@@ -4221,7 +4223,14 @@ public class View extends MainFrame {
                 menuAddToQueue.setVisible(isShowingExecutor());
                 menuAddToQueue.removeAll();
                 if (executor != null) {
-                    String filename = executor.getFileName();
+                    String _filename = executor.getFileName();
+                    Map<String, Object> _args=null;
+                    if ((_filename==null) && (executor instanceof ScriptProcessor)){
+                        _filename = ((ScriptProcessor)executor).getScript();
+                        _args = ((ScriptProcessor)executor).getArgs();
+                    }
+                    String filename = _filename;
+                    Map<String, Object> args = _args;
                     menuAddToQueue.setEnabled(filename != null);
                     if (filename != null) {
                         if (queues.size() == 0) {
@@ -4229,7 +4238,7 @@ public class View extends MainFrame {
                             item.addActionListener((e) -> {
                                 try {
                                     QueueProcessor tq = openProcessor(QueueProcessor.class, null);
-                                    tq.addNewFile(filename);
+                                    tq.addNewFile(filename, args);
                                 } catch (Exception ex) {
                                     showException(ex);
                                 }
@@ -4248,7 +4257,7 @@ public class View extends MainFrame {
                                     int index = i;
                                     item.addActionListener((e) -> {
                                         try {
-                                            queues.get(index).addNewFile(filename);
+                                            queues.get(index).addNewFile(filename, args);
                                             tabDoc.setSelectedComponent(queues.get(index));
                                         } catch (Exception ex) {
                                             showException(ex);

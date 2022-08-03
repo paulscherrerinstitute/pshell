@@ -21,6 +21,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.EventObject;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.logging.Logger;
 import javax.swing.AbstractAction;
 import javax.swing.AbstractCellEditor;
@@ -162,16 +163,31 @@ public final class QueueProcessor extends PanelProcessor {
     public void addNewFile(String filename, String args) {
         addNewFile(filename, args, model.getRowCount());
     }
+    
+    public void addNewFile(String filename, Map<String, Object> args) throws IOException {
+        addNewFile(filename, (args==null) ? "" : EncoderJson.encode(args, false));
+    }
 
     public void addNewFile(String filename, String args, int index) {
         addNewFile(filename, args, index, null);
     }
 
+    public void addNewFile(String filename, Map<String, Object> args, int index) throws IOException {
+        addNewFile(filename, (args==null) ? "" : EncoderJson.encode(args, false), index);
+    }
+    
     public void addNewFile(String filename, String args, String info) {
         addNewFile(filename, args, model.getRowCount(), info);
     }
 
+    public void addNewFile(String filename, Map<String, Object> args, String info) throws IOException {
+        addNewFile(filename, (args==null) ? "" : EncoderJson.encode(args, false), info);
+    }
+
     public void addNewFile(String filename, String args, int index, String info) {
+        if (args==null){
+            args = "";
+        }
         if (filename != null) {
             for (String path : new String[]{Context.getInstance().getSetup().getScriptPath(),
                 Context.getInstance().getSetup().getHomePath()}) {
@@ -190,6 +206,10 @@ public final class QueueProcessor extends PanelProcessor {
         table.getSelectionModel().setSelectionInterval(index, index);
         updateButtons();
     }
+    
+    public void addNewFile(String filename, Map<String, Object> args, int index,String info) throws IOException {
+        addNewFile(filename, (args==null) ? "" : EncoderJson.encode(args, false), index, info);
+    }    
 
     public JTable getTable() {
         return table;
