@@ -306,16 +306,18 @@ Caused by: java.lang.ArrayIndexOutOfBoundsException: 1001 >= 1001
             }
 
             // Check user parameters
-            // TODO start and end values must be between the motor high and low value - otherwise fail
-            if (start > motorHighLimit || start < motorLowLimit) {
-                // Start value is outside motor high and/or low value
-                logger.info("Start value is outside motor high and/or low value");
-                throw new IllegalArgumentException("Start value is outside motor high and/or low value");
-            }
-            if (end > motorHighLimit || end < motorLowLimit) {
-                // End value is outside motor high and/or low value
-                logger.info("End value is outside motor high and/or low value");
-                throw new IllegalArgumentException("End value is outside motor high and/or low value");
+            if ((motorHighLimit!=0) || (motorLowLimit!=0)){ //low==high==0 => Mo limits
+                // TODO start and end values must be between the motor high and low value - otherwise fail
+                if (start > motorHighLimit || start < motorLowLimit) {
+                    // Start value is outside motor high and/or low value
+                    logger.info("Start value is outside motor high and/or low value");
+                    throw new IllegalArgumentException("Start value is outside motor high and/or low value");
+                }
+                if (end > motorHighLimit || end < motorLowLimit) {
+                    // End value is outside motor high and/or low value
+                    logger.info("End value is outside motor high and/or low value");
+                    throw new IllegalArgumentException("End value is outside motor high and/or low value");
+                }
             }
             // TODO Check minimum step size
             int minimumTicks = 10;
