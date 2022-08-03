@@ -61,9 +61,9 @@ public class LoggerPanel extends MonitoredPanel {
                     comp.setForeground(colorInfo);
                     String cell = (String) table.getModel().getValueAt(row, 3);
                     if (Level.SEVERE.toString().equalsIgnoreCase(cell)) {
-                        comp.setForeground(colorWarning);
-                    } else if (Level.WARNING.toString().equalsIgnoreCase(cell)) {
                         comp.setForeground(colorError);
+                    } else if (Level.WARNING.toString().equalsIgnoreCase(cell)) {
+                        comp.setForeground(colorWarning);
                     }
                     return comp;
                 }
