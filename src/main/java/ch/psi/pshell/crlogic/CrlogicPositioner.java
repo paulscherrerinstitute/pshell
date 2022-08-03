@@ -130,7 +130,8 @@ public class CrlogicPositioner extends RegisterBase<Double> implements ReadbackD
             } else if (getUseEncoder() && (!getUseReadback())) {
                 // use readback link
                 if (getPositionerReadback() != null) {
-                    throw new IllegalArgumentException("Readback not supported if motor is configured to use encoder");
+                    //throw new IllegalArgumentException("Readback not supported if motor is configured to use encoder");
+                    readbackKey = getPositionerReadback();
                 } else {
                     // Set resouce to readback link
                     readbackKey = getKey() + "_ENC";

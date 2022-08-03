@@ -156,16 +156,20 @@ public class CrlogicLoopStream implements ActionLoop {
             Double val;
 
             if (i == 0) {
-                if (useEncoder) {
-                    val = crlogicDataFilter.calculatePositionMotorUseEncoder(raw);
-                } else if (useReadback) {
-                    val = crlogicDataFilter.calculatePositionMotorUseReadback(raw);
+                if (isExtReadback()){
+                    val=raw;
                 } else {
-                    val = crlogicDataFilter.calculatePositionMotor(raw);
-                }
+                    if (useEncoder) {
+                        val = crlogicDataFilter.calculatePositionMotorUseEncoder(raw);
+                    } else if (useReadback) {
+                        val = crlogicDataFilter.calculatePositionMotorUseReadback(raw);
+                    } else {
+                        val = crlogicDataFilter.calculatePositionMotor(raw);
+                    }
 
-                // Check whether data is within the configured range - otherwise drop data
-                use = crlogicDataFilter.filter(val);
+                    // Check whether data is within the configured range - otherwise drop data
+                    use = crlogicDataFilter.filter(val);
+                }
             } else if (scalerIndices.containsKey(i)) {
                 CrlogicDeltaDataFilter f = scalerIndices.get(i);
                 val = f.delta(raw);
@@ -478,6 +482,10 @@ Caused by: java.lang.ArrayIndexOutOfBoundsException: 1001 >= 1001
     public void abort() {
         abort = true;
     }
+    
+    boolean isExtReadback(){
+        return  (!useReadback) && (!useEncoder) && (this.readback != null);
+    }
 
     /**
      * Prepare this loop for execution
@@ -521,8 +529,9 @@ Caused by: java.lang.ArrayIndexOutOfBoundsException: 1001 >= 1001
             // Determine mode of motor
             if ((!useReadback) && (!useEncoder)) {
                 // Open loop
-                if (this.readback != null) {
-                    throw new IllegalArgumentException("Readback not supported if motor is configured in open loop");
+                if (this.readback != null) { //isExtReadback = true
+                    //throw new IllegalArgumentException("Readback not supported if motor is configured in open loop");
+                    readoutResources.add(this.readback);
                 } else {
                     readoutResources.add(this.name);
                 }
@@ -563,7 +572,8 @@ Caused by: java.lang.ArrayIndexOutOfBoundsException: 1001 >= 1001
             } else if (useEncoder && (!useReadback)) {
                 // use readback link
                 if (this.readback != null) {
-                    throw new IllegalArgumentException("Readback not supported if motor is configured to use encoder");
+                    //throw new IllegalArgumentException("Readback not supported if motor is configured to use encoder");
+                    readoutResources.add(this.readback);
                 } else {
                     // Set resouce to readback link
                     readoutResources.add(this.name + "_ENC");
