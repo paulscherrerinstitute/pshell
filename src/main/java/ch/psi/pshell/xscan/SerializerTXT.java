@@ -19,6 +19,7 @@ public class SerializerTXT implements EventBusListener{
 
 	private File file;
 	private boolean appendSuffix = true;
+        private boolean flush = false;
 
 	private boolean first = true;
 	private File outfile;
@@ -44,9 +45,10 @@ public class SerializerTXT implements EventBusListener{
 	 *            Flag whether to append a _0000 suffix after the original file
 	 *            name
 	 */
-	public SerializerTXT(File file, boolean appendSuffix) {
+	public SerializerTXT(File file, boolean appendSuffix, boolean flush) {
 		this.file = file;
 		this.appendSuffix = appendSuffix;
+                this.flush = flush;
 	}
 
 	//@Subscribe
@@ -162,6 +164,9 @@ public class SerializerTXT implements EventBusListener{
 					buffer.append("\n"); // Append newline
 				}
 				writer.write(buffer.toString());
+                                if (flush){                                             
+                                    writer.flush();
+                                }
 			}
 			else if (message instanceof StreamDelimiterMessage) {
 				StreamDelimiterMessage m = (StreamDelimiterMessage) message;

@@ -202,8 +202,8 @@ public class Acquisition {
                 if (Context.getInstance().getConfig().fdaSerialization){
                     //Priority to Type field
                     datafile = new File(fprefix+".txt");
-                    this.serializer = new SerializerTXT(datafile, configuration.getAppendSuffix());                    
                     executionParameters = Context.getInstance().getExecutionPars();
+                    this.serializer = new SerializerTXT(datafile, configuration.getAppendSuffix(), executionParameters.getFlush());                    
                     executionParameters.setDataPath(datafile.getParentFile()); //Create base dir and trigger callbacks
                     
                 } else {
