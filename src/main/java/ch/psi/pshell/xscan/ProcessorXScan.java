@@ -70,10 +70,10 @@ public final class ProcessorXScan extends MonitoredPanel implements Processor {
     public static final String SCAN_TYPE = "XScan";
     public static final String BROWSER_TITLE = "XScan Data";
 
-    /*
+    
     static {
-        View view = App.getInstance().getMainFrame();
-        if (view != null) {
+        if (App.getInstance().getMainFrame() != null) {
+            /*
             JMenuBar menu = App.getInstance().getMainFrame().getMenu();
             JMenu menuView = (JMenu) SwingUtils.getComponentByName(menu, "menuView");
             JCheckBoxMenuItem menuDataBrowser = new JCheckBoxMenuItem(BROWSER_TITLE);
@@ -95,16 +95,19 @@ public final class ProcessorXScan extends MonitoredPanel implements Processor {
             //TODO: On Mac, Java >10,  meta+B generates 2 events (with and without modifier)
             //https://bugs.openjdk.java.net/browse/JDK-8208712
             SwingUtils.adjustMacMenuBarAccelerator(menuDataBrowser);
+            */            
             try {
                 if ((App.hasArgument("fda_browser"))
-                        || ("true".equalsIgnoreCase(Context.getInstance().getSetting("FdaBrowser")))) {
+                        //|| ("true".equalsIgnoreCase(Context.getInstance().getSetting("FdaBrowser")))
+                        ) {
                     showDataBrowser();
                 }
-            } catch (IOException ex) {
+            } catch (Exception ex) {
+                SwingUtils.showException(App.getInstance().getMainFrame(), ex);
             }
         }
     }
-     */
+     
     public static boolean isDataBrowserVisible() {
         if (App.getInstance().getMainFrame() != null) {
             JTabbedPane tab = App.getInstance().getMainFrame().getLeftTab();
