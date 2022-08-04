@@ -98,7 +98,7 @@ public abstract class PanelProcessor extends Panel implements Processor{
     static QueueProcessor detachedQueueProcessor;
     
     @Override
-    public void onUnloaded() {
+    protected void onUnloaded() {
         super.onUnloaded();
         if (this.isDetached()) {
             if (detachedQueueProcessor != null) {
