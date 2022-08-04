@@ -4,6 +4,7 @@ package ch.psi.pshell.ui;
 import ch.psi.pshell.core.Context;
 import ch.psi.utils.IO;
 import java.io.File;
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
@@ -15,6 +16,8 @@ public abstract class ScriptProcessor extends PanelProcessor {
     public abstract String getScript();
     
     public abstract Map<String, Object> getArgs();
+    
+    private volatile boolean running;
     
     @Override
     public boolean canSave() {
@@ -28,8 +31,16 @@ public abstract class ScriptProcessor extends PanelProcessor {
             throw new Exception ("Execution procedure not implemented");
         }
         Map<String, Object> args = getArgs();
-        runAsync(getScript(), args);
+        running = true;
+        runAsync(getScript(), args).handle((ok, ex) -> {
+            running = false;
+            return ok;
+        });
     } 
+    
+    public boolean isRunning(){
+        return running;
+    }
     
     @Override
     public void queue() throws Exception{
