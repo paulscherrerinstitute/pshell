@@ -1,7 +1,12 @@
 package ch.psi.pshell.ui;
 
 import ch.psi.pshell.core.Context;
+import ch.psi.pshell.swing.Executor;
+import ch.psi.utils.IO;
+import java.io.File;
 import java.io.IOException;
+import java.util.List;
+import java.util.Map;
 
 /**
  *
@@ -89,6 +94,68 @@ public abstract class PanelProcessor extends Panel implements Processor{
     public boolean hasChanged() {
         return false;
     }      
+    
+    static QueueProcessor detachedQueueProcessor;
+    
+    @Override
+    public void onUnloaded() {
+        super.onUnloaded();
+        if (this.isDetached()) {
+            if (detachedQueueProcessor != null) {
+                getContext().getPluginManager().unloadPlugin(detachedQueueProcessor);
+                getApp().exit(this);
+            }
+        }
+    }
+    
+    protected QueueProcessor getQueueProcessor() throws Exception{
+        QueueProcessor tq;
+        if (this.isDetached()) {
+            if ((detachedQueueProcessor == null) || !detachedQueueProcessor.isLoaded()) {
+                detachedQueueProcessor = new QueueProcessor();
+                Context.getInstance().getPluginManager().loadPlugin(detachedQueueProcessor, "Queue");
+                Context.getInstance().getPluginManager().startPlugin(detachedQueueProcessor);
+            }
+            tq = detachedQueueProcessor;
+            tq.requestFocus();
+        } else {
+            List<QueueProcessor> queues = getView().getQueues();
+            if (queues.isEmpty()) {
+                tq = getView().openProcessor(QueueProcessor.class, null);
+            } else {
+                tq = queues.get(0);
+            }
+            getView().getDocumentsTab().setSelectedComponent(tq);
+        }
+        return tq;
+    }
+    
+    public void queue() throws Exception{
+        if (getFileName()==null){
+            throw new Exception("File not saved");
+        }
+        getQueueProcessor().addNewFile(getFileName());
+    }
+    
+    
+    public void runNext() throws Exception{
+        runNext(this);
+    }    
+    
+    public static void runNext(Executor executor) throws Exception{
+        String filename = executor.getFileName();
+        if (filename==null){
+            throw new Exception("File not saved");
+        }           
+        
+        File file = new File(filename);        
+        if (Context.getInstance().getState().isProcessing()) {
+            App.getInstance().evalFileNext(file);
+        } else {
+            App.getInstance().evalFile(file);
+        }
+    }    
+
     
     // Variables declaration - do not modify//GEN-BEGIN:variables
     // End of variables declaration//GEN-END:variables

@@ -1409,6 +1409,10 @@ public class App extends ObservableBase<AppListener> {
 
     Processor runningProcessor;
 
+    public Object evalFile(File file) throws Exception {
+        return evalFile(file,  null);
+    }
+    
     public Object evalFile(File file, Map<String, Object> args) throws Exception {
         return evalFile(file, args, false);
     }
@@ -1431,7 +1435,7 @@ public class App extends ObservableBase<AppListener> {
         }
         return context.evalFile(file.getPath(), args);
     }
-
+    
     public Object evalStatement(String statement) throws Exception {
         context.clearAborted();
         return context.evalLine(statement);
@@ -1510,7 +1514,7 @@ public class App extends ObservableBase<AppListener> {
     }
 
     public void evalFileNext(File file, Map<String, Object> args) throws State.StateException {
-        Context.getInstance().getState().assertProcessing();
+        Context.getInstance().getState().assertProcessing();        
         ExecutionStage stage = new ExecutionStage(file, args);
         synchronized (executionQueue) {
             logger.info("Next stage: " + stage.toString());

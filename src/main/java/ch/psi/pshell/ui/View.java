@@ -503,7 +503,7 @@ public class View extends MainFrame {
         for (Processor processor : Processor.getServiceProviders()) {
             addProcessorComponents(processor);
         }
-
+        
         App.getInstance().addListener(new AppListener() {
             @Override
             public boolean canExit(Object source) {
@@ -648,6 +648,10 @@ public class View extends MainFrame {
         if (context.getConfig().instanceName.length() > 0) {
             setTitle(App.getApplicationTitle() + " [" + context.getConfig().instanceName + "]");
         }
+        if (App.getInstance().isContextPersisted()) {
+            restoreOpenedFiles();
+        }
+
         //In case openCmdLineFiles() in onStart didn't open because context was not instantiated
         openCmdLineFiles(true);
     }
@@ -1644,6 +1648,35 @@ public class View extends MainFrame {
         });
     }
 
+    public boolean isScriptOpen(String file) throws IOException {
+        for (ScriptEditor se : getScriptEditors()) {
+            if ((se.getFileName() != null) && sameFile(file, se.getFileName())){
+                return true;
+            }
+        }
+        return false;
+    }        
+
+    public void closeFile(String file) throws IOException {
+        for (ScriptEditor se : getScriptEditors()) {
+            if ((se.getFileName() != null) && sameFile(file, se.getFileName())){
+                if (tabDoc.indexOfComponent(se) >= 0) {
+                    tabDoc.remove(se);
+                }
+            }
+        }     
+        for (Processor p : getProcessors()) {
+            try {
+                if (sameFile(file, p.getFileName())){
+                    if (tabDoc.indexOfComponent(p.getPanel()) >= 0) {
+                        tabDoc.remove(p.getPanel());
+                    }
+                }
+            } catch (Exception ex) {
+            }
+        }
+    }        
+
     public ScriptEditor openScript(String file) throws IOException {
         if (file == null) {
             return null;
@@ -1751,6 +1784,18 @@ public class View extends MainFrame {
         return editor;
     }
 
+    public boolean isProcessorOpen(String file) {    
+        for (Processor p : getProcessors()) {
+            try {
+                if (sameFile(file, p.getFileName())){
+                    return true;
+                }
+            } catch (Exception ex) {
+            }
+        }
+        return false;
+    }
+    
     public <T extends Processor> T openProcessor(Class<T> cls, String file) throws IOException, InstantiationException, IllegalAccessException {
         if (file != null) {
             for (Processor p : getProcessors()) {
@@ -1790,6 +1835,29 @@ public class View extends MainFrame {
         return processor;
     }
 
+    
+    public boolean isScriptOrProcessorOpen(String file) throws IOException {
+        return isScriptOpen(file) || isProcessorOpen(file);
+    }
+    
+    
+    public Processor getProcessorForFile(String file){
+        String extension = IO.getExtension(file);
+        if (!extension.isEmpty()) {
+            for (Processor processor : Processor.getServiceProviders()) {
+                if (Arr.containsEqual(processor.getExtensions(), extension)) {                    
+                    return processor;
+                }
+            }
+        }
+        return null;
+    }
+    
+    
+    public boolean isProcessorFile(String file){
+        return (getProcessorForFile(file) != null);
+    }
+    
     public void openScriptOrProcessor(String file) throws IOException, InstantiationException, IllegalAccessException {
         String extension = IO.getExtension(file);
         if (!extension.isEmpty()) {
@@ -2251,12 +2319,24 @@ public class View extends MainFrame {
         preferences = Preferences.load();
         applyPreferences();
         if (App.getInstance().isContextPersisted()) {
-            for (String file : openedFiles.stringPropertyNames()) {
-                try {
-                    openScriptOrProcessor(file);
-                } catch (Exception ex) {
-                    logger.log(Level.INFO, null, ex);
+            restoreOpenedFiles();
+        }        
+    }
+    
+    void restoreOpenedFiles(){        
+        for (String file : openedFiles.stringPropertyNames()) {
+            try {
+                if (isProcessorFile(file)){
+                    if (isScriptOpen(file)){
+                        //Opened before plugin was loaded
+                        closeFile(file);
+                    }
                 }
+                if (!isScriptOrProcessorOpen(file)){
+                    openScriptOrProcessor(file);
+                }
+            } catch (Exception ex) {
+                logger.log(Level.INFO, null, ex);
             }
         }
     }
@@ -4229,6 +4309,17 @@ public class View extends MainFrame {
                         _filename = ((ScriptProcessor)executor).getScript();
                         _args = ((ScriptProcessor)executor).getArgs();
                     }
+                    
+                    if (executor instanceof Processor){
+                        String home = ((Processor)executor).getHomePath();
+                        if ((home!=null) && (!home.isBlank())){
+                            if (IO.isSubPath(_filename, home)) {
+                                //If in script folder then use only relative
+                                _filename =  IO.getRelativePath(_filename, home);
+                            }
+                        }
+                    }
+
                     String filename = _filename;
                     Map<String, Object> args = _args;
                     menuAddToQueue.setEnabled(filename != null);
@@ -5261,18 +5352,22 @@ public class View extends MainFrame {
 
     private void menuRunNextbuttonRunActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuRunNextbuttonRunActionPerformed
         try {
-            String filename = getSelectedExecutor().getFileName();
-            if (filename != null) {
-                if (context.getState().isProcessing()) {
-                    for (String path : new String[]{context.getSetup().getScriptPath(), context.getSetup().getHomePath()}) {
-                        if (IO.isSubPath(filename, path)) {
-                            filename = IO.getRelativePath(filename, path);
-                            break;
-                        }
+            Executor executor = getSelectedExecutor();
+            if (executor!=null){
+                String filename = executor.getFileName();
+                Map<String, Object> args=null;
+                if ((filename==null) && (executor instanceof ScriptProcessor)){
+                    filename = ((ScriptProcessor)executor).getScript();
+                    args = ((ScriptProcessor)executor).getArgs();
+                }
+
+                if (filename != null) {
+                    File file = new File(filename);
+                    if (context.getState().isProcessing()) {
+                        App.getInstance().evalFileNext(file, args);
+                    } else {
+                        App.getInstance().evalFile(file, args);
                     }
-                    App.getInstance().evalFileNext(new File(filename));
-                } else {
-                    runScript();
                 }
             }
         } catch (Exception ex) {

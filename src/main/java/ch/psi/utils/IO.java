@@ -667,6 +667,28 @@ public class IO {
         }
         return fileName;
     }
+    
+    public static File getRelativePath(File file, File referenceFile) {
+        try {
+            String fileName =  file.toString();
+            try {
+                file = file.getCanonicalFile();
+            } catch (Exception ex) {
+            }
+            try {
+                referenceFile = referenceFile.getCanonicalFile();
+            } catch (Exception ex) {
+            }
+            String ret = referenceFile.toURI().relativize(file.toURI()).getPath();
+            //TODO: sometimes file.toURI() appends a slash  to the name
+            if (ret.endsWith("/") && !fileName.endsWith("/")) {
+                ret = ret.substring(0, ret.length() - 1);
+            }
+            return new File(ret);
+        } catch (Exception ex) {
+        }
+        return file;
+    }    
 
     //Asserting
     public static void assertExists(String path) throws FileNotFoundException {
