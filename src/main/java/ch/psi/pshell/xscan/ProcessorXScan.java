@@ -608,12 +608,33 @@ public final class ProcessorXScan extends MonitoredPanel implements Processor {
     Configuration config;
 
     public Map<String, Object> getVariables() {
+        return getVariables(panelConfig.getObject());
+    }
+    
+    public Map<String, Object> getVariables(Configuration model) {
         Map<String, Object> variables = new LinkedHashMap<>();
-        Configuration model = panelConfig.getObject();
         for (Variable v : model.getVariable()) {
             variables.put(v.getName(), v.getValue());
         }
         return variables;
+    }
+    
+    void injectVariables(){
+        injectVariables(panelConfig.getObject());
+    }
+    
+    void injectVariables(Configuration model){
+        for (Map.Entry<String, Object> entry : getVariables(model).entrySet()) {
+            try {
+                Object value = entry.getValue();
+                if ((value instanceof String) && ((String) value).startsWith("=")) {
+                    value = eval(((String) value).substring(1).trim());
+                }
+                setInterpreterVariable(entry.getKey(), value);
+            } catch (Exception ex) {
+                Logger.getLogger(ProcessorXScan.class.getName()).severe("Error setting variable " + entry.getKey() + ": " + ex.getMessage());
+            }
+        }
     }
 
     void doExecution(boolean batch, Map<String, Object> vars) throws Exception {
@@ -630,17 +651,7 @@ public final class ProcessorXScan extends MonitoredPanel implements Processor {
             App.getInstance().getMainFrame().updateButtons();   //Update pause button state
             config = panelConfig.getObject();
 
-            for (Map.Entry<String, Object> entry : getVariables().entrySet()) {
-                try {
-                    Object value = entry.getValue();
-                    if ((value instanceof String) && ((String) value).startsWith("=")) {
-                        value = eval(((String) value).substring(1).trim());
-                    }
-                    setInterpreterVariable(entry.getKey(), value);
-                } catch (Exception ex) {
-                    Logger.getLogger(ProcessorXScan.class.getName()).severe("Error setting variable " + entry.getKey() + ": " + ex.getMessage());
-                }
-            }
+            injectVariables();
 
             acquisition.initalize(ebus, config);
             if (!batch && App.isScanPlottingActive()) {
@@ -780,13 +791,14 @@ public final class ProcessorXScan extends MonitoredPanel implements Processor {
         Deserializer deserializer = deserializerTXT ? new DeserializerTXT(ebus, file) : new DeserializerPShell(ebus, file, path, dm);
 
         Configuration c = load(cfile);
+        injectVariables(c);
         VDescriptor vdescriptor = Acquisition.mapVisualizations(c.getVisualization());
 
         Visualizer visualizer = new Visualizer(vdescriptor);
         visualizer.setUpdateAtStreamElement(false);
         visualizer.setUpdateAtStreamDelimiter(false);
         visualizer.setUpdateAtEndOfStream(true);
-
+        
         ebus.register(visualizer);
 
         //tc.updatePanel(visualizer.getPlotPanels());

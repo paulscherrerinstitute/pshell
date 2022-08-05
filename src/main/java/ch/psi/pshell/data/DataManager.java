@@ -1361,7 +1361,7 @@ public class DataManager implements AutoCloseable {
                 }
             }
         } catch (Exception ex){
-            logger.log(Level.INFO, null, ex);
+            logger.log(Level.FINER, null, ex);
         }
         return doGetScanPlots(root, path);
     }
