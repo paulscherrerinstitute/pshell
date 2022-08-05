@@ -15,12 +15,17 @@ import java.util.Map;
  *
  */
 public class ProviderFDA extends ProviderText{
+    public static final String ITEM_SEPARATOR = "\t";
     public static final String INFO_FIELD_DIMENSIONS= "Field Dimensions";
     public static boolean ADD_ATTRIBUTE_FILE_TIMESTAMP = true;
     
+   public static String getDefaultItemSeparator() {
+        return ITEM_SEPARATOR;
+    }
+    
     public ProviderFDA(){
         super();
-        this.setItemSeparator("\t");
+        this.setItemSeparator(getDefaultItemSeparator());
     }
     @Override
     protected Path getAttributePath(String root, String path) throws IOException {

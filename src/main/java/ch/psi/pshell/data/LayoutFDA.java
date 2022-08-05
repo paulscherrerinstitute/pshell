@@ -62,6 +62,27 @@ public class LayoutFDA extends LayoutTable {
         return super.getScanPlots(root, path, dm);
     }
     
+    public static boolean isFdaDataFile(Path filePath) throws IOException{
+        return isFdaDataFile(filePath, null);
+    }
+    
+    public static boolean isFdaDataFile(Path filePath, Provider p) throws IOException{
+        String separator = (p==null) ? ProviderFDA.ITEM_SEPARATOR: ((ProviderText)p).getItemSeparator();
+        try (BufferedReader br = new BufferedReader(new FileReader(filePath.toFile()))) {
+            String first = br.readLine(); 
+            String second = br.readLine();
+            String third = br.readLine();
+            if ((first.startsWith("#")) && (second.startsWith("#")) && (!third.startsWith("#"))){
+                for (String token: second.substring(1).split(separator)){
+                    Integer.valueOf(token.trim());
+                }
+                return true;
+            }
+        } catch (Exception ex) {            
+        }
+        return false;
+    }
+    
     public static boolean isFdaDataFile(String root, String path) throws IOException{
         return isFdaDataFile(root, path, (Context.isDataManagerInstantiated()) ? Context.getInstance().getDataManager() : null, null);
     }
@@ -77,18 +98,7 @@ public class LayoutFDA extends LayoutTable {
         }       
         if ((p!=null) && (p instanceof ProviderText)){
             Path filePath = ((ProviderText)p).getFilePath(root, path);
-            try (BufferedReader br = new BufferedReader(new FileReader(filePath.toFile()))) {
-                String first = br.readLine(); 
-                String second = br.readLine();
-                String third = br.readLine();
-                if ((first.startsWith("#")) && (second.startsWith("#")) && (!third.startsWith("#"))){
-                    for (String token: second.substring(1).split(((ProviderText)p).getItemSeparator())){
-                        Integer.valueOf(token.trim());
-                    }
-                    return true;
-                }
-            } catch (Exception ex) {            
-            }
+            return isFdaDataFile(filePath, p);
         }
         return false;
     }

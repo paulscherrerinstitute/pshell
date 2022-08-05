@@ -2,11 +2,9 @@ package ch.psi.pshell.ui;
 
 import ch.psi.pshell.core.Context;
 import ch.psi.pshell.swing.Executor;
-import ch.psi.utils.IO;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
-import java.util.Map;
 
 /**
  *

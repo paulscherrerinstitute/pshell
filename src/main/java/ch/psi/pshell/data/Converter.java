@@ -23,8 +23,19 @@ public interface Converter {
     public String getExtension();
     
     default boolean canConvert(DataSlice slice, Map<String, Object> info, Map<String, Object> attrs){
-        return true;
-    }    
+        return false;
+    }  
+    
+    default boolean canConvert(File file) throws Exception{
+        try{
+            DataManager dataManager = new DataManager(Context.getInstance(), file.isDirectory() ? 
+                                                     Context.getInstance().getConfig().getDataProvider() : IO.getExtension(file),
+                                                     Context.getInstance().getConfig().getDataLayout());
+            return canConvert(dataManager, file.getParent(), file.getName());
+        } catch (Exception ex){
+            return false;
+        }
+    }      
     
     default boolean canConvert(DataManager dataManager, String root, String path){
         try{
@@ -32,12 +43,15 @@ public interface Converter {
             Map<String, Object> info = dataManager.getInfo(root, path);
             Map<String, Object> attrs = dataManager.getAttributes(root, path);
             return canConvert(slice, info, attrs);
-            } catch (Exception ex) {
-                return false;
-            }  
+        } catch (Exception ex) {
+            return false;
+        }  
     }
-
-    void convert(DataSlice slice, Map<String, Object> info, Map<String, Object> attrs, File output) throws Exception;
+  
+    
+    default void convert(DataSlice slice, Map<String, Object> info, Map<String, Object> attrs, File output) throws Exception{
+        throw new Exception ("Not implemented");
+    }
 
     default void convert(DataManager dataManager, String root, String path, File output) throws Exception {
         DataSlice slice = dataManager.getData(root, path);
@@ -45,9 +59,16 @@ public interface Converter {
         Map<String, Object> attrs = dataManager.getAttributes(root, path);
         convert(slice, info, attrs, output);
     }
+    
+    default void convert(File file, File output) throws Exception{        
+        DataManager dataManager = new DataManager(Context.getInstance(), file.isDirectory() ? 
+                                                 Context.getInstance().getConfig().getDataProvider() : IO.getExtension(file),
+                                                 Context.getInstance().getConfig().getDataLayout());
+        convert(dataManager, file.getParent(), file.getName(), output);
+    }        
 
     default File convert(DataManager dataManager, String root, String path, Component parent) throws Exception {
-        JFileChooser chooser = new JFileChooser(Context.getInstance().getSetup().getDataPath());        
+        JFileChooser chooser = new JFileChooser(getDefaultOutputFolder(root, path));        
         chooser.addChoosableFileFilter(new ExtensionFileFilter(getName() + " files (*." + getExtension() + ")", new String[]{getExtension()}));
         chooser.setAcceptAllFileFilterUsed(false);
         chooser.setSelectedFile(Paths.get(chooser.getCurrentDirectory().toString(),IO.getPrefix(path)+"." + getExtension()).toFile());
@@ -63,6 +84,43 @@ public interface Converter {
         }
         return ret;
     }
+    
+    default File convert(File file, Component parent) throws Exception {
+        JFileChooser chooser = new JFileChooser(file.getParent());        
+        chooser.addChoosableFileFilter(new ExtensionFileFilter(getName() + " files (*." + getExtension() + ")", new String[]{getExtension()}));
+        chooser.setAcceptAllFileFilterUsed(false);
+        chooser.setSelectedFile(Paths.get(chooser.getCurrentDirectory().toString(),IO.getPrefix(file)+"." + getExtension()).toFile());
+        int rVal = chooser.showSaveDialog(parent);
+        File ret = null;
+        if (rVal == JFileChooser.APPROVE_OPTION) {
+            String fileName = chooser.getSelectedFile().getAbsolutePath();
+            if (IO.getExtension(fileName).isEmpty()) {
+                fileName += "." + getExtension();
+            }
+            ret = new File(fileName);
+            convert(file, ret);
+        }
+        return ret;
+    }    
+        
+    
+    default String getDefaultOutputFolder(String root, String path){
+        File f = Paths.get(root, path).toFile();
+        if (f.isDirectory()){
+            return f.toString();
+        }
+        if (f.isFile()){
+            return f.getParentFile().toString();
+        }        
+        f = new File(root);
+        if (f.isDirectory()){
+            return f.toString();
+        }
+        if (f.isFile()){
+            return f.getParentFile().toString();
+        }           
+        return Context.getInstance().getSetup().getDataPath();
+    }
 
     default CompletableFuture startConvert(DataManager dataManager, String root, String path, File output) {
         return Threading.getFuture(() -> convert(dataManager, root, path, output));
@@ -71,6 +129,15 @@ public interface Converter {
     default CompletableFuture startConvert(DataManager dataManager, String root, String path, Component parent) {
         return Threading.getFuture(() -> convert(dataManager, root, path, parent));
     }
+    
+    default CompletableFuture startConvert(File file, File output) {
+        return Threading.getFuture(() -> convert(file, output));
+    }
+    
+    default CompletableFuture startConvert(File file, Component parent) {
+        return Threading.getFuture(() -> convert(file, parent));
+    }
+
 
     static ArrayList<Class> dynamicProviders = new ArrayList<Class>() {
         /*{   //Defaut conveters

@@ -186,7 +186,10 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
                 showException(ex);
             }
         });
-        filePopupMenu.add(menuPlot);        
+        filePopupMenu.add(menuPlot);     
+        
+        JMenu menuConvertFile = new JMenu("Convert"); 
+        filePopupMenu.add(menuConvertFile);             
 
         JMenuItem menuBrowse = new JMenuItem("");
         menuBrowse.addActionListener((ActionEvent e) -> {
@@ -321,6 +324,28 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
                             menuCalcSize.setVisible(selected.isDirectory() && (path.getPathCount() > 1));
                             menuRefresh.setVisible(selected.isDirectory());
                             menuFileOrder.setVisible(path.getPathCount() == 1);
+                            menuConvertFile.setVisible(false);
+                            //if (isAdditionaExtension){
+                                menuConvertFile.removeAll();
+                                for (Converter converter : Converter.getServiceProviders()){
+                                    TreePath tp = treeFolder.getSelectionPath();
+                                    if (converter.canConvert(file)){
+                                        JMenuItem item = new JMenuItem(converter.getName());                                        
+                                        item.addActionListener((a)->{    
+                                            converter.startConvert(file, DataPanel.this).handle((ret,ex)->{
+                                                if (ex != null){
+                                                    showException((Exception) ex);
+                                                } else if (ret!=null){
+                                                    showMessage("Success", "Success creating:\n" + String.valueOf(ret));
+                                                }
+                                                return ret;
+                                            });
+                                        });
+                                        menuConvertFile.add(item);
+                                    }
+                                }
+                                menuConvertFile.setVisible(menuConvertFile.getMenuComponentCount()>0);
+                            //}
                             
                             if (isRoot==false){
                                 menuProcessing.setVisible(false);
@@ -493,7 +518,7 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
                                                 converter.startConvert(dataManager, currentFile.getPath(),  getDataPath(tp), DataPanel.this).handle((ret,ex)->{
                                                     if (ex != null){
                                                         showException((Exception) ex);
-                                                    } else{
+                                                    } else if (ret!=null){
                                                         showMessage("Success", "Success creating:\n" + String.valueOf(ret));
                                                     }
                                                     return ret;
@@ -502,9 +527,9 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
                                             menuConvert.add(item);
                                         }
                                     }
-                                    
-                                    menuPlotData.setVisible(true);
+                                                                 
                                     menuConvert.setVisible(menuConvert.getMenuComponentCount()>0);
+                                    menuPlotData.setVisible(true);
                                 }
                             }
                         }

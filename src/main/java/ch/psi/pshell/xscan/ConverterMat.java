@@ -1,8 +1,12 @@
 package ch.psi.pshell.xscan;
 
+import ch.psi.pshell.core.Context;
 import ch.psi.pshell.data.Converter;
+import ch.psi.pshell.data.DataManager;
 import ch.psi.pshell.data.DataSlice;
+import ch.psi.pshell.data.LayoutFDA;
 import ch.psi.pshell.data.Provider;
+import ch.psi.utils.IO;
 import com.jmatio.io.MatFileWriter;
 import com.jmatio.types.MLArray;
 import com.jmatio.types.MLDouble;
@@ -28,12 +32,27 @@ public class ConverterMat implements Converter {
     public boolean canConvert(DataSlice slice, Map<String, Object> info, Map<String, Object> attrs){
         try{
             String[] fieldNames = (String[]) info.get(Provider.INFO_FIELD_NAMES);     
-            return true;
+            return (fieldNames!=null);
         } catch (Exception ex){
             return false;
         }
     }
+    
+    @Override
+    public boolean canConvert(File file){
+        try{
+             return IO.getExtension(file).equals("txt") && LayoutFDA.isFdaDataFile(file.toPath());
+        } catch (Exception ex){
+            return false;
+        }
+    }    
 
+    @Override
+    public void convert(File file, File output) throws Exception {
+        DataManager dataManager = new DataManager(Context.getInstance(), "fda", "fda");
+        convert(dataManager, file.getParent(), file.getName(), output);
+    }    
+    
     @Override
     public void convert(DataSlice slice, Map<String, Object> info, Map<String, Object> attrs, File output) throws Exception {
         List<List<Object>> dlist = new ArrayList<List<Object>>();
