@@ -22,6 +22,10 @@ public abstract class ScriptProcessor extends PanelProcessor {
         return false;
     }  
     
+    protected boolean isScriptExceptionShown(){
+        return (getView()==null) ? true : getView().getPreferences().getScriptPopupDlg() != Preferences.ScriptPopupDialog.None;
+    }
+    
     @Override
     public void execute() throws Exception{
         //Default implementation uses getScript and getArgs
@@ -29,11 +33,23 @@ public abstract class ScriptProcessor extends PanelProcessor {
             throw new Exception ("Execution procedure not implemented");
         }
         Map<String, Object> args = getArgs();
+        
+        
+        boolean showException = isScriptExceptionShown();
+            
         running = true;
         runAsync(getScript(), args).handle((ok, ex) -> {
+            if (ex != null) {               
+                if (showException) {
+                    if (!getContext().isAborted()) {     
+                        showException((Exception)ex);
+                    }  
+                }
+            }
             running = false;
             return ok;
         });
+        
     } 
     
     public boolean isRunning(){
