@@ -3,6 +3,7 @@ package ch.psi.utils;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.FileFilter;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -312,7 +313,7 @@ public class IO {
         }
         return list.toArray(new File[0]);
     }
-
+    
     public static File[] listFilesRecursive(String pathName) {
         return listFilesRecursive(new File(pathName));
     }
@@ -388,6 +389,40 @@ public class IO {
         }
         return ret.toArray(new File[0]);
     }    
+    
+    public static FileFilter getHiddenFileFileter(){
+        return new FileFilter(){
+            @Override
+            public boolean accept(File entry)
+            {
+                return entry.isHidden();
+            }
+        };
+    }
+    
+    public static FileFilter getNotHiddenFileFileter(){
+        return new FileFilter(){
+            @Override
+            public boolean accept(File entry)
+            {
+                return !entry.isHidden();
+            }
+        };
+    }    
+    
+    public static File[] listFiles(File path, FileFilter filter) {
+        return path.listFiles(filter);
+    }    
+    
+    public static File[] listFilesRecursive(File path, FileFilter filter) {
+        ArrayList<File> ret = new ArrayList<>();
+        ret.addAll(Arrays.asList(listFiles(path, filter)));
+        for (File child : listSubFolders(path)){
+            ret.addAll(Arrays.asList(listFilesRecursive(child, filter)));
+        }
+        return ret.toArray(File[]::new);
+    }
+    
 
     public static void orderByName(File[] files) {
         Arrays.sort(files, (a, b) -> a.compareTo(b));

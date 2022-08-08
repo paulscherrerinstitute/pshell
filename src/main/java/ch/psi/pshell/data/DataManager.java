@@ -343,7 +343,12 @@ public class DataManager implements AutoCloseable {
     public DirectoryStream.Filter getFileFilter() {
          return getFileFilter(new String[0]);
     }
+    
     public DirectoryStream.Filter getFileFilter(final String[] additionalExtensions) {
+        return getFileFilter(additionalExtensions, false);
+    }
+    
+    public DirectoryStream.Filter getFileFilter(final String[] additionalExtensions, boolean hidden) {
         ProviderData pd = getProviderData();
         if (pd == null) {
             return null;
@@ -351,24 +356,26 @@ public class DataManager implements AutoCloseable {
         if (pd.fileFilter == null) {
             pd.fileFilter = (DirectoryStream.Filter<Path>) (Path path) -> {
                 File file = path.toFile();
-                if (file.isDirectory()) {
-                    if (!isDataPacked()) {
-                        if (isRoot(file.getParent())) {
-                            return false;
-                        }
-                    }
-                    return true;
-                } else {
-                    String ext = IO.getExtension(file);
-                    if (isDataPacked()) {
-                        if (getDataFileType() != null) {
-                            if (ext.equals(getDataFileType())) {
-                                return true;
+                if (!file.isHidden() || hidden){
+                    if (file.isDirectory()) {
+                        if (!isDataPacked()) {
+                            if (isRoot(file.getParent())) {
+                                return false;
                             }
                         }
-                    }
-                    if (Arr.containsEqual(additionalExtensions, ext)){
                         return true;
+                    } else {
+                        String ext = IO.getExtension(file);
+                        if (isDataPacked()) {
+                            if (getDataFileType() != null) {
+                                if (ext.equals(getDataFileType())) {
+                                    return true;
+                                }
+                            }
+                        }
+                        if (Arr.containsEqual(additionalExtensions, ext)){
+                            return true;
+                        }
                     }
                 }
                 return false;

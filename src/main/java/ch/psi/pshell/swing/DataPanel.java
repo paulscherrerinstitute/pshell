@@ -7,6 +7,7 @@ import ch.psi.pshell.data.Provider;
 import ch.psi.pshell.data.DataSlice;
 import ch.psi.pshell.data.Layout;
 import ch.psi.pshell.data.PlotDescriptor;
+import ch.psi.pshell.data.ProviderFDA;
 import ch.psi.pshell.plot.Plot;
 import ch.psi.pshell.scripting.ViewPreference;
 import ch.psi.utils.Range;
@@ -50,6 +51,7 @@ import java.nio.file.WatchKey;
 import java.nio.file.WatchService;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -60,6 +62,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.BorderFactory;
 import javax.swing.ImageIcon;
+import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
@@ -221,13 +224,25 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
                 menuFileOrder.add(item);
             }
         }
+        menuFileOrder.addSeparator();
+        JCheckBoxMenuItem menuSeparateFolders = new JCheckBoxMenuItem("Separate Folders");    
+        menuSeparateFolders.addActionListener((ActionEvent e) -> {
+                    if (menuSeparateFolders.isSelected() != getSeparateFolders()) {
+                        setSeparateFolders(menuSeparateFolders.isSelected());
+                        repaintTreePath(treeFolder.getSelectionPath(), true);
+                    }
+                });
+        menuFileOrder.add(menuSeparateFolders);
 
         menuFileOrder.addMenuListener(new MenuListener() {
             @Override
             public void menuSelected(MenuEvent e) {
                 for (Component item : menuFileOrder.getMenuComponents()) {
-                    ((JMenuItem) item).setSelected(getFileOrder().toString().equals(((JMenuItem) item).getText()));
+                    if (item instanceof JMenuItem){
+                        ((JMenuItem) item).setSelected(getFileOrder().toString().equals(((JMenuItem) item).getText()));
+                    }
                 }
+                menuSeparateFolders.setSelected(getSeparateFolders());
             }
 
             @Override
@@ -277,7 +292,11 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
                                             listener.plotData(dataManager, currentFile.getAbsolutePath(), null);
                                         } else {
                                             TreePath tp = treeFolder.getSelectionPath();
-                                            if ((treeFolderModel.getChildCount(currentFile)==0) || (!ProcessorXScan.isFdaSerializationFolder(currentFile))){
+                                            boolean xscan = !currentFile.isDirectory()? false : ProcessorXScan.isFdaSerializationFolder(currentFile) ||
+                                                    // If FDA serialization then never opens a root with double-click if there are children - to emulate old FDA viewer.
+                                                    (Context.getInstance().getConfig().fdaSerialization && (dataManager.getProvider() instanceof ProviderFDA));
+                                            
+                                            if ((treeFolderModel.getChildCount(currentFile)==0) || (!xscan)){
                                                 listener.openFile(currentFile.getCanonicalPath());   
                                             }
                                         }
@@ -923,7 +942,21 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
     public FileOrder getFileOrder() {
         return fileOrder;
     }
+    
+    
+    boolean separateFolders=true;
+    public void setSeparateFolders(boolean separateFolders) {
+        if (this.separateFolders != separateFolders) {
+            this.separateFolders = separateFolders;
+            if (treeFolderModel != null) {
+                treeFolderModel.invalidate();
+            }
+        }
+    }
 
+    public boolean getSeparateFolders() {
+        return separateFolders;
+    }
     class FileSystemModel implements TreeModel {
 
         private File root;
@@ -968,28 +1001,40 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
                         curChildren.remove(x);
                     }
                 }
-            }
+            }   
             File[] ret = new File[0];
             if (f.isDirectory() && (dataManager != null)) {
-                File[] files = IO.listFiles(f, dataManager.getFileFilter(additionalExtensions));
-                switch (fileOrder) {
-                    case Modified:
-                        IO.orderByModified(files);
-                        break;
-                    case Name:
-                        IO.orderByName(files);
-                        break;
-                }
-                ret = files;
-                for (String subFolder : additionalFiles){
-                    File child = new File(f, subFolder);
-                    if (child.exists()){
-                        ret=Arr.append(ret, child);
+                if (Arr.containsEqual(additionalFiles, "*")){
+                    ret = IO.listFiles(f, IO.getNotHiddenFileFileter());                  
+                } else {
+                    File[] files = IO.listFiles(f, dataManager.getFileFilter(additionalExtensions));
+                    ret = files;
+                    for (String subFolder : additionalFiles){
+                        File child = new File(f, subFolder);
+                        if (child.exists() && !child.isHidden()){
+                            ret=Arr.append(ret, child);
+                        }
                     }
                 }
+                
+                switch (fileOrder) {
+                    case Modified:
+                        IO.orderByModified(ret);
+                        break;
+                    case Name:
+                        IO.orderByName(ret);
+                        break;
+
+                }              
+                
+                if (separateFolders){
+                    //Put the folders before
+                    Arrays.sort(ret, (a,b) -> Boolean.compare(b.isDirectory(), a.isDirectory()));   
+                }
+                
                 //TODO: Is there way to check if has been regestered already?
                 registerFolderEvents(((File) parent).getPath());
-            }
+            }        
             curChildren.put(f, ret);
             return ret;
         }
