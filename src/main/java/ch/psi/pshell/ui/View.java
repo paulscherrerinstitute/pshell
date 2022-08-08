@@ -2342,11 +2342,17 @@ public class View extends MainFrame {
     }
 
     public void applyPreferences() {
-        shell.setTextPaneFont(preferences.fontShellPanel.toFont());
-        shell.setTextInputFont(preferences.fontShellCommand.toFont());
+        if (preferences.fontShellPanel != null){
+            shell.setTextPaneFont(preferences.fontShellPanel.toFont());
+        }
+        if (preferences.fontShellCommand != null){        
+            shell.setTextInputFont(preferences.fontShellCommand.toFont());
+        }
         shell.setPropagateVariableEvaluation(!preferences.noVariableEvaluationPropagation);
         ScriptEditor.setPropagateVariableEvaluation(!preferences.noVariableEvaluationPropagation);
-        outputPanel.setTextPaneFont(preferences.fontOutput.toFont());
+        if (preferences.fontOutput != null){
+            outputPanel.setTextPaneFont(preferences.fontOutput.toFont());
+        }
         devicesPanel.setAsyncUpdate(preferences.asyncViewersUpdate);
         dataPanel.setCached(preferences.cachedDataPanel);
         dataPanel.setPlottingScripts(preferences.processingScripts);
@@ -2355,7 +2361,9 @@ public class View extends MainFrame {
         for (int i = 0; i < tabDoc.getTabCount(); i++) {
             if (tabDoc.getComponentAt(i) instanceof ScriptEditor) {
                 ScriptEditor editor = ((ScriptEditor) tabDoc.getComponentAt(i));
-                editor.setTextPaneFont(preferences.fontEditor.toFont());
+                if (preferences.fontEditor != null){
+                    editor.setTextPaneFont(preferences.fontEditor.toFont());
+                }
                 editor.setContentWidth((preferences.contentWidth <= 0) ? DEFAULT_CONTENT_WIDTH : preferences.contentWidth);
                 editor.setEditorForeground(preferences.getEditorForegroundColor());
                 editor.setEditorBackground(preferences.getEditorBackgroundColor());
@@ -2365,10 +2373,16 @@ public class View extends MainFrame {
         PlotBase.setPlotBackground(preferences.getPlotBackgroundColor());
         PlotBase.setGridColor(preferences.getPlotGridColor());
         PlotBase.setOutlineColor(preferences.getPlotOutlineColor());
-        PlotBase.setDefaultLabelFont(preferences.fontPlotLabel.toFont());
-        PlotBase.setDefaultTickFont(preferences.fontPlotTick.toFont());
+        if (preferences.fontPlotLabel != null){
+            PlotBase.setDefaultLabelFont(preferences.fontPlotLabel.toFont());
+        }
+        if (preferences.fontPlotTick != null){
+            PlotBase.setDefaultTickFont(preferences.fontPlotTick.toFont());
+        }
         PlotBase.setOffscreenBuffer(!preferences.disableOffscreenBuffer);
-        PlotPanel.setTitleFont(preferences.fontPlotTitle.toFont());
+        if (preferences.fontPlotTitle != null){
+            PlotPanel.setTitleFont(preferences.fontPlotTitle.toFont());
+        }
         HistoryChart.setDefaultAsync(preferences.asyncViewersUpdate);
 
         if (preferences.linePlot != null) {
@@ -4897,6 +4911,7 @@ public class View extends MainFrame {
                 {"Config file", setup.getConfigFile()},
                 {"Settings file", setup.getSettingsFile()},
                 {"Device pool", setup.getDevicePoolFile()},
+                {"Preferences", Preferences.getFile().toString()},
                 {"Server URL", server == null ? "" : server.getInterfaceURL()},};
 
             JTable table = new JTable();

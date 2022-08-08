@@ -114,17 +114,21 @@ public class PreferencesDialog extends StandardDialog {
 
     
     String getFontDesc(FontSpec fs) {
-        Font f = fs.toFont();
-        StringBuilder sb = new StringBuilder();
-        sb.append(f.getName());
-        sb.append(" ").append(f.getSize());
-        if (f.isBold()) {
-            sb.append(" ").append("bold");
+        try{
+            Font f = fs.toFont();
+            StringBuilder sb = new StringBuilder();
+            sb.append(f.getName());
+            sb.append(" ").append(f.getSize());
+            if (f.isBold()) {
+                sb.append(" ").append("bold");
+            }
+            if (f.isItalic()) {
+                sb.append(" ").append("italic");
+            }
+            return sb.toString();
+        } catch(Exception ex){
+            return "";
         }
-        if (f.isItalic()) {
-            sb.append(" ").append("italic");
-        }
-        return sb.toString();
     }
 
     @Override
@@ -213,11 +217,13 @@ public class PreferencesDialog extends StandardDialog {
             modelPanels.addRow(new Object[]{defaultPanel.deviceClassName, defaultPanel.panelClassName});
         }
         
-        for (String plottingScript: preferences.processingScripts) {
-            String[] tokens = plottingScript.split("\\|");        
-            String file = tokens[0].trim();
-            String category = ((tokens.length==1) || (tokens[1].isBlank()))? "" : tokens[1].trim();
-            modelProcessingScripts.addRow(new Object[]{file, category});
+        if (preferences.processingScripts!=null){
+            for (String plottingScript: preferences.processingScripts) {
+                    String[] tokens = plottingScript.split("\\|");        
+                    String file = tokens[0].trim();
+                    String category = ((tokens.length==1) || (tokens[1].isBlank()))? "" : tokens[1].trim();
+                    modelProcessingScripts.addRow(new Object[]{file, category});
+            }
         }
                 
         updateTablePanels();

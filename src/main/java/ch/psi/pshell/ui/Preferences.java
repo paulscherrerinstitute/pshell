@@ -165,43 +165,47 @@ public class Preferences {
     public ScriptPopupDialog scriptPopupDialog = ScriptPopupDialog.None;
 
     Path file;
+    
+    public static Path getFile(){ 
+        String pref = App.getArgumentValue("pref");
+        if ((pref!=null) && (!pref.isBlank())){
+            return Paths.get(Context.getInstance().getSetup().expandPath(pref.trim()));
+        } else {
+            return Paths.get(Context.getInstance().getSetup().getConfigPath(), PREFERENCES_FILENAME);
+        }    
+    }
 
     public static Preferences load() {
         Preferences preferences = new Preferences();
-        String pref = App.getArgumentValue("pref");
-        Path file;
-        if ((pref!=null) && (!pref.isBlank())){
-            file =Paths.get(Context.getInstance().getSetup().expandPath(pref.trim()));
-        } else {
-            file = Paths.get(Context.getInstance().getSetup().getConfigPath(), PREFERENCES_FILENAME);
-            if (!file.toFile().exists()){
-                //TODO: Just for backward compatibility - Remove in the future
-                Path back_comp = Paths.get(Context.getInstance().getSetup().getContextPath(), "Preferences.dat");
-                if (back_comp.toFile().exists()){
-                    try {
-                        HashMap<String, Object> map = (HashMap) Serializer.decode(Files.readAllBytes(back_comp), Serializer.EncoderType.bin);
-                        for (String name : map.keySet()) {
-                            try {
-                                Field f = Preferences.class.getField(name);
-                                Object obj = map.get(name);
-                                if (obj instanceof Font){
-                                    obj = FontSpec.fromFont((Font)obj);
-                                } else if (obj instanceof Color){
-                                    obj = ((Color)obj).getRGB();
-                                }
-                                f.set(preferences,obj);
-                            } catch (Exception ex) {
-                                Logger.getLogger(Preferences.class.getName()).log(Level.FINE, null, ex);
+        Path file = getFile();
+        
+        if (!file.toFile().exists() && !App.hasArgument("pref")){
+            //TODO: Just for backward compatibility - Remove in the future
+            Path back_comp = Paths.get(Context.getInstance().getSetup().getContextPath(), "Preferences.dat");
+            if (back_comp.toFile().exists()){
+                try {
+                    HashMap<String, Object> map = (HashMap) Serializer.decode(Files.readAllBytes(back_comp), Serializer.EncoderType.bin);
+                    for (String name : map.keySet()) {
+                        try {
+                            Field f = Preferences.class.getField(name);
+                            Object obj = map.get(name);
+                            if (obj instanceof Font){
+                                obj = FontSpec.fromFont((Font)obj);
+                            } else if (obj instanceof Color){
+                                obj = ((Color)obj).getRGB();
                             }
+                            f.set(preferences,obj);
+                        } catch (Exception ex) {
+                            Logger.getLogger(Preferences.class.getName()).log(Level.FINE, null, ex);
                         }
-                        Serializer.encode(preferences, file);
-                        IO.setFilePermissions(file.toFile(), Context.getInstance().getConfig().filePermissionsConfig);
-                    } catch (IOException ex) {
-                        Logger.getLogger(Preferences.class.getName()).log(Level.SEVERE, null, ex);
                     }
+                    Serializer.encode(preferences, file);
+                    IO.setFilePermissions(file.toFile(), Context.getInstance().getConfig().filePermissionsConfig);
+                } catch (IOException ex) {
+                    Logger.getLogger(Preferences.class.getName()).log(Level.SEVERE, null, ex);
                 }
             }
-        }
+        } 
         
 
         try {

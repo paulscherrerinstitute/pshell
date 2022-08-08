@@ -284,7 +284,7 @@ public class TextEditor extends Editor {
             menuRedo.addActionListener(redoAction);
             menuFont = new JMenuItem("Set font...");
             menuFont.addActionListener((ActionEvent e) -> {
-                Frame owner = getFrame();
+                Frame owner = SwingUtils.getFrame(TextEditor.this);
                 FontDialog dlg = new FontDialog(owner, true, getEditorFont());
                 dlg.setVisible(true);
                 if (dlg.getResult()) {

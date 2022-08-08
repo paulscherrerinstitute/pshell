@@ -135,7 +135,7 @@ public class DsvEditor extends Editor {
         JMenuItem menuFont;
         menuFont = new JMenuItem("Set font...");
         menuFont.addActionListener((ActionEvent e) -> {
-            FontDialog dlg = new FontDialog(getFrame(), true, getTableFont());
+            FontDialog dlg = new FontDialog(SwingUtils.getFrame(this), true, getTableFont());
             dlg.setVisible(true);
             if (dlg.getResult()) {
                 setTableFont(dlg.getSelectedFont());

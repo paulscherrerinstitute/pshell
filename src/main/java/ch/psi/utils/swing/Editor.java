@@ -247,7 +247,6 @@ public abstract class Editor<T extends Document>
     public EditorFrame getFrame() {
         if (window == null) {
             window = new EditorFrame();
-            updateTitle();
         }
         if (window instanceof JFrame) {
             return (EditorFrame) window;
