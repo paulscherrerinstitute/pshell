@@ -43,7 +43,7 @@ public class ScriptManipulationPanel extends EditablePanel<ScriptManipulation> {
         jScrollPane1.setViewportView(textScript);    
         
         setManagedFields(jButton1,
-                new Component[]{jTextFieldId, textScript},
+                new Component[]{textScript},
                 new Component[]{jCheckBoxArray, collapsibleListContainerMapping},
                 new String[]{"false", null}
         );

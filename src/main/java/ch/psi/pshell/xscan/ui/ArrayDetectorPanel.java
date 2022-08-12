@@ -28,7 +28,9 @@ public class ArrayDetectorPanel extends EditablePanel<ArrayDetector> {
 
         initComponents();
 
-        setManagedFields(jButton1, new Component[]{jTextFieldName, jTextFieldName}, new Component[]{collapsibleListContainer1,});
+        setManagedFields(jButton1, 
+                new Component[]{jTextFieldName}, 
+                new Component[]{jFormattedTextFieldArraySize, collapsibleListContainer1,});
 
         // Establish bindings
         bindIdEditor(jTextFieldId);

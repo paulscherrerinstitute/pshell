@@ -1,14 +1,11 @@
 package ch.psi.pshell.xscan.ui;
 
 import ch.psi.pshell.xscan.model.Timestamp;
-import java.awt.event.FocusAdapter;
-import java.awt.event.FocusEvent;
-import javax.swing.event.DocumentEvent;
 
 /**
  *
  */
-public class TimestampDetectorPanel extends javax.swing.JPanel implements ObjectProvider<Timestamp> {
+public class TimestampDetectorPanel extends EditablePanel<Timestamp> {
 
     private Timestamp detector;
 
@@ -32,19 +29,7 @@ public class TimestampDetectorPanel extends javax.swing.JPanel implements Object
         jTextFieldId.setText(this.detector.getId());
 
         // Establish bindings
-        jTextFieldId.getDocument().addDocumentListener(new DocumentAdapter() {
-            @Override
-            public void valueChange(DocumentEvent de) {
-                detector.setId(jTextFieldId.getText());
-            }
-        });
-        jTextFieldId.addFocusListener(new FocusAdapter() {
-            @Override
-            public void focusLost(FocusEvent fe) {
-                // Workaround to update shown ids in visualizations and manipulations
-                ModelUtil.getInstance().refreshIds();
-            }
-        });
+        bindIdEditor(jTextFieldId);
 
     }
 

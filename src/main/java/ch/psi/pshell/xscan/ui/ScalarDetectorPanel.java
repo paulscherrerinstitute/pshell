@@ -28,8 +28,8 @@ public class ScalarDetectorPanel extends EditablePanel<ScalarDetector> {
         initComponents();
 
         setManagedFields(jButton1,
-                new Component[]{jTextFieldId},
-                new Component[]{jTextFieldName, jComboBoxType},
+                new Component[]{jTextFieldName},
+                new Component[]{jComboBoxType, collapsibleListContainer1},
                 new String[]{null, "Double"}
         );
 
