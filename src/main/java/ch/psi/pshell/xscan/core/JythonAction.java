@@ -3,7 +3,6 @@ package ch.psi.pshell.xscan.core;
 import ch.psi.pshell.xscan.ProcessorXScan;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
