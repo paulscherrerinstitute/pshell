@@ -4,7 +4,6 @@ import ch.psi.utils.EventBus;
 import ch.psi.pshell.xscan.DataMessage;
 import ch.psi.pshell.xscan.EndOfStreamMessage;
 import ch.psi.pshell.xscan.Metadata;
-import ch.psi.jcae.ChannelException;
 import ch.psi.jcae.ChannelService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
@@ -13,7 +12,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -386,7 +384,9 @@ Caused by: java.lang.ArrayIndexOutOfBoundsException: 1001 >= 1001
                 template.setStatus(TemplateCrlogic.Status.INITIALIZE);
                 try {
                     template.waitStatus(TemplateCrlogic.Status.ACTIVE, startStopTimeout);
-                } catch (ChannelException | ExecutionException | TimeoutException e) {
+                } catch (InterruptedException e) {
+                    throw e; 
+                } catch (Exception e) {
                     logger.info("Failed to start CRLOGIC. Logic in status: " + template.getStatus().getValue());
                     if (template.getStatus().getValue().equals(TemplateCrlogic.Status.FAULT.toString())) {
                         logger.info("Error message: " + template.getMessage().getValue());
@@ -446,7 +446,9 @@ Caused by: java.lang.ArrayIndexOutOfBoundsException: 1001 >= 1001
                 logger.info("Wait until stopped");
                 try {
                     template.waitStatus(TemplateCrlogic.Status.INACTIVE, startStopTimeout);
-                } catch (ChannelException | ExecutionException | TimeoutException e) {
+                } catch (InterruptedException e) {
+                    throw e; 
+                } catch (Exception e) {
                     logger.info("Failed to stop CRLOGIC. Logic in status: " + template.getStatus().getValue());
                     // TODO Improve error handling
                     throw new RuntimeException("Failed to stop CRLOGIC.  Logic in status: " + template.getStatus().getValue(), e);
@@ -472,7 +474,9 @@ Caused by: java.lang.ArrayIndexOutOfBoundsException: 1001 >= 1001
                 start = aend;
             }
 
-        } catch (ChannelException | ExecutionException | TimeoutException e) {
+        } catch (InterruptedException e) {
+            throw e; 
+        } catch (Exception e) {
             throw new RuntimeException("Unable to execute crloop", e);
         }
     }

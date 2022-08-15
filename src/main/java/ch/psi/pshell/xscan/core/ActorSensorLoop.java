@@ -6,7 +6,6 @@ import ch.psi.pshell.xscan.EndOfStreamMessage;
 import ch.psi.pshell.xscan.Metadata;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -188,8 +187,10 @@ public class ActorSensorLoop implements ActionLoop {
                         for (Future<Object> f : executorService.invokeAll(pactors)) {
                             f.get(); //Blocks until the async set() is finished
                         }
-                    } catch (ExecutionException e) {
-                        throw new RuntimeException("Setting the actors failed", e);
+                    } catch (InterruptedException |  RuntimeException e) {
+                        throw e; 
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
                     }
 
                     // Execute post actor actions

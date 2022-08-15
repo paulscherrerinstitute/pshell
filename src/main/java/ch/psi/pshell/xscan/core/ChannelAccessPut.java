@@ -1,10 +1,7 @@
 package ch.psi.pshell.xscan.core;
 
 import ch.psi.jcae.Channel;
-import ch.psi.jcae.ChannelException;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import java.util.logging.Logger;
 
 /**
@@ -56,12 +53,14 @@ public class ChannelAccessPut<E> implements Action {
                 channel.setValueNoWait(value);
             } else {
                 if (timeout == null) {
-                    channel.setValue(value);
+                        channel.setValue(value);
                 } else {
                     channel.setValueAsync(value).get(timeout, TimeUnit.MILLISECONDS);
                 }
             }
-        } catch (ExecutionException | TimeoutException | ChannelException e) {
+        } catch (InterruptedException e) {
+            throw e; 
+        } catch (Exception e) {
             throw new RuntimeException("Unable to set channel [name:" + channel.getName() + "] to value " + value, e);
         }
     }

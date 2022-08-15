@@ -1,10 +1,7 @@
 package ch.psi.pshell.xscan.core;
 
 import ch.psi.jcae.Channel;
-import ch.psi.jcae.ChannelException;
 import ch.psi.utils.Str;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -38,7 +35,9 @@ public class ChannelAccessSensor<T> implements Sensor {
             if (logger.isLoggable(Level.FINEST)) {
                 logger.finest("Read channel [" + channel.getName() + "]: " + Str.toString(v, 10));
             }
-        } catch (TimeoutException | ChannelException | ExecutionException e) {
+        } catch (InterruptedException e) {
+            throw e; 
+        } catch (Exception e) {
             String errMsg = "Unable to get value from channel [" + channel.getName() + "]";
             logger.fine(errMsg);
             if (failOnSensorError) {

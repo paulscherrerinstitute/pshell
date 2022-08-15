@@ -2,6 +2,7 @@ package ch.psi.pshell.xscan.core;
 
 import ch.psi.pshell.xscan.ProcessorXScan;
 import java.util.Map;
+import java.util.UUID;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -14,9 +15,11 @@ public class JythonFunction implements Function {
     private static final String ENTRY_FUNCTION_PATTERN = "def " + ENTRY_FUNCTION_NAME + "\\((.*)\\):";
 
     private String additionalParameter = "";
+    private String uniqueEntryFunction;
 
-    public JythonFunction(String script, Map<String, Object> map) {
-
+    
+    public JythonFunction(String script, Map<String, Object> map) {   
+        
         // Determine script entry function and the function parameters
         String[] parameter;
         Pattern pattern = Pattern.compile(ENTRY_FUNCTION_PATTERN);
@@ -47,12 +50,15 @@ public class JythonFunction implements Function {
         for (String k : map.keySet()) {
             ProcessorXScan.setInterpreterVariable(k, map.get(k));
         }
-
+        
+        uniqueEntryFunction = "_" + UUID.randomUUID().toString() + "_" + ENTRY_FUNCTION_NAME;
+        uniqueEntryFunction = uniqueEntryFunction.replaceAll("[^a-zA-Z0-9_]", "_");
+        String uniqueScript  = script.replaceFirst(ENTRY_FUNCTION_NAME, uniqueEntryFunction);             
         // Load manipulation script
         try {
-            ProcessorXScan.eval(script);
+            ProcessorXScan.eval(uniqueScript);
         } catch (Exception e) {
-            throw new RuntimeException("Unable to load function script", e);
+            throw new RuntimeException("Unable to load function script", e); 
         }
     }
  
@@ -61,7 +67,7 @@ public class JythonFunction implements Function {
     public double calculate(double parameter) {
         try {
             logger.fine("calculate( " + parameter + "" + additionalParameter + " )");
-            return ((Double) ProcessorXScan.eval("calculate( " + parameter + "" + additionalParameter + " )"));
+            return ((Double) ProcessorXScan.eval(uniqueEntryFunction + "( " + parameter + "" + additionalParameter + " )"));
         } catch (Exception e) {
             throw new RuntimeException("Calculating actuator step failed while executing the script: " + e.getMessage(), e);
         }

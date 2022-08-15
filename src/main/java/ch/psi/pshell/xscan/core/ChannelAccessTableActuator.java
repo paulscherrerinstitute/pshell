@@ -1,10 +1,7 @@
 package ch.psi.pshell.xscan.core;
 
 import ch.psi.jcae.Channel;
-import ch.psi.jcae.ChannelException;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import java.util.logging.Logger;
 
 /**
@@ -141,7 +138,9 @@ public class ChannelAccessTableActuator<T> implements Actor {
                 }
             }
 
-        } catch (ExecutionException | ChannelException | TimeoutException e) {
+        } catch (InterruptedException e) {
+            throw e; 
+        } catch (Exception e) {
             throw new RuntimeException("Move actuator [channel: " + channel.getName() + "] to value " + table[count], e);
         }
 

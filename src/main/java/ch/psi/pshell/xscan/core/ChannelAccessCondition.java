@@ -1,10 +1,7 @@
 package ch.psi.pshell.xscan.core;
 
 import ch.psi.jcae.Channel;
-import ch.psi.jcae.ChannelException;
 import java.util.Comparator;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeoutException;
 import java.util.logging.Logger;
 
 /**
@@ -77,9 +74,12 @@ public class ChannelAccessCondition<E> implements Action {
                         channel.waitForValue(expectedValue, comparator, timeout);
                     }
                 }
-            } catch (ExecutionException | ChannelException | TimeoutException | InterruptedException e) {
-                if (abort && e instanceof InterruptedException) {
-                    return;
+            } catch (Exception e) {
+                if ( e instanceof InterruptedException) {
+                    if (abort){
+                        return;
+                    }
+                    throw (InterruptedException)e;
                 }
                 throw new RuntimeException("Channel [name:" + channel.getName() + "] did not reach expected value " + expectedValue + " ", e);
             }

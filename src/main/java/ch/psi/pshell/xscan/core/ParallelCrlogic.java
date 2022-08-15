@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CyclicBarrier;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -133,7 +132,9 @@ public class ParallelCrlogic implements ActionLoop {
             // Wait for completion of the thread
             try {
                 bf.get();
-            } catch (ExecutionException e) {
+            } catch (InterruptedException e) {
+                throw e; 
+            } catch (Exception e) {
                 logger.log(Level.WARNING, "Something went wrong while waiting for crthreads to finish: " + e.getMessage());
                 throw new RuntimeException(e);
             }

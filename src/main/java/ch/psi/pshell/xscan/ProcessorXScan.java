@@ -549,7 +549,7 @@ public final class ProcessorXScan extends MonitoredPanel implements Processor {
 
     @Override
     public boolean createFilePanel() {
-        return App.getInstance().getMainFrame().getPreferences().showXScanFileBrowser;
+        return App.getInstance().getMainFrame().getPreferences().showXScanFileBrowser || App.hasArgument("xscan_panel");
     }
 
     public AcquisitionConfiguration getConfiguration() {

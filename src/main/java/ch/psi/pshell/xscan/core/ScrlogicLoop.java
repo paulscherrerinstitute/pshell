@@ -5,15 +5,12 @@ import ch.psi.pshell.xscan.DataMessage;
 import ch.psi.pshell.xscan.EndOfStreamMessage;
 import ch.psi.pshell.xscan.Metadata;
 import ch.psi.jcae.Channel;
-import ch.psi.jcae.ChannelException;
 import ch.psi.jcae.impl.type.DoubleTimestamp;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeoutException;
 import java.util.logging.Logger;
 
 /**
@@ -80,7 +77,9 @@ public class ScrlogicLoop implements ActionLoop {
                     currentValues.set(1, noffset);
                 }
                 currentValues.add(value.getValue());
-            } catch (InterruptedException | TimeoutException | ChannelException | ExecutionException e) {
+            } catch (InterruptedException e) {
+                throw e; 
+            } catch (Exception e) {
                 throw new RuntimeException("Unable to retrieve initial value");
             }
             // Initialize current value with NAN

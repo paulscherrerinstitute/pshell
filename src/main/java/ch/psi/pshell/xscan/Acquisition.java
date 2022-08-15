@@ -75,7 +75,6 @@ import ch.psi.pshell.xscan.plot.YZSeries;
 import ch.psi.pshell.xscan.ui.ModelUtil;
 import ch.psi.jcae.Channel;
 import ch.psi.jcae.ChannelDescriptor;
-import ch.psi.jcae.ChannelException;
 import ch.psi.jcae.ChannelService;
 import ch.psi.jcae.impl.type.DoubleTimestamp;
 import ch.psi.jcae.util.ComparatorAND;
@@ -101,7 +100,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeoutException;
 import java.util.logging.FileHandler;
 import java.util.logging.Handler;
 import java.util.logging.Level;
@@ -400,14 +398,14 @@ public class Acquisition {
 			for(Channel<?> c: channels){
 				try {
 					c.destroy();
-				} catch (ChannelException e) {
+				} catch (Exception e) {
 					logger.severe("Unable to destroy channel "+c.getName() + ": " + e.getMessage());
 				}
 			}
 			for(Object o: templates){
 				try {
 					cservice.destroyAnnotatedChannels(o);
-				} catch (ChannelException e) {
+				} catch (Exception e) {
 					logger.severe("Unable to destroy channels of template "+o.getClass().getName() + ": " + e.getMessage());
 				}
 			}
@@ -1213,11 +1211,10 @@ public class Acquisition {
 			if(name== null){
 				return null;
 			}
-			
 			Channel<T> c = cservice.createChannel(new ChannelDescriptor<T>(type, name, monitor) );
 			channels.add(c);
 			return c;
-		} catch (ChannelException | InterruptedException | TimeoutException e) {
+		} catch (Exception e) {
 			throw new RuntimeException("Unable to create channel: "+name,e);
 		}
 		
@@ -1234,11 +1231,10 @@ public class Acquisition {
 			if(name== null){
 				return null;
 			}
-			
 			Channel<T> c = cservice.createChannel(new ChannelDescriptor<T>(type, name) );
 			channels.add(c);
 			return c;
-		} catch (ChannelException | InterruptedException | TimeoutException e) {
+		} catch (Exception e) {
 			throw new RuntimeException("Unable to create channel: "+name,e);
 		}
 		
@@ -1249,11 +1245,10 @@ public class Acquisition {
 			if(name== null){
 				return null;
 			}
-			
 			Channel<T> c = cservice.createChannel(new ChannelDescriptor<T>(type, name, false, size) );
 			channels.add(c);
 			return c;
-		} catch (ChannelException | InterruptedException | TimeoutException e) {
+		} catch (Exception e) {
 			throw new RuntimeException("Unable to create channel: "+name,e);
 		}
 		

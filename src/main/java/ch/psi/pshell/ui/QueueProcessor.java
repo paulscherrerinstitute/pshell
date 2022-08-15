@@ -460,7 +460,7 @@ public final class QueueProcessor extends PanelProcessor {
     
     @Override
     public boolean createFilePanel() {
-        return App.getInstance().getMainFrame().getPreferences().showQueueBrowser;
+        return App.getInstance().getMainFrame().getPreferences().showQueueBrowser || App.hasArgument("queue_panel");
     }    
 
     @Override

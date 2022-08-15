@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -121,12 +122,20 @@ public class JythonManipulation implements Manipulation {
         } else {
             throw new IllegalArgumentException("Cannot determine entry function: " + entryFunctionPattern);
         }
+        
+        
+        //String uniquEntryFunction = "_" + getId() + "_" + entryFunction;
+        String uniqueEntryFunction = "_" + UUID.randomUUID().toString() + "_" + entryFunction;
+        uniqueEntryFunction = uniqueEntryFunction.replaceAll("[^a-zA-Z0-9_]", "_");
+        String uniqueScript = this.script.replaceFirst(entryFunction, uniqueEntryFunction);
 
         // Load manipulation script
         try {
-            ProcessorXScan.eval(this.script);
+            ProcessorXScan.eval(uniqueScript);
         } catch (Exception e) {
-            throw new RuntimeException("Unable to load manipulation script", e);
+            String err = "Unable to load manipulation script for data manipulaton [id: " + id + "]";
+            logger.warning(err);
+            throw new RuntimeException(err, e);
         }
 
         // Determine component index of the needed parameters
@@ -171,7 +180,7 @@ public class JythonManipulation implements Manipulation {
         }
 
         StringBuffer buffer = new StringBuffer();
-        buffer.append(entryFunction);
+        buffer.append(uniqueEntryFunction);
         buffer.append("(");
 
         for (String p : parameter) {

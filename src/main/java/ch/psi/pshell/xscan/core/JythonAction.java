@@ -3,6 +3,7 @@ package ch.psi.pshell.xscan.core;
 import ch.psi.pshell.xscan.ProcessorXScan;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -38,14 +39,18 @@ public class JythonAction implements Action {
         Pattern pattern = Pattern.compile(entryFunctionPattern);
         Matcher matcher = pattern.matcher(script);
         String[] functionParameters = null;
+        String uniqueEntryFunction = "_" + UUID.randomUUID().toString() + "_" + entryFunction; 
+        uniqueEntryFunction = uniqueEntryFunction.replaceAll("[^a-zA-Z0-9_]", "_");
+            
         if (matcher.find() && matcher.groupCount() == 1) {
-            logger.finest("Entry function '" + entryFunctionPattern + "' found - Identified parameters: " + matcher.group(1));
-            jythonCall = entryFunction + "(" + matcher.group(1) + ")";
+            logger.finest("Entry function '" + entryFunctionPattern + "' found - Identified parameters: " + matcher.group(1));         
+            jythonCall = uniqueEntryFunction + "(" + matcher.group(1) + ")";
             if (matcher.group(1).matches(" *")) {
                 functionParameters = new String[0];
             } else {
                 functionParameters = matcher.group(1).split(" *, *");
             }
+            
         } else {
             if (mapping.size()>0){
                 throw new IllegalArgumentException("Cannot determine entry function: " + entryFunctionPattern);
@@ -75,9 +80,10 @@ public class JythonAction implements Action {
             throw new IllegalArgumentException("More mappings than function parameters are specified");
         }
 
+         String uniqueScript = this.script.replaceFirst(entryFunction, uniqueEntryFunction);  
         // Load manipulation script
         try {
-            ProcessorXScan.eval(script);
+            ProcessorXScan.eval(uniqueScript);
         } catch (Exception e) {
             throw new RuntimeException("Unable to load action script", e);
         }

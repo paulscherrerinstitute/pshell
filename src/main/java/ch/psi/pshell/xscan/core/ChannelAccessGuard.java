@@ -1,11 +1,8 @@
 package ch.psi.pshell.xscan.core;
 
-import ch.psi.jcae.ChannelException;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -53,7 +50,7 @@ public class ChannelAccessGuard implements Guard {
                 }
             } catch (InterruptedException e) {
                 throw new RuntimeException("Guard interrupted ", e);
-            } catch (TimeoutException | ChannelException | ExecutionException e) {
+            } catch (Exception e) {
                 logger.log(Level.WARNING, "Unable ", e);
                 check = false;
             }

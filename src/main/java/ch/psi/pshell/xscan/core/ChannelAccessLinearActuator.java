@@ -1,10 +1,7 @@
 package ch.psi.pshell.xscan.core;
 
 import ch.psi.jcae.Channel;
-import ch.psi.jcae.ChannelException;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import java.util.logging.Logger;
 
 /**
@@ -136,10 +133,11 @@ public class ChannelAccessLinearActuator<T> implements Actor {
                     throw new RuntimeException("Actuator [channel: " + channel.getName() + "] could not be set to the value " + value + " The readback of the set value does not match the value that was set [value: " + c + " delta: " + a + " accuracy: " + accuracy + "]");
                 }
             }
-
-        } catch (ExecutionException | TimeoutException | ChannelException e) {
+        } catch (InterruptedException e) {
+            throw e; 
+        } catch (Exception e) {
             throw new RuntimeException("Unable to move actuator [channel: " + channel.getName() + "] to value " + value, e);
-        }
+        } 
 
         count++;
         double nextValue = start + (count * stepSize * direction); // Done like this to keep floating point rounding errors minimal

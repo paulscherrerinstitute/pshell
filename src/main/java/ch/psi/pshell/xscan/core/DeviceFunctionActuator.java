@@ -1,16 +1,12 @@
 package ch.psi.pshell.xscan.core;
 
 import ch.psi.jcae.Channel;
-import ch.psi.jcae.ChannelException;
 import ch.psi.pshell.device.Device;
 import ch.psi.pshell.device.ReadbackDevice;
 import ch.psi.pshell.device.Writable;
 import ch.psi.pshell.device.Readable;
 import ch.psi.pshell.device.Movable;
 import java.io.IOException;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import java.util.logging.Logger;
 
 public class DeviceFunctionActuator<T> extends ChannelAccessFunctionActuator{
