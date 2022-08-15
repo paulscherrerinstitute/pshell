@@ -95,6 +95,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
     final Boolean bareMode;
     final Boolean emptyMode;
     final Boolean genericMode;
+    final Boolean volatileMode;
     final Boolean interpreterEnabled;
     final Boolean handlingSessions;
     final Boolean serverMode;
@@ -152,6 +153,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
     public static final String PROPERTY_ENABLE_VERSIONING = "ch.psi.pshell.force.versioning";
     public static final String PROPERTY_SIMULATION = "ch.psi.pshell.simulation";
     public static final String PROPERTY_PACKAGES = "ch.psi.pshell.packages";
+    public static final String PROPERTY_VOLATILE = "ch.psi.pshell.volatile";
     
     public static final String INTERPRETER_THREAD = "MainThread";
 
@@ -181,6 +183,12 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
             genericMode = Boolean.valueOf(System.getProperty(PROPERTY_GENERIC_MODE));
         } else {
             genericMode = false;
+        }
+        
+        if (System.getProperty(PROPERTY_VOLATILE) != null) {
+            volatileMode = Boolean.valueOf(System.getProperty(PROPERTY_VOLATILE));
+        } else {
+            volatileMode = false;
         }
 
         if (System.getProperty(PROPERTY_SESSIONS_ENABLED) != null) {
@@ -1306,7 +1314,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
                 } else {
                     if (extractedUtilities) {
                         //TODO: remove this  when Jython fixes this: https://github.com/jython/jython/issues/93                
-                        if (!getConfig().noBytecodeFiles) {
+                        if (!getConfig().noBytecodeFiles && !volatileMode) {
                             new Thread(() -> {                                
                                 scriptManager.fixClassFilesPermissions();
                             }).start();
@@ -4086,7 +4094,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
         }
         if (scriptManager != null) {
             //TODO: remove this  when Jython fixes this: https://github.com/jython/jython/issues/93                
-            if (!getConfig().noBytecodeFiles) {                
+            if (!getConfig().noBytecodeFiles && !volatileMode) {                
                 scriptManager.startFixClassFilesPermissions();
             }
         }

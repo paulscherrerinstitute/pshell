@@ -342,6 +342,7 @@ public class App extends ObservableBase<AppListener> {
 
         if (isVolatile()) {
             System.setProperty(DevicePool.PROPERTY_EPICS_DEFAULT_CONFIG, defaultJcaeProperties);
+            System.setProperty(Context.PROPERTY_VOLATILE, "true");
         }
         if (isArgumentDefined("jcae")) {
             String jcae = getArgumentValue("jcae");
