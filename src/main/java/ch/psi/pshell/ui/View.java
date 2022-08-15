@@ -138,7 +138,6 @@ import ch.psi.pshell.swing.MotorPanel;
 import ch.psi.pshell.swing.RepositoryChangesDialog;
 import ch.psi.pshell.swing.NextStagesPanel;
 import static ch.psi.pshell.ui.App.getResourceImage;
-import ch.psi.pshell.xscan.ProcessorXScan;
 import ch.psi.utils.Config;
 import ch.psi.utils.Sys;
 import ch.psi.utils.Sys.OSFamily;
@@ -364,7 +363,7 @@ public class View extends MainFrame {
                         }
                     }
 
-                    for (ScriptEditor editor : getScriptEditors()) {
+                    for (Editor editor : getEditors()) {
                         editor.setReadOnly(context.getRights().denyEdit);
                     }
                 }
@@ -1658,7 +1657,7 @@ public class View extends MainFrame {
     }        
 
     public void closeFile(String file) throws IOException {
-        for (ScriptEditor se : getScriptEditors()) {
+        for (Editor se : getEditors()) {
             if ((se.getFileName() != null) && sameFile(file, se.getFileName())){
                 if (tabDoc.indexOfComponent(se) >= 0) {
                     tabDoc.remove(se);
@@ -1718,8 +1717,12 @@ public class View extends MainFrame {
         for (Editor ed : getEditors()) {
             if (ed.getFileName() != null) {
                if (sameFile(file, ed.getFileName())){
-                    selectPanel(ed);
-                    return ed;
+                   if (ed.changedOnDisk()){
+                       closeFile(file);
+                   } else {
+                        selectPanel(ed);
+                        return ed;
+                   }
                 }
             }
         }
@@ -1738,6 +1741,7 @@ public class View extends MainFrame {
         for (DataPanel dp : getDataFilePanels()) {
             if (dp.getFileName() != null) {
                if (sameFile(file, dp.getFileName())){
+                   
                     selectPanel(dp);
                     dp.load(file);
                     return dp;
@@ -4840,7 +4844,7 @@ public class View extends MainFrame {
     private void menuCloseAllActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuCloseAllActionPerformed
         try {
             closeSearchPanels();
-            for (ScriptEditor editor : getScriptEditors()) {
+            for (Editor editor : getEditors()) {
                 if (tabDoc.indexOfComponent(editor) >= 0) {
                     tabDoc.remove(editor);
                 } else if (detachedScripts.containsValue(editor)) {

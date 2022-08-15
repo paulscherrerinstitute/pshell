@@ -18,6 +18,7 @@ import javax.swing.JFrame;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
 import ch.psi.utils.IO.FilePermissions;
+import java.io.File;
 
 /**
  * Implementations of this class perform edition on Document objects.
@@ -37,6 +38,8 @@ public abstract class Editor<T extends Document>
     String fileChooserFolder = null;
 
     FilePermissions permissions = FilePermissions.Default;
+    
+    long openTimestamp;
 
     public void setFileChooserFolder(String value) {
         fileChooserFolder = value;;
@@ -146,12 +149,14 @@ public abstract class Editor<T extends Document>
     final public void load(String fileName) throws IOException {
         setFileName(fileName);
         document.load(fileName);
+        openTimestamp = System.currentTimeMillis();
         update();
     }
 
     final public void reload() throws IOException {
         if (fileName != null) {
             document.load(fileName);
+            openTimestamp = System.currentTimeMillis();
         }
         updateTitle();
         update();
@@ -174,6 +179,7 @@ public abstract class Editor<T extends Document>
     public void saveAs(String fileName) throws IOException {
         setFileName(fileName);
         document.save(fileName, filePermissions);
+        openTimestamp = System.currentTimeMillis();
     }
 
     public void saveAs() throws IOException {
@@ -242,6 +248,16 @@ public abstract class Editor<T extends Document>
         return document.hasChanged();
     }
 
+    public boolean changedOnDisk() {
+        try{
+           File f = new File(getFileName());
+           return f.lastModified() > openTimestamp;
+        } catch (Exception ex){
+       
+        }
+        return false;
+    }
+    
     Window window;
 
     public EditorFrame getFrame() {
