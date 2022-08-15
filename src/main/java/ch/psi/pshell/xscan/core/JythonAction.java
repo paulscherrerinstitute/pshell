@@ -26,11 +26,11 @@ public class JythonAction implements Action {
 
     private final Map<String, Object> globalObjects;
 
-    public JythonAction(String script, Map<String, ?> mapping) {
-        this(script, mapping, new HashMap<String, Object>());
+    public JythonAction(String script, int functionId, Map<String, ?> mapping) {
+        this(script, functionId, mapping, new HashMap<String, Object>());
     }
 
-    public JythonAction(String script, Map<String, ?> mapping, Map<String, Object> globalObjects) {
+    public JythonAction(String script, int functionId, Map<String, ?> mapping, Map<String, Object> globalObjects) {
 
         this.globalObjects = globalObjects;
         this.script=script;
@@ -39,7 +39,7 @@ public class JythonAction implements Action {
         Pattern pattern = Pattern.compile(entryFunctionPattern);
         Matcher matcher = pattern.matcher(script);
         String[] functionParameters = null;
-        String uniqueEntryFunction = "_" + UUID.randomUUID().toString() + "_" + entryFunction; 
+        String uniqueEntryFunction = entryFunction + "_" + functionId; 
         uniqueEntryFunction = uniqueEntryFunction.replaceAll("[^a-zA-Z0-9_]", "_");
             
         if (matcher.find() && matcher.groupCount() == 1) {

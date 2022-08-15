@@ -142,6 +142,8 @@ public class Acquisition {
                       
         
         private final Map<String, Object> vars;
+        
+        private int functionId;
 	
 	public Acquisition(ChannelService cservice, AcquisitionConfiguration configuration, Map<String, Object> vars){
 		this.cservice = cservice;
@@ -163,6 +165,9 @@ public class Acquisition {
 		return active;
 	}
 
+        public int getFunctionId(){
+            return functionId++;
+        }
 
 
 	/**
@@ -740,7 +745,7 @@ public class Acquisition {
 				Map<String,Object> gobjects = new HashMap<>();
 				gobjects.put("FILENAME", datafile.getName().replaceAll("\\.\\w*$", ""));
 				gobjects.put("DATAFILE", datafile.getAbsoluteFile());
-				ch.psi.pshell.xscan.core.JythonAction ja = new ch.psi.pshell.xscan.core.JythonAction(sa.getScript(), mapping, gobjects);
+				ch.psi.pshell.xscan.core.JythonAction ja = new ch.psi.pshell.xscan.core.JythonAction(sa.getScript(), getFunctionId(), mapping, gobjects);
 				
 				alist.add(ja);
 			}
@@ -1048,7 +1053,7 @@ public class Acquisition {
                                 }
                         }
 		}
-		JythonFunction function = new JythonFunction(f.getScript(), map);
+		JythonFunction function = new JythonFunction(f.getScript(), getFunctionId(), map);
 		return function;
 	}
 	

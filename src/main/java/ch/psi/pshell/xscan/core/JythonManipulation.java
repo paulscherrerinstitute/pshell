@@ -7,7 +7,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -124,8 +123,7 @@ public class JythonManipulation implements Manipulation {
         }
         
         
-        //String uniquEntryFunction = "_" + getId() + "_" + entryFunction;
-        String uniqueEntryFunction = "_" + UUID.randomUUID().toString() + "_" + entryFunction;
+        String uniqueEntryFunction = entryFunction + "_" + id; 
         uniqueEntryFunction = uniqueEntryFunction.replaceAll("[^a-zA-Z0-9_]", "_");
         String uniqueScript = this.script.replaceFirst(entryFunction, uniqueEntryFunction);
 

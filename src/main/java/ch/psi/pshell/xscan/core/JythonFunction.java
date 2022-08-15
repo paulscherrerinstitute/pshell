@@ -18,7 +18,7 @@ public class JythonFunction implements Function {
     private String uniqueEntryFunction;
 
     
-    public JythonFunction(String script, Map<String, Object> map) {   
+    public JythonFunction(String script, int functionId, Map<String, Object> map) {   
         
         // Determine script entry function and the function parameters
         String[] parameter;
@@ -51,7 +51,7 @@ public class JythonFunction implements Function {
             ProcessorXScan.setInterpreterVariable(k, map.get(k));
         }
         
-        uniqueEntryFunction = "_" + UUID.randomUUID().toString() + "_" + ENTRY_FUNCTION_NAME;
+        uniqueEntryFunction = ENTRY_FUNCTION_NAME + "_" + functionId; 
         uniqueEntryFunction = uniqueEntryFunction.replaceAll("[^a-zA-Z0-9_]", "_");
         String uniqueScript  = script.replaceFirst(ENTRY_FUNCTION_NAME, uniqueEntryFunction);             
         // Load manipulation script
