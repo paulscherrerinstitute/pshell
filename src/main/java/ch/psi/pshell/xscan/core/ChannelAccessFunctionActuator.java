@@ -125,7 +125,7 @@ public class ChannelAccessFunctionActuator<T> implements Actor {
         }
 
         // Set actuator channel
-        logger.finest("Set actuator channel " + channel.getName() + " to value: " + value);
+        logger.finer("Set actuator channel " + channel.getName() + " to value: " + value);
         try {
             double fvalue = function.calculate(value);
 

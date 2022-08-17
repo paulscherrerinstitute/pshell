@@ -42,7 +42,7 @@ public class JythonAction implements Action {
         uniqueEntryFunction = uniqueEntryFunction.replaceAll("[^a-zA-Z0-9_]", "_");
             
         if (matcher.find() && matcher.groupCount() == 1) {
-            logger.finest("Entry function '" + entryFunctionPattern + "' found - Identified parameters: " + matcher.group(1));         
+            logger.finer("Entry function '" + entryFunctionPattern + "' found - Identified parameters: " + matcher.group(1));         
             jythonCall = uniqueEntryFunction + "(" + matcher.group(1) + ")";
             if (matcher.group(1).matches(" *")) {
                 functionParameters = new String[0];
@@ -54,7 +54,7 @@ public class JythonAction implements Action {
             if (mapping.size()>0){
                 throw new IllegalArgumentException("Cannot determine entry function: " + entryFunctionPattern);
             }
-            logger.finest("No entry function ");
+            logger.finer("No entry function ");
             return;
         }
 

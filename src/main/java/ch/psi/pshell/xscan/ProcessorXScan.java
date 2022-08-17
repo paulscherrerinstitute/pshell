@@ -679,11 +679,15 @@ public final class ProcessorXScan extends MonitoredPanel implements Processor {
             t.printStackTrace();
             throw t;
         } finally {
-            ModelUtil.getInstance().setConfigurationPanel(null);
-            Logger.getLogger(ProcessorXScan.class.getName()).log(Level.FINER, "Destroy acquisition");
-            if (acquisition != null) {
-                acquisition.destroy();
-                acquisition = null;
+            try{
+                ModelUtil.getInstance().setConfigurationPanel(null);
+                Logger.getLogger(ProcessorXScan.class.getName()).log(Level.FINER, "Destroy acquisition");
+                if (acquisition != null) {
+                    acquisition.destroy();
+                    acquisition = null;
+                }
+            } catch (Exception e) {
+                Logger.getLogger(ProcessorXScan.class.getName()).log(Level.FINER, "Unable to destroy acquisition", e);
             }
             Logger.getLogger(ProcessorXScan.class.getName()).log(Level.FINER, "Destroy channel service");
             try {

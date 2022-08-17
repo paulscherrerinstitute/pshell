@@ -17,6 +17,7 @@ public class TimestampDetectorPanel extends EditablePanel<Timestamp> {
      * Creates new form TimestampDetectorPanel
      */
     public TimestampDetectorPanel(final Timestamp detector) {
+        super(detector);
         // Generate id if detector has no id
         if (detector.getId() == null || detector.getId().equals("")) {
             detector.setId(IdGenerator.generateId());

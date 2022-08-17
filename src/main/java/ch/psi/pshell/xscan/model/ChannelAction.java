@@ -139,7 +139,10 @@ public class ChannelAction
      *     
      */
     public String getOperation() {
-        return getString(operation,"put");
+        if ((operation==null) || operation.isBlank()){
+            return "put";
+        }
+        return operation;
     }
 
     /**

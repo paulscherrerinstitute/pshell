@@ -47,7 +47,7 @@ public class ChannelAccessPut<E> implements Action {
      */
     @Override
     public void execute() throws InterruptedException {
-        logger.finest("Put to channel: " + channel.getName() + " asynchronous: " + asynchronous);
+        logger.finer("Put to channel: " + channel.getName() + " asynchronous: " + asynchronous);
         try {
             if (asynchronous) {
                 channel.setValueNoWait(value);

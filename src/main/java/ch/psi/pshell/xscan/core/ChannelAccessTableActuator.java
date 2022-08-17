@@ -114,7 +114,7 @@ public class ChannelAccessTableActuator<T> implements Actor {
         }
 
         // Set actuator channel
-        logger.finest("Set actuator channel " + channel.getName() + " to value: " + table[count]);
+        logger.finer("Set actuator channel " + channel.getName() + " to value: " + table[count]);
         try {
             if (!asynchronous) {
                 if (timeout == null) {

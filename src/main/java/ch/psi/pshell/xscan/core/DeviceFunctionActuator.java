@@ -53,7 +53,7 @@ public class DeviceFunctionActuator<T> extends ChannelAccessFunctionActuator{
         }
 
         // Set actuator channel
-        logger.finest("Set actuator device " + device.getName() + " to value: " + value);
+        logger.finer("Set actuator device " + device.getName() + " to value: " + value);
         try {
             double fvalue = function.calculate(value);
 

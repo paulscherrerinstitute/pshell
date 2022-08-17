@@ -113,7 +113,7 @@ public class JythonManipulation implements Manipulation {
         Matcher matcher = pattern.matcher(this.script);
         if (matcher.find() && matcher.groupCount() == 1) {
             if (!matcher.group(1).trim().equals("")) {
-                logger.finest("Entry function '" + entryFunctionPattern + "' found - Identified parameters: " + matcher.group(1));
+                logger.finer("Entry function '" + entryFunctionPattern + "' found - Identified parameters: " + matcher.group(1));
                 parameter = matcher.group(1).split(" *, *");
             } else {
                 parameter = new String[0];

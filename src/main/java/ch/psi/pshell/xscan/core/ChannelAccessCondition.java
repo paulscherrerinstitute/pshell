@@ -1,6 +1,7 @@
 package ch.psi.pshell.xscan.core;
 
 import ch.psi.jcae.Channel;
+import ch.psi.pshell.epics.Epics;
 import java.util.Comparator;
 import java.util.logging.Logger;
 
@@ -57,8 +58,20 @@ public class ChannelAccessCondition<E> implements Action {
     @Override
     public void execute() throws InterruptedException {
         abort = false;
-        logger.finest("Checking channel " + channel.getName() + " for value " + expectedValue + " [timeout: " + timeout + "]");
+        
         try {
+            logger.fine("Waiting channel " + channel.getName() + " for value " + expectedValue + " [timeout: " + timeout + "]");
+            //if (channel.isMonitored()){
+                Object cache = channel.get(false);
+                if (cache!=null){
+                    if (  ((comparator == null) && (cache.equals(expectedValue))) ||
+                          ((comparator != null) && (comparator.compare((E)cache, expectedValue)==0))  ){
+                        logger.finer("Channel " + channel.getName() + " already at expected value");
+                        return;
+                    }
+                }
+           // }
+           
             waitT = Thread.currentThread();
             try {
                 if (comparator == null) {

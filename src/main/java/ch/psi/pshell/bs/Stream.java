@@ -9,6 +9,7 @@ import ch.psi.bsread.ReceiverConfig;
 import ch.psi.bsread.message.ValueImpl;
 import ch.psi.pshell.device.Device;
 import ch.psi.bsread.converter.MatlabByteConverter;
+import ch.psi.pshell.bs.ProviderConfig.SocketType;
 import ch.psi.pshell.bs.StreamConfig.Incomplete;
 import ch.psi.pshell.device.Cacheable;
 import ch.psi.pshell.device.Readable.ReadableType;
@@ -61,7 +62,7 @@ public class Stream extends DeviceBase implements Readable<StreamValue>, Cacheab
     }
 
     public Stream(String name, boolean persisted) {
-        this(name, null, persisted);
+        this(name, (Provider)null, persisted);
     }
 
     
@@ -73,13 +74,22 @@ public class Stream extends DeviceBase implements Readable<StreamValue>, Cacheab
      * If provider is null then uses default provider.
      */
     public Stream(String name, Provider provider, boolean persisted) {
+        this(name, provider, null, null, persisted);
+    }
+    
+    protected Stream(String name, Provider provider, String address, SocketType socketType, boolean persisted) {
         super(name, persisted ? new StreamConfig() : null);
         if (converter == null) {
             converter = new MatlabByteConverter();
         }
         if (provider == null) {
-            provider = Provider.getOrCreateDefault();
-            privateProvider = (provider != Provider.getDefault());
+            if (address==null){
+                provider = Provider.getOrCreateDefault();
+                privateProvider = (provider != Provider.getDefault());
+            } else {
+                provider = new Provider(name + "_provider", address, socketType);
+                privateProvider = true;
+            }
         } else {
             privateProvider = false;
         }
@@ -144,6 +154,16 @@ public class Stream extends DeviceBase implements Readable<StreamValue>, Cacheab
         this(name, provider, incomplete, channels);
         setFilter(filter);
     }    
+    
+    
+    public Stream(String name, String address, boolean pull) {
+        this(name, address, pull ? SocketType.PULL : ProviderConfig.SocketType.SUB);
+    }
+    
+    public Stream(String name, String address, SocketType socketType) {
+        this(name, null, address, socketType, false);
+    }
+    
     
     public Incomplete mappingIncomplete;
     

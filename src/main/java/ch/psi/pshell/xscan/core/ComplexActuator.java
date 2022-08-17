@@ -72,7 +72,7 @@ public class ComplexActuator implements Actor {
             this.firstrun = false;
 
             // Execute pre actions
-            logger.finest("Execute pre actions");
+            logger.finer("Execute pre actions");
             for (Action action : preActions) {
                 action.execute();
             }
@@ -96,7 +96,7 @@ public class ComplexActuator implements Actor {
             this.next = false;
 
             // Execute post actions
-            logger.finest("Execute post actions");
+            logger.finer("Execute post actions");
             for (Action action : postActions) {
                 action.execute();
             }

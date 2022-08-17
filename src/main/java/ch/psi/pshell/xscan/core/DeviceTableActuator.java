@@ -55,7 +55,7 @@ public class DeviceTableActuator<T> extends ChannelAccessTableActuator {
 
         double fvalue = table[count];
         // Set actuator channel
-        logger.finest("Set device " + channel.getName() + " to value: " + fvalue);
+        logger.finer("Set device " + channel.getName() + " to value: " + fvalue);
         
         
         try {

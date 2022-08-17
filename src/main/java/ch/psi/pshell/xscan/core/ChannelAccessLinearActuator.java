@@ -107,7 +107,7 @@ public class ChannelAccessLinearActuator<T> implements Actor {
         }
 
         // Set actuator channel
-        logger.finest("Set actuator channel " + channel.getName() + " to value: " + value);
+        logger.finer("Set actuator channel " + channel.getName() + " to value: " + value);
         try {
 
             if (!asynchronous) {

@@ -26,14 +26,14 @@ public class ComplexSensor implements Sensor {
 
     @Override
     public Object read() throws InterruptedException {
-        logger.finest("Execute pre actions");
+        logger.finer("Execute pre actions");
         for (Action action : preActions) {
             action.execute();
         }
 
         Object value = sensor.read();
 
-        logger.finest("Execute post actions");
+        logger.finer("Execute post actions");
         for (Action action : postActions) {
             action.execute();
         }

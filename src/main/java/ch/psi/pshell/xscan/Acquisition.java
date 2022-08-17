@@ -105,7 +105,6 @@ import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
-import java.util.logging.SimpleFormatter;
 
 /**
  * Data acquisition engine for performing scans
@@ -1212,6 +1211,7 @@ public class Acquisition {
 
         
 	private <T> Channel<T> createChannel(Class<T> type, String name, boolean monitor){
+            for (int i=0; i< configuration.getChannelCreationRetries(); i++){
 		try {
 			if(name== null){
 				return null;
@@ -1220,9 +1220,14 @@ public class Acquisition {
 			channels.add(c);
 			return c;
 		} catch (Exception e) {
+                    if (i>= (configuration.getChannelCreationRetries()-1)){
 			throw new RuntimeException("Unable to create channel: "+name,e);
+                    } else {
+                        logger.warning("Unable to create channel: " + name + " - Retrying");
+                    }
 		}
-		
+            }
+            return null;
 	}
 	
 	/**
@@ -1232,6 +1237,7 @@ public class Acquisition {
 	 * @return	null if the name of the channel is null, otherwise the channel
 	 */
 	private <T> Channel<T> createChannel(Class<T> type, String name){
+            for (int i=0; i< configuration.getChannelCreationRetries(); i++){
 		try {
 			if(name== null){
 				return null;
@@ -1240,12 +1246,18 @@ public class Acquisition {
 			channels.add(c);
 			return c;
 		} catch (Exception e) {
+                    if (i>= (configuration.getChannelCreationRetries()-1)){
 			throw new RuntimeException("Unable to create channel: "+name,e);
+                    } else {
+                        logger.warning("Unable to create channel: " + name + " - Retrying");
+                    }
 		}
-		
+            }
+            return null;
 	}
 	
 	private <T> Channel<T> createChannel(Class<T> type, String name, int size){
+            for (int i=0; i< configuration.getChannelCreationRetries(); i++){
 		try {
 			if(name== null){
 				return null;
@@ -1254,9 +1266,14 @@ public class Acquisition {
 			channels.add(c);
 			return c;
 		} catch (Exception e) {
+                    if (i>= (configuration.getChannelCreationRetries()-1)){
 			throw new RuntimeException("Unable to create channel: "+name,e);
+                    } else {
+                        logger.warning("Unable to create channel: " + name + " - Retrying");
+                    }
 		}
-		
+            }
+            return null;
 	}	
         
 	public static VDescriptor mapVisualizations(List<Visualization> vl){

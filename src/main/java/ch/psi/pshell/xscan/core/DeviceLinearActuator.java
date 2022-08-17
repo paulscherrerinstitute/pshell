@@ -55,7 +55,7 @@ public class DeviceLinearActuator<T> extends ChannelAccessLinearActuator {
         }
 
         // Set device
-        logger.finest("Set device " + device.getName() + " to value: " + value);
+        logger.finer("Set device " + device.getName() + " to value: " + value);
         try {
 
             if (asynchronous) {
