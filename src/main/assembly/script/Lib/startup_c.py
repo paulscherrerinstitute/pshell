@@ -255,7 +255,7 @@ from ch.psi.pshell.core import InlineDevice as InlineDevice
 from ch.psi.pshell.data import DataSlice as DataSlice
 from ch.psi.pshell.data import PlotDescriptor as PlotDescriptor
 from ch.psi.pshell.data import Table as Table
-from ch.psi.pshell.data import Provider as  Provider
+from ch.psi.pshell.data import Provider as  DataProvider
 from ch.psi.pshell.data import ProviderHDF5 as  ProviderHDF5
 from ch.psi.pshell.data import ProviderText as  ProviderText
 from ch.psi.pshell.data import ProviderCSV as  ProviderCSV

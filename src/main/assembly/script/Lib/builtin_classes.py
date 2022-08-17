@@ -38,7 +38,7 @@ import ch.psi.pshell.core.InlineDevice as InlineDevice
 import ch.psi.pshell.data.DataSlice as DataSlice
 import ch.psi.pshell.data.PlotDescriptor as PlotDescriptor
 import ch.psi.pshell.data.Table as Table
-import ch.psi.pshell.data.Provider as  Provider
+import ch.psi.pshell.data.Provider as  DataProvider
 import ch.psi.pshell.data.ProviderHDF5 as  ProviderHDF5
 import ch.psi.pshell.data.ProviderText as  ProviderText
 import ch.psi.pshell.data.ProviderCSV as  ProviderCSV
@@ -238,6 +238,7 @@ import ch.psi.pshell.scan.ScanAbortedException as ScanAbortedException
 import ch.psi.pshell.bs.BsScan
 import ch.psi.pshell.bs.Stream as Stream
 import ch.psi.pshell.bs.Provider as Provider
+import ch.psi.pshell.bs.ProviderConfig.SocketType as SocketType
 import ch.psi.pshell.bs.Dispatcher as Dispatcher
 import ch.psi.pshell.bs.Scalar as Scalar
 import ch.psi.pshell.bs.Waveform as Waveform
