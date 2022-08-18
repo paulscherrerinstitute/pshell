@@ -70,7 +70,6 @@ public final class ProcessorXScan extends MonitoredPanel implements Processor {
     public static final String SCAN_TYPE = "XScan";
     public static final String BROWSER_TITLE = "XScan Data";
 
-    
     static {
         if (App.getInstance().getMainFrame() != null) {
             /*
@@ -95,10 +94,9 @@ public final class ProcessorXScan extends MonitoredPanel implements Processor {
             //TODO: On Mac, Java >10,  meta+B generates 2 events (with and without modifier)
             //https://bugs.openjdk.java.net/browse/JDK-8208712
             SwingUtils.adjustMacMenuBarAccelerator(menuDataBrowser);
-            */            
+             */
             try {
-                if ((App.hasArgument("fda_browser"))
-                        //|| ("true".equalsIgnoreCase(Context.getInstance().getSetting("FdaBrowser")))
+                if ((App.hasArgument("fda_browser")) //|| ("true".equalsIgnoreCase(Context.getInstance().getSetting("FdaBrowser")))
                         ) {
                     showDataBrowser();
                 }
@@ -107,7 +105,7 @@ public final class ProcessorXScan extends MonitoredPanel implements Processor {
             }
         }
     }
-     
+
     public static boolean isDataBrowserVisible() {
         if (App.getInstance().getMainFrame() != null) {
             JTabbedPane tab = App.getInstance().getMainFrame().getLeftTab();
@@ -230,32 +228,53 @@ public final class ProcessorXScan extends MonitoredPanel implements Processor {
 
     @Override
     public void open(String fileName) throws IOException {
-        File file = new File(fileName);
-        if (!file.getName().endsWith("." + EXTENSION)) {
-            file = new File(file.getAbsolutePath() + "." + EXTENSION);
-        }
-        setFile(file);
-        Configuration c = null;
+        open(fileName, true);
+    }
 
-        try {
-            if (!file.exists()) {
-                //New file
-                c = new Configuration();
-                c.setScan(new Scan());
-                ModelManager.marshall(c, file);
-            } else {
-                c = load(file);
+    void open(String fileName, boolean showConfig) throws IOException {
+        if (fileName == null) {
+            if (!showConfig) {
+                throw new IOException("Undefined file name");
             }
-        } catch (Exception ex) {
-            throw new IOException(ex);
+            config = new Configuration();
+            config.setScan(new Scan());
+        } else {
+            File file = new File(fileName);
+            if (!file.getName().endsWith("." + EXTENSION)) {
+                file = new File(file.getAbsolutePath() + "." + EXTENSION);
+            }
+            setFile(file);
+            try {
+                if (!file.exists()) {
+                    if (!showConfig) {
+                        throw new IOException("Invalid file name: " + file);
+                    }
+                    //New file
+                    config = new Configuration();
+                    config.setScan(new Scan());
+                    ModelManager.marshall(config, file);
+                } else {
+                    config = load(file);
+                }
+            } catch (Exception ex) {
+                throw new IOException(ex);
+            }
         }
 
-        this.jPanel1.removeAll();
-        this.panelConfig = new ConfigurationPanel(c);
-        this.jPanel1.add(panelConfig, BorderLayout.CENTER);
-        this.jPanel1.revalidate();
-        this.jPanel1.repaint();
+        if (showConfig) {
+            this.jPanel1.removeAll();
+            this.panelConfig = new ConfigurationPanel(config);
+            this.jPanel1.add(panelConfig, BorderLayout.CENTER);
+            this.jPanel1.revalidate();
+            this.jPanel1.repaint();
+        }
+    }
 
+    public Configuration getConfig() {
+        if (panelConfig != null) {
+            return panelConfig.getObject();
+        }
+        return config;
     }
 
     File file;
@@ -269,7 +288,7 @@ public final class ProcessorXScan extends MonitoredPanel implements Processor {
     public JPanel getPanel() {
         //Creating new
         if (file == null) {
-            JFileChooser chooser = new JFileChooser(getHomePath());
+           JFileChooser chooser = new JFileChooser(getHomePath());
             FileNameExtensionFilter filter = new FileNameExtensionFilter(getDescription(), getExtensions());
             chooser.setFileFilter(filter);
             chooser.setDialogTitle("Enter new file name");
@@ -315,7 +334,7 @@ public final class ProcessorXScan extends MonitoredPanel implements Processor {
                 copy = new File(file.getAbsolutePath() + ".tmp");
                 IO.copy(file.getAbsolutePath(), copy.getAbsolutePath());
             }
-            ModelManager.marshall(panelConfig.getObject(), file);
+            ModelManager.marshall(getConfig(), file);
             changed = false;
             ModelUtil.getInstance().clearModified();
 
@@ -335,7 +354,7 @@ public final class ProcessorXScan extends MonitoredPanel implements Processor {
 
     @Override
     public void saveAs(String fileName) throws IOException {
-        Configuration model = panelConfig.getObject();
+        Configuration model = getConfig();
 
         try {
             File f = new File(fileName);
@@ -500,7 +519,7 @@ public final class ProcessorXScan extends MonitoredPanel implements Processor {
 
     @Override
     public void execute() throws Exception {
-        App.getInstance().startTask(new XscanTask(getFileName(), panelConfig.getObject()));
+        App.getInstance().startTask(new XscanTask(getFileName(), getConfig()));
     }
 
     @Override
@@ -508,8 +527,10 @@ public final class ProcessorXScan extends MonitoredPanel implements Processor {
         if (acquisition != null) {
             try {
                 acquisition.abort();
+
             } catch (Exception e) {
-                Logger.getLogger(ProcessorXScan.class.getName()).log(Level.WARNING, null, e);
+                Logger.getLogger(ProcessorXScan.class
+                        .getName()).log(Level.WARNING, null, e);
             }
         }
 
@@ -531,8 +552,10 @@ public final class ProcessorXScan extends MonitoredPanel implements Processor {
         if (acquisition != null) {
             try {
                 acquisition.pause();
+
             } catch (Exception e) {
-                Logger.getLogger(ProcessorXScan.class.getName()).log(Level.WARNING, null, e);
+                Logger.getLogger(ProcessorXScan.class
+                        .getName()).log(Level.WARNING, null, e);
             }
         }
     }
@@ -541,8 +564,10 @@ public final class ProcessorXScan extends MonitoredPanel implements Processor {
         if (acquisition != null) {
             try {
                 acquisition.resume();
+
             } catch (Exception e) {
-                Logger.getLogger(ProcessorXScan.class.getName()).log(Level.WARNING, null, e);
+                Logger.getLogger(ProcessorXScan.class
+                        .getName()).log(Level.WARNING, null, e);
             }
         }
     }
@@ -564,7 +589,7 @@ public final class ProcessorXScan extends MonitoredPanel implements Processor {
         if (!new File(file).exists()) {
             throw new IOException("Invalid file: " + file);
         }
-        open(file);
+        open(file, false);
 
         State initialState = Context.getInstance().getState();
         CommandInfo info = null;
@@ -582,25 +607,27 @@ public final class ProcessorXScan extends MonitoredPanel implements Processor {
             }
         }
     }
-    
+
     public void startExecute(String file, Map<String, Object> vars) throws Exception {
-        new Thread(()->{
+        new Thread(() -> {
             try {
                 execute(file, vars);
+
             } catch (Exception ex) {
-                Logger.getLogger(ProcessorXScan.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(ProcessorXScan.class
+                        .getName()).log(Level.SEVERE, null, ex);
             }
         }).start();
-    }    
+    }
 
     public void testNotification(String recipient) {
-            NotificationAgent a = new NotificationAgent();
-            Recipient r = new Recipient();
-            r.setValue(recipient);
-            r.setError(true);
-            r.setSuccess(true);
-            a.getRecipients().add(r);
-            a.sendNotification("Test Notification", "This is a test notification", true, true);
+        NotificationAgent a = new NotificationAgent();
+        Recipient r = new Recipient();
+        r.setValue(recipient);
+        r.setError(true);
+        r.setSuccess(true);
+        a.getRecipients().add(r);
+        a.sendNotification("Test Notification", "This is a test notification", true, true);
     }
 
     Thread executionThread;
@@ -608,9 +635,9 @@ public final class ProcessorXScan extends MonitoredPanel implements Processor {
     Configuration config;
 
     public Map<String, Object> getVariables() {
-        return getVariables(panelConfig.getObject());
+        return getVariables(getConfig());
     }
-    
+
     public Map<String, Object> getVariables(Configuration model) {
         Map<String, Object> variables = new LinkedHashMap<>();
         for (Variable v : model.getVariable()) {
@@ -618,12 +645,12 @@ public final class ProcessorXScan extends MonitoredPanel implements Processor {
         }
         return variables;
     }
-    
-    void injectVariables(){
-        injectVariables(panelConfig.getObject());
+
+    void injectVariables() {
+        injectVariables(getConfig());
     }
-    
-    void injectVariables(Configuration model){
+
+    void injectVariables(Configuration model) {
         for (Map.Entry<String, Object> entry : getVariables(model).entrySet()) {
             try {
                 Object value = entry.getValue();
@@ -631,8 +658,10 @@ public final class ProcessorXScan extends MonitoredPanel implements Processor {
                     value = eval(((String) value).substring(1).trim());
                 }
                 setInterpreterVariable(entry.getKey(), value);
+
             } catch (Exception ex) {
-                Logger.getLogger(ProcessorXScan.class.getName()).severe("Error setting variable " + entry.getKey() + ": " + ex.getMessage());
+                Logger.getLogger(ProcessorXScan.class
+                        .getName()).severe("Error setting variable " + entry.getKey() + ": " + ex.getMessage());
             }
         }
     }
@@ -649,13 +678,12 @@ public final class ProcessorXScan extends MonitoredPanel implements Processor {
             EventBus ebus = new EventBus(AcquisitionConfiguration.eventBusModeAcq);
             acquisition = new Acquisition(channelService, getConfiguration(), vars);
             App.getInstance().getMainFrame().updateButtons();   //Update pause button state
-            config = panelConfig.getObject();
 
             injectVariables();
 
-            acquisition.initalize(ebus, config);
+            acquisition.initalize(ebus, getConfig());
             if (!batch && App.isScanPlottingActive()) {
-                visualizer = new Visualizer(Acquisition.mapVisualizations(config.getVisualization()));
+                visualizer = new Visualizer(Acquisition.mapVisualizations(getConfig().getVisualization()));
                 /*
                 if (config.getScan() != null && config.getScan().getCdimension() != null) {
                     // If there is a continuous dimension only update the plot a the end of a line.
@@ -664,7 +692,7 @@ public final class ProcessorXScan extends MonitoredPanel implements Processor {
                     visualizer.setUpdateAtStreamDelimiter(true);
                     visualizer.setUpdateAtEndOfStream(false);
                 }
-                */
+                 */
                 ebus.register(visualizer);
                 setPlots(visualizer.getPlotPanels(), null);
             }
@@ -674,17 +702,22 @@ public final class ProcessorXScan extends MonitoredPanel implements Processor {
             acquisition.execute();
         } catch (InterruptedException ex) {
             throw ex;
+
         } catch (Throwable t) {
-            Logger.getLogger(ProcessorXScan.class.getName()).log(Level.WARNING, null, t);
+            Logger.getLogger(ProcessorXScan.class
+                    .getName()).log(Level.WARNING, null, t);
             t.printStackTrace();
             throw t;
         } finally {
-            try{
+            try {
                 ModelUtil.getInstance().setConfigurationPanel(null);
-                Logger.getLogger(ProcessorXScan.class.getName()).log(Level.FINER, "Destroy acquisition");
+                Logger
+                        .getLogger(ProcessorXScan.class
+                                .getName()).log(Level.FINER, "Destroy acquisition");
                 if (acquisition != null) {
                     acquisition.destroy();
                     acquisition = null;
+
                 }
             } catch (Exception e) {
                 Logger.getLogger(ProcessorXScan.class.getName()).log(Level.FINER, "Unable to destroy acquisition", e);
@@ -708,6 +741,7 @@ public final class ProcessorXScan extends MonitoredPanel implements Processor {
                     }
                     try {
                         executor.shutdown();
+
                     } catch (Exception e) {
                         Logger.getLogger(ProcessorXScan.class.getName()).log(Level.FINER, "Unable to stop executor service", e);
                     }
@@ -716,25 +750,23 @@ public final class ProcessorXScan extends MonitoredPanel implements Processor {
             executionThread = null;
         }
     }
-    
+
     @Override
-    public boolean isPlottable(File file, String path, DataManager dm){
-        try{
-            if ((file!=null)  && file.exists() ) {
-                
-                if (path!=null){
+    public boolean isPlottable(File file, String path, DataManager dm) {
+        try {
+            if ((file != null) && file.exists()) {
+                if (path != null) {
                     //Within data root
                     if (ProcessorXScan.SCAN_TYPE.toString().equalsIgnoreCase(String.valueOf(dm.getAttribute(file.getAbsolutePath(), path, Layout.ATTR_TYPE)))) {
                         return true;
                     }
-                   file = Paths.get(file.toString(), path+".txt").toFile();
-                    
-                }     
+                    file = Paths.get(file.toString(), path + ".txt").toFile();
+                }
 
                 //Isolated file
-                if (file.exists() && file.isFile()){
-                    if (IO.getExtension(file).equals("txt")) {      
-                        File dir = file.getParentFile();  
+                if (file.exists() && file.isFile()) {
+                    if (IO.getExtension(file).equals("txt")) {
+                        File dir = file.getParentFile();
                         String name = file.getName();
                         name = name.replaceAll("_[0-9]*.txt$", "");
                         name = name.replaceAll(".txt$", "");
@@ -750,7 +782,7 @@ public final class ProcessorXScan extends MonitoredPanel implements Processor {
                     }
                 }
             }
-        } catch (Exception ex){
+        } catch (Exception ex) {
         }
         return false;
     }
@@ -758,12 +790,12 @@ public final class ProcessorXScan extends MonitoredPanel implements Processor {
     @Override
     public void plotDataFile(File file, String path, DataManager dm) {
         // Try to determine configuration file from data file name
-        boolean deserializerTXT= (path == null);
+        boolean deserializerTXT = (path == null);
         File dir = file.getParentFile();
         String name = file.getName();
         name = name.replaceAll("_[0-9]*.txt$", "");
-        String ext =IO.getExtension(name);
-        if (!ext.isBlank()){
+        String ext = IO.getExtension(name);
+        if (!ext.isBlank()) {
             name = name.replaceAll("." + IO.getExtension(name) + "$", "");
         }
         File cfile = new File(dir, name + "." + EXTENSION);
@@ -773,23 +805,23 @@ public final class ProcessorXScan extends MonitoredPanel implements Processor {
             throw new IllegalArgumentException("Data file [" + file.getAbsolutePath() + "] does not exist");
         }
         if (!cfile.exists()) {
-            File cf = new File(dir.toString() +"." + EXTENSION);
+            File cf = new File(dir.toString() + "." + EXTENSION);
             if (cf.exists()) {
                 //Reading a text file in file browser generated with PShell setializer
                 cfile = cf;
-                deserializerTXT  = false;
-            } else {                
+                deserializerTXT = false;
+            } else {
                 cf = Paths.get(dir.toString(), name, name + "." + EXTENSION).toFile();
                 if (file.isDirectory() && cf.exists()) {
                     //Reading with DataPanel inside a dolder generated with text serializer
                     cfile = cf;
-                    file = new File(file,path + ".txt");
-                    deserializerTXT  = true;
+                    file = new File(file, path + ".txt");
+                    deserializerTXT = true;
                 } else {
-                    throw new IllegalArgumentException("Configuration file [" + cfile.getAbsolutePath() + "] does not exist");   
+                    throw new IllegalArgumentException("Configuration file [" + cfile.getAbsolutePath() + "] does not exist");
                 }
             }
-        }                     
+        }
 
         EventBus ebus = new EventBus(AcquisitionConfiguration.eventBusModePlot);
         Deserializer deserializer = deserializerTXT ? new DeserializerTXT(ebus, file) : new DeserializerPShell(ebus, file, path, dm);
@@ -802,12 +834,12 @@ public final class ProcessorXScan extends MonitoredPanel implements Processor {
         visualizer.setUpdateAtStreamElement(false);
         visualizer.setUpdateAtStreamDelimiter(false);
         visualizer.setUpdateAtEndOfStream(true);
-        
+
         ebus.register(visualizer);
 
         //tc.updatePanel(visualizer.getPlotPanels());
         ProcessorXScan.setPlots(visualizer.getPlotPanels(), "Data");
-        
+
         Logger.getLogger(ProcessorXScan.class.getName()).log(Level.INFO, "Visualize file: {0}", file.getAbsolutePath());
         String filename = file.getName();
         Thread t = new Thread(new Runnable() {
@@ -823,12 +855,12 @@ public final class ProcessorXScan extends MonitoredPanel implements Processor {
         });
         t.start();
     }
-    
-    public static boolean isFdaSerializationFolder(File file){
-        if ((file!=null) && (file.isDirectory())){
-            if (new File(file, file.getName()+".xml").isFile()){
-                if (new File(file, file.getName()+".xml").isFile()){
-                    if (new File(file, file.getName()+".xml").isFile()){
+
+    public static boolean isFdaSerializationFolder(File file) {
+        if ((file != null) && (file.isDirectory())) {
+            if (new File(file, file.getName() + ".xml").isFile()) {
+                if (new File(file, file.getName() + ".xml").isFile()) {
+                    if (new File(file, file.getName() + ".xml").isFile()) {
                         return true;
                     }
                 }
@@ -871,45 +903,47 @@ public final class ProcessorXScan extends MonitoredPanel implements Processor {
     }
 
     private static ScriptEngine engine;
-    
-    private static void createPrivateEngine(){
+
+    private static void createPrivateEngine() {
         if (engine == null) {
             engine = new ScriptEngineManager().getEngineByName("python");
+
             if (engine == null) {
-                Logger.getLogger(ProcessorXScan.class.getName()).severe("Error instantiating script engine in XScan");
+                Logger.getLogger(ProcessorXScan.class
+                        .getName()).severe("Error instantiating script engine in XScan");
                 throw new RuntimeException("Error instantiating script engine in XScan");
-            }  
-            
-            try{
+            }
+
+            try {
                 ScriptStdio stdio = new ScriptStdio(engine);
                 Context.getInstance().addScriptStdio(stdio);
-            } catch (Exception ex){
+            } catch (Exception ex) {
                 engine.getContext().setWriter(new PrintWriter(System.out));
-                engine.getContext().setErrorWriter(new PrintWriter(System.err));    
+                engine.getContext().setErrorWriter(new PrintWriter(System.err));
             }
         }
     }
-    
+
     public static Object eval(String script) throws Exception {
-        if (Context.getInstance().isInterpreterEnabled()){
+        if (Context.getInstance().isInterpreterEnabled()) {
             return Context.getInstance().evalLineBackground(script);
         } else {
             createPrivateEngine();
-            return engine.eval(script);          
+            return engine.eval(script);
         }
     }
 
     public static void setInterpreterVariable(String name, Object value) {
-        if (Context.getInstance().isInterpreterEnabled()){
+        if (Context.getInstance().isInterpreterEnabled()) {
             Context.getInstance().setInterpreterVariable(name, value);
         } else {
             createPrivateEngine();
-            engine.put(name, value);       
+            engine.put(name, value);
         }
     }
 
     public static Object getInterpreterVariable(String name) {
-        if (Context.getInstance().isInterpreterEnabled()){
+        if (Context.getInstance().isInterpreterEnabled()) {
             return Context.getInstance().getInterpreterVariable(name);
         } else {
             createPrivateEngine();
@@ -922,8 +956,9 @@ public final class ProcessorXScan extends MonitoredPanel implements Processor {
     }
 
     /**
-     * This method is called from within the constructor to initialize the form. WARNING: Do NOT modify this code. The
-     * content of this method is always regenerated by the Form Editor.
+     * This method is called from within the constructor to initialize the form.
+     * WARNING: Do NOT modify this code. The content of this method is always
+     * regenerated by the Form Editor.
      */
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {

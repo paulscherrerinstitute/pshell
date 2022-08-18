@@ -268,7 +268,7 @@ public class EditablePanel<T> extends javax.swing.JPanel implements EditableComp
                     textComponent.getDocument().addDocumentListener(new DocumentAdapter() {
                         @Override
                         public void valueChange(DocumentEvent de) {
-                            if (!updating){
+                            if (!updating && textComponent.isVisible()){
                                 updating=true;
                                 //Must invoke because doc updating to current value generate 1 remove + 1 insert, and doc is marked as changed if checked in between
                                 SwingUtilities.invokeLater(()->{
