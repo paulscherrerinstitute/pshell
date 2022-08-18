@@ -33,7 +33,7 @@ public class ContinuousPositionerPanel extends EditablePanel<ContinuousPositione
         // Establish bindings
         bindIdEditor(jTextFieldId);
         bindEditor(jTextFieldName, "name", true);
-        bindEditor(jTextFieldReadback, "readback", false);
+        bindEditor(jTextFieldReadback, "readback", true);
         bindEditor(jFormattedTextFieldStart, "start", true, 0);
         bindEditor(jFormattedTextFieldEnd, "end", true, 0);
         bindEditor(jFormattedTextFieldStepSize, "stepSize", true, 0);

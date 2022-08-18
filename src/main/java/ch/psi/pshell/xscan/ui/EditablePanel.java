@@ -280,7 +280,7 @@ public class EditablePanel<T> extends javax.swing.JPanel implements EditableComp
                                         String var=(getterVar!=null) ? (String)getterVar.invoke(obj): null;
                                         Object edited=null;
                                         Object editedVar=null;
-                                        if (str != null) {     
+                                        if ((str != null) || ((type == String.class))) {     
                                             if ((getterVar!=null) && ((getVariable(str)!=null) || (getInterpreterVariable(str)!=null))){
                                                 editedVar = str;
                                             } else {                                

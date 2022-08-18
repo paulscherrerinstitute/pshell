@@ -113,6 +113,9 @@ public class CrlogicLoopStream implements ActionLoop {
     public void setActuator(String id, String name, String readback, double start, double end, double stepSize, double integrationTime, double additionalBacklash) {
         this.id = id;
         this.name = name;
+        if ((readback!=null) && (readback.isBlank())){
+            readback=null;
+        }
         this.readback = readback;
         this.start = start;
         this.end = end;

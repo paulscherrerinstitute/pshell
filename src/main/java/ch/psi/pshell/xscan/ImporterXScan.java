@@ -14,7 +14,7 @@ import java.util.List;
 import org.apache.commons.lang3.ArrayUtils;
 
 /**
- * 
+ *
  */
 public class ImporterXScan implements Importer {
 
@@ -42,22 +42,22 @@ public class ImporterXScan implements Importer {
     ArrayList<String> scanValues;
 
     @Override
-    public String getDescription(){
+    public String getDescription() {
         return "XScan files";
     }
-    
+
     @Override
-    public String[] getExtensions(){
+    public String[] getExtensions() {
         return new String[]{"xml"};
-    }    
-    
+    }
+
     @Override
     public synchronized String importFile(File file) throws Exception {
         indentation = 0;
         setpointIndex = 1;
         dimensionCount = 1;
         detectorIndex = 1;
-        
+
         Configuration cfg = ModelManager.unmarshall(file);
         sb = new StringBuilder();
         indentation = 0;
@@ -521,8 +521,8 @@ public class ImporterXScan implements Importer {
         add("#" + positioner.getClass().getSimpleName() + " " + id);
         String readback = positioner.getReadback();
 
-        setpointVar = "setpoint" + (setpointIndex);// id ;            
-        readbackVar = "readback" + (setpointIndex);// id ;                    
+        setpointVar = "setpoint" + (setpointIndex);// id ;     
+        readbackVar = "readback" + (setpointIndex);// id ;     
         setpointIndex++;
 
         if (!(positioner instanceof PseudoPositioner)) {
@@ -542,8 +542,8 @@ public class ImporterXScan implements Importer {
         double settlingTime = positioner.getSettlingTime();
         String type = positioner.getType();
 
-        setpointVar = "setpoint" + (setpointIndex);// id ;            
-        readbackVar = "readback" + (setpointIndex);// id ;                    
+        setpointVar = "setpoint" + (setpointIndex);// id ;   
+        readbackVar = "readback" + (setpointIndex);// id ;     
         setpointIndex++;
 
         if (positioner instanceof FunctionPositioner) {
@@ -667,7 +667,7 @@ public class ImporterXScan implements Importer {
     void addPositionerChannel(String id, String setpointChannel, String readbackChannel) {
         String readbackId = id + "Readback";
         add(id + " = Channel('" + setpointChannel + "', type = 'd')");
-        if (readbackChannel != null) {
+        if ((readbackChannel != null) & (!readbackChannel.isBlank())){
             add(readbackId + " = Channel('" + readbackChannel + "', type = 'd')"); //
         }
     }
@@ -687,7 +687,7 @@ public class ImporterXScan implements Importer {
             add("cawait('" + done + "', " + doneValue + ", '" + getType(type) + "')");
         }
 
-        if (readback != null) {
+        if ((readback != null) && (!readback.isBlank())){
             add(readbackVar + " = " + readbackId + ".get()");
         } else {
             add(readbackVar + " = " + id + ".get()");
@@ -716,7 +716,7 @@ public class ImporterXScan implements Importer {
         //indentation -= 4;
         if (!(positioner instanceof PseudoPositioner)) {
             add(id + ".close()");
-            if (readback != null) {
+            if ((readback != null) && (!readback.isBlank())){
                 add(readbackId + ".close()");
 
             }
