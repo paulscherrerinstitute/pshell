@@ -236,6 +236,7 @@ public final class ProcessorXScan extends MonitoredPanel implements Processor {
             if (!showConfig) {
                 throw new IOException("Undefined file name");
             }
+            setFile(null);
             config = new Configuration();
             config.setScan(new Scan());
         } else {
@@ -281,35 +282,15 @@ public final class ProcessorXScan extends MonitoredPanel implements Processor {
 
     private void setFile(File f) {
         this.file = f;
-        setName(IO.getPrefix(f.getName()));
+        setName((f==null) ? "Unknown": IO.getPrefix(f.getName()));
     }
 
     @Override
     public JPanel getPanel() {
         //Creating new
-        if (file == null) {
-           JFileChooser chooser = new JFileChooser(getHomePath());
-            FileNameExtensionFilter filter = new FileNameExtensionFilter(getDescription(), getExtensions());
-            chooser.setFileFilter(filter);
-            chooser.setDialogTitle("Enter new file name");
-            if (chooser.showSaveDialog(SwingUtils.getFrame(this)) != JFileChooser.APPROVE_OPTION) {
-                throw new RuntimeException("File name must be set");
-            }
-
-            try {
-                File f = chooser.getSelectedFile();
-                if (!String.valueOf(IO.getExtension(f)).toLowerCase().equals(EXTENSION)) {
-                    f = new File(f.getCanonicalPath() + "." + EXTENSION);
-                }
-                if (f.exists()) {
-                    throw new RuntimeException("File already exists");
-                }
-                open(f.getCanonicalPath());
-                save();
-                SwingUtilities.invokeLater(() -> {
-                    JTabbedPane tabDoc = App.getInstance().getMainFrame().getDocumentsTab();
-                    tabDoc.setTitleAt(tabDoc.getSelectedIndex(), new File(getFileName()).getName());
-                });
+        if (panelConfig == null) {
+            try{
+                open(null);
             } catch (RuntimeException ex) {
                 throw ex;
             } catch (Exception ex) {
