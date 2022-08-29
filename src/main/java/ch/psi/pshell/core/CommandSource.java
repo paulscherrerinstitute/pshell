@@ -15,11 +15,11 @@ public enum CommandSource {
     }
 
     public boolean isInternal() {
-        return (this == ctr) || (this == plugin) || (this == script);
+        return (this == ctr) || (this == plugin) || (this == script) || (this == task);
     }
 
     public boolean isLocal() {
-        return (this == ui) || (this == console) || (this == task);
+        return (this == ui) || (this == console);
     }
 
     public boolean isRemote() {
@@ -27,10 +27,16 @@ public enum CommandSource {
     }
     
     public boolean isDisplayable(){
-        return !this.isRemote() || !Context.getInstance().getConfig().hideServerMessages;
+        if (this == ctr) {
+            return false;
+        }
+        if (this == server){
+            return !Context.getInstance().getConfig().hideServerMessages;
+        }
+        return true;
     }
     
     public boolean isSavable(){
-        return (this == console) || (this == terminal) || ((this == server) && !Context.getInstance().getConfig().hideServerMessages); 
+        return isLocal() || (this == terminal) || ((this == server) && !Context.getInstance().getConfig().hideServerMessages); 
     }    
 }
