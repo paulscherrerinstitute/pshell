@@ -2,7 +2,7 @@ package ch.psi.pshell.core;
 
 /**
  * This enumeration represents the origin of a command (script execution, evaluation...) to the
- * current context. The execution behaviour and rights may vary according ti th origin.
+ * current context. The execution behavior and rights may vary according to the origin.
  */
 public enum CommandSource {
 
@@ -27,6 +27,10 @@ public enum CommandSource {
     }
     
     public boolean isDisplayable(){
-     return !this.isRemote() || !Context.getInstance().getConfig().hideServerMessages;
+        return !this.isRemote() || !Context.getInstance().getConfig().hideServerMessages;
     }
+    
+    public boolean isSavable(){
+        return (this == console) || (this == terminal) || ((this == server) && !Context.getInstance().getConfig().hideServerMessages); 
+    }    
 }

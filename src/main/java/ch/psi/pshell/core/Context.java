@@ -74,9 +74,7 @@ import java.io.FileOutputStream;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.util.Enumeration;
-import java.util.HashSet;
 import java.util.Properties;
-import java.util.Set;
 import java.util.jar.JarFile;
 
 /**
@@ -1525,7 +1523,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
         } finally {
             try {
                 if (!command.trim().isEmpty()) {
-                    if (source.isDisplayable()) {
+                    if (source.isSavable()) {
                         history.put(command);
                     }
                 }
