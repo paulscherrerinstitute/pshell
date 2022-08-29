@@ -795,7 +795,7 @@ public class App extends ObservableBase<AppListener> {
      * If disabled the interpreter is not instantiated
      */
     static public boolean isDisabled() {
-        return getBoolArgumentValue("n");
+        return getBoolArgumentValue("n") | isOffline();
     }
 
     static public boolean isVersionMessage() {
