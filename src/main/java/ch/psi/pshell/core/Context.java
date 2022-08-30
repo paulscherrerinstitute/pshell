@@ -1107,6 +1107,21 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
         filePermissionsConfig = config.filePermissionsConfig;
         Config.setDefaultPermissions(filePermissionsConfig);
 
+        if (scriptManager!=null){
+            try {
+                if (!scriptManager.isThreaded()){
+                    if (getState().isProcessing()){
+                        scriptManager.abort();
+                    }
+                    scriptManager.eval("on_system_restart()");
+                } else {
+                    scriptManager.evalBackground("on_system_restart()");
+                }
+            } catch (Exception ex) {
+                Logger.getLogger(CommandManager.class.getName()).log(Level.WARNING, null, ex);
+            }    
+        }
+        
         setState(State.Initializing);
         aborted = false;
         foregroundException = null;

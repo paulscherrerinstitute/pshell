@@ -487,12 +487,13 @@ public class ScriptManager implements AutoCloseable {
 
     public void abort() {
         logger.fine("Aborting");
-        if (engine instanceof JepScriptEngine){
-            ((JepScriptEngine)engine).abort();
-        }
         try {
-            if ((evalThread != null) && (evalThread != Thread.currentThread())) {
-                evalThread.interrupt();
+            if (engine instanceof JepScriptEngine){
+                ((JepScriptEngine)engine).abort();
+            } else {
+                if ((evalThread != null) && (evalThread != Thread.currentThread())) {
+                    evalThread.interrupt();
+                }
             }
             resetInterpreter();
         } catch (Exception ex) {

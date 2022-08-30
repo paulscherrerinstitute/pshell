@@ -1,5 +1,6 @@
 package ch.psi.pshell.scripting;
 
+import static ch.psi.pshell.scripting.ScriptManager.logger;
 import ch.psi.utils.Threading;
 import java.io.BufferedReader;
 import java.io.File;
@@ -309,10 +310,10 @@ public class JepScriptEngine implements ScriptEngine, AutoCloseable, Compilable 
     @Override
     public void close() {
         Logger.getLogger(JepScriptEngine.class.getName()).info("Closing " + JepScriptEngine.class.getName());
-        try {                    
-            if (interpreterExecutor != null) {
-                sendCtrCmd("close");
-    
+        try {      
+            sendCtrCmd("close");
+            Logger.getLogger(JepScriptEngine.class.getName()).info("Done");
+            if (interpreterExecutor != null) {    
                 try{
                     interpreterExecutor.submit(() -> {
                         try{
@@ -326,6 +327,12 @@ public class JepScriptEngine implements ScriptEngine, AutoCloseable, Compilable 
                 }
                 interpreterExecutor.shutdownNow();
                 Threading.stop(interpreterThread, true, 3000);
+            } else {
+                try{
+                    this.jep.close();
+                } catch (Exception ex){
+                   Logger.getLogger(JepScriptEngine.class.getName()).log(Level.SEVERE, null, ex);
+                }     
             }
             
         } catch (Exception e) {
@@ -334,11 +341,14 @@ public class JepScriptEngine implements ScriptEngine, AutoCloseable, Compilable 
     }
     
     public boolean abort(){
-        return sendCtrCmd("abort");
+        boolean ret =  sendCtrCmd("abort");
+        return ret;
+
     }
     
     public static boolean sendCtrCmd(String cmd){
         try{
+            System.out.println("sendCtrCmd ->" + cmd);
             ch.psi.pshell.serial.UdpDevice pause_server = new ch.psi.pshell.serial.UdpDevice("pause_server","localhost", CTRL_CMD_PORT);
             pause_server.initialize();
             pause_server.write(cmd);        

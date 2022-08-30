@@ -17,6 +17,7 @@ import functools
 import socket
 import numpy
 import traceback
+import ctypes
 from jep import jproxy
 
 #TODO
@@ -57,6 +58,16 @@ from ch.psi.utils import Convert
 from ch.psi.utils import Arr
 
 __THREAD_EXEC_RESULT__=None
+
+###################################################################################################
+#Default empty callbacks
+###################################################################################################
+def on_command_started(info): pass
+def on_command_finished(info): pass
+def on_session_started(id): pass
+def on_session_finished(id): pass
+def on_change_data_path(path): pass
+def on_system_restart(): pass
 
 ###################################################################################################
 #Type conversion and checking
@@ -2815,6 +2826,14 @@ def on_ctrl_cmd(cmd):
     #print ("Control command: ", cmd)
     pass
 
+def on_close(parent_thread):   
+    on_abort(parent_thread) 
+
+def on_abort(parent_thread):   
+    tid=parent_thread.ident
+    exception = KeyboardInterrupt
+    ctypes.pythonapi.PyThreadState_SetAsyncExc(ctypes.c_long(tid), ctypes.py_object(exception))
+
 if __name__ == "__main__":
     #Handle control command server   
     if ("ctrl_cmd_socket" in globals()) and (ctrl_cmd_socket is not None):
@@ -2839,9 +2858,14 @@ if __name__ == "__main__":
                     except socket.timeout:
                         continue                    
                     cmd =msg.decode('UTF-8')
-                    on_ctrl_cmd(cmd)
-                    if cmd=="exit":
-                        quit=True            
+                    
+                    if cmd=="close":
+                        quit=True  
+                        on_close(parent_thread)
+                    elif cmd=="abort":
+                        on_abort(parent_thread)
+                    else:
+                        on_ctrl_cmd(cmd)
                     ctrl_cmd_socket.sendto("ack".encode('UTF-8'), add)
         finally:
             print("Quitting control command task")
