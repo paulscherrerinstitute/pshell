@@ -1111,11 +1111,16 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
             try {
                 if (!scriptManager.isThreaded()){
                     if (getState().isProcessing()){
-                        scriptManager.abort();
+                        abort();
+                        waitStateNotProcessing(20000);
                     }
-                    scriptManager.eval("on_system_restart()");
+                    if (getState().isProcessing()){
+                        logger.warning("Error aborting running task in single-threaded interpreter");
+                    } else {
+                        evalLine(CommandSource.ctr, "on_system_restart()");
+                    }
                 } else {
-                    scriptManager.evalBackground("on_system_restart()");
+                    evalLineBackground(CommandSource.ctr, "on_system_restart()");
                 }
             } catch (Exception ex) {
                 Logger.getLogger(CommandManager.class.getName()).log(Level.WARNING, null, ex);

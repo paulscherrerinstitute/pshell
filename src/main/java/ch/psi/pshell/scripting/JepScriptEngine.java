@@ -348,7 +348,6 @@ public class JepScriptEngine implements ScriptEngine, AutoCloseable, Compilable 
     
     public static boolean sendCtrCmd(String cmd){
         try{
-            System.out.println("sendCtrCmd ->" + cmd);
             ch.psi.pshell.serial.UdpDevice pause_server = new ch.psi.pshell.serial.UdpDevice("pause_server","localhost", CTRL_CMD_PORT);
             pause_server.initialize();
             pause_server.write(cmd);        
