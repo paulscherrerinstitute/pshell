@@ -611,7 +611,7 @@ public class PlotPanel extends MonitoredPanel {
                                         double scale = ((maxY > minY) && (Array.getLength(val) > 1)) ? (maxY - minY) / (Array.getLength(val) - 1) : Double.NaN;
 
                                         if ((prefs.autoRange != null) && (prefs.autoRange)) {
-                                            //TODO: improve perfoemance, avoiding coopying
+                                            //TODO: improve perfoemance, avoiding copying
                                             Axis x = ((MatrixPlotBase) plot).getAxis(Plot.AxisId.X);
                                             if (record.getIndex() == 0) {
                                                 series.setRangeX(xValue, xValue);
@@ -965,6 +965,7 @@ public class PlotPanel extends MonitoredPanel {
         double[] z = descriptor.z;
         int[] numberSteps = descriptor.steps;
         boolean multidimentional1dDataset = descriptor.isMultidimentional1dArray();
+        boolean forceMatrixPlot=false;
         boolean sparseArrayData = false;
 
         if (rank < 0) {
@@ -1017,12 +1018,20 @@ public class PlotPanel extends MonitoredPanel {
                         start = new double[]{(Double) Arr.getMin(x), (Double) Arr.getMin(y), 0};
                         end = new double[]{(Double) Arr.getMax(x), (Double) Arr.getMax(y), shape[1] - 1};
                         steps = new int[]{numberSteps[0], numberSteps[1], shape[1] - 1};
-                        if ((z != null) && (z.length > 0)) {
-                            start[2] = z[0];
-                            end[2] = z[z.length - 1];
-                            steps[2] = z.length - 1;
+                        if (numberSteps.length==2){
+                            if ((z != null) && (z.length > 0)) {
+                                start[2] = z[0];
+                                end[2] = z[z.length - 1];
+                                steps[2] = z.length - 1;
+                            }
+                            rank = 3;
+                        } else if (numberSteps.length>2){
+                            start = new double[]{0, 0};
+                            end = new double[]{z.length-1, shape[1] -1};
+                            steps = new int[]{z.length-1, shape[1] -1};
+                            rank = 2;
+                            forceMatrixPlot = true;
                         }
-                        rank = 3;
                     }
                 } else {
                     start = new double[2];
@@ -1107,10 +1116,20 @@ public class PlotPanel extends MonitoredPanel {
                             }
                         }                        
                     } else {
-                        double[] array = (double[]) data;
-                        //Already checked array sizes                   
-                        for (int i = 0; i < array.length; i++) {
-                            series.appendData(x[i], y[i], array[i]);
+                        if (forceMatrixPlot){
+                            double[][] array = (double[][]) data;
+                            //Already checked array sizes                   
+                            for (int i = 0; i < array.length; i++) {
+                                for (int j = 0; j < array[i].length; j++) {
+                                    series.appendData(i, j, array[i][j]);
+                                }
+                            }
+                        } else {
+                            double[] array = (double[]) data;
+                            //Already checked array sizes                   
+                            for (int i = 0; i < array.length; i++) {
+                                series.appendData(x[i], y[i], array[i]);
+                            }
                         }
                     }
                 } else {
@@ -1120,13 +1139,13 @@ public class PlotPanel extends MonitoredPanel {
                 final SlicePlotSeries series = ((SlicePlotSeries) plot.getSeries(0));
                 if (multidimentional1dDataset) {
                     double[][] array = (double[][]) data;
-                    final int[] finalSteps = steps;
+                    final int[] _steps = steps;
                     ((SlicePlotSeries) plot.getSeries(0)).setListener((SlicePlotSeries series1, int page) -> {
                         try {
-                            int begin = page * (finalSteps[1] + 1);
+                            int begin = page * (_steps[1] + 1);
                             series1.clear();
-                            for (int i = begin; i < begin + (finalSteps[1] + 1); i++) {
-                                for (int j = 0; j < (finalSteps[2] + 1); j++) {
+                            for (int i = begin; i < begin + (_steps[1] + 1); i++) {
+                                for (int j = 0; j < (_steps[2] + 1); j++) {
                                     series1.appendData(y[i], (z == null) ? j : z[j], array[i][j]);
                                 }
                             }

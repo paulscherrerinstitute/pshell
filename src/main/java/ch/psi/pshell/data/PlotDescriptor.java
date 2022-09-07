@@ -118,8 +118,19 @@ public class PlotDescriptor {
 
     public boolean isMultidimentional1dArray() {
         int[] shape = Arr.getShape(data);
-        return ((steps != null) && (steps.length == 2) && (y != null) && (x != null) && (x.length == y.length)
-                && (shape.length > 0) && (shape[0] == x.length));
+        if (    (rank==2) && (steps != null) && (steps.length >= 2) && 
+                (y != null) && (x != null) && (x.length == y.length) &&
+                (shape.length >= 2) && (shape[0] == x.length) ){
+            if (steps.length==2){
+                return true;
+            }
+            if (steps.length==3){
+                if ((z != null) && (z.length == shape[0])){
+                    return true;
+                }
+            }
+        }
+       return false;
     }
 
     public String labelX;
