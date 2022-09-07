@@ -49,8 +49,8 @@ public class Positioner extends PositionerBase {
     public Positioner(String name, String channelName, String readbackChannelName, ReadonlyRegister<Double> readbackChannel, boolean timestamped, InvalidValueAction invalidValueAction) {
         super(name, new PositionerConfig());
         this.channelName = channelName;
-        channel = new ChannelDouble(name + " channel", channelName, getConfig().precision, timestamped, invalidValueAction);
-        this.readbackChannel = (readbackChannel != null) ? readbackChannel : new ReadbackChannel(name + " readback channel", readbackChannelName, timestamped, invalidValueAction);
+        channel = new ChannelDouble(name + " setpoint", channelName, getConfig().precision, timestamped, invalidValueAction);
+        this.readbackChannel = (readbackChannel != null) ? readbackChannel : new ReadbackChannel(name + " readback", readbackChannelName, timestamped, invalidValueAction);
         setChildren(new Device[]{channel, this.readbackChannel});
         setTrackChildren(true);
         setReadback(this.readbackChannel);

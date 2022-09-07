@@ -40,8 +40,8 @@ public class ControlledVariable extends ControlledVariableBase {
     public ControlledVariable(String name, String channelName, String readbackChannelName, ReadonlyRegister<Double> readbackChannel, boolean timestamped, InvalidValueAction invalidValueAction) {
         super(name, new ProcessVariableConfig());
         this.channelName = channelName;
-        channel = new ChannelDouble(name + " channel", channelName, getConfig().precision, timestamped, invalidValueAction);
-        this.readbackChannel = (readbackChannel != null) ? readbackChannel : new ReadbackChannel(name + " readback channel", readbackChannelName, timestamped, invalidValueAction);
+        channel = new ChannelDouble(name + " setpoint", channelName, getConfig().precision, timestamped, invalidValueAction);
+        this.readbackChannel = (readbackChannel != null) ? readbackChannel : new ReadbackChannel(name + " readback", readbackChannelName, timestamped, invalidValueAction);
         setChildren(new Device[]{channel, this.readbackChannel});
         setTrackChildren(true);
         setReadback(this.readbackChannel);

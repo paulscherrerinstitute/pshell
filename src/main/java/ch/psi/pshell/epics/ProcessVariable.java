@@ -4,6 +4,7 @@ import ch.psi.jcae.ChannelException;
 import ch.psi.pshell.device.Device;
 import ch.psi.pshell.device.ProcessVariableBase;
 import ch.psi.pshell.device.ProcessVariableConfig;
+import ch.psi.utils.Reflection.Hidden;
 import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -36,9 +37,15 @@ public class ProcessVariable extends ProcessVariableBase {
         return channelName;
     }
 
+    @Hidden
+    @Deprecated
     public ChannelDouble getSetpoint() {
         return channel;
     }
+    
+    public ChannelDouble getChannel() {
+        return channel;
+    }    
 
     @Override
     protected void doInitialize() throws IOException, InterruptedException {
