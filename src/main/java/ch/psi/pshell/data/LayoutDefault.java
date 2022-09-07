@@ -200,7 +200,20 @@ public class LayoutDefault extends LayoutBase implements Layout {
             }
 
             String[] children = dm.getChildren(root, path);
-            //Object dimensions =dm.getAttribute(root, path, ATTR_SCAN_DIMENSION);            
+            //Object dimensions =dm.getAttribute(root, path, ATTR_SCAN_DIMENSION);  
+
+            //Remove setpoint datasets from visualization
+            for (String child : ch.psi.utils.Arr.copy(children)) {
+                if (child.endsWith(SETPOINTS_DATASET_SUFFIX)){
+                    int size = child.length()-SETPOINTS_DATASET_SUFFIX.length();
+                    if (size>0){
+                        if (Arr.containsEqual(children, child.substring(0, size))){
+                            children = Arr.removeEquals(children, child);
+                        }
+                    }
+                }
+            }
+            
             Object steps = dm.getAttribute(root, path, ATTR_SCAN_STEPS);
             for (String child : ch.psi.utils.Arr.copy(children)) {
                 Object dim = dm.getAttribute(root, child, ATTR_WRITABLE_DIMENSION);
