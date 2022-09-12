@@ -2980,6 +2980,7 @@ public class View extends MainFrame {
 
         statusBar.setName("statusBar"); // NOI18N
 
+        toolBar.setFloatable(false);
         toolBar.setName("toolBar"); // NOI18N
 
         buttonNew.setIcon(new javax.swing.ImageIcon(getClass().getResource("/ch/psi/pshell/ui/New.png"))); // NOI18N

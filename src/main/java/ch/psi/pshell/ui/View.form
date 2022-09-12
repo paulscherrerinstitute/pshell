@@ -1538,6 +1538,7 @@
     </Component>
     <Container class="javax.swing.JToolBar" name="toolBar">
       <Properties>
+        <Property name="floatable" type="boolean" value="false"/>
         <Property name="name" type="java.lang.String" value="toolBar" noResource="true"/>
       </Properties>
 
