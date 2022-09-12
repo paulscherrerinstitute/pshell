@@ -33,7 +33,7 @@ public class ConverterMat2d implements Converter {
     }
     
     @Override
-    public boolean canConvert(DataSlice slice, Map<String, Object> info, Map<String, Object> attrs){
+    public boolean canConvert(Map<String, Object> info){
         try{
             String[] fieldNames = (String[]) info.get(Provider.INFO_FIELD_NAMES);     
             return (fieldNames!=null);

@@ -22,27 +22,28 @@ public interface Converter {
 
     public String getExtension();
     
-    default boolean canConvert(DataSlice slice, Map<String, Object> info, Map<String, Object> attrs){
+    default boolean canConvert(Map<String, Object> info) throws Exception{
         return false;
     }  
     
     default boolean canConvert(File file) throws Exception{
-        try{
-            DataManager dataManager = new DataManager(Context.getInstance(), file.isDirectory() ? 
-                                                     Context.getInstance().getConfig().getDataProvider() : IO.getExtension(file),
-                                                     Context.getInstance().getConfig().getDataLayout());
-            return canConvert(dataManager, file.getParent(), file.getName());
-        } catch (Exception ex){
-            return false;
-        }
+        return false;
     }      
     
-    default boolean canConvert(DataManager dataManager, String root, String path){
+    default boolean canConvert(DataManager dataManager, File file){
         try{
-            DataSlice slice = dataManager.getData(root, path);
-            Map<String, Object> info = dataManager.getInfo(root, path);
-            Map<String, Object> attrs = dataManager.getAttributes(root, path);
-            return canConvert(slice, info, attrs);
+            return canConvert(file);
+        } catch (Exception ex) {
+            return false;
+        }              
+    }          
+    
+    default boolean canConvert(DataManager dataManager, String root, String path, Map<String, Object> info){
+        try{
+            if (info==null){
+                info = dataManager.getInfo(root, path);
+            }
+            return canConvert(info);
         } catch (Exception ex) {
             return false;
         }  

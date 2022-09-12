@@ -348,7 +348,7 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
                                 menuConvertFile.removeAll();
                                 for (Converter converter : Converter.getServiceProviders()){
                                     TreePath tp = treeFolder.getSelectionPath();
-                                    if (converter.canConvert(file)){
+                                    if (converter.canConvert(dataManager, file)){
                                         JMenuItem item = new JMenuItem(converter.getName());                                        
                                         item.addActionListener((a)->{    
                                             converter.startConvert(file, DataPanel.this).handle((ret,ex)->{
@@ -531,7 +531,7 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
                                     menuConvert.removeAll();
                                     for (Converter converter : Converter.getServiceProviders()){
                                         TreePath tp = treeFile.getSelectionPath();
-                                        if (converter.canConvert(dataManager, currentFile.getPath(),  getDataPath(tp))){
+                                        if (converter.canConvert(dataManager, currentFile.getPath(), dataPath, info)){
                                             JMenuItem item = new JMenuItem(converter.getName());                                        
                                             item.addActionListener((a)->{    
                                                 converter.startConvert(dataManager, currentFile.getPath(),  getDataPath(tp), DataPanel.this).handle((ret,ex)->{
