@@ -43,6 +43,7 @@ import java.awt.Font;
 import java.awt.Insets;
 import java.awt.LayoutManager;
 import java.awt.Toolkit;
+import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -167,8 +168,9 @@ public class StripChart extends StandardDialog {
     boolean persisting;
     StripScanExecutor persistenceExecutor;
 
-    public StripChart(java.awt.Frame parent, boolean modal, File defaultFolder) {
+    public StripChart(Window parent, boolean modal, File defaultFolder) {
         super(parent, modal);
+        
         initComponents();
         chartElementProducer = new InvokingProducer<ChartElement>() {
             @Override
@@ -1669,12 +1671,11 @@ public class StripChart extends StandardDialog {
 
     public static void create(File file, String config, File defaultFolder, boolean start, boolean modal) {
         java.awt.EventQueue.invokeLater(() -> {
-            StripChart dialog = new StripChart(new javax.swing.JFrame(), modal, defaultFolder);
+            StripChart dialog = new StripChart(null, modal, defaultFolder);
             dialog.setIconImage(Toolkit.getDefaultToolkit().getImage(App.getResourceUrl("IconSmall.png")));
             try {
                 if (file != null) {
                     File f = resolveFile(file, defaultFolder);
-                    dialog.open(f);
                 } else if (config != null) {
                     dialog.open(config);
                 }
@@ -1700,6 +1701,7 @@ public class StripChart extends StandardDialog {
                 }
             });
             SwingUtils.centerComponent(null, dialog);
+            dialog.getOwner().setIconImage(Toolkit.getDefaultToolkit().getImage(App.getResourceUrl("IconSmall.png")));
             dialog.setVisible(true);
             dialog.requestFocus();
         });

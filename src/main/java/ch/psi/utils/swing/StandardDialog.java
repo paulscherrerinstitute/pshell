@@ -73,6 +73,27 @@ public class StandardDialog extends JDialog {
     public StandardDialog(Frame owner, String title, boolean modal, GraphicsConfiguration gc) {
         super(owner, title, modal, gc);
     }
+    
+    public StandardDialog(Window owner) {
+        super(owner);
+    }
+    
+    public StandardDialog(Window owner, boolean modal) {
+        super(owner, modal ? Dialog.ModalityType.APPLICATION_MODAL: Dialog.ModalityType.MODELESS);
+    }
+    
+
+    public StandardDialog(Window owner, String title) {
+        super(owner, title);
+    }
+    
+    public StandardDialog(Window owner, String title, boolean modal) {
+        super(owner, title, modal ? Dialog.ModalityType.APPLICATION_MODAL: Dialog.ModalityType.MODELESS);
+    }
+
+    public StandardDialog(Window owner, String title, boolean modal, GraphicsConfiguration gc) {
+        super(owner, title, modal ? Dialog.ModalityType.APPLICATION_MODAL: Dialog.ModalityType.MODELESS, gc);
+    }
 
     private void dialogOpened() {
         onOpened();
