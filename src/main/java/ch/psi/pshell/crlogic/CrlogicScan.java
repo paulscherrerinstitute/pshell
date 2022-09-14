@@ -143,7 +143,7 @@ public class CrlogicScan extends HardwareScan {
     public boolean isInRange(Double value) {
         double start = getPassStart();
         double end = getPassEnd();
-        if (positioner.getUseExtEncoder()) {
+        if (positioner.getUseExtReadback()) {
             value = value - extEncoderOffset;
         }
 
@@ -307,7 +307,7 @@ public class CrlogicScan extends HardwareScan {
         double backupBacklash = motorBacklash;
         double backupBaseSpeed = motorBaseSpeed;
 
-        if (positioner.getUseExtEncoder()) {
+        if (positioner.getUseExtReadback()) {
             extEncoderOffset = positioner.getReadback().read() - positioner.read();
         }
         try {
