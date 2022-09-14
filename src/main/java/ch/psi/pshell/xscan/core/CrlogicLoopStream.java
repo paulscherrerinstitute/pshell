@@ -5,6 +5,9 @@ import ch.psi.pshell.xscan.DataMessage;
 import ch.psi.pshell.xscan.EndOfStreamMessage;
 import ch.psi.pshell.xscan.Metadata;
 import ch.psi.jcae.ChannelService;
+import ch.psi.pshell.crlogic.TemplateCrlogic;
+import ch.psi.pshell.crlogic.TemplateEncoder;
+import ch.psi.pshell.crlogic.TemplateMotor;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -493,7 +496,7 @@ Caused by: java.lang.ArrayIndexOutOfBoundsException: 1001 >= 1001
     }
     
     boolean isExtReadback(){
-        return  (!useReadback) && (!useEncoder) && (this.readback != null);
+        return  (!useReadback) && (!useEncoder) && (this.readback != null)  && (!this.readback.isBlank());
     }
 
     /**
@@ -562,22 +565,28 @@ Caused by: java.lang.ArrayIndexOutOfBoundsException: 1001 >= 1001
                 // Fill readback encoder settings
                 // Connect to encoder
                 TemplateEncoder encodertemplate = new TemplateEncoder();
-                map = new HashMap<>();
-                map.put("PREFIX", readback);
-                cservice.createAnnotatedChannels(encodertemplate, map);
+                try{
+                    map = new HashMap<>();
+                    map.put("PREFIX", readback);
+                    cservice.createAnnotatedChannels(encodertemplate, map);
 
-                // Read encoder settings
-                if (encodertemplate.getDirection().getValue() == TemplateEncoder.Direction.Positive.ordinal()) {
-                    crlogicDataFilter.setEncoderDirection(1);
-                } else {
-                    crlogicDataFilter.setEncoderDirection(-1);
+                    // Read encoder settings
+                    if (encodertemplate.getDirection().getValue() == TemplateEncoder.Direction.Positive.ordinal()) {
+                        crlogicDataFilter.setEncoderDirection(1);
+                    } else {
+                        crlogicDataFilter.setEncoderDirection(-1);
+                    }
+                    crlogicDataFilter.setEncoderOffset(encodertemplate.getOffset().getValue());
+                    crlogicDataFilter.setEncoderResolution(encodertemplate.getResolution().getValue());
+                } catch (Exception ex){
+                    logger.warning("Error reading encoder fields: " + ex.getMessage());
+                } finally{
+                    try{
+                    // Disconnect from encoder
+                    cservice.destroyAnnotatedChannels(encodertemplate);
+                   } catch (Exception ex){
+                   } 
                 }
-                crlogicDataFilter.setEncoderOffset(encodertemplate.getOffset().getValue());
-                crlogicDataFilter.setEncoderResolution(encodertemplate.getResolution().getValue());
-
-                // Disconnect from encoder
-                cservice.destroyAnnotatedChannels(encodertemplate);
-
             } else if (useEncoder && (!useReadback)) {
                 // use readback link
                 if (this.readback != null) {

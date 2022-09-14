@@ -7,9 +7,6 @@ import ch.psi.pshell.epics.Epics;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
-/**
- * Taken from FDA.
- */
 public class TemplateCrlogic {
 
     /**
@@ -22,7 +19,6 @@ public class TemplateCrlogic {
      * Status of the OTFSCAN IOC logic
      */
     public enum Status {
-
         SETUP, INACTIVE, INITIALIZE, ACTIVE, STOP, FAULT, ERROR
     };
     @CaChannel(type = String.class, name = "${PREFIX}:STATUS")
@@ -106,13 +102,12 @@ public class TemplateCrlogic {
         return readoutResources;
     }
 
-    public void waitStatus(TemplateCrlogic.Status status, long timeout) throws InterruptedException, ExecutionException, ChannelException, TimeoutException{
+    public void waitStatus(TemplateCrlogic.Status status, long timeout) throws InterruptedException, ExecutionException, ChannelException, TimeoutException {
         //getStatus().waitForValue(status.toString(), timeout);    
         Epics.waitValue(getStatus(), status.toString(), (int) timeout); //Extra check in the end of temporization
-    }    
-    
-    public void setStatus(TemplateCrlogic.Status status) throws InterruptedException, ExecutionException, ChannelException{
+    }
+
+    public void setStatus(TemplateCrlogic.Status status) throws InterruptedException, ExecutionException, ChannelException {
         getStatus().setValue(status.toString());
     }
-    
 }

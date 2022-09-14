@@ -1,4 +1,4 @@
-package ch.psi.pshell.xscan.core;
+package ch.psi.pshell.crlogic;
 
 import ch.psi.jcae.Channel;
 import ch.psi.jcae.annotation.CaChannel;

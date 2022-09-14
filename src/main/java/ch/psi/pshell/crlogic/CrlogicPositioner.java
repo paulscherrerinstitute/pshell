@@ -22,7 +22,7 @@ import java.util.concurrent.TimeUnit;
 /**
  *
  */
-public class CrlogicPositioner extends RegisterBase<Double> implements ReadbackDevice<Double>, Movable<Double>, Speedable, Resolved{
+public class CrlogicPositioner extends RegisterBase<Double> implements ReadbackDevice<Double>, Movable<Double>, Speedable, Resolved {
 
     final String key;
     final String positionerReadback;
@@ -30,7 +30,7 @@ public class CrlogicPositioner extends RegisterBase<Double> implements ReadbackD
     final ReadonlyRegister readbackRegister;
     boolean useReadback;
     boolean useEncoder;
-    ChannelDouble extEncoder;
+    ChannelDouble extReadback;
 
     private TemplateMotor motortemplate;
 
@@ -52,14 +52,16 @@ public class CrlogicPositioner extends RegisterBase<Double> implements ReadbackD
         }
 
         void setRawValue(Double value) {
-            if (getUseEncoder()) {
-                setCache(calculatePositionMotorUseEncoder(value));
-            } else if (getUseReadback()) {
-                setCache(calculatePositionMotorUseReadback(value));
-            } else if (getUseExtEncoder()) {
-                setCache(calculatePositionMotorUseExtEncoder(value));
+            if (getUseExtReadback()) {
+                setCache(value);
             } else {
-                setCache(calculatePositionMotor(value));
+                if (getUseEncoder()) {
+                    setCache(calculatePositionMotorUseEncoder(value));
+                } else if (getUseReadback()) {
+                    setCache(calculatePositionMotorUseReadback(value));
+                } else {
+                    setCache(calculatePositionMotor(value));
+                }
             }
         }
 
@@ -69,8 +71,8 @@ public class CrlogicPositioner extends RegisterBase<Double> implements ReadbackD
                 return null;
             }
             try {
-                if (getUseExtEncoder()) {
-                    return extEncoder.read();
+                if (getUseExtReadback()) {
+                    return extReadback.read();
                 } else {
                     return motortemplate.getReadbackValue().getValue();
                 }
@@ -96,10 +98,20 @@ public class CrlogicPositioner extends RegisterBase<Double> implements ReadbackD
     protected void doInitialize() throws IOException, InterruptedException {
         super.doInitialize();
         destroyTemplate();
-        if (extEncoder != null) {
-            extEncoder.close();
-            extEncoder = null;
+        if (extReadback != null) {
+            extReadback.close();
+            extReadback = null;
         }
+
+        motorResolution = 1;
+        motorDirection = 1;
+        motorOffset = 0;
+        motorReadbackResolution = 1;
+        motorEncoderResolution = 1;
+
+        encoderOffset = 0;
+        encoderResolution = 1;
+        encoderDirection = 1;
 
         // Connect motor channels
         motortemplate = new TemplateMotor();
@@ -114,7 +126,7 @@ public class CrlogicPositioner extends RegisterBase<Double> implements ReadbackD
             getLogger().info("Motor type: " + TemplateMotor.Type.values()[motortemplate.getType().getValue()]);
             getLogger().info("Motor use readback: " + getUseReadback());
             getLogger().info("Motor use encoder: " + getUseEncoder());
-            getLogger().info("Motor use ext encoder: " + getUseExtEncoder());
+            getLogger().info("Motor use external readback: " + getUseExtReadback());
 
             // Determine mode of motor           
             if (getUseReadback() && (!getUseEncoder())) {
@@ -138,12 +150,11 @@ public class CrlogicPositioner extends RegisterBase<Double> implements ReadbackD
                 }
             } else if ((!getUseReadback()) && (!getUseEncoder())) {
                 // Open loop
-                if (getUseExtEncoder()) {
-                    extEncoder = new ChannelDouble(getName() + " ext readback", getPositionerReadback());
-                    extEncoder.initialize();
+                if (getPositionerReadback() != null) {
+                    extReadback = new ChannelDouble(getName() + " ext readback", getPositionerReadback());
+                    extReadback.initialize();
                     //Readback refers to external encoder
                     readbackKey = getPositionerReadback();
-                    loadEncoderSettings();
                 } else {
                     readbackKey = getKey();
                 }
@@ -169,23 +180,30 @@ public class CrlogicPositioner extends RegisterBase<Double> implements ReadbackD
     }
 
     void loadEncoderSettings() throws Exception {
-        // Connect to encoder
         TemplateEncoder encodertemplate = new TemplateEncoder();
-        Map<String, String> map = new HashMap<>();
-        map.put("PREFIX", getPositionerReadback());
-        Epics.getChannelFactory().createAnnotatedChannels(encodertemplate, map);
+        try {
+            Map<String, String> map = new HashMap<>();
+            map.put("PREFIX", getPositionerReadback());
+            Epics.getChannelFactory().createAnnotatedChannels(encodertemplate, map);
 
-        // Read encoder settings
-        if (encodertemplate.getDirection().getValue() == TemplateEncoder.Direction.Positive.ordinal()) {
-            encoderDirection = 1;
-        } else {
-            encoderDirection = -1;
+            // Read encoder settings
+            if (encodertemplate.getDirection().getValue() == TemplateEncoder.Direction.Positive.ordinal()) {
+                encoderDirection = 1;
+            } else {
+                encoderDirection = -1;
+            }
+            encoderOffset = encodertemplate.getOffset().getValue();
+            encoderResolution = encodertemplate.getResolution().getValue();
+        } catch (Exception ex) {
+            getLogger().warning("Error reading encoder fields: " + ex.getMessage());
+
+        } finally {
+            try {
+                Epics.getChannelFactory().destroyAnnotatedChannels(encodertemplate);
+            } catch (Exception ex) {
+            }
         }
-        encoderOffset = encodertemplate.getOffset().getValue();
-        encoderResolution = encodertemplate.getResolution().getValue();
 
-        // Disconnect from encoder
-        Epics.getChannelFactory().destroyAnnotatedChannels(encodertemplate);
     }
 
     @Override
@@ -248,6 +266,7 @@ public class CrlogicPositioner extends RegisterBase<Double> implements ReadbackD
         return Math.abs(getPosition() - read()) <= Math.abs(getResolution());
     }
 
+    @Override
     public double getResolution() {
         if (getUseEncoder()) {
             return motorEncoderResolution * motorReadbackResolution;
@@ -313,17 +332,13 @@ public class CrlogicPositioner extends RegisterBase<Double> implements ReadbackD
         return (raw * motorEncoderResolution * motorReadbackResolution / motorDirection + motorOffset);
     }
 
-    double calculatePositionMotorUseExtEncoder(double raw) {
-        return ((((raw - encoderOffset) * encoderResolution * encoderDirection * motorReadbackResolution) / motorDirection));
-    }
-
     @Override
     protected void doClose() throws IOException {
         super.doClose();
         destroyTemplate();
-        if (extEncoder != null) {
-            extEncoder.close();
-            extEncoder = null;
+        if (extReadback != null) {
+            extReadback.close();
+            extReadback = null;
         }
     }
 
@@ -347,8 +362,8 @@ public class CrlogicPositioner extends RegisterBase<Double> implements ReadbackD
         return useEncoder;
     }
 
-    boolean getUseExtEncoder() {
-        return !useReadback && !useEncoder && (getPositionerReadback() != null);
+    boolean getUseExtReadback() {
+        return !useReadback && !useEncoder && (getPositionerReadback() != null) && (!getPositionerReadback().isBlank());
     }
 
     public Double getBaseSpeed() throws IOException, InterruptedException {

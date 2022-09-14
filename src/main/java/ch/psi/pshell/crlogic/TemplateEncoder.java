@@ -3,9 +3,6 @@ package ch.psi.pshell.crlogic;
 import ch.psi.jcae.Channel;
 import ch.psi.jcae.annotation.CaChannel;
 
-/**
- * Taken from FDA.
- */
 public class TemplateEncoder {
 
     /**
@@ -24,7 +21,6 @@ public class TemplateEncoder {
      * Direction	- $(P)$(E)_DIR
      */
     public enum Direction {
-
         Negative, Positive
     };
     @CaChannel(type = Integer.class, name = "${PREFIX}_DIR")

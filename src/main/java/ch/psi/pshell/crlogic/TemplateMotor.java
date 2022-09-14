@@ -3,13 +3,9 @@ package ch.psi.pshell.crlogic;
 import ch.psi.jcae.Channel;
 import ch.psi.jcae.annotation.CaChannel;
 
-/**
- * Taken from FDA.
- */
 public class TemplateMotor {
 
     public enum Type {
-
         SOFT_CHANNEL, MOTOR_SIMULATION, OMS_VME58, OMS_MAXv
     };
 
@@ -149,7 +145,6 @@ public class TemplateMotor {
      * .SPMG	Stop/Pause/Move/Go	- (0:"Stop", 1:"Pause", 2:"Move", 3:"Go")	- 3
      */
     public enum Commands {
-
         Stop, Pause, Move, Go
     };
     @CaChannel(type = Integer.class, name = "${PREFIX}.SPMG")
@@ -162,7 +157,6 @@ public class TemplateMotor {
      * .SET	Set/Use Switch	- (0:"Use", 1:"Set")	- 0
      */
     public enum Calibration {
-
         Use, Set
     };
     @CaChannel(type = Integer.class, name = "${PREFIX}.SET")
@@ -178,7 +172,6 @@ public class TemplateMotor {
      * .FOFF	Offset-Freeze Switch	- (0:"Variable", 1:"Frozen") - 1
      */
     public enum OffsetMode {
-
         Variable, Frozen
     };
     @CaChannel(type = Integer.class, name = "${PREFIX}.FOFF")
@@ -188,7 +181,6 @@ public class TemplateMotor {
      * .DIR	User direction	- (0:"Pos", 1:"Neg")
      */
     public enum Direction {
-
         Positive, Negative
     };
     @CaChannel(type = Integer.class, name = "${PREFIX}.DIR")
@@ -306,7 +298,6 @@ public class TemplateMotor {
      * .OMSL	Output mode select	- (0:"supervisory", 1:"closed_loop")
      */
     public enum OutputMode {
-
         Supervisory, Closed_Loop
     };
     @CaChannel(type = Integer.class, name = "${PREFIX}.OMSL")
