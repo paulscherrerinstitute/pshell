@@ -32,6 +32,7 @@ public class LoggerPanel extends MonitoredPanel {
     Color colorInfo ;
     Color colorWarning;
     Color colorError;
+    final Object insertLock = new Object();
     
     final DefaultTableModel model;
     
@@ -108,14 +109,17 @@ public class LoggerPanel extends MonitoredPanel {
 
             @Override
             public void publish(LogRecord record) {
-                int rows = model.getRowCount();
-                if (inverted) {
-                    addRow(LogManager.parseLogRecord(record));
-                } else {
-                    addRow(LogManager.parseLogRecord(record));
-                    if (!scrollPane.getVerticalScrollBar().getValueIsAdjusting()) {
-                        SwingUtils.scrollToVisible(table, -1, 0);
+                try{
+                    synchronized(insertLock){
+                        addRow(LogManager.parseLogRecord(record));
                     }
+                    if (!inverted) {                    
+                        if (!scrollPane.getVerticalScrollBar().getValueIsAdjusting()) {
+                            SwingUtils.scrollToVisible(table, -1, 0);
+                        }
+                    }
+                } catch (Exception ex){
+                    ex.printStackTrace();
                 }
             }
 
@@ -161,7 +165,7 @@ public class LoggerPanel extends MonitoredPanel {
 
     }
 
-    void addRow(Object[] data) {
+    void addRow(Object[] data) {        
         if (data.length == 5) {
             if (inverted) {
                 model.insertRow(0, data);
