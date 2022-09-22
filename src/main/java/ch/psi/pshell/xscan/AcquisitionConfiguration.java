@@ -12,6 +12,7 @@ public class AcquisitionConfiguration {
 
     private String crlogicPrefix;
     private String crlogicIoc;
+    private String crlogicChannel;
 
     /**
      * Base directory for data. The directory may contain date macros. The
@@ -47,7 +48,8 @@ public class AcquisitionConfiguration {
     public AcquisitionConfiguration() {
         //Enforce PShell config insted
         crlogicPrefix = App.hasArgument("crlogic.prefix") ? App.getArgumentValue("crlogic.prefix") : "";
-        crlogicIoc = App.hasArgument("crlogic.ioc") ? App.getArgumentValue("crlogic.ioc") : "";;
+        crlogicIoc = App.hasArgument("crlogic.ioc") ? App.getArgumentValue("crlogic.ioc") : "";
+        crlogicChannel = App.hasArgument("crlogic.channel") ? App.getArgumentValue("crlogic.channel") : "";
         actorMoveTimeout = App.hasArgument("move.timeout") ? Long.valueOf(App.getArgumentValue("move.timeout")) : 600000l; // 10 Minutes maximum move time 
         dataBaseDirectory = Context.getInstance().getSetup().getDataPath();
         appendSuffix = App.hasArgument("fdanosuffix") ? false : true;
@@ -79,6 +81,10 @@ public class AcquisitionConfiguration {
     public String getCrlogicIoc() {
         return crlogicIoc;
     }
+    
+    public String getCrlogicChannel() {
+        return crlogicChannel;
+    }    
 
     public String getDataBaseDirectory() {
         return dataBaseDirectory;

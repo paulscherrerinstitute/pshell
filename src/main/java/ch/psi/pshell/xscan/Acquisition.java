@@ -1138,7 +1138,7 @@ public class Acquisition {
 		// Create loop
 		boolean zigZag = dimension.isZigzag(); // default value is false
 
-		CrlogicLoopStream actionLoop = new CrlogicLoopStream(cservice, configuration.getCrlogicPrefix(), configuration.getCrlogicIoc(), zigZag);
+		CrlogicLoopStream actionLoop = new CrlogicLoopStream(cservice, configuration.getCrlogicPrefix(), configuration.getCrlogicIoc(),  configuration.getCrlogicChannel(),zigZag);
 
 		actionLoop.getPreActions().addAll(mapActions(dimension.getPreAction()));
 

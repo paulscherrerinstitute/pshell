@@ -263,6 +263,14 @@ public abstract class DeviceBase extends GenericDeviceBase<DeviceListener> imple
         }
         return !former.equals(value);
     }
+    
+    public boolean hasCacheChanged(Object former) {
+        return hasChanged(take(), former);
+    }   
+    
+    public boolean hasCacheUpdated(Object former) {
+        return take() != former;
+    }       
 
     //Children
     Device[] children;

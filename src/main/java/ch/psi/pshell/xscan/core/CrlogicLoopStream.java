@@ -8,6 +8,8 @@ import ch.psi.jcae.ChannelService;
 import ch.psi.pshell.crlogic.TemplateCrlogic;
 import ch.psi.pshell.crlogic.TemplateEncoder;
 import ch.psi.pshell.crlogic.TemplateMotor;
+import static ch.psi.pshell.device.Record.UNDEFINED_PRECISION;
+import ch.psi.pshell.epics.ChannelDoubleArray;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -18,6 +20,7 @@ import java.util.Map;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.zeromq.ZMQ;
 import org.zeromq.ZMQ.Context;
@@ -38,6 +41,8 @@ public class CrlogicLoopStream implements ActionLoop {
     private Socket socket;
 
     private ObjectMapper mapper = new ObjectMapper();
+    
+    private ChannelDoubleArray dataChannel; 
 
     /**
      * Flag to indicate whether the data of this loop will be grouped According to this flag the dataGroup flag in
@@ -50,6 +55,8 @@ public class CrlogicLoopStream implements ActionLoop {
 
     private String ioc;
 
+    final String channel;
+        
     /**
      * Flag whether the actor of this loop should move in zig zag mode
      */
@@ -96,11 +103,12 @@ public class CrlogicLoopStream implements ActionLoop {
      * @param ioc	Name of the IOC running CRLOGIC
      * @param zigZag	Do zigZag scan
      */
-    public CrlogicLoopStream(ChannelService cservice, String prefix, String ioc, boolean zigZag) {
+    public CrlogicLoopStream(ChannelService cservice, String prefix, String ioc,  String channel, boolean zigZag) {
         eventbus = new EventBus();
         this.cservice = cservice;
         this.prefix = prefix;
         this.ioc = ioc;
+        this.channel=channel;
         this.zigZag = zigZag;
 
         // Initialize lists used by the loop
@@ -130,7 +138,7 @@ public class CrlogicLoopStream implements ActionLoop {
     /**
      * Receive a ZMQ message
      */
-    private void receive() {
+    private void receiveZmq() {
 
         MainHeader mainHeader;
 
@@ -194,9 +202,64 @@ public class CrlogicLoopStream implements ActionLoop {
             eventbus.post(message);
         }
     }
+    
+    /**
+     * Receive a ZMQ message
+     */
+    private void receiveChannel() throws IOException, InterruptedException {
+        if (!dataChannel.waitCacheChange(10)){
+            return;
+        }
+
+        DataMessage message = new DataMessage(metadata);
+        boolean use = true;
+        double pos = Double.NaN;
+        
+        double[] data = dataChannel.take();
+        for (int i = 0; i < data.length; i++) {
+            double raw = data[i];
+            Double val;
+            if (i == 0) {
+                if (isExtReadback()){
+                    val=raw;
+                } else {
+                    if (useEncoder) {
+                        val = crlogicDataFilter.calculatePositionMotorUseEncoder(raw);
+                    } else if (useReadback) {
+                        val = crlogicDataFilter.calculatePositionMotorUseReadback(raw);
+                    } else {
+                        val = crlogicDataFilter.calculatePositionMotor(raw);
+                    }
+
+                    // Check whether data is within the configured range - otherwise drop data
+                    use = crlogicDataFilter.filter(val);
+                }
+            } else if (i<=sensors.size()){
+                if (scalerIndices.containsKey(i)) {
+                    CrlogicDeltaDataFilter f = scalerIndices.get(i);
+                    val = f.delta(raw);
+                } else {
+                    val = raw;
+            }
+            } else {
+                break;
+            }
+            message.getData().add(val);
+        }
+        
+        if (use) {
+            eventbus.post(message);
+        }
+    }
+    
 
     @Override
     public void execute() throws InterruptedException {
+        if (!useIoc() && !useChannel()){
+            throw new IllegalArgumentException("Either IOC or channel name must be configured");
+        }
+        boolean usingIoc = useIoc();
+        
         try {
 
             // Set values for the datafilter
@@ -234,42 +297,6 @@ public class CrlogicLoopStream implements ActionLoop {
 
             logger.info("Set parameters");
 
-            /*
-java.lang.RuntimeException: java.util.concurrent.ExecutionException: java.lang.ArrayIndexOutOfBoundsException: 1001 >= 1001
-	at ch.psi.pshell.xscan.core.loops.cr.ParallelCrlogic.execute(ParallelCrlogic.java:165)
-	at ch.psi.pshell.xscan.core.loops.ActorSensorLoop.execute(ActorSensorLoop.java:314)
-	at ch.psi.pshell.xscan.aq.Acquisition.execute(Acquisition.java:365)
-	at ch.psi.pshell.xscan.ProcessorFDA.doExecution(ProcessorFDA.java:623)
-	at ch.psi.pshell.xscan.ProcessorFDA$FDATask.doInBackground(ProcessorFDA.java:440)
-	at ch.psi.pshell.xscan.ProcessorFDA$FDATask.doInBackground(ProcessorFDA.java:420)
-	at java.desktop/javax.swing.SwingWorker$1.call(SwingWorker.java:304)
-	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
-	at java.desktop/javax.swing.SwingWorker.run(SwingWorker.java:343)
-	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1128)
-	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:628)
-	at java.base/java.lang.Thread.run(Thread.java:835)
-Caused by: java.util.concurrent.ExecutionException: java.lang.ArrayIndexOutOfBoundsException: 1001 >= 1001
-	at java.base/java.util.concurrent.FutureTask.report(FutureTask.java:122)
-	at java.base/java.util.concurrent.FutureTask.get(FutureTask.java:191)
-	at ch.psi.pshell.xscan.core.loops.cr.ParallelCrlogic.execute(ParallelCrlogic.java:162)
-	... 11 more
-Caused by: java.lang.ArrayIndexOutOfBoundsException: 1001 >= 1001
-	at java.base/java.util.Vector.elementAt(Vector.java:496)
-	at java.desktop/javax.swing.table.DefaultTableModel.justifyRows(DefaultTableModel.java:281)
-	at java.desktop/javax.swing.table.DefaultTableModel.insertRow(DefaultTableModel.java:382)
-	at java.desktop/javax.swing.table.DefaultTableModel.addRow(DefaultTableModel.java:357)
-	at java.desktop/javax.swing.table.DefaultTableModel.addRow(DefaultTableModel.java:368)
-	at ch.psi.pshell.swing.LoggerPanel.addRow(LoggerPanel.java:163)
-	at ch.psi.pshell.swing.LoggerPanel$3.publish(LoggerPanel.java:105)
-	at java.logging/java.util.logging.Logger.log(Logger.java:979)
-	at java.logging/java.util.logging.Logger.doLog(Logger.java:1006)
-	at java.logging/java.util.logging.Logger.log(Logger.java:1029)
-	at java.logging/java.util.logging.Logger.info(Logger.java:1802)
-	at ch.psi.pshell.xscan.core.loops.cr.CrlogicLoopStream.execute(CrlogicLoopStream.java:264)
-	at ch.psi.pshell.xscan.core.loops.cr.ParallelCrlogic$1.call(ParallelCrlogic.java:127)
-	at ch.psi.pshell.xscan.core.loops.cr.ParallelCrlogic$1.call(ParallelCrlogic.java:115)
-	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
-	... 3 more   */
             template.getNfsServer().setValue("");
             template.getNfsShare().setValue("");
             template.getDataFile().setValue("");
@@ -404,8 +431,8 @@ Caused by: java.lang.ArrayIndexOutOfBoundsException: 1001 >= 1001
 
                 }
 
-                // Connect ZMQ stream
-                connect(ioc);
+                // Connect to source
+                connect();
 //				drainHangingSubmessages();
 
                 // Move motor(s) to end / wait until motor is stopped
@@ -423,7 +450,11 @@ Caused by: java.lang.ArrayIndexOutOfBoundsException: 1001 >= 1001
                             throw new TimeoutException("Motion timed out");
                         }
 
-                        receive(); // TODO Problem still blocking
+                        if (usingIoc){
+                            receiveZmq(); // TODO Problem still blocking
+                        } else if (channel != null){
+                            receiveChannel();
+                        }
 
                         if (abort) {
                             // Abort motor move 
@@ -434,7 +465,9 @@ Caused by: java.lang.ArrayIndexOutOfBoundsException: 1001 >= 1001
 
                     }
                 } finally {
-                    receive();
+                    if (usingIoc){
+                        receiveZmq();
+                    }
 
                     // Send end of stream message
                     logger.info("Sending - End of Line - Data Group: " + dataGroup);
@@ -632,32 +665,67 @@ Caused by: java.lang.ArrayIndexOutOfBoundsException: 1001 >= 1001
     }
 
     /**
-     * Connect ZMQ stream
+     * Connect to source
      *
      * @param address	ZMQ endpoint address
      */
-    private void connect(String address) {
+    private void connect() {
         // Clear interrupted state
         Thread.interrupted();
 
-        logger.info("Connecting with IOC" + address);
-        context = ZMQ.context(1);
-        socket = context.socket(ZMQ.PULL);
-        socket.setRcvHWM(HIGH_WATER_MARK);
-        socket.connect("tcp://" + address + ":9999");
+        boolean useIoc = (ioc!=null) && !ioc.isBlank();
+        if (useIoc()){
+            logger.info("Connecting with IOC" + ioc);
+            context = ZMQ.context(1);
+            socket = context.socket(ZMQ.PULL);
+            socket.setRcvHWM(HIGH_WATER_MARK);
+            socket.connect("tcp://" + ioc + ":9999");
+        } else if (channel  != null){
+            logger.info("Connecting to channel: " + channel);
+            int size = sensors.size() + 1;
+            dataChannel = new ChannelDoubleArray("CrlogicChannel",channel, UNDEFINED_PRECISION, size);
+            dataChannel.setMonitored(true);
+            try{
+                dataChannel.initialize();
+            } catch (Exception e) {
+                throw new RuntimeException("Unable to connect to Crlogic source channel: " + channel, e);
+            }
+        }
     }
 
     /**
-     * Close ZMQ stream
+     * Close source
      */
     private void close() {
-        logger.info("Closing stream from IOC " + ioc);
-
-        socket.close();
-        context.close();
-        socket = null;
-        context = null;
+        boolean useIoc = (ioc!=null) && !ioc.isBlank();
+        if (useIoc()){
+            logger.info("Closing stream from IOC " + ioc);
+            try {
+                socket.close();
+                context.close();
+            } catch (Exception ex) {
+                logger.log(Level.INFO, null, ex);
+            }
+            socket = null;
+            context = null;
+        } else if (channel!=null){
+            logger.info("Closing stream from channel " + channel);
+            try {
+                dataChannel.close();
+            } catch (Exception ex) {
+                logger.log(Level.INFO, null, ex);
+            }
+        }
+        
     }
+    
+    public boolean useIoc(){
+        return (ioc!=null) && !ioc.isBlank();
+    }
+    
+    public boolean useChannel(){
+        return !useIoc() && (channel!=null) && !channel.isBlank();
+    }       
 
     /**
      * Drain sub-messages

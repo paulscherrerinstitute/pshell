@@ -19,6 +19,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import ch.psi.jcae.ChannelException;
 import ch.psi.pshell.device.Readable;
+import ch.psi.pshell.device.Record;
+import ch.psi.pshell.epics.ChannelDoubleArray;
 import ch.psi.pshell.epics.Epics;
 import ch.psi.pshell.scan.HardwareScan;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -35,6 +37,8 @@ public class CrlogicScan extends HardwareScan {
     private Context context;
     private Socket socket;
     private final ObjectMapper mapper = new ObjectMapper();
+    
+    private ChannelDoubleArray dataChannel; 
 
     // Default timeout (in milliseconds) for wait operations
     private final long startStopTimeout = 8000;
@@ -51,6 +55,7 @@ public class CrlogicScan extends HardwareScan {
 
     final String prefix;
     final String ioc;
+    final String channel;
     final double integrationTime;
     final double additionalBacklash;
     final double stepSize;
@@ -66,7 +71,11 @@ public class CrlogicScan extends HardwareScan {
         this.stepSize = stepSize;
 
         prefix = (String) configuration.get("prefix");
-        ioc = (String) configuration.get("ioc");
+        
+        ioc = (String) configuration.getOrDefault("ioc", null);
+        channel = (String) configuration.getOrDefault("channel", null);
+        
+        
         integrationTime = configuration.containsKey("integrationTime") ? (Double) configuration.get("integrationTime") : 0.01;
         additionalBacklash = configuration.containsKey("additionalBacklash") ? (Double) configuration.get("additionalBacklash") : 0.0;
         for (Readable r : readables) {
@@ -81,7 +90,7 @@ public class CrlogicScan extends HardwareScan {
     /**
      * Receive a ZMQ message
      */
-    private void receive() throws IOException, InterruptedException {
+    private void receiveZmq() throws IOException, InterruptedException {
 
         MainHeader mainHeader;
 
@@ -103,24 +112,18 @@ public class CrlogicScan extends HardwareScan {
         byte[] bytes = socket.recv();
         ByteBuffer byteBuffer = ByteBuffer.wrap(bytes);
 
-//        List<Object> data = new ArrayList<>();
         boolean use = true;
         double pos = Double.NaN;
 
         for (int i = 0; i < mainHeader.getElements(); i++) {
             Double raw = byteBuffer.getDouble();
-//            Double val;
-
             if (i == 0) {
                 ((CrlogicPositioner.ReadbackRegister) positioner.getReadback()).setRawValue(raw);
                 pos = positioner.getReadback().take();
                 use = isInRange(pos);
-//                data.add(pos);
             } else {
                 CrlogicSensor sensor = sensors.get(i - 1);
                 sensor.setRawValue(raw);
-//                val = sensor.take();
-//                data.add(val);
             }
 
         }
@@ -131,10 +134,40 @@ public class CrlogicScan extends HardwareScan {
             throw new RuntimeException("More than 1 message drained from stream: " + n);
         }
 
-        if (use) {
-            //System.out.println(String.join(", ", Convert.toStringArray(data.toArray())));            
+        if (use) {        
             processPosition(new double[]{pos});
-            //listener.onData(data);
+        }
+    }
+    
+    
+    /**
+     * Receive a ZMQ message
+     */
+    private void receiveChannel() throws IOException, InterruptedException {
+        if (!dataChannel.waitCacheChange(10)){
+            return;
+        }
+
+        boolean use = true;
+        double pos = Double.NaN;
+        
+        double[] data = dataChannel.take();
+        for (int i = 0; i < data.length; i++) {
+            double raw = data[i];
+            if (i == 0) {
+                ((CrlogicPositioner.ReadbackRegister) positioner.getReadback()).setRawValue(raw);
+                pos = positioner.getReadback().take();
+                use = isInRange(pos);
+            } else if (i<=sensors.size()){
+                CrlogicSensor sensor = sensors.get(i - 1);
+                sensor.setRawValue(raw);
+            } else {
+                break;
+            }
+        }
+
+        if (use) {         
+            processPosition(new double[]{pos});
         }
     }
 
@@ -183,8 +216,13 @@ public class CrlogicScan extends HardwareScan {
         }
     }
 
-//    @Override
+    @Override
     protected void execute() throws Exception {
+        if (!useIoc() && !useChannel()){
+            throw new IllegalArgumentException("Either IOC or channel name must be configured");
+        }
+        boolean usingIoc = useIoc();
+        
         // Set abort state to false
         executing.set(true);
         double start = getPassStart();
@@ -341,8 +379,8 @@ public class CrlogicScan extends HardwareScan {
 
             }
 
-            // Connect ZMQ stream
-            connect(ioc);
+            // Connect to data source
+            connect();
 //				drainHangingSubmessages();
 //            listener.onStartOfStream();
             // Move motor(s) to end / wait until motor is stopped
@@ -361,7 +399,11 @@ public class CrlogicScan extends HardwareScan {
                         throw new TimeoutException("Motion timed out");
                     }
 
-                    receive(); // TODO Problem still blocking
+                    if (usingIoc){
+                        receiveZmq(); // TODO Problem still blocking
+                    } else if (channel != null){
+                        receiveChannel();
+                    }
 
                     if (isAborted()) {
                         logger.info("Scan aborted: stopping positioner");
@@ -372,8 +414,19 @@ public class CrlogicScan extends HardwareScan {
                 logger.info("Motor reached end position");
             } finally {
                 logger.info("End of Scan");
-                receive();
-                onAfterStream(getCurrentPass());
+                try{
+                    if (usingIoc){
+                        receiveZmq();
+                    }
+                } catch (Exception ex){
+                    logger.log(Level.INFO, null, ex);
+                }
+                try{
+                    onAfterStream(getCurrentPass());
+                } catch (Exception ex){
+                    logger.log(Level.WARNING, null, ex);
+                }
+                    
                 closeStream();
                 logger.info("Stream closed");
             }
@@ -450,35 +503,60 @@ public class CrlogicScan extends HardwareScan {
      *
      * @param address	ZMQ endpoint address
      */
-    private void connect(String address) {
+    private void connect() throws IOException, InterruptedException {
         // Clear interrupted state
         Thread.interrupted();
-
-        logger.info("Connecting with IOC" + address);
-        context = ZMQ.context(1);
-        socket = context.socket(ZMQ.PULL);
-        socket.setRcvHWM(HIGH_WATER_MARK);
-        socket.connect("tcp://" + address + ":9999");
+        if (useIoc()){
+            logger.info("Connecting with IOC: " + ioc);
+            context = ZMQ.context(1);
+            socket = context.socket(ZMQ.PULL);
+            socket.setRcvHWM(HIGH_WATER_MARK);
+            socket.connect("tcp://" + ioc + ":9999");
+        } else if (channel  != null){
+            logger.info("Connecting to channel: " + channel);
+            int size = sensors.size() + 1;
+            dataChannel = new ChannelDoubleArray("CrlogicChannel",channel, Record.UNDEFINED_PRECISION, size);
+            dataChannel.setMonitored(true);
+            dataChannel.initialize();
+        }
     }
 
     /**
      * Close ZMQ stream
      */
     private void closeStream() {
-        logger.info("Closing stream from IOC " + ioc);
-        try {
-            socket.close();
-        } catch (Exception ex) {
-            logger.log(Level.INFO, null, ex);
-        }
-        try {
-            context.close();
-        } catch (Exception ex) {
-            logger.log(Level.INFO, null, ex);
+        if (useIoc()){
+            logger.info("Closing stream from IOC " + ioc);
+            try {
+                socket.close();
+            } catch (Exception ex) {
+                logger.log(Level.INFO, null, ex);
+            }
+            try {
+                context.close();
+            } catch (Exception ex) {
+                logger.log(Level.INFO, null, ex);
+            }
+        } else if (channel!=null){
+            logger.info("Closing stream from channel " + channel);
+            try {
+                dataChannel.close();
+            } catch (Exception ex) {
+                logger.log(Level.INFO, null, ex);
+            }
         }
         socket = null;
         context = null;
+        dataChannel = null;
     }
+    
+    public boolean useIoc(){
+        return (ioc!=null) && !ioc.isBlank();
+    }
+    
+    public boolean useChannel(){
+        return (!useIoc()) && (channel!=null) && !channel.isBlank();
+    }    
 
     /**
      * Drain sub-messages

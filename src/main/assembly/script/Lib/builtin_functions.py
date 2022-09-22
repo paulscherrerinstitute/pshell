@@ -214,6 +214,7 @@ def cscan(writables, readables, start, end, steps, latency=0.0, time=None, relat
         time (float, seconds): if not None then speeds are set according to time.
         relative (bool, optional): if true, start and end positions are relative to current.
         passes(int, optional): number of passes
+        zigzag(bool, optional): if true writables invert direction on each pass.
         pars(keyworded variable length arguments, optional): scan optional named arguments:
             - title(str, optional): plotting window name.
             - before_read (function(positions, scan), optional): called on each step, before sampling.
@@ -262,6 +263,7 @@ def hscan(config, writable, readables, start, end, steps, passes=1, zigzag=False
         end(float): final positions of writables.
         steps(int or float): number of scan steps (int) or step size (float).
         passes(int, optional): number of passes
+        zigzag(bool, optional): if true writables invert direction on each pass.
         pars(keyworded variable length arguments, optional): scan optional named arguments:
             - title(str, optional): plotting window name.
             - after_read (function(record, scan), optional): callback on each step, after sampling.
@@ -286,16 +288,18 @@ def oscan(ioc, prefix, writable, readables, start, end, steps, integration_time,
     """OTF scan based on crlogic
 
     Args:
-        ioc(string): Crlogic ioc
+        source(string): Crlogic ioc (if zmq==True) or data channel name (zmq==False).
         prefix(string): Crlogic prefix 
         writable(Writable): A cslogic positioner 
         readables(list of Readable): List of crlogic sensors
         start(float): start positions of writable.
         end(float): final positions of writables.
-        steps(int or float): number of scan steps (int) or step size (float).
-        passes(int, optional): number of passes
+        steps(float) : size of scan step
         integration_time(float)
         additional_backlash(float, optional)
+        passes(int, optional): number of passes
+        zigzag(bool, optional): if true writables invert direction on each pass.
+        zmq(bool, optional): if true receives data from ioc through zmq stream, otherwise with a channel monitor.
         pars(keyworded variable length arguments, optional): scan optional named arguments:
             - title(str, optional): plotting window name.
             - after_read (function(record, scan), optional): callback on each step, after sampling.
@@ -311,11 +315,14 @@ def oscan(ioc, prefix, writable, readables, start, end, steps, integration_time,
     """
     config = {}
     config["class"] = "ch.psi.pshell.crlogic.CrlogicScan"
-    config["ioc"] = ioc
+    if zmq:
+        config["ioc"] = source
+    else:
+        config["channel"] = source
     config["prefix"] = prefix
     config["integrationTime"] = integration_time
     config["additionalBacklash"] = additional_backlash
-    return hscan(config, writable, readables, start, end, steps, **pars)
+    return hscan(config, writable, readables, start, end, float(steps), **pars)
 
 def bscan(stream, records, timeout = None, passes=1, **pars):
     """BS Scan: records all values in a beam synchronous stream.
