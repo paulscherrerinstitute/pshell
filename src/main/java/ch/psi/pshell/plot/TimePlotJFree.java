@@ -62,7 +62,7 @@ public class TimePlotJFree extends TimePlotBase {
         data = new TimeSeriesCollection();
         marker = new Rectangle2D.Double(-1, -1, 2, 2);
         chart = ChartFactory.createTimeSeriesChart(null,
-                "Time",
+                getAxis(AxisId.X).getLabel(),
                 null,
                 data,
                 true,
@@ -682,4 +682,30 @@ public class TimePlotJFree extends TimePlotBase {
     public JFreeChart getChart() {
         return chart;
     }
+    
+    
+    @Override
+    protected void onTitleChanged() {
+        chartPanel.setName(getTitle());
+        chart.setTitle(getTitle());
+        if ((getTitleFont() != null) && (chart.getTitle() != null)) {
+            chart.getTitle().setFont(getTitleFont());
+        }
+    }
+    
+    @Override
+    protected void onAxisLabelChanged(AxisId axis) {
+        switch (axis) {
+            case X:
+                chart.getXYPlot().getDomainAxis().setLabel(getAxis(AxisId.X).getLabel());
+                break;
+            case Y:
+                chart.getXYPlot().getRangeAxis().setLabel(getAxis(AxisId.Y).getLabel());
+                break;
+            case Y2:
+                createY2();
+                chart.getXYPlot().getRangeAxis(1).setLabel(getAxis(AxisId.Y2).getLabel());
+                break;
+        }
+    }      
 }

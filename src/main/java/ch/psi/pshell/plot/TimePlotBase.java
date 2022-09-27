@@ -30,6 +30,14 @@ public abstract class TimePlotBase extends PlotBase<TimePlotSeries> implements T
         super(TimePlotSeries.class, title);
     }
 
+    @Override
+    protected void createChart() {
+        super.createChart();
+        createAxis(AxisId.X, "Time");
+        createAxis(AxisId.Y, "");
+        createAxis(AxisId.Y2, "");
+    }
+
     JCheckBoxMenuItem menuMarkers;
     JCheckBoxMenuItem menuLegend;
     JMenuItem menuStopStart;
