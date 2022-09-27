@@ -797,6 +797,12 @@ public class DataManager implements AutoCloseable {
         path=adjustPath(path);
         return getProvider().isGroup(root, path);
     }
+    
+    public boolean isLink(String root, String path) throws IOException {        
+        root = adjustRoot(root);
+        path=adjustPath(path);
+        return getProvider().isLink(root, path);
+    }    
 
     public static class DataAddress {
         DataAddress(String root, String path){

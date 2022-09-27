@@ -30,6 +30,8 @@ public interface Provider {
     public static final String INFO_FIELD_NAMES = "Field Names";
     public static final String INFO_FIELD_TYPES = "Field Types";
     public static final String INFO_FIELD_LENGTHS = "Field Lengths";
+    public static final String INFO_LINK_ROOT = "Link Root";
+    public static final String INFO_LINK_PATH = "Link Path";
 
     public static final String INFO_VAL_TYPE_GROUP = "GROUP";
     public static final String INFO_VAL_TYPE_DATASET = "DATASET";
@@ -72,7 +74,11 @@ public interface Provider {
     boolean isDataset(String root, String path) throws IOException;
 
     boolean isGroup(String root, String path) throws IOException;
-
+    
+    default boolean isLink(String root, String path) throws IOException{
+        return false;
+    }
+    
     String[] getChildren(String root, String path) throws IOException;
 
     void createGroup(String path) throws IOException;

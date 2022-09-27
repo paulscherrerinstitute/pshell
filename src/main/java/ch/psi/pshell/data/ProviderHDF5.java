@@ -34,6 +34,7 @@ import java.io.IOException;
 import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.math.BigInteger;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.BitSet;
@@ -152,16 +153,16 @@ public class ProviderHDF5 implements Provider {
         contents.add(info.getName());
         for (String element : elements) {
             info = reader.object().getLinkInformation(group + "/" + element);
-            if (info.isGroup()) {
+                    if (info.isGroup()) {
                 subgroups.add(getGroupStructure(reader, info.getPath()));
-            } else {
+                     } else {
                 contents.add(info.getName());
             }
         }
         contents.addAll(subgroups);
         return contents.toArray();
     }
-
+    
     @Override
     public Object[] getStructure(String root) {
         Object[] ret;
@@ -200,10 +201,7 @@ public class ProviderHDF5 implements Provider {
         IHDF5Reader reader = openReadOnly(root);
         try {
             HDF5LinkInformation info = reader.object().getLinkInformation(path);
-            if (info.isSoftLink()){
-                        
-            }
-            return info.isDataSet()|| info.isSoftLink();
+            return info.isDataSet() || info.isSoftLink();
         } finally {
             if ((reader != null) && (reader != writer)) {
                 reader.close();
@@ -225,10 +223,23 @@ public class ProviderHDF5 implements Provider {
         }
     }
     
-    public DataSlice getData(String root, String path,  long[] index, int[] shape) throws IOException {        
+    @Override
+    public boolean isLink(String root, String path) {
         IHDF5Reader reader = openReadOnly(root);
         try {
             HDF5LinkInformation info = reader.object().getLinkInformation(path);
+            return info.isExternalLink();
+        } finally {
+            if ((reader != null) && (reader != writer)) {
+                reader.close();
+            }
+        }
+    }    
+    
+    public DataSlice getData(String root, String path,  long[] index, int[] shape) throws IOException {        
+        IHDF5Reader reader = openReadOnly(root);
+        try {
+            HDF5LinkInformation info = reader.object().getLinkInformation(path);       
             if (!info.isDataSet() && !info.isSoftLink()) {
                 return null;
             }
@@ -474,14 +485,14 @@ public class ProviderHDF5 implements Provider {
 
     @Override
     public Map<String, Object> getInfo(String root, String path) {
-        HashMap<String, Object> ret = new HashMap<>();
+        Map<String, Object> ret = new HashMap<>();
         IHDF5Reader reader = openReadOnly(root);
         try {
             HDF5LinkInformation info = reader.object().getLinkInformation(path);
             HDF5ObjectType type = info.getType();
-            ret.put(INFO_TYPE, type);
+             ret.put(INFO_TYPE, type);
             //ret.put("Size", reader.object().getSize(path));
-            if (info.isDataSet()|| info.isSoftLink()) {
+            if (info.isDataSet() || info.isSoftLink()) {
                 HDF5ObjectInformation objinfo = reader.object().getObjectInformation(path);
                 ret.put(INFO_CREATION, Chrono.getTimeStr(objinfo.getCreationTime() * 1000, "dd/MM/YY HH:mm:ss"));
 
@@ -515,7 +526,18 @@ public class ProviderHDF5 implements Provider {
                 }
 
             } else if (info.isGroup()) {
-            }
+            } else  if (info.isExternalLink()){
+                try{
+                    String linkRoot = info.tryGetExternalLinkFilename();
+                    if (!new File(linkRoot).exists()){
+                        linkRoot = Paths.get(new File(root).getParent(), linkRoot).toString();
+                    }
+                    String linkPath = info.tryGetExternalLinkTarget();
+                    ret.put(INFO_LINK_ROOT, linkRoot);
+                    ret.put(INFO_LINK_PATH, linkPath);
+                } catch (Exception ex){
+                }
+            }   
             return ret;
         } finally {
             if ((reader != null) && (reader != writer)) {
@@ -550,7 +572,6 @@ public class ProviderHDF5 implements Provider {
             }
         }
         return ret;
-
     }
 
     Object getAttribute(IHDF5Reader reader, String path, String attr) {

@@ -1246,10 +1246,16 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
         headers = null;
         if ((path != null) && (dataManager != null)) {
             try {
+                
                 if (dataManager.isGroup(currentFile.getPath(), path)) {
                     return;
                 }
 
+                if (dataManager.isLink(currentFile.getPath(), path)) {
+                    System.out.println("TODO: Open " + currentFile.getPath() + "  /  " + path);
+                    return;
+                }
+                
                 DataSlice dataSlice = dataManager.getData(currentFile.getPath(), path);
                 if (dataSlice != null) {
                     this.dataSlice = dataSlice;
