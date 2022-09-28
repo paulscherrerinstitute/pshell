@@ -104,9 +104,9 @@ if (ext.type == 'all'){
 
 if (ext.hdf5 == '1.10'){
     dependencies {
-        implementation 'cisd:jhdf5:19.04.0'
-        implementation 'cisd:base:18.09.0'
-        implementation 'commons-io:commons-io:2.8.0'
+        implementation 'cisd:jhdf5:19.04.1'
+        //implementation 'cisd:base:18.09.0'
+        //implementation 'commons-io:commons-io:2.8.0'
     }
 } else {
     dependencies {
@@ -170,9 +170,9 @@ dependencies {
     implementation 'net.sourceforge.jmatio:jmatio:1.0'
     
     //TIFF support for ImageIO can be added installing JAI, or one of the following dependencies:
-    //implementation 'com.twelvemonkeys'.imageio:imageio-tiff:3.4.1'    
+    implementation 'com.twelvemonkeys.imageio:imageio-tiff:3.8.3'    
     //implementation 'com.tomgibara.imageio:imageio-tiff:1.0'   //maven { url "http://www.tomgibara.com/maven/repo/" }     
-    implementation 'com.github.jai-imageio:jai-imageio-core:1.4.0'
+    //implementation 'com.github.jai-imageio:jai-imageio-core:1.4.0'
     //Or else adding to extensions folder:
     //https://github.com/jai-imageio/jai-imageio-core/releases/download/jai-imageio-core-1.4.0/jai-imageio-core-1.4.0.jar
 
