@@ -83,6 +83,10 @@ public class DataManager implements AutoCloseable {
         outputFile.mkdirs();
         getProvider().openOutput(outputFile);
     }
+    
+    public DataManager(String file, String provider) throws Exception {
+        this(new File(file), provider);
+    }
 
     /**
      * Constructor for offline data access
@@ -631,8 +635,10 @@ public class DataManager implements AutoCloseable {
     }
 
     public void closeOutput() {
-        if (getExecutionPars().getSaveOutput()) {
-            outputListener.stop();
+        if (context!=null){
+            if (getExecutionPars().getSaveOutput()) {
+                outputListener.stop();
+            }
         }
         if (outputFile!=null) { 
                 try {
@@ -644,12 +650,14 @@ public class DataManager implements AutoCloseable {
         }
         if (isOpen()) {
             try {
-                try {
-                    if (getExecutionPars().getSave()) {
-                        appendLog("Close persistence context: " + getExecutionPars().getOutputFile());
+                if (context!=null){
+                    try {
+                        if (getExecutionPars().getSave()) {
+                            appendLog("Close persistence context: " + getExecutionPars().getOutputFile());
+                        }
+                    } catch (Exception ex) {
+                        logger.log(Level.WARNING, null, ex);
                     }
-                } catch (Exception ex) {
-                    logger.log(Level.WARNING, null, ex);
                 }
                 try {
                     getLayout().onClosed(getExecutionPars().getOutputFile());
@@ -667,7 +675,9 @@ public class DataManager implements AutoCloseable {
                     logger.log(Level.WARNING, null, ex);
                 }
             } finally {
-                getExecutionPars().setDataPath(null);
+                if (context!=null){
+                    getExecutionPars().setDataPath(null);
+                }
             }
         }
     }
@@ -1031,6 +1041,22 @@ public class DataManager implements AutoCloseable {
         }
     }
 
+    // External link    
+    public void createLink(String path, String targetRoot, String targetPath) throws IOException {
+        synchronized (providerData) {
+            openOutput();
+            getProvider().createLink(path, targetRoot, targetPath);
+        }
+    }
+    
+    // Internal link    
+    public void createLink(String path, String targetPath) throws IOException {
+        synchronized (providerData) {
+            openOutput();
+            getProvider().createLink(path, targetPath);
+        }
+    }    
+    
     public void setDataset(String path, Object data) throws IOException {
         setDataset(path, data, false);
     }

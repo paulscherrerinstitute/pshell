@@ -3,6 +3,7 @@ package ch.psi.pshell.swing;
 import ch.psi.pshell.data.Converter;
 import ch.psi.pshell.core.Context;
 import ch.psi.pshell.data.DataManager;
+import ch.psi.pshell.data.DataManager.DataAddress;
 import ch.psi.pshell.data.Provider;
 import ch.psi.pshell.data.DataSlice;
 import ch.psi.pshell.data.Layout;
@@ -1420,6 +1421,20 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
                     }
                     if (file.exists()){
                         listener.openFile(file.getCanonicalPath());
+                    } else {
+                        DataAddress address = DataManager.getAddress((String)selection);
+                        if (address!=null){
+                            File root = new File(address.root);
+                            if (!root.exists()){
+                                root = Paths.get(baseFolder, address.root).toFile();
+                            }                            
+                            if (root.exists()){
+                                JPanel panel = listener.openFile(root.getCanonicalPath());
+                                if (panel instanceof DataPanel){
+                                    ((DataPanel)panel).selectDataPath(address.path);
+                                }
+                            }
+                        }
                     }
                 }
             }

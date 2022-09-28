@@ -656,6 +656,25 @@ public class ProviderHDF5 implements Provider {
         } catch (Exception ex){            
         }
     }
+    
+    @Override
+    public void createLink(String path, String targetRoot, String targetPath){
+        assertOpenOutput();
+        try{
+            writer.object().createOrUpdateExternalLink( targetRoot, targetPath, path);
+        } catch (Exception ex){            
+        }
+    }
+    
+    @Override
+    public void createLink(String path, String targetPath){
+        assertOpenOutput();
+        try{
+            writer.object().createOrUpdateSoftLink( targetPath, path);
+        } catch (Exception ex){            
+        }
+    }    
+      
 
     @Override
     public void setDataset(String path, Object data, Class type, int rank, int[] dims, boolean unsigned, Map features) {

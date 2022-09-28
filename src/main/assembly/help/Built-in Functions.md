@@ -34,6 +34,7 @@ These functions provide the script API to many aspects of PShell:
     - create_group
     - create_dataset
     - create_table
+    - create_link
     - append_dataset
     - append_table
     - flush_data

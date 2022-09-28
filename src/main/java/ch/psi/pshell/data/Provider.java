@@ -108,7 +108,15 @@ public interface Provider {
     String[] getChildren(String root, String path) throws IOException;
 
     void createGroup(String path) throws IOException;
-
+    
+    default void createLink(String path, String targetRoot, String targetPath) throws IOException{
+       throw new UnsupportedOperationException();
+    }
+    
+    default void createLink(String path, String targetPath) throws IOException{
+       throw new UnsupportedOperationException();
+    }
+    
     void setAttribute(String path, String name, Object value, Class type, boolean unsigned) throws IOException;
 
     void setDataset(String path, Object data, Class type, int rank, int[] dimensions, boolean unsigned, Map features) throws IOException;

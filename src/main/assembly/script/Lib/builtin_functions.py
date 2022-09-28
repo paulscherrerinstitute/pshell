@@ -764,6 +764,23 @@ def create_table(path, names, types=None, lengths=None, features=None):
             type_classes.append(ScriptUtils.getType(types[i]))
     get_context().dataManager.createDataset(path, names, type_classes, lengths, features)
 
+def create_link(path, target_path, target_root=None):
+    """Create a internal or external link.
+
+    Args:
+        path(str): Path to link relative to the current persistence context root.
+        target_path(str): Path to data on the target
+        target_root(str, optional): If defined creates an external link to the target root.
+                 Otherwise creates an internal link in the current persistence context.
+        
+    Returns:
+        None
+    """
+    if target_root: 
+        get_context().dataManager.createLink(path,target_root, target_path)
+    else:
+        get_context().dataManager.createLink(path, target_path)
+
 def append_dataset(path, data, index=None, type='d', shape=None):
     """Append data to dataset.
 

@@ -35,6 +35,7 @@ import ch.psi.pshell.core.ContextAdapter as ContextListener
 import ch.psi.pshell.core.Context
 import ch.psi.pshell.core.InlineDevice as InlineDevice
 
+import ch.psi.pshell.data.DataManager as DataManager
 import ch.psi.pshell.data.DataSlice as DataSlice
 import ch.psi.pshell.data.PlotDescriptor as PlotDescriptor
 import ch.psi.pshell.data.Table as Table
@@ -45,11 +46,11 @@ import ch.psi.pshell.data.ProviderCSV as  ProviderCSV
 import ch.psi.pshell.data.ProviderFDA as  ProviderFDA
 import ch.psi.pshell.data.Converter as  DataConverter
 import ch.psi.pshell.data.Layout as  Layout
-import  ch.psi.pshell.data.LayoutBase as LayoutBase
-import  ch.psi.pshell.data.LayoutDefault as LayoutDefault
-import  ch.psi.pshell.data.LayoutTable as LayoutTable
-import  ch.psi.pshell.data.LayoutFDA as LayoutFDA
-import  ch.psi.pshell.data.LayoutSF as LayoutSF
+import ch.psi.pshell.data.LayoutBase as LayoutBase
+import ch.psi.pshell.data.LayoutDefault as LayoutDefault
+import ch.psi.pshell.data.LayoutTable as LayoutTable
+import ch.psi.pshell.data.LayoutFDA as LayoutFDA
+import ch.psi.pshell.data.LayoutSF as LayoutSF
 
 import ch.psi.pshell.device.Camera as Camera
 import ch.psi.pshell.device.CameraBase as CameraBase

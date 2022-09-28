@@ -22,6 +22,7 @@ import java.awt.Point as Point
 import java.awt.Dimension as Dimension
 import java.awt.Rectangle as Rectangle
 import java.awt.Font as Font
+import java.io.File as File
 import org.python.core.PyArray as PyArray
 import org.python.core.PyFunction as PyFunction
 import org.python.core.PyMethod as PyMethod
