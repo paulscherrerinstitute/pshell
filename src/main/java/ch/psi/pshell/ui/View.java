@@ -878,28 +878,29 @@ public class View extends MainFrame {
         }
 
         @Override
-        public void openFile(String fileName) throws Exception {
+        public JPanel openFile(String fileName) throws Exception {
             String ext=IO.getExtension(fileName);
             if (ext.equalsIgnoreCase(context.getScriptType().getExtension())) {
-                View.this.openScript(fileName);
+                return View.this.openScript(fileName);
             } else if (getProcessorExtensions().contains(ext)) {
-                View.this.openScriptOrProcessor(fileName);
+                return View.this.openScriptOrProcessor(fileName);
             } else if (Arr.containsEqual(dataFileExtensions, ext)){
-                View.this.openDataFile(fileName);
+                return View.this.openDataFile(fileName);
             } else if (Arr.containsEqual(imageFileExtensions, ext)){
-                View.this.openImageFile(fileName);
+                return View.this.openImageFile(fileName);
             } else if ((new File(fileName).isDirectory()) && context.getDataManager().isRoot(fileName)){
-                View.this.openDataFile(fileName);
+                return View.this.openDataFile(fileName);
             }  else {
-                View.this.openTextFile(fileName);
+                return View.this.openTextFile(fileName);
             }
         }
         
         @Override
-        public void openScript(String script, String name) throws Exception {
+        public ScriptEditor openScript(String script, String name) throws Exception {
             ScriptEditor editor = newScript(script);
             tabDoc.setTitleAt(tabDoc.indexOfComponent(editor), name);
             tabDoc.setSelectedComponent(editor);
+            return editor;
         }
     };
 
@@ -1862,17 +1863,16 @@ public class View extends MainFrame {
         return (getProcessorForFile(file) != null);
     }
     
-    public void openScriptOrProcessor(String file) throws IOException, InstantiationException, IllegalAccessException {
+    public JPanel openScriptOrProcessor(String file) throws IOException, InstantiationException, IllegalAccessException {
         String extension = IO.getExtension(file);
         if (!extension.isEmpty()) {
             for (Processor processor : Processor.getServiceProviders()) {
                 if (Arr.containsEqual(processor.getExtensions(), extension)) {
-                    openProcessor(processor.getClass(), file);
-                    return;
+                    return openProcessor(processor.getClass(), file).getPanel();
                 }
             }
         }
-        openScript(file);
+        return openScript(file);
     }
     
     

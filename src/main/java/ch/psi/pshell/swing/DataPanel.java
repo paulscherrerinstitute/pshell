@@ -66,6 +66,7 @@ import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
+import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JPopupMenu.Separator;
 import javax.swing.JRadioButtonMenuItem;
@@ -103,9 +104,9 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
 
         void plotData(Object array, Range range) throws Exception;
 
-        void openFile(String fileName) throws Exception;
+        JPanel openFile(String fileName) throws Exception;
 
-        void openScript(String script, String name) throws Exception;
+        JPanel openScript(String script, String name) throws Exception;
     }
 
     JTable tableData;
@@ -1231,6 +1232,11 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
         }
     }
 
+    public boolean selectDataPath(String path){
+        return SwingUtils.selectTreePath(treeFile, path);
+    }
+    
+    
     //Data
     DataSlice dataSlice;
     Object data;
@@ -1251,8 +1257,14 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
                     return;
                 }
 
-                if (dataManager.isLink(currentFile.getPath(), path)) {
-                    System.out.println("TODO: Open " + currentFile.getPath() + "  /  " + path);
+                if (dataManager.isExtLink(currentFile.getPath(), path)) {
+                    Map<String, Object> info = dataManager.getInfo(currentFile.getPath(), path);
+                    String linkRoot = (String) info.get(Provider.INFO_LINK_ROOT);
+                    String linkPath = (String) info.get(Provider.INFO_LINK_PATH);                    
+                    if (listener != null) {
+                        DataPanel pn = (DataPanel)listener.openFile(linkRoot);   
+                        pn.selectDataPath(linkPath);
+                    }
                     return;
                 }
                 
@@ -1681,23 +1693,25 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
         }
 
         @Override
-        public void openFile(String fileName) throws Exception {
+        public JPanel openFile(String fileName) throws Exception {
             if (IO.getExtension(fileName).equalsIgnoreCase(Context.getInstance().getScriptType().getExtension())) {
-                openScript(new String(Files.readAllBytes(Paths.get(fileName))), fileName);
+                return openScript(new String(Files.readAllBytes(Paths.get(fileName))), fileName);
             } else {
                 DataPanel panel = new DataPanel();
                 panel.load(fileName);
                 panel.setListener(this);
                 SwingUtils.showDialog(getParent(), fileName, new Dimension(800, 600), panel);
+                return panel;
             }
         }
 
         @Override
-        public void openScript(String script, String name) throws Exception {
+        public JPanel openScript(String script, String name) throws Exception {
             TextEditor editor = new TextEditor();
             editor.setText((script == null) ? "" : script);
             editor.setReadOnly(true);
             SwingUtils.showDialog(getParent(), name, new Dimension(800, 600), editor);
+            return editor;
         }
 
     }

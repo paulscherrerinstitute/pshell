@@ -798,10 +798,33 @@ public class DataManager implements AutoCloseable {
         return getProvider().isGroup(root, path);
     }
     
-    public boolean isLink(String root, String path) throws IOException {        
+    public boolean isExtLink(String path) throws IOException {
+        DataAddress address = getAddress(path);
+        if (address != null) {
+            return isExtLink(address.root, address.path);
+        }
+        return isExtLink(getOutput(), path);
+    }
+    
+    public boolean isExtLink(String root, String path) throws IOException {        
         root = adjustRoot(root);
         path=adjustPath(path);
-        return getProvider().isLink(root, path);
+        return getProvider().isExtLink(root, path);
+    }    
+    
+    public boolean isSoftLink(String path) throws IOException {
+        DataAddress address = getAddress(path);
+        if (address != null) {
+            return isSoftLink(address.root, address.path);
+        }
+        return isSoftLink(getOutput(), path);
+    }
+    
+
+    public boolean isSoftLink(String root, String path) throws IOException {        
+        root = adjustRoot(root);
+        path=adjustPath(path);
+        return getProvider().isSoftLink(root, path);
     }    
 
     public static class DataAddress {

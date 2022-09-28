@@ -224,7 +224,7 @@ public class ProviderHDF5 implements Provider {
     }
     
     @Override
-    public boolean isLink(String root, String path) {
+    public boolean isExtLink(String root, String path) {
         IHDF5Reader reader = openReadOnly(root);
         try {
             HDF5LinkInformation info = reader.object().getLinkInformation(path);

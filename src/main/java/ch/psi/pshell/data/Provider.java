@@ -37,6 +37,7 @@ public interface Provider {
     public static final String INFO_VAL_TYPE_DATASET = "DATASET";
     public static final String INFO_VAL_TYPE_UNDEFINED = "NONEXISTENT";
     public static final String INFO_VAL_TYPE_SOFTLINK = "SOFT_LINK";
+    public static final String INFO_VAL_TYPE_EXTLINK = "EXTERNAL_LINK";
 
     public static final String INFO_VAL_DATA_TYPE_STRING = "STRING";
     public static final String INFO_VAL_DATA_TYPE_FLOAT = "FLOAT";
@@ -71,12 +72,37 @@ public interface Provider {
 
     DataSlice getData(String root, String path, int index) throws IOException;
 
-    boolean isDataset(String root, String path) throws IOException;
+    default boolean isDataset(String root, String path) throws IOException{
+        try{
+            return getInfo(root, path).get(Provider.INFO_TYPE).equals(INFO_VAL_TYPE_DATASET);
+        } catch (Exception ex){
+            return false;
+        }
+    }
 
-    boolean isGroup(String root, String path) throws IOException;
+    default boolean isGroup(String root, String path) throws IOException{
+        try{
+            return getInfo(root, path).get(Provider.INFO_TYPE).equals(INFO_VAL_TYPE_GROUP);
+        } catch (Exception ex){
+            return false;
+        }
+    }
     
-    default boolean isLink(String root, String path) throws IOException{
-        return false;
+    default boolean isSoftLink(String root, String path) throws IOException{
+        try{
+            return getInfo(root, path).get(Provider.INFO_TYPE).equals(INFO_VAL_TYPE_SOFTLINK);
+        } catch (Exception ex){
+            return false;
+        }
+    }
+
+    
+    default boolean isExtLink(String root, String path) throws IOException{
+        try{
+            return getInfo(root, path).get(Provider.INFO_TYPE).equals(INFO_VAL_TYPE_EXTLINK);
+        } catch (Exception ex){
+            return false;
+        }
     }
     
     String[] getChildren(String root, String path) throws IOException;

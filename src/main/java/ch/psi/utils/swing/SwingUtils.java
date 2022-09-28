@@ -43,6 +43,7 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Enumeration;
+import java.util.List;
 import java.util.Random;
 import java.util.concurrent.Callable;
 import java.util.logging.Level;
@@ -90,6 +91,7 @@ import javax.swing.text.JTextComponent;
 import javax.swing.text.SimpleAttributeSet;
 import javax.swing.text.StyleConstants;
 import javax.swing.text.StyleContext;
+import javax.swing.tree.TreeModel;
 import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreePath;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -1273,6 +1275,46 @@ public class SwingUtils {
             tree.collapsePath(parent);
         }
     }
+
+    public static TreePath getTreePath(JTree tree, String path){
+        try{
+            List selectionPath = new ArrayList<>();
+            path = path.replaceFirst("^/",""); //remove first / if present
+            path = path.replaceAll("./$", ""); //remove last / if present
+            String[] tokens = path.split("/");
+            TreeModel model = tree.getModel();
+            Object cur = model.getRoot();
+            selectionPath.add(cur);
+            for (String name:tokens){
+                Object next=null;
+                for (int i=0; i<model.getChildCount(cur); i++){
+                    Object child = model.getChild(cur, i);
+                    if (child.toString().equals(name)){
+                        next = child;
+                        break;
+                    }                    
+                }
+                if (next==null){
+                    return null;
+                }                
+                cur=next;
+                selectionPath.add(cur);
+            }
+            return new TreePath(selectionPath.toArray());        
+        } catch (Exception ex){
+            return null;
+        }
+    }
+
+    
+    public static boolean selectTreePath(JTree tree,String path){
+        TreePath treePath = getTreePath(tree, path);
+        if (treePath!=null){
+            tree.setSelectionPath(treePath);
+        }
+        return (treePath!=null);
+    }
+    
     
     /**
      * Implement table change listener that provide new and former value
