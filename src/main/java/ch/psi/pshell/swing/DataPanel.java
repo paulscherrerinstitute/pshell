@@ -1407,12 +1407,20 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
 
     void plotTableSelection() {
         try {
-            Object selection = getTableSelection();
-            if (isTableSelectionPlottable(selection)) {
-                Range range = getTableSelectionRange();
-                //Simplify plotting if  showing only 1 element
-                if (listener != null) {
+            if (listener != null) {
+                Object selection = getTableSelection();
+                if (isTableSelectionPlottable(selection)) {
+                    Range range = getTableSelectionRange();
+                    //Simplify plotting if  showing only 1 element                
                     listener.plotData(selection, range);
+                } else if (selection instanceof String){
+                    File file = new File((String)selection);
+                    if (!file.exists()){
+                        file = Paths.get(baseFolder, (String)selection).toFile();
+                    }
+                    if (file.exists()){
+                        listener.openFile(file.getCanonicalPath());
+                    }
                 }
             }
         } catch (Exception ex) {
