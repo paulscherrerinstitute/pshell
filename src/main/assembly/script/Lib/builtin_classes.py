@@ -78,6 +78,7 @@ import ch.psi.pshell.device.Register as Register
 import ch.psi.pshell.device.Register.RegisterArray as RegisterArray
 import ch.psi.pshell.device.Register.RegisterNumber as RegisterNumber
 import ch.psi.pshell.device.Register.RegisterBoolean as RegisterBoolean
+import ch.psi.pshell.device.Register.RegisterString as RegisterString
 import ch.psi.pshell.device.RegisterCache as RegisterCache
 import ch.psi.pshell.device.ReadonlyRegister.ReadonlyRegisterArray as ReadonlyRegisterArray
 import ch.psi.pshell.device.ReadonlyRegister.ReadonlyRegisterMatrix as ReadonlyRegisterMatrix
