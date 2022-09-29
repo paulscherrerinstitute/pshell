@@ -1676,6 +1676,7 @@ public class StripChart extends StandardDialog {
             try {
                 if (file != null) {
                     File f = resolveFile(file, defaultFolder);
+                    dialog.open(f);
                 } else if (config != null) {
                     dialog.open(config);
                 }
