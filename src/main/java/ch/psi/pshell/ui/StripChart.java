@@ -1701,7 +1701,9 @@ public class StripChart extends StandardDialog {
                 }
             });
             SwingUtils.centerComponent(null, dialog);
-            dialog.getOwner().setIconImage(Toolkit.getDefaultToolkit().getImage(App.getResourceUrl("IconSmall.png")));
+            if (dialog.getOwner()!=null){
+                dialog.getOwner().setIconImage(Toolkit.getDefaultToolkit().getImage(App.getResourceUrl("IconSmall.png")));
+            }
             dialog.setVisible(true);
             dialog.requestFocus();
         });
