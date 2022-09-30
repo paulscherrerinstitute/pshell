@@ -6,7 +6,7 @@ plugins {
     id "nebula.ospackage" version "9.1.1"
 }
 
-version = '1.18.0'
+version = '1.19.0'
 group = 'ch.psi'
 ext.timestamp = new Date().format("yyMMddHHmm")
 
