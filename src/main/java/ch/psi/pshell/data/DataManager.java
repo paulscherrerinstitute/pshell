@@ -216,6 +216,8 @@ public class DataManager implements AutoCloseable {
             layoutClass = LayoutTable.class;
         } else if (layoutName.equals("sf")) {
             layoutClass = LayoutSF.class;
+        } else if (layoutName.equals("nx")) {
+            layoutClass = LayoutNX.class;
         } else if (layoutName.equals("fda")) {
             layoutClass = LayoutFDA.class;            
         } else {
