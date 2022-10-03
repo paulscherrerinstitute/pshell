@@ -1,6 +1,8 @@
 package ch.psi.pshell.device;
 
 import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * A simulated motor implementation.
@@ -14,9 +16,8 @@ public class DummyMotor extends MotorBase {
 
     @Override
     protected void doInitialize() throws IOException, InterruptedException {
-        super.doInitialize();
-        //If units not set assumes it is first execution 
         if (getConfig().isUndefined()) {
+            //If units not set assumes it is first execution 
             MotorConfig cfg = getConfig();
             cfg.minValue = -10.0;
             cfg.maxValue = 10.0;
@@ -26,7 +27,8 @@ public class DummyMotor extends MotorBase {
             cfg.precision = 2;
             cfg.unit = "mm";
             cfg.save();
-        }
+        }        
+        super.doInitialize();
     }
 
     @Override
