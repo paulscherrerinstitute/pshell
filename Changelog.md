@@ -1,5 +1,62 @@
 # Changelog
 
+## 1.19.0
+
+### Added
+ 
+* Improve MatrixPlotRenderer to better mimic MatrixPlotJFree.
+
+### Changed
+
+* Update to Jython 2.7.3
+
+### Fixed
+
+* Fix first initialization of DummyMotor.
+
+
+## 1.18.0
+
+### Added
+ 
+* Built-in XScan panels from FDA (XScan variables and code snippets share same global interpreter).
+
+* __xscan__ function in scripting API
+
+* __create_link__ function in scripting API
+
+* Automatically retrieve and save metadata for EPICS channel devices.
+
+* Configuration of visibility of scan panel, output panel, data browser and queue browser.
+
+* Option to open data files in Document Tab.
+
+* Dynamic change of LAF.
+
+* Built-in support to TIFF files.
+
+* Configuration of sub-folder and visible file types in data panel. Support opening generic file types.
+
+* Viridis colormap
+
+* _data_utils__: simple direct creation of TIFF and HDF5 files.
+
+
+### Changed
+
+* Save preferences as JSON and not bin. 
+
+* Change default home folder to ~/pshell/home (not current folder).
+
+* Update JHDF5 to 19.04.1: support to Apple M1 processor.
+
+### Fixed
+
+* Support to Nasshorn in Java>11
+
+
+# Changelog
+
 ## 1.17.0
 
 ### Added
@@ -160,7 +217,7 @@
 
 * 'fda' file format.
 
-* Highligting VB files.
+* Highlighting VB files.
 
 * Image threshold operation.
 
@@ -266,14 +323,14 @@
 
 * FlatLaf look and feel.
 
-* Possibility to creatte streams using HeaderReservingMsgAllocator. 
+* Possibility to create streams using HeaderReservingMsgAllocator. 
 
   
 ### Changed
 
 * Streams save Pulse ID as long, not double.
 
-* Defulat colors on HistoryChart defined by JFreeChart.
+* Default colors on HistoryChart defined by JFreeChart.
 
 * PipelineServer listener to track config changes.
 
@@ -284,7 +341,7 @@
 
 * Bug not applying default colors on StripChart.
 
-* Opening FDA files pon Windows.
+* Opening FDA files on Windows.
 
 * Bug forking empty Callable list (parallelize and fork built-ins).
 
@@ -312,7 +369,7 @@
 
 * Persistence of experiment state to diffutils (limits, restrictions, ub)
 
-* MotorGroup.isStartingSimultaneousMove for interlocks differ synchronized and sequential moves.
+* MotorGroup.isStartingSimultaneousMove for interlocks differ synchronised and sequential moves.
 
   
 ### Changed
@@ -378,7 +435,7 @@
 
 ### Fixed
 
-* Stream chanel creation failures with addScalar.
+* Stream channel creation failures with addScalar.
 
 * Strip chart dragging issues.
 
