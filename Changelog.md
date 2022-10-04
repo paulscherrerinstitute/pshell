@@ -55,8 +55,6 @@
 * Support to Nasshorn in Java>11
 
 
-# Changelog
-
 ## 1.17.0
 
 ### Added
