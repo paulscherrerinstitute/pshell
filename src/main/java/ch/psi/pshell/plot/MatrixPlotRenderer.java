@@ -56,6 +56,10 @@ public class MatrixPlotRenderer extends MatrixPlotBase {
         title.setHorizontalAlignment(SwingConstants.CENTER);
         add(title, BorderLayout.NORTH);
         add(getRenderer(), BorderLayout.CENTER);
+        SwingUtilities.invokeLater(()->{
+            renderer.updateColormapScale(getColormap(), new Range(0.0, 1.0), isColormapLogarithmic());
+        });        
+        
     }
     
     @Override
