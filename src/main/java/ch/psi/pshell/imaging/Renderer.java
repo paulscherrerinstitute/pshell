@@ -581,7 +581,7 @@ public class Renderer extends MonitoredPanel implements ImageListener, ImageBuff
         }
     }
 
-    void updateColormapScale() {
+    public void updateColormapScale() {
         Object origin = getOrigin();
         if (((origin != null) && (origin instanceof ColormapSource))) {
             ColormapSource source = (ColormapSource) origin;
@@ -589,7 +589,7 @@ public class Renderer extends MonitoredPanel implements ImageListener, ImageBuff
         }
     }
 
-    void updateColormapScale(Colormap colormap, Range range, Boolean log) {
+    public void updateColormapScale(Colormap colormap, Range range, Boolean log) {
         if (colormapPanel != null) {
             colormapPanel.update(colormap, range, log);
         }

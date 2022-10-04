@@ -1,11 +1,14 @@
 package ch.psi.pshell.plot;
 
+import ch.psi.pshell.imaging.Colormap;
 import ch.psi.pshell.imaging.Renderer;
 import ch.psi.pshell.imaging.RendererMode;
+import ch.psi.pshell.imaging.Utils;
 import ch.psi.utils.Convert;
 import ch.psi.utils.Range;
 import ch.psi.utils.swing.SwingUtils;
 import java.awt.BorderLayout;
+import java.awt.Component;
 import java.awt.color.ColorSpace;
 import java.awt.event.ActionEvent;
 import java.awt.image.BufferedImage;
@@ -17,10 +20,14 @@ import java.awt.image.PixelInterleavedSampleModel;
 import java.awt.image.SampleModel;
 import java.awt.image.WritableRaster;
 import java.util.Hashtable;
+import javax.swing.JCheckBoxMenuItem;
+import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JRadioButtonMenuItem;
+import javax.swing.SwingConstants;
+import javax.swing.SwingUtilities;
 import javax.swing.event.PopupMenuEvent;
 import javax.swing.event.PopupMenuListener;
 
@@ -33,16 +40,28 @@ public class MatrixPlotRenderer extends MatrixPlotBase {
     BufferedImage image;
     DataBufferDouble dataBuffer;
     ColorModel cmGray;
+    JLabel title;
+    
 
     public MatrixPlotRenderer() {
         super();
         getRenderer().getPopupMenu().setVisible(false); //Workaroung to menu menu poping up when ServiceLoader.load(MatrixPlot.class) was called
         setRequireUpdateOnAppend(false);
         getRenderer().setPreferredSize(new java.awt.Dimension(PREFERRED_WIDTH, PREFERRED_HEIGHT));
+        getRenderer().setMode(RendererMode.Stretch);
+        showScale(true);
         cmGray = new ComponentColorModel(csGray, false, false, ColorModel.OPAQUE, DataBuffer.TYPE_DOUBLE);
         setLayout(new BorderLayout());
-        add(getRenderer());
+        title = new JLabel();
+        title.setHorizontalAlignment(SwingConstants.CENTER);
+        add(title, BorderLayout.NORTH);
+        add(getRenderer(), BorderLayout.CENTER);
     }
+    
+    @Override
+    protected void onTitleChanged() {
+        title.setFont(getTitleFont());
+    }    
 
     private Renderer getRenderer() {
         if (renderer == null) {
@@ -54,47 +73,86 @@ public class MatrixPlotRenderer extends MatrixPlotBase {
 
     @Override
     protected void createPopupMenu() {
-        // Update colormap
-        JRadioButtonMenuItem popupMenuAutoScale = new JRadioButtonMenuItem("Auto");
+
+
+        JRadioButtonMenuItem popupMenuAutoScale = new JRadioButtonMenuItem("Automatic");
         popupMenuAutoScale.addActionListener((ActionEvent e) -> {
             setAutoScale();
         });
 
-        // Set color colormap
         JRadioButtonMenuItem popupMenuManualScale = new JRadioButtonMenuItem("Manual");
         popupMenuManualScale.addActionListener((ActionEvent e) -> {
             ManualScaleDialog d = new ManualScaleDialog();
+            SwingUtils.centerComponent(renderer, d);
             Double low = Double.isNaN(scaleMin) ? 0.0 : scaleMin;
             Double high =Double.isNaN(scaleMax) ? 1.0 : scaleMax;
-            Boolean auto =isAutoScale();            
-            SwingUtils.centerComponent(renderer, d);  
+            Boolean auto = isAutoScale();
             d.setLow(low);
             d.setHigh(high);
             d.setScaleChangeListener(this);
+
             d.showDialog();
             if (d.getSelectedOption() == JOptionPane.OK_OPTION) {
                 setScale(d.getLow(), d.getHigh());
-            } else { 
-                if (auto){
+            } else {
+                if (auto) {
                     setAutoScale();
                 } else {
                     setScale(low, high);
                 }
             }
+        });        
+        
+        JMenu popupMenuChooseColormap = new JMenu("Colormap");
+        for (Colormap c : Colormap.values()) {
+            JRadioButtonMenuItem item = new JRadioButtonMenuItem(c.toString());
+            item.addActionListener((ActionEvent e) -> {
+                setColormap(Colormap.valueOf(item.getText()));
+            });
+            popupMenuChooseColormap.add(item);
+        }
+        JCheckBoxMenuItem menuLogarithmic = new JCheckBoxMenuItem("Logarithmic");
+        menuLogarithmic.addActionListener((ActionEvent e) -> {
+            setColormapLogarithmic(menuLogarithmic.isSelected());
         });
 
-        // Group colormap related menu items
-        JMenu poopupMenuChooseColorMap = new JMenu("Scale");
-        poopupMenuChooseColorMap.add(popupMenuAutoScale);
-        poopupMenuChooseColorMap.add(popupMenuManualScale);
-        addPopupMenuItem(poopupMenuChooseColorMap);
+        JMenu popupMenuChooseScale = new JMenu("Scale");
+        popupMenuChooseScale.add(popupMenuAutoScale);
+        popupMenuChooseScale.add(popupMenuManualScale);
 
+        popupMenuChooseColormap.addSeparator();
+        popupMenuChooseColormap.add(popupMenuChooseScale);
+        popupMenuChooseColormap.add(menuLogarithmic);        
+        
+        
+        JCheckBoxMenuItem menuShowScale = new JCheckBoxMenuItem("Show Scale");
+        
+        menuShowScale.addActionListener((e)->{
+            try {
+                showScale(menuShowScale.isSelected());
+            } catch (Exception ex) {
+            }            
+        });           
+        popupMenuChooseColormap.addSeparator();
+        popupMenuChooseColormap.add(menuShowScale);          
+        
+        // Group colormap related menu items
+        addPopupMenuItem(popupMenuChooseColormap);
+
+        
         getRenderer().getPopupMenu().addPopupMenuListener(new PopupMenuListener() {
 
             @Override
             public void popupMenuWillBecomeVisible(PopupMenuEvent e) {
                 popupMenuManualScale.setSelected(!isAutoScale());
                 popupMenuAutoScale.setSelected(isAutoScale());
+                for (Component c : popupMenuChooseColormap.getMenuComponents()) {
+                    if (c instanceof JRadioButtonMenuItem) {
+                        ((JRadioButtonMenuItem) c).setSelected(getColormap() == Colormap.valueOf(((JMenuItem) c).getText()));
+                    } else if (c instanceof JCheckBoxMenuItem) {
+                        ((JCheckBoxMenuItem) c).setSelected(isColormapLogarithmic());
+                    }
+                }
             }
 
             @Override
@@ -104,8 +162,7 @@ public class MatrixPlotRenderer extends MatrixPlotBase {
             @Override
             public void popupMenuCanceled(PopupMenuEvent e) {
             }
-        });
-
+        });        
         super.createPopupMenu();
 
     }
@@ -122,6 +179,12 @@ public class MatrixPlotRenderer extends MatrixPlotBase {
         update(true);
     }
 
+    boolean showScale;
+    void showScale(boolean value){
+        showScale = value;
+        renderer.setShowColormapScale(value);
+    }
+    
     private boolean grayScale = true;
 
     public void setGrayScale(boolean value) {
@@ -231,6 +294,7 @@ public class MatrixPlotRenderer extends MatrixPlotBase {
     @Override
     protected Object onAddedSeries(MatrixPlotSeries series) {
         dataBuffer = null;
+        title.setText(series.getName());
         return dataBuffer;
     }
 
@@ -257,7 +321,13 @@ public class MatrixPlotRenderer extends MatrixPlotBase {
 
     @Override
     public void updateSeries(MatrixPlotSeries series) {
-        renderer.onImage(series, image, null);
+        if (image!=null){
+            if ((getColormap() != Colormap.Grayscale) || ( isColormapLogarithmic())) {
+                renderer.onImage(null, Utils.newImage(image, getColormap(), isColormapLogarithmic()), null);
+                return;
+            }    
+        }
+        renderer.onImage(null, image, null);
     }
 
     @Override
@@ -269,5 +339,35 @@ public class MatrixPlotRenderer extends MatrixPlotBase {
         int height = series.getNumberOfBinsY();
 
         return (double[][]) Convert.reshape(dataBuffer.getBankData()[0],height, width);
+    }
+    
+    @Override
+    public void setColormap(Colormap value) {
+        if (value != getColormap()) {
+            super.setColormap(value);
+            if (isAutoScale()) {
+                setAutoScale();
+            } else {
+                setScale(scaleMin, scaleMax);
+            }
+            if (showScale){
+                showScale(true);
+            }
+        }
+    }    
+    
+    volatile boolean updatingScale;
+    @Override
+    protected void updateScale(double scaleMin, double scaleMax) {
+        super.updateScale(scaleMin, scaleMax);
+        
+        if ((showScale) && !updatingScale){
+            updatingScale = true;
+            SwingUtilities.invokeLater(()->{
+                renderer.updateColormapScale(getColormap(), new Range(scaleMin, scaleMax), isColormapLogarithmic());
+                updatingScale=false;
+            });
+        }        
+        
     }
 }
