@@ -254,6 +254,14 @@ import ch.psi.pshell.bs.ScalarConfig as ScalarConfig
 import ch.psi.pshell.bs.WaveformConfig as WaveformConfig
 import ch.psi.pshell.bs.MatrixConfig as MatrixConfig
 
+import ch.psi.pshell.camserver.PipelineClient as PipelineClient
+import ch.psi.pshell.camserver.CameraClient as CameraClient
+import ch.psi.pshell.camserver.ProxyClient as ProxyClient
+import ch.psi.pshell.camserver.PipelineStream as PipelineStream
+import ch.psi.pshell.camserver.PipelineSource as PipelineSource
+import ch.psi.pshell.camserver.CameraSource as CameraSource
+
+
 import ch.psi.pshell.detector.DetectorConfig as DetectorConfig
 
 import ch.psi.pshell.ui.App as App

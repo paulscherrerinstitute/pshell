@@ -119,7 +119,7 @@ public class Chrono {
     }
 
     public static String getEllapsedStr(Integer millis, String mask) {
-        if ((millis == null) || (millis <= 0)) {
+        if ((millis == null) || (millis < 0)) {
             return "";
         }
         millis = millis - java.util.TimeZone.getDefault().getOffset(millis);

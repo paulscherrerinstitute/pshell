@@ -552,7 +552,7 @@ public abstract class Task extends SwingWorker<Object, Void> {
                                     break;
                                 }
                                 
-                                Context.getInstance().waitState(State.Ready, 5000); //Tries to keep up with some concurrent execution.
+                                Context.getInstance().waitState(ch.psi.utils.State.Ready, 5000); //Tries to keep up with some concurrent execution.
 
                                 Object ret = (task.file != null)
                                         ? App.getInstance().evalFile(task.file, task.args)

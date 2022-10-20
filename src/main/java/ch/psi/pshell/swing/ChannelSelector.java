@@ -1,6 +1,6 @@
 package ch.psi.pshell.swing;
 
-import ch.psi.pshell.bs.PipelineServer;
+import ch.psi.pshell.camserver.PipelineSource;
 import ch.psi.utils.DataAPI;
 import ch.psi.utils.DispatcherAPI;
 import ch.psi.pshell.core.Context;
@@ -40,7 +40,7 @@ public class ChannelSelector extends MonitoredPanel {
     //DataAPI dataApi;
     //EpicsBootInfoAPI epicsApi;
     ChannelQueryAPI channelNameSource;
-    PipelineServer pipelineServer;
+    PipelineSource pipelineServer;
     final AtomicBoolean updating;
     int historySize;
     String backend;
@@ -105,7 +105,7 @@ public class ChannelSelector extends MonitoredPanel {
         } else if (type == Type.IocInfo) {
             channelNameSource = new IocInfoAPI( url);
         } else if (type == Type.Camera) {
-            pipelineServer = new PipelineServer(null, url);
+            pipelineServer = new PipelineSource(null, url);
             channelNameSource = new ChannelQueryAPI() {
                 @Override
                 public List<String> queryChannels(String text, String backend, int limit) throws IOException {

@@ -1,8 +1,8 @@
 package ch.psi.pshell.ui;
 
-import ch.psi.pshell.bs.PipelineServer;
 import ch.psi.pshell.bs.Scalar;
 import ch.psi.pshell.bs.Stream;
+import ch.psi.pshell.camserver.PipelineSource;
 import ch.psi.pshell.core.Context;
 import ch.psi.pshell.core.ContextAdapter;
 import ch.psi.pshell.core.InlineDevice;
@@ -1487,7 +1487,7 @@ public class StripChart extends StandardDialog {
                             if (!url.startsWith("tcp://")) {
                                 String instanceName = url.substring(url.lastIndexOf("/") + 1);
                                 url = url.substring(0, url.lastIndexOf("/"));
-                                PipelineServer server = new PipelineServer(null, url);
+                                PipelineSource server = new PipelineSource(null, url);
                                 try {
                                     server.initialize();
                                     url = server.getStream(instanceName);

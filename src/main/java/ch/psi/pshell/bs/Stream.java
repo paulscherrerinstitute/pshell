@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * A device implementing a beam synchronous string, having, for each identifier,
@@ -88,6 +89,11 @@ public class Stream extends DeviceBase implements Readable<StreamValue>, Cacheab
                 privateProvider = (provider != Provider.getDefault());
             } else {
                 provider = new Provider(name + "_provider", address, socketType);
+                try {
+                    provider.initialize();
+                } catch (Exception ex) {
+                    Logger.getLogger(Stream.class.getName()).log(Level.SEVERE, null, ex);
+                }
                 privateProvider = true;
             }
         } else {
@@ -596,7 +602,6 @@ public class Stream extends DeviceBase implements Readable<StreamValue>, Cacheab
                     } catch (Exception ex) {
                     }
                 }
-
                 if (c != null) {
                     if (c.getUseLocalTimestamp() && (v.getTimestamp() != null)){
                         devTimestamp = v.getTimestamp().getAsMillis();
@@ -741,6 +746,10 @@ public class Stream extends DeviceBase implements Readable<StreamValue>, Cacheab
     public String getChannelPrefix(){
         return channelPrefix;
     }
-    
+
+    @Hidden
+    public void setChannelPrefix(String channelPrefix){
+        this.channelPrefix = channelPrefix;
+    }    
     
 }

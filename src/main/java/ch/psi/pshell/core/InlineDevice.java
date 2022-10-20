@@ -1,8 +1,8 @@
 package ch.psi.pshell.core;
 
-import ch.psi.pshell.bs.PipelineServer;
 import ch.psi.pshell.bs.Scalar;
 import ch.psi.pshell.bs.Stream;
+import ch.psi.pshell.camserver.PipelineSource;
 import ch.psi.pshell.device.ArrayAverager;
 import ch.psi.pshell.device.Averager;
 import ch.psi.pshell.device.Device;
@@ -334,7 +334,7 @@ public class InlineDevice extends DeviceBase implements Readable, Writable {
                 if (!url.startsWith("tcp://")) {
                     String instanceName = url.substring(url.lastIndexOf("/") + 1);
                     url = url.substring(0, url.lastIndexOf("/"));
-                    PipelineServer server = new PipelineServer(null, url);
+                    PipelineSource server = new PipelineSource(null, url);
                     try {
                         server.initialize();
                         url = server.getStream(instanceName);
