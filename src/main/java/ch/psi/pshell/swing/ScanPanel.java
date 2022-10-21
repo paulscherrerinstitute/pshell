@@ -66,7 +66,7 @@ public class ScanPanel extends MonitoredPanel {
                 columns.add(w.getAlias());
             }
             for (Readable r : scan.getReadables()) {
-                columns.add(r.getAlias());
+                columns.add((r==null) ? "" : r.getAlias());
             }
             model = new DefaultTableModel(new Object[][]{}, columns.toArray(new String[0])) {
                 @Override

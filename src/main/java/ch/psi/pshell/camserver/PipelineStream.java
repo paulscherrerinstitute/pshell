@@ -2,9 +2,9 @@ package ch.psi.pshell.camserver;
 
 import ch.psi.pshell.bs.Stream;
 import ch.psi.pshell.bs.StreamValue;
-import ch.psi.pshell.device.Cacheable;
 import ch.psi.pshell.device.Device;
-import ch.psi.pshell.device.DeviceBase;
+import ch.psi.pshell.device.DeviceAdapter;
+import ch.psi.pshell.device.ReadonlyRegisterBase;
 
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -20,7 +20,7 @@ import java.util.logging.Logger;
 /**
  * Imaging Source implementation connecting to a CameraServer.
  */
-public class PipelineStream extends DeviceBase implements ch.psi.pshell.device.Readable<StreamValue>, Cacheable<StreamValue>, ch.psi.pshell.device.Readable.ReadableType {
+public class PipelineStream extends ReadonlyRegisterBase<StreamValue> implements ch.psi.pshell.device.Readable.ReadableType {
 
     final PipelineClient client;
     final ProxyClient proxy;
@@ -62,8 +62,12 @@ public class PipelineStream extends DeviceBase implements ch.psi.pshell.device.R
         this.pipelineName = null;
         this.instanceId = instanceId;
         this.config = config;
-
     }
+    
+    @Override
+    public Class _getElementType() {
+        return Long.class;
+    }        
 
     public Object getValue(String name) {
         StreamValue cache = take();
@@ -98,44 +102,58 @@ public class PipelineStream extends DeviceBase implements ch.psi.pshell.device.R
         return new ArrayList();
     }
 
-    public StreamValue getValue() {
-        return take();
-    }
-
     public Stream getStream() {
         return stream;
     }
+    
+    protected void startReceiver() {
+        try {
+            stream.start(true);
+        } catch (Exception ex) {
+            Logger.getLogger(PipelineStream.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
+    protected void stopReceiver() {
+        try {
+            stream.stop();
+        } catch (Exception ex) {
+            Logger.getLogger(PipelineStream.class.getName()).log(Level.WARNING, null, ex);
+        }
+    }
 
     @Override
-    protected void doInitialize() throws IOException, InterruptedException {
-        if ((pipelineName == null) && (config == null)) {
-            if (getInstances().contains(instanceId)) {
-                startInstance(instanceId);
+    protected void doSetMonitored(boolean value) {
+        super.doSetMonitored(value);
+        if (isInitialized() && (stream != null)) {
+            if (value) {
+                startReceiver();
             } else {
-                startPipeline(instanceId, instanceId);
+                stopReceiver();
             }
-        } else {
-            if (getInstances().contains(instanceId)) {
-                //If instance id is present connect to it instead of raising errors
-                Logger.getLogger(PipelineStream.class.getName()).warning("Instance already present in server: " + instanceId);
-                this.startInstance(instanceId);
-            } else {            
-                if (config != null) {
-                    startPipeline(config, instanceId);
-                } else {
-                    startPipeline(pipelineName, instanceId);
+        }
+    }
+    
+    @Override
+    protected void doUpdate() throws IOException, InterruptedException {
+        if (stream != null){
+            Object cache = stream.take();
+            if (!isMonitored()) {
+                try {
+                    startReceiver();
+                    stream.waitValueNot(cache, -1);
+                } finally {
+                    stopReceiver();
                 }
+            } else {
+                stream.waitValueNot(cache, -1);
             }
         }
-
-        if (stream != null) {
-            try {
-                stream.initialize();
-                stream.start(true);
-            } catch (Exception ex) {
-                Logger.getLogger(PipelineStream.class.getName()).log(Level.SEVERE, null, ex);
-            }
-        }
+    }
+    
+    @Override
+    protected void doInitialize() throws IOException, InterruptedException {
+        start();
     }
 
     /**
@@ -158,22 +176,11 @@ public class PipelineStream extends DeviceBase implements ch.psi.pshell.device.R
     public String getInstance() {
         return instance;
     }
-
-
+    
     @Override
-    public StreamValue read() throws IOException, InterruptedException {
-        if (stream == null) {
-            return null;
-        }
-        return stream.read();
-    }
-
-    @Override
-    public StreamValue take() {
-        if (stream == null) {
-            return null;
-        }
-        return stream.take();
+    protected StreamValue doRead() throws IOException, InterruptedException {
+        update();
+        return take();
     }
 
     @Override
@@ -200,9 +207,9 @@ public class PipelineStream extends DeviceBase implements ch.psi.pshell.device.R
     }
 
     /**
-     * Return the info of the cam server instance.
+     * Return the info of the  server instance.
      */
-    public Map<String, Object> getInfo() throws IOException {
+    public Map<String, Object> getServerInfo() throws IOException {
         return client.getInfo();
     }
 
@@ -290,7 +297,7 @@ public class PipelineStream extends DeviceBase implements ch.psi.pshell.device.R
      * created and will be read only - no config changes will be allowed. If
      * instanceId then return existing (writable).
      */
-    public String getStream(String instanceId) throws IOException {
+    protected String getStream(String instanceId) throws IOException {
         return client.getStream(instanceId);
     }
 
@@ -298,7 +305,7 @@ public class PipelineStream extends DeviceBase implements ch.psi.pshell.device.R
      * Create a pipeline from a config file. Pipeline config can be changed.
      * Return pipeline instance id and instance stream in a list.
      */
-    public List<String> createFromName(String pipelineName, String id) throws IOException {
+    protected List<String> createFromName(String pipelineName, String id) throws IOException {
         return client.createFromName(pipelineName, id);
     }
 
@@ -306,7 +313,7 @@ public class PipelineStream extends DeviceBase implements ch.psi.pshell.device.R
      * Create a pipeline from the provided config. Pipeline config can be
      * changed. Return pipeline instance id and instance stream in a list.
      */
-    public List<String> createFromConfig(Map<String, Object> config, String id) throws IOException {
+    protected List<String> createFromConfig(Map<String, Object> config, String id) throws IOException {
         return client.createFromConfig(config, id);
     }
 
@@ -398,10 +405,49 @@ public class PipelineStream extends DeviceBase implements ch.psi.pshell.device.R
         this.instance = ret.get(0);
     }
 
-    /**
-     * Stop receiving from current pipeline.
+ 
+     /**
+     * Start the pipeline.
      */
-    public void stop() throws IOException {
+    public void start() throws IOException, InterruptedException {
+        if ((pipelineName == null) && (config == null)) {
+            if (getInstances().contains(instanceId)) {
+                startInstance(instanceId);
+            } else {
+                startPipeline(instanceId, instanceId);
+            }
+        } else {
+            if (getInstances().contains(instanceId)) {
+                //If instance id is present connect to it instead of raising errors
+                Logger.getLogger(PipelineStream.class.getName()).warning("Instance already present in server: " + instanceId);
+                this.startInstance(instanceId);
+            } else {            
+                if (config != null) {
+                    startPipeline(config, instanceId);
+                } else {
+                    startPipeline(pipelineName, instanceId);
+                }
+            }
+        }
+
+        if (stream != null) {
+            stream.addListener(new DeviceAdapter() {
+                @Override
+                public void onCacheChanged(Device device, Object value, Object former, long timestamp, boolean valueChange) {
+                    setCache(value, timestamp);
+                }
+            });            
+            stream.initialize();
+            if (isMonitored()) {
+                startReceiver();
+            }
+        }  
+    }
+    
+    /**
+     * Stop the pipeline.
+     */
+    public void stop() {
         if (stream != null) {
             try {
                 stream.close();
@@ -508,6 +554,7 @@ public class PipelineStream extends DeviceBase implements ch.psi.pshell.device.R
     @Override
     protected void doClose() throws IOException {
         configChangeListener = null;
+        stop();
         super.doClose();
     }
 

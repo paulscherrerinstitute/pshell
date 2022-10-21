@@ -161,10 +161,12 @@ public class MonitorScan extends LineScan {
     }
 
     static Readable[] getReadables(Device trigger, Readable[] readables, boolean async) {
-        for (int i = 0; i < readables.length; i++) {
-            if (async || (readables[i] == trigger)) {
-                if (readables[i] instanceof Cacheable){
-                    readables[i] = ((Cacheable) readables[i]).getCache();
+        if (readables!=null){
+            for (int i = 0; i < readables.length; i++) {
+                if (async || (readables[i] == trigger)) {
+                    if (readables[i] instanceof Cacheable){
+                        readables[i] = ((Cacheable) readables[i]).getCache();
+                    }
                 }
             }
         }
