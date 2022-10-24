@@ -28,12 +28,13 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.zeromq.ZMQ;
 
 /**
  * A device implementing a beam synchronous string, having, for each identifier,
  * a corresponding Scalar or Waveform child.
  */
-public class Stream extends DeviceBase implements Readable<StreamValue>, Cacheable<StreamValue>, ReadableType{
+public class Stream extends DeviceBase implements Readable<StreamValue>, Cacheable<StreamValue>, ReadableType {
 
     public static final int TIMEOUT_START_STREAMING = 10000;
 
@@ -62,29 +63,40 @@ public class Stream extends DeviceBase implements Readable<StreamValue>, Cacheab
         return ((Provider) getParent()).getSocketType();
     }
 
-    public Stream(String name, boolean persisted) {
-        this(name, (Provider)null, persisted);
+    public String getSocketTypeStr() {
+        switch (getSocketType()) {
+            case ZMQ.PULL:
+                return SocketType.PULL.toString();
+            case ZMQ.SUB:
+                return SocketType.SUB.toString();
+            default:
+                return "";
+        }
     }
 
-    
+    public Stream(String name, boolean persisted) {
+        this(name, (Provider) null, persisted);
+    }
+
     @Override
     public Class _getElementType() {
         return Long.class;
-    }    
+    }
+
     /**
      * If provider is null then uses default provider.
      */
     public Stream(String name, Provider provider, boolean persisted) {
         this(name, provider, null, null, persisted);
     }
-    
+
     protected Stream(String name, Provider provider, String address, SocketType socketType, boolean persisted) {
         super(name, persisted ? new StreamConfig() : null);
         if (converter == null) {
             converter = new MatlabByteConverter();
         }
         if (provider == null) {
-            if (address==null){
+            if (address == null) {
                 provider = Provider.getOrCreateDefault();
                 privateProvider = (provider != Provider.getDefault());
             } else {
@@ -136,11 +148,11 @@ public class Stream extends DeviceBase implements Readable<StreamValue>, Cacheab
         this(name, provider);
         setFilter(filter);
     }
-    
+
     public Stream(String name, Provider provider, String filter, Incomplete incomplete) {
         this(name, provider, filter);
         setIncomplete(incomplete);
-    }    
+    }
 
     public Stream(String name, Scalar... channels) {
         this(name, null, channels);
@@ -155,43 +167,40 @@ public class Stream extends DeviceBase implements Readable<StreamValue>, Cacheab
         this(name, provider, channels);
         setIncomplete(incomplete);
     }
-    
+
     public Stream(String name, Provider provider, String filter, Incomplete incomplete, Scalar... channels) {
         this(name, provider, incomplete, channels);
         setFilter(filter);
-    }    
-    
-    
+    }
+
     public Stream(String name, String address, boolean pull) {
         this(name, address, pull ? SocketType.PULL : ProviderConfig.SocketType.SUB);
     }
-    
+
     public Stream(String name, String address, SocketType socketType) {
         this(name, null, address, socketType, false);
     }
-    
-    
+
     public Incomplete mappingIncomplete;
-    
-    public void setIncomplete(String mappingIncomplete){
+
+    public void setIncomplete(String mappingIncomplete) {
         setIncomplete(Incomplete.valueOf(mappingIncomplete));
     }
-    
-    public void setIncomplete(Incomplete mappingIncomplete){
+
+    public void setIncomplete(Incomplete mappingIncomplete) {
         this.mappingIncomplete = mappingIncomplete;
     }
 
-    public Incomplete getIncomplete(){
-        if (mappingIncomplete != null){
+    public Incomplete getIncomplete() {
+        if (mappingIncomplete != null) {
             return mappingIncomplete;
         }
-        if (getConfig()!=null){
+        if (getConfig() != null) {
             return getConfig().mappingIncomplete;
         }
         return null;
     }
 
-    
     @Override
     protected void doInitialize() throws IOException, InterruptedException {
         stop();
@@ -243,8 +252,9 @@ public class Stream extends DeviceBase implements Readable<StreamValue>, Cacheab
     }
 
     final Object lock = new Object();
+
     public Scalar addScalar(String name, String id, int modulo, int offset) throws IOException, InterruptedException {
-        synchronized(lock){
+        synchronized (lock) {
             assertStateNot(State.Busy);
             Scalar scalar = new Scalar(name, this, id, modulo, offset);
             addChild(scalar);
@@ -260,7 +270,7 @@ public class Stream extends DeviceBase implements Readable<StreamValue>, Cacheab
     }
 
     public Waveform addWaveform(String name, String id, int modulo, int offset, int size) throws IOException, InterruptedException {
-        synchronized(lock){
+        synchronized (lock) {
             assertStateNot(State.Busy);
             Waveform waveform = new Waveform(name, this, id, modulo, offset, size);
             addChild(waveform);
@@ -272,7 +282,7 @@ public class Stream extends DeviceBase implements Readable<StreamValue>, Cacheab
     }
 
     public Matrix addMatrix(String name, String id, int modulo, int offset, int width, int height) throws IOException, InterruptedException {
-        synchronized(lock){
+        synchronized (lock) {
             assertStateNot(State.Busy);
             Matrix matrix = new Matrix(name, this, id, modulo, offset, width, height);
             addChild(matrix);
@@ -334,7 +344,7 @@ public class Stream extends DeviceBase implements Readable<StreamValue>, Cacheab
                 }
             }
             if (started.get()) {
-                getLogger().finer("Receiver thread was interrupted");                
+                getLogger().finer("Receiver thread was interrupted");
             } else {
                 getLogger().finer("Receiver was closed");
             }
@@ -367,7 +377,7 @@ public class Stream extends DeviceBase implements Readable<StreamValue>, Cacheab
             thread.setDaemon(true);
             setState(State.Busy);
             thread.start();
-            channelPrefix = ((Provider) getParent()).getAddress();  
+            channelPrefix = ((Provider) getParent()).getAddress();
         }
     }
 
@@ -379,7 +389,7 @@ public class Stream extends DeviceBase implements Readable<StreamValue>, Cacheab
         if (thread != null) {
             try {
                 long start = System.currentTimeMillis();
-                while ((thread != null) && (thread.isAlive())){
+                while ((thread != null) && (thread.isAlive())) {
                     if (System.currentTimeMillis() - start > 1000) {
                         getLogger().log(Level.WARNING, "Receiver did't quit: interrupting thread");
                         //TODO: Killing thread because it blocks  if no message is received
@@ -575,17 +585,18 @@ public class Stream extends DeviceBase implements Readable<StreamValue>, Cacheab
         return true;
     }
 
-    LinkedHashMap<String, Object> streamCache = new  LinkedHashMap<>();
+    LinkedHashMap<String, Object> streamCache = new LinkedHashMap<>();
+
     protected void onMessage(long pulse_id, long timestamp, long nanosOffset, Map<String, ValueImpl> data) {
-        boolean fill_null = (getIncomplete() == Incomplete.fill_null) && fixedChildren ;                
-        
-        if (!fixedChildren){
+        boolean fill_null = (getIncomplete() == Incomplete.fill_null) && fixedChildren;
+
+        if (!fixedChildren) {
             streamCache.clear();
-        } else if (fill_null){
-            for (String name:channelNames){
+        } else if (fill_null) {
+            for (String name : channelNames) {
                 streamCache.put(name, null);
             }
-        } 
+        }
 
         for (String channel : data.keySet()) {
             Scalar c = channels.get(channel);
@@ -603,7 +614,7 @@ public class Stream extends DeviceBase implements Readable<StreamValue>, Cacheab
                     }
                 }
                 if (c != null) {
-                    if (c.getUseLocalTimestamp() && (v.getTimestamp() != null)){
+                    if (c.getUseLocalTimestamp() && (v.getTimestamp() != null)) {
                         devTimestamp = v.getTimestamp().getAsMillis();
                         devNanosOffset = v.getTimestamp().getNs() % 1000000L;
                     }
@@ -618,10 +629,10 @@ public class Stream extends DeviceBase implements Readable<StreamValue>, Cacheab
             if (debug) {
                 System.out.println(channel + ": " + Str.toString(val, 100));
             }
-            if (!fixedChildren){
+            if (!fixedChildren) {
                 streamCache.put(channel, val);
-            } else if (fill_null){
-                if (channelNames.contains(channel)){
+            } else if (fill_null) {
+                if (channelNames.contains(channel)) {
                     streamCache.put(channel, val);
                 }
             }
@@ -636,7 +647,7 @@ public class Stream extends DeviceBase implements Readable<StreamValue>, Cacheab
 
         if (fixedChildren) {
             //If ids are declared, value list is fixed and ordered 
-            if (getIncomplete() == Incomplete.fill_null){
+            if (getIncomplete() == Incomplete.fill_null) {
                 //Null values are cached
                 setCache(new StreamValue(pulse_id, timestamp, nanosOffset, channelNames, new ArrayList(streamCache.values())), timestamp, nanosOffset);
             } else {
@@ -740,16 +751,17 @@ public class Stream extends DeviceBase implements Readable<StreamValue>, Cacheab
         }
         return timestampReader;
     }
-    
+
     String channelPrefix;
+
     @Hidden
-    public String getChannelPrefix(){
+    public String getChannelPrefix() {
         return channelPrefix;
     }
 
     @Hidden
-    public void setChannelPrefix(String channelPrefix){
+    public void setChannelPrefix(String channelPrefix) {
         this.channelPrefix = channelPrefix;
-    }    
-    
+    }
+
 }
