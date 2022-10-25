@@ -65,7 +65,8 @@ public class MatrixPlotRenderer extends MatrixPlotBase {
     @Override
     protected void onTitleChanged() {
         title.setFont(getTitleFont());
-    }    
+        title.setText((getTitle()   ==null) ? "" : getTitle());
+    }
 
     private Renderer getRenderer() {
         if (renderer == null) {
@@ -298,7 +299,7 @@ public class MatrixPlotRenderer extends MatrixPlotBase {
     @Override
     protected Object onAddedSeries(MatrixPlotSeries series) {
         dataBuffer = null;
-        title.setText(series.getName());
+        //title.setText(series.getName());
         return dataBuffer;
     }
 

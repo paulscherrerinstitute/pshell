@@ -136,18 +136,19 @@ public class PlotPanel extends MonitoredPanel {
         }
     }
 
-    public PlotLayout getPlotLayout() {
-        try {
-            try {
-                if (prefs.plotLayout != null) {
-                    return prefs.plotLayout;
-                }
-            } catch (Exception ex) {
-            }
+    static public PlotLayout getDefaultLayout() {
+        try{
             return PlotLayout.valueOf(System.getProperty(PROPERTY_PLOT_LAYOUT));
         } catch (Exception ex) {
             return DEFAULT_PLOT_LAYOUT;
         }
+    }    
+    
+    public PlotLayout getPlotLayout() {
+        if (prefs.plotLayout != null) {
+            return prefs.plotLayout;
+        }
+        return getDefaultLayout();
     }
 
     final ArrayList<Plot> plots;
@@ -757,7 +758,7 @@ public class PlotPanel extends MonitoredPanel {
                     int ySize = recordSize[0];
                     series = new MatrixPlotSeries(name, start[0], end[0], steps[0] + 1, 0, ySize - 1, ySize);
                 } else if (recordDimensions == 2) {
-                    series = new MatrixPlotSeries(name, 0, recordSize[0], recordSize[0], 0, recordSize[1], recordSize[1]);
+                    series = new MatrixPlotSeries(name, recordSize[0], recordSize[1]);
                 } else {
                     return null;
                 }

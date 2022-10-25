@@ -74,6 +74,14 @@ public interface Plugin extends ch.psi.pshell.core.Plugin {
         return (DevicePanel) getApp().getDevicePanelManager().showPanel(device, getTopLevel());
     }
 
+    default boolean hideDevicePanel(String device) {
+        return getApp().getDevicePanelManager().hidePanel(device);
+    }    
+    
+    default boolean hideDevicePanel(Device device) {
+        return getApp().getDevicePanelManager().hidePanel(device);
+    }        
+    
     default Renderer showRenderer(String name) {
         GenericDevice c = getDevice(name);
         if (c instanceof Source) {
@@ -85,6 +93,16 @@ public interface Plugin extends ch.psi.pshell.core.Plugin {
     default Renderer showRenderer(Source source) {
         return (Renderer) getApp().getDevicePanelManager().showPanel(source, getTopLevel());
     }
+
+    default boolean hideRenderer(String source) {
+        return getApp().getDevicePanelManager().hidePanel(source);
+    }    
+    
+    default boolean hideRenderer(Source source) {
+        return getApp().getDevicePanelManager().hidePanel(source);
+    }    
+    
+    
     default void showSettingsEditor(boolean modal) {
         showPropertiesEditor(getContext().getSettingsFile(), modal);
     }

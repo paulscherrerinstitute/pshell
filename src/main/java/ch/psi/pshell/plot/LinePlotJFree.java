@@ -724,8 +724,13 @@ public class LinePlotJFree extends LinePlotBase {
     protected void onTitleChanged() {
         chartPanel.setName(getTitle());
         chart.setTitle(getTitle());
-        if ((getTitleFont() != null) && (chart.getTitle() != null)) {
-            chart.getTitle().setFont(getTitleFont());
+        if (chart.getTitle() != null){
+            if (getTitleFont() != null) {
+                chart.getTitle().setFont(getTitleFont());
+            }
+            if (chart.getTitle() != null) {
+                chart.getTitle().setPaint(getAxisTextColor());
+            }       
         }
     }
 

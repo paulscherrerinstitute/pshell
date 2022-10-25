@@ -264,7 +264,7 @@ public class RendererMenu extends JPopupMenu {
                 return;
             }
             Dimension size = new Dimension(matrix[0].length, matrix.length);
-            MatrixPlotSeries series = new MatrixPlotSeries("Image Plot", 0, size.width - 1, size.width, 0, size.height - 1, size.height);
+            MatrixPlotSeries series = new MatrixPlotSeries("Image Plot", size);
             PlotPanel.addSurfacePlotMenu((MatrixPlotBase) plot);
             plot.setTitle(null);
             plot.addSeries(series);

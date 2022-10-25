@@ -49,6 +49,7 @@ public class PlotPanel extends MonitoredPanel {
         pnGraphs.setLayout(new GridBagLayout());
         plots = new ArrayList<>();
         sliceSeriesData = new HashMap<>();
+        pnGraphs.setBackground(Color.red);
     }
 
     public List<Plot> getPlots() {
@@ -127,7 +128,7 @@ public class PlotPanel extends MonitoredPanel {
             case Horizontal:
                 panelIndexX++;
                 break;
-            case Vertical:
+            case Vertical:  
                 panelIndexY++;
                 break;
             default:

@@ -168,6 +168,11 @@ public class DevicePanelManager {
         return (deviceDialogs.containsKey(name));
     }
     
+    
+    public JDialog getPanelDialog(GenericDevice device) {
+        return getPanelDialog(device.getName());
+    }
+    
     public JDialog getPanelDialog(final String name) {
         if (name == null) {
             return null;
@@ -175,6 +180,20 @@ public class DevicePanelManager {
         return (deviceDialogs.get(name));
     }
     
+    
+    public boolean hidePanel(final GenericDevice device) {
+        return hidePanel(device.getName());
+    }  
+
+    public boolean hidePanel(final String device) {
+        JDialog dlg = getPanelDialog(device);
+        if (dlg==null){
+            return false;
+        }
+        dlg.setVisible(false);
+        dlg.dispose();
+        return true;
+    }
 
     public boolean isShowingPanel(final GenericDevice device) {
         if (device == null) {

@@ -22,8 +22,10 @@ import javax.swing.Timer;
 import javax.swing.border.TitledBorder;
 import ch.psi.pshell.core.ContextListener;
 import ch.psi.pshell.device.GenericDevice;
+import ch.psi.pshell.ui.App;
 import ch.psi.utils.swing.ConfigDialog;
 import java.awt.Component;
+import javax.swing.JPanel;
 
 /**
  * Device panels should only read cached values (take) or execute direct device access in private
@@ -337,6 +339,7 @@ public class DevicePanel extends MonitoredPanel {
         if (device != null) {
             device.removeListener(listener);
         }
+        stopTimer();
     }
 
     //A configurable timer
@@ -393,6 +396,15 @@ public class DevicePanel extends MonitoredPanel {
         return showConfigEditor(this, getDevice(), modal, readOnly);
     }        
     
+
+    public JPanel showDevicePanel(GenericDevice device) {
+        return App.getInstance().getDevicePanelManager().showPanel(device, getFrame());
+    }
+    
+    public boolean hideDevicePanel(GenericDevice device) {
+        return App.getInstance().getDevicePanelManager().hidePanel(device);
+    }
+
     protected String getDeviceTooltip(){
         if (device==null){
             return null;

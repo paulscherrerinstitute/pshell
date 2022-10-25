@@ -128,7 +128,7 @@ public class DeviceValueChart extends DevicePanel {
                     chart = (MatrixPlotBase) Plot.newPlot(PlotPanel.getMatrixPlotImpl());
                     ((MatrixPlotBase) chart).getAxis(Plot.AxisId.Y).setInverted(invertedScale);
                     ReadonlyRegisterMatrix reg = (ReadonlyRegisterMatrix) device;
-                    series = new MatrixPlotSeries(device.getName(), 0, reg.getWidth() - 1, reg.getWidth(), 0, reg.getHeight() - 1, reg.getHeight());
+                    series = new MatrixPlotSeries(device.getName(),reg.getWidth(), reg.getHeight());
                     ((MatrixPlotBase) chart).addSeries((MatrixPlotSeries) series);
                     if (device instanceof ReadableCalibratedMatrix) {
                         ReadableCalibratedMatrix cm = (ReadableCalibratedMatrix) device;

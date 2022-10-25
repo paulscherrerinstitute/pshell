@@ -30,6 +30,7 @@ public class PipelineStream extends ReadonlyRegisterBase<StreamValue> implements
 
     String pipeline;
     String instance;
+    boolean push;
 
     Stream stream;
 
@@ -364,7 +365,7 @@ public class PipelineStream extends ReadonlyRegisterBase<StreamValue> implements
 
     void startInstance(String instanceId) throws IOException {
         stop();
-        boolean push = false;
+        push = false;
         String streamUrl = getStream(instanceId);
         try {
             push = proxy.isPush(pipelineName);
@@ -379,10 +380,10 @@ public class PipelineStream extends ReadonlyRegisterBase<StreamValue> implements
 
     void startPipeline(String pipelineName, String instanceId) throws IOException {
         stop();
-        boolean push = false;
+        push = false;
         List<String> ret = createFromName(pipelineName, instanceId);
         try {
-            push = proxy.isPush(instanceId);
+            push = proxy.isPush(ret.get(0));
         } catch (Exception ex) {
             Logger.getLogger(PipelineStream.class.getName()).log(Level.WARNING, null, ex);
         }
@@ -393,10 +394,10 @@ public class PipelineStream extends ReadonlyRegisterBase<StreamValue> implements
 
     void startPipeline(Map<String, Object> config, String instanceId) throws IOException {
         stop();
-        boolean push = false;
+        push = false;
         List<String> ret = createFromConfig(config, instanceId);
         try {
-            push = proxy.isPush(instanceId);
+            push = proxy.isPush(ret.get(0));
         } catch (Exception ex) {
             Logger.getLogger(PipelineStream.class.getName()).log(Level.WARNING, null, ex);
         }
@@ -555,7 +556,43 @@ public class PipelineStream extends ReadonlyRegisterBase<StreamValue> implements
     protected void doClose() throws IOException {
         configChangeListener = null;
         stop();
+        for (Device d: this.getComponents()){
+            try {
+                d.close();
+            } catch (Exception ex) {
+                Logger.getLogger(PipelineStream.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
         super.doClose();
     }
 
+    public Stream createSubsampled(double maxFrameRate) throws IOException, InterruptedException{
+        return createSubsampled(maxFrameRate, null);
+    }
+    
+    public Stream createSubsampled(int downsampling) throws IOException, InterruptedException{
+        return createSubsampled(null, downsampling);
+    }    
+    
+    protected Stream createSubsampled(Double maxFrameRate, Integer downsampling) throws IOException, InterruptedException{
+        Map<String, Object> config = new HashMap<>();
+        config.put("name", instance + "_subsampled");
+        config.put("input_mode", push ? "PULL" : "SUB");
+        config.put("input_pipeline", instanceId);
+        config.put("pipeline_type", "stream");
+        config.put("mode", "PUB");
+        config.put("function", "propagate_stream");
+        if (maxFrameRate!=null){
+            config.put("max_frame_rate", maxFrameRate);
+        } else {
+            config.put("downsampling", downsampling);
+        }
+        List<String> ret = createFromConfig(config, null);
+        Stream stream = new Stream(getName() + " subsampled", ret.get(1), false);
+        stream.setMonitored(true);
+        stream.initialize();
+        stream.start(true);
+        addComponent(stream);
+        return stream;
+    }       
 }

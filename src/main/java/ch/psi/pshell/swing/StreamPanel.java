@@ -10,6 +10,8 @@ import ch.psi.utils.Arr;
 import ch.psi.utils.Convert;
 import ch.psi.utils.State;
 import ch.psi.utils.Str;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.util.Collections;
 import java.util.List;
 import java.util.logging.Level;
@@ -27,6 +29,25 @@ public class StreamPanel extends DevicePanel {
     public StreamPanel() {
         initComponents();
         model = (DefaultTableModel) table.getModel();
+        table.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                try {
+                    if ((e.getClickCount() == 2) && (!e.isPopupTrigger())) {
+                        int row = table.getSelectedRow();
+                        if (row>=0){
+                             String channel =model.getValueAt(table.convertRowIndexToModel(row),0).toString();
+                             Device child = getDevice().getChild(channel);
+                             showDevicePanel(child);     
+                        }
+                    }
+                } catch (Exception ex) {
+                    showException(ex);
+                }
+            }
+       });
+        
+        
     }
     
     @Override
@@ -60,19 +81,30 @@ public class StreamPanel extends DevicePanel {
     }
     
     void clear(){
+        stopTimer();
         textAddress.setText("");
+        textTimestamp.setText("");
+        textId.setText("");
         textType.setText(null); 
         model.setNumRows(0);
-        stopTimer();
+        validate();
+        repaint();
     }
 
     
-    void updateTable(StreamValue sv){
+    public void updateTable(){
+        StreamValue sv = getDevice().take();
+        
         int index = 0;
         if (sv==null){
+            textTimestamp.setText("");
+            textId.setText("");
             model.setNumRows(0);
             return;
         }
+        textId.setText(Str.toString(sv.getPulseId()));
+        textTimestamp.setText(Str.toString(sv.getTimestamp()));
+
         List<String> keys= sv.getKeys();
         Collections.sort(keys);
         model.setNumRows(keys.size());
@@ -104,7 +136,7 @@ public class StreamPanel extends DevicePanel {
             index++;
         }  
     }
-    
+   
     
     /**
      * This method is called from within the constructor to initialize the form.
@@ -115,12 +147,18 @@ public class StreamPanel extends DevicePanel {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
+        textAddress = new javax.swing.JTextField();
         jScrollPane1 = new javax.swing.JScrollPane();
         table = new javax.swing.JTable();
         jLabel1 = new javax.swing.JLabel();
-        textAddress = new javax.swing.JTextField();
-        jLabel2 = new javax.swing.JLabel();
         textType = new javax.swing.JTextField();
+        jLabel2 = new javax.swing.JLabel();
+        jLabel3 = new javax.swing.JLabel();
+        textId = new javax.swing.JTextField();
+        jLabel4 = new javax.swing.JLabel();
+        textTimestamp = new javax.swing.JTextField();
+
+        textAddress.setEditable(false);
 
         table.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
@@ -150,43 +188,64 @@ public class StreamPanel extends DevicePanel {
 
         jLabel1.setText("Address:");
 
-        textAddress.setEditable(false);
+        textType.setEditable(false);
+        textType.setHorizontalAlignment(javax.swing.JTextField.CENTER);
 
         jLabel2.setText("Type:");
 
-        textType.setEditable(false);
-        textType.setHorizontalAlignment(javax.swing.JTextField.CENTER);
+        jLabel3.setText("ID:");
+
+        textId.setEditable(false);
+        textId.setHorizontalAlignment(javax.swing.JTextField.CENTER);
+
+        jLabel4.setText("Timestamp:");
+
+        textTimestamp.setEditable(false);
+        textTimestamp.setHorizontalAlignment(javax.swing.JTextField.CENTER);
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(layout.createSequentialGroup()
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addComponent(jScrollPane1)
+                    .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
                         .addComponent(jLabel1)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(textAddress, javax.swing.GroupLayout.DEFAULT_SIZE, 207, Short.MAX_VALUE)
+                        .addComponent(textAddress)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addComponent(jLabel2)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(textType, javax.swing.GroupLayout.PREFERRED_SIZE, 73, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addGroup(layout.createSequentialGroup()
-                        .addContainerGap()
-                        .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)))
+                    .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
+                        .addComponent(jLabel3)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(textId, javax.swing.GroupLayout.PREFERRED_SIZE, 200, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 65, Short.MAX_VALUE)
+                        .addComponent(jLabel4)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(textTimestamp, javax.swing.GroupLayout.PREFERRED_SIZE, 200, javax.swing.GroupLayout.PREFERRED_SIZE)))
                 .addContainerGap())
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+            .addGroup(layout.createSequentialGroup()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel1)
                     .addComponent(textAddress, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jLabel2)
                     .addComponent(textType, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 121, Short.MAX_VALUE)
-                .addContainerGap())
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 159, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel3)
+                    .addComponent(textId, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jLabel4)
+                    .addComponent(textTimestamp, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(9, 9, 9))
         );
     }// </editor-fold>//GEN-END:initComponents
 
@@ -194,9 +253,13 @@ public class StreamPanel extends DevicePanel {
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
+    private javax.swing.JLabel jLabel3;
+    private javax.swing.JLabel jLabel4;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JTable table;
     private javax.swing.JTextField textAddress;
+    private javax.swing.JTextField textId;
+    private javax.swing.JTextField textTimestamp;
     private javax.swing.JTextField textType;
     // End of variables declaration//GEN-END:variables
 
@@ -215,7 +278,7 @@ public class StreamPanel extends DevicePanel {
     protected void onTimer() {
         try{
             if ((getDevice()!=null) && chacheChanged){
-                updateTable(getDevice().take());
+                updateTable();
             }
         } catch (Exception ex){
             getLogger().log(Level.WARNING, null, ex);

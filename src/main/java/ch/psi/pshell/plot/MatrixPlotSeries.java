@@ -1,5 +1,6 @@
 package ch.psi.pshell.plot;
 
+import java.awt.Dimension;
 import java.util.Arrays;
 import java.util.logging.Logger;
 
@@ -33,6 +34,14 @@ public class MatrixPlotSeries extends PlotSeries<MatrixPlot> {
 
     public MatrixPlotSeries(String name) {
         super(name);
+    }
+    
+    public MatrixPlotSeries(String name, Dimension size) {
+        this(name, size.width, size.height);
+    }
+    
+    public MatrixPlotSeries(String name, int width, int height) {
+        this(name, 0, width-1, width,0, height-1, height);
     }
 
     public MatrixPlotSeries(String name, double minX, double maxX, int nX, double minY, double maxY, int nY) {
