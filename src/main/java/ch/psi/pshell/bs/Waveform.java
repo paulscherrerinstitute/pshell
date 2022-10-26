@@ -2,17 +2,18 @@ package ch.psi.pshell.bs;
 
 import java.lang.reflect.Array;
 import ch.psi.pshell.device.ReadonlyRegister.ReadonlyRegisterArray;
+import ch.psi.utils.Convert;
 import java.io.IOException;
 
 /**
  * Represents a 1-dimensional array element in a BS stream.
  */
-public class Waveform<T> extends Scalar<T> implements ReadonlyRegisterArray<T> {
+public class Waveform<T> extends StreamChannel<T> implements ReadonlyRegisterArray<T> {
 
     Integer size;
 
     public Waveform(String name, Stream stream) {
-        super(name, stream, new ScalarConfig());
+        super(name, stream, new StreamChannelConfig());
     }
 
     public Waveform(String name, Stream stream, String id) {

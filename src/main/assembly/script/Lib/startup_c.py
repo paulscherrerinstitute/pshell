@@ -454,6 +454,7 @@ from ch.psi.pshell.bs import Stream as Stream
 from ch.psi.pshell.bs import Provider as Provider
 from ch.psi.pshell.bs import Dispatcher as Dispatcher
 from ch.psi.pshell.bs import Scalar as Scalar
+from ch.psi.pshell.bs import StreamChannel as StreamChannel
 from ch.psi.pshell.bs import Waveform as Waveform
 from ch.psi.pshell.bs import Matrix as Matrix
 from ch.psi.pshell.bs import StreamCamera as StreamCamera
@@ -461,7 +462,7 @@ from ch.psi.pshell.bs import CameraServer as CameraServer
 from ch.psi.pshell.bs import PipelineServer as PipelineServer
 from ch.psi.pshell.bs import ProviderConfig as ProviderConfig
 from ch.psi.pshell.bs import StreamConfig as StreamConfig
-from ch.psi.pshell.bs import ScalarConfig as ScalarConfig
+from ch.psi.pshell.bs import StreamChannelConfig as StreamChannelConfig
 from ch.psi.pshell.bs import WaveformConfig as WaveformConfig
 from ch.psi.pshell.bs import MatrixConfig as MatrixConfig
 

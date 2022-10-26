@@ -291,7 +291,7 @@ public class DevicePoolEditor extends Editor {
                 ch.psi.pshell.bs.Provider.class.getName(),
                 ch.psi.pshell.bs.Dispatcher.class.getName(),
                 ch.psi.pshell.bs.Stream.class.getName(),
-                ch.psi.pshell.bs.Scalar.class.getName(),
+                ch.psi.pshell.bs.StreamChannel.class.getName(),
                 ch.psi.pshell.bs.Waveform.class.getName(),
                 ch.psi.pshell.bs.Matrix.class.getName(),
                 ch.psi.pshell.bs.StreamCamera.class.getName(),

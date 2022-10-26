@@ -1,6 +1,6 @@
 package ch.psi.pshell.core;
 
-import ch.psi.pshell.bs.Scalar;
+import ch.psi.pshell.bs.StreamChannel;
 import ch.psi.pshell.bs.Stream;
 import ch.psi.pshell.camserver.PipelineSource;
 import ch.psi.pshell.device.ArrayAverager;
@@ -273,15 +273,15 @@ public class InlineDevice extends DeviceBase implements Readable, Writable {
                 } else {
                     //Use existing channel if already defined
                     for (Device d : ((Stream) getParent()).getChildren()) {
-                        if (d instanceof Scalar) {
-                            if (String.valueOf(id).equals(((Scalar) d).getId())) {
+                        if (d instanceof StreamChannel) {
+                            if (String.valueOf(id).equals(((StreamChannel) d).getId())) {
                                 ret = d;
                             }
                         }
                     }
                     if (ret == null) {
-                        int modulo = Scalar.DEFAULT_MODULO;
-                        int offset = Scalar.DEFAULT_OFFSET;
+                        int modulo = StreamChannel.DEFAULT_MODULO;
+                        int offset = StreamChannel.DEFAULT_OFFSET;
                         boolean waveform = false;
                         int sz = -1;
                         int width = -1;

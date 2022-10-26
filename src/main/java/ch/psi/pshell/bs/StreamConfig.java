@@ -74,17 +74,17 @@ public class StreamConfig extends DeviceConfig {
     public String channel49;
     public String channel50;
 
-    ArrayList<ScalarConfig> getChannels() {
-        ArrayList<ScalarConfig> ret = new ArrayList<>();
+    ArrayList<StreamChannelConfig> getChannels() {
+        ArrayList<StreamChannelConfig> ret = new ArrayList<>();
         try {
             for (int i = 1; i <= 1000; i++) {
                 Field f = StreamConfig.class.getField("channel" + String.format("%02d", i));
-                ScalarConfig cc = null;
+                StreamChannelConfig cc = null;
                 String val = ((String) (f.get(this)));
                 if (val != null) {
                     String[] tokens = val.split(" ");
                     if (DeviceConfig.isStringDefined(tokens[0].trim())) {
-                        cc = new ScalarConfig();
+                        cc = new StreamChannelConfig();
                         cc.id = tokens[0];
                         if (tokens.length > 0) {
                             try {

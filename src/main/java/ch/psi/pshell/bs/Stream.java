@@ -9,6 +9,7 @@ import ch.psi.bsread.ReceiverConfig;
 import ch.psi.bsread.message.ValueImpl;
 import ch.psi.pshell.device.Device;
 import ch.psi.bsread.converter.MatlabByteConverter;
+import ch.psi.bsread.message.ChannelConfig;
 import ch.psi.pshell.bs.ProviderConfig.SocketType;
 import ch.psi.pshell.bs.StreamConfig.Incomplete;
 import ch.psi.pshell.device.Cacheable;
@@ -39,7 +40,7 @@ public class Stream extends DeviceBase implements Readable<StreamValue>, Cacheab
     public static final int TIMEOUT_START_STREAMING = 10000;
 
     Thread thread;
-    final Map<String, Scalar> channels;
+    final Map<String, StreamChannel> channels;
     final List<String> channelNames;
     final List<Readable> readables;
     static MatlabByteConverter converter;
@@ -84,6 +85,17 @@ public class Stream extends DeviceBase implements Readable<StreamValue>, Cacheab
     }
 
     /**
+     * Direct URL
+     */    
+    public Stream(String name, String address, boolean pull) {
+        this(name, address, pull ? SocketType.PULL : ProviderConfig.SocketType.SUB);
+    }
+
+    public Stream(String name, String address, SocketType socketType) {
+        this(name, null, address, socketType, false);
+    }    
+    
+    /**
      * If provider is null then uses default provider.
      */
     public Stream(String name, Provider provider, boolean persisted) {
@@ -119,8 +131,8 @@ public class Stream extends DeviceBase implements Readable<StreamValue>, Cacheab
         setMonitored(true);
         if (persisted) {
             setFilter(getConfig().filter);
-            ArrayList<ScalarConfig> cfg = getConfig().getChannels();
-            for (ScalarConfig cc : cfg) {
+            ArrayList<StreamChannelConfig> cfg = getConfig().getChannels();
+            for (StreamChannelConfig cc : cfg) {
                 if (cc != null) {
                     if (cc.id.startsWith("[")) {
                         addChild(new Waveform(cc.id.substring(1), this, cc.id.substring(1), cc.precision, cc.offset));
@@ -154,31 +166,23 @@ public class Stream extends DeviceBase implements Readable<StreamValue>, Cacheab
         setIncomplete(incomplete);
     }
 
-    public Stream(String name, Scalar... channels) {
+    public Stream(String name, StreamChannel... channels) {
         this(name, null, channels);
     }
 
-    public Stream(String name, Provider provider, Scalar... channels) {
+    public Stream(String name, Provider provider, StreamChannel... channels) {
         this(name, provider, false);
         setChildren(channels);
     }
 
-    public Stream(String name, Provider provider, Incomplete incomplete, Scalar... channels) {
+    public Stream(String name, Provider provider, Incomplete incomplete, StreamChannel... channels) {
         this(name, provider, channels);
         setIncomplete(incomplete);
     }
 
-    public Stream(String name, Provider provider, String filter, Incomplete incomplete, Scalar... channels) {
+    public Stream(String name, Provider provider, String filter, Incomplete incomplete, StreamChannel... channels) {
         this(name, provider, incomplete, channels);
         setFilter(filter);
-    }
-
-    public Stream(String name, String address, boolean pull) {
-        this(name, address, pull ? SocketType.PULL : ProviderConfig.SocketType.SUB);
-    }
-
-    public Stream(String name, String address, SocketType socketType) {
-        this(name, null, address, socketType, false);
     }
 
     public Incomplete mappingIncomplete;
@@ -210,17 +214,17 @@ public class Stream extends DeviceBase implements Readable<StreamValue>, Cacheab
         readables.clear();
         readables.add(this);
         for (Device dev : getChildren()) {
-            if (dev instanceof Scalar) {
-                appendChild((Scalar) dev);
+            if (dev instanceof StreamChannel) {
+                appendChild((StreamChannel) dev);
             }
         }
         //fixed by first initialize
         if (fixedChildren == null) {
-            fixedChildren = Arr.containsClass(getChildren(), Scalar.class);
+            fixedChildren = Arr.containsClass(getChildren(), StreamChannel.class);
         }
     }
 
-    void appendChild(Scalar c) {
+    void appendChild(StreamChannel c) {
         channels.put(c.getId(), c);
         channelNames.add(c.getId());
         readables.add(c);
@@ -253,10 +257,39 @@ public class Stream extends DeviceBase implements Readable<StreamValue>, Cacheab
 
     final Object lock = new Object();
 
-    public Scalar addScalar(String name, String id, int modulo, int offset) throws IOException, InterruptedException {
+    
+    public StreamChannel addChannel(String id) throws IOException, InterruptedException {
+        return addScalar(id, id);
+    }
+    
+    public StreamChannel addChannel(String name, String id) throws IOException, InterruptedException {
+           return addScalar(name, id, 1, 0);
+    }
+     
+    public StreamChannel addChannel(String name, String id, int modulo, int offset) throws IOException, InterruptedException {
         synchronized (lock) {
             assertStateNot(State.Busy);
-            Scalar scalar = new Scalar(name, this, id, modulo, offset);
+            StreamChannel channel = new StreamChannel(name, this, id, modulo, offset);
+            addChild(channel);
+            if (isInitialized()) {
+                doInitialize();
+            }
+            return channel;
+        }
+    }
+    
+    public StreamChannel addScalar(String id) throws IOException, InterruptedException {
+        return addScalar(id, id);
+    }
+    
+    public StreamChannel addScalar(String name, String id) throws IOException, InterruptedException {
+           return addScalar(name, id, 1, 0);
+    }
+     
+    public StreamChannel addScalar(String name, String id, int modulo, int offset) throws IOException, InterruptedException {
+        synchronized (lock) {
+            assertStateNot(State.Busy);
+            StreamChannel scalar = new Scalar(name, this, id, modulo, offset);
             addChild(scalar);
             if (isInitialized()) {
                 doInitialize();
@@ -265,10 +298,22 @@ public class Stream extends DeviceBase implements Readable<StreamValue>, Cacheab
         }
     }
 
+    public StreamChannel addWaveform(String id) throws IOException, InterruptedException {
+        return addWaveform(id, id);
+    }
+        
+    public StreamChannel addWaveform(String name, String id) throws IOException, InterruptedException {
+           return addWaveform(name, id, 1, 0);
+    }
+    
     public Waveform addWaveform(String name, String id, int modulo, int offset) throws IOException, InterruptedException {
         return addWaveform(name, id, modulo, offset, -1);
     }
 
+    public StreamChannel addWaveform(String name, String id, int size) throws IOException, InterruptedException {
+        return addWaveform(name, id, 1, 0, size);
+    }
+    
     public Waveform addWaveform(String name, String id, int modulo, int offset, int size) throws IOException, InterruptedException {
         synchronized (lock) {
             assertStateNot(State.Busy);
@@ -281,6 +326,19 @@ public class Stream extends DeviceBase implements Readable<StreamValue>, Cacheab
         }
     }
 
+    public StreamChannel addMatrix(String id) throws IOException, InterruptedException {
+        return addMatrix(id, id);
+    }
+    
+    public Matrix addMatrix(String name, String id) throws IOException, InterruptedException {
+        return addMatrix(name, id, 1,0);
+    }
+    
+    public Matrix addMatrix(String name, String id, int modulo, int offset) throws IOException, InterruptedException {
+        return addMatrix(name, id, modulo,offset, -1, -1);
+    }
+    
+    
     public Matrix addMatrix(String name, String id, int modulo, int offset, int width, int height) throws IOException, InterruptedException {
         synchronized (lock) {
             assertStateNot(State.Busy);
@@ -314,7 +372,7 @@ public class Stream extends DeviceBase implements Readable<StreamValue>, Cacheab
             ReceiverConfig config = ((Provider) getParent()).getReceiverConfig(this);
             ArrayList<ch.psi.bsread.configuration.Channel> channelsConfig = new ArrayList<>();
             for (String channel : channels.keySet()) {
-                Scalar c = channels.get(channel);
+                StreamChannel c = channels.get(channel);
                 ch.psi.bsread.configuration.Channel channelConfig = new ch.psi.bsread.configuration.Channel(
                         c.getId(), c.getModulo(), c.getOffset());
                 channelsConfig.add(channelConfig);
@@ -337,7 +395,8 @@ public class Stream extends DeviceBase implements Readable<StreamValue>, Cacheab
                                 long pulseId = msg.getMainHeader().getPulseId();
                                 long timestamp = msg.getMainHeader().getGlobalTimestamp().getAsMillis();
                                 long nanosOffset = msg.getMainHeader().getGlobalTimestamp().getNs() % 1000000L;
-                                onMessage(pulseId, timestamp, nanosOffset, data);
+                                Map<String, ChannelConfig> channelConfig = msg.getDataHeader().getChannelsMapping();
+                                onMessage(pulseId, timestamp, nanosOffset, data, channelConfig);
                             }
                         }
                     }
@@ -587,7 +646,7 @@ public class Stream extends DeviceBase implements Readable<StreamValue>, Cacheab
 
     LinkedHashMap<String, Object> streamCache = new LinkedHashMap<>();
 
-    protected void onMessage(long pulse_id, long timestamp, long nanosOffset, Map<String, ValueImpl> data) {
+    protected void onMessage(long pulse_id, long timestamp, long nanosOffset, Map<String, ValueImpl> data, Map<String, ChannelConfig> config) {
         boolean fill_null = (getIncomplete() == Incomplete.fill_null) && fixedChildren;
 
         if (!fixedChildren) {
@@ -599,7 +658,8 @@ public class Stream extends DeviceBase implements Readable<StreamValue>, Cacheab
         }
 
         for (String channel : data.keySet()) {
-            Scalar c = channels.get(channel);
+            StreamChannel c = channels.get(channel);
+            ChannelConfig cfg = config.get(channel);
             ValueImpl v = data.get(channel);
             Object val = v.getValue();
             long devTimestamp = timestamp;
@@ -618,12 +678,12 @@ public class Stream extends DeviceBase implements Readable<StreamValue>, Cacheab
                         devTimestamp = v.getTimestamp().getAsMillis();
                         devNanosOffset = v.getTimestamp().getNs() % 1000000L;
                     }
-                    c.set(pulse_id, devTimestamp, devNanosOffset, val);
+                    c.set(pulse_id, devTimestamp, devNanosOffset, val, cfg);
                 }
             } catch (Exception ex) {
                 getLogger().log(Level.FINE, null, ex);
                 if (c != null) {
-                    c.set(pulse_id, devTimestamp, devNanosOffset, null);
+                    c.set(pulse_id, devTimestamp, devNanosOffset, null, cfg);
                 }
             }
             if (debug) {
@@ -649,14 +709,14 @@ public class Stream extends DeviceBase implements Readable<StreamValue>, Cacheab
             //If ids are declared, value list is fixed and ordered 
             if (getIncomplete() == Incomplete.fill_null) {
                 //Null values are cached
-                setCache(new StreamValue(pulse_id, timestamp, nanosOffset, channelNames, new ArrayList(streamCache.values())), timestamp, nanosOffset);
+                setCache(new StreamValue(pulse_id, timestamp, nanosOffset, channelNames, new ArrayList(streamCache.values()),config), timestamp, nanosOffset);
             } else {
                 //If received null value caches last value
-                setCache(new StreamValue(pulse_id, timestamp, nanosOffset, channelNames, Arrays.asList(getChildrenValues())), timestamp, nanosOffset);
+                setCache(new StreamValue(pulse_id, timestamp, nanosOffset, channelNames, Arrays.asList(getChildrenValues()), config), timestamp, nanosOffset);
             }
         } else {
             //Else caches everything received            
-            setCache(new StreamValue(pulse_id, timestamp, nanosOffset, new ArrayList(streamCache.keySet()), new ArrayList(streamCache.values())), timestamp, nanosOffset);
+            setCache(new StreamValue(pulse_id, timestamp, nanosOffset, new ArrayList(streamCache.keySet()), new ArrayList(streamCache.values()), config), timestamp, nanosOffset);
         }
     }
 
@@ -688,6 +748,22 @@ public class Stream extends DeviceBase implements Readable<StreamValue>, Cacheab
     public Object getValue(int index) {
         return getCurrentValue().getValue(index);
     }
+    
+    public  ChannelConfig  getChannelConfig(String id) {
+         return getCurrentValue().getChannelConfig(id);
+    }     
+    
+    public  ChannelConfig  getChannelConfig(int index) {
+         return getCurrentValue().getChannelConfig(index);
+    }     
+    
+    public int[]  getShape(String id) {
+         return getCurrentValue().getShape(id);
+    }     
+    
+    public int[]  getShape(int index) {
+         return getCurrentValue().getShape(index);
+    }        
 
     public static List readChannels(List<String> names, int modulo, int offset, int timeout) throws IOException, InterruptedException {
         Stream stream = new Stream(null);

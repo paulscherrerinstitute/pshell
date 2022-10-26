@@ -1,6 +1,6 @@
 package ch.psi.pshell.ui;
 
-import ch.psi.pshell.bs.Scalar;
+import ch.psi.pshell.bs.StreamChannel;
 import ch.psi.pshell.bs.Stream;
 import ch.psi.pshell.camserver.PipelineSource;
 import ch.psi.pshell.core.Context;
@@ -402,7 +402,7 @@ public class StripChart extends StandardDialog {
                         tooltip = "Format: DeviceName";
                         break;
                     case Stream:
-                        tooltip = "Format: Identifier [Modulo=" + Scalar.DEFAULT_MODULO + " Offset=" + Scalar.DEFAULT_OFFSET + " GlobalTime=true]";
+                        tooltip = "Format: Identifier [Modulo=" + StreamChannel.DEFAULT_MODULO + " Offset=" + StreamChannel.DEFAULT_OFFSET + " GlobalTime=true]";
                         break;
                     case CamServer:
                         tooltip = "Format: URL Identifier";
@@ -1462,8 +1462,8 @@ public class StripChart extends StandardDialog {
                         }
                         break;
                     case Stream:
-                        int modulo = Scalar.DEFAULT_MODULO;
-                        int offset = Scalar.DEFAULT_OFFSET;
+                        int modulo = StreamChannel.DEFAULT_MODULO;
+                        int offset = StreamChannel.DEFAULT_OFFSET;
                         boolean useGlobalTimestamp = true;
                         if (name.contains(" ")) {
                             String[] tokens = name.split(" ");
@@ -1477,7 +1477,7 @@ public class StripChart extends StandardDialog {
                         }
                         dev = stream.addScalar(name, name, modulo, offset);
                         Logger.getLogger(StripChart.class.getName()).finer("Adding channel to stream: " + name);
-                        ((Scalar) dev).setUseLocalTimestamp(!useGlobalTimestamp);
+                        ((StreamChannel) dev).setUseLocalTimestamp(!useGlobalTimestamp);
                         streamDevices--;
                         break;
                     case CamServer:

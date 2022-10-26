@@ -1,6 +1,6 @@
 package ch.psi.pshell.scan;
 
-import ch.psi.pshell.bs.Scalar;
+import ch.psi.pshell.bs.StreamChannel;
 import ch.psi.pshell.bs.Stream;
 import ch.psi.pshell.bs.StreamValue;
 import ch.psi.pshell.core.InlineDevice;
@@ -104,7 +104,7 @@ public class MonitorScan extends LineScan {
             for (Readable r : readables) {
                 Device src = getSourceDevice(r);
                 if (src != null){
-                    if ((src instanceof Scalar) || (src instanceof Stream.PidReader) || (src instanceof Stream.TimestampReader)) {
+                    if ((src instanceof StreamChannel) || (src instanceof Stream.PidReader) || (src instanceof Stream.TimestampReader)) {
                         trigger = ((Device) src).getParent();
                         break;
                     }

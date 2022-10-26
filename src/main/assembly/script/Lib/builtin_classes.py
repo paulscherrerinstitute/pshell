@@ -242,6 +242,7 @@ import ch.psi.pshell.bs.Stream as Stream
 import ch.psi.pshell.bs.Provider as Provider
 import ch.psi.pshell.bs.ProviderConfig.SocketType as SocketType
 import ch.psi.pshell.bs.Dispatcher as Dispatcher
+import ch.psi.pshell.bs.StreamChannel as StreamChannel
 import ch.psi.pshell.bs.Scalar as Scalar
 import ch.psi.pshell.bs.Waveform as Waveform
 import ch.psi.pshell.bs.Matrix as Matrix
@@ -250,7 +251,7 @@ import ch.psi.pshell.bs.CameraServer as CameraServer
 import ch.psi.pshell.bs.PipelineServer as PipelineServer
 import ch.psi.pshell.bs.ProviderConfig as ProviderConfig
 import ch.psi.pshell.bs.StreamConfig as StreamConfig
-import ch.psi.pshell.bs.ScalarConfig as ScalarConfig
+import ch.psi.pshell.bs.StreamChannelConfig as StreamChannelConfig
 import ch.psi.pshell.bs.WaveformConfig as WaveformConfig
 import ch.psi.pshell.bs.MatrixConfig as MatrixConfig
 

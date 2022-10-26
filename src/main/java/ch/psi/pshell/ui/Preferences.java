@@ -1,6 +1,6 @@
 package ch.psi.pshell.ui;
 
-import ch.psi.pshell.bs.Scalar;
+import ch.psi.pshell.bs.StreamChannel;
 import ch.psi.pshell.bs.Stream;
 import ch.psi.pshell.camserver.PipelineStream;
 import ch.psi.pshell.core.Context;
@@ -39,7 +39,7 @@ import ch.psi.pshell.swing.MasterPositionerPanel;
 import ch.psi.pshell.swing.PipelineStreamPanel;
 import ch.psi.pshell.swing.ScalerPanel;
 import ch.psi.pshell.swing.StreamPanel;
-import ch.psi.pshell.swing.StreamValuePanel;
+import ch.psi.pshell.swing.StreamChannelPanel;
 import ch.psi.utils.IO;
 import ch.psi.utils.Str;
 import ch.psi.utils.Arr;
@@ -286,7 +286,7 @@ public class Preferences {
             new DefaultPanel(HistogramGenerator.class.getName(), HistogramGeneratorPanel.class.getName()),
             new DefaultPanel(Stream.class.getName(), StreamPanel.class.getName()),   
             new DefaultPanel(PipelineStream.class.getName(), PipelineStreamPanel.class.getName()),   
-            new DefaultPanel(Scalar.class.getName(), StreamValuePanel.class.getName()),   
+            new DefaultPanel(StreamChannel.class.getName(), StreamChannelPanel.class.getName()),   
             new DefaultPanel(ReadonlyRegister.ReadonlyRegisterArray.class.getName(), DeviceValueChart.class.getName()),
             new DefaultPanel(ReadonlyRegister.ReadonlyRegisterMatrix.class.getName(), DeviceValueChart.class.getName()),            
         };

@@ -196,7 +196,7 @@ public class Dispatcher extends Provider {
     @Override
     protected void createStream(Stream stream) throws IOException {
         List channels = new ArrayList();
-        for (Scalar s : stream.channels.values()) {
+        for (StreamChannel s : stream.channels.values()) {
             List channel = new ArrayList();
             channel.add(s.getId());
             channel.add(s.getModulo());
