@@ -4,12 +4,12 @@ package ch.psi.pshell.swing;
 import ch.psi.pshell.bs.ProviderConfig.SocketType;
 import ch.psi.pshell.bs.Stream;
 import ch.psi.pshell.bs.StreamValue;
-import ch.psi.pshell.camserver.PipelineStream;
 import ch.psi.pshell.device.Device;
 import ch.psi.utils.Arr;
 import ch.psi.utils.Convert;
 import ch.psi.utils.State;
 import ch.psi.utils.Str;
+import ch.psi.utils.swing.SwingUtils;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.Collections;
@@ -25,6 +25,9 @@ public class StreamPanel extends DevicePanel {
 
     final DefaultTableModel model;
     volatile boolean chacheChanged;
+    volatile boolean updating;
+    volatile Device monitoredDevice;
+    
     
     public StreamPanel() {
         initComponents();
@@ -46,8 +49,6 @@ public class StreamPanel extends DevicePanel {
                 }
             }
        });
-        
-        
     }
     
     @Override
@@ -57,25 +58,24 @@ public class StreamPanel extends DevicePanel {
     
     @Override
     public void setDevice(Device device) {
-        if ((device!=null) && (device instanceof PipelineStream)){
-            super.setDevice(((PipelineStream)device).getStream());
-        } else {
-            super.setDevice(device);
-        }
-        
+        super.setDevice(device);
+        monitoredDevice = getDevice();
         if (getDevice() != null) {
             onDeviceStateChanged(getDevice().getState(), null);
             textAddress.setText(getDevice().getAddress());
             textType.setText(getDevice().getSocketType() == ZMQ.PULL ?
                     SocketType.PULL.toString() : 
                     SocketType.SUB.toString());
-            this.startTimer(1000, 10);
+            startTimer(1000, 10);
         } else {
             clear();
         }
         updateButtons();  
     }
    
+    protected void setMonitoredDevice(Device device){
+        monitoredDevice = device;
+    }
     
     void updateButtons(){             
     }
@@ -87,8 +87,6 @@ public class StreamPanel extends DevicePanel {
         textId.setText("");
         textType.setText(null); 
         model.setNumRows(0);
-        validate();
-        repaint();
     }
 
     
@@ -137,7 +135,6 @@ public class StreamPanel extends DevicePanel {
         }  
     }
    
-    
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -157,6 +154,7 @@ public class StreamPanel extends DevicePanel {
         textId = new javax.swing.JTextField();
         jLabel4 = new javax.swing.JLabel();
         textTimestamp = new javax.swing.JTextField();
+        ckMonitored = new javax.swing.JCheckBox();
 
         textAddress.setEditable(false);
 
@@ -203,6 +201,13 @@ public class StreamPanel extends DevicePanel {
         textTimestamp.setEditable(false);
         textTimestamp.setHorizontalAlignment(javax.swing.JTextField.CENTER);
 
+        ckMonitored.setText("Monitored");
+        ckMonitored.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                ckMonitoredActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
@@ -215,15 +220,17 @@ public class StreamPanel extends DevicePanel {
                         .addComponent(jLabel1)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(textAddress)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jLabel2)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(textType, javax.swing.GroupLayout.PREFERRED_SIZE, 73, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addComponent(textType, javax.swing.GroupLayout.PREFERRED_SIZE, 60, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addComponent(ckMonitored))
                     .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
                         .addComponent(jLabel3)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(textId, javax.swing.GroupLayout.PREFERRED_SIZE, 200, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 65, Short.MAX_VALUE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 81, Short.MAX_VALUE)
                         .addComponent(jLabel4)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(textTimestamp, javax.swing.GroupLayout.PREFERRED_SIZE, 200, javax.swing.GroupLayout.PREFERRED_SIZE)))
@@ -236,7 +243,8 @@ public class StreamPanel extends DevicePanel {
                     .addComponent(jLabel1)
                     .addComponent(textAddress, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jLabel2)
-                    .addComponent(textType, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(textType, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(ckMonitored))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 159, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -249,8 +257,21 @@ public class StreamPanel extends DevicePanel {
         );
     }// </editor-fold>//GEN-END:initComponents
 
+    private void ckMonitoredActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ckMonitoredActionPerformed
+        try{
+            if (!updating){
+                if (monitoredDevice!=null){
+                    monitoredDevice.setMonitored(ckMonitored.isSelected());
+                }
+            }
+        } catch (Exception ex){
+            SwingUtils.showException(this, ex);
+        }
+    }//GEN-LAST:event_ckMonitoredActionPerformed
+
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JCheckBox ckMonitored;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
@@ -276,14 +297,19 @@ public class StreamPanel extends DevicePanel {
     
     @Override
     protected void onTimer() {
-        try{
-            if ((getDevice()!=null) && chacheChanged){
-                updateTable();
+        try{    
+            if ((getDevice()!=null)){
+                if (chacheChanged){
+                    updateTable();
+                }
+                updating = true;
+                ckMonitored.setSelected(monitoredDevice.isMonitored());
             }
         } catch (Exception ex){
             getLogger().log(Level.WARNING, null, ex);
         } finally{
             chacheChanged = false;
+            updating = false;
         }
     }    
 }

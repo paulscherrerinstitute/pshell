@@ -36,6 +36,7 @@ import ch.psi.pshell.swing.CodeEditor;
 import ch.psi.pshell.swing.DeviceValueChart;
 import ch.psi.pshell.swing.HistogramGeneratorPanel;
 import ch.psi.pshell.swing.MasterPositionerPanel;
+import ch.psi.pshell.swing.PipelineStreamPanel;
 import ch.psi.pshell.swing.ScalerPanel;
 import ch.psi.pshell.swing.StreamPanel;
 import ch.psi.pshell.swing.StreamValuePanel;
@@ -284,7 +285,7 @@ public class Preferences {
             new DefaultPanel(Slit.class.getName(), SlitPanel.class.getName()),
             new DefaultPanel(HistogramGenerator.class.getName(), HistogramGeneratorPanel.class.getName()),
             new DefaultPanel(Stream.class.getName(), StreamPanel.class.getName()),   
-            new DefaultPanel(PipelineStream.class.getName(), StreamPanel.class.getName()),   
+            new DefaultPanel(PipelineStream.class.getName(), PipelineStreamPanel.class.getName()),   
             new DefaultPanel(Scalar.class.getName(), StreamValuePanel.class.getName()),   
             new DefaultPanel(ReadonlyRegister.ReadonlyRegisterArray.class.getName(), DeviceValueChart.class.getName()),
             new DefaultPanel(ReadonlyRegister.ReadonlyRegisterMatrix.class.getName(), DeviceValueChart.class.getName()),            

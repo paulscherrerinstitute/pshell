@@ -167,6 +167,7 @@ public class DevicePanel extends MonitoredPanel {
 
     @Override
     protected void onDesactive() {
+        stopTimer();
         if (contextListener != null) {
             Context.getInstance().removeListener(contextListener);
             contextListener = null;
@@ -339,9 +340,8 @@ public class DevicePanel extends MonitoredPanel {
         if (device != null) {
             device.removeListener(listener);
         }
-        stopTimer();
     }
-
+    
     //A configurable timer
     Timer timer;
 

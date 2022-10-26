@@ -37,6 +37,10 @@ public class PipelineStream extends ReadonlyRegisterBase<StreamValue> implements
     public PipelineClient getClient() {
         return client;
     }
+    
+    public ProxyClient getProxy() {
+        return proxy;
+    }
 
     public PipelineStream(String name, String url, String instanceId) {
         super(name, null);
