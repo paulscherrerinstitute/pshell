@@ -65,7 +65,7 @@ public class TextEditor extends Editor {
     public static Color FOREGROUND_COLOR_DARK = new Color(187, 187, 187);
     public static Color BACKGROUND_COLOR_DARK = new Color(43, 43, 43);
 
-        public static Color getForegroundColor(){
+    public static Color getForegroundColor(){
         return MainFrame.isDark() ? FOREGROUND_COLOR_DARK : FOREGROUND_COLOR;
     }
     

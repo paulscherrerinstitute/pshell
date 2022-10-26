@@ -41,15 +41,15 @@ import java.util.logging.Logger;
  */
 public class Shell extends MonitoredPanel {
 
-    public static final Color OUTPUT_COLOR = MainFrame.isDark() ? Color.LIGHT_GRAY : Color.DARK_GRAY;
-    public static final Color ERROR_COLOR = MainFrame.isDark() ? new Color(255, 70, 70) : Color.RED;
-    public static final Color INPUT_COLOR = MainFrame.isDark() ? new Color(100, 100, 255) : Color.BLUE;
-    public static final Color REMOTE_COLOR = Color.GRAY;
+    static Color colorOutput;
+    static Color colorError;
+    static Color colorInput;
+    static Color colorRemote;
 
-    public static final Color STDOUT_COLOR = MainFrame.isDark() ? new Color(187, 187, 187) : Color.BLACK;
-    public static final Color STDERR_COLOR = MainFrame.isDark() ? new Color(255, 0, 255) : Color.MAGENTA;
-    public static final Color STDIN_COLOR = MainFrame.isDark() ? new Color(0, 200, 0) : Color.GREEN;
-
+    static Color colorStdout;
+    static Color colorStderr;
+    static Color colorStdin;
+    
     int historyIndex = -1;
 
     ScrollPopupMenu popupAutoComp;
@@ -64,15 +64,62 @@ public class Shell extends MonitoredPanel {
         initComponents();
         input.setFocusTraversalKeys(KeyboardFocusManager.FORWARD_TRAVERSAL_KEYS, Collections.EMPTY_SET);
         commandExecutor = Executors.newSingleThreadExecutor(new NamedThreadFactory("Shell command executor"));
+        onLafChange();
     }
 
+    @Override
+    protected final void onLafChange() {  
+        if (MainFrame.isDark()){
+            colorOutput = Color.LIGHT_GRAY ;
+            colorError = new Color(255, 70, 70);
+            colorInput = new Color(100, 100, 255);
+            colorRemote = Color.GRAY;
+            colorStdout = new Color(187, 187, 187);
+            colorStderr = new Color(255, 0, 255);
+            colorStdin = new Color(0, 200, 0);               
+        } else {
+            colorOutput = Color.DARK_GRAY;
+            colorError =  Color.RED;
+            colorInput = Color.BLUE;
+            colorRemote = Color.GRAY;
+            colorStdout = Color.BLACK;
+            colorStderr = Color.MAGENTA;
+            colorStdin = Color.GREEN;  
+        }
+     
+    }        
+    
+    public static Color getColorOutput(){
+        return colorOutput;
+    }
+    
+    public static Color getColorError(){
+        return colorError;
+    }
+
+    public static Color getColorInput(){
+        return colorInput;
+    }
+
+    public static Color getColorRemote(){
+        return colorRemote;
+    }
+
+    public static Color getColorStdout(){
+        return colorStdout;
+    }
+
+    public static Color getColorStderr(){
+        return colorStderr;
+    }    
+
+    public static Color getColorStdin(){
+        return colorStdin;
+    }
+    
     public void initialize() {
         clear();
         input.setEditable(true);
-        if (MainFrame.isDark()) {
-            //input.setBackground(DevicePanel.TEXT_EDIT_BACKGROUND_COLOR);
-            //input.setBackground(new Color(52, 52, 52));
-        }
         input.requestFocus();
         Context.getInstance().addListener(contextListener);
     }
@@ -91,7 +138,7 @@ public class Shell extends MonitoredPanel {
         @Override
         public void onShellCommand(CommandSource source, String command) {
             if (source.isDisplayable()){
-                output.append(Context.getInstance().getCursor(command) + command + "\n", (source == CommandSource.ui) ? INPUT_COLOR : REMOTE_COLOR);
+                output.append(Context.getInstance().getCursor(command) + command + "\n", (source == CommandSource.ui) ? colorInput : colorRemote);
             }
         }
 
@@ -100,9 +147,9 @@ public class Shell extends MonitoredPanel {
             if (result != null) {
                 if (source.isDisplayable()){               
                     if (result instanceof Throwable) {
-                        output.append(Console.getPrintableMessage((Throwable) result) + "\n", ERROR_COLOR);
+                        output.append(Console.getPrintableMessage((Throwable) result) + "\n", colorError);
                     } else {
-                        output.append(Context.getInstance().interpreterVariableToString(result) + "\n", (source == CommandSource.ui) ? OUTPUT_COLOR : REMOTE_COLOR);
+                        output.append(Context.getInstance().interpreterVariableToString(result) + "\n", (source == CommandSource.ui) ? colorOutput : colorRemote);
                     }
                 }
             }
@@ -110,17 +157,17 @@ public class Shell extends MonitoredPanel {
 
         @Override
         public void onShellStdout(String str) {
-            output.append(str + "\n", STDOUT_COLOR);
+            output.append(str + "\n", colorStdout);
         }
 
         @Override
         public void onShellStderr(String str) {
-            output.append(str + "\n", STDERR_COLOR);
+            output.append(str + "\n", colorStderr);
         }
 
         @Override
         public void onShellStdin(String str) {
-            output.append(str + "\n", STDIN_COLOR);
+            output.append(str + "\n", colorStdin);
         }
 
         @Override
@@ -268,7 +315,7 @@ public class Shell extends MonitoredPanel {
             if (!Context.getInstance().getExecutionPars().isScanDisplayed(scan)){
                 return;
             }            
-            output.append(scan.getHeader("\t") + "\n", STDOUT_COLOR);
+            output.append(scan.getHeader("\t") + "\n", colorStdout);
         }
 
         @Override
@@ -276,7 +323,7 @@ public class Shell extends MonitoredPanel {
             if (!Context.getInstance().getExecutionPars().isScanDisplayed(scan)){
                 return;
             }            
-            output.append(record.print("\t") + "\n", STDOUT_COLOR);
+            output.append(record.print("\t") + "\n", colorStdout);
         }
 
         @Override
@@ -451,7 +498,7 @@ public class Shell extends MonitoredPanel {
                         try {
                             submit(ScriptStdio.END_OF_LINES, true);
                         } catch (Exception ex) {
-                            output.append(ex.getMessage() + "\n", ERROR_COLOR);
+                            output.append(ex.getMessage() + "\n", colorError);
                         }
                     }
                     input.setText("");
@@ -526,7 +573,7 @@ public class Shell extends MonitoredPanel {
                     submit(command, false);
                 }
             } catch (Exception ex) {
-                output.append("Cannot execute command: " + ex.getMessage() + "\n", ERROR_COLOR);
+                output.append("Cannot execute command: " + ex.getMessage() + "\n", colorError);
             }
             input.setText("");
         } else if ((modifiers & KeyEvent.CTRL_MASK) != 0) {

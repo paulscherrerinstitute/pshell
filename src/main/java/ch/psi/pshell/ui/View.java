@@ -159,6 +159,7 @@ import java.awt.dnd.DropTargetEvent;
 import java.util.HashSet;
 import java.util.Set;
 import javax.swing.BoxLayout;
+import javax.swing.ButtonGroup;
 import javax.swing.DefaultCellEditor;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
@@ -186,6 +187,7 @@ public class View extends MainFrame {
     String[] imageFileExtensions = new String[]{"png", "bmp", "gif", "tif", "tiff", "jpg", "jpeg"};
     String[] textFileExtensions = new String[]{"txt", "csv", "log"};
     String[] dataFileExtensions = new String[]{"h5", "hdf5"};
+    
 
     public View() {
         super();
@@ -315,6 +317,7 @@ public class View extends MainFrame {
                 }
             } catch (Exception ex){                
             }
+           
             JRadioButtonMenuItem lafItem = new JRadioButtonMenuItem(laf.toString());
             lafItem.addActionListener((java.awt.event.ActionEvent evt) -> {
                 if (!App.isLocalMode()) {
@@ -326,7 +329,7 @@ public class View extends MainFrame {
                     }
                 } 
                 setLookAndFeel(laf.toString());
-               
+                updateLafMenu();
             });
             menuLaf.add(lafItem);
         }
@@ -642,6 +645,16 @@ public class View extends MainFrame {
         }
     }
 
+    void updateLafMenu(){
+        for (Component item : menuLaf.getMenuComponents()) {
+            try{
+                String text = ((JRadioButtonMenuItem) item).getText();
+                boolean enabled = text.equals(getLookAndFeelType().toString());
+                ((JRadioButtonMenuItem) item).setSelected(enabled);
+            } catch(Exception ex){
+            }
+        }
+    }
     void onFirstStart() {
         //setupPanelsMenu()
         if (context.getConfig().instanceName.length() > 0) {
@@ -4405,13 +4418,14 @@ public class View extends MainFrame {
     }//GEN-LAST:event_menuConfigurationActionPerformed
 
     private void menuViewStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_menuViewStateChanged
-        if (menuView.isSelected()) {
-            try {
-                menuViewPlotWindow.setSelected(isPlotsVisible());
+        try {
+            if (menuView.isSelected()) {
+                    menuViewPlotWindow.setSelected(isPlotsVisible());
                 menuFullScreen.setSelected(isFullScreen());
                 menuTerminal.setSelected(isTerminalVisible());
                 menuScanPanel.setSelected(isScanPanelVisible());
                 menuOutput.setSelected(isOutputPanelVisible());
+                updateLafMenu();
                 for (Component item : menuConsoleLocation.getMenuComponents()) {
                     ((JRadioButtonMenuItem) item).setSelected(((JRadioButtonMenuItem) item).getText().equals(consoleLocation.toString()));
                 }
@@ -4422,17 +4436,11 @@ public class View extends MainFrame {
                         ((JCheckBoxMenuItem) item).setSelected(preferences.openDataFilesInDocTab);
                     }
                 }
-                for (Component item : menuLaf.getMenuComponents()) {
-                    try{
-                        ((JRadioButtonMenuItem) item).setSelected(((JRadioButtonMenuItem) item).getText().equals(getLookAndFeelType().toString()));
-                    } catch(Exception ex){
-                        
-                    }
-                }
-            } catch (Exception ex) {
-                showException(ex);
             }
+        } catch (Exception ex) {
+            showException(ex);
         }
+
     }//GEN-LAST:event_menuViewStateChanged
 
     private void menuViewPlotWindowActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuViewPlotWindowActionPerformed

@@ -678,7 +678,6 @@ abstract public class PlotBase<T extends PlotSeries> extends MonitoredPanel impl
     }
 
     public static Color getGridColor() {
-
         return (gridColor==null)? (MainFrame.isDark() ? DEFAULT_GRID_COLOR_DARK : DEFAULT_GRID_COLOR) : gridColor;
     }
     

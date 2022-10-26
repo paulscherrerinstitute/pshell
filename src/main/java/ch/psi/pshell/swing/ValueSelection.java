@@ -23,6 +23,18 @@ public class ValueSelection extends MonitoredPanel implements Observable<ValueSe
     public final static Color TEXT_EDIT_BACKGROUND_COLOR_DARK  = new Color(43, 43, 43);
     public final static Color TEXT_READONLY_BACKGROUND_COLOR_DARK  =new Color(92, 92, 92);
     
+    public static Color getTextDisplayBackgroundColor(){
+        return MainFrame.isDark() ? TEXT_DISPLAY_BACKGROUND_COLOR_DARK : TEXT_DISPLAY_BACKGROUND_COLOR;
+    }
+        
+    public static Color getTextEditBackgroundColor(){
+        return MainFrame.isDark() ?  TEXT_EDIT_BACKGROUND_COLOR_DARK : TEXT_EDIT_BACKGROUND_COLOR;
+    }
+
+    public static Color getTextReadonlyBackgroundColor(){
+        return MainFrame.isDark() ? TEXT_READONLY_BACKGROUND_COLOR_DARK : TEXT_READONLY_BACKGROUND_COLOR;
+    }
+    
     public ValueSelection() {
         initComponents();
         showButtons = true;

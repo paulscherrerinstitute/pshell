@@ -70,37 +70,37 @@ public class OutputPanel extends MonitoredPanel {
     final ContextListener contextListener = new ContextAdapter() {
         @Override
         public void onShellStdout(String str) {
-            outputTextPane.append(str + "\n", Shell.STDOUT_COLOR);
+            outputTextPane.append(str + "\n", Shell.getColorStdout());
         }
 
         @Override
         public void onShellStderr(String str) {
-            outputTextPane.append(str + "\n", Shell.STDERR_COLOR);
+            outputTextPane.append(str + "\n", Shell.getColorStderr());
         }
 
         @Override
         public void onShellStdin(String str) {
-            outputTextPane.append(str + "\n", Shell.STDIN_COLOR);
+            outputTextPane.append(str + "\n", Shell.getColorStdin());
         }
 
         @Override
         public void onExecutingFile(String fileName) {
             String scriptName = Context.getInstance().getStandardScriptName(fileName);
-            outputTextPane.append(getTaskInitMessage(scriptName) + "\n", Shell.OUTPUT_COLOR);
+            outputTextPane.append(getTaskInitMessage(scriptName) + "\n", Shell.getColorOutput());
         }
 
         @Override
         public void onExecutedFile(String fileName, Object result) {
             if (result != null) {
                 if (result instanceof Throwable) {
-                    outputTextPane.append(Console.getPrintableMessage((Throwable) result) + "\n", Shell.ERROR_COLOR);
+                    outputTextPane.append(Console.getPrintableMessage((Throwable) result) + "\n", Shell.getColorError());
                 } else {
-                    outputTextPane.append(String.valueOf(result) + "\n", Shell.OUTPUT_COLOR);
+                    outputTextPane.append(String.valueOf(result) + "\n", Shell.getColorOutput());
                 }
             }
 
             String scriptName = Context.getInstance().getStandardScriptName(fileName);
-            outputTextPane.append(getTaskFinishMessage(scriptName) + "\n", Shell.OUTPUT_COLOR);
+            outputTextPane.append(getTaskFinishMessage(scriptName) + "\n", Shell.getColorOutput());
         }
     };
 
@@ -116,11 +116,11 @@ public class OutputPanel extends MonitoredPanel {
     static int outputMaxLength = -1;
 
     public void putOutput(String str) {
-        outputTextPane.append(str + "\n", Shell.OUTPUT_COLOR);
+        outputTextPane.append(str + "\n", Shell.getColorOutput());
     }
 
     public void putError(String str) {
-        outputTextPane.append(str + "\n", Shell.ERROR_COLOR);
+        outputTextPane.append(str + "\n", Shell.getColorError());
     }
 
     //Properties     

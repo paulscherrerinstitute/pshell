@@ -401,10 +401,10 @@ public class ScanEditorPanel extends MonitoredPanel implements Processor {
             }
             cmd.append(String.join(", ", getParameters()));
             cmd.append(")");
-            textCommand.setForeground(Shell.STDOUT_COLOR);
+            textCommand.setForeground(Shell.getColorStdout());
             textCommand.setText(cmd.toString());
         } catch (Exception ex) {
-            textCommand.setForeground(Color.RED);
+            textCommand.setForeground(Shell.getColorError());
             textCommand.setText(ex.getMessage());
         }
     }

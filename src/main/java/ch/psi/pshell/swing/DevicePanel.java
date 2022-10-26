@@ -33,20 +33,19 @@ import javax.swing.JPanel;
  */
 public class DevicePanel extends MonitoredPanel {
 
+    public DevicePanel() {
+    }
+   
     public Color getTextDisplayBackgroundColor(){
-        return MainFrame.isDark() ? ValueSelection.TEXT_DISPLAY_BACKGROUND_COLOR_DARK : ValueSelection.TEXT_DISPLAY_BACKGROUND_COLOR;
+        return ValueSelection.getTextDisplayBackgroundColor();
     }
         
     public Color getTextEditBackgroundColor(){
-        return MainFrame.isDark() ? ValueSelection.TEXT_EDIT_BACKGROUND_COLOR_DARK : ValueSelection.TEXT_EDIT_BACKGROUND_COLOR;
+        return ValueSelection.getTextDisplayBackgroundColor();
     }
 
     public Color getTextReadonlyBackgroundColor(){
-        return MainFrame.isDark() ? ValueSelection.TEXT_READONLY_BACKGROUND_COLOR_DARK : ValueSelection.TEXT_READONLY_BACKGROUND_COLOR;
-    
-    }
-    
-    public DevicePanel() {
+        return ValueSelection.getTextDisplayBackgroundColor();
     }
 
     protected Logger getLogger() {

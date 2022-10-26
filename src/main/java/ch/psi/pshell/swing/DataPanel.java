@@ -154,7 +154,7 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
                         }
                     }
                 } catch (Exception ex) {
-                    textProperties.append("\n" + ex.getMessage(), Shell.ERROR_COLOR);
+                    textProperties.append("\n" + ex.getMessage(), Shell.getColorError());
                     textProperties.setCaretPosition(0);
                 }
             }
@@ -1144,16 +1144,16 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
         textProperties.clear();
         if ((file != null) && (treeFolderModel != null)) {
             if (!file.equals(treeFolderModel.root)) { //Not to compute the whole folder size
-                textProperties.append("Type:     " + (file.isDirectory() ? "Folder" : IO.getExtension(file)) + "\n", Shell.STDOUT_COLOR);
+                textProperties.append("Type:     " + (file.isDirectory() ? "Folder" : IO.getExtension(file)) + "\n", Shell.getColorStdout());
                 try {
                     BasicFileAttributes attr = Files.readAttributes(Paths.get(file.getPath()), BasicFileAttributes.class);
-                    textProperties.append("Creation: " + Chrono.getTimeStr(attr.creationTime().toMillis(), "dd/MM/YY HH:mm\n"), Shell.STDOUT_COLOR);
-                    textProperties.append("Accessed: " + Chrono.getTimeStr(attr.lastAccessTime().toMillis(), "dd/MM/YY HH:mm\n"), Shell.STDOUT_COLOR);
-                    textProperties.append("Modified: " + Chrono.getTimeStr(attr.lastModifiedTime().toMillis(), "dd/MM/YY HH:mm\n"), Shell.STDOUT_COLOR);
+                    textProperties.append("Creation: " + Chrono.getTimeStr(attr.creationTime().toMillis(), "dd/MM/YY HH:mm\n"), Shell.getColorStdout());
+                    textProperties.append("Accessed: " + Chrono.getTimeStr(attr.lastAccessTime().toMillis(), "dd/MM/YY HH:mm\n"), Shell.getColorStdout());
+                    textProperties.append("Modified: " + Chrono.getTimeStr(attr.lastModifiedTime().toMillis(), "dd/MM/YY HH:mm\n"), Shell.getColorStdout());
                 } catch (Exception ex) {
                 }
                 if (file.isFile() || calculateFolderSize) {
-                    textProperties.append("Size:     " + IO.getSize(file) / 1024 + "KB\n", Shell.STDOUT_COLOR);
+                    textProperties.append("Size:     " + IO.getSize(file) / 1024 + "KB\n", Shell.getColorStdout());
                 }
             }
             textProperties.setCaretPosition(0);
@@ -1206,20 +1206,20 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
         if ((currentFile != null) && (path != null)) {
             Map<String, Object> info = dataManager.getInfo(currentFile.getPath(), path);
             for (String key : info.keySet()) {
-                Color c = Shell.STDOUT_COLOR;
+                Color c = Shell.getColorStdout();
                 if (key.equals("Exception")) {
-                    c = Shell.ERROR_COLOR;
+                    c = Shell.getColorError();
                 }
                 textProperties.append(key + " = " + Str.toString(info.get(key), 100) + "\n", c);
             }
 
             Map<String, Object> attrs = dataManager.getAttributes(currentFile.getPath(), path);
             if (attrs.keySet().size() > 0) {
-                textProperties.append("\nAttributes:\n", Shell.INPUT_COLOR);
+                textProperties.append("\nAttributes:\n", Shell.getColorInput());
                 for (String key : attrs.keySet()) {
-                    Color c = Shell.INPUT_COLOR;
+                    Color c = Shell.getColorInput();
                     if (key.equals("Exception")) {
-                        c = Shell.ERROR_COLOR;
+                        c = Shell.getColorError();
                     }
                     textProperties.append(key + " = " + Str.toString(attrs.get(key), 100) + "\n", c);
                 }
