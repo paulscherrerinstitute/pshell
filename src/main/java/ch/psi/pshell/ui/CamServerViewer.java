@@ -1,5 +1,10 @@
-package ch.psi.pshell.bs;
+package ch.psi.pshell.ui;
 
+import ch.psi.pshell.bs.Stream;
+import ch.psi.pshell.bs.StreamCamera;
+import ch.psi.pshell.bs.StreamValue;
+import ch.psi.pshell.camserver.CameraSource;
+import ch.psi.pshell.camserver.PipelineSource;
 import ch.psi.pshell.core.Context;
 import java.io.IOException;
 import java.nio.file.Paths;
@@ -14,7 +19,6 @@ import ch.psi.pshell.device.ReadableRegister.ReadableRegisterArray;
 import ch.psi.pshell.device.ReadableRegister.ReadableRegisterNumber;
 import ch.psi.pshell.imaging.Colormap;
 import ch.psi.pshell.imaging.ColormapSource;
-import ch.psi.pshell.ui.App;
 import ch.psi.pshell.imaging.Data;
 import ch.psi.pshell.imaging.DimensionDouble;
 import ch.psi.pshell.imaging.Histogram;
@@ -109,11 +113,12 @@ import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 /**
  *
  */
-@Deprecated
-public class StreamCameraViewer extends MonitoredPanel {
+public class CamServerViewer extends MonitoredPanel {
 
+    final static String CHANNEL_IMAGE = "image";
+    final static String CHANNEL_PARAMETERS = "processing_parameters";
+    
     final String CAMERA_DEVICE_NAME = "CurrentCamera";
-    boolean useServerStats = true;
     String userOverlaysConfigFile;
     StreamCamera camera;
     String stream;
@@ -135,7 +140,7 @@ public class StreamCameraViewer extends MonitoredPanel {
     List<String> streamList;
 
     String serverUrl;
-    PipelineServer server;
+    PipelineSource server;
     String pipelineNameFormat = "%s_sp";
     String instanceNameFormat = "%s1";
 
@@ -145,7 +150,7 @@ public class StreamCameraViewer extends MonitoredPanel {
     Text imagePauseOverlay;
     DevicePanel streamPanel;
 
-    public StreamCameraViewer() {
+    public CamServerViewer() {
         try {
             initComponents();
             setSidePanelVisible(false);
@@ -158,10 +163,12 @@ public class StreamCameraViewer extends MonitoredPanel {
             checkBackground.setEnabled(false);
             checkThreshold.setEnabled(false);
             checkRotation.setEnabled(false);
+            checkAveraging.setEnabled(false);
             checkGoodRegion.setEnabled(false);
             setGoodRegionOptionsVisible(false);
             setSlicingOptionsVisible(false);
             setRotationOptionsVisible(false);
+            setAveragingOptionsVisible(false);            
             JComponent editor = spinnerSlOrientation.getEditor();
             if (editor instanceof JSpinner.DefaultEditor) {
                 ((JSpinner.DefaultEditor) editor).getTextField().setHorizontalAlignment(JTextField.RIGHT);
@@ -187,7 +194,7 @@ public class StreamCameraViewer extends MonitoredPanel {
                     if (camera != null) {
                         String cameraName = getCameraName();
                         String cameraConfigJson = null;
-                        try (CameraServer srv = new CameraServer("CamServer", App.getArgumentValue("camera_server"))) {
+                        try (CameraSource srv = new CameraSource("CamServer", App.getArgumentValue("camera_server"))) {
                             srv.initialize();
                             //TODO: replace into encodeMultiline
                             cameraConfigJson = EncoderJson.encode(srv.getConfig(cameraName), true);
@@ -395,7 +402,7 @@ public class StreamCameraViewer extends MonitoredPanel {
             if (App.hasArgument("persistence_file")) {
                 setPersistenceFile(App.getArgumentValue("persistence_file"));
             } else {
-                setPersistenceFile(Paths.get(Sys.getTempFolder(), "StreamCameraViewer.bin").toString());
+                setPersistenceFile(Paths.get(Sys.getTempFolder(), "CamServerViewer.bin").toString());
             }
 
             if (App.hasArgument("zoom")) {
@@ -407,11 +414,15 @@ public class StreamCameraViewer extends MonitoredPanel {
             }
             if (App.hasArgument("buffer_size")) {
                 try {
-                    setBufferLength(Integer.valueOf(App.getArgumentValue("buf")));
+                    setBufferLength(Integer.valueOf(App.getArgumentValue("buffer_size")));
                 } catch (Exception ex) {
                     ex.printStackTrace();
                 }
             }
+
+            if (App.getBoolArgumentValue("side_panel")) {
+                setSidePanelVisible(true);
+            }            
 
             if (App.hasArgument("user_overlays")) {
                 try {
@@ -457,7 +468,7 @@ public class StreamCameraViewer extends MonitoredPanel {
             }            
             if (App.hasArgument("stream")) {
                 setStream(App.getArgumentValue("stream"));
-            }           
+            }               
 
         } catch (Exception ex) {
             ex.printStackTrace();
@@ -465,17 +476,17 @@ public class StreamCameraViewer extends MonitoredPanel {
         updateButtons();
     }
 
-    public interface StreamCameraViewerListener{
+    public interface CamServerViewerListener{
         void onStream(String name);
     }
     
-    StreamCameraViewerListener listener;
+    CamServerViewerListener listener;
     
-    public StreamCameraViewerListener getListener(){
+    public CamServerViewerListener getListener(){
         return listener;
     }
     
-    public void setListener(StreamCameraViewerListener listener){
+    public void setListener(CamServerViewerListener listener){
         this.listener = listener;
     }
     
@@ -483,7 +494,7 @@ public class StreamCameraViewer extends MonitoredPanel {
         return serverUrl;
     }
     
-    public PipelineServer getServer() {
+    public PipelineSource getServer() {
         return server;
     }    
     
@@ -558,7 +569,7 @@ public class StreamCameraViewer extends MonitoredPanel {
     DefaultComboBoxModel getStreamList(SourceSelecionMode mode) {
         DefaultComboBoxModel model = new DefaultComboBoxModel();
         List<String> streams = new ArrayList<>();
-        try (PipelineServer srv = new PipelineServer(CAMERA_DEVICE_NAME, serverUrl);) {
+        try (PipelineSource srv = new PipelineSource(CAMERA_DEVICE_NAME, serverUrl);) {
             if (streamList != null){     
                 streams = streamList;
             } else {
@@ -607,6 +618,7 @@ public class StreamCameraViewer extends MonitoredPanel {
     }
 
     public void setSidePanelVisible(boolean value) {
+        buttonSidePanel.setSelected(value);
         sidePanel.setVisible(value);
     }
 
@@ -1090,10 +1102,12 @@ public class StreamCameraViewer extends MonitoredPanel {
             checkBackground.setEnabled(false);
             checkThreshold.setEnabled(false);
             checkRotation.setEnabled(false);
+            checkAveraging.setEnabled(false);
             checkGoodRegion.setEnabled(false);
             setGoodRegionOptionsVisible(false);
             setSlicingOptionsVisible(false);
             setRotationOptionsVisible(false);
+            setAveragingOptionsVisible(false);            
         }
 
         synchronized (imageBuffer) {
@@ -1118,12 +1132,12 @@ public class StreamCameraViewer extends MonitoredPanel {
 
         System.out.println("Setting stream: " + stream);
         try {
-            if (serverUrl != null) {
-                server = new PipelineServer(CAMERA_DEVICE_NAME, serverUrl);
-                camera = server;
-            } else {
+            if ((serverUrl == null) || (stream.startsWith("tcp"))) {
                 server = null;
                 camera = new StreamCamera(CAMERA_DEVICE_NAME, stream);
+            } else {
+                server = new PipelineSource(CAMERA_DEVICE_NAME, serverUrl);
+                camera = server;
             }
 
             camera.getConfig().flipHorizontally = false;
@@ -1191,6 +1205,7 @@ public class StreamCameraViewer extends MonitoredPanel {
                 checkBackground.setEnabled(true);
                 checkThreshold.setEnabled(true);
                 checkRotation.setEnabled(true);
+                checkAveraging.setEnabled(true);
                 checkGoodRegion.setEnabled(true);                
             }
 
@@ -1542,7 +1557,14 @@ public class StreamCameraViewer extends MonitoredPanel {
         spinnerRotationMode.setVisible(visible);
         spinnerRotationConstant.setVisible(visible);
     }
-
+    
+    void setAveragingOptionsVisible(boolean visible) {
+        labelAvMode.setVisible(visible);
+        labelAvFrames.setVisible(visible);
+        spinnerAvMode.setVisible(visible);
+        spinnerAvFrames.setVisible(visible);
+    }
+    
     public boolean isCameraStopped() {
         return ((camera == null) || camera.isClosed());
     }
@@ -2207,7 +2229,7 @@ public class StreamCameraViewer extends MonitoredPanel {
     }
 
     public static Map<String, Object> getProcessingParameters(StreamValue value) throws IOException {
-        return (Map) EncoderJson.decode(value.getValue("processing_parameters").toString(), Map.class);
+        return (Map) EncoderJson.decode(value.getValue(CHANNEL_PARAMETERS).toString(), Map.class);
     }
     
     
@@ -2303,8 +2325,8 @@ public class StreamCameraViewer extends MonitoredPanel {
                                     });
                                 } else {
                                     Object obj = getCurrentFrame().cache.getValue(id);
-                                    if (id.equals("image")) {
-                                    } else if (id.equals("processing_parameters")) {
+                                    if (id.equals(CHANNEL_IMAGE)) {
+                                    } else if (id.equals(CHANNEL_PARAMETERS)) {
                                         Map<String, Object> pars = getProcessingParameters(getCurrentFrame().cache);
                                         StringBuilder sb = new StringBuilder();
                                         for (String key : pars.keySet()) {
@@ -2498,6 +2520,13 @@ public class StreamCameraViewer extends MonitoredPanel {
                         spinnerGrThreshold.setValue(((Number) gr.get("threshold")).doubleValue());
                         spinnerGrScale.setValue(((Number) gr.get("gfscale")).doubleValue());
                     }
+                    Number averaging = (Number) server.getAveraging();
+                    checkAveraging.setSelected(averaging != null);
+                    if (averaging!=null){
+                        spinnerAvFrames.setValue(Math.abs(averaging.intValue()));
+                        spinnerAvMode.setValue(averaging.intValue()<0 ? "window" : "single");                        
+                    }           
+                    
                     Map rotation = server.getRotation();
                     checkRotation.setSelected(rotation != null);
                     if (rotation != null) {
@@ -2524,7 +2553,8 @@ public class StreamCameraViewer extends MonitoredPanel {
                     spinnerThreshold.setVisible(checkThreshold.isSelected());
                     setGoodRegionOptionsVisible(gr != null);
                     setSlicingOptionsVisible(slicing != null);
-                    setRotationOptionsVisible(rotation != null);
+                    setRotationOptionsVisible(rotation != null);        
+                    setAveragingOptionsVisible(averaging!=null);                    
                     
                 } catch (Exception ex) {
                     ex.printStackTrace();
@@ -2660,9 +2690,10 @@ public class StreamCameraViewer extends MonitoredPanel {
         Map<String, Object> processingPars = getProcessingParameters(first);
         String camera = (String) processingPars.get("camera_name");
 
-        int width = ((Number) first.getValue("width")).intValue();
-        int height = ((Number) first.getValue("height")).intValue();
-        Class dataType = first.getValue("image").getClass().getComponentType();
+        int[] shape = first.getShape(CHANNEL_IMAGE);
+        int width = shape[0];
+        int height = shape[1];        
+        Class dataType = first.getValue(CHANNEL_IMAGE).getClass().getComponentType();
 
         DataManager dm;
         if (Context.getInstance() != null) {
@@ -2682,32 +2713,38 @@ public class StreamCameraViewer extends MonitoredPanel {
         dm.createDataset(pathPid, Long.class, new int[]{depth});
         dm.createDataset(pathTimestampStr, String.class, new int[]{depth});
         for (String id : first.getIdentifiers()) {
-            Object val = first.getValue(id);
-            if (id.equals("image")) {
-            } else if (id.equals("processing_parameters")) {
-                Map<String, Object> pars = getProcessingParameters(first);
-                for (String key : pars.keySet()) {
-                    if ((pars.get(key) != null) && (pars.get(key) instanceof Map)) {
-                        for (Object k : ((Map) pars.get(key)).keySet()) {
-                            Object v = ((Map) pars.get(key)).get(k);
-                            dm.setAttribute(pathImage, key + " " + k, (v == null) ? "" : v);
+            if (!id.startsWith("_")){    //Filter commented entries
+                try{
+                    Object val = first.getValue(id);
+                    if (id.equals(CHANNEL_IMAGE)) {
+                    } else if (id.equals(CHANNEL_PARAMETERS)) {
+                        Map<String, Object> pars = getProcessingParameters(first);
+                        for (String key : pars.keySet()) {
+                            if ((pars.get(key) != null) && (pars.get(key) instanceof Map)) {
+                                for (Object k : ((Map) pars.get(key)).keySet()) {
+                                    Object v = ((Map) pars.get(key)).get(k);
+                                    dm.setAttribute(pathImage, key + " " + k, (v == null) ? "" : v);
+                                }
+                            } else {
+                                Object value = pars.get(key);
+                                if (value == null) {
+                                    value = "";
+                                } else if (value instanceof List) {
+                                    Class cls = (((List) value).size() > 0) ? ((List) value).get(0).getClass() : double.class;
+                                    value = Convert.toPrimitiveArray(value, cls);
+                                    //value = Convert.toDouble(value);
+                                }
+                                dm.setAttribute(pathImage, key, value);
+                            }
                         }
+                    } else if (val.getClass().isArray()) {
+                        dm.createDataset(pathRoot + id, Double.class, new int[]{depth, Array.getLength(val)});
                     } else {
-                        Object value = pars.get(key);
-                        if (value == null) {
-                            value = "";
-                        } else if (value instanceof List) {
-                            Class cls = (((List) value).size() > 0) ? ((List) value).get(0).getClass() : double.class;
-                            value = Convert.toPrimitiveArray(value, cls);
-                            //value = Convert.toDouble(value);
-                        }
-                        dm.setAttribute(pathImage, key, value);
+                        dm.createDataset(pathRoot + id, val.getClass(), new int[]{depth});
                     }
+                } catch (Exception ex){
+                     Logger.getLogger(CamServerViewer.class.getName()).log(Level.WARNING, null, ex);
                 }
-            } else if (val.getClass().isArray()) {
-                dm.createDataset(pathRoot + id, Double.class, new int[]{depth, Array.getLength(val)});
-            } else {
-                dm.createDataset(pathRoot + id, val.getClass(), new int[]{depth});
             }
         }
 
@@ -2724,18 +2761,24 @@ public class StreamCameraViewer extends MonitoredPanel {
         //Save data
         for (int index = 0; index < depth; index++) {
             StreamValue streamValue = images.get(index);
-            dm.setItem(pathImage, streamValue.getValue("image"), new long[]{index, 0, 0}, new int[]{1, height, width});
+            dm.setItem(pathImage, streamValue.getValue(CHANNEL_IMAGE), new long[]{index, 0, 0}, new int[]{1, height, width});
             dm.setItem(pathPid, streamValue.getPulseId(), index);
             dm.setItem(pathTimestampStr, Chrono.getTimeStr(streamValue.getTimestamp(), "YYYY-MM-dd HH:mm:ss.SSS"), index);
 
             for (String id : streamValue.getIdentifiers()) {
-                Object val = streamValue.getValue(id);
-                if (id.equals("image")) {
-                } else if (id.equals("processing_parameters")) {
-                } else if (val.getClass().isArray()) {
-                    dm.setItem(pathRoot + id, val, index);
-                } else {
-                    dm.setItem(pathRoot + id, val, index);
+                if (!id.startsWith("_")){    //Filter commented entries
+                    try{                    
+                        Object val = streamValue.getValue(id);
+                        if (id.equals(CHANNEL_IMAGE)) {
+                        } else if (id.equals(CHANNEL_PARAMETERS)) {
+                        } else if (val.getClass().isArray()) {
+                            dm.setItem(pathRoot + id, val, index);
+                        } else {
+                            dm.setItem(pathRoot + id, val, index);
+                        }
+                    } catch (Exception ex){
+                         Logger.getLogger(CamServerViewer.class.getName()).log(Level.WARNING, null, ex);
+                    }                        
                 }
             }
         }
@@ -2782,17 +2825,20 @@ public class StreamCameraViewer extends MonitoredPanel {
 
     public static void main(String[] args) throws Exception {
         App.init(args);
+        create();
+    }
+    
+    public static void create() {
         SwingUtilities.invokeLater(() -> {
             try {
-                StreamCameraViewer iv = new StreamCameraViewer();
-                Window window = SwingUtils.showFrame(null, "Stream Camera Viewer", new Dimension(800, 600), iv);
+                CamServerViewer viewer = new CamServerViewer();
+                Window window = SwingUtils.showFrame(null, "Stream Camera Viewer", new Dimension(800, 600), viewer);
                 window.setIconImage(Toolkit.getDefaultToolkit().getImage(App.getResourceUrl("IconSmall.png"))); 
             } catch (Exception ex) {
-                Logger.getLogger(StreamCameraViewer.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(CamServerViewer.class.getName()).log(Level.SEVERE, null, ex);
             }
 
-        });
-
+        });        
     }
 
     ////////
@@ -2848,6 +2894,11 @@ public class StreamCameraViewer extends MonitoredPanel {
         labelAngle = new javax.swing.JLabel();
         labelConstant = new javax.swing.JLabel();
         spinnerRotationConstant = new javax.swing.JSpinner();
+        checkAveraging = new javax.swing.JCheckBox();
+        labelAvFrames = new javax.swing.JLabel();
+        spinnerAvFrames = new javax.swing.JSpinner();
+        spinnerAvMode = new javax.swing.JSpinner();
+        labelAvMode = new javax.swing.JLabel();
         panelZoom = new javax.swing.JPanel();
         buttonZoomFit = new javax.swing.JRadioButton();
         buttonZoomStretch = new javax.swing.JRadioButton();
@@ -3231,7 +3282,7 @@ public class StreamCameraViewer extends MonitoredPanel {
     labelMode.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
     labelMode.setText("Mode:");
 
-    spinnerRotationMode.setModel(new javax.swing.SpinnerListModel(new String[] {"constant", "reflect", "nearest", "mirror", "wrap"}));
+    spinnerRotationMode.setModel(new javax.swing.SpinnerListModel(new String[] {"constant", "reflect", "nearest", "mirror", "wrap", "ortho"}));
     spinnerRotationMode.addChangeListener(new javax.swing.event.ChangeListener() {
         public void stateChanged(javax.swing.event.ChangeEvent evt) {
             spinnerRotationModespinnerRotationAngleStateChanged(evt);
@@ -3251,54 +3302,93 @@ public class StreamCameraViewer extends MonitoredPanel {
         }
     });
 
+    checkAveraging.setText("Averaging");
+    checkAveraging.addActionListener(new java.awt.event.ActionListener() {
+        public void actionPerformed(java.awt.event.ActionEvent evt) {
+            checkAveragingActionPerformed(evt);
+        }
+    });
+
+    labelAvFrames.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
+    labelAvFrames.setText("Frames:");
+
+    spinnerAvFrames.setModel(new javax.swing.SpinnerNumberModel(1, 1, 1000, 1));
+    spinnerAvFrames.addChangeListener(new javax.swing.event.ChangeListener() {
+        public void stateChanged(javax.swing.event.ChangeEvent evt) {
+            spinnerAvFramesStateChanged(evt);
+        }
+    });
+
+    spinnerAvMode.setModel(new javax.swing.SpinnerListModel(new String[] {"single", "window"}));
+    spinnerAvMode.addChangeListener(new javax.swing.event.ChangeListener() {
+        public void stateChanged(javax.swing.event.ChangeEvent evt) {
+            spinnerAvModeonChange(evt);
+        }
+    });
+
+    labelAvMode.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
+    labelAvMode.setText("Mode:");
+
     javax.swing.GroupLayout panelPipelineLayout = new javax.swing.GroupLayout(panelPipeline);
     panelPipeline.setLayout(panelPipelineLayout);
     panelPipelineLayout.setHorizontalGroup(
         panelPipelineLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-        .addGroup(panelPipelineLayout.createSequentialGroup()
-            .addContainerGap()
-            .addGroup(panelPipelineLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, panelPipelineLayout.createSequentialGroup()
-                    .addComponent(checkGoodRegion)
-                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addGroup(panelPipelineLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                        .addComponent(labelOrder)
-                        .addComponent(labelGrScale)
-                        .addComponent(labelMode)))
-                .addGroup(panelPipelineLayout.createSequentialGroup()
-                    .addComponent(checkThreshold)
-                    .addGap(0, 0, Short.MAX_VALUE))
-                .addGroup(panelPipelineLayout.createSequentialGroup()
-                    .addComponent(checkRotation)
-                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(labelAngle))
-                .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, panelPipelineLayout.createSequentialGroup()
-                    .addGap(0, 0, Short.MAX_VALUE)
-                    .addGroup(panelPipelineLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                        .addComponent(labelGrThreshold, javax.swing.GroupLayout.Alignment.TRAILING)
-                        .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, panelPipelineLayout.createSequentialGroup()
-                            .addComponent(labelConstant)
-                            .addGap(3, 3, 3)))))
-            .addGap(2, 2, 2)
-            .addGroup(panelPipelineLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                .addComponent(spinnerGrThreshold, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addComponent(spinnerGrScale)
-                .addComponent(spinnerThreshold)
-                .addComponent(spinnerRotationOrder)
-                .addComponent(spinnerRotationMode)
-                .addComponent(spinnerRotationAngle)
-                .addComponent(spinnerRotationConstant))
-            .addContainerGap())
         .addComponent(panelSlicing, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
         .addGroup(panelPipelineLayout.createSequentialGroup()
             .addGap(6, 6, 6)
             .addComponent(checkBackground)
             .addGap(106, 106, 106))
+        .addGroup(panelPipelineLayout.createSequentialGroup()
+            .addContainerGap()
+            .addGroup(panelPipelineLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addGroup(panelPipelineLayout.createSequentialGroup()
+                    .addGroup(panelPipelineLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, panelPipelineLayout.createSequentialGroup()
+                            .addComponent(checkGoodRegion)
+                            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addGroup(panelPipelineLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                .addComponent(labelOrder)
+                                .addComponent(labelGrScale)
+                                .addComponent(labelMode)))
+                        .addGroup(panelPipelineLayout.createSequentialGroup()
+                            .addComponent(checkThreshold)
+                            .addGap(0, 0, Short.MAX_VALUE))
+                        .addGroup(panelPipelineLayout.createSequentialGroup()
+                            .addComponent(checkRotation)
+                            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(labelAngle))
+                        .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, panelPipelineLayout.createSequentialGroup()
+                            .addGap(0, 0, Short.MAX_VALUE)
+                            .addGroup(panelPipelineLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                .addComponent(labelGrThreshold, javax.swing.GroupLayout.Alignment.TRAILING)
+                                .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, panelPipelineLayout.createSequentialGroup()
+                                    .addComponent(labelConstant)
+                                    .addGap(3, 3, 3)))))
+                    .addGap(2, 2, 2)
+                    .addGroup(panelPipelineLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                        .addComponent(spinnerGrThreshold, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(spinnerGrScale)
+                        .addComponent(spinnerThreshold)
+                        .addComponent(spinnerRotationOrder)
+                        .addComponent(spinnerRotationMode)
+                        .addComponent(spinnerRotationAngle)
+                        .addComponent(spinnerRotationConstant)))
+                .addGroup(panelPipelineLayout.createSequentialGroup()
+                    .addComponent(checkAveraging)
+                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addGroup(panelPipelineLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addComponent(labelAvFrames, javax.swing.GroupLayout.Alignment.TRAILING)
+                        .addComponent(labelAvMode, javax.swing.GroupLayout.Alignment.TRAILING))
+                    .addGap(2, 2, 2)
+                    .addGroup(panelPipelineLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                        .addComponent(spinnerAvFrames, javax.swing.GroupLayout.Alignment.TRAILING)
+                        .addComponent(spinnerAvMode, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 85, javax.swing.GroupLayout.PREFERRED_SIZE))))
+            .addContainerGap())
     );
 
     panelPipelineLayout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {spinnerGrScale, spinnerGrThreshold});
 
-    panelPipelineLayout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {spinnerRotationAngle, spinnerRotationConstant, spinnerRotationMode, spinnerRotationOrder});
+    panelPipelineLayout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {spinnerAvFrames, spinnerAvMode, spinnerRotationAngle, spinnerRotationConstant, spinnerRotationMode, spinnerRotationOrder});
 
     panelPipelineLayout.setVerticalGroup(
         panelPipelineLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -3309,6 +3399,15 @@ public class StreamCameraViewer extends MonitoredPanel {
             .addGroup(panelPipelineLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                 .addComponent(checkThreshold)
                 .addComponent(spinnerThreshold, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+            .addGap(2, 2, 2)
+            .addGroup(panelPipelineLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                .addComponent(checkAveraging)
+                .addComponent(spinnerAvFrames, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(labelAvFrames))
+            .addGap(2, 2, 2)
+            .addGroup(panelPipelineLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                .addComponent(spinnerAvMode, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(labelAvMode))
             .addGap(2, 2, 2)
             .addGroup(panelPipelineLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                 .addComponent(checkRotation)
@@ -4182,6 +4281,29 @@ public class StreamCameraViewer extends MonitoredPanel {
         // TODO add your handling code here:
     }//GEN-LAST:event_textStreamActionPerformed
 
+    private void checkAveragingActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_checkAveragingActionPerformed
+        if (!updatingServerControls) {
+            try {
+                if ((server != null) && (server.isStarted())) {
+                    setAveragingOptionsVisible(checkAveraging.isSelected());
+                    Integer av = spinnerAvMode.getValue().equals("window") ? - (Integer)spinnerAvFrames.getValue() : (Integer)spinnerAvFrames.getValue();
+                    server.setAveraging(checkAveraging.isSelected() ? av : null);
+                }
+            } catch (Exception ex) {
+                showException(ex);
+                updatePipelineControls();
+            }
+        }
+    }//GEN-LAST:event_checkAveragingActionPerformed
+
+    private void spinnerAvFramesStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_spinnerAvFramesStateChanged
+        checkAveragingActionPerformed(null);
+    }//GEN-LAST:event_spinnerAvFramesStateChanged
+
+    private void spinnerAvModeonChange(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_spinnerAvModeonChange
+        checkAveragingActionPerformed(null);
+    }//GEN-LAST:event_spinnerAvModeonChange
+
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btFixColormapRange;
@@ -4207,6 +4329,7 @@ public class StreamCameraViewer extends MonitoredPanel {
     private javax.swing.JRadioButton buttonZoomFit;
     private javax.swing.JRadioButton buttonZoomNormal;
     private javax.swing.JRadioButton buttonZoomStretch;
+    private javax.swing.JCheckBox checkAveraging;
     private javax.swing.JCheckBox checkBackground;
     private javax.swing.JCheckBox checkGoodRegion;
     private javax.swing.JCheckBox checkHistogram;
@@ -4219,6 +4342,8 @@ public class StreamCameraViewer extends MonitoredPanel {
     private javax.swing.JPanel jPanel1;
     private javax.swing.JToolBar.Separator jSeparator6;
     private javax.swing.JLabel labelAngle;
+    private javax.swing.JLabel labelAvFrames;
+    private javax.swing.JLabel labelAvMode;
     private javax.swing.JLabel labelConstant;
     private javax.swing.JLabel labelGrScale;
     private javax.swing.JLabel labelGrThreshold;
@@ -4238,6 +4363,8 @@ public class StreamCameraViewer extends MonitoredPanel {
     private ch.psi.pshell.swing.ValueSelection pauseSelection;
     protected ch.psi.pshell.imaging.Renderer renderer;
     private javax.swing.JPanel sidePanel;
+    private javax.swing.JSpinner spinnerAvFrames;
+    private javax.swing.JSpinner spinnerAvMode;
     private javax.swing.JSpinner spinnerGrScale;
     private javax.swing.JSpinner spinnerGrThreshold;
     private javax.swing.JSpinner spinnerMax;

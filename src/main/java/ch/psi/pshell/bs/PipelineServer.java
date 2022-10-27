@@ -8,7 +8,7 @@ import java.util.Map;
  * Imaging Source implementation connecting to a CameraServer.
  */
 @Deprecated
-public class PipelineServer extends ch.psi.pshell.camserver.PipelineSource {
+public class PipelineServer extends PipelineSource {
 
     public interface PipelineServerListener{
         void onConfigChanged(Map<String, Object> config);

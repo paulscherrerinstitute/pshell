@@ -96,7 +96,7 @@ public class ScreenPanelPipelineClient extends PipelineClient{
         if (isBackgroundSubtractionEnabled(value)){
             String id = getBackground(instanceId);
             if (id == null) {
-                setBackground(instanceId, getLastBackground(instanceId));
+                setBackground(instanceId, getLastBackground(getCameraName(instanceId)));
             }
         }
         setInstanceConfigValue(instanceId, "image_background_enable", value);
@@ -160,4 +160,13 @@ public class ScreenPanelPipelineClient extends PipelineClient{
         gr.put("mode", mode);
         setRotation(instanceId, gr);
     }            
+     
+    public Number getAveraging(String instanceId) throws IOException {
+        Object ret = getInstanceConfigValue(instanceId, "averaging");
+        return ((ret != null) && (ret instanceof Number)) ? (Number) ret : null;
+    }
+
+    public void setAveraging(String instanceId, Number value) throws IOException {
+        setInstanceConfigValue(instanceId, "averaging", value);    
+    }
 }

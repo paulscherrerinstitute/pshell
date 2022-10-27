@@ -1,10 +1,12 @@
 package ch.psi.pshell.camserver;
 
+import ch.psi.pshell.bs.Provider;
 import ch.psi.pshell.bs.Stream;
 import ch.psi.pshell.bs.StreamValue;
 import ch.psi.pshell.device.Device;
 import ch.psi.pshell.device.DeviceAdapter;
 import ch.psi.pshell.device.ReadonlyRegisterBase;
+import ch.psi.utils.Str;
 
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -16,11 +18,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import ch.psi.pshell.bs.AddressableDevice;
 
 /**
  * Imaging Source implementation connecting to a CameraServer.
  */
-public class PipelineStream extends ReadonlyRegisterBase<StreamValue> implements ch.psi.pshell.device.Readable.ReadableType {
+public class PipelineStream extends ReadonlyRegisterBase<StreamValue> implements ch.psi.pshell.device.Readable.ReadableType, AddressableDevice {
 
     final PipelineClient client;
     final ProxyClient proxy;
@@ -41,7 +44,7 @@ public class PipelineStream extends ReadonlyRegisterBase<StreamValue> implements
     public ProxyClient getProxy() {
         return proxy;
     }
-
+    
     public PipelineStream(String name, String url, String instanceId) {
         super(name, null);
         client = new ScreenPanelPipelineClient(url);
@@ -181,6 +184,11 @@ public class PipelineStream extends ReadonlyRegisterBase<StreamValue> implements
     public String getInstance() {
         return instance;
     }
+    
+    @Override
+    public String getAddress() {
+        return getUrl() + "/" + Str.toString(instanceId);
+    }    
     
     @Override
     protected StreamValue doRead() throws IOException, InterruptedException {

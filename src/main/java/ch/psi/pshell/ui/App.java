@@ -488,28 +488,35 @@ public class App extends ObservableBase<AppListener> {
             sb.append("\n\t-alarm_interval=<..>\tSet the alarm timer interval (default 1000ms)");
             sb.append("\n\t-alarm_file=<..>\tSet alarm sound file (default use system beep)");
         }
+        
+        if (isCamServerViewer()){
+            sb.append("\n\nCamServer viewer arguments:");
+            sb.append("\n\t-camera_server=<..>\tAddress of CamServer camera proxy");
+            sb.append("\n\t-pipeline_server=<..>\tAddress of CamServer pipeline proxy");
+        }
+        
         sb.append("\n");
         return sb.toString();
     }
 
     static public boolean isLocalMode() {
-        return getBoolArgumentValue("l") || isPlotOnly() || isHelpOnly() || isDataPanel() || isStripChart() || isOffline() || isVolatile();
+        return getBoolArgumentValue("l") || isPlotOnly() || isHelpOnly() || isDataPanel() || isStripChart() || isOffline() || isVolatile() || isCamServerViewer();
     }
 
     static public boolean isBareMode() {
-        return getBoolArgumentValue("b") || isVolatile();
+        return getBoolArgumentValue("b") || isVolatile() ||  isCamServerViewer();
     }
 
     static public boolean isEmptyMode() {
-        return getBoolArgumentValue("e");
+        return getBoolArgumentValue("e") ||  isCamServerViewer();
     }
 
     static public boolean isGenericMode() {
-        return getBoolArgumentValue("g");
+        return getBoolArgumentValue("g") ||  isCamServerViewer();
     }
 
     static public boolean isHandlingSessions() {
-        boolean disableSessions = getBoolArgumentValue("j") || isPlotOnly() || isHelpOnly() || isDataPanel() || isStripChart() || isVolatile() || isDetached();
+        boolean disableSessions = getBoolArgumentValue("j") || isPlotOnly() || isHelpOnly() || isDataPanel() || isStripChart() || isVolatile() || isDetached() || isCamServerViewer();
         return !disableSessions;
     }
 
@@ -620,6 +627,10 @@ public class App extends ObservableBase<AppListener> {
         return getBoolArgumentValue("strp");
     }
 
+    static public boolean isCamServerViewer() {
+        return getBoolArgumentValue("csvw");
+    }
+    
     static public boolean isStripChartServer() {
         return isStripChart() && ((isAttach() || (isServerMode())));
     }
@@ -795,7 +806,7 @@ public class App extends ObservableBase<AppListener> {
      * If disabled the interpreter is not instantiated
      */
     static public boolean isDisabled() {
-        return getBoolArgumentValue("n") | isOffline();
+        return getBoolArgumentValue("n") | isOffline() ||  isCamServerViewer();
     }
 
     static public boolean isVersionMessage() {
@@ -1066,6 +1077,8 @@ public class App extends ObservableBase<AppListener> {
                 }
             } else if (isDataPanel()) {
                 DataPanel.createPanel(getFileArg());
+            } else if (isCamServerViewer()) {
+                CamServerViewer.create();
             } else {
                 if (isDual()) {
                     Console c = new Console();

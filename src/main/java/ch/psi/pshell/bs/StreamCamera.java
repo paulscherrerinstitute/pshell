@@ -13,14 +13,22 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * An imaging source from a bsread source. The following identifiers are mandatory in the stream:
- * "image" (waveform), "width" and "height" (scalars). "x_axis" and "y_axis" are optional
+ * An imaging source from a bsread source. 
+ * "image" (waveform) is the default image channel name.
+ * "width" and "height" are optional (image channel shape is used instead if defined)
+ * "x_axis" and "y_axis" are optional for calibrating the image, and if present determine shape.
  * identifiers, containing the x and y axis values, used to calibrate the image.
  */
 public class StreamCamera extends ColormapSource {
 
     final Provider provider;
     final Stream stream;
+    
+    String channelImage = "image";
+    String channelAxisX = "x_axis";
+    String channelAxisY = "y_axis";
+    String channelWidth = "width";
+    String channelHeight = "height";
 
     public StreamCamera(String name) {
         this(name, null);
@@ -29,10 +37,20 @@ public class StreamCamera extends ColormapSource {
     public StreamCamera(String name, String host, int port) {
         this(name, "tcp://" + host + ":" + port);
     }
-
-
+    
     public StreamCamera(String name, String streamSocket) {
-        this(name, streamSocket, null);
+        this(name, streamSocket, (ColormapSourceConfig)null);
+    }
+
+    public StreamCamera(String name, String host, int port, String channelImage) {
+        this(name, host, port);
+        this.channelImage = channelImage;     
+    }
+
+
+    public StreamCamera(String name, String streamSocket, String channelImage) {
+        this(name, streamSocket);
+        this.channelImage = channelImage;   
     }
 
     protected StreamCamera(String name, String streamSocket, ColormapSourceConfig config) {
@@ -49,17 +67,45 @@ public class StreamCamera extends ColormapSource {
     public void setStreamSocket(String socket) {
         provider.setAddress(socket);
     }
+    
+    public String getChannelImage() {
+        return channelImage;
+    }
+
+    public void setChannelImage(String value) {
+        channelImage = value;
+    }    
+
+    public String getChannelAxisY() {
+        return channelAxisY;
+    }
+
+    public void setChannelAxisY(String value) {
+        channelAxisY = value;
+    }    
+
+    public String getChannelWidth() {
+        return channelWidth;
+    }
+
+    public void setChannelWidth(String value) {
+        channelWidth = value;
+    }    
+    
+    public String getChannelHeight() {
+        return channelHeight;
+    }
+
+    public void setChannelHeight(String value) {
+        channelHeight = value;
+    }    
 
     public Object getValue(String name) {
-        StreamValue cache = stream.take();
-        if (cache != null) {
-            for (int i = 0; i < cache.identifiers.size(); i++) {
-                if (cache.identifiers.get(i).equals(name)) {
-                    return cache.values.get(i);
-                }
-            }
-        }
-        return null;
+        return stream.getValue(name);
+    }
+
+    public int[] getShape(String name) {
+        return stream.getShape(name);
     }
 
     public StreamValue getValue() {
@@ -126,15 +172,24 @@ public class StreamCamera extends ColormapSource {
         @Override
         public void onValueChanged(Device device, Object value, Object former) {
             try {
-                Object image = getValue("image");
-                Number width = (Number) getValue("width");
-                Number height = (Number) getValue("height");
-                Object x = getValue("x_axis");
-                Object y = getValue("y_axis");
+                Object image = getValue(channelImage);
+                int[] shape = getShape(channelImage);
+                Number width=0, height=0;
+                
+                Object x = getValue(channelAxisX);
+                Object y = getValue(channelAxisY);
                 if ((x != null) && (y != null)) {
                     width = Array.getLength(x);
                     height = Array.getLength(y);
                     setCalibration(new Calibration(x, y));
+                } else {                
+                    if ((shape!=null) && (shape.length==2)){                        
+                        width=shape[0];
+                        height=shape[1];
+                    } else {
+                        width = (Number) getValue(channelWidth);
+                        height = (Number) getValue(channelHeight);
+                    }
                 }
                 if (image == null) {
                     pushData(null);

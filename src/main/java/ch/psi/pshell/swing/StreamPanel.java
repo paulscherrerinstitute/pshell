@@ -1,6 +1,7 @@
 package ch.psi.pshell.swing;
 
 
+import ch.psi.pshell.bs.AddressableDevice;
 import ch.psi.pshell.bs.ProviderConfig.SocketType;
 import ch.psi.pshell.bs.Stream;
 import ch.psi.pshell.bs.StreamValue;
@@ -10,11 +11,20 @@ import ch.psi.utils.Convert;
 import ch.psi.utils.State;
 import ch.psi.utils.Str;
 import ch.psi.utils.swing.SwingUtils;
+import java.awt.Toolkit;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.StringSelection;
+import java.awt.datatransfer.Transferable;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.Collections;
 import java.util.List;
 import java.util.logging.Level;
+import javax.swing.JMenuItem;
+import javax.swing.JPopupMenu;
+import javax.swing.SwingUtilities;
 import javax.swing.table.DefaultTableModel;
 import org.zeromq.ZMQ;
 
@@ -24,32 +34,132 @@ import org.zeromq.ZMQ;
 public class StreamPanel extends DevicePanel {
 
     final DefaultTableModel model;
-    volatile boolean chacheChanged;
+    volatile boolean cacheChanged;
     volatile boolean updating;
-    volatile Device monitoredDevice;
+    volatile AddressableDevice monitoredDevice;
+    int updateInterval = 1000;
     
     
     public StreamPanel() {
         initComponents();
+        JPopupMenu popupMenu = new JPopupMenu();
+        JMenuItem menuPlotChannel = new JMenuItem("Plot channel");
+        JMenuItem menuCopyChannelId = new JMenuItem("Copy identifier");
+        menuPlotChannel.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try {
+                   plotChannel();
+                } catch (Exception ex) {
+                }
+            }
+        });        
+        
+        menuCopyChannelId.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    String channelId = getCurrentChannelId();
+                    showMessage("Channel Identifier", "Copied to clipboard: " + channelId);
+                    Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+                    clipboard.setContents(new StringSelection(channelId), (Clipboard clipboard1, Transferable contents) -> {
+                });
+
+                } catch (Exception ex) {
+                }
+            }
+        });        
+        popupMenu.add(menuPlotChannel);
+        popupMenu.addSeparator();
+        popupMenu.add(menuCopyChannelId);        
+        
         model = (DefaultTableModel) table.getModel();
         table.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
                 try {
-                    if ((e.getClickCount() == 2) && (!e.isPopupTrigger())) {
-                        int row = table.getSelectedRow();
-                        if (row>=0){
-                             String channel =model.getValueAt(table.convertRowIndexToModel(row),0).toString();
-                             Device child = getDevice().getChild(channel);
-                             showDevicePanel(child);     
+                    String channel = getCurrentChannel();
+                    if (channel != null){
+                        table.setToolTipText(getCurrentChannelId());        
+                        
+                        if ((e.getClickCount() == 2) && (!e.isPopupTrigger())) {                             
+                             plotChannel();
                         }
                     }
                 } catch (Exception ex) {
                     showException(ex);
                 }
             }
+            
+                @Override
+                public void mouseReleased(MouseEvent e) {
+                    checkPopupMenu(e);
+                }
+
+                @Override
+                public void mousePressed(MouseEvent e) {
+                    checkPopupMenu(e);
+                }
+                
+                void checkPopupMenu(MouseEvent e) {
+                    try {
+                        if (e.isPopupTrigger()) {
+                            popupMenu.show(e.getComponent(), e.getX(), e.getY());
+                        }
+                    } catch (Exception ex) {
+                    }
+                }
+                
        });
     }
+    
+    public void setUpdateInterval(int value){
+        updateInterval = value;
+        Stream device = getDevice();
+        if (device!=null){
+            setDevice(device);
+        }
+    }
+    
+    public int getUpdateInterval(){
+        return updateInterval;
+    }
+
+    @Override
+    public void setReadOnly(boolean value) {
+        super.setReadOnly(value);
+        ckMonitored.setVisible(!value);
+
+    }
+    
+    String getCurrentChannel(){
+        int row = table.getSelectedRow(); 
+        if (row<0){
+            return null;
+        }
+        return model.getValueAt(table.convertRowIndexToModel(row),0).toString();
+    }
+    
+    String getCurrentChannelId(){
+        String channel = getCurrentChannel();
+        if ((monitoredDevice!=null) && (channel!=null)){
+            String url = monitoredDevice.getAddress();
+            String channelId = url + " " + channel;                    
+            return channelId;                    
+        }
+        return null;
+    }
+    
+    
+    void plotChannel( ){
+        String channel = getCurrentChannel();
+        Stream device = getDevice();
+        if ((device!=null) && (channel!=null)){
+            Device child = device.getChild(channel);
+            showDevicePanel(child); 
+        }
+    }
+    
     
     @Override
     public Stream getDevice() {
@@ -66,14 +176,16 @@ public class StreamPanel extends DevicePanel {
             textType.setText(getDevice().getSocketType() == ZMQ.PULL ?
                     SocketType.PULL.toString() : 
                     SocketType.SUB.toString());
-            startTimer(1000, 10);
+            if (updateInterval>0){
+                startTimer(updateInterval, 10);
+            }
         } else {
             clear();
         }
         updateButtons();  
     }
    
-    protected void setMonitoredDevice(Device device){
+    protected void setMonitoredDevice(AddressableDevice device){
         monitoredDevice = device;
     }
     
@@ -295,14 +407,19 @@ public class StreamPanel extends DevicePanel {
 
     @Override
     protected void onDeviceCacheChanged(Object value, Object former, long timestamp, boolean valueChange) {
-        chacheChanged = true;
+        if (cacheChanged==false){
+            cacheChanged = true;
+            if (updateInterval<=0){
+                SwingUtilities.invokeLater(()->{onTimer();});
+            }
+        }
     }    
     
     @Override
     protected void onTimer() {
         try{    
             if ((getDevice()!=null)){
-                if (chacheChanged){
+                if (cacheChanged){
                     updateTable();
                 }
                 updating = true;
@@ -311,7 +428,7 @@ public class StreamPanel extends DevicePanel {
         } catch (Exception ex){
             getLogger().log(Level.WARNING, null, ex);
         } finally{
-            chacheChanged = false;
+            cacheChanged = false;
             updating = false;
         }
     }    

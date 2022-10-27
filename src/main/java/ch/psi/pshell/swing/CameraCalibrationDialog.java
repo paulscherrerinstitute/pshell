@@ -1,5 +1,6 @@
-package ch.psi.pshell.bs;
+package ch.psi.pshell.swing;
 
+import ch.psi.pshell.camserver.CameraSource;
 import ch.psi.utils.swing.StandardDialog;
 import ch.psi.utils.swing.SwingUtils;
 import ch.psi.pshell.imaging.Overlay;
@@ -30,7 +31,7 @@ import javax.swing.JDialog;
  */
 public class CameraCalibrationDialog extends StandardDialog {
     
-    CameraServer server;
+    CameraSource server;
     Renderer renderer;
     String cameraName;
     Overlay[] calibrationOverlays;
@@ -44,7 +45,7 @@ public class CameraCalibrationDialog extends StandardDialog {
         super(parent, cameraName, false);        
         
         initComponents();    
-        server = new CameraServer("Camera Server", cameraServer);   
+        server = new CameraSource("Camera Server", cameraServer);   
                         
         this.cameraName = cameraName;
         this.renderer = renderer;

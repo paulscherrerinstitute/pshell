@@ -535,6 +535,16 @@ public class PipelineSource extends StreamCamera {
         client.setRotation(currentInstance, angle, order, mode);  
     }   
      
+    public Number getAveraging() throws IOException {
+        assertStarted();
+        return client.getAveraging(currentInstance);   
+    }
+    
+     public void setAveraging(Number value) throws IOException {
+        assertStarted();
+        client.setAveraging(currentInstance, value);  
+    }   
+
     public String getFunction() throws IOException {
         assertStarted();
         return client.getFunction(currentInstance);

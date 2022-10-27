@@ -2,7 +2,6 @@ package ch.psi.pshell.swing;
 
 
 import ch.psi.pshell.camserver.PipelineStream;
-import ch.psi.pshell.camserver.ProxyClient;
 import ch.psi.pshell.device.Device;
 import ch.psi.utils.Arr;
 import ch.psi.utils.EncoderJson;
@@ -45,7 +44,7 @@ public class PipelineStreamPanel extends DevicePanel {
     public void setDevice(Device device) {
         super.setDevice(device);
         streamPanel.setDevice((device!=null) ? ((PipelineStream)device).getStream(): null);
-        streamPanel.setMonitoredDevice(device);
+        streamPanel.setMonitoredDevice(getDevice());
               
         clearInfo();   
         if (getDevice() != null) {
@@ -77,7 +76,13 @@ public class PipelineStreamPanel extends DevicePanel {
         updateButtons();  
         //model.setNumRows(0);
     }
-
+    
+    @Override
+    public void setReadOnly(boolean value) {
+        super.setReadOnly(value);
+        buttonConfig.setVisible(!value);
+        streamPanel.setReadOnly(value);
+    }
     
     static String getDisplayValue( Object obj){
         if (obj==null) {
@@ -128,7 +133,7 @@ public class PipelineStreamPanel extends DevicePanel {
             String keys[] = Arr.sort(cfg.keySet().toArray(new String[0]));
             modelConfig.setNumRows(0);
             for (String key:keys){
-                modelConfig.addRow(new Object[]{key, getDisplayValue(cfg.get(key))});
+                modelConfig.addRow(new Object[]{key, Str.toString(cfg.get(key))});
             }
             
 

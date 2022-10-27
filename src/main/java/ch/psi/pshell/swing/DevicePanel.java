@@ -10,7 +10,6 @@ import ch.psi.pshell.device.MotorStatus;
 import ch.psi.pshell.device.ReadbackDevice;
 import ch.psi.utils.swing.MonitoredPanel;
 import ch.psi.utils.State;
-import ch.psi.utils.swing.MainFrame;
 import ch.psi.utils.swing.SwingUtils;
 import java.awt.Color;
 import java.awt.event.ActionEvent;
@@ -25,6 +24,7 @@ import ch.psi.pshell.device.GenericDevice;
 import ch.psi.pshell.ui.App;
 import ch.psi.utils.swing.ConfigDialog;
 import java.awt.Component;
+import java.awt.Window;
 import javax.swing.JPanel;
 
 /**
@@ -396,11 +396,16 @@ public class DevicePanel extends MonitoredPanel {
     }        
     
 
+    public static JPanel showDevicePanel(Component parent, GenericDevice device) {
+        Window window = (parent instanceof Window) ? (Window)parent : SwingUtils.getWindow(parent);
+        return App.getInstance().getDevicePanelManager().showPanel(device, window);
+    }
+
     public JPanel showDevicePanel(GenericDevice device) {
-        return App.getInstance().getDevicePanelManager().showPanel(device, getFrame());
+        return showDevicePanel(getFrame(), device);
     }
     
-    public boolean hideDevicePanel(GenericDevice device) {
+    static public boolean hideDevicePanel(GenericDevice device) {
         return App.getInstance().getDevicePanelManager().hidePanel(device);
     }
 

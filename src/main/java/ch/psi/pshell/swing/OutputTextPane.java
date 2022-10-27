@@ -164,7 +164,12 @@ public class OutputTextPane extends JTextPane {
         for (AppendedText txt : list) {
             String text = txt.sb.toString();
             StyleContext sc = StyleContext.getDefaultStyleContext();
-            AttributeSet aset = sc.addAttribute(SimpleAttributeSet.EMPTY, StyleConstants.Foreground, txt.c);
+            AttributeSet aset=null;
+            try{
+                aset = sc.addAttribute(SimpleAttributeSet.EMPTY, StyleConstants.Foreground, txt.c);
+            } catch (Exception ex){                
+            }
+            
             int len = getDocument().getLength();
             if (getTextLength() > 0) {
                 int textLength = len + text.length();
@@ -194,7 +199,9 @@ public class OutputTextPane extends JTextPane {
 
             }
             setCaretPosition(len);
-            setCharacterAttributes(aset, false);
+            if (aset!=null){
+                setCharacterAttributes(aset, false);
+            }
             replaceSelection(text);
         }
     }

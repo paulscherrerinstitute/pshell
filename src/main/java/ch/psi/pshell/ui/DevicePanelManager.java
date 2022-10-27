@@ -13,7 +13,7 @@ import ch.psi.utils.State;
 import ch.psi.utils.swing.SwingUtils;
 import java.awt.Component;
 import java.awt.Dimension;
-import java.awt.Frame;
+import java.awt.Window;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
@@ -45,14 +45,14 @@ public class DevicePanelManager {
         return showPanel(name, view);
     }
 
-    public JPanel showPanel(final String name, Frame parent) {
+    public JPanel showPanel(final String name, Window parent) {
         return showPanel(Context.getInstance().getDevicePool().getByName(name), parent);
     }
     public JPanel showPanel(final GenericDevice dev) {
         return showPanel(dev, view);
     }
     
-    public JPanel showPanel(final GenericDevice dev, Frame parent) {
+    public JPanel showPanel(final GenericDevice dev, Window parent) {
 
         if ((dev == null) || (dev.getName() == null)) {
             return null;
@@ -79,7 +79,7 @@ public class DevicePanelManager {
 
     public static final String RENDERER_DIALOG_NAME_PREFIX = "Renderer ";
 
-    Renderer newRenderer(final Source source, Frame parent) {
+    Renderer newRenderer(final Source source, Window parent) {
         final String name = source.getName();
         final Renderer renderer = new Renderer() {
             @Override
@@ -113,7 +113,7 @@ public class DevicePanelManager {
         return renderer;
     }
 
-    DevicePanel newPanel(Device dev, Frame parent) {
+    DevicePanel newPanel(Device dev, Window parent) {
         for (DevicePoolPanel.DefaultPanel entry : preferences.defaultPanels) {
             try {
                 if (entry.getDeviceClass().isAssignableFrom(dev.getClass())) {
