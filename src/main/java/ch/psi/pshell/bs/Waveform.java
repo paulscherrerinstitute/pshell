@@ -2,7 +2,6 @@ package ch.psi.pshell.bs;
 
 import java.lang.reflect.Array;
 import ch.psi.pshell.device.ReadonlyRegister.ReadonlyRegisterArray;
-import ch.psi.utils.Convert;
 import java.io.IOException;
 
 /**

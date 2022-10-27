@@ -13,7 +13,6 @@ public class Matrix<T> extends StreamChannel<T> implements ReadonlyRegisterMatri
 
     Integer width;
     Integer height;
-    int[] shape;
 
     public Matrix(String name, Stream stream) {
         super(name, stream, new MatrixConfig());
@@ -57,6 +56,10 @@ public class Matrix<T> extends StreamChannel<T> implements ReadonlyRegisterMatri
     @Override
     public int getWidth() {
         if (width==null){
+            int[] shape = getShape();
+            if (shape==null){
+                return 0;
+            }
             return shape[1];
         }
         return width;
@@ -65,14 +68,18 @@ public class Matrix<T> extends StreamChannel<T> implements ReadonlyRegisterMatri
     @Override
     public int getHeight() {
         if (height==null){
+            int[] shape = getShape();
+            if (shape==null){
+                return 0;
+            }
             return shape[0];
         }
         return height;
     }
 
     @Override
-    void set(long pulseId, long timestamp, long nanosOffset, T value, ChannelConfig config) {
-        shape = config.getShape();
+    protected void set(long pulseId, long timestamp, long nanosOffset, T value, ChannelConfig config) {
+        this.config = config; //Done before so getWidth and getHeight get updated value
         super.set(pulseId, timestamp, nanosOffset, (T) Convert.reshape(value, getWidth(), getHeight()), config);
     }
 }

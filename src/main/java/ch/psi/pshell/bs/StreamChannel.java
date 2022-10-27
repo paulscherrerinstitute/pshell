@@ -18,7 +18,6 @@ public class StreamChannel<T> extends ReadonlyAsyncRegisterBase<T> {
     private String id;
     private int modulo = DEFAULT_MODULO;
     private int offset = DEFAULT_OFFSET;
-    
 
     public int TIMEOUT_UPDATE = 10000;
 
@@ -26,7 +25,7 @@ public class StreamChannel<T> extends ReadonlyAsyncRegisterBase<T> {
     boolean useLocalTimestamp = true;
 
     private volatile Long pulseId;
-    private volatile ChannelConfig config;
+    volatile ChannelConfig config;
 
     @Override
     public StreamChannelConfig getConfig() {
@@ -118,7 +117,7 @@ public class StreamChannel<T> extends ReadonlyAsyncRegisterBase<T> {
         return pulseId;
     }
 
-    void set(long pulseId, long timestamp, long nanosOffset, T value, ChannelConfig config) {
+    protected void set(long pulseId, long timestamp, long nanosOffset, T value, ChannelConfig config) {
         synchronized (cacheUpdateLock) {
             this.pulseId = pulseId;
             this.config = config;
@@ -158,8 +157,8 @@ public class StreamChannel<T> extends ReadonlyAsyncRegisterBase<T> {
     public String getChannelName(){
         String prefix = getParent().getChannelPrefix();
         return (prefix==null) ? id : prefix+":"+id;
-    }
-
+    } 
+    
     @Override
     public BeamSynchronousValue takeTimestamped() {
         synchronized (cacheUpdateLock) {

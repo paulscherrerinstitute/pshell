@@ -39,7 +39,7 @@ public class Scalar<T> extends StreamChannel<T> {
     }
     
     @Override
-    void set(long pulseId, long timestamp, long nanosOffset, T value, ChannelConfig config) {
+    protected void set(long pulseId, long timestamp, long nanosOffset, T value, ChannelConfig config) {
         if ((value!=null) && (value.getClass().isArray())){
             value = (T) Array.get(value, 0);
         } 
