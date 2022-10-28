@@ -118,6 +118,7 @@ public class StreamChannelPanel extends DevicePanel {
             }
             if (plot!=null){
                 plot.setTitle(getDevice().getChannelName());
+                plot.setTitleFont(PlotPanel.getTitleFont());
                 plot.getAxis(Plot.AxisId.X).setLabel("");
                 plot.getAxis(Plot.AxisId.Y).setLabel("");   
                 add((Component)plot);

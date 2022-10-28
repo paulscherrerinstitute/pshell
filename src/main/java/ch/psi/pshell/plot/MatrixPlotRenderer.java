@@ -64,8 +64,10 @@ public class MatrixPlotRenderer extends MatrixPlotBase {
     
     @Override
     protected void onTitleChanged() {
-        title.setFont(getTitleFont());
-        title.setText((getTitle()   ==null) ? "" : getTitle());
+        if (getTitleFont()!=null){
+            title.setFont(getTitleFont());
+        }
+        title.setText((getTitle()==null) ? "" : getTitle());
     }
 
     private Renderer getRenderer() {
