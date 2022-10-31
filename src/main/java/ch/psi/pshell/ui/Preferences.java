@@ -134,6 +134,7 @@ public class Preferences {
     public String[] processingScripts;
 
     public boolean asyncViewersUpdate;
+    public boolean asyncHistoryPlotsUpdate;
     public boolean scanPlotDisabled;
     public boolean scanTableDisabled;
     public boolean cachedDataPanel;

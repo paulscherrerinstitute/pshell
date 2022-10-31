@@ -174,6 +174,7 @@ public class PreferencesDialog extends StandardDialog {
         textPT.setText(getFontDesc(preferences.fontPlotTick));
         textT.setText(getFontDesc(preferences.fontTerminal));
         ckAsyncUpdate.setSelected(preferences.asyncViewersUpdate);
+        ckAsyncPlotsUpdate.setSelected(preferences.asyncHistoryPlotsUpdate);        
         ckScanPlotEnabled.setSelected(!preferences.scanPlotDisabled);
         ckScanTableEnabled.setSelected(!preferences.scanTableDisabled);
         checkCachedDataPanel.setSelected(preferences.cachedDataPanel);
@@ -399,6 +400,7 @@ public class PreferencesDialog extends StandardDialog {
         ckAsyncUpdate = new javax.swing.JCheckBox();
         comboScriptPopup = new javax.swing.JComboBox();
         jLabel21 = new javax.swing.JLabel();
+        ckAsyncPlotsUpdate = new javax.swing.JCheckBox();
         jPanel5 = new javax.swing.JPanel();
         ckeckBackgroundRendering = new javax.swing.JCheckBox();
         checkStatusBar = new javax.swing.JCheckBox();
@@ -1586,6 +1588,8 @@ public class PreferencesDialog extends StandardDialog {
         jLabel21.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
         jLabel21.setText("Script popup dialog:");
 
+        ckAsyncPlotsUpdate.setText("Async history plot updates");
+
         javax.swing.GroupLayout jPanel9Layout = new javax.swing.GroupLayout(jPanel9);
         jPanel9.setLayout(jPanel9Layout);
         jPanel9Layout.setHorizontalGroup(
@@ -1599,7 +1603,8 @@ public class PreferencesDialog extends StandardDialog {
                         .addComponent(comboScriptPopup, javax.swing.GroupLayout.PREFERRED_SIZE, 120, javax.swing.GroupLayout.PREFERRED_SIZE))
                     .addComponent(ckScanPlotEnabled)
                     .addComponent(ckScanTableEnabled)
-                    .addComponent(ckAsyncUpdate))
+                    .addComponent(ckAsyncUpdate)
+                    .addComponent(ckAsyncPlotsUpdate))
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         jPanel9Layout.setVerticalGroup(
@@ -1615,6 +1620,8 @@ public class PreferencesDialog extends StandardDialog {
                 .addComponent(ckScanTableEnabled)
                 .addGap(0, 0, 0)
                 .addComponent(ckAsyncUpdate)
+                .addGap(0, 0, 0)
+                .addComponent(ckAsyncPlotsUpdate)
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
@@ -1760,6 +1767,7 @@ public class PreferencesDialog extends StandardDialog {
                 preferences.dataPanelLocation = (PanelLocation) comboDataPanelLocation.getSelectedItem();
                 preferences.openDataFilesInDocTab = radioDataDocTab.isSelected();
                 preferences.asyncViewersUpdate = ckAsyncUpdate.isSelected();
+                preferences.asyncHistoryPlotsUpdate = ckAsyncPlotsUpdate.isSelected();
                 preferences.scanPlotDisabled = !ckScanPlotEnabled.isSelected();
                 preferences.scanTableDisabled = !ckScanTableEnabled.isSelected();
                 preferences.cachedDataPanel = checkCachedDataPanel.isSelected();
@@ -2128,6 +2136,7 @@ public class PreferencesDialog extends StandardDialog {
     private javax.swing.JCheckBox checkStatusBar;
     private javax.swing.JCheckBox checkSyntaxHighlight;
     private javax.swing.JCheckBox checkXScanBrowser;
+    private javax.swing.JCheckBox ckAsyncPlotsUpdate;
     private javax.swing.JCheckBox ckAsyncUpdate;
     private javax.swing.JCheckBox ckScanPlotEnabled;
     private javax.swing.JCheckBox ckScanTableEnabled;

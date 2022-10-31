@@ -1880,6 +1880,7 @@
                               <Component id="ckScanPlotEnabled" alignment="0" min="-2" max="-2" attributes="0"/>
                               <Component id="ckScanTableEnabled" alignment="0" min="-2" max="-2" attributes="0"/>
                               <Component id="ckAsyncUpdate" alignment="0" min="-2" max="-2" attributes="0"/>
+                              <Component id="ckAsyncPlotsUpdate" alignment="0" min="-2" max="-2" attributes="0"/>
                           </Group>
                           <EmptySpace max="32767" attributes="0"/>
                       </Group>
@@ -1899,6 +1900,8 @@
                           <Component id="ckScanTableEnabled" min="-2" max="-2" attributes="0"/>
                           <EmptySpace min="0" pref="0" max="-2" attributes="0"/>
                           <Component id="ckAsyncUpdate" min="-2" max="-2" attributes="0"/>
+                          <EmptySpace min="0" pref="0" max="-2" attributes="0"/>
+                          <Component id="ckAsyncPlotsUpdate" min="-2" max="-2" attributes="0"/>
                           <EmptySpace max="32767" attributes="0"/>
                       </Group>
                   </Group>
@@ -1931,6 +1934,11 @@
                   <Properties>
                     <Property name="horizontalAlignment" type="int" value="11"/>
                     <Property name="text" type="java.lang.String" value="Script popup dialog:"/>
+                  </Properties>
+                </Component>
+                <Component class="javax.swing.JCheckBox" name="ckAsyncPlotsUpdate">
+                  <Properties>
+                    <Property name="text" type="java.lang.String" value="Async history plot updates"/>
                   </Properties>
                 </Component>
               </SubComponents>

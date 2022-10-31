@@ -2399,7 +2399,7 @@ public class View extends MainFrame {
         if (preferences.fontPlotTitle != null){
             PlotPanel.setTitleFont(preferences.fontPlotTitle.toFont());
         }
-        HistoryChart.setDefaultAsync(preferences.asyncViewersUpdate);
+        HistoryChart.setDefaultAsync(preferences.asyncHistoryPlotsUpdate);
 
         if (preferences.linePlot != null) {
             System.setProperty(PlotPanel.PROPERTY_PLOT_IMPL_LINE, preferences.linePlot);
