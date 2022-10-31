@@ -47,7 +47,7 @@ public class PipelineStream extends ReadonlyRegisterBase<StreamValue> implements
     
     public PipelineStream(String name, String url, String instanceId) {
         super(name, null);
-        client = new ScreenPanelPipelineClient(url);
+        client = new DefaultProcessingPipelineClient(url);
         proxy = new ProxyClient(url);
         this.instanceId = instanceId;
         this.pipelineName = null;
@@ -56,7 +56,7 @@ public class PipelineStream extends ReadonlyRegisterBase<StreamValue> implements
 
     public PipelineStream(String name, String url, String pipelineName, String instanceId) {
         super(name, null);
-        client = new ScreenPanelPipelineClient(url);
+        client = new DefaultProcessingPipelineClient(url);
         proxy = new ProxyClient(url);
         this.pipelineName = pipelineName;
         this.instanceId = instanceId;
@@ -65,7 +65,7 @@ public class PipelineStream extends ReadonlyRegisterBase<StreamValue> implements
 
     public PipelineStream(String name, String url, Map<String, Object> config, String instanceId) {
         super(name, null);
-        client = new ScreenPanelPipelineClient(url);
+        client = new DefaultProcessingPipelineClient(url);
         proxy = new ProxyClient(url);
         this.pipelineName = null;
         this.instanceId = instanceId;

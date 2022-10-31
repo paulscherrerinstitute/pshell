@@ -15,7 +15,7 @@ import java.util.Map;
 public class PipelineSource extends StreamCamera {
 
     //final PipelineClient client;
-    final ScreenPanelPipelineClient client; //Using instead of PipelineClient to easilly add methods to access stadndard processing pipeline
+    final DefaultProcessingPipelineClient client; //Using instead of PipelineClient to easilly add methods to access stadndard processing pipeline
     String currentPipeline;
     String currentInstance;
     Boolean currentShared;
@@ -31,7 +31,7 @@ public class PipelineSource extends StreamCamera {
         public String serverURL = PipelineClient.DEFAULT_URL;
     }
     
-    public ScreenPanelPipelineClient getClient() {
+    public DefaultProcessingPipelineClient getClient() {
         return client;
     }    
 
@@ -52,7 +52,7 @@ public class PipelineSource extends StreamCamera {
         if (cfg instanceof PipelineSourceConfig) {
             url = ((PipelineSourceConfig) cfg).serverURL;
         }
-        client = new ScreenPanelPipelineClient(url);
+        client = new DefaultProcessingPipelineClient(url);
     }
 
     /**

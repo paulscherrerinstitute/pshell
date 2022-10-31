@@ -78,16 +78,15 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.DefaultComboBoxModel;
-import javax.swing.GroupLayout;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JCheckBoxMenuItem;
-import javax.swing.JComboBox;
 import javax.swing.JComponent;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
@@ -117,6 +116,18 @@ public class CamServerViewer extends MonitoredPanel {
 
     final static String CHANNEL_IMAGE = "image";
     final static String CHANNEL_PARAMETERS = "processing_parameters";
+
+    public static final String ARG_TYPE = "cam_type";
+    public static final String ARG_LIST = "cam_list";
+    public static final String ARG_ALIAS = "alias";
+    public static final String ARG_CAMERA = "cam";
+    public static final String ARG_STREAM = "stream";
+    public static final String ARG_CONSOLE = "console";
+    public static final String ARG_CAMERA_SERVER = "camera_server";
+    public static final String ARG_PIPELINE_SERVER = "pipeline_server";
+    public static final String ARG_SELECTION_MODE = "selection_mode";
+    public static final String ARG_STREAM_LIST = "stream_list";
+
     
     final String CAMERA_DEVICE_NAME = "CurrentCamera";
     String userOverlaysConfigFile;
@@ -138,8 +149,10 @@ public class CamServerViewer extends MonitoredPanel {
     int integration = 0;
     boolean persistCameraState;
     List<String> streamList;
+    String startupStream;
 
-    String serverUrl;
+    String pipelineServerUrl;
+    String cameraServerUrl;
     PipelineSource server;
     String pipelineNameFormat = "%s_sp";
     String instanceNameFormat = "%s1";
@@ -150,12 +163,36 @@ public class CamServerViewer extends MonitoredPanel {
     Text imagePauseOverlay;
     DevicePanel streamPanel;
 
+    Map<String, List<String>> groups;
+    Map<String, String> aliases;
+    String[] types;
+
+    SourceSelecionMode sourceSelecionMode;
+    Console console;
+
+    public static interface CamServerViewerListener {
+        void onOpeningStream(String name) throws Exception;
+        void onOpenedStream(String name, String instance) throws Exception;
+        void onSavingImages(String name, String instance, DataManager dm, String pathRoot) throws Exception;
+        void onSavedSnapshot(String name, String instance, String snapshotFile) throws Exception;        
+    }
+
+    CamServerViewerListener listener;
+
+    public CamServerViewerListener getListener() {
+        return listener;
+    }
+
+    public void setListener(CamServerViewerListener listener) {
+        this.listener = listener;
+    }
+
+    
     public CamServerViewer() {
         try {
             initComponents();
             setSidePanelVisible(false);
             panelPipeline.setVisible(false);
-            textStream.setBackground(panelStream.getBackground());
             SwingUtils.setEnumCombo(comboColormap, Colormap.class);
 
             spinnerThreshold.setVisible(false);
@@ -168,7 +205,7 @@ public class CamServerViewer extends MonitoredPanel {
             setGoodRegionOptionsVisible(false);
             setSlicingOptionsVisible(false);
             setRotationOptionsVisible(false);
-            setAveragingOptionsVisible(false);            
+            setAveragingOptionsVisible(false);
             JComponent editor = spinnerSlOrientation.getEditor();
             if (editor instanceof JSpinner.DefaultEditor) {
                 ((JSpinner.DefaultEditor) editor).getTextField().setHorizontalAlignment(JTextField.RIGHT);
@@ -187,14 +224,14 @@ public class CamServerViewer extends MonitoredPanel {
                     showException(ex);
                 }
             });
-            
+
             JMenuItem menuCameraConfig = new JMenuItem("Camera Configurarion");
             menuCameraConfig.addActionListener((ActionEvent e) -> {
                 try {
                     if (camera != null) {
                         String cameraName = getCameraName();
                         String cameraConfigJson = null;
-                        try (CameraSource srv = new CameraSource("CamServer", App.getArgumentValue("camera_server"))) {
+                        try ( CameraSource srv = newCameraSource()) {
                             srv.initialize();
                             //TODO: replace into encodeMultiline
                             cameraConfigJson = EncoderJson.encode(srv.getConfig(cameraName), true);
@@ -211,7 +248,7 @@ public class CamServerViewer extends MonitoredPanel {
                 } catch (Exception ex) {
                     showException(ex);
                 }
-            });            
+            });
 
             JMenuItem menuSetImageBufferSize = new JMenuItem("Set Stack Size...");
             menuSetImageBufferSize.addActionListener((ActionEvent e) -> {
@@ -233,7 +270,7 @@ public class CamServerViewer extends MonitoredPanel {
                     showException(ex);
                 }
             });
-            
+
             JMenuItem menuCalibrate = new JMenuItem("Calibrate...");
             menuCalibrate.addActionListener((ActionEvent e) -> {
                 try {
@@ -241,8 +278,8 @@ public class CamServerViewer extends MonitoredPanel {
                 } catch (Exception ex) {
                     showException(ex);
                 }
-            });            
-            
+            });
+
             JMenuItem menuSetROI = new JMenuItem("Set ROI...");
             menuSetROI.addActionListener((ActionEvent e) -> {
                 renderer.abortSelection();
@@ -287,7 +324,7 @@ public class CamServerViewer extends MonitoredPanel {
                         showException(ex);
                     }
                 }
-            });            
+            });
 
             JCheckBoxMenuItem menuFrameIntegration = new JCheckBoxMenuItem("Multi-Frame", (integration != 0));
             menuFrameIntegration.addActionListener((ActionEvent e) -> {
@@ -322,7 +359,7 @@ public class CamServerViewer extends MonitoredPanel {
                 }
             });
 
-            SwingUtilities.invokeLater(()->{
+            SwingUtilities.invokeLater(() -> {
                 for (Component cmp : SwingUtils.getComponentsByType(renderer.getPopupMenu(), JMenu.class)) {
                     JMenu menu = (JMenu) cmp;
                     if (menu.getText().equals("Integration")) {
@@ -340,27 +377,27 @@ public class CamServerViewer extends MonitoredPanel {
                 });
                 renderer.getPopupMenu().add(menuHistogram);
                 renderer.getPopupMenu().addSeparator();
-                renderer.getPopupMenu().add(menuRendererConfig);                
+                renderer.getPopupMenu().add(menuRendererConfig);
                 renderer.getPopupMenu().add(menuSetImageBufferSize);
                 renderer.getPopupMenu().add(menuSaveStack);
                 renderer.getPopupMenu().addSeparator();
-                if (App.hasArgument("camera_server")){
+                if (getCameraServerUrl()!=null) {
                     renderer.getPopupMenu().add(menuCalibrate);
                     renderer.getPopupMenu().add(menuCameraConfig);
                     renderer.getPopupMenu().addSeparator();
                 }
-                                        
+
                 renderer.getPopupMenu().add(menuSetROI);
-                renderer.getPopupMenu().add(menuResetROI);                
+                renderer.getPopupMenu().add(menuResetROI);
                 renderer.getPopupMenu().addPopupMenuListener(new PopupMenuListener() {
                     @Override
                     public void popupMenuWillBecomeVisible(PopupMenuEvent e) {
                         menuSetImageBufferSize.setEnabled(!renderer.isPaused());
                         menuFrameIntegration.setSelected(integration != 0);
                         menuCalibrate.setVisible(server != null);
-                        menuCalibrate.setEnabled((calibrationDialolg == null) || (!calibrationDialolg.isShowing()));                        
-                        menuSetROI.setEnabled(server!=null);
-                        menuResetROI.setEnabled(server!=null);
+                        menuCalibrate.setEnabled((calibrationDialolg == null) || (!calibrationDialolg.isShowing()));
+                        menuSetROI.setEnabled(server != null);
+                        menuResetROI.setEnabled(server != null);
                     }
 
                     @Override
@@ -389,7 +426,7 @@ public class CamServerViewer extends MonitoredPanel {
                     }
                 }
             });
-            
+
             renderer.addListener(new RendererListener() {
                 @Override
                 public void onMoveFinished(Renderer renderer, Overlay overlay) {
@@ -397,116 +434,179 @@ public class CamServerViewer extends MonitoredPanel {
                         onMarkerChanged();
                     }
                 }
-            });            
-
-            if (App.hasArgument("persistence_file")) {
-                setPersistenceFile(App.getArgumentValue("persistence_file"));
-            } else {
-                setPersistenceFile(Paths.get(Sys.getTempFolder(), "CamServerViewer.bin").toString());
-            }
-
-            if (App.hasArgument("zoom")) {
-                try {
-                    setZoom(Double.valueOf(App.getArgumentValue("zoom")));
-                } catch (Exception ex) {
-                    ex.printStackTrace();
-                }
-            }
-            if (App.hasArgument("buffer_size")) {
-                try {
-                    setBufferLength(Integer.valueOf(App.getArgumentValue("buffer_size")));
-                } catch (Exception ex) {
-                    ex.printStackTrace();
-                }
-            }
-
-            if (App.getBoolArgumentValue("side_panel")) {
-                setSidePanelVisible(true);
-            }            
-
-            if (App.hasArgument("user_overlays")) {
-                try {
-                    setUserOverlaysConfigFile(App.getArgumentValue("user_overlays"));
-                } catch (Exception ex) {
-                    ex.printStackTrace();
-                }
-            }
-
-            if (App.getBoolArgumentValue("local_fit")) {
-                setLocalFit(true);
-            }
-
-            if (App.getBoolArgumentValue("persist_camera")) {
-                setPersist(true);
-            }
-
-            if (App.hasArgument("integration")) {
-                try {
-                    setIntegration(Integer.valueOf(App.getArgumentValue("integration")));
-                } catch (Exception ex) {
-                    ex.printStackTrace();
-                }
-            }
-
-            if (App.hasArgument("stream_list")) {
-                setStreamList(Arrays.asList(App.getArgumentValue("stream_list").split("\\|")));
-            }
-
-            if (App.hasArgument("pipeline_format")) {
-                setPipelineNameFormat(App.getArgumentValue("pipeline_format"));
-            }
-
-            if (App.hasArgument("instance_format")) {
-                setInstanceNameFormat(App.getArgumentValue("instance_format"));
-            }
-
-            if (App.hasArgument("pipeline_server")) {
-                setServerUrl(App.getArgumentValue("pipeline_server"));
-            }
-            if (App.hasArgument("selection_mode")) {
-                setSourceSelecionMode(SourceSelecionMode.valueOf(App.getArgumentValue("selection_mode")));
-            }            
-            if (App.hasArgument("stream")) {
-                setStream(App.getArgumentValue("stream"));
-            }               
+            });
 
         } catch (Exception ex) {
             ex.printStackTrace();
         }
         updateButtons();
     }
+    
+                
+    
+    public void initialize(String selectionMode, String startupStream, 
+            boolean consoleCommands, String cameraServer, String PipelineServer, 
+            List<String> types, List<String> streams) throws IOException, InterruptedException {
+        SourceSelecionMode mode = (selectionMode==null) ? SourceSelecionMode.Cameras : SourceSelecionMode.valueOf(selectionMode);
+        initialize(mode, startupStream, consoleCommands, cameraServer, PipelineServer, types, streams);
+    }
+    
+    public void initialize(SourceSelecionMode selectionMode, String startupStream, 
+            boolean consoleCommands, String cameraServer, String pipelineServer,
+            List<String> types, List<String> streams) throws IOException, InterruptedException{
+        try{
+            if (selectionMode==null){
+                selectionMode = SourceSelecionMode.Cameras;
+            }
+            this.cameraServerUrl = cameraServer;
+            this.pipelineServerUrl = pipelineServer;  
+            
+            setStreamList(streams);            
+            
+            this.types= new String[]{"All"};
+            try ( CameraSource srv = newCameraSource()) {
+                groups = srv.getCameraGroups();
+                this.types = Arr.insert(Arr.sort(groups.keySet().toArray(new String[0])), "All", 0);
+                aliases = srv.getCameraAliases();
+            } catch (Exception ex) {
+                groups = null;
+                aliases = null;
+            }
+            
+            if (types != null) {
+                types.removeIf(Objects::isNull);
+                types.removeIf(String::isBlank);
+                this.types = types.toArray(new String[0]);
+            }
+            comboType.setModel(new javax.swing.DefaultComboBoxModel(this.types));
+            this.startupStream = startupStream;
+            setComboNameSelection(null);
+            if (Arr.containsEqual(this.types, "All")) {
+                setComboTypeSelection("All");
+            }
+            
+            if ((getPipelineServerUrl() == null) && (getCameraServerUrl() == null)){
+                setSourceSelecionMode(SourceSelecionMode.Single);
+            } else {
+                setSourceSelecionMode(selectionMode);
+            }
+            
+            setComboNameSelection(null);
+            if (startupStream!=null) {                
+                setStream(startupStream);
+            }      
+            
+            
+            console = !consoleCommands ? null : new Console() {
+                @Override
+                protected void onConsoleCommand(String command) {
+                    String[] tokens = command.split(" ");
+                    if (tokens.length > 0){
+                        try {
+                            if (tokens[0].equals(ARG_CAMERA) || tokens[0].equals(ARG_STREAM)) {
+                                if (!tokens[1].equals(comboName.getSelectedItem())) {
+                                    setComboTypeSelection("All");
+                                    updateNameList();
+                                    comboName.setSelectedItem(tokens[1]);
+                                    if (!tokens[1].equals(comboName.getSelectedItem())) {
+                                        comboName.setSelectedItem("");
+                                        throw new Exception("Invalid name : " + tokens[1]);
+                                    }
+                                    System.out.println("Console set stream: " + tokens[1]);
+                                }
+                            } else if (tokens[0].equals("stop")) {
+                                setStream((String)null);
+                            } else {
+                                System.err.println("Invalid command: " + command);
+                            }  
+                        } catch (Exception ex) {
+                            System.err.println(ex);
+                        }
+                    } 
+                }
+            };
+            if (console!=null){
+                console.start();
+            }
+            
+        } finally{
+            updateButtons();
+        }
+    }
 
-    public interface CamServerViewerListener{
-        void onStream(String name);
+    
+    CameraSource newCameraSource() throws IOException, InterruptedException {
+        CameraSource srv = new CameraSource("CamServer", getCameraServerUrl());
+        srv.initialize();
+        return srv;
+    }
+
+    
+    public void setPipelineServerUrl(String value){
+        pipelineServerUrl = value;
     }
     
-    CamServerViewerListener listener;
-    
-    public CamServerViewerListener getListener(){
-        return listener;
+    public String getPipelineServerUrl() {             
+        return pipelineServerUrl;
+    }    
+
+    public void setCameraServerUrl(String value){
+        cameraServerUrl = value;
     }
     
-    public void setListener(CamServerViewerListener listener){
-        this.listener = listener;
-    }
-    
-    public String getServerUrl() {
-        return serverUrl;
-    }
-    
+    public String getCameraServerUrl() {
+        if (cameraServerUrl == null) {
+            String pipelineServer = getPipelineServerUrl();
+            if (pipelineServer!=null){
+                //Default to port 8888
+                return pipelineServer.substring(0, pipelineServer.length() - 1) + "8";
+            }
+        }
+        return cameraServerUrl;
+    }    
+
     public PipelineSource getServer() {
         return server;
-    }    
-    
-    public StreamCamera getCamera(){
+    }
+
+    public StreamCamera getCamera() {
         return camera;
     }
-
-    public void setServerUrl(String server) {
-        this.serverUrl = server;
-        panelPipeline.setVisible(serverUrl != null);
+    
+    public Overlay[] getUserOverlays(){
+        return userOv;
+    }
+    
+    public Overlay[] getFitOverlays(){
+        return fitOv;
     }
 
+    public Overlay[] getProfileOverlays(){
+        return profileOv;
+    }
+
+    public Overlay getErrorOverlays(){
+        return errorOverlay;
+    }
+    
+    
+    public Map<String, List<String>> getGroups() {
+        if (groups==null){
+            return new HashMap<>();
+        }
+        return groups;
+    }
+    public Map<String, String> getAliases() {
+        if (aliases==null){
+            return new HashMap<>();
+        }
+        return aliases;
+    }
+    
+    public List<String> getTypes (){
+        return Arrays.asList((types==null) ? new String[0] : types);
+    }
+    
     public enum SourceSelecionMode {
         Single,
         Instances,
@@ -514,66 +614,61 @@ public class CamServerViewer extends MonitoredPanel {
         Cameras
 
     }
-    JComboBox comboStream;
 
-    SourceSelecionMode sourceSelecionMode = SourceSelecionMode.Single;
-
-    public void setSourceSelecionMode(SourceSelecionMode mode) {
+    protected void setSourceSelecionMode(SourceSelecionMode mode) {
         if (sourceSelecionMode == mode) {
             return;
         }
-        GroupLayout layout = (GroupLayout) panelStream.getLayout();
-        if ((getServerUrl() == null) && (mode != SourceSelecionMode.Single)) {
+        sourceSelecionMode = mode; 
+        
+        comboType.setVisible((sourceSelecionMode==SourceSelecionMode.Cameras) && !App.hasArgument(ARG_LIST));
+        labelType.setVisible(comboType.isVisible());        
+        panelPipeline.setVisible(getPipelineServerUrl() != null);
+        
+        if ((getPipelineServerUrl() == null) && (mode != SourceSelecionMode.Single)) {
             throw new RuntimeException("Invalid selection mode: Pipeline Server URL is not configured.");
         }
-        if ((sourceSelecionMode == SourceSelecionMode.Single) && (mode != SourceSelecionMode.Single)) {
-            comboStream = new JComboBox();
-            comboStream.setModel(getStreamList(mode));
-            comboStream.addActionListener((e) -> {
-                try {
-                    if (!comboStream.isEnabled()) {
-                        throw new Exception("Invalid state");
-                    }
-                    comboStream.setEnabled(false);
-                    final String stream = (String) comboStream.getSelectedItem();
-                    new Thread(new Runnable() {
-                        @Override
-                        public void run() {
-                            try {
-                                setStream(stream.trim().isEmpty() ? null : stream);
-                            } catch (Exception ex) {
-                                ex.printStackTrace();
-                            } finally {
-                                updateButtons();
-                                comboStream.setEnabled(true);
-                            }
-                        }
-                    }).start();
-                } catch (Exception ex) {
-                    showException(ex);
-                }
-
-            });
-            layout.replace(textStream, comboStream);
-        }
-        if ((mode == SourceSelecionMode.Single) && (sourceSelecionMode != SourceSelecionMode.Single)) {
-            layout.replace(comboStream, textStream);
-        }
-        sourceSelecionMode = mode;
+        updateNameList();
     }
 
     public SourceSelecionMode getSourceSelecionMode() {
         return sourceSelecionMode;
     }
+    
+    public List getCameraTypes(String name) {        
+        if (name == null) {
+            return null;
+        }
+        if (App.hasArgument(ARG_ALIAS) && (aliases!=null)){
+            name = aliases.getOrDefault(name, name);
+        }
+        
+        List ret = new ArrayList<String>();
+        if (groups!=null){            
+            for (String group: Arr.sort(groups.keySet().toArray(new String[0]))){
+                if (groups.get(group).contains(name)){
+                    ret.add(group);
+                }
+            }
+        }
+        ret.add("Unknown"); 
+        return ret;
+    }
+    
+    public boolean isCameraVisible(String camera) {
+        return ((comboType.getSelectedItem().toString().toLowerCase().equals("all")) || 
+                (getCameraTypes(camera).contains(comboType.getSelectedItem()))  );
+    }
+    
 
-    DefaultComboBoxModel getStreamList(SourceSelecionMode mode) {
+    DefaultComboBoxModel getNameList() {
         DefaultComboBoxModel model = new DefaultComboBoxModel();
         List<String> streams = new ArrayList<>();
-        try (PipelineSource srv = new PipelineSource(CAMERA_DEVICE_NAME, serverUrl);) {
-            if (streamList != null){     
+        try ( PipelineSource srv = new PipelineSource(CAMERA_DEVICE_NAME, getPipelineServerUrl())) {
+            if (streamList != null) {
                 streams = streamList;
             } else {
-                switch (mode) {
+                switch (sourceSelecionMode) {
                     case Instances:
                         streams = srv.getInstances();
                         break;
@@ -588,21 +683,19 @@ public class CamServerViewer extends MonitoredPanel {
             Collections.sort(streams);
 
             for (String stream : streams) {
-                model.addElement(stream);
+                if ((sourceSelecionMode!=SourceSelecionMode.Cameras) || isCameraVisible(stream)) {
+                    model.addElement(stream);
+                }
             }
 
-            if (App.hasArgument("stream")) {
-                String camera = App.getArgumentValue("stream");
-                if (model.getIndexOf(camera) < 0) {
-                    model.addElement(camera);
+            if (startupStream!=null) {
+                if (model.getIndexOf(startupStream) < 0) {
+                    if ((sourceSelecionMode!=SourceSelecionMode.Cameras) || isCameraVisible(startupStream)) {
+                        model.addElement(startupStream);
+                    }
                 }
             }
             model.addElement("");
-            if (App.hasArgument("stream")) {
-                model.setSelectedItem(App.getArgumentValue("stream"));
-            } else {
-                model.setSelectedItem("");
-            }
         } catch (Exception ex) {
             ex.printStackTrace();
         }
@@ -687,7 +780,7 @@ public class CamServerViewer extends MonitoredPanel {
             ex.printStackTrace();
         }
     }
-    
+
     public void setStreamList(List<String> value) {
         streamList = value;
     }
@@ -695,7 +788,6 @@ public class CamServerViewer extends MonitoredPanel {
     public List<String> getStreamList() {
         return streamList;
     }
-    
 
     public Boolean getLocalFit() {
         return localFit;
@@ -769,6 +861,14 @@ public class CamServerViewer extends MonitoredPanel {
         }
     }
 
+    @Override
+    protected void onDesactive() {
+        if (console != null) {
+            console.stop();
+            console = null;
+        }        
+    }
+    
     public class CameraState extends Config {
 
         public boolean valid;
@@ -999,6 +1099,44 @@ public class CamServerViewer extends MonitoredPanel {
         Data data;
     }
 
+    boolean updatingSelection;
+    Object comboSelection;
+
+    void setComboNameSelection(Object selection) {
+        updatingSelection = true;
+        comboSelection = selection;
+        try {
+            comboName.setSelectedItem(selection);
+        } finally {
+            updatingSelection = false;
+        }
+    }
+
+    void setComboTypeSelection(Object selection) {
+        updatingSelection = true;
+        try {
+            comboType.setSelectedItem(selection);
+        } finally {
+            updatingSelection = false;
+        }
+    }
+
+    void updateNameList() {
+        try {
+            String selected = (String) comboName.getSelectedItem();
+            comboName.setModel(getNameList());
+            if ((selected != null) && (((DefaultComboBoxModel) comboName.getModel()).getIndexOf(selected) > 0)) {
+                setComboNameSelection(selected);
+            } else {
+                setComboNameSelection("");
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        } finally {
+            updateButtons();
+        }
+    }
+
     final Object lockOverlays = new Object();
 
     protected void manageFit(BufferedImage bi, Data data) {
@@ -1047,14 +1185,13 @@ public class CamServerViewer extends MonitoredPanel {
     }
 
     public String setStream(Map<String, Object> stream) throws IOException, InterruptedException {
-        String json = EncoderJson.encode(stream, false);        
+        String json = EncoderJson.encode(stream, false);
         return setStream(json);
     }
-    
 
     public String setStream(String stream) throws IOException, InterruptedException {
         System.out.println("Initializing: " + stream);
-        
+
         parseUserOverlays();
         errorOverlay = null;
         lastFrame = null;
@@ -1066,10 +1203,10 @@ public class CamServerViewer extends MonitoredPanel {
         }
         dataTableModel = null;
 
-        if (streamPanel!=null){
+        if (streamPanel != null) {
             DevicePanel.hideDevicePanel(server.getStream());
         }
-        
+
         if (camera != null) {
             saveCameraState();
             camera.close();
@@ -1086,18 +1223,18 @@ public class CamServerViewer extends MonitoredPanel {
         renderer.removeOverlays(userOv);
         renderer.clear();
         renderer.resetZoom();
-        
+
         Map<String, Object> cfg = null;
-        if ((stream!=null) && (stream.startsWith("{") && stream.endsWith("}"))){
-            cfg =  (Map<String, Object>) EncoderJson.decode(stream, Map.class);        
-            textStream.setText((String) cfg.get("camera_name"));            
+        if ((stream != null) && (stream.startsWith("{") && stream.endsWith("}"))) {
+            cfg = (Map<String, Object>) EncoderJson.decode(stream, Map.class);
+            setComboNameSelection((String) cfg.get("camera_name"));
         } else {
-            textStream.setText((stream == null) ? "" : stream);
-        }        
+            setComboNameSelection((stream == null) ? "" : stream);
+        }
 
         boolean changed = !String.valueOf(stream).equals(this.stream);
         this.stream = stream;
-        if (changed || ((serverUrl == null))) {
+        if (changed || ((getPipelineServerUrl() == null))) {
             spinnerThreshold.setVisible(false);
             checkBackground.setEnabled(false);
             checkThreshold.setEnabled(false);
@@ -1107,20 +1244,27 @@ public class CamServerViewer extends MonitoredPanel {
             setGoodRegionOptionsVisible(false);
             setSlicingOptionsVisible(false);
             setRotationOptionsVisible(false);
-            setAveragingOptionsVisible(false);            
+            setAveragingOptionsVisible(false);
         }
 
         synchronized (imageBuffer) {
             currentFrame = null;
             imageBuffer.clear();
         }
-        if (changed) {            
+        if (changed) {
             if (renderer.isPaused()) {
                 renderer.resume();
                 removePauseOverlay();
                 pauseSelection.setVisible(false);
                 panelStream.setVisible(true);
             }
+            if (listener != null) {
+                try{
+                    listener.onOpeningStream(getStream());
+                } catch (Exception ex){
+                    Logger.getLogger(CamServerViewer.class.getName()).log(Level.WARNING, null, ex);
+                }
+            }            
         }
 
         if (stream == null) {
@@ -1132,11 +1276,11 @@ public class CamServerViewer extends MonitoredPanel {
 
         System.out.println("Setting stream: " + stream);
         try {
-            if ((serverUrl == null) || (stream.startsWith("tcp"))) {
+            if ((getPipelineServerUrl() == null) || (stream.startsWith("tcp"))) {
                 server = null;
                 camera = new StreamCamera(CAMERA_DEVICE_NAME, stream);
             } else {
-                server = new PipelineSource(CAMERA_DEVICE_NAME, serverUrl);
+                server = new PipelineSource(CAMERA_DEVICE_NAME, getPipelineServerUrl());
                 camera = server;
             }
 
@@ -1151,21 +1295,20 @@ public class CamServerViewer extends MonitoredPanel {
             camera.initialize();
             camera.assertInitialized();
 
-            System.out.println("Camera initialization OK");
             loadCameraState();
 
             if (server != null) {
-                if (cfg!=null){
+                if (cfg != null) {
                     String cameraName = (String) cfg.get("camera_name");
-                    if (cfg.get("name") != null){
+                    if (cfg.get("name") != null) {
                         pipelineName = String.valueOf(cfg.get("name"));
                     } else {
                         pipelineName = String.format(pipelineNameFormat, cameraName);
                     }
-                    instanceName = String.format(instanceNameFormat, pipelineName);   
+                    instanceName = String.format(instanceNameFormat, pipelineName);
                     if (server.getInstances().contains(instanceName)) {
                         server.start(instanceName, true);
-                    } else {                                    
+                    } else {
                         List<String> ret = server.createFromConfig(cfg, instanceName);
                         String instance_id = ret.get(0);
                         server.start(instance_id, true);
@@ -1206,7 +1349,7 @@ public class CamServerViewer extends MonitoredPanel {
                 checkThreshold.setEnabled(true);
                 checkRotation.setEnabled(true);
                 checkAveraging.setEnabled(true);
-                checkGoodRegion.setEnabled(true);                
+                checkGoodRegion.setEnabled(true);
             }
 
             updateButtons();
@@ -1293,43 +1436,56 @@ public class CamServerViewer extends MonitoredPanel {
             }
         } finally {
             //checkReticle();
-            onTimer();            
+            onTimer();
         }
-        onChangeColormap(null);            
-        if (listener != null){
-            listener.onStream((serverUrl != null) ? instanceName : stream);
+        onChangeColormap(null);
+        if (listener != null) {
+            try{
+                listener.onOpenedStream(getStream(), getInstanceName());
+            } catch (Exception ex){
+                Logger.getLogger(CamServerViewer.class.getName()).log(Level.WARNING, null, ex);
+            }
         }
-        return (serverUrl != null) ? instanceName : stream;
+        return getInstanceName();
     }
     
-    public Map<String,Object> getConfig(String instanceName) throws IOException, InterruptedException {
-        if (server==null){
+    public String getInstanceName(){
+        return (getPipelineServerUrl() != null) ? instanceName : stream;
+    }
+
+    public String getStream(){
+        return stream;
+    }
+
+    
+    public Map<String, Object> getConfig(String instanceName) throws IOException, InterruptedException {
+        if (server == null) {
             return null;
         }
         return server.getInstanceConfig(instanceName);
     }
-    
-    public void setConfig(String instanceName, Map<String,Object> config) throws IOException, InterruptedException {
-        if (server!=null){
-            Map<String,Object> cfg= getConfig();
+
+    public void setConfig(String instanceName, Map<String, Object> config) throws IOException, InterruptedException {
+        if (server != null) {
+            Map<String, Object> cfg = getConfig();
             cfg.putAll(config);
             server.setInstanceConfig(instanceName, config);
         }
     }
 
     public void setConfig(String instanceName, String key, Object value) throws IOException, InterruptedException {
-        if (server!=null){
-            Map<String,Object> config= new HashMap<>();
+        if (server != null) {
+            Map<String, Object> config = new HashMap<>();
             config.put(key, value);
-            server.setInstanceConfig(instanceName, config);           
+            server.setInstanceConfig(instanceName, config);
         }
     }
-   
-    public Map<String,Object> getConfig() throws IOException, InterruptedException {
+
+    public Map<String, Object> getConfig() throws IOException, InterruptedException {
         return getConfig(instanceName);
     }
-    
-    public void setConfig(Map<String,Object> config) throws IOException, InterruptedException {
+
+    public void setConfig(Map<String, Object> config) throws IOException, InterruptedException {
         setConfig(instanceName, config);
     }
 
@@ -1441,7 +1597,7 @@ public class CamServerViewer extends MonitoredPanel {
             onMarkerChanged();
         }
     }
-    
+
     Point lastMarkerPos;
 
     protected void onMarkerChanged() {
@@ -1454,9 +1610,9 @@ public class CamServerViewer extends MonitoredPanel {
             }
         } catch (Exception ex) {
             Logger.getLogger(getClass().getName()).log(Level.FINE, null, ex);
-        }        
-    }    
-    
+        }
+    }
+
     protected void updateMarker() {
         try {
             if (server != null) {
@@ -1499,7 +1655,7 @@ public class CamServerViewer extends MonitoredPanel {
             return new Point(Integer.MIN_VALUE, Integer.MIN_VALUE);
         }
         return null;
-    }    
+    }
 
     protected void checkProfile() {
         if (!updatingButtons) {
@@ -1557,14 +1713,14 @@ public class CamServerViewer extends MonitoredPanel {
         spinnerRotationMode.setVisible(visible);
         spinnerRotationConstant.setVisible(visible);
     }
-    
+
     void setAveragingOptionsVisible(boolean visible) {
         labelAvMode.setVisible(visible);
         labelAvFrames.setVisible(visible);
         spinnerAvMode.setVisible(visible);
         spinnerAvFrames.setVisible(visible);
     }
-    
+
     public boolean isCameraStopped() {
         return ((camera == null) || camera.isClosed());
     }
@@ -1613,8 +1769,8 @@ public class CamServerViewer extends MonitoredPanel {
             updateColormap();
             updateButtons();
             checkHistogram.setSelected((histogramDialog != null) && (histogramDialog.isShowing()));
-            buttonScale.setSelected(renderer.getShowColormapScale());        
-            
+            buttonScale.setSelected(renderer.getShowColormapScale());
+
             Frame frame = getCurrentFrame();
             if (frame != lastFrame) {
                 lastFrame = frame;
@@ -1628,8 +1784,8 @@ public class CamServerViewer extends MonitoredPanel {
             }
         } catch (Exception ex) {
             ex.printStackTrace();
-        }        
-    }   
+        }
+    }
 
     protected Pen penFit = new Pen(new Color(192, 105, 0), 0);
     protected Pen penCross = new Pen(new Color(192, 105, 0), 0);
@@ -1970,7 +2126,7 @@ public class CamServerViewer extends MonitoredPanel {
         userOverlayConfig = new ArrayList<>();
         if (userOverlaysConfigFile != null) {
             try {
-                try (FileInputStream in = new FileInputStream(userOverlaysConfigFile)) {
+                try ( FileInputStream in = new FileInputStream(userOverlaysConfigFile)) {
                     userOverlays.load(in);
 
                     for (String name : userOverlays.stringPropertyNames()) {
@@ -2231,14 +2387,13 @@ public class CamServerViewer extends MonitoredPanel {
     public static Map<String, Object> getProcessingParameters(StreamValue value) throws IOException {
         return (Map) EncoderJson.decode(value.getValue(CHANNEL_PARAMETERS).toString(), Map.class);
     }
-    
-    
+
     StandardDialog calibrationDialolg;
 
     void calibrate() throws Exception {
         if (server != null) {
             server.resetRoi();
-            calibrationDialolg = new CameraCalibrationDialog( getFrame(),  App.getArgumentValue("camera_server"), server.getCurrentCamera(), renderer);
+            calibrationDialolg = new CameraCalibrationDialog(getFrame(), getCameraServerUrl(), server.getCurrentCamera(), renderer);
             SwingUtils.centerComponent(getTopLevel(), calibrationDialolg);
             calibrationDialolg.setVisible(true);
             calibrationDialolg.setListener(new StandardDialog.StandardDialogListener() {
@@ -2253,7 +2408,7 @@ public class CamServerViewer extends MonitoredPanel {
                 }
             });
         }
-    }    
+    }
 
     StandardDialog dataTableDialog;
     DefaultTableModel dataTableModel;
@@ -2502,11 +2657,10 @@ public class CamServerViewer extends MonitoredPanel {
         updatingColormap = false;
     }
 
-    
     boolean updatingServerControls;
 
     void updatePipelineControls() {
-        if (server != null) {            
+        if (server != null) {
             if (server.isStarted()) {
                 updatingServerControls = true;
                 try {
@@ -2522,11 +2676,11 @@ public class CamServerViewer extends MonitoredPanel {
                     }
                     Number averaging = (Number) server.getAveraging();
                     checkAveraging.setSelected(averaging != null);
-                    if (averaging!=null){
+                    if (averaging != null) {
                         spinnerAvFrames.setValue(Math.abs(averaging.intValue()));
-                        spinnerAvMode.setValue(averaging.intValue()<0 ? "window" : "single");                        
-                    }           
-                    
+                        spinnerAvMode.setValue(averaging.intValue() < 0 ? "window" : "single");
+                    }
+
                     Map rotation = server.getRotation();
                     checkRotation.setSelected(rotation != null);
                     if (rotation != null) {
@@ -2549,17 +2703,17 @@ public class CamServerViewer extends MonitoredPanel {
                         spinnerSlScale.setValue(((Number) slicing.get("scale")).doubleValue());
                         spinnerSlOrientation.setValue((String) slicing.get("orientation"));
                     }
-                    
+
                     spinnerThreshold.setVisible(checkThreshold.isSelected());
                     setGoodRegionOptionsVisible(gr != null);
                     setSlicingOptionsVisible(slicing != null);
-                    setRotationOptionsVisible(rotation != null);        
-                    setAveragingOptionsVisible(averaging!=null);                    
-                    
+                    setRotationOptionsVisible(rotation != null);
+                    setAveragingOptionsVisible(averaging != null);
+
                 } catch (Exception ex) {
                     ex.printStackTrace();
                 }
-                               
+
                 updatingServerControls = false;
             }
         }
@@ -2646,7 +2800,16 @@ public class CamServerViewer extends MonitoredPanel {
                 if (snapshotFile != null) {
                     //renderer.saveSnapshot(snapshotFile, "png", true);
                     ImageBuffer.saveImage(SwingUtils.createImage(renderer), snapshotFile + ".png", "png");
-                    SwingUtils.showMessage(getTopLevel(), "Success", "Created data file:\n" + snapshotFile);
+
+                    if (listener!=null){
+                        try{
+                            listener.onSavedSnapshot(getStream(), getInstanceName(), snapshotFile);
+                        } catch (Exception ex){
+                            Logger.getLogger(CamServerViewer.class.getName()).log(Level.WARNING, null, ex);
+                        }            
+                    } else {                    
+                        SwingUtils.showMessage(getTopLevel(), "Success", "Created data file:\n" + snapshotFile);
+                    }
                 }
             }
 
@@ -2692,7 +2855,7 @@ public class CamServerViewer extends MonitoredPanel {
 
         int[] shape = first.getShape(CHANNEL_IMAGE);
         int width = shape[0];
-        int height = shape[1];        
+        int height = shape[1];
         Class dataType = first.getValue(CHANNEL_IMAGE).getClass().getComponentType();
 
         DataManager dm;
@@ -2713,8 +2876,8 @@ public class CamServerViewer extends MonitoredPanel {
         dm.createDataset(pathPid, Long.class, new int[]{depth});
         dm.createDataset(pathTimestampStr, String.class, new int[]{depth});
         for (String id : first.getIdentifiers()) {
-            if (!id.startsWith("_")){    //Filter commented entries
-                try{
+            if (!id.startsWith("_")) {    //Filter commented entries
+                try {
                     Object val = first.getValue(id);
                     if (id.equals(CHANNEL_IMAGE)) {
                     } else if (id.equals(CHANNEL_PARAMETERS)) {
@@ -2742,8 +2905,8 @@ public class CamServerViewer extends MonitoredPanel {
                     } else {
                         dm.createDataset(pathRoot + id, val.getClass(), new int[]{depth});
                     }
-                } catch (Exception ex){
-                     Logger.getLogger(CamServerViewer.class.getName()).log(Level.WARNING, null, ex);
+                } catch (Exception ex) {
+                    Logger.getLogger(CamServerViewer.class.getName()).log(Level.WARNING, null, ex);
                 }
             }
         }
@@ -2766,8 +2929,8 @@ public class CamServerViewer extends MonitoredPanel {
             dm.setItem(pathTimestampStr, Chrono.getTimeStr(streamValue.getTimestamp(), "YYYY-MM-dd HH:mm:ss.SSS"), index);
 
             for (String id : streamValue.getIdentifiers()) {
-                if (!id.startsWith("_")){    //Filter commented entries
-                    try{                    
+                if (!id.startsWith("_")) {    //Filter commented entries
+                    try {
                         Object val = streamValue.getValue(id);
                         if (id.equals(CHANNEL_IMAGE)) {
                         } else if (id.equals(CHANNEL_PARAMETERS)) {
@@ -2776,12 +2939,20 @@ public class CamServerViewer extends MonitoredPanel {
                         } else {
                             dm.setItem(pathRoot + id, val, index);
                         }
-                    } catch (Exception ex){
-                         Logger.getLogger(CamServerViewer.class.getName()).log(Level.WARNING, null, ex);
-                    }                        
+                    } catch (Exception ex) {
+                        Logger.getLogger(CamServerViewer.class.getName()).log(Level.WARNING, null, ex);
+                    }
                 }
             }
         }
+        if (listener!=null){            
+            try{
+                listener.onSavingImages(getStream(), getInstanceName(), dm, pathRoot);
+            } catch (Exception ex){
+                Logger.getLogger(CamServerViewer.class.getName()).log(Level.WARNING, null, ex);
+            }            
+        }
+        
         dm.closeOutput();
 
         return dm.getRootFileName();
@@ -2818,8 +2989,8 @@ public class CamServerViewer extends MonitoredPanel {
     protected Window getTopLevel() {
         return (Window) this.getTopLevelAncestor();
     }
-    
-    public JPanel getCustomPanel(){
+
+    public JPanel getCustomPanel() {
         return panelCustom;
     }
 
@@ -2827,18 +2998,26 @@ public class CamServerViewer extends MonitoredPanel {
         App.init(args);
         create();
     }
-    
+
     public static void create() {
         SwingUtilities.invokeLater(() -> {
             try {
                 CamServerViewer viewer = new CamServerViewer();
                 Window window = SwingUtils.showFrame(null, "Stream Camera Viewer", new Dimension(800, 600), viewer);
-                window.setIconImage(Toolkit.getDefaultToolkit().getImage(App.getResourceUrl("IconSmall.png"))); 
+                window.setIconImage(Toolkit.getDefaultToolkit().getImage(App.getResourceUrl("IconSmall.png")));
+                viewer.initialize(App.getArgumentValue(ARG_SELECTION_MODE), 
+                        App.getArgumentValue(ARG_STREAM), 
+                        App.getBoolArgumentValue(ARG_CONSOLE), 
+                        App.getArgumentValue(ARG_CAMERA_SERVER), 
+                        App.getArgumentValue(ARG_PIPELINE_SERVER),
+                        App.hasArgument(ARG_TYPE) ? List.of(App.getArgumentValue(ARG_TYPE).split(",")) : null,
+                        App.hasArgument(ARG_STREAM_LIST) ? Arrays.asList(App.getArgumentValue(ARG_STREAM_LIST).split("\\|")) : null
+                        );
             } catch (Exception ex) {
                 Logger.getLogger(CamServerViewer.class.getName()).log(Level.SEVERE, null, ex);
             }
 
-        });        
+        });
     }
 
     ////////
@@ -2865,7 +3044,10 @@ public class CamServerViewer extends MonitoredPanel {
         buttonTitle = new javax.swing.JToggleButton();
         pauseSelection = new ch.psi.pshell.swing.ValueSelection();
         panelStream = new javax.swing.JPanel();
-        textStream = new javax.swing.JTextField();
+        jLabel1 = new javax.swing.JLabel();
+        comboName = new javax.swing.JComboBox();
+        labelType = new javax.swing.JLabel();
+        comboType = new javax.swing.JComboBox();
         renderer = new ch.psi.pshell.imaging.Renderer();
         sidePanel = new javax.swing.JPanel();
         panelPipeline = new javax.swing.JPanel();
@@ -3072,10 +3254,25 @@ public class CamServerViewer extends MonitoredPanel {
 
     pauseSelection.setDecimals(0);
 
-    textStream.setHorizontalAlignment(javax.swing.JTextField.CENTER);
-    textStream.addActionListener(new java.awt.event.ActionListener() {
+    jLabel1.setText("Name:");
+
+    comboName.setFont(new java.awt.Font("Dialog", 1, 14)); // NOI18N
+    comboName.setMaximumRowCount(30);
+    comboName.setMinimumSize(new java.awt.Dimension(127, 27));
+    comboName.addActionListener(new java.awt.event.ActionListener() {
         public void actionPerformed(java.awt.event.ActionEvent evt) {
-            textStreamActionPerformed(evt);
+            comboNameActionPerformed(evt);
+        }
+    });
+
+    labelType.setText("Type:");
+
+    comboType.setFont(new java.awt.Font("Dialog", 1, 14)); // NOI18N
+    comboType.setMaximumRowCount(30);
+    comboType.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "All", "Laser", "Electrons", "Photonics" }));
+    comboType.addActionListener(new java.awt.event.ActionListener() {
+        public void actionPerformed(java.awt.event.ActionEvent evt) {
+            comboTypeActionPerformed(evt);
         }
     });
 
@@ -3083,16 +3280,27 @@ public class CamServerViewer extends MonitoredPanel {
     panelStream.setLayout(panelStreamLayout);
     panelStreamLayout.setHorizontalGroup(
         panelStreamLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-        .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, panelStreamLayout.createSequentialGroup()
-            .addComponent(textStream, javax.swing.GroupLayout.DEFAULT_SIZE, 238, Short.MAX_VALUE)
-            .addContainerGap())
+        .addGroup(panelStreamLayout.createSequentialGroup()
+            .addContainerGap()
+            .addComponent(jLabel1)
+            .addGap(0, 0, 0)
+            .addComponent(comboName, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+            .addComponent(labelType)
+            .addGap(0, 0, 0)
+            .addComponent(comboType, 0, 0, Short.MAX_VALUE)
+            .addGap(0, 0, 0))
     );
     panelStreamLayout.setVerticalGroup(
         panelStreamLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
         .addGroup(panelStreamLayout.createSequentialGroup()
-            .addGap(2, 2, 2)
-            .addComponent(textStream, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-            .addGap(1, 1, 1))
+            .addGap(0, 0, 0)
+            .addGroup(panelStreamLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.CENTER)
+                .addComponent(comboType, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(labelType)
+                .addComponent(jLabel1)
+                .addComponent(comboName, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+            .addGap(0, 0, 0))
     );
 
     javax.swing.GroupLayout topPanelLayout = new javax.swing.GroupLayout(topPanel);
@@ -3101,7 +3309,7 @@ public class CamServerViewer extends MonitoredPanel {
         topPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
         .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, topPanelLayout.createSequentialGroup()
             .addComponent(toolBar, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-            .addGap(18, 18, 18)
+            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
             .addComponent(panelStream, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
             .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
             .addComponent(pauseSelection, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -3696,7 +3904,7 @@ public class CamServerViewer extends MonitoredPanel {
                 .addGroup(layout.createSequentialGroup()
                     .addComponent(sidePanel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addGap(0, 0, 0)
-                    .addComponent(renderer, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
+                    .addComponent(renderer, javax.swing.GroupLayout.DEFAULT_SIZE, 591, Short.MAX_VALUE)))
             .addContainerGap())
     );
     layout.setVerticalGroup(
@@ -3751,8 +3959,8 @@ public class CamServerViewer extends MonitoredPanel {
 
     private void buttonStreamDataActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonStreamDataActionPerformed
         try {
-            streamPanel =(DevicePanel) DevicePanel.showDevicePanel(this, server.getStream());
-            ((JDialog)streamPanel.getWindow()).setTitle("Stream Data");
+            streamPanel = (DevicePanel) DevicePanel.showDevicePanel(this, server.getStream());
+            ((JDialog) streamPanel.getWindow()).setTitle("Stream Data");
             streamPanel.setReadOnly(true);
         } catch (Exception ex) {
             showException(ex);
@@ -4277,16 +4485,12 @@ public class CamServerViewer extends MonitoredPanel {
         }
     }//GEN-LAST:event_buttonTitleActionPerformed
 
-    private void textStreamActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_textStreamActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_textStreamActionPerformed
-
     private void checkAveragingActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_checkAveragingActionPerformed
         if (!updatingServerControls) {
             try {
                 if ((server != null) && (server.isStarted())) {
                     setAveragingOptionsVisible(checkAveraging.isSelected());
-                    Integer av = spinnerAvMode.getValue().equals("window") ? - (Integer)spinnerAvFrames.getValue() : (Integer)spinnerAvFrames.getValue();
+                    Integer av = spinnerAvMode.getValue().equals("window") ? -(Integer) spinnerAvFrames.getValue() : (Integer) spinnerAvFrames.getValue();
                     server.setAveraging(checkAveraging.isSelected() ? av : null);
                 }
             } catch (Exception ex) {
@@ -4303,6 +4507,60 @@ public class CamServerViewer extends MonitoredPanel {
     private void spinnerAvModeonChange(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_spinnerAvModeonChange
         checkAveragingActionPerformed(null);
     }//GEN-LAST:event_spinnerAvModeonChange
+
+    private void comboNameActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_comboNameActionPerformed
+        try {
+            if (!updatingSelection) {
+                if (!comboName.isEnabled()) {
+                    return;
+                }
+                comboName.setEnabled(false);
+                comboType.setEnabled(false);
+                final String name = (String) comboName.getSelectedItem();
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (requestCameraListUpdate) {
+                            requestCameraListUpdate = false;
+                            try {
+                                updateNameList();
+                            } catch (Exception ex) {
+                                ex.printStackTrace();
+                            }
+                        }
+                        try {
+                            setStream(name.trim().isEmpty() ? null : name);
+                        } catch (Exception ex) {
+                            ex.printStackTrace();
+                        } finally {
+                            updateButtons();
+                            comboName.setEnabled(true);
+                            comboType.setEnabled(true);
+                        }
+                    }
+                }).start();
+            }
+        } catch (Exception ex) {
+            showException(ex);
+        }
+    }//GEN-LAST:event_comboNameActionPerformed
+
+    private void comboTypeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_comboTypeActionPerformed
+        try {
+            if (!updatingSelection) {
+                Object currentSelection = comboSelection;
+                updateNameList();
+                if ((currentSelection != null) && (!currentSelection.equals(comboName.getSelectedItem()))) {
+                    setStream((String) null);
+                }
+            }
+
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        } finally {
+            updateButtons();
+        }
+    }//GEN-LAST:event_comboTypeActionPerformed
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
@@ -4337,6 +4595,9 @@ public class CamServerViewer extends MonitoredPanel {
     private javax.swing.JCheckBox checkSlicing;
     private javax.swing.JCheckBox checkThreshold;
     private javax.swing.JComboBox comboColormap;
+    private javax.swing.JComboBox comboName;
+    private javax.swing.JComboBox comboType;
+    private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
     private javax.swing.JPanel jPanel1;
@@ -4354,6 +4615,7 @@ public class CamServerViewer extends MonitoredPanel {
     private javax.swing.JLabel labelSlNumber;
     private javax.swing.JLabel labelSlOrientation;
     private javax.swing.JLabel labelSlScale;
+    private javax.swing.JLabel labelType;
     private javax.swing.JPanel panelColormap;
     private javax.swing.JPanel panelCustom;
     private javax.swing.JPanel panelPipeline;
@@ -4377,7 +4639,6 @@ public class CamServerViewer extends MonitoredPanel {
     private javax.swing.JSpinner spinnerSlOrientation;
     private javax.swing.JSpinner spinnerSlScale;
     private javax.swing.JSpinner spinnerThreshold;
-    private javax.swing.JTextField textStream;
     private javax.swing.JToolBar toolBar;
     private javax.swing.JPanel topPanel;
     // End of variables declaration//GEN-END:variables

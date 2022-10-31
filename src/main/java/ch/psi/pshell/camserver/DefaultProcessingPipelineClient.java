@@ -6,15 +6,15 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Client to  ScreenPanel default pipeline
+ * Client to Camserver  default processing pipeline (used by ScreenPanel)
  */
-public class ScreenPanelPipelineClient extends PipelineClient{
+public class DefaultProcessingPipelineClient extends PipelineClient{
 
-    public ScreenPanelPipelineClient(String host, int port) {
+    public DefaultProcessingPipelineClient(String host, int port) {
         super( host, port);
     }
 
-    public ScreenPanelPipelineClient(String url) {
+    public DefaultProcessingPipelineClient(String url) {
         super(url);
     }
     
