@@ -7,5 +7,5 @@ import ch.psi.pshell.device.Device;
  *
  */
 public interface AddressableDevice extends Device{
-    String getAddress();    
+    String getAddress();   
 }

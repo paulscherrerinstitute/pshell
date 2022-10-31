@@ -2,6 +2,8 @@ package ch.psi.pshell.ui;
 
 import ch.psi.pshell.bs.StreamChannel;
 import ch.psi.pshell.bs.Stream;
+import ch.psi.pshell.camserver.CamServerStream;
+import ch.psi.pshell.camserver.CameraStream;
 import ch.psi.pshell.camserver.PipelineStream;
 import ch.psi.pshell.core.Context;
 import java.awt.Font;
@@ -36,7 +38,7 @@ import ch.psi.pshell.swing.CodeEditor;
 import ch.psi.pshell.swing.DeviceValueChart;
 import ch.psi.pshell.swing.HistogramGeneratorPanel;
 import ch.psi.pshell.swing.MasterPositionerPanel;
-import ch.psi.pshell.swing.PipelineStreamPanel;
+import ch.psi.pshell.swing.CamServerStreamPanel;
 import ch.psi.pshell.swing.ScalerPanel;
 import ch.psi.pshell.swing.StreamPanel;
 import ch.psi.pshell.swing.StreamChannelPanel;
@@ -284,9 +286,9 @@ public class Preferences {
             new DefaultPanel(Camera.class.getName(), CameraPanel.class.getName()),
             new DefaultPanel(Slit.class.getName(), SlitPanel.class.getName()),
             new DefaultPanel(HistogramGenerator.class.getName(), HistogramGeneratorPanel.class.getName()),
-            new DefaultPanel(Stream.class.getName(), StreamPanel.class.getName()),   
-            new DefaultPanel(PipelineStream.class.getName(), PipelineStreamPanel.class.getName()),   
+            new DefaultPanel(Stream.class.getName(), StreamPanel.class.getName()),               
             new DefaultPanel(StreamChannel.class.getName(), StreamChannelPanel.class.getName()),   
+            new DefaultPanel(CamServerStream.class.getName(), CamServerStreamPanel.class.getName()),   
             new DefaultPanel(ReadonlyRegister.ReadonlyRegisterArray.class.getName(), DeviceValueChart.class.getName()),
             new DefaultPanel(ReadonlyRegister.ReadonlyRegisterMatrix.class.getName(), DeviceValueChart.class.getName()),            
         };

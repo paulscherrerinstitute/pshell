@@ -1,6 +1,7 @@
 package ch.psi.pshell.swing;
 
 
+import ch.psi.pshell.camserver.CamServerStream;
 import ch.psi.pshell.camserver.PipelineStream;
 import ch.psi.pshell.device.Device;
 import ch.psi.utils.Arr;
@@ -20,7 +21,7 @@ import javax.swing.table.DefaultTableModel;
 /**
  *
  */
-public class PipelineStreamPanel extends DevicePanel {
+public class CamServerStreamPanel extends DevicePanel {
 
     final DefaultTableModel modelConfig;
     final DefaultTableModel modelStats;
@@ -29,32 +30,34 @@ public class PipelineStreamPanel extends DevicePanel {
     Long  initTime;    
     volatile Map instanceInfo;
     
-    public PipelineStreamPanel() {
+    public CamServerStreamPanel() {
         initComponents();
         modelConfig =(DefaultTableModel) tableConfig.getModel();  
         modelStats =(DefaultTableModel) tableStats.getModel();  
     }
     
     @Override
-    public PipelineStream getDevice() {
-        return (PipelineStream) super.getDevice();
+    public CamServerStream getDevice() {
+        return (CamServerStream) super.getDevice();
+    }
+    
+    public boolean isPipeline(){
+        return getDevice() instanceof PipelineStream;
     }
     
     @Override
     public void setDevice(Device device) {
         super.setDevice(device);
-        streamPanel.setDevice((device!=null) ? ((PipelineStream)device).getStream(): null);
+        streamPanel.setDevice((device!=null) ? getDevice().getStream():null);
         streamPanel.setMonitoredDevice(getDevice());
               
         clearInfo();   
         if (getDevice() != null) {
-            textInstance.setText(getDisplayValue(getDevice().getInstance()));
-            textPipeline.setText(getDisplayValue(getDevice().getPipeline()));
             onDeviceStateChanged(getDevice().getState(), null);
             this.startTimer(1000, 10);
-        } else {
-            clear();
         }
+        textPipeline.setVisible(isPipeline());
+        labelPipeline.setVisible(textPipeline.isVisible());
         updateButtons();  
     }
    
@@ -62,7 +65,9 @@ public class PipelineStreamPanel extends DevicePanel {
     void updateButtons(){      
         if (getDevice()!=null){
             textInstance.setText(getDisplayValue(getDevice().getInstance()));
-            textPipeline.setText(getDisplayValue(getDevice().getPipeline()));
+            if (isPipeline()){
+                textPipeline.setText(getDisplayValue(((PipelineStream)getDevice()).getPipeline()));
+            }
             buttonConfig.setEnabled(getDevice().isInitialized());
         } else {
             textInstance.setText("");
@@ -84,7 +89,7 @@ public class PipelineStreamPanel extends DevicePanel {
         streamPanel.setReadOnly(value);
     }
     
-    static String getDisplayValue( Object obj){
+    public static String getDisplayValue( Object obj){
         if (obj==null) {
             return "";
         }        
@@ -193,7 +198,7 @@ public class PipelineStreamPanel extends DevicePanel {
 
         buttonConfig = new javax.swing.JButton();
         jLabel1 = new javax.swing.JLabel();
-        jLabel2 = new javax.swing.JLabel();
+        labelPipeline = new javax.swing.JLabel();
         textInstance = new javax.swing.JTextField();
         textPipeline = new javax.swing.JTextField();
         jTabbedPane1 = new javax.swing.JTabbedPane();
@@ -212,9 +217,9 @@ public class PipelineStreamPanel extends DevicePanel {
             }
         });
 
-        jLabel1.setText("Instance Name: ");
+        jLabel1.setText("Instance: ");
 
-        jLabel2.setText("Pipeline Name:");
+        labelPipeline.setText("Pipeline:");
 
         textInstance.setEditable(false);
 
@@ -326,7 +331,7 @@ public class PipelineStreamPanel extends DevicePanel {
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(textInstance)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(jLabel2)
+                .addComponent(labelPipeline)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(textPipeline)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -339,7 +344,7 @@ public class PipelineStreamPanel extends DevicePanel {
             .addGroup(layout.createSequentialGroup()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel1)
-                    .addComponent(jLabel2)
+                    .addComponent(labelPipeline)
                     .addComponent(textInstance, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(textPipeline, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(buttonConfig))
@@ -372,12 +377,12 @@ public class PipelineStreamPanel extends DevicePanel {
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton buttonConfig;
     private javax.swing.JLabel jLabel1;
-    private javax.swing.JLabel jLabel2;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel2;
     private javax.swing.JScrollPane jScrollPane3;
     private javax.swing.JScrollPane jScrollPane4;
     private javax.swing.JTabbedPane jTabbedPane1;
+    private javax.swing.JLabel labelPipeline;
     private ch.psi.pshell.swing.StreamPanel streamPanel;
     private javax.swing.JTable tableConfig;
     private javax.swing.JTable tableStats;
@@ -407,10 +412,10 @@ public class PipelineStreamPanel extends DevicePanel {
                                   updateInfo(instanceInfo);
                               });
                           } catch (Exception ex) {
-                              Logger.getLogger(PipelineStreamPanel.class.getName()).log(Level.WARNING, null, ex);
+                              Logger.getLogger(CamServerStreamPanel.class.getName()).log(Level.WARNING, null, ex);
                           }
                       } catch (IOException ex) {
-                          Logger.getLogger(PipelineStreamPanel.class.getName()).log(Level.WARNING, null, ex);
+                          Logger.getLogger(CamServerStreamPanel.class.getName()).log(Level.WARNING, null, ex);
                           clearInfo();
                       }
                       

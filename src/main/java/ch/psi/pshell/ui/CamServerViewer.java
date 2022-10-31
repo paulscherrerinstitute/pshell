@@ -2996,14 +2996,14 @@ public class CamServerViewer extends MonitoredPanel {
 
     public static void main(String[] args) throws Exception {
         App.init(args);
-        create();
+        create(null);
     }
 
-    public static void create() {
+    public static CamServerViewer create(Window parent) {
+        CamServerViewer viewer = new CamServerViewer();
         SwingUtilities.invokeLater(() -> {
-            try {
-                CamServerViewer viewer = new CamServerViewer();
-                Window window = SwingUtils.showFrame(null, "Stream Camera Viewer", new Dimension(800, 600), viewer);
+            try {                
+                Window window = SwingUtils.showFrame(parent, "CamServer Viewer", new Dimension(800, 600), viewer);
                 window.setIconImage(Toolkit.getDefaultToolkit().getImage(App.getResourceUrl("IconSmall.png")));
                 viewer.initialize(App.getArgumentValue(ARG_SELECTION_MODE), 
                         App.getArgumentValue(ARG_STREAM), 
@@ -3016,8 +3016,8 @@ public class CamServerViewer extends MonitoredPanel {
             } catch (Exception ex) {
                 Logger.getLogger(CamServerViewer.class.getName()).log(Level.SEVERE, null, ex);
             }
-
         });
+        return viewer;
     }
 
     ////////

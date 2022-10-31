@@ -1,6 +1,5 @@
 package ch.psi.pshell.camserver;
 
-import ch.psi.pshell.bs.Provider;
 import ch.psi.pshell.bs.Stream;
 import ch.psi.pshell.bs.StreamValue;
 import ch.psi.pshell.device.Device;
@@ -23,7 +22,7 @@ import ch.psi.pshell.bs.AddressableDevice;
 /**
  * Imaging Source implementation connecting to a CameraServer.
  */
-public class PipelineStream extends ReadonlyRegisterBase<StreamValue> implements ch.psi.pshell.device.Readable.ReadableType, AddressableDevice {
+public class PipelineStream extends ReadonlyRegisterBase<StreamValue> implements ch.psi.pshell.device.Readable.ReadableType, CamServerStream {
 
     final PipelineClient client;
     final ProxyClient proxy;
@@ -385,9 +384,12 @@ public class PipelineStream extends ReadonlyRegisterBase<StreamValue> implements
             Logger.getLogger(PipelineStream.class.getName()).log(Level.WARNING, null, ex);
         }
         stream = new Stream(getName() + " stream", streamUrl, push);
-        this.pipeline = instanceId;
         this.instance = instanceId;
-
+        try{
+            this.pipeline = (String) ((Map)proxy.getInstance(instance).get("config")).get("name");
+        } catch (Exception ex){
+            this.pipeline = "Unknown";
+        }
     }
 
     void startPipeline(String pipelineName, String instanceId) throws IOException {
@@ -414,7 +416,7 @@ public class PipelineStream extends ReadonlyRegisterBase<StreamValue> implements
             Logger.getLogger(PipelineStream.class.getName()).log(Level.WARNING, null, ex);
         }
         stream = new Stream(getName() + " stream", ret.get(1), push);
-        this.pipeline = pipelineName;
+        this.pipeline = (String) config.getOrDefault("name", "Unknown");
         this.instance = ret.get(0);
     }
 

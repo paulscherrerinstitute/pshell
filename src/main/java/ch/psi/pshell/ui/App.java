@@ -631,6 +631,14 @@ public class App extends ObservableBase<AppListener> {
         return getBoolArgumentValue("csvw");
     }
     
+    static public boolean isPipelineInstancesViewer() {
+        return getBoolArgumentValue("pivw");
+    }    
+    
+    static public boolean isCameraInstancesViewer() {
+        return getBoolArgumentValue("civw");
+    }       
+    
     static public boolean isStripChartServer() {
         return isStripChart() && ((isAttach() || (isServerMode())));
     }
@@ -1078,7 +1086,11 @@ public class App extends ObservableBase<AppListener> {
             } else if (isDataPanel()) {
                 DataPanel.createPanel(getFileArg());
             } else if (isCamServerViewer()) {
-                CamServerViewer.create();
+                CamServerViewer.create(null);
+            } else if (isPipelineInstancesViewer()) {
+                CamServerInstancesViewer.createPipelineInstances(null);                
+            } else if (isCameraInstancesViewer()) {
+                CamServerInstancesViewer.createCameraInstances(null);                
             } else {
                 if (isDual()) {
                     Console c = new Console();

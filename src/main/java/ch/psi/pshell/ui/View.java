@@ -137,7 +137,6 @@ import ch.psi.pshell.swing.MetadataEditor;
 import ch.psi.pshell.swing.MotorPanel;
 import ch.psi.pshell.swing.RepositoryChangesDialog;
 import ch.psi.pshell.swing.NextStagesPanel;
-import static ch.psi.pshell.ui.App.getResourceImage;
 import ch.psi.utils.Config;
 import ch.psi.utils.Sys;
 import ch.psi.utils.Sys.OSFamily;
@@ -159,7 +158,6 @@ import java.awt.dnd.DropTargetEvent;
 import java.util.HashSet;
 import java.util.Set;
 import javax.swing.BoxLayout;
-import javax.swing.ButtonGroup;
 import javax.swing.DefaultCellEditor;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
@@ -225,7 +223,8 @@ public class View extends MainFrame {
         MainFrame.setPersistenceFilesPermissions(context.getConfig().filePermissionsConfig);
         
         menuVersioning.setVisible(false);             
-        menuSessions.setVisible(context.isHandlingSessions());        
+        menuSessions.setVisible(context.isHandlingSessions());      
+        menuCamServer.setVisible(App.hasArgument(CamServerViewer.ARG_PIPELINE_SERVER));
 
         fileHistory = new History(getSessionPath() + "/FileHistory.dat", 10, true);
         openedFiles = new Properties();
@@ -2220,19 +2219,19 @@ public class View extends MainFrame {
     public static void setLookAndFeel(String laf){    
         MainFrame.setLookAndFeel(laf);
         if (isDark()) {
-            UIManager.put("FileView.directoryIcon", new ImageIcon(getResourceImage("FolderClosed.png")));
-            UIManager.put("FileChooser.homeFolderIcon", new ImageIcon(getResourceImage("Home.png")));
-            UIManager.put("FileView.computerIcon", new ImageIcon(getResourceImage("Computer.png")));
-            UIManager.put("FileView.floppyDriveIcon", new ImageIcon(getResourceImage("Floppy.png")));
-            UIManager.put("FileView.hardDriveIcon", new ImageIcon(getResourceImage("HardDrive.png")));
-            UIManager.put("FileChooser.upFolderIcon", new ImageIcon(getResourceImage("FolderUp.png")));
-            UIManager.put("FileChooser.newFolderIcon", new ImageIcon(getResourceImage("FolderNew.png")));
-            UIManager.put("FileView.fileIcon", new ImageIcon(getResourceImage("File.png")));
-            UIManager.put("FileChooser.listViewIcon", new ImageIcon(getResourceImage("List.png")));
-            UIManager.put("FileChooser.detailsViewIcon", new ImageIcon(getResourceImage("Details.png")));
-            UIManager.put("Tree.openIcon", new ImageIcon(getResourceImage("FolderOpen.png")));
-            UIManager.put("Tree.closedIcon", new ImageIcon(getResourceImage("FolderClosed.png")));
-            UIManager.put("Tree.leafIcon", new ImageIcon(getResourceImage("File.png")));
+            UIManager.put("FileView.directoryIcon", new ImageIcon(App.getResourceImage("FolderClosed.png")));
+            UIManager.put("FileChooser.homeFolderIcon", new ImageIcon(App.getResourceImage("Home.png")));
+            UIManager.put("FileView.computerIcon", new ImageIcon(App.getResourceImage("Computer.png")));
+            UIManager.put("FileView.floppyDriveIcon", new ImageIcon(App.getResourceImage("Floppy.png")));
+            UIManager.put("FileView.hardDriveIcon", new ImageIcon(App.getResourceImage("HardDrive.png")));
+            UIManager.put("FileChooser.upFolderIcon", new ImageIcon(App.getResourceImage("FolderUp.png")));
+            UIManager.put("FileChooser.newFolderIcon", new ImageIcon(App.getResourceImage("FolderNew.png")));
+            UIManager.put("FileView.fileIcon", new ImageIcon(App.getResourceImage("File.png")));
+            UIManager.put("FileChooser.listViewIcon", new ImageIcon(App.getResourceImage("List.png")));
+            UIManager.put("FileChooser.detailsViewIcon", new ImageIcon(App.getResourceImage("Details.png")));
+            UIManager.put("Tree.openIcon", new ImageIcon(App.getResourceImage("FolderOpen.png")));
+            UIManager.put("Tree.closedIcon", new ImageIcon(App.getResourceImage("FolderClosed.png")));
+            UIManager.put("Tree.leafIcon", new ImageIcon(App.getResourceImage("File.png")));
         }            
         try{
             View view = App.getInstance().getMainFrame();
@@ -2832,6 +2831,10 @@ public class View extends MainFrame {
         menuReinit = new javax.swing.JMenuItem();
         menuStopAll = new javax.swing.JMenuItem();
         jSeparator22 = new javax.swing.JPopupMenu.Separator();
+        menuCamServer = new javax.swing.JMenu();
+        menuCamServerViewer = new javax.swing.JMenuItem();
+        menuCamServerCameras = new javax.swing.JMenuItem();
+        menuCamServerPipelines = new javax.swing.JMenuItem();
         menuStripChart = new javax.swing.JMenuItem();
         menuSessions = new javax.swing.JMenu();
         menuSessionStart = new javax.swing.JMenuItem();
@@ -3678,6 +3681,38 @@ public class View extends MainFrame {
 
         jSeparator22.setName("jSeparator22"); // NOI18N
         menuDevices.add(jSeparator22);
+
+        menuCamServer.setText(bundle.getString("View.menuCamServer.text_1")); // NOI18N
+        menuCamServer.setName("menuCamServer"); // NOI18N
+
+        menuCamServerViewer.setText(bundle.getString("View.menuCamServerViewer.text")); // NOI18N
+        menuCamServerViewer.setName("menuCamServerViewer"); // NOI18N
+        menuCamServerViewer.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                menuCamServerViewerActionPerformed(evt);
+            }
+        });
+        menuCamServer.add(menuCamServerViewer);
+
+        menuCamServerCameras.setText(bundle.getString("View.menuCamServerCameras.text")); // NOI18N
+        menuCamServerCameras.setName("menuCamServerCameras"); // NOI18N
+        menuCamServerCameras.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                menuCamServerCamerasActionPerformed(evt);
+            }
+        });
+        menuCamServer.add(menuCamServerCameras);
+
+        menuCamServerPipelines.setText(bundle.getString("View.menuCamServerPipelines.text")); // NOI18N
+        menuCamServerPipelines.setName("menuCamServerPipelines"); // NOI18N
+        menuCamServerPipelines.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                menuCamServerPipelinesActionPerformed(evt);
+            }
+        });
+        menuCamServer.add(menuCamServerPipelines);
+
+        menuDevices.add(menuCamServer);
 
         menuStripChart.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_F4, 0));
         menuStripChart.setText(bundle.getString("View.menuStripChart.text")); // NOI18N
@@ -5603,6 +5638,29 @@ public class View extends MainFrame {
          updateSelectedPanels(tabLeft);
     }//GEN-LAST:event_tabLeftStateChanged
 
+    private void menuCamServerViewerActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuCamServerViewerActionPerformed
+        try {
+            CamServerViewer.create(this);            
+        } catch (Exception ex) {
+            showException(ex);
+        }
+    }//GEN-LAST:event_menuCamServerViewerActionPerformed
+
+    private void menuCamServerPipelinesActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuCamServerPipelinesActionPerformed
+        try {
+            CamServerInstancesViewer.createPipelineInstances(this);            
+        } catch (Exception ex) {
+            showException(ex);
+        }
+    }//GEN-LAST:event_menuCamServerPipelinesActionPerformed
+
+    private void menuCamServerCamerasActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuCamServerCamerasActionPerformed
+        try {
+            CamServerInstancesViewer.createCameraInstances(this);            
+        } catch (Exception ex) {
+            showException(ex);
+        }    }//GEN-LAST:event_menuCamServerCamerasActionPerformed
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton buttonAbort;
     private javax.swing.JButton buttonAbout;
@@ -5652,6 +5710,10 @@ public class View extends MainFrame {
     private javax.swing.JMenu menuAddToQueue;
     private javax.swing.JMenuBar menuBar;
     private javax.swing.JMenu menuBlock;
+    private javax.swing.JMenu menuCamServer;
+    private javax.swing.JMenuItem menuCamServerCameras;
+    private javax.swing.JMenuItem menuCamServerPipelines;
+    private javax.swing.JMenuItem menuCamServerViewer;
     private javax.swing.JMenuItem menuChangeUser;
     private javax.swing.JMenuItem menuChanges;
     private javax.swing.JMenuItem menuCheckSyntax;

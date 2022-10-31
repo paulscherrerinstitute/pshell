@@ -22,7 +22,7 @@
               <EmptySpace min="-2" max="-2" attributes="0"/>
               <Component id="textInstance" max="32767" attributes="0"/>
               <EmptySpace type="unrelated" max="-2" attributes="0"/>
-              <Component id="jLabel2" min="-2" max="-2" attributes="0"/>
+              <Component id="labelPipeline" min="-2" max="-2" attributes="0"/>
               <EmptySpace type="unrelated" min="-2" max="-2" attributes="0"/>
               <Component id="textPipeline" max="32767" attributes="0"/>
               <EmptySpace min="-2" max="-2" attributes="0"/>
@@ -37,7 +37,7 @@
           <Group type="102" alignment="0" attributes="0">
               <Group type="103" groupAlignment="3" attributes="0">
                   <Component id="jLabel1" alignment="3" min="-2" max="-2" attributes="0"/>
-                  <Component id="jLabel2" alignment="3" min="-2" max="-2" attributes="0"/>
+                  <Component id="labelPipeline" alignment="3" min="-2" max="-2" attributes="0"/>
                   <Component id="textInstance" alignment="3" min="-2" max="-2" attributes="0"/>
                   <Component id="textPipeline" alignment="3" min="-2" max="-2" attributes="0"/>
                   <Component id="buttonConfig" alignment="3" min="-2" max="-2" attributes="0"/>
@@ -60,12 +60,12 @@
     </Component>
     <Component class="javax.swing.JLabel" name="jLabel1">
       <Properties>
-        <Property name="text" type="java.lang.String" value="Instance Name: "/>
+        <Property name="text" type="java.lang.String" value="Instance: "/>
       </Properties>
     </Component>
-    <Component class="javax.swing.JLabel" name="jLabel2">
+    <Component class="javax.swing.JLabel" name="labelPipeline">
       <Properties>
-        <Property name="text" type="java.lang.String" value="Pipeline Name:"/>
+        <Property name="text" type="java.lang.String" value="Pipeline:"/>
       </Properties>
     </Component>
     <Component class="javax.swing.JTextField" name="textInstance">
