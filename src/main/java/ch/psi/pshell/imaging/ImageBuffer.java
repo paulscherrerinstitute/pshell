@@ -15,6 +15,12 @@ import javax.imageio.stream.MemoryCacheImageOutputStream;
 public interface ImageBuffer {
 
     public BufferedImage getImage();
+    
+    public default void waitImage(int timeout) throws InterruptedException, TimeoutException {
+        if (getImage()==null){
+            waitNext(timeout);
+        }
+    }
 
     public void waitNext(int timeout) throws InterruptedException, TimeoutException;
 

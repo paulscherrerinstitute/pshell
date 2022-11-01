@@ -72,6 +72,7 @@ import java.awt.event.WindowEvent;
 import java.awt.image.BufferedImage;
 import java.io.FileInputStream;
 import java.lang.reflect.Array;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -145,6 +146,7 @@ public class CamServerViewer extends MonitoredPanel {
     boolean requestCameraListUpdate;
     String instanceName;
     String pipelineName;
+    String cameraName;
     Overlay titleOv = null;
     int integration = 0;
     boolean persistCameraState;
@@ -381,7 +383,7 @@ public class CamServerViewer extends MonitoredPanel {
                 renderer.getPopupMenu().add(menuSetImageBufferSize);
                 renderer.getPopupMenu().add(menuSaveStack);
                 renderer.getPopupMenu().addSeparator();
-                if (getCameraServerUrl()!=null) {
+                if ((getCameraServerUrl()!=null)&&(sourceSelecionMode == SourceSelecionMode.Cameras)) {
                     renderer.getPopupMenu().add(menuCalibrate);
                     renderer.getPopupMenu().add(menuCameraConfig);
                     renderer.getPopupMenu().addSeparator();
@@ -437,7 +439,7 @@ public class CamServerViewer extends MonitoredPanel {
             });
 
         } catch (Exception ex) {
-            ex.printStackTrace();
+            Logger.getLogger(getClass().getName()).log(Level.WARNING, null, ex);
         }
         updateButtons();
     }
@@ -697,7 +699,7 @@ public class CamServerViewer extends MonitoredPanel {
             }
             model.addElement("");
         } catch (Exception ex) {
-            ex.printStackTrace();
+            Logger.getLogger(getClass().getName()).log(Level.WARNING, null, ex);
         }
         return model;
     }
@@ -777,7 +779,7 @@ public class CamServerViewer extends MonitoredPanel {
                 }
             }
         } catch (Exception ex) {
-            ex.printStackTrace();
+            Logger.getLogger(getClass().getName()).log(Level.WARNING, null, ex);
         }
     }
 
@@ -797,12 +799,12 @@ public class CamServerViewer extends MonitoredPanel {
         localFit = value;
     }
 
-    public Boolean getPersist() {
-        return persistCameraState;
+    public Boolean getPersistCameraState() {
+        return persistCameraState && (Context.getInstance() != null) && (sourceSelecionMode == SourceSelecionMode.Cameras);
     }
 
-    public void setPersist(Boolean value) {
-        persistCameraState = value && (Context.getInstance() != null);
+    public void setPersistCameraState(Boolean value) {
+        persistCameraState = value;
     }
 
     public String getUserOverlaysConfigFile() {
@@ -819,12 +821,20 @@ public class CamServerViewer extends MonitoredPanel {
 
     public void setPersistenceFile(String value) {
         try {
-            renderer.setPersistenceFile(Paths.get(value));
+            setPersistenceFile(Paths.get(value));
         } catch (Exception ex) {
-            ex.printStackTrace();
+            Logger.getLogger(getClass().getName()).log(Level.WARNING, null, ex);
         }
     }
 
+    public void setPersistenceFile(Path path) {
+        try {
+            renderer.setPersistenceFile(path);
+        } catch (Exception ex) {
+            Logger.getLogger(getClass().getName()).log(Level.WARNING, null, ex);
+        }
+    }
+    
     @Override
     protected void onShow() {
         try {
@@ -835,9 +845,10 @@ public class CamServerViewer extends MonitoredPanel {
                     Logger.getLogger(getClass().getName()).log(Level.FINE, null, ex);
                 }
             });
+            timer.setInitialDelay(10);
             timer.start();
         } catch (Exception ex) {
-            ex.printStackTrace();
+            Logger.getLogger(getClass().getName()).log(Level.WARNING, null, ex);
         }
     }
 
@@ -849,16 +860,8 @@ public class CamServerViewer extends MonitoredPanel {
                 timer = null;
             }
         } catch (Exception ex) {
-            ex.printStackTrace();
-        }
-        try {
-            if (camera != null) {
-                camera.close();
-                camera = null;
-            }
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
+            Logger.getLogger(getClass().getName()).log(Level.WARNING, null, ex);
+        }    
     }
 
     @Override
@@ -866,7 +869,17 @@ public class CamServerViewer extends MonitoredPanel {
         if (console != null) {
             console.stop();
             console = null;
-        }        
+        }
+        try {
+            if (camera != null) {
+                saveCameraState();
+                camera.close();
+                camera = null;
+            }
+        } catch (Exception ex) {
+            Logger.getLogger(getClass().getName()).log(Level.WARNING, null, ex);
+        }
+
     }
     
     public class CameraState extends Config {
@@ -887,7 +900,7 @@ public class CamServerViewer extends MonitoredPanel {
         public Colormap colormap;
         public boolean colormapLogarithmic;
 
-        String getFile() throws IOException {
+        String getFile() throws Exception {
             if (camera == null) {
                 return null;
             }
@@ -896,7 +909,7 @@ public class CamServerViewer extends MonitoredPanel {
     }
 
     void loadCameraState() {
-        if (persistCameraState) {
+        if (getPersistCameraState()) {
             try {
                 CameraState state = new CameraState();
                 state.load(state.getFile());
@@ -925,13 +938,13 @@ public class CamServerViewer extends MonitoredPanel {
                     }
                 }
             } catch (Exception ex) {
-                ex.printStackTrace();
+                Logger.getLogger(getClass().getName()).log(Level.WARNING, null, ex);
             }
         }
     }
 
     void saveCameraState() {
-        if (persistCameraState) {
+        if (getPersistCameraState()) {
             try {
                 CameraState state = new CameraState();
                 state.valid = true;
@@ -954,7 +967,7 @@ public class CamServerViewer extends MonitoredPanel {
 
                 state.save(state.getFile());
             } catch (Exception ex) {
-                ex.printStackTrace();
+                Logger.getLogger(getClass().getName()).log(Level.WARNING, null, ex);
             }
         }
     }
@@ -1131,7 +1144,7 @@ public class CamServerViewer extends MonitoredPanel {
                 setComboNameSelection("");
             }
         } catch (Exception ex) {
-            ex.printStackTrace();
+            Logger.getLogger(getClass().getName()).log(Level.WARNING, null, ex);
         } finally {
             updateButtons();
         }
@@ -1143,9 +1156,11 @@ public class CamServerViewer extends MonitoredPanel {
         Overlay[][] fo = null;
         if ((showFit || showProfile)) {
             try {
-                fo = getFitOverlays(data, localFit);
+                ImageData id = getFrame(data);
+                 boolean hasServerFit = (id.x_profile != null);   
+                fo = getFitOverlays(data, localFit || !hasServerFit);
             } catch (Exception ex) {
-                System.err.println(ex);
+                Logger.getLogger(getClass().getName()).log(Level.FINE, null, ex);
             }
         }
         synchronized (lockOverlays) {
@@ -1216,6 +1231,7 @@ public class CamServerViewer extends MonitoredPanel {
         updateButtons();
         instanceName = null;
         pipelineName = null;
+        cameraName = null;
         renderer.setDevice(null);
         renderer.setShowReticle(false);
         renderer.removeOverlays(fitOv);
@@ -1270,9 +1286,7 @@ public class CamServerViewer extends MonitoredPanel {
         if (stream == null) {
             return null;
         }
-        stream = stream.trim();
-
-        manageTitleOverlay();
+        stream = stream.trim();        
 
         System.out.println("Setting stream: " + stream);
         try {
@@ -1295,11 +1309,9 @@ public class CamServerViewer extends MonitoredPanel {
             camera.initialize();
             camera.assertInitialized();
 
-            loadCameraState();
-
             if (server != null) {
                 if (cfg != null) {
-                    String cameraName = (String) cfg.get("camera_name");
+                    cameraName = (String) cfg.get("camera_name");
                     if (cfg.get("name") != null) {
                         pipelineName = String.valueOf(cfg.get("name"));
                     } else {
@@ -1325,6 +1337,7 @@ public class CamServerViewer extends MonitoredPanel {
                             server.start(stream, true);
                             break;
                         case Cameras:
+                            cameraName = stream;
                             pipelineName = String.format(pipelineNameFormat, stream);
                             instanceName = String.format(instanceNameFormat, pipelineName);
                             server.start(pipelineName, instanceName);
@@ -1337,6 +1350,7 @@ public class CamServerViewer extends MonitoredPanel {
                                 instanceName = String.format(instanceNameFormat, stream);
                                 server.start(stream, instanceName);
                             } else if (server.getCameras().contains(stream)) {
+                                cameraName = stream;
                                 pipelineName = String.format(pipelineNameFormat, stream);
                                 instanceName = String.format(instanceNameFormat, pipelineName);
                                 server.start(pipelineName, instanceName);
@@ -1351,7 +1365,8 @@ public class CamServerViewer extends MonitoredPanel {
                 checkAveraging.setEnabled(true);
                 checkGoodRegion.setEnabled(true);
             }
-
+            
+            loadCameraState();
             updateButtons();
             camera.getConfig().save();
             if (Math.abs(integration) > 1) {
@@ -1406,16 +1421,9 @@ public class CamServerViewer extends MonitoredPanel {
                                 updateMarker();
                             }
                         }
-                        //
-                        //try{
-                        //    updateStreamInfo(camera.getValue());
-                        //} catch(Exception ex){
-                        //    System.err.println(ex.getMessage());
-                        //}
                         manageFit(bi, data);
                         manageUserOverlays(bi, data);
                     }
-                    //updateImageData();
                 }
 
                 @Override
@@ -1436,6 +1444,7 @@ public class CamServerViewer extends MonitoredPanel {
             }
         } finally {
             //checkReticle();
+            manageTitleOverlay();
             onTimer();
         }
         onChangeColormap(null);
@@ -1522,7 +1531,7 @@ public class CamServerViewer extends MonitoredPanel {
                         buffer.clear();
                         integration = null;
                         ImageIntegrator.this.pushData(null);
-                        ex.printStackTrace();
+                        Logger.getLogger(getClass().getName()).log(Level.FINE, null, ex);
                         return;
                     }
                     if (buffer.size() >= numImages) {
@@ -1640,7 +1649,7 @@ public class CamServerViewer extends MonitoredPanel {
                 }
             }
         } catch (Exception ex) {
-            ex.printStackTrace();
+            Logger.getLogger(getClass().getName()).log(Level.WARNING, null, ex);
         }
     }
 
@@ -1783,7 +1792,7 @@ public class CamServerViewer extends MonitoredPanel {
                 }
             }
         } catch (Exception ex) {
-            ex.printStackTrace();
+            Logger.getLogger(getClass().getName()).log(Level.FINE, null, ex);
         }
     }
 
@@ -1822,7 +1831,7 @@ public class CamServerViewer extends MonitoredPanel {
         }
 
     }
-
+        
     protected Overlay[][] getFitOverlays(Data data, boolean localFit) {
         Overlays.Polyline hgaussian = null;
         Overlays.Polyline vgaussian = null;
@@ -1979,7 +1988,7 @@ public class CamServerViewer extends MonitoredPanel {
                             vprofile = new Overlays.Polyline(renderer.getPenProfile(), x, p);
                         }
                     } catch (Exception ex) {
-                        ex.printStackTrace();
+                        Logger.getLogger(getClass().getName()).log(Level.FINE, null, ex);
                     }
 
                     try {
@@ -2025,7 +2034,7 @@ public class CamServerViewer extends MonitoredPanel {
                         }
 
                     } catch (Exception ex) {
-                        ex.printStackTrace();
+                        Logger.getLogger(getClass().getName()).log(Level.FINE, null, ex);
                     }
                     if (xSigma != null) {
                         xSigma *= renderer.getCalibration().getScaleX();
@@ -2183,12 +2192,12 @@ public class CamServerViewer extends MonitoredPanel {
                             uo.obj.setPen(pen);
                             userOverlayConfig.add(uo);
                         } catch (Exception ex) {
-                            ex.printStackTrace();
+                            Logger.getLogger(getClass().getName()).log(Level.FINE, null, ex);
                         }
                     }
                 }
             } catch (Exception ex) {
-                ex.printStackTrace();
+                Logger.getLogger(getClass().getName()).log(Level.FINE, null, ex);
             }
         }
     }
@@ -2239,7 +2248,7 @@ public class CamServerViewer extends MonitoredPanel {
                         ret.add(ov);
                     }
                 } catch (Exception ex) {
-                    //ex.printStackTrace();
+                    Logger.getLogger(CamServerViewer.class.getName()).log(Level.WARNING, null, ex);
                 }
             }
         }
@@ -2385,6 +2394,9 @@ public class CamServerViewer extends MonitoredPanel {
     }
 
     public static Map<String, Object> getProcessingParameters(StreamValue value) throws IOException {
+        if (value==null){
+            return null;
+        }
         return (Map) EncoderJson.decode(value.getValue(CHANNEL_PARAMETERS).toString(), Map.class);
     }
 
@@ -2622,7 +2634,7 @@ public class CamServerViewer extends MonitoredPanel {
                 }
             }
         } catch (Exception ex) {
-            ex.printStackTrace();
+            Logger.getLogger(getClass().getName()).log(Level.FINE, null, ex);
         }
     }
 
@@ -2652,7 +2664,7 @@ public class CamServerViewer extends MonitoredPanel {
                 }
             }
         } catch (Exception ex) {
-            ex.printStackTrace();
+            Logger.getLogger(getClass().getName()).log(Level.FINE, null, ex);
         }
         updatingColormap = false;
     }
@@ -2711,7 +2723,7 @@ public class CamServerViewer extends MonitoredPanel {
                     setAveragingOptionsVisible(averaging != null);
 
                 } catch (Exception ex) {
-                    ex.printStackTrace();
+                    Logger.getLogger(getClass().getName()).log(Level.FINE, null, ex);
                 }
 
                 updatingServerControls = false;
@@ -2958,16 +2970,23 @@ public class CamServerViewer extends MonitoredPanel {
         return dm.getRootFileName();
     }
 
-    public String getCameraName() throws IOException {
-        return (String) getProcessingParameters(camera.getValue()).get("camera_name");
+    public String getCameraName() throws Exception {
+        if (cameraName!=null){
+            return cameraName;
+        }
+        //return (String) getProcessingParameters(camera.getValue()).get("camera_name");
+        return null;
     }
 
     public String getDisplayName() {
         try {
-            return getCameraName();
+            String cameraName = getCameraName();
+            if (cameraName!=null){
+                return cameraName;
+            }
         } catch (Exception ex) {
-            return stream;
         }
+        return stream;
     }
 
     public void grabBackground() throws Exception {
@@ -3904,7 +3923,7 @@ public class CamServerViewer extends MonitoredPanel {
                 .addGroup(layout.createSequentialGroup()
                     .addComponent(sidePanel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addGap(0, 0, 0)
-                    .addComponent(renderer, javax.swing.GroupLayout.DEFAULT_SIZE, 591, Short.MAX_VALUE)))
+                    .addComponent(renderer, javax.swing.GroupLayout.DEFAULT_SIZE, 555, Short.MAX_VALUE)))
             .addContainerGap())
     );
     layout.setVerticalGroup(
@@ -4525,13 +4544,13 @@ public class CamServerViewer extends MonitoredPanel {
                             try {
                                 updateNameList();
                             } catch (Exception ex) {
-                                ex.printStackTrace();
+                                Logger.getLogger(getClass().getName()).log(Level.WARNING, null, ex);
                             }
                         }
                         try {
                             setStream(name.trim().isEmpty() ? null : name);
                         } catch (Exception ex) {
-                            ex.printStackTrace();
+                            Logger.getLogger(getClass().getName()).log(Level.WARNING, null, ex);
                         } finally {
                             updateButtons();
                             comboName.setEnabled(true);
@@ -4556,7 +4575,7 @@ public class CamServerViewer extends MonitoredPanel {
             }
 
         } catch (Exception ex) {
-            ex.printStackTrace();
+            Logger.getLogger(getClass().getName()).log(Level.WARNING, null, ex);;
         } finally {
             updateButtons();
         }
