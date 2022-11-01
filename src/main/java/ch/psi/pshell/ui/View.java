@@ -1,5 +1,7 @@
 package ch.psi.pshell.ui;
 
+import ch.psi.pshell.camserver.CamServerService;
+import ch.psi.pshell.swing.CamServerServicePanel;
 import java.awt.Component;
 import java.awt.Container;
 import java.awt.GridBagConstraints;
@@ -5648,7 +5650,7 @@ public class View extends MainFrame {
 
     private void menuCamServerPipelinesActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuCamServerPipelinesActionPerformed
         try {
-            CamServerInstancesViewer.createPipelineInstances(this);            
+            CamServerServicePanel.create(this, App.getArgumentValue(CamServerViewer.ARG_PIPELINE_SERVER), "Pipeline Instances",  CamServerService.Type.Pipeline);            
         } catch (Exception ex) {
             showException(ex);
         }
@@ -5656,10 +5658,10 @@ public class View extends MainFrame {
 
     private void menuCamServerCamerasActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuCamServerCamerasActionPerformed
         try {
-            CamServerInstancesViewer.createCameraInstances(this);            
+            CamServerServicePanel.create(this, App.getArgumentValue(CamServerViewer.ARG_CAMERA_SERVER), "Camera Instances",  CamServerService.Type.Camera);            
         } catch (Exception ex) {
             showException(ex);
-        }    }//GEN-LAST:event_menuCamServerCamerasActionPerformed
+    }    }//GEN-LAST:event_menuCamServerCamerasActionPerformed
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton buttonAbort;

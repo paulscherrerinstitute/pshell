@@ -470,8 +470,10 @@ from ch.psi.pshell.camserver import PipelineClient as PipelineClient
 from ch.psi.pshell.camserver import CameraClient as CameraClient
 from ch.psi.pshell.camserver import ProxyClient as ProxyClient
 from ch.psi.pshell.camserver import CameraSource as CameraSource
+from ch.psi.pshell.camserver import CameraStream as CameraStream
 from ch.psi.pshell.camserver import PipelineSource as PipelineSource
 from ch.psi.pshell.camserver import PipelineStream as PipelineStream
+from ch.psi.pshell.camserver import CamServerService as CamServerService
 
 from ch.psi.pshell.detector import DetectorConfig as DetectorConfig
 

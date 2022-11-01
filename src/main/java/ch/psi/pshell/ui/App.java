@@ -1,5 +1,6 @@
 package ch.psi.pshell.ui;
 
+import ch.psi.pshell.swing.CamServerServicePanel;
 import ch.psi.pshell.core.Configuration;
 import ch.psi.pshell.core.Configuration.LogLevel;
 import ch.psi.pshell.core.Context;
@@ -631,14 +632,6 @@ public class App extends ObservableBase<AppListener> {
         return getBoolArgumentValue("csvw");
     }
     
-    static public boolean isPipelineInstancesViewer() {
-        return getBoolArgumentValue("pivw");
-    }    
-    
-    static public boolean isCameraInstancesViewer() {
-        return getBoolArgumentValue("civw");
-    }       
-    
     static public boolean isStripChartServer() {
         return isStripChart() && ((isAttach() || (isServerMode())));
     }
@@ -1087,10 +1080,6 @@ public class App extends ObservableBase<AppListener> {
                 DataPanel.createPanel(getFileArg());
             } else if (isCamServerViewer()) {
                 CamServerViewer.create(null);
-            } else if (isPipelineInstancesViewer()) {
-                CamServerInstancesViewer.createPipelineInstances(null);                
-            } else if (isCameraInstancesViewer()) {
-                CamServerInstancesViewer.createCameraInstances(null);                
             } else {
                 if (isDual()) {
                     Console c = new Console();

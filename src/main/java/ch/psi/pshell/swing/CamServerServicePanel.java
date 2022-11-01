@@ -1,17 +1,15 @@
-package ch.psi.pshell.ui;
+package ch.psi.pshell.swing;
 
+import ch.psi.pshell.camserver.CamServerService;
 import ch.psi.pshell.camserver.CamServerStream;
 import ch.psi.pshell.camserver.CameraStream;
 import ch.psi.pshell.camserver.PipelineStream;
 import ch.psi.pshell.camserver.ProxyClient;
-import static ch.psi.pshell.swing.CamServerStreamPanel.getDisplayValue;
-import static ch.psi.pshell.ui.CamServerViewer.ARG_CAMERA_SERVER;
-import java.io.IOException;
+import ch.psi.pshell.device.Device;
+import ch.psi.pshell.ui.App;
 import ch.psi.utils.swing.SwingUtils;
-import static ch.psi.pshell.ui.CamServerViewer.ARG_PIPELINE_SERVER;
 import ch.psi.utils.NamedThreadFactory;
 import ch.psi.utils.Str;
-import ch.psi.utils.swing.MonitoredPanel;
 import java.awt.Dimension;
 import java.awt.Toolkit;
 import java.awt.Window;
@@ -31,31 +29,46 @@ import javax.swing.table.DefaultTableModel;
 /**
  *
  */
-public class CamServerInstancesViewer extends MonitoredPanel {
-
-    String serverUrl;
-    ProxyClient proxy;
+public class CamServerServicePanel extends DevicePanel {
     Timer timer;
     final DefaultTableModel model;
     ScheduledExecutorService schedulerPolling;
     CamServerStream stream;
-    boolean cameraServer;
 
-    public CamServerInstancesViewer() {
+    public CamServerServicePanel() {
         initComponents();
         model = (DefaultTableModel) table.getModel();
     }
-
-    public void initialize(String url, boolean cameraServer) throws IOException, InterruptedException {
-        proxy = new ProxyClient(url);
-        this.cameraServer = cameraServer;
+    
+    @Override
+    public CamServerService getDevice() {
+        return (CamServerService) super.getDevice();
     }
+    
+    public CamServerService.Type getType(){
+        return getDevice().getType();
+    }
+    
+    public ProxyClient getProxy() {
+        CamServerService device = getDevice();
+        return (device==null) ? null : device.getProxy();
+    }    
+    
+    @Override
+    public void setDevice(Device device) {
+        if (stream != null) {
+            stream.close();
+        }        
+        super.setDevice(device);
+        if (getDevice() != null) {
+        }
+    }    
 
     @Override
     protected void onShow() {
         try {
             schedulerPolling = Executors.newSingleThreadScheduledExecutor(
-                    new NamedThreadFactory("PanelServers update thread"));
+                    new NamedThreadFactory("CamServerServicePanel update thread"));
             schedulerPolling.scheduleWithFixedDelay(() -> {
                 if (isShowing()) {
                     update();
@@ -86,6 +99,7 @@ public class CamServerInstancesViewer extends MonitoredPanel {
     }
 
     void update() {
+        ProxyClient proxy = getProxy();
         try {
             if (proxy != null) {
                 Map<String, Object> info = proxy.getInfo();
@@ -115,40 +129,27 @@ public class CamServerInstancesViewer extends MonitoredPanel {
                 Map data = active_instances.getOrDefault(instanceName, new HashMap());
                 Map stats = (Map) data.getOrDefault("statistics", new HashMap());
                 //modelInstances.setValueAt(data.getOrDefault("stream_address", ""), i, col++);
-                model.setValueAt(getDisplayValue(stats.getOrDefault("time", "")), i, col++);
-                model.setValueAt(getDisplayValue(stats.getOrDefault("clients", "")), i, col++);
-                model.setValueAt(getDisplayValue(Str.toString(stats.getOrDefault("rx", "")).split(" -")[0]), i, col++);
-                model.setValueAt(getDisplayValue(Str.toString(stats.getOrDefault("tx", "")).split(" -")[0]), i, col++);
-                model.setValueAt(getDisplayValue(stats.getOrDefault("cpu", "")), i, col++);
-                model.setValueAt(getDisplayValue(stats.getOrDefault("memory", "")), i, col++);
+                model.setValueAt(CamServerStreamPanel.getDisplayValue(stats.getOrDefault("time", "")), i, col++);
+                model.setValueAt(CamServerStreamPanel.getDisplayValue(stats.getOrDefault("clients", "")), i, col++);
+                model.setValueAt(CamServerStreamPanel.getDisplayValue(Str.toString(stats.getOrDefault("rx", "")).split(" -")[0]), i, col++);
+                model.setValueAt(CamServerStreamPanel.getDisplayValue(Str.toString(stats.getOrDefault("tx", "")).split(" -")[0]), i, col++);
+                model.setValueAt(CamServerStreamPanel.getDisplayValue(stats.getOrDefault("cpu", "")), i, col++);
+                model.setValueAt(CamServerStreamPanel.getDisplayValue(stats.getOrDefault("memory", "")), i, col++);
             }
         } catch (Exception ex) {
             Logger.getLogger(getClass().getName()).log(Level.SEVERE, null, ex);
         }
     }
 
-    public static void main(String[] args) throws Exception {
-        App.init(args);
-        createPipelineInstances(null);
-    }
-
-    public static CamServerInstancesViewer createPipelineInstances(Window parent) {
-        return create(parent, App.getArgumentValue(ARG_PIPELINE_SERVER), "Pipeline Instances", false);
-    }
-
-    public static CamServerInstancesViewer createCameraInstances(Window parent) {
-        return create(parent, App.getArgumentValue(ARG_CAMERA_SERVER), "Camera Instances", true);
-    }
-
-    public static CamServerInstancesViewer create(Window parent, String url, String title, boolean cameraServer) {
-        CamServerInstancesViewer viewer = new CamServerInstancesViewer();
+    public static CamServerServicePanel create(Window parent, String url, String title, CamServerService.Type type) {
+        CamServerServicePanel viewer = new CamServerServicePanel();
         SwingUtilities.invokeLater(() -> {
-            try {
-                viewer.initialize(url, cameraServer);
+            try {                
+                viewer.setDevice(new CamServerService("CamServer"+type.toString()+"Service", url, type));
                 Window window = SwingUtils.showFrame(parent, title, new Dimension(800, 600), viewer);
                 window.setIconImage(Toolkit.getDefaultToolkit().getImage(App.getResourceUrl("IconSmall.png")));
             } catch (Exception ex) {
-                Logger.getLogger(CamServerInstancesViewer.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(CamServerServicePanel.class.getName()).log(Level.SEVERE, null, ex);
             }
         });
         return viewer;
@@ -231,10 +232,10 @@ public class CamServerInstancesViewer extends MonitoredPanel {
                     stream.close();
                     stream = null;
                 }
-                if (cameraServer) {
-                    stream = new CameraStream("Camera Stream", proxy.getUrl(), currentInstance);
+                if (getType() == CamServerService.Type.Camera) {
+                    stream = new CameraStream("Camera Stream", getProxy().getUrl(), currentInstance);
                 } else {
-                    stream = new PipelineStream("Pipeline Stream", proxy.getUrl(), currentInstance);
+                    stream = new PipelineStream("Pipeline Stream", getProxy().getUrl(), currentInstance);
                 }
                 stream.setMonitored(true);
                 stream.initialize();

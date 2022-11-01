@@ -2,6 +2,7 @@ package ch.psi.pshell.ui;
 
 import ch.psi.pshell.bs.StreamChannel;
 import ch.psi.pshell.bs.Stream;
+import ch.psi.pshell.camserver.CamServerService;
 import ch.psi.pshell.camserver.CamServerStream;
 import ch.psi.pshell.camserver.CameraStream;
 import ch.psi.pshell.camserver.PipelineStream;
@@ -34,6 +35,7 @@ import ch.psi.pshell.swing.SlitPanel;
 import ch.psi.utils.swing.SwingUtils;
 import ch.psi.pshell.epics.Scaler;
 import ch.psi.pshell.imaging.Colormap;
+import ch.psi.pshell.swing.CamServerServicePanel;
 import ch.psi.pshell.swing.CodeEditor;
 import ch.psi.pshell.swing.DeviceValueChart;
 import ch.psi.pshell.swing.HistogramGeneratorPanel;
@@ -290,6 +292,7 @@ public class Preferences {
             new DefaultPanel(Stream.class.getName(), StreamPanel.class.getName()),               
             new DefaultPanel(StreamChannel.class.getName(), StreamChannelPanel.class.getName()),   
             new DefaultPanel(CamServerStream.class.getName(), CamServerStreamPanel.class.getName()),   
+            new DefaultPanel(CamServerService.class.getName(), CamServerServicePanel.class.getName()),               
             new DefaultPanel(ReadonlyRegister.ReadonlyRegisterArray.class.getName(), DeviceValueChart.class.getName()),
             new DefaultPanel(ReadonlyRegister.ReadonlyRegisterMatrix.class.getName(), DeviceValueChart.class.getName()),            
         };
