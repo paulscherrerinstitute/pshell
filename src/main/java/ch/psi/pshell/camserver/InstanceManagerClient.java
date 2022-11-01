@@ -12,7 +12,7 @@ import javax.ws.rs.core.Response;
 /**
  * Imaging Source implementation connecting to a CameraServer.
  */
-public class InstanceManagerClient extends CamServerClient{
+public class InstanceManagerClient extends CamServerClient {
 
     public InstanceManagerClient(String host, int port, String prefix) {
         super(host, port, prefix);
@@ -20,11 +20,10 @@ public class InstanceManagerClient extends CamServerClient{
 
     public InstanceManagerClient(String url, String prefix) {
         super(url, prefix);
-    }  
+    }
 
-    
     /**
-     * Stop  instance.
+     * Stop instance.
      */
     public void stopInstance(String instanceName) throws IOException {
         checkName(instanceName);
@@ -43,10 +42,10 @@ public class InstanceManagerClient extends CamServerClient{
         Map<String, Object> map = (Map) EncoderJson.decode(json, Map.class);
         checkReturn(map);
     }
-   
-    public boolean isInstanceRunning(String instanceName) throws IOException{    
+
+    public boolean isInstanceRunning(String instanceName) throws IOException {
         checkName(instanceName);
-        return ((List)getInfo().get("active_instances")).contains(instanceName);
+        return ((List) getInfo().get("active_instances")).contains(instanceName);
     }
 
     /**
@@ -60,9 +59,9 @@ public class InstanceManagerClient extends CamServerClient{
         checkReturn(map);
         return (Map<String, Object>) map.get("config");
     }
-    
+
     /**
-     * Set configuration 
+     * Set configuration
      */
     public void setConfig(String name, Map<String, Object> config) throws IOException {
         checkName(name);
@@ -74,17 +73,16 @@ public class InstanceManagerClient extends CamServerClient{
         checkReturn(map);
     }
 
-    
     public List<String> getConfigNames() throws IOException {
-        WebTarget resource = client.target(prefix+ "/config_names");
+        WebTarget resource = client.target(prefix + "/config_names");
         String json = resource.request().accept(MediaType.TEXT_HTML).get(String.class);
         Map<String, Object> map = (Map) EncoderJson.decode(json, Map.class);
         checkReturn(map);
-        return (List<String>) map.get("config_names");        
-    }    
-    
+        return (List<String>) map.get("config_names");
+    }
+
     /**
-     * Delete configuration 
+     * Delete configuration
      */
     public void deleteConfig(String name) throws IOException {
         checkName(name);
@@ -92,17 +90,29 @@ public class InstanceManagerClient extends CamServerClient{
         String json = resource.request().accept(MediaType.TEXT_HTML).delete(String.class);
         Map<String, Object> map = (Map) EncoderJson.decode(json, Map.class);
         checkReturn(map);
-    }    
+    }
 
     /**
      * Camera groups.
      */
-    public Map<String,List<String>> getGroups() throws IOException {
-        WebTarget resource = client.target(prefix+ "/groups");
+    public Map<String, List<String>> getGroups() throws IOException {
+        WebTarget resource = client.target(prefix + "/groups");
         String json = resource.request().accept(MediaType.TEXT_HTML).get(String.class);
         Map<String, Object> map = (Map) EncoderJson.decode(json, Map.class);
         checkReturn(map);
-        return (Map<String,List<String>>) map.get("groups");
+        return (Map<String, List<String>>) map.get("groups");
     }
-    
+
+    /**
+     * Get the camera stream address.
+     */
+    public String getStream(String cameraName) throws IOException {
+        checkName(cameraName);
+        WebTarget resource = client.target(prefix + "/" + cameraName);
+        String json = resource.request().accept(MediaType.TEXT_HTML).get(String.class);
+        Map<String, Object> map = (Map) EncoderJson.decode(json, Map.class);
+        checkReturn(map);
+        return (String) map.get("stream");
+    }
+
 }

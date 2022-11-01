@@ -115,6 +115,7 @@ public class PipelineClient extends InstanceManagerClient{
      * Return the instance stream. If the instance does not exist, it will be created and will be
      * read only - no config changes will be allowed. If instanceId then return existing (writable).
      */
+    @Override
     public String getStream(String instanceId) throws IOException {
         checkName(instanceId);
         WebTarget resource = client.target(prefix + "/instance/" + instanceId);

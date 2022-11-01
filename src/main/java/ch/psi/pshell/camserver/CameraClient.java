@@ -83,18 +83,6 @@ public class CameraClient extends InstanceManagerClient{
         byte[] ret = resource.request().accept(MediaType.APPLICATION_OCTET_STREAM).get(byte[].class);
         return Utils.newImage(ret);
     }
-
-    /**
-     * Get the camera stream address.
-     */
-    public String getStream(String cameraName) throws IOException {
-        checkName(cameraName);
-        WebTarget resource = client.target(prefix + "/" + cameraName);
-        String json = resource.request().accept(MediaType.TEXT_HTML).get(String.class);
-        Map<String, Object> map = (Map) EncoderJson.decode(json, Map.class);
-        checkReturn(map);
-        return (String) map.get("stream");
-    }
     
 
     public String start(String cameraName) throws IOException {

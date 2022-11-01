@@ -1,173 +1,43 @@
 package ch.psi.pshell.camserver;
 
 import ch.psi.pshell.bs.Stream;
-import ch.psi.pshell.bs.StreamValue;
 import ch.psi.pshell.device.Device;
 import ch.psi.pshell.device.DeviceAdapter;
-import ch.psi.pshell.device.ReadonlyRegisterBase;
-import ch.psi.utils.Str;
 
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import ch.psi.pshell.bs.AddressableDevice;
 
 /**
  * Imaging Source implementation connecting to a CameraServer.
  */
-public class PipelineStream extends ReadonlyRegisterBase<StreamValue> implements ch.psi.pshell.device.Readable.ReadableType, CamServerStream {
+public class PipelineStream extends CamServerStream {
 
-    final PipelineClient client;
-    final ProxyClient proxy;
     final String pipelineName;
-    final String instanceId;
-    final Map<String, Object> config;
-
     String pipeline;
-    String instance;
-    boolean push;
 
-    Stream stream;
-
-    public PipelineClient getClient() {
-        return client;
-    }
-    
-    public ProxyClient getProxy() {
-        return proxy;
-    }
-    
     public PipelineStream(String name, String url, String instanceId) {
-        super(name, null);
-        client = new DefaultProcessingPipelineClient(url);
-        proxy = new ProxyClient(url);
-        this.instanceId = instanceId;
+        super(name, new DefaultProcessingPipelineClient(url), instanceId);
         this.pipelineName = null;
-        this.config = null;
     }
 
     public PipelineStream(String name, String url, String pipelineName, String instanceId) {
-        super(name, null);
-        client = new DefaultProcessingPipelineClient(url);
-        proxy = new ProxyClient(url);
+        super(name, new DefaultProcessingPipelineClient(url), instanceId);
         this.pipelineName = pipelineName;
-        this.instanceId = instanceId;
-        this.config = null;
     }
 
     public PipelineStream(String name, String url, Map<String, Object> config, String instanceId) {
-        super(name, null);
-        client = new DefaultProcessingPipelineClient(url);
-        proxy = new ProxyClient(url);
+        super(name, new DefaultProcessingPipelineClient(url), config, instanceId);
         this.pipelineName = null;
-        this.instanceId = instanceId;
-        this.config = config;
-    }
-    
-    @Override
-    public Class _getElementType() {
-        return Long.class;
-    }        
-
-    public Object getValue(String name) {
-        StreamValue cache = take();
-        if (cache != null) {
-            for (int i = 0; i < cache.getIdentifiers().size(); i++) {
-                if (cache.getIdentifiers().get(i).equals(name)) {
-                    return cache.getValues().get(i);
-                }
-            }
-        }
-        return null;
-    }
-    
-    public Device getChannel(String name){
-        if (stream!=null){
-            return stream.getChild(name);
-        }
-        return null;
-    }
-    
-    public List<Device> getChannels(){
-        if (stream!=null){
-            return Arrays.asList(stream.getChildren());
-        }
-        return new ArrayList();
     }
 
-    public List<String> getChannelNames(){
-        if (stream!=null){
-            return stream.getIdentifiers();
-        }
-        return new ArrayList();
-    }
-
-    public Stream getStream() {
-        return stream;
-    }
-    
-    protected void startReceiver() {
-        try {
-            stream.start(true);
-        } catch (Exception ex) {
-            Logger.getLogger(PipelineStream.class.getName()).log(Level.SEVERE, null, ex);
-        }
-    }
-
-    protected void stopReceiver() {
-        try {
-            stream.stop();
-        } catch (Exception ex) {
-            Logger.getLogger(PipelineStream.class.getName()).log(Level.WARNING, null, ex);
-        }
-    }
-
-    @Override
-    protected void doSetMonitored(boolean value) {
-        super.doSetMonitored(value);
-        if (isInitialized() && (stream != null)) {
-            if (value) {
-                startReceiver();
-            } else {
-                stopReceiver();
-            }
-        }
-    }
-    
-    @Override
-    protected void doUpdate() throws IOException, InterruptedException {
-        if (stream != null){
-            Object cache = stream.take();
-            if (!isMonitored()) {
-                try {
-                    startReceiver();
-                    stream.waitValueNot(cache, -1);
-                } finally {
-                    stopReceiver();
-                }
-            } else {
-                stream.waitValueNot(cache, -1);
-            }
-        }
-    }
-    
-    @Override
-    protected void doInitialize() throws IOException, InterruptedException {
-        start();
-    }
-
-    /**
-     * Return the REST api endpoint address.
-     */
-    public String getUrl() {
-        return client.getUrl();
+    public PipelineClient getClient() {
+        return (PipelineClient) super.getClient();
     }
 
     /**
@@ -175,32 +45,6 @@ public class PipelineStream extends ReadonlyRegisterBase<StreamValue> implements
      */
     public String getPipeline() {
         return pipeline;
-    }
-
-    /**
-     * Return the name of the current streaming pipeline.
-     */
-    public String getInstance() {
-        return instance;
-    }
-    
-    @Override
-    public String getAddress() {
-        return getUrl() + "/" + Str.toString(instanceId);
-    }    
-    
-    @Override
-    protected StreamValue doRead() throws IOException, InterruptedException {
-        update();
-        return take();
-    }
-
-    @Override
-    public StreamValue request() {
-        if (stream == null) {
-            return null;
-        }
-        return stream.request();
     }
 
     public interface ConfigChangeListener {
@@ -219,59 +63,31 @@ public class PipelineStream extends ReadonlyRegisterBase<StreamValue> implements
     }
 
     /**
-     * Return the info of the  server instance.
+     * List existing pipelines.
      */
-    public Map<String, Object> getServerInfo() throws IOException {
-        return client.getInfo();
+    public List<String> getPipelines() throws IOException {
+        return getClient().getPipelines();
     }
 
     /**
      * List existing cameras.
      */
     public List<String> getCameras() throws IOException {
-        return client.getCameras();
-    }
-
-    /**
-     * List existing pipelines.
-     */
-    public List<String> getPipelines() throws IOException {
-        return client.getPipelines();
+        return getClient().getCameras();
     }
 
     /**
      * List running instances.
      */
     public List<String> getInstances() throws IOException {
-        return client.getInstances();
-    }
-
-    /**
-     * Return the pipeline configuration.
-     */
-    public Map<String, Object> getConfig(String pipelineName) throws IOException {
-        return client.getConfig(pipelineName);
-    }
-
-    /**
-     * Set configuration of the pipeline.
-     */
-    public void setConfig(String pipelineName, Map<String, Object> config) throws IOException {
-        client.setConfig(pipelineName, config);
-    }
-
-    /**
-     * Delete configuration of the pipeline.
-     */
-    public void deleteConfig(String pipelineName) throws IOException {
-        client.deleteConfig(pipelineName);
+        return getClient().getInstances();
     }
 
     /**
      * Return the instance configuration.
      */
     public Map<String, Object> getInstanceConfig(String instanceId) throws IOException {
-        return client.getInstanceConfig(instanceId);
+        return getClient().getInstanceConfig(instanceId);
     }
 
     public Object getInstanceConfigValue(String instanceId, String value) throws IOException {
@@ -283,7 +99,7 @@ public class PipelineStream extends ReadonlyRegisterBase<StreamValue> implements
      * Set instance configuration.
      */
     public void setInstanceConfig(String instanceId, Map<String, Object> config) throws IOException {
-        client.setInstanceConfig(instanceId, config);
+        getClient().setInstanceConfig(instanceId, config);
         if (configChangeListener != null) {
             if (instanceId.equals(instanceId)) {
                 configChangeListener.onConfigChanged(config);
@@ -301,16 +117,7 @@ public class PipelineStream extends ReadonlyRegisterBase<StreamValue> implements
      * Return the instance info.
      */
     public Map<String, Object> getInstanceInfo(String instanceId) throws IOException {
-        return client.getInstanceInfo(instanceId);
-    }
-
-    /**
-     * Return the instance stream. If the instance does not exist, it will be
-     * created and will be read only - no config changes will be allowed. If
-     * instanceId then return existing (writable).
-     */
-    protected String getStream(String instanceId) throws IOException {
-        return client.getStream(instanceId);
+        return getClient().getInstanceInfo(instanceId);
     }
 
     /**
@@ -318,7 +125,7 @@ public class PipelineStream extends ReadonlyRegisterBase<StreamValue> implements
      * Return pipeline instance id and instance stream in a list.
      */
     protected List<String> createFromName(String pipelineName, String id) throws IOException {
-        return client.createFromName(pipelineName, id);
+        return getClient().createFromName(pipelineName, id);
     }
 
     /**
@@ -326,28 +133,14 @@ public class PipelineStream extends ReadonlyRegisterBase<StreamValue> implements
      * changed. Return pipeline instance id and instance stream in a list.
      */
     protected List<String> createFromConfig(Map<String, Object> config, String id) throws IOException {
-        return client.createFromConfig(config, id);
+        return getClient().createFromConfig(config, id);
     }
 
     /**
      * Set config of the pipeline. Return actual applied config.
      */
     public String savePipelineConfig(String pipelineName, Map<String, Object> config) throws IOException {
-        return client.savePipelineConfig(pipelineName, config);
-    }
-
-    /**
-     * Stop the pipeline.
-     */
-    public void stopInstance(String instanceId) throws IOException {
-        client.stopInstance(instanceId);
-    }
-
-    /**
-     * Stop all the pipelines on the server.
-     */
-    public void stopAllInstances() throws IOException {
-        client.stopAllInstances();
+        return getClient().savePipelineConfig(pipelineName, config);
     }
 
     /**
@@ -355,15 +148,15 @@ public class PipelineStream extends ReadonlyRegisterBase<StreamValue> implements
      * id.
      */
     public String captureBackground(String cameraName, Integer images) throws IOException {
-        return client.captureBackground(cameraName, images);
+        return getClient().captureBackground(cameraName, images);
     }
 
     public String getLastBackground(String cameraName) throws IOException {
-        return client.getLastBackground(cameraName);
+        return getClient().getLastBackground(cameraName);
     }
 
     public List<String> getBackgrounds(String cameraName) throws IOException {
-        return client.getBackgrounds(cameraName);
+        return getClient().getBackgrounds(cameraName);
     }
 
     public BufferedImage getLastBackgroundImage(String cameraName) throws IOException {
@@ -371,23 +164,23 @@ public class PipelineStream extends ReadonlyRegisterBase<StreamValue> implements
     }
 
     public BufferedImage getBackgroundImage(String name) throws IOException {
-        return client.getBackgroundImage(name);
+        return getClient().getBackgroundImage(name);
     }
 
     void startInstance(String instanceId) throws IOException {
         stop();
-        push = false;
+        setPush(false);
         String streamUrl = getStream(instanceId);
         try {
-            push = proxy.isPush(pipelineName);
+            setPush(proxy.isPush(pipelineName));
         } catch (Exception ex) {
             Logger.getLogger(PipelineStream.class.getName()).log(Level.WARNING, null, ex);
         }
         stream = new Stream(getName() + " stream", streamUrl, push);
-        this.instance = instanceId;
-        try{
-            this.pipeline = (String) ((Map)proxy.getInstance(instance).get("config")).get("name");
-        } catch (Exception ex){
+        setInstance(instanceId);
+        try {
+            this.pipeline = (String) ((Map) proxy.getInstance(instance).get("config")).get("name");
+        } catch (Exception ex) {
             this.pipeline = "Unknown";
         }
     }
@@ -403,7 +196,7 @@ public class PipelineStream extends ReadonlyRegisterBase<StreamValue> implements
         }
         stream = new Stream(getName() + " stream", ret.get(1), push);
         this.pipeline = pipelineName;
-        this.instance = ret.get(0);
+        setInstance(ret.get(0));
     }
 
     void startPipeline(Map<String, Object> config, String instanceId) throws IOException {
@@ -417,11 +210,10 @@ public class PipelineStream extends ReadonlyRegisterBase<StreamValue> implements
         }
         stream = new Stream(getName() + " stream", ret.get(1), push);
         this.pipeline = (String) config.getOrDefault("name", "Unknown");
-        this.instance = ret.get(0);
+        setInstance(ret.get(0));
     }
 
- 
-     /**
+    /**
      * Start the pipeline.
      */
     public void start() throws IOException, InterruptedException {
@@ -436,7 +228,7 @@ public class PipelineStream extends ReadonlyRegisterBase<StreamValue> implements
                 //If instance id is present connect to it instead of raising errors
                 Logger.getLogger(PipelineStream.class.getName()).warning("Instance already present in server: " + instanceId);
                 this.startInstance(instanceId);
-            } else {            
+            } else {
                 if (config != null) {
                     startPipeline(config, instanceId);
                 } else {
@@ -451,26 +243,25 @@ public class PipelineStream extends ReadonlyRegisterBase<StreamValue> implements
                 public void onCacheChanged(Device device, Object value, Object former, long timestamp, boolean valueChange) {
                     setCache(value, timestamp);
                 }
-            });            
+            });
             stream.initialize();
             if (isMonitored()) {
                 startReceiver();
             }
-        }  
-    }
-    
-    /**
-     * Stop the pipeline.
-     */
-    public void stop() {
-        if (stream != null) {
-            try {
-                stream.close();
-            } catch (Exception ex) {
-                Logger.getLogger(PipelineStream.class.getName()).log(Level.WARNING, null, ex);
-            }
-            stream = null;
         }
+    }
+
+    public void stop() {
+        super.stop();
+        pipeline = null;
+    }
+
+    /**
+     * Return the current instance camera.
+     */
+    public String getCameraName() throws IOException {
+        assertInitialized();
+        return getClient().getCameraName(instanceId);
     }
 
     /**
@@ -486,7 +277,7 @@ public class PipelineStream extends ReadonlyRegisterBase<StreamValue> implements
      */
     public Boolean getReadonly() throws IOException {
         assertInitialized();
-        return client.getReadonly(instanceId);
+        return getClient().getReadonly(instanceId);
     }
 
     /**
@@ -494,7 +285,7 @@ public class PipelineStream extends ReadonlyRegisterBase<StreamValue> implements
      */
     public Boolean getActive() throws IOException {
         assertInitialized();
-        return client.getActive(instanceId);
+        return getClient().getActive(instanceId);
     }
 
     /**
@@ -502,7 +293,7 @@ public class PipelineStream extends ReadonlyRegisterBase<StreamValue> implements
      */
     public String getInstanceId() throws IOException {
         assertInitialized();
-        return client.getInstanceId(instanceId);
+        return getClient().getInstanceId(instanceId);
     }
 
     /**
@@ -510,15 +301,7 @@ public class PipelineStream extends ReadonlyRegisterBase<StreamValue> implements
      */
     public String getStreamAddress() throws IOException {
         assertInitialized();
-        return client.getStreamAddress(instanceId);
-    }
-
-    /**
-     * Return the current instance camera.
-     */
-    public String getCameraName() throws IOException {
-        assertInitialized();
-        return client.getCameraName(instanceId);
+        return getClient().getStreamAddress(instanceId);
     }
 
     /**
@@ -549,16 +332,16 @@ public class PipelineStream extends ReadonlyRegisterBase<StreamValue> implements
 
     public String getFunction() throws IOException {
         assertInitialized();
-        return client.getFunction(instanceId);
+        return getClient().getFunction(instanceId);
     }
 
     public void setFunction(String function) throws IOException {
         assertInitialized();
-        client.setFunction(instanceId, function);
+        getClient().setFunction(instanceId, function);
     }
 
     public void sendFunctionScript(String fileName) throws IOException {
-        client.setScriptFile(fileName);
+        getClient().setScriptFile(fileName);
     }
 
     public void setFunctionScript(String fileName) throws IOException {
@@ -566,29 +349,15 @@ public class PipelineStream extends ReadonlyRegisterBase<StreamValue> implements
         setFunction(new File(fileName).getName());
     }
 
-    @Override
-    protected void doClose() throws IOException {
-        configChangeListener = null;
-        stop();
-        for (Device d: this.getComponents()){
-            try {
-                d.close();
-            } catch (Exception ex) {
-                Logger.getLogger(PipelineStream.class.getName()).log(Level.SEVERE, null, ex);
-            }
-        }
-        super.doClose();
-    }
-
-    public Stream createSubsampled(double maxFrameRate) throws IOException, InterruptedException{
+    public Stream createSubsampled(double maxFrameRate) throws IOException, InterruptedException {
         return createSubsampled(maxFrameRate, null);
     }
-    
-    public Stream createSubsampled(int downsampling) throws IOException, InterruptedException{
+
+    public Stream createSubsampled(int downsampling) throws IOException, InterruptedException {
         return createSubsampled(null, downsampling);
-    }    
-    
-    protected Stream createSubsampled(Double maxFrameRate, Integer downsampling) throws IOException, InterruptedException{
+    }
+
+    protected Stream createSubsampled(Double maxFrameRate, Integer downsampling) throws IOException, InterruptedException {
         Map<String, Object> config = new HashMap<>();
         config.put("name", instance + "_subsampled");
         config.put("input_mode", push ? "PULL" : "SUB");
@@ -596,7 +365,7 @@ public class PipelineStream extends ReadonlyRegisterBase<StreamValue> implements
         config.put("pipeline_type", "stream");
         config.put("mode", "PUB");
         config.put("function", "propagate_stream");
-        if (maxFrameRate!=null){
+        if (maxFrameRate != null) {
             config.put("max_frame_rate", maxFrameRate);
         } else {
             config.put("downsampling", downsampling);
@@ -608,5 +377,11 @@ public class PipelineStream extends ReadonlyRegisterBase<StreamValue> implements
         stream.start(true);
         addComponent(stream);
         return stream;
-    }       
+    }
+
+    @Override
+    protected void doClose() throws IOException {
+        configChangeListener = null;
+        super.doClose();
+    }
 }

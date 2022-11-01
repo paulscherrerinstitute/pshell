@@ -1,9 +1,9 @@
 package ch.psi.pshell.ui;
 
+import ch.psi.pshell.camserver.CamServerStream;
 import ch.psi.pshell.camserver.CameraStream;
 import ch.psi.pshell.camserver.PipelineStream;
 import ch.psi.pshell.camserver.ProxyClient;
-import ch.psi.pshell.device.ReadonlyRegisterBase;
 import static ch.psi.pshell.swing.CamServerStreamPanel.getDisplayValue;
 import static ch.psi.pshell.ui.CamServerViewer.ARG_CAMERA_SERVER;
 import java.io.IOException;
@@ -32,39 +32,37 @@ import javax.swing.table.DefaultTableModel;
  *
  */
 public class CamServerInstancesViewer extends MonitoredPanel {
+
     String serverUrl;
     ProxyClient proxy;
     Timer timer;
     final DefaultTableModel model;
-    ScheduledExecutorService schedulerPolling;       
-    ReadonlyRegisterBase stream; 
-    boolean cameraInstances;
-    
+    ScheduledExecutorService schedulerPolling;
+    CamServerStream stream;
+    boolean cameraServer;
+
     public CamServerInstancesViewer() {
         initComponents();
         model = (DefaultTableModel) table.getModel();
     }
-    
-                
-    
-    public void initialize(String url, boolean cameraInstances) throws IOException, InterruptedException{
-        proxy = new ProxyClient(url);
-        this.cameraInstances = cameraInstances;
-    }
 
+    public void initialize(String url, boolean cameraServer) throws IOException, InterruptedException {
+        proxy = new ProxyClient(url);
+        this.cameraServer = cameraServer;
+    }
 
     @Override
     protected void onShow() {
         try {
             schedulerPolling = Executors.newSingleThreadScheduledExecutor(
                     new NamedThreadFactory("PanelServers update thread"));
-            schedulerPolling.scheduleWithFixedDelay( () -> {
-                if (isShowing()){
-                    update();                           
-                }  else {
+            schedulerPolling.scheduleWithFixedDelay(() -> {
+                if (isShowing()) {
+                    update();
+                } else {
                     Logger.getLogger(getClass().getName()).info("");
-                }     
-            } , 10, 3000, TimeUnit.MILLISECONDS);
+                }
+            }, 10, 3000, TimeUnit.MILLISECONDS);
 
         } catch (Exception ex) {
             ex.printStackTrace();
@@ -82,43 +80,40 @@ public class CamServerInstancesViewer extends MonitoredPanel {
 
     @Override
     protected void onDesactive() {
-        if (stream!=null) {
+        if (stream != null) {
             stream.close();
         }
     }
 
-        
-    
-
-    void update(){
+    void update() {
         try {
-            if (proxy!=null){
+            if (proxy != null) {
                 Map<String, Object> info = proxy.getInfo();
                 Map<String, Map<String, Object>> servers = (Map<String, Map<String, Object>>) info.get("servers");
                 Map<String, Map<String, Object>> active_instances = (Map<String, Map<String, Object>>) info.get("active_instances");
 
-                SwingUtilities.invokeLater(()->{
+                SwingUtilities.invokeLater(() -> {
                     update(servers, active_instances);
-                });                 
+                });
             } else {
                 model.setRowCount(0);
             }
         } catch (Exception ex) {
             Logger.getLogger(getClass().getName()).log(Level.INFO, null, ex);
         }
-    }    
+    }
 
-    void update(Map<String, Map<String, Object>> servers, Map<String, Map<String, Object>> active_instances){
-        try {            
+    void update(Map<String, Map<String, Object>> servers, Map<String, Map<String, Object>> active_instances) {
+        try {
             ArrayList<String> keys = new ArrayList<>(active_instances.keySet());
             Collections.sort(keys);
             model.setRowCount(keys.size());
-            for (int i =0; i< keys.size(); i++){
+            for (int i = 0; i < keys.size(); i++) {
                 String instanceName = keys.get(i);
-                int col=0;
-                model.setValueAt(instanceName, i, col++);  
+                int col = 0;
+                model.setValueAt(instanceName, i, col++);
                 Map data = active_instances.getOrDefault(instanceName, new HashMap());
-                Map stats = (Map) data.getOrDefault("statistics", new HashMap());                     
+                Map stats = (Map) data.getOrDefault("statistics", new HashMap());
                 //modelInstances.setValueAt(data.getOrDefault("stream_address", ""), i, col++);
                 model.setValueAt(getDisplayValue(stats.getOrDefault("time", "")), i, col++);
                 model.setValueAt(getDisplayValue(stats.getOrDefault("clients", "")), i, col++);
@@ -126,13 +121,12 @@ public class CamServerInstancesViewer extends MonitoredPanel {
                 model.setValueAt(getDisplayValue(Str.toString(stats.getOrDefault("tx", "")).split(" -")[0]), i, col++);
                 model.setValueAt(getDisplayValue(stats.getOrDefault("cpu", "")), i, col++);
                 model.setValueAt(getDisplayValue(stats.getOrDefault("memory", "")), i, col++);
-            }                   
+            }
         } catch (Exception ex) {
             Logger.getLogger(getClass().getName()).log(Level.SEVERE, null, ex);
         }
     }
 
-    
     public static void main(String[] args) throws Exception {
         App.init(args);
         createPipelineInstances(null);
@@ -145,14 +139,14 @@ public class CamServerInstancesViewer extends MonitoredPanel {
     public static CamServerInstancesViewer createCameraInstances(Window parent) {
         return create(parent, App.getArgumentValue(ARG_CAMERA_SERVER), "Camera Instances", true);
     }
-    
-    public static CamServerInstancesViewer create(Window parent, String url, String title, boolean cameraInstances) {
+
+    public static CamServerInstancesViewer create(Window parent, String url, String title, boolean cameraServer) {
         CamServerInstancesViewer viewer = new CamServerInstancesViewer();
         SwingUtilities.invokeLater(() -> {
-            try {                
-                viewer.initialize(url, cameraInstances);
+            try {
+                viewer.initialize(url, cameraServer);
                 Window window = SwingUtils.showFrame(parent, title, new Dimension(800, 600), viewer);
-                window.setIconImage(Toolkit.getDefaultToolkit().getImage(App.getResourceUrl("IconSmall.png")));                
+                window.setIconImage(Toolkit.getDefaultToolkit().getImage(App.getResourceUrl("IconSmall.png")));
             } catch (Exception ex) {
                 Logger.getLogger(CamServerInstancesViewer.class.getName()).log(Level.SEVERE, null, ex);
             }
@@ -230,23 +224,21 @@ public class CamServerInstancesViewer extends MonitoredPanel {
 
     private void tableMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_tableMouseClicked
         try {
-            if ((evt.getClickCount() == 2) && (!evt.isPopupTrigger())) {                
+            if ((evt.getClickCount() == 2) && (!evt.isPopupTrigger())) {
                 int index = table.convertRowIndexToModel(table.getSelectedRow());
-                String currentInstance = (index>=0) ? model.getValueAt(index, 0).toString() : null;                        
-                if (stream!=null){
+                String currentInstance = (index >= 0) ? model.getValueAt(index, 0).toString() : null;
+                if (stream != null) {
                     stream.close();
                     stream = null;
                 }
-                if (cameraInstances){
-                    stream = new CameraStream("Camera Stream", proxy.getUrl(), currentInstance);   
-                    stream.setMonitored(true);
-                    stream.initialize();
+                if (cameraServer) {
+                    stream = new CameraStream("Camera Stream", proxy.getUrl(), currentInstance);
                 } else {
-                    stream = new PipelineStream("Pipeline Stream", proxy.getUrl(), currentInstance);   
-                    stream.setMonitored(true);
-                    stream.initialize();
-                } 
-                App.getInstance().getDevicePanelManager().showPanel(stream,getWindow());
+                    stream = new PipelineStream("Pipeline Stream", proxy.getUrl(), currentInstance);
+                }
+                stream.setMonitored(true);
+                stream.initialize();
+                App.getInstance().getDevicePanelManager().showPanel(stream, getWindow());
             }
         } catch (Exception ex) {
             showException(ex);
