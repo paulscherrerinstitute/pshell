@@ -171,14 +171,14 @@ public class CamServerViewer extends MonitoredPanel {
 
     SourceSelecionMode sourceSelecionMode;
     Console console;
-
-    public static interface CamServerViewerListener {
-        void onOpeningStream(String name) throws Exception;
-        void onOpenedStream(String name, String instance) throws Exception;
-        void onSavingImages(String name, String instance, DataManager dm, String pathRoot) throws Exception;
-        void onSavedSnapshot(String name, String instance, String snapshotFile) throws Exception;        
+    
+    public static interface CamServerViewerListener{
+        default void onOpenedStream(String name, String instance) throws Exception {};
+        default void onOpeningStream(String name) throws Exception {};
+        default void onSavingImages(String name, String instance, DataManager dm, String pathRoot) throws Exception {};
+        default void onSavedSnapshot(String name, String instance, String snapshotFile) throws Exception {};        
     }
-
+    
     CamServerViewerListener listener;
 
     public CamServerViewerListener getListener() {
@@ -189,7 +189,8 @@ public class CamServerViewer extends MonitoredPanel {
         this.listener = listener;
     }
 
-    
+    JMenu menuCamera = new JMenu("Camera");
+            
     public CamServerViewer() {
         try {
             initComponents();
@@ -227,7 +228,7 @@ public class CamServerViewer extends MonitoredPanel {
                 }
             });
 
-            JMenuItem menuCameraConfig = new JMenuItem("Camera Configurarion");
+            JMenuItem menuCameraConfig = new JMenuItem("Configuration...");
             menuCameraConfig.addActionListener((ActionEvent e) -> {
                 try {
                     if (camera != null) {
@@ -381,13 +382,11 @@ public class CamServerViewer extends MonitoredPanel {
                 renderer.getPopupMenu().addSeparator();
                 renderer.getPopupMenu().add(menuRendererConfig);
                 renderer.getPopupMenu().add(menuSetImageBufferSize);
-                renderer.getPopupMenu().add(menuSaveStack);
-                renderer.getPopupMenu().addSeparator();
-                if ((getCameraServerUrl()!=null)&&(sourceSelecionMode == SourceSelecionMode.Cameras)) {
-                    renderer.getPopupMenu().add(menuCalibrate);
-                    renderer.getPopupMenu().add(menuCameraConfig);
-                    renderer.getPopupMenu().addSeparator();
-                }
+                renderer.getPopupMenu().add(menuSaveStack);                
+                menuCamera.add(menuCalibrate);
+                menuCamera.add(menuCameraConfig);                
+                renderer.getPopupMenu().add(menuCamera);
+                renderer.getPopupMenu().addSeparator();                                    
 
                 renderer.getPopupMenu().add(menuSetROI);
                 renderer.getPopupMenu().add(menuResetROI);
@@ -626,6 +625,7 @@ public class CamServerViewer extends MonitoredPanel {
         comboType.setVisible((sourceSelecionMode==SourceSelecionMode.Cameras) && !App.hasArgument(ARG_LIST));
         labelType.setVisible(comboType.isVisible());        
         panelPipeline.setVisible(getPipelineServerUrl() != null);
+        menuCamera.setVisible((getCameraServerUrl()!=null)&&(sourceSelecionMode == SourceSelecionMode.Cameras));
         
         if ((getPipelineServerUrl() == null) && (mode != SourceSelecionMode.Single)) {
             throw new RuntimeException("Invalid selection mode: Pipeline Server URL is not configured.");
@@ -680,6 +680,11 @@ public class CamServerViewer extends MonitoredPanel {
                     case Cameras:
                         streams = srv.getCameras();
                         break;
+                    case Single:
+                        if (comboSelection!=null){
+                            model.addElement(comboSelection);
+                        } 
+                        return model;                      
                 }
             }
             Collections.sort(streams);
@@ -1113,12 +1118,15 @@ public class CamServerViewer extends MonitoredPanel {
     }
 
     boolean updatingSelection;
-    Object comboSelection;
+    String comboSelection;
 
-    void setComboNameSelection(Object selection) {
+    void setComboNameSelection(String selection) {
         updatingSelection = true;
         comboSelection = selection;
         try {
+            if (sourceSelecionMode == SourceSelecionMode.Single){
+                comboName.setModel(getNameList());
+            }            
             comboName.setSelectedItem(selection);
         } finally {
             updatingSelection = false;
@@ -1138,7 +1146,7 @@ public class CamServerViewer extends MonitoredPanel {
         try {
             String selected = (String) comboName.getSelectedItem();
             comboName.setModel(getNameList());
-            if ((selected != null) && (((DefaultComboBoxModel) comboName.getModel()).getIndexOf(selected) > 0)) {
+            if ((selected != null) && (((DefaultComboBoxModel) comboName.getModel()).getIndexOf(selected) >= 0)) {
                 setComboNameSelection(selected);
             } else {
                 setComboNameSelection("");
@@ -1243,7 +1251,9 @@ public class CamServerViewer extends MonitoredPanel {
         Map<String, Object> cfg = null;
         if ((stream != null) && (stream.startsWith("{") && stream.endsWith("}"))) {
             cfg = (Map<String, Object>) EncoderJson.decode(stream, Map.class);
-            setComboNameSelection((String) cfg.get("camera_name"));
+            String camera = (String) cfg.get("camera_name");
+            String name =  (String) cfg.get("name");
+            setComboNameSelection((camera==null) ? name : camera);
         } else {
             setComboNameSelection((stream == null) ? "" : stream);
         }
@@ -3978,9 +3988,16 @@ public class CamServerViewer extends MonitoredPanel {
 
     private void buttonStreamDataActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonStreamDataActionPerformed
         try {
-            streamPanel = (DevicePanel) DevicePanel.showDevicePanel(this, server.getStream());
-            ((JDialog) streamPanel.getWindow()).setTitle("Stream Data");
-            streamPanel.setReadOnly(true);
+            Device stream = (server!=null) ? server.getStream() : ((camera!=null) ? camera.getStream() : null);
+            if (stream!=null){
+                streamPanel = (DevicePanel) DevicePanel.showDevicePanel(this, stream);
+                if (streamPanel==null){
+                    showMessage("Error", "No panel defined for the stream");
+                } else {
+                    ((JDialog) streamPanel.getWindow()).setTitle("Stream Data"); //NULL
+                    streamPanel.setReadOnly(true);
+                }
+            }
         } catch (Exception ex) {
             showException(ex);
         }

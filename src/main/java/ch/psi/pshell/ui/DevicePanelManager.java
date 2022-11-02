@@ -114,58 +114,63 @@ public class DevicePanelManager {
     }
 
     DevicePanel newPanel(Device dev, Window parent) {
-        for (DevicePoolPanel.DefaultPanel entry : preferences.defaultPanels) {
-            try {
-                if (entry.getDeviceClass().isAssignableFrom(dev.getClass())) {
-                    DevicePanel ret = (DevicePanel) entry.getPanelClass().newInstance();
-                    ret.setDevice(dev);
-                    dev.addListener(new DeviceAdapter() {
-                        @Override
-                        public void onStateChanged(Device device, State state, State former) {
-                            if (state == State.Closing) {
-                                String name = device.getName();
-                                if (name != null) {
-                                    if (deviceDialogs.containsKey(name)) {
-                                        deviceDialogs.get(name).setVisible(false);
-                                        deviceDialogs.get(name).dispose();
-                                        deviceDialogs.remove(name);
-                                    }
+        try {
+            DevicePoolPanel.DefaultPanel defaultPanel = getDefaultPanel(dev);
+            if (defaultPanel!=null) {
+                DevicePanel ret = (DevicePanel) defaultPanel.getPanelClass().newInstance();
+                ret.setDevice(dev);
+                dev.addListener (new DeviceAdapter() {
+                    @Override
+                    public void onStateChanged(Device device, State state, State former) {
+                        if (state == State.Closing) {
+                            String name = device.getName();
+                            if (name != null) {
+                                if (deviceDialogs.containsKey(name)) {
+                                    deviceDialogs.get(name).setVisible(false);
+                                    deviceDialogs.get(name).dispose();
+                                    deviceDialogs.remove(name);
                                 }
                             }
                         }
-                    });
-
-                    JDialog dlg = SwingUtils.showDialog(parent, dev.getName(), null, ret);
-                    dlg.setMinimumSize(dlg.getPreferredSize());
-                    deviceDialogs.put(dev.getName(), dlg);
-
-                    return ret;
-                }
-            } catch (Exception ex) {
-                logger.log(Level.INFO, null, ex);
+                    }
+                });
+                JDialog dlg = SwingUtils.showDialog(parent, dev.getName(), null, ret);
+                dlg.setMinimumSize(dlg.getPreferredSize());
+                deviceDialogs.put(dev.getName(), dlg);
+                return ret;
             }
+        } catch (Exception ex) {
+            logger.log(Level.INFO, null, ex);
         }
         return null;
     }
 
     public boolean hasControlPanel(GenericDevice device) {
-        for (DevicePoolPanel.DefaultPanel entry : preferences.defaultPanels) {
-            try {
-                if (entry.getDeviceClass().isAssignableFrom(device.getClass())) {
-                    return true;
-                }
-            } catch (Exception ex) {
-                logger.log(Level.INFO, null, ex);
-            }
-        }
-        return false;
-    }
+        return getDefaultPanel(device) != null;
+    } 
 
-    public boolean isShowingPanel(final String name) {
-        if (name == null) {
-            return false;
+    public DevicePoolPanel.DefaultPanel getDefaultPanel(GenericDevice device) {
+        if (device!=null){
+            for (DevicePoolPanel.DefaultPanel entry : preferences.defaultPanels) {
+                try {
+                    if (entry.getDeviceClass().isAssignableFrom(device.getClass())) {
+                        return entry;
+                    }
+                } catch (Exception ex) {
+                    logger.log(Level.INFO, null, ex);
+                }
+            }
+            for (DevicePoolPanel.DefaultPanel entry : Preferences.getDefaultPanels()) {
+                try {
+                    if (entry.getDeviceClass().isAssignableFrom(device.getClass())) {
+                        return entry;
+                    }
+                } catch (Exception ex) {
+                    logger.log(Level.INFO, null, ex);
+                }
+            } 
         }
-        return (deviceDialogs.containsKey(name));
+        return null;
     }
     
     
@@ -195,6 +200,13 @@ public class DevicePanelManager {
         return true;
     }
 
+    public boolean isShowingPanel(final String name) {
+        if (name == null) {
+            return false;
+        }
+        return (deviceDialogs.containsKey(name));
+    }
+            
     public boolean isShowingPanel(final GenericDevice device) {
         if (device == null) {
             return false;
