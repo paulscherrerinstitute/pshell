@@ -839,5 +839,27 @@ public class Stream extends DeviceBase implements Readable<StreamValue>, Cacheab
     public void setChannelPrefix(String channelPrefix) {
         this.channelPrefix = channelPrefix;
     }
+    
+    //Used to implemente visualization playback when dispaly is paused in CamServerViewer
+    @Hidden
+    public void setValue(StreamValue value){
+         for (String channel : value.getIdentifiers()) {
+            try {
+                StreamChannel c = channels.get(channel);
+                ChannelConfig cfg = value.getChannelConfig(channel);
+                Object val = value.getValue(channel);
+                long devTimestamp = value.getTimestamp();
+                long devNanosOffset = value.getTimestampNanos();
+                long pulse_id = value.getPulseId();
+
+                if (c != null) {
+                    c.set(pulse_id, devTimestamp, devNanosOffset, val, cfg);
+                }
+            } catch (Exception ex) {
+                getLogger().log(Level.FINE, null, ex);
+            }
+        }
+         setCache(value);
+    }
 
 }

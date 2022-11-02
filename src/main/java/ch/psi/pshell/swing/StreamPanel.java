@@ -37,7 +37,7 @@ public class StreamPanel extends DevicePanel {
     volatile boolean cacheChanged;
     volatile boolean updating;
     volatile AddressableDevice monitoredDevice;
-    int updateInterval = 1000;
+    int updateInterval = 200;
     
     
     public StreamPanel() {
@@ -182,6 +182,7 @@ public class StreamPanel extends DevicePanel {
         } else {
             clear();
         }
+        updateTable();
         updateButtons();  
     }
    
@@ -203,9 +204,9 @@ public class StreamPanel extends DevicePanel {
 
     
     public void updateTable(){
-        StreamValue sv = getDevice().take();
+        Stream device = getDevice();
+        StreamValue sv = (device==null) ? null : device.take();
         
-        int index = 0;
         if (sv==null){
             textTimestamp.setText("");
             textId.setText("");
@@ -215,6 +216,7 @@ public class StreamPanel extends DevicePanel {
         textId.setText(Str.toString(sv.getPulseId()));
         textTimestamp.setText(Str.toString(sv.getTimestamp()));
 
+        int index = 0;
         List<String> keys= sv.getKeys();
         Collections.sort(keys);
         model.setNumRows(keys.size());
