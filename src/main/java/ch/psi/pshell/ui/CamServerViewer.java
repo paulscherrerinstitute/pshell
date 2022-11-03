@@ -479,7 +479,7 @@ public class CamServerViewer extends MonitoredPanel {
 
     
     CameraSource newCameraSource() throws IOException, InterruptedException {
-        CameraSource srv = new CameraSource("CamServer", getCameraServerUrl());
+        CameraSource srv = new CameraSource("CameraServer", getCameraServerUrl());
         srv.initialize();
         return srv;
     }

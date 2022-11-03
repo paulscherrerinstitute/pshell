@@ -97,9 +97,9 @@ public interface GenericDevice<T> extends Observable<T>, Timestamped, AutoClosea
     public static String getConfigPath() {
         String path = System.getProperty(PROPERTY_CONFIG_PATH);
         if (path == null) {
-            return Setup.DEFAULT_HOME_FOLDER + "/devices";
+            path = Setup.DEFAULT_HOME_FOLDER + "/devices";
         }
-        return path;
+        return Setup.expand(path);
     }      
 
     public static String getConfigFileName(String name) {
