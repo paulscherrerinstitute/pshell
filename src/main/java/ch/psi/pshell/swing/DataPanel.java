@@ -39,6 +39,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.lang.reflect.Array;
 import java.nio.file.FileSystems;
@@ -1757,6 +1758,20 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
         }
         panel.setDefaultDataPanelListener();
         return panel;
+    }
+    
+    public static DataPanel createDialog(Window parent, String root, String path) {
+        File file = root.startsWith("/") ? new File(root) : 
+                Paths.get(Context.getInstance().getSetup().getDataPath(), root).toFile();
+        if (file.isFile()){   
+            DataPanel dp = DataPanel.create(file);
+            SwingUtils.showDialog(parent, root, new Dimension(1000, 600), dp);
+            if ((path!=null) && (!path.isBlank())){
+                dp.selectDataPath(path.trim());                    
+            }
+            return dp;
+        }
+        return null;
     }
 
     static Path getWindowStatePath(){

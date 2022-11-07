@@ -1047,7 +1047,7 @@ public class DataManager implements AutoCloseable {
     public void createLink(String path, String targetRoot, String targetPath) throws IOException {
         synchronized (providerData) {
             openOutput();
-            getProvider().createLink(path, targetRoot, targetPath);
+            getProvider().createLink(adjustPath(path), targetRoot, adjustPath(targetPath));
         }
     }
     
@@ -1055,7 +1055,7 @@ public class DataManager implements AutoCloseable {
     public void createLink(String path, String targetPath) throws IOException {
         synchronized (providerData) {
             openOutput();
-            getProvider().createLink(path, targetPath);
+            getProvider().createLink(adjustPath(path), adjustPath(targetPath));
         }
     }    
     

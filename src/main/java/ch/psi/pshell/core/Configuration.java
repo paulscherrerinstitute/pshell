@@ -31,7 +31,7 @@ public class Configuration extends Config {
     public String dataPath = TOKEN_DATA + "/" + TOKEN_YEAR + "_" + TOKEN_MONTH + "/" + TOKEN_DATE + "/" + TOKEN_DATE + "_" + TOKEN_TIME + "_" + TOKEN_EXEC_NAME;
     @Defaults(values = {"h5", "txt", "csv", "fda"})
     public String dataProvider = "h5";
-    @Defaults(values = {"default", "table", "sf", "fda"})
+    @Defaults(values = {"default", "table", "sf", "fda", "nx"})
     public String dataLayout = "default";
     public int depthDimension = 0;
     public boolean dataScanFlushRecords = false;

@@ -16,6 +16,7 @@ import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -630,6 +631,31 @@ public class IO {
         }
         return getExtension(new File(fileName));
     }
+
+    public static long getCreation(String fileName) throws IOException {
+        return getCreation(new File(fileName));
+    }
+    
+    public static long getCreation(File file) throws IOException {
+        return Files.readAttributes(Paths.get(file.getPath()), BasicFileAttributes.class).creationTime().toMillis();
+    }
+    
+    public static long getLastAccess(String fileName) throws IOException {
+        return getCreation(new File(fileName));
+    }
+    
+    public static long getLastAccess(File file) throws IOException {
+        return Files.readAttributes(Paths.get(file.getPath()), BasicFileAttributes.class).lastAccessTime().toMillis();
+    }
+
+    public static long getLastModifiedTime(String fileName) throws IOException {
+        return getCreation(new File(fileName));
+    }
+    
+    public static long getLastModifiedTime(File file) throws IOException {
+        return Files.readAttributes(Paths.get(file.getPath()), BasicFileAttributes.class).lastModifiedTime().toMillis();
+    }    
+
 
     public static String getPrefix(File file) {
         if (file == null) {

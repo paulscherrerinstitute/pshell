@@ -1769,6 +1769,25 @@ public class View extends MainFrame {
         panel.setListener(dataPanelListener);
         return panel;
     }
+    
+    public DataPanel showDataFileWindow(String fileName, String path) throws Exception {
+        if (fileName == null) {
+            return null;
+        }        
+        File file = fileName.startsWith("/") ? new File(fileName) : Paths.get(context.getSetup().getDataPath(), fileName).toFile();
+        if (!file.exists()){
+            return null;
+        }
+        DataPanel panel = new DataPanel();
+        showDialog(fileName, new Dimension(1000, 600), panel);
+        panel.load(file.toString());
+        panel.setListener(dataPanelListener);        
+        if ((path!=null) && (!path.isBlank())){
+            panel.selectDataPath(path);
+        }        
+        return panel;
+    }
+    
 
     public Renderer openImageFile(String file) throws IOException, InterruptedException {
         if (file == null) {

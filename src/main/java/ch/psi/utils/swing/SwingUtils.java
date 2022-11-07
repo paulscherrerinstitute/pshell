@@ -1280,7 +1280,7 @@ public class SwingUtils {
         try{
             List selectionPath = new ArrayList<>();
             path = path.replaceFirst("^/",""); //remove first / if present
-            path = path.replaceAll("./$", ""); //remove last / if present
+            path = path.replaceAll("/$", ""); //remove last / if present
             String[] tokens = path.split("/");
             TreeModel model = tree.getModel();
             Object cur = model.getRoot();

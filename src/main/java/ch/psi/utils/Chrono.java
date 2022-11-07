@@ -1,7 +1,9 @@
 package ch.psi.utils;
 
+import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.TimeZone;
 import java.util.concurrent.TimeoutException;
 
 /**
@@ -127,11 +129,20 @@ public class Chrono {
     }
 
     public static String getTimeStr(Long millis, String mask) {
+        return(getTimeStr(millis, mask, null));
+    }
+    
+    public static String getTimeStr(Long millis, String mask, String timeZone) {
+
         if ((millis == null) || (millis <= 0)) {
             return "";
         }
         Date time = new Date(millis);
         SimpleDateFormat date_format = new SimpleDateFormat(mask);
+        if (timeZone!=null){
+            TimeZone tz = TimeZone.getTimeZone(timeZone);
+            date_format.setTimeZone(tz);
+        }
         return date_format.format(time);
-    }
+    }    
 }

@@ -1399,8 +1399,13 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
     }
 
     @Override
+    public String getDescription() {
+        return name + "-" + scanIndex;
+    }
+        
+    @Override
     public String toString() {
-        return Nameable.getShortClassName(getClass()) + " " + name + "-" + scanIndex;
+        return Nameable.getShortClassName(getClass()) + " " + getDescription();
     }
 
     public Thread getThread() {

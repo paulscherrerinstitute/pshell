@@ -670,7 +670,7 @@ public class ProviderHDF5 implements Provider {
     public void createLink(String path, String targetPath){
         assertOpenOutput();
         try{
-            writer.object().createOrUpdateSoftLink( targetPath, path);
+            writer.object().createOrUpdateSoftLink( "/"+targetPath, path);
         } catch (Exception ex){            
         }
     }    

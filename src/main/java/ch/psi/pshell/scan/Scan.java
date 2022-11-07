@@ -97,6 +97,18 @@ public interface Scan {
     public long getStartTimestamp();
 
     public long getEndTimestamp();
+    
+    public default long getTimeElapsed() {
+        long start = getStartTimestamp();
+        if (start<=0){
+            return 0;
+        }
+        long end = getEndTimestamp();
+        if (end <=0){
+            return System.currentTimeMillis();
+        }
+        return Math.max(0, end - start);
+    }
 
     public int getRecordIndex();
     
@@ -134,6 +146,8 @@ public interface Scan {
     public long[] readTimestamps();    
     
     public String getTag();
+    
+    public String getDescription();
     
     /**
      * If true the scans records are kept in memory.

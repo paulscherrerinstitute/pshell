@@ -110,6 +110,7 @@ public class CamServerViewer extends MonitoredPanel {
     public static final String ARG_SELECTION_MODE = "selection_mode";
     public static final String ARG_STREAM_LIST = "stream_list";
     public static final String ARG_BUFFER_SIZE = "buffer_size";
+    public static final String ARG_SIDE_PANEL = "side_panel";
    
  
     final String CAMERA_DEVICE_NAME = "CurrentCamera";
@@ -2858,6 +2859,7 @@ public class CamServerViewer extends MonitoredPanel {
                 viewer.setTypeList(App.hasArgument(ARG_TYPE) ? List.of(App.getArgumentValue(ARG_TYPE).split(",")) : null);
                 viewer.setStreamList(App.hasArgument(ARG_STREAM_LIST) ? Arrays.asList(App.getArgumentValue(ARG_STREAM_LIST).split("\\|")) : null);
                 viewer.setConsoleEnabled(App.getBoolArgumentValue(ARG_CONSOLE));
+                viewer.setSidePanelVisible(App.getBoolArgumentValue(ARG_SIDE_PANEL));                
                 viewer.setCameraServerUrl(App.getArgumentValue(ARG_CAMERA_SERVER));
                 viewer.setPipelineServerUrl(App.getArgumentValue(ARG_PIPELINE_SERVER));
                 viewer.setStartupStream(App.getArgumentValue(ARG_STREAM));

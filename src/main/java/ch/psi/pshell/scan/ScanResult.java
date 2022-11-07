@@ -1,6 +1,5 @@
 package ch.psi.pshell.scan;
 
-import ch.psi.pshell.core.Context;
 import ch.psi.pshell.core.Nameable;
 import ch.psi.pshell.data.LayoutDefault;
 import ch.psi.pshell.device.Device;
@@ -300,7 +299,7 @@ public class ScanResult implements SubscriptableList<ScanRecord>, Subscriptable.
     }
 
     public long getTimeElapsed() {
-        return scan.getEndTimestamp()- scan.getStartTimestamp();
+        return scan.getTimeElapsed();
     }
 
     @Transient
