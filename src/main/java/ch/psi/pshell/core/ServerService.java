@@ -33,6 +33,7 @@ import ch.psi.pshell.scan.DataAccessDummyScan;
 import ch.psi.pshell.scan.Scan;
 import ch.psi.pshell.scan.ScanListener;
 import ch.psi.pshell.scan.ScanRecord;
+import ch.psi.pshell.scan.ScanResult;
 import ch.psi.pshell.scripting.ViewPreference;
 import ch.psi.pshell.scripting.Statement;
 import ch.psi.pshell.security.User;
@@ -1033,6 +1034,11 @@ public class ServerService {
 
         @Override
         public Object showPanel(Config config) throws InterruptedException {
+            throw new java.lang.UnsupportedOperationException();
+        }
+        
+        @Override
+        public Object showPanel(ScanResult result) throws InterruptedException {
             throw new java.lang.UnsupportedOperationException();
         }
 

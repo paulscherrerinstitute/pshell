@@ -19,6 +19,7 @@ import ch.psi.pshell.core.PlotListener;
 import ch.psi.pshell.core.PluginManager;
 import ch.psi.pshell.core.Setup;
 import ch.psi.pshell.core.UserInterface;
+import ch.psi.pshell.data.DataManager;
 import ch.psi.pshell.data.PlotDescriptor;
 import ch.psi.pshell.device.GenericDevice;
 import ch.psi.pshell.plot.Plot;
@@ -28,6 +29,7 @@ import ch.psi.pshell.plotter.PlotterBinder;
 import ch.psi.pshell.scan.Scan;
 import ch.psi.pshell.scan.ScanListener;
 import ch.psi.pshell.scan.ScanRecord;
+import ch.psi.pshell.scan.ScanResult;
 import ch.psi.pshell.scripting.ViewPreference;
 import ch.psi.pshell.swing.DataPanel;
 import ch.psi.pshell.swing.PlotPanel;
@@ -44,8 +46,10 @@ import ch.psi.utils.Str;
 import ch.psi.utils.swing.ConfigDialog;
 import ch.psi.utils.swing.MainFrame;
 import ch.psi.utils.swing.MainFrame.LookAndFeelType;
+import ch.psi.utils.swing.TextEditor;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
+import java.awt.Font;
 import java.awt.GraphicsEnvironment;
 import java.awt.Image;
 import java.awt.Toolkit;
@@ -457,6 +461,7 @@ public class App extends ObservableBase<AppListener> {
         sb.append("\n\t-dplt        \tCreate plots for detached windows");
         sb.append("\n\t-strp        \tShow strip chart window (can be used together with -f)");
         sb.append("\n\t-dtpn        \tShow data panel window only (can be used together with -f)");
+        sb.append("\n\t-csvw        \tShow CamServer viewer");
         sb.append("\n\t-help        \tStart the GUI help window");
         sb.append("\n\t-full        \tStart in full screen mode");
         sb.append("\n\t-dual        \tStart GUI and command line interface (not allowed if running in the background)");
@@ -1037,6 +1042,32 @@ public class App extends ObservableBase<AppListener> {
                 @Override
                 public Object showPanel(Config config) throws InterruptedException {
                     return ConfigDialog.showConfigEditor(getMainFrame(), config, false, false);
+                }
+                
+                @Override
+                public Object showPanel(ScanResult result) throws InterruptedException {                    
+                    DataManager.DataAddress scanPath = DataManager.getAddress(result.getScan().getPath());                    
+                    
+                    try{
+                        DataPanel dp =  (view != null) ? 
+                                view.showDataFileWindow(scanPath.root, scanPath.path):
+                                DataPanel.createDialog(getMainFrame(), scanPath.root, scanPath.path);
+                        if (dp!=null){
+                            return dp;
+                        }
+                        //Only in-memory
+                        String table = result.print("\t");
+                        TextEditor editor = new TextEditor();
+                        editor.setText(table);
+                        editor.setReadOnly(true);
+                        editor.setFont(new Font("Courrier New", 1, 13));
+                        SwingUtils.showDialog(getMainFrame(), result.getScan().toString(), new Dimension(1000, 600), editor);                        
+                        return editor;
+                    } catch (InterruptedException ex){
+                        throw ex;
+                    } catch (Exception ex){
+                        return null;
+                    }            
                 }
 
                 @Override

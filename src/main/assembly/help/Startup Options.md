@@ -217,6 +217,10 @@
     <td>Show data panel window only (can be used together with -f).</td>
   </tr>
   <tr>
+    <td>-dtpn</td>
+    <td>Show CamServer viewer.</td>
+  </tr>
+  <tr>
     <td>-help</td>
     <td>Start the GUI help window.</td>
   </tr>

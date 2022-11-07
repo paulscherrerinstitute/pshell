@@ -1,6 +1,7 @@
 package ch.psi.pshell.core;
 
 import ch.psi.pshell.device.GenericDevice;
+import ch.psi.pshell.scan.ScanResult;
 import ch.psi.utils.Config;
 
 /**
@@ -27,6 +28,8 @@ public interface UserInterface {
     public Object showPanel(GenericDevice dev) throws InterruptedException;
     
     public Object showPanel(Config config) throws InterruptedException;
+    
+    public Object showPanel(ScanResult result) throws InterruptedException;
     
     public int waitKey(int timeout) throws InterruptedException;
 }
