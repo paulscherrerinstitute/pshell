@@ -50,6 +50,7 @@ import ch.psi.utils.swing.TextEditor;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.Font;
+import java.awt.Frame;
 import java.awt.GraphicsEnvironment;
 import java.awt.Image;
 import java.awt.Toolkit;
@@ -1110,7 +1111,7 @@ public class App extends ObservableBase<AppListener> {
             } else if (isDataPanel()) {
                 DataPanel.createPanel(getFileArg());
             } else if (isCamServerViewer()) {
-                CamServerViewer.create(null);
+                JPanel panel = CamServerViewer.create(null, getSize());
             } else {
                 if (isDual()) {
                     Console c = new Console();

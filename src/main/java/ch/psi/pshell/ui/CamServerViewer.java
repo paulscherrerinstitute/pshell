@@ -110,7 +110,7 @@ public class CamServerViewer extends MonitoredPanel {
     public static final String ARG_SELECTION_MODE = "selection_mode";
     public static final String ARG_STREAM_LIST = "stream_list";
     public static final String ARG_BUFFER_SIZE = "buffer_size";
-    public static final String ARG_SIDE_PANEL = "side_panel";
+    public static final String ARG_SIDE_BAR = "side_bar";
    
  
     final String CAMERA_DEVICE_NAME = "CurrentCamera";
@@ -2842,12 +2842,16 @@ public class CamServerViewer extends MonitoredPanel {
         App.init(args);
         create(null);
     }
-
+    
     public static CamServerViewer create(Window parent) {
+        return create(parent, null);
+    }
+
+    public static CamServerViewer create(Window parent, Dimension size) {
         CamServerViewer viewer = new CamServerViewer();
         SwingUtilities.invokeLater(() -> {
             try {                
-                Window window = SwingUtils.showFrame(parent, "CamServer Viewer", new Dimension(800, 600), viewer);
+                Window window = SwingUtils.showFrame(parent, "CamServer Viewer", (size==null)?new Dimension(800, 600):size, viewer);
                 window.setIconImage(Toolkit.getDefaultToolkit().getImage(App.getResourceUrl("IconSmall.png")));
                 if (App.hasArgument(ARG_BUFFER_SIZE)) {
                     try {
@@ -2859,11 +2863,12 @@ public class CamServerViewer extends MonitoredPanel {
                 viewer.setTypeList(App.hasArgument(ARG_TYPE) ? List.of(App.getArgumentValue(ARG_TYPE).split(",")) : null);
                 viewer.setStreamList(App.hasArgument(ARG_STREAM_LIST) ? Arrays.asList(App.getArgumentValue(ARG_STREAM_LIST).split("\\|")) : null);
                 viewer.setConsoleEnabled(App.getBoolArgumentValue(ARG_CONSOLE));
-                viewer.setSidePanelVisible(App.getBoolArgumentValue(ARG_SIDE_PANEL));                
+                viewer.setSidePanelVisible(App.getBoolArgumentValue(ARG_SIDE_BAR));                
                 viewer.setCameraServerUrl(App.getArgumentValue(ARG_CAMERA_SERVER));
                 viewer.setPipelineServerUrl(App.getArgumentValue(ARG_PIPELINE_SERVER));
                 viewer.setStartupStream(App.getArgumentValue(ARG_STREAM));
-                viewer.initialize(App.getArgumentValue(ARG_SELECTION_MODE));                             
+                viewer.initialize(App.getArgumentValue(ARG_SELECTION_MODE));      
+                       
             } catch (Exception ex) {
                 Logger.getLogger(CamServerViewer.class.getName()).log(Level.SEVERE, null, ex);
             }
@@ -3688,7 +3693,7 @@ public class CamServerViewer extends MonitoredPanel {
                     .addGap(2, 2, 2)
                     .addGroup(panelColormapLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                         .addComponent(btFixColormapRange, javax.swing.GroupLayout.Alignment.TRAILING)
-                        .addComponent(spinnerMin, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 97, Short.MAX_VALUE))))
+                        .addComponent(spinnerMin, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
             .addContainerGap())
     );
 
