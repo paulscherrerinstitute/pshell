@@ -1,6 +1,7 @@
 package ch.psi.pshell.bs;
 
 import ch.psi.bsread.message.ChannelConfig;
+import ch.psi.bsread.message.Type;
 import ch.psi.pshell.scripting.Subscriptable;
 import ch.psi.utils.Reflection.Hidden;
 import java.util.ArrayList;
@@ -88,12 +89,22 @@ public class StreamValue extends Number implements Subscriptable.MappedList<Stri
         ChannelConfig  config = getChannelConfig(id);
         return (config==null) ? null : config.getShape();
     }     
-    
+     
     public int[]  getShape(int index) {
         ChannelConfig  config = getChannelConfig(index);
         return (config==null) ? null : config.getShape();
-    }    
+    }        
 
+    public Type getType(String id) {
+        ChannelConfig  config = getChannelConfig(id);
+        return (config==null) ? null : config.getType();
+    }     
+     
+    public Type getType(int index) {
+        ChannelConfig  config = getChannelConfig(index);
+        return (config==null) ? null : config.getType();
+    }     
+    
     @Override
     public String toString() {
         return String.valueOf(pulseId);

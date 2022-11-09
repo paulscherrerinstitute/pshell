@@ -234,10 +234,11 @@ public class StreamPanel extends DevicePanel {
                     }
                     size = Convert.arrayToString(shape, " x ");
                 }
-                type = val.getClass().getTypeName();
-                if (type.contains(".")){
-                    type = type.substring(type.lastIndexOf(".")+1);
-                }
+                //type = val.getClass().getTypeName();
+                //if (type.contains(".")){
+                //    type = type.substring(type.lastIndexOf(".")+1);
+                //}
+                type = Str.toString(getDevice().getType(key));
             }                        
             if (index>=model.getRowCount()){
                 model.addRow(new Object[]{"","","",""});            

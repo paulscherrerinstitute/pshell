@@ -10,6 +10,7 @@ import ch.psi.bsread.message.ValueImpl;
 import ch.psi.pshell.device.Device;
 import ch.psi.bsread.converter.MatlabByteConverter;
 import ch.psi.bsread.message.ChannelConfig;
+import ch.psi.bsread.message.Type;
 import ch.psi.pshell.bs.ProviderConfig.SocketType;
 import ch.psi.pshell.bs.StreamConfig.Incomplete;
 import ch.psi.pshell.device.Cacheable;
@@ -763,6 +764,14 @@ public class Stream extends DeviceBase implements Readable<StreamValue>, Cacheab
     
     public int[]  getShape(int index) {
          return getCurrentValue().getShape(index);
+    }        
+    
+    public Type getType(String id) {
+        return getCurrentValue().getType(id);
+    }     
+     
+    public Type getType(int index) {
+        return getCurrentValue().getType(index);
     }        
 
     public static List readChannels(List<String> names, int modulo, int offset, int timeout) throws IOException, InterruptedException {
