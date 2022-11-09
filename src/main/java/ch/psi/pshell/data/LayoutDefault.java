@@ -23,7 +23,7 @@ import java.util.logging.Logger;
 /**
  * This data layout stores each positioner and sensor as an individual dataset
  */
-public class LayoutDefault extends LayoutBase implements Layout {
+public class LayoutDefault extends LayoutBase {
 
     public static final String ATTR_SCAN_DIMENSION = "Dimensions";
     public static final String ATTR_SCAN_STEPS = "Steps";

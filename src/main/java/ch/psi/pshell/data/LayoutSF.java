@@ -3,19 +3,15 @@ package ch.psi.pshell.data;
 import ch.psi.pshell.bs.BsScan;
 import ch.psi.pshell.bs.Stream;
 import ch.psi.pshell.core.Context;
-import ch.psi.pshell.core.InlineDevice;
 import ch.psi.pshell.device.ArrayCalibration;
 import ch.psi.pshell.device.Averager;
 import ch.psi.pshell.device.DescStatsDouble;
-import ch.psi.pshell.device.Device;
 import ch.psi.pshell.device.MatrixCalibration;
 import ch.psi.pshell.device.Readable;
 import ch.psi.pshell.device.Readable.ReadableArray;
 import ch.psi.pshell.device.Readable.ReadableCalibratedArray;
 import ch.psi.pshell.device.Readable.ReadableMatrix;
 import ch.psi.pshell.device.Readable.ReadableCalibratedMatrix;
-import ch.psi.pshell.device.ReadonlyProcessVariableConfig;
-import ch.psi.pshell.device.ReadonlyRegister;
 import ch.psi.pshell.device.Writable;
 import ch.psi.pshell.device.Writable.WritableArray;
 import ch.psi.pshell.scan.AreaScan;
@@ -35,7 +31,6 @@ import ch.psi.pshell.scan.VectorScan;
 import ch.psi.pshell.ui.App;
 import ch.psi.utils.Arr;
 import ch.psi.utils.Chrono;
-import ch.psi.utils.Config;
 import ch.psi.utils.Sys;
 import ch.psi.utils.Str;
 import java.io.File;
@@ -50,7 +45,7 @@ import java.util.logging.Logger;
 /**
  * This data layout stores each positioner and sensor as an individual dataset
  */
-public class LayoutSF extends LayoutBase implements Layout {
+public class LayoutSF extends LayoutBase {
 
     public static final String ATTR_GROUP_GENERAL = "general/";
     public static final String ATTR_GROUP_EXPERIMENT = "experiment/";

@@ -18,7 +18,7 @@ import java.util.UUID;
 /**
  * This data layout stores each positioner and sensor as an individual dataset
  */
-public class LayoutNX extends LayoutDefault implements Layout {
+public class LayoutNX extends LayoutDefault {
 
 public static final String ATTR_CLASS = "NX_class";
 
@@ -63,12 +63,18 @@ public static final String ATTR_Z = "z";
     public void initialize() {
     }
 
+    @Override
+    public String getCurrentGroup(Scan scan) {
+        String ret = super.getCurrentGroup(scan);
+        ret = ret.replaceAll(" ", "_");
+        return ret;
+    }
+    
     public String getEntryPath(Scan scan) {        
         String ret = super.getScanPath(scan);
         if (!ret.startsWith("/")){
             ret = "/" + ret;
         }
-        ret = ret.replaceAll(" ", "_");
         return ret;
     }
 

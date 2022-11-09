@@ -17,7 +17,7 @@ import java.util.Map;
 /**
  * This data layout stores all positioners and sensors in a single table
  */
-public class LayoutTable extends LayoutBase implements Layout {
+public class LayoutTable extends LayoutBase {
 
     public static final String ATTR_SCAN_WRITABLE_DIMS = "Writable Dims";
 
