@@ -407,6 +407,9 @@ ReadableMatrixSource=RegisterMatrixSource.ReadableMatrixSource
 from ch.psi.pshell.imaging import ImageListener as ImageListener
 from ch.psi.pshell.imaging import ImageMeasurement as ImageMeasurement
 from ch.psi.pshell.imaging import CameraSource as CameraSource
+from ch.psi.pshell.imaging import DeviceSource as DeviceSource
+from ch.psi.pshell.imaging import ColormapSource as ColormapSource
+from ch.psi.pshell.imaging import StreamSource as StreamSource
 from ch.psi.pshell.imaging import ColormapAdapter as ColormapAdapter
 from ch.psi.pshell.imaging import FileSource as FileSource
 from ch.psi.pshell.imaging import MjpegSource as MjpegSource

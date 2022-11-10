@@ -73,4 +73,56 @@ abstract public class Filter extends SourceBase implements ImageListener {
     }
 
     abstract public BufferedImage process(BufferedImage image, Data data);
+    
+    /**
+     * Filter that operates exclusively on the data object
+     */
+    abstract static public class DataFilter extends Filter{
+        public DataFilter(String name) {
+            super(name);
+        }
+
+        public DataFilter() {
+            super();
+        }
+
+        @Override
+        void execute(BufferedImage image, Data data) {
+            data = process(data);
+            pushImage(null, data);
+        }        
+        
+        @Override
+        public final BufferedImage process(BufferedImage image, Data data){
+            return null;
+        }
+        
+        abstract public Data process(Data data);        
+    }
+    
+    /**
+     * Filter that operates exclusively on the image object
+     */
+    abstract static public class ImageFilter extends Filter{
+        public ImageFilter(String name) {
+            super(name);
+        }
+
+        public ImageFilter() {
+            super();
+        }
+
+        @Override
+        void execute(BufferedImage image, Data data) {
+            image = process(image);
+            pushImage(image, null);
+        }        
+        
+        @Override
+        public final BufferedImage process(BufferedImage image, Data data){
+            return process(image);
+        }
+        
+        abstract public BufferedImage process(BufferedImage data);        
+    }    
 }

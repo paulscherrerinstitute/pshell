@@ -181,6 +181,9 @@ import ch.psi.pshell.imaging.RegisterMatrixSource as RegisterMatrixSource
 import ch.psi.pshell.imaging.ImageListener as ImageListener
 import ch.psi.pshell.imaging.ImageMeasurement as ImageMeasurement
 import ch.psi.pshell.imaging.CameraSource as CameraSource
+import ch.psi.pshell.imaging.DeviceSource as DeviceSource
+import ch.psi.pshell.imaging.ColormapSource as ColormapSource
+import ch.psi.pshell.imaging.StreamSource as StreamSource
 import ch.psi.pshell.imaging.ColormapAdapter as ColormapAdapter
 import ch.psi.pshell.imaging.FileSource as FileSource
 import ch.psi.pshell.imaging.MjpegSource as MjpegSource

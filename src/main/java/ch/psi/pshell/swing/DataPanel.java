@@ -1778,12 +1778,12 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
          return Paths.get(Context.getInstance().getSetup().getContextPath(), DataPanel.class.getSimpleName() + "_" + "WindowState.xml");
     }
     
-    public static void createPanel(File path) { 
+    public static DataPanel createPanel(File path) { 
+        DataPanel panel = new DataPanel();
         java.awt.EventQueue.invokeLater(() -> {
             Context.createInstance();
             JFrame frame = new JFrame(App.getApplicationTitle());
             frame.setIconImage(App.getIconSmall());
-            DataPanel panel = new DataPanel();
             frame.add(panel);
             frame.setSize(1000, 800);
             SwingUtils.centerComponent(null, frame);            
@@ -1822,6 +1822,7 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
                 }
             });
         });
+        return panel;
     }
 
     static List<Plot> plot(Window parent, String title, PlotDescriptor[] plots, ViewPreference.PlotPreferences preferences) throws Exception {
