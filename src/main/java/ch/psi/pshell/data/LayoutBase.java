@@ -313,7 +313,14 @@ public abstract class LayoutBase implements Layout {
                         getDataManager().setAttribute(dataset, ATTR_DEVICE_PREC, precision);
                     }       
                 } catch (Exception ex){
-                }   
+                }  
+                try{
+                    int[] shape = reg.getShape();
+                    if (shape!=ReadonlyRegister.UNDEFINED_SHAPE){
+                        getDataManager().setAttribute(dataset, ATTR_DEVICE_SHAPE, shape);
+                    }       
+                } catch (Exception ex){
+                }                  
             }
         }
     }    

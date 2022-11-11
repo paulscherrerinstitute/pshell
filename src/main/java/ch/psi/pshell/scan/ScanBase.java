@@ -1,5 +1,6 @@
 package ch.psi.pshell.scan;
 
+import ch.psi.pshell.bs.Matrix;
 import ch.psi.pshell.core.InlineDevice;
 import ch.psi.pshell.bs.Stream;
 import ch.psi.pshell.bs.Waveform;
@@ -1319,7 +1320,14 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
                 } catch (Exception ex) {
                     ((Waveform) r).update(); //Performs a first read to initialize array length    
                 }
-            }
+            } else if (r instanceof Matrix) {
+                try {
+                    ((Matrix) r).getWidth();
+                    ((Matrix) r).getHeight();
+                } catch (Exception ex) {
+                    ((Matrix) r).update(); //Performs a first read to initialize array length    
+                }
+            }            
         }
     }
 

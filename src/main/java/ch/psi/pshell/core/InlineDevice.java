@@ -283,12 +283,16 @@ public class InlineDevice extends DeviceBase implements Readable, Writable {
                         int modulo = StreamChannel.DEFAULT_MODULO;
                         int offset = StreamChannel.DEFAULT_OFFSET;
                         boolean waveform = false;
+                        boolean matrix = false;
                         int sz = -1;
                         int width = -1;
                         int height = -1;
                         if ("true".equalsIgnoreCase(pars.get("waveform"))) {
                             waveform = true;
                         }
+                        if ("true".equalsIgnoreCase(pars.get("matrix"))) {
+                            matrix = true;
+                        }                        
                         try {
                             sz = Integer.valueOf(pars.get("size"));
                             waveform = true;
@@ -310,7 +314,10 @@ public class InlineDevice extends DeviceBase implements Readable, Writable {
                             offset = Integer.valueOf(pars.get("offset"));
                         } catch (Exception ex) {
                         }
-                        if ((width >= 0) && (height >= 0)) {
+                        if (matrix){
+                            ret = ((Stream) getParent()).addMatrix(name, id, modulo, offset);
+                        }
+                        else if ((width >= 0) && (height >= 0)) {
                             ret = ((Stream) getParent()).addMatrix(name, id, modulo, offset, width, height);
                         } else if (waveform) {
                             if (sz >= 0) {

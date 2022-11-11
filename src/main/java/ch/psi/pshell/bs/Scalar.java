@@ -29,8 +29,8 @@ public class Scalar<T> extends StreamChannel<T> {
     }
 
     @Override
-    public WaveformConfig getConfig() {
-        return (WaveformConfig) super.getConfig();
+    public ScalarConfig getConfig() {
+        return (ScalarConfig) super.getConfig();
     }
     
     @Override

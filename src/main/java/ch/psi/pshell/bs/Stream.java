@@ -51,6 +51,7 @@ public class Stream extends DeviceBase implements Readable<StreamValue>, Cacheab
     Receiver receiver;
     Boolean fixedChildren;
     final Boolean privateProvider;
+    boolean createMatrix;
 
     @Override
     public StreamConfig getConfig() {
@@ -206,10 +207,17 @@ public class Stream extends DeviceBase implements Readable<StreamValue>, Cacheab
         return null;
     }
 
+    public boolean getCreateMatrix(){
+        return createMatrix;
+    }
+    
+    public void setCreateMatrix(boolean value){
+        createMatrix = value;
+    }
+
     @Override
     protected void doInitialize() throws IOException, InterruptedException {
-        stop();
-        super.doInitialize();
+        stop();        
         channels.clear();
         channelNames.clear();
         readables.clear();
@@ -219,6 +227,7 @@ public class Stream extends DeviceBase implements Readable<StreamValue>, Cacheab
                 appendChild((StreamChannel) dev);
             }
         }
+        super.doInitialize();
         //fixed by first initialize
         if (fixedChildren == null) {
             fixedChildren = Arr.containsClass(getChildren(), StreamChannel.class);
@@ -666,8 +675,19 @@ public class Stream extends DeviceBase implements Readable<StreamValue>, Cacheab
             long devTimestamp = timestamp;
             long devNanosOffset = nanosOffset;
             try {
-                if ((!fixedChildren) && (c == null) && (val != null)) {
-                    c = (val.getClass().isArray()) ? new Waveform(channel, this, channel) : new Scalar(channel, this, channel);
+                if ((!fixedChildren) && (c == null)) {
+                    int[] shape = cfg.getShape();
+                    Type type = cfg.getType();
+                    
+                    if ((shape==null) || (shape.length==0)){
+                        c=new Scalar(channel, this, channel);
+                    } else if ((shape.length==1) && (shape[0]<=1)){
+                        c=new Scalar(channel, this, channel);
+                    } else if ((shape.length==2) && (getCreateMatrix())){
+                        c = new Matrix(channel, this, channel);
+                    } else {
+                        c = new Waveform(channel, this, channel);
+                    }
                     appendChild(c);
                     try {
                         c.initialize();
@@ -691,10 +711,10 @@ public class Stream extends DeviceBase implements Readable<StreamValue>, Cacheab
                 System.out.println(channel + ": " + Str.toString(val, 100));
             }
             if (!fixedChildren) {
-                streamCache.put(channel, val);
+                streamCache.put(channel, c.take());
             } else if (fill_null) {
                 if (channelNames.contains(channel)) {
-                    streamCache.put(channel, val);
+                    streamCache.put(channel, c.take());
                 }
             }
         }

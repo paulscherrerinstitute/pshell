@@ -72,4 +72,8 @@ public interface ReadonlyRegister<T> extends Device, Readable<T>, Cacheable<T> {
     default int getPrecision(){
         return UNDEFINED_PRECISION;
     }
+    
+    default int[] getShape(){
+        return UNDEFINED_SHAPE;
+    }
 }

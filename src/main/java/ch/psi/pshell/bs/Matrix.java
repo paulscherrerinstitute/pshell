@@ -2,8 +2,10 @@ package ch.psi.pshell.bs;
 
 import ch.psi.bsread.message.ChannelConfig;
 import ch.psi.pshell.device.ReadonlyRegister.ReadonlyRegisterMatrix;
+import ch.psi.utils.Arr;
 import ch.psi.utils.Convert;
 import java.io.IOException;
+import java.lang.reflect.Array;
 
 /**
  * Represents a 2-dimensional array element in a BS stream.
@@ -57,8 +59,16 @@ public class Matrix<T> extends StreamChannel<T> implements ReadonlyRegisterMatri
     public int getWidth() {
         if (width==null){
             int[] shape = getShape();
-            if (shape==null){
-                return 0;
+            if ((shape==null) ||  (shape.length!=2)){
+                try{
+                    Object value = take();
+                    int[] ashape = Arr.getShape(take());
+                    if  (shape.length==2){
+                        return ashape[0];
+                    }                 
+                } catch (Exception ex){                    
+                }
+                throw new RuntimeException("Indefined matrix size");
             }
             return shape[1];
         }
@@ -69,8 +79,16 @@ public class Matrix<T> extends StreamChannel<T> implements ReadonlyRegisterMatri
     public int getHeight() {
         if (height==null){
             int[] shape = getShape();
-            if (shape==null){
-                return 0;
+            if ((shape==null) || (shape.length!=2)){
+                try{
+                    Object value = take();
+                    int[] ashape = Arr.getShape(take());
+                    if  (shape.length==2){
+                        return ashape[1];
+                    }                 
+                } catch (Exception ex){                    
+                }
+                throw new RuntimeException("Indefined matrix size");
             }
             return shape[0];
         }

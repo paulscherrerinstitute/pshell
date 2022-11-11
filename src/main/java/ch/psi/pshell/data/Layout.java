@@ -52,6 +52,7 @@ public interface Layout {
     public static final String ATTR_DEVICE_CHANNEL = "channel";   
     public static final String ATTR_DEVICE_UNIT= "unit";  
     public static final String ATTR_DEVICE_DESC= "description";  
+    public static final String ATTR_DEVICE_SHAPE= "shape";  
     public static final String ATTR_DEVICE_PREC= "precision";  
     
     

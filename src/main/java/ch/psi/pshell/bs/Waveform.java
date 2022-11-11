@@ -50,8 +50,13 @@ public class Waveform<T> extends StreamChannel<T> implements ReadonlyRegisterArr
         if (size != null) {
             return size;
         }
+        
+        int[] shape = getShape();
+        if ((shape!=null) && (shape.length==1)){
+            return shape[0];
+        }
+        
         Object value = take();
-
         //TODO: This cannot be blocking: it is called from GUI thread to setup plots
         if ((value == null) || (!value.getClass().isArray())) {
             //update();

@@ -1,11 +1,13 @@
 package ch.psi.pshell.bs;
 
 import ch.psi.bsread.message.ChannelConfig;
+import ch.psi.bsread.message.Type;
 import ch.psi.pshell.device.ReadonlyAsyncRegisterBase;
 import ch.psi.pshell.device.TimestampedValue;
 import ch.psi.utils.Convert;
 import ch.psi.utils.State;
 import java.io.IOException;
+import java.math.BigInteger;
 
 /**
  * Represents a scalar element in a BS stream.
@@ -130,11 +132,51 @@ public class StreamChannel<T> extends ReadonlyAsyncRegisterBase<T> {
         return config;
     }     
     
+    @Override
     public int[]  getShape() {
         ChannelConfig  config = getChannelConfig();
         return (config==null) ? null : config.getShape();
     }     
+    
+    public Type getType() {
+        ChannelConfig  config = getChannelConfig();
+        return (config==null) ? null : config.getType();
+    }         
 
+    @Override
+    public Class getElementType(){
+        Type type = getType();
+        if (type!=null){
+            switch (type){
+                case Bool:
+                    return Boolean.class;
+                case String:
+                     return String.class;
+                case Float64:
+                     return Double.class;
+                case Float32:
+                     return Float.class;
+                case Int8:
+                     return Byte.class;
+                case UInt8:
+                     return Short.class;
+                case Int16:
+                     return Short.class;
+                case UInt16:
+                     return Integer.class;
+                case Int32:
+                     return Integer.class;
+                case UInt32:
+                     return Long.class;
+                case Int64:
+                     return Long.class;
+                case UInt64:
+                     return BigInteger.class;
+            }
+        }
+        return super.getElementType();
+    }
+    
     public Object toImage(Object value){
         int[] shape = getShape();
         if (shape.length!=2){
