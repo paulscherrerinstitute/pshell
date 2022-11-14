@@ -111,6 +111,7 @@ public class CamServerViewer extends MonitoredPanel {
     public static final String ARG_STREAM_LIST = "stream_list";
     public static final String ARG_BUFFER_SIZE = "buffer_size";
     public static final String ARG_SIDE_BAR = "side_bar";
+    public static final String ARG_TITLE = "title";
    
  
     final String CAMERA_DEVICE_NAME = "CurrentCamera";
@@ -909,7 +910,7 @@ public class CamServerViewer extends MonitoredPanel {
         public boolean colormapLogarithmic;
 
         String getFile() throws Exception {
-            if (camera == null) {
+            if ((camera == null) || (Context.getInstance()==null)){
                 return null;
             }
             return Context.getInstance().getSetup().expandPath("{context}/screen_panel/" + getCameraName() + ".properties");
@@ -2619,6 +2620,12 @@ public class CamServerViewer extends MonitoredPanel {
         }
         updateButtons();
     }
+    
+    public void setShowReticle(boolean value) {
+        buttonReticle.setSelected(value);
+        updateButtons();
+    }    
+    
 
     public void saveSnapshot() throws Exception {
         boolean paused = isPaused();
@@ -2851,7 +2858,8 @@ public class CamServerViewer extends MonitoredPanel {
         CamServerViewer viewer = new CamServerViewer();
         SwingUtilities.invokeLater(() -> {
             try {                
-                Window window = SwingUtils.showFrame(parent, "CamServer Viewer", (size==null)?new Dimension(800, 600):size, viewer);
+                String title = App.hasArgument(ARG_TITLE) ? App.getArgumentValue(ARG_TITLE): "CamServer Viewer";
+                Window window = SwingUtils.showFrame(parent, title, (size==null)?new Dimension(800, 600):size, viewer);
                 window.setIconImage(Toolkit.getDefaultToolkit().getImage(App.getResourceUrl("IconSmall.png")));
                 if (App.hasArgument(ARG_BUFFER_SIZE)) {
                     try {
@@ -2866,8 +2874,15 @@ public class CamServerViewer extends MonitoredPanel {
                 viewer.setSidePanelVisible(App.getBoolArgumentValue(ARG_SIDE_BAR));                
                 viewer.setCameraServerUrl(App.getArgumentValue(ARG_CAMERA_SERVER));
                 viewer.setPipelineServerUrl(App.getArgumentValue(ARG_PIPELINE_SERVER));
-                viewer.setStartupStream(App.getArgumentValue(ARG_STREAM));
-                viewer.initialize(App.getArgumentValue(ARG_SELECTION_MODE));      
+                if (Context.getInstance() != null){
+                    viewer.setPersistenceFile(Paths.get(Context.getInstance().getSetup().getContextPath(), "CamServer_Viewer.bin"));
+                }                
+                if (App.hasArgument(ARG_STREAM)){
+                    viewer.setStartupStream(App.getArgumentValue(ARG_STREAM));
+                } else if (App.hasArgument(ARG_CAMERA)){
+                    viewer.setStartupStream(App.getArgumentValue(ARG_CAMERA));
+                }
+                viewer.initialize(App.getArgumentValue(ARG_SELECTION_MODE));   
                        
             } catch (Exception ex) {
                 Logger.getLogger(CamServerViewer.class.getName()).log(Level.SEVERE, null, ex);
