@@ -224,7 +224,7 @@ public class LogManager {
             Object value = dev.take();
             if (value != null) {
                 Integer age = dev.getAge();
-                return new String[]{Str.toString(value, maxElements) + units, Chrono.getEllapsedStr(age, "HH:mm:ss"), info};
+                return new String[]{getLogForValue(value, maxElements) + units, Chrono.getEllapsedStr(age, "HH:mm:ss"), info};
             }
         } catch (Exception ex) {
         }
@@ -309,12 +309,23 @@ public class LogManager {
         return ret;
     }
 
+    
     public static String getLogForValue(Object value) {
+        return getLogForValue(value, 10);
+    }
+
+    public static String getLogForValue(Object value, int maxArrElements) {
         int[] shape = Arr.getShape(value);
-        String log = null;
-        if (shape.length >= 2) {
-            return "[" + Convert.arrayToString(shape, " x ") + "]";
+        if (shape.length >= 1) {
+            String type = Arr.getTypeName(value);
+            String desc = type + " [" + Convert.arrayToString(shape, "x") + "] ";
+            if ((shape.length == 1) && (shape[0]<=maxArrElements)){
+                return Str.toString(value, maxArrElements);
+            } else {
+                return desc;
+            }
+        } else {
+            return Str.toString(value, maxArrElements);
         }
-        return Str.toString(value, 10);
     }
 }

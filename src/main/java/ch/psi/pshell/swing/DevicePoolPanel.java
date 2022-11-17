@@ -325,7 +325,7 @@ public class DevicePoolPanel extends MonitoredPanel implements UpdatablePanel {
             int row = getDeviceRow(device);
             if (row >= 0) {
                 String units = (device instanceof ReadonlyProcessVariable) ? " " + ((ReadonlyProcessVariable) device).getUnit() : "";
-                model.setValueAt(Str.toString(value, 10) + units, row, 3);
+                model.setValueAt(LogManager.getLogForValue(value) + units, row, 3);
                 model.setValueAt("00:00:00", row, 4);
             }
         }

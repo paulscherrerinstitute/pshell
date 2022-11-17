@@ -1,5 +1,6 @@
 package ch.psi.pshell.scan;
 
+import ch.psi.pshell.core.LogManager;
 import ch.psi.pshell.scripting.Subscriptable;
 import ch.psi.utils.Arr;
 import ch.psi.utils.Chrono;
@@ -180,13 +181,7 @@ public class ScanRecord implements Subscriptable.MappedSequence<Object,Object>{
         }
         for (Object value : getReadables()) {
             if ((value != null) && (value.getClass().isArray())) {
-                int[] shape = Arr.getShape(value);
-                if (shape.length == 1) {
-                    values.add("[" + String.join(", ", Convert.toStringArray(value)) + "]");
-                } else {
-                    values.add("[" + Convert.arrayToString(shape, " x ") + "]");
-                }
-
+                values.add(LogManager.getLogForValue(value));
             } else {
                 values.add(String.valueOf(value));
             }

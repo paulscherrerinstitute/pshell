@@ -1,5 +1,6 @@
 package ch.psi.pshell.swing;
 
+import ch.psi.pshell.core.LogManager;
 import ch.psi.pshell.device.Device;
 import ch.psi.pshell.device.ReadbackDevice;
 import ch.psi.utils.Str;
@@ -32,7 +33,7 @@ public final class DeviceValuePanel extends DevicePanel {
         if (value == null) {
             labelValue.setText(" ");
         } else {
-            labelValue.setText(Str.toString(value, 5));
+            labelValue.setText(LogManager.getLogForValue(value,5));
         }
     }
 

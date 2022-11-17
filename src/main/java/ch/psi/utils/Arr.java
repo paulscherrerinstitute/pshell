@@ -335,6 +335,22 @@ public class Arr {
         }
         return null;
     }
+    
+    public static String getTypeName(Object obj) {
+        if (obj==null){
+            return Str.toString(obj);
+        }
+        try{
+             return ch.psi.pshell.bs.Encoder.classToType(obj.getClass(), false).toString();
+        } catch (Exception ex){
+            Class componentType = getComponentType(obj);
+            if (componentType!=null){
+                return componentType.getSimpleName();
+            }
+            return obj.getClass().getSimpleName();
+        }
+    }
+    
 
     public static double[] onesDouble(int size) {
         double[] ret = new double[size];

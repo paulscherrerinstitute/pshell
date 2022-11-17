@@ -53,6 +53,7 @@ public class CameraImageDescriptor {
     
     @Override
     public String toString() {
-        return width + " x " + height;
+        return dataType + " [" + width + "x" + height + "]";
+        
     }    
 }

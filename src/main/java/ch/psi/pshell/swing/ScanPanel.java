@@ -1,15 +1,14 @@
 package ch.psi.pshell.swing;
 
 import ch.psi.pshell.core.Context;
+import ch.psi.pshell.core.LogManager;
 import ch.psi.pshell.device.Readable;
 import ch.psi.pshell.device.Writable;
 import ch.psi.pshell.scan.PlotScan;
 import ch.psi.pshell.scan.Scan;
 import ch.psi.pshell.scan.ScanListener;
 import ch.psi.pshell.scan.ScanRecord;
-import ch.psi.utils.Arr;
 import ch.psi.utils.Chrono;
-import ch.psi.utils.Convert;
 import ch.psi.utils.swing.MonitoredPanel;
 import ch.psi.utils.swing.SwingUtils;
 import java.util.ArrayList;
@@ -97,13 +96,7 @@ public class ScanPanel extends MonitoredPanel {
                     if (value == null) {
                         values.add(null);
                     } else if (value.getClass().isArray()) {
-                        int[] shape = Arr.getShape(value);
-                        if (shape.length == 1) {
-                            values.add(Convert.arrayToString(value, " ", 1000));
-                        } else {
-                            values.add(Convert.arrayToString(shape, " x "));
-                        }
-
+                        values.add(LogManager.getLogForValue(value));
                     } else if ((value instanceof Number) || (value instanceof Boolean) || (value instanceof String)){
                         values.add(value);
                     } else {
