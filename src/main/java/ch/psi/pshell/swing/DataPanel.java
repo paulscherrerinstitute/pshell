@@ -21,8 +21,8 @@ import ch.psi.utils.Chrono;
 import ch.psi.utils.Convert;
 import ch.psi.utils.IO;
 import ch.psi.utils.Str;
+import ch.psi.utils.swing.FileTransferHandler;
 import ch.psi.utils.swing.MainFrame;
-import ch.psi.utils.swing.MainFrame.LookAndFeelType;
 import ch.psi.utils.swing.MonitoredPanel;
 import ch.psi.utils.swing.SwingUtils;
 import ch.psi.utils.swing.TextEditor;
@@ -34,12 +34,13 @@ import java.awt.Desktop;
 import java.awt.Dimension;
 import java.awt.Toolkit;
 import java.awt.Window;
+import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
+import java.awt.datatransfer.Transferable;
 import java.awt.event.ActionEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.lang.reflect.Array;
 import java.nio.file.FileSystems;
@@ -177,6 +178,23 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
             }
         });
         filePopupMenu.add(menuOpen);
+        
+        JMenuItem menuCopy = new JMenuItem("Copy");
+        menuCopy.addActionListener((ActionEvent e) -> {
+            try {
+                File selected = getFolderTreeSelectedFile();
+                if (selected != null) {
+                    String filename = selected.getCanonicalPath();
+                    Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+                    clipboard.setContents(new FileTransferHandler(filename), (Clipboard clipboard1, Transferable contents) -> {
+                        //Do nothing
+                    });                    
+                }
+            } catch (Exception ex) {
+                showException(ex);
+            }
+        });
+        filePopupMenu.add(menuCopy);        
         
         JMenuItem menuPlot = new JMenuItem("Plot");
         menuPlot.addActionListener((ActionEvent e) -> {
