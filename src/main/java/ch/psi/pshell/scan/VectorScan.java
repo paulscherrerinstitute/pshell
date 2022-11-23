@@ -98,4 +98,9 @@ public class VectorScan extends DiscreteScan {
             return super.getDimensions();
         }
     }
+    
+    @Override
+    public boolean getInitialMove(){
+        return false;
+    }    
 }
