@@ -65,8 +65,13 @@ public class VectorScan extends DiscreteScan {
     @Override
     protected void doScan() throws IOException, InterruptedException {
         if (vector!=null) {
-            for (int i = 0; i < vector.length; i++) {
-                processPosition(vector[isCurrentPassBackwards() ? (vector.length - 1 - i) : i]);
+            for (int i = 0; i < vector.length; i++) {    
+                double[] pos = vector[isCurrentPassBackwards() ? (vector.length - 1 - i) : i];
+                if (relative) {
+                    pos = relativeToAbsolute(pos);
+                }                
+                processPosition(pos);
+                        
             }
         } else {
            while (iterator.hasNext()){
@@ -76,6 +81,9 @@ public class VectorScan extends DiscreteScan {
                 } else if (pos instanceof Number){
                     pos = new double[]{((Number)pos).doubleValue()};
                 }
+                if (relative) {
+                    pos = relativeToAbsolute((double[])pos);
+                }                   
                 processPosition((double[])pos);
             }
         }
@@ -103,4 +111,5 @@ public class VectorScan extends DiscreteScan {
     public boolean getInitialMove(){
         return false;
     }    
+    
 }
