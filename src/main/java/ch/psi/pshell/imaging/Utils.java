@@ -1,24 +1,33 @@
 package ch.psi.pshell.imaging;
 
+import ch.psi.utils.Convert;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.Rectangle;
+import java.awt.color.ColorSpace;
 import java.awt.geom.AffineTransform;
 import java.awt.image.AffineTransformOp;
 import java.awt.image.BufferedImage;
 import java.awt.image.BufferedImageOp;
 import java.awt.image.ColorModel;
+import java.awt.image.ComponentColorModel;
 import java.awt.image.ConvolveOp;
 import java.awt.image.DataBuffer;
 import java.awt.image.DataBufferByte;
+import java.awt.image.DataBufferDouble;
+import java.awt.image.DataBufferFloat;
+import java.awt.image.DataBufferInt;
+import java.awt.image.DataBufferShort;
 import java.awt.image.DataBufferUShort;
 import java.awt.image.IndexColorModel;
 import java.awt.image.Kernel;
 import java.awt.image.LookupOp;
 import java.awt.image.LookupTable;
+import java.awt.image.PixelInterleavedSampleModel;
 import java.awt.image.Raster;
 import java.awt.image.RasterOp;
 import java.awt.image.RescaleOp;
+import java.awt.image.SampleModel;
 import java.awt.image.ShortLookupTable;
 import java.awt.image.WritableRaster;
 import java.io.BufferedInputStream;
@@ -26,6 +35,7 @@ import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Hashtable;
 import java.util.List;
 import javax.imageio.ImageIO;
 
@@ -70,6 +80,110 @@ public class Utils {
         throw new IllegalArgumentException("Unsupported format");
     }
 
+    public static BufferedImage newImage(Data data, ColorModel grayRange, Colormap colormap, boolean logarithmic) {
+        return newImage(data.getDataBuffer(), data.getWidth(), data.getHeight(), grayRange, colormap, logarithmic);
+    }
+
+    public static BufferedImage newImage(DataBuffer buffer, int width, int height, ColorModel grayRange, Colormap colormap, boolean logarithmic) {
+        SampleModel sm = new PixelInterleavedSampleModel(buffer.getDataType(), width, height, 1, width, new int[]{0});
+        WritableRaster wr = WritableRaster.createWritableRaster(sm, buffer, null);
+        BufferedImage ret = new BufferedImage(grayRange, wr, true, new Hashtable<Object, Object>());
+        if ((colormap != Colormap.Grayscale) || logarithmic) {
+            ret = Utils.newImage(ret, colormap, logarithmic);
+        }
+        return ret;
+    }
+
+    public static BufferedImage newImage(Data data, float scaleMin, float scaleMax, Colormap colormap, boolean logarithmic) {
+        return newImage(data.getDataBuffer(), data.getWidth(), data.getHeight(), scaleMin, scaleMax, colormap, logarithmic, data.isUnsigned());
+    }
+
+    public static BufferedImage newImage(DataBuffer buffer, int width, int height, float scaleMin, float scaleMax, Colormap colormap, boolean logarithmic) {
+        return newImage(buffer, width, height, scaleMin, scaleMax, colormap, logarithmic, Utils.isDataBufferUnsigned(buffer));
+    }
+
+    static BufferedImage newImage(DataBuffer buffer, int width, int height, float scaleMin, float scaleMax, Colormap colormap, boolean logarithmic, boolean unsigned) {
+        ColorModel grayRange = getGrayRange(scaleMin, scaleMax, buffer.getDataType(), unsigned);
+        return newImage(buffer, width, height, grayRange, colormap, logarithmic);
+    }
+
+    public static ColorModel getGrayRange(float scaleMin, float scaleMax, int dataType) {
+        return getGrayRange(scaleMin, scaleMax, dataType, false);
+    }
+    
+    public static ColorModel getGrayRange(float scaleMin, float scaleMax, int dataType, boolean unsigned) {
+        float scaleRange = (scaleMax - scaleMin) == 0 ? Float.NaN : (scaleMax - scaleMin);
+
+        ColorSpace csGray = new ColorSpace(ColorSpace.TYPE_GRAY, 1) {
+            @Override
+            public float[] toRGB(float[] colorvalue) {
+                float val = (colorvalue[0] - scaleMin) / scaleRange;
+                return new float[]{((Float.isNaN(val) || (val < 0.0f)) ? 0.0f : (val > 1.0f ? 1.0f : val))};
+            }
+
+            @Override
+            public float[] fromRGB(float[] rgbvalue) {
+                throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+            }
+
+            @Override
+            public float[] toCIEXYZ(float[] colorvalue) {
+                throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+            }
+
+            @Override
+            public float[] fromCIEXYZ(float[] colorvalue) {
+                throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+            }
+
+            @Override
+            public float getMinValue(int component) {
+                return (float) scaleMin;
+            }
+
+            @Override
+            public float getMaxValue(int component) {
+                return (float) scaleMax;
+            }
+        };
+
+        ComponentColorModel cmGray = new ComponentColorModel(csGray, false, false, ColorModel.OPAQUE, dataType) {
+            public float[] getNormalizedComponents(Object pixel,
+                    float[] normComponents,
+                    int normOffset) {
+                switch (transferType) {
+                    case DataBuffer.TYPE_BYTE:
+                        if (unsigned) {
+                            return new float[]{(float) Convert.toUnsigned(((byte[]) pixel)[0])};
+                        } else {
+                            return new float[]{(float) ((byte[]) pixel)[0]};
+                        }
+                    case DataBuffer.TYPE_USHORT:
+                        return new float[]{(float) Convert.toUnsigned(((short[]) pixel)[0])};
+                    case DataBuffer.TYPE_INT:
+                        if (unsigned) {
+                            return new float[]{(float) Convert.toUnsigned(((int[]) pixel)[0])};
+                        } else {
+                            return new float[]{(float) ((int[]) pixel)[0]};
+                        }
+                    case DataBuffer.TYPE_SHORT:
+                        if (unsigned) {
+                            return new float[]{(float) Convert.toUnsigned(((short[]) pixel)[0])};
+                        } else {
+                            return new float[]{(float) ((short[]) pixel)[0]};
+                        }
+                    case DataBuffer.TYPE_FLOAT:
+                        return new float[]{((float[]) pixel)[0]};
+                    case DataBuffer.TYPE_DOUBLE:
+                        return new float[]{(float) ((double[]) pixel)[0]};
+                    default:
+                        return new float[1];
+                }
+            }
+        };
+        return cmGray;
+    }
+
     //Instantiation of new empty image objects derived from reference image
     public static BufferedImage newImage(BufferedImage ref, Integer type, int width, int height) {
         if (ref == null) {
@@ -111,12 +225,12 @@ public class Utils {
     public static final BufferedImage newImage(BufferedImage ref, Colormap colormap) {
         return newImage(ref, colormap, false);
     }
-    
-     public static final BufferedImage newImage(BufferedImage ref, Colormap colormap, boolean logarithmic) {
+
+    public static final BufferedImage newImage(BufferedImage ref, Colormap colormap, boolean logarithmic) {
         BufferedImage aux = copy(ref, BufferedImage.TYPE_INT_RGB, null);
-        return execLookup(aux, logarithmic ? colormap.getLookupTableLogarithmic(): colormap.getLookupTable(), true);
+        return execLookup(aux, logarithmic ? colormap.getLookupTableLogarithmic() : colormap.getLookupTable(), true);
     }
-     
+
     // Operations and transformations 
     public static BufferedImage copy(BufferedImage image, Integer type, Rectangle bounds) {
         if (image == null) {
@@ -379,7 +493,7 @@ public class Utils {
         int width = Math.min(image1.getWidth(), image2.getWidth());
         int height = Math.min(image1.getHeight(), image2.getHeight());
         BufferedImage ret = inPlace ? image1 : newImage(image1, null, -1, -1);
-        int max= getMaxPixelValue(ret);
+        int max = getMaxPixelValue(ret);
         for (int x = 0; x < width; x++) {
             for (int y = 0; y < height; y++) {
                 ret.setRGB(x, y, Math.min(image1.getRGB(x, y) + image2.getRGB(x, y), max));
@@ -392,7 +506,7 @@ public class Utils {
         int width = Math.min(image1.getWidth(), image2.getWidth());
         int height = Math.min(image1.getHeight(), image2.getHeight());
         BufferedImage ret = inPlace ? image1 : newImage(image1, null, -1, -1);
-        int max= getMaxPixelValue(ret);
+        int max = getMaxPixelValue(ret);
         for (int x = 0; x < width; x++) {
             for (int y = 0; y < height; y++) {
                 ret.setRGB(x, y, Math.min(image1.getRGB(x, y) * image2.getRGB(x, y), max));
@@ -554,25 +668,54 @@ public class Utils {
         ret.add(max);
         return ret;
     }
-    
+
     public static int getMaxPixelValue(BufferedImage img) {
         switch (img.getColorModel().getPixelSize()) {
-            case 16: return 0xFFFF;
-        } 
+            case 16:
+                return 0xFFFF;
+        }
         return 255;
     }
 
-    
     static String selectedImageFolder;
-    
+
     public static void setSelectedImageFolder(String folderName) {
-        if (folderName!=null){
+        if (folderName != null) {
             selectedImageFolder = folderName;
-        }                
+        }
     }
 
     public static String getSelectedImageFolder() {
         return selectedImageFolder;
     }
-    
+
+    public static Object getDataBufferArray(DataBuffer buffer) {
+        switch (buffer.getDataType()) {
+            case DataBuffer.TYPE_BYTE:
+                return ((DataBufferByte) buffer).getData();
+            case DataBuffer.TYPE_DOUBLE:
+                return ((DataBufferDouble) buffer).getData();
+            case DataBuffer.TYPE_FLOAT:
+                return ((DataBufferFloat) buffer).getData();
+            case DataBuffer.TYPE_INT:
+                return ((DataBufferInt) buffer).getData();
+            case DataBuffer.TYPE_SHORT:
+                return ((DataBufferShort) buffer).getData();
+            case DataBuffer.TYPE_USHORT:
+                return ((DataBufferUShort) buffer).getData();
+            default:
+                throw new IllegalArgumentException("Invalid data buffer type");
+        }
+    }
+
+    public static boolean isDataBufferUnsigned(DataBuffer buffer) {
+        switch (buffer.getDataType()) {
+            case DataBuffer.TYPE_BYTE:
+            case DataBuffer.TYPE_USHORT:
+                return true;
+            default:
+                return false;
+        }
+
+    }
 }

@@ -1,6 +1,7 @@
 package ch.psi.pshell.plot;
 
 import ch.psi.pshell.imaging.Colormap;
+import ch.psi.pshell.imaging.Data;
 import ch.psi.pshell.imaging.Renderer;
 import ch.psi.pshell.imaging.RendererMode;
 import ch.psi.pshell.imaging.Utils;
@@ -9,17 +10,11 @@ import ch.psi.utils.Range;
 import ch.psi.utils.swing.SwingUtils;
 import java.awt.BorderLayout;
 import java.awt.Component;
-import java.awt.color.ColorSpace;
 import java.awt.event.ActionEvent;
 import java.awt.image.BufferedImage;
 import java.awt.image.ColorModel;
-import java.awt.image.ComponentColorModel;
 import java.awt.image.DataBuffer;
 import java.awt.image.DataBufferDouble;
-import java.awt.image.PixelInterleavedSampleModel;
-import java.awt.image.SampleModel;
-import java.awt.image.WritableRaster;
-import java.util.Hashtable;
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JLabel;
 import javax.swing.JMenu;
@@ -38,6 +33,7 @@ public class MatrixPlotRenderer extends MatrixPlotBase {
 
     Renderer renderer;
     BufferedImage image;
+    Data imageData;
     DataBufferDouble dataBuffer;
     ColorModel cmGray;
     JLabel title;
@@ -49,8 +45,7 @@ public class MatrixPlotRenderer extends MatrixPlotBase {
         setRequireUpdateOnAppend(false);
         getRenderer().setPreferredSize(new java.awt.Dimension(PREFERRED_WIDTH, PREFERRED_HEIGHT));
         getRenderer().setMode(RendererMode.Stretch);
-        showScale(true);
-        cmGray = new ComponentColorModel(csGray, false, false, ColorModel.OPAQUE, DataBuffer.TYPE_DOUBLE);
+        showScale(true);        
         setLayout(new BorderLayout());
         title = new JLabel();
         title.setHorizontalAlignment(SwingConstants.CENTER);
@@ -59,7 +54,7 @@ public class MatrixPlotRenderer extends MatrixPlotBase {
         SwingUtilities.invokeLater(()->{
             renderer.updateColormapScale(getColormap(), new Range(0.0, 1.0), isColormapLogarithmic());
         });        
-        
+        cmGray = Utils.getGrayRange((float)scaleMin, (float)scaleMax, DataBuffer.TYPE_DOUBLE);
     }
     
     @Override
@@ -175,7 +170,7 @@ public class MatrixPlotRenderer extends MatrixPlotBase {
     }
 
     @Override
-    public void setScale(double scaleMin, double scaleMax) {
+    public void setScale(double scaleMin, double scaleMax) {        
         super.setScale(scaleMin, scaleMax);
         update(true);
     }
@@ -204,38 +199,6 @@ public class MatrixPlotRenderer extends MatrixPlotBase {
         return grayScale;
     }
 
-    ColorSpace csGray = new ColorSpace(ColorSpace.TYPE_GRAY, 1) {
-        @Override
-        public float[] toRGB(float[] colorvalue) {
-            float val = (colorvalue[0] - (float) scaleMin) / (float) scaleRange;
-            return new float[]{((Float.isNaN(val) || (val < 0.0f)) ? 0.0f : (val > 1.0f ? 1.0f : val))};
-        }
-
-        @Override
-        public float[] fromRGB(float[] rgbvalue) {
-            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-        }
-
-        @Override
-        public float[] toCIEXYZ(float[] colorvalue) {
-            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-        }
-
-        @Override
-        public float[] fromCIEXYZ(float[] colorvalue) {
-            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-        }
-
-        @Override
-        public float getMinValue(int component) {
-            return (float) scaleMin;
-        }
-
-        @Override
-        public float getMaxValue(int component) {
-            return (float) scaleMax;
-        }
-    };
 
     @Override
     protected void onAppendData(MatrixPlotSeries series, int indexX, int indexY, double x, double y, double z) {
@@ -243,10 +206,7 @@ public class MatrixPlotRenderer extends MatrixPlotBase {
             int width = series.getNumberOfBinsX();
             int height = series.getNumberOfBinsY();
             dataBuffer = new DataBufferDouble(width * height);
-            //sm = RasterFactory.createBandedSampleModel(DataBuffer.TYPE_DOUBLE, width, height, 1);
-            SampleModel sm = new PixelInterleavedSampleModel(DataBuffer.TYPE_DOUBLE, width, height, 1, width, new int[]{0});
-            WritableRaster wr = WritableRaster.createWritableRaster(sm, dataBuffer, null);
-            image = new BufferedImage(cmGray, wr, true, new Hashtable<Object, Object>());
+            imageData = new Data(dataBuffer, width, height);
             if (autoScale) {
                 updateScale(Double.MAX_VALUE, -Double.MAX_VALUE);
             }
@@ -268,9 +228,7 @@ public class MatrixPlotRenderer extends MatrixPlotBase {
         int width = data[0].length;
         int height = data.length;
         dataBuffer = new DataBufferDouble((double[]) Convert.flatten(data), width);
-        SampleModel sm = new PixelInterleavedSampleModel(DataBuffer.TYPE_DOUBLE, width, height, 1, width, new int[]{0});
-        WritableRaster wr = WritableRaster.createWritableRaster(sm, dataBuffer, null);
-        image = new BufferedImage(cmGray, wr, true, new Hashtable<Object, Object>());
+        imageData = new Data(dataBuffer, width, height);
 
         if (autoScale) {
             double min = Double.MAX_VALUE;
@@ -328,13 +286,25 @@ public class MatrixPlotRenderer extends MatrixPlotBase {
 
     @Override
     public void updateSeries(MatrixPlotSeries series) {
-        if (image!=null){
-            if ((getColormap() != Colormap.Grayscale) || ( isColormapLogarithmic())) {
-                renderer.onImage(null, Utils.newImage(image, getColormap(), isColormapLogarithmic()), null);
-                return;
-            }    
+        if (imageData==null){
+            renderer.onImage(this, null, null);
+        } else {
+            renderer.onImage(this, getImage(), imageData);
+        }        
+    }
+    
+    public Data getData() {
+        return imageData;
+    }
+
+    public BufferedImage getImage() {    
+        if (imageData==null){
+            return null;
         }
-        renderer.onImage(null, image, null);
+        int width = imageData.getWidth();
+        int height = imageData.getHeight();
+        DataBuffer buffer = imageData.getDataBuffer();
+        return Utils.newImage(buffer, width, height, cmGray, getColormap() , isColormapLogarithmic());
     }
 
     @Override
@@ -366,7 +336,10 @@ public class MatrixPlotRenderer extends MatrixPlotBase {
     volatile boolean updatingScale;
     @Override
     protected void updateScale(double scaleMin, double scaleMax) {
-        super.updateScale(scaleMin, scaleMax);
+        if ((scaleMin!=this.scaleMin) || (scaleMax!=this.scaleMax)){
+            cmGray = Utils.getGrayRange((float)scaleMin, (float)scaleMax, DataBuffer.TYPE_DOUBLE);
+        }
+        super.updateScale(scaleMin, scaleMax);                
         
         if ((showScale) && !updatingScale){
             updatingScale = true;
