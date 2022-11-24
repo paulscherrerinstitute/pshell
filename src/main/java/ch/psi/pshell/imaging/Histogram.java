@@ -24,6 +24,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.JDialog;
 
 /**
  *
@@ -315,7 +316,7 @@ public class Histogram extends MonitoredPanel implements RendererListener, Image
         this.renderer = renderer;
         if (isVisible()) {
             onShow();
-        }
+        }                
         originalConfig = null;
     }
 
@@ -331,5 +332,24 @@ public class Histogram extends MonitoredPanel implements RendererListener, Image
             onShow();
         }
         originalConfig = null;
+    }
+    
+    public static Histogram create(Renderer renderer){
+        return create(renderer, false);
+    }
+            
+    public static Histogram create(Renderer renderer, boolean autoSave){
+        Histogram histogram = new Histogram(autoSave);
+        histogram.setRenderer(renderer);
+        JDialog dlg = SwingUtils.showDialog(SwingUtils.getWindow(renderer), "Histogram", null, histogram);
+        renderer.refresh();
+
+        renderer.addHierarchyListener((e)->{
+            if (!renderer.isShowing()){
+                dlg.setVisible(false);
+                dlg.dispose();
+            }
+        });        
+        return histogram;
     }
 }
