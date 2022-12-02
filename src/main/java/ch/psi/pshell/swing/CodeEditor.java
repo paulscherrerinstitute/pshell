@@ -195,8 +195,8 @@ public class CodeEditor extends TextEditor {
         setShowLineNumbers(true);
         setScrollPane(scrollPane);
         setEditor(editorPane);
-    }
-
+                        }                        
+                        
     boolean showLineNumbers;
 
     public void setShowLineNumbers(boolean value) {
