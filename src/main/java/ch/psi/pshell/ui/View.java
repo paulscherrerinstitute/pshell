@@ -1707,6 +1707,7 @@ public class View extends MainFrame {
 
         final ScriptEditor editor = newScriptEditor(file);
         fileHistory.put(file);
+        saveContext();
         return editor;
     }
 
@@ -1865,11 +1866,12 @@ public class View extends MainFrame {
                 processor.open(file);
                 openComponent(new File(processor.getFileName()).getName(), processor.getPanel());
                 fileHistory.put(file);
+                saveContext();
             } else {
                 openComponent("Unknown", processor.getPanel());
                 processor.clear();
             }
-        }
+        }        
         return processor;
     }
 
@@ -4325,6 +4327,7 @@ public class View extends MainFrame {
                     editor.saveAs(fileName);
                     fileHistory.put(fileName);
                     tabDoc.setTitleAt(tabDoc.getSelectedIndex(), editor.getScriptName());
+                    saveContext();
                 }
             } else {
                 Processor processor = getSelectedProcessor();
@@ -4352,6 +4355,7 @@ public class View extends MainFrame {
                             if (processor.isTabNameUpdated()) {
                                 tabDoc.setTitleAt(tabDoc.getSelectedIndex(), new File(processor.getFileName()).getName());
                             }
+                            saveContext();
                         }
                     }
                 }
