@@ -88,12 +88,10 @@ public abstract class RegisterBase<T> extends ReadonlyRegisterBase<T> implements
     /**
      * If write operation returns ok then cache is updated,
      */
-    @Hidden
     public boolean isTrustedWrite() {
         return trustedWrite;
     }
 
-    @Hidden
     public void setTrustedWrite(boolean value) {
         trustedWrite = value;
     }

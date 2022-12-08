@@ -520,7 +520,7 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
                     triggerEnded(ex);
                     throw ex;
                 } finally {
-                    if (relative && restorePosition && (initialPosition!=null)) {
+                    if (relative && getRestorePosition() && (initialPosition!=null)) {
                         try {
                             setPosition(initialPosition);
                         } catch (InterruptedException ex) {
@@ -559,7 +559,7 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
      
     protected void doAbort() throws InterruptedException {
         //Not stopping relative moves because it affects recovering position
-        if (!relative || !restorePosition) {
+        if (!relative || !getRestorePosition()) {
             stopAll();
         }
     }
@@ -1150,11 +1150,7 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
     public double[] getStart() {
         double[] ret = Arrays.copyOf(start, start.length);
         if (relative) {
-            if (initialPosition != null) {
-                for (int i = 0; i < ret.length; i++) {
-                    ret[i] += initialPosition[i];
-                }
-            }
+            ret = relativeToAbsolute(ret);
         }
         return ret;
     }
@@ -1163,14 +1159,21 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
     public double[] getEnd() {
         double[] ret = Arrays.copyOf(end, start.length);
         if (relative) {
-            if (initialPosition != null) {
-                for (int i = 0; i < ret.length; i++) {
-                    ret[i] += initialPosition[i];
-                }
+            ret = relativeToAbsolute(ret);
+        }
+        return ret;
+    }
+    
+    public double[] relativeToAbsolute(double[] pos){
+        double[] ret = Arrays.copyOf(pos, pos.length);
+        if (initialPosition != null) {
+            for (int j = 0; j < pos.length; j++) {
+                ret[j] += initialPosition[j];
             }
         }
         return ret;
     }
+    
 
     @Override
     public double[] getStepSize() {

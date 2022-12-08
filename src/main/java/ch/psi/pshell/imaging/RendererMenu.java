@@ -139,10 +139,7 @@ public class RendererMenu extends JPopupMenu {
         }
         JMenuItem menuHistogram = new JMenuItem("Histogram");
         menuHistogram.addActionListener((ActionEvent e) -> {
-            Histogram histogram = new Histogram();
-            histogram.setRenderer(renderer);
-            JDialog dlg = SwingUtils.showDialog(SwingUtils.getWindow(renderer), "Histogram", null, histogram);
-            renderer.refresh();
+            Histogram.create(renderer);
         });
         JMenu menuColormap = new JMenu("Colormap");
         for (Colormap c : Colormap.values()) {

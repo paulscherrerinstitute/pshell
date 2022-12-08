@@ -66,7 +66,7 @@ public abstract class DiscretePositionerBase extends RegisterBase<String> implem
      * Derived classes can call this to provide an existing register or implementing
      * getReadbackValue callback
      */
-    protected void setReadback(ReadonlyRegister<String> readback) {
+    public void setReadback(ReadonlyRegister<String> readback) {
         if (this.readback != null) {
             readback.removeListener(changeListener);
         }

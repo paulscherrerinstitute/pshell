@@ -3,6 +3,7 @@ package ch.psi.pshell.imaging;
 import ch.psi.pshell.imaging.ColormapSource.ColormapSourceConfig;
 import ch.psi.utils.ArrayProperties;
 import ch.psi.pshell.plot.LinePlotSeries;
+import ch.psi.pshell.plot.MatrixPlotRenderer;
 import ch.psi.pshell.plot.Plot;
 import ch.psi.pshell.plot.RangeSelectionPlot;
 import ch.psi.pshell.plot.RangeSelectionPlot.RangeSelectionPlotListener;
@@ -23,6 +24,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.JDialog;
 
 /**
  *
@@ -49,24 +51,32 @@ public class Histogram extends MonitoredPanel implements RendererListener, Image
         rangeSelectionPlot.setListener(new RangeSelectionPlotListener() {
             @Override
             public void onRangeAdded(RangeSelectionPlot.RangeSelection range) {
-                if ((origin != null) && (origin instanceof ColormapSource)) {
-                    ColormapSource source = (ColormapSource) origin;
-                    saveOriginalConfig(source.getConfig());
-                    source.getConfig().colormapAutomatic = false;
-                    source.getConfig().colormapMin = range.getMin();
-                    source.getConfig().colormapMax = range.getMax();
-                    source.refresh();
-                    if (autoSave) {
-                        try {
-                            source.getConfig().save();
-                        } catch (IOException ex) {
-                            Logger.getLogger(Histogram.class.getName()).log(Level.SEVERE, null, ex);
+                if (origin != null) {
+                    if (origin instanceof ColormapSource){
+                        ColormapSource source = (ColormapSource) origin;
+                        saveOriginalConfig(source.getConfig());
+                        source.getConfig().colormapAutomatic = false;
+                        source.getConfig().colormapMin = range.getMin();
+                        source.getConfig().colormapMax = range.getMax();
+                        source.refresh();
+                        if (autoSave) {
+                            try {
+                                source.getConfig().save();
+                            } catch (IOException ex) {
+                                Logger.getLogger(Histogram.class.getName()).log(Level.SEVERE, null, ex);
+                            }
                         }
-                    }
-                    //So paused renderer is updated
-                    if (renderer != null) {
-                        renderer.setImage(source, source.getOutput(), source.getData());
-                    }
+                        //So paused renderer is updated
+                        if (renderer != null) {
+                            renderer.setImage(source, source.getOutput(), source.getData());
+                        }
+                    } else if (origin instanceof MatrixPlotRenderer){
+                        MatrixPlotRenderer plot = (MatrixPlotRenderer)origin;
+                        plot.setScale(range.getMin(), range.getMax());
+                        if (renderer != null) {
+                            renderer.setImage(renderer, plot.getImage(), plot.getData());
+                        }
+                    }                    
                     rangeSelectionPlot.selectMarker(range);
                 }
 
@@ -78,19 +88,24 @@ public class Histogram extends MonitoredPanel implements RendererListener, Image
 
             @Override
             public void onRangeRemoved(RangeSelectionPlot.RangeSelection range) {
-                if ((origin != null) && (origin instanceof ColormapSource)) {
-                    ColormapSource source = (ColormapSource) origin;
-                    saveOriginalConfig(source.getConfig());
-                    source.getConfig().colormapAutomatic = false;
-                    source.getConfig().colormapMin = Double.NaN;
-                    source.getConfig().colormapMax = Double.NaN;
-                    source.refresh();
-                    if (autoSave) {
-                        try {
-                            source.getConfig().save();
-                        } catch (IOException ex) {
-                            Logger.getLogger(Histogram.class.getName()).log(Level.SEVERE, null, ex);
+                if (origin != null) {
+                    if (origin instanceof ColormapSource){
+                        ColormapSource source = (ColormapSource) origin;
+                        saveOriginalConfig(source.getConfig());
+                        source.getConfig().colormapAutomatic = false;
+                        source.getConfig().colormapMin = Double.NaN;
+                        source.getConfig().colormapMax = Double.NaN;
+                        source.refresh();
+                        if (autoSave) {
+                            try {
+                                source.getConfig().save();
+                            } catch (IOException ex) {
+                                Logger.getLogger(Histogram.class.getName()).log(Level.SEVERE, null, ex);
+                            }
                         }
+                    } else if (origin instanceof MatrixPlotRenderer){
+                        MatrixPlotRenderer renderer = (MatrixPlotRenderer)origin;
+                        renderer.setAutoScale();
                     }
                 }
             }
@@ -209,7 +224,7 @@ public class Histogram extends MonitoredPanel implements RendererListener, Image
     @Override
     public void onImage(Object origin, BufferedImage image, Data data) {
         this.origin = origin;
-        boolean enabled = (origin != null) && (origin instanceof ColormapSource);
+        boolean enabled = ((origin != null) && ((origin instanceof ColormapSource) || (origin instanceof MatrixPlotRenderer)));
         rangeSelectionPlot.setManualSelectionEnabled(enabled);
         if ((data != null) && (data.getSourceImage() == null)) {
             calculate(data);
@@ -301,7 +316,7 @@ public class Histogram extends MonitoredPanel implements RendererListener, Image
         this.renderer = renderer;
         if (isVisible()) {
             onShow();
-        }
+        }                
         originalConfig = null;
     }
 
@@ -317,5 +332,24 @@ public class Histogram extends MonitoredPanel implements RendererListener, Image
             onShow();
         }
         originalConfig = null;
+    }
+    
+    public static Histogram create(Renderer renderer){
+        return create(renderer, false);
+    }
+            
+    public static Histogram create(Renderer renderer, boolean autoSave){
+        Histogram histogram = new Histogram(autoSave);
+        histogram.setRenderer(renderer);
+        JDialog dlg = SwingUtils.showDialog(SwingUtils.getWindow(renderer), "Histogram", null, histogram);
+        renderer.refresh();
+
+        renderer.addHierarchyListener((e)->{
+            if (!renderer.isShowing()){
+                dlg.setVisible(false);
+                dlg.dispose();
+            }
+        });        
+        return histogram;
     }
 }

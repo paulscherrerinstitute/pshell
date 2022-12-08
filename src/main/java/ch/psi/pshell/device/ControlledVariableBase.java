@@ -27,7 +27,7 @@ public abstract class ControlledVariableBase extends ProcessVariableBase impleme
 
     ReadonlyRegister<Double> readback;
 
-    protected void setReadback(ReadonlyRegister<Double> readback) {
+    public void setReadback(ReadonlyRegister<Double> readback) {
         this.readback = readback;
         if (readback != null) {
             readback.addListener(changeListener);

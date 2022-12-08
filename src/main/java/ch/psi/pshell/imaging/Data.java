@@ -35,6 +35,7 @@ public class Data implements Serializable {
     final boolean rgb;
     final BufferedImage image;
     final long timestamp;
+    final DataBuffer dataBuffer;
 
     public Data(Object array, int width, int height, Boolean unsigned) {
         this(array, width, height, unsigned, 1);
@@ -58,8 +59,9 @@ public class Data implements Serializable {
         }
         this.rgb = false;
         this.depth = depth;
-        timestamp = System.currentTimeMillis();
-        image = null;
+        this.timestamp = System.currentTimeMillis();
+        this.image = null;
+        this.dataBuffer = null;
     }
 
     public Data(Object array, int width, int height) {
@@ -73,40 +75,27 @@ public class Data implements Serializable {
     public Data(Object array2d, boolean unsigned) {
         this(Convert.flatten(array2d), Array.getLength(Array.get(array2d, 0)), Array.getLength(array2d), unsigned);
     }
-
+            
+    public Data(DataBuffer buffer, int width, int height) {
+        this.dataBuffer = buffer;
+        this.array = Utils.getDataBufferArray(buffer);
+        this.unsigned = Utils.isDataBufferUnsigned(buffer);
+        this.length = Array.getLength(array);
+        this.width = width;
+        this.height = height;
+        this.rgb = false;
+        this.depth = 1;
+        this.image = null;
+        timestamp = System.currentTimeMillis();
+    }
+    
     public Data(BufferedImage image) {
-
-        DataBuffer buf = image.getRaster().getDataBuffer();
-        Object array = null;
-        boolean unsigned = false;
-        switch (buf.getDataType()) {
-            case DataBuffer.TYPE_BYTE:
-                array = ((DataBufferByte) buf).getData();
-                unsigned = true;
-                break;
-            case DataBuffer.TYPE_DOUBLE:
-                array = ((DataBufferDouble) buf).getData();
-                break;
-            case DataBuffer.TYPE_FLOAT:
-                array = ((DataBufferFloat) buf).getData();
-                break;
-            case DataBuffer.TYPE_INT:
-                array = ((DataBufferInt) buf).getData();
-                break;
-            case DataBuffer.TYPE_SHORT:
-                array = ((DataBufferShort) buf).getData();
-                break;
-            case DataBuffer.TYPE_USHORT:
-                array = ((DataBufferUShort) buf).getData();
-                unsigned = true;
-                break;
-        }
-
-        this.array = array;
+        this.dataBuffer = image.getRaster().getDataBuffer();
+        this.array = Utils.getDataBufferArray(dataBuffer);
+        this.unsigned = Utils.isDataBufferUnsigned(dataBuffer);
         this.length = Array.getLength(array);
         this.width = image.getWidth();
         this.height = image.getHeight();
-        this.unsigned = unsigned;
         this.rgb = !Utils.isGrayscale(image);
         this.depth = image.getColorModel().getNumComponents();
         this.image = image;
@@ -129,6 +118,7 @@ public class Data implements Serializable {
         unsigned = data.unsigned;
         rgb = data.rgb;
         timestamp = data.timestamp;
+        dataBuffer = null;
         for (int row = 0; row < roi.height; row++) {
             System.arraycopy(data.array, (row + roi.y) * data.width + roi.x, array, row * width, roi.width);
         }
@@ -462,6 +452,29 @@ public class Data implements Serializable {
     public BufferedImage getSourceImage() {
         return image;
     }
+    
+    public DataBuffer getDataBuffer() {
+        if (dataBuffer != null){
+            return dataBuffer;
+        }                
+        if (array instanceof byte[]) {
+            return new DataBufferByte((byte[])array, ((byte[])array).length);
+        } else if (array instanceof short[]) {
+            if (unsigned) {
+                return new DataBufferUShort((short[])array, ((short[])array).length);
+            } else {
+                return new DataBufferShort((short[])array, ((short[])array).length);
+            }
+        } else if (array instanceof int[]) {
+            return new DataBufferInt((int[])array, ((int[])array).length);
+        } else if (array instanceof double[]) {
+            return new DataBufferDouble((double[])array, ((double[])array).length);
+        } else if (array instanceof float[]) {
+            return new DataBufferFloat((float[])array, ((float[])array).length);
+        } else if (array instanceof long[]) {
+        }
+        return null;          
+    }    
 
     public boolean isRgb() {
         return rgb;
@@ -863,26 +876,46 @@ public class Data implements Serializable {
 
     public BufferedImage toBufferedImage(boolean transformed) {
         BufferedImage ret = Utils.newImage((getType() == byte.class) ? array : translateToByteArray(null), new ImageDescriptor(ImageFormat.Gray8, width, height));
-
-        if ((ret != null) && transformed && (sourceConfig != null)) {
-            if (sourceConfig.transpose) {
-                ret = Utils.transpose(ret);
-            }
-            if ((sourceConfig.flipVertically) || (sourceConfig.flipHorizontally)) {
-                ret = Utils.flip(ret, sourceConfig.flipVertically, sourceConfig.flipHorizontally);
-            }
-            if (sourceConfig.rotation != 0) {
-                ret = Utils.rotate(ret, sourceConfig.rotation, sourceConfig.rotationCrop);
-            }
-            if (sourceConfig.scale != 1.0) {
-                ret = Utils.scale(ret, sourceConfig.scale);
-            }
-            if ((sourceConfig.roiX > 0) || (sourceConfig.roiY > 0) || (sourceConfig.roiWidth >= 0) || (sourceConfig.roiHeight >= 0)) {
-                ret = ret.getSubimage(sourceConfig.roiX, sourceConfig.roiY, sourceConfig.roiWidth, sourceConfig.roiHeight);
-            }
+        if (transformed) {
+            ret=applyTransformatiuons(ret);
         }
         return ret;
     }
+    
+    public BufferedImage toBufferedImage(float scaleMin, float scaleMax, Colormap colormap, boolean logarithmic) {
+        return toBufferedImage(scaleMin, scaleMax, colormap, logarithmic, false);
+    }
+
+    public BufferedImage toBufferedImage(float scaleMin, float scaleMax, Colormap colormap, boolean logarithmic, boolean transformed) {
+        BufferedImage ret = Utils.newImage(this, scaleMin, scaleMax, colormap, logarithmic);
+        if (transformed) {
+            ret=applyTransformatiuons(ret);
+        }
+        return ret;
+    }
+    
+    
+    public BufferedImage applyTransformatiuons(BufferedImage img){
+        if ((img != null) && (sourceConfig != null)) {
+            if (sourceConfig.transpose) {
+                img = Utils.transpose(img);
+            }
+            if ((sourceConfig.flipVertically) || (sourceConfig.flipHorizontally)) {
+                img = Utils.flip(img, sourceConfig.flipVertically, sourceConfig.flipHorizontally);
+            }
+            if (sourceConfig.rotation != 0) {
+                img = Utils.rotate(img, sourceConfig.rotation, sourceConfig.rotationCrop);
+            }
+            if (sourceConfig.scale != 1.0) {
+                img = Utils.scale(img, sourceConfig.scale);
+            }
+            if ((sourceConfig.roiX > 0) || (sourceConfig.roiY > 0) || (sourceConfig.roiWidth >= 0) || (sourceConfig.roiHeight >= 0)) {
+                img = img.getSubimage(sourceConfig.roiX, sourceConfig.roiY, sourceConfig.roiWidth, sourceConfig.roiHeight);
+            }
+        }
+        return img;
+    }
+    
 
     public double[] integrateVertically() {
           return integrateVertically(false);

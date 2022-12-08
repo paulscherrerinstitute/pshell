@@ -535,15 +535,19 @@ public class PlotPanel extends MonitoredPanel {
                     }
                     if (scan.getDimensions() == 3) {
                         if (val instanceof Number) {
-                            xValue = positions[2].doubleValue();
-                            double yValue = positions[1].doubleValue();
-                            /* 
-                            if ((Math.abs(yValue - scan.getStart()[1]) < (scan.getStepSize()[1] / 10))
-                                    && (Math.abs(xValue - scan.getStart()[2]) < (scan.getStepSize()[2] / 10))) {
-                                ((MatrixPlotBase) plot).getSeries(0).clear();
+                            if (plot instanceof MatrixPlotBase) {
+                                xValue = positions[2].doubleValue();
+                                double yValue = positions[1].doubleValue();
+                                /* 
+                                if ((Math.abs(yValue - scan.getStart()[1]) < (scan.getStepSize()[1] / 10))
+                                        && (Math.abs(xValue - scan.getStart()[2]) < (scan.getStepSize()[2] / 10))) {
+                                    ((MatrixPlotBase) plot).getSeries(0).clear();
+                                }
+                                 */                                
+                                ((MatrixPlotBase) plot).getSeries(0).appendData(xValue, yValue, ((Number) val).doubleValue());
+                            } else if (plot instanceof LinePlotBase) {//###
+                                ((LinePlotBase) plot).getSeries(0).appendData(xValue, ((Number) val).doubleValue());
                             }
-                             */
-                            ((MatrixPlotBase) plot).getSeries(0).appendData(xValue, yValue, ((Number) val).doubleValue());
                         } else if (val.getClass().isArray()) {
                             val = Convert.toDouble(val);
                             if (val instanceof double[]) {
@@ -750,19 +754,49 @@ public class PlotPanel extends MonitoredPanel {
         if (rank == 3) {
             //Don't use slice plot during scan
             if (isScan) {
-                plot = newPlot(name, isScan, 2, false);
-                MatrixPlotSeries series = null;
-                if (recordDimensions == 0) {
-                    series = new MatrixPlotSeries(name, start[2], end[2], steps[2] + 1, start[1], end[1], steps[1] + 1);
-                } else if (recordDimensions == 1) {
-                    int ySize = recordSize[0];
-                    series = new MatrixPlotSeries(name, start[0], end[0], steps[0] + 1, 0, ySize - 1, ySize);
-                } else if (recordDimensions == 2) {
-                    series = new MatrixPlotSeries(name, recordSize[0], recordSize[1]);
+                plot = newPlot(name, isScan, 2, true);
+                if (plot instanceof LinePlotBase) {
+                    if ((start != null) && (start.length > 0) && (end != null) && (end.length > 0)) {
+                        if (prefs.range != null) {
+                            plot.getAxis(Plot.AxisId.X).setRange(prefs.range.min, prefs.range.max);
+                        } else if ((prefs.autoRange == null) || (!prefs.autoRange)) {
+                            plot.getAxis(Plot.AxisId.X).setRange(Math.min(start[0], end[0]), Math.max(start[0], end[0]));
+                        }
+                    }
+                    plot.getAxis(Plot.AxisId.X).setLabel(labelX);
+                    plot.getAxis(Plot.AxisId.Y).setLabel(null);
+                    plot.addSeries(new LinePlotSeries(name));
                 } else {
-                    return null;
+                    MatrixPlotSeries series = null;
+                    if (recordDimensions == 0) {
+                        series = new MatrixPlotSeries(name, start[2], end[2], steps[2] + 1, start[1], end[1], steps[1] + 1);
+                    } else if (recordDimensions == 1) {
+                        int ySize = recordSize[0];
+                        series = new MatrixPlotSeries(name, start[0], end[0], steps[0] + 1, 0, ySize - 1, ySize);
+                    } else if (recordDimensions == 2) {
+                        series = new MatrixPlotSeries(name, recordSize[0], recordSize[1]);
+                    } else {
+                        return null;
+                    }
+                    
+                    if (prefs.range != null) {
+                        if (series.getNumberOfBinsX()==0){
+                            series.setNumberOfBinsX(DEFAULT_RANGE_STEPS);
+                        }
+                        plot.getAxis(Plot.AxisId.X).setRange(prefs.range.min, prefs.range.max);
+                        series.setRangeX(prefs.range.min, prefs.range.max);                        
+                    }
+                    if (prefs.rangeY != null) {
+                        if (series.getNumberOfBinsY()==0){
+                            series.setNumberOfBinsY(DEFAULT_RANGE_STEPS);
+                        }
+                        plot.getAxis(Plot.AxisId.Y).setRange(prefs.rangeY.min, prefs.rangeY.max);                        
+                        series.setRangeY(prefs.rangeY.min, prefs.rangeY.max);
+                    }                    
+                        //}                
+                    plot.addSeries(series);
+                
                 }
-                plot.addSeries(series);
             } else {
                 if ((recordSize == null) || (recordSize[0] == 1)) {
 

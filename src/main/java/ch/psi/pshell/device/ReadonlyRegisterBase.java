@@ -97,7 +97,6 @@ public abstract class ReadonlyRegisterBase<T> extends DeviceBase implements Read
         return precision;
     }
 
-    @Reflection.Hidden
     public void setPrecision(int precision) {
         this.precision = precision;
     }

@@ -5,7 +5,6 @@ import ch.psi.jcae.impl.type.TimestampValue;
 import ch.psi.pshell.device.RegisterBase;
 import ch.psi.pshell.device.RegisterConfig;
 import ch.psi.pshell.device.TimestampedValue;
-import ch.psi.utils.Reflection.Hidden;
 import java.util.logging.Level;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
@@ -340,16 +339,14 @@ public abstract class EpicsRegister<T> extends RegisterBase<T> {
     /**
      * Force device access if device is monitored.
      */
-    @Hidden
     public boolean isForcedRead() {
         return forceRead;
     }
 
-    @Hidden
     public void setForcedRead(boolean value) {
         forceRead = value;
     }
-
+    
     @Override
     protected void doClose() throws IOException {
         super.doClose();

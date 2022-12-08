@@ -56,6 +56,7 @@ import ch.psi.pshell.plot.LinePlotBase;
 import ch.psi.pshell.plot.LinePlotSeries;
 import ch.psi.pshell.plot.MatrixPlotBase;
 import ch.psi.pshell.plot.MatrixPlotSeries;
+import ch.psi.pshell.plot.MatrixPlotRenderer;
 import ch.psi.pshell.plot.Plot;
 import ch.psi.pshell.plot.PlotBase;
 import ch.psi.pshell.plot.PlotSeries;
@@ -554,7 +555,7 @@ public class Renderer extends MonitoredPanel implements ImageListener, ImageBuff
             if (value) {
                 Object origin = getOrigin();
                 colormapPanel = new ColormapPanel();
-                setColormapSource(((origin == null) || (origin instanceof ColormapSource)) ? (ColormapSource) origin : null);
+                setColormapSource(((origin != null) && (origin instanceof ColormapSource)) ? (ColormapSource) origin : null);
                 add(colormapPanel, BorderLayout.EAST);
             } else {
                 setColormapSource(null);
@@ -1042,6 +1043,7 @@ public class Renderer extends MonitoredPanel implements ImageListener, ImageBuff
                 if (colormapSource.getConfig().colormapAutomatic){
                     requestColormapScaleUpdate();
                 }                
+            } else if (origin instanceof MatrixPlotRenderer) {     
             } else {
                 setShowColormapScale(false);
             }
