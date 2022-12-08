@@ -205,7 +205,8 @@ public abstract class DiscreteStepPositioner
      *     
      */
     public String getDoneValue() {
-        return getString(doneValue);
+        return (doneValue == null) ? "1" :doneValue;
+        
     }
 
     /**
