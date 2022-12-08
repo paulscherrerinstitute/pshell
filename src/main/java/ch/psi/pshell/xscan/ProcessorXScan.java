@@ -692,9 +692,7 @@ public final class ProcessorXScan extends MonitoredPanel implements Processor {
         } finally {
             try {
                 ModelUtil.getInstance().setConfigurationPanel(null);
-                Logger
-                        .getLogger(ProcessorXScan.class
-                                .getName()).log(Level.FINER, "Destroy acquisition");
+                Logger.getLogger(ProcessorXScan.class.getName()).log(Level.FINER, "Destroy acquisition");
                 if (acquisition != null) {
                     acquisition.destroy();
                     acquisition = null;

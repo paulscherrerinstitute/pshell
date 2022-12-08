@@ -6,6 +6,7 @@ import ch.psi.pshell.xscan.EndOfStreamMessage;
 import ch.psi.pshell.xscan.Metadata;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -81,6 +82,11 @@ public class ActorSensorLoop implements ActionLoop {
     private List<ActorSetCallable> pactors;
 
     private EventBus eventBus = new EventBus();
+    
+    /**
+     * Thread pool for parallel execution of tasks
+     */
+    ExecutorService executorService;    
 
     public ActorSensorLoop() {
         this(false);
@@ -119,10 +125,7 @@ public class ActorSensorLoop implements ActionLoop {
             metadata.add(new Metadata(s.getId()));
         }
 
-        /**
-         * Thread pool for parallel execution of tasks
-         */
-        ExecutorService executorService = Executors.newCachedThreadPool();
+        executorService = Executors.newCachedThreadPool();
 
         loop = true;
 
@@ -189,6 +192,14 @@ public class ActorSensorLoop implements ActionLoop {
                         }
                     } catch (InterruptedException |  RuntimeException e) {
                         throw e; 
+                    } catch (ExecutionException e) {
+                        if (e.getCause()!=null){
+                            if (e.getCause() instanceof InterruptedException){
+                                throw (InterruptedException)e.getCause();
+                            }
+                            throw new RuntimeException(e.getCause());
+                        }
+                        throw new RuntimeException(e);
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
@@ -301,7 +312,6 @@ public class ActorSensorLoop implements ActionLoop {
         //executorService.shutdownNow();
         //TODO: Before it was shutdownNow, why?
         executorService.shutdown();
-
     }
 
     @Override
@@ -325,6 +335,9 @@ public class ActorSensorLoop implements ActionLoop {
             } catch (Exception ex) {
                 Logger.getLogger(ActorSensorLoop.class.getName()).log(Level.WARNING, null, ex);
             }
+        }
+        if (executorService!=null){
+            executorService.shutdownNow();
         }
     }
 

@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CyclicBarrier;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -37,6 +38,11 @@ public class ParallelCrlogic implements ActionLoop {
     private MergeLogic mergeLogic;
 
     private final EventBus eventbus;
+    
+    /**
+     * 2 for the parallel data acquisition and 1 for the merger thread
+     */
+    ExecutorService service = Executors.newFixedThreadPool(3);
 
     public ParallelCrlogic(CrlogicLoopStream crlogic, ScrlogicLoop scrlogic) {
 
@@ -76,7 +82,7 @@ public class ParallelCrlogic implements ActionLoop {
             action.execute();
         }
 
-        ExecutorService service = Executors.newFixedThreadPool(3); // 2 for the parallel data acquisition and 1 for the merger thread
+        service = Executors.newFixedThreadPool(3); // 2 for the parallel data acquisition and 1 for the merger thread
         final CyclicBarrier b = new CyclicBarrier(2);
 
         List<Future<Boolean>> list = new ArrayList<Future<Boolean>>();
@@ -132,12 +138,19 @@ public class ParallelCrlogic implements ActionLoop {
             // Wait for completion of the thread
             try {
                 bf.get();
-            } catch (InterruptedException e) {
+            } catch (InterruptedException |  RuntimeException e) {
                 throw e; 
-            } catch (Exception e) {
-                logger.log(Level.WARNING, "Something went wrong while waiting for crthreads to finish: " + e.getMessage());
+            } catch (ExecutionException e) {
+                if (e.getCause()!=null){
+                    if (e.getCause() instanceof InterruptedException){
+                        throw (InterruptedException)e.getCause();
+                    }
+                    throw new RuntimeException(e.getCause());
+                }
                 throw new RuntimeException(e);
-            }
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }            
         }
 
         // Wait until all threads have finished
@@ -180,4 +193,14 @@ public class ParallelCrlogic implements ActionLoop {
     public EventBus getEventBus() {
         return eventbus;
     }
+    
+    /**
+     * Abort execution
+     */
+    @Override
+    public void abort() {
+        scrlogic.abort();
+        crlogic.abort();
+        service.shutdown();
+    }    
 }
