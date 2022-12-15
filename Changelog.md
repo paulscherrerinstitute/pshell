@@ -6,13 +6,28 @@
  
 * Improve MatrixPlotRenderer to better mimic MatrixPlotJFree.
 
+* Integration with CamServer and StreamViewer widget.
+
+* Configuration of async updates for history plots alone.
+
+* Preliminary support to NX format.
+
+
 ### Changed
 
 * Update to Jython 2.7.3
 
+* Homogeneous string representation of arrays and scan records.
+
+* Changed ControlledVariable.setReadback to public.
+
+
 ### Fixed
 
 * Fix first initialization of DummyMotor.
+
+* VectorScan: Removed initial move and fixed relative positions.
+
 
 
 ## 1.18.0
