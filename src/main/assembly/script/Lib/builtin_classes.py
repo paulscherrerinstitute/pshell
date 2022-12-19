@@ -88,6 +88,7 @@ import ch.psi.pshell.device.DummyMotor as DummyMotor
 import ch.psi.pshell.device.DummyRegister as DummyRegister
 import ch.psi.pshell.device.Timestamp as Timestamp
 import ch.psi.pshell.device.Interlock as Interlock
+import ch.psi.pshell.device.Cacheable as Cacheable
 import ch.psi.pshell.device.Readable as Readable
 import ch.psi.pshell.device.Readable.ReadableArray as ReadableArray
 import ch.psi.pshell.device.Readable.ReadableMatrix as ReadableMatrix
