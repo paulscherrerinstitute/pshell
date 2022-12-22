@@ -39,7 +39,7 @@ public abstract class DeviceSource extends ColormapSource {
                         onDataReceived(value);
                     }
                 } catch (Exception ex) {
-                    Logger.getLogger(DeviceSource.class.getName()).log(Level.FINE, null, ex);
+                    Logger.getLogger(DeviceSource.class.getName()).log(Level.FINER, null, ex);
                     pushError(ex);
                 }
             }

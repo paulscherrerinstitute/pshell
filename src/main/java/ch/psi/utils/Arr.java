@@ -341,7 +341,7 @@ public class Arr {
             return Str.toString(obj);
         }
         try{
-             return ch.psi.pshell.bs.Encoder.classToType(obj.getClass(), false).toString();
+             return Type.fromClass(obj.getClass()).toString();
         } catch (Exception ex){
             Class componentType = getComponentType(obj);
             if (componentType!=null){

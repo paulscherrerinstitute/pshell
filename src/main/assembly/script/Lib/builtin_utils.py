@@ -15,6 +15,8 @@ import java.util.concurrent.Callable
 import java.util.List
 import java.util.ArrayList
 import java.lang.reflect.Array
+import java.util.function.Function as Function
+import java.util.function.BiFunction as BiFunction
 import java.lang.Thread
 import java.awt.image.BufferedImage as BufferedImage
 import java.awt.Color as Color
@@ -161,6 +163,12 @@ def is_list(obj):
 
 def is_string(obj):
     return (type(obj) is str) or (type(obj) is unicode)
+
+def string_to_list(val):
+   return [ord(c) for c in val] 
+
+def list_to_string(val):
+    return ''.join(chr(c) for c in val)
 
 def is_interpreter_thread():
     return java.lang.Thread.currentThread().name == "MainThread"

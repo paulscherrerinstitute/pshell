@@ -28,7 +28,8 @@ import ch.psi.utils.Reflection as Reflection
 import ch.psi.utils.Serializer as Serializer
 import ch.psi.utils.Windows as Windows
 import ch.psi.utils.NumberComparator as NumberComparator
-
+import ch.psi.utils.BufferConverter as BufferConverter
+import ch.psi.utils.Type as Type
 
 import ch.psi.pshell.core.CommandSource as CommandSource
 import ch.psi.pshell.core.ContextAdapter as ContextListener
@@ -622,3 +623,89 @@ class Channel(java.beans.PropertyChangeListener, Writable, Readable, DeviceBase)
 
     def __exit__(self, *args):
         self.close()
+
+
+###################################################################################################
+#  Command API implementation through EPICS channels 
+###################################################################################################
+
+
+class EpicsCmdAPI(RegisterBase, RegisterArray):
+    def __init__(self, name, channel, as_string=True, background=False, max_size=10000):
+        RegisterBase.__init__(self, name)
+        self.channel=channel
+        self.background=background
+        self.as_string=as_string
+        self.val = "INIT"
+        self.debug=False
+        self.max_size = 10000
+        self.cas = None
+
+    def doInitialize(self):   
+        super(EpicsCmdAPI, self).doInitialize()
+        if self.as_string:
+            self.cas = CAS(self.channel, self, 'string')
+        else:
+            self.cas = CAS(self.channel, self, 'byte')
+        self.val = "READY"
+            
+    def doClose(self):
+        if self.cas:
+            self.cas.close()
+            self.cas = None
+        RegisterBase.doInitialize(self)         
+
+    def getSize(self):
+        if self.as_string:
+            return 1            
+        else:
+            return self.max_size #len(self.val)
+        
+    def doRead(self):
+        if self.debug:
+            print "READ: ", self.val
+        if self.as_string:
+            return self.val
+        else:
+            return string_to_list(self.val)
+        
+    def doWrite(self, val):
+        self.val = "RUNNING"
+        try:
+            if self.as_string:
+                cmd = str(val[0])
+            else:
+                cmd = list_to_string(val)
+            if self.debug:            
+                print "WRITE: ", cmd
+            class eval_callback(BiFunction):
+                def apply(self_callback, ret, ex):
+                    try:
+                        if ex is not None:
+                            err=ex.message
+                            if "Exception:" in err:
+                                err = err[err.index("Exception:")+10:].strip()
+                            self.val = "ERR:" + err  
+                        else:
+                            self.val = "RET:" + str(ret)  
+                        self.val = self.val[0:self.max_size]
+                    except:
+                        err=str(sys.exc_info()[1])
+                        self.val = "EXC: " + err
+                    if self.debug:
+                        print self.val
+                                            
+            #self.val = cmd      
+            if self.background:     
+                get_context().evalLineBackgroundAsync(cmd).handle(eval_callback())
+            else:
+                get_context().evalLineAsync(cmd).handle(eval_callback())
+            
+        except:
+            err=str(sys.exc_info()[1])
+            if "Exception:" in err:
+                err = err[err.index("Exception:")+10:].strip()
+            self.val = "EXC: " + err
+            self.val = self.val[0:self.max_size]
+            if self.debug:
+                print self.val        
