@@ -195,13 +195,17 @@ public class DataManager implements AutoCloseable {
 
     void clearProviderData() {
         Provider provider = getProvider();
-        synchronized (providerData) {
-            //Keeps general provider data
-            if (provider == this.provider) {
-                ProviderData pd = providerData.get(provider);
-                pd.tableIndex.clear();
-            } else {
-                providerData.remove(provider);
+        if (provider!=null){
+            synchronized (providerData) {
+                //Keeps general provider data
+                if (provider == this.provider) {
+                    ProviderData pd = providerData.get(provider);
+                    if (pd!=null){
+                        pd.tableIndex.clear();
+                    }
+                } else {
+                    providerData.remove(provider);
+                }
             }
         }
     }
