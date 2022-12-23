@@ -14,6 +14,7 @@ import ch.psi.utils.Type;
 import java.io.IOException;
 import java.lang.reflect.Array;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
@@ -150,7 +151,7 @@ public class Array10 extends DeviceBase implements Readable, Cacheable, Readable
                     try{
                         String json = new String(header_arr, StandardCharsets.UTF_8);
                         Map<String, Object> header = (Map) EncoderJson.decode(json, Map.class);                        
-                        int[] shape = (int[]) header.getOrDefault("shape", null);
+                        int[] shape = (int[]) Convert.toPrimitiveArray(header.getOrDefault("shape", new ArrayList()), int.class);
                         String dtype = (String) header.getOrDefault("type", "int8");
                         byte[] data_arr = socket.recv(); 
                         if (data_arr!=null){
@@ -190,6 +191,10 @@ public class Array10 extends DeviceBase implements Readable, Cacheable, Readable
     public Array10Array getDevArray(){
         return devArray;
     }
+    
+    public Array10Matrix getDevMatrix(){
+        return devMatrix;
+    }    
 
     @Override
     protected void doClose() throws IOException {
