@@ -479,6 +479,7 @@ from ch.psi.pshell.camserver import PipelineStream as PipelineStream
 from ch.psi.pshell.camserver import CamServerService as CamServerService
 
 from ch.psi.pshell.detector import DetectorConfig as DetectorConfig
+from ch.psi.pshell.detector import Array10 as Array10
 
 from ch.psi.pshell.ui import App as App
 

@@ -270,6 +270,7 @@ import ch.psi.pshell.camserver.CameraSource as CameraSource
 import ch.psi.pshell.camserver.CamServerService as CamServerService
 
 import ch.psi.pshell.detector.DetectorConfig as DetectorConfig
+import ch.psi.pshell.detector.Array10 as Array10
 
 import ch.psi.pshell.ui.App as App
 
