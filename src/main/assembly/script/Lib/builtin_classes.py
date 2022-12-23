@@ -654,7 +654,7 @@ class EpicsCmdAPI(RegisterBase, RegisterArray):
         if self.cas:
             self.cas.close()
             self.cas = None
-        RegisterBase.doInitialize(self)         
+        super(EpicsCmdAPI, self).doClose()         
 
     def getSize(self):
         if self.as_string:
