@@ -272,6 +272,10 @@ import ch.psi.pshell.camserver.CamServerService as CamServerService
 import ch.psi.pshell.detector.DetectorConfig as DetectorConfig
 import ch.psi.pshell.detector.Array10 as Array10
 
+import org.zeromq.ZMQ as ZMQ
+import org.zeromq.SocketType
+ZMQ.SocketType=org.zeromq.SocketType #Not to collide with bsread.SocketType
+
 import ch.psi.pshell.ui.App as App
 
 import ch.psi.pshell.scripting.ViewPreference as Preference
@@ -637,7 +641,7 @@ class EpicsCmdAPI(RegisterBase, RegisterArray):
         self.channel=channel
         self.background=background
         self.as_string=as_string
-        self.val = "INIT"
+        self.val = "Unknown"
         self.debug=False
         self.max_size = 10000
         self.cas = None
@@ -648,7 +652,7 @@ class EpicsCmdAPI(RegisterBase, RegisterArray):
             self.cas = CAS(self.channel, self, 'string')
         else:
             self.cas = CAS(self.channel, self, 'byte')
-        self.val = "READY"
+        self.val = "Ready"
             
     def doClose(self):
         if self.cas:
@@ -671,7 +675,7 @@ class EpicsCmdAPI(RegisterBase, RegisterArray):
             return string_to_list(self.val)
         
     def doWrite(self, val):
-        self.val = "RUNNING"
+        self.val = "Busy"
         try:
             if self.as_string:
                 cmd = str(val[0])
@@ -686,13 +690,13 @@ class EpicsCmdAPI(RegisterBase, RegisterArray):
                             err=ex.message
                             if "Exception:" in err:
                                 err = err[err.index("Exception:")+10:].strip()
-                            self.val = "ERR:" + err  
+                            self.val = "Err: " + err  
                         else:
-                            self.val = "RET:" + str(ret)  
+                            self.val = "Ret: " + str(ret)  
                         self.val = self.val[0:self.max_size]
                     except:
                         err=str(sys.exc_info()[1])
-                        self.val = "EXC: " + err
+                        self.val = "Exc: " + err
                     if self.debug:
                         print self.val
                                             
@@ -706,7 +710,83 @@ class EpicsCmdAPI(RegisterBase, RegisterArray):
             err=str(sys.exc_info()[1])
             if "Exception:" in err:
                 err = err[err.index("Exception:")+10:].strip()
-            self.val = "EXC: " + err
+            self.val = "Exc: " + err
             self.val = self.val[0:self.max_size]
             if self.debug:
                 print self.val        
+
+
+class EpicsServerState(ReadonlyAsyncRegisterBase, RegisterArray):
+    def __init__(self, name, channel, as_string=True):
+        RegisterBase.__init__(self, name)
+        self.channel=channel
+        self.as_string=as_string
+        self.val = "Unknown"
+        self.cas = None 
+        self.state_change_listener=None        
+        
+    def doInitialize(self):   
+        super(EpicsServerState, self).doInitialize()
+        if self.as_string:
+            self.cas = CAS(self.channel, self, 'string')
+        else:
+            self.cas = CAS(self.channel, self, 'byte')
+        if self.state_change_listener is None:
+            class StateChangeListener(ContextListener):
+                def onContextStateChanged(_self, state, former):  
+                    self.set(state)        
+            self.state_change_listener = StateChangeListener()   
+            get_context().addListener(self.state_change_listener)
+                     
+    def getSize(self):
+        if self.as_string:
+            return 1            
+        else:
+            return 100
+                        
+    def doClose(self):
+        if self.state_change_listener:
+            get_context().removeListener(self.state_change_listener)
+        if self.cas:
+            self.cas.close()
+            self.cas = None
+        super(EpicsServerState, self).doClose()        
+
+    def set(self, value):
+        if self.as_string:
+            self.onReadout(str(value)) 
+        else:
+            self.onReadout(string_to_list(str(value)))
+
+
+class EpicsServerUrl(ReadonlyRegisterBase, RegisterArray):
+    def __init__(self, name, channel, as_string=True):
+        ReadonlyRegisterBase.__init__(self, name)
+        self.channel=channel
+        self.as_string=as_string
+        self.cas = None 
+        
+    def doInitialize(self):   
+        super(EpicsServerUrl, self).doInitialize()
+        if self.as_string:
+            self.cas = CAS(self.channel, self, 'string')
+        else:
+            self.cas = CAS(self.channel, self, 'byte')
+                     
+    def getSize(self):
+        if self.as_string:
+            return 1            
+        else:
+            return 100
+                        
+    def doClose(self):
+        if self.cas:
+            self.cas.close()
+            self.cas = None
+        super(EpicsServerURL, self).doClose()        
+
+    def doRead(self):
+        if self.as_string:
+            return get_context().server.baseURL  
+        else:
+            return string_to_list(get_context().server.baseURL)

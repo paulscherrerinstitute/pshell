@@ -481,6 +481,8 @@ from ch.psi.pshell.camserver import CamServerService as CamServerService
 from ch.psi.pshell.detector import DetectorConfig as DetectorConfig
 from ch.psi.pshell.detector import Array10 as Array10
 
+from org.zeromq import ZMQ as ZMQ
+
 from ch.psi.pshell.ui import App as App
 
 from ch.psi.pshell.scripting import ViewPreference as Preference
