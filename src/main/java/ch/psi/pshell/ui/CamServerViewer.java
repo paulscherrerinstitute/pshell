@@ -112,6 +112,7 @@ public class CamServerViewer extends MonitoredPanel {
     public static final String ARG_BUFFER_SIZE = "buffer_size";
     public static final String ARG_SIDE_BAR = "side_bar";
     public static final String ARG_TITLE = "title";
+    public static final String ARG_PERSIST_CAMERA_STATE = "persist_camera";
    
  
     final String CAMERA_DEVICE_NAME = "CurrentCamera";
@@ -2881,6 +2882,9 @@ public class CamServerViewer extends MonitoredPanel {
                     viewer.setStartupStream(App.getArgumentValue(ARG_STREAM));
                 } else if (App.hasArgument(ARG_CAMERA)){
                     viewer.setStartupStream(App.getArgumentValue(ARG_CAMERA));
+                }
+                if (App.hasArgument(ARG_PERSIST_CAMERA_STATE)){
+                    viewer.setPersistCameraState(true);
                 }
                 viewer.initialize(App.getArgumentValue(ARG_SELECTION_MODE));   
                        

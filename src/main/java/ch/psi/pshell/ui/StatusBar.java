@@ -270,30 +270,32 @@ public class StatusBar extends MonitoredPanel implements PropertyChangeListener 
             });
             return;
         }
-        switch (state) {
-            case Ready:
-                if (timerStateIcon.isRunning()) {
-                    timerStateIcon.stop();
-                }
-                stateIconLabel.setIcon(iconsBusy[0]);
-                break;
-            case Busy:
-            case Paused:
-            case Initializing:
-                if (!timerStateIcon.isRunning()) {
+        if (timerStateIcon!=null){
+            switch (state) {
+                case Ready:
+                    if (timerStateIcon.isRunning()) {
+                        timerStateIcon.stop();
+                    }
                     stateIconLabel.setIcon(iconsBusy[0]);
-                    busyIconIndex = 0;
-                    timerStateIcon.start();
-                }
-                break;
-            case Invalid:
-                break;
-            default:
-                if (timerStateIcon.isRunning()) {
-                    timerStateIcon.stop();
-                }
-                stateIconLabel.setIcon(iconIdle);
-                break;
+                    break;
+                case Busy:
+                case Paused:
+                case Initializing:
+                    if (!timerStateIcon.isRunning()) {
+                        stateIconLabel.setIcon(iconsBusy[0]);
+                        busyIconIndex = 0;
+                        timerStateIcon.start();
+                    }
+                    break;
+                case Invalid:
+                    break;
+                default:
+                    if (timerStateIcon.isRunning()) {
+                        timerStateIcon.stop();
+                    }
+                    stateIconLabel.setIcon(iconIdle);
+                    break;
+            }
         }
     }
 
