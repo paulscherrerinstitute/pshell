@@ -5,6 +5,7 @@ import ch.psi.pshell.core.Context;
 import ch.psi.utils.IO;
 import java.io.File;
 import java.util.Map;
+import java.util.logging.Level;
 
 /**
  *
@@ -37,8 +38,14 @@ public abstract class ScriptProcessor extends PanelProcessor {
         
         boolean showException = isScriptExceptionShown();
             
-        running = true;
-        runAsync(getScript(), args).handle((ok, ex) -> {
+        running = true;        
+        try{
+            onStartingExecution(args);
+        } catch (Exception e){ 
+            getLogger().log(Level.WARNING, null, e);
+        }         
+        
+        runAsync(getScript(), args).handle((ret, ex) -> {
             if (ex != null) {               
                 if (showException) {
                     if (!getContext().isAborted()) {     
@@ -46,11 +53,24 @@ public abstract class ScriptProcessor extends PanelProcessor {
                     }  
                 }
             }
-            running = false;
-            return ok;
+            try{
+                onFinishedExecution(args, ret, ex);
+            } catch (Exception e){ 
+                getLogger().log(Level.WARNING, null, e);
+            } finally{
+                running = false;
+            }
+            return ret;
         });
         
     } 
+    
+    protected void onStartingExecution(Map<String, Object> args) throws Exception{        
+    }
+    
+    protected void onFinishedExecution(Map<String, Object> args, Object ret, Throwable t) throws Exception{   
+    }
+    
     
     public boolean isRunning(){
         return running;
@@ -58,7 +78,16 @@ public abstract class ScriptProcessor extends PanelProcessor {
     
     @Override
     public void queue() throws Exception{
-        getQueueProcessor().addNewFile(getScript(), getArgs());
+        //By default queue script and arguments insted of the filename
+        queue(false);
+    }
+    
+    public void queue(boolean filename) throws Exception{
+        if (filename){
+            super.queue();
+        } else {
+            getQueueProcessor().addNewFile(getScript(), getArgs());
+        }        
     }
     
     public void runNext() throws Exception{

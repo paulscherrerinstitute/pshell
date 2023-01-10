@@ -4395,16 +4395,24 @@ public class View extends MainFrame {
                 menuAddToQueue.setVisible(isShowingExecutor());
                 menuAddToQueue.removeAll();
                 if (executor != null) {
-                    String _filename = executor.getFileName();
+                    String _filename = null;
+                    try{
+                        _filename = executor.getFileName();
+                    } catch (Exception ex){                        
+                    }
                     Map<String, Object> _args=null;
                     if ((_filename==null) && (executor instanceof ScriptProcessor)){
-                        _filename = ((ScriptProcessor)executor).getScript();
-                        _args = ((ScriptProcessor)executor).getArgs();
+                        try{
+                            _filename = ((ScriptProcessor)executor).getScript();
+                            _args = ((ScriptProcessor)executor).getArgs();
+                         } catch (Exception ex){  
+                            _filename = null;
+                        }
                     }
                     
                     if (executor instanceof Processor){
                         String home = ((Processor)executor).getHomePath();
-                        if ((home!=null) && (!home.isBlank())){
+                        if ((home!=null) && (!home.isBlank()) && (_filename!=null)){
                             if (IO.isSubPath(_filename, home)) {
                                 //If in script folder then use only relative
                                 _filename =  IO.getRelativePath(_filename, home);
