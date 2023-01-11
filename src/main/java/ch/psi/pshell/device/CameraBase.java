@@ -13,11 +13,11 @@ import ch.psi.utils.State;
  */
 public abstract class CameraBase extends DeviceBase implements Camera {
 
-    BidimentionalImageRegister matrix;
+    ImageMatrix matrix;
 
     public CameraBase(String name) {
         super(name);
-        matrix = new BidimentionalImageRegister(name + " image");
+        matrix = new ImageMatrix(name + " image");
     }
 
     @Override
@@ -118,9 +118,9 @@ public abstract class CameraBase extends DeviceBase implements Camera {
         return new CameraImageDescriptor(colorMode, dataType, width, height, stack);
     }
 
-    class BidimentionalImageRegister extends ReadonlyRegisterBase implements ReadonlyRegisterMatrix, ReadableCalibratedMatrix {
+    class ImageMatrix extends ReadonlyRegisterBase implements ReadonlyRegisterMatrix, ReadableCalibratedMatrix {
 
-        public BidimentionalImageRegister(String name) {
+        public ImageMatrix(String name) {
             super(name);
         }
 

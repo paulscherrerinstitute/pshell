@@ -1068,7 +1068,7 @@ Object run(script_name, args = null, locals = null) {
     /*
     Run script: can be absolute path, relative, or short name to be search in the path.
     Args:
-    args(Dict ot List): Sets Sys.argv (if list) or gobal variables(if dict) to the script.
+    args(Dict or List): Sets Sys.argv (if list) or gobal variables(if dict) to the script.
     locals(Dict): If not null sets the locals()for the runing script.
     If locals is used then script definitions will not go to global namespace.
      

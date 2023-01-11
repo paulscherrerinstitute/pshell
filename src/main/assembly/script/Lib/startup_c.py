@@ -930,7 +930,7 @@ def inject():
 def run(script_name, args = None, locals = None):
     """Run script: can be absolute path, relative, or short name to be search in the path.
     Args:
-        args(Dict ot List): Sets sys.argv (if list) or gobal variables(if dict) to the script.
+        args(Dict or List): Sets sys.argv (if list) or gobal variables(if dict) to the script.
         locals(Dict): If not none sets the locals()for the runing script.
                       If locals is used then script definitions will not go to global namespace.
 

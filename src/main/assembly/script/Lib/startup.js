@@ -1495,7 +1495,7 @@ function run(script_name, args) {
     /*
      Run script: can be absolute path, relative, or short name to be search in the path.
      Args:
-        args(Dict ot Array): gobal variables set to the script(if dict), or argv varialble (if array).
+        args(Dict or Array): gobal variables set to the script(if dict), or argv varialble (if array).
      
      Returns:
         The script return value
