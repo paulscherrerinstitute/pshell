@@ -430,7 +430,7 @@ public class Convert {
         if (data instanceof Integer) {
             return Convert.toUnsigned((int) data);
         }
-        if (data instanceof Integer) {
+        if (data instanceof Long) {
             return Convert.toUnsigned((long) data);
         }
         if (data instanceof byte[]) {
@@ -440,6 +440,9 @@ public class Convert {
             return Convert.toUnsigned((short[]) data);
         }
         if (data instanceof int[]) {
+            return Convert.toUnsigned((int[]) data);
+        }
+        if (data instanceof long[]) {
             return Convert.toUnsigned((int[]) data);
         }
         if (data instanceof byte[][]) {
@@ -473,6 +476,46 @@ public class Convert {
         return data;
     }
 
+    public static Class getUnsignedClass(Class cls) {
+        if (cls == Byte.class) {
+            return Short.class;
+        }
+        if (cls == Short.class) {
+            return Integer.class;
+        }
+        if (cls == Integer.class) {
+            return Long.class;
+        }
+        if (cls == Long.class) {
+            return BigInteger.class;
+        }
+        if (cls == byte[].class) {            
+            return short[].class;
+        }
+        if (cls == short[].class) {            
+            return int[].class;
+        }
+        if (cls == int[].class) {            
+            return long[].class;
+        }
+        if (cls == long[].class) {            
+            return BigInteger[].class;
+        }
+        if (cls == byte[][].class) {            
+            return short[][].class;
+        }
+        if (cls == short[][].class) {            
+            return int[][].class;
+        }
+        if (cls == int[][].class) {            
+            return long[][].class;
+        }
+        if (cls == long[][].class) {            
+            return BigInteger[][].class;
+        }        
+        return cls;
+    }
+    
     //"Casting"
     public static Object cast(byte[] array, Class type) {
         return cast(array, type, ByteOrder.nativeOrder());

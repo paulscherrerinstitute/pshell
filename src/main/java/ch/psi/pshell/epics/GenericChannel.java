@@ -5,6 +5,7 @@ import ch.psi.pshell.device.Device;
 import static ch.psi.pshell.device.Record.UNDEFINED_PRECISION;
 import ch.psi.pshell.device.Register;
 import ch.psi.pshell.device.RegisterBase;
+import ch.psi.utils.Convert;
 import ch.psi.utils.State;
 import java.io.IOException;
 import java.util.logging.Level;
@@ -21,7 +22,9 @@ public class GenericChannel extends RegisterBase {
     final InvalidValueAction invalidAction;
     Register register;
     Class type;
+    boolean unsigned;
     boolean autoResolveType = true;    
+    boolean promoteUnsigned = false;    
     int size=1;
     Object defaultValue;
 
@@ -67,14 +70,39 @@ public class GenericChannel extends RegisterBase {
     public void setAutoResolveType(boolean value) {
         autoResolveType = value;
     }
+    
+    public boolean getPromoteUnsigned() {
+        return promoteUnsigned;
+    }
+
+    public void setPromoteUnsigned(boolean value) {
+        if (promoteUnsigned != value){
+            promoteUnsigned = value;
+            if (register != null) {
+                ((EpicsRegister)register).setElementUnsigned(promoteUnsigned ? null : unsigned);
+            }
+        }
+    }    
+
+    public boolean isUnsigned() {
+        return unsigned;
+    }    
+
+    public Class getType() {
+        return type;
+    }    
 
     public void setType(Class type) throws IOException, InterruptedException {
+        setType(type, null);
+    }
+    
+    public void setType(Class type, Boolean unsigned) throws IOException, InterruptedException {
         if ((type != null) && (type != this.type)) {
             boolean initialized = isInitialized();
             closeRegister();
             String name = getName() + " channel";
-            setRegister(Epics.newChannelDevice(name, channelName, type, timestamped, UNDEFINED_PRECISION, SIZE_MAX, invalidAction));
-            if (initialized) {
+            setRegister(Epics.newChannelDevice(name, channelName, type, timestamped, UNDEFINED_PRECISION, SIZE_MAX, invalidAction), unsigned);
+            if (initialized) {                
                 register.initialize();
             }
             if (register instanceof RegisterArray){
@@ -82,6 +110,8 @@ public class GenericChannel extends RegisterBase {
             }
         }
     }
+    
+    
     public void resolveType() throws IOException, InterruptedException {
         try {
             Object val = isSimulated() ?  defaultValue : Epics.get(channelName, null, 1);
@@ -134,18 +164,27 @@ public class GenericChannel extends RegisterBase {
         }
     }
 
-    void setRegister(EpicsRegister register) throws IOException, IOException, InterruptedException {
+    void setRegister(EpicsRegister register, Boolean unsigned) throws IOException, IOException, InterruptedException {
         if (isSimulated()) {
             register.setSimulated();
         }
-        this.register = register;
-        this.type = register.getType();
+        this.unsigned=unsigned;
+        if (unsigned){
+            if (!promoteUnsigned){
+                register.setElementUnsigned(unsigned);
+            }
+        } 
+        this.register = register;        
+        this.type = register.getType();                
         this.setChildren(new Device[]{register});
     }
 
     @Override
     protected void onChildValueChange(Device child, Object value, Object former) {
         if (child == register) {
+            if (promoteUnsigned && unsigned){
+                value = Convert.toUnsigned(value);
+            }                    
             setCache(value);
         }
     }
@@ -167,7 +206,10 @@ public class GenericChannel extends RegisterBase {
     @Override
     protected Object doRead() throws IOException, InterruptedException {
         assertTypeSet();
-        return register.read();
+        if (this.register != null) {
+            register.update();
+        }
+        return take();
     }
 
     @Override
@@ -181,4 +223,25 @@ public class GenericChannel extends RegisterBase {
             throw new IOException("Type not set");
         }        
     }
+    
+    @Override
+    public Class getElementType() {
+        if (register != null) {
+            Class ret =  register.getElementType();
+            if (promoteUnsigned && unsigned){
+                ret = Convert.getUnsignedClass(ret);
+            }                    
+            return ret;
+        }
+        return super.getElementType();
+    }
+
+    @Override
+    public Boolean isElementUnsigned() {
+        if (register != null) {
+            return register.isElementUnsigned();
+        }
+        return super.isElementUnsigned();
+    }
+    
 }

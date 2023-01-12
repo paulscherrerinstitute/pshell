@@ -533,6 +533,15 @@ public class PlotPanel extends MonitoredPanel {
                     } else if (val instanceof Boolean) {
                         val = ((Boolean) val) ? 1.0 : 0.0;
                     }
+                    
+                    try{
+                        if (Boolean.TRUE.equals(scan.getReadables()[readableIndex].isElementUnsigned())){
+                            val = Convert.toUnsigned(val);
+                        }
+                    } catch (Exception ex) {
+                        Logger.getLogger(PlotPanel.class.getName()).log(Level.WARNING, null, ex);
+                    }
+                        
                     if (scan.getDimensions() == 3) {
                         if (val instanceof Number) {
                             if (plot instanceof MatrixPlotBase) {
