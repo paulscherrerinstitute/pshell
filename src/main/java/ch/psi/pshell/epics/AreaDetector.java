@@ -78,7 +78,7 @@ public class AreaDetector extends CameraBase {
                         if (isSimulated()){
                             setSimulationData(type);
                         } else {
-                            data.setType(type.getArrayType());
+                            data.setType(type.getArrayType(), type.isUnsigned());
                         }
                     }
                     data.setSize(desc.getTotalSize());
@@ -93,6 +93,14 @@ public class AreaDetector extends CameraBase {
         colorMode.addListener(imageFormatListener);
         dataType.addListener(imageFormatListener);
     }
+    
+    public boolean getPromoteUnsigned() {
+        return data.getPromoteUnsigned();
+    }
+
+    public void setPromoteUnsigned(boolean value) {
+        data.setPromoteUnsigned(value);
+    }        
 
     @Override
     protected void doSetSimulated() {
@@ -133,7 +141,7 @@ public class AreaDetector extends CameraBase {
             int width = sizeX.take();
             int height = sizeY.take();
             
-            data.setType(type.getArrayType());
+            data.setType(type.getArrayType(), type.isUnsigned());
             int arraySize = width * height;
             data.setSize(arraySize);
             Object array = Array.newInstance(type.getElementType(), arraySize);

@@ -138,8 +138,8 @@ public abstract class CameraBase extends DeviceBase implements Camera {
         protected Object doRead() throws IOException, InterruptedException {
             CameraBase.this.update();
             ReadonlyRegisterArray dataArray = getDataArray();
-            if (dataArray != null) {
-                getDataArray().update();
+            if ( dataArray != null) {
+                dataArray.update();
             }
             return take();
         }
@@ -161,6 +161,24 @@ public abstract class CameraBase extends DeviceBase implements Camera {
             }
             return desc.height;
         }
+        
+        @Override
+        public Boolean isElementUnsigned() {
+            ReadonlyRegisterArray dataArray = getDataArray();
+            if ( dataArray != null) {
+                return dataArray.isElementUnsigned();
+            }
+            return super.isElementUnsigned();
+        }  
+        
+        @Override
+        public Class getElementType() {
+            ReadonlyRegisterArray dataArray = getDataArray();
+            if ( dataArray != null) {
+                return dataArray.getElementType();
+            }
+            return super.getElementType();
+        }          
 
         @Override
         public MatrixCalibration getCalibration() {

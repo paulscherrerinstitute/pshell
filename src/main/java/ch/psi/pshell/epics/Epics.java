@@ -355,6 +355,14 @@ public class Epics {
         }
         throw new RuntimeException("Invalid channel type");
     }
+    
+    public static EpicsRegister newChannelDevice(String name, String channelName, Class type, boolean timestamped, int precision, int size, InvalidValueAction invalidAction, boolean unsigned) {
+        EpicsRegister ret = newChannelDevice(name, channelName, type, timestamped, precision, size, invalidAction);
+        if (ret!=null){
+            ret.setElementUnsigned(unsigned);
+        }
+        return ret;
+    }
 
     public static Class getChannelType(String typeId) throws ClassNotFoundException {
         if (typeId == null) {

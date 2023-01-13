@@ -1,6 +1,5 @@
 package ch.psi.pshell.imaging;
 
-import ch.psi.pshell.device.GenericDevice;
 import ch.psi.pshell.device.GenericDeviceBase;
 import ch.psi.pshell.device.Readable.ReadableMatrix;
 import ch.psi.pshell.device.ReadonlyAsyncRegisterBase;

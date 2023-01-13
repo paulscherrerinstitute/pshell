@@ -109,5 +109,4 @@ public abstract class ScriptProcessor extends PanelProcessor {
         }
     }       
 
-    
 }
