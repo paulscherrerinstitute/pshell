@@ -541,6 +541,9 @@
               <Properties>
                 <Property name="text" type="java.lang.String" value="Lazy table creation (after reception of first record)"/>
               </Properties>
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="ckAutoSaveActionPerformed"/>
+              </Events>
             </Component>
           </SubComponents>
         </Container>

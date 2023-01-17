@@ -711,6 +711,11 @@ public class DataFileDialog extends StandardDialog {
         });
 
         ckScanLazy.setText("Lazy table creation (after reception of first record)");
+        ckScanLazy.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                ckAutoSaveActionPerformed(evt);
+            }
+        });
 
         javax.swing.GroupLayout jPanel4Layout = new javax.swing.GroupLayout(jPanel4);
         jPanel4.setLayout(jPanel4Layout);
