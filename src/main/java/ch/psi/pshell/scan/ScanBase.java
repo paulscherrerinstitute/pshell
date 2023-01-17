@@ -825,6 +825,7 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
         if (!isLazy()){
             triggerStarted();
         } else {
+            /*
             if (context != null) {
                 //Clear plots and table if lazy table creation
                 try{
@@ -835,8 +836,9 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
                     }                                                    
                 } catch (Exception ex){
                     logger.log(Level.FINER, null, ex);
-                }
+                }  
             }
+            */
         }
     }
 
