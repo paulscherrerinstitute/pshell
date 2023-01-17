@@ -31,6 +31,8 @@ import ch.psi.utils.NumberComparator as NumberComparator
 import ch.psi.utils.BufferConverter as BufferConverter
 import ch.psi.utils.Type as Type
 
+import ch.psi.utils.swing.SwingUtils as SwingUtils
+
 import ch.psi.pshell.core.CommandSource as CommandSource
 import ch.psi.pshell.core.ContextAdapter as ContextListener
 import ch.psi.pshell.core.Context
