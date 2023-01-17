@@ -681,6 +681,10 @@ class EpicsCmdAPI(RegisterBase, RegisterArray):
                 cmd = str(val[0])
             else:
                 cmd = list_to_string(val)
+            if len(cmd)>1:            
+                #Remove trailing 0               
+                if ord(cmd[-1])==0:
+                    cmd=cmd[0:-1]
             if self.debug:            
                 print "WRITE: ", cmd
             class eval_callback(BiFunction):
