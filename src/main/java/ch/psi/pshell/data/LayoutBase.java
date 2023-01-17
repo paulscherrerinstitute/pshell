@@ -165,8 +165,11 @@ public abstract class LayoutBase implements Layout {
     
     @Override
     public void onFinish(Scan scan) throws IOException {
-        setEndTimestampAttibute(scan);
-        resetScanPath(scan);
+        try{
+            setEndTimestampAttibute(scan);
+        } finally{
+            resetScanPath(scan);
+        }
     }    
 
     //Set common attributes as expected by DataManager (can be ommited).

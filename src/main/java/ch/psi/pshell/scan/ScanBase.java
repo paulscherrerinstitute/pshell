@@ -20,12 +20,14 @@ import java.io.IOException;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import jep.NDArray;
+import org.apache.commons.lang3.tuple.ImmutablePair;
 
 /**
  *
@@ -404,16 +406,33 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
     }
     
     
-    DeviceListener monitorListener = new DeviceAdapter() {
+    final DeviceListener monitorListener = new DeviceAdapter() {
         @Override
         public void onCacheChanged(Device device, Object value, Object former, long timestamp, boolean valueChange) {
+            if (isLazy() && !triggeredStart){
+                synchronized(monitorListener){
+                    if (monitorBuffer!=null){
+                        monitorBuffer.get(device).add(new ImmutablePair(value, timestamp));                        ;
+                    } 
+                    return;
+                }
+            }
             triggerMonitor(device, value, timestamp);
         }
     };
     
     
+    Map<Device,List<ImmutablePair<Object, Long>>> monitorBuffer;
     protected void startMonitor(Device dev){
         dev.addListener(monitorListener);
+        if (isLazy()){
+            synchronized(monitorListener){
+                if (monitorBuffer==null){
+                    monitorBuffer = new HashMap<>();
+                }
+                monitorBuffer.put(dev, new ArrayList<>());
+            }
+        }
     }
     
     protected void stopMonitor(Device dev){
@@ -824,47 +843,38 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
         aborted = false;
         if (!isLazy()){
             triggerStarted();
-        } else {
-            /*
-            if (context != null) {
-                //Clear plots and table if lazy table creation
-                try{
-                    if (context.getExecutionPars().isScanDisplayed(this)){
-                        if (App.getInstance().getMainFrame()!=null){                            
-                            App.getInstance().getMainFrame().clearScanDisplays();                  
-                        }
-                    }                                                    
-                } catch (Exception ex){
-                    logger.log(Level.FINER, null, ex);
-                }  
-            }
-            */
         }
     }
 
-    protected void triggerStarted() {
-        for (ScanListener listener : getListeners()) {
-            try{
-                listener.onScanStarted(ScanBase.this, plotTitle);
-            } catch (Exception ex){
-                logger.log(Level.WARNING, null, ex);
-            }
-        }
-        Context context = Context.getInstance();
-        //Called later to let DataManager initialize storage before reading the scan path
-        if (context != null) {
-            final ExecutionParameters execPars = context.getExecutionPars();
-            synchronized (execPars) {
-                String scanRoot = execPars.getPath();
-                if (IO.isSubPath(scanRoot, context.getSetup().getDataPath())) {
-                    scanRoot = IO.getRelativePath(scanRoot, context.getSetup().getDataPath());
-                }
-                scanPath = scanRoot + " | " + context.getDataManager().getScanPath(this);
-                if (execPars.isScanPersisted(this)) {
-                    dataLayout = (execPars.getDataLayout() != null) ? execPars.getDataLayout() : context.getDataManager().getLayout();
-                    dataProvider = (execPars.getDataProvider() != null) ? execPars.getDataProvider() : context.getDataManager().getProvider();
+    boolean triggeredStart;
+    protected void triggerStarted() {        
+        try{
+            for (ScanListener listener : getListeners()) {
+                try{
+                    listener.onScanStarted(ScanBase.this, plotTitle);
+                } catch (Exception ex){
+                    logger.log(Level.WARNING, null, ex);
                 }
             }
+
+            Context context = Context.getInstance();
+            //Called later to let DataManager initialize storage before reading the scan path
+            if (context != null) {
+                final ExecutionParameters execPars = context.getExecutionPars();
+                synchronized (execPars) {
+                    String scanRoot = execPars.getPath();
+                    if (IO.isSubPath(scanRoot, context.getSetup().getDataPath())) {
+                        scanRoot = IO.getRelativePath(scanRoot, context.getSetup().getDataPath());
+                    }
+                    scanPath = scanRoot + " | " + context.getDataManager().getScanPath(this);
+                    if (execPars.isScanPersisted(this)) {
+                        dataLayout = (execPars.getDataLayout() != null) ? execPars.getDataLayout() : context.getDataManager().getLayout();
+                        dataProvider = (execPars.getDataProvider() != null) ? execPars.getDataProvider() : context.getDataManager().getProvider();
+                    }
+                }
+            }
+        } finally {
+            triggeredStart = true;
         }
     }
 
@@ -885,8 +895,18 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
         }
         
         if (isLazy()){
-            if (currentRecord==null){
+            if (triggeredStart==false){
                 triggerStarted();
+                synchronized(monitorListener){
+                    if (monitorBuffer!=null){
+                        for (Device dev : monitorBuffer.keySet()){
+                            for (ImmutablePair<Object, Long> pair : monitorBuffer.get(dev)){
+                                triggerMonitor(dev, pair.left, pair.right);                                
+                            }
+                        }
+                    }                
+                    monitorBuffer = null;
+                }
             }
         }        
         
@@ -903,24 +923,28 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
         }
         currentRecord.sent = true;
     }
-    
+        
     protected void triggerMonitor(Device dev, Object value, long timestamp) {
-        for (ScanListener listener : getListeners()) {
-            try {
-                listener.onMonitor(ScanBase.this, dev, value, timestamp);
-            } catch (Exception ex) {
-                logger.log(Level.WARNING, null, ex);
+        if (triggeredStart){
+            for (ScanListener listener : getListeners()) {
+                try {
+                    listener.onMonitor(ScanBase.this, dev, value, timestamp);
+                } catch (Exception ex) {
+                    logger.log(Level.WARNING, null, ex);
+                }
             }
         }
     }    
 
     protected void triggerEnded(Exception ex) {
         result.completed = true;
-        for (ScanListener listener : getListeners()) {
-            try{
-                listener.onScanEnded(ScanBase.this, ex);
-            } catch (Exception e){
-                logger.log(Level.WARNING, null, e);
+        if (triggeredStart){
+            for (ScanListener listener : getListeners()) {
+                try{
+                    listener.onScanEnded(ScanBase.this, ex);
+                } catch (Exception e){
+                    logger.log(Level.WARNING, null, e);
+                }
             }
         }
     }

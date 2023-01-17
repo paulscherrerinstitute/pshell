@@ -510,6 +510,7 @@ public class DataManager implements AutoCloseable {
                     getLayout().onFinish(scan);
                     appendLog(String.format("Scan %s ended", getScanIndex(scan)));
                 } catch (Exception e) {
+                    //Does not log if scan didn't triggered
                     logger.log(Level.WARNING, null, e);
                 }
             }
@@ -694,7 +695,11 @@ public class DataManager implements AutoCloseable {
         }
         if (isOpen() && (getExecutionPars().isScanPersisted(scan))) {
             int index = getScanIndex(scan);
-            getLayout().onFinish(scan);            
+            try {
+                getLayout().onFinish(scan);
+            } catch (Exception e) {
+                logger.log(Level.WARNING, null, e);
+            }                        
             getExecutionPars().addScan(scan);
             ScanRecord rec = scan.getCurrentRecord();
             if (rec!=null){
