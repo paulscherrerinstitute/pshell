@@ -219,7 +219,7 @@ public class ManualScan extends DiscreteScan {
         recordIndex = 0;
         result = newResult();
         openDevices();
-        triggerStarted();
+        initialize();
         if(getInitialMove()){
             moveToStart();
         }

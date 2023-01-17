@@ -40,6 +40,7 @@ public class Configuration extends Config {
     public boolean dataScanSaveOutput = false;
     public boolean dataScanSaveScript = false;
     public boolean dataScanSaveSetpoints = false;
+    public boolean dataScanLazyTableCreation = false;
     public DataTransferMode dataTransferMode = DataTransferMode.Off;
     public String dataTransferPath = "";
     public String dataTransferUser = "";

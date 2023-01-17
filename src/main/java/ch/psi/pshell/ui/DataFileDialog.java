@@ -164,6 +164,7 @@ public class DataFileDialog extends StandardDialog {
                 || (ckSaveConsole.isSelected() != config.dataScanSaveOutput)
                 || (ckSaveScript.isSelected() != config.dataScanSaveScript)
                 || (ckSaveSetpoints.isSelected() != config.dataScanSaveSetpoints)
+                || (ckScanLazy.isSelected() != config.dataScanLazyTableCreation)
                 || (ckXscanUsesFDASerialization.isSelected() != config.fdaSerialization)
                 || (ckConvert.isSelected() == config.dataScanPreserveTypes);
 
@@ -236,6 +237,7 @@ public class DataFileDialog extends StandardDialog {
         ckConvert.setSelected(!config.dataScanPreserveTypes);
         ckFlush.setSelected(config.dataScanFlushRecords);
         ckKeep.setSelected(!config.dataScanReleaseRecords);
+        ckScanLazy.setSelected(config.dataScanLazyTableCreation);
         ckSaveConsole.setSelected(config.dataScanSaveOutput);
         ckSaveScript.setSelected(config.dataScanSaveScript);
         ckSaveSetpoints.setSelected(config.dataScanSaveSetpoints);
@@ -361,6 +363,7 @@ public class DataFileDialog extends StandardDialog {
         ckSaveSetpoints = new javax.swing.JCheckBox();
         ckSaveScript = new javax.swing.JCheckBox();
         ckXscanUsesFDASerialization = new javax.swing.JCheckBox();
+        ckScanLazy = new javax.swing.JCheckBox();
         jPanel5 = new javax.swing.JPanel();
         jLabel18 = new javax.swing.JLabel();
         textTransferPath = new javax.swing.JTextField();
@@ -619,7 +622,7 @@ public class DataFileDialog extends StandardDialog {
         jPanel3Layout.setVerticalGroup(
             jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel3Layout.createSequentialGroup()
-                .addContainerGap()
+                .addGap(16, 16, 16)
                 .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.CENTER)
                     .addComponent(jLabel3)
                     .addComponent(comboProvider, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
@@ -707,6 +710,8 @@ public class DataFileDialog extends StandardDialog {
             }
         });
 
+        ckScanLazy.setText("Lazy table creation (after reception of first record)");
+
         javax.swing.GroupLayout jPanel4Layout = new javax.swing.GroupLayout(jPanel4);
         jPanel4.setLayout(jPanel4Layout);
         jPanel4Layout.setHorizontalGroup(
@@ -721,7 +726,8 @@ public class DataFileDialog extends StandardDialog {
                     .addComponent(ckFlush)
                     .addComponent(ckSaveSetpoints)
                     .addComponent(ckAutoSave)
-                    .addComponent(ckXscanUsesFDASerialization))
+                    .addComponent(ckXscanUsesFDASerialization)
+                    .addComponent(ckScanLazy))
                 .addContainerGap(26, Short.MAX_VALUE))
         );
         jPanel4Layout.setVerticalGroup(
@@ -743,6 +749,8 @@ public class DataFileDialog extends StandardDialog {
                 .addComponent(ckSaveSetpoints)
                 .addGap(0, 0, 0)
                 .addComponent(ckXscanUsesFDASerialization)
+                .addGap(0, 0, 0)
+                .addComponent(ckScanLazy)
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
@@ -942,7 +950,7 @@ public class DataFileDialog extends StandardDialog {
                 .addGroup(jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel15)
                     .addComponent(textTasks, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap(78, Short.MAX_VALUE))
+                .addContainerGap(96, Short.MAX_VALUE))
         );
 
         jTabbedPane1.addTab("Notification", jPanel6);
@@ -1009,6 +1017,7 @@ public class DataFileDialog extends StandardDialog {
                 config.dataScanPreserveTypes = !ckConvert.isSelected();
                 config.dataScanFlushRecords = ckFlush.isSelected();
                 config.dataScanReleaseRecords = !ckKeep.isSelected();
+                config.dataScanLazyTableCreation = ckScanLazy.isSelected();
                 config.dataScanSaveOutput = ckSaveConsole.isSelected();
                 config.dataScanSaveScript = ckSaveScript.isSelected();
                 config.dataScanSaveSetpoints = ckSaveSetpoints.isSelected();
@@ -1200,6 +1209,7 @@ public class DataFileDialog extends StandardDialog {
     private javax.swing.JCheckBox ckSaveConsole;
     private javax.swing.JCheckBox ckSaveScript;
     private javax.swing.JCheckBox ckSaveSetpoints;
+    private javax.swing.JCheckBox ckScanLazy;
     private javax.swing.JCheckBox ckXscanUsesFDASerialization;
     private javax.swing.JComboBox<String> comboLayout;
     private javax.swing.JComboBox<String> comboNotification;

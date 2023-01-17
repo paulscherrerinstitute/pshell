@@ -78,6 +78,7 @@ public class AreaDetector extends CameraBase {
                         if (isSimulated()){
                             setSimulationData(type);
                         } else {
+                            getLogger().log(Level.FINE, "Setting data type: " + type.getArrayType() + " unsigned: " + type.isUnsigned());
                             data.setType(type.getArrayType(), type.isUnsigned());
                         }
                     }

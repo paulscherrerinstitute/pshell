@@ -78,9 +78,9 @@ public class GenericChannel extends RegisterBase {
     public void setPromoteUnsigned(boolean value) {
         if (promoteUnsigned != value){
             promoteUnsigned = value;
-            if (register != null) {
-                ((EpicsRegister)register).setElementUnsigned(promoteUnsigned ? null : unsigned);
-            }
+            //if (register != null) {
+            //    ((EpicsRegister)register).setElementUnsigned(promoteUnsigned ? null : unsigned);
+            //}
         }
     }    
 
@@ -97,7 +97,7 @@ public class GenericChannel extends RegisterBase {
     }
     
     public void setType(Class type, Boolean unsigned) throws IOException, InterruptedException {
-        if ((type != null) && (type != this.type)) {
+        if ((type != null) && ((type != this.type) || (unsigned != this.unsigned))) {
             boolean initialized = isInitialized();
             closeRegister();
             String name = getName() + " channel";
@@ -168,14 +168,10 @@ public class GenericChannel extends RegisterBase {
         if (isSimulated()) {
             register.setSimulated();
         }
-        this.unsigned=unsigned;
-        if (unsigned){
-            if (!promoteUnsigned){
-                register.setElementUnsigned(unsigned);
-            }
-        } 
+        register.setElementUnsigned(unsigned);
+        this.unsigned=unsigned;        
         this.register = register;        
-        this.type = register.getType();                
+        this.type = register.getType();                        
         this.setChildren(new Device[]{register});
     }
 

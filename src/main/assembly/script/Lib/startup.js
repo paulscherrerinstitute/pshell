@@ -1242,6 +1242,8 @@ function set_exec_pars(args){
         flush(bool): Overrides the configuration option to flush file on each record.
         keep(bool): Overrides the configuration option to release scan records.
                                     If false disable accumulation of scan records to scan result.
+        lazy(bool): Change option for lazy table creation. 
+                                    If true create tables only after first record is received.
         preserve(bool): Overrides the configuration option to preserve device types.
                                   If false all values are converted to double.
         compression(obj): True for enabling default compression, int for specifying deflation level.                                    

@@ -154,6 +154,11 @@ public interface Scan {
      */
     public boolean getKeep();
     
+    /**
+     * If true the start scan event waits the reception of first record
+     */
+    public boolean isLazy();        
+    
     public Thread getThread();
     
     public void setPlotTitle(String plotTitle);

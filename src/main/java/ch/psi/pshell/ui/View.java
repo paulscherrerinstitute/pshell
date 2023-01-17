@@ -139,6 +139,7 @@ import ch.psi.pshell.swing.MetadataEditor;
 import ch.psi.pshell.swing.MotorPanel;
 import ch.psi.pshell.swing.RepositoryChangesDialog;
 import ch.psi.pshell.swing.NextStagesPanel;
+import ch.psi.pshell.swing.ScanPanel;
 import ch.psi.utils.Config;
 import ch.psi.utils.Sys;
 import ch.psi.utils.Sys.OSFamily;
@@ -1019,6 +1020,19 @@ public class View extends MainFrame {
                 sb.append((char) b);
             }
         }
+    }
+    
+    public void clearScanDisplays(){
+        if (!isScanPlotDisabled()){
+            getPlotPanel(null).clear();                                
+        }
+        if (!isScanTableDisabled()){
+            getScanPanel().clear();
+        }                                
+    }
+    
+    public ScanPanel getScanPanel(){
+        return scanPanel;
     }
 
     public PlotPanel getPlotPanel(String plotTitle) {

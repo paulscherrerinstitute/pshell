@@ -1844,6 +1844,7 @@ def set_exec_pars(**args):
         save(bool): Change option to auto save scan data.
         flush(bool): Change option to flush file on each record.
         keep(bool): Change option keep scan records in memory. If false do not add records to scan result.
+        lazy(bool): Change option for lazy table creation. If true create tables only after first record is received.
         preserve(bool): Change option to preserve device types. If false all values are converted to double.
         setpoints(bool): Save the positioner setpoints too.
         verbose(bool): Enable options to save additional information (output, script).

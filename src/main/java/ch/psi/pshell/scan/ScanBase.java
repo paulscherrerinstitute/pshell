@@ -12,6 +12,8 @@ import ch.psi.pshell.data.Provider;
 import ch.psi.pshell.device.*;
 import ch.psi.pshell.device.Readable;
 import ch.psi.pshell.scripting.JepUtils;
+import ch.psi.pshell.swing.PlotPanel;
+import ch.psi.pshell.ui.App;
 import ch.psi.utils.*;
 
 import java.io.IOException;
@@ -61,6 +63,7 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
     String tag;
     int pass = 1;
     boolean keep;
+    boolean lazy;
     String name = "Scan";
     Layout dataLayout;
     Provider dataProvider;
@@ -472,7 +475,7 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
                 if (relative) {
                     readInitialPosition();
                 }            
-                triggerStarted();
+                initialize();
                 if(getInitialMove()){
                     moveToStart();
                 }
@@ -793,8 +796,8 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
         val = Context.getInstance().getSetup().expandPath((val == null) ? Context.getInstance().getScanTag() : val);
         tag = val;
     }
-
-    protected void triggerStarted() {
+    
+    protected void initialize() {
         startTimestamp = System.currentTimeMillis();
         Context context = Context.getInstance();
         if (context != null) {
@@ -813,11 +816,31 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
                 name = execPars.toString();
                 scanIndex = execPars.getIndex(this);
                 keep = execPars.getKeep();
+                lazy = execPars.getLazy();
             }
         }
 
         executionThread = Thread.currentThread();
         aborted = false;
+        if (!isLazy()){
+            triggerStarted();
+        } else {
+            if (context != null) {
+                //Clear plots and table if lazy table creation
+                try{
+                    if (context.getExecutionPars().isScanDisplayed(this)){
+                        if (App.getInstance().getMainFrame()!=null){                            
+                            App.getInstance().getMainFrame().clearScanDisplays();                  
+                        }
+                    }                                                    
+                } catch (Exception ex){
+                    logger.log(Level.FINER, null, ex);
+                }
+            }
+        }
+    }
+
+    protected void triggerStarted() {
         for (ScanListener listener : getListeners()) {
             try{
                 listener.onScanStarted(ScanBase.this, plotTitle);
@@ -825,6 +848,7 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
                 logger.log(Level.WARNING, null, ex);
             }
         }
+        Context context = Context.getInstance();
         //Called later to let DataManager initialize storage before reading the scan path
         if (context != null) {
             final ExecutionParameters execPars = context.getExecutionPars();
@@ -857,10 +881,17 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
                 }
             } 
         }
+        
+        if (isLazy()){
+            if (currentRecord==null){
+                triggerStarted();
+            }
+        }        
+        
         if (keep) {
             result.records.add(record);
         }
-        currentRecord = record;
+        currentRecord = record;        
         for (ScanListener listener : getListeners()) {
             try {
                 listener.onNewRecord(ScanBase.this, record);
@@ -966,6 +997,11 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
         }
         return null;    
     }
+    
+    @Override
+    public boolean isLazy() {
+        return lazy;
+    }    
 
     @Override
     public boolean getKeep() {

@@ -26,7 +26,7 @@ public class ExecutionParameters {
     static final Logger logger = Logger.getLogger(ExecutionParameters.class.getName());
 
     final String[] executionOptions = new String[]{"defaults", "group", "open", "reset", "name", "type", "path", "tag", "seq", "split",
-        "layout", "provider", "format", "save", "persist", "flush", "preserve", "keep", "accumulate", "setpoints", "verbose",
+        "layout", "provider", "format", "save", "persist", "flush", "preserve", "keep", "lazy", "accumulate", "setpoints", "verbose",
         "depth_dim", "compression", "shuffle", "contiguous", "then", "then_exception", "then_success"};
 
     final String[] viewOptions = new String[]{"plot_disabled", "table_disabled", "enabled_plots", "plot_layout",
@@ -592,6 +592,11 @@ public class ExecutionParameters {
         return (option != null) ? (Boolean) option : !Context.getInstance().getConfig().dataScanReleaseRecords;
     }
 
+    public Boolean getLazy() {
+        Object option = getOption("lazy");
+        return (option != null) ? (Boolean) option : Context.getInstance().getConfig().dataScanLazyTableCreation;
+    }
+    
     public Boolean getSaveSetpoints() {
         Object option = getOption("setpoints");
         return (option != null) ? (Boolean) option : Context.getInstance().getConfig().dataScanSaveSetpoints;
