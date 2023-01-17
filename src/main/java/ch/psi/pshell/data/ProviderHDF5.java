@@ -1126,7 +1126,6 @@ public class ProviderHDF5 implements Provider {
         setAttribute(path, INFO_FIELD_TYPES, typesNames, String[].class, false);
         setAttribute(path, INFO_FIELD_LENGTHS, lengths, int[].class, false);
         setAttribute(path, INFO_FIELDS, names.length, Integer.class, false);
-        flush();
     }
 
     @Override
