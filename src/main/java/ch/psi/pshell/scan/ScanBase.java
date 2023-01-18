@@ -57,6 +57,7 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
     boolean canPause=true;
     
     String plotTitle;
+    boolean plottingActive;
     boolean hidden;
     boolean splitPasses;
     
@@ -269,6 +270,16 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
     public String getPlotTitle(){
         return plotTitle;
     }
+        
+    @Override
+    public boolean isPlottingActive(){
+        return plottingActive;
+    }
+   
+    @Override
+    public  void setPlottingActive(boolean value){
+        plottingActive=value;
+    }   
     
     @Override
     public void setHidden(boolean value){
@@ -1469,7 +1480,7 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
         return (getEndTimestamp() != 0)
                 || ((result != null) && (result.completed))
                 || ((executionThread != null) && (!executionThread.isAlive())); //For derived classes that re-implement start() 
-    }
+    } 
 
     @Override
     public String getDescription() {
@@ -1623,5 +1634,5 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
 
     public static void setScansUseWritableReadback(boolean value) {
         scansUseWritableReadback = value;
-    }       
+    }              
 }

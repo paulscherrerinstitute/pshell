@@ -756,27 +756,9 @@ public class View extends MainFrame {
     @Override
     protected void onOpen() {
         context.addScanListener(new ScanListener() {
-            boolean plottingActive;
-
             @Override
             public void onScanStarted(Scan scan, final String plotTitle) {
-                synchronized (plotTitles) {
-                    plotTitles.put(scan, plotTitle);
-                    if (!context.getExecutionPars().isScanDisplayed(scan)){
-                        return;
-                    }
-                    PlotPanel plottingPanel = getPlotPanel(plotTitles.get(scan));
-                    plottingActive = !isScanPlotDisabled();
-                    plottingPanel.setPreferences(context.getPlotPreferences());
-                    if (plottingActive) {
-                        plottingPanel.triggerScanStarted(scan, plotTitle);
-                        if (plottingPanel.isDisplayable() && SwingUtils.containsComponent(tabPlots, plottingPanel)) {
-                            SwingUtilities.invokeLater(() -> {
-                                tabPlots.setSelectedComponent(plottingPanel);
-                            });
-                        }
-                    }
-                }
+                startScanPlot(scan, plotTitle);
                 updateButtons();
             }
 
@@ -785,9 +767,9 @@ public class View extends MainFrame {
                 PlotPanel plottingPanel = null;
                 synchronized (plotTitles) {
                     plottingPanel = getPlotPanel(plotTitles.get(scan), false);
-                }
-                if (plottingActive) {
-                    if (plottingPanel != null) {
+                }                
+                if (plottingPanel != null) {
+                    if (scan.isPlottingActive()) {
                         plottingPanel.triggerOnNewRecord(scan, record);
                     }
                 }
@@ -800,7 +782,7 @@ public class View extends MainFrame {
                     plottingPanel = getPlotPanel(plotTitles.get(scan), false);
                     plotTitles.remove(scan);
                 }
-                if (plottingActive) {
+                if (scan.isPlottingActive()) {
                     if (plottingPanel != null) {
                         plottingPanel.triggerScanEnded(scan, ex);
                     }
@@ -1022,15 +1004,37 @@ public class View extends MainFrame {
         }
     }
     
-    public void clearScanDisplays(){
-        if (!isScanPlotDisabled()){
-            getPlotPanel(null).clear();                                
-        }
-        if (!isScanTableDisabled()){
-            getScanPanel().clear();
-        }                                
+    public void startScanPlot(Scan scan, String title){
+        synchronized (plotTitles) {
+            plotTitles.put(scan, title);
+            if (!context.getExecutionPars().isScanDisplayed(scan)){
+                return;
+            }
+            PlotPanel plottingPanel = getPlotPanel(plotTitles.get(scan));
+            scan.setPlottingActive(!isScanPlotDisabled());
+            plottingPanel.setPreferences(context.getPlotPreferences());
+            if (scan.isPlottingActive()) {
+                plottingPanel.triggerScanStarted(scan, title);
+                if (plottingPanel.isDisplayable() && SwingUtils.containsComponent(tabPlots, plottingPanel)) {
+                    SwingUtilities.invokeLater(() -> {
+                        tabPlots.setSelectedComponent(plottingPanel);
+                    });
+                }
+            }
+        }  
+        updateButtons();
     }
-    
+        
+    public void clearScanDisplays(String title){
+        getPlotPanel(title).clear();                                
+        getScanPanel().clear();
+    }
+
+    public void setScanDisplays(Scan scan, String title){
+        startScanPlot(scan, title);
+        getScanPanel().startScan(scan, title);
+    }
+
     public ScanPanel getScanPanel(){
         return scanPanel;
     }

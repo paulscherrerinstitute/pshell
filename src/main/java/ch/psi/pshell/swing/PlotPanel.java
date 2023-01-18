@@ -189,7 +189,7 @@ public class PlotPanel extends MonitoredPanel {
     public void setPreferences(PlotPreferences preferences) {
         prefs = preferences.clone();
     }
-
+     
     public void clear() {
         plots.clear();
         if (!offscreen) {

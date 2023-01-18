@@ -107,6 +107,10 @@ public class ScanRecord implements Subscriptable.MappedSequence<Object,Object>{
         return id;
     }
     
+    public Scan getScan(){
+        return scan;
+    }
+    
     @Hidden
     public void setId(long value) {
         id = value;

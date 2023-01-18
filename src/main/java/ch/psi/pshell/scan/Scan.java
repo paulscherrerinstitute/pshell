@@ -163,8 +163,12 @@ public interface Scan {
     
     public void setPlotTitle(String plotTitle);
     
-    public String getPlotTitle(); 
+    public String getPlotTitle();
     
+    public boolean isPlottingActive();
+
+    public  void setPlottingActive(boolean value);
+        
     public void setHidden(boolean value);
     
     public boolean isHidden();     
