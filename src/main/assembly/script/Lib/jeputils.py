@@ -172,6 +172,8 @@ def call_jep(module, function, args = [], kwargs = {}, reload=False):
 def to_npa(data, dimensions = None, type = None):   
     if (not isinstance(data, PyArray)) or (type is not None):
         data = to_array(data,'d' if type is None else type)
+    if dimensions is None:
+        return jep.NDArray(data)    
     return jep.NDArray(data, dimensions)    
 
 #recursivelly converts all NumPy arrays to Java arrys
