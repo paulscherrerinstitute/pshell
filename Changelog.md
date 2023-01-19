@@ -12,6 +12,16 @@
 
 * Preliminary support to NX format.
 
+* BufferConverter and Type classes.
+
+* Array10 detector streeaming protocol.
+
+* EpicsCmdAPI bultin class to trigger remote commands through EPICS (CAS).
+
+* Lazy table creation option for scans.
+
+* Utilities to support parallel scans executing in turns and sharing the same plotting.
+
 
 ### Changed
 
@@ -27,6 +37,8 @@
 * Fix first initialization of DummyMotor.
 
 * VectorScan: Removed initial move and fixed relative positions.
+
+* Blocking abort of XScan.
 
 
 
