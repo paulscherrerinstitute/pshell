@@ -89,7 +89,7 @@
         ```
         set_exec_pars(persist = False)
         ```
-    - Include add the option inline in the scan command.:
+    - Include  the option inline in the scan command:
         ```
         scan (pos, sensor, start, end, steps, persist = False)
         ```
@@ -138,6 +138,17 @@
         ```
         positioner.config.resolution = float('inf') 
         ```   
+
+ * Scans assume types and shapes of arrays are known previously, so tables can be created before the scab begins.  
+   If the types or shapes of readables can only br defined upon the first sampling then 
+   the scan data won't be correctly saved. How this can be solved?
+
+    - This scan should do a lazy creation of tables. 
+      It can be set as the default option in the "Data Setup" window, tab "Scans".      
+      Or it can be set for a specific scan including the option 'lazy' in the scan command:
+        ```
+        scan (pos, sensor, start, end, steps, lazy = True)
+        ```
 
 ---
 ## Versioning
