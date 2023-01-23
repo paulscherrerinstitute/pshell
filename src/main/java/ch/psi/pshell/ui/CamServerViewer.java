@@ -223,12 +223,12 @@ public class CamServerViewer extends MonitoredPanel {
                         try ( CameraSource srv = newCameraSource()) {
                             srv.initialize();
                             //TODO: replace into encodeMultiline
-                            cameraConfigJson = EncoderJson.encode(srv.getConfig(cameraName), true);
+                            cameraConfigJson = EncoderJson.encode(srv.getConfig(getCameraName()), true);
                         }
                         TextEditor configEditor = new TextEditor();
                         configEditor.setText(cameraConfigJson);
                         configEditor.setReadOnly(true);
-                        configEditor.setTitle(cameraName);
+                        configEditor.setTitle(getCameraName());
                         Editor.EditorDialog dlg = configEditor.getDialog(getFrame(), false);
                         dlg.setSize(480, 640);
                         dlg.setVisible(true);
@@ -448,6 +448,7 @@ public class CamServerViewer extends MonitoredPanel {
                 this.types = Arr.insert(Arr.sort(groups.keySet().toArray(new String[0])), "All", 0);
                 aliases = srv.getCameraAliases();
             } catch (Exception ex) {
+                Logger.getLogger(getClass().getName()).log(Level.WARNING, null, ex);
                 groups = null;
                 aliases = null;
             }
@@ -682,6 +683,17 @@ public class CamServerViewer extends MonitoredPanel {
                 }
             }
             Collections.sort(streams);
+            
+            if (sourceSelecionMode==SourceSelecionMode.Cameras){
+                if (App.hasArgument(ARG_ALIAS) && (aliases!=null)){
+                    if ("only".equals(App.getArgumentValue(ARG_ALIAS))){
+                        streams = new ArrayList<String>();
+                    }
+                    List aliasesList = new ArrayList(aliases.keySet());
+                    Collections.sort(aliasesList);
+                    streams.addAll(0, aliasesList);
+                }            
+            }
 
             for (String stream : streams) {
                 if ((sourceSelecionMode!=SourceSelecionMode.Cameras) || isCameraVisible(stream)) {
@@ -793,6 +805,7 @@ public class CamServerViewer extends MonitoredPanel {
     
     public void setTypeList(List<String> types) {
         if (types != null) {
+            types = new java.util.ArrayList<>(types); //Be sure it is an array that allows removal.
             types.removeIf(Objects::isNull);
             types.removeIf(String::isBlank);
         } 
@@ -1346,8 +1359,8 @@ public class CamServerViewer extends MonitoredPanel {
                             server.start(stream, true);
                             break;
                         case Cameras:
-                            cameraName = stream;
-                            pipelineName = String.format(pipelineNameFormat, stream);
+                            cameraName = stream;                                                         
+                            pipelineName = String.format(pipelineNameFormat, getCameraName());
                             instanceName = String.format(instanceNameFormat, pipelineName);
                             server.start(pipelineName, instanceName);
                             break;
@@ -1470,7 +1483,7 @@ public class CamServerViewer extends MonitoredPanel {
     public String getStream(){
         return stream;
     }
-
+    
     
     public Map<String, Object> getConfig(String instanceName) throws IOException, InterruptedException {
         if (server == null) {
@@ -2803,21 +2816,21 @@ public class CamServerViewer extends MonitoredPanel {
         return dm.getRootFileName();
     }
 
-    public String getCameraName() throws Exception {
-        if (cameraName!=null){
-            return cameraName;
-        }
-        //return (String) getProcessingParameters(camera.getValue()).get("camera_name");
-        return null;
+    public String getCameraName(){
+        if ((aliases!=null) && (cameraName!=null) && (aliases.containsKey(cameraName))){
+            return aliases.get(cameraName);
+        }            
+        return cameraName;        
     }
-
+    
     public String getDisplayName() {
-        try {
-            String cameraName = getCameraName();
-            if (cameraName!=null){
-                return cameraName;
+        if (sourceSelecionMode==SourceSelecionMode.Cameras){
+            try {
+               if (cameraName!=null){
+                    return cameraName;
+                }
+            } catch (Exception ex) {
             }
-        } catch (Exception ex) {
         }
         return stream;
     }

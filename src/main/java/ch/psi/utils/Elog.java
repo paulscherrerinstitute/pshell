@@ -11,7 +11,7 @@ public class Elog {
         StringBuffer cmd = new StringBuffer();
 
         cmd.append("G_CS_ELOG_add -l \"").append(logbook).append("\" ");
-        cmd.append("-a \"Author=%s\" ".formatted(Sys.getUserName()));
+        cmd.append("-a \"Author=").append(Sys.getUserName()).append("\" ");
         cmd.append("-a \"Type=pshell\" ");
         cmd.append("-a \"Entry=").append(entry).append("\" ");
         cmd.append("-a \"Title=").append(title).append("\" ");
