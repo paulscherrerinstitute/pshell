@@ -2656,8 +2656,10 @@ public class CamServerViewer extends MonitoredPanel {
                 frames.add(frame);
                 String snapshotFile = this.saveFrames(getDisplayName() + "_snapshot", frames, null);
                 if (snapshotFile != null) {
+                    snapshotFile =  snapshotFile + ".png";
+                    
                     //renderer.saveSnapshot(snapshotFile, "png", true);
-                    ImageBuffer.saveImage(SwingUtils.createImage(renderer), snapshotFile + ".png", "png");
+                    ImageBuffer.saveImage(SwingUtils.createImage(renderer), snapshotFile, "png");
 
                     if (listener!=null){
                         try{
