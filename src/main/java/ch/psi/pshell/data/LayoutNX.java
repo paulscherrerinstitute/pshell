@@ -172,9 +172,8 @@ public static final String ATTR_Z = "z";
                 Object dim = getDataManager().getAttribute(getPath(scan, writable), ATTR_WRITABLE_DIMENSION);
                 Object index = getDataManager().getAttribute(getPath(scan, writable),ATTR_WRITABLE_INDEX);
                 if ((dim!=null) && (((Number)dim).intValue()>0)){
-                    getDataManager().setAttribute(plotPath, ATTR_AXISNAME_INDICES.formatted(writable), ((Number)dim).intValue() - 1);
+                    getDataManager().setAttribute(plotPath, String.format(ATTR_AXISNAME_INDICES, writable), ((Number)dim).intValue() - 1);
                 }
-                
             }
         }
         getDataManager().setAttribute(plotPath, ATTR_TITLE, scan.getTag());                
