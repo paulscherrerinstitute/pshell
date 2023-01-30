@@ -584,8 +584,8 @@ class PShellClient:
             if self.sse_event_loop_thread is None:
                 self.sse_event_loop_thread = threading.Thread(target=self._sse_event_loop_task, \
                                                      args = (), \
-                                                     kwargs={}, \
-                                                     daemon=True)
+                                                     kwargs={})
+                self.sse_event_loop_thread.daemon = True
                 self.sse_event_loop_thread.start()
         else:
             raise Exception ("sseclient library is not instlled: server events are not available")
