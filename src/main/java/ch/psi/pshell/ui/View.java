@@ -4279,11 +4279,15 @@ public class View extends MainFrame {
         Component c = tabDoc.getSelectedComponent();
         if (context != null) {
             for (ch.psi.pshell.core.Plugin plugin : context.getPlugins()) {
-                if (plugin instanceof Panel) {
-                    Panel panel = (Panel) plugin;
-                    if (panel == c) {
-                        panel.onShow();
+                try{
+                    if (plugin instanceof Panel) {
+                        Panel panel = (Panel) plugin;
+                        if (panel == c) {
+                            panel.onShow();
+                        }
                     }
+                } catch (Exception ex){
+                    logger.log(Level.SEVERE, null, ex);
                 }
             }
         }
@@ -4877,13 +4881,17 @@ public class View extends MainFrame {
         menuViewPanels.removeAll();
         if (menuViewPanels.isSelected()) {
             for (ch.psi.pshell.core.Plugin plugin : context.getPlugins()) {
-                if (plugin instanceof Panel) {
-                    Panel panel = (Panel) plugin;
-                    JCheckBoxMenuItem item = new JCheckBoxMenuItem(panel.getPluginName(), panel.isLoaded());
-                    menuViewPanels.add(item);
-                    item.addActionListener((ActionEvent e) -> {
-                        panel.setLoaded(item.isSelected());
-                    });
+                try{
+                    if (plugin instanceof Panel) {
+                        Panel panel = (Panel) plugin;
+                        JCheckBoxMenuItem item = new JCheckBoxMenuItem(panel.getPluginName(), panel.isLoaded());
+                        menuViewPanels.add(item);
+                        item.addActionListener((ActionEvent e) -> {
+                            panel.setLoaded(item.isSelected());
+                        });
+                    }
+                } catch (Exception ex){
+                    logger.log(Level.SEVERE, null, ex);
                 }
             }
         }
@@ -4968,7 +4976,11 @@ public class View extends MainFrame {
         try {
             ArrayList<String> plugins = new ArrayList<>();
             for (ch.psi.pshell.core.Plugin p : context.getPlugins()) {
-                plugins.add(p.getPluginName());
+                try{
+                    plugins.add(p.getPluginName());
+                } catch (Exception ex){
+                    logger.log(Level.SEVERE, null, ex);
+                }                    
             }
 
             ArrayList<String> extensions = new ArrayList<>();
