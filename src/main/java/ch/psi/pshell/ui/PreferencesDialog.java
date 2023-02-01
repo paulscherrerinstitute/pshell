@@ -191,7 +191,7 @@ public class PreferencesDialog extends StandardDialog {
         comboMatrixPlot.setSelectedItem(preferences.matrixPlot);
         comboSurfacePlot.setSelectedItem(preferences.surfacePlot);
         comboTimePlot.setSelectedItem(preferences.timePlot);
-        comboPlotsLocation.setSelectedIndex(preferences.plotsDetached ? 1 : 0);
+        comboPlotsLocation.setSelectedIndex(preferences.plotsHidden ? 2 : (preferences.plotsDetached ? 1 : 0));
         comboQuality.setSelectedItem(preferences.quality);
         comboLayout.setSelectedItem(preferences.plotLayout);
         comboScriptPopup.setSelectedItem(preferences.getScriptPopupDlg());
@@ -1322,7 +1322,7 @@ public class PreferencesDialog extends StandardDialog {
                     .addComponent(checkShowHomingButtons)
                     .addComponent(checkShowJogButtons)
                     .addComponent(checkShowEmergencyStop))
-                .addContainerGap(16, Short.MAX_VALUE))
+                .addContainerGap(31, Short.MAX_VALUE))
         );
 
         jPanel3Layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {checkShowHomingButtons, checkShowJogButtons});
@@ -1360,7 +1360,7 @@ public class PreferencesDialog extends StandardDialog {
                     .addComponent(checkQueueBrowser)
                     .addComponent(checkOutputPanel)
                     .addComponent(checkScanPanel))
-                .addContainerGap(43, Short.MAX_VALUE))
+                .addContainerGap(53, Short.MAX_VALUE))
         );
         jPanel14Layout.setVerticalGroup(
             jPanel14Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -1393,7 +1393,7 @@ public class PreferencesDialog extends StandardDialog {
             }
         });
 
-        comboPlotsLocation.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "Internal", "Detached" }));
+        comboPlotsLocation.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "Internal", "Detached", "Hidden" }));
 
         javax.swing.GroupLayout jPanel15Layout = new javax.swing.GroupLayout(jPanel15);
         jPanel15.setLayout(jPanel15Layout);
@@ -1459,7 +1459,7 @@ public class PreferencesDialog extends StandardDialog {
                 .addGroup(jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(radioDataDocTab)
                     .addComponent(radioDataEmbedded))
-                .addContainerGap(10, Short.MAX_VALUE))
+                .addContainerGap(21, Short.MAX_VALUE))
         );
         jPanel6Layout.setVerticalGroup(
             jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -1785,6 +1785,7 @@ public class PreferencesDialog extends StandardDialog {
                 preferences.surfacePlot = String.valueOf(comboSurfacePlot.getSelectedItem());
                 preferences.timePlot = String.valueOf(comboTimePlot.getSelectedItem());
                 preferences.plotsDetached = (comboPlotsLocation.getSelectedIndex() == 1);
+                preferences.plotsHidden = (comboPlotsLocation.getSelectedIndex() == 2);
                 preferences.plotLayout = plotLayout;
                 preferences.scriptPopupDialog = scriptPopup;
                 preferences.quality = quality;

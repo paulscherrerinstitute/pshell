@@ -162,6 +162,7 @@ public class Preferences {
     public String surfacePlot = null;
     public String timePlot = ch.psi.pshell.plot.TimePlotJFree.class.getName();
     public boolean plotsDetached;
+    public boolean plotsHidden;
     public PlotLayout plotLayout = PlotLayout.Vertical;
     public Quality quality = Quality.High;
     public Colormap defaultPlotColormap;

@@ -2060,7 +2060,7 @@ public class View extends MainFrame {
                 }
             }
             plotsDetached = value;
-            menuPlotWindowDetached.setSelected(value);
+            radioPlotsDetached.setSelected(value);
         }
     }
     
@@ -2473,6 +2473,7 @@ public class View extends MainFrame {
         System.setProperty(PlotBase.PROPERTY_PLOT_MARKER_SIZE, String.valueOf(preferences.markerSize));
 
         //if (!App.isLocalMode()) {
+            setScanPlotVisible(!preferences.plotsHidden);
             setScanPlotDetached(preferences.plotsDetached);
             setConsoleLocation(preferences.consoleLocation);
         //}
@@ -2757,6 +2758,7 @@ public class View extends MainFrame {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
+        buttonGroupPlotsVisibility = new javax.swing.ButtonGroup();
         mainPanel = new javax.swing.JPanel();
         splitterHoriz = new javax.swing.JSplitPane();
         splitterVert = new javax.swing.JSplitPane();
@@ -2910,8 +2912,9 @@ public class View extends MainFrame {
         menuConsoleLocation = new javax.swing.JMenu();
         menuDataPanelLocation = new javax.swing.JMenu();
         menuPlotWindow = new javax.swing.JMenu();
-        menuViewPlotWindow = new javax.swing.JCheckBoxMenuItem();
-        menuPlotWindowDetached = new javax.swing.JCheckBoxMenuItem();
+        radioPlotsVisible = new javax.swing.JRadioButtonMenuItem();
+        radioPlotsDetached = new javax.swing.JRadioButtonMenuItem();
+        radioPlotsHidden = new javax.swing.JRadioButtonMenuItem();
         menuViewPanels1 = new javax.swing.JMenu();
         menuOutput = new javax.swing.JCheckBoxMenuItem();
         menuScanPanel = new javax.swing.JCheckBoxMenuItem();
@@ -3037,7 +3040,6 @@ public class View extends MainFrame {
 
         statusBar.setName("statusBar"); // NOI18N
 
-        toolBar.setFloatable(false);
         toolBar.setName("toolBar"); // NOI18N
 
         buttonNew.setIcon(new javax.swing.ImageIcon(getClass().getResource("/ch/psi/pshell/ui/New.png"))); // NOI18N
@@ -4005,24 +4007,36 @@ public class View extends MainFrame {
         menuPlotWindow.setText(bundle.getString("View.menuPlotWindow.text")); // NOI18N
         menuPlotWindow.setName("menuPlotWindow"); // NOI18N
 
-        menuViewPlotWindow.setSelected(true);
-        menuViewPlotWindow.setText(bundle.getString("View.menuViewPlotWindow.text")); // NOI18N
-        menuViewPlotWindow.setName("menuViewPlotWindow"); // NOI18N
-        menuViewPlotWindow.addActionListener(new java.awt.event.ActionListener() {
+        buttonGroupPlotsVisibility.add(radioPlotsVisible);
+        radioPlotsVisible.setSelected(true);
+        radioPlotsVisible.setText(bundle.getString("View.radioPlotsVisible.text")); // NOI18N
+        radioPlotsVisible.setName("radioPlotsVisible"); // NOI18N
+        radioPlotsVisible.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                menuViewPlotWindowActionPerformed(evt);
+                radioPlotsVisibleActionPerformed(evt);
             }
         });
-        menuPlotWindow.add(menuViewPlotWindow);
+        menuPlotWindow.add(radioPlotsVisible);
 
-        menuPlotWindowDetached.setText(bundle.getString("View.menuPlotWindowDetached.text")); // NOI18N
-        menuPlotWindowDetached.setName("menuPlotWindowDetached"); // NOI18N
-        menuPlotWindowDetached.addActionListener(new java.awt.event.ActionListener() {
+        buttonGroupPlotsVisibility.add(radioPlotsDetached);
+        radioPlotsDetached.setText(bundle.getString("View.radioPlotsDetached.text")); // NOI18N
+        radioPlotsDetached.setName("radioPlotsDetached"); // NOI18N
+        radioPlotsDetached.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                menuPlotWindowDetachedActionPerformed(evt);
+                radioPlotsVisibleActionPerformed(evt);
             }
         });
-        menuPlotWindow.add(menuPlotWindowDetached);
+        menuPlotWindow.add(radioPlotsDetached);
+
+        buttonGroupPlotsVisibility.add(radioPlotsHidden);
+        radioPlotsHidden.setText(bundle.getString("View.radioPlotsHidden.text")); // NOI18N
+        radioPlotsHidden.setName("radioPlotsHidden"); // NOI18N
+        radioPlotsHidden.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                radioPlotsVisibleActionPerformed(evt);
+            }
+        });
+        menuPlotWindow.add(radioPlotsHidden);
 
         menuView.add(menuPlotWindow);
 
@@ -4510,7 +4524,10 @@ public class View extends MainFrame {
     private void menuViewStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_menuViewStateChanged
         try {
             if (menuView.isSelected()) {
-                    menuViewPlotWindow.setSelected(isPlotsVisible());
+                boolean plotsVisible = isPlotsVisible();                
+                radioPlotsDetached.setSelected(plotsVisible && plotsDetached);
+                radioPlotsVisible.setSelected(plotsVisible && !plotsDetached);
+                radioPlotsHidden.setSelected(!plotsVisible);
                 menuFullScreen.setSelected(isFullScreen());
                 menuTerminal.setSelected(isTerminalVisible());
                 menuScanPanel.setSelected(isScanPanelVisible());
@@ -4532,10 +4549,6 @@ public class View extends MainFrame {
         }
 
     }//GEN-LAST:event_menuViewStateChanged
-
-    private void menuViewPlotWindowActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuViewPlotWindowActionPerformed
-        setScanPlotVisible(menuViewPlotWindow.isSelected());
-    }//GEN-LAST:event_menuViewPlotWindowActionPerformed
 
     EditorDialog devicePoolEditorDlg;
 
@@ -5089,18 +5102,6 @@ public class View extends MainFrame {
             showException(ex);
         }
     }//GEN-LAST:event_menuCloseAllPlotsActionPerformed
-
-    private void menuPlotWindowDetachedActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuPlotWindowDetachedActionPerformed
-        try {
-            if (!App.isLocalMode()) {
-                preferences.plotsDetached = menuPlotWindowDetached.isSelected();
-                preferences.save();
-            }
-            setScanPlotDetached(menuPlotWindowDetached.isSelected());
-        } catch (Exception ex) {
-            showException(ex);
-        }
-    }//GEN-LAST:event_menuPlotWindowDetachedActionPerformed
 
     JTextField findInFilesText;
     JCheckBox findInFilesCaseInsensitive;
@@ -5724,10 +5725,21 @@ public class View extends MainFrame {
             showException(ex);
     }    }//GEN-LAST:event_menuCamServerCamerasActionPerformed
 
+    private void radioPlotsVisibleActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_radioPlotsVisibleActionPerformed
+        if (!App.isLocalMode()) {
+            preferences.plotsHidden = radioPlotsHidden.isSelected();
+            preferences.plotsDetached = radioPlotsDetached.isSelected();
+            preferences.save();
+        }
+        setScanPlotVisible(!radioPlotsHidden.isSelected());
+        setScanPlotDetached(radioPlotsDetached.isSelected());
+    }//GEN-LAST:event_radioPlotsVisibleActionPerformed
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton buttonAbort;
     private javax.swing.JButton buttonAbout;
     private javax.swing.JButton buttonDebug;
+    private javax.swing.ButtonGroup buttonGroupPlotsVisibility;
     private javax.swing.JButton buttonNew;
     private javax.swing.JButton buttonOpen;
     private javax.swing.JButton buttonPause;
@@ -5819,7 +5831,6 @@ public class View extends MainFrame {
     private javax.swing.JMenuItem menuPaste;
     private javax.swing.JMenuItem menuPause;
     private javax.swing.JMenu menuPlotWindow;
-    private javax.swing.JCheckBoxMenuItem menuPlotWindowDetached;
     private javax.swing.JMenuItem menuPlugins;
     private javax.swing.JMenuItem menuPreferences;
     private javax.swing.JMenuItem menuPull;
@@ -5861,8 +5872,10 @@ public class View extends MainFrame {
     private javax.swing.JMenu menuView;
     private javax.swing.JMenu menuViewPanels;
     private javax.swing.JMenu menuViewPanels1;
-    private javax.swing.JCheckBoxMenuItem menuViewPlotWindow;
     private ch.psi.pshell.swing.OutputPanel outputPanel;
+    private javax.swing.JRadioButtonMenuItem radioPlotsDetached;
+    private javax.swing.JRadioButtonMenuItem radioPlotsHidden;
+    private javax.swing.JRadioButtonMenuItem radioPlotsVisible;
     private ch.psi.pshell.swing.ScanPanel scanPanel;
     private ch.psi.pshell.swing.PlotPanel scanPlot;
     private ch.psi.pshell.swing.ScriptsPanel scriptsPanel;
