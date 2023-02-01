@@ -107,6 +107,7 @@ public class ScanRecord implements Subscriptable.MappedSequence<Object,Object>{
         return id;
     }
     
+    @Transient
     public Scan getScan(){
         return scan;
     }

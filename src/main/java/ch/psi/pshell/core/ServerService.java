@@ -782,10 +782,10 @@ public class ServerService {
         if (broadcaster != null) {
             OutboundEvent.Builder eventBuilder = new OutboundEvent.Builder();
             OutboundEvent event = eventBuilder.name(name)
-                    .mediaType(mediaType)
-                    .data(value)
-                    .build();
-            broadcaster.broadcast(event);
+                .mediaType(mediaType)
+                .data(value)
+                .build();
+        broadcaster.broadcast(event);
         }
     }
 
