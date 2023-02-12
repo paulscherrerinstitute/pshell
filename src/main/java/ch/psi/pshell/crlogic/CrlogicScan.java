@@ -144,30 +144,30 @@ public class CrlogicScan extends HardwareScan {
      * Receive a ZMQ message
      */
     private void receiveChannel() throws IOException, InterruptedException {
-        if (!dataChannel.waitCacheChange(10)){
-            return;
-        }
+        //if (dataChannel.waitCacheChange(10)){
+        if (dataChannel.waitBuffer(10)){
+            boolean use = true;
+            double pos = Double.NaN;
 
-        boolean use = true;
-        double pos = Double.NaN;
-        
-        double[] data = dataChannel.take();
-        for (int i = 0; i < data.length; i++) {
-            double raw = data[i];
-            if (i == 0) {
-                ((CrlogicPositioner.ReadbackRegister) positioner.getReadback()).setRawValue(raw);
-                pos = positioner.getReadback().take();
-                use = isInRange(pos);
-            } else if (i<=sensors.size()){
-                CrlogicSensor sensor = sensors.get(i - 1);
-                sensor.setRawValue(raw);
-            } else {
-                break;
+            //double[] data = dataChannel.take();
+            double[] data = dataChannel.popBuffer().getValue();
+            for (int i = 0; i < data.length; i++) {
+                double raw = data[i];
+                if (i == 0) {
+                    ((CrlogicPositioner.ReadbackRegister) positioner.getReadback()).setRawValue(raw);
+                    pos = positioner.getReadback().take();
+                    use = isInRange(pos);
+                } else if (i<=sensors.size()){
+                    CrlogicSensor sensor = sensors.get(i - 1);
+                    sensor.setRawValue(raw);
+                } else {
+                    break;
+                }
             }
-        }
 
-        if (use) {         
-            processPosition(new double[]{pos});
+            if (use) {         
+                processPosition(new double[]{pos});
+            }
         }
     }
 
@@ -517,6 +517,7 @@ public class CrlogicScan extends HardwareScan {
             int size = sensors.size() + 1;
             dataChannel = new ChannelDoubleArray("CrlogicChannel",channel, Record.UNDEFINED_PRECISION, size);
             dataChannel.setMonitored(true);
+            dataChannel.setBufferCapacity(100);
             dataChannel.initialize();
         }
     }

@@ -232,7 +232,12 @@ public abstract class ReadonlyRegisterBase<T> extends DeviceBase implements Read
         super.request();
         return take();
     }
-
+    
+    @Override
+    public TimestampedValue<T> popBuffer(){
+        return (TimestampedValue<T>) super.popBuffer();
+    }
+    
     @Override
     public T getValue() throws IOException, InterruptedException {
         if (isMonitored()) {

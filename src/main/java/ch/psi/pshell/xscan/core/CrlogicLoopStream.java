@@ -207,48 +207,48 @@ public class CrlogicLoopStream implements ActionLoop {
      * Receive a ZMQ message
      */
     private void receiveChannel() throws IOException, InterruptedException {
-        if (!dataChannel.waitCacheChange(10)){
-            return;
-        }
+        //if (!dataChannel.waitCacheChange(10)){
+        if (dataChannel.waitBuffer(10)){
+            DataMessage message = new DataMessage(metadata);
+            boolean use = true;
+            double pos = Double.NaN;
 
-        DataMessage message = new DataMessage(metadata);
-        boolean use = true;
-        double pos = Double.NaN;
-        
-        double[] data = dataChannel.take();
-        for (int i = 0; i < data.length; i++) {
-            double raw = data[i];
-            Double val;
-            if (i == 0) {
-                if (isExtReadback()){
-                    val=raw;
-                } else {
-                    if (useEncoder) {
-                        val = crlogicDataFilter.calculatePositionMotorUseEncoder(raw);
-                    } else if (useReadback) {
-                        val = crlogicDataFilter.calculatePositionMotorUseReadback(raw);
+            //double[] data = dataChannel.take();
+            double[] data = dataChannel.popBuffer().getValue();
+            for (int i = 0; i < data.length; i++) {
+                double raw = data[i];
+                Double val;
+                if (i == 0) {
+                    if (isExtReadback()){
+                        val=raw;
                     } else {
-                        val = crlogicDataFilter.calculatePositionMotor(raw);
-                    }
+                        if (useEncoder) {
+                            val = crlogicDataFilter.calculatePositionMotorUseEncoder(raw);
+                        } else if (useReadback) {
+                            val = crlogicDataFilter.calculatePositionMotorUseReadback(raw);
+                        } else {
+                            val = crlogicDataFilter.calculatePositionMotor(raw);
+                        }
 
-                    // Check whether data is within the configured range - otherwise drop data
-                    use = crlogicDataFilter.filter(val);
+                        // Check whether data is within the configured range - otherwise drop data
+                        use = crlogicDataFilter.filter(val);
+                    }
+                } else if (i<=sensors.size()){
+                    if (scalerIndices.containsKey(i)) {
+                        CrlogicDeltaDataFilter f = scalerIndices.get(i);
+                        val = f.delta(raw);
+                    } else {
+                        val = raw;
                 }
-            } else if (i<=sensors.size()){
-                if (scalerIndices.containsKey(i)) {
-                    CrlogicDeltaDataFilter f = scalerIndices.get(i);
-                    val = f.delta(raw);
                 } else {
-                    val = raw;
+                    break;
+                }
+                message.getData().add(val);
             }
-            } else {
-                break;
+
+            if (use) {
+                eventbus.post(message);
             }
-            message.getData().add(val);
-        }
-        
-        if (use) {
-            eventbus.post(message);
         }
     }
     
@@ -685,6 +685,7 @@ public class CrlogicLoopStream implements ActionLoop {
             int size = sensors.size() + 1;
             dataChannel = new ChannelDoubleArray("CrlogicChannel",channel, UNDEFINED_PRECISION, size);
             dataChannel.setMonitored(true);
+            dataChannel.setBufferCapacity(100);
             try{
                 dataChannel.initialize();
             } catch (Exception e) {

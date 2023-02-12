@@ -8,12 +8,16 @@ import ch.psi.utils.Reflection.Hidden;
 import ch.psi.utils.State;
 import ch.psi.utils.Str;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * The base class for Device implementations
@@ -179,6 +183,9 @@ public abstract class DeviceBase extends GenericDeviceBase<DeviceListener> imple
         synchronized (cacheUpdateLock) {
             chronoValue = (timestamp == null) ? new Chrono() : new Chrono(timestamp, nanosOffset);
             cache = value;
+            if (getBufferCapacity()>0){
+                addBuffer(new TimestampedValue(cache, timestamp, nanosOffset));
+            }            
             cacheUpdateLock.notifyAll();
         }
         updatingCache = true;
@@ -215,6 +222,85 @@ public abstract class DeviceBase extends GenericDeviceBase<DeviceListener> imple
             getLogger().warning("Attempt to set cache of not child device: " + child.getName());
         }
     }
+    
+    
+    ArrayList<TimestampedValue> buffer;
+    volatile int bufferCapacity=0;
+    
+    @Override
+    public void setBufferCapacity(int bufferCapacity){
+        synchronized(cacheUpdateLock){
+            buffer = (bufferCapacity<=0) ? null : new ArrayList<>();
+            this.bufferCapacity = bufferCapacity;
+        }
+    }
+    
+    @Override
+    public int getBufferCapacity(){
+        return bufferCapacity;
+    }
+
+    @Override
+    public int getBufferSize(){        
+        synchronized(cacheUpdateLock){
+            return (buffer==null) ? 0 : buffer.size();
+        }
+    }
+    
+    @Override
+    public TimestampedValue popBuffer(){
+        synchronized(cacheUpdateLock){
+            if (buffer!=null){
+                int size = buffer.size();
+                if (size>0){
+                    return buffer.remove(size-1);
+                }
+            }
+            return null;
+        }
+    }
+    
+    @Override
+    public void clearBuffer(){
+        synchronized(cacheUpdateLock){
+            if (buffer!=null){
+                buffer.clear();
+            }
+        }
+    }    
+    
+    @Override
+    public List<TimestampedValue> getBuffer(){
+        synchronized(cacheUpdateLock){    
+            if (buffer==null){
+                return null;
+            }
+            return Collections.unmodifiableList(buffer);
+        }
+    }
+        
+    
+    protected void addBuffer(TimestampedValue v){        
+        synchronized(cacheUpdateLock){
+            if (buffer!=null){
+                buffer.add(0, v);
+                while (buffer.size()>getBufferCapacity()){
+                    buffer.remove(buffer.size()-1);
+                }
+            }
+        }
+    }
+    
+    //Waiting for buffer to ne non-empty
+    @Override
+    public boolean waitBuffer(int timeout) throws InterruptedException {
+        try {
+            waitCondition(() -> getBufferSize()>0,  timeout, "Timeout waiting queue non empty");
+            return true;
+        } catch (IOException ex) {
+            return false;
+        }
+    }    
     
     protected boolean isUpdatingCache(){
         return updatingCache;

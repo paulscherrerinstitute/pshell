@@ -2,11 +2,11 @@ package ch.psi.pshell.device;
 
 import ch.psi.utils.Reflection.Hidden;
 import java.io.IOException;
+import java.util.List;
 
 /**
- * __Device__ is a notion in PShell representing a real-world hardware or subsystem. A Device
- * encapsulates a set of values (state) and a set of methods (behavior) in order to simplify the
- * statements of the scripts.
+ * __Device__ is a notion in PShell representing a real-world hardware or subsystem. A Device encapsulates a set of
+ * values (state) and a set of methods (behavior) in order to simplify the statements of the scripts.
  */
 public interface Device extends GenericDevice<DeviceListener> {
 
@@ -50,6 +50,23 @@ public interface Device extends GenericDevice<DeviceListener> {
 
     TimestampedValue takeTimestamped();
 
+
+
+    //Cache Buffering
+    public int getBufferCapacity();
+    
+    public void setBufferCapacity(int queueCapacity);
+
+    public int getBufferSize();
+
+    public TimestampedValue popBuffer();
+    
+    public void clearBuffer();
+
+    public List<TimestampedValue> getBuffer();
+
+    public boolean waitBuffer(int timeout) throws InterruptedException, IOException;
+
     @Hidden
     default public boolean isChild(Device device) {
         for (Device child : getChildren()) {
@@ -59,8 +76,8 @@ public interface Device extends GenericDevice<DeviceListener> {
         }
         return false;
     }
-    
-    default String getDescription(){
+
+    default String getDescription() {
         return "";
     }
 };
