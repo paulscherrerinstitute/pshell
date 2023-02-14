@@ -22,7 +22,7 @@ public class GenericChannel extends RegisterBase {
     final InvalidValueAction invalidAction;
     Register register;
     Class type;
-    boolean unsigned;
+    Boolean unsigned;
     boolean autoResolveType = true;    
     boolean promoteUnsigned = false;    
     int size=1;
@@ -84,7 +84,7 @@ public class GenericChannel extends RegisterBase {
         }
     }    
 
-    public boolean isUnsigned() {
+    public Boolean isUnsigned() {
         return unsigned;
     }    
 
@@ -178,7 +178,7 @@ public class GenericChannel extends RegisterBase {
     @Override
     protected void onChildValueChange(Device child, Object value, Object former) {
         if (child == register) {
-            if (promoteUnsigned && unsigned){
+            if (promoteUnsigned && (Boolean.TRUE.equals(unsigned))){
                 value = Convert.toUnsigned(value);
             }                    
             setCache(value);

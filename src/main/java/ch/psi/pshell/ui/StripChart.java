@@ -1386,7 +1386,7 @@ public class StripChart extends StandardDialog {
             if ((age == null) || (age >= sleep_ms)) {
                 Long devTimestamp = dev.getTimestamp();
                 if (devTimestamp != null) {
-                    now = devTimestamp + age;
+                    now = (age!=null) ? devTimestamp + age : devTimestamp;
                 }
                 //System.out.println(seriesIndex + " | " + value + Chrono.getTimeStr(time, "dd/MM/YY HH:mm:ss.SSS"));
                 add(dev, dev.take(), now, plot, seriesIndex, true);
