@@ -1362,6 +1362,12 @@ public class CamServerViewer extends MonitoredPanel {
                             cameraName = stream;                                                         
                             pipelineName = String.format(pipelineNameFormat, getCameraName());
                             instanceName = String.format(instanceNameFormat, pipelineName);
+                            if (!server.getPipelines().contains(pipelineName)) {
+                                System.out.println("Creating pipeline: " + pipelineName);
+                                HashMap<String, Object> config = new HashMap<>();
+                                config.put("camera_name", cameraName);
+                                server.savePipelineConfig(pipelineName, config);
+                            }                            
                             server.start(pipelineName, instanceName);
                             break;
                         case Single:
@@ -1375,6 +1381,12 @@ public class CamServerViewer extends MonitoredPanel {
                                 cameraName = stream;
                                 pipelineName = String.format(pipelineNameFormat, stream);
                                 instanceName = String.format(instanceNameFormat, pipelineName);
+                                if (!server.getPipelines().contains(pipelineName)) {
+                                    System.out.println("Creating pipeline: " + pipelineName);
+                                    HashMap<String, Object> config = new HashMap<>();
+                                    config.put("camera_name", cameraName);
+                                    server.savePipelineConfig(pipelineName, config);
+                                }                            
                                 server.start(pipelineName, instanceName);
                             }
                             break;
