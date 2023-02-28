@@ -160,6 +160,34 @@ public class ProxyClient extends CamServerClient{
         checkReturn(map);
     }    
     
+     /**
+     * Get server logs
+     */
+    public String getLogs(int serverIndex) throws IOException {
+        WebTarget resource = client.target(prefix+ "/server/logs/" + serverIndex + "/txt");
+        String logs = resource.request().accept(MediaType.TEXT_PLAIN).get(String.class);
+        return logs;
+    }    
+    
+    public String getLogs(String server) throws IOException {
+        String compactName = server.replace("http", "").replace("/", "").replace(":", "");        
+        WebTarget resource = client.target(prefix+ "/server/logs/" + compactName + "/txt");
+        String logs = resource.request().accept(MediaType.TEXT_PLAIN).get(String.class);
+        return logs;
+    }    
+
+    public String getLogs(int serverIndex, String instance) throws IOException {
+        WebTarget resource = client.target(prefix+ "/server/instance/logs/" + serverIndex + "/" + instance +"/txt");
+        String logs = resource.request().accept(MediaType.TEXT_PLAIN).get(String.class);
+        return logs;
+    }    
+
+    public String getLogs(String server, String instance) throws IOException {
+        String compactName = server.replace("http", "").replace("/", "").replace(":", "");        
+        WebTarget resource = client.target(prefix+ "/server/instance/logs/" + compactName + "/" + instance+ "/txt");
+        String logs = resource.request().accept(MediaType.TEXT_PLAIN).get(String.class);
+        return logs;
+    }    
     
     public static boolean isPush(Map instanceData){
         if (instanceData==null){

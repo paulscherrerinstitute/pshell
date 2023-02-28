@@ -90,6 +90,12 @@ public class CamServerClient {
         String logs = resource.request().accept(MediaType.TEXT_PLAIN).get(String.class);
         return logs;
     }  
+    
+    public String getLogs(String instance) throws IOException {
+        WebTarget resource = client.target(getUrl() + "/api/v1/logs/instance/"+ instance +"/txt");
+        String logs = resource.request().accept(MediaType.TEXT_PLAIN).get(String.class);
+        return logs;
+    }            
 
     public void reset() throws IOException {
         WebTarget resource = client.target(getUrl() + "/api/v1/reset");
