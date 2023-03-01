@@ -375,6 +375,19 @@ public class StripChart extends StandardDialog {
     public JPanel getConfigPanel() {
         return panelConfig;
     }
+    
+    public static JPanel getPlotPanel(File file){
+        StripChart stripChart = new StripChart(null,false, null);         
+        new Thread(()->{
+            try {
+                stripChart.open(file); 
+                stripChart.start();
+            } catch (Exception ex) {
+                Logger.getLogger(StripChart.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }).run();
+        return stripChart.getPlotPanel();
+    }    
 
     void setButtonPause(boolean paused) {
         buttonPause.setText("");
@@ -857,8 +870,14 @@ public class StripChart extends StandardDialog {
             open(chooser.getSelectedFile());
         }
     }
-
+    
     public void open(File file) throws IOException {
+        if (!file.isFile()){
+            File f = Paths.get(getDefaultFolder(), file.toString()).toFile();
+            if (f.isFile()){
+                file = f;
+            }
+        }
         Logger.getLogger(StripChart.class.getName()).info("Open: " + file.getAbsolutePath());
         String json = new String(Files.readAllBytes(file.toPath()));
         open(json);
