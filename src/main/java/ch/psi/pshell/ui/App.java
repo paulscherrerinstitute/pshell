@@ -1,8 +1,6 @@
 package ch.psi.pshell.ui;
 
-import ch.psi.pshell.swing.CamServerServicePanel;
 import ch.psi.pshell.core.Configuration;
-import ch.psi.pshell.core.Configuration.LogLevel;
 import ch.psi.pshell.core.Context;
 import ch.psi.pshell.core.ContextAdapter;
 import ch.psi.pshell.core.DevicePool;
@@ -50,7 +48,6 @@ import ch.psi.utils.swing.TextEditor;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.Font;
-import java.awt.Frame;
 import java.awt.GraphicsEnvironment;
 import java.awt.Image;
 import java.awt.Toolkit;
@@ -80,7 +77,6 @@ import javax.swing.event.SwingPropertyChangeSupport;
 import java.util.List;
 import java.util.Map;
 import javax.swing.ImageIcon;
-import javax.swing.UIManager;
 
 /**
  * The application singleton object.
@@ -474,6 +470,7 @@ public class App extends ObservableBase<AppListener> {
         sb.append("\n\t-clsp=<path> \tAdd to class path");
         sb.append("\n\t-scrp=<path> \tAdd to script path");
         sb.append("\n\t-jcae=<file> \tForce EPICS config file (or, in volatile mode, EPICS options separated by '|')");
+        sb.append("\n\t-uisc=<value>\tUI Scale factor as factor (e.g 0.75, 75% or 72dpi)");
         sb.append("\n\t-laf=<name>  \tLook and feel: system, metal, nimbus, darcula, flat, or dark");
         sb.append("\n\t-size=WxH    \tSet application window size if GUI state not persisted");
         sb.append("\n\t-args=<...>  \tProvide arguments to interpreter");
@@ -1925,39 +1922,42 @@ public class App extends ObservableBase<AppListener> {
 
     }
 
-    static String getLookAndFeel() {
+    public static String getLookAndFeel() {
         String laf = getArgumentValue("laf");
         if (laf == null) {
-            LookAndFeelType type;
             //Deprecated arguments
             if (hasArgument("mlaf")) {
-                type = LookAndFeelType.metal;
+                laf = MainFrame.getLookAndFeel(LookAndFeelType.metal);
             } else if (hasArgument("slaf")) {
-                type = LookAndFeelType.system;
+                laf = MainFrame.getLookAndFeel(LookAndFeelType.system);
             } else if (hasArgument("nlaf")) {
-                type = LookAndFeelType.nimbus;
+                laf = MainFrame.getLookAndFeel(LookAndFeelType.nimbus);
             } else if (hasArgument("blaf")) {
-                type = LookAndFeelType.dark;
+                laf = MainFrame.getLookAndFeel(LookAndFeelType.dark);
             } else if (hasArgument("dlaf")) {
-                type = LookAndFeelType.darcula;
+                laf = MainFrame.getLookAndFeel(LookAndFeelType.darcula);
             } else {
                 if (Config.isStringDefined(userOptions.laf)) {
                     laf = userOptions.laf;
                 } else {
-                    // Default is system laf (or Metal, if no system installed).
-                    // However prefer Nimbus on Windows & Linux
-                    type = LookAndFeelType.nimbus;
+                    // Default LAF is Nimbus but prefer System on Mac
                     if (Sys.getOSFamily() == OSFamily.Mac) {
-                        type = LookAndFeelType.system;
+                        laf = MainFrame.getLookAndFeel(LookAndFeelType.system);
+                    } else {
+                        laf = MainFrame.getLookAndFeel(LookAndFeelType.nimbus);
                     }
-                    laf = MainFrame.getLookAndFeel(type);
                 }
             }
         }
         return laf;
     }
+    
+    public static String getScaleUI(){
+        return getArgumentValue("uisc");
+    }
 
     static void applyLookAndFeel() {
+        View.setScaleUI(getScaleUI());
         if (isHeadless()) {
             try{
                 //Try setting LAF for offscreen plotting
@@ -1973,7 +1973,7 @@ public class App extends ObservableBase<AppListener> {
                     SwingUtils.setMacScreenMenuBar(getApplicationTitle());
                 } catch (Exception ex) {
                 }
-            }        
+            }                    
             View.setLookAndFeel(getLookAndFeel());
         }
     }

@@ -1488,18 +1488,24 @@ public class SwingUtils {
     public static boolean isDark() {
         return isDark(UIManager.getLookAndFeel().getClass());            
     }    
-    
-    
-  
+      
     public static boolean isDark(Class laf) {
+        return isDark(laf.getName());            
+    }      
+    
+    public static boolean isDark(String lafClassName) {
         return Arr.containsEqual(new String[]{
                     "com.bulenkov.darcula.DarculaLaf",
                     "com.formdev.flatlaf.FlatDarculaLaf",
                     "com.formdev.flatlaf.FlatDarkLaf",
                 },
-                laf.getName() );            
-    }      
+                lafClassName );     
+    }
     
+    public static boolean isFlatLaf(String className){
+        return className.contains("flatlaf");
+    }      
+
     public static boolean isNimbus() {
         return UIManager.getLookAndFeel().getClass().getName().equals(getNimbusLookAndFeel());
     }

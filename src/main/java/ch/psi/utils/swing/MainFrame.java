@@ -463,7 +463,16 @@ public abstract class MainFrame extends JFrame {
     public static boolean isNimbus() {
         return SwingUtils.isNimbus();
     }
-
+    
+    public static void setScaleUI(String scale) {
+        if (scale!=null){
+            System.setProperty( "flatlaf.uiScale", scale );                
+        } else {
+            System.clearProperty("flatlaf.uiScale");                
+        }
+    }
+    
+    
     public static void setLookAndFeel(LookAndFeelType type) {
         setLookAndFeel(type.toString());
     }
@@ -475,10 +484,9 @@ public abstract class MainFrame extends JFrame {
             className = getLookAndFeel(LookAndFeelType.valueOf(className));
         }
         dark = null;
-        SwingUtils.setLookAndFeel(className);
-        
-    }
-
+        SwingUtils.setLookAndFeel(className);        
+    }    
+    
     //Window state persistence
     public String getSessionPath() {
         return Paths.get(Sys.getUserHome(), "." + getClass().getName()).toString();

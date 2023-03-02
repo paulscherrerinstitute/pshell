@@ -265,6 +265,10 @@
     <td>Force EPICS configuration file (or, in volatile mode, EPICS configuration options separated by '|').</td>
   </tr>
   <tr>
+    <td>-uisc=[value]</td>
+    <td>UI Scale factor as factor (e.g 0.75, 75% or 72dpi).</td>
+  </tr>
+  <tr>
     <td>-laf=[name]</td>
     <td>Set application Look and Feel: system (s), metal (m), nimbus (n), darcula (d), 
         flat (f), or dark (b).</td>
