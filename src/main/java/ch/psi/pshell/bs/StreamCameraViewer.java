@@ -148,6 +148,7 @@ public class StreamCameraViewer extends MonitoredPanel {
     public StreamCameraViewer() {
         try {
             initComponents();
+            toolBar.setFloatable(false);
             setSidePanelVisible(false);
             panelPipeline.setVisible(false);
             textStream.setBackground(panelStream.getBackground());

@@ -391,6 +391,7 @@ public class View extends MainFrame {
         menuPull.setVisible(false); //Disabling this menu because may be dangerous for users have such easy access
         Utils.setSelectedImageFolder(context.getSetup().getImagesPath());
         toolBar.setRollover(true);
+        toolBar.setFloatable(false); //By default true in nimbus
 
         if (App.isPlotOnly()) {
             splitterVert.setVisible(false);

@@ -181,6 +181,7 @@ public class CamServerViewer extends MonitoredPanel {
         try {
             initComponents();
             setSidePanelVisible(false);
+            toolBar.setFloatable(false);
             panelPipeline.setVisible(false);
             SwingUtils.setEnumCombo(comboColormap, Colormap.class);
 
