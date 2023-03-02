@@ -2,6 +2,7 @@ package ch.psi.pshell.plot;
 
 import ch.psi.pshell.plot.Plot.Quality;
 import ch.psi.pshell.device.TimestampedValue;
+import static ch.psi.pshell.plot.PlotBase.getOutlineColor;
 import ch.psi.utils.Chrono;
 import ch.psi.utils.IO;
 import ch.psi.utils.Reflection.Hidden;
@@ -33,6 +34,7 @@ import org.jfree.chart.JFreeChart;
 import org.jfree.chart.axis.LogarithmicAxis;
 import org.jfree.chart.axis.NumberAxis;
 import org.jfree.chart.axis.ValueAxis;
+import static org.jfree.chart.plot.Plot.DEFAULT_OUTLINE_STROKE;
 import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.renderer.xy.XYItemRenderer;
 import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
@@ -303,8 +305,28 @@ public class TimePlotJFree extends TimePlotBase {
 
     @Override
     public void setPlotOutlineColor(Color c) {
-        chart.getXYPlot().setOutlinePaint(c);
+        chart.getXYPlot().setOutlinePaint((c==null) ? getOutlineColor() : c);        
+    }   
+    
+    @Override
+    public Color getPlotOutlineColor() {
+        Paint ret = chart.getXYPlot().getOutlinePaint();
+        return (ret instanceof Color) ? (Color) ret : null;
     }
+
+    @Override
+    public void setPlotOutlineWidth(int width) {
+        chart.getXYPlot().setOutlineStroke(width<0 ? DEFAULT_OUTLINE_STROKE : new BasicStroke(width));
+    }
+        
+     @Override
+    public int getPlotOutlineWidth() {
+        Stroke s = chart.getXYPlot().getOutlineStroke();
+        if ((s==DEFAULT_OUTLINE_STROKE) || (!(s instanceof BasicStroke))){
+            return -1;
+        }
+        return Math.round(((BasicStroke)s).getLineWidth());
+    }       
     
     @Override
     protected void doClear(int graphIndex) {

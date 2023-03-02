@@ -127,6 +127,12 @@ public interface Plot<T extends PlotSeries> {
     
     default void setPlotOutlineColor(Color c) {};      
     
+    default void setPlotOutlineWidth(int width) {};
+
+    default Color getPlotOutlineColor() {return null;};      
+    
+    default int getPlotOutlineWidth() {return -1;};
+    
     default void setLabelFont(Font f) {}
 
     default void setTickLabelFont(Font f) {}

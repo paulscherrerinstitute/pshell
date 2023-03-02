@@ -1257,12 +1257,16 @@ public class StripChart extends StandardDialog {
     void onAlarmTimer() {
         List<Integer> alarmingPlots = new ArrayList<>();
         boolean alarming = false;
+        boolean alarmEnabled = false;
+        
         boolean paused = buttonPause.isSelected();
         if (!paused) {
             for (DeviceTask task : tasks) {
                 if (task.isAlarming()) {
                     alarming = true;
                     alarmingPlots.add(((Integer) task.info.get(3)) - 1);
+                } else if (task.isAlarmEnabled()){
+                    alarmEnabled = true;
                 }
             }
         }
@@ -1285,15 +1289,30 @@ public class StripChart extends StandardDialog {
             }
         } else {
             pulse = false;
+            if (!alarmEnabled){
+                //Reset sound timer if no alarm configured
+                chronoDisableAlarmSound = null;
+            }
         }
         setAlarming(alarming);
 
         for (int i = 0; i < plots.size(); i++) {
             TimePlotBase p = plots.get(i);
-            if (alarmingPlots.contains(i)) {
-                p.setPlotOutlineColor(pulse ? Color.RED : LinePlotBase.getOutlineColor());
-            } else {
-                p.setPlotOutlineColor(LinePlotBase.getOutlineColor());
+            Color color = LinePlotBase.getOutlineColor();
+            int width = -1;
+            if (alarmingPlots.contains(i) && pulse) {
+                color = Color.RED;
+                width = 2;
+            }
+            if ((color!=p.getPlotOutlineColor()) || (width!=p.getPlotOutlineWidth())){
+                if (p instanceof TimePlotJFree){
+                    ((TimePlotJFree)p).getChart().getPlot().setNotify(false);
+                }
+                p.setPlotOutlineColor(color);
+                p.setPlotOutlineWidth(width);
+                if (p instanceof TimePlotJFree){
+                    ((TimePlotJFree)p).getChart().getPlot().setNotify(true);
+                }
             }
         }
     }
@@ -1325,6 +1344,11 @@ public class StripChart extends StandardDialog {
         boolean isAlarming() {
             final StripChartAlarmConfig alarmConfig = (StripChartAlarmConfig) info.get(6);
             return (alarmConfig == null) ? false : alarmConfig.isAlarm(currentValue);
+        }
+
+        boolean isAlarmEnabled() {
+            final StripChartAlarmConfig alarmConfig = (StripChartAlarmConfig) info.get(6);
+            return ((alarmConfig != null) && (alarmConfig.isEnabled()));
         }
 
         void add(Device device, Object value, Long timestamp, TimePlotBase plot, int seriesIndex, boolean dragging) {

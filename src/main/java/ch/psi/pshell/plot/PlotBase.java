@@ -691,6 +691,10 @@ abstract public class PlotBase<T extends PlotSeries> extends MonitoredPanel impl
         return (outlineColor==null)? (MainFrame.isDark() ? DEFAULT_OUTLINE_COLOR_DARK : DEFAULT_OUTLINE_COLOR) : outlineColor;
     }
     
+    @Override
+    public Color getPlotOutlineColor() {
+        return getOutlineColor();
+    }            
     
     static Color axisColor;
     public static void setAxisTextColor(Color color) {

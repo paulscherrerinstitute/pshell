@@ -5,6 +5,7 @@ import ch.psi.pshell.swing.PlotPanel;
 import ch.psi.pshell.swing.ValueSelection;
 import ch.psi.utils.Convert;
 import ch.psi.utils.Range;
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.image.BufferedImage;
@@ -96,6 +97,20 @@ public class SlicePlotDefault extends SlicePlotBase {
             matrixPlot.setTitleFont(font);
         }
     }
+    
+    @Override
+    public void setPlotOutlineColor(Color c) {
+        if (matrixPlot != null) {
+            matrixPlot.setPlotOutlineColor(c);
+        }
+    }
+    
+    @Override
+    public void setPlotOutlineWidth(int width) {
+        if (matrixPlot != null) {
+            matrixPlot.setPlotOutlineWidth(width);
+        }   
+    }       
 
     void setData(double[][] data) {
         if (data == null) {

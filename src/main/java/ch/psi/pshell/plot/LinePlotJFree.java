@@ -23,6 +23,7 @@ import java.awt.image.BufferedImage;
 import java.awt.print.PageFormat;
 import java.awt.print.PrinterException;
 import java.awt.RenderingHints;
+import java.awt.Stroke;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -57,6 +58,7 @@ import org.jfree.chart.entity.StandardEntityCollection;
 import org.jfree.chart.labels.StandardXYToolTipGenerator;
 import org.jfree.chart.plot.IntervalMarker;
 import org.jfree.chart.plot.Marker;
+import static org.jfree.chart.plot.Plot.DEFAULT_OUTLINE_STROKE;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.plot.ValueMarker;
 import org.jfree.chart.plot.XYPlot;
@@ -201,8 +203,28 @@ public class LinePlotJFree extends LinePlotBase {
 
     @Override
     public void setPlotOutlineColor(Color c) {
-        chart.getPlot().setOutlinePaint(c);
+        chart.getPlot().setOutlinePaint((c==null) ? getOutlineColor() : c);        
+    }   
+    
+    @Override
+    public Color getPlotOutlineColor() {
+        Paint ret = chart.getPlot().getOutlinePaint();
+        return (ret instanceof Color) ? (Color) ret : null;
     }
+
+    @Override
+    public void setPlotOutlineWidth(int width) {
+        chart.getPlot().setOutlineStroke(width<0 ? DEFAULT_OUTLINE_STROKE : new BasicStroke(width));
+    }
+        
+     @Override
+    public int getPlotOutlineWidth() {
+        Stroke s = chart.getPlot().getOutlineStroke();
+        if ((s==DEFAULT_OUTLINE_STROKE) || (!(s instanceof BasicStroke))){
+            return -1;
+        }
+        return Math.round(((BasicStroke)s).getLineWidth());
+    }  
 
     @Override
     protected void onAppendData(LinePlotSeries series, double x, double y) {

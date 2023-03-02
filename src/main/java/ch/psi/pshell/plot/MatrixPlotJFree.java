@@ -38,6 +38,7 @@ import org.jfree.ui.RectangleInsets;
 import org.jfree.ui.TextAnchor;
 import ch.psi.pshell.imaging.Colormap;
 import static ch.psi.pshell.plot.PlotBase.SNAPSHOT_WIDTH;
+import static ch.psi.pshell.plot.PlotBase.getOutlineColor;
 import ch.psi.utils.Reflection.Hidden;
 import ch.psi.utils.swing.SwingUtils;
 
@@ -45,6 +46,7 @@ import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.List;
 import org.jfree.chart.annotations.XYTextAnnotation;
+import static org.jfree.chart.plot.Plot.DEFAULT_OUTLINE_STROKE;
 
 /**
  * Returns a matrix plot panel
@@ -491,6 +493,32 @@ public class MatrixPlotJFree extends MatrixPlotBase {
             }
         }
     }
+    
+    @Override
+    public void setPlotOutlineColor(Color c) {
+        chart.getXYPlot().setOutlinePaint((c==null) ? getOutlineColor() : c);        
+    }   
+    
+    @Override
+    public Color getPlotOutlineColor() {
+        Paint ret = chart.getXYPlot().getOutlinePaint();
+        return (ret instanceof Color) ? (Color) ret : null;
+    }
+
+    @Override
+    public void setPlotOutlineWidth(int width) {
+        chart.getXYPlot().setOutlineStroke(width<0 ? DEFAULT_OUTLINE_STROKE : new BasicStroke(width));
+    }
+        
+     @Override
+    public int getPlotOutlineWidth() {
+        Stroke s = chart.getXYPlot().getOutlineStroke();
+        if ((s==DEFAULT_OUTLINE_STROKE) || (!(s instanceof BasicStroke))){
+            return -1;
+        }
+        return Math.round(((BasicStroke)s).getLineWidth());
+    }  
+       
 
     /**
      * Set the min and max of color map scale to scaleMin and scaleMax
