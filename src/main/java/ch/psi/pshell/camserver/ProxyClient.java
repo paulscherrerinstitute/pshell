@@ -138,6 +138,18 @@ public class ProxyClient extends CamServerClient{
     
     
     /**
+     * Stop and delete instance.
+     */
+    public void deleteInstance(String instanceName) throws IOException {
+        checkName(instanceName);
+        WebTarget resource = client.target(prefix + "/" + instanceName + "/del");
+        String json = resource.request().accept(MediaType.TEXT_HTML).delete(String.class);
+        Map<String, Object> map = (Map) EncoderJson.decode(json, Map.class);
+        checkReturn(map);
+    }       
+    
+    
+    /**
      * Return the configuration.
      */
     public Map<String, String> getPemanentInstances() throws IOException {
