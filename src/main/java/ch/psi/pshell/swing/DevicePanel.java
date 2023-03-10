@@ -21,6 +21,7 @@ import javax.swing.Timer;
 import javax.swing.border.TitledBorder;
 import ch.psi.pshell.core.ContextListener;
 import ch.psi.pshell.device.GenericDevice;
+import ch.psi.pshell.device.ReadonlyRegister;
 import ch.psi.pshell.ui.App;
 import ch.psi.utils.swing.ConfigDialog;
 import java.awt.Component;
@@ -419,5 +420,19 @@ public class DevicePanel extends MonitoredPanel {
             tooltip  = tooltip + " (" + desc.trim() + ")";
         }
         return tooltip;
+    }
+    
+    
+    final int DEFAULT_PANEL_PRECISION = 2;
+    protected int getDisplayDecimals(int panelDecimals){
+        int deviceDecimals = (getDevice() instanceof ReadonlyRegister) ? ((ReadonlyRegister)getDevice()).getPrecision() : Device.UNDEFINED_PRECISION;
+        if (panelDecimals<0){
+            panelDecimals = deviceDecimals;
+        }
+        if (panelDecimals<0){
+            panelDecimals = DEFAULT_PANEL_PRECISION;
+        }
+        int decimals = deviceDecimals < 0 ? panelDecimals : Math.min(panelDecimals, deviceDecimals);
+        return Math.max(decimals, 0);        
     }
 }

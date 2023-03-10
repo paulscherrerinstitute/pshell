@@ -195,7 +195,7 @@ public final class ProcessVariablePanel extends DevicePanel {
             valueSelection.setMinValue(pv.getMinValue());
             valueSelection.setMaxValue(pv.getMaxValue());
             valueSelection.setStep((Double) spinnerStep.getValue());
-            int decimals = Math.max(Math.min(getDecimals(), ((ProcessVariable) device).getPrecision()), 0);
+            int decimals = getDisplayDecimals(getDecimals());
             valueSelection.setDecimals(decimals);
             valueSelection.setUnit(((ProcessVariable) device).getUnit());        
         }

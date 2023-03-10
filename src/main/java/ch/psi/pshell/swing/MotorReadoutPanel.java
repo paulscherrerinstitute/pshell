@@ -99,8 +99,7 @@ public final class MotorReadoutPanel extends DevicePanel {
                 txtMotorReadout.setText("");
             } else if (isEditing() == false) {
                 Double position = getDevice().getReadback().take();
-                int decimals = Math.min(getDecimals(), getDevice().getPrecision());
-                decimals = Math.max(decimals, 0);
+                int decimals = getDisplayDecimals(getDecimals());                
                 position = Convert.roundDouble(position, decimals);
                 txtMotorReadout.setText((position == null) ? "" : String.format("%1." + decimals + "f", position));
             }
