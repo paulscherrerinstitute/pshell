@@ -44,6 +44,26 @@ public class GenericChannel extends RegisterBase {
         this(name, channelName, timestamped, invalidAction, className, 1);
     }
     
+    public GenericChannel(String name, final String channelName, int precision) {
+        this(name, channelName, true);
+        this.setPrecision(precision);
+    }
+    
+    public GenericChannel(String name, final String channelName, int precision, boolean timestamped) {
+        this(name, channelName, timestamped, timestamped ? Epics.getDefaultInvalidValueAction(): null);
+        this.setPrecision(precision);
+    }
+
+    public GenericChannel(String name, final String channelName, int precision, boolean timestamped, InvalidValueAction invalidAction) {
+        this(name, channelName, timestamped, invalidAction, null);
+        this.setPrecision(precision);
+    }
+    
+    public GenericChannel(String name, final String channelName, int precision, boolean timestamped, InvalidValueAction invalidAction, final String className) {
+        this(name, channelName, timestamped, invalidAction, className, 1);
+        this.setPrecision(precision);
+    }
+
     protected GenericChannel(String name, final String channelName, boolean timestamped, InvalidValueAction invalidAction, final String className, int size) {
         super(name);
         this.channelName = channelName;

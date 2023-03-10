@@ -103,7 +103,8 @@ public final class RegisterPanel extends DevicePanel {
         }
     }
 
-    int decimals = 8;
+    int decimals = -1;
+    final int DEFAULT_PANEL_PRECISION = 2;
 
     public void setDecimals(int decimals) {
         this.decimals = decimals;
@@ -125,7 +126,12 @@ public final class RegisterPanel extends DevicePanel {
                     if (! (val instanceof Number)){
                         throw new Exception();
                     }
-                    int decimals = Math.min(getDecimals(), getDevice().getPrecision());
+                    int devicePrecision = getDevice().getPrecision();
+                    int panelPrecision = getDecimals() < 0 ? devicePrecision :  getDecimals();     
+                    if (panelPrecision<0){
+                        panelPrecision = DEFAULT_PANEL_PRECISION;
+                    }
+                    int decimals = devicePrecision < 0 ? panelPrecision : Math.min(panelPrecision, devicePrecision);
                     decimals = Math.max(decimals, 0);
                     if ((val instanceof Float) || (val instanceof Double)){
                         Double position = Convert.roundDouble(((Double)val).doubleValue(), decimals);
