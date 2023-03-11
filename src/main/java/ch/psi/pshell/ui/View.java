@@ -2414,6 +2414,7 @@ public class View extends MainFrame {
             outputPanel.setTextPaneFont(preferences.fontOutput.toFont());
         }
         devicesPanel.setAsyncUpdate(preferences.asyncViewersUpdate);
+        DevicePanel.setDefaultPanelPrecision(preferences.getDefaultPanelPrecision());
         dataPanel.setCached(preferences.cachedDataPanel);
         dataPanel.setPlottingScripts(preferences.processingScripts);
         MotorPanel.setDefaultShowHoming(preferences.showHomingButtons);

@@ -137,6 +137,7 @@ public class Preferences {
 
     public boolean asyncViewersUpdate;
     public boolean asyncHistoryPlotsUpdate;
+    public Integer defaultPanelPrecision; 
     public boolean scanPlotDisabled;
     public boolean scanTableDisabled;
     public boolean cachedDataPanel;
@@ -399,5 +400,10 @@ public class Preferences {
         }
         return new String[0];
     }    
+    
+    @Transient
+    public int getDefaultPanelPrecision(){
+        return (defaultPanelPrecision==null) ? 6 : defaultPanelPrecision;
+    }
     
 }

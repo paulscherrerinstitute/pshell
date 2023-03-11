@@ -423,7 +423,12 @@ public class DevicePanel extends MonitoredPanel {
     }
     
     
-    final int DEFAULT_PANEL_PRECISION = 2;
+    static int DEFAULT_PANEL_PRECISION = 6;
+    
+    public static void setDefaultPanelPrecision(int value){
+        DEFAULT_PANEL_PRECISION = Math.max(value, 0);
+    }
+    
     protected int getDisplayDecimals(int panelDecimals){
         int deviceDecimals = (getDevice() instanceof ReadonlyRegister) ? ((ReadonlyRegister)getDevice()).getPrecision() : Device.UNDEFINED_PRECISION;
         if (panelDecimals<0){

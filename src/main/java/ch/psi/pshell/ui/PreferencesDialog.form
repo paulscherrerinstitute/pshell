@@ -1874,7 +1874,7 @@
                           <EmptySpace max="-2" attributes="0"/>
                           <Group type="103" groupAlignment="0" attributes="0">
                               <Group type="102" alignment="0" attributes="0">
-                                  <Component id="jLabel21" linkSize="17" min="-2" max="-2" attributes="0"/>
+                                  <Component id="jLabel21" min="-2" max="-2" attributes="0"/>
                                   <EmptySpace max="-2" attributes="0"/>
                                   <Component id="comboScriptPopup" min="-2" pref="120" max="-2" attributes="0"/>
                               </Group>
@@ -1882,6 +1882,11 @@
                               <Component id="ckScanTableEnabled" alignment="0" min="-2" max="-2" attributes="0"/>
                               <Component id="ckAsyncUpdate" alignment="0" min="-2" max="-2" attributes="0"/>
                               <Component id="ckAsyncPlotsUpdate" alignment="0" min="-2" max="-2" attributes="0"/>
+                              <Group type="102" alignment="0" attributes="0">
+                                  <Component id="jLabel37" min="-2" max="-2" attributes="0"/>
+                                  <EmptySpace max="-2" attributes="0"/>
+                                  <Component id="spinerDefaultDecimals" min="-2" max="-2" attributes="0"/>
+                              </Group>
                           </Group>
                           <EmptySpace max="32767" attributes="0"/>
                       </Group>
@@ -1895,7 +1900,7 @@
                               <Component id="jLabel21" alignment="3" min="-2" max="-2" attributes="0"/>
                               <Component id="comboScriptPopup" alignment="3" min="-2" max="-2" attributes="0"/>
                           </Group>
-                          <EmptySpace max="32767" attributes="0"/>
+                          <EmptySpace type="unrelated" max="32767" attributes="0"/>
                           <Component id="ckScanPlotEnabled" min="-2" max="-2" attributes="0"/>
                           <EmptySpace min="0" pref="0" max="-2" attributes="0"/>
                           <Component id="ckScanTableEnabled" min="-2" max="-2" attributes="0"/>
@@ -1903,6 +1908,11 @@
                           <Component id="ckAsyncUpdate" min="-2" max="-2" attributes="0"/>
                           <EmptySpace min="0" pref="0" max="-2" attributes="0"/>
                           <Component id="ckAsyncPlotsUpdate" min="-2" max="-2" attributes="0"/>
+                          <EmptySpace type="unrelated" max="32767" attributes="0"/>
+                          <Group type="103" groupAlignment="3" attributes="0">
+                              <Component id="jLabel37" alignment="3" min="-2" max="-2" attributes="0"/>
+                              <Component id="spinerDefaultDecimals" alignment="3" min="-2" max="-2" attributes="0"/>
+                          </Group>
                           <EmptySpace max="32767" attributes="0"/>
                       </Group>
                   </Group>
@@ -1921,7 +1931,7 @@
                 </Component>
                 <Component class="javax.swing.JCheckBox" name="ckAsyncUpdate">
                   <Properties>
-                    <Property name="text" type="java.lang.String" value="Async device widgets updates"/>
+                    <Property name="text" type="java.lang.String" value="Async device panel updates"/>
                   </Properties>
                 </Component>
                 <Component class="javax.swing.JComboBox" name="comboScriptPopup">
@@ -1940,6 +1950,19 @@
                 <Component class="javax.swing.JCheckBox" name="ckAsyncPlotsUpdate">
                   <Properties>
                     <Property name="text" type="java.lang.String" value="Async history plot updates"/>
+                  </Properties>
+                </Component>
+                <Component class="javax.swing.JLabel" name="jLabel37">
+                  <Properties>
+                    <Property name="horizontalAlignment" type="int" value="11"/>
+                    <Property name="text" type="java.lang.String" value="Default panel decimals:"/>
+                  </Properties>
+                </Component>
+                <Component class="javax.swing.JSpinner" name="spinerDefaultDecimals">
+                  <Properties>
+                    <Property name="model" type="javax.swing.SpinnerModel" editor="org.netbeans.modules.form.editors2.SpinnerModelEditor">
+                      <SpinnerModel initial="6" maximum="12" minimum="0" numberType="java.lang.Integer" stepSize="1" type="number"/>
+                    </Property>
                   </Properties>
                 </Component>
               </SubComponents>
