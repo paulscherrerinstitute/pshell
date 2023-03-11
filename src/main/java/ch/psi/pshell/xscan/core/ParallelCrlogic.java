@@ -199,8 +199,10 @@ public class ParallelCrlogic implements ActionLoop {
      */
     @Override
     public void abort() {
-        scrlogic.abort();
-        crlogic.abort();
+        if (crlogic.isAbortable()){
+            scrlogic.abort();
+            crlogic.abort();
+        }
         service.shutdown();
     }    
 }

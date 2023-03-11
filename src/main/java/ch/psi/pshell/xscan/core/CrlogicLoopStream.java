@@ -8,6 +8,7 @@ import ch.psi.jcae.ChannelService;
 import ch.psi.pshell.crlogic.TemplateCrlogic;
 import ch.psi.pshell.crlogic.TemplateEncoder;
 import ch.psi.pshell.crlogic.TemplateMotor;
+import ch.psi.pshell.device.DummyMotor;
 import static ch.psi.pshell.device.Record.UNDEFINED_PRECISION;
 import ch.psi.pshell.epics.ChannelDoubleArray;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -61,6 +62,9 @@ public class CrlogicLoopStream implements ActionLoop {
      * Flag whether the actor of this loop should move in zig zag mode
      */
     private final boolean zigZag;
+    private final boolean simulation;
+    private final boolean abortable;
+    
 
     private boolean useReadback;
     private boolean useEncoder;
@@ -103,14 +107,16 @@ public class CrlogicLoopStream implements ActionLoop {
      * @param ioc	Name of the IOC running CRLOGIC
      * @param zigZag	Do zigZag scan
      */
-    public CrlogicLoopStream(ChannelService cservice, String prefix, String ioc,  String channel, boolean zigZag) {
+    
+    public CrlogicLoopStream(ChannelService cservice,  boolean zigZag, String prefix, String ioc,  String channel, boolean abortable, boolean simulation) {
         eventbus = new EventBus();
         this.cservice = cservice;
         this.prefix = prefix;
         this.ioc = ioc;
         this.channel=channel;
         this.zigZag = zigZag;
-
+        this.simulation = simulation;
+        this.abortable = abortable;
         // Initialize lists used by the loop
         this.preActions = new ArrayList<Action>();
         this.postActions = new ArrayList<Action>();
@@ -134,6 +140,15 @@ public class CrlogicLoopStream implements ActionLoop {
         this.integrationTime = integrationTime;
         this.additionalBacklash = additionalBacklash;
     }
+    
+    public boolean isSimulated(){
+        return simulation;
+    }
+
+
+    public boolean isAbortable(){
+        return abortable;
+    }   
 
     /**
      * Receive a ZMQ message
@@ -247,20 +262,133 @@ public class CrlogicLoopStream implements ActionLoop {
             }
 
             if (use) {
-                eventbus.post(message);
+                eventbus.post(message); 
             }
         }
     }
+
+
+    private void receiveSimulation(DummyMotor motor) throws IOException, InterruptedException {
+
+        DataMessage message = new DataMessage(metadata);
+        double pos = Double.NaN;
+
+        Double val = motor.getPosition();
+        message.getData().add(val);
+        
+        message.getData().add((double)System.currentTimeMillis());
+        
+        //double[] data = dataChannel.take();
+        for (int i = 0; i < 15; i++) {
+            Double raw = i + Math.random();
+            if (i<=sensors.size()){
+                if (scalerIndices.containsKey(i)) {
+                    CrlogicDeltaDataFilter f = scalerIndices.get(i);
+                    val = f.delta(raw);
+                } else {
+                    val = raw;
+                }
+            } else {
+                break;
+            }
+            message.getData().add(val);
+        }
+
+        eventbus.post(message);
+        
+    }
+
     
+    private void simulate() throws IOException, TimeoutException, InterruptedException{
+        logger.warning("CRLOGIC is simulated");
+        abort = false;
+        int timeout = 600000; // 10 minutes move timeout
+        DummyMotor motor = new DummyMotor("crlogic simulation");
+        motor.initialize();
+        motor.getConfig().minValue=Math.min(start,end);
+        motor.getConfig().maxValue=Math.max(start,end);
+        double range = motor.getConfig().maxValue-motor.getConfig().minValue;
+        motor.getConfig().maxSpeed=range;
+        motor.getConfig().defaultSpeed=range/10.0;
+        
+        // Move to start
+        logger.info("Move motor to start [" + start + "]");
+        motor.setSpeed(motor.getMaxSpeed());
+        motor.move(start, timeout);
+
+        // Execute pre actions
+        for (Action action : preActions) {
+            action.execute();
+        }
+
+        // Move motor(s) to end / wait until motor is stopped
+        logger.info("Move motor to end [" + end + "]");
+        try {
+            motor.setSpeed(motor.getDefaultSpeed());
+            Future<Double> future = motor.moveAsync(end);
+            long timeoutTime = System.currentTimeMillis() + timeout;
+
+            // This loop will keep spinning until the motor reached the final position
+            while (!future.isDone()) {
+                if (System.currentTimeMillis() > timeoutTime) {
+                    throw new TimeoutException("Motion timed out");
+                }
+                receiveSimulation(motor);
+                if (abort && abortable) {
+                    logger.info("CRLOGIC scan aborted");
+                    break;
+                }
+            }
+            if (future.isDone()) {
+                logger.info("Motor reached end position");
+            } else {
+                logger.info("Motor didn't reached end position");
+            }            
+        } finally {
+            // Send end of stream message
+            logger.info("Sending - End of Line - Data Group: " + dataGroup);
+            eventbus.post(new EndOfStreamMessage(dataGroup));
+            // Close ZMQ stream
+            close();
+        }        
+
+        // Stop crlogic logic
+        logger.info("Wait until stopped");
+        try {
+            motor.waitReady((int)startStopTimeout);
+        } catch (InterruptedException e) {
+            throw e; 
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to stop CRLOGIC: " + e.getMessage(), e);
+        }
+        logger.info("CRLOGIC is now stopped");
+
+        // Execute post actions
+        for (Action action : postActions) {
+            action.execute();
+        }
+
+        if (zigZag) {
+            // reverse start/end
+            double aend = end;
+            end = start;
+            start = aend;
+        }
+        
+    }
 
     @Override
     public void execute() throws InterruptedException {
-        if (!useIoc() && !useChannel()){
+        if (!useIoc() && !useChannel() && !simulation){
             throw new IllegalArgumentException("Either IOC or channel name must be configured");
         }
         boolean usingIoc = useIoc();
         
         try {
+            if (simulation){
+                simulate();
+                return;
+            }
 
             // Set values for the datafilter
             crlogicDataFilter.setStart(start);
@@ -456,13 +584,19 @@ public class CrlogicLoopStream implements ActionLoop {
                             receiveChannel();
                         }
 
-                        if (abort) {
+                        if (abort && abortable) {
+                            logger.info("CRLOGIC scan aborted");
                             // Abort motor move 
                             motortemplate.getCommand().setValue(TemplateMotor.Commands.Stop.ordinal());
                             motortemplate.getCommand().setValue(TemplateMotor.Commands.Go.ordinal());
                             break;
                         }
 
+                    }
+                    if (future.isDone()) {
+                        logger.info("Motor reached end position");
+                    } else {
+                        logger.info("Motor didn't reached end position");
                     }
                 } finally {
                     if (usingIoc){
@@ -476,7 +610,6 @@ public class CrlogicLoopStream implements ActionLoop {
                     // Close ZMQ stream
                     close();
                 }
-                logger.info("Motor reached end position");
 
                 // Stop crlogic logic
                 logger.info("Stop CRLOGIC");
@@ -537,7 +670,6 @@ public class CrlogicLoopStream implements ActionLoop {
      */
     @Override
     public void prepare() {
-
         metadata = new ArrayList<>();
 
         // Build up metadata
@@ -546,6 +678,9 @@ public class CrlogicLoopStream implements ActionLoop {
             metadata.add(new Metadata(s.getId()));
         }
 
+        if (simulation){
+            return;
+        }
         try {
             // Connect crlogic channels
             template = new TemplateCrlogic();
@@ -673,6 +808,10 @@ public class CrlogicLoopStream implements ActionLoop {
         // Clear interrupted state
         Thread.interrupted();
 
+        if (simulation){
+            return;
+        }
+        
         boolean useIoc = (ioc!=null) && !ioc.isBlank();
         if (useIoc()){
             logger.info("Connecting with IOC" + ioc);
@@ -698,6 +837,10 @@ public class CrlogicLoopStream implements ActionLoop {
      * Close source
      */
     private void close() {
+        if (simulation){
+            return;
+        }
+        
         boolean useIoc = (ioc!=null) && !ioc.isBlank();
         if (useIoc()){
             logger.info("Closing stream from IOC " + ioc);
@@ -752,6 +895,9 @@ public class CrlogicLoopStream implements ActionLoop {
     @Override
     public void cleanup() {
         logger.info("Cleanup");
+        if (simulation){
+            return;
+        }        
         try {
             cservice.destroyAnnotatedChannels(template);
             cservice.destroyAnnotatedChannels(motortemplate);

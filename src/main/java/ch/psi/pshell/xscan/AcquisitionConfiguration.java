@@ -3,61 +3,26 @@ package ch.psi.pshell.xscan;
 import ch.psi.pshell.core.Context;
 import ch.psi.pshell.data.LayoutFDA;
 import ch.psi.pshell.ui.App;
+import ch.psi.utils.Config;
 import ch.psi.utils.EventBus;
-import java.util.logging.Logger;
 
-public class AcquisitionConfiguration {
+public class AcquisitionConfiguration extends Config {
 
-    private static final Logger logger = Logger.getLogger(AcquisitionConfiguration.class.getName());
+    public static transient final EventBus.Mode eventBusModeAcq = EventBus.Mode.SYNC;
+    public static transient final EventBus.Mode eventBusModePlot = EventBus.Mode.ASYNC;
 
-    private String crlogicPrefix;
-    private String crlogicIoc;
-    private String crlogicChannel;
+    public String crlogicPrefix = "";
+    public String crlogicIoc = "";
+    public String crlogicChannel = "";
+    public boolean crlogicAbortable;
+    public boolean crlogicSimulated;
+    public String dataBaseDirectory = "{data}";
+    public String dataFilePrefix = "";
+    public int actorMoveTimeout = 600; // 10 Minutes maximum move time 
+    public boolean appendSuffix = true;
+    public int channelCreationRetries = 1;
 
-    /**
-     * Base directory for data. The directory may contain date macros. The
-     * string may contain any @see java.text.SimpleDateFormat patterns within ${
-     * } brackets. The macros are resolved with the actual time while the get
-     * method of this property is called.
-     */
-    private String dataBaseDirectory = System.getProperty("user.home");
-    /**
-     * Prefix of the data file. The prefix may contain date macros. The string
-     * may contain any @see java.text.SimpleDateFormat patterns within ${ }
-     * brackets. The macros are resolved with the actual time while the get
-     * method of this property is called.
-     */
-    private String dataFilePrefix = "";
-
-    /**
-     * Maximum time for a actor move
-     */
-    private Long actorMoveTimeout = 600000l; // 10 Minutes maximum move time 
-
-    private boolean appendSuffix = true;
-
-    public static EventBus.Mode eventBusModeAcq = EventBus.Mode.SYNC;
-    public static EventBus.Mode eventBusModePlot = EventBus.Mode.ASYNC;
-
-    int channelCreationRetries = 1;
-
-    /**
-     * Default Constructor The constructor will read the configuration from the
-     * /fda.properties file (resource) located in the classpath.
-     */
-    public AcquisitionConfiguration() {
-        //Enforce PShell config insted
-        crlogicPrefix = App.hasArgument("crlogic.prefix") ? App.getArgumentValue("crlogic.prefix") : "";
-        crlogicIoc = App.hasArgument("crlogic.ioc") ? App.getArgumentValue("crlogic.ioc") : "";
-        crlogicChannel = App.hasArgument("crlogic.channel") ? App.getArgumentValue("crlogic.channel") : "";
-        actorMoveTimeout = App.hasArgument("move.timeout") ? Long.valueOf(App.getArgumentValue("move.timeout")) : 600000l; // 10 Minutes maximum move time 
-        dataBaseDirectory = Context.getInstance().getSetup().getDataPath();
-        appendSuffix = App.hasArgument("fdanosuffix") ? false : true;
-        dataFilePrefix = "";
-        channelCreationRetries = App.hasArgument("xscan.channel.retries") ? Integer.valueOf(App.getArgumentValue("xscan.channel.retries")) : 1;
-    }
-
-    public String getDataFileNameDefault() {
+    public static String getDataFileNameDefault() {
         String ret = Context.getInstance().getConfig().dataPath;
         if (Context.getInstance().getConfig().fdaSerialization) {
             ret = ret.replaceAll("./$", "");
@@ -67,6 +32,9 @@ public class AcquisitionConfiguration {
     }
 
     public String getCrlogicPrefix() {
+        if (App.hasArgument("crlogic.prefix")) {
+            return App.getArgumentValue("crlogic.prefix");
+        }
         return crlogicPrefix;
     }
 
@@ -74,24 +42,22 @@ public class AcquisitionConfiguration {
         this.crlogicPrefix = crlogicPrefix;
     }
 
-    public void setCrlogicIoc(String crlogicIoc) {
-        this.crlogicIoc = crlogicIoc;
-    }
-
     public String getCrlogicIoc() {
+        if (App.hasArgument("crlogic.ioc")) {
+            return App.getArgumentValue("crlogic.ioc");
+        }
         return crlogicIoc;
     }
-    
-    public String getCrlogicChannel() {
-        return crlogicChannel;
-    }    
 
-    public String getDataBaseDirectory() {
-        return dataBaseDirectory;
+    public String getCrlogicChannel() {
+        if (App.hasArgument("crlogic.channel")) {
+            return App.getArgumentValue("crlogic.channel");
+        }
+        return crlogicChannel;
     }
 
-    public void setDataBaseDirectory(String dataBaseDirectory) {
-        this.dataBaseDirectory = dataBaseDirectory;
+    public String getDataBaseDirectory() {
+        return Context.getInstance().getSetup().expandPath(dataBaseDirectory);
     }
 
     public String getDataFilePrefix() {
@@ -101,28 +67,32 @@ public class AcquisitionConfiguration {
         return dataFilePrefix;
     }
 
-    public void setDataFilePrefix(String dataFilePrefix) {
-        this.dataFilePrefix = dataFilePrefix;
-    }
-
-    public Long getActorMoveTimeout() {
+    public int getActorMoveTimeout() {
+        if (App.hasArgument("move.timeout")) {
+            return Integer.valueOf(App.getArgumentValue("move.timeout"));
+        }
         return actorMoveTimeout;
     }
 
-    public void setActorMoveTimeout(Long actorMoveTimeout) {
-        this.actorMoveTimeout = actorMoveTimeout;
-    }
-
-    public void setAppendSuffix(boolean value) {
-        appendSuffix = value;
-    }
-
     public boolean getAppendSuffix() {
+        if (App.hasArgument("fdanosuffix")) {
+            return false;
+        }
         return appendSuffix;
     }
 
     public int getChannelCreationRetries() {
+        if (App.hasArgument("xscan.channel.retries")){
+            return Integer.valueOf(App.getArgumentValue("xscan.channel.retries"));
+        }
         return channelCreationRetries;
     }
 
+    public boolean getCrlogicAbortable() {
+        return crlogicAbortable;
+    }
+
+    public boolean getScrlogicSimulated() {
+        return crlogicSimulated;
+    }
 }

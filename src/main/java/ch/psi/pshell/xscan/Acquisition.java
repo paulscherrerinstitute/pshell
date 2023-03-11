@@ -797,7 +797,7 @@ public class Acquisition {
 		// Mapping dimension pre-actions
 		aLoop.getPreActions().addAll(mapActions(dimension.getPreAction()));
 		
-		Long moveTimeout = this.configuration.getActorMoveTimeout();
+		Long moveTimeout = Long.valueOf(configuration.getActorMoveTimeout() * 1000); //millis
 		
 		// Mapping positioners
 		Double stime = 0d;
@@ -1156,7 +1156,9 @@ public class Acquisition {
 		// Create loop
 		boolean zigZag = dimension.isZigzag(); // default value is false
 
-		CrlogicLoopStream actionLoop = new CrlogicLoopStream(cservice, configuration.getCrlogicPrefix(), configuration.getCrlogicIoc(),  configuration.getCrlogicChannel(),zigZag);
+		CrlogicLoopStream actionLoop = new CrlogicLoopStream( cservice, zigZag, 
+                        configuration.getCrlogicPrefix(), configuration.getCrlogicIoc(),  configuration.getCrlogicChannel(),  
+                        configuration.getCrlogicAbortable(), configuration.getScrlogicSimulated());
 
 		actionLoop.getPreActions().addAll(mapActions(dimension.getPreAction()));
 
