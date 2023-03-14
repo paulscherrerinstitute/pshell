@@ -277,9 +277,17 @@ public class Arr {
     }
 
     public static String[] sort(String[] data) {
+        return sort(data, false);
+    }
+    
+    public static String[] sort(String[] data, boolean caseInsensitive) {
         String[] array = copy(data);
         try {
-            java.util.Arrays.sort(array, new java.text.RuleBasedCollator("< a < b < c < d"));
+            if (caseInsensitive){
+                java.util.Arrays.sort(array, String.CASE_INSENSITIVE_ORDER);
+            } else {
+                java.util.Arrays.sort(array);
+            }
         } catch (Exception ex) {
         }
         return array;
