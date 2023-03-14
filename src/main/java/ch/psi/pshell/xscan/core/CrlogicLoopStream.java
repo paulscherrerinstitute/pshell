@@ -11,6 +11,7 @@ import ch.psi.pshell.crlogic.TemplateMotor;
 import ch.psi.pshell.device.DummyMotor;
 import static ch.psi.pshell.device.Record.UNDEFINED_PRECISION;
 import ch.psi.pshell.epics.ChannelDoubleArray;
+import ch.psi.utils.Chrono;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -269,16 +270,10 @@ public class CrlogicLoopStream implements ActionLoop {
 
 
     private void receiveSimulation(DummyMotor motor) throws IOException, InterruptedException {
-
         DataMessage message = new DataMessage(metadata);
-        double pos = Double.NaN;
-
         Double val = motor.getPosition();
-        message.getData().add(val);
-        
-        message.getData().add((double)System.currentTimeMillis());
-        
-        //double[] data = dataChannel.take();
+        message.getData().add(val);        
+        message.getData().add((double)System.currentTimeMillis());        
         for (int i = 0; i < 15; i++) {
             Double raw = i + Math.random();
             if (i<=sensors.size()){
@@ -293,9 +288,7 @@ public class CrlogicLoopStream implements ActionLoop {
             }
             message.getData().add(val);
         }
-
-        eventbus.post(message);
-        
+        eventbus.post(message);       
     }
 
     
@@ -303,18 +296,24 @@ public class CrlogicLoopStream implements ActionLoop {
         logger.warning("CRLOGIC is simulated");
         abort = false;
         int timeout = 600000; // 10 minutes move timeout
+        double scanTime=10.0;
         DummyMotor motor = new DummyMotor("crlogic simulation");
         motor.initialize();
         motor.getConfig().minValue=Math.min(start,end);
         motor.getConfig().maxValue=Math.max(start,end);
+        motor.getConfig().precision=6;        
         double range = motor.getConfig().maxValue-motor.getConfig().minValue;
         motor.getConfig().maxSpeed=range;
-        motor.getConfig().defaultSpeed=range/10.0;
+        motor.getConfig().defaultSpeed=range/scanTime;
+        motor.getConfig().save();
         
         // Move to start
         logger.info("Move motor to start [" + start + "]");
         motor.setSpeed(motor.getMaxSpeed());
         motor.move(start, timeout);
+        motor.assertInPosition(start);
+        int steps = (int)(range / stepSize);
+        double stepTime = scanTime/steps;
 
         // Execute pre actions
         for (Action action : preActions) {
@@ -327,17 +326,19 @@ public class CrlogicLoopStream implements ActionLoop {
             motor.setSpeed(motor.getDefaultSpeed());
             Future<Double> future = motor.moveAsync(end);
             long timeoutTime = System.currentTimeMillis() + timeout;
-
+            
             // This loop will keep spinning until the motor reached the final position
             while (!future.isDone()) {
+                Chrono chrono = new Chrono();
                 if (System.currentTimeMillis() > timeoutTime) {
                     throw new TimeoutException("Motion timed out");
-                }
+                }                
                 receiveSimulation(motor);
                 if (abort && abortable) {
                     logger.info("CRLOGIC scan aborted");
                     break;
                 }
+                chrono.waitTimeout((int)(stepTime*1000));
             }
             if (future.isDone()) {
                 logger.info("Motor reached end position");

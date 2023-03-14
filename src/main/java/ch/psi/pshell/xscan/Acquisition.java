@@ -1156,7 +1156,7 @@ public class Acquisition {
 
 		CrlogicLoopStream actionLoop = new CrlogicLoopStream( cservice, zigZag, 
                         configuration.getCrlogicPrefix(), configuration.getCrlogicIoc(),  configuration.getCrlogicChannel(),  
-                        configuration.getCrlogicAbortable(), configuration.getScrlogicSimulated());
+                        configuration.getCrlogicAbortable(), configuration.isCrlogicSimulated());
 
 		actionLoop.getPreActions().addAll(mapActions(dimension.getPreAction()));
 

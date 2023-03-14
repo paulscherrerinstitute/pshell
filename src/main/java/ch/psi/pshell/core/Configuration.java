@@ -79,13 +79,14 @@ public class Configuration extends Config {
     public boolean parallelInitialization;
     public boolean fdaSerialization;
     
-    public String XScanCrlogicPrefix = "";
-    public String XScanCrlogicIoc = "";
-    public String XScanCrlogicChannel = "";
-    public boolean XScanCrlogicAbortable = true;
-    public boolean XScanCrlogicSimulated;
-    public int XScanMoveTimeout = 600; // 10 Minutes maximum move time 
-    public boolean XScanAppendSuffix = true;
+    public String xscanCrlogicPrefix = "";
+    public String xscanCrlogicIoc = "";
+    public String xscanCrlogicChannel = "";
+    public boolean xscanCrlogicAbortable = true;
+    public boolean xscanCrlogicSimulated;
+    public int xscanMoveTimeout = 600; // 10 Minutes maximum move time 
+    public boolean xscanAppendSuffix = true;
+    public boolean xscanContinuousUpdate;
 
     public enum LogLevel {
 

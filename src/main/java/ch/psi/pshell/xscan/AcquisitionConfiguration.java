@@ -20,36 +20,44 @@ public class AcquisitionConfiguration {
         if (App.hasArgument("crlogic.prefix")) {
             return App.getArgumentValue("crlogic.prefix");
         }
-        return getConfig().XScanCrlogicPrefix;
+        return getConfig().xscanCrlogicPrefix;
     }
 
     public static String getCrlogicIoc() {
         if (App.hasArgument("crlogic.ioc")) {
             return App.getArgumentValue("crlogic.ioc");
         }
-        return getConfig().XScanCrlogicIoc;
+        return getConfig().xscanCrlogicIoc;
     }
 
     public static String getCrlogicChannel() {
         if (App.hasArgument("crlogic.channel")) {
             return App.getArgumentValue("crlogic.channel");
         }
-        return getConfig().XScanCrlogicChannel;
+        return getConfig().xscanCrlogicChannel;
     }
 
     public static boolean getCrlogicAbortable() {
         if (App.hasArgument("crlogic.abortable")){
             return App.getBoolArgumentValue("crlogic.abortable");
         }
-        return getConfig().XScanCrlogicAbortable;
+        return getConfig().xscanCrlogicAbortable;
     }
 
-    public static boolean getScrlogicSimulated() {
+    public static boolean isCrlogicSimulated() {
         if (App.hasArgument("crlogic.simulated")){
             return App.getBoolArgumentValue("crlogic.simulated");
         }
-        return getConfig().XScanCrlogicSimulated;
+        return getConfig().xscanCrlogicSimulated;
     }    
+    
+    public static boolean isContinuousUpdate() {
+        if (App.hasArgument("xscan.continuous.update")){
+            return App.getBoolArgumentValue("xscan.continuous.update");
+        }
+        return getConfig().xscanContinuousUpdate;
+    }    
+
     public static String getDataFilePrefix() {
         return getConfig().getXScanDataFileName();
     }
@@ -61,7 +69,7 @@ public class AcquisitionConfiguration {
         if (App.hasArgument("move.timeout")) {
             return Integer.valueOf(App.getArgumentValue("move.timeout"));
         }
-        return getConfig().XScanMoveTimeout;
+        return getConfig().xscanMoveTimeout;
     }
 
     public static boolean getAppendSuffix() {
@@ -71,7 +79,7 @@ public class AcquisitionConfiguration {
         if (App.hasArgument("fdanosuffix")) {
             return false;
         }
-        return getConfig().XScanAppendSuffix;
+        return getConfig().xscanAppendSuffix;
     }
 
     public static int getChannelCreationRetries() {
