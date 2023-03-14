@@ -2833,7 +2833,6 @@ public class View extends MainFrame {
         menuPlugins = new javax.swing.JMenuItem();
         menuTasks = new javax.swing.JMenuItem();
         menuUsers = new javax.swing.JMenuItem();
-        menuXscan = new javax.swing.JMenuItem();
         menuConfiguration = new javax.swing.JMenuItem();
         jSeparator11 = new javax.swing.JPopupMenu.Separator();
         javax.swing.JMenuItem menuExit = new javax.swing.JMenuItem();
@@ -3372,15 +3371,6 @@ public class View extends MainFrame {
             }
         });
         menuFile.add(menuUsers);
-
-        menuXscan.setText(bundle.getString("View.menuXscan.text")); // NOI18N
-        menuXscan.setName("menuXscan"); // NOI18N
-        menuXscan.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                menuXscanActionPerformed(evt);
-            }
-        });
-        menuFile.add(menuXscan);
 
         menuConfiguration.setText(bundle.getString("View.menuConfiguration.text")); // NOI18N
         menuConfiguration.setName("menuConfiguration"); // NOI18N
@@ -5749,23 +5739,6 @@ public class View extends MainFrame {
         setScanPlotDetached(radioPlotsDetached.isSelected());
     }//GEN-LAST:event_radioPlotsVisibleActionPerformed
 
-    private void menuXscanActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuXscanActionPerformed
-        try {
-            ConfigDialog dlg = new ConfigDialog(this, true);
-            dlg.setTitle("XScan Configuration");
-            Config cfg = ProcessorXScan.getConfiguration();
-            dlg.setConfig(cfg);
-            dlg.setReadOnly(context.getRights().denyConfig);
-            dlg.setSize(600, 480);
-            showChildWindow(dlg);
-            if (dlg.getResult()) {
-                cfg.save();
-            }
-        } catch (Exception ex) {
-            showException(ex);
-        }
-    }//GEN-LAST:event_menuXscanActionPerformed
-
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton buttonAbort;
     private javax.swing.JButton buttonAbout;
@@ -5903,7 +5876,6 @@ public class View extends MainFrame {
     private javax.swing.JMenu menuView;
     private javax.swing.JMenu menuViewPanels;
     private javax.swing.JMenu menuViewPanels1;
-    private javax.swing.JMenuItem menuXscan;
     private ch.psi.pshell.swing.OutputPanel outputPanel;
     private javax.swing.JRadioButtonMenuItem radioPlotsDetached;
     private javax.swing.JRadioButtonMenuItem radioPlotsHidden;

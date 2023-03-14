@@ -194,8 +194,6 @@ public class Acquisition {
                 String fprefix=configuration.getDataFilePrefix();
                 
                 if ((smodel.getData().getFileName()!=null) && (!smodel.getData().getFileName().trim().isEmpty())){
-                    String dir = configuration.getDataBaseDirectory();
-                    dir = dir.replace(Setup.TOKEN_EXEC_NAME, smodel.getData().getFileName()); 
                     fprefix = fprefix.replace(Setup.TOKEN_EXEC_NAME, smodel.getData().getFileName()); 
                 }
                 fprefix = Context.getInstance().getSetup().expandPath(fprefix);

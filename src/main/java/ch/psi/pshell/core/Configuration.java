@@ -7,6 +7,7 @@ import static ch.psi.pshell.core.Setup.TOKEN_EXEC_NAME;
 import static ch.psi.pshell.core.Setup.TOKEN_MONTH;
 import static ch.psi.pshell.core.Setup.TOKEN_TIME;
 import static ch.psi.pshell.core.Setup.TOKEN_YEAR;
+import ch.psi.pshell.data.LayoutFDA;
 import ch.psi.utils.Config;
 import ch.psi.utils.IO.FilePermissions;
 import ch.psi.utils.Str;
@@ -77,6 +78,14 @@ public class Configuration extends Config {
     public boolean saveCommandStatistics;
     public boolean parallelInitialization;
     public boolean fdaSerialization;
+    
+    public String XScanCrlogicPrefix = "";
+    public String XScanCrlogicIoc = "";
+    public String XScanCrlogicChannel = "";
+    public boolean XScanCrlogicAbortable = true;
+    public boolean XScanCrlogicSimulated;
+    public int XScanMoveTimeout = 600; // 10 Minutes maximum move time 
+    public boolean XScanAppendSuffix = true;
 
     public enum LogLevel {
 
@@ -202,4 +211,14 @@ public class Configuration extends Config {
         }
         return parallelInitialization;
     }
+    
+    public static String getXScanDataFileName() {
+        String ret = Context.getInstance().getConfig().dataPath;
+        if (Context.getInstance().getConfig().fdaSerialization) {
+            ret = ret.replaceAll("./$", "");
+            return ret + "/" + LayoutFDA.getFilePrefix();
+        }
+        return ret;
+    }        
+    
 }

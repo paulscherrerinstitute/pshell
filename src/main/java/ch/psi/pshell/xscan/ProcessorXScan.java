@@ -170,20 +170,12 @@ public final class ProcessorXScan extends MonitoredPanel implements Processor {
     }
 
     private ConfigurationPanel panelConfig;
-    final static AcquisitionConfiguration configuration;
+    final AcquisitionConfiguration configuration;
     final String homePath;
-    
-    static {
-        configuration = new AcquisitionConfiguration();
-        try {        
-            configuration.load(Context.getInstance().getSetup().expandPath("{config}/xscan.properties"));
-        } catch (IOException ex) {
-            Logger.getLogger(ProcessorXScan.class.getName()).log(Level.SEVERE, null, ex);
-        }
-    }
-
+        
     public ProcessorXScan() {
         initComponents();
+        configuration = new AcquisitionConfiguration();
         jScrollPane1.getVerticalScrollBar().setUnitIncrement(16);
         jScrollPane1.getHorizontalScrollBar().setUnitIncrement(16);
         if ((App.getInstance() != null) && (App.hasArgument("xpath"))) {
@@ -566,7 +558,7 @@ public final class ProcessorXScan extends MonitoredPanel implements Processor {
         return App.getInstance().getMainFrame().getPreferences().showXScanFileBrowser || App.hasArgument("xscan_panel");
     }
 
-    public static AcquisitionConfiguration getConfiguration() {
+    public  AcquisitionConfiguration getConfiguration() {
         return configuration;
     }
 

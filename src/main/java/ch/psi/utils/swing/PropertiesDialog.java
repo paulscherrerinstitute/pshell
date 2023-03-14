@@ -144,7 +144,7 @@ public class PropertiesDialog extends StandardDialog {
                 return;
             }
             this.properties = properties;
-            String keys[] = Arr.sort(properties.keySet().toArray(new String[0]));
+            String keys[] = Arr.sort(properties.keySet().toArray(new String[0]), true);
             int numberOfRows = keys.length;
 
             DefaultTableModel model = new DefaultTableModel();

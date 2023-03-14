@@ -1,98 +1,84 @@
 package ch.psi.pshell.xscan;
 
+import ch.psi.pshell.core.Configuration;
 import ch.psi.pshell.core.Context;
-import ch.psi.pshell.data.LayoutFDA;
 import ch.psi.pshell.ui.App;
-import ch.psi.utils.Config;
 import ch.psi.utils.EventBus;
 
-public class AcquisitionConfiguration extends Config {
+public class AcquisitionConfiguration {
 
     public static transient final EventBus.Mode eventBusModeAcq = EventBus.Mode.SYNC;
     public static transient final EventBus.Mode eventBusModePlot = EventBus.Mode.ASYNC;
+    public static transient int channelCreationRetries = 1;
+    public static transient String dataFilePrefix = "";
 
-    public String crlogicPrefix = "";
-    public String crlogicIoc = "";
-    public String crlogicChannel = "";
-    public boolean crlogicAbortable;
-    public boolean crlogicSimulated;
-    public String dataBaseDirectory = "{data}";
-    public String dataFilePrefix = "";
-    public int actorMoveTimeout = 600; // 10 Minutes maximum move time 
-    public boolean appendSuffix = true;
-    public int channelCreationRetries = 1;
-
-    public static String getDataFileNameDefault() {
-        String ret = Context.getInstance().getConfig().dataPath;
-        if (Context.getInstance().getConfig().fdaSerialization) {
-            ret = ret.replaceAll("./$", "");
-            return ret + "/" + LayoutFDA.getFilePrefix();
-        }
-        return ret;
+    static Configuration getConfig(){
+        return Context.getInstance().getConfig();
     }
-
-    public String getCrlogicPrefix() {
+    
+    public static String getCrlogicPrefix() {
         if (App.hasArgument("crlogic.prefix")) {
             return App.getArgumentValue("crlogic.prefix");
         }
-        return crlogicPrefix;
+        return getConfig().XScanCrlogicPrefix;
     }
 
-    public void setCrlogicPrefix(String crlogicPrefix) {
-        this.crlogicPrefix = crlogicPrefix;
-    }
-
-    public String getCrlogicIoc() {
+    public static String getCrlogicIoc() {
         if (App.hasArgument("crlogic.ioc")) {
             return App.getArgumentValue("crlogic.ioc");
         }
-        return crlogicIoc;
+        return getConfig().XScanCrlogicIoc;
     }
 
-    public String getCrlogicChannel() {
+    public static String getCrlogicChannel() {
         if (App.hasArgument("crlogic.channel")) {
             return App.getArgumentValue("crlogic.channel");
         }
-        return crlogicChannel;
+        return getConfig().XScanCrlogicChannel;
     }
 
-    public String getDataBaseDirectory() {
-        return Context.getInstance().getSetup().expandPath(dataBaseDirectory);
-    }
-
-    public String getDataFilePrefix() {
-        if ((dataFilePrefix == null) || (dataFilePrefix.trim().length() == 0)) {
-            return getDataFileNameDefault();
+    public static boolean getCrlogicAbortable() {
+        if (App.hasArgument("crlogic.abortable")){
+            return App.getBoolArgumentValue("crlogic.abortable");
         }
-        return dataFilePrefix;
+        return getConfig().XScanCrlogicAbortable;
     }
 
-    public int getActorMoveTimeout() {
+    public static boolean getScrlogicSimulated() {
+        if (App.hasArgument("crlogic.simulated")){
+            return App.getBoolArgumentValue("crlogic.simulated");
+        }
+        return getConfig().XScanCrlogicSimulated;
+    }    
+    public static String getDataFilePrefix() {
+        return getConfig().getXScanDataFileName();
+    }
+
+    public static int getActorMoveTimeout() {
+        if (App.hasArgument("xscan.move.timeout")){
+            return Integer.valueOf(App.getArgumentValue("xscan.move.timeout"));
+        }
         if (App.hasArgument("move.timeout")) {
             return Integer.valueOf(App.getArgumentValue("move.timeout"));
         }
-        return actorMoveTimeout;
+        return getConfig().XScanMoveTimeout;
     }
 
-    public boolean getAppendSuffix() {
+    public static boolean getAppendSuffix() {
+        if (App.hasArgument("xscan.suffix")){
+            return App.getBoolArgumentValue("xscan.suffix");
+        }
         if (App.hasArgument("fdanosuffix")) {
             return false;
         }
-        return appendSuffix;
+        return getConfig().XScanAppendSuffix;
     }
 
-    public int getChannelCreationRetries() {
+    public static int getChannelCreationRetries() {
         if (App.hasArgument("xscan.channel.retries")){
             return Integer.valueOf(App.getArgumentValue("xscan.channel.retries"));
         }
         return channelCreationRetries;
     }
 
-    public boolean getCrlogicAbortable() {
-        return crlogicAbortable;
-    }
-
-    public boolean getScrlogicSimulated() {
-        return crlogicSimulated;
-    }
 }
