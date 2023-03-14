@@ -527,7 +527,7 @@ public class DevicePool extends ObservableBase<DevicePoolListener> implements Au
     }
 
     public String[] getAllNamesOrderedByName() {
-        return getAllDeviceNames(null);
+        return getAllNamesOrderedByName(null);
     }
 
     public <T extends GenericDevice> String[] getAllNamesOrderedByName(Class<T> type) {
