@@ -284,12 +284,10 @@ def hscan(config, writable, readables, start, end, steps, passes=1, zigzag=False
     scan.start()
     return scan.getResult()
 
-def oscan(ioc, prefix, writable, readables, start, end, steps, integration_time, additional_backlash=0, passes=1, zigzag=False, **pars):
+def oscan(writable, readables, start, end, steps, integration_time, additional_backlash=0, passes=1, zigzag=False, ioc=None, prefix=None, channel=None, simulation=None, **pars):
     """OTF scan based on crlogic
 
     Args:
-        source(string): Crlogic ioc (if zmq==True) or data channel name (zmq==False).
-        prefix(string): Crlogic prefix 
         writable(Writable): A cslogic positioner 
         readables(list of Readable): List of crlogic sensors
         start(float): start positions of writable.
@@ -299,6 +297,10 @@ def oscan(ioc, prefix, writable, readables, start, end, steps, integration_time,
         additional_backlash(float, optional)
         passes(int, optional): number of passes
         zigzag(bool, optional): if true writables invert direction on each pass.
+        ioc(string, optional): name of the Crlogic ioc. Default from XScan configuration
+        prefix(string, optional): Crlogic prefix . Default from XScan configuration
+        data_channel(string, optional): If defined receives data through channelmonitor and not ZMQ. 
+        simulation(bool, optional):if true simulates CRLOGIC stream. Default from XScan configuration
         zmq(bool, optional): if true receives data from ioc through zmq stream, otherwise with a channel monitor.
         pars(keyworded variable length arguments, optional): scan optional named arguments:
             - title(str, optional): plotting window name.
@@ -313,15 +315,24 @@ def oscan(ioc, prefix, writable, readables, start, end, steps, integration_time,
     Returns:
         ScanResult.
     """
+    if ioc is None:
+        ioc = get_context().config.xscanCrlogicIoc
+    if prefix is None:
+        prefix = get_context().config.xscanCrlogicPrefix
+    if channel is None:
+        channel = get_context().config.xscanCrlogicChannel
+    if simulation is None:
+        simulation = get_context().config.xscanCrlogicSimulated
     config = {}
     config["class"] = "ch.psi.pshell.crlogic.CrlogicScan"
-    if zmq:
-        config["ioc"] = source
+    if not channel:
+        config["ioc"] = ioc
     else:
-        config["channel"] = source
+        config["channel"] = channel
     config["prefix"] = prefix
     config["integrationTime"] = integration_time
     config["additionalBacklash"] = additional_backlash
+    config["simulation"]=simulation
     return hscan(config, writable, readables, start, end, float(steps), **pars)
 
 def bscan(stream, records, timeout = None, passes=1, **pars):
