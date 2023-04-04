@@ -295,14 +295,16 @@ public class CrlogicLoopStream implements ActionLoop {
     private void simulate() throws IOException, TimeoutException, InterruptedException{
         logger.warning("CRLOGIC is simulated");
         abort = false;
-        int timeout = 600000; // 10 minutes move timeout
-        double scanTime=10.0;
+        int timeout = 600000; // 10 minutes move timeout        
+        double stepTime = integrationTime;
+        double range =Math.abs(start-end);
+        int steps = (int)(range / stepSize);
+        double scanTime=stepTime*steps;                
         DummyMotor motor = new DummyMotor("crlogic simulation");
         motor.initialize();
         motor.getConfig().minValue=Math.min(start,end);
         motor.getConfig().maxValue=Math.max(start,end);
-        motor.getConfig().precision=6;        
-        double range = motor.getConfig().maxValue-motor.getConfig().minValue;
+        motor.getConfig().precision=6;                
         motor.getConfig().maxSpeed=range;
         motor.getConfig().defaultSpeed=range/scanTime;
         motor.getConfig().save();
@@ -311,9 +313,7 @@ public class CrlogicLoopStream implements ActionLoop {
         logger.info("Move motor to start [" + start + "]");
         motor.setSpeed(motor.getMaxSpeed());
         motor.move(start, timeout);
-        motor.assertInPosition(start);
-        int steps = (int)(range / stepSize);
-        double stepTime = scanTime/steps;
+        motor.assertInPosition(start);        
 
         // Execute pre actions
         for (Action action : preActions) {
