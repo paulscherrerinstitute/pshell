@@ -122,6 +122,25 @@ public class SessionPanel extends MonitoredPanel implements SessionManagerListen
     void addMetadata(String key, Object value) {
         try {
             MetadataType type = manager.getMetadataType(key);
+            if (value instanceof String){
+                String str = (String)value;
+                if (type==MetadataType.List){
+                    if (!str.startsWith("[")){
+                        value = "[" + value;
+                    }
+                    if (!str.endsWith("]")){
+                        value = value + "]";
+                    }
+                }
+                else if (type==MetadataType.Map){
+                    if (!str.startsWith("{")){
+                        value = "{" + value;
+                    }
+                    if (!str.endsWith("}")){
+                        value = value + "}";
+                    }
+                }
+            }  
             manager.fromString(type, Str.toString(value));
         } catch (Exception ex) {
             SwingUtilities.invokeLater(() -> {
@@ -209,7 +228,7 @@ public class SessionPanel extends MonitoredPanel implements SessionManagerListen
     
     public static String getDateTimeStr(Number timestamp) {
         long l = timestamp.longValue();
-        return (l > 0) ? Chrono.getTimeStr(l, "dd.MM HH:mm") : "";
+        return (l > 0) ? Chrono.getTimeStr(l, "dd.MM.YY HH:mm") : "";
     }    
 
     public void update() {
