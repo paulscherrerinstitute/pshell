@@ -21,6 +21,7 @@ import java.awt.event.MouseEvent;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
@@ -201,6 +202,25 @@ public class SessionsDialog extends StandardDialog implements SessionManagerList
     void addMetadata(int session, String key, Object value) {
         try {
             MetadataType type = manager.getMetadataType(key);
+            if (value instanceof String){
+                String str = (String)value;
+                if (type==MetadataType.List){
+                    if (!str.startsWith("[")){
+                        value = "[" + value;
+                    }
+                    if (!str.endsWith("]")){
+                        value = value + "]";
+                    }
+                }
+                else if (type==MetadataType.Map){
+                    if (!str.startsWith("{")){
+                        value = "{" + value;
+                    }
+                    if (!str.endsWith("}")){
+                        value = value + "}";
+                    }
+                }
+            }            
             manager.fromString(type, Str.toString(value));
         } catch (Exception ex) {
             SwingUtilities.invokeLater(() -> {
@@ -722,9 +742,7 @@ public class SessionsDialog extends StandardDialog implements SessionManagerList
                 .addGap(0, 0, 0))
         );
 
-        jSplitPane1.setBorder(null);
         jSplitPane1.setDividerLocation(300);
-        jSplitPane1.setDividerSize(5);
         jSplitPane1.setResizeWeight(0.5);
 
         panelMetadata.setBorder(javax.swing.BorderFactory.createTitledBorder("Metadata"));
@@ -789,7 +807,7 @@ public class SessionsDialog extends StandardDialog implements SessionManagerList
             .addGroup(panelMetadataLayout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(panelMetadataLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 275, Short.MAX_VALUE)
+                    .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 269, Short.MAX_VALUE)
                     .addGroup(panelMetadataLayout.createSequentialGroup()
                         .addGap(0, 0, Short.MAX_VALUE)
                         .addComponent(buttonAddMetadata)
@@ -840,7 +858,7 @@ public class SessionsDialog extends StandardDialog implements SessionManagerList
                 return canEdit [columnIndex];
             }
         });
-        tableFiles.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_INTERVAL_SELECTION);
+        tableFiles.setSelectionMode(javax.swing.ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
         tableFiles.getTableHeader().setReorderingAllowed(false);
         tableFiles.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseReleased(java.awt.event.MouseEvent evt) {
@@ -878,11 +896,11 @@ public class SessionsDialog extends StandardDialog implements SessionManagerList
                 .addContainerGap()
                 .addGroup(panelFilesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, panelFilesLayout.createSequentialGroup()
-                        .addGap(0, 39, Short.MAX_VALUE)
+                        .addGap(0, 57, Short.MAX_VALUE)
                         .addComponent(buttonAddFile)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addComponent(buttonRemoveFile)
-                        .addGap(0, 39, Short.MAX_VALUE))
+                        .addGap(0, 57, Short.MAX_VALUE))
                     .addComponent(jScrollPane4, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE))
                 .addContainerGap())
         );
@@ -921,7 +939,7 @@ public class SessionsDialog extends StandardDialog implements SessionManagerList
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
                 .addGap(50, 50, 50)
                 .addComponent(checkPreserveDirectoryStructure)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 88, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 150, Short.MAX_VALUE)
                 .addComponent(buttonZIP)
                 .addGap(50, 50, 50))
         );
@@ -1000,10 +1018,10 @@ public class SessionsDialog extends StandardDialog implements SessionManagerList
                     .addComponent(jLabel1, javax.swing.GroupLayout.Alignment.TRAILING))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(textScicatLocation, javax.swing.GroupLayout.DEFAULT_SIZE, 306, Short.MAX_VALUE)
+                    .addComponent(textScicatLocation, javax.swing.GroupLayout.DEFAULT_SIZE, 327, Short.MAX_VALUE)
                     .addComponent(textScicatGroup)
                     .addComponent(textScicatPI))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 15, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 36, Short.MAX_VALUE)
                 .addComponent(jPanel3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap())
         );
@@ -1075,9 +1093,12 @@ public class SessionsDialog extends StandardDialog implements SessionManagerList
             JFileChooser chooser = new JFileChooser(Context.getInstance().getSetup().getDataPath());
             chooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
             chooser.setAcceptAllFileFilterUsed(true);
+            chooser.setMultiSelectionEnabled(true);
             int rVal = chooser.showOpenDialog(this);
             if (rVal == JFileChooser.APPROVE_OPTION) {
-                ((DefaultTableModel)tableFiles.getModel()).addRow(new Object[]{chooser.getSelectedFile().getCanonicalPath()});
+                for (File file : chooser.getSelectedFiles()){
+                    ((DefaultTableModel)tableFiles.getModel()).addRow(new Object[]{file.getCanonicalPath()});
+                }
                 setAdditionalFiles();
             }
         } catch (Exception ex) {
@@ -1088,11 +1109,15 @@ public class SessionsDialog extends StandardDialog implements SessionManagerList
     private void buttonRemoveFileActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonRemoveFileActionPerformed
         try {
             cancelMetadataEditing();
-            int row = tableFiles.getSelectedRow();
-            if(row>=0){
-                modelFiles.removeRow(row);
-                setAdditionalFiles();
+            int[] rows = tableFiles.getSelectedRows();            
+            Arrays.sort(rows);
+            for (int i = rows.length-1; i >= 0; i--) {
+                int row = rows[i];
+                if(row>=0){
+                    modelFiles.removeRow(row);                    
+                }                
             }
+            setAdditionalFiles();
         } catch (Exception ex) {
             showException(ex);
         }            

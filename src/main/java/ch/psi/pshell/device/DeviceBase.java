@@ -295,7 +295,7 @@ public abstract class DeviceBase extends GenericDeviceBase<DeviceListener> imple
     @Override
     public boolean waitBuffer(int timeout) throws InterruptedException {
         try {
-            waitCondition(() -> getBufferSize()>0,  timeout, "Timeout waiting queue non empty");
+            waitConditionOnCache(() -> getBufferSize()>0,  timeout, "Timeout waiting queue non empty");
             return true;
         } catch (IOException ex) {
             return false;
