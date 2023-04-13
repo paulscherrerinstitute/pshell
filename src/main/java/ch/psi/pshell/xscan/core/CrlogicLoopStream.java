@@ -600,16 +600,18 @@ public class CrlogicLoopStream implements ActionLoop {
                         logger.info("Motor didn't reached end position");
                     }
                 } finally {
-                    if (usingIoc){
-                        receiveZmq();
+                    try{
+                        if (usingIoc){
+                            receiveZmq();
+                        }
+
+                        // Send end of stream message
+                        logger.info("Sending - End of Line - Data Group: " + dataGroup);
+                        eventbus.post(new EndOfStreamMessage(dataGroup));
+                    } finally{
+                        // Close ZMQ stream or channel
+                        close();
                     }
-
-                    // Send end of stream message
-                    logger.info("Sending - End of Line - Data Group: " + dataGroup);
-                    eventbus.post(new EndOfStreamMessage(dataGroup));
-
-                    // Close ZMQ stream
-                    close();
                 }
 
                 // Stop crlogic logic
@@ -813,7 +815,6 @@ public class CrlogicLoopStream implements ActionLoop {
             return;
         }
         
-        boolean useIoc = (ioc!=null) && !ioc.isBlank();
         if (useIoc()){
             logger.info("Connecting with IOC" + ioc);
             context = ZMQ.context(1);
@@ -838,30 +839,24 @@ public class CrlogicLoopStream implements ActionLoop {
      * Close source
      */
     private void close() {
-        if (simulation){
+        if (simulation) {
             return;
-        }
+        }    
         
-        boolean useIoc = (ioc!=null) && !ioc.isBlank();
-        if (useIoc()){
-            logger.info("Closing stream from IOC " + ioc);
-            try {
+        try {
+            if (useIoc()){
+                logger.info("Closing stream from IOC " + ioc);
                 socket.close();
                 context.close();
-            } catch (Exception ex) {
-                logger.log(Level.INFO, null, ex);
-            }
-            socket = null;
-            context = null;
-        } else if (channel!=null){
-            logger.info("Closing stream from channel " + channel);
-            try {
+            } else if (channel!=null){
+                logger.info("Closing stream from channel " + channel);
                 dataChannel.close();
-            } catch (Exception ex) {
-                logger.log(Level.INFO, null, ex);
             }
+        } catch (Exception ex) {
+            logger.log(Level.INFO, null, ex);
         }
-        
+        socket = null;
+        context = null;        
     }
     
     public boolean useIoc(){
