@@ -8,17 +8,20 @@ import ch.psi.pshell.imaging.Renderer;
 import ch.psi.pshell.imaging.Source;
 import ch.psi.pshell.swing.DevicePanel;
 import ch.psi.pshell.swing.DevicePoolPanel;
+import ch.psi.pshell.swing.HistoryChart;
 import static ch.psi.pshell.ui.View.logger;
 import ch.psi.utils.State;
 import ch.psi.utils.swing.SwingUtils;
 import java.awt.Component;
 import java.awt.Dimension;
+import java.awt.Frame;
 import java.awt.Window;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.JDialog;
 import javax.swing.JPanel;
 
@@ -28,12 +31,14 @@ import javax.swing.JPanel;
 public class DevicePanelManager {
 
     final Map<String, JDialog> deviceDialogs;
+    final Map<Device, JDialog> historyDialogs;
     final View view;
     final Preferences preferences;
 
     DevicePanelManager(View view) {
         this.view = view;
         this.deviceDialogs = new HashMap<>();
+        this.historyDialogs = new HashMap<>();
         if (view == null) {
             preferences = Preferences.load();
         } else {
@@ -48,10 +53,11 @@ public class DevicePanelManager {
     public JPanel showPanel(final String name, Window parent) {
         return showPanel(Context.getInstance().getDevicePool().getByName(name), parent);
     }
+
     public JPanel showPanel(final GenericDevice dev) {
         return showPanel(dev, view);
     }
-    
+               
     public JPanel showPanel(final GenericDevice dev, Window parent) {
 
         if ((dev == null) || (dev.getName() == null)) {
@@ -65,7 +71,10 @@ public class DevicePanelManager {
                 Class type = dev instanceof Source ? Renderer.class : DevicePanel.class;
                 Component[] ret = SwingUtils.getComponentsByType(dlg, type);
                 if ((ret.length == 0) || !(type.isAssignableFrom(ret[0].getClass()))) {
-                    return null;
+                    ret = SwingUtils.getComponentsByType(dlg, HistoryChart.class);
+                     if (ret.length == 0){
+                        return null;
+                     }
                 }
                 if (dev instanceof Source) {
                     ((Renderer) ret[0]).setDevice((Source) dev);
@@ -73,9 +82,52 @@ public class DevicePanelManager {
                 return (JPanel) ret[0];
             }
         }
-        JPanel panel = dev instanceof Source ? newRenderer((Source) dev, parent) : newPanel((Device) dev, parent);
+        JPanel panel = dev instanceof Source ? newRenderer((Source) dev, parent) : newPanel((Device) dev, parent);         
+        
+        if ((panel==null) && (dev instanceof Device)) {
+            return showHistory((Device) dev);
+        }
+
         return panel;
     }
+    
+    public HistoryChart showHistory(final Device dev) {
+        return showHistory(dev, view);
+    }    
+    
+    public HistoryChart showHistory(Device dev, Window parent)  {
+        if (historyDialogs.containsKey(dev)) {
+            JDialog dlg = historyDialogs.get(dev);
+            if (dlg.isDisplayable()) {
+                dlg.requestFocus();
+                Component[] ret = SwingUtils.getComponentsByType(dlg, HistoryChart.class);
+                return (HistoryChart) ret[0];
+
+            }
+        }
+        try {        
+            HistoryChart chart = HistoryChart.create(dev);
+            JDialog dlg = SwingUtils.showDialog(parent, dev.getName(), null, chart);
+            historyDialogs.put(dev, dlg);
+            dev.addListener (new DeviceAdapter() {
+                @Override
+                public void onStateChanged(Device device, State state, State former) {
+                    if (state == State.Closing) {
+                        if (historyDialogs.containsKey(device)) {
+                            for (Component hc : SwingUtils.getComponentsByType(historyDialogs.get(device), HistoryChart.class)) {
+                                ((HistoryChart) hc).close();
+                            }
+                            historyDialogs.get(device).setVisible(false);
+                        }
+                    }
+                }
+            });
+            
+            return chart;
+        } catch (Exception ex) {
+            return null;
+        }
+    }    
 
     public static final String RENDERER_DIALOG_NAME_PREFIX = "Renderer ";
 

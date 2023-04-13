@@ -47,8 +47,7 @@ public class DevicePoolPanel extends MonitoredPanel implements UpdatablePanel {
 
     public DevicePoolPanel() {
         initComponents();
-        model = (DefaultTableModel) table.getModel();
-        historyDialogs = new HashMap<>();
+        model = (DefaultTableModel) table.getModel();        
         setupMenu();
     }
 
@@ -153,7 +152,7 @@ public class DevicePoolPanel extends MonitoredPanel implements UpdatablePanel {
             if (dev != null) {
                 try {
                     if (dev instanceof Device) {
-                        showHistory((Device) dev);
+                         ((View) App.getInstance().getMainFrame()).showHistory((Device) dev);
                     }
                 } catch (Exception ex) {
                     showException(ex);
@@ -295,14 +294,6 @@ public class DevicePoolPanel extends MonitoredPanel implements UpdatablePanel {
                     model.setValueAt(state, row, 2);
                 }
             }
-            if (state == State.Closing) {
-                if (historyDialogs.containsKey(device)) {
-                    for (Component hc : SwingUtils.getComponentsByType(historyDialogs.get(device), HistoryChart.class)) {
-                        ((HistoryChart) hc).close();
-                    }
-                    historyDialogs.get(device).setVisible(false);
-                }
-            }
         }
 
         @Override
@@ -439,30 +430,8 @@ public class DevicePoolPanel extends MonitoredPanel implements UpdatablePanel {
         dlg.setVisible(true);
     }
 
-    final Map<Device, JDialog> historyDialogs;
-
-    void showHistory(Device dev) throws ClassNotFoundException, InstantiationException, IllegalAccessException {
-        Frame frame = (Frame) getTopLevelAncestor();
-        if (historyDialogs.containsKey(dev)) {
-            JDialog dlg = historyDialogs.get(dev);
-            if (dlg.isDisplayable()) {
-                dlg.requestFocus();
-                return;
-            }
-        }
-        HistoryChart chart = HistoryChart.create(dev);
-        JDialog dlg = SwingUtils.showDialog(frame, dev.getName(), null, chart);
-        historyDialogs.put(dev, dlg);
-    }
-
     protected void onDoubleClick(GenericDevice dev) throws Exception {
-        if (((View) App.getInstance().getMainFrame()).showPanel(dev) == null) {
-            //Update value in table if has no panel
-            if (dev instanceof Device) {
-                //dev.request();
-                showHistory((Device) dev);
-            }
-        }
+        ((View) App.getInstance().getMainFrame()).showPanel(dev);
     }
 
     /**

@@ -2563,10 +2563,13 @@ public class View extends MainFrame {
         return shell;
     }
 
-    ;
 
     public JPanel showPanel(final GenericDevice dev) {
         return App.getInstance().getDevicePanelManager().showPanel(dev);
+    }
+
+    public JPanel showHistory(final Device dev) {
+        return App.getInstance().getDevicePanelManager().showHistory(dev);
     }
 
     void openFile(File f) throws Exception {
