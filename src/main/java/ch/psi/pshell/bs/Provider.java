@@ -19,7 +19,11 @@ public class Provider extends DeviceBase {
 
     final ProviderConfig volatileConfig;
     String address;
-
+    public static final int MAX_HEADER_BYTES = Short.BYTES +      // ID 
+                                               Byte.BYTES +       // Compression algo 
+                                               Byte.BYTES +       // Dim 
+                                               2 * Integer.BYTES; // Shape elements, max 2d
+    
     //Persisted configuration
     public Provider(String name, String address) {
         this(name, address, new ProviderConfig());
@@ -76,13 +80,13 @@ public class Provider extends DeviceBase {
     public int getSocketType() {
         return (getConfig().socketType == SocketType.PULL) ? ZMQ.PULL : ZMQ.SUB;
     }
-
+    
     public ReceiverConfig getReceiverConfig(Stream stream) throws Exception {
         String socket = getStreamSocket(stream);
         if (socket == null) {
             throw new Exception("Stream socket is not defined");
         }
-        MsgAllocator allocator = getConfig().byteBufferAllocator ? new HeaderReservingMsgAllocator(12, ByteBufferAllocator.DEFAULT_ALLOCATOR) : null;
+        MsgAllocator allocator = getConfig().headerReservingAllocator ? new HeaderReservingMsgAllocator(MAX_HEADER_BYTES, ByteBufferAllocator.DEFAULT_ALLOCATOR) : null;
         ReceiverConfig ret = new ReceiverConfig(socket,true, false, new StandardMessageExtractor<>(new MatlabByteConverter()),allocator);
         ret.setSocketType(getSocketType());
         ret.setKeepListeningOnStop(getConfig().keepListeningOnStop);
