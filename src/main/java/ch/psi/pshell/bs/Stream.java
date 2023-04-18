@@ -96,6 +96,17 @@ public class Stream extends DeviceBase implements Readable<StreamValue>, Cacheab
     public Stream(String name, String address, SocketType socketType) {
         this(name, null, address, socketType, false);
     }    
+
+    public Stream(String name, String address, boolean pull, Incomplete incomplete) {
+        this(name, address, pull);
+        setIncomplete(incomplete);
+    }
+
+    public Stream(String name, String address, SocketType socketType, Incomplete incomplete) {
+        this(name, address, socketType);
+        setIncomplete(incomplete);
+    }    
+
     
     /**
      * If provider is null then uses default provider.
