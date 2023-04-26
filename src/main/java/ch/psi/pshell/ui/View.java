@@ -373,6 +373,9 @@ public class View extends MainFrame {
                     for (Editor editor : getEditors()) {
                         editor.setReadOnly(context.getRights().denyEdit);
                     }
+                    for (ScriptEditor editor : getScriptEditors()) {
+                        editor.setReadOnly(context.getRights().denyEdit);
+                    }
                 }
             }
         });
@@ -1427,6 +1430,17 @@ public class View extends MainFrame {
         return getPanels(Renderer.class);
     }
 
+    public List<JPanel> getDocumentPanels(){
+        List<JPanel> ret = new ArrayList<>();
+        ret.addAll(getEditors());
+        ret.addAll(getRenderers());
+        ret.addAll(getDataFilePanels());
+        ret.addAll(getScriptEditors());
+        for (Processor p : getProcessors()) {
+            ret.add(p.getPanel());
+        }        
+        return ret;
+    }
             
     public <T> List<T> getPanels(Class<T> type) {
         ArrayList<T> ret = new ArrayList();
@@ -1699,7 +1713,14 @@ public class View extends MainFrame {
                     tabDoc.remove(se);
                 }
             }
-        }     
+        }  
+        for (ScriptEditor se : getScriptEditors()) {
+            if ((se.getFileName() != null) && sameFile(file, se.getFileName())){
+                if (tabDoc.indexOfComponent(se) >= 0) {
+                    tabDoc.remove(se);
+                }
+            }
+        }          
         for (Processor p : getProcessors()) {
             try {
                 if (sameFile(file, p.getFileName())){
@@ -4967,25 +4988,18 @@ public class View extends MainFrame {
     private void menuCloseAllActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuCloseAllActionPerformed
         try {
             closeSearchPanels();
-            for (Editor editor : getEditors()) {
-                if (tabDoc.indexOfComponent(editor) >= 0) {
-                    tabDoc.remove(editor);
-                } else if (detachedScripts.containsValue(editor)) {
-                    detachedScripts.values().removeIf(val -> val == editor);
-                    editor.getTopLevelAncestor().setVisible(false);
-                }
-            }
-            for (Processor processor : getProcessors()) {
-                JPanel panel = processor.getPanel();
-                int index = tabDoc.indexOfComponent(panel);
-                if (index >= 0) {
+   
+            for ( JPanel panel : getDocumentPanels()) {                
+                if (tabDoc.indexOfComponent(panel) >= 0) {
+                    int index = tabDoc.indexOfComponent(panel);
                     if (SwingUtils.isTabClosable(tabDoc, index)){
-                        tabDoc.remove(processor.getPanel());
+                        tabDoc.remove(panel);
                     }
-                } else if (detachedScripts.containsValue(processor.getPanel())) {
-                    detachedScripts.values().removeIf(val -> val == processor.getPanel());
+                } else if (detachedScripts.containsValue(panel)) {
+                    detachedScripts.values().removeIf(val -> val == panel);
                     panel.getTopLevelAncestor().setVisible(false);
                 }
+                
             }
         } catch (Exception ex) {
             showException(ex);
