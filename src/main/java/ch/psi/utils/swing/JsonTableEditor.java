@@ -1,6 +1,9 @@
 package ch.psi.utils.swing;
 
 import ch.psi.utils.Convert;
+import ch.psi.utils.EncoderJson;
+import ch.psi.utils.IO;
+import ch.psi.utils.Str;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.io.IOException;
@@ -8,39 +11,35 @@ import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Vector;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JMenuItem;
 import javax.swing.JTable;
 import javax.swing.event.TableModelEvent;
 import javax.swing.table.DefaultTableModel;
-import javax.swing.undo.UndoManager;
 
 /**
  * Editor for files containing delimiter-separated values, displayed in a table. Can also edit
  * property files, setting the property name to the first column.
  */
-public class DsvEditor extends Editor {
+public class JsonTableEditor extends Editor {
 
-    UndoManager undoManager;
-    Integer contentWidth;
-    final String[] columns;
-    final Class[] types;
-    final boolean[] editable;
-    final String separator;
-    final boolean persistHeader;
+    String[] columns;
+    Class[] types;
+    boolean[] editable;
     final DefaultTableModel model;
 
     /**
-     * Implementation of DSV (delimiter-separated values) documents .
+     * Implementation of Json table documents .
      */
-    public static class DsvDocument extends Document {
+    public static class JsonTableDocument extends Document {
 
-        DsvEditor editor;
+        JsonTableEditor editor;
 
-        DsvDocument() {
+        JsonTableDocument() {
         }
 
         @Override
@@ -51,22 +50,10 @@ public class DsvEditor extends Editor {
 
         @Override
         public void load(String fileName) throws IOException {
-            ArrayList<Object[]> data = new ArrayList();
+            List<Map> data = new ArrayList();
             try {
-                boolean properties = editor.isPropertiesFile();
-                for (String line : Files.readAllLines(Paths.get(fileName))) {
-                    if (properties) {
-                        line = line.replaceFirst("=", editor.separator);
-                    }
-                    String[] tokens = line.split(editor.separator);
-                    for (int i = 0; i < tokens.length; i++) {
-                        tokens[i] = tokens[i].trim();
-                    }
-                    data.add(tokens);
-                }
-                if (editor.persistHeader) {
-                    data.remove(0);
-                }
+                String json = Files.readString(Paths.get(fileName));
+                data = (List) EncoderJson.decode(json, List.class);
                 editor.setData(data);
             } catch (NoSuchFileException ex) {
                 clear();
@@ -76,62 +63,44 @@ public class DsvEditor extends Editor {
 
         @Override
         public void save(String fileName) throws IOException {
-            Files.write(Paths.get(fileName), getLines());
+            if (IO.getExtension(fileName).isEmpty()){
+                fileName += ".json";
+            }
+            Files.writeString(Paths.get(fileName), getContents());
             setChanged(false);
         }
-
-        List<String> getLines() {
-            boolean properties = editor.isPropertiesFile();
-            List<Object[]> data = editor.getData();
-            List<String> lines = new ArrayList<>();
-            if (editor.persistHeader) {
-                lines.add(String.join(editor.separator, editor.columns));
-            }
-            for (Object[] row : data) {
-                String[] rowStr = Convert.toStringArray(row);
-                String str = String.join(editor.separator, rowStr);
-                if (properties) {
-                    str = str.replaceFirst(editor.separator, "=");
-                }
-                lines.add(str);
-            }
-            return lines;
-        }
-
         @Override
         public String getContents() {
-            return String.join("\n", getLines());
+            try{
+                List<Map> data = editor.getData();
+                return EncoderJson.encode(data, true);
+            } catch (Exception ex){
+                Logger.getLogger(JsonTableEditor.class.getName()).log(Level.SEVERE, null, ex);
+                return "{}";
+            }
         }
 
     }
-
-    public String getSeparator() {
-        return separator;
-    }
-
-    public DsvEditor(String[] columns) {
+    
+    public JsonTableEditor() {
+        this(null, null);
+    }    
+   
+    public JsonTableEditor(String[] columns) {
         this(columns, null);
     }
 
-    public DsvEditor(String[] columns, Class[] types) {
-        this(columns, types, ";");
-    }
-
-    public DsvEditor(String[] columns, Class[] types, String separator) {
-        this(columns, types, separator, false);
-    }
-
-    public DsvEditor(String[] columns, Class[] types, String separator, boolean persistHeader) {
-        super(new DsvDocument());
+    public JsonTableEditor(String[] columns, Class[] types) {
+        super(new JsonTableDocument());
         this.columns = columns;
         this.types = types;
-        this.separator = separator;
-        this.persistHeader = persistHeader;
-        this.editable = new boolean[columns.length];
-        for (int i = 0; i < editable.length; i++) {
-            editable[i] = true;
+        if (columns!=null){
+            this.editable = new boolean[columns.length];
+            for (int i = 0; i < editable.length; i++) {
+                editable[i] = true;
+            }
         }
-        ((DsvDocument) getDocument()).editor = this;
+        ((JsonTableDocument) getDocument()).editor = this;
         initComponents();
 
         JMenuItem menuFont;
@@ -170,23 +139,21 @@ public class DsvEditor extends Editor {
         buttonDelete.setEnabled(rows > 0);
     }
 
-    Object[] getRow(String[] data) {
-        if (data == null) {
-            data = new String[columns.length];
-        }
+    Object[] getRow(Map data) {
         Object[] ret = new Object[columns.length];
         for (int i = 0; i < columns.length; i++) {
             try {
                 ret[i] = null;
-                boolean empty = ((data == null) || (i >= data.length) || (data[i] == null));
+                Object value =(data == null)? null : data.get(columns[i]);
+                boolean empty = (value==null);
                 if ((types == null) || (types[i] == String.class)) {
-                    String val = empty ? "" : data[i];
+                    String val = empty ? "" : Str.toString(value);
                     ret[i] = val;
                 } else if (Number.class.isAssignableFrom(types[i])) {
-                    String val = empty ? "0" : data[i];
+                    String val = empty ? "0" : Str.toString(value);
                     ret[i] = types[i].getConstructor(String.class).newInstance(val);
                 } else if (types[i] == Boolean.class) {
-                    String val = empty ? "false" : data[i];
+                    String val = empty ? "false" : Str.toString(value);
                     ret[i] = Boolean.valueOf(val);
                 }
             } catch (Exception ex) {
@@ -420,37 +387,63 @@ public class DsvEditor extends Editor {
         return editable[column];
     }
 
-    public void setData(List<Object[]> data) {
-
+    public void setData(List<Map> data) {
         List<Object[]> aux = new ArrayList<Object[]>();
         if (data != null) {
-            for (int i = 0; i < data.size(); i++) {
-                aux.add(getRow(Convert.toStringArray(data.get(i))));
+            if ((columns==null) && (data.size()>0)){
+                Map row = data.get(0);
+                columns = Convert.toStringArray(row.keySet().toArray());
+                this.editable = new boolean[columns.length];
+                for (int i = 0; i < editable.length; i++) {
+                    editable[i] = true;
+                }                
+                if (types==null){
+                    types = new Class[columns.length];
+                    for (int i=0; i< columns.length; i++){
+                        Object val = row.get(columns[i]);
+                        types[i] = (val==null) ? String.class : val.getClass();
+                    }
+                }
+            }
+            for (Map row : data) {
+                aux.add(getRow(row));
             }
         }
         model.setDataVector(aux.toArray(new Object[0][0]), Convert.toObjectArray(columns));
         updateButtons();
     }
 
-    public List<Object[]> getData() {
-        List<Object[]> ret = new ArrayList<Object[]>();
+    public List<Map> getData() {
+        List<Map> ret = new ArrayList<>();
         List data = model.getDataVector();
         for (int i = 0; i < data.size(); i++) {
             Object row = data.get(i);
+            Object[] values;
+            Map map = new HashMap();
             if (row instanceof List) {
-                ret.add(((List) row).toArray(new Object[0]));
-            } else if (row instanceof Object[]) {
-                ret.add((Object[])row);
+                row = ((List) row).toArray(new Object[0]);
+            }            
+            if (row instanceof Object[]) {
+                values = (Object[])row;
+                if (values.length == columns.length){
+                    for (int j=0; j< columns.length; j++){
+                        map.put(columns[j], values[j]);
+                    }
+                } else {
+                    Logger.getLogger(DsvEditor.class.getName()).severe("Invalid table data vector row size");
+                }
             } else {
                 Logger.getLogger(DsvEditor.class.getName()).severe("Invalid table data vector row");
             }
+            
+            ret.add(map);
         }
         return ret;
     }
 
     @Override
-    public DsvDocument getDocument() {
-        return (DsvDocument) document;
+    public JsonTableDocument getDocument() {
+        return (JsonTableDocument) document;
     }
 
     public Font getTableFont() {
@@ -496,8 +489,18 @@ public class DsvEditor extends Editor {
         return sidePanel.isVisible();
     }
 
-    //If property file substitute first separator by '='
-    public boolean isPropertiesFile() {
-        return (getFileName() != null) && (getFileName().endsWith(".properties"));
-    }
+    
+    public static void main(String[] args) throws InterruptedException, IOException {
+        String[] columns = new String[]{"string", "int", "float", "bool"};
+        Class[] types = new Class[]{String.class, Integer.class, Float.class, Boolean.class};
+        JsonTableEditor editor = new JsonTableEditor(columns, types);
+        
+        //editor.load("/Users/gobbo_a/test/tst.json");
+        //if ((args.length > 0) && (args[0] != null) & (!args[0].trim().isEmpty())) {
+        //    editor.load(args[0]);
+        //}
+        javax.swing.JFrame frame = editor.getFrame();
+        frame.setSize(600, 400);
+        frame.setVisible(true);
+    }    
 }
