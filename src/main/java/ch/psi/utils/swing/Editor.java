@@ -217,6 +217,11 @@ public abstract class Editor<T extends Document>
     public void onDocumentChanged(Document doc) {
         updateTitle();
     }
+    
+    @Override
+    public void onDocumentSaved(Document doc){
+        
+    }
 
     public void setTitle(String title) {
         this.title = title;

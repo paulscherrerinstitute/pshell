@@ -19,6 +19,9 @@ public abstract class Document extends ObservableBase<DocumentListener> {
     public void save(String fileName, FilePermissions filePermissions) throws IOException {
         save(fileName);
         IO.setFilePermissions(fileName, filePermissions);
+        for (DocumentListener listener : getListeners()) {
+            listener.onDocumentSaved(this);
+        }
     }
 
     boolean changed;

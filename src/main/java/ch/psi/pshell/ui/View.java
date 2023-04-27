@@ -1639,6 +1639,9 @@ public class View extends MainFrame {
                 }
             }
         }
+        @Override
+        public void onDocumentSaved(Document doc){            
+        }
     };
 
     void updateScriptEditorTabTitle(ScriptEditor editor, int index) {
