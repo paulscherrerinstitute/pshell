@@ -29,6 +29,7 @@ public class JsonTableEditor extends Editor {
 
     String[] columns;
     Class[] types;
+    Object[] defaultValues;
     boolean[] editable;
     final DefaultTableModel model;
 
@@ -132,6 +133,15 @@ public class JsonTableEditor extends Editor {
         setShowClearButton(false);
     }
     
+        
+    public void setDefaultValues(Object[] defaultValues){
+        this.defaultValues = defaultValues;
+    }
+    
+     public Object[] getDefaultValues(){
+        return defaultValues;
+    }    
+    
     public boolean getShowSaveButton(){
         return buttonSave.isVisible();
     }
@@ -163,14 +173,17 @@ public class JsonTableEditor extends Editor {
                 ret[i] = null;
                 Object value =(data == null)? null : data.get(columns[i]);
                 boolean empty = (value==null);
+                String defaultValue =  ((defaultValues!=null) && (defaultValues[i]!=null)) ?  Str.toString(defaultValues[i]) : null;                
+                
+                                
                 if ((types == null) || (types[i] == String.class)) {
-                    String val = empty ? "" : Str.toString(value);
+                    String val = empty ? ((defaultValue==null) ? "" : defaultValue) : Str.toString(value);
                     ret[i] = val;
                 } else if (Number.class.isAssignableFrom(types[i])) {
-                    String val = empty ? "0" : Str.toString(value);
+                    String val = empty ? ((defaultValue==null) ? "0" : defaultValue) : Str.toString(value);
                     ret[i] = types[i].getConstructor(String.class).newInstance(val);
                 } else if (types[i] == Boolean.class) {
-                    String val = empty ? "false" : Str.toString(value);
+                    String val = empty ? ((defaultValue==null) ? "false" : defaultValue) : Str.toString(value);
                     ret[i] = Boolean.valueOf(val);
                 }
             } catch (Exception ex) {

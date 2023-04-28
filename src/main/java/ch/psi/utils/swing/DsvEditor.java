@@ -1,6 +1,7 @@
 package ch.psi.utils.swing;
 
 import ch.psi.utils.Convert;
+import ch.psi.utils.Str;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.io.IOException;
@@ -22,10 +23,9 @@ import javax.swing.undo.UndoManager;
  */
 public class DsvEditor extends Editor {
 
-    UndoManager undoManager;
-    Integer contentWidth;
     final String[] columns;
     final Class[] types;
+    Object[] defaultValues;
     final boolean[] editable;
     final String separator;
     final boolean persistHeader;
@@ -161,6 +161,14 @@ public class DsvEditor extends Editor {
         setShowClearButton(false);
     }
     
+    public void setDefaultValues(Object[] defaultValues){
+        this.defaultValues = defaultValues;
+    }
+    
+     public Object[] getDefaultValues(){
+        return defaultValues;
+    }    
+    
     public boolean getShowSaveButton(){
         return buttonSave.isVisible();
     }
@@ -193,15 +201,17 @@ public class DsvEditor extends Editor {
         for (int i = 0; i < columns.length; i++) {
             try {
                 ret[i] = null;
-                boolean empty = ((data == null) || (i >= data.length) || (data[i] == null));
+                boolean empty = ((data == null) || (i >= data.length) || (data[i] == null));                
+                String defaultValue =  ((defaultValues!=null) && (defaultValues[i]!=null)) ?  Str.toString(defaultValues[i]) : null;                
+                
                 if ((types == null) || (types[i] == String.class)) {
-                    String val = empty ? "" : data[i];
+                    String val = empty ? ((defaultValue==null) ? "" : defaultValue) : data[i];
                     ret[i] = val;
                 } else if (Number.class.isAssignableFrom(types[i])) {
-                    String val = empty ? "0" : data[i];
+                    String val = empty ?  ((defaultValue==null) ? "0" : defaultValue) : data[i];
                     ret[i] = types[i].getConstructor(String.class).newInstance(val);
                 } else if (types[i] == Boolean.class) {
-                    String val = empty ? "false" : data[i];
+                    String val = empty ?  ((defaultValue==null) ? "false" : defaultValue) : data[i];
                     ret[i] = Boolean.valueOf(val);
                 }
             } catch (Exception ex) {
