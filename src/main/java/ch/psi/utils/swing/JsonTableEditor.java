@@ -83,7 +83,7 @@ public class JsonTableEditor extends Editor {
     }
     
     public JsonTableEditor() {
-        this(null, null);
+        this(null, null);        
     }    
    
     public JsonTableEditor(String[] columns) {
@@ -91,7 +91,7 @@ public class JsonTableEditor extends Editor {
     }
 
     public JsonTableEditor(String[] columns, Class[] types) {
-        super(new JsonTableDocument());
+        super(new JsonTableDocument());        
         this.columns = columns;
         this.types = types;
         if (columns!=null){
@@ -129,8 +129,25 @@ public class JsonTableEditor extends Editor {
             getDocument().setChanged(true);
         });
         table.setComponentPopupMenu(menuPopup);
+        setShowClearButton(false);
+    }
+    
+    public boolean getShowSaveButton(){
+        return buttonSave.isVisible();
     }
 
+    public void setShowSaveButton(boolean value){
+        buttonSave.setVisible(value);
+    }
+    
+    public boolean getShowClearButton(){
+        return buttonClear.isVisible();
+    }
+
+    public void setShowClearButton(boolean value){
+        buttonClear.setVisible(value);
+    }
+    
     private void updateButtons() {
         int rows = model.getRowCount();
         int cur = table.getSelectedRow();
@@ -178,6 +195,7 @@ public class JsonTableEditor extends Editor {
         buttonDelete = new javax.swing.JButton();
         buttonSave = new javax.swing.JButton();
         buttonInsert = new javax.swing.JButton();
+        buttonClear = new javax.swing.JButton();
 
         table.getTableHeader().setReorderingAllowed(false);
         table.addMouseListener(new java.awt.event.MouseAdapter() {
@@ -227,18 +245,26 @@ public class JsonTableEditor extends Editor {
             }
         });
 
+        buttonClear.setText("Clear");
+        buttonClear.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                buttonClearActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout sidePanelLayout = new javax.swing.GroupLayout(sidePanel);
         sidePanel.setLayout(sidePanelLayout);
         sidePanelLayout.setHorizontalGroup(
             sidePanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(sidePanelLayout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(sidePanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                .addGroup(sidePanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(buttonUp, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addComponent(buttonDown, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addComponent(buttonSave, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addComponent(buttonInsert, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(buttonDelete, javax.swing.GroupLayout.PREFERRED_SIZE, 89, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(buttonDelete, javax.swing.GroupLayout.PREFERRED_SIZE, 89, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(buttonClear, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addContainerGap())
         );
 
@@ -255,7 +281,9 @@ public class JsonTableEditor extends Editor {
                 .addComponent(buttonUp)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(buttonDown)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 133, Short.MAX_VALUE)
+                .addGap(18, 18, 18)
+                .addComponent(buttonClear)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 92, Short.MAX_VALUE)
                 .addComponent(buttonSave)
                 .addContainerGap())
         );
@@ -337,7 +365,17 @@ public class JsonTableEditor extends Editor {
         updateButtons();
     }//GEN-LAST:event_tableKeyReleased
 
+    private void buttonClearActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonClearActionPerformed
+        try {
+            model.setNumRows(0);
+            updateButtons();
+        } catch (Exception ex) {
+            showException(ex);
+        }
+    }//GEN-LAST:event_buttonClearActionPerformed
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JButton buttonClear;
     private javax.swing.JButton buttonDelete;
     private javax.swing.JButton buttonDown;
     private javax.swing.JButton buttonInsert;
@@ -495,7 +533,7 @@ public class JsonTableEditor extends Editor {
         Class[] types = new Class[]{String.class, Integer.class, Float.class, Boolean.class};
         JsonTableEditor editor = new JsonTableEditor(columns, types);
         
-        //editor.load("/Users/gobbo_a/test/tst.json");
+        editor.load("/Users/gobbo_a/test/tst.json");
         //if ((args.length > 0) && (args[0] != null) & (!args[0].trim().isEmpty())) {
         //    editor.load(args[0]);
         //}

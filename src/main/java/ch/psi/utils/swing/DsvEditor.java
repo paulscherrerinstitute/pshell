@@ -9,8 +9,6 @@ import java.nio.file.NoSuchFileException;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Vector;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JMenuItem;
 import javax.swing.JTable;
@@ -122,7 +120,7 @@ public class DsvEditor extends Editor {
     }
 
     public DsvEditor(String[] columns, Class[] types, String separator, boolean persistHeader) {
-        super(new DsvDocument());
+        super(new DsvDocument());        
         this.columns = columns;
         this.types = types;
         this.separator = separator;
@@ -160,7 +158,24 @@ public class DsvEditor extends Editor {
             getDocument().setChanged(true);
         });
         table.setComponentPopupMenu(menuPopup);
+        setShowClearButton(false);
     }
+    
+    public boolean getShowSaveButton(){
+        return buttonSave.isVisible();
+    }
+
+    public void setShowSaveButton(boolean value){
+        buttonSave.setVisible(value);
+    }
+    
+    public boolean getShowClearButton(){
+        return buttonClear.isVisible();
+    }
+
+    public void setShowClearButton(boolean value){
+        buttonClear.setVisible(value);
+    }    
 
     private void updateButtons() {
         int rows = model.getRowCount();
@@ -211,6 +226,7 @@ public class DsvEditor extends Editor {
         buttonDelete = new javax.swing.JButton();
         buttonSave = new javax.swing.JButton();
         buttonInsert = new javax.swing.JButton();
+        buttonClear = new javax.swing.JButton();
 
         table.getTableHeader().setReorderingAllowed(false);
         table.addMouseListener(new java.awt.event.MouseAdapter() {
@@ -260,18 +276,26 @@ public class DsvEditor extends Editor {
             }
         });
 
+        buttonClear.setText("Clear");
+        buttonClear.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                buttonClearActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout sidePanelLayout = new javax.swing.GroupLayout(sidePanel);
         sidePanel.setLayout(sidePanelLayout);
         sidePanelLayout.setHorizontalGroup(
             sidePanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(sidePanelLayout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(sidePanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                .addGroup(sidePanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(buttonUp, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addComponent(buttonDown, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addComponent(buttonSave, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addComponent(buttonInsert, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(buttonDelete, javax.swing.GroupLayout.PREFERRED_SIZE, 89, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(buttonDelete, javax.swing.GroupLayout.PREFERRED_SIZE, 89, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(buttonClear, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addContainerGap())
         );
 
@@ -288,7 +312,9 @@ public class DsvEditor extends Editor {
                 .addComponent(buttonUp)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(buttonDown)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 133, Short.MAX_VALUE)
+                .addGap(18, 18, 18)
+                .addComponent(buttonClear)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 92, Short.MAX_VALUE)
                 .addComponent(buttonSave)
                 .addContainerGap())
         );
@@ -370,7 +396,17 @@ public class DsvEditor extends Editor {
         updateButtons();
     }//GEN-LAST:event_tableKeyReleased
 
+    private void buttonClearActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonClearActionPerformed
+        try {
+            model.setNumRows(0);
+            updateButtons();
+        } catch (Exception ex) {
+            showException(ex);
+        }
+    }//GEN-LAST:event_buttonClearActionPerformed
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JButton buttonClear;
     private javax.swing.JButton buttonDelete;
     private javax.swing.JButton buttonDown;
     private javax.swing.JButton buttonInsert;

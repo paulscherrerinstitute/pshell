@@ -1816,6 +1816,36 @@ public class View extends MainFrame {
         return panel;
     }
     
+    public Editor openEditor(Editor editor) throws IOException {
+        return openEditor(null, editor);
+    }
+    
+    public Editor openEditor(String title, Editor editor) throws IOException {
+        String file = editor.getFileName();
+        if (file!=null){
+            for (Editor ed : getEditors()) {
+                if (ed.getFileName() != null) {
+                   if  ((ed.getClass() == editor.getClass()) && (sameFile(file, ed.getFileName()))){
+                       if (ed.changedOnDisk()){
+                           closeFile(file);
+                       } else {
+                           selectPanel(ed);
+                           return ed;
+                       }
+                    }
+                }
+            }
+        }
+        editor.setFilePermissions(context.getConfig().filePermissionsScripts);
+        if (title==null){
+            title = ((file!=null)&&(!file.isBlank())) ? new File(file).getName() : "Unknown";
+        }
+        openComponent(title, editor);
+        editor.load(file);
+        return editor;
+    }
+    
+    
     public DataPanel showDataFileWindow(String fileName, String path) throws Exception {
         if (fileName == null) {
             return null;
