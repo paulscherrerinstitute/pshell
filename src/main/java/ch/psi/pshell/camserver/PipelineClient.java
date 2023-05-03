@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -351,4 +352,49 @@ public class PipelineClient extends InstanceManagerClient{
         setFunction(instanceId, new File(fileName).getName());
     }
         
+    
+    public List<String> getLibs() throws IOException {
+        WebTarget resource = client.target(prefix+ "/lib");
+        String json = resource.request().accept(MediaType.TEXT_HTML).get(String.class);
+        Map<String, Object> map = (Map) EncoderJson.decode(json, Map.class);
+        checkReturn(map);
+        return (List<String>) map.get("libs");
+    }
+    
+    public byte[] getLib(String name) throws IOException {
+        WebTarget resource = client.target(prefix+ "/lib/" + name + "/lib_bytes");
+        String json = resource.request().accept(MediaType.TEXT_HTML).get(String.class);
+        Map<String, Object> map = (Map) EncoderJson.decode(json, Map.class);
+        checkReturn(map);
+        Boolean base64 = (Boolean) map.get("base64");
+        String ret = (String)map.get("lib");
+        if (base64){
+            return  Base64.getDecoder().decode(ret);
+        }        
+        return ((String) ret).getBytes("UTF-8");
+    }
+    
+    public void setLib(String name, byte[] lib) throws IOException {
+        WebTarget resource = client.target(prefix+ "/lib/" + name + "/lib_bytes");
+        Response r = resource.request().accept(MediaType.TEXT_HTML).put(Entity.text(lib));
+        String json = r.readEntity(String.class);
+        Map<String, Object> map = (Map) EncoderJson.decode(json, Map.class);
+        checkReturn(map);   
+    }               
+
+    public void deleteLib(String name) throws IOException {
+        checkName(name);
+        WebTarget resource = client.target(prefix+ "/lib/" + name + "/lib_bytes");
+        String json = resource.request().accept(MediaType.TEXT_HTML).delete(String.class);
+        Map<String, Object> map = (Map) EncoderJson.decode(json, Map.class);
+        checkReturn(map);
+    }   
+    
+    public void setLibFile(String fileName) throws IOException {
+        File file = new File(fileName);
+        byte[] lib = Files.readAllBytes(file.toPath());
+        String name = file.getName();
+        setLib(name, lib);
+    }     
+    
 }
