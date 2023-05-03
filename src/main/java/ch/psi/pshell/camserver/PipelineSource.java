@@ -462,7 +462,11 @@ public class PipelineSource extends StreamCamera {
 
     public String captureBackground(Integer images) throws IOException {
         assertStarted();
-        return client.captureBackground(getCurrentCamera(), images);
+        String id = client.captureBackground(getCurrentCamera(), images);
+        if (id != null) {
+            setBackground(id);
+        }
+        return id;        
     }
     
     public boolean isBackgroundSubtractionEnabled() throws IOException {
