@@ -588,7 +588,7 @@ class PShellClient:
                 self.sse_event_loop_thread.daemon = True
                 self.sse_event_loop_thread.start()
         else:
-            raise Exception ("sseclient library is not instlled: server events are not available")
+            raise Exception ("sseclient library is not installed: server events are not available")
 
     def on_event(self, name, value):
         pass
