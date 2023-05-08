@@ -6,7 +6,7 @@ plugins {
     id "nebula.ospackage" version "9.1.1"
 }
 
-version = '1.19.0'
+version = '1.19.1'
 group = 'ch.psi'
 ext.timestamp = new Date().format("yyMMddHHmm")
 
@@ -58,7 +58,7 @@ repositories {
         }       
     maven { url "https://maven.scijava.org/content/repositories/public/" }         
     maven { url "https://maven.scijava.org/" }
-    maven { url "https://artifacts.psi.ch/artifactory/libs-snapshots-local/" }
+    //maven { url "https://artifacts.psi.ch/artifactory/libs-snapshots-local/" }
 }
 
 configurations {
@@ -160,8 +160,8 @@ dependencies {
     implementation 'org.jetbrains.pty4j:pty4j:0.12.6'
     implementation 'black.ninia:jep:3.9.1'
     
-    //implementation 'ch.psi:bsread:4.1.0'  // BSREAD using vanilla JeroMQ 0.5.3
-    implementation 'ch.psi:bsread:4.2.9'  // JeroMQ 0.5.3 modified for fixing header reserving allocator and sending compressed data
+    implementation 'ch.psi:bsread:4.1.0'  // BSREAD using vanilla JeroMQ 0.5.3
+    //implementation 'ch.psi:bsread:4.2.9'  // JeroMQ 0.5.3 modified for fixing header reserving allocator and sending compressed data
     //BSREAD dependencies
     implementation 'ch.psi:bitshuffle-lz4:1.1.2'
     implementation 'org.slf4j:slf4j-api:1.7.26'

@@ -1,5 +1,41 @@
 # Changelog
 
+## 1.19.1
+
+### Added
+ 
+* Device cache buffer.
+
+* UI Scaling.
+
+* XScan simulation & configuration edition.
+
+* Configuration of default decimals in oanels.
+
+* Case insensitive sort.
+
+* Configuration of continuous updates on XScan.
+
+* New Stream constructors.
+
+* JsonTableEditor.
+
+
+### Changed
+
+* XScan config saved within system config.
+
+* Update current pipeline background after capture.
+
+
+### Fixed
+
+* Decimals in RegisterPanel when undefined in the device
+
+* Sessions editing.
+
+
+
 ## 1.19.0
 
 ### Added
