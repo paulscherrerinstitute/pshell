@@ -219,7 +219,7 @@ public class DevicePoolPanel extends MonitoredPanel implements UpdatablePanel {
                             menuRevisionHistory.setEnabled(menuConfig.isEnabled() && Context.getInstance().isVersioningEnabled());
                             popupMenu.show(e.getComponent(), e.getX(), e.getY());
                             menuHistory.setEnabled(getSelectedDevice() instanceof Device);
-                            menuPanel.setEnabled(App.getInstance().getDevicePanelManager().hasControlPanel(getSelectedDevice()));
+                            menuPanel.setEnabled(App.getDevicePanelManager().hasControlPanel(getSelectedDevice()));
                             menuPanel.setText((getSelectedDevice() instanceof Source) ? "Render" : "Control panel");
                         }
                     }
@@ -249,11 +249,17 @@ public class DevicePoolPanel extends MonitoredPanel implements UpdatablePanel {
 
         @Transient
         public Class getDeviceClass() throws ClassNotFoundException {
+            if (Context.getInstance()==null){
+                return Class.forName(deviceClassName);
+            }
             return Context.getInstance().getClassByName(deviceClassName);
         }
 
         @Transient
         public Class getPanelClass() throws ClassNotFoundException {
+            if (Context.getInstance()==null){
+                return Class.forName(panelClassName);
+            }
             return Context.getInstance().getClassByName(panelClassName);
         }
     }

@@ -6,11 +6,13 @@ import ch.psi.pshell.bs.ProviderConfig.SocketType;
 import ch.psi.pshell.bs.Stream;
 import ch.psi.pshell.bs.StreamValue;
 import ch.psi.pshell.device.Device;
+import ch.psi.pshell.ui.App;
 import ch.psi.utils.Arr;
 import ch.psi.utils.Convert;
 import ch.psi.utils.State;
 import ch.psi.utils.Str;
 import ch.psi.utils.swing.SwingUtils;
+import java.awt.Dimension;
 import java.awt.Toolkit;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
@@ -19,10 +21,14 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.swing.JDialog;
 import javax.swing.JMenuItem;
+import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.SwingUtilities;
 import javax.swing.table.DefaultTableModel;
@@ -154,9 +160,9 @@ public class StreamPanel extends DevicePanel {
     void plotChannel( ){
         String channel = getCurrentChannel();
         Stream device = getDevice();
-        if ((device!=null) && (channel!=null)){
+        if ((device!=null) && (channel!=null)){ 
             Device child = device.getChild(channel);
-            showDevicePanel(child); 
+            showDevicePanel(child);             
         }
     }
     
@@ -435,4 +441,36 @@ public class StreamPanel extends DevicePanel {
             updating = false;
         }
     }    
+    
+    public static StreamPanel create(String url, SocketType type) throws IOException, InterruptedException {
+        if (type==null) { 
+            type = SocketType.SUB;
+        }
+
+        Stream stream = new Stream (url, url, type);
+        stream.initialize();
+        stream.start();
+
+        StreamPanel panel = new StreamPanel();
+        panel.setDevice(stream);
+
+        // new Dimension(300, cs.getPreferredSize().height + 30)
+        JDialog dlg = SwingUtils.showDialog(null, url, panel.getPreferredSize(), panel);
+        SwingUtils.centerComponent(null, dlg);        
+        dlg.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+        return panel;        
+    }
+    
+    
+    public static void main(String[] args) {
+        try {
+            App.init(args);
+            String address = args[0]; //"tcp://localhost:5554";
+            SocketType type = SocketType.SUB;
+            StreamPanel panel = create (address, type);
+        } catch (Exception ex) {
+            SwingUtils.showException(null, ex);
+        }
+        
+    }
 }

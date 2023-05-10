@@ -399,15 +399,15 @@ public class DevicePanel extends MonitoredPanel {
 
     public static JPanel showDevicePanel(Component parent, GenericDevice device) {
         Window window = (parent instanceof Window) ? (Window)parent : SwingUtils.getWindow(parent);
-        return App.getInstance().getDevicePanelManager().showPanel(device, window);
+        return App.getDevicePanelManager().showPanel(device, window);
     }
 
     public JPanel showDevicePanel(GenericDevice device) {
-        return showDevicePanel(getFrame(), device);
+        return showDevicePanel(getFrame() == null ? this : getFrame(), device);
     }
     
     static public boolean hideDevicePanel(GenericDevice device) {
-        return App.getInstance().getDevicePanelManager().hidePanel(device);
+        return App.getDevicePanelManager().hidePanel(device);
     }
 
     protected String getDeviceTooltip(){

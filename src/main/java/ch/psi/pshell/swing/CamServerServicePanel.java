@@ -239,7 +239,7 @@ public class CamServerServicePanel extends DevicePanel {
                 }
                 stream.setMonitored(true);
                 stream.initialize();
-                App.getInstance().getDevicePanelManager().showPanel(stream, getWindow());
+                App.getDevicePanelManager().showPanel(stream, getWindow());
             }
         } catch (Exception ex) {
             showException(ex);

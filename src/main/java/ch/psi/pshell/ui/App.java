@@ -1221,15 +1221,15 @@ public class App extends ObservableBase<AppListener> {
         scanPlottingActive = value;
     }
 
-    DevicePanelManager devicePanelManager;
+    static DevicePanelManager devicePanelManager;
 
-    public DevicePanelManager getDevicePanelManager() {
+    public static DevicePanelManager getDevicePanelManager() {
         if (devicePanelManager == null) {
-            devicePanelManager = new DevicePanelManager(view);
+            devicePanelManager = new DevicePanelManager((instance != null) ? instance.getMainFrame() : null);
         }
         return devicePanelManager;
     }
-
+    
     HashMap<String, PlotPanel> plotPanels = new HashMap<>();
 
     public PlotPanel getPlotPanel(String title, Window parent) {
