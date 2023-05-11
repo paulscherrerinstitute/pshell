@@ -151,15 +151,11 @@ public class StreamPanel extends DevicePanel {
     String getCurrentChannelId(){
         String channel = getCurrentChannel();
         if ((monitoredDevice!=null) && (channel!=null)){
-            String address = monitoredDevice.getAddress();
-            if (monitoredDevice instanceof Stream){
-                String channelPrefix = ((Stream)monitoredDevice).getChannelPrefix();
-                if ((channelPrefix!=null) && (!channelPrefix.isBlank())){
-                    address = channelPrefix.trim();
-                }
-            }
-            
-            String channelId = address + " " + channel;                    
+            String address = monitoredDevice.getChannelPrefix();
+            if ((address==null) || (address.isBlank())){
+                address = Str.toString(monitoredDevice.getAddress());
+            }            
+            String channelId = address.trim() + " " + channel;                    
             return channelId;                    
         }
         return null;

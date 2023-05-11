@@ -309,7 +309,7 @@ public class PipelineSource extends StreamCamera {
         this.currentShared = shared;
         startReceiver();
         //Should use this.currentInstance instead? Not readable when ID is created but unique...
-        getStream().setChannelPrefix((instanceId==null) ? pipelineName : instanceId);        
+        getStream().setChannelPrefix(this.currentInstance);        
     }
 
     /**

@@ -90,6 +90,14 @@ public abstract class CamServerStream extends ReadonlyRegisterBase<StreamValue> 
         return new ArrayList();
     }
 
+    @Override
+    public String getChannelPrefix(){
+        if (stream != null) {
+            return stream.getChannelPrefix();
+        }
+        return AddressableDevice.super.getChannelPrefix();
+    }
+
     public Stream getStream() {
         return stream;
     }
@@ -97,6 +105,7 @@ public abstract class CamServerStream extends ReadonlyRegisterBase<StreamValue> 
     protected void startReceiver() {
         try {
             stream.start(true);
+            getStream().setChannelPrefix(instance);                
         } catch (Exception ex) {
             Logger.getLogger(PipelineStream.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -104,6 +113,7 @@ public abstract class CamServerStream extends ReadonlyRegisterBase<StreamValue> 
 
     protected void stopReceiver() {
         try {
+            getStream().setChannelPrefix(null);    
             stream.stop();
         } catch (Exception ex) {
             Logger.getLogger(PipelineStream.class.getName()).log(Level.WARNING, null, ex);
