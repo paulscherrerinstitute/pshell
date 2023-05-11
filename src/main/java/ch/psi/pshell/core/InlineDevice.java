@@ -130,8 +130,10 @@ public class InlineDevice extends DeviceBase implements Readable, Writable {
             Device source = getSourceDevice(device);
             if (source != null) {
                 if (!source.isInitialized()) {
-                    if (Context.getInstance().isSimulation()) {
-                        source.setSimulated();
+                    if (Context.getInstance() != null) {
+                        if (Context.getInstance().isSimulation()) {
+                            source.setSimulated();
+                        }
                     }
                     source.initialize();
                 }

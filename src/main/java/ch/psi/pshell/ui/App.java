@@ -4,6 +4,7 @@ import ch.psi.pshell.core.Configuration;
 import ch.psi.pshell.core.Context;
 import ch.psi.pshell.core.ContextAdapter;
 import ch.psi.pshell.core.DevicePool;
+import ch.psi.pshell.core.InlineDevice;
 import ch.psi.pshell.core.LogManager;
 import ch.psi.pshell.swing.HelpContentsDialog;
 import ch.psi.pshell.swing.OutputPanel;
@@ -20,6 +21,7 @@ import ch.psi.pshell.core.UserInterface;
 import ch.psi.pshell.data.DataManager;
 import ch.psi.pshell.data.PlotDescriptor;
 import ch.psi.pshell.device.GenericDevice;
+import ch.psi.pshell.epics.Epics;
 import ch.psi.pshell.plot.Plot;
 import ch.psi.pshell.plotter.Client;
 import ch.psi.pshell.plotter.Plotter;
@@ -30,6 +32,7 @@ import ch.psi.pshell.scan.ScanRecord;
 import ch.psi.pshell.scan.ScanResult;
 import ch.psi.pshell.scripting.ViewPreference;
 import ch.psi.pshell.swing.DataPanel;
+import ch.psi.pshell.swing.DevicePanel;
 import ch.psi.pshell.swing.PlotPanel;
 import ch.psi.pshell.swing.ScanEditorPanel;
 import java.util.logging.Level;
@@ -57,6 +60,7 @@ import java.beans.PropertyChangeListener;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.lang.reflect.Method;
 import java.net.ConnectException;
 import java.net.URL;
 import java.nio.file.Files;
@@ -100,6 +104,9 @@ public class App extends ObservableBase<AppListener> {
     }
 
     static public void init(String[] args) {
+        if (arguments!=null){   //Only run this once
+            return;
+        }
         arguments = args;
         if (isForcedHeadless()) {
             System.setProperty("java.awt.headless", "true");
@@ -462,6 +469,7 @@ public class App extends ObservableBase<AppListener> {
         sb.append("\n\t-help        \tStart the GUI help window");
         sb.append("\n\t-full        \tStart in full screen mode");
         sb.append("\n\t-dual        \tStart GUI and command line interface (not allowed if running in the background)");
+        sb.append("\n\t-dvpn=<cls>  \tShow a device panel, giving a class name and args, if it has a main metho");
         sb.append("\n\t-extr=<value>\tForce (true) or disable (false) extraction of startup and utility scrips");
         sb.append("\n\t-vers=<value>\tForce versioning enabled (true) or disabled (false)");
         sb.append("\n\t-nbcf=<value>\tForce disabling (true) or enabling (false) the use of bytecode files");
@@ -504,23 +512,23 @@ public class App extends ObservableBase<AppListener> {
     }
 
     static public boolean isLocalMode() {
-        return getBoolArgumentValue("l") || isPlotOnly() || isHelpOnly() || isDataPanel() || isStripChart() || isOffline() || isVolatile() || isCamServerViewer();
+        return getBoolArgumentValue("l") || isPlotOnly() || isHelpOnly() || isDataPanel() || isStripChart() || isOffline() || isVolatile() || isSingleViewer();
     }
 
     static public boolean isBareMode() {
-        return getBoolArgumentValue("b") || isVolatile() ||  isCamServerViewer();
+        return getBoolArgumentValue("b") || isVolatile() ||  isSingleViewer();
     }
 
     static public boolean isEmptyMode() {
-        return getBoolArgumentValue("e") ||  isCamServerViewer();
+        return getBoolArgumentValue("e") ||  isSingleViewer();
     }
 
     static public boolean isGenericMode() {
-        return getBoolArgumentValue("g") ||  isCamServerViewer();
+        return getBoolArgumentValue("g") ||  isSingleViewer();
     }
 
     static public boolean isHandlingSessions() {
-        boolean disableSessions = getBoolArgumentValue("j") || isPlotOnly() || isHelpOnly() || isDataPanel() || isStripChart() || isVolatile() || isDetached() || isCamServerViewer();
+        boolean disableSessions = getBoolArgumentValue("j") || isPlotOnly() || isHelpOnly() || isDataPanel() || isStripChart() || isVolatile() || isDetached() || isSingleViewer();
         return !disableSessions;
     }
 
@@ -631,9 +639,27 @@ public class App extends ObservableBase<AppListener> {
         return getBoolArgumentValue("strp");
     }
 
+    static public boolean isSingleViewer() {
+        return isCamServerViewer() || isDeviceViewer();
+    }
+    
     static public boolean isCamServerViewer() {
         return getBoolArgumentValue("csvw");
     }
+    
+    static public boolean isDeviceViewer() {
+        String device = getArgumentValue("dvpn");
+        return (device!=null) && (!device.isBlank());
+    }    
+
+    static public String getDeviceViewerArgs() {
+        String device = getArgumentValue("dvpn");
+        if ((device!=null) && (!device.isBlank())){
+            return device.trim();
+        }
+        return null;
+    }    
+
     
     static public boolean isStripChartServer() {
         return isStripChart() && ((isAttach() || (isServerMode())));
@@ -642,7 +668,7 @@ public class App extends ObservableBase<AppListener> {
     static public boolean isDataPanel() {
         return getBoolArgumentValue("dtpn");
     }
-
+    
     static public boolean isScanPlottingDisabled() {
         return getBoolArgumentValue("dspt");
     }
@@ -810,7 +836,7 @@ public class App extends ObservableBase<AppListener> {
      * If disabled the interpreter is not instantiated
      */
     static public boolean isDisabled() {
-        return getBoolArgumentValue("n") | isOffline() ||  isCamServerViewer();
+        return getBoolArgumentValue("n") | isOffline() ||  isSingleViewer() ;
     }
 
     static public boolean isVersionMessage() {
@@ -1109,6 +1135,19 @@ public class App extends ObservableBase<AppListener> {
                 DataPanel.createPanel(getFileArg());
             } else if (isCamServerViewer()) {
                 JPanel panel = CamServerViewer.create(null, getSize());
+            } else if (isDeviceViewer()){
+                try {
+                    App.createDetachedEpicsContext();
+                    String pars = getDeviceViewerArgs();                    
+                    String[] tokens = Str.splitIgnoringQuotesAndMultSpaces(pars);
+                    String className = tokens[0];
+                    String[] args = Arr.getSubArray(tokens, 1);
+                    Method main = Class.forName(className).getMethod("main", String[].class);
+                    main.invoke(null, new Object[]{args});
+                    //DevicePanel.createFrame(dev.getDevice());
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
             } else {
                 if (isDual()) {
                     Console c = new Console();
@@ -1200,6 +1239,26 @@ public class App extends ObservableBase<AppListener> {
                 }
             }
         }
+    }
+    
+    public static void createDetachedEpicsContext(){
+        String prop = System.getProperty(Setup.PROPERTY_PARALLEL_INIT);
+        boolean parallel = ((prop != null) && (prop.length()>0)) ? Boolean.valueOf(prop) : false;
+    
+        String homePath = System.getProperty(Setup.PROPERTY_HOME_PATH);
+        if ((homePath!=null) && (homePath.trim().startsWith("~"))){
+            homePath =  Sys.getUserHome() + Str.trimLeft(homePath).substring(1);
+        }
+        String configPath = (homePath==null) ? null : homePath+"/config";
+        
+        String path = ".";
+        if ((configPath!=null) && (new File(configPath).isDirectory())){
+            path =  configPath;
+        } else if (homePath!=null){
+            path = homePath;
+        }
+        
+        Epics.create(Paths.get(path, "jcae.properties").toString(), parallel);        
     }
 
     void registerProcessors() {

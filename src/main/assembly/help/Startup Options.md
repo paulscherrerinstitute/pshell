@@ -233,6 +233,10 @@
     <td>Start GUI and command line terminal: cannot be used if running in the background.</td>
   </tr>
   <tr>
+    <td>-dvpn=[cls, ,,,]</td>
+    <td>Show a device panel, giving a class name and arguments, if it has a main method.</td>
+  </tr>    
+  <tr>
     <td>-extr=[value]</td>
     <td>Force (value=true) or disable (value=false) extraction of startup and utility scrips (default disabled in local mode).</td>
   </tr>    

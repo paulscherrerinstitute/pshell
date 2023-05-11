@@ -6,12 +6,11 @@ import ch.psi.pshell.camserver.CameraStream;
 import ch.psi.pshell.camserver.PipelineStream;
 import ch.psi.pshell.camserver.ProxyClient;
 import ch.psi.pshell.device.Device;
+import static ch.psi.pshell.swing.DevicePanel.createFrame;
 import ch.psi.pshell.ui.App;
-import ch.psi.utils.swing.SwingUtils;
 import ch.psi.utils.NamedThreadFactory;
 import ch.psi.utils.Str;
-import java.awt.Dimension;
-import java.awt.Toolkit;
+import ch.psi.utils.swing.SwingUtils;
 import java.awt.Window;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -141,18 +140,24 @@ public class CamServerServicePanel extends DevicePanel {
         }
     }
 
-    public static CamServerServicePanel create(Window parent, String url, String title, CamServerService.Type type) {
-        CamServerServicePanel viewer = new CamServerServicePanel();
-        SwingUtilities.invokeLater(() -> {
-            try {                
-                viewer.setDevice(new CamServerService("CamServer"+type.toString()+"Service", url, type));
-                Window window = SwingUtils.showFrame(parent, title, new Dimension(800, 600), viewer);
-                window.setIconImage(Toolkit.getDefaultToolkit().getImage(App.getResourceUrl("IconSmall.png")));
-            } catch (Exception ex) {
-                Logger.getLogger(CamServerServicePanel.class.getName()).log(Level.SEVERE, null, ex);
+    public static CamServerServicePanel createFrame(String url, Window parent,  String title) throws Exception {
+        return createFrame(url, null, parent, title);
+    }
+    
+    public static CamServerServicePanel createFrame(String url, CamServerService.Type type, Window parent,  String title) throws Exception {
+        if (type == null){
+            type = CamServerService.Type.Pipeline;
+            try{
+                //Default CameraServer ports are even
+                if ((Integer.valueOf(url.substring(url.length()-1)) % 2)==0){
+                    type = CamServerService.Type.Camera;
+                }
+            } catch (Exception ex){                
             }
-        });
-        return viewer;
+        }
+        CamServerService camServerService = new CamServerService(url, url, type);       
+        CamServerServicePanel viewer = new CamServerServicePanel();        
+        return (CamServerServicePanel) createFrame(camServerService,parent, title, viewer);    
     }
 
     ////////
@@ -254,4 +259,20 @@ public class CamServerServicePanel extends DevicePanel {
     private javax.swing.JScrollPane jScrollPane3;
     private javax.swing.JTable table;
     // End of variables declaration//GEN-END:variables
+
+    
+    public static void main(String[] args) {
+        try {
+            App.init(args);
+            //String url="localhost:8889";            
+            String url=args[0];            
+            createFrame (url, null, null);
+        } catch (Exception ex) {
+            SwingUtils.showException(null, ex);
+        }        
+    }
+
+
+
+
 }

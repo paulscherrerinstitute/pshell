@@ -2462,10 +2462,7 @@ public class StripChart extends StandardDialog {
      */
     public static void main(String args[]) {
         App.init(args);
-        String prop = System.getProperty(Setup.PROPERTY_PARALLEL_INIT);
-        boolean parallel = ((prop != null) && (prop.length()>0)) ? Boolean.valueOf(prop) : false;
-        String path = System.getProperty(Setup.PROPERTY_HOME_PATH);
-        Epics.create(Paths.get((path==null) ? "." : path, "jcae.properties").toString(), parallel);
+        App.createDetachedEpicsContext();
         create(App.getFileArg(), null, null, false, true);
     }
 

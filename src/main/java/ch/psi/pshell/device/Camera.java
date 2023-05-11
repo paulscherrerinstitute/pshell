@@ -9,7 +9,7 @@ import java.io.IOException;
  * Interface for camera objects: 2D sensors with optional features of binning, roi, gain, exposure,
  * iterations, trigger mode and more.
  */
-public interface Camera extends Device {
+public interface Camera extends Device, Startable {
 
     /**
      * Typically the camera data is read as an 1D array Camera provide 1D data to CameraSource (and
@@ -224,11 +224,6 @@ public interface Camera extends Device {
      */
     public void trigger() throws IOException, InterruptedException;
 
-    public void start() throws IOException, InterruptedException;
-
-    public void stop() throws IOException, InterruptedException;
-
-    public boolean isStarted() throws IOException, InterruptedException; //triggers state change events
     
     
     public default Object takeStack() throws Exception {    

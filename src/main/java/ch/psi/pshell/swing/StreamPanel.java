@@ -14,6 +14,7 @@ import ch.psi.utils.Str;
 import ch.psi.utils.swing.SwingUtils;
 import java.awt.Dimension;
 import java.awt.Toolkit;
+import java.awt.Window;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
 import java.awt.datatransfer.Transferable;
@@ -27,6 +28,7 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JDialog;
+import javax.swing.JFrame;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
@@ -149,8 +151,15 @@ public class StreamPanel extends DevicePanel {
     String getCurrentChannelId(){
         String channel = getCurrentChannel();
         if ((monitoredDevice!=null) && (channel!=null)){
-            String url = monitoredDevice.getAddress();
-            String channelId = url + " " + channel;                    
+            String address = monitoredDevice.getAddress();
+            if (monitoredDevice instanceof Stream){
+                String channelPrefix = ((Stream)monitoredDevice).getChannelPrefix();
+                if ((channelPrefix!=null) && (!channelPrefix.isBlank())){
+                    address = channelPrefix.trim();
+                }
+            }
+            
+            String channelId = address + " " + channel;                    
             return channelId;                    
         }
         return null;
@@ -442,35 +451,24 @@ public class StreamPanel extends DevicePanel {
         }
     }    
     
-    public static StreamPanel create(String url, SocketType type) throws IOException, InterruptedException {
-        if (type==null) { 
-            type = SocketType.SUB;
-        }
-
-        Stream stream = new Stream (url, url, type);
-        stream.initialize();
-        stream.start();
-
-        StreamPanel panel = new StreamPanel();
-        panel.setDevice(stream);
-
-        // new Dimension(300, cs.getPreferredSize().height + 30)
-        JDialog dlg = SwingUtils.showDialog(null, url, panel.getPreferredSize(), panel);
-        SwingUtils.centerComponent(null, dlg);        
-        dlg.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
-        return panel;        
+    public static StreamPanel createFrame(String url, SocketType type, Window parent, String title) throws Exception {
+        Stream stream = new Stream (url, url, (type==null) ? SocketType.SUB : type);
+        return (StreamPanel) createFrame(stream,parent, title);        
     }
     
     
     public static void main(String[] args) {
         try {
-            App.init(args);
-            String address = args[0]; //"tcp://localhost:5554";
+            App.init(args);            
             SocketType type = SocketType.SUB;
-            StreamPanel panel = create (address, type);
+            //String url = "tcp://localhost:5554";
+            String url=args[0];   
+            if ((args.length>1) && (args[1].toUpperCase().equals(SocketType.PULL.toString()))){
+                type = SocketType.PULL;
+            }
+            StreamPanel panel = createFrame (url, type, null, null);
         } catch (Exception ex) {
             SwingUtils.showException(null, ex);
-        }
-        
+        }        
     }
 }

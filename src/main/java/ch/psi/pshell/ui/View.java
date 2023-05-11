@@ -5766,7 +5766,7 @@ public class View extends MainFrame {
 
     private void menuCamServerPipelinesActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuCamServerPipelinesActionPerformed
         try {
-            CamServerServicePanel.create(this, App.getArgumentValue(CamServerViewer.ARG_PIPELINE_SERVER), "Pipeline Instances",  CamServerService.Type.Pipeline);            
+            CamServerServicePanel.createFrame(App.getArgumentValue(CamServerViewer.ARG_PIPELINE_SERVER), CamServerService.Type.Pipeline, this, "Pipeline Instances");            
         } catch (Exception ex) {
             showException(ex);
         }
@@ -5774,7 +5774,7 @@ public class View extends MainFrame {
 
     private void menuCamServerCamerasActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuCamServerCamerasActionPerformed
         try {
-            CamServerServicePanel.create(this, App.getArgumentValue(CamServerViewer.ARG_CAMERA_SERVER), "Camera Instances",  CamServerService.Type.Camera);            
+            CamServerServicePanel.createFrame(App.getArgumentValue(CamServerViewer.ARG_CAMERA_SERVER), CamServerService.Type.Camera, this, "Camera Instances");            
         } catch (Exception ex) {
             showException(ex);
     }    }//GEN-LAST:event_menuCamServerCamerasActionPerformed

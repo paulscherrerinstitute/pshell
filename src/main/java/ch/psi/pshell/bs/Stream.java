@@ -16,6 +16,7 @@ import ch.psi.pshell.bs.StreamConfig.Incomplete;
 import ch.psi.pshell.device.Cacheable;
 import ch.psi.pshell.device.Readable.ReadableType;
 import ch.psi.pshell.device.ReadonlyAsyncRegisterBase;
+import ch.psi.pshell.device.Startable;
 import ch.psi.utils.Arr;
 import ch.psi.utils.Reflection.Hidden;
 import ch.psi.utils.State;
@@ -36,7 +37,7 @@ import org.zeromq.ZMQ;
  * A device implementing a beam synchronous string, having, for each identifier,
  * a corresponding Scalar or Waveform child.
  */
-public class Stream extends DeviceBase implements Readable<StreamValue>, Cacheable<StreamValue>, ReadableType, AddressableDevice {
+public class Stream extends DeviceBase implements Readable<StreamValue>, Cacheable<StreamValue>, ReadableType, AddressableDevice, Startable {
 
     public static final int TIMEOUT_START_STREAMING = 10000;
 
@@ -441,6 +442,7 @@ public class Stream extends DeviceBase implements Readable<StreamValue>, Cacheab
         }
     }
 
+    @Override
     public void start() {
         start(null);
     }
@@ -461,6 +463,7 @@ public class Stream extends DeviceBase implements Readable<StreamValue>, Cacheab
         }
     }
 
+    @Override
     public void stop() {
         getLogger().fine("Stopping");
         channelPrefix = null;
@@ -484,6 +487,11 @@ public class Stream extends DeviceBase implements Readable<StreamValue>, Cacheab
             }
             thread = null;
         }
+    }
+    
+    @Override
+    public boolean isStarted() throws IOException, InterruptedException {
+        return started.get();
     }
 
     void closeReceiver() {

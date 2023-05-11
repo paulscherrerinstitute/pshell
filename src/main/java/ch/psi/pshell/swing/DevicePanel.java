@@ -1,5 +1,7 @@
 package ch.psi.pshell.swing;
 
+import ch.psi.pshell.bs.ProviderConfig;
+import ch.psi.pshell.bs.Stream;
 import ch.psi.pshell.core.Context;
 import ch.psi.pshell.core.ContextAdapter;
 import ch.psi.pshell.device.Device;
@@ -22,10 +24,14 @@ import javax.swing.border.TitledBorder;
 import ch.psi.pshell.core.ContextListener;
 import ch.psi.pshell.device.GenericDevice;
 import ch.psi.pshell.device.ReadonlyRegister;
+import ch.psi.pshell.device.Startable;
 import ch.psi.pshell.ui.App;
 import ch.psi.utils.swing.ConfigDialog;
 import java.awt.Component;
+import java.awt.Toolkit;
 import java.awt.Window;
+import javax.swing.JDialog;
+import javax.swing.JFrame;
 import javax.swing.JPanel;
 
 /**
@@ -440,4 +446,43 @@ public class DevicePanel extends MonitoredPanel {
         int decimals = deviceDecimals < 0 ? panelDecimals : Math.min(panelDecimals, deviceDecimals);
         return Math.max(decimals, 0);        
     }
+    
+    
+    public static DevicePanel createFrame(Device device) throws Exception {
+        return createFrame(device, null);
+    }
+
+    public static DevicePanel createFrame(Device device, Window parent) throws Exception {
+        return createFrame(device, parent, null);
+    }
+
+    public static DevicePanel createFrame(Device device, Window parent, String title) throws Exception {
+        return createFrame(device, parent, title, null);
+    }
+    
+    public static DevicePanel createFrame(Device device, Window parent, String title, DevicePanel panel) throws Exception {
+        DevicePanel devicePanal = (panel==null) ? 
+                (DevicePanel)App.getDevicePanelManager().getDefaultPanel(device).getPanelClass().getDeclaredConstructor().newInstance() :
+                panel;
+
+        SwingUtilities.invokeLater(() -> {
+            try {                                
+                device.initialize();
+                if (device instanceof Startable){
+                    if (!((Startable)device).isStarted()){
+                        ((Startable)device).start();
+                    }
+                }                
+                devicePanal.setDevice(device);                
+                JFrame window = SwingUtils.showFrame(parent,((title==null) ? device.getName() : title),  devicePanal.getPreferredSize(), devicePanal);
+                window.setIconImage(Toolkit.getDefaultToolkit().getImage(App.getResourceUrl("IconSmall.png")));
+                SwingUtils.centerComponent(parent, window);        
+                window.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);                
+            } catch (Exception ex) {
+                Logger.getLogger(CamServerServicePanel.class.getName()).log(Level.SEVERE, null, ex);
+                SwingUtils.showException(parent, ex);
+            }
+        });
+        return devicePanal;        
+    }    
 }

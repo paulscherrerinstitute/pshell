@@ -5,6 +5,7 @@ import ch.psi.pshell.device.Device;
 import ch.psi.pshell.device.DeviceAdapter;
 import ch.psi.pshell.device.ReadonlyRegister.ReadonlyRegisterArray;
 import ch.psi.pshell.device.ReadonlyRegisterBase;
+import ch.psi.pshell.device.Startable;
 import ch.psi.utils.State;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -12,7 +13,7 @@ import java.util.ArrayList;
 /**
  *
  */
-public class Scaler extends ReadonlyRegisterBase<int[]> implements ReadonlyRegisterArray<int[]> {
+public class Scaler extends ReadonlyRegisterBase<int[]> implements ReadonlyRegisterArray<int[]>, Startable {
 
     final String channelName;
     final ArrayList<ScalerChannel> channels;
@@ -114,6 +115,11 @@ public class Scaler extends ReadonlyRegisterBase<int[]> implements ReadonlyRegis
     public void stop() throws IOException, InterruptedException {
         control.write(0);
     }
+    
+    @Override
+    public boolean isStarted() throws IOException, InterruptedException {
+        return control.read()!=0;
+    }    
 
     public void setOneShot() throws InterruptedException, IOException {
         try {
@@ -214,6 +220,7 @@ public class Scaler extends ReadonlyRegisterBase<int[]> implements ReadonlyRegis
         }
         return ret;
     }
+
 
     public enum CounterDirection {
 
