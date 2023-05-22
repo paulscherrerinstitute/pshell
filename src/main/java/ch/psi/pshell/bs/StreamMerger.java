@@ -57,12 +57,16 @@ public class StreamMerger extends Stream {
         readables.add(this);
     }
 
-    protected void doUpdate() {
+    protected void doUpdate() {       
+        boolean hasMoreSt1,hasMoreSt2;
         while (true) {
+            hasMoreSt1=false;
+            hasMoreSt2=false;
             if ((v1 == null) || ((v1 != null) && (v2 != null) && (v1.pulseId < v2.pulseId))) {
                 if (stream1.getBufferCapacity() > 0) {
                     TimestampedValue tv = stream1.popBuffer();
                     v1 = (tv == null) ? null : (StreamValue) tv.getValue();
+                    hasMoreSt1 = (v1 != null);
                 } else {
                     v1 = stream1.take();
                 }
@@ -71,6 +75,7 @@ public class StreamMerger extends Stream {
                 if (stream2.getBufferCapacity() > 0) {
                     TimestampedValue tv = stream2.popBuffer();
                     v2 = (tv == null) ? null : (StreamValue) tv.getValue();
+                    hasMoreSt2 = (v2 != null);
                 } else {
                     v2 = stream2.take();
                 }
@@ -121,7 +126,7 @@ public class StreamMerger extends Stream {
                 v1 = null;
                 v2 = null;
             } else {
-                if ((v1 == null) || (v2 == null)) {
+                if (!hasMoreSt1 &&  !hasMoreSt2) {
                     break;
                 }
             }
