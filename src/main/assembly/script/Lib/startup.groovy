@@ -43,6 +43,7 @@ import ch.psi.pshell.scan.ScanRecord
 import ch.psi.pshell.scan.TimeScan
 import ch.psi.pshell.bs.BsScan
 import ch.psi.pshell.bs.Stream
+import ch.psi.pshell.bs.StreamMerger
 import ch.psi.pshell.scripting.ViewPreference as Preference
 import ch.psi.pshell.scripting.ScriptUtils as ScriptUtils
 

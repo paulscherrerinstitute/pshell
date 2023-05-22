@@ -198,6 +198,16 @@ public class Stream extends DeviceBase implements Readable<StreamValue>, Cacheab
         this(name, provider, incomplete, channels);
         setFilter(filter);
     }
+    
+    //Constructor for merger classes
+    public Stream(String name, Stream... components) {
+        super(name);
+        channels = new HashMap<>();
+        channelNames = new ArrayList<>();
+        readables = new ArrayList<>();        
+        privateProvider=null;
+        setComponents(components);
+    }    
 
     public Incomplete mappingIncomplete;
 
@@ -490,7 +500,7 @@ public class Stream extends DeviceBase implements Readable<StreamValue>, Cacheab
     }
     
     @Override
-    public boolean isStarted() throws IOException, InterruptedException {
+    public boolean isStarted() {
         return started.get();
     }
 
@@ -739,10 +749,10 @@ public class Stream extends DeviceBase implements Readable<StreamValue>, Cacheab
         }
 
         if (pidReader != null) {
-            setCache((DeviceBase) pidReader, (Object) pulse_id, timestamp);
+            setCache((DeviceBase) pidReader, (Object) pulse_id, timestamp, nanosOffset);
         }
         if (timestampReader != null) {
-            setCache((DeviceBase) timestampReader, (Object) timestamp, timestamp);
+            setCache((DeviceBase) timestampReader, (Object) timestamp, timestamp, nanosOffset);
         }
 
         if (fixedChildren) {

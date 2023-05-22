@@ -113,6 +113,7 @@ import ch.psi.pshell.device.MotorAdapter as MotorListener
 import ch.psi.pshell.device.MoveMode as MoveMode
 import ch.psi.pshell.device.SettlingCondition as SettlingCondition
 import ch.psi.pshell.device.HistogramGenerator as HistogramGenerator
+import ch.psi.pshell.device.Startable as Startable
 
 import ch.psi.pshell.epics.Epics as Epics
 import ch.psi.pshell.epics.EpicsScan as EpicsScan
@@ -246,6 +247,7 @@ import ch.psi.pshell.scan.ScanAbortedException as ScanAbortedException
 
 import ch.psi.pshell.bs.BsScan
 import ch.psi.pshell.bs.Stream as Stream
+import ch.psi.pshell.bs.StreamMerger as StreamMerger
 import ch.psi.pshell.bs.Provider as Provider
 import ch.psi.pshell.bs.ProviderConfig.SocketType as SocketType
 import ch.psi.pshell.bs.Dispatcher as Dispatcher

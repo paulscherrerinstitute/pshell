@@ -454,6 +454,7 @@ from ch.psi.pshell.crlogic import CrlogicSensor as CrlogicSensor
 
 from ch.psi.pshell.bs import BsScan
 from ch.psi.pshell.bs import Stream as Stream
+from ch.psi.pshell.bs import StreamMerger as StreamMerger
 from ch.psi.pshell.bs import Provider as Provider
 from ch.psi.pshell.bs import Dispatcher as Dispatcher
 from ch.psi.pshell.bs import Scalar as Scalar
