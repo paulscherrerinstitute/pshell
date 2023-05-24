@@ -81,6 +81,7 @@ import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JSpinner;
 import javax.swing.JTextField;
+import javax.swing.SpinnerNumberModel;
 import javax.swing.SwingUtilities;
 import javax.swing.Timer;
 import javax.swing.event.PopupMenuEvent;
@@ -185,6 +186,7 @@ public class CamServerViewer extends MonitoredPanel {
             panelPipeline.setVisible(false);
             SwingUtils.setEnumCombo(comboColormap, Colormap.class);
 
+            spinnerBackground.setVisible(false);
             spinnerThreshold.setVisible(false);
             btFixColormapRange.setVisible(false);
             checkBackground.setEnabled(false);
@@ -1274,6 +1276,7 @@ public class CamServerViewer extends MonitoredPanel {
         boolean changed = !String.valueOf(stream).equals(this.stream);
         this.stream = stream;
         if (changed || ((getPipelineServerUrl() == null))) {
+            spinnerBackground.setVisible(false);
             spinnerThreshold.setVisible(false);
             checkBackground.setEnabled(false);
             checkThreshold.setEnabled(false);
@@ -2507,18 +2510,43 @@ public class CamServerViewer extends MonitoredPanel {
                 btFixColormapRange.setVisible(buttonAutomatic.isSelected());
                 spinnerMin.setEnabled(buttonManual.isSelected());
                 spinnerMax.setEnabled(buttonManual.isSelected());
+                
+                boolean signed = spinnerBackground.isVisible() &&  "signed".equals(spinnerBackground.getValue());
+                Integer min = signed ? -65535: 0;      
+                if (!min.equals(((SpinnerNumberModel)spinnerMin.getModel()).getMinimum())){
+                    spinnerMin.setModel(new SpinnerNumberModel(0, min.intValue(), 65535, 1));
+                    spinnerMax.setModel(new SpinnerNumberModel(255, min.intValue(), 65535, 1));
+                    if ((Integer)((SpinnerNumberModel)spinnerMin.getModel()).getValue() < min){
+                        spinnerMin.setValue(min);  
+                    }
+                    if ((Integer)((SpinnerNumberModel)spinnerMax.getModel()).getValue() < min){
+                        spinnerMax.setValue(min);  
+                    }
+                }
+        
                 if (!Double.isNaN(config.colormapMin)) {
-                    spinnerMin.setValue(Math.min(Math.max((int) config.colormapMin, 0), 65535));
+                    Integer value = Math.min(Math.max((int) config.colormapMin, min), 65535);
+                    if (spinnerMin.getModel().getValue()!= value){
+                        spinnerMin.setValue(value);  
+                    }
                 }
                 if (!Double.isNaN(config.colormapMax)) {
-                    spinnerMax.setValue(Math.min(Math.max((int) config.colormapMax, 0), 65535));
+                    Integer value = Math.min(Math.max((int) config.colormapMax, min), 65535);
+                    if (spinnerMax.getModel().getValue()!= value){
+                        spinnerMax.setValue(value);
+                    }
                 }
+
             }
         } catch (Exception ex) {
             Logger.getLogger(getClass().getName()).log(Level.FINE, null, ex);
         }
         updatingColormap = false;
     }
+    
+    void setBackgoundControl(Object background){
+        spinnerBackground.setValue((background.equals("signed") || background.equals("passive")) ? background : "normal");
+    }    
 
     boolean updatingServerControls;
 
@@ -2527,7 +2555,15 @@ public class CamServerViewer extends MonitoredPanel {
             if (server.isStarted()) {
                 updatingServerControls = true;
                 try {
-                    checkBackground.setSelected(server.isBackgroundSubtractionEnabled());
+                    checkBackground.setSelected(server.isBackgroundSubtractionEnabled());                                        
+                    setBackgoundControl(server.getBackgroundSubtraction());
+                    Object bg = server.getBackgroundSubtraction();
+                    if (bg.equals("signed") || bg.equals("passive")){
+                        spinnerBackground.setValue(bg);
+                    } else {
+                        spinnerBackground.setValue("normal");
+                    }                    
+                    
                     Double threshold = (server.getThreshold());
                     checkThreshold.setSelected(threshold != null);
                     spinnerThreshold.setValue((threshold == null) ? 0 : threshold);
@@ -2567,6 +2603,7 @@ public class CamServerViewer extends MonitoredPanel {
                         spinnerSlOrientation.setValue((String) slicing.get("orientation"));
                     }
 
+                    spinnerBackground.setVisible(checkBackground.isSelected());    
                     spinnerThreshold.setVisible(checkThreshold.isSelected());
                     setGoodRegionOptionsVisible(gr != null);
                     setSlicingOptionsVisible(slicing != null);
@@ -2988,6 +3025,7 @@ public class CamServerViewer extends MonitoredPanel {
         spinnerAvFrames = new javax.swing.JSpinner();
         spinnerAvMode = new javax.swing.JSpinner();
         labelAvMode = new javax.swing.JLabel();
+        spinnerBackground = new javax.swing.JSpinner();
         panelZoom = new javax.swing.JPanel();
         buttonZoomFit = new javax.swing.JRadioButton();
         buttonZoomStretch = new javax.swing.JRadioButton();
@@ -3023,7 +3061,6 @@ public class CamServerViewer extends MonitoredPanel {
 
         setPreferredSize(new java.awt.Dimension(873, 600));
 
-        toolBar.setFloatable(false);
         toolBar.setRollover(true);
 
         buttonSidePanel.setIcon(getIcon("List"));
@@ -3444,50 +3481,21 @@ public class CamServerViewer extends MonitoredPanel {
     labelAvMode.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
     labelAvMode.setText("Mode:");
 
+    spinnerBackground.setModel(new javax.swing.SpinnerListModel(new String[] {"normal", "signed", "passive"}));
+    spinnerBackground.addChangeListener(new javax.swing.event.ChangeListener() {
+        public void stateChanged(javax.swing.event.ChangeEvent evt) {
+            spinnerBackgroundStateChanged(evt);
+        }
+    });
+
     javax.swing.GroupLayout panelPipelineLayout = new javax.swing.GroupLayout(panelPipeline);
     panelPipeline.setLayout(panelPipelineLayout);
     panelPipelineLayout.setHorizontalGroup(
         panelPipelineLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
         .addComponent(panelSlicing, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
         .addGroup(panelPipelineLayout.createSequentialGroup()
-            .addGap(6, 6, 6)
-            .addComponent(checkBackground)
-            .addGap(106, 106, 106))
-        .addGroup(panelPipelineLayout.createSequentialGroup()
             .addContainerGap()
             .addGroup(panelPipelineLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                .addGroup(panelPipelineLayout.createSequentialGroup()
-                    .addGroup(panelPipelineLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                        .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, panelPipelineLayout.createSequentialGroup()
-                            .addComponent(checkGoodRegion)
-                            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addGroup(panelPipelineLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                .addComponent(labelOrder)
-                                .addComponent(labelGrScale)
-                                .addComponent(labelMode)))
-                        .addGroup(panelPipelineLayout.createSequentialGroup()
-                            .addComponent(checkThreshold)
-                            .addGap(0, 0, Short.MAX_VALUE))
-                        .addGroup(panelPipelineLayout.createSequentialGroup()
-                            .addComponent(checkRotation)
-                            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(labelAngle))
-                        .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, panelPipelineLayout.createSequentialGroup()
-                            .addGap(0, 0, Short.MAX_VALUE)
-                            .addGroup(panelPipelineLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                .addComponent(labelGrThreshold, javax.swing.GroupLayout.Alignment.TRAILING)
-                                .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, panelPipelineLayout.createSequentialGroup()
-                                    .addComponent(labelConstant)
-                                    .addGap(3, 3, 3)))))
-                    .addGap(2, 2, 2)
-                    .addGroup(panelPipelineLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                        .addComponent(spinnerGrThreshold, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(spinnerGrScale)
-                        .addComponent(spinnerThreshold)
-                        .addComponent(spinnerRotationOrder)
-                        .addComponent(spinnerRotationMode)
-                        .addComponent(spinnerRotationAngle)
-                        .addComponent(spinnerRotationConstant)))
                 .addGroup(panelPipelineLayout.createSequentialGroup()
                     .addComponent(checkAveraging)
                     .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
@@ -3497,19 +3505,59 @@ public class CamServerViewer extends MonitoredPanel {
                     .addGap(2, 2, 2)
                     .addGroup(panelPipelineLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                         .addComponent(spinnerAvFrames, javax.swing.GroupLayout.Alignment.TRAILING)
-                        .addComponent(spinnerAvMode, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 85, javax.swing.GroupLayout.PREFERRED_SIZE))))
+                        .addComponent(spinnerAvMode, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 85, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                .addGroup(panelPipelineLayout.createSequentialGroup()
+                    .addGroup(panelPipelineLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addGroup(panelPipelineLayout.createSequentialGroup()
+                            .addGroup(panelPipelineLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, panelPipelineLayout.createSequentialGroup()
+                                    .addComponent(checkGoodRegion)
+                                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                    .addGroup(panelPipelineLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                        .addComponent(labelOrder)
+                                        .addComponent(labelGrScale)
+                                        .addComponent(labelMode)))
+                                .addGroup(panelPipelineLayout.createSequentialGroup()
+                                    .addComponent(checkThreshold)
+                                    .addGap(0, 0, Short.MAX_VALUE))
+                                .addGroup(panelPipelineLayout.createSequentialGroup()
+                                    .addComponent(checkRotation)
+                                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                    .addComponent(labelAngle))
+                                .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, panelPipelineLayout.createSequentialGroup()
+                                    .addGap(0, 0, Short.MAX_VALUE)
+                                    .addGroup(panelPipelineLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                        .addComponent(labelGrThreshold, javax.swing.GroupLayout.Alignment.TRAILING)
+                                        .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, panelPipelineLayout.createSequentialGroup()
+                                            .addComponent(labelConstant)
+                                            .addGap(3, 3, 3)))))
+                            .addGap(2, 2, 2))
+                        .addGroup(panelPipelineLayout.createSequentialGroup()
+                            .addComponent(checkBackground)
+                            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
+                    .addGroup(panelPipelineLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                        .addComponent(spinnerBackground)
+                        .addComponent(spinnerGrThreshold, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(spinnerGrScale)
+                        .addComponent(spinnerThreshold)
+                        .addComponent(spinnerRotationOrder)
+                        .addComponent(spinnerRotationMode)
+                        .addComponent(spinnerRotationAngle)
+                        .addComponent(spinnerRotationConstant))))
             .addContainerGap())
     );
 
     panelPipelineLayout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {spinnerGrScale, spinnerGrThreshold});
 
-    panelPipelineLayout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {spinnerAvFrames, spinnerAvMode, spinnerRotationAngle, spinnerRotationConstant, spinnerRotationMode, spinnerRotationOrder});
+    panelPipelineLayout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {spinnerAvFrames, spinnerAvMode, spinnerBackground, spinnerRotationAngle, spinnerRotationConstant, spinnerRotationMode, spinnerRotationOrder, spinnerThreshold});
 
     panelPipelineLayout.setVerticalGroup(
         panelPipelineLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
         .addGroup(panelPipelineLayout.createSequentialGroup()
             .addContainerGap()
-            .addComponent(checkBackground)
+            .addGroup(panelPipelineLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                .addComponent(checkBackground)
+                .addComponent(spinnerBackground, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
             .addGap(2, 2, 2)
             .addGroup(panelPipelineLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                 .addComponent(checkThreshold)
@@ -3811,7 +3859,7 @@ public class CamServerViewer extends MonitoredPanel {
                 .addGroup(layout.createSequentialGroup()
                     .addComponent(sidePanel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addGap(0, 0, 0)
-                    .addComponent(renderer, javax.swing.GroupLayout.DEFAULT_SIZE, 555, Short.MAX_VALUE)))
+                    .addComponent(renderer, javax.swing.GroupLayout.DEFAULT_SIZE, 580, Short.MAX_VALUE)))
             .addContainerGap())
     );
     layout.setVerticalGroup(
@@ -3933,7 +3981,10 @@ public class CamServerViewer extends MonitoredPanel {
             if (!updatingServerControls) {
                 try {
                     if (server.isStarted()) {
-                        server.setBackgroundSubtraction(checkBackground.isSelected());
+                        //server.setBackgroundSubtraction(checkBackground.isSelected());
+                        spinnerBackground.setVisible(checkBackground.isSelected());
+                        Object bg_mode = checkBackground.isSelected() ? String.valueOf(spinnerBackground.getValue()) : false;                        
+                        server.setBackgroundSubtraction(bg_mode.equals("normal") ? true : bg_mode);                        
                     }
                 } catch (Exception ex) {
                     showException(ex);
@@ -4479,6 +4530,18 @@ public class CamServerViewer extends MonitoredPanel {
         }
     }//GEN-LAST:event_comboTypeActionPerformed
 
+    private void spinnerBackgroundStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_spinnerBackgroundStateChanged
+        if (!updatingServerControls) {
+            try {
+                Object bg_mode = String.valueOf(spinnerBackground.getValue());
+                server.setBackgroundSubtraction((bg_mode=="normal") ? true : bg_mode);
+            } catch (Exception ex) {
+                showException(ex);
+                updatePipelineControls();
+            }
+        }
+    }//GEN-LAST:event_spinnerBackgroundStateChanged
+
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btFixColormapRange;
@@ -4544,6 +4607,7 @@ public class CamServerViewer extends MonitoredPanel {
     private javax.swing.JPanel sidePanel;
     private javax.swing.JSpinner spinnerAvFrames;
     private javax.swing.JSpinner spinnerAvMode;
+    private javax.swing.JSpinner spinnerBackground;
     private javax.swing.JSpinner spinnerGrScale;
     private javax.swing.JSpinner spinnerGrThreshold;
     private javax.swing.JSpinner spinnerMax;

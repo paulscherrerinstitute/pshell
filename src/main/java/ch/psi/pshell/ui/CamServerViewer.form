@@ -49,7 +49,7 @@
                   <Group type="102" attributes="0">
                       <Component id="sidePanel" min="-2" max="-2" attributes="0"/>
                       <EmptySpace min="0" pref="0" max="-2" attributes="0"/>
-                      <Component id="renderer" pref="555" max="32767" attributes="0"/>
+                      <Component id="renderer" pref="580" max="32767" attributes="0"/>
                   </Group>
               </Group>
               <EmptySpace max="-2" attributes="0"/>
@@ -408,57 +408,10 @@
             <DimensionLayout dim="0">
               <Group type="103" groupAlignment="0" attributes="0">
                   <Component id="panelSlicing" alignment="0" max="32767" attributes="0"/>
-                  <Group type="102" alignment="0" attributes="0">
-                      <EmptySpace min="6" pref="6" max="-2" attributes="0"/>
-                      <Component id="checkBackground" min="-2" max="-2" attributes="0"/>
-                      <EmptySpace min="106" pref="106" max="-2" attributes="0"/>
-                  </Group>
                   <Group type="102" attributes="0">
                       <EmptySpace max="-2" attributes="0"/>
                       <Group type="103" groupAlignment="0" attributes="0">
-                          <Group type="102" alignment="0" attributes="0">
-                              <Group type="103" groupAlignment="0" attributes="0">
-                                  <Group type="102" alignment="1" attributes="0">
-                                      <Component id="checkGoodRegion" min="-2" max="-2" attributes="0"/>
-                                      <EmptySpace max="32767" attributes="0"/>
-                                      <Group type="103" groupAlignment="0" attributes="0">
-                                          <Component id="labelOrder" alignment="0" min="-2" max="-2" attributes="0"/>
-                                          <Component id="labelGrScale" alignment="0" min="-2" max="-2" attributes="0"/>
-                                          <Component id="labelMode" alignment="0" min="-2" max="-2" attributes="0"/>
-                                      </Group>
-                                  </Group>
-                                  <Group type="102" alignment="0" attributes="0">
-                                      <Component id="checkThreshold" min="-2" max="-2" attributes="0"/>
-                                      <EmptySpace min="0" pref="0" max="32767" attributes="0"/>
-                                  </Group>
-                                  <Group type="102" alignment="0" attributes="0">
-                                      <Component id="checkRotation" min="-2" max="-2" attributes="0"/>
-                                      <EmptySpace max="32767" attributes="0"/>
-                                      <Component id="labelAngle" min="-2" max="-2" attributes="0"/>
-                                  </Group>
-                                  <Group type="102" alignment="1" attributes="0">
-                                      <EmptySpace min="0" pref="0" max="32767" attributes="0"/>
-                                      <Group type="103" groupAlignment="0" attributes="0">
-                                          <Component id="labelGrThreshold" alignment="1" min="-2" max="-2" attributes="0"/>
-                                          <Group type="102" alignment="1" attributes="0">
-                                              <Component id="labelConstant" min="-2" max="-2" attributes="0"/>
-                                              <EmptySpace min="3" pref="3" max="-2" attributes="0"/>
-                                          </Group>
-                                      </Group>
-                                  </Group>
-                              </Group>
-                              <EmptySpace min="-2" pref="2" max="-2" attributes="0"/>
-                              <Group type="103" groupAlignment="0" max="-2" attributes="0">
-                                  <Component id="spinnerGrThreshold" linkSize="3" alignment="0" max="32767" attributes="0"/>
-                                  <Component id="spinnerGrScale" linkSize="3" alignment="0" max="32767" attributes="0"/>
-                                  <Component id="spinnerThreshold" alignment="0" max="32767" attributes="0"/>
-                                  <Component id="spinnerRotationOrder" linkSize="4" alignment="0" max="32767" attributes="0"/>
-                                  <Component id="spinnerRotationMode" linkSize="4" alignment="0" max="32767" attributes="0"/>
-                                  <Component id="spinnerRotationAngle" linkSize="4" alignment="0" max="32767" attributes="0"/>
-                                  <Component id="spinnerRotationConstant" linkSize="4" alignment="0" max="32767" attributes="0"/>
-                              </Group>
-                          </Group>
-                          <Group type="102" alignment="0" attributes="0">
+                          <Group type="102" attributes="0">
                               <Component id="checkAveraging" min="-2" max="-2" attributes="0"/>
                               <EmptySpace max="32767" attributes="0"/>
                               <Group type="103" groupAlignment="0" attributes="0">
@@ -471,6 +424,57 @@
                                   <Component id="spinnerAvMode" linkSize="4" alignment="1" min="-2" pref="85" max="-2" attributes="0"/>
                               </Group>
                           </Group>
+                          <Group type="102" attributes="0">
+                              <Group type="103" groupAlignment="0" attributes="0">
+                                  <Group type="102" attributes="0">
+                                      <Group type="103" groupAlignment="0" attributes="0">
+                                          <Group type="102" alignment="1" attributes="0">
+                                              <Component id="checkGoodRegion" min="-2" max="-2" attributes="0"/>
+                                              <EmptySpace max="32767" attributes="0"/>
+                                              <Group type="103" groupAlignment="0" attributes="0">
+                                                  <Component id="labelOrder" alignment="0" min="-2" max="-2" attributes="0"/>
+                                                  <Component id="labelGrScale" alignment="0" min="-2" max="-2" attributes="0"/>
+                                                  <Component id="labelMode" alignment="0" min="-2" max="-2" attributes="0"/>
+                                              </Group>
+                                          </Group>
+                                          <Group type="102" alignment="0" attributes="0">
+                                              <Component id="checkThreshold" min="-2" max="-2" attributes="0"/>
+                                              <EmptySpace min="0" pref="0" max="32767" attributes="0"/>
+                                          </Group>
+                                          <Group type="102" alignment="0" attributes="0">
+                                              <Component id="checkRotation" min="-2" max="-2" attributes="0"/>
+                                              <EmptySpace max="32767" attributes="0"/>
+                                              <Component id="labelAngle" min="-2" max="-2" attributes="0"/>
+                                          </Group>
+                                          <Group type="102" alignment="1" attributes="0">
+                                              <EmptySpace min="0" pref="0" max="32767" attributes="0"/>
+                                              <Group type="103" groupAlignment="0" attributes="0">
+                                                  <Component id="labelGrThreshold" alignment="1" min="-2" max="-2" attributes="0"/>
+                                                  <Group type="102" alignment="1" attributes="0">
+                                                      <Component id="labelConstant" min="-2" max="-2" attributes="0"/>
+                                                      <EmptySpace min="3" pref="3" max="-2" attributes="0"/>
+                                                  </Group>
+                                              </Group>
+                                          </Group>
+                                      </Group>
+                                      <EmptySpace min="-2" pref="2" max="-2" attributes="0"/>
+                                  </Group>
+                                  <Group type="102" attributes="0">
+                                      <Component id="checkBackground" min="-2" max="-2" attributes="0"/>
+                                      <EmptySpace max="32767" attributes="0"/>
+                                  </Group>
+                              </Group>
+                              <Group type="103" groupAlignment="0" max="-2" attributes="0">
+                                  <Component id="spinnerBackground" linkSize="4" max="32767" attributes="0"/>
+                                  <Component id="spinnerGrThreshold" linkSize="3" alignment="0" max="32767" attributes="0"/>
+                                  <Component id="spinnerGrScale" linkSize="3" alignment="0" max="32767" attributes="0"/>
+                                  <Component id="spinnerThreshold" linkSize="4" alignment="0" max="32767" attributes="0"/>
+                                  <Component id="spinnerRotationOrder" linkSize="4" alignment="0" max="32767" attributes="0"/>
+                                  <Component id="spinnerRotationMode" linkSize="4" alignment="0" max="32767" attributes="0"/>
+                                  <Component id="spinnerRotationAngle" linkSize="4" alignment="0" max="32767" attributes="0"/>
+                                  <Component id="spinnerRotationConstant" linkSize="4" alignment="0" max="32767" attributes="0"/>
+                              </Group>
+                          </Group>
                       </Group>
                       <EmptySpace max="-2" attributes="0"/>
                   </Group>
@@ -480,7 +484,10 @@
               <Group type="103" groupAlignment="0" attributes="0">
                   <Group type="102" alignment="0" attributes="0">
                       <EmptySpace min="-2" max="-2" attributes="0"/>
-                      <Component id="checkBackground" min="-2" max="-2" attributes="0"/>
+                      <Group type="103" groupAlignment="3" attributes="0">
+                          <Component id="checkBackground" alignment="3" min="-2" max="-2" attributes="0"/>
+                          <Component id="spinnerBackground" alignment="3" min="-2" max="-2" attributes="0"/>
+                      </Group>
                       <EmptySpace min="-2" pref="2" max="-2" attributes="0"/>
                       <Group type="103" groupAlignment="3" attributes="0">
                           <Component id="checkThreshold" alignment="3" min="-2" max="-2" attributes="0"/>
@@ -856,6 +863,20 @@
                 <Property name="horizontalAlignment" type="int" value="11"/>
                 <Property name="text" type="java.lang.String" value="Mode:"/>
               </Properties>
+            </Component>
+            <Component class="javax.swing.JSpinner" name="spinnerBackground">
+              <Properties>
+                <Property name="model" type="javax.swing.SpinnerModel" editor="org.netbeans.modules.form.editors2.SpinnerModelEditor">
+                  <SpinnerModel type="list">
+                    <ListItem value="normal"/>
+                    <ListItem value="signed"/>
+                    <ListItem value="passive"/>
+                  </SpinnerModel>
+                </Property>
+              </Properties>
+              <Events>
+                <EventHandler event="stateChanged" listener="javax.swing.event.ChangeListener" parameters="javax.swing.event.ChangeEvent" handler="spinnerBackgroundStateChanged"/>
+              </Events>
             </Component>
           </SubComponents>
         </Container>

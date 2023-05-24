@@ -504,6 +504,11 @@ public class Stream extends DeviceBase implements Readable<StreamValue>, Cacheab
         return started.get();
     }
 
+    @Hidden
+    public Receiver getReceiver(){
+        return receiver;
+    }
+    
     void closeReceiver() {
         if (closing.compareAndSet(false, true)) {
             try {
