@@ -81,6 +81,7 @@ import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JSpinner;
 import javax.swing.JTextField;
+import javax.swing.JToolBar;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.SwingUtilities;
 import javax.swing.Timer;
@@ -97,8 +98,8 @@ import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
  */
 public class CamServerViewer extends MonitoredPanel {
 
-    final static String CHANNEL_IMAGE = "image";
-    final static String CHANNEL_PARAMETERS = "processing_parameters";
+    public final static String CHANNEL_IMAGE = "image";
+    public final static String CHANNEL_PARAMETERS = "processing_parameters";
 
     public static final String ARG_TYPE = "cam_type";
     public static final String ARG_LIST = "cam_list";
@@ -485,7 +486,7 @@ public class CamServerViewer extends MonitoredPanel {
     }
 
     
-    CameraSource newCameraSource() throws IOException, InterruptedException {
+    protected CameraSource newCameraSource() throws IOException, InterruptedException {
         CameraSource srv = new CameraSource("CameraServer", getCameraServerUrl());
         srv.initialize();
         return srv;
@@ -531,6 +532,14 @@ public class CamServerViewer extends MonitoredPanel {
         return camera;
     }
     
+    public ArrayList<Frame> getImageBuffer(){
+        return imageBuffer;
+    }
+    
+    public Renderer getRenderer(){
+        return renderer;
+    }
+   
     public Overlay[] getUserOverlays(){
         return userOv;
     }
@@ -661,7 +670,7 @@ public class CamServerViewer extends MonitoredPanel {
     }
     
 
-    DefaultComboBoxModel getNameList() {
+    protected DefaultComboBoxModel getNameList() {
         DefaultComboBoxModel model = new DefaultComboBoxModel();
         List<String> streams = new ArrayList<>();
         try ( PipelineSource srv = new PipelineSource(CAMERA_DEVICE_NAME, getPipelineServerUrl())) {
@@ -1141,7 +1150,7 @@ public class CamServerViewer extends MonitoredPanel {
     boolean updatingSelection;
     String comboSelection;
 
-    void setComboNameSelection(String selection) {
+    protected void setComboNameSelection(String selection) {
         updatingSelection = true;
         comboSelection = selection;
         try {
@@ -1154,7 +1163,7 @@ public class CamServerViewer extends MonitoredPanel {
         }
     }
 
-    void setComboTypeSelection(Object selection) {
+    protected void setComboTypeSelection(Object selection) {
         updatingSelection = true;
         try {
             comboType.setSelectedItem(selection);
@@ -1163,7 +1172,7 @@ public class CamServerViewer extends MonitoredPanel {
         }
     }
 
-    void updateNameList() {
+    protected void updateNameList() {
         try {
             String selected = (String) comboName.getSelectedItem();
             comboName.setModel(getNameList());
@@ -1212,7 +1221,7 @@ public class CamServerViewer extends MonitoredPanel {
         }
     }
 
-    void manageTitleOverlay() {
+    protected void manageTitleOverlay() {
         Overlay to = null;
         String name = getDisplayName();
         if ((buttonTitle.isSelected()) && (name != null)) {
@@ -1729,7 +1738,7 @@ public class CamServerViewer extends MonitoredPanel {
         renderer.setMarker(marker);
     }
 
-    void setGoodRegionOptionsVisible(boolean visible) {
+    protected void setGoodRegionOptionsVisible(boolean visible) {
         spinnerGrThreshold.setVisible(visible);
         labelGrThreshold.setVisible(visible);
         spinnerGrScale.setVisible(visible);
@@ -1737,7 +1746,7 @@ public class CamServerViewer extends MonitoredPanel {
         panelSlicing.setVisible(visible);
     }
 
-    void setSlicingOptionsVisible(boolean visible) {
+    protected void setSlicingOptionsVisible(boolean visible) {
         spinnerSlNumber.setVisible(visible);
         labelSlNumber.setVisible(visible);
         spinnerSlScale.setVisible(visible);
@@ -1746,7 +1755,7 @@ public class CamServerViewer extends MonitoredPanel {
         labelSlOrientation.setVisible(visible);
     }
 
-    void setRotationOptionsVisible(boolean visible) {
+    protected void setRotationOptionsVisible(boolean visible) {
         labelAngle.setVisible(visible);
         labelOrder.setVisible(visible);
         labelMode.setVisible(visible);
@@ -1757,7 +1766,7 @@ public class CamServerViewer extends MonitoredPanel {
         spinnerRotationConstant.setVisible(visible);
     }
 
-    void setAveragingOptionsVisible(boolean visible) {
+    protected void setAveragingOptionsVisible(boolean visible) {
         labelAvMode.setVisible(visible);
         labelAvFrames.setVisible(visible);
         spinnerAvMode.setVisible(visible);
@@ -2910,6 +2919,18 @@ public class CamServerViewer extends MonitoredPanel {
     public JPanel getCustomPanel() {
         return panelCustom;
     }
+    
+    public JPanel getSidePanel() {
+        return sidePanel;
+    }    
+    
+    public JPanel getTopPanel() {
+        return topPanel;
+    }    
+    
+    public JToolBar getToolBar() {
+        return toolBar;
+    }    
 
     public static void main(String[] args) throws Exception {
         App.init(args);
