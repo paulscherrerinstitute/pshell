@@ -8,6 +8,7 @@ import ch.psi.pshell.bs.StreamValue;
 import ch.psi.pshell.device.Device;
 import ch.psi.pshell.ui.App;
 import ch.psi.utils.Arr;
+import ch.psi.utils.Chrono;
 import ch.psi.utils.Convert;
 import ch.psi.utils.State;
 import ch.psi.utils.Str;
@@ -224,8 +225,11 @@ public class StreamPanel extends DevicePanel {
             model.setNumRows(0);
             return;
         }
-        textId.setText(Str.toString(sv.getPulseId()));
-        textTimestamp.setText(Str.toString(sv.getTimestamp()));
+        long id = sv.getPulseId();
+        textId.setText(Str.toString(id));
+        textTimestamp.setText(Str.toString(sv.getTimestamp()));       
+        textIdOff.setText(String.format("%06X", id % 1000000L));
+        textTimestampOff.setText(String.format("%06X", sv.getNanosOffset()));        
 
         int index = 0;
         List<String> keys= sv.getKeys();
@@ -284,6 +288,8 @@ public class StreamPanel extends DevicePanel {
         jLabel4 = new javax.swing.JLabel();
         textTimestamp = new javax.swing.JTextField();
         ckMonitored = new javax.swing.JCheckBox();
+        textIdOff = new javax.swing.JTextField();
+        textTimestampOff = new javax.swing.JTextField();
 
         textAddress.setEditable(false);
 
@@ -337,6 +343,12 @@ public class StreamPanel extends DevicePanel {
             }
         });
 
+        textIdOff.setEditable(false);
+        textIdOff.setHorizontalAlignment(javax.swing.JTextField.CENTER);
+
+        textTimestampOff.setEditable(false);
+        textTimestampOff.setHorizontalAlignment(javax.swing.JTextField.CENTER);
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
@@ -358,11 +370,15 @@ public class StreamPanel extends DevicePanel {
                     .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
                         .addComponent(jLabel3)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(textId, javax.swing.GroupLayout.PREFERRED_SIZE, 200, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 81, Short.MAX_VALUE)
+                        .addComponent(textId, javax.swing.GroupLayout.PREFERRED_SIZE, 140, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(0, 0, 0)
+                        .addComponent(textIdOff, javax.swing.GroupLayout.PREFERRED_SIZE, 80, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(18, 18, Short.MAX_VALUE)
                         .addComponent(jLabel4)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(textTimestamp, javax.swing.GroupLayout.PREFERRED_SIZE, 200, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        .addComponent(textTimestamp, javax.swing.GroupLayout.PREFERRED_SIZE, 140, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(0, 0, 0)
+                        .addComponent(textTimestampOff, javax.swing.GroupLayout.PREFERRED_SIZE, 80, javax.swing.GroupLayout.PREFERRED_SIZE)))
                 .addContainerGap())
         );
         layout.setVerticalGroup(
@@ -381,7 +397,9 @@ public class StreamPanel extends DevicePanel {
                     .addComponent(jLabel3)
                     .addComponent(textId, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jLabel4)
-                    .addComponent(textTimestamp, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(textTimestamp, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(textIdOff, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(textTimestampOff, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addGap(9, 9, 9))
         );
     }// </editor-fold>//GEN-END:initComponents
@@ -409,7 +427,9 @@ public class StreamPanel extends DevicePanel {
     private javax.swing.JTable table;
     private javax.swing.JTextField textAddress;
     private javax.swing.JTextField textId;
+    private javax.swing.JTextField textIdOff;
     private javax.swing.JTextField textTimestamp;
+    private javax.swing.JTextField textTimestampOff;
     private javax.swing.JTextField textType;
     // End of variables declaration//GEN-END:variables
 
