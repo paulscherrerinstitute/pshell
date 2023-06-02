@@ -6,7 +6,6 @@ import ch.psi.pshell.camserver.PipelineSource;
 import ch.psi.pshell.core.Context;
 import ch.psi.pshell.core.ContextAdapter;
 import ch.psi.pshell.core.InlineDevice;
-import ch.psi.pshell.core.Setup;
 import ch.psi.pshell.data.ProviderCSV;
 import ch.psi.pshell.data.ProviderText;
 import ch.psi.pshell.device.Device;
@@ -14,7 +13,6 @@ import ch.psi.pshell.device.DeviceAdapter;
 import ch.psi.pshell.device.DeviceListener;
 import ch.psi.pshell.device.TimestampedValue;
 import ch.psi.pshell.epics.ChannelDouble;
-import ch.psi.pshell.epics.Epics;
 import ch.psi.pshell.plot.LinePlotBase;
 import ch.psi.pshell.plot.PlotBase;
 import ch.psi.pshell.plot.TimePlotBase;
@@ -25,6 +23,7 @@ import ch.psi.pshell.scan.StripScanExecutor;
 import ch.psi.pshell.swing.HistoryChart;
 import ch.psi.pshell.swing.PlotPanel;
 import ch.psi.pshell.ui.StripChartAlarmEditor.StripChartAlarmConfig;
+import ch.psi.utils.Arr;
 import ch.psi.utils.Audio;
 import ch.psi.utils.Chrono;
 import ch.psi.utils.EncoderJson;
@@ -409,16 +408,16 @@ public class StripChart extends StandardDialog {
                 Type type = Type.valueOf(modelSeries.getValueAt(row, 2).toString());
                 switch (type) {
                     case Channel:
-                        tooltip = "Format: ChannelName [Polling=-1 Precision=-1]";
+                        tooltip = "Format: ChannelName [Polling(ms)=-1 Precision=-1] (Alias)";
                         break;
                     case Device:
-                        tooltip = "Format: DeviceName";
+                        tooltip = "Format: DeviceName (Alias)";
                         break;
                     case Stream:
-                        tooltip = "Format: Identifier [Modulo=" + StreamChannel.DEFAULT_MODULO + " Offset=" + StreamChannel.DEFAULT_OFFSET + " GlobalTime=true]";
+                        tooltip = "Format: Identifier [Modulo=" + StreamChannel.DEFAULT_MODULO + " Offset=" + StreamChannel.DEFAULT_OFFSET + " GlobalTime=true] (Alias)";
                         break;
                     case CamServer:
-                        tooltip = "Format: URL Identifier";
+                        tooltip = "Format: URL Identifier (Alias)";
                         break;
                 }
             }
@@ -1030,6 +1029,52 @@ public class StripChart extends StandardDialog {
         }
         return null;
     }
+    
+    String removeAlias(String str){
+        str=str.trim();
+        if (str.endsWith(")")) {
+            int start = str.lastIndexOf('(');
+            if (start>=0){
+                str=str.substring(0, start);
+            }
+        }    
+        return str;
+    }
+    
+    String getChannelName(String str){
+        str=removeAlias(str);
+        if (str.contains(" ")) {
+            String[] tokens = str.split(" ");
+            str = tokens[0];
+        }
+        return str.trim();        
+    }
+
+    String[] getChannelArgs(String str){
+        str=removeAlias(str);
+        if (str.contains(" ")) {
+            String[] tokens = str.split(" ");
+            String[] args = Arr.remove(tokens, 0);
+            args=Arr.removeEquals(args, "");
+            return args;
+        }
+        return new String[0];        
+    }
+
+    String getChannelAlias(String str){
+        str=str.trim();
+        if (str.endsWith(")")) {
+            int end = str.lastIndexOf(')');            
+            int start = str.lastIndexOf('(');
+            if (start>=0){
+                String alias = str.substring(start + 1, end);
+                if (!alias.isBlank()){
+                    return alias;
+                }
+            }
+        }
+        return getChannelName(str);               
+    }
 
     public void start() throws Exception {
         stop();
@@ -1134,7 +1179,7 @@ public class StripChart extends StandardDialog {
         for (int i = 0; i < rows.length; i++) {
             Vector info = rows[i];
             if (info.get(0).equals(true)) {
-                final String name = ((String) info.get(1)).trim();
+                final String name = getChannelAlias(((String) info.get(1)).trim());
                 final Type type = Type.valueOf(info.get(2).toString());
                 final int plotIndex = ((Integer) info.get(3)) - 1;
                 final int axis = (Integer) info.get(4);
@@ -1438,7 +1483,10 @@ public class StripChart extends StandardDialog {
 
         @Override
         public void run() {
-            String name = ((String) info.get(1)).trim();
+            String channel = ((String) info.get(1)).trim();
+            String name=getChannelName(channel);
+            String[] args=getChannelArgs(channel);
+                
             final Type type = Type.valueOf(info.get(2).toString());
             final int plotIndex = ((Integer) info.get(3)) - 1;
             final int axis = (Integer) info.get(4);
@@ -1463,15 +1511,11 @@ public class StripChart extends StandardDialog {
                     case Channel:
                         int polling = -1;
                         boolean timestamped = true;
-                        int precision = -1;
-                        if (name.contains(" ")) {
-                            String[] tokens = name.split(" ");
-                            name = tokens[0];
-                            try {
-                                polling = Integer.valueOf(tokens[1]);
-                                precision = Integer.valueOf(tokens[2]);
-                            } catch (Exception ex) {
-                            }
+                        int precision = -1;                                
+                        try {
+                            polling = Integer.valueOf(args[0]);
+                            precision = Integer.valueOf(args[1]);
+                        } catch (Exception ex) {
                         }
                         dev = new ChannelDouble(name, name, precision, timestamped);
 
@@ -1491,7 +1535,7 @@ public class StripChart extends StandardDialog {
                                 Context.getInstance().waitStateNot(State.Initializing, -1);
                                 Logger.getLogger(StripChart.class.getName()).fine("Waiting done");
                             }
-                            try {
+                                try {
                                 dev = Context.getInstance().getDevicePool().getByName(name, Device.class);
                                 if (dev == null) {
                                     dev = (Device) Context.getInstance().tryEvalLineBackground(name);
@@ -1508,15 +1552,11 @@ public class StripChart extends StandardDialog {
                         int modulo = StreamChannel.DEFAULT_MODULO;
                         int offset = StreamChannel.DEFAULT_OFFSET;
                         boolean useGlobalTimestamp = true;
-                        if (name.contains(" ")) {
-                            String[] tokens = name.split(" ");
-                            name = tokens[0];
-                            try {
-                                modulo = Integer.valueOf(tokens[1]);
-                                offset = Integer.valueOf(tokens[2]);
-                                useGlobalTimestamp = !tokens[3].equalsIgnoreCase("false");
-                            } catch (Exception ex) {
-                            }
+                        try {
+                            modulo = Integer.valueOf(args[0]);
+                            offset = Integer.valueOf(args[1]);
+                            useGlobalTimestamp = !args[2].equalsIgnoreCase("false");
+                        } catch (Exception ex) {
                         }
                         dev = stream.addScalar(name, name, modulo, offset);
                         Logger.getLogger(StripChart.class.getName()).finer("Adding channel to stream: " + name);
@@ -1524,45 +1564,42 @@ public class StripChart extends StandardDialog {
                         streamDevices--;
                         break;
                     case CamServer:
-                        if (name.contains(" ")) {
-                            String[] tokens = name.split(" ");
-                            String url = tokens[0];
-                            if (!url.startsWith("tcp://")) {
-                                String instanceName = url.substring(url.lastIndexOf("/") + 1);
-                                url = url.substring(0, url.lastIndexOf("/"));
-                                PipelineSource server = new PipelineSource(null, url);
-                                try {
-                                    server.initialize();
-                                    url = server.getStream(instanceName);
-                                } finally {
-                                    server.close();
+                        String url = name;
+                        if (!url.startsWith("tcp://")) {
+                            String instanceName = url.substring(url.lastIndexOf("/") + 1);
+                            url = url.substring(0, url.lastIndexOf("/"));
+                            PipelineSource server = new PipelineSource(null, url);
+                            try {
+                                server.initialize();
+                                url = server.getStream(instanceName);
+                            } finally {
+                                server.close();
+                            }
+                        }
+                        String channelName = args[0];
+                        Stream s = null;
+                        url = url.trim();
+                        synchronized (cameraStreams) {
+                            for (Stream cs : cameraStreams) {
+                                if (cs.getAddress().equals(url)) {
+                                    s = cs;
+                                    break;
                                 }
                             }
-                            name = tokens[1];
-                            Stream s = null;
-                            url = url.trim();
-                            synchronized (cameraStreams) {
-                                for (Stream cs : cameraStreams) {
-                                    if (cs.getAddress().equals(url)) {
-                                        s = cs;
-                                        break;
-                                    }
+                            if (s == null) {
+                                Logger.getLogger(StripChart.class.getName()).fine("Connecting to cam server stream: " + url);
+                                ch.psi.pshell.bs.Provider p = new ch.psi.pshell.bs.Provider(null, url, false);
+                                s = new Stream(null, p);
+                                cameraStreams.add(s);
+                                p.initialize();
+                                s.start();
+                                s.waitCacheChange(10000);
+                                synchronized (instantiatedDevices) {
+                                    instantiatedDevices.add(s);
+                                    instantiatedDevices.add(p);
                                 }
-                                if (s == null) {
-                                    Logger.getLogger(StripChart.class.getName()).fine("Connecting to cam server stream: " + url);
-                                    ch.psi.pshell.bs.Provider p = new ch.psi.pshell.bs.Provider(null, url, false);
-                                    s = new Stream(null, p);
-                                    cameraStreams.add(s);
-                                    p.initialize();
-                                    s.start();
-                                    s.waitCacheChange(10000);
-                                    synchronized (instantiatedDevices) {
-                                        instantiatedDevices.add(s);
-                                        instantiatedDevices.add(p);
-                                    }
-                                }
-                                dev = s.getChild(name);
                             }
+                            dev = s.getChild(channelName);
                         }
                         break;
                 }
