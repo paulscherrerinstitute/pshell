@@ -37,13 +37,11 @@ import ch.psi.utils.Config;
 import ch.psi.utils.Convert;
 import ch.psi.utils.EncoderJson;
 import ch.psi.utils.Sys;
-import ch.psi.utils.swing.Editor;
 import ch.psi.utils.swing.MonitoredPanel;
 import ch.psi.utils.swing.ScriptDialog;
 import ch.psi.utils.swing.StandardDialog;
 import ch.psi.utils.swing.SwingUtils.OptionResult;
 import ch.psi.utils.swing.SwingUtils.OptionType;
-import ch.psi.utils.swing.TextEditor;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
@@ -146,7 +144,7 @@ public class CamServerViewer extends MonitoredPanel {
     String cameraServerUrl;
     PipelineSource server;
     String pipelineNameFormat = "%s_sp";
-    String instanceNameFormat = "%s1";
+    String instanceNameFormat = "%s%d";
 
     final ArrayList<Frame> imageBuffer = new ArrayList();
     Frame currentFrame;
@@ -263,7 +261,24 @@ public class CamServerViewer extends MonitoredPanel {
                     showException(ex);
                 }
             });
-                    
+
+            JMenuItem menuPipelineDetach  = new JMenuItem("Detach Instance");
+            menuPipelineDetach.addActionListener((ActionEvent e) -> {
+                try {
+                    if (server!=null){                    
+                        String instance = server.getInstanceId();                        
+                        if ((instance!=null) && (server.getInstanceConfig()!=null)){
+                            Map cfg = (Map) server.getInstanceConfig();
+                            cfg.put("port", 0); //Make sure get new port
+                            cfg.remove("no_client_timeout");                            
+                            setStream(cfg);
+                            SwingUtils.showMessage(getTopLevel(), "Success", "Detached instance name:\n" + server.getInstanceId());
+                        }
+                    }
+                } catch (Exception ex) {
+                    showException(ex);
+                }
+            });
 
             JMenuItem menuSetImageBufferSize = new JMenuItem("Stack Size");
             menuSetImageBufferSize.addActionListener((ActionEvent e) -> {
@@ -392,6 +407,7 @@ public class CamServerViewer extends MonitoredPanel {
                 });
                 
                 menuConfig.add(menuPipelineConfig);                
+                menuConfig.add(menuPipelineDetach);                
                 menuConfig.addSeparator();
                 menuConfig.add(menuCameraConfig);                
                 menuConfig.add(menuCalibrate);
@@ -416,6 +432,7 @@ public class CamServerViewer extends MonitoredPanel {
                         menuCalibrate.setEnabled((calibrationDialolg == null) || (!calibrationDialolg.isShowing()));
                         menuSetROI.setEnabled(server != null);
                         menuResetROI.setEnabled(server != null);
+                        menuPipelineDetach.setEnabled(server!=null);
                         menuPipelineConfig.setEnabled(server!=null);
                         menuCalibrate.setEnabled((getCameraServerUrl()!=null)&&(sourceSelecionMode == SourceSelecionMode.Cameras));
                         menuCameraConfig.setEnabled(menuCalibrate.isEnabled());                        
@@ -1350,7 +1367,7 @@ public class CamServerViewer extends MonitoredPanel {
         if (stream == null) {
             return null;
         }
-        stream = stream.trim();        
+        stream = stream.trim();              
 
         System.out.println("Setting stream: " + stream);
         try {
@@ -1381,14 +1398,18 @@ public class CamServerViewer extends MonitoredPanel {
                     } else {
                         pipelineName = String.format(pipelineNameFormat, cameraName);
                     }
-                    instanceName = String.format(instanceNameFormat, pipelineName);
-                    if (server.getInstances().contains(instanceName)) {
-                        server.start(instanceName, true);
-                    } else {
-                        List<String> ret = server.createFromConfig(cfg, instanceName);
-                        String instance_id = ret.get(0);
-                        server.start(instance_id, true);
-                    }
+                    //Get next availabe instance index (never 1 not to collide with instances created by name).
+                    int instanceIndex = 2;
+                    while (true){
+                        instanceName = String.format(instanceNameFormat, pipelineName, instanceIndex);   
+                        if (!server.getInstances().contains(instanceName)) {
+                            List<String> ret = server.createFromConfig(cfg, instanceName);
+                            String instance_id = ret.get(0);
+                            server.start(instance_id, true);
+                            break;
+                        }
+                        instanceIndex++;
+                    }                    
                 } else {
                     switch (getSourceSelecionMode()) {
                         case Instances:
@@ -1403,7 +1424,7 @@ public class CamServerViewer extends MonitoredPanel {
                         case Cameras:
                             cameraName = stream;                                                         
                             pipelineName = String.format(pipelineNameFormat, getCameraName());
-                            instanceName = String.format(instanceNameFormat, pipelineName);
+                            instanceName = String.format(instanceNameFormat, pipelineName, 1);
                             if (!server.getPipelines().contains(pipelineName)) {
                                 System.out.println("Creating pipeline: " + pipelineName);
                                 HashMap<String, Object> config = new HashMap<>();
@@ -1417,12 +1438,12 @@ public class CamServerViewer extends MonitoredPanel {
                                 instanceName = stream;
                                 server.start(stream, true);
                             } else if (server.getPipelines().contains(stream)) {
-                                instanceName = String.format(instanceNameFormat, stream);
+                                instanceName = String.format(instanceNameFormat, stream, 1);
                                 server.start(stream, instanceName);
                             } else if (server.getCameras().contains(stream)) {
                                 cameraName = stream;
                                 pipelineName = String.format(pipelineNameFormat, stream);
-                                instanceName = String.format(instanceNameFormat, pipelineName);
+                                instanceName = String.format(instanceNameFormat, pipelineName, 1);
                                 if (!server.getPipelines().contains(pipelineName)) {
                                     System.out.println("Creating pipeline: " + pipelineName);
                                     HashMap<String, Object> config = new HashMap<>();
