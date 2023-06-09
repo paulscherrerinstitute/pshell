@@ -39,6 +39,7 @@ import ch.psi.utils.EncoderJson;
 import ch.psi.utils.Sys;
 import ch.psi.utils.swing.Editor;
 import ch.psi.utils.swing.MonitoredPanel;
+import ch.psi.utils.swing.ScriptDialog;
 import ch.psi.utils.swing.StandardDialog;
 import ch.psi.utils.swing.SwingUtils.OptionResult;
 import ch.psi.utils.swing.SwingUtils.OptionType;
@@ -176,8 +177,6 @@ public class CamServerViewer extends MonitoredPanel {
     public void setListener(CamServerViewerListener listener) {
         this.listener = listener;
     }
-
-    JMenu menuCamera = new JMenu("Camera");
             
     public CamServerViewer() {
         try {
@@ -206,6 +205,8 @@ public class CamServerViewer extends MonitoredPanel {
 
             renderer.setProfileNormalized(true);
             renderer.setShowProfileLimits(false);
+            
+            JMenu menuConfig = new JMenu("Configuration");
 
             JMenuItem menuRendererConfig = new JMenuItem("Renderer Parameters");
             menuRendererConfig.addActionListener((ActionEvent e) -> {
@@ -217,8 +218,9 @@ public class CamServerViewer extends MonitoredPanel {
                     showException(ex);
                 }
             });
+                        
 
-            JMenuItem menuCameraConfig = new JMenuItem("Configuration...");
+            JMenuItem menuCameraConfig = new JMenuItem("Camera Configuration");
             menuCameraConfig.addActionListener((ActionEvent e) -> {
                 try {
                     if (camera != null) {
@@ -229,21 +231,41 @@ public class CamServerViewer extends MonitoredPanel {
                             //TODO: replace into encodeMultiline
                             cameraConfigJson = EncoderJson.encode(srv.getConfig(getCameraName()), true);
                         }
-                        TextEditor configEditor = new TextEditor();
-                        configEditor.setText(cameraConfigJson);
-                        configEditor.setReadOnly(true);
-                        configEditor.setTitle(getCameraName());
-                        Editor.EditorDialog dlg = configEditor.getDialog(getFrame(), false);
-                        dlg.setSize(480, 640);
+                        
+                        ScriptDialog dlg = new ScriptDialog(getWindow(), true, cameraName, cameraConfigJson, "json");
+                        dlg.setReadOnly(true);
                         dlg.setVisible(true);
-                        SwingUtils.centerComponent(getTopLevel(), dlg);
+                        
                     }
                 } catch (Exception ex) {
                     showException(ex);
                 }
             });
+                        
+            JMenuItem menuPipelineConfig = new JMenuItem("Pipeline Configuration");
+            menuPipelineConfig.addActionListener((ActionEvent e) -> {
+                try {
+                    if (server!=null){                    
+                        String instance = server.getInstanceId();                        
+                        if ((instance!=null) && (server.getInstanceConfig()!=null)){
+                            Map cfg = (Map) server.getInstanceConfig();
+                            String json = EncoderJson.encode(cfg, true);
+                            ScriptDialog dlg = new ScriptDialog(getWindow(), true, instance, json, "json");
+                            dlg.setVisible(true);
+                            if (dlg.getResult()){
+                                json = dlg.getText();
+                                cfg = (Map) EncoderJson.decode(json, Map.class);
+                                server.setInstanceConfig(cfg);
+                            }
+                        }
+                    }
+                } catch (Exception ex) {
+                    showException(ex);
+                }
+            });
+                    
 
-            JMenuItem menuSetImageBufferSize = new JMenuItem("Set Stack Size...");
+            JMenuItem menuSetImageBufferSize = new JMenuItem("Stack Size");
             menuSetImageBufferSize.addActionListener((ActionEvent e) -> {
                 try {
                     String ret = SwingUtils.getString(getTopLevel(), "Enter size of image buffer: ", String.valueOf(imageBufferLength));
@@ -264,7 +286,7 @@ public class CamServerViewer extends MonitoredPanel {
                 }
             });
 
-            JMenuItem menuCalibrate = new JMenuItem("Calibrate...");
+            JMenuItem menuCalibrate = new JMenuItem("Camera Calibration");
             menuCalibrate.addActionListener((ActionEvent e) -> {
                 try {
                     calibrate();
@@ -273,7 +295,7 @@ public class CamServerViewer extends MonitoredPanel {
                 }
             });
 
-            JMenuItem menuSetROI = new JMenuItem("Set ROI...");
+            JMenuItem menuSetROI = new JMenuItem("Set ROI");
             menuSetROI.addActionListener((ActionEvent e) -> {
                 renderer.abortSelection();
                 if (server != null) {
@@ -368,16 +390,21 @@ public class CamServerViewer extends MonitoredPanel {
                         showException(ex);
                     }
                 });
+                
+                menuConfig.add(menuPipelineConfig);                
+                menuConfig.addSeparator();
+                menuConfig.add(menuCameraConfig);                
+                menuConfig.add(menuCalibrate);
+                menuConfig.addSeparator();
+                menuConfig.add(menuRendererConfig);
+                menuConfig.add(menuSetImageBufferSize);
+
+                
+                renderer.getPopupMenu().add(menuSaveStack);                
                 renderer.getPopupMenu().add(menuHistogram);
                 renderer.getPopupMenu().addSeparator();
-                renderer.getPopupMenu().add(menuRendererConfig);
-                renderer.getPopupMenu().add(menuSetImageBufferSize);
-                renderer.getPopupMenu().add(menuSaveStack);                
-                menuCamera.add(menuCalibrate);
-                menuCamera.add(menuCameraConfig);                
-                renderer.getPopupMenu().add(menuCamera);
+                renderer.getPopupMenu().add(menuConfig);                
                 renderer.getPopupMenu().addSeparator();                                    
-
                 renderer.getPopupMenu().add(menuSetROI);
                 renderer.getPopupMenu().add(menuResetROI);
                 renderer.getPopupMenu().addPopupMenuListener(new PopupMenuListener() {
@@ -389,6 +416,9 @@ public class CamServerViewer extends MonitoredPanel {
                         menuCalibrate.setEnabled((calibrationDialolg == null) || (!calibrationDialolg.isShowing()));
                         menuSetROI.setEnabled(server != null);
                         menuResetROI.setEnabled(server != null);
+                        menuPipelineConfig.setEnabled(server!=null);
+                        menuCalibrate.setEnabled((getCameraServerUrl()!=null)&&(sourceSelecionMode == SourceSelecionMode.Cameras));
+                        menuCameraConfig.setEnabled(menuCalibrate.isEnabled());                        
                     }
 
                     @Override
@@ -590,8 +620,7 @@ public class CamServerViewer extends MonitoredPanel {
         
         comboType.setVisible((sourceSelecionMode==SourceSelecionMode.Cameras) && !App.hasArgument(ARG_LIST));
         labelType.setVisible(comboType.isVisible());        
-        panelPipeline.setVisible(getPipelineServerUrl() != null);
-        menuCamera.setVisible((getCameraServerUrl()!=null)&&(sourceSelecionMode == SourceSelecionMode.Cameras));
+        panelPipeline.setVisible(getPipelineServerUrl() != null);        
         
         if ((getPipelineServerUrl() == null) && (mode != SourceSelecionMode.Single)) {
             throw new RuntimeException("Invalid selection mode: Pipeline Server URL is not configured.");
