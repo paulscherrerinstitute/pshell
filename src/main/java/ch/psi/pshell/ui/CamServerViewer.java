@@ -430,14 +430,12 @@ public class CamServerViewer extends MonitoredPanel {
                     public void popupMenuWillBecomeVisible(PopupMenuEvent e) {
                         menuSetImageBufferSize.setEnabled(!renderer.isPaused());
                         menuFrameIntegration.setSelected(integration != 0);
-                        menuCalibrate.setVisible(server != null);
-                        menuCalibrate.setEnabled((calibrationDialolg == null) || (!calibrationDialolg.isShowing()));
                         menuSetROI.setEnabled(server != null);
                         menuResetROI.setEnabled(server != null);
                         menuPipelineDetach.setEnabled(server!=null);
                         menuPipelineConfig.setEnabled(server!=null);
-                        menuCalibrate.setEnabled((getCameraServerUrl()!=null)&&(cameraName!=null));
-                        menuCameraConfig.setEnabled(menuCalibrate.isEnabled());                        
+                        menuCameraConfig.setEnabled((getCameraServerUrl()!=null)&&(cameraName!=null));
+                        menuCalibrate.setEnabled(menuCameraConfig.isEnabled() && ((calibrationDialolg == null) || (!calibrationDialolg.isShowing())));                     
                     }
 
                     @Override
