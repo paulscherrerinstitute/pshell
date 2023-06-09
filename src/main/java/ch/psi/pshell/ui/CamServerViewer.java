@@ -111,6 +111,7 @@ public class CamServerViewer extends MonitoredPanel {
     public static final String ARG_SELECTION_MODE = "selection_mode";
     public static final String ARG_STREAM_LIST = "stream_list";
     public static final String ARG_BUFFER_SIZE = "buffer_size";
+    public static final String ARG_SHARED = "pipeline_shared";
     public static final String ARG_SIDE_BAR = "side_bar";
     public static final String ARG_TITLE = "title";
     public static final String ARG_PERSIST_CAMERA_STATE = "persist_camera";
@@ -139,6 +140,7 @@ public class CamServerViewer extends MonitoredPanel {
     List<String> streamList;
     List<String> typeList;
     String startupStream;
+    boolean shared = true;
 
     String pipelineServerUrl;
     String cameraServerUrl;
@@ -434,7 +436,7 @@ public class CamServerViewer extends MonitoredPanel {
                         menuResetROI.setEnabled(server != null);
                         menuPipelineDetach.setEnabled(server!=null);
                         menuPipelineConfig.setEnabled(server!=null);
-                        menuCalibrate.setEnabled((getCameraServerUrl()!=null)&&(sourceSelecionMode == SourceSelecionMode.Cameras));
+                        menuCalibrate.setEnabled((getCameraServerUrl()!=null)&&(cameraName!=null));
                         menuCameraConfig.setEnabled(menuCalibrate.isEnabled());                        
                     }
 
@@ -645,7 +647,14 @@ public class CamServerViewer extends MonitoredPanel {
         updateNameList();
     }
     
+    public void setShared(boolean value){
+        shared = value;
+    }
     
+    public boolean isShared(){
+        return shared;
+    }
+        
     public void setConsoleEnabled(boolean value){
         if (value != isConsoleEnabled()){
             console = !value ? null : new Console() {
@@ -884,7 +893,7 @@ public class CamServerViewer extends MonitoredPanel {
     }
 
     public Boolean getPersistCameraState() {
-        return persistCameraState && (Context.getInstance() != null) && (sourceSelecionMode == SourceSelecionMode.Cameras);
+        return persistCameraState && (Context.getInstance() != null) && (cameraName!=null);
     }
 
     public void setPersistCameraState(Boolean value) {
@@ -1287,6 +1296,33 @@ public class CamServerViewer extends MonitoredPanel {
         String json = EncoderJson.encode(stream, false);
         return setStream(json);
     }
+       
+    
+    protected String getPipelineName(String cameraName) throws IOException{
+        return String.format(pipelineNameFormat, cameraName);
+    }
+    
+    protected String getInstanceName(String pipelineName) throws IOException{
+        return getInstanceName(pipelineName, shared);
+    }
+    
+    protected String getInstanceName(String pipelineName, boolean shared) throws IOException{
+        if (shared){
+            return String.format(instanceNameFormat, pipelineName, 1);   
+        } else {
+            //Get next name not used
+            int instanceIndex = 2;
+            String instanceName = null;
+            while (true){
+                instanceName = String.format(instanceNameFormat, pipelineName, instanceIndex);   
+                if (!server.getInstances().contains(instanceName)) {
+                    break;
+                }
+                instanceIndex++;
+            }     
+            return instanceName;
+        }        
+    }
 
     public String setStream(String stream) throws IOException, InterruptedException {
         System.out.println("Initializing: " + stream);
@@ -1396,20 +1432,12 @@ public class CamServerViewer extends MonitoredPanel {
                     if (cfg.get("name") != null) {
                         pipelineName = String.valueOf(cfg.get("name"));
                     } else {
-                        pipelineName = String.format(pipelineNameFormat, cameraName);
+                        pipelineName = getPipelineName(cameraName);
                     }
-                    //Get next availabe instance index (never 1 not to collide with instances created by name).
-                    int instanceIndex = 2;
-                    while (true){
-                        instanceName = String.format(instanceNameFormat, pipelineName, instanceIndex);   
-                        if (!server.getInstances().contains(instanceName)) {
-                            List<String> ret = server.createFromConfig(cfg, instanceName);
-                            String instance_id = ret.get(0);
-                            server.start(instance_id, true);
-                            break;
-                        }
-                        instanceIndex++;
-                    }                    
+                    instanceName = getInstanceName(pipelineName, false);
+                    List<String> ret = server.createFromConfig(cfg, instanceName);
+                    String instance_id = ret.get(0);
+                    server.start(instance_id, true);
                 } else {
                     switch (getSourceSelecionMode()) {
                         case Instances:
@@ -1423,8 +1451,8 @@ public class CamServerViewer extends MonitoredPanel {
                             break;
                         case Cameras:
                             cameraName = stream;                                                         
-                            pipelineName = String.format(pipelineNameFormat, getCameraName());
-                            instanceName = String.format(instanceNameFormat, pipelineName, 1);
+                            pipelineName = getPipelineName(getCameraName());
+                            instanceName = getInstanceName(pipelineName);
                             if (!server.getPipelines().contains(pipelineName)) {
                                 System.out.println("Creating pipeline: " + pipelineName);
                                 HashMap<String, Object> config = new HashMap<>();
@@ -1437,13 +1465,10 @@ public class CamServerViewer extends MonitoredPanel {
                             if (server.getInstances().contains(stream)) {
                                 instanceName = stream;
                                 server.start(stream, true);
-                            } else if (server.getPipelines().contains(stream)) {
-                                instanceName = String.format(instanceNameFormat, stream, 1);
-                                server.start(stream, instanceName);
                             } else if (server.getCameras().contains(stream)) {
                                 cameraName = stream;
-                                pipelineName = String.format(pipelineNameFormat, stream);
-                                instanceName = String.format(instanceNameFormat, pipelineName, 1);
+                                pipelineName = getPipelineName(stream);
+                                instanceName = getInstanceName(pipelineName);
                                 if (!server.getPipelines().contains(pipelineName)) {
                                     System.out.println("Creating pipeline: " + pipelineName);
                                     HashMap<String, Object> config = new HashMap<>();
@@ -1451,6 +1476,9 @@ public class CamServerViewer extends MonitoredPanel {
                                     server.savePipelineConfig(pipelineName, config);
                                 }                            
                                 server.start(pipelineName, instanceName);
+                            } else if (server.getPipelines().contains(stream)) {
+                                instanceName = getInstanceName(stream);
+                                server.start(stream, instanceName);
                             }
                             break;
                     }
@@ -3011,6 +3039,9 @@ public class CamServerViewer extends MonitoredPanel {
                 viewer.setSidePanelVisible(App.getBoolArgumentValue(ARG_SIDE_BAR));                
                 viewer.setCameraServerUrl(App.getArgumentValue(ARG_CAMERA_SERVER));
                 viewer.setPipelineServerUrl(App.getArgumentValue(ARG_PIPELINE_SERVER));
+                if (App.hasArgument(ARG_SHARED)) {                    
+                    viewer.setShared(App.getBoolArgumentValue(ARG_SHARED));
+                }
                 if (Context.getInstance() != null){
                     viewer.setPersistenceFile(Paths.get(Context.getInstance().getSetup().getContextPath(), "CamServer_Viewer.bin"));
                 }                
