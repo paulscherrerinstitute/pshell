@@ -408,16 +408,16 @@ public class StripChart extends StandardDialog {
                 Type type = Type.valueOf(modelSeries.getValueAt(row, 2).toString());
                 switch (type) {
                     case Channel:
-                        tooltip = "Format: ChannelName [Polling(ms)=-1 Precision=-1] (Alias)";
+                        tooltip = "Format: ChannelName [Polling(ms)=-1 Precision=-1] <Alias>";
                         break;
                     case Device:
-                        tooltip = "Format: DeviceName (Alias)";
+                        tooltip = "Format: DeviceName <Alias>";
                         break;
                     case Stream:
-                        tooltip = "Format: Identifier [Modulo=" + StreamChannel.DEFAULT_MODULO + " Offset=" + StreamChannel.DEFAULT_OFFSET + " GlobalTime=true] (Alias)";
+                        tooltip = "Format: Identifier [Modulo=" + StreamChannel.DEFAULT_MODULO + " Offset=" + StreamChannel.DEFAULT_OFFSET + " GlobalTime=true] <Alias>";
                         break;
                     case CamServer:
-                        tooltip = "Format: URL Identifier (Alias)";
+                        tooltip = "Format: URL Identifier <Alias>";
                         break;
                 }
             }
@@ -1032,8 +1032,8 @@ public class StripChart extends StandardDialog {
     
     String removeAlias(String str){
         str=str.trim();
-        if (str.endsWith(")")) {
-            int start = str.lastIndexOf('(');
+        if (str.endsWith(">")) {
+            int start = str.lastIndexOf('<');
             if (start>=0){
                 str=str.substring(0, start);
             }
@@ -1063,9 +1063,9 @@ public class StripChart extends StandardDialog {
 
     String getChannelAlias(String str){
         str=str.trim();
-        if (str.endsWith(")")) {
-            int end = str.lastIndexOf(')');            
-            int start = str.lastIndexOf('(');
+        if (str.endsWith(">")) {
+            int end = str.lastIndexOf('>');            
+            int start = str.lastIndexOf('<');
             if (start>=0){
                 String alias = str.substring(start + 1, end);
                 if (!alias.isBlank()){
