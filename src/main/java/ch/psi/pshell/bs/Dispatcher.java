@@ -2,6 +2,7 @@ package ch.psi.pshell.bs;
 
 import ch.psi.pshell.bs.ProviderConfig.SocketType;
 import ch.psi.utils.EncoderJson;
+import ch.psi.utils.Str;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -20,7 +21,7 @@ import org.glassfish.jersey.client.ClientProperties;
 import org.glassfish.jersey.jackson.JacksonFeature;
 
 /**
- * Extension to Provirder class, managing the creation and disposal of streams at the Dispatcher
+ * Extension to Provider class, managing the creation and disposal of streams at the Dispatcher
  * layer.
  */
 public class Dispatcher extends Provider {
@@ -186,7 +187,7 @@ public class Dispatcher extends Provider {
             getLogger().fine("Created stream: " + url);
             return url.toString();
         }
-        String message = "Error creating stream: " + ((streamData.get("message") != null) ? streamData.get("message").toString() : r.getStatus());
+        String message = "Error creating stream: " + Str.toString(streamData.get("message"))  + " status: " + r.getStatus();
         getLogger().warning(message);
         throw new DeviceException(message);
     }
