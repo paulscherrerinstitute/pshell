@@ -49,7 +49,6 @@ public class PlotPanel extends MonitoredPanel {
         pnGraphs.setLayout(new GridBagLayout());
         plots = new ArrayList<>();
         sliceSeriesData = new HashMap<>();
-        pnGraphs.setBackground(Color.red);
     }
 
     public List<Plot> getPlots() {
