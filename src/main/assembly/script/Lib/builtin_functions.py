@@ -1777,7 +1777,7 @@ print (json.dumps(function(*args)))
         jsonret = ret[ret.rfind('\n')+1:].strip()
         return json.loads(jsonret)
 
-def bsget(channel, modulo=1, offset=0, timeout = 5.0):
+def bsget(channel, modulo=StreamChannel.DEFAULT_MODULO, offset=StreamChannel.DEFAULT_OFFSET, timeout = 5.0):
     """Reads an values a bsread stream, using the default provider.
 
     Args:

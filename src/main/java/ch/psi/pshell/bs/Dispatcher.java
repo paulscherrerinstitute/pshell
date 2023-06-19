@@ -1,6 +1,8 @@
 package ch.psi.pshell.bs;
 
 import ch.psi.pshell.bs.ProviderConfig.SocketType;
+import static ch.psi.pshell.bs.StreamChannel.DEFAULT_MODULO;
+import static ch.psi.pshell.bs.StreamChannel.DEFAULT_OFFSET;
 import ch.psi.utils.EncoderJson;
 import ch.psi.utils.Str;
 import java.io.IOException;
@@ -158,18 +160,26 @@ public class Dispatcher extends Provider {
             } else if ((channel instanceof List) && (((List) channel).size() > 0)) {
                 channelDict.put("name", ((List) channel).get(0));
                 if (((List) channel).size() > 1) {
-                    channelDict.put("modulo", ((List) channel).get(1));
+                    if (((List) channel).get(1)!=null){
+                        channelDict.put("modulo", ((List) channel).get(1));
+                    }
                 }
                 if (((List) channel).size() > 2) {
-                    channelDict.put("offset", ((List) channel).get(2));
+                    if (((List) channel).get(2)!=null){
+                        channelDict.put("offset", ((List) channel).get(2));
+                    }
                 }
             } else if ((channel instanceof Map) && (((Map) channel).containsKey("name"))) {
                 channelDict.put("name", ((Map) channel).get("name"));
                 if (((Map) channel).containsKey("modulo")) {
-                    channelDict.put("modulo", ((Map) channel).get("modulo"));
+                    if (((Map) channel).get("modulo") != null){
+                        channelDict.put("modulo", ((Map) channel).get("modulo"));
+                    }
                 }
                 if (((Map) channel).containsKey("offset")) {
-                    channelDict.put("offset", ((Map) channel).get("offset"));
+                    if (((Map) channel).get("offset") != null){
+                        channelDict.put("offset", ((Map) channel).get("offset"));
+                    }
                 }
             } else {
                 continue;
@@ -200,8 +210,8 @@ public class Dispatcher extends Provider {
         for (StreamChannel s : stream.channels.values()) {
             List channel = new ArrayList();
             channel.add(s.getId());
-            channel.add(s.getModulo());
-            channel.add(s.getOffset());
+            channel.add( (s.getModulo() <= 0) ? null : s.getModulo());
+            channel.add( (s.getOffset() < 0 ) ? null : s.getOffset());
             channels.add(channel);
         }
         try {

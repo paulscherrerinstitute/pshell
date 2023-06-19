@@ -14,8 +14,8 @@ import java.math.BigInteger;
  */
 public class StreamChannel<T> extends ReadonlyAsyncRegisterBase<T> {
 
-    public static final int DEFAULT_MODULO = 1;
-    public static final int DEFAULT_OFFSET = 0;
+    public static final int DEFAULT_MODULO = UNDEFINED;
+    public static final int DEFAULT_OFFSET = UNDEFINED;
 
     private String id;
     private int modulo = DEFAULT_MODULO;
@@ -44,11 +44,11 @@ public class StreamChannel<T> extends ReadonlyAsyncRegisterBase<T> {
     }
 
     public StreamChannel(String name, Stream stream, String id) {
-        this(name, stream, id, 1);
+        this(name, stream, id, DEFAULT_MODULO);
     }
 
     public StreamChannel(String name, Stream stream, String id, int modulo) {
-        this(name, stream, id, modulo, 0);
+        this(name, stream, id, modulo, DEFAULT_OFFSET);
     }
 
     public StreamChannel(String name, Stream stream, String id, int modulo, int offset) {

@@ -12,6 +12,8 @@ import ch.psi.bsread.converter.MatlabByteConverter;
 import ch.psi.bsread.message.ChannelConfig;
 import ch.psi.bsread.message.Type;
 import ch.psi.pshell.bs.ProviderConfig.SocketType;
+import static ch.psi.pshell.bs.StreamChannel.DEFAULT_MODULO;
+import static ch.psi.pshell.bs.StreamChannel.DEFAULT_OFFSET;
 import ch.psi.pshell.bs.StreamConfig.Incomplete;
 import ch.psi.pshell.device.Cacheable;
 import ch.psi.pshell.device.Readable.ReadableType;
@@ -295,7 +297,7 @@ public class Stream extends DeviceBase implements Readable<StreamValue>, Cacheab
     }
     
     public StreamChannel addChannel(String name, String id) throws IOException, InterruptedException {
-           return addScalar(name, id, 1, 0);
+           return addScalar(name, id, DEFAULT_MODULO, DEFAULT_OFFSET);
     }
      
     public StreamChannel addChannel(String name, String id, int modulo, int offset) throws IOException, InterruptedException {
@@ -315,7 +317,7 @@ public class Stream extends DeviceBase implements Readable<StreamValue>, Cacheab
     }
     
     public StreamChannel addScalar(String name, String id) throws IOException, InterruptedException {
-           return addScalar(name, id, 1, 0);
+           return addScalar(name, id, DEFAULT_MODULO, 0);
     }
      
     public StreamChannel addScalar(String name, String id, int modulo, int offset) throws IOException, InterruptedException {
@@ -335,15 +337,15 @@ public class Stream extends DeviceBase implements Readable<StreamValue>, Cacheab
     }
         
     public StreamChannel addWaveform(String name, String id) throws IOException, InterruptedException {
-           return addWaveform(name, id, 1, 0);
+           return addWaveform(name, id, DEFAULT_MODULO, DEFAULT_OFFSET);
     }
     
     public Waveform addWaveform(String name, String id, int modulo, int offset) throws IOException, InterruptedException {
-        return addWaveform(name, id, modulo, offset, -1);
+        return addWaveform(name, id, modulo, offset, SIZE_MAX);
     }
 
     public StreamChannel addWaveform(String name, String id, int size) throws IOException, InterruptedException {
-        return addWaveform(name, id, 1, 0, size);
+        return addWaveform(name, id, DEFAULT_MODULO, DEFAULT_OFFSET, size);
     }
     
     public Waveform addWaveform(String name, String id, int modulo, int offset, int size) throws IOException, InterruptedException {
@@ -363,11 +365,11 @@ public class Stream extends DeviceBase implements Readable<StreamValue>, Cacheab
     }
     
     public Matrix addMatrix(String name, String id) throws IOException, InterruptedException {
-        return addMatrix(name, id, 1,0);
+        return addMatrix(name, id, DEFAULT_MODULO, DEFAULT_OFFSET);
     }
     
     public Matrix addMatrix(String name, String id, int modulo, int offset) throws IOException, InterruptedException {
-        return addMatrix(name, id, modulo,offset, -1, -1);
+        return addMatrix(name, id, modulo,offset, SIZE_MAX, SIZE_MAX);
     }
     
     
@@ -395,7 +397,7 @@ public class Stream extends DeviceBase implements Readable<StreamValue>, Cacheab
             for (FilterCondition filterCondition : filterConditions) {
                 if (!Arr.containsEqual(channels.keySet().toArray(), filterCondition.id)) {
                     getLogger().info("Adding filter condition id to stream: " + filterCondition.id);
-                    channels.put(filterCondition.id, new Scalar(filterCondition.id, this, filterCondition.id, minModulo, 0));
+                    channels.put(filterCondition.id, new Scalar(filterCondition.id, this, filterCondition.id, minModulo, DEFAULT_OFFSET));
                 }
             }
 
@@ -406,7 +408,9 @@ public class Stream extends DeviceBase implements Readable<StreamValue>, Cacheab
             for (String channel : channels.keySet()) {
                 StreamChannel c = channels.get(channel);
                 ch.psi.bsread.configuration.Channel channelConfig = new ch.psi.bsread.configuration.Channel(
-                        c.getId(), c.getModulo(), c.getOffset());
+                        c.getId(), 
+                        (c.getModulo() <=0 ) ? 1 : c.getModulo(), 
+                        (c.getOffset() < 0 ) ? 0 : c.getOffset() );
                 channelsConfig.add(channelConfig);
             }
             config.setRequestedChannels(channelsConfig);
