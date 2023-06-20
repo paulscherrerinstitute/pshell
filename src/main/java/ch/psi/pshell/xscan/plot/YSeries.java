@@ -1,7 +1,7 @@
 package ch.psi.pshell.xscan.plot;
 
-import javax.xml.bind.annotation.XmlAttribute;
-import javax.xml.bind.annotation.XmlRootElement;
+import jakarta.xml.bind.annotation.XmlAttribute;
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 /**
  * In a YSeries the Y components hold an data array in which the index i the x and the value the y value.

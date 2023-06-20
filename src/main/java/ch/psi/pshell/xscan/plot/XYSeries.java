@@ -1,7 +1,7 @@
 package ch.psi.pshell.xscan.plot;
 
-import javax.xml.bind.annotation.XmlAttribute;
-import javax.xml.bind.annotation.XmlRootElement;
+import jakarta.xml.bind.annotation.XmlAttribute;
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 @XmlRootElement(name = "xyseries")
 public class XYSeries extends Series {

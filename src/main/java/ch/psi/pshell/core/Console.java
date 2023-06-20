@@ -33,7 +33,12 @@ import java.util.logging.Logger;
 import javax.script.ScriptException;
 import javax.swing.JComponent;
 import javax.swing.JPanel;
+import jline.TerminalFactory;
+import jline.console.ConsoleReader;
+import jline.console.KeyMap;
 import jline.console.completer.Completer;
+import jline.console.history.MemoryHistory;
+import jline.internal.NonBlockingInputStream;
 
 /**
  * Implement PShell command-line interface. If Console.run() is called with the advanced parameter
@@ -88,8 +93,8 @@ public class Console {
     //Uses JLine has JNI on Windows
     void runAdvancedConsole() throws IOException {
         Context context = Context.getInstance();
-        jline.console.ConsoleReader console = new jline.console.ConsoleReader();
-        jline.console.history.MemoryHistory history = new jline.console.history.MemoryHistory();
+        ConsoleReader console = new ConsoleReader();
+        MemoryHistory history = new MemoryHistory();
         history.setMaxSize(context.history.getSize());
         history.setIgnoreDuplicates(true);
         for (String line : context.getHistory()) {
@@ -131,17 +136,17 @@ public class Console {
                 try {
                     CompletableFuture cf = context.evalLineAsync(CommandSource.console, statement);
                     while (!cf.isDone()) {
-                        int key = ((jline.internal.NonBlockingInputStream) console.getInput()).read(10);
+                        int key = ((NonBlockingInputStream) console.getInput()).read(10);
                         if (key>0){
                             char CTRL_P = '\u0010';
-                            if (key == jline.console.KeyMap.CTRL_X) {
+                            if (key == KeyMap.CTRL_X) {
                                 System.out.println("\nControl command: abort");
                                 context.abort(CommandSource.console);
                                 break;
                             } else if (key == CTRL_P) {
                                 System.out.println("\nControl command: pause");
                                 context.pause(CommandSource.console);
-                            } else if (key == jline.console.KeyMap.CTRL_R) {
+                            } else if (key == KeyMap.CTRL_R) {
                                 System.out.println("\nControl command: resume");
                                 context.resume(CommandSource.console);
                             }
@@ -159,7 +164,7 @@ public class Console {
             }
         } finally {
             try {
-                jline.TerminalFactory.get().restore();
+                TerminalFactory.get().restore();
             } catch (Exception ex) {
                 System.err.println(getPrintableMessage(ex));
             }

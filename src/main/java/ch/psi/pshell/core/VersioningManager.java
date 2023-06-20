@@ -32,9 +32,9 @@ import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.revwalk.RevTree;
 import org.eclipse.jgit.revwalk.RevWalk;
 import org.eclipse.jgit.transport.CredentialsProvider;
-import org.eclipse.jgit.transport.JschConfigSessionFactory;
-import org.eclipse.jgit.transport.OpenSshConfig;
-import org.eclipse.jgit.transport.OpenSshConfig.Host;
+import org.eclipse.jgit.transport.ssh.jsch.JschConfigSessionFactory;
+import org.eclipse.jgit.transport.ssh.jsch.OpenSshConfig;
+import org.eclipse.jgit.transport.ssh.jsch.OpenSshConfig.Host;
 import org.eclipse.jgit.transport.SshSessionFactory;
 import org.eclipse.jgit.transport.SshTransport;
 import org.eclipse.jgit.transport.Transport;
@@ -510,7 +510,7 @@ public class VersioningManager implements AutoCloseable {
         try {
             commit = walk.parseCommit(ObjectId.fromString(objectId));
         } catch (Exception ex) {
-            commit = walk.parseCommit(localRepo.getRef(objectId).getObjectId());
+            commit = walk.parseCommit(localRepo.exactRef(objectId).getObjectId());
         }
         RevTree tree = walk.parseTree(commit.getTree().getId());
 
