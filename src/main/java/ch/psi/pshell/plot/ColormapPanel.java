@@ -17,8 +17,8 @@ import org.jfree.chart.axis.NumberTickUnitSource;
 import org.jfree.chart.axis.TickUnit;
 import org.jfree.chart.renderer.LookupPaintScale;
 import org.jfree.chart.title.PaintScaleLegend;
-import org.jfree.ui.RectangleEdge;
-import org.jfree.ui.RectangleInsets;
+import org.jfree.chart.ui.RectangleEdge;
+import org.jfree.chart.ui.RectangleInsets;
 
 /**
  * Panel displaying a colormap

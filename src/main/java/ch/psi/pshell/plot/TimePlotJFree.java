@@ -257,7 +257,6 @@ public class TimePlotJFree extends TimePlotBase {
             axis2.setTickLabelFont(tickLabelFont);
             plot.setRangeAxis(1, axis2);
             XYLineAndShapeRenderer renderer2 = new XYLineAndShapeRenderer();
-            renderer2.setBaseShapesVisible(isMarkersVisible());
             plot.setRenderer(1, renderer2);
             plot.setDataset(1, dataY2);
             plot.mapDatasetToRangeAxis(1, 1);
@@ -345,10 +344,14 @@ public class TimePlotJFree extends TimePlotBase {
         checkSeriesDuration();
         dataset.addSeries(ts);
         XYPlot plot = chart.getXYPlot();
-        getRenderer(series.axis).setSeriesShape(dataset.getSeriesCount() - 1, marker);
+        int index = dataset.getSeriesCount() - 1;
+        getRenderer(series.axis).setSeriesShape(index, marker);
         if (series.getColor() != null) {
-            getRenderer(series.axis).setSeriesPaint(dataset.getSeriesCount() - 1, series.getColor());
-        }
+            getRenderer(series.axis).setSeriesPaint(index, series.getColor());
+        }        
+        if (isMarkersVisible()) {
+            getRenderer(series.axis).setSeriesShapesVisible(index, true);
+        }          
         return ts;
     }
 
@@ -461,12 +464,16 @@ public class TimePlotJFree extends TimePlotBase {
 
     @Override
     protected void doSetMarkersVisible(boolean visible) {
-        XYPlot plot = (XYPlot) chart.getPlot();
-        getRenderer(1).setBaseShapesVisible(visible);
-        if (dataY2 != null) {
-            getRenderer(2).setBaseShapesVisible(visible);
+        XYPlot plot = (XYPlot) chart.getPlot();        
+        for (int series = 0; series < plot.getDataset(0).getSeriesCount(); series++) {
+            getRenderer(1).setSeriesShapesVisible(series, visible);
         }
-    }
+        if (dataY2 != null) {
+            for (int series = 0; series < plot.getDataset(1).getSeriesCount(); series++) {
+                getRenderer(2).setSeriesShapesVisible(series, visible);
+            }
+        }        
+    }    
 
     @Override
     protected void doSetLegendVisible(boolean visible) {
