@@ -68,7 +68,7 @@ import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
 import org.jfree.chart.renderer.xy.XYSplineRenderer;
 import org.jfree.data.ComparableObjectSeries;
 import org.jfree.data.Range;
-import org.jfree.data.general.DatasetUtilities;
+import org.jfree.data.general.DatasetUtils;
 import org.jfree.data.general.Series;
 import org.jfree.data.xy.AbstractXYDataset;
 import org.jfree.data.xy.XIntervalSeries;
@@ -80,11 +80,11 @@ import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 import org.jfree.data.xy.YIntervalSeries;
 import org.jfree.data.xy.YIntervalSeriesCollection;
-import org.jfree.ui.Drawable;
-import org.jfree.ui.Layer;
-import org.jfree.ui.RectangleAnchor;
-import org.jfree.ui.RectangleEdge;
-import org.jfree.ui.TextAnchor;
+import org.jfree.chart.ui.Drawable;
+import org.jfree.chart.ui.Layer;
+import org.jfree.chart.ui.RectangleAnchor;
+import org.jfree.chart.ui.RectangleEdge;
+import org.jfree.chart.ui.TextAnchor;
 
 public class LinePlotJFree extends LinePlotBase {
 
@@ -106,7 +106,6 @@ public class LinePlotJFree extends LinePlotBase {
     static final double AUTO_RANGE_LOG_MINIMUM_SIZE = 1e-32;
     JFreeChart chart;
 
-    boolean tooltips = false;
     Rectangle2D.Double seriesMarker;
 
     /**
@@ -285,7 +284,6 @@ public class LinePlotJFree extends LinePlotBase {
             axis2.setTickLabelFont(tickLabelFont);
             plot.setRangeAxis(1, axis2);
             XYLineAndShapeRenderer renderer2 = getStyle().isError() ? new XYErrorRenderer() : new XYLineAndShapeRenderer();
-            renderer2.setBaseShapesVisible(true);
             plot.setRenderer(1, renderer2);
             plot.setDataset(1, dataY2);
             plot.mapDatasetToRangeAxis(1, 1);
@@ -367,7 +365,8 @@ public class LinePlotJFree extends LinePlotBase {
         //TODO: LinePlotErrorSeries is specific to JFree
         Series s;
         AbstractXYDataset data = getYData(series.getAxisY());
-        switch (getStyle()) {
+        Style style = getStyle();
+        switch (style) {
             case ErrorX:
                 s = new XIntervalSeries(series.getName(), false, true);
                 ((XIntervalSeriesCollection) data).addSeries((XIntervalSeries) s);
@@ -393,14 +392,21 @@ public class LinePlotJFree extends LinePlotBase {
             }
         }
         int index = data.getSeriesCount() - 1;
-        XYItemRenderer renderer = getRenderer(series.getAxisY());
-        renderer.setSeriesShape(index, seriesMarker);
+        XYLineAndShapeRenderer renderer = getRenderer(series.getAxisY());
+        renderer.setSeriesShape(index, seriesMarker);        
+        renderer.setSeriesShapesVisible(index, true);
+        if (showTooltips) {
+            renderer.setSeriesToolTipGenerator(index, tooltipGenerator);               
+            //renderer.setSeriesCreateEntities(index, true); 
+        } else {
+           //renderer.setSeriesCreateEntities(index, false); 
+        }
         if (series.getColor() != null) {
             renderer.setSeriesPaint(index, series.getColor());
         }
         if (getStyle().isError()) {
             ((XYLineAndShapeRenderer) renderer).setSeriesLinesVisible(index, series.getLinesVisible());
-        }
+        }               
         return s;
     }
 
@@ -584,9 +590,7 @@ public class LinePlotJFree extends LinePlotBase {
         plot.setDomainGridlinePaint(getGridColor());
         plot.setRangeGridlinePaint(getGridColor());
         plot.setOutlinePaint(getOutlineColor());
-        // Show data point
-        ((XYLineAndShapeRenderer) plot.getRenderer()).setBaseShapesVisible(true);
-
+        
         // Include zeros in range (x) axis
         ((NumberAxis) plot.getRangeAxis()).setAutoRangeIncludesZero(false);
 
@@ -861,7 +865,7 @@ public class LinePlotJFree extends LinePlotBase {
         JFreeChart ret = null;
         switch (getStyle()) {
             case Step:
-                ret = ChartFactory.createXYStepChart(getTitle(), getAxis(AxisId.X).getLabel(), getAxis(AxisId.Y).getLabel(), dataY1, PlotOrientation.VERTICAL, true, tooltips, false);
+                ret = ChartFactory.createXYStepChart(getTitle(), getAxis(AxisId.X).getLabel(), getAxis(AxisId.Y).getLabel(), dataY1, PlotOrientation.VERTICAL, true, showTooltips, false);
                 NumberAxis axis = new NumberAxis();
                 axis.setAutoRangeIncludesZero(false);
                 ret.getXYPlot().setDomainAxis(axis);
@@ -873,9 +877,6 @@ public class LinePlotJFree extends LinePlotBase {
                 XYSplineRenderer renderer = new XYSplineRenderer();
                 XYPlot plot = new XYPlot(dataY1, xAxis, yAxis, renderer);
                 plot.setOrientation(PlotOrientation.VERTICAL);
-                if (tooltips) {
-                    renderer.setBaseToolTipGenerator(new StandardXYToolTipGenerator());
-                }
                 ret = new JFreeChart(title, JFreeChart.DEFAULT_TITLE_FONT, plot, true);               
                 ChartFactory.getChartTheme().apply(ret);
             }
@@ -899,14 +900,11 @@ public class LinePlotJFree extends LinePlotBase {
                 XYErrorRenderer renderer = new XYErrorRenderer();
                 XYPlot plot = new XYPlot(dataY1, xAxis, yAxis, renderer);
                 plot.setOrientation(PlotOrientation.VERTICAL);
-                if (tooltips) {
-                    renderer.setBaseToolTipGenerator(new StandardXYToolTipGenerator());
-                }
                 ret = new JFreeChart(title, JFreeChart.DEFAULT_TITLE_FONT, plot, true);
                 ChartFactory.getChartTheme().apply(ret);
                 break;
             default:
-                ret = ChartFactory.createXYLineChart(getTitle(), getAxis(AxisId.X).getLabel(), getAxis(AxisId.Y).getLabel(), dataY1, PlotOrientation.VERTICAL, true, tooltips, false);
+                ret = ChartFactory.createXYLineChart(getTitle(), getAxis(AxisId.X).getLabel(), getAxis(AxisId.Y).getLabel(), dataY1, PlotOrientation.VERTICAL, true, showTooltips, false);
         }
 
         return ret;
@@ -1210,33 +1208,48 @@ public class LinePlotJFree extends LinePlotBase {
         super.createPopupMenu();
     }
     
+    
+    static DecimalFormat tooltipGeneratorFormat = new DecimalFormat("0.##########");
+    static StandardXYToolTipGenerator tooltipGenerator = new StandardXYToolTipGenerator("x={1} y={2}", tooltipGeneratorFormat, tooltipGeneratorFormat);
+    static int MINIMUM_TOOLTIP_MARKER_SIZE = 3;
 
-    // http://www.jfree.org/phpBB2/viewtopic.php?t=12788&highlight=redraw+speed+performance+problem
     void showTooltips() {
-        tooltips = true;
-        DecimalFormat dm = new DecimalFormat("0.##########");       
-        getRenderer(1).setBaseToolTipGenerator(new StandardXYToolTipGenerator("x={1} y={2}", dm, dm));
+        XYPlot plot = (XYPlot) chart.getPlot(); 
+        chartPanel.setDisplayToolTips(true);        
+        chartPanel.getChartRenderingInfo().setEntityCollection(new StandardEntityCollection());
+        for (int series = 0; series < plot.getDataset(0).getSeriesCount(); series++) {
+            getRenderer(1).setSeriesToolTipGenerator(series,tooltipGenerator);
+            //getRenderer(1).setSeriesCreateEntities(series, true); 
+        }
         if (getRenderer(2) != null) {
-            getRenderer(2).setBaseToolTipGenerator(new StandardXYToolTipGenerator("x={1} y={2}", dm, dm));
+            for (int series = 0; series < plot.getDataset(1).getSeriesCount(); series++) {
+                getRenderer(2).setSeriesToolTipGenerator(series,tooltipGenerator);
+                //getRenderer(2).setSeriesCreateEntities(series, true); 
+            }            
         }
 
-        chartPanel.setDisplayToolTips(true);
-        chartPanel.getChartRenderingInfo().setEntityCollection(new StandardEntityCollection());
 
         //If marker size smaller than 2 then tooltips are unusable
-        if (getMarkerSize() < 3) {
-            changeMarkerSize(3);
+        if (getMarkerSize() < MINIMUM_TOOLTIP_MARKER_SIZE) {
+            changeMarkerSize(MINIMUM_TOOLTIP_MARKER_SIZE);
         }
     }
 
     void hideTooltips() {
-        tooltips = false;
+        XYPlot plot = (XYPlot) chart.getPlot(); 
         chartPanel.getChartRenderingInfo().setEntityCollection(null);
-        getRenderer(1).setBaseToolTipGenerator(null);
-        if (getRenderer(2) != null) {
-            getRenderer(2).setBaseToolTipGenerator(null);
+        for (int series = 0; series < plot.getDataset(0).getSeriesCount(); series++) {
+            getRenderer(1).setSeriesToolTipGenerator(series, null);
+            //getRenderer(1).setSeriesCreateEntities(series, false); 
         }
-        if (getMarkerSize() < 3) {
+        if (getRenderer(2) != null) {
+            for (int series = 0; series < plot.getDataset(1).getSeriesCount(); series++) {
+                getRenderer(2).setSeriesToolTipGenerator(series, null);
+                //getRenderer(2).setSeriesCreateEntities(series, false); 
+            }            
+        }
+        chartPanel.setDisplayToolTips(false);
+        if (getMarkerSize() < MINIMUM_TOOLTIP_MARKER_SIZE) {
             changeMarkerSize(getMarkerSize());
         }
     }
@@ -1486,7 +1499,7 @@ public class LinePlotJFree extends LinePlotBase {
                         double y = yAxis.java2DToValue(event.getTrigger().getY(), dataArea, RectangleEdge.LEFT);
 
                         for (int i = 0; i < series; i++) {
-                            double f = DatasetUtilities.findYValue(plot.getDataset(), i, x);
+                            double f = DatasetUtils.findYValue(plot.getDataset(), i, x);
                             String text = String.format("x=%s y=%s", getDisplayableValue(x), getDisplayableValue(f));
                             if (pointers[i] == null) {
                                 if (mouseListener == null) {

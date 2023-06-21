@@ -289,8 +289,13 @@ import ch.psi.pshell.scripting.ScriptType as ScriptType
 from ch.psi.pshell.device.Record import *
 from javax.swing.SwingUtilities import invokeLater, invokeAndWait
 
-import org.jfree.ui.RectangleAnchor as RectangleAnchor
-import org.jfree.ui.TextAnchor as TextAnchor
+try:    
+    import org.jfree.chart.ui.RectangleAnchor as RectangleAnchor
+    import org.jfree.chart.ui.TextAnchor as TextAnchor
+except: #Compatibility version 1.19.3
+    #JFreechart 1.0.19
+    import org.jfree.ui.RectangleAnchor as RectangleAnchor
+    import org.jfree.ui.TextAnchor as TextAnchor
 
 import ch.psi.pshell.xscan.ProcessorXScan as ProcessorXScan
 

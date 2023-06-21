@@ -31,11 +31,11 @@ import org.jfree.chart.renderer.xy.XYBlockRenderer;
 import org.jfree.chart.title.PaintScaleLegend;
 import org.jfree.data.Range;
 import org.jfree.data.xy.DefaultXYZDataset;
-import org.jfree.ui.Layer;
-import org.jfree.ui.RectangleAnchor;
-import org.jfree.ui.RectangleEdge;
-import org.jfree.ui.RectangleInsets;
-import org.jfree.ui.TextAnchor;
+import org.jfree.chart.ui.Layer;
+import org.jfree.chart.ui.RectangleAnchor;
+import org.jfree.chart.ui.RectangleEdge;
+import org.jfree.chart.ui.RectangleInsets;
+import org.jfree.chart.ui.TextAnchor;
 import ch.psi.pshell.imaging.Colormap;
 import static ch.psi.pshell.plot.PlotBase.SNAPSHOT_WIDTH;
 import static ch.psi.pshell.plot.PlotBase.getOutlineColor;
@@ -108,6 +108,13 @@ public class MatrixPlotJFree extends MatrixPlotBase {
             renderer.setBlockHeight(series.getBinWidthY()); // If this is not set the default block size is 1
         }
         renderer.setBlockAnchor(RectangleAnchor.CENTER);
+                
+        if (showTooltips){
+            renderer.setSeriesToolTipGenerator(0, tooltipGenerator);
+            renderer.setSeriesCreateEntities(0, true);            
+        } else {
+            renderer.setSeriesCreateEntities(0, false);
+        }
 
         // Remove background paint/color
         plot.setBackgroundPaint(null /*getPlotBackground()*/); //Always transparent
@@ -375,17 +382,14 @@ public class MatrixPlotJFree extends MatrixPlotBase {
         super.createPopupMenu();
     }
 
-    /**
-     * Show Tooltips. This is not done per default since it makes the app slow
-     * for datasize >= 1M
-     */
+    static DecimalFormat tooltipGeneratorFormat = new DecimalFormat("0.##########");
+    static XYZToolTipGenerator tooltipGenerator = new StandardXYZToolTipGenerator("x={1} y={2} z={3}", tooltipGeneratorFormat, tooltipGeneratorFormat, tooltipGeneratorFormat);
     private void showTooltips() {
         //Tooltips are quit expensive
-        DecimalFormat dm = new DecimalFormat("0.##########");
-        XYZToolTipGenerator xYZToolTipGenerator = new StandardXYZToolTipGenerator("x={1} y={2} z={3}", dm, dm, dm);
-
-        chart.getXYPlot().getRenderer().setBaseToolTipGenerator(xYZToolTipGenerator);
-        ((XYBlockRenderer) chart.getXYPlot().getRenderer()).setBaseCreateEntities(true);
+        if (series!=null){
+            chart.getXYPlot().getRenderer().setSeriesToolTipGenerator(0, tooltipGenerator);
+            chart.getXYPlot().getRenderer().setSeriesCreateEntities(0, true);
+        }
     }
 
     @Override
@@ -416,10 +420,10 @@ public class MatrixPlotJFree extends MatrixPlotBase {
      * Clear Tooltips
      */
     private void hideTooltips() {
-        //Tooltips are quit expensive
-        ((XYBlockRenderer) chart.getXYPlot().getRenderer()).setBaseToolTipGenerator(null);
-        ((XYBlockRenderer) chart.getXYPlot().getRenderer()).setBaseCreateEntities(false);
-
+        if (series!=null){
+            chart.getXYPlot().getRenderer().setSeriesToolTipGenerator(0, null);
+            chart.getXYPlot().getRenderer().setSeriesCreateEntities(0, false);
+        }
     }
 
     /**
@@ -615,7 +619,6 @@ public class MatrixPlotJFree extends MatrixPlotBase {
         final Range initRangeY = xAxis.getRange();
         // Configure block renderer to have the blocks rendered in the correct size
         renderer = new XYBlockRenderer();
-        renderer.setBaseCreateEntities(false);
         plot = new XYPlot(null, xAxis, yAxis, renderer);
 
         // Remove background paint/color
