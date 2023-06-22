@@ -4,6 +4,7 @@ plugins {
     id "eclipse"
     id "maven-publish"
     id "nebula.ospackage" version "9.1.1"
+    id 'org.openjfx.javafxplugin' version '0.0.10'
 }
 
 version = '1.20.0'
@@ -12,6 +13,7 @@ ext.timestamp = new Date().format("yyMMddHHmm")
 
 ext.type = 'py'     //py, groovy, js or all
 ext.javafx = false
+ext.jzy3d = false
 ext.manif_addopens = 'java.base/sun.nio.ch java.base/java.io java.desktop/sun.awt java.desktop/javax.swing.text.html java.desktop/sun.swing java.base/jdk.internal.loader jdk.nashorn.internal.runtime'
 ext.run_addopens = 'java.base/jdk.internal.loader=ALL-UNNAMED'
 sourceCompatibility = JavaVersion.VERSION_11
@@ -188,6 +190,23 @@ dependencies {
     testImplementation group: 'junit', name: 'junit', version: '4.10'
 }
 
+if (ext.jzy3d==true){
+    dependencies {
+        implementation 'org.jzy3d:jzy3d-api:1.0.3'
+    }
+}
+
+if (ext.javafx==true){
+    dependencies {
+    implementation 'org.openjfx:javafx-controls:11'
+    implementation 'org.openjfx:javafx-embed-swing:11'
+    }
+   javafx {
+        version = "11"
+        modules = [ 'javafx.controls', 'javafx.swing']
+    }
+}
+
 task sourcesJar(type: Jar, dependsOn: classes) {
 classifier = 'sources'
 from sourceSets.main.allSource
@@ -276,19 +295,16 @@ task generateRpm(type: Rpm) {
     link(sys_lib + "pshell.jar", sys_lib + fatJar.archiveName) 
 }
 
-if (ext.javafx == false){
-    compileJava {
-        //So we have parameter names for reflection
-        options.compilerArgs << '-parameters'    
+compileJava {
+    //So we have parameter names for reflection
+    options.compilerArgs << '-parameters'    
+    if (project.javafx == false){
         exclude '**/LinePlotJavaFx.java'
     }
-    
-} else {
-    compileJava {
-        //So we have parameter names for reflection
-        options.compilerArgs << '-parameters'    
+    if (project.jzy3d == false){
+        exclude '**/SurfacePlotJzy3d.java'
     }
-}
+ }    
 
 
 jar {

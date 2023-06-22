@@ -1,5 +1,6 @@
 package ch.psi.pshell.plot;
 
+import ch.psi.utils.swing.MainFrame;
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Dimension;
@@ -214,6 +215,9 @@ public class LinePlotJavaFx extends LinePlotBase {
         chart.setAnimated(false);
         chart.setCreateSymbols(false);
         chart.setCursor(Cursor.CROSSHAIR);
+        if (MainFrame.isDark()){
+            chart.getStylesheets().add(getClass().getResource("/ch/psi/pshell/plot/dark-theme.css").toExternalForm());
+        }
 
         fxContainer.setPreferredSize(new Dimension(PREFERRED_WIDTH, PREFERRED_HEIGHT));
         setLayout(new BorderLayout());
