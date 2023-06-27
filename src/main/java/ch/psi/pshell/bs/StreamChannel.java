@@ -24,7 +24,7 @@ public class StreamChannel<T> extends ReadonlyAsyncRegisterBase<T> {
     public int TIMEOUT_UPDATE = 10000;
 
     final Object lock = new Object();
-    boolean useLocalTimestamp = true;
+    boolean useLocalTimestamp = false;
 
     private volatile Long pulseId;
     volatile ChannelConfig config;
