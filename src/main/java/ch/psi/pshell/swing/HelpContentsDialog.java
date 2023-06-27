@@ -11,15 +11,19 @@ import ch.psi.utils.Sys;
 import ch.psi.utils.swing.MainFrame;
 import ch.psi.utils.swing.StandardDialog;
 import ch.psi.utils.swing.SwingUtils;
-import com.github.rjeschke.txtmark.BlockEmitter;
-import com.github.rjeschke.txtmark.Configuration;
-import com.github.rjeschke.txtmark.Processor;
+import org.commonmark.node.Node;
+import org.commonmark.parser.Parser;
+import org.commonmark.renderer.html.HtmlRenderer;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.awt.event.ActionEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.List;
 import javax.swing.BorderFactory;
 import javax.swing.JMenuItem;
@@ -30,6 +34,8 @@ import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreePath;
+import org.commonmark.Extension;
+import org.commonmark.ext.gfm.tables.TablesExtension;
 
 /**
  *
@@ -328,10 +334,14 @@ public class HelpContentsDialog extends StandardDialog {
                 editor.setContentType("text/html");
                 editor.setText(content);
                 break;
-            case md:
-                Configuration config = Configuration.builder().forceExtentedProfile().setCodeBlockEmitter(new MyBlockEmitter()).build();
+            case md:  
+                List<Extension> extensions = Arrays.asList(TablesExtension.create());
+                Parser parser = Parser.builder().extensions(extensions).build();
+                Node document = parser.parse(content);      
+                HtmlRenderer renderer = HtmlRenderer.builder().extensions(extensions).build();
+                String htmlContent = renderer.render(document); 
                 editor.setContentType("text/html");
-                editor.setText(Processor.process(content, config));
+                editor.setText(htmlContent);                
                 break;
             case py:
             case js:
@@ -365,23 +375,6 @@ public class HelpContentsDialog extends StandardDialog {
         editor.setCaretPosition(0);
     }
 
-    public final class MyBlockEmitter implements BlockEmitter {
-
-        @Override
-        public void emitBlock(StringBuilder out, List<String> lines, String meta) {
-            if (!lines.isEmpty()) {
-                out.append("<pre>");
-
-                StringBuilder code = new StringBuilder();
-                for (String s : lines) {
-                    code.append(s).append('\n');
-                }
-                out.append(code.toString());
-                out.append("</pre>\n");
-            }
-        }
-
-    }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JEditorPane editor;
