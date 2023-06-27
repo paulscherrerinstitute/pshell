@@ -705,11 +705,11 @@ public class Stream extends DeviceBase implements Readable<StreamValue>, Cacheab
             }
         }
 
-        for (String channel : data.keySet()) {
+        for (String channel : config.keySet()) {
             StreamChannel c = channels.get(channel);
             ChannelConfig cfg = config.get(channel);
             ValueImpl v = data.get(channel);
-            Object val = v.getValue();
+            Object val = (v==null) ? null : v.getValue();
             long devTimestamp = timestamp;
             long devNanosOffset = nanosOffset;
             try {
@@ -733,9 +733,11 @@ public class Stream extends DeviceBase implements Readable<StreamValue>, Cacheab
                     }
                 }
                 if (c != null) {
-                    if (c.getUseLocalTimestamp() && (v.getTimestamp() != null)) {
-                        devTimestamp = v.getTimestamp().getAsMillis();
-                        devNanosOffset = v.getTimestamp().getNs() % 1000000L;
+                    if (v!=null) {
+                        if (c.getUseLocalTimestamp() && (v.getTimestamp() != null)) {
+                            devTimestamp = v.getTimestamp().getAsMillis();
+                            devNanosOffset = v.getTimestamp().getNs() % 1000000L;
+                        }
                     }
                     c.set(pulse_id, devTimestamp, devNanosOffset, val, cfg);
                 }
