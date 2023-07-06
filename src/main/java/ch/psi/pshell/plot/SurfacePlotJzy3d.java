@@ -39,19 +39,20 @@ import org.jzy3d.contour.MapperContourPictureGenerator;
 import org.jzy3d.maths.BoundingBox3d;
 import org.jzy3d.maths.Coord3d;
 import org.jzy3d.maths.Range;
-import org.jzy3d.plot3d.builder.Builder;
+import org.jzy3d.plot3d.builder.SurfaceBuilder;
 import org.jzy3d.plot3d.builder.Mapper;
 import org.jzy3d.plot3d.builder.concrete.OrthonormalGrid;
-import org.jzy3d.plot3d.primitives.AbstractDrawable;
+import org.jzy3d.plot3d.primitives.Drawable;
 import org.jzy3d.plot3d.primitives.Point;
 import org.jzy3d.plot3d.primitives.Polygon;
 import org.jzy3d.plot3d.primitives.ScatterMultiColor;
 import org.jzy3d.plot3d.primitives.Shape;
-import org.jzy3d.plot3d.primitives.axes.ContourAxeBox;
+import org.jzy3d.plot3d.primitives.axis.ContourAxisBox;
 import org.jzy3d.plot3d.rendering.canvas.IScreenCanvas;
 import org.jzy3d.plot3d.rendering.legends.colorbars.AWTColorbarLegend;
 import org.jzy3d.plot3d.rendering.view.modes.ViewBoundMode;
 import ch.psi.utils.swing.SwingUtils;
+import org.jzy3d.chart.NativeAnimator;
 
 /**
  *
@@ -65,14 +66,6 @@ public class SurfacePlotJzy3d extends SurfacePlotBase {
     private MatrixPlotSeries series;
     private double[][] data;
     JPopupMenu menuPopup;
-
-    enum CanvasType {
-
-        awt,
-        newt
-    };
-
-    static final CanvasType canvasType = CanvasType.awt;
 
     public SurfacePlotJzy3d() {
         super();
@@ -94,7 +87,7 @@ public class SurfacePlotJzy3d extends SurfacePlotBase {
 
     protected void onHidden() {
         if (chart != null) {
-            chart.stopAnimator();
+            chart.stopAnimation();
             removeAll();
             chart.dispose();
             chart = null;
@@ -132,7 +125,9 @@ public class SurfacePlotJzy3d extends SurfacePlotBase {
         synchronized (chartLock) {
             if (s != null) {
                 if (chart != null) {
-                    chart.clear();
+                    //chart clear ###
+                    chart.dispose();
+                    chart = null;
                 }
             }
 
@@ -170,7 +165,9 @@ public class SurfacePlotJzy3d extends SurfacePlotBase {
     protected void onRemovedSeries(MatrixPlotSeries s) {
         series = null;
         if (chart != null) {
-            chart.clear();
+            //chart clear ###
+            chart.dispose();
+            chart = null;
         }
     }
 
@@ -275,23 +272,6 @@ public class SurfacePlotJzy3d extends SurfacePlotBase {
         return showAxis;
     }
 
-    Boolean continuousRendering;
-
-    public void setContinuousRendering(boolean value) {
-        if (value != getContinuousRendering()) {
-            continuousRendering = value;
-            if (isShowing()) {
-                createGraph();
-            }
-        }
-    }
-
-    public boolean getContinuousRendering() {
-        if (continuousRendering == null) {
-            return false;
-        }
-        return continuousRendering;
-    }
 
     public void setColormap(Colormap value) {
         if ((value != Colormap.Grayscale) && (value != Colormap.Temperature)) {
@@ -308,13 +288,13 @@ public class SurfacePlotJzy3d extends SurfacePlotBase {
     org.jzy3d.plot3d.rendering.canvas.Quality getJzy3dQuality() {
         switch (getQuality()) {
             case Low:
-                return org.jzy3d.plot3d.rendering.canvas.Quality.Fastest;
+                return org.jzy3d.plot3d.rendering.canvas.Quality.Fastest();
             case Medium:
-                return org.jzy3d.plot3d.rendering.canvas.Quality.Intermediate;
+                return org.jzy3d.plot3d.rendering.canvas.Quality.Intermediate();
             case High:
-                return org.jzy3d.plot3d.rendering.canvas.Quality.Advanced;
+                return org.jzy3d.plot3d.rendering.canvas.Quality.Advanced();
             case Maximum:
-                return org.jzy3d.plot3d.rendering.canvas.Quality.Nicest;
+                return org.jzy3d.plot3d.rendering.canvas.Quality.Nicest();
         }
         return null;
     }
@@ -454,8 +434,8 @@ public class SurfacePlotJzy3d extends SurfacePlotBase {
     }
 
     protected static void remap(Shape shape, Mapper mapper) {
-        List<AbstractDrawable> polygons = shape.getDrawables();
-        for (AbstractDrawable d : polygons) {
+        List<Drawable> polygons = shape.getDrawables();
+        for (Drawable d : polygons) {
             if (d instanceof Polygon) {
                 Polygon p = (Polygon) d;
                 for (int i = 0; i < p.size(); i++) {
@@ -474,13 +454,12 @@ public class SurfacePlotJzy3d extends SurfacePlotBase {
             Chart formerChart = chart;
             if (series != null) {
                 if ((getContour() == Contour.None) || (getContour() == Contour.Contour3D)) {
-                    chart = org.jzy3d.chart.factories.ContourChartComponentFactory.chart(getJzy3dQuality(), canvasType.toString());
+                    chart = org.jzy3d.chart.factories.ContourChartFactory.chart(getJzy3dQuality());
                 } else {
-                    chart = new org.jzy3d.chart.factories.ContourChartComponentFactory().newChart(getJzy3dQuality(), canvasType.toString());
+                    chart = new org.jzy3d.chart.factories.ContourChartFactory().newChart(getJzy3dQuality());
                 }
-
                 java.awt.Color frameColor = getFrameColor();
-                chart.getAxeLayout().setMainColor(new Color(frameColor.getRed(), frameColor.getGreen(), frameColor.getBlue()));
+                chart.getAxisLayout().setMainColor(new Color(frameColor.getRed(), frameColor.getGreen(), frameColor.getBlue()));
                 java.awt.Color background = getBackground();
                 if (background == null) {
                     background = getParent().getBackground();
@@ -513,7 +492,8 @@ public class SurfacePlotJzy3d extends SurfacePlotBase {
                 Component canvas = (Component) chart.getCanvas();
                 if (canvas instanceof IScreenCanvas) {
                     screenCanvas = (IScreenCanvas) canvas;
-                    animatorControl = screenCanvas.getAnimator();
+                    NativeAnimator animation = (NativeAnimator) screenCanvas.getAnimation();                    
+                    animatorControl = (GLAnimatorControl) animation.getAnimator();
                 }
 
                 SurfacePlotJzy3d.this.removeAll();
@@ -525,70 +505,21 @@ public class SurfacePlotJzy3d extends SurfacePlotBase {
                 }
 
                 chart.addMouseCameraController();
-                chart.getAxeLayout().setXAxeLabel(getAxis(AxisId.X).getLabel());
-                chart.getAxeLayout().setYAxeLabel(getAxis(AxisId.Y).getLabel());
-                chart.getAxeLayout().setZAxeLabel(getAxis(AxisId.Z).getLabel());
+                chart.getAxisLayout().setXAxisLabel(getAxis(AxisId.X).getLabel());
+                chart.getAxisLayout().setYAxisLabel(getAxis(AxisId.Y).getLabel());
+                chart.getAxisLayout().setZAxisLabel(getAxis(AxisId.Z).getLabel());
 
-                Object listener = (canvasType == CanvasType.newt)
-                        ? new com.jogamp.newt.event.MouseAdapter() {
-                    @Override
-                    public void mousePressed(com.jogamp.newt.event.MouseEvent e) {
-                        if (!getContinuousRendering() && (animatorControl != null)) {
-                            animatorControl.resume();
-                        }
-                    }
-
-                    public void mouseWheelMoved(com.jogamp.newt.event.MouseEvent me) {
-                        if (!getContinuousRendering() && (animatorControl != null)) {
-                            if (animatorControl.isPaused()) {
-                                screenCanvas.display();
-                            }
-                        }
-                    }
-
-                    @Override
-                    public void mouseReleased(com.jogamp.newt.event.MouseEvent e) {
-                        if ((e.getButton() == com.jogamp.newt.event.MouseEvent.BUTTON3)
-                                && (!e.isAltDown()) && (!e.isControlDown()) && (!e.isShiftDown())) {
-                            menuPopup.show(SurfacePlotJzy3d.this, e.getX(), e.getY());
-                        }
-
-                        if (!getContinuousRendering() && (animatorControl != null)) {
-                            if ((e.getClickCount() != 2) && (e.getButtonsDown().length <= 1)) {
-                                animatorControl.pause();
-                                screenCanvas.display();
-                            }
-                        }
-                    }
-                }
-                        : new MouseAdapter() {
+                
+                Object listener =  new MouseAdapter() {
 
                     @Override
                     public void mouseReleased(MouseEvent e) {
                         checkPopup(e);
-                        if (!getContinuousRendering() && (animatorControl != null)) {
-                            if ((e.getClickCount() != 2)) {
-                                animatorControl.pause();
-                                screenCanvas.display();
-                            }
-                        }
-                    }
-
-                    public void mouseWheelMoved(MouseWheelEvent e) {
-                        if (!getContinuousRendering() && (animatorControl != null)) {
-                            if (animatorControl.isPaused()) {
-                                screenCanvas.display();
-                            }
-                        }
                     }
 
                     @Override
                     public void mousePressed(MouseEvent e) {
                         checkPopup(e);
-                        if (!getContinuousRendering() && (animatorControl != null)) {
-                            animatorControl.resume();
-                        }
-
                     }
 
                     private void checkPopup(MouseEvent e) {
@@ -600,10 +531,11 @@ public class SurfacePlotJzy3d extends SurfacePlotBase {
                 };
 
                 chart.getCanvas().addMouseController(listener);
+                
 
                 updateGraph(true);
 
-                if (!getContinuousRendering() && (animatorControl != null)) {
+                if (animatorControl != null) {
                     SwingUtilities.invokeLater(new Runnable() {
                         @Override
                         public void run() {
@@ -820,8 +752,7 @@ public class SurfacePlotJzy3d extends SurfacePlotBase {
                 boolean changedBoundsZ = checkBounds(false);
                 if ((surface == null) || (newSeries) || getAxis(AxisId.Z).isAutoRange() || changedBoundsZ) {
                     //if (true) {
-                    surface = (Shape) Builder.buildOrthonormal(
-                            new OrthonormalGrid(rangeX, series.getNumberOfBinsX(), rangeY, series.getNumberOfBinsY()), mapper);
+                    surface = new SurfaceBuilder().orthonormal(new OrthonormalGrid(rangeX, series.getNumberOfBinsX(), rangeY, series.getNumberOfBinsY()), mapper);
                     ColorMapper colorMapper = new ColorMapper((getColormap() == Colormap.Temperature) ? new ColorMapRainbow() : new ColorMapGrayscale(),
                             (float) ((getAxis(AxisId.Z).isAutoRange()) ? surface.getBounds().getZmin() : getAxis(AxisId.Z).getMin()),
                             (float) ((getAxis(AxisId.Z).isAutoRange()) ? surface.getBounds().getZmax() : getAxis(AxisId.Z).getMax()),
@@ -833,7 +764,7 @@ public class SurfacePlotJzy3d extends SurfacePlotBase {
                     surface.setWireframeColor(new Color(getFrameColor().getRed(), getFrameColor().getGreen(), getFrameColor().getBlue(), getFrameColor().getAlpha()));
                     surface.setFaceDisplayed(getShowFace());
                     if (getShowLegend()) {
-                        AWTColorbarLegend cbar = new AWTColorbarLegend(surface, chart.getView().getAxe().getLayout());
+                        AWTColorbarLegend cbar = new AWTColorbarLegend(surface, chart.getView().getAxis().getLayout());
                         cbar.setBackground(chart.getView().getBackgroundColor());
                         surface.setLegend(cbar);
                     }
@@ -844,7 +775,7 @@ public class SurfacePlotJzy3d extends SurfacePlotBase {
 
                         MapperContourPictureGenerator contour = new MapperContourPictureGenerator(mapper, rangeX, rangeY);
                         IContourColoringPolicy policy = new DefaultContourColoringPolicy(colorMapper);
-                        ContourAxeBox cab = (getContour() == Contour.Contour3D) ? null : (ContourAxeBox) chart.getView().getAxe();
+                        ContourAxisBox cab = (getContour() == Contour.Contour3D) ? null : (ContourAxisBox) chart.getView().getAxis();
 
                         switch (getContour()) {
                             case Normal:
@@ -894,17 +825,18 @@ public class SurfacePlotJzy3d extends SurfacePlotBase {
                         chart.getScene().getGraph().remove(former, false);
                     }
                     boolean changed = checkBounds(true);
-                    //if (!changed)
-                    //    chart.getView().updateBounds();
+                    if (!changed)
+                        chart.getView().updateBounds();
                 }
             }
         }
         if (newSeries) {
-            if (!getContinuousRendering() && (animatorControl != null)) {
+            if (animatorControl != null) {
                 if (animatorControl.isPaused()) {
                     screenCanvas.display();
                 }
             }
+            
         }
 
     }
