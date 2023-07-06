@@ -52,6 +52,8 @@ import org.jzy3d.plot3d.rendering.legends.colorbars.AWTColorbarLegend;
 import org.jzy3d.plot3d.rendering.view.modes.ViewBoundMode;
 import ch.psi.utils.swing.SwingUtils;
 import com.jogamp.opengl.util.texture.TextureData;
+import javax.swing.JLabel;
+import javax.swing.SwingConstants;
 import org.jzy3d.chart.NativeAnimator;
 import org.jzy3d.chart.factories.ContourChartFactory;
 
@@ -67,6 +69,7 @@ public class SurfacePlotJzy3d extends SurfacePlotBase {
     private MatrixPlotSeries series;
     private double[][] data;
     JPopupMenu menuPopup;
+    JLabel title;
 
     public SurfacePlotJzy3d() {
         super();
@@ -106,7 +109,11 @@ public class SurfacePlotJzy3d extends SurfacePlotBase {
     @Override
     protected void createChart() {
         super.createChart();
-        setLayout(new BorderLayout());
+        setLayout(new BorderLayout());        
+        title = new JLabel();
+        title.setHorizontalAlignment(SwingConstants.CENTER);
+        add(title, BorderLayout.NORTH);
+        
         setColormap(Colormap.Temperature);
         if (getHardwareAccelerated() != Settings.getInstance().isHardwareAccelerated()) {
             Settings.getInstance().setHardwareAccelerated(getHardwareAccelerated());
@@ -114,6 +121,14 @@ public class SurfacePlotJzy3d extends SurfacePlotBase {
         setPreferredSize(new Dimension(PREFERRED_WIDTH, PREFERRED_HEIGHT));
         menuPopup = new JPopupMenu();
     }
+    
+    @Override
+    protected void onTitleChanged() {
+        if (getTitleFont()!=null){
+            title.setFont(getTitleFont());
+        }
+        title.setText((getTitle()==null) ? "" : getTitle());
+    }    
 
     @Override
     protected Object onAddedSeries(final MatrixPlotSeries s) {
@@ -475,6 +490,7 @@ public class SurfacePlotJzy3d extends SurfacePlotBase {
                 }
                 chart.getView().setBackgroundColor(new Color(background.getRed(), background.getGreen(), background.getBlue()));
 
+
                 if (rangeY == null) {
                     rangeY = new Range(0, data.length - 1);
                 }
@@ -505,8 +521,10 @@ public class SurfacePlotJzy3d extends SurfacePlotBase {
                     animatorControl = (GLAnimatorControl) animation.getAnimator();
                 }
 
-                SurfacePlotJzy3d.this.removeAll();
-                SurfacePlotJzy3d.this.add(canvas);
+                if (formerChart!=null){
+                    SurfacePlotJzy3d.this.remove((Component)  formerChart.getCanvas());
+                }                
+                SurfacePlotJzy3d.this.add(canvas, BorderLayout.CENTER);
 
                 //Todo: why it is not displyed if I don'r pack the Window?
                 if (SurfacePlotJzy3d.this.isVisible()) {
