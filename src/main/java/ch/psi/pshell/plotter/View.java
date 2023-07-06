@@ -19,21 +19,31 @@ import java.util.logging.Logger;
  *
  */
 public class View extends MainFrame {
-
+    public static final String ARG_SERVER_PORT = "port";
+    
     static final Logger logger = Logger.getLogger(View.class.getName());
     final Plotter pm;
     final PlotServer ps;
     final LogManager logManager;
 
-    
     public View() {
+        this(-1);
+    }
+    
+    public View(int port) {
         super();
         initComponents();
         setTitle("Plotter");
         setIcon(getClass().getResource("/ch/psi/pshell/ui/Icon.ico"));
 
         pm = new DesktopPlotter(plotPane);
-        ps = new PlotServer(pm);
+        if (port > 0){
+            ps = new PlotServer(port, pm);
+        } else if (App.hasArgument(ARG_SERVER_PORT)){
+            ps = new PlotServer(Integer.valueOf(App.getArgumentValue(ARG_SERVER_PORT)), pm);
+        } else {
+            ps = new PlotServer(pm);
+        }
 
         loggerPanel.setOutputLength(1000);
         //loggerPanel.setInverted(true);
@@ -290,8 +300,6 @@ public class View extends MainFrame {
     public static void main(String args[]) throws Exception {
         App.init(args);
         String home = Setup.expand(System.getProperty(Setup.PROPERTY_HOME_PATH, Setup.DEFAULT_HOME_FOLDER));
-        Sys.addToLibraryPath(Paths.get(home, "extensions").toFile().getCanonicalPath());
-        Sys.addToClassPath(Paths.get(home, "extensions", "jzy3d-1.9.0-jar-with-dependencies.jar").toString());
         
         if (App.isDebug()){
             PlotServer.debug = true;

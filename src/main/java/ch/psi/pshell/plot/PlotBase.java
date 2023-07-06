@@ -293,7 +293,7 @@ abstract public class PlotBase<T extends PlotSeries> extends MonitoredPanel impl
                     String filename = chooser.getSelectedFile().getAbsolutePath();
                     String type = "png";
                     String ext = IO.getExtension(chooser.getSelectedFile());
-                    for (String fe : new String[]{"bmp", "jpg"}) {
+                    for (String fe : new String[]{"png","bmp", "jpg", "gif", "tif", "tiff", "jpg", "jpeg"}) {
                         if ((chooser.getFileFilter().getDescription().contains(fe))
                                 || (fe.equals(ext))) {
                             type = fe;

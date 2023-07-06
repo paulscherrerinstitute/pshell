@@ -9,7 +9,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.awt.event.MouseWheelEvent;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -52,7 +51,9 @@ import org.jzy3d.plot3d.rendering.canvas.IScreenCanvas;
 import org.jzy3d.plot3d.rendering.legends.colorbars.AWTColorbarLegend;
 import org.jzy3d.plot3d.rendering.view.modes.ViewBoundMode;
 import ch.psi.utils.swing.SwingUtils;
+import com.jogamp.opengl.util.texture.TextureData;
 import org.jzy3d.chart.NativeAnimator;
+import org.jzy3d.chart.factories.ContourChartFactory;
 
 /**
  *
@@ -71,27 +72,35 @@ public class SurfacePlotJzy3d extends SurfacePlotBase {
         super();
     }
 
+    
     @Override
     protected void onShow() {
+        /*
         if (series != null) {
             SwingUtilities.invokeLater(new Runnable() { //Invoking later because was not rendering when setting date with FDA
                 @Override
                 public void run() {
-                    createGraph();
+                    if (chart == null) {            
+                        createGraph();
+                    } else {
+                        updateGraph(false);
+                    }
                 }
             });
         } else {
             checkBounds(true);
-        }
+        }*/
     }
 
     protected void onHidden() {
+        /*
         if (chart != null) {
             chart.stopAnimation();
             removeAll();
             chart.dispose();
-            chart = null;
+            chart = null; 
         }
+        */
     }
 
     @Override
@@ -148,9 +157,9 @@ public class SurfacePlotJzy3d extends SurfacePlotBase {
                 series = s;
             }
         }
-        if (isShowing()) {
+        //if (isShowing()) {
             createGraph();
-        }
+        //}
         return this;
     }
 
@@ -205,9 +214,9 @@ public class SurfacePlotJzy3d extends SurfacePlotBase {
     public void setShowLegend(boolean value) {
         if (value != getShowLegend()) {
             showLegend = value;
-            if (isShowing()) {
+            //if (isShowing()) {
                 updateGraph(true);
-            }
+            //}
         }
     }
 
@@ -223,9 +232,9 @@ public class SurfacePlotJzy3d extends SurfacePlotBase {
     public void setShowFace(boolean value) {
         if (value != getShowFace()) {
             showFace = value;
-            if (isShowing()) {
+            //if (isShowing()) {
                 updateGraph(true);
-            }
+            //}
         }
     }
 
@@ -241,9 +250,9 @@ public class SurfacePlotJzy3d extends SurfacePlotBase {
     public void setShowFrame(boolean value) {
         if (value != getShowFrame()) {
             showFrame = value;
-            if (isShowing()) {
+            //if (isShowing()) {
                 updateGraph(true);
-            }
+            //}
         }
     }
 
@@ -259,9 +268,9 @@ public class SurfacePlotJzy3d extends SurfacePlotBase {
     public void setShowAxis(boolean value) {
         if (value != getShowAxis()) {
             showAxis = value;
-            if (isShowing()) {
+            //if (isShowing()) {
                 updateGraph(true);
-            }
+            //}
         }
     }
 
@@ -279,9 +288,9 @@ public class SurfacePlotJzy3d extends SurfacePlotBase {
         }
         if (value != getColormap()) {
             super.setColormap(value);
-            if (isShowing()) {
+            //if (isShowing()) {
                 updateGraph(true);
-            }
+            //}
         }
     }
 
@@ -306,9 +315,9 @@ public class SurfacePlotJzy3d extends SurfacePlotBase {
             menuItem.setSelected(String.valueOf(quality).equals(menuItem.getText()));
         }
         if (series != null) {
-            if (isShowing()) {
+            //if (isShowing()) {
                 createGraph();
-            }
+            //}
         }
     }
 
@@ -361,9 +370,9 @@ public class SurfacePlotJzy3d extends SurfacePlotBase {
     public void setContour(Contour contour) {
         this.contour = contour;
         if (series != null) {
-            if (isShowing()) {
+            //if (isShowing()) {
                 createGraph();
-            }
+            //}
         }
     }
 
@@ -454,10 +463,10 @@ public class SurfacePlotJzy3d extends SurfacePlotBase {
             Chart formerChart = chart;
             if (series != null) {
                 if ((getContour() == Contour.None) || (getContour() == Contour.Contour3D)) {
-                    chart = org.jzy3d.chart.factories.ContourChartFactory.chart(getJzy3dQuality());
+                    chart = ContourChartFactory.chart(getJzy3dQuality());
                 } else {
-                    chart = new org.jzy3d.chart.factories.ContourChartFactory().newChart(getJzy3dQuality());
-                }
+                    chart = new ContourChartFactory().newChart(getJzy3dQuality());
+                }       
                 java.awt.Color frameColor = getFrameColor();
                 chart.getAxisLayout().setMainColor(new Color(frameColor.getRed(), frameColor.getGreen(), frameColor.getBlue()));
                 java.awt.Color background = getBackground();
@@ -788,27 +797,29 @@ public class SurfacePlotJzy3d extends SurfacePlotBase {
                                 cab.setContourImg(contour.getHeightMap(policy, xRes, yRes, getContourLevels()), rangeX, rangeY);
                                 break;
                             case Contour3D:
-                                float dx = ((float) series.getNumberOfBinsX()) / xRes;
-                                float dy = ((float) series.getNumberOfBinsY()) / yRes;
+                                double dx = ((double) series.getNumberOfBinsX()-1) * series.getBinWidthX() / xRes;
+                                double dy = ((double) series.getNumberOfBinsY()-1) * series.getBinWidthY() / yRes;
                                 double[][] contours = contour.getContourMatrix(xRes, yRes, getContourLevels());
+                               
                                 // Create the dot cloud scene and fill with data
                                 int size = xRes * yRes;
                                 Coord3d[] points = new Coord3d[size];
                                 for (int x = 0; x < xRes; x++) {
                                     for (int y = 0; y < yRes; y++) {
-                                        float px = (float) ((float) x * dx * series.getBinWidthX() + series.getMinX());
-                                        float py = (float) (series.getMaxY() - (float) y * dy * series.getBinWidthY());
-
-                                        if (contours[x][y] > -Double.MAX_VALUE) { // Non contours points are -Double.MAX_VALUE and are not painted
-                                            points[x * yRes + y] = new Coord3d(px, py, (float) contours[x][y]);
+                                        double px = ((double) x * dx + series.getMinX());
+                                        //double py = (double) (series.getMaxY() - (double) (y+1) * dy);
+                                        double py = ((double) (yRes-y) * dy + series.getMinY());
+                                        double z = contours[x][y];
+                                        if (z > -Double.MAX_VALUE) { // Non contours points are -Double.MAX_VALUE and are not painted
+                                            points[x * yRes + y] = new Coord3d(px, py, z);
                                         } else {
-                                            points[x * yRes + y] = new Coord3d(px, py, Float.NaN);
+                                            points[x * yRes + y] = new Coord3d(px, py, Double.NaN);
                                         }
                                     }
                                 }
                                 ScatterMultiColor scatter = new ScatterMultiColor(points, colorMapper);
                                 surface.add(scatter);
-                                break;
+                                break;                                                                                            
                         }
                     }
                     chart.setViewMode(getMode().toJzy3dMode());
@@ -854,7 +865,7 @@ public class SurfacePlotJzy3d extends SurfacePlotBase {
         //If manual bounds
         if (manualBounds) {
             //Deferring setting bounds untiul the panel is displayed
-            if (isShowing() && (chart != null)) {
+            if (/*isShowing() &&*/ (chart != null)) {
                 if (chart.getView().getBoundsMode() != ViewBoundMode.MANUAL) {
                     changed = true;
                 }
@@ -913,7 +924,7 @@ public class SurfacePlotJzy3d extends SurfacePlotBase {
                 if (changed && updateBounds) {
                     chart.getView().setBoundManual(bounds);
                 }
-            }
+            }           
         } else if (chart.getView().getBoundsMode() != ViewBoundMode.AUTO_FIT) {
             if (updateBounds) {
                 chart.getView().setBoundMode(ViewBoundMode.AUTO_FIT);
@@ -938,7 +949,7 @@ public class SurfacePlotJzy3d extends SurfacePlotBase {
 
         File temp = null;
         try {
-            temp = File.createTempFile("snapshot", ".bmp");
+            temp = File.createTempFile("snapshot", ".png");
             chart.screenshot(temp);
             return ImageIO.read(new File(temp.getAbsolutePath()));
         } catch (Exception ex) {
