@@ -41,7 +41,7 @@ public class PlotServer implements AutoCloseable {
             socket = context.socket(zmq.ZMQ.ZMQ_REP);
 
             try {
-                socket.bind("tcp://*:" + port);
+                socket.bind(getAddress());
             } catch (Exception ex) {
                 socket.close();
                 context.term();
@@ -104,6 +104,14 @@ public class PlotServer implements AutoCloseable {
         }, "Plot Server - port: " + port);
 
         thread.start();
+    }
+    
+    public int getPort(){
+        return port;
+    }
+    
+    public String getAddress(){
+        return "tcp://*:" + port;
     }
 
     public boolean isRunning() {

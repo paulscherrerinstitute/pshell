@@ -4,7 +4,6 @@ import ch.psi.pshell.core.Configuration;
 import ch.psi.pshell.core.Context;
 import ch.psi.pshell.core.ContextAdapter;
 import ch.psi.pshell.core.DevicePool;
-import ch.psi.pshell.core.InlineDevice;
 import ch.psi.pshell.core.LogManager;
 import ch.psi.pshell.swing.HelpContentsDialog;
 import ch.psi.pshell.swing.OutputPanel;
@@ -32,7 +31,6 @@ import ch.psi.pshell.scan.ScanRecord;
 import ch.psi.pshell.scan.ScanResult;
 import ch.psi.pshell.scripting.ViewPreference;
 import ch.psi.pshell.swing.DataPanel;
-import ch.psi.pshell.swing.DevicePanel;
 import ch.psi.pshell.swing.PlotPanel;
 import ch.psi.pshell.swing.ScanEditorPanel;
 import java.util.logging.Level;
@@ -401,7 +399,7 @@ public class App extends ObservableBase<AppListener> {
         return view;
     }
 
-    static String getHeaderMessage() {
+    public static String getHeaderMessage() {
         StringBuilder sb = new StringBuilder();
         sb.append(getResourceBundleValue("Application.description")).append("\n");
         sb.append(App.getResourceBundleValue("Application.copyright"));

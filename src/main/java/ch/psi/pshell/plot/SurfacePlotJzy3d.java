@@ -76,35 +76,22 @@ public class SurfacePlotJzy3d extends SurfacePlotBase {
     }
 
     
+    /*
     @Override
     protected void onShow() {
-        /*
         if (series != null) {
             SwingUtilities.invokeLater(new Runnable() { //Invoking later because was not rendering when setting date with FDA
                 @Override
                 public void run() {
-                    if (chart == null) {            
-                        createGraph();
-                    } else {
-                        updateGraph(false);
-                    }
+                    createGraph();
                 }
             });
         } else {
             checkBounds(true);
-        }*/
-    }
-
-    protected void onHidden() {
-        /*
-        if (chart != null) {
-            chart.stopAnimation();
-            removeAll();
-            chart.dispose();
-            chart = null; 
         }
-        */
     }
+    */
+
 
     @Override
     protected void createChart() {
@@ -151,7 +138,7 @@ public class SurfacePlotJzy3d extends SurfacePlotBase {
                 if (chart != null) {
                     //chart clear ###
                     chart.dispose();
-                    chart = null;
+                    chart = null;                    
                 }
             }
 
