@@ -43,8 +43,7 @@ Note: The general startup options also apply, see document __Startup Options__.
 >The __Series__ table holds the definition of the streamed data. 
 >Each series must be assigned to a Y axis of one of the five available charts.
 >After the plotting starts, the series properties cannot change dynamically, with the exception of "Color" and "Alarm".
-
-
+>
 >| Column       | Description |
 >| :------------| :---------- |
 >| Enable       | Enables/Disables plotting.|
@@ -54,32 +53,22 @@ Note: The general startup options also apply, see document __Startup Options__.
 >| YAxis        | Y axis for this series (1-2).|
 >| Color        | Color for the series.|
 >| Alarm        | Enables alarm for the series, opening a window for setting alarm limits.|
-
-
+>
 >The optional parameters depend on the type of data. The values on the __Name__ column are formed by:
 >- A mandatory name.
 >- An optional list of values corresponding to type-specific parameters.
 >- An optional __alias__, surrounded by the delimiters: \< \>. If defined, if will be used in the plot legends instead of the full name.
-
-
+>
 >| Data Type               | Name and Optional Parameters |
 >| :-----------------------| :---------- |
 >| Channel                 | __ChannelName [Polling(ms)=-1 Precision=-1] \<Alias\>__|
->|                         |     CamServer uses EPICS channel monitors by default. If the data volume is to big for the the plotting, it can be lowered by specifying the __Polling__ parameter.|
->|                         |     Instead of appending to the chart on the monitor event, the channel will be read in the given interval (in milliseconds.)|
->|                         |     |
+>|                         |     CamServer uses EPICS channel monitors by default. If the data volume is to big for the the plotting, it can be lowered by specifying the __Polling__ parameter. Instead of appending to the chart on the monitor event, the channel will be read in the given interval (in milliseconds.)<br />|
 >| Stream                  | __ChannelName [Modulo=1 Offset=0] \<Alias\>__|
->|                         |     Stream data source are BSREAD channels requested to the Dispatcher. All Streams sources in a plot are aligned to the same pulse ID. |
->|                         |     |
+>|                         |     Stream data source are BSREAD channels requested to the Dispatcher. All Streams sources in a plot are aligned to the same pulse ID. <br />|
 >| Device                  | __DeviceName \<Alias\>__|
->|                         |     Where DeviceName can be:|
->|                         |     - A global device.|
->|                         |     - An _inline device_ string, as defined in __Devices__ document, section __Inline devices__.|
->|                         |     - A statement, if the interpreter is enabled (e.g. for accessing sub-devices).|
->|                         |     |
+>|                         |     Where DeviceName can be: <br /> - A global device.<br /> - An _inline device_ string, as defined in __Devices__ document, section __Inline devices__.<br /> - A statement, if the interpreter is enabled (e.g. for accessing sub-devices).<br />|
 >| CamServer               | __InstanceName ChannelName \<Alias\>__|
->|                         |     - Alternativelly, the CamServer stream URL can be provided instead of the instance name.|
->|                         |     |
+>|                         |     - Alternativelly, the CamServer stream URL can be provided instead of the instance name. <br />|
 
 
 ### Charts
@@ -87,8 +76,7 @@ Note: The general startup options also apply, see document __Startup Options__.
 >The __Charts__ table holds properties of each chart. Up to 5 charts can be used in Strip Chart.
 >Each chart can have two Y axis (Y1 and Y2).
 >After the plotting starts, the chart properties can be changed dynamically, with the exception of "Local Time".
-
-
+>
 >| Column       | Description |
 >| :------------| :---------- |
 >| Y1min, Y1max | If both are specified, sets a fixed Y1 range (otherwise range is automatic).|
