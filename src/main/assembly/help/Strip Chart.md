@@ -66,7 +66,7 @@ Note: The general startup options also apply, see document __Startup Options__.
 >| Stream                  | __ChannelName [Modulo=1 Offset=0] \<Alias\>__|
 >|                         |     Stream data source are BSREAD channels requested to the Dispatcher. All Streams sources in a plot are aligned to the same pulse ID. <br />|
 >| Device                  | __DeviceName \<Alias\>__|
->|                         |     Where DeviceName can be: <br /> - A global device.<br /> - An _inline device_ string, as defined in __Devices__ document, section __Inline devices__.<br /> - A statement, if the interpreter is enabled (e.g. for accessing sub-devices).<br />|
+>|                         |     Where DeviceName can be: <br /> - A global device.<br /> - An _inline device_ string, as defined in __Devices__ document, section [__Inline devices__](./Devices.md#inline-devices).<br /> - A statement, if the interpreter is enabled (e.g. for accessing sub-devices).<br />|
 >| CamServer               | __InstanceName ChannelName \<Alias\>__|
 >|                         |     - Alternativelly, the CamServer stream URL can be provided instead of the instance name. <br />|
 
