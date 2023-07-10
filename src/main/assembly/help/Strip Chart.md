@@ -30,7 +30,7 @@ There are some startup options specific for Strip Chart when detached:
 | -alarm_file=<...>         | Set alarm sound file (default use system beep).|
 
 
-Note: The general startup options also apply, see document [__Startup Options__](./Startup%20Options.md").
+Note: The general startup options also apply, see document [__Startup Options__](./Startup%20Options.md).
 
 
 <br/>
