@@ -30,7 +30,7 @@ There are some startup options specific for Strip Chart when detached:
 | -alarm_file=<...>         | Set alarm sound file (default use system beep).|
 
 
-Note: The general startup options also apply, see document __Startup Options__.
+Note: The general startup options also apply, see document [__Startup Options__](./Startup Options).
 
 
 <br/>
@@ -119,7 +119,7 @@ Note: The general startup options also apply, see document __Startup Options__.
 
 ### Persistence
 
->If the checkbox __Save to__ is checked then all received data is saved using the file name template and the given data format and layout (see __Data__ document).
+>If the checkbox __Save to__ is checked then all received data is saved using the file name template and the given data format and layout (see document [__Data__](./Data.md)).
 >
 >If the checkbox is not set before starting the plotting then, while plotting, it is replaced by a __Save__ button, 
 >which saves the data currently displayed using the file name template and the given data format and layout.
