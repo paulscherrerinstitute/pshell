@@ -159,6 +159,31 @@ def abort():
     fork(get_context().abort) #Cannot be on script execution thread
     while True: sleep(10.0)
 
+def is_aborted():
+    """Checks if ongoing task has been aborted.
+       In Java>=20 threads cannot be forcibly stopped, so lengthy operations in scripts must check if task has been aborted.
+
+    Args:
+        None
+
+    Returns:
+        None
+    """
+    return java.lang.Thread.currentThread().isInterrupted() or get_exec_pars().commandInfo.aborted
+
+def check_aborted():
+    """Stops current execution if task has been aborted.
+       In Java>=20 threads cannot be forcibly stopped, so lengthy operations in scripts must check if task has been aborted.
+         
+    Args:
+        None
+
+    Returns:
+        None
+    """
+    if is_aborted():
+        abort()
+
 def set_return(value):
     """Sets the script return value. This value is returned by the "run" function.
 

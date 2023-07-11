@@ -116,7 +116,7 @@ public class Threading {
                                 Logger.getLogger(Threading.class.getName()).severe("Force stopping thread: " + thread.getName());
                                 thread.stop();
                             } else {
-                                Logger.getLogger(Threading.class.getName()).severe("Cannot force the thread to stop.");
+                                Logger.getLogger(Threading.class.getName()).severe("Cannot force the thread to stop");
                             }
                         }
                         return !thread.isAlive();

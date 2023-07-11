@@ -60,9 +60,11 @@ These functions provide the script API to many aspects of PShell:
  * Script evaluation and background task control.
     - run
     - abort
+    - is_aborted
+    - check_aborted
+    - set_return
     - start_task
     - stop_task
-    - set_return
 
  * Versioning tools:
     - commit
