@@ -12,6 +12,7 @@ import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -91,23 +92,36 @@ public class Threading {
     public static boolean stop(Thread thread, boolean force, int waitMillis) throws InterruptedException {
         if ((thread!=null) && (thread.isAlive())) {
             thread.interrupt();
+            Thread.sleep(0);
+            Chrono chrono = new Chrono();
             if (waitMillis > 0) {
-                for (int i = 0; i < waitMillis; i++) {
-                    Thread.sleep(1);
-                    if (!thread.isAlive()) {
-                        return true;
-                    } else if (!thread.isInterrupted()) {
-                        thread.interrupt();
-                    }
+                try {
+                    chrono.waitCondition(new Condition() {
+                        @Override
+                        public boolean evaluate() throws InterruptedException {
+                            if (!thread.isAlive()) {
+                                return true;
+                            } else if (!thread.isInterrupted()) {
+                                thread.interrupt();                                
+                            }
+                            return false;                            
+                        }
+                    }, waitMillis);
+                    return true;
+                } catch (TimeoutException ex) {                    
+                    if (force) {
+                        Thread.sleep(0);
+                        if (thread.isAlive()) {
+                            if (Sys.getJavaVersion()<20){
+                                Logger.getLogger(Threading.class.getName()).severe("Force stopping thread: " + thread.getName());
+                                thread.stop();
+                            } else {
+                                Logger.getLogger(Threading.class.getName()).severe("Cannot force the thread to stop.");
+                            }
+                        }
+                        return !thread.isAlive();
+                    }                    
                 }
-            }
-            if (force) {
-                Thread.sleep(0);
-                if (thread.isAlive()) {
-                    Logger.getLogger(Threading.class.getName()).severe("Force stopping thread: " + thread.getName());
-                    thread.stop();
-                }
-                return !thread.isAlive();
             }
             return false;
         }
