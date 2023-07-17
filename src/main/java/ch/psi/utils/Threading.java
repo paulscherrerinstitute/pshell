@@ -112,11 +112,11 @@ public class Threading {
                     if (force) {
                         Thread.sleep(0);
                         if (thread.isAlive()) {
-                            if (Sys.getJavaVersion()<20){
-                                Logger.getLogger(Threading.class.getName()).severe("Force stopping thread: " + thread.getName());
+                            Logger.getLogger(Threading.class.getName()).severe("Force stopping thread: " + thread.getName());
+                            try{
                                 thread.stop();
-                            } else {
-                                Logger.getLogger(Threading.class.getName()).severe("Cannot force the thread to stop");
+                            } catch (Exception e){
+                                Logger.getLogger(Threading.class.getName()).severe("Cannot force the thread to stop on Java " + Sys.getJavaVersion()+ ": " + e);
                             }
                         }
                         return !thread.isAlive();
