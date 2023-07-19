@@ -184,10 +184,6 @@ public class StreamPanel extends DevicePanel {
         monitoredDevice = getDevice();
         if (getDevice() != null) {
             onDeviceStateChanged(getDevice().getState(), null);
-            textAddress.setText(getDevice().getAddress());
-            textType.setText(getDevice().getSocketType() == ZMQ.PULL ?
-                    SocketType.PULL.toString() : 
-                    SocketType.SUB.toString());
             if (updateInterval>0){
                 startTimer(updateInterval, 10);
             }
@@ -198,6 +194,20 @@ public class StreamPanel extends DevicePanel {
         updateButtons();  
     }
    
+    protected void updateSocket(){
+            String socket = getDevice().getStreamSocket();
+            
+            if (socket==null){
+                textAddress.setText(getDevice().getAddress());
+                textType.setText("");
+            } else {
+                textAddress.setText( socket);
+                textType.setText(getDevice().getSocketType() == ZMQ.PULL ?
+                        SocketType.PULL.toString() : 
+                        SocketType.SUB.toString());
+            }        
+    }
+    
     protected void setMonitoredDevice(AddressableDevice device){
         monitoredDevice = device;
     }
@@ -429,7 +439,7 @@ public class StreamPanel extends DevicePanel {
 
 
     @Override
-    protected void onDeviceStateChanged(State state, State former) {
+    protected void onDeviceStateChanged(State state, State former) {        
         updateButtons();
     }
 
@@ -446,9 +456,11 @@ public class StreamPanel extends DevicePanel {
     @Override
     protected void onTimer() {
         try{    
-            if ((getDevice()!=null)){
+            if ((getDevice()!=null)){                
                 if (cacheChanged){
                     updateTable();
+                } else {
+                    updateSocket();
                 }
                 updating = true;
                 ckMonitored.setSelected(monitoredDevice.isMonitored());
