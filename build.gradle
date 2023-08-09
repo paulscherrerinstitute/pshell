@@ -165,9 +165,7 @@ dependencies {
     implementation 'org.jetbrains.pty4j:pty4j:0.12.11'
     implementation 'black.ninia:jep:3.9.1'  //TODO: Update
     
-    //implementation 'ch.psi:bsread:4.1.0'  // BSREAD using vanilla JeroMQ 0.5.3
-    //implementation 'ch.psi:bsread:4.2.9'  // JeroMQ 0.5.3 modified for fixing header reserving allocator and sending compressed data
-    implementation 'ch.psi:bsread:4.3.1'  // BSREAD using vanilla JeroMQ 0.5.3 fixing sending compressed data and send return checking    //BSREAD dependencies
+    implementation 'ch.psi:bsread:4.4.0'
     implementation 'ch.psi:bitshuffle-lz4:1.1.2'
     implementation 'com.fasterxml.jackson.core:jackson-databind:2.14.2'
     implementation 'org.zeromq:jeromq:0.5.3'   
