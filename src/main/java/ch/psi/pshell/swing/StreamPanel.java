@@ -24,6 +24,8 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URISyntaxException;
 import java.util.Collections;
 import java.util.List;
 import java.util.logging.Level;
@@ -224,6 +226,16 @@ public class StreamPanel extends DevicePanel {
         model.setNumRows(0);
     }
 
+    public static boolean showHelp() throws Exception{
+        String spec = "https://git.psi.ch/photon-diagnostics/swissfel-photon-diagnostics-guide/-/wikis/Aramis%20spectral%20diagnostics/PSSS%20user%20guide";
+        java.net.URL url = new java.net.URL(spec);
+        java.awt.Desktop desktop = java.awt.Desktop.isDesktopSupported() ? java.awt.Desktop.getDesktop() : null;
+        if (desktop != null && desktop.isSupported(java.awt.Desktop.Action.BROWSE)) {
+            desktop.browse(url.toURI());
+            return true;
+        }    
+        return false;
+    }
     
     public void updateTable(){
         Stream device = getDevice();
@@ -410,11 +422,13 @@ public class StreamPanel extends DevicePanel {
 
     private void ckMonitoredActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ckMonitoredActionPerformed
         try{
-            if (!updating){
-                if (monitoredDevice!=null){
-                    monitoredDevice.setMonitored(ckMonitored.isSelected());
-                }
-            }
+            //if (!updating){
+            //    if (monitoredDevice!=null){
+            //        monitoredDevice.setMonitored(ckMonitored.isSelected());
+            //    }
+            
+            
+            showHelp();
         } catch (Exception ex){
             SwingUtils.showException(this, ex);
         }

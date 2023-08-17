@@ -146,6 +146,7 @@ public class CamServerViewer extends MonitoredPanel {
     String cameraServerUrl;
     PipelineSource server;
     String pipelineNameFormat = "%s_sp";
+    String sharedInstanceNameFormat = "%s";
     String instanceNameFormat = "%s%d";
 
     final ArrayList<Frame> imageBuffer = new ArrayList();
@@ -813,6 +814,14 @@ public class CamServerViewer extends MonitoredPanel {
     public void setInstanceNameFormat(String value) {
         instanceNameFormat = value;
     }
+    
+    public String getSharedInstanceNameFormat() {
+        return sharedInstanceNameFormat;
+    }
+
+    public void setSharedInstanceNameFormat(String value) {
+        sharedInstanceNameFormat = value;
+    }
 
     public Double getZoom() {
         return renderer.getDefaultZoom();
@@ -1306,13 +1315,13 @@ public class CamServerViewer extends MonitoredPanel {
     
     protected String getInstanceName(String pipelineName, boolean shared) throws IOException{
         if (shared){
-            return String.format(instanceNameFormat, pipelineName, 1);   
+            return String.format(getSharedInstanceNameFormat(), pipelineName);   
         } else {
             //Get next name not used
-            int instanceIndex = 2;
+            int instanceIndex = 1;
             String instanceName = null;
             while (true){
-                instanceName = String.format(instanceNameFormat, pipelineName, instanceIndex);   
+                instanceName = String.format(getInstanceNameFormat(), pipelineName, instanceIndex);   
                 if (!server.getInstances().contains(instanceName)) {
                     break;
                 }
