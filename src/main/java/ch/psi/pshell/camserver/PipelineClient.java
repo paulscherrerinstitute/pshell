@@ -16,6 +16,7 @@ import jakarta.ws.rs.client.Entity;
 import jakarta.ws.rs.client.WebTarget;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import java.net.URLEncoder;
 
 /**
  * Client to PipelineServer
@@ -131,10 +132,19 @@ public class PipelineClient extends InstanceManagerClient{
      * instance id and instance stream in a list.
      */
     public List<String> createFromName(String pipelineName, String id) throws IOException {
+        return createFromName(pipelineName, id, null);
+    }
+
+    public List<String> createFromName(String pipelineName, String id, Map<String, Object> additionalConfig) throws IOException {
         checkName(pipelineName);
         WebTarget resource = client.target(prefix + "/" + pipelineName);
         if (id != null) {
             resource = resource.queryParam("instance_id", id);
+        }
+        if (additionalConfig != null) {
+            String json = EncoderJson.encode(additionalConfig, false);
+            
+            resource = resource.queryParam("additional_config", URLEncoder.encode(json, "UTF-8"));
         }
         Response r = resource.request().accept(MediaType.TEXT_HTML).post(null);
         String json = r.readEntity(String.class);
@@ -143,6 +153,13 @@ public class PipelineClient extends InstanceManagerClient{
         return Arrays.asList(new String[]{(String) map.get("instance_id"), (String) map.get("stream")});
     }
 
+    public List<String> createReadonlyFromName(String pipelineName, String id) throws IOException {
+        Map<String, Object> additionalConfig = new HashMap<>();
+        additionalConfig.put("read_only", true);
+        return createFromName(pipelineName, id, additionalConfig);
+    }
+
+    
     /**
      * Create a pipeline from the provided config. Pipeline config can be changed. Return pipeline
      * instance id and instance stream in a list.
@@ -160,6 +177,11 @@ public class PipelineClient extends InstanceManagerClient{
         return Arrays.asList(new String[]{(String) map.get("instance_id"), (String) map.get("stream")});
     }
 
+    public List<String> createReadonlyFromConfig(Map<String, Object> config, String id) throws IOException {
+        config.put("read_only", true);
+        return createFromConfig(config, id);
+    }
+    
     /**
      * Set config of the pipeline. Return actual applied config.
      */

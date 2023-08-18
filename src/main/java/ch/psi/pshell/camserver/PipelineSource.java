@@ -19,6 +19,7 @@ public class PipelineSource extends StreamCamera {
     String currentPipeline;
     String currentInstance;
     Boolean currentShared;
+    Boolean currentReadonly;
 
     public interface ConfigChangeListener {
         void onConfigChanged(Map<String, Object> config);
@@ -92,6 +93,10 @@ public class PipelineSource extends StreamCamera {
      */
     public Boolean getCurrentShared() {
         return currentShared;
+    }    
+
+    public Boolean getCurrentReadonly() {
+        return currentReadonly;
     }    
 
     void assertStarted() throws IOException {
@@ -213,6 +218,22 @@ public class PipelineSource extends StreamCamera {
     }
 
     /**
+     * Create a pipeline from a config file and additional configuration. 
+     * instance id and instance stream in a list.
+     */
+    public List<String> createFromName(String pipelineName, String id, Map<String, Object> additionalConfig) throws IOException {
+        return client.createFromName(pipelineName, id, additionalConfig);
+    }
+
+    /**
+     * Create a readonly pipeline from a config file and additional configuration. 
+     * instance id and instance stream in a list.
+     */
+    public List<String> createReadonlyFromName(String pipelineName, String id) throws IOException {
+        return client.createReadonlyFromName(pipelineName, id);
+    }
+
+    /**
      * Create a pipeline from the provided config. Pipeline config can be changed. Return pipeline
      * instance id and instance stream in a list.
      */
@@ -220,6 +241,14 @@ public class PipelineSource extends StreamCamera {
         return client.createFromConfig(config, id);
     }
 
+    /**
+     * Create readonly a pipeline from the provided config. Pipeline config can be changed. Return pipeline
+     * instance id and instance stream in a list.
+     */
+    public List<String> createReadonlyFromConfig(Map<String, Object> config, String id) throws IOException {
+        return client.createReadonlyFromConfig(config, id);
+    }
+    
     /**
      * Set config of the pipeline. Return actual applied config.
      */
@@ -265,6 +294,9 @@ public class PipelineSource extends StreamCamera {
     }    
        
 
+    public boolean isInstanceRunning(String instanceId) throws IOException{
+        return getInstances().contains(instanceId);
+    }
     /**
      * Start pipeline streaming, creating a private instance, and set the stream endpoint to the
      * current stream socket.
@@ -274,44 +306,97 @@ public class PipelineSource extends StreamCamera {
     }
 
     /**
-     * Start pipeline streaming, and set the stream endpoint to the current stream socket. If shared
-     * is true, start the read-only shared instance of the pipeline.
+     * Start pipeline streaming, and set the stream endpoint to the current stream socket. 
+     * If shared is true, start the shared instance of the pipeline, else create a 
+     * private instance with unique id.
      */
     public void start(String pipelineName, boolean shared) throws IOException {
-        start(pipelineName, shared, null);
+        if (shared){
+            start(pipelineName, pipelineName, false);
+        } else {
+            start(pipelineName, null, false);
+        }
     }
 
     /**
-     * Start pipeline streaming, using a shared instance called instanceId. If instance id different
+     * Start pipeline streaming, creating instance called instanceId. 
+     * If instance name already running,  connects to it (even if pipeline was different.)
      * than the pipeline name, instance is not readonly.
      */
     public void start(String pipelineName, String instanceId) throws IOException {
-        if (!getInstances().contains(instanceId)) {
-            start(pipelineName, false, instanceId);
-        } else {
-            start(instanceId, true, null);
-        }
-    }
+        start(pipelineName, instanceId, false);
+    }    
 
-    void start(String pipelineName, boolean shared, String instanceId) throws IOException {
+    public void start(String pipelineName, String instanceId, boolean readonly) throws IOException {
         stop();
-        if (shared) {
-            String stream = getStream(pipelineName);
+        boolean shared = (pipelineName !=null) && (pipelineName.equals(instanceId));
+        if (pipelineName==null){
+            if (!isInstanceRunning(instanceId)) {
+                throw new IOException("Instance not started: " + instanceId);
+            } 
+            String stream = getStream(instanceId);
             setStreamSocket(stream);
-            this.currentPipeline = pipelineName;
-            this.currentInstance = pipelineName;
-        } else {
-            List<String> ret = createFromName(pipelineName, instanceId);
+            currentPipeline = pipelineName;
+            currentInstance = instanceId;            
+        } else if (shared){
+            if (isInstanceRunning(instanceId)) {
+                String stream = getStream(pipelineName);
+                setStreamSocket(stream);
+            } else {                
+                List<String> ret = readonly ? createReadonlyFromName(pipelineName, instanceId) : createFromName(pipelineName, instanceId);
+                setStreamSocket(ret.get(1));
+            }
+            currentPipeline = pipelineName;
+            currentInstance = instanceId;
+        } else {            
+            List<String> ret = readonly ? createReadonlyFromName(pipelineName, instanceId) : createFromName(pipelineName, instanceId);
             setStreamSocket(ret.get(1));
-            this.currentPipeline = pipelineName;
-            this.currentInstance = ret.get(0);
+            currentPipeline = pipelineName;
+            currentInstance = ret.get(0);
         }
-        this.currentShared = shared;
+        currentShared = shared;
+        currentReadonly = readonly;
         startReceiver();
-        //Should use this.currentInstance instead? Not readable when ID is created but unique...
-        getStream().setChannelPrefix(this.currentInstance);        
+        getStream().setChannelPrefix(currentInstance);        
     }
 
+           
+    public void startConfig(Map<String, Object> config) throws IOException {
+        startConfig(config, null);
+    }
+    
+    public void startConfig(Map<String, Object> config, String instanceId) throws IOException {
+        startConfig(config, instanceId, false);
+    }
+    
+    public void startConfig(Map<String, Object> config, String instanceId, boolean readonly) throws IOException {
+        stop();
+        List<String> ret = readonly ? createReadonlyFromConfig(config, instanceId) : createFromConfig(config, instanceId);
+        setStreamSocket(ret.get(1));
+        currentPipeline = String.valueOf(config.getOrDefault("name", "unknown"));
+        currentInstance = ret.get(0);
+        currentShared = false;
+        currentReadonly = readonly;
+        startReceiver();
+        getStream().setChannelPrefix(currentInstance);                
+    }
+        
+    public void connect(String instanceId) throws IOException {
+        start(null, instanceId, false);
+    }       
+        
+    public void connectOrStart(String pipelineName, String instanceId) throws IOException {
+        connectOrStart(pipelineName, instanceId, false);
+    }
+    
+    public void connectOrStart(String pipelineName, String instanceId, boolean readonly) throws IOException {
+        if (isInstanceRunning(instanceId)){
+            connect(instanceId);
+        } else {
+            start(pipelineName, instanceId, readonly);
+        }
+    }
+    
     /**
      * Stop receiving from current pipeline.
      */
