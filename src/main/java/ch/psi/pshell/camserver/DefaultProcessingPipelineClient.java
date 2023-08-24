@@ -28,6 +28,15 @@ public class DefaultProcessingPipelineClient extends PipelineClient{
     }
 
     public void setRoi(String instanceId, int x, int y, int width, int height) throws IOException {
+        if (x<0) {
+            throw new IOException("Invalid ROI x: " + x );
+        }        
+        if (y<0) {
+            throw new IOException("Invalid ROI y: " + y );
+        }        
+        if ((width<=0) ||(height<=0)){
+            throw new IOException("Invalid ROI size: " + width + " x " + height);
+        }        
         setInstanceConfigValue(instanceId, "image_region_of_interest", new int[]{x, width, y, height});
     }
 

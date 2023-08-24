@@ -331,6 +331,7 @@ public class CamServerViewer extends MonitoredPanel {
                                     server.setRoi(new int[]{roi.x, roi.y, roi.width, roi.height});
                                 }
                             } catch (Exception ex) {
+                                showException(ex);
                             } finally {
                                 renderer.removeListener(this);
                             }

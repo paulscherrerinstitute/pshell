@@ -7,7 +7,7 @@ import ch.psi.utils.Reflection.Hidden;
 /**
  * Interface for devices containing a readonly numeric or array value.
  */
-public interface ReadonlyRegister<T> extends Device, Readable<T>, Cacheable<T> {
+public interface ReadonlyRegister<T> extends Device, Cacheable<T> {
 
     //public boolean isArray();
     //public int getMaximumSize();
