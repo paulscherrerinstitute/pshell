@@ -27,8 +27,8 @@ public class ScriptActionPanel extends EditablePanel<ScriptAction> {
         String script = action.getScript();
         if (script != null) {
             // Remove empty lines at the begining and end
-            script = script.replaceAll("^[ ,\t,\n]*", "");
-            script = script.replaceAll("[ ,\t,\n]*$", "");
+            script = script.replaceAll("^[ \t \n]*", "");
+            script = script.replaceAll("[ \t \n]*$", "");
         } else {
             script = "def process():\n    return 0.0";
         }
