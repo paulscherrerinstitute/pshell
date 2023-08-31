@@ -1519,6 +1519,7 @@ public class App extends ObservableBase<AppListener> {
     }
 
     public Object evalFile(File file, Map<String, Object> args, boolean topLevel) throws Exception {
+        logger.log(Level.INFO, "Eval file: " + file.getPath() + " args: " + Str.toString(args, 20) +  " top_level: " + topLevel);
         context.clearAborted();
         Processor processor = getProcessor(file);
         if (processor != null) {
@@ -1538,11 +1539,13 @@ public class App extends ObservableBase<AppListener> {
     }
     
     public Object evalStatement(String statement) throws Exception {
+        logger.log(Level.INFO, "Eval statement: " + statement);
         context.clearAborted();
         return context.evalLine(statement);
     }
 
     public void abortEval(File file) throws InterruptedException {
+        logger.log(Level.INFO, "Abort eval"  + file.getPath() );
         if (runningProcessor != null) {
             runningProcessor.abort();
         }

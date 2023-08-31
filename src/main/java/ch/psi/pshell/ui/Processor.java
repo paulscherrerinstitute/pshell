@@ -235,6 +235,7 @@ public interface Processor extends Executor {
                     processor.plotDataFile(rootFile, path, dm);
                     return true;
                 } catch (Exception e) {
+                    Logger.getLogger(Processor.class.getName()).log(Level.WARNING, null, e);  
                 }
             }
         }
