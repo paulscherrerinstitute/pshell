@@ -56,7 +56,7 @@ public class LinePlotArrayPanel extends EditablePanel<LinePlotArray> {
         jTextFieldSize.setText(plot.getSize() + "");
 
         // Establish bindings 
-        bindEditor(jTextFieldTitle, "maxSeries");
+        bindEditor(jTextFieldTitle, "title");
         bindEditor(jTextFieldMaxSeries, "maxSeries", false, 1);
         bindEditor(jTextFieldOffset, "offset");
         bindEditor(jTextFieldSize, "size");
