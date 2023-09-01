@@ -808,8 +808,16 @@ public final class ProcessorXScan extends MonitoredPanel implements Processor {
         Deserializer deserializer = deserializerTXT ? new DeserializerTXT(ebus, file) : new DeserializerPShell(ebus, file, path, dm);
 
         Configuration c = load(cfile);
-        injectVariables(c);
-        VDescriptor vdescriptor = Acquisition.mapVisualizations(c.getVisualization());
+        VDescriptor vdescriptor;
+        synchronized(interpreterLock){
+            try{
+                setPlottingInterpreter(true);
+                injectVariables(c);
+                vdescriptor = Acquisition.mapVisualizations(c.getVisualization());
+            } finally{
+                setPlottingInterpreter(false);
+            }
+        }
 
         Visualizer visualizer = new Visualizer(vdescriptor);
         visualizer.setUpdateAtStreamElement(false);
@@ -883,52 +891,83 @@ public final class ProcessorXScan extends MonitoredPanel implements Processor {
         return c;
     }
 
-    private static ScriptEngine engine;
+    private static ScriptEngine privateEngine;
+    private static ScriptEngine plottingEngine;
+    static final Object interpreterLock = new Object();
 
-    private static void createPrivateEngine() {
+
+    private static ScriptEngine createEngine() {
+        ScriptEngine engine = new ScriptEngineManager().getEngineByName("python");
+
         if (engine == null) {
-            engine = new ScriptEngineManager().getEngineByName("python");
-
-            if (engine == null) {
-                Logger.getLogger(ProcessorXScan.class
-                        .getName()).severe("Error instantiating script engine in XScan");
-                throw new RuntimeException("Error instantiating script engine in XScan");
-            }
-
-            try {
-                ScriptStdio stdio = new ScriptStdio(engine);
-                Context.getInstance().addScriptStdio(stdio);
-            } catch (Exception ex) {
-                engine.getContext().setWriter(new PrintWriter(System.out));
-                engine.getContext().setErrorWriter(new PrintWriter(System.err));
-            }
+            Logger.getLogger(ProcessorXScan.class
+                    .getName()).severe("Error instantiating script engine in XScan");
+            throw new RuntimeException("Error instantiating script engine in XScan");
         }
+
+        try {
+            ScriptStdio stdio = new ScriptStdio(engine);
+            Context.getInstance().addScriptStdio(stdio);
+        } catch (Exception ex) {
+            engine.getContext().setWriter(new PrintWriter(System.out));
+            engine.getContext().setErrorWriter(new PrintWriter(System.err));
+        }      
+        return engine;
+    }
+    
+    static ScriptEngine getPrivateEngine() {
+        if (privateEngine == null) {
+            privateEngine =createEngine();
+        }
+        return privateEngine;
     }
 
+    static ScriptEngine getPlottingEngine() {
+        if (plottingEngine == null) {
+            plottingEngine =createEngine();
+        }
+        return plottingEngine;
+    }        
+    
+    static boolean plottingInterpreter;
+    
+    static void setPlottingInterpreter(boolean value){
+        plottingInterpreter = value;
+    }
+          
     public static Object eval(String script) throws Exception {
-        if (Context.getInstance().isInterpreterEnabled()) {
-            return Context.getInstance().evalLineBackground(script);
-        } else {
-            createPrivateEngine();
-            return engine.eval(script);
+        synchronized(interpreterLock){
+            if (plottingInterpreter){
+                return getPlottingEngine().eval(script);            
+            } else if (Context.getInstance().isInterpreterEnabled()) {
+                return Context.getInstance().evalLineBackground(script);
+            } else {
+                return getPrivateEngine().eval(script);
+            }
         }
     }
 
     public static void setInterpreterVariable(String name, Object value) {
-        if (Context.getInstance().isInterpreterEnabled()) {
-            Context.getInstance().setInterpreterVariable(name, value);
-        } else {
-            createPrivateEngine();
-            engine.put(name, value);
+        synchronized(interpreterLock){
+            if (plottingInterpreter){
+                getPlottingEngine().put(name, value);     
+            } else if (Context.getInstance().isInterpreterEnabled()) {
+                Context.getInstance().setInterpreterVariable(name, value);
+            } else {
+                getPrivateEngine().put(name, value);
+            }
         }
     }
 
     public static Object getInterpreterVariable(String name) {
-        if (Context.getInstance().isInterpreterEnabled()) {
-            return Context.getInstance().getInterpreterVariable(name);
-        } else {
-            createPrivateEngine();
-            return engine.get(name);
+        synchronized(interpreterLock){
+            if (plottingInterpreter){
+                return getPlottingEngine().get(name);   
+            } else if (Context.getInstance().isInterpreterEnabled()) {
+                return Context.getInstance().getInterpreterVariable(name);
+            } else {
+                return getPrivateEngine().get(name);
+            }
         }
     }
 
