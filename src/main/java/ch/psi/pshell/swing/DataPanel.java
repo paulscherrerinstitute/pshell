@@ -343,16 +343,9 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
                     if (e.isPopupTrigger()) {
                         TreePath path = treeFolder.getPathForLocation(e.getX(), e.getY());
                         treeFolder.setSelectionPath(path);
-
-                        boolean isRoot = false;
+                        
                         File file = (File) treeFolder.getLastSelectedPathComponent();
-                        if (file != null) {
-                            if (dataManager.isDataPacked()) {
-                                isRoot = dataManager.getDataFileType().equals(IO.getExtension(file));
-                            } else {
-                                isRoot = dataManager.isRoot(file.getPath()) && file.isDirectory();
-                            }
-                        }
+                        boolean isRoot = isRoot(file);
                         File selected = getFolderTreeSelectedFile();
                         if (selected != null) {
                             boolean isAdditionaExtension =  file.isFile() && (Arr.containsEqual(additionalExtensions,IO.getExtension(file)));
@@ -650,6 +643,17 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
             }            
         }
     }    
+    
+    public boolean isRoot(File file){
+        if (file != null) {
+            if (dataManager.isDataPacked()) {
+                return dataManager.getDataFileType().equals(IO.getExtension(file));
+            } else {
+                return dataManager.isRoot(file.getPath()) && file.isDirectory();
+            }
+        }
+        return false;
+    }
     
     void setupProcessMenu(JMenuItem menuItem){
         List<ImmutablePair<String,String>> scripts = new ArrayList<>();
@@ -1184,15 +1188,15 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
     void setCurrentPath(File f) throws IOException {
         if ((currentFile != f) || (f == null)) {
             currentFile = f;
-            if (embedded){
+            if (embedded){                    
                 updateFileTree();
             } 
         }
     }
 
     void updateFileTree() throws IOException {
-        treeFile.setModel(new DefaultTreeModel(null));
-        if ((currentFile != null) && (dataManager != null)) {
+        treeFile.setModel(new DefaultTreeModel(null));        
+        if ((currentFile != null) && (dataManager != null) && isRoot(currentFile)) {
             Object[] data = dataManager.getStructure(currentFile.getPath());
             setTreeData(treeFile, data);
         }
