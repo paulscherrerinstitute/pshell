@@ -179,8 +179,9 @@ public class WrapLayout extends FlowLayout {
             while (!(top instanceof Window) && top.getParent() != null) {
                 top = top.getParent();
             }
-
-            top.validate();
+            if (top.isVisible()){
+                 top.validate();
+            }
         }
     }
 

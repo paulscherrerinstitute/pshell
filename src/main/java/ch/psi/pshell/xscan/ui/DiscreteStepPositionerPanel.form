@@ -228,6 +228,7 @@
               <Font name="Lucida Grande" size="13" style="1"/>
             </Property>
             <Property name="text" type="java.lang.String" value="Asynchronous:"/>
+            <Property name="toolTipText" type="java.lang.String" value="Asynchronous"/>
             <Property name="name" type="java.lang.String" value="Asynchronous" noResource="true"/>
           </Properties>
         </Component>

@@ -160,6 +160,7 @@ public class DiscreteStepPositionerPanel extends EditablePanel<DiscreteStepPosit
 
         jCheckBoxAsynchronous.setFont(new java.awt.Font("Lucida Grande", 1, 13)); // NOI18N
         jCheckBoxAsynchronous.setText("Asynchronous:");
+        jCheckBoxAsynchronous.setToolTipText("Asynchronous");
         jCheckBoxAsynchronous.setName("Asynchronous"); // NOI18N
         jPanel1.add(jCheckBoxAsynchronous);
 
