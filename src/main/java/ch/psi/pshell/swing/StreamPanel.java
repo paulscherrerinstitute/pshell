@@ -8,12 +8,10 @@ import ch.psi.pshell.bs.StreamValue;
 import ch.psi.pshell.device.Device;
 import ch.psi.pshell.ui.App;
 import ch.psi.utils.Arr;
-import ch.psi.utils.Chrono;
 import ch.psi.utils.Convert;
 import ch.psi.utils.State;
 import ch.psi.utils.Str;
 import ch.psi.utils.swing.SwingUtils;
-import java.awt.Dimension;
 import java.awt.Toolkit;
 import java.awt.Window;
 import java.awt.datatransfer.Clipboard;
@@ -23,17 +21,10 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URISyntaxException;
 import java.util.Collections;
 import java.util.List;
 import java.util.logging.Level;
-import java.util.logging.Logger;
-import javax.swing.JDialog;
-import javax.swing.JFrame;
 import javax.swing.JMenuItem;
-import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.SwingUtilities;
 import javax.swing.table.DefaultTableModel;
@@ -225,17 +216,6 @@ public class StreamPanel extends DevicePanel {
         textType.setText(null); 
         model.setNumRows(0);
     }
-
-    public static boolean showHelp() throws Exception{
-        String spec = "https://git.psi.ch/photon-diagnostics/swissfel-photon-diagnostics-guide/-/wikis/Aramis%20spectral%20diagnostics/PSSS%20user%20guide";
-        java.net.URL url = new java.net.URL(spec);
-        java.awt.Desktop desktop = java.awt.Desktop.isDesktopSupported() ? java.awt.Desktop.getDesktop() : null;
-        if (desktop != null && desktop.isSupported(java.awt.Desktop.Action.BROWSE)) {
-            desktop.browse(url.toURI());
-            return true;
-        }    
-        return false;
-    }
     
     public void updateTable(){
         Stream device = getDevice();
@@ -422,13 +402,11 @@ public class StreamPanel extends DevicePanel {
 
     private void ckMonitoredActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ckMonitoredActionPerformed
         try{
-            //if (!updating){
-            //    if (monitoredDevice!=null){
-            //        monitoredDevice.setMonitored(ckMonitored.isSelected());
-            //    }
-            
-            
-            showHelp();
+            if (!updating){
+                if (monitoredDevice!=null){
+                    monitoredDevice.setMonitored(ckMonitored.isSelected());
+                }
+            }                        
         } catch (Exception ex){
             SwingUtils.showException(this, ex);
         }
