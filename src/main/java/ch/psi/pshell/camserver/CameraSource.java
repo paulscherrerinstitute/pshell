@@ -148,7 +148,7 @@ public class CameraSource extends StreamCamera {
     /**
      * Start camera streaming and set the stream endpoint to the current stream socket.
      */
-    public void start(String cameraName) throws IOException {
+    public void start(String cameraName) throws IOException, InterruptedException {
         stop();
         setStreamSocket(getStream(cameraName));
         this.currentName = cameraName;

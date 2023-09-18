@@ -301,7 +301,7 @@ public class PipelineSource extends StreamCamera {
      * Start pipeline streaming, creating a private instance, and set the stream endpoint to the
      * current stream socket.
      */
-    public void start(String pipelineName) throws IOException {
+    public void start(String pipelineName) throws IOException, InterruptedException {
         start(pipelineName, false);
     }
 
@@ -310,7 +310,7 @@ public class PipelineSource extends StreamCamera {
      * If shared is true, start the shared instance of the pipeline, else create a 
      * private instance with unique id.
      */
-    public void start(String pipelineName, boolean shared) throws IOException {
+    public void start(String pipelineName, boolean shared) throws IOException, InterruptedException {
         if (shared){
             start(pipelineName, pipelineName, false);
         } else {
@@ -323,11 +323,11 @@ public class PipelineSource extends StreamCamera {
      * If instance name already running,  connects to it (even if pipeline was different.)
      * than the pipeline name, instance is not readonly.
      */
-    public void start(String pipelineName, String instanceId) throws IOException {
+    public void start(String pipelineName, String instanceId) throws IOException, InterruptedException {
         start(pipelineName, instanceId, false);
     }    
 
-    public void start(String pipelineName, String instanceId, boolean readonly) throws IOException {
+    public void start(String pipelineName, String instanceId, boolean readonly) throws IOException, InterruptedException {
         stop();
         boolean shared = (pipelineName !=null) && (pipelineName.equals(instanceId));
         if (pipelineName==null){
@@ -361,15 +361,15 @@ public class PipelineSource extends StreamCamera {
     }
 
            
-    public void startConfig(Map<String, Object> config) throws IOException {
+    public void startConfig(Map<String, Object> config) throws IOException, InterruptedException {
         startConfig(config, null);
     }
     
-    public void startConfig(Map<String, Object> config, String instanceId) throws IOException {
+    public void startConfig(Map<String, Object> config, String instanceId) throws IOException, InterruptedException {
         startConfig(config, instanceId, false);
     }
     
-    public void startConfig(Map<String, Object> config, String instanceId, boolean readonly) throws IOException {
+    public void startConfig(Map<String, Object> config, String instanceId, boolean readonly) throws IOException, InterruptedException {
         stop();
         List<String> ret = readonly ? createReadonlyFromConfig(config, instanceId) : createFromConfig(config, instanceId);
         setStreamSocket(ret.get(1));
@@ -381,15 +381,15 @@ public class PipelineSource extends StreamCamera {
         getStream().setChannelPrefix(currentInstance);                
     }
         
-    public void connect(String instanceId) throws IOException {
+    public void connect(String instanceId) throws IOException, InterruptedException {
         start(null, instanceId, false);
     }       
         
-    public void connectOrStart(String pipelineName, String instanceId) throws IOException {
+    public void connectOrStart(String pipelineName, String instanceId) throws IOException, InterruptedException {
         connectOrStart(pipelineName, instanceId, false);
     }
     
-    public void connectOrStart(String pipelineName, String instanceId, boolean readonly) throws IOException {
+    public void connectOrStart(String pipelineName, String instanceId, boolean readonly) throws IOException, InterruptedException {
         if (isInstanceRunning(instanceId)){
             connect(instanceId);
         } else {

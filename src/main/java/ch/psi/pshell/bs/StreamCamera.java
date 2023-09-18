@@ -64,8 +64,13 @@ public class StreamCamera extends ColormapSource {
         return provider.getAddress();
     }
 
-    public void setStreamSocket(String socket) {
-        provider.setAddress(socket);
+    public void setStreamSocket(String streamSocket) throws IOException, InterruptedException {     
+        if (isInitialized()){
+            if ((streamSocket==null) || !streamSocket.equals(provider.getAddress())){
+                stream.initialize();                            
+            }   
+        }
+        provider.setAddress(streamSocket);
     }
     
     public String getChannelImage() {
@@ -140,7 +145,7 @@ public class StreamCamera extends ColormapSource {
             Logger.getLogger(StreamCamera.class.getName()).log(Level.WARNING, null, ex);
         }
     }
-
+    
     @Override
     protected void doSetMonitored(boolean value) {
         super.doSetMonitored(value);

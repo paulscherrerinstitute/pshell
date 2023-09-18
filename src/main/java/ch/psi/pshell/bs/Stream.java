@@ -247,6 +247,9 @@ public class Stream extends DeviceBase implements Readable<StreamValue>, Cacheab
     @Override
     protected void doInitialize() throws IOException, InterruptedException {
         stop();        
+        if((fixedChildren!=null) &&  (!fixedChildren)){
+            setChildren(new Device[0]);
+        }
         channels.clear();
         channelNames.clear();
         readables.clear();
