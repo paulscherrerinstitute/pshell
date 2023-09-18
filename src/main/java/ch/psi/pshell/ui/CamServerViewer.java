@@ -540,7 +540,7 @@ public class CamServerViewer extends MonitoredPanel {
         srv.initialize();
         return srv;
     }
-
+   
     
     public void setPipelineServerUrl(String value){
         pipelineServerUrl = value;
@@ -622,7 +622,15 @@ public class CamServerViewer extends MonitoredPanel {
     public List<String> getTypes (){
         return Arrays.asList((types==null) ? new String[0] : types);
     }
-    
+
+    public boolean isManualSelectionEnabled(){
+        return comboName.isEnabled();
+    }
+
+    public void setManualSelectionEnabled(boolean value){
+        comboName.setEnabled(value);
+    }
+
     public enum SourceSelecionMode {
         Single,
         Instances,
