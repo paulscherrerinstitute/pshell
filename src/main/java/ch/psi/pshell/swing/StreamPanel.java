@@ -61,12 +61,11 @@ public class StreamPanel extends DevicePanel {
             @Override
             public void actionPerformed(ActionEvent e) {
                 try {
-                    String channelId = getCurrentChannelId();
-                    showMessage("Channel Identifier", "Copied to clipboard: " + channelId);
+                    String channelId = getCurrentChannelId();                    
                     Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
                     clipboard.setContents(new StringSelection(channelId), (Clipboard clipboard1, Transferable contents) -> {
-                });
-
+                    });
+                    showMessage("Channel Identifier", "Copied to clipboard: " + channelId);
                 } catch (Exception ex) {
                 }
             }

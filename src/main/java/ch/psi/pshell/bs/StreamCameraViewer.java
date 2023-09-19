@@ -2297,11 +2297,11 @@ public class StreamCameraViewer extends MonitoredPanel {
                             String channelId = locator + " " + id;
                             dataTable.setToolTipText(channelId);
                             if ((e.getClickCount() == 2) && (!e.isPopupTrigger())) {
-                                if (col == 0) {
-                                    SwingUtils.showMessage(dataTableDialog, "Channel Identifier", "Copied to clipboard: " + channelId);
+                                if (col == 0) {                                    
                                     Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
                                     clipboard.setContents(new StringSelection(channelId), (Clipboard clipboard1, Transferable contents) -> {
                                     });
+                                    SwingUtils.showMessage(dataTableDialog, "Channel Identifier", "Copied to clipboard: " + channelId);
                                 } else {
                                     Object obj = getCurrentFrame().cache.getValue(id);
                                     if (id.equals("image")) {
