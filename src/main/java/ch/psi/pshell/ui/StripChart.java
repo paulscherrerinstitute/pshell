@@ -1566,9 +1566,16 @@ public class StripChart extends StandardDialog {
                     case CamServer:
                         String url = name;
                         if (!url.startsWith("tcp://")) {
-                            String instanceName = url.substring(url.lastIndexOf("/") + 1);
-                            url = url.substring(0, url.lastIndexOf("/"));
-                            PipelineSource server = new PipelineSource(null, url);
+                            PipelineSource server = null;
+                            String instanceName = null;
+                            if (url.lastIndexOf("/") >= 0 ){
+                                instanceName = url.substring(url.lastIndexOf("/") + 1);
+                                url = url.substring(0, url.lastIndexOf("/"));                                
+                            } else {
+                                 instanceName= url;
+                                 url = App.getArgumentValue("pipeline_server");
+                            }
+                            server = new PipelineSource(null, url);
                             try {
                                 server.initialize();
                                 url = server.getStream(instanceName);
