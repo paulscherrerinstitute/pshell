@@ -3,24 +3,35 @@ package ch.psi.pshell.swing;
 import ch.psi.pshell.camserver.CamServerService;
 import ch.psi.pshell.camserver.CamServerStream;
 import ch.psi.pshell.camserver.CameraStream;
+import ch.psi.pshell.camserver.PipelineClient;
 import ch.psi.pshell.camserver.PipelineStream;
 import ch.psi.pshell.camserver.ProxyClient;
 import ch.psi.pshell.device.Device;
 import static ch.psi.pshell.swing.DevicePanel.createFrame;
 import ch.psi.pshell.ui.App;
+import ch.psi.utils.EncoderJson;
 import ch.psi.utils.NamedThreadFactory;
 import ch.psi.utils.Str;
+import ch.psi.utils.swing.ScriptDialog;
 import ch.psi.utils.swing.SwingUtils;
 import java.awt.Window;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.JMenuItem;
+import javax.swing.JPopupMenu;
 import javax.swing.SwingUtilities;
 import javax.swing.Timer;
 import javax.swing.table.DefaultTableModel;
@@ -29,6 +40,7 @@ import javax.swing.table.DefaultTableModel;
  *
  */
 public class CamServerServicePanel extends DevicePanel {
+
     Timer timer;
     final DefaultTableModel model;
     ScheduledExecutorService schedulerPolling;
@@ -36,32 +48,189 @@ public class CamServerServicePanel extends DevicePanel {
 
     public CamServerServicePanel() {
         initComponents();
-        model = (DefaultTableModel) table.getModel();
+        JPopupMenu popupMenu = new JPopupMenu();
+        JMenuItem menuConfig = new JMenuItem("Configuration");
+        JMenuItem menuInspect = new JMenuItem("Inspect");
+        JMenuItem menuStop = new JMenuItem("Stop");
+        JMenuItem menuDuplicate= new JMenuItem("Duplicate");
+        menuConfig.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    String currentInstance = getCurrentInstance();
+                    if (currentInstance!=null){                        
+                        Map <String, Object> cfg = getDevice().getClient().getInstanceConfig(currentInstance);
+                        if (cfg!=null){
+                            String json = EncoderJson.encode(cfg, true);
+                            ScriptDialog dlg = new ScriptDialog(getWindow(), true, currentInstance, json, "json");
+                            dlg.setVisible(true);
+                            if (dlg.getResult()){
+                                json = dlg.getText();
+                                cfg = (Map) EncoderJson.decode(json, Map.class);
+                                getDevice().getClient().setInstanceConfig(currentInstance, cfg);
+                            }                    
+                        }
+                    }
+                } catch (Exception ex) {
+                    showException(ex);
+                }
+            }
+        });        
+
+        menuInspect.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try {
+                        String currentInstance = getCurrentInstance();
+                         if (currentInstance!=null){
+                            showInstance(currentInstance);
+                         }
+                } catch (Exception ex) {
+                    showException(ex);
+                }
+            }
+        });        
+
+        menuStop.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    String currentInstance = getCurrentInstance();
+                    if (currentInstance!=null){
+                        getDevice().getProxy().stopInstance(currentInstance);
+                    }
+                } catch (Exception ex) {
+                    showException(ex);
+                }
+            }
+        });                
+        
+        menuDuplicate.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    String currentInstance = getCurrentInstance();
+                    if (currentInstance!=null){
+                        Map <String, Object> cfg =  getDevice().getClient().getInstanceConfig(currentInstance);;
+                        if (cfg!=null){
+                            cfg.put("port", 0); //Make sure get new port
+                            cfg.put("no_client_timeout", 60.0);    //Set a timeout to 1min                                                    
+                            String instanceName = getDuplicatedInstanceName(cfg.get("name"));
+                            List<String> ret = ((PipelineClient)getDevice().getClient()).createFromConfig(cfg, instanceName);
+                            String instance_id = ret.get(0);                            
+                            showMessage("Success", "Duplicated instance name:\n" +instance_id);
+                        }
+                    }                    
+                } catch (Exception ex) {
+                    showException(ex);
+                }
+            }
+        });  
+        popupMenu.add(menuConfig);
+        popupMenu.add(menuInspect);
+        popupMenu.addSeparator();
+        popupMenu.add(menuDuplicate);             
+        popupMenu.add(menuStop);
+        
+        
+        model = (DefaultTableModel) table.getModel();                
+        
+        table.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                try {
+                    if ((e.getClickCount() == 2) && (!e.isPopupTrigger()) && !popupMenu.isVisible()) {
+                        String currentInstance = getCurrentInstance();
+                        showInstance(currentInstance);
+                    }
+                } catch (Exception ex) {
+                    showException(ex);
+                }
+            }
+
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                checkPopupMenu(e);
+            }
+
+            @Override
+            public void mousePressed(MouseEvent e) {
+                checkPopupMenu(e);
+            }
+
+            void checkPopupMenu(MouseEvent e) {
+                try {
+                    if (e.isPopupTrigger()) {
+                        menuDuplicate.setEnabled(getType() == CamServerService.Type.Pipeline);
+                        popupMenu.show(e.getComponent(), e.getX(), e.getY());
+                    }
+                } catch (Exception ex) {
+                }
+            }
+
+        });
+
+    }
+
+    public String getCurrentInstance(){
+        int index = table.convertRowIndexToModel(table.getSelectedRow());
+        return (index >= 0) ? model.getValueAt(index, 0).toString() : null;
+    }
+    
+    public void showInstance(String instance) throws IOException, InterruptedException{
+        if (stream != null) {
+            stream.close();
+            stream = null;
+        }
+        if (getType() == CamServerService.Type.Camera) {
+            stream = new CameraStream("Camera Stream", getProxy().getUrl(), instance);
+        } else {
+            stream = new PipelineStream("Pipeline Stream", getProxy().getUrl(), instance);
+        }
+        stream.setMonitored(true);
+        stream.initialize();
+        App.getDevicePanelManager().showPanel(stream, getWindow());        
     }
     
     @Override
     public CamServerService getDevice() {
         return (CamServerService) super.getDevice();
     }
-    
-    public CamServerService.Type getType(){
+
+    public CamServerService.Type getType() {        
         return getDevice().getType();
     }
-    
+
     public ProxyClient getProxy() {
         CamServerService device = getDevice();
-        return (device==null) ? null : device.getProxy();
-    }    
-    
+        return (device == null) ? null : device.getProxy();
+    }
+
     @Override
     public void setDevice(Device device) {
         if (stream != null) {
             stream.close();
-        }        
+        }
         super.setDevice(device);
         if (getDevice() != null) {
         }
-    }    
+    }
+    
+    protected String getDuplicatedInstanceName(Object pipelineName) throws IOException{            
+        //Get next name not used
+        int instanceIndex = 1;
+        String instanceName = null;
+        if (pipelineName!=null){
+            while (true){
+                instanceName = pipelineName + "_" + instanceIndex;
+                if (!getDevice().getProxy().getInstances().containsKey(instanceName)) {
+                    break;
+                }
+                instanceIndex++;
+            }     
+        }
+        return instanceName;
+    }           
 
     @Override
     protected void onShow() {
@@ -140,24 +309,24 @@ public class CamServerServicePanel extends DevicePanel {
         }
     }
 
-    public static CamServerServicePanel createFrame(String url, Window parent,  String title) throws Exception {
+    public static CamServerServicePanel createFrame(String url, Window parent, String title) throws Exception {
         return createFrame(url, null, parent, title);
     }
-    
-    public static CamServerServicePanel createFrame(String url, CamServerService.Type type, Window parent,  String title) throws Exception {
-        if (type == null){
+
+    public static CamServerServicePanel createFrame(String url, CamServerService.Type type, Window parent, String title) throws Exception {
+        if (type == null) {
             type = CamServerService.Type.Pipeline;
-            try{
+            try {
                 //Default CameraServer ports are even
-                if ((Integer.valueOf(url.substring(url.length()-1)) % 2)==0){
+                if ((Integer.valueOf(url.substring(url.length() - 1)) % 2) == 0) {
                     type = CamServerService.Type.Camera;
                 }
-            } catch (Exception ex){                
+            } catch (Exception ex) {
             }
         }
-        CamServerService camServerService = new CamServerService(url, url, type);       
-        CamServerServicePanel viewer = new CamServerServicePanel();        
-        return (CamServerServicePanel) createFrame(camServerService,parent, title, viewer);    
+        CamServerService camServerService = new CamServerService(url, url, type);
+        CamServerServicePanel viewer = new CamServerServicePanel();
+        return (CamServerServicePanel) createFrame(camServerService, parent, title, viewer);
     }
 
     ////////
@@ -209,11 +378,6 @@ public class CamServerServicePanel extends DevicePanel {
         });
         table.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
         table.getTableHeader().setReorderingAllowed(false);
-        table.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mouseClicked(java.awt.event.MouseEvent evt) {
-                tableMouseClicked(evt);
-            }
-        });
         jScrollPane3.setViewportView(table);
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
@@ -228,29 +392,6 @@ public class CamServerServicePanel extends DevicePanel {
         );
     }// </editor-fold>//GEN-END:initComponents
 
-    private void tableMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_tableMouseClicked
-        try {
-            if ((evt.getClickCount() == 2) && (!evt.isPopupTrigger())) {
-                int index = table.convertRowIndexToModel(table.getSelectedRow());
-                String currentInstance = (index >= 0) ? model.getValueAt(index, 0).toString() : null;
-                if (stream != null) {
-                    stream.close();
-                    stream = null;
-                }
-                if (getType() == CamServerService.Type.Camera) {
-                    stream = new CameraStream("Camera Stream", getProxy().getUrl(), currentInstance);
-                } else {
-                    stream = new PipelineStream("Pipeline Stream", getProxy().getUrl(), currentInstance);
-                }
-                stream.setMonitored(true);
-                stream.initialize();
-                App.getDevicePanelManager().showPanel(stream, getWindow());
-            }
-        } catch (Exception ex) {
-            showException(ex);
-        }
-    }//GEN-LAST:event_tableMouseClicked
-
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.ButtonGroup buttonGroup1;
@@ -260,19 +401,15 @@ public class CamServerServicePanel extends DevicePanel {
     private javax.swing.JTable table;
     // End of variables declaration//GEN-END:variables
 
-    
     public static void main(String[] args) {
         try {
             App.init(args);
             //String url="localhost:8889";            
-            String url=args[0];            
-            createFrame (url, null, null);
+            String url = args[0];
+            createFrame(url, null, null);
         } catch (Exception ex) {
             SwingUtils.showException(null, ex);
-        }        
+        }
     }
-
-
-
 
 }
