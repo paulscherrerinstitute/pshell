@@ -183,7 +183,7 @@ public class DevicePoolPanel extends MonitoredPanel implements UpdatablePanel {
             @Override
             public void mouseClicked(MouseEvent e) {
                 try {
-                    if ((e.getClickCount() == 2) && (!e.isPopupTrigger())) {
+                    if ((e.getClickCount() == 2) && (!e.isPopupTrigger()) && !popupMenu.isVisible()) {
                         if (getSelectedDevice() != null) {
                             onDoubleClick(getSelectedDevice());
                         }

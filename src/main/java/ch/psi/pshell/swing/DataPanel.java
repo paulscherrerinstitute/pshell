@@ -121,7 +121,8 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
     String[] processingScripts;
     String[] additionalExtensions = new String[0];
     String[] additionalFiles = new String[0];
-
+    int selectedDataCol;
+    
     public DataPanel() {
         initComponents();
         setPlottingScripts(null);
@@ -135,8 +136,8 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
             File file = (File) treeFolder.getLastSelectedPathComponent();
             showFileProps(file, false);
             if (file != null) {
-                try {    
-                    if (file.isFile() && (Arr.containsEqual(additionalExtensions,IO.getExtension(file)))) {
+                try {
+                    if (file.isFile() && (Arr.containsEqual(additionalExtensions, IO.getExtension(file)))) {
                         setCurrentPath(file);
                     } else {
                         if (dataManager.isDataPacked()) {
@@ -178,7 +179,7 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
             }
         });
         filePopupMenu.add(menuOpen);
-        
+
         JMenuItem menuCopy = new JMenuItem("Copy");
         menuCopy.addActionListener((ActionEvent e) -> {
             try {
@@ -188,14 +189,14 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
                     Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
                     clipboard.setContents(new FileTransferHandler(filename), (Clipboard clipboard1, Transferable contents) -> {
                         //Do nothing
-                    });                    
+                    });
                 }
             } catch (Exception ex) {
                 showException(ex);
             }
         });
-        filePopupMenu.add(menuCopy);        
-        
+        filePopupMenu.add(menuCopy);
+
         JMenuItem menuPlot = new JMenuItem("Plot");
         menuPlot.addActionListener((ActionEvent e) -> {
             try {
@@ -210,10 +211,10 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
                 showException(ex);
             }
         });
-        filePopupMenu.add(menuPlot);     
-        
-        JMenu menuConvertFile = new JMenu("Convert"); 
-        filePopupMenu.add(menuConvertFile);             
+        filePopupMenu.add(menuPlot);
+
+        JMenu menuConvertFile = new JMenu("Convert");
+        filePopupMenu.add(menuConvertFile);
 
         JMenuItem menuBrowse = new JMenuItem("");
         menuBrowse.addActionListener((ActionEvent e) -> {
@@ -228,9 +229,9 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
             }
         });
         filePopupMenu.add(menuBrowse);
-        
+
         JMenu menuProcessing = new JMenu("Run");
-        filePopupMenu.add(menuProcessing);        
+        filePopupMenu.add(menuProcessing);
 
         JMenu menuFileOrder = new JMenu("File order");
         for (FileOrder fo : FileOrder.values()) {
@@ -246,20 +247,20 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
             }
         }
         menuFileOrder.addSeparator();
-        JCheckBoxMenuItem menuSeparateFolders = new JCheckBoxMenuItem("Separate Folders");    
+        JCheckBoxMenuItem menuSeparateFolders = new JCheckBoxMenuItem("Separate Folders");
         menuSeparateFolders.addActionListener((ActionEvent e) -> {
-                    if (menuSeparateFolders.isSelected() != getSeparateFolders()) {
-                        setSeparateFolders(menuSeparateFolders.isSelected());
-                        repaintTreePath(treeFolder.getSelectionPath(), true);
-                    }
-                });
+            if (menuSeparateFolders.isSelected() != getSeparateFolders()) {
+                setSeparateFolders(menuSeparateFolders.isSelected());
+                repaintTreePath(treeFolder.getSelectionPath(), true);
+            }
+        });
         menuFileOrder.add(menuSeparateFolders);
 
         menuFileOrder.addMenuListener(new MenuListener() {
             @Override
             public void menuSelected(MenuEvent e) {
                 for (Component item : menuFileOrder.getMenuComponents()) {
-                    if (item instanceof JMenuItem){
+                    if (item instanceof JMenuItem) {
                         ((JMenuItem) item).setSelected(getFileOrder().toString().equals(((JMenuItem) item).getText()));
                     }
                 }
@@ -302,23 +303,23 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
             public void mousePressed(MouseEvent e) {
                 checkPopup(e);
                 try {
-                    if (e.getClickCount() == 2) {                                                                      
+                    if (e.getClickCount() == 2) {
                         if (currentFile != null) {
-                            boolean isAdditionaExtension =  currentFile.isFile() && (Arr.containsEqual(additionalExtensions,IO.getExtension(currentFile)));      
-                            if ((!embedded) || isAdditionaExtension){
+                            boolean isAdditionaExtension = currentFile.isFile() && (Arr.containsEqual(additionalExtensions, IO.getExtension(currentFile)));
+                            if ((!embedded) || isAdditionaExtension) {
                                 Logger.getLogger(DataPanel.class.getName()).fine("Opening: " + String.valueOf(currentFile));
                                 if (listener != null) {
                                     try {
-                                        if (Processor.canProcessorsPlot(currentFile.getAbsolutePath(), null, dataManager)){
+                                        if (Processor.canProcessorsPlot(currentFile.getAbsolutePath(), null, dataManager)) {
                                             listener.plotData(dataManager, currentFile.getAbsolutePath(), null);
                                         } else {
                                             TreePath tp = treeFolder.getSelectionPath();
-                                            boolean xscan = !currentFile.isDirectory()? false : ProcessorXScan.isFdaSerializationFolder(currentFile) ||
-                                                    // If FDA serialization then never opens a root with double-click if there are children - to emulate old FDA viewer.
+                                            boolean xscan = !currentFile.isDirectory() ? false : ProcessorXScan.isFdaSerializationFolder(currentFile)
+                                                    || // If FDA serialization then never opens a root with double-click if there are children - to emulate old FDA viewer.
                                                     (Context.getInstance().getConfig().fdaSerialization && (dataManager.getProvider() instanceof ProviderFDA));
-                                            
-                                            if ((treeFolderModel.getChildCount(currentFile)==0) || (!xscan)){
-                                                listener.openFile(currentFile.getCanonicalPath());   
+
+                                            if ((treeFolderModel.getChildCount(currentFile) == 0) || (!xscan)) {
+                                                listener.openFile(currentFile.getCanonicalPath());
                                             }
                                         }
                                     } catch (Exception ex) {
@@ -326,7 +327,7 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
                                     }
                                 }
                             }
-                        } 
+                        }
                     }
                 } catch (Exception ex) {
                     showException(ex);
@@ -343,12 +344,12 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
                     if (e.isPopupTrigger()) {
                         TreePath path = treeFolder.getPathForLocation(e.getX(), e.getY());
                         treeFolder.setSelectionPath(path);
-                        
+
                         File file = (File) treeFolder.getLastSelectedPathComponent();
                         boolean isRoot = isRoot(file);
                         File selected = getFolderTreeSelectedFile();
                         if (selected != null) {
-                            boolean isAdditionaExtension =  file.isFile() && (Arr.containsEqual(additionalExtensions,IO.getExtension(file)));
+                            boolean isAdditionaExtension = file.isFile() && (Arr.containsEqual(additionalExtensions, IO.getExtension(file)));
                             boolean isProcessorDataFile = Processor.canProcessorsPlot(file.getAbsolutePath(), null, dataManager);
                             menuOpen.setVisible(isRoot || isAdditionaExtension);
                             menuPlot.setVisible(isProcessorDataFile);
@@ -359,28 +360,28 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
                             menuFileOrder.setVisible(path.getPathCount() == 1);
                             menuConvertFile.setVisible(false);
                             //if (isAdditionaExtension){
-                                menuConvertFile.removeAll();
-                                for (Converter converter : Converter.getServiceProviders()){
-                                    TreePath tp = treeFolder.getSelectionPath();
-                                    if (converter.canConvert(dataManager, file)){
-                                        JMenuItem item = new JMenuItem(converter.getName());                                        
-                                        item.addActionListener((a)->{    
-                                            converter.startConvert(file, DataPanel.this).handle((ret,ex)->{
-                                                if (ex != null){
-                                                    showException((Exception) ex);
-                                                } else if (ret!=null){
-                                                    showMessage("Success", "Success creating:\n" + String.valueOf(ret));
-                                                }
-                                                return ret;
-                                            });
+                            menuConvertFile.removeAll();
+                            for (Converter converter : Converter.getServiceProviders()) {
+                                TreePath tp = treeFolder.getSelectionPath();
+                                if (converter.canConvert(dataManager, file)) {
+                                    JMenuItem item = new JMenuItem(converter.getName());
+                                    item.addActionListener((a) -> {
+                                        converter.startConvert(file, DataPanel.this).handle((ret, ex) -> {
+                                            if (ex != null) {
+                                                showException((Exception) ex);
+                                            } else if (ret != null) {
+                                                showMessage("Success", "Success creating:\n" + String.valueOf(ret));
+                                            }
+                                            return ret;
                                         });
-                                        menuConvertFile.add(item);
-                                    }
+                                    });
+                                    menuConvertFile.add(item);
                                 }
-                                menuConvertFile.setVisible(menuConvertFile.getMenuComponentCount()>0);
+                            }
+                            menuConvertFile.setVisible(menuConvertFile.getMenuComponentCount() > 0);
                             //}
-                            
-                            if (isRoot==false){
+
+                            if (isRoot == false) {
                                 menuProcessing.setVisible(false);
                             } else {
                                 setupProcessMenu(menuProcessing);
@@ -425,14 +426,14 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
 
         Separator menuPlotDataSeparator = new Separator();
         popupMenu.add(menuPlotDataSeparator);
-        
-        popupMenu.add(menuConvert);       
+
+        popupMenu.add(menuConvert);
         Separator menuConvertSeparator = new Separator();
         popupMenu.add(menuConvertSeparator);
-        
+
         JMenuItem menuCopyLink = new JMenuItem("Copy link to clipboard");
         menuCopyLink.addActionListener((ActionEvent e) -> {
-            try {                
+            try {
                 TreePath path = treeFile.getSelectionPath();
                 String root = getCurrentRoot();
                 String dataPath = getDataPath(path);
@@ -479,7 +480,7 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
                 String dataPath = getDataPath(path);
                 if (dataPath == null) {
                     dataPath = "/";
-                }                
+                }
                 String var = getString("Enter variable name:", null);
                 if ((var != null) && (!var.trim().isEmpty())) {
                     context.tryEvalLineBackground(var.trim() + "=load_data(\"" + root + "|" + dataPath + "\")");
@@ -522,7 +523,7 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
                         TreePath path = treeFile.getPathForLocation(e.getX(), e.getY());
                         treeFile.setSelectionPath(path);
                         String dataPath = getDataPath(path);
-                        if (dataPath==null){
+                        if (dataPath == null) {
                             return;
                         }
                         Map<String, Object> info = dataManager.getInfo(currentFile.getPath(), dataPath);
@@ -543,15 +544,15 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
                                 menuAssign.setVisible(Context.getInstance().getScriptManager() != null);
                                 if (dataManager.isDisplayablePlot(info)) {
                                     menuConvert.removeAll();
-                                    for (Converter converter : Converter.getServiceProviders()){
+                                    for (Converter converter : Converter.getServiceProviders()) {
                                         TreePath tp = treeFile.getSelectionPath();
-                                        if (converter.canConvert(dataManager, currentFile.getPath(), dataPath, info)){
-                                            JMenuItem item = new JMenuItem(converter.getName());                                        
-                                            item.addActionListener((a)->{    
-                                                converter.startConvert(dataManager, currentFile.getPath(),  getDataPath(tp), DataPanel.this).handle((ret,ex)->{
-                                                    if (ex != null){
+                                        if (converter.canConvert(dataManager, currentFile.getPath(), dataPath, info)) {
+                                            JMenuItem item = new JMenuItem(converter.getName());
+                                            item.addActionListener((a) -> {
+                                                converter.startConvert(dataManager, currentFile.getPath(), getDataPath(tp), DataPanel.this).handle((ret, ex) -> {
+                                                    if (ex != null) {
                                                         showException((Exception) ex);
-                                                    } else if (ret!=null){
+                                                    } else if (ret != null) {
                                                         showMessage("Success", "Success creating:\n" + String.valueOf(ret));
                                                     }
                                                     return ret;
@@ -560,8 +561,8 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
                                             menuConvert.add(item);
                                         }
                                     }
-                                                                 
-                                    menuConvert.setVisible(menuConvert.getMenuComponentCount()>0);
+
+                                    menuConvert.setVisible(menuConvert.getMenuComponentCount() > 0);
                                     menuPlotData.setVisible(true);
                                 }
                             }
@@ -594,6 +595,102 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
         tableRowHeader.setFocusable(false);
         tableRowHeader.setRowSelectionAllowed(false);
 
+        
+        JPopupMenu tableDataPopupMenu = new JPopupMenu();
+        JMenuItem menuPlotTableData = new JMenuItem("Plot data");
+        menuPlotTableData.addActionListener((ActionEvent e) -> {
+            plotTableSelection();
+        });
+        tableDataPopupMenu.add(menuPlotTableData);
+        
+        JPopupMenu tableDataColPopupMenu = new JPopupMenu();
+        JMenuItem menuPlotCol = new JMenuItem("Plot column");
+        menuPlotCol.addActionListener((ActionEvent ev) -> {
+            plotColumnData(selectedDataCol);
+        });
+        tableDataColPopupMenu.add(menuPlotCol);
+        
+        
+        tableData.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if ((e.getClickCount() == 2) && (!e.isPopupTrigger()) && !tableDataColPopupMenu.isVisible()) {
+                    if (tableData.getSelectedRow() >= 0) {
+                        plotTableSelection();
+                    }
+                }
+            }
+
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                checkPopup(e);
+            }
+
+            @Override
+            public void mousePressed(MouseEvent e) {
+                checkPopup(e);
+            }
+
+            private void checkPopup(MouseEvent e) {
+                try {
+                    if (e.isPopupTrigger()) {
+                        int r = tableData.rowAtPoint(e.getPoint());
+                        if (r >= 0 && r < tableData.getRowCount()) {
+                            Object selection = getTableSelection();
+                            if (tableData.getSelectedRowCount() == 1) {
+                                menuPlotTableData.setText("Plot row");
+                            } else if ((tableData.getSelectedRowCount() == 0) || (tableData.getSelectedRowCount() >= tableData.getRowCount())) {
+                                menuPlotTableData.setText("Plot data");
+                            } else {
+                                menuPlotTableData.setText("Plot row selection");
+                            }
+                            menuPlotTableData.setEnabled(isTableSelectionPlottable(selection));
+                            tableDataPopupMenu.show(e.getComponent(), e.getX(), e.getY());
+                        }
+                    }
+                } catch (Exception ex) {
+                    showException(ex);
+                }
+            }
+        });
+
+        tableData.getTableHeader().addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if ((e.getClickCount() == 2) && (!e.isPopupTrigger()) && !tableDataColPopupMenu.isVisible()) {
+                    int c = tableData.columnAtPoint(e.getPoint());
+                    if (c >= 0 && c < tableData.getColumnCount()) {
+                        plotColumnData(c);
+                    }
+                }
+            }
+
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                checkPopup(e);
+            }
+
+            @Override
+            public void mousePressed(MouseEvent e) {
+                checkPopup(e);
+            }
+
+            private void checkPopup(MouseEvent e) {
+                try {
+                    if (e.isPopupTrigger()) {
+                        int c = tableData.columnAtPoint(e.getPoint());
+                        if (c >= 0 && c < tableData.getColumnCount()) {
+                            selectedDataCol = c;
+                            menuPlotCol.setEnabled(isTableSelectionPlottable(getColumnSelection(c)));
+                            tableDataColPopupMenu.show(e.getComponent(), e.getX(), e.getY());
+                        }
+                    }
+                } catch (Exception ex) {
+                    showException(ex);
+                }
+            }
+        });
+
         scrollPaneTableData = new JScrollPane(tableData);
 
         JViewport viewport = new JViewport();
@@ -621,15 +718,15 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
 
         ((DefaultTreeCellRenderer) treeFile.getCellRenderer()).setLeafIcon(new ImageIcon(App.getResourceImage("Data.png")));
     }
-        
+
     boolean embedded = true;
-    
-    public boolean getEmbedded(){
+
+    public boolean getEmbedded() {
         return embedded;
     }
-    
-    public void setEmbedded(boolean value){
-        if (embedded != value){
+
+    public void setEmbedded(boolean value) {
+        if (embedded != value) {
             embedded = value;
             dataPanel.setVisible(embedded);
             splitFile.setVisible(embedded);
@@ -637,14 +734,14 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
             splitFolder.setDividerSize(value ? splitFile.getDividerSize() : 0);
             if ((splitSource.getDividerLocation() >= splitSource.getWidth() - splitSource.getDividerSize() - 10)) {
                 splitSource.setDividerLocation(0.70);
-            }      
-              if ((splitFolder.getDividerLocation() >= splitFolder.getWidth() - splitFolder.getDividerSize() - 10)) {
+            }
+            if ((splitFolder.getDividerLocation() >= splitFolder.getWidth() - splitFolder.getDividerSize() - 10)) {
                 splitFolder.setDividerLocation(0.70);
-            }            
+            }
         }
-    }    
-    
-    public boolean isRoot(File file){
+    }
+
+    public boolean isRoot(File file) {
         if (file != null) {
             if (dataManager.isDataPacked()) {
                 return dataManager.getDataFileType().equals(IO.getExtension(file));
@@ -654,60 +751,60 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
         }
         return false;
     }
-    
-    void setupProcessMenu(JMenuItem menuItem){
-        List<ImmutablePair<String,String>> scripts = new ArrayList<>();
+
+    void setupProcessMenu(JMenuItem menuItem) {
+        List<ImmutablePair<String, String>> scripts = new ArrayList<>();
         Set<String> categories = new LinkedHashSet<>();
-        if (processingScripts!=null){
-            for (String script: processingScripts){
-                String[] tokens = script.split("\\|");        
+        if (processingScripts != null) {
+            for (String script : processingScripts) {
+                String[] tokens = script.split("\\|");
                 String file = tokens[0].trim();
-                String category = ((tokens.length==1) || (tokens[1].isBlank()))? "" : tokens[1].trim();                                    
+                String category = ((tokens.length == 1) || (tokens[1].isBlank())) ? "" : tokens[1].trim();
                 File f = Context.getInstance().getScriptFile(file);
-                if ((f!=null) && (f.exists())){
+                if ((f != null) && (f.exists())) {
                     scripts.add(new ImmutablePair(file, category));
-                    if (!category.isEmpty()){
+                    if (!category.isEmpty()) {
                         categories.add(category);
                     }
                 }
             }
         }
         menuItem.removeAll();
-        if (scripts.size()==0){
+        if (scripts.size() == 0) {
             menuItem.setEnabled(false);
         } else {
             menuItem.setEnabled(true);
-            for (String category:categories){
+            for (String category : categories) {
                 JMenu categoryMenu = new JMenu(category);
                 categoryMenu.setName(category);
                 menuItem.add(categoryMenu);
             }
-            for (ImmutablePair<String,String> script:scripts){
+            for (ImmutablePair<String, String> script : scripts) {
                 String file = script.left;
                 String category = script.right;
                 JMenuItem item = new JMenuItem(IO.getPrefix(file));
                 item.addActionListener((ActionEvent ae) -> {
                     try {
-                        Context.getInstance().evalFileBackgroundAsync(file, List.of(getCurrentRoot())).handle((ret, ex)->{
-                            if (ex != null){
-                               showException((Exception)ex);
+                        Context.getInstance().evalFileBackgroundAsync(file, List.of(getCurrentRoot())).handle((ret, ex) -> {
+                            if (ex != null) {
+                                showException((Exception) ex);
                             }
                             return ret;
                         });
                     } catch (Exception ex) {
                         showException(ex);
                     }
-                });      
-                if (category.isEmpty()){
-                    menuItem.add(item);                                    
+                });
+                if (category.isEmpty()) {
+                    menuItem.add(item);
                 } else {
-                    ((JMenu)SwingUtils.getComponentByName(menuItem, category)).add(item);
+                    ((JMenu) SwingUtils.getComponentByName(menuItem, category)).add(item);
                 }
             }
         }
     }
 
-    String getCurrentRoot(){
+    String getCurrentRoot() {
         String root = currentFile.getPath();
         Context context = Context.getInstance();
         if (IO.isSubPath(root, context.getSetup().getDataPath())) {
@@ -717,7 +814,7 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
         }
         return root;
     }
-    
+
     public File getFolderTreeSelectedFile() {
         TreePath selection = treeFolder.getSelectionPath();
         if (selection != null) {
@@ -755,10 +852,9 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
         }
         return ret;
     }
-    
-    
+
     public void setPlottingScripts(String[] plottingScripts) {
-        if (plottingScripts==null){
+        if (plottingScripts == null) {
             plottingScripts = new String[0];
         }
         this.processingScripts = plottingScripts;
@@ -770,18 +866,17 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
 
     public void initialize() {
         dataManager = Context.getInstance().getDataManager();
-        try{
+        try {
             additionalExtensions = App.getInstance().getMainFrame().getPreferences().getDataPanelAdditionalExtensions();
         } catch (Exception ex) {
             additionalExtensions = new String[0];
-        }       
-        try{
+        }
+        try {
             additionalFiles = App.getInstance().getMainFrame().getPreferences().getDataPanelAdditionalFiles();
         } catch (Exception ex) {
             additionalFiles = new String[0];
-        }            
-        
-        
+        }
+
         setBaseFolder(dataManager.getDataFolder());
         try {
             setCurrentPath(null);
@@ -914,8 +1009,8 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
     }
 
     public void repaintTreePath(TreePath path, boolean invalidate) {
-        if (invalidate) {            
-            treeFolderModel.invalidate((File) path.getLastPathComponent());         
+        if (invalidate) {
+            treeFolderModel.invalidate((File) path.getLastPathComponent());
         }
         int childrenCount = treeFolderModel.getChildCount(path.getLastPathComponent());
         int[] changedChildrenIndices = new int[childrenCount];
@@ -967,9 +1062,9 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
     public FileOrder getFileOrder() {
         return fileOrder;
     }
-    
-    
-    boolean separateFolders=true;
+
+    boolean separateFolders = true;
+
     public void setSeparateFolders(boolean separateFolders) {
         if (this.separateFolders != separateFolders) {
             this.separateFolders = separateFolders;
@@ -982,6 +1077,7 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
     public boolean getSeparateFolders() {
         return separateFolders;
     }
+
     class FileSystemModel implements TreeModel {
 
         private File root;
@@ -1026,22 +1122,22 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
                         curChildren.remove(x);
                     }
                 }
-            }   
+            }
             File[] ret = new File[0];
             if (f.isDirectory() && (dataManager != null)) {
-                if (Arr.containsEqual(additionalFiles, "*")){
-                    ret = IO.listFiles(f, IO.getNotHiddenFileFileter());                  
+                if (Arr.containsEqual(additionalFiles, "*")) {
+                    ret = IO.listFiles(f, IO.getNotHiddenFileFileter());
                 } else {
                     File[] files = IO.listFiles(f, dataManager.getFileFilter(additionalExtensions));
                     ret = files;
-                    for (String subFolder : additionalFiles){
+                    for (String subFolder : additionalFiles) {
                         File child = new File(f, subFolder);
-                        if (child.exists() && !child.isHidden()){
-                            ret=Arr.append(ret, child);
+                        if (child.exists() && !child.isHidden()) {
+                            ret = Arr.append(ret, child);
                         }
                     }
                 }
-                
+
                 switch (fileOrder) {
                     case Modified:
                         IO.orderByModified(ret);
@@ -1050,16 +1146,16 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
                         IO.orderByName(ret);
                         break;
 
-                }              
-                
-                if (separateFolders){
-                    //Put the folders before
-                    Arrays.sort(ret, (a,b) -> Boolean.compare(b.isDirectory(), a.isDirectory()));   
                 }
-                
+
+                if (separateFolders) {
+                    //Put the folders before
+                    Arrays.sort(ret, (a, b) -> Boolean.compare(b.isDirectory(), a.isDirectory()));
+                }
+
                 //TODO: Is there way to check if has been regestered already?
                 registerFolderEvents(((File) parent).getPath());
-            }        
+            }
             curChildren.put(f, ret);
             return ret;
         }
@@ -1188,14 +1284,14 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
     void setCurrentPath(File f) throws IOException {
         if ((currentFile != f) || (f == null)) {
             currentFile = f;
-            if (embedded){                    
+            if (embedded) {
                 updateFileTree();
-            } 
+            }
         }
     }
 
     void updateFileTree() throws IOException {
-        treeFile.setModel(new DefaultTreeModel(null));        
+        treeFile.setModel(new DefaultTreeModel(null));
         if ((currentFile != null) && (dataManager != null) && isRoot(currentFile)) {
             Object[] data = dataManager.getStructure(currentFile.getPath());
             setTreeData(treeFile, data);
@@ -1256,11 +1352,10 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
         }
     }
 
-    public boolean selectDataPath(String path){
+    public boolean selectDataPath(String path) {
         return SwingUtils.selectTreePath(treeFile, path);
     }
-    
-    
+
     //Data
     DataSlice dataSlice;
     Object data;
@@ -1276,7 +1371,7 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
         headers = null;
         if ((path != null) && (dataManager != null)) {
             try {
-                
+
                 if (dataManager.isGroup(currentFile.getPath(), path)) {
                     return;
                 }
@@ -1284,14 +1379,14 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
                 if (dataManager.isExtLink(currentFile.getPath(), path)) {
                     Map<String, Object> info = dataManager.getInfo(currentFile.getPath(), path);
                     String linkRoot = (String) info.get(Provider.INFO_LINK_ROOT);
-                    String linkPath = (String) info.get(Provider.INFO_LINK_PATH);                    
+                    String linkPath = (String) info.get(Provider.INFO_LINK_PATH);
                     if (listener != null) {
-                        DataPanel pn = (DataPanel)listener.openFile(linkRoot);   
+                        DataPanel pn = (DataPanel) listener.openFile(linkRoot);
                         pn.selectDataPath(linkPath);
                     }
                     return;
                 }
-                
+
                 DataSlice dataSlice = dataManager.getData(currentFile.getPath(), path);
                 if (dataSlice != null) {
                     this.dataSlice = dataSlice;
@@ -1323,96 +1418,6 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
             }
             tableData.getTableHeader().setReorderingAllowed(false);
             tableRowHeader.getTableHeader().setReorderingAllowed(false);
-
-            JPopupMenu tableDataPopupMenu = new JPopupMenu();
-            JMenuItem menuPlot = new JMenuItem("Plot data");
-            menuPlot.addActionListener((ActionEvent e) -> {
-                plotTableSelection();
-            });
-            tableDataPopupMenu.add(menuPlot);
-
-            tableData.addMouseListener(new MouseAdapter() {
-                @Override
-                public void mouseClicked(MouseEvent e) {
-                    if ((e.getClickCount() == 2) && (!e.isPopupTrigger())) {
-                        plotTableSelection();
-                    }
-                }
-
-                @Override
-                public void mouseReleased(MouseEvent e) {
-                    checkPopup(e);
-                }
-
-                @Override
-                public void mousePressed(MouseEvent e) {
-                    checkPopup(e);
-                }
-
-                private void checkPopup(MouseEvent e) {
-                    try {
-                        if (e.isPopupTrigger()) {
-                            int r = tableData.rowAtPoint(e.getPoint());
-                            if (r >= 0 && r < tableData.getRowCount()) {
-                                Object selection = getTableSelection();
-                                if (tableData.getSelectedRowCount() == 1) {
-                                    menuPlot.setText("Plot row");
-                                } else if ((tableData.getSelectedRowCount() == 0) || (tableData.getSelectedRowCount() >= tableData.getRowCount())) {
-                                    menuPlot.setText("Plot data");
-                                } else {
-                                    menuPlot.setText("Plot row selection");
-                                }
-                                menuPlot.setEnabled(isTableSelectionPlottable(selection));
-                                tableDataPopupMenu.show(e.getComponent(), e.getX(), e.getY());
-                            }
-                        }
-                    } catch (Exception ex) {
-                        showException(ex);
-                    }
-                }
-            });
-
-            tableData.getTableHeader().addMouseListener(new MouseAdapter() {
-                @Override
-                public void mouseClicked(MouseEvent e) {
-                    if ((e.getClickCount() == 2) && (!e.isPopupTrigger())) {
-                        int c = tableData.columnAtPoint(e.getPoint());
-                        if (c >= 0 && c < tableData.getColumnCount()) {
-                            plotColumnData(c);
-                        }
-                    }
-                }
-
-                @Override
-                public void mouseReleased(MouseEvent e) {
-                    checkPopup(e);
-                }
-
-                @Override
-                public void mousePressed(MouseEvent e) {
-                    checkPopup(e);
-                }
-
-                private void checkPopup(MouseEvent e) {
-                    try {
-                        if (e.isPopupTrigger()) {
-                            int c = tableData.columnAtPoint(e.getPoint());
-                            if (c >= 0 && c < tableData.getColumnCount()) {
-                                JPopupMenu tableDataColPopupMenu = new JPopupMenu();
-                                JMenuItem menuPlotCol = new JMenuItem("Plot column");
-                                menuPlotCol.addActionListener((ActionEvent ev) -> {
-                                    plotColumnData(c);
-                                });
-                                tableDataColPopupMenu.add(menuPlotCol);
-                                menuPlotCol.setEnabled(isTableSelectionPlottable(getColumnSelection(c)));
-                                tableDataColPopupMenu.show(e.getComponent(), e.getX(), e.getY());
-                            }
-                        }
-                    } catch (Exception ex) {
-                        showException(ex);
-                    }
-                }
-            });
         }
     }
 
@@ -1437,24 +1442,24 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
                     Range range = getTableSelectionRange();
                     //Simplify plotting if  showing only 1 element                
                     listener.plotData(selection, range);
-                } else if (selection instanceof String){
-                    File file = new File((String)selection);
-                    if (!file.exists()){
-                        file = Paths.get(baseFolder, (String)selection).toFile();
+                } else if (selection instanceof String) {
+                    File file = new File((String) selection);
+                    if (!file.exists()) {
+                        file = Paths.get(baseFolder, (String) selection).toFile();
                     }
-                    if (file.exists()){
+                    if (file.exists()) {
                         listener.openFile(file.getCanonicalPath());
                     } else {
-                        DataAddress address = DataManager.getAddress((String)selection);
-                        if (address!=null){
+                        DataAddress address = DataManager.getAddress((String) selection);
+                        if (address != null) {
                             File root = new File(address.root);
-                            if (!root.exists()){
+                            if (!root.exists()) {
                                 root = Paths.get(baseFolder, address.root).toFile();
-                            }                            
-                            if (root.exists()){
+                            }
+                            if (root.exists()) {
                                 JPanel panel = listener.openFile(root.getCanonicalPath());
-                                if (panel instanceof DataPanel){
-                                    ((DataPanel)panel).selectDataPath(address.path);
+                                if (panel instanceof DataPanel) {
+                                    ((DataPanel) panel).selectDataPath(address.path);
                                 }
                             }
                         }
@@ -1546,7 +1551,7 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
                 return 1;
             }
             Object element = Array.get(data, 0);
-            if (element == null){
+            if (element == null) {
                 return 1;
             }
             if (!element.getClass().isArray()) {
@@ -1689,10 +1694,10 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
         setCurrentPath(file);
     }
 
-    public String getFileName(){
+    public String getFileName() {
         return fileName;
     }
-    
+
     class DefaultDataPanelListener implements DataPanelListener {
 
         Window getParent() {
@@ -1702,11 +1707,11 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
         @Override
         public void plotData(DataManager dataManager, String root, String path) throws Exception {
             ViewPreference.PlotPreferences prefs = dataManager.getPlotPreferences(root, path);
-            try{
+            try {
                 plot(getParent(), dataManager.getFullPath(root, path), dataManager.getScanPlots(root, path).toArray(new PlotDescriptor[0]), prefs);
             } catch (IOException ex) {
                 //If cannot open file, try with external processors
-                if (!Processor.tryProcessorsPlot(root, path, dataManager)){
+                if (!Processor.tryProcessorsPlot(root, path, dataManager)) {
                     throw ex;
                 }
             }
@@ -1781,26 +1786,26 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
         panel.setDefaultDataPanelListener();
         return panel;
     }
-    
+
     public static DataPanel createDialog(Window parent, String root, String path) {
-        File file = root.startsWith("/") ? new File(root) : 
-                Paths.get(Context.getInstance().getSetup().getDataPath(), root).toFile();
-        if (file.isFile()){   
+        File file = root.startsWith("/") ? new File(root)
+                : Paths.get(Context.getInstance().getSetup().getDataPath(), root).toFile();
+        if (file.isFile()) {
             DataPanel dp = DataPanel.create(file);
             SwingUtils.showDialog(parent, root, new Dimension(1000, 600), dp);
-            if ((path!=null) && (!path.isBlank())){
-                dp.selectDataPath(path.trim());                    
+            if ((path != null) && (!path.isBlank())) {
+                dp.selectDataPath(path.trim());
             }
             return dp;
         }
         return null;
     }
 
-    static Path getWindowStatePath(){
-         return Paths.get(Context.getInstance().getSetup().getContextPath(), DataPanel.class.getSimpleName() + "_" + "WindowState.xml");
+    static Path getWindowStatePath() {
+        return Paths.get(Context.getInstance().getSetup().getContextPath(), DataPanel.class.getSimpleName() + "_" + "WindowState.xml");
     }
-    
-    public static DataPanel createPanel(File path) { 
+
+    public static DataPanel createPanel(File path) {
         DataPanel panel = new DataPanel();
         java.awt.EventQueue.invokeLater(() -> {
             Context.createInstance();
@@ -1808,15 +1813,15 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
             frame.setIconImage(App.getIconSmall());
             frame.add(panel);
             frame.setSize(1000, 800);
-            SwingUtils.centerComponent(null, frame);            
+            SwingUtils.centerComponent(null, frame);
             //frame.pack();
             if (App.isDetachedPersisted()) {
                 try {
                     MainFrame.restore(frame, getWindowStatePath());
                 } catch (Exception ex) {
                     Logger.getLogger(DataPanel.class.getName()).log(Level.INFO, null, ex);
-                }                 
-            } 
+                }
+            }
             frame.setVisible(true);
 
             try {
@@ -1838,8 +1843,8 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
                             MainFrame.save(frame, getWindowStatePath());
                         } catch (Exception ex) {
                             Logger.getLogger(DataPanel.class.getName()).log(Level.WARNING, null, ex);
-                        }                            
-                    }                    
+                        }
+                    }
                     System.exit(0);
                 }
             });
@@ -1875,24 +1880,24 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
         SwingUtils.showDialog(parent, title, null, plotPanel);
         return ret;
     }
-    
-    public int getSelectedFilesCount(){
+
+    public int getSelectedFilesCount() {
         return treeFolder.getSelectionCount();
     }
-    
-    public List<String> getSelectedFiles(){
+
+    public List<String> getSelectedFiles() {
         List<String> ret = new ArrayList<>();
-        for (TreePath tp : treeFolder.getSelectionPaths()){
+        for (TreePath tp : treeFolder.getSelectionPaths()) {
             String file = getDataPath(tp);
             if (file.startsWith("/")) {
                 file = file.substring(1);
             }
             ret.add(file);
         }
-        return ret;                
+        return ret;
     }
 
-    public static void main(String args[]) {      
+    public static void main(String args[]) {
         App.init(args);
         createPanel(args.length > 1 ? new File(args[1]) : null);
     }

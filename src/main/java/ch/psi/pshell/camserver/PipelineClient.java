@@ -68,6 +68,7 @@ public class PipelineClient extends InstanceManagerClient{
     /**
      * Return the instance configuration.
      */
+    @Override
     public Map<String, Object> getInstanceConfig(String instanceId) throws IOException {
         checkName(instanceId);
         WebTarget resource = client.target(prefix + "/instance/" + instanceId + "/config");
@@ -76,15 +77,10 @@ public class PipelineClient extends InstanceManagerClient{
         checkReturn(map);
         return (Map<String, Object>) map.get("config");
     }
-    
-    public Object getInstanceConfigValue(String instanceId, String value) throws IOException {
-        Map<String, Object> pars = getInstanceConfig(instanceId);
-        return pars.get(value);
-    }    
-
     /**
      * Set instance configuration.
      */
+    @Override
     public void setInstanceConfig(String instanceId, Map<String, Object> config) throws IOException {
         checkName(instanceId);
         String json = EncoderJson.encode(config, false);
@@ -95,12 +91,6 @@ public class PipelineClient extends InstanceManagerClient{
         checkReturn(map);
     }
 
-    public void setInstanceConfigValue(String instanceId, String name, Object value) throws IOException {
-        Map<String, Object> pars = new HashMap();
-        pars.put(name, value);
-        setInstanceConfig(instanceId, pars);
-    }    
-        
     /**
      * Return the instance info.
      */

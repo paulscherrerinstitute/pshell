@@ -3,7 +3,7 @@ package ch.psi.pshell.camserver;
 import ch.psi.pshell.device.DeviceBase;
 
 /**
- * Imaging Source implementation connecting to a CameraServer.
+ * Interface to a CamServer cluster manager
  */
 public class CamServerService extends DeviceBase {
 
@@ -14,6 +14,7 @@ public class CamServerService extends DeviceBase {
 
     final ProxyClient proxy;
     final Type type;
+    final InstanceManagerClient client;
     
     
     public CamServerService(String name, String url) {
@@ -26,8 +27,13 @@ public class CamServerService extends DeviceBase {
     
     public CamServerService(String name, String url, Type type) {
         super(name);
-        proxy = new ProxyClient(url);
         this.type = (type==null) ? Type.Pipeline : type;
+        proxy = new ProxyClient(url);        
+        if (this.type == CamServerService.Type.Camera){
+            client =  new CameraClient(url);
+        } else {
+            client =  new PipelineClient(url);        
+        }
     }
 
     public ProxyClient getProxy() {
@@ -40,5 +46,9 @@ public class CamServerService extends DeviceBase {
     
     public String getUrl() {
         return proxy.getUrl();
+    }
+    
+    public InstanceManagerClient getClient(){        
+        return client;
     }
 }

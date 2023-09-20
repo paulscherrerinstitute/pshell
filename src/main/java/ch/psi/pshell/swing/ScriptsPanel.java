@@ -179,7 +179,7 @@ public class ScriptsPanel extends MonitoredPanel implements UpdatablePanel {
             @Override
             public void mouseClicked(MouseEvent e) {
                 try {
-                    if ((e.getClickCount() == 2) && (!e.isPopupTrigger())) {
+                    if ((e.getClickCount() == 2) && (!e.isPopupTrigger() && !popupMenu.isVisible())) {
                         String file = getSelectedScript();
                         if (file != null) {
                             //Opening file

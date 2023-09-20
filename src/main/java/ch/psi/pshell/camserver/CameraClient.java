@@ -88,5 +88,18 @@ public class CameraClient extends InstanceManagerClient{
     public String start(String cameraName) throws IOException {
         return getStream(cameraName);
     }
+    
+    @Override
+    public Map<String, Object> getInstanceConfig(String instanceId) throws IOException {
+        return getConfig(instanceId);
+    }    
+
+    /**
+     * Set instance configuration.
+     */
+    @Override
+    public void setInstanceConfig(String instanceId, Map<String, Object> config) throws IOException {
+        setInstanceConfig(instanceId, config);
+    }    
 
 }

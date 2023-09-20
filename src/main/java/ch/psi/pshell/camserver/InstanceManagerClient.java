@@ -8,11 +8,12 @@ import jakarta.ws.rs.client.Entity;
 import jakarta.ws.rs.client.WebTarget;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import java.util.HashMap;
 
 /**
- * Imaging Source implementation connecting to a CameraServer.
+ * Generic Client to CamServer services
  */
-public class InstanceManagerClient extends CamServerClient {
+public abstract class InstanceManagerClient extends CamServerClient {
 
     public InstanceManagerClient(String host, int port, String prefix) {
         super(host, port, prefix);
@@ -104,7 +105,7 @@ public class InstanceManagerClient extends CamServerClient {
     }
 
     /**
-     * Camera groups.
+     * Groups.
      */
     public Map<String, List<String>> getGroups() throws IOException {
         WebTarget resource = client.target(prefix + "/groups");
@@ -115,15 +116,37 @@ public class InstanceManagerClient extends CamServerClient {
     }
 
     /**
-     * Get the camera stream address.
+     * Get the stream address.
      */
-    public String getStream(String cameraName) throws IOException {
-        checkName(cameraName);
-        WebTarget resource = client.target(prefix + "/" + cameraName);
+    public String getStream(String name) throws IOException {
+        checkName(name);
+        WebTarget resource = client.target(prefix + "/" + name);
         String json = resource.request().accept(MediaType.TEXT_HTML).get(String.class);
         Map<String, Object> map = (Map) EncoderJson.decode(json, Map.class);
         checkReturn(map);
         return (String) map.get("stream");
     }
 
+    
+    
+    /**
+     * Return the instance configuration.
+     */
+    abstract public Map<String, Object> getInstanceConfig(String instanceId) throws IOException;
+    
+    public Object getInstanceConfigValue(String instanceId, String value) throws IOException {
+        Map<String, Object> pars = getInstanceConfig(instanceId);
+        return pars.get(value);
+    }    
+
+    /**
+     * Set instance configuration.
+     */
+    abstract public void setInstanceConfig(String instanceId, Map<String, Object> config) throws IOException;
+
+    public void setInstanceConfigValue(String instanceId, String name, Object value) throws IOException {
+        Map<String, Object> pars = new HashMap();
+        pars.put(name, value);
+        setInstanceConfig(instanceId, pars);
+    }    
 }

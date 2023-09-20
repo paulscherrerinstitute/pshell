@@ -83,7 +83,7 @@ public class StreamPanel extends DevicePanel {
                     if (channel != null){
                         table.setToolTipText(getCurrentChannelId());        
                         
-                        if ((e.getClickCount() == 2) && (!e.isPopupTrigger())) {                             
+                        if ((e.getClickCount() == 2) && (!e.isPopupTrigger()) && !popupMenu.isVisible()) {                             
                              plotChannel();
                         }
                     }
