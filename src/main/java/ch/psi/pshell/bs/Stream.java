@@ -62,16 +62,28 @@ public class Stream extends DeviceBase implements Readable<StreamValue>, Cacheab
     }
 
     public String getAddress() {
-        return ((Provider) getParent()).getAddress();
+        try{
+            return ((Provider) getParent()).getAddress();
+        } catch (Exception ex){
+            return null;
+        }
     }
 
     public String getStreamSocket() {
-        return ((Provider) getParent()).getStreamSocket(this);
+        try{
+            return ((Provider) getParent()).getStreamSocket(this);
+        } catch (Exception ex){
+            return null;
+        }
     }
 
 
     public int getSocketType() {
-        return ((Provider) getParent()).getSocketType();
+        try{
+            return ((Provider) getParent()).getSocketType();
+        } catch (Exception ex){
+            return -1;
+        }            
     }
 
     public String getSocketTypeStr() {

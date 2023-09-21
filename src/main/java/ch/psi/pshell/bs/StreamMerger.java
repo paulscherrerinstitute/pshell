@@ -175,4 +175,16 @@ public class StreamMerger extends Stream {
     public boolean isStarted() {
         return stream1.isStarted() && stream2.isStarted();
     }
+    
+    public String getAddress() {
+        return stream1.getAddress() +  " + " + stream2.getAddress();
+    }
+
+    public String getStreamSocket() {
+        return null;
+    }
+
+    public int getSocketType() {
+        return -1;
+    }    
 }
