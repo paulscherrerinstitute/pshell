@@ -201,6 +201,12 @@ public class ArrayAverager extends ReadonlyRegisterBase<double[]> implements Rea
 
                 }
                 setCache(calculate(values));
+                for (Device dev : getChildren()){
+                    if (dev instanceof ArrayAveragerStatsNumber){
+                        ((ArrayAveragerStatsNumber)dev).read();
+                    }
+                }
+                
             } catch (Exception ex) {
             }
         }
@@ -318,11 +324,29 @@ public class ArrayAverager extends ReadonlyRegisterBase<double[]> implements Rea
             @Override
             public Double read() throws IOException, InterruptedException {
                 double[] data = getData();
-                return (data == null) ? null : new DescStatsDouble(getData(), getPrecision()).getVariance();
+                Double ret =  (data == null) ? null : new DescStatsDouble(getData(), getPrecision()).getVariance();
+                setCache (ret);
+                return ret;                       
             }
         };
     }
 
+    public ArrayAveragerStatsNumber getRms() {
+        return getRms(null);
+    }
+
+    public ArrayAveragerStatsNumber getRms(String name) {
+        return new ArrayAveragerStatsNumber(name, "rms") {
+            @Override
+            public Double read() throws IOException, InterruptedException {
+                double[] data = getData();
+                Double ret =  (data == null) ? null : new DescStatsDouble(getData(), getPrecision()).getRms();
+                setCache (ret);
+                return ret;                       
+            }
+        };
+    }
+    
     public ArrayAveragerStatsNumber getMean() {
         return getMean(null);
     }
@@ -332,7 +356,9 @@ public class ArrayAverager extends ReadonlyRegisterBase<double[]> implements Rea
             @Override
             public Double read() throws IOException, InterruptedException {
                 double[] data = getData();
-                return (data == null) ? null : new DescStatsDouble(getData(), getPrecision()).getMean();
+                Double ret =  (data == null) ? null : new DescStatsDouble(getData(), getPrecision()).getMean();
+                setCache (ret);
+                return ret;                       
             }
         };
     }
@@ -346,7 +372,9 @@ public class ArrayAverager extends ReadonlyRegisterBase<double[]> implements Rea
             @Override
             public Double read() throws IOException, InterruptedException {
                 double[] data = getData();
-                return (data == null) ? null : new DescStatsDouble(getData(), getPrecision()).getStdev();
+                Double ret =  (data == null) ? null : new DescStatsDouble(getData(), getPrecision()).getStdev();
+                setCache (ret);
+                return ret;                       
             }
         };
     }
@@ -360,7 +388,9 @@ public class ArrayAverager extends ReadonlyRegisterBase<double[]> implements Rea
             @Override
             public Double read() throws IOException, InterruptedException {
                 double[] data = getData();
-                return (data == null) ? null : new DescStatsDouble(getData(), getPrecision()).getMin();
+                Double ret =  (data == null) ? null : new DescStatsDouble(getData(), getPrecision()).getMin();
+                setCache (ret);
+                return ret;                       
             }
         };
     }
@@ -374,7 +404,9 @@ public class ArrayAverager extends ReadonlyRegisterBase<double[]> implements Rea
             @Override
             public Double read() throws IOException, InterruptedException {
                 double[] data = getData();
-                return (data == null) ? null : new DescStatsDouble(getData(), getPrecision()).getMax();
+                Double ret =  (data == null) ? null : new DescStatsDouble(getData(), getPrecision()).getMax();
+                setCache (ret);
+                return ret;                       
             }
         };
     }
@@ -388,7 +420,9 @@ public class ArrayAverager extends ReadonlyRegisterBase<double[]> implements Rea
             @Override
             public Double read() throws IOException, InterruptedException {
                 double[] data = getData();
-                return (data == null) ? null : new DescStatsDouble(getData(), getPrecision()).getSum();
+                Double ret =  (data == null) ? null : new DescStatsDouble(getData(), getPrecision()).getSum();
+                setCache (ret);
+                return ret;                       
             }
         };
     }

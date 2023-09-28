@@ -1160,11 +1160,6 @@ public class StripChart extends StandardDialog {
             synchronized (instantiatedDevices) {
                 instantiatedDevices.add(stream);
             }
-            try {
-                stream.initialize();
-            } catch (Exception ex) {
-                Logger.getLogger(StripChart.class.getName()).log(Level.WARNING, null, ex);
-            }
         }
 
         if (Context.getInstance() != null) {
@@ -1620,6 +1615,7 @@ public class StripChart extends StandardDialog {
                 if ((type == Type.Stream) && (streamDevices == 0)) {
                     try {
                         Logger.getLogger(StripChart.class.getName()).fine("Starting stream");
+                        stream.initialize();
                         stream.start(true);
                     } catch (Exception ex) {
                         Logger.getLogger(StripChart.class.getName()).log(Level.WARNING, null, ex);

@@ -22,6 +22,7 @@ public final class DescStatsDouble extends Number implements Comparable<Double> 
     private Double stdev;
     private Double min;
     private Double max;
+    private Double rms;
 
     public DescStatsDouble(double[] samples, int precision) {
         setSamples(samples, precision);
@@ -128,6 +129,22 @@ public final class DescStatsDouble extends Number implements Comparable<Double> 
         }        
         return max;
     }
+    
+    public double getRms() {
+        if (rms==null){
+            rms = stats.getQuadraticMean();
+            if (precision >= 0) {
+                rms = Convert.roundDouble(max, precision);
+            }      
+        }        
+        return rms;
+    }
+    
+    public long getNumSamples() {
+        return stats.getN();
+    }
+       
+    
 
     @Override
     public int intValue() {

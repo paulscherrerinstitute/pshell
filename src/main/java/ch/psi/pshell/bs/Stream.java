@@ -313,11 +313,11 @@ public class Stream extends DeviceBase implements Readable<StreamValue>, Cacheab
 
     
     public StreamChannel addChannel(String id) throws IOException, InterruptedException {
-        return addScalar(id, id);
+        return addChannel(id, id);
     }
     
     public StreamChannel addChannel(String name, String id) throws IOException, InterruptedException {
-           return addScalar(name, id, DEFAULT_MODULO, DEFAULT_OFFSET);
+           return addChannel(name, id, DEFAULT_MODULO, DEFAULT_OFFSET);
     }
      
     public StreamChannel addChannel(String name, String id, int modulo, int offset) throws IOException, InterruptedException {

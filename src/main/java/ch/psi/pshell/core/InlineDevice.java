@@ -13,10 +13,13 @@ import ch.psi.pshell.device.ReadonlyRegister.ReadonlyRegisterMatrix;
 import ch.psi.pshell.device.ArrayRegisterStats;
 import ch.psi.pshell.device.Averager.RegisterStats;
 import ch.psi.pshell.device.Cacheable;
+import ch.psi.pshell.device.DeviceAdapter;
+import ch.psi.pshell.device.DeviceListener;
 import ch.psi.pshell.device.Writable;
 import ch.psi.pshell.epics.Epics;
 import ch.psi.pshell.epics.EpicsRegister;
 import ch.psi.pshell.epics.InvalidValueAction;
+import ch.psi.utils.State;
 import ch.psi.utils.Str;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -450,6 +453,8 @@ public class InlineDevice extends DeviceBase implements Readable, Writable {
                                 return av.getMean(givenName).withForceRead(forceRead);
                             case "stdev":
                                 return av.getStdev(givenName).withForceRead(forceRead);
+                            case "rms":
+                                return av.getRms(givenName).withForceRead(forceRead);
                             case "variance":
                                 return av.getVariance(givenName).withForceRead(forceRead);
                             case "samples":
@@ -475,6 +480,8 @@ public class InlineDevice extends DeviceBase implements Readable, Writable {
                                 return av.getMean(givenName);
                             case "stdev":
                                 return av.getStdev(givenName);
+                            case "rms":
+                                return av.getRms(givenName);
                             case "variance":
                                 return av.getVariance(givenName);
                             case "samples":
@@ -557,8 +564,7 @@ public class InlineDevice extends DeviceBase implements Readable, Writable {
         Stream innerStream = null;
         if (parent == null) {
             if (getUrlProtocol(url).equals("bs")) {
-                innerStream = new Stream("Url device stream");
-                innerStream.initialize();
+                innerStream = new Stream("Url device stream");                
                 parent = innerStream;
             }
         }
@@ -567,6 +573,16 @@ public class InlineDevice extends DeviceBase implements Readable, Writable {
         }
         dev.initialize();
         if (innerStream != null) {
+            Stream finalInnerStream = innerStream;
+            dev.getDevice().addListener(new DeviceAdapter() {
+                @Override
+                public void onStateChanged(Device device, State state, State former) {
+                    if (state==State.Closing){
+                        finalInnerStream.close();
+                    }                    
+                };
+            });
+            innerStream.initialize();
             innerStream.start();
             innerStream.waitValueChange(Stream.TIMEOUT_START_STREAMING);
         }
@@ -582,6 +598,7 @@ public class InlineDevice extends DeviceBase implements Readable, Writable {
     public static List<Device> create(List<String> url, List<DeviceBase> parents) throws IOException, InterruptedException {
         Stream innerStream = null;
         List<Device> ret = new ArrayList<>();
+        int firstStreamIndex=0;
         for (int i = 0; i < url.size(); i++) {
             DeviceBase parent = null;
             if (parents.size() > 0) {
@@ -590,8 +607,8 @@ public class InlineDevice extends DeviceBase implements Readable, Writable {
             if (parent == null) {
                 if (getUrlProtocol(url.get(i)).equals("bs")) {
                     if (innerStream == null) {
-                        innerStream = new Stream("Url device stream");
-                        innerStream.initialize();
+                        innerStream = new Stream("Inline device stream");                        
+                        firstStreamIndex = i;
                     }
                     parent = innerStream;
                 }
@@ -600,6 +617,17 @@ public class InlineDevice extends DeviceBase implements Readable, Writable {
             ret.add(dev);
         }
         if (innerStream != null) {
+            Stream finalInnerStream = innerStream;
+            Device dev = ret.get(firstStreamIndex);
+            dev.addListener(new DeviceAdapter() {
+                @Override
+                public void onStateChanged(Device device, State state, State former) {
+                    if (state==State.Closing){
+                        finalInnerStream.close();
+                    }                    
+                };
+            });            
+            innerStream.initialize();
             innerStream.start();
             innerStream.waitValueChange(Stream.TIMEOUT_START_STREAMING);
         }
