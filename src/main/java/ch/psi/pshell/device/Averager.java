@@ -93,7 +93,6 @@ public class Averager extends ReadonlyRegisterBase<DescStatsDouble> implements R
             try{
                 if (((InlineDevice)source).getProtocol().equals("bs")){
                     Stream stream = new Stream("Averager inner device stream");
-                    stream.initialize();                                                     
                     ((InlineDevice)source).setParent(stream);
                     innerDevice = stream;
                 }
@@ -125,6 +124,7 @@ public class Averager extends ReadonlyRegisterBase<DescStatsDouble> implements R
             config.interval = UNDEFINED; //Sampling on event change
         }
         if (innerDevice instanceof Stream){
+            ((Stream)innerDevice).initialize();                                                                 
             ((Stream)innerDevice).start(true); 
             ((Stream)innerDevice).waitCacheChange(Stream.TIMEOUT_START_STREAMING);
         }

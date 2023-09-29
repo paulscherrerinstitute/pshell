@@ -1351,8 +1351,7 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
                 if (inlineDevice.getProtocol().equals("bs")) {
                     if (innerStream == null) {
                         innerStream = new Stream("Scan devices stream");
-                        innerDevices.add(innerStream);
-                        innerStream.initialize();
+                        innerDevices.add(innerStream);                        
                     }
                     inlineDevice.setParent(innerStream);
                 }
@@ -1369,7 +1368,6 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
                         if (innerStream == null) {
                             innerStream = new Stream("Scan devices stream");
                             innerDevices.add(innerStream);
-                            innerStream.initialize();
                         }
                         inlineDevice.setParent(innerStream);
                     }
@@ -1381,6 +1379,7 @@ public abstract class ScanBase extends ObservableBase<ScanListener> implements S
         }     
         
         if (innerStream != null) {
+            innerStream.initialize();
             innerStream.start(true);
             innerStream.waitCacheChange(10000);
         }

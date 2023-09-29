@@ -111,6 +111,7 @@ public class ArrayAverager extends ReadonlyRegisterBase<double[]> implements Rea
             config.interval = UNDEFINED; //Sampling on event change
         }
         if (innerDevice instanceof Stream) {
+            ((Stream) innerDevice).initialize();   
             ((Stream) innerDevice).start(true);
             ((Stream) innerDevice).waitCacheChange(Stream.TIMEOUT_START_STREAMING);
         }
