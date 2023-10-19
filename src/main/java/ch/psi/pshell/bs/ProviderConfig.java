@@ -17,4 +17,5 @@ public class ProviderConfig extends DeviceConfig {
     public boolean keepListeningOnStop = false;
     public boolean parallelHandlerProcessing = true;
     public boolean headerReservingAllocator = false;
+    public boolean analizeHeader = false;
 }

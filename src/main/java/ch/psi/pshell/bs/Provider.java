@@ -81,6 +81,15 @@ public class Provider extends DeviceBase {
         return (getConfig().socketType == SocketType.PULL) ? ZMQ.PULL : ZMQ.SUB;
     }
     
+    public boolean getAnalizeHeader() {
+        return Boolean.TRUE.equals(getConfig().analizeHeader) ? true : false; 
+    }    
+
+    public boolean setAnalizeHeader(boolean value) {
+        return getConfig().analizeHeader = value;
+    }    
+
+    
     public ReceiverConfig getReceiverConfig(Stream stream) throws Exception {
         String socket = getStreamSocket(stream);
         if (socket == null) {

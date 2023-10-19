@@ -6,6 +6,7 @@ import java.io.IOException;
 import ch.psi.bsread.Receiver;
 import ch.psi.bsread.message.Message;
 import ch.psi.bsread.ReceiverConfig;
+import ch.psi.bsread.analyzer.MainHeaderAnalyzer;
 import ch.psi.bsread.message.ValueImpl;
 import ch.psi.pshell.device.Device;
 import ch.psi.bsread.converter.MatlabByteConverter;
@@ -24,6 +25,7 @@ import ch.psi.utils.Reflection.Hidden;
 import ch.psi.utils.State;
 import ch.psi.utils.Str;
 import ch.psi.utils.Threading;
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -33,6 +35,7 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Pattern;
 import org.zeromq.ZMQ;
 
 /**
@@ -55,6 +58,7 @@ public class Stream extends DeviceBase implements Readable<StreamValue>, Cacheab
     Boolean fixedChildren;
     final Boolean privateProvider;
     boolean createMatrix;
+    MainHeaderAnalyzer  mainHeaderAnalyzer;
 
     @Override
     public StreamConfig getConfig() {
@@ -77,7 +81,22 @@ public class Stream extends DeviceBase implements Readable<StreamValue>, Cacheab
         }
     }
 
+    public boolean getAnalizeHeader() {
+        try{
+            return ((Provider) getParent()).getAnalizeHeader();
+        } catch (Exception ex){
+            return false;
+        }
+    }
 
+    public void setAnalizeHeader(boolean value) {
+        try{
+            ((Provider) getParent()).setAnalizeHeader(value);
+        } catch (Exception ex){            
+        }
+    }
+
+    
     public int getSocketType() {
         try{
             return ((Provider) getParent()).getSocketType();
@@ -437,12 +456,32 @@ public class Stream extends DeviceBase implements Readable<StreamValue>, Cacheab
             getLogger().fine("Connecting to: " + config.getAddress() + " (" + config.getSocketType() + ")");
             receiver = new Receiver(config);
             receiver.connect();
+            if (getAnalizeHeader()){
+                mainHeaderAnalyzer = new MainHeaderAnalyzer( config.getAddress()) {
+                     protected void warn(String log, Object... args){
+                         try{
+                            int i = 0;
+                            while(log.contains("{}")) {
+                                log = log.replaceFirst(Pattern.quote("{}"), "{"+ i++ +"}");
+                            }                             
+                            Logger.getLogger(Stream.class.getName()).severe(MessageFormat.format(log, args));
+                         } catch (Exception ex){                                 
+                         }
+                     }
+                };
+            }
 
             while (!Thread.currentThread().isInterrupted() && started.get()) {
                 Message msg = receiver.receive();
                 if (msg == null) {
                     started.set(false);
                 } else {
+                    if (mainHeaderAnalyzer!=null){
+                        if (!mainHeaderAnalyzer.analyze(msg.getMainHeader())){
+                            continue;
+                        }
+                    }
+                    
                     if (isMonitored() || reading) {
                         Map<String, ValueImpl> data = msg.getValues();
                         if (data != null) {
