@@ -13,7 +13,7 @@ ext.timestamp = new Date().format("yyMMddHHmm")
 
 ext.type = 'py'     //py, groovy, js or all
 ext.javafx = false
-ext.jzy3d = true
+ext.jzy3d = false
 ext.manif_addopens = 'java.base/sun.nio.ch java.base/java.io java.desktop/sun.awt java.desktop/javax.swing.text.html java.desktop/sun.swing java.base/jdk.internal.loader jdk.nashorn.internal.runtime'
 ext.run_addopens = 'java.base/jdk.internal.loader=ALL-UNNAMED'
 ext.run_addexports = "java.desktop/sun.awt=ALL-UNNAMED"
@@ -192,8 +192,11 @@ dependencies {
 
 if (ext.jzy3d==true){
     dependencies {
-        implementation 'org.jzy3d:jzy3d-native-jogl-awt:2.2.1'
-       
+        implementation 'org.jzy3d:jzy3d-native-jogl-awt:2.2.1'       
+    }
+} else {
+    dependencies {
+        provided 'org.jzy3d:jzy3d-native-jogl-awt:2.2.1'       
     }
 }
 
@@ -302,9 +305,9 @@ compileJava {
     if (project.javafx == false){
         exclude '**/LinePlotJavaFx.java'
     }
-    if (project.jzy3d == false){
-        exclude '**/SurfacePlotJzy3d.java'
-    }
+    //if (project.jzy3d == false){
+    //    exclude '**/SurfacePlotJzy3d.java'
+    //}
  }    
 
 
