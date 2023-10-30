@@ -172,7 +172,7 @@ public class PipelineStream extends CamServerStream {
         setPush(false);
         String streamUrl = getStream(instanceId);
         try {
-            setPush(proxy.isPush(pipelineName));
+            setPush(proxy.isPush(instanceId));
         } catch (Exception ex) {
             Logger.getLogger(PipelineStream.class.getName()).log(Level.WARNING, null, ex);
         }
