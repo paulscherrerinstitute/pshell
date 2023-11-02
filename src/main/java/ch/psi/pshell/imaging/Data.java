@@ -377,7 +377,7 @@ public class Data implements Serializable {
     public String getXStr(int col, Calibration calibration) {
         double x = getX(col, calibration);
         final int precision = 6;
-        if ((x - (long) x) < Math.pow(10.0, -precision)) {
+        if (Math.abs(x - (long) x) < Math.pow(10.0, -precision)) {
             return String.format("%d", (long) x);
         } else {
             String ret = String.format("%s", Convert.roundDouble(x, precision));
@@ -403,7 +403,7 @@ public class Data implements Serializable {
     public String getYStr(int row, Calibration calibration) {
         double y = getY(row, calibration);
         final int precision = 6;
-        if ((y - (long) y) < Math.pow(10.0, -precision)) {
+        if (Math.abs(y - (long) y) < Math.pow(10.0, -precision)) {
             return String.format("%d", (long) y);
         } else {
             String ret = String.format("%s", Convert.roundDouble(y, precision));
