@@ -304,6 +304,11 @@ public final class ProcessVariablePanel extends DevicePanel {
         textReadback.setEnabled(false);
 
         buttonStop.setText("Stop");
+        buttonStop.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                buttonStopActionPerformed(evt);
+            }
+        });
 
         javax.swing.GroupLayout panelAdvancedLayout = new javax.swing.GroupLayout(panelAdvanced);
         panelAdvanced.setLayout(panelAdvancedLayout);
@@ -375,6 +380,17 @@ public final class ProcessVariablePanel extends DevicePanel {
             showException(ex);
         }
     }//GEN-LAST:event_sliderStateChanged
+
+    private void buttonStopActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonStopActionPerformed
+        try {
+            Device device = getDevice();
+            if ((device != null) && (device instanceof Stoppable)){
+                ((Stoppable)device).stop();
+            }
+        } catch (Exception ex) {
+            showException(ex);
+        }
+    }//GEN-LAST:event_buttonStopActionPerformed
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton buttonStop;
