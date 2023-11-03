@@ -34,6 +34,7 @@ import ch.psi.utils.Arr;
 import ch.psi.utils.ArrayProperties;
 import ch.psi.utils.Chrono;
 import ch.psi.utils.Config;
+import ch.psi.utils.Config.ConfigListener;
 import ch.psi.utils.Convert;
 import ch.psi.utils.EncoderJson;
 import ch.psi.utils.Sys;
@@ -1509,6 +1510,7 @@ public class CamServerViewer extends MonitoredPanel {
             
             loadCameraState();
             updateButtons();
+            
             camera.getConfig().save();
             if (Math.abs(integration) > 1) {
                 renderer.setDevice(new ImageIntegrator(camera, integration));
@@ -1568,6 +1570,18 @@ public class CamServerViewer extends MonitoredPanel {
                     //System.err.println(ex);
                 }
             });
+            camera.getConfig().addListener(new ConfigListener(){
+                public void onSave(Config config) {
+                    boolean reticle = renderer.getShowReticle();
+                    if (reticle){
+                        renderer.setShowReticle(false);
+                        SwingUtilities.invokeLater(()->{
+                            renderer.setShowReticle(true);
+                        });
+                    }            
+                    
+                }                
+            });
 
         } catch (Exception ex) {
             showException(ex);
@@ -1619,7 +1633,7 @@ public class CamServerViewer extends MonitoredPanel {
         }
     }
 
-    public void setConfig(String instanceName, String key, Object value) throws IOException, InterruptedException {
+    public void setConfigValue(String instanceName, String key, Object value) throws IOException, InterruptedException {
         if (server != null) {
             Map<String, Object> config = new HashMap<>();
             config.put(key, value);
@@ -1635,8 +1649,8 @@ public class CamServerViewer extends MonitoredPanel {
         setConfig(instanceName, config);
     }
 
-    public void setConfig(String key, Object value) throws IOException, InterruptedException {
-        setConfig(instanceName, key, value);
+    public void setConfigValue(String key, Object value) throws IOException, InterruptedException {
+        setConfigValue(instanceName, key, value);
     }
 
     public static class ImageIntegrator extends ColormapSource {
@@ -1750,9 +1764,9 @@ public class CamServerViewer extends MonitoredPanel {
         try {
             lastMarkerPos = getStreamMarkerPos();
             if (marker == null) {
-                setConfig("Marker", null);
+                setConfigValue("Marker", null);
             } else {
-                setConfig("Marker", new int[]{marker.getPosition().x, marker.getPosition().y});
+                setConfigValue("Marker", new int[]{marker.getPosition().x, marker.getPosition().y});
             }
         } catch (Exception ex) {
             Logger.getLogger(getClass().getName()).log(Level.FINE, null, ex);
@@ -1890,7 +1904,7 @@ public class CamServerViewer extends MonitoredPanel {
                 buttonPauseActionPerformed(null);
             }
             if (renderer.getShowReticle() != buttonReticle.isSelected()) {
-                //buttonReticle.setSelected(renderer.getShowReticle());
+                buttonReticle.setSelected(renderer.getShowReticle());
             }
             if ((renderer.getMarker() == null) && buttonMarker.isSelected()) {
                 buttonMarker.setSelected(false);
@@ -3060,6 +3074,7 @@ public class CamServerViewer extends MonitoredPanel {
                 }
                 if (Context.getInstance() != null){
                     viewer.setPersistenceFile(Paths.get(Context.getInstance().getSetup().getContextPath(), "CamServer_Viewer.bin"));
+                    viewer.getRenderer().clear();
                 }                
                 if (App.hasArgument(ARG_STREAM)){
                     viewer.setStartupStream(App.getArgumentValue(ARG_STREAM));
@@ -3992,7 +4007,9 @@ public class CamServerViewer extends MonitoredPanel {
 
     private void buttonReticleActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonReticleActionPerformed
         try {
-            checkReticle();
+            if (!updatingButtons){
+                checkReticle();
+            }
         } catch (Exception ex) {
             showException(ex);
         }

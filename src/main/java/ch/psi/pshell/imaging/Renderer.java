@@ -639,7 +639,7 @@ public class Renderer extends MonitoredPanel implements ImageListener, ImageBuff
     }
 
     Dimension reticleSize;
-    double reticleTickUnits = 1.0;
+    double reticleTickUnits = DEFAULT_RETICLE_TICK_UNITS;
 
     public void configureReticle(Dimension size, double tickUnits) {
         reticleSize = size;
@@ -649,7 +649,10 @@ public class Renderer extends MonitoredPanel implements ImageListener, ImageBuff
             reticle.setTickUnits(reticleTickUnits);
         }
     }
-
+    
+    public static final Dimension DEFAULT_RETICLE_SIZE = new Dimension(400, 200); 
+    public static final double DEFAULT_RETICLE_TICK_UNITS = 1; 
+    
     public void setShowReticle(boolean value) {
         if (value != getShowReticle()) {
             if (value) {
@@ -657,7 +660,7 @@ public class Renderer extends MonitoredPanel implements ImageListener, ImageBuff
                     reticle = new Overlays.Reticle(penReticle);
                     reticle.setPassive(false);
                     reticle.setCalibration(getCalibration());
-                    reticle.setSize((reticleSize == null) ? new Dimension(400, 200) : reticleSize);
+                    reticle.setSize((reticleSize == null) ? DEFAULT_RETICLE_SIZE : reticleSize);
                     reticle.setTickUnits(reticleTickUnits); //units
                     reticle.setZOrder(zOrderReticle); //Always below other overlays
                     addOverlay(reticle);
@@ -1230,7 +1233,7 @@ public class Renderer extends MonitoredPanel implements ImageListener, ImageBuff
     }
 
     public void addOverlay(Overlay overlay) {
-        updateOverlays(overlay, null);
+    updateOverlays(overlay, null);
     }
 
     public void removeOverlay(Overlay overlay) {
@@ -1548,8 +1551,10 @@ public class Renderer extends MonitoredPanel implements ImageListener, ImageBuff
             removeOverlay(this.marker);
         }
         this.marker = marker;
-        if (!hasOverlay(marker)) {
-            addOverlay(marker);
+        if (marker!=null){
+            if (!hasOverlay(marker)) {
+                addOverlay(marker);
+            }
         }
         checkPersistence();
     }
@@ -2560,6 +2565,8 @@ public class Renderer extends MonitoredPanel implements ImageListener, ImageBuff
         state.scaleX = getScaleX();
         state.scaleY = getScaleY();
         state.reticle = getShowReticle();
+        state.reticleTickUnits = ((reticle!=null) && (reticle.getTickUnits()>0)) ? reticle.getTickUnits() : DEFAULT_RETICLE_TICK_UNITS;
+        state.reticleSize = (reticle!=null) ? reticle.getSize() : null;
         state.imagePosition = toImageCoord(scrollPane.getViewport().getViewPosition());
         state.status = getShowStatus();
         state.marker = marker;
@@ -2596,16 +2603,25 @@ public class Renderer extends MonitoredPanel implements ImageListener, ImageBuff
                 try {
                     waitNext(10000);
                     SwingUtils.invokeDelayed(() -> {
-                        setViewPosition(state.imagePosition);
+                        if (state.imagePosition!=null){
+                            setViewPosition(state.imagePosition);
+                        }
                         //If state had no reticule, but a reticule has been enabled, do nothing.
-                        if (state.reticle) {
+                        if ((state.reticle) && !getShowReticle()) {
+                            double units =(state.reticleTickUnits>0) ? state.reticleTickUnits : DEFAULT_RETICLE_TICK_UNITS;
+                            Dimension size = (state.reticleSize == null) ? DEFAULT_RETICLE_SIZE: state.reticleSize;
+                            configureReticle(size,units);
                             setShowReticle(true);
                         }
                     }, 100);
+                } catch (TimeoutException ex) {
+                    Logger.getLogger(Renderer.class.getName()).info("Timeout waiting initial camera image to restore image position");
                 } catch (Exception ex) {
+                    Logger.getLogger(Renderer.class.getName()).log(Level.WARNING, null, ex);
                 }
             }).start();
         } catch (NoSuchFileException ex) {
+            Logger.getLogger(Renderer.class.getName()).log(Level.INFO, null, ex);
         } catch (Exception ex) {
             Logger.getLogger(Renderer.class.getName()).log(Level.WARNING, null, ex);
         }

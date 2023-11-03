@@ -538,9 +538,11 @@ public class Stream extends DeviceBase implements Readable<StreamValue>, Cacheab
 
     @Override
     public void stop() {
-        getLogger().fine("Stopping");
+        if (isStarted()){
+            getLogger().fine("Stopping");
+            started.set(false);
+        }
         channelPrefix = null;
-        started.set(false);
         closeReceiver();
         if (thread != null) {
             try {

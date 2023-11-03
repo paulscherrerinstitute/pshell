@@ -126,12 +126,14 @@ public class StreamCamera extends ColormapSource {
         provider.initialize();
         stream.initialize();
         if (isMonitored()) {
-            startReceiver();
+            if (stream.getStreamSocket()!=null){
+                startReceiver();
+            }
         }
     }
 
     public void startReceiver() {
-        try {
+        try {            
             stream.start(true);
         } catch (Exception ex) {
             Logger.getLogger(StreamCamera.class.getName()).log(Level.SEVERE, null, ex);
