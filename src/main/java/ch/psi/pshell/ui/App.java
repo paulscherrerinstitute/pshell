@@ -106,6 +106,10 @@ public class App extends ObservableBase<AppListener> {
             return;
         }
         arguments = args;
+
+        //Disable eventual loggers of dependencies.
+        System.setProperty("org.slf4j.simpleLogger.defaultLogLevel","OFF");
+        
         if (isForcedHeadless()) {
             System.setProperty("java.awt.headless", "true");
         }
