@@ -5,6 +5,7 @@ import ch.psi.bsread.message.Type;
 import ch.psi.pshell.device.ReadonlyAsyncRegisterBase;
 import ch.psi.pshell.device.TimestampedValue;
 import ch.psi.utils.Convert;
+import ch.psi.utils.Reflection;
 import ch.psi.utils.State;
 import java.io.IOException;
 import java.math.BigInteger;
@@ -200,6 +201,29 @@ public class StreamChannel<T> extends ReadonlyAsyncRegisterBase<T> {
         String prefix = getParent().getChannelPrefix();
         return (prefix==null) ? id : prefix+":"+id;
     } 
+    
+    @Override
+    public String getName(){
+        String name = super.getName();
+        if (getAppendPrefixToName()){
+            String prefix = getParent().getChannelPrefix();
+            return (prefix==null) ? name : prefix+":"+name;
+        }
+        return name;
+    }  
+    
+    
+    boolean appendPrefixToName;
+
+    @Reflection.Hidden
+    public boolean getAppendPrefixToName() {
+        return appendPrefixToName;
+    }
+
+    @Reflection.Hidden
+    public void setAppendPrefixToName(boolean channelPrefix) {
+        this.appendPrefixToName = channelPrefix;
+    }    
     
     @Override
     public BeamSynchronousValue takeTimestamped() {
