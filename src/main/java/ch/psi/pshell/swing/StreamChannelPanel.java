@@ -1,5 +1,8 @@
 package ch.psi.pshell.swing;
 
+import ch.psi.pshell.bs.ProviderConfig;
+import ch.psi.pshell.bs.ProviderConfig.SocketType;
+import ch.psi.pshell.bs.Stream;
 import ch.psi.pshell.bs.StreamChannel;
 import ch.psi.pshell.device.Device;
 import ch.psi.pshell.plot.LinePlotSeries;
@@ -11,12 +14,16 @@ import ch.psi.pshell.plot.MatrixPlotRenderer;
 import ch.psi.pshell.plot.MatrixPlotSeries;
 import ch.psi.pshell.plot.TimePlotJFree;
 import ch.psi.pshell.plot.TimePlotSeries;
+import static ch.psi.pshell.swing.DevicePanel.createFrame;
+import ch.psi.pshell.ui.App;
 import ch.psi.utils.Arr;
 import ch.psi.utils.Convert;
 import ch.psi.utils.EncoderJson;
+import ch.psi.utils.swing.SwingUtils;
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Dimension;
+import java.awt.Window;
 import java.util.Map;
 import javax.swing.JTextArea;
 
@@ -134,6 +141,34 @@ public class StreamChannelPanel extends DevicePanel {
     public JTextArea getText(){
         return text;
     }    
+    
+    public static StreamChannelPanel createFrame(String channelName, String url, ProviderConfig.SocketType type, Window parent, String title) throws Exception {
+        Stream stream = new Stream (url, url, (type==null) ? ProviderConfig.SocketType.SUB : type);
+        stream.initialize();
+        stream.start();
+        stream.waitCacheChange(10000);
+        StreamChannel channel = (StreamChannel)stream.getChild(channelName);
+        return (StreamChannelPanel) createFrame(channel,parent, title, new Dimension(600,400));        
+    }
+    
+    
+    public static void main(String[] args) {
+        try {
+            App.init(args);            
+            ProviderConfig.SocketType type = SocketType.SUB;
+            //String url = "tcp://localhost:5554";
+            //String channel = "image";
+            String channel=args[0];   
+            String url=args[1];   
+            if ((args.length>2) && (args[2].toUpperCase().equals(ProviderConfig.SocketType.PULL.toString()))){
+                type = ProviderConfig.SocketType.PULL;
+            }
+            StreamChannelPanel panel = createFrame (channel, url, type, null, null);
+        } catch (Exception ex) {
+            SwingUtils.showException(null, ex);
+        }        
+    }
+    
     
     
 

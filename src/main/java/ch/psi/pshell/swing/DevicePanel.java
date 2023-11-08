@@ -28,6 +28,7 @@ import ch.psi.pshell.device.Startable;
 import ch.psi.pshell.ui.App;
 import ch.psi.utils.swing.ConfigDialog;
 import java.awt.Component;
+import java.awt.Dimension;
 import java.awt.Toolkit;
 import java.awt.Window;
 import javax.swing.JDialog;
@@ -457,11 +458,19 @@ public class DevicePanel extends MonitoredPanel {
     }
 
     public static DevicePanel createFrame(Device device, Window parent, String title) throws Exception {
-        return createFrame(device, parent, title, null);
+        return createFrame(device, parent, title, null, null);
+    }
+    
+    public static DevicePanel createFrame(Device device, Window parent, String title, Dimension size) throws Exception {
+        return createFrame(device, parent, title, null, size);
     }
     
     public static DevicePanel createFrame(Device device, Window parent, String title, DevicePanel panel) throws Exception {
-        DevicePanel devicePanal = (panel==null) ? 
+         return createFrame(device, parent, title, panel, null);
+    }
+    
+    public static DevicePanel createFrame(Device device, Window parent, String title, DevicePanel panel, Dimension size) throws Exception {
+        DevicePanel devicePanel = (panel==null) ? 
                 (DevicePanel)App.getDevicePanelManager().getDefaultPanel(device).getPanelClass().getDeclaredConstructor().newInstance() :
                 panel;
 
@@ -473,8 +482,9 @@ public class DevicePanel extends MonitoredPanel {
                         ((Startable)device).start();
                     }
                 }                
-                devicePanal.setDevice(device);                
-                JFrame window = SwingUtils.showFrame(parent,((title==null) ? device.getName() : title),  devicePanal.getPreferredSize(), devicePanal);
+                devicePanel.setDevice(device);                
+                Dimension panelSize = (size==null) ? devicePanel.getPreferredSize() : size;               
+                JFrame window = SwingUtils.showFrame(parent,((title==null) ? device.getName() : title),  panelSize, devicePanel);
                 window.setIconImage(Toolkit.getDefaultToolkit().getImage(App.getResourceUrl("IconSmall.png")));
                 SwingUtils.centerComponent(parent, window);        
                 window.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);                
@@ -483,6 +493,6 @@ public class DevicePanel extends MonitoredPanel {
                 SwingUtils.showException(parent, ex);
             }
         });
-        return devicePanal;        
+        return devicePanel;        
     }    
 }

@@ -1,6 +1,5 @@
 package ch.psi.pshell.swing;
 
-
 import ch.psi.pshell.bs.AddressableDevice;
 import ch.psi.pshell.bs.ProviderConfig.SocketType;
 import ch.psi.pshell.bs.Stream;
@@ -40,8 +39,7 @@ public class StreamPanel extends DevicePanel {
     volatile boolean updating;
     volatile AddressableDevice monitoredDevice;
     int updateInterval = 200;
-    
-    
+
     public StreamPanel() {
         initComponents();
         JPopupMenu popupMenu = new JPopupMenu();
@@ -51,17 +49,17 @@ public class StreamPanel extends DevicePanel {
             @Override
             public void actionPerformed(ActionEvent e) {
                 try {
-                   plotChannel();
+                    plotChannel();
                 } catch (Exception ex) {
                 }
             }
-        });        
-        
+        });
+
         menuCopyChannelId.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 try {
-                    String channelId = getCurrentChannelId();                    
+                    String channelId = getCurrentChannelId();
                     Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
                     clipboard.setContents(new StringSelection(channelId), (Clipboard clipboard1, Transferable contents) -> {
                     });
@@ -69,60 +67,60 @@ public class StreamPanel extends DevicePanel {
                 } catch (Exception ex) {
                 }
             }
-        });        
+        });
         popupMenu.add(menuPlotChannel);
         popupMenu.addSeparator();
-        popupMenu.add(menuCopyChannelId);        
-        
+        popupMenu.add(menuCopyChannelId);
+
         model = (DefaultTableModel) table.getModel();
         table.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
                 try {
                     String channel = getCurrentChannel();
-                    if (channel != null){
-                        table.setToolTipText(getCurrentChannelId());        
-                        
-                        if ((e.getClickCount() == 2) && (!e.isPopupTrigger()) && !popupMenu.isVisible()) {                             
-                             plotChannel();
+                    if (channel != null) {
+                        table.setToolTipText(getCurrentChannelId());
+
+                        if ((e.getClickCount() == 2) && (!e.isPopupTrigger()) && !popupMenu.isVisible()) {
+                            plotChannel();
                         }
                     }
                 } catch (Exception ex) {
                     showException(ex);
                 }
             }
-            
-                @Override
-                public void mouseReleased(MouseEvent e) {
-                    checkPopupMenu(e);
-                }
 
-                @Override
-                public void mousePressed(MouseEvent e) {
-                    checkPopupMenu(e);
-                }
-                
-                void checkPopupMenu(MouseEvent e) {
-                    try {
-                        if (e.isPopupTrigger()) {
-                            popupMenu.show(e.getComponent(), e.getX(), e.getY());
-                        }
-                    } catch (Exception ex) {
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                checkPopupMenu(e);
+            }
+
+            @Override
+            public void mousePressed(MouseEvent e) {
+                checkPopupMenu(e);
+            }
+
+            void checkPopupMenu(MouseEvent e) {
+                try {
+                    if (e.isPopupTrigger()) {
+                        popupMenu.show(e.getComponent(), e.getX(), e.getY());
                     }
+                } catch (Exception ex) {
                 }
-                
-       });
+            }
+
+        });
     }
-    
-    public void setUpdateInterval(int value){
+
+    public void setUpdateInterval(int value) {
         updateInterval = value;
         Stream device = getDevice();
-        if (device!=null){
+        if (device != null) {
             setDevice(device);
         }
     }
-    
-    public int getUpdateInterval(){
+
+    public int getUpdateInterval() {
         return updateInterval;
     }
 
@@ -132,95 +130,103 @@ public class StreamPanel extends DevicePanel {
         ckMonitored.setVisible(!value);
 
     }
-    
-    String getCurrentChannel(){
-        int row = table.getSelectedRow(); 
-        if (row<0){
+
+    String getCurrentChannel() {
+        int row = table.getSelectedRow();
+        if (row < 0) {
             return null;
         }
-        return model.getValueAt(table.convertRowIndexToModel(row),0).toString();
+        return model.getValueAt(table.convertRowIndexToModel(row), 0).toString();
     }
-    
-    String getCurrentChannelId(){
+
+    String getCurrentChannelId() {
         String channel = getCurrentChannel();
-        if ((monitoredDevice!=null) && (channel!=null)){
+        if ((monitoredDevice != null) && (channel != null)) {
             String address = monitoredDevice.getChannelPrefix();
-            if ((address==null) || (address.isBlank())){
+            if ((address == null) || (address.isBlank())) {
                 address = Str.toString(monitoredDevice.getAddress());
-            }            
-            String channelId = address.trim() + " " + channel;                    
-            return channelId;                    
+            }
+            String channelId = address.trim() + " " + channel;
+            return channelId;
         }
         return null;
     }
-    
-    
-    void plotChannel( ){
+
+    void plotChannel() {
         String channel = getCurrentChannel();
         Stream device = getDevice();
-        if ((device!=null) && (channel!=null)){ 
+        if ((device != null) && (channel != null)) {
             Device child = device.getChild(channel);
-            showDevicePanel(child);             
+            showDevicePanel(child);
         }
     }
-    
-    
+
     @Override
     public Stream getDevice() {
         return (Stream) super.getDevice();
     }
-    
+
     @Override
     public void setDevice(Device device) {
         super.setDevice(device);
         monitoredDevice = getDevice();
         if (getDevice() != null) {
             onDeviceStateChanged(getDevice().getState(), null);
-            if (updateInterval>0){
+            if (updateInterval > 0) {
                 startTimer(updateInterval, 10);
             }
         } else {
             clear();
         }
         updateTable();
-        updateButtons();  
+        updateButtons();
     }
-   
-    protected void updateSocket(){
-            String socket = getDevice().getStreamSocket();
-            
-            if (socket==null){
-                textAddress.setText(getDevice().getAddress());
-                textType.setText("");
-            } else {
-                textAddress.setText( socket);
-                textType.setText(getDevice().getSocketType() == ZMQ.PULL ?
-                        SocketType.PULL.toString() : 
-                        SocketType.SUB.toString());
-            }        
+
+    protected void updateSocket() {
+        String socket = getDevice().getStreamSocket();
+        String address;
+        String type;
+        if (socket == null) {
+            address = getDevice().getAddress();
+            if (address == null) {
+                address = "";
+            }
+            type = "";
+        } else {
+            address = socket;
+            type = getDevice().getSocketType() == ZMQ.PULL
+                    ? SocketType.PULL.toString()
+                    : SocketType.SUB.toString();
+        }
+        if (!address.equals(textAddress.getText())) {
+            textAddress.setText(address);
+        }
+        if (!type.equals(textType.getText())) {
+            textType.setText(type);
+        }
     }
-    
-    protected void setMonitoredDevice(AddressableDevice device){
+
+    protected void setMonitoredDevice(AddressableDevice device) {
         monitoredDevice = device;
     }
-    
-    void updateButtons(){             
+
+    void updateButtons() {
     }
-    
-    void clear(){
+
+    void clear() {
         stopTimer();
         textAddress.setText("");
         textTimestamp.setText("");
         textId.setText("");
-        textType.setText(null); 
+        textType.setText(null);
         model.setNumRows(0);
     }
-    
-    public void updateTable(){
+
+    public void updateTable() {
         Stream device = getDevice();
-        StreamValue sv = (device==null) ? null : device.take();
-        
-        if (sv==null){
+        StreamValue sv = (device == null) ? null : device.take();
+
+        if (sv == null) {
             textTimestamp.setText("");
             textId.setText("");
             model.setNumRows(0);
@@ -228,41 +234,41 @@ public class StreamPanel extends DevicePanel {
         }
         long id = sv.getPulseId();
         textId.setText(Str.toString(id));
-        textTimestamp.setText(Str.toString(sv.getTimestamp()));       
+        textTimestamp.setText(Str.toString(sv.getTimestamp()));
         textIdOff.setText(String.format("%06X", id % 1000000L));
-        textTimestampOff.setText(String.format("%06X", sv.getNanosOffset()));        
+        textTimestampOff.setText(String.format("%06X", sv.getNanosOffset()));
 
         int index = 0;
-        List<String> keys= sv.getKeys();
+        List<String> keys = sv.getKeys();
         Collections.sort(keys);
         model.setNumRows(keys.size());
         for (String key : keys) {
             Object val = sv.getValue(key);
             int[] shape = sv.getShape(key);
-            String type =  Str.toString(sv.getType(key));
-            if (val!=null){
-                if (shape==null){
-                    if (val instanceof String){
-                        shape =new int[] {((String)val).length()};
-                    } else if (val.getClass().isArray()){
+            String type = Str.toString(sv.getType(key));
+            if (val != null) {
+                if (shape == null) {
+                    if (val instanceof String) {
+                        shape = new int[]{((String) val).length()};
+                    } else if (val.getClass().isArray()) {
                         shape = Arr.getShape(val);
-                    }                    
+                    }
                 }
-            }        
-            String size = Convert.arrayToString(shape, " x ");                
-            if (index>=model.getRowCount()){
-                model.addRow(new Object[]{"","","",""});            
+            }
+            String size = Convert.arrayToString(shape, " x ");
+            if (index >= model.getRowCount()) {
+                model.addRow(new Object[]{"", "", "", ""});
             } else {
                 model.setValueAt(key, index, 0);
                 model.setValueAt(type, index, 1);
                 model.setValueAt(size, index, 2);
                 model.setValueAt(Str.toString(val, 10), index, 3);
             }
-            
+
             index++;
-        }  
+        }
     }
-   
+
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -400,13 +406,13 @@ public class StreamPanel extends DevicePanel {
     }// </editor-fold>//GEN-END:initComponents
 
     private void ckMonitoredActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ckMonitoredActionPerformed
-        try{
-            if (!updating){
-                if (monitoredDevice!=null){
+        try {
+            if (!updating) {
+                if (monitoredDevice != null) {
                     monitoredDevice.setMonitored(ckMonitored.isSelected());
                 }
-            }                        
-        } catch (Exception ex){
+            }
+        } catch (Exception ex) {
             SwingUtils.showException(this, ex);
         }
     }//GEN-LAST:event_ckMonitoredActionPerformed
@@ -428,27 +434,28 @@ public class StreamPanel extends DevicePanel {
     private javax.swing.JTextField textType;
     // End of variables declaration//GEN-END:variables
 
-
     @Override
-    protected void onDeviceStateChanged(State state, State former) {        
+    protected void onDeviceStateChanged(State state, State former) {
         updateButtons();
     }
 
     @Override
     protected void onDeviceCacheChanged(Object value, Object former, long timestamp, boolean valueChange) {
-        if (cacheChanged==false){
+        if (cacheChanged == false) {
             cacheChanged = true;
-            if (updateInterval<=0){
-                SwingUtilities.invokeLater(()->{onTimer();});
+            if (updateInterval <= 0) {
+                SwingUtilities.invokeLater(() -> {
+                    onTimer();
+                });
             }
         }
-    }    
-    
+    }
+
     @Override
     protected void onTimer() {
-        try{    
-            if ((getDevice()!=null)){                
-                if (cacheChanged){
+        try {
+            if ((getDevice() != null)) {
+                if (cacheChanged) {
                     updateTable();
                 } else {
                     updateSocket();
@@ -456,32 +463,31 @@ public class StreamPanel extends DevicePanel {
                 updating = true;
                 ckMonitored.setSelected(monitoredDevice.isMonitored());
             }
-        } catch (Exception ex){
+        } catch (Exception ex) {
             getLogger().log(Level.WARNING, null, ex);
-        } finally{
+        } finally {
             cacheChanged = false;
             updating = false;
         }
-    }    
-    
-    public static StreamPanel createFrame(String url, SocketType type, Window parent, String title) throws Exception {
-        Stream stream = new Stream (url, url, (type==null) ? SocketType.SUB : type);
-        return (StreamPanel) createFrame(stream,parent, title);        
     }
-    
-    
+
+    public static StreamPanel createFrame(String url, SocketType type, Window parent, String title) throws Exception {
+        Stream stream = new Stream(url, url, (type == null) ? SocketType.SUB : type);
+        return (StreamPanel) createFrame(stream, parent, title);
+    }
+
     public static void main(String[] args) {
         try {
-            App.init(args);            
+            App.init(args);
             SocketType type = SocketType.SUB;
             //String url = "tcp://localhost:5554";
-            String url=args[0];   
-            if ((args.length>1) && (args[1].toUpperCase().equals(SocketType.PULL.toString()))){
+            String url = args[0];
+            if ((args.length > 1) && (args[1].toUpperCase().equals(SocketType.PULL.toString()))) {
                 type = SocketType.PULL;
             }
-            StreamPanel panel = createFrame (url, type, null, null);
+            StreamPanel panel = createFrame(url, type, null, null);
         } catch (Exception ex) {
             SwingUtils.showException(null, ex);
-        }        
+        }
     }
 }
