@@ -306,7 +306,9 @@ public class Stream extends DeviceBase implements Readable<StreamValue>, Cacheab
     @Override
     protected void doUpdate() throws IOException, InterruptedException {
         if (getState() == State.Busy) {
-            read();
+            if (!isPaused()){
+                read();
+            }
         } else if (getState() == State.Ready) {
             start(false);
             try {
@@ -515,16 +517,18 @@ public class Stream extends DeviceBase implements Readable<StreamValue>, Cacheab
         }
     }
 
-    @Override
-    public void start() {
-        start(null);
-    }
-
     public void start(Boolean async) {
         if (async != null) {
             setMonitored(async);
         }
+        start();
+    }
+
+    volatile boolean async;
+    @Override
+    public void start() {        
         if (started.compareAndSet(false, true)) {
+            async = isMonitored();  
             thread = new Thread(() -> {
                 receiverTask();
             });
@@ -538,9 +542,11 @@ public class Stream extends DeviceBase implements Readable<StreamValue>, Cacheab
 
     @Override
     public void stop() {
+        boolean paused = false;
         if (isStarted()){
-            getLogger().fine("Stopping");
-            started.set(false);
+            paused = isPaused();
+            getLogger().fine("Stopping");            
+            started.set(false);                    
         }
         channelPrefix = null;
         closeReceiver();
@@ -562,11 +568,31 @@ public class Stream extends DeviceBase implements Readable<StreamValue>, Cacheab
             }
             thread = null;
         }
+        if (paused){
+            setMonitored(true); //Restore initial config for async
+        }        
     }
     
     @Override
     public boolean isStarted() {
         return started.get();
+    }
+    
+    //Pause commands only valid for async streams
+    public boolean isPaused(){
+        return isStarted() && async && !isMonitored();
+    }
+
+    public void pause(){
+        if (isStarted() && async){
+            setMonitored(false);
+        }                
+    }
+
+    public void resume(){
+        if (isStarted() && async){
+            setMonitored(true);
+        }                
     }
 
     @Hidden

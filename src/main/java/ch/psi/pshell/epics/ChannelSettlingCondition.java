@@ -23,7 +23,7 @@ public class ChannelSettlingCondition extends SettlingCondition{
         this(channelName, value, timeout, type, null);
     }
 
-    public ChannelSettlingCondition(String channelName, Object value, Integer timeout, String type, Integer size) {
+    public ChannelSettlingCondition(String channelName, Object value, Integer timeout, String  type, Integer size) {
         this(channelName, value, timeout, type, size, null);
     }
 

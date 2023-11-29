@@ -170,6 +170,7 @@ public class StreamPanel extends DevicePanel {
     public void setDevice(Device device) {
         super.setDevice(device);
         monitoredDevice = getDevice();
+        cacheChanged = true;
         if (getDevice() != null) {
             onDeviceStateChanged(getDevice().getState(), null);
             if (updateInterval > 0) {
@@ -457,11 +458,12 @@ public class StreamPanel extends DevicePanel {
             if ((getDevice() != null)) {
                 if (cacheChanged) {
                     updateTable();
-                } else {
-                    updateSocket();
+                } 
+                updateSocket();                
+                if (monitoredDevice.isMonitored()!=ckMonitored.isSelected()){
+                    updating = true;
+                    ckMonitored.setSelected(monitoredDevice.isMonitored());
                 }
-                updating = true;
-                ckMonitored.setSelected(monitoredDevice.isMonitored());
             }
         } catch (Exception ex) {
             getLogger().log(Level.WARNING, null, ex);
@@ -480,8 +482,8 @@ public class StreamPanel extends DevicePanel {
         try {
             App.init(args);
             SocketType type = SocketType.SUB;
-            //String url = "tcp://localhost:5554";
             String url = args[0];
+            //String url = "tcp://localhost:5554";            
             if ((args.length > 1) && (args[1].toUpperCase().equals(SocketType.PULL.toString()))) {
                 type = SocketType.PULL;
             }
