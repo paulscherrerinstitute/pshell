@@ -223,7 +223,7 @@ public class DevicePanelManager {
     
     
     public JDialog getPanelDialog(GenericDevice device) {
-        return getPanelDialog(device);
+        return deviceDialogs.get(device);
     }
     
     public JDialog getPanelDialog(final String name) {
