@@ -5,6 +5,7 @@ import ch.psi.pshell.bs.ProviderConfig.SocketType;
 import ch.psi.pshell.bs.Stream;
 import ch.psi.pshell.bs.StreamChannel;
 import ch.psi.pshell.device.Device;
+import ch.psi.pshell.device.TimestampedValue;
 import ch.psi.pshell.plot.LinePlotSeries;
 import ch.psi.pshell.plot.Plot;
 import ch.psi.pshell.plot.LinePlot;
@@ -57,7 +58,12 @@ public class StreamChannelPanel extends DevicePanel {
             text=null;
             super.setDevice(device);
             if (device!=null){
-                createPlot(device.take());
+                TimestampedValue timestampedValue = device.takeTimestamped();
+                Object value = timestampedValue.getValue();
+                createPlot(value);
+                if (value!=null){
+                     onDeviceCacheChanged(value, value, timestampedValue.getTimestamp(), false);
+                }
             }
         }
                   
