@@ -492,8 +492,13 @@ from ch.psi.pshell.device import Record
 from javax.swing import SwingUtilities 
 
 
-from org.jfree.ui import RectangleAnchor as RectangleAnchor
-from org.jfree.ui import TextAnchor as TextAnchor
+try:    
+    from org.jfree.chart.ui import RectangleAnchor as RectangleAnchor
+    from org.jfree.chart.ui import RectangleAnchor as TextAnchor
+except: #Compatibility version 1.19.3
+    #JFreechart 1.0.19
+    from org.jfree.ui import RectangleAnchor as RectangleAnchor
+    from org.jfree.ui import TextAnchor as TextAnchor
 
 from ch.psi.pshell.xscan import ProcessorXScan as ProcessorXScan
 
