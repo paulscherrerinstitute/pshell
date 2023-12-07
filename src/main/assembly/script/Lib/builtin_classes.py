@@ -114,6 +114,7 @@ import ch.psi.pshell.device.MoveMode as MoveMode
 import ch.psi.pshell.device.SettlingCondition as SettlingCondition
 import ch.psi.pshell.device.HistogramGenerator as HistogramGenerator
 import ch.psi.pshell.device.Startable as Startable
+import ch.psi.pshell.device.TimestampedValue as TimestampedValue
 
 import ch.psi.pshell.epics.Epics as Epics
 import ch.psi.pshell.epics.EpicsScan as EpicsScan

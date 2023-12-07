@@ -302,6 +302,7 @@ from ch.psi.pshell.device import ReadonlyRegisterBase as ReadonlyRegisterBase
 from ch.psi.pshell.device import ReadonlyAsyncRegisterBase as ReadonlyAsyncRegisterBase
 from ch.psi.pshell.device import Register as Register
 from ch.psi.pshell.device import Record as Record
+from ch.psi.pshell.device import TimestampedValue as TimestampedValue
 
 RegisterArray = Register.RegisterArray
 RegisterNumber = Register.RegisterNumber
