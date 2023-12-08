@@ -238,4 +238,4 @@ def import_py(module, function):
         return call_py(module, function, reload_function, *args, **kwargs)
     jep_wrapper.reload=True
     _get_caller().f_globals[function] = jep_wrapper   
-    
+    return jep_wrapper   
