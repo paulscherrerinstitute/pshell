@@ -539,7 +539,7 @@ public class PlotPanel extends MonitoredPanel {
                             val = Convert.toUnsigned(val);
                         }
                     } catch (Exception ex) {
-                        Logger.getLogger(PlotPanel.class.getName()).log(Level.WARNING, null, ex);
+                        Logger.getLogger(PlotPanel.class.getName()).log(Level.FINE, null, ex);
                     }
                         
                     if (scan.getDimensions() == 3) {

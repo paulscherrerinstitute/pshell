@@ -3,14 +3,16 @@
 ################################################################################################### 
 
 #Creating a stream, assuming a provided  named "dispatcher".
-st1 = Stream("st1", dispatcher)
+st1=Stream("st1", dispatcher)
 
 #Adding channels to that stream
 s1=st1.addScalar("Int8Scalar", "Int8Scalar", 10, 0)
 s2=st1.addScalar("Float64Scalar", "Float64Scalar", 10, 0)
 w1=st1.addWaveform("Int32Waveform", "Int32Waveform", 10, 0)
 mt1=st1.addMatrix("Int16Waveform", "Int16Waveform", 10, 0, 64, 32)
-st1.initialize()
+
+add_device(st1, True)
+st1.start()
 
 try:
     #The stream can be used on any conventional scan. The next stream value is sampled.

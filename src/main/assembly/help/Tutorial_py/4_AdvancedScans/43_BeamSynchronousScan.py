@@ -11,6 +11,7 @@ s2=st1.addScalar("Float64Scalar", "Float64Scalar", 10, 0)
 w1=st1.addWaveform("Int32Waveform", "Int32Waveform", 10, 0)
 mt1=st1.addMatrix("Int16Waveform", "Int16Waveform", 10, 0, 64, 32)
 st1.initialize()
+st1.start()
 
 try:
     #The stream can be used on any conventional scan. The next stream value is sampled.
