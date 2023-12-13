@@ -14,7 +14,6 @@ import ch.psi.pshell.device.ArrayRegisterStats;
 import ch.psi.pshell.device.Averager.RegisterStats;
 import ch.psi.pshell.device.Cacheable;
 import ch.psi.pshell.device.DeviceAdapter;
-import ch.psi.pshell.device.DeviceListener;
 import ch.psi.pshell.device.Writable;
 import ch.psi.pshell.epics.Epics;
 import ch.psi.pshell.epics.EpicsRegister;
@@ -344,8 +343,14 @@ public class InlineDevice extends DeviceBase implements Readable, Writable {
                     url = Str.replaceLast(url, " ", "?channel=");
                 }               
                 if (!url.startsWith("tcp://")) {
-                    String instanceName = url.substring(url.lastIndexOf("/") + 1);
-                    url = url.substring(0, url.lastIndexOf("/"));
+                    String instanceName = null; 
+                    if (url.lastIndexOf("/") >= 0 ){
+                        instanceName = url.substring(url.lastIndexOf("/") + 1);
+                        url = url.substring(0, url.lastIndexOf("/"));
+                    } else {
+                        instanceName= url;
+                        url = Setup.getPipelineServer();                        
+                    }
                     PipelineSource server = new PipelineSource(null, url);
                     try {
                         server.initialize();
@@ -564,7 +569,7 @@ public class InlineDevice extends DeviceBase implements Readable, Writable {
         Stream innerStream = null;
         if (parent == null) {
             if (getUrlProtocol(url).equals("bs")) {
-                innerStream = new Stream("Url device stream");                
+                innerStream = new Stream("Inline device stream");                
                 parent = innerStream;
             }
         }

@@ -51,6 +51,8 @@ public class Setup extends Config {
     public static transient final String PROPERTY_SCRIPT_TYPE = "ch.psi.pshell.type";
     public static transient final String PROPERTY_LOCAL_STARTUP_SCRIPT = "ch.psi.pshell.local.startup";
     public static transient final String PROPERTY_PARALLEL_INIT = "ch.psi.pshell.parallel.init";
+    public static transient final String PROPERTY_PIPELINE_SERVER = "ch.psi.pshell.pipeline.server";
+    public static transient final String PROPERTY_CAMERA_SERVER = "ch.psi.pshell.camera.server";
 
     //Fixed tokens
     public static transient final String TOKEN_HOME = "{home}";
@@ -819,6 +821,15 @@ public class Setup extends Config {
     public String getQueuePath() {
         return expandPath(queuePath);
     }    
+        
+    public static String getPipelineServer() {
+        return System.getProperty(PROPERTY_PIPELINE_SERVER);
+    }    
+    
+    public static String getCameraServer() {
+        return System.getProperty(PROPERTY_CAMERA_SERVER);
+    }    
+    
     
     public static String getSourceAssemblyFolder() {
         return Paths.get("src", "main", "assembly").toString();

@@ -299,7 +299,16 @@ public class App extends ObservableBase<AppListener> {
         if (isArgumentDefined("scrp")) {
             System.setProperty(Setup.PROPERTY_EXT_SCRIPT_PATH, String.join(";", getArgumentValues("scrp")));
         }
+        
+        if (isArgumentDefined("camera_server")) {
+            System.setProperty(Setup.PROPERTY_CAMERA_SERVER,  getArgumentValue("camera_server"));
+        }
+        
+        if (isArgumentDefined("pipeline_server")) {
+            System.setProperty(Setup.PROPERTY_PIPELINE_SERVER,  getArgumentValue("pipeline_server"));
+        }
 
+        
         if (isLocalMode()) {
             System.setProperty(Context.PROPERTY_LOCAL_MODE, "true");
         }

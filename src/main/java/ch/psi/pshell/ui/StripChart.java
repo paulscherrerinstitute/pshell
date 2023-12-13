@@ -1530,7 +1530,7 @@ public class StripChart extends StandardDialog {
                                 Context.getInstance().waitStateNot(State.Initializing, -1);
                                 Logger.getLogger(StripChart.class.getName()).fine("Waiting done");
                             }
-                                try {
+                            try {
                                 dev = Context.getInstance().getDevicePool().getByName(name, Device.class);
                                 if (dev == null) {
                                     dev = (Device) Context.getInstance().tryEvalLineBackground(name);
