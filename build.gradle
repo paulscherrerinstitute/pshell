@@ -1,10 +1,9 @@
 plugins {
-    //id 'application'
     id 'java-library'
-    id "eclipse"
-    id "maven-publish"
-    id "nebula.ospackage" version "9.1.1"
-    id 'org.openjfx.javafxplugin' version '0.0.10'
+    id 'eclipse'
+    id 'maven-publish'
+    id 'com.netflix.nebula.rpm' version '11.6.0'
+    //id 'org.openjfx.javafxplugin' version '0.0.10'
 }
 
 version = '1.20.2'
@@ -18,7 +17,11 @@ ext.manif_addopens = 'java.base/sun.nio.ch java.base/java.io java.desktop/sun.aw
 ext.run_addopens = 'java.base/jdk.internal.loader=ALL-UNNAMED'
 ext.run_addexports = "java.desktop/sun.awt=ALL-UNNAMED"
 
-sourceCompatibility = JavaVersion.VERSION_11
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_11
+}
+
 ext.hdf5 = '1.10' // '1.10' or '1.8
 
 [compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
@@ -211,17 +214,17 @@ if (ext.javafx==true){
 }
 
 task sourcesJar(type: Jar, dependsOn: classes) {
-classifier = 'sources'
-from sourceSets.main.allSource
+    archiveClassifier = 'sources'
+    from sourceSets.main.allSource
 }
 
 task javadocJar(type: Jar, dependsOn: javadoc) {
-classifier = 'javadoc'
-from javadoc.destinationDir
+    archiveClassifier = 'javadoc'
+    from javadoc.destinationDir
 }
 
 task fatJar(type: Jar, dependsOn: jar) {
-    classifier 'fat'
+    archiveClassifier = 'fat'
     duplicatesStrategy = 'exclude'  
     manifest {
         attributes (
@@ -243,7 +246,7 @@ task fatJar(type: Jar, dependsOn: jar) {
 
 def app_name = project.name
 def app_path = '/opt/' + project.name + "/" + version
-def jar_file = app_path + '/lib/' + fatJar.archiveName
+def jar_file = app_path + '/lib/' + fatJar.archiveFileName
 def sys_bin ='/usr/local/bin/'
 def sys_lib ='/usr/local/lib/'
 
@@ -294,8 +297,8 @@ task generateRpm(type: Rpm) {
     link(sys_bin + app_name +   "_" + version, app_path + '/bin/' + app_name + "_" + version)   
     link(sys_bin + app_name, sys_bin + app_name + "_" + version) 
 
-    link(sys_lib + fatJar.archiveName, app_path + '/lib/' + fatJar.archiveName)   
-    link(sys_lib + "pshell.jar", sys_lib + fatJar.archiveName) 
+    link(sys_lib + fatJar.archiveFileName, app_path + '/lib/' + fatJar.archiveFileName)   
+    link(sys_lib + "pshell.jar", sys_lib + fatJar.archiveFileName) 
 }
 
 compileJava {
@@ -331,7 +334,7 @@ task(debug, dependsOn: 'classes', type: JavaExec) {
     //systemProperty 'java.awt.headless' ,true        
     systemProperty 'pshell.build.time', timestamp
     systemProperty 'pshell.build.type', type    
-    main = main_class
+    mainClass = main_class
     classpath = sourceSets.main.runtimeClasspath
     args arguments
     ignoreExitValue = true
@@ -346,7 +349,7 @@ task(debug, dependsOn: 'classes', type: JavaExec) {
 task(run, dependsOn: 'classes', type: JavaExec) {      
     systemProperty 'pshell.build.time', timestamp
     systemProperty 'pshell.build.type', type
-    main = main_class
+    mainClass = main_class
     classpath = sourceSets.main.runtimeClasspath
     args arguments 
     ignoreExitValue = true
