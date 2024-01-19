@@ -165,7 +165,7 @@ public final class QueueProcessor extends PanelProcessor {
     }
     
     public void addNewFile(String filename, Map<String, Object> args) throws IOException {
-        addNewFile(filename, (args==null) ? "" : EncoderJson.encode(args, false));
+        addNewFile(filename, (args==null) ? "" : encodeArgs(args));
     }
 
     public void addNewFile(String filename, String args, int index) {
@@ -173,7 +173,7 @@ public final class QueueProcessor extends PanelProcessor {
     }
 
     public void addNewFile(String filename, Map<String, Object> args, int index) throws IOException {
-        addNewFile(filename, (args==null) ? "" : EncoderJson.encode(args, false), index);
+        addNewFile(filename, (args==null) ? "" : encodeArgs(args), index);
     }
     
     public void addNewFile(String filename, String args, String info) {
@@ -181,7 +181,7 @@ public final class QueueProcessor extends PanelProcessor {
     }
 
     public void addNewFile(String filename, Map<String, Object> args, String info) throws IOException {
-        addNewFile(filename, (args==null) ? "" : EncoderJson.encode(args, false), info);
+        addNewFile(filename, (args==null) ? "" : encodeArgs(args), info);
     }
 
     public void addNewFile(String filename, String args, int index, String info) {
@@ -208,7 +208,7 @@ public final class QueueProcessor extends PanelProcessor {
     }
     
     public void addNewFile(String filename, Map<String, Object> args, int index,String info) throws IOException {
-        addNewFile(filename, (args==null) ? "" : EncoderJson.encode(args, false), index, info);
+        addNewFile(filename, (args==null) ? "" : encodeArgs(args), index, info);
     }    
 
     public JTable getTable() {
@@ -635,6 +635,20 @@ public final class QueueProcessor extends PanelProcessor {
 
     }
 
+    public String encodeArgs(Map<String, Object> args) throws IOException {
+        //Non-encodable fields such as plots are set to null
+        Map<String, Object> ret = new HashMap<>();
+        ret.putAll(args);
+        for (Object s: ret.keySet().toArray()){
+            try{                
+                EncoderJson.encode(ret.get(s), false);
+            } catch (Exception ex) {
+                ret.put(s.toString(), null);
+            }
+        }
+        return EncoderJson.encode(ret, false);
+    }
+    
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
