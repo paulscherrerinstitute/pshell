@@ -205,7 +205,8 @@ public class PluginsEditor extends Editor {
     enum Type{
         Standard,
         Panel,
-        Processor
+        Processor,
+        ScriptPanel
     }
     
     void create(Type type) {
@@ -269,6 +270,20 @@ public class PluginsEditor extends Editor {
                     }
                     IO.replace(path, "ProcessorPlugin", name);
                     break;
+                case ScriptPanel:
+                    if (jarFile != null) {
+                        IO.extractZipFileContent(jarFile, "templates/plugin/ScriptPanel.java", path);
+                    } else {
+                        IO.copy(Paths.get(templatesFolder.getPath(), "ScriptPanel.java").toString(), path);
+                    }
+                    String scriptFormPath = path.substring(0, path.length() - 4) + "form";
+                    if (jarFile != null) {
+                        IO.extractZipFileContent(jarFile, "templates/plugin/ScriptPanel.form", scriptFormPath);
+                    } else {
+                        IO.copy(Paths.get(templatesFolder.getPath(), "ScriptPanel.form").toString(), scriptFormPath);
+                    }
+                    IO.replace(path, "ScriptPanel", name);
+                    break;                                        
             }
             
 
@@ -343,6 +358,7 @@ public class PluginsEditor extends Editor {
         buttonCreateStandard = new javax.swing.JButton();
         buttonCreatePanel = new javax.swing.JButton();
         buttonCreatePanel1 = new javax.swing.JButton();
+        buttonCreateScript = new javax.swing.JButton();
 
         jPanel3.setPreferredSize(new java.awt.Dimension(452, 300));
 
@@ -560,17 +576,24 @@ public class PluginsEditor extends Editor {
             }
         });
 
-        buttonCreatePanel.setText("Create Panel");
+        buttonCreatePanel.setText("Create Panel Plugin");
         buttonCreatePanel.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 buttonCreatePanelActionPerformed(evt);
             }
         });
 
-        buttonCreatePanel1.setText("Create Processor");
+        buttonCreatePanel1.setText("Create Processor Panel");
         buttonCreatePanel1.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 buttonCreatePanel1ActionPerformed(evt);
+            }
+        });
+
+        buttonCreateScript.setText("Create Script Panel");
+        buttonCreateScript.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                buttonCreateScriptActionPerformed(evt);
             }
         });
 
@@ -579,12 +602,13 @@ public class PluginsEditor extends Editor {
         jPanel2Layout.setHorizontalGroup(
             jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel2Layout.createSequentialGroup()
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(buttonCreateStandard)
-                    .addComponent(buttonCreatePanel)
-                    .addComponent(buttonCreatePanel1))
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addContainerGap(144, Short.MAX_VALUE)
+                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                    .addComponent(buttonCreateStandard, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(buttonCreatePanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(buttonCreatePanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(buttonCreateScript, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addContainerGap(145, Short.MAX_VALUE))
         );
 
         jPanel2Layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {buttonCreatePanel, buttonCreatePanel1, buttonCreateStandard});
@@ -598,6 +622,8 @@ public class PluginsEditor extends Editor {
                 .addComponent(buttonCreatePanel)
                 .addGap(18, 18, 18)
                 .addComponent(buttonCreatePanel1)
+                .addGap(18, 18, 18)
+                .addComponent(buttonCreateScript)
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
@@ -785,9 +811,14 @@ public class PluginsEditor extends Editor {
         create(Type.Processor);
     }//GEN-LAST:event_buttonCreatePanel1ActionPerformed
 
+    private void buttonCreateScriptActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonCreateScriptActionPerformed
+        create(Type.ScriptPanel);
+    }//GEN-LAST:event_buttonCreateScriptActionPerformed
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton buttonCreatePanel;
     private javax.swing.JButton buttonCreatePanel1;
+    private javax.swing.JButton buttonCreateScript;
     private javax.swing.JButton buttonCreateStandard;
     private javax.swing.JButton buttonDown;
     private javax.swing.JButton buttonEdit;

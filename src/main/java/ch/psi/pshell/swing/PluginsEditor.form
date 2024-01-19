@@ -354,13 +354,14 @@
                 <DimensionLayout dim="0">
                   <Group type="103" groupAlignment="0" attributes="0">
                       <Group type="102" alignment="0" attributes="0">
-                          <EmptySpace max="32767" attributes="0"/>
-                          <Group type="103" groupAlignment="0" attributes="0">
-                              <Component id="buttonCreateStandard" linkSize="1" alignment="0" min="-2" max="-2" attributes="0"/>
-                              <Component id="buttonCreatePanel" linkSize="1" alignment="0" min="-2" max="-2" attributes="0"/>
-                              <Component id="buttonCreatePanel1" linkSize="1" alignment="0" min="-2" max="-2" attributes="0"/>
+                          <EmptySpace pref="144" max="32767" attributes="0"/>
+                          <Group type="103" groupAlignment="0" max="-2" attributes="0">
+                              <Component id="buttonCreateStandard" linkSize="1" alignment="0" max="32767" attributes="0"/>
+                              <Component id="buttonCreatePanel" linkSize="1" alignment="0" max="32767" attributes="0"/>
+                              <Component id="buttonCreatePanel1" linkSize="1" alignment="0" max="32767" attributes="0"/>
+                              <Component id="buttonCreateScript" alignment="0" max="32767" attributes="0"/>
                           </Group>
-                          <EmptySpace max="32767" attributes="0"/>
+                          <EmptySpace pref="145" max="32767" attributes="0"/>
                       </Group>
                   </Group>
                 </DimensionLayout>
@@ -373,6 +374,8 @@
                           <Component id="buttonCreatePanel" min="-2" max="-2" attributes="0"/>
                           <EmptySpace type="separate" max="-2" attributes="0"/>
                           <Component id="buttonCreatePanel1" min="-2" max="-2" attributes="0"/>
+                          <EmptySpace type="separate" max="-2" attributes="0"/>
+                          <Component id="buttonCreateScript" min="-2" max="-2" attributes="0"/>
                           <EmptySpace max="32767" attributes="0"/>
                       </Group>
                   </Group>
@@ -389,7 +392,7 @@
                 </Component>
                 <Component class="javax.swing.JButton" name="buttonCreatePanel">
                   <Properties>
-                    <Property name="text" type="java.lang.String" value="Create Panel"/>
+                    <Property name="text" type="java.lang.String" value="Create Panel Plugin"/>
                   </Properties>
                   <Events>
                     <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="buttonCreatePanelActionPerformed"/>
@@ -397,10 +400,18 @@
                 </Component>
                 <Component class="javax.swing.JButton" name="buttonCreatePanel1">
                   <Properties>
-                    <Property name="text" type="java.lang.String" value="Create Processor"/>
+                    <Property name="text" type="java.lang.String" value="Create Processor Panel"/>
                   </Properties>
                   <Events>
                     <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="buttonCreatePanel1ActionPerformed"/>
+                  </Events>
+                </Component>
+                <Component class="javax.swing.JButton" name="buttonCreateScript">
+                  <Properties>
+                    <Property name="text" type="java.lang.String" value="Create Script Panel"/>
+                  </Properties>
+                  <Events>
+                    <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="buttonCreateScriptActionPerformed"/>
                   </Events>
                 </Component>
               </SubComponents>
