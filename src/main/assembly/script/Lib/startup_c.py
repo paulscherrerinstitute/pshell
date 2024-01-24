@@ -2894,6 +2894,6 @@ if __name__ == "__main__":
         finally:
             print("Quitting control command task")
 
-    ctrl_cmd_task_thread = threading.Thread(target=functools.partial(ctlm_cmd_task, CTRL_CMD_PORT, threading.currentThread(), run_count))
-    ctrl_cmd_task_thread.setDaemon(True)
+    ctrl_cmd_task_thread = threading.Thread(target=functools.partial(ctlm_cmd_task, CTRL_CMD_PORT, threading.current_thread(), run_count))
+    ctrl_cmd_task_thread.daemon = True
     ctrl_cmd_task_thread.start()   

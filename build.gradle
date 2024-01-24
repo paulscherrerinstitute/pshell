@@ -165,7 +165,7 @@ dependencies {
     implementation 'com.github.sarxos:webcam-capture:0.3.12'
     implementation 'org.clojars.nakkaya:darcula:1.0.0'  
     implementation 'com.formdev:flatlaf:3.2.5'
-    implementation 'black.ninia:jep:3.9.1'  //TODO: Update
+    implementation 'black.ninia:jep:4.2.0' 
     
     implementation 'ch.psi:bsread:4.4.5'
     implementation 'ch.psi:bitshuffle-lz4:1.1.2'

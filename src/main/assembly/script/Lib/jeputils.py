@@ -34,6 +34,8 @@ import java.lang.String as String
 import java.util.List
 import java.util.Map 
 import java.util.HashMap 
+import java.util.ArrayList 
+import java.util.Collections
 import ch.psi.pshell.scripting.ScriptUtils as ScriptUtils
 
 
@@ -56,8 +58,11 @@ def init_jep():
     #TODO: Should do it but generates errors
     #__close_jep()
     j = jep.SharedInterpreter()
-    #Faster, but statements must be complete
-    j.setInteractive(False) 
+    try:
+        #Faster, but statements must be complete
+        j.setInteractive(False) 
+    except:
+        pass    # Removed in 4.2
     __jep[java.lang.Thread.currentThread()] = j
     j.eval("import sys")
     #sys.argv is not present in JEP and may be needed for certain modules (as Tkinter)
@@ -134,6 +139,9 @@ def get_jep(var):
 
 def call_jep(module, function, args = [], kwargs = {}, reload=False):
     j=__get_jep()
+    if isinstance(args, java.util.List):
+        args=list(args)
+        
     if "/" in module: 
         script = get_context().scriptManager.library.resolveFile(module)       
         if "\\" in script: 
@@ -156,7 +164,6 @@ def call_jep(module, function, args = [], kwargs = {}, reload=False):
             eval_jep("_=reload(" + module+")")
         eval_jep("from " + module + " import " + function + " as " + f)    
         if (kwargs is not None) and (len(kwargs)>0):
-            #invoke with kwargs only available in JEP>3.8
             hm=java.util.HashMap()
             hm.update(kwargs)            
             #The only way to get the overloaded method...
@@ -178,49 +185,46 @@ def to_npa(data, dimensions = None, type = None):
 
 #recursivelly converts all NumPy arrays to Java arrys
 def rec_from_npa(obj):
+    ret = obj
     if isinstance(obj, jep.NDArray):
         ret = obj.data
         if len(obj.dimensions)>1:
             ret=Convert.reshape(ret, obj.dimensions)
-        return ret
-    if isinstance(obj, java.util.List) or isinstance(obj,tuple) or isinstance(obj,list):
+    elif isinstance(obj, java.util.List) or isinstance(obj,tuple) or isinstance(obj,list):
         ret=[]
         for i in range(len(obj)):            
             ret.append(rec_from_npa(obj[i]))
-        if isinstance(obj,tuple):
-            return type(ret)
-        return ret
-    if isinstance(obj, java.util.Map) or isinstance(obj,dict):
-        ret = {} if isinstance(obj,dict) else java.util.HashMap()
+        #if isinstance(obj,tuple) or obj.getClass().getSimpleName().startswith("Unmodifiable"): #TODO: Is it a good check for immutability?    
+        #    ret=tuple(ret)
+    elif isinstance(obj, java.util.Map) or isinstance(obj,dict):
+        ret = {} 
         for k in obj.keys():            
-            ret[k] = rec_from_npa(obj[k])    
-        return ret    
-    return obj
+            ret[k] = rec_from_npa(obj[k])     
+    return ret
 
-#recursivelly converts all Java arrays to NumPy arrys
+#recursivelly converts all Java arrays to NumPy arrays
 def rec_to_npa(obj):
+    ret = obj
     if isinstance(obj, PyArray):
         dimensions = Arr.getShape(obj)
         if len(dimensions)>1:
             obj = Convert.flatten(obj)
-        return to_npa(obj, dimensions = dimensions)
-    if isinstance(obj, java.util.List) or isinstance(obj,tuple) or isinstance(obj,list):
-        ret=[]
+        ret = to_npa(obj, dimensions = dimensions)
+    elif isinstance(obj, java.util.List) or isinstance(obj,tuple) or isinstance(obj,list):
+        ret = java.util.ArrayList()
         for i in range(len(obj)):            
-            ret.append(rec_to_npa(obj[i]))
-        if isinstance(obj,tuple):
-            return tuple(ret)
-        return ret
-    if isinstance(obj, java.util.Map) or isinstance(obj,dict):        
-        ret = {} if isinstance(obj,dict) else java.util.HashMap()
+            ret.add(rec_to_npa(obj[i]))              
+        #if isinstance(obj,tuple):
+        #    ret = java.util.Collections.unmodifiableList(ret);
+    elif isinstance(obj, java.util.Map) or isinstance(obj,dict):        
+        ret = java.util.HashMap()
         for k in obj.keys():            
-            ret[k] = rec_to_npa(obj[k])    
-        return ret    
-    return obj  
+            ret[k] = rec_to_npa(obj[k])  
+    return ret
 
 def call_py(module, function, reload_function, *args, **kwargs):      
     """
-    Calls a CPython function recursively crecursively converting Java arrays in arguments to NumPy,
+    Calls a CPython function recursively converting Java arrays in arguments to NumPy,
     and  NumPy arrays in return values to Java arrays.
     """
     ret =  call_jep(module, function, rec_to_npa(args), rec_to_npa(kwargs), reload=reload_function)
