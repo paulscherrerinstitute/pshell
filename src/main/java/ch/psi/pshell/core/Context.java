@@ -244,7 +244,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
         } catch (IOException ex) {
             throw new RuntimeException("Cannot generate configuration file");
         }
-
+                
         Config.setDefaultPermissions(config.filePermissionsConfig);
         History.setDefaultPermissions(config.filePermissionsConfig);
 
@@ -1106,6 +1106,16 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
         boolean firstRun = (getState() == State.Invalid);
         filePermissionsConfig = config.filePermissionsConfig;
         Config.setDefaultPermissions(filePermissionsConfig);
+        
+        String configuredPythonHome = config.getPythonHome();
+        if (configuredPythonHome != null) {           
+            try { 
+                logger.warning("Attempt to override variable PYTHONHOME: " + configuredPythonHome);
+                Sys.setEnvironmentVariable("PYTHONHOME",configuredPythonHome);
+            } catch (Exception ex) { 
+                logger.severe("Cannot set PYTHONHOME: " + ex.getMessage());
+            }             
+        }         
 
         if (scriptManager!=null){
             try {

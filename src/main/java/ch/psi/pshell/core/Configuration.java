@@ -25,6 +25,7 @@ public class Configuration extends Config {
     public static transient final String PROPERTY_DATA_PROVIDER = "ch.psi.pshell.data.provider";
     public static transient final String PROPERTY_DATA_LAYOUT = "ch.psi.pshell.data.layout";
     public static transient final String PROPERTY_NO_BYTECODE_FILES = "ch.psi.pshell.data.nbcf";
+    public static transient final String PROPERTY_PYTHON_HOME  = "ch.psi.pshell.python.home";
 
     public boolean autoSaveScanData = true;
     public boolean saveConsoleSessionFiles;
@@ -34,7 +35,7 @@ public class Configuration extends Config {
     public String dataProvider = "h5";
     @Defaults(values = {"default", "table", "sf", "fda", "nx"})
     public String dataLayout = "default";
-    public int depthDimension = 0;
+    public int depthDimension = 0;    
     public boolean dataScanFlushRecords = false;
     public boolean dataScanReleaseRecords = false;
     public boolean dataScanPreserveTypes = false;
@@ -61,6 +62,7 @@ public class Configuration extends Config {
     public NotificationLevel notificationLevel = NotificationLevel.Off;
     public String notifiedTasks = "";
     public boolean noBytecodeFiles = false;
+    public String pythonHome= "";
     public boolean simulation;
     public boolean versionTrackingEnabled;
     public boolean versionTrackingManual;
@@ -156,7 +158,10 @@ public class Configuration extends Config {
         }         
         if (notifiedTasks==null){
             notifiedTasks = "";
-        }                         
+        }             
+        if (pythonHome==null){
+            pythonHome= "";
+        }
     }
 
     public Level getLogLevel() {
@@ -213,6 +218,18 @@ public class Configuration extends Config {
         return parallelInitialization;
     }
     
+    
+    public String getPythonHome(){
+        String prop = System.getProperty(PROPERTY_PYTHON_HOME);
+        if ((prop != null) && !prop.isBlank()) {
+            return Context.getInstance().getSetup().expandPath(prop.trim());
+        } 
+        if ((pythonHome==null) || (pythonHome.isBlank())){
+            return null;
+        }
+        return Context.getInstance().getSetup().expandPath(pythonHome.trim());        
+    }
+    
     public static String getXScanDataFileName() {
         String ret = Context.getInstance().getConfig().dataPath;
         if (Context.getInstance().getConfig().fdaSerialization) {
@@ -220,6 +237,5 @@ public class Configuration extends Config {
             return ret + "/" + LayoutFDA.getFilePrefix();
         }
         return ret;
-    }        
-    
+    }                    
 }

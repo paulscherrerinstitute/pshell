@@ -44,6 +44,7 @@
 | -plug=[path]             | Override the plugin definition file, which lists plugins loaded at startup (default is {config}/plugins.properties).|
 | -task=[path]             | Override the task definition file,  which lists tasks loaded at startup (default is {config}/tasks.properties).|
 | -sets=[path]             | Override the settings file - persisted script properties (default is {config}/settings.properties).|
+| -pyhm=[path]             | Set the CPython home, overriding the configuration (default is PYTHONHOME variable).|
 | -pini=[value]            | Override config flag (true or false)for parallel initialization.|
 | -user=[name]             | Set the startup user.|
 | -clog=[level]            | Set the console logging level: OFF, FINEST, FINER, FINE, INFO, WARNING or SEVERE.|

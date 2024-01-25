@@ -79,6 +79,7 @@ import javax.swing.event.SwingPropertyChangeSupport;
 import java.util.List;
 import java.util.Map;
 import javax.swing.ImageIcon;
+import java.lang.reflect.Field;
 
 /**
  * The application singleton object.
@@ -90,7 +91,7 @@ public class App extends ObservableBase<AppListener> {
     private static String[] arguments;
     private SwingPropertyChangeSupport pcs;
     static UserOptions userOptions;
-
+     
     static public void main(String[] args) {
         try {
             System.out.println(getHeaderMessage());
@@ -260,6 +261,13 @@ public class App extends ObservableBase<AppListener> {
             System.setProperty(Setup.PROPERTY_IMAGE_PATH, userOptions.imgp.toString());
         }             
         
+        
+        if (isArgumentDefined("pyhm")) {
+            System.setProperty(Configuration.PROPERTY_PYTHON_HOME, getArgumentValue("pyhm"));
+        } else if (userOptions.pyhm != null) {
+            System.setProperty(Configuration.PROPERTY_PYTHON_HOME, userOptions.pyhm.toString());
+        }
+        
         if (isArgumentDefined("type")) {
             System.setProperty(Setup.PROPERTY_SCRIPT_TYPE, getArgumentValue("type"));
         }
@@ -388,7 +396,7 @@ public class App extends ObservableBase<AppListener> {
                 ex.printStackTrace();
                 System.exit(0);
             }
-        }
+        }               
     }
 
     final static String defaultJcaeProperties = "ch.psi.jcae.ContextFactory.autoAddressList=true\n"
@@ -462,6 +470,7 @@ public class App extends ObservableBase<AppListener> {
         sb.append("\n\t-plug=<path>\tOverride the plugin definition file (default is {config}/plugins.properties)");
         sb.append("\n\t-task=<path>\tOverride the task definition file (default is {config}/tasks.properties)");
         sb.append("\n\t-sets=<path>\tOverride the settings file (default is {config}/settings.properties)");
+        sb.append("\n\t-pyhm=<path>\tSet the Cpython home, overriding the configuration (default is PYTHONHOME var");   
         sb.append("\n\t-pini=<value>\tOverride config flag for parallel initialization (values: true or false)");
         sb.append("\n\t-clog=<level>\tSet the console logging level");
         sb.append("\n\t-user=<name>\tSet the startup user");

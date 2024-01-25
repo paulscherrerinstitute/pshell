@@ -112,7 +112,7 @@ def to_array(obj, type = None, primitive = True):
         if type == "s":
             return Convert.toStringArray(obj)   
         if primitive:   
-            ret = Convert.toPrimitiveArray(obj, element_type)  
+            ret = Convert.wrapperArrayToPrimitiveArray(obj, element_type)  
         else:
             ret = reflect.Array.newInstance(element_type,len(obj))
             for i in range(len(obj)): ret[i] = Convert.toType(obj[i],element_type)
@@ -185,7 +185,7 @@ def to_list(obj):
     """
     if obj is None:
         return None
-    if isinstance(obj,tuple) or is_java_instance(obj,List) :
+    if isinstance(obj,tuple) or isinstance(obj,List) :
         return list(obj)
     #if is_array(obj):
     #    return obj.tolist()
@@ -199,7 +199,7 @@ def is_list(obj):
             return True
     except:
         pass
-    return isinstance(obj,tuple) or isinstance(obj,list) or is_java_instance (obj, List)
+    return isinstance(obj,tuple) or isinstance(obj,list) or isinstance (obj, List)
 
 def is_string(obj):
     return (type(obj) is str)
@@ -209,17 +209,10 @@ def is_main_thread():
     return threading.current_thread() == threading.main_thread()
 
 
-def is_java_instance(obj, cls):
-    try:
-        return obj.getClass() == Class.forName(cls.java_name)
-    except:
-        return False
 ###################################################################################################
 #Access to context singleton
 ###################################################################################################
 def get_context():
-    if not is_main_thread():
-        raise Exception("Application context can only be accessed by the scripting main thread")
     return _core.Context.getInstance()
 
 ###################################################################################################
@@ -1541,12 +1534,12 @@ def plot(data, name = None, xdata = None, ydata=None, title=None):
     data = json_to_obj(data)
     xdata = json_to_obj(xdata)
     ydata = json_to_obj(ydata)
-    if is_java_instance(data, Table):
+    if isinstance(data, Table):
         if is_list(xdata):
             xdata = np_to_java(to_array(xdata, 'd'), 'd')
         return get_context().plot(data,xdata,name,title)
 
-    if is_java_instance(data, ScanResult):
+    if isinstance(data, ScanResult):
         return get_context().plot(data,title)
 
     if (name is not None) and is_list(name):
@@ -1561,10 +1554,10 @@ def plot(data, name = None, xdata = None, ydata=None, title=None):
         for i in range (len(data)):
             plotName = None if (name is None) else name[i]
             x = xdata
-            if is_list(x) and len(x)>0 and (is_list(x[i]) or is_java_instance(x[i] , List) or is_array(x[i])):
+            if is_list(x) and len(x)>0 and (is_list(x[i]) or isinstance(x[i] , List) or is_array(x[i])):
                 x = x[i]
             y = ydata
-            if is_list(y) and len(y)>0 and (is_list(y[i]) or is_java_instance(y[i] , List) or is_array(y[i])):
+            if is_list(y) and len(y)>0 and (is_list(y[i]) or isinstance(y[i] , List) or is_array(y[i])):
                 y = y[i]
             plots[i] =  PlotDescriptor(plotName , np_to_java(to_array(data[i], 'd'), 'd'), np_to_java(to_array(x, 'd'), 'd'), np_to_java(to_array(y, 'd'), 'd'))
         return get_context().plot(plots,title)
@@ -2345,7 +2338,7 @@ def create_averager(dev, count, interval=0.0, name = None,  monitored = False):
         Averager device
     """
     dev = string_to_obj(dev)
-    if is_java_instance(dev, ReadableArray):
+    if isinstance(dev, ReadableArray):
         av = ArrayAverager(dev, count, int(interval*1000)) if (name is None) else ArrayAverager(name, dev, count, int(interval*1000))
     else:
         av = Averager(dev, count, int(interval*1000)) if (name is None) else Averager(name, dev, count, int(interval*1000))
@@ -2840,25 +2833,44 @@ def show_panel(device, title=None):
         device = get_device(device)
     return get_context().showPanel(device)
 
-
-
+    
 ###################################################################################################
 #Executed on startup
 ###################################################################################################
 
-def on_ctrl_cmd(cmd):   
-    #print ("Control command: ", cmd)
-    pass
-
-def on_close(parent_thread):   
-    on_abort(parent_thread) 
-
-def on_abort(parent_thread):   
-    tid=parent_thread.ident
-    exception = KeyboardInterrupt
-    ctypes.pythonapi.PyThreadState_SetAsyncExc(ctypes.c_long(tid), ctypes.py_object(exception))
-
 if __name__ == "__main__":
+    def on_ctrl_cmd(cmd):   
+        #print ("Control command: ", cmd)
+        pass
+
+    def on_close(parent_thread):   
+        on_abort(parent_thread) 
+
+    def on_abort(parent_thread):   
+        _default_abort(parent_thread)
+
+    def _default_abort(parent_thread):   
+        #This does not work because don't run actually on the main thread
+        #import _thread
+        #_thread.interrupt_main()
+
+        if _interrupt_sleep_event is not None:
+            _interrupt_sleep_event.set()
+
+        tid=parent_thread.ident
+        exception = KeyboardInterrupt
+        ctypes.pythonapi.PyThreadState_SetAsyncExc(ctypes.c_long(tid), ctypes.py_object(exception))        
+ 
+
+    _interrupt_sleep_event = None 
+    def _sleep(secs):
+        global _interrupt_sleep_event
+        _interrupt_sleep_event = threading.Event()
+        _interrupt_sleep_event.wait(secs)
+        _interrupt_sleep_event = None
+    sleep = _sleep    
+    time.sleep=sleep
+
     #Handle control command server   
     if ("ctrl_cmd_socket" in globals()) and (ctrl_cmd_socket is not None):
         if ("ctrl_cmd_task_thread" in globals()) and (ctrl_cmd_task_thread.is_alive()):
@@ -2870,7 +2882,7 @@ if __name__ == "__main__":
     def ctlm_cmd_task(port,parent_thread, rc):
         try:
             global ctrl_cmd_socket
-            print ("Starting control command task")
+            get_context().scriptingLog("Starting control command task")
             quit=False
             with socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM) as ctrl_cmd_socket:
                 ctrl_cmd_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
@@ -2892,7 +2904,7 @@ if __name__ == "__main__":
                         on_ctrl_cmd(cmd)
                     ctrl_cmd_socket.sendto("ack".encode('UTF-8'), add)
         finally:
-            print("Quitting control command task")
+            get_context().scriptingLog("Quitting control command task")
 
     ctrl_cmd_task_thread = threading.Thread(target=functools.partial(ctlm_cmd_task, CTRL_CMD_PORT, threading.current_thread(), run_count))
     ctrl_cmd_task_thread.daemon = True

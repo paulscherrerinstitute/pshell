@@ -2917,6 +2917,7 @@ public class View extends MainFrame {
         menuSetLogLevel = new javax.swing.JMenu();
         menuSettings = new javax.swing.JMenuItem();
         menuChangeUser = new javax.swing.JMenuItem();
+        menuCPython = new javax.swing.JMenuItem();
         jSeparator4 = new javax.swing.JPopupMenu.Separator();
         menuCheckSyntax = new javax.swing.JMenuItem();
         jSeparator9 = new javax.swing.JPopupMenu.Separator();
@@ -3650,6 +3651,15 @@ public class View extends MainFrame {
             }
         });
         menuShell.add(menuChangeUser);
+
+        menuCPython.setText(bundle.getString("View.menuCPython.text")); // NOI18N
+        menuCPython.setName("menuCPython"); // NOI18N
+        menuCPython.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                menuCPythonActionPerformed(evt);
+            }
+        });
+        menuShell.add(menuCPython);
 
         jSeparator4.setName("jSeparator4"); // NOI18N
         menuShell.add(jSeparator4);
@@ -4983,7 +4993,7 @@ public class View extends MainFrame {
         }
     }//GEN-LAST:event_menuChangeUserActionPerformed
 
-    HelpContentsDialog dialogHelp;
+    HelpContentsDialog dialogHelp;    
 
     private void menuHelpContentsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuHelpContentsActionPerformed
         try {
@@ -5789,6 +5799,22 @@ public class View extends MainFrame {
         setScanPlotDetached(radioPlotsDetached.isSelected());
     }//GEN-LAST:event_radioPlotsVisibleActionPerformed
 
+    CPythonDialog dialogCPython;
+    
+    private void menuCPythonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuCPythonActionPerformed
+        try {
+            if ((dialogCPython == null) || (!dialogCPython.isDisplayable())) {
+                dialogCPython = new CPythonDialog(this, false);
+                dialogCPython.setDefaultCloseOperation(HIDE_ON_CLOSE);
+                dialogCPython.setReadOnly(context.getRights().denyConfig);
+                dialogCPython.setSize(600, 400);
+            } 
+            showChildWindow(dialogCPython);
+        } catch (Exception ex) {
+            showException(ex);
+        }
+    }//GEN-LAST:event_menuCPythonActionPerformed
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton buttonAbort;
     private javax.swing.JButton buttonAbout;
@@ -5839,6 +5865,7 @@ public class View extends MainFrame {
     private javax.swing.JMenu menuAddToQueue;
     private javax.swing.JMenuBar menuBar;
     private javax.swing.JMenu menuBlock;
+    private javax.swing.JMenuItem menuCPython;
     private javax.swing.JMenu menuCamServer;
     private javax.swing.JMenuItem menuCamServerCameras;
     private javax.swing.JMenuItem menuCamServerPipelines;

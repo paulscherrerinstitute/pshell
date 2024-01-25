@@ -1068,6 +1068,11 @@ public class Convert {
         }
         return ret;
     }
+    
+    //Alias to toPrimitiveArray to avoid problems on JEP for choosing the good overloaded method.
+    public static Object wrapperArrayToPrimitiveArray(Object wrapperArray, Class type) {
+        return toPrimitiveArray(wrapperArray, type);
+    }
 
     public static Object toWrapperArray(Object primitiveArray) {
         if (primitiveArray instanceof List) {

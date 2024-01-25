@@ -44,6 +44,7 @@ public class UserOptions extends Config {
     public String ctxp;
     public String extp;
     public String imgp;
+    public String pyhm;
     public String logp;
     public String sets;
     public String pini;

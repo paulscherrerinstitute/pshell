@@ -14,6 +14,7 @@ import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -393,10 +394,14 @@ public class Sys {
         Posix.Passwd passwd = Posix.getpwnam(userName);    
         return new UserInfo(passwd.getName(), passwd.getUID(), passwd.getGID());
     }               
-            
-                
-    public static void main (String[] args){
-        System.out.println(getUserInfo("gobbo_a"));
-        System.out.println(getUserInfo("root"));
-    }
+    
+     public static void setEnvironmentVariable(String key, String value) throws Exception{ 
+            Map<String, String> env = System.getenv(); 
+            Class<?> cl = env.getClass(); 
+            Field field = cl.getDeclaredField("m"); 
+            field.setAccessible(true); 
+            Map<String, String> writableEnv = (Map<String, String>) field.get(env); 
+            writableEnv.put(key, value); 
+    } 
+               
 }

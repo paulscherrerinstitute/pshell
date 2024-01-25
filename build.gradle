@@ -13,9 +13,10 @@ ext.timestamp = new Date().format("yyMMddHHmm")
 ext.type = 'py'     //py, groovy, js or all
 ext.javafx = false
 ext.jzy3d = false
-ext.manif_addopens = 'java.base/sun.nio.ch java.base/java.io java.desktop/sun.awt java.desktop/javax.swing.text.html java.desktop/sun.swing java.base/jdk.internal.loader jdk.nashorn.internal.runtime'
-ext.run_addopens = 'java.base/jdk.internal.loader=ALL-UNNAMED'
+ext.manif_addopens = 'java.base/sun.nio.ch java.base/java.io java.desktop/sun.awt java.desktop/javax.swing.text.html java.desktop/sun.swing java.base/jdk.internal.loader jdk.nashorn.internal.runtime java.base/java.util'
+ext.run_addopens = 'java.base/jdk.internal.loader=ALL-UNNAMED java.base/java.util=ALL-UNNAMED'
 ext.run_addexports = "java.desktop/sun.awt=ALL-UNNAMED"
+ext.run_jvargs = ["--add-opens", "java.base/jdk.internal.loader=ALL-UNNAMED", "--add-opens", "java.base/java.util=ALL-UNNAMED", "--add-exports", "java.desktop/sun.awt=ALL-UNNAMED"]
 
 
 java {
@@ -334,16 +335,14 @@ task(debug, dependsOn: 'classes', type: JavaExec) {
     //systemProperty 'java.awt.headless' ,true        
     systemProperty 'pshell.build.time', timestamp
     systemProperty 'pshell.build.type', type    
+    //environment 'PYTHONHOME', "/Users/gobbo_a/dev/pshell/config/home/cpython"
     mainClass = main_class
     classpath = sourceSets.main.runtimeClasspath
     args arguments
     ignoreExitValue = true
     debug true
     executable=java_exec_jdk
-    jvmArgs = [
-        "--add-opens", run_addopens,
-        "--add-exports", run_addexports
-    ]
+    jvmArgs = run_jvargs
 }
 
 task(run, dependsOn: 'classes', type: JavaExec) {      
@@ -355,10 +354,7 @@ task(run, dependsOn: 'classes', type: JavaExec) {
     ignoreExitValue = true
     debug false
     executable=java_exec_jdk
-    jvmArgs = [
-        "--add-opens", run_addopens,
-        "--add-exports", run_addexports        
-    ]
+    jvmArgs = run_jvargs
 }
 
 

@@ -60,4 +60,46 @@ public class Processing {
         
         return new String[]{out, err};                
     }
+    
+    
+    public static String run( ProcessBuilder processBuilder) throws IOException, InterruptedException {
+        return run(processBuilder, false);
+    }
+    
+    public  static String  run( ProcessBuilder processBuilder, boolean throwError) throws IOException, InterruptedException {
+        return run(processBuilder, throwError, true);
+    }    
+    
+    public  static String  run( ProcessBuilder processBuilder, boolean throwError, boolean print) throws IOException, InterruptedException {         
+        Process process = processBuilder.start();
+        process.waitFor();    
+        String stdout = null;
+        String stderr = null;
+        
+        int bytes = process.getInputStream().available();
+        if (bytes>0){
+            byte[] arr = new byte[bytes];
+            process.getInputStream().read(arr, 0, bytes);
+            stdout = new String(arr);
+            if (print){
+                System.out.println(stdout);
+            }
+        }
+        bytes = process.getErrorStream().available();
+        if (bytes>0){
+            byte[] arr = new byte[bytes];
+            process.getErrorStream().read(arr, 0, bytes);
+            stderr = new String(arr);
+            if (print){
+                System.err.println(stderr);
+            }
+            if (throwError){
+                if (!stderr.isBlank()){
+                    throw new RuntimeException(stderr);
+                }
+            }
+        }   
+        return stdout;
+     }
+    
 }

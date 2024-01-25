@@ -6,6 +6,7 @@ import ch.psi.utils.Arr;
 import ch.psi.utils.Chrono;
 import ch.psi.utils.Config;
 import ch.psi.utils.IO;
+import ch.psi.utils.Miniconda;
 import ch.psi.utils.Str;
 import ch.psi.utils.Sys;
 import java.awt.image.BufferedImage;
@@ -202,7 +203,6 @@ public class Setup extends Config {
             queuePath = TOKEN_SCRIPT;
             save();
         }        
-        
  
         if (System.getProperty(PROPERTY_DATA_PATH) != null) {
             dataPath = System.getProperty(PROPERTY_DATA_PATH);
@@ -238,7 +238,7 @@ public class Setup extends Config {
 
         if (System.getProperty(PROPERTY_LOGS_PATH) != null) {
             logPath = System.getProperty(PROPERTY_LOGS_PATH);
-        }           
+        }         
         
         initPaths();
 
@@ -310,7 +310,7 @@ public class Setup extends Config {
         expansionTokens.put(TOKEN_IMAGES, imagesPath);
         expansionTokens.put(TOKEN_LOGS, logPath);
         expansionTokens.put(TOKEN_PLUGINS, pluginsPath);
-        expansionTokens.put(TOKEN_EXTENSIONS, extensionsPath);
+        expansionTokens.put(TOKEN_EXTENSIONS, extensionsPath);        
         expansionTokens.put(TOKEN_WWW, wwwPath);
 
         expandedPathNames = new HashMap<>();
@@ -320,7 +320,7 @@ public class Setup extends Config {
             (new File(expandedHomePath)).mkdirs();
         } catch (Exception ex) {
             throw new RuntimeException("Cannot create path: " + expandedHomePath);
-        }
+        }        
 
         boolean finished = false;
         int count = 0;
@@ -351,7 +351,7 @@ public class Setup extends Config {
                     throw new RuntimeException("Cannot create path: " + path);
                 }
             }
-        }
+        }                
     }
 
     int getExpansionTokenCount(String path) {
@@ -581,7 +581,7 @@ public class Setup extends Config {
     public String getConfigPath() {
         return expandedPathNames.get(configPath);
     }
-
+    
     public String getWwwPath() {
         if (isRunningInIde()) {
             return Paths.get(getSourceAssemblyFolder(), "www").toString();
@@ -619,6 +619,28 @@ public class Setup extends Config {
 
     public static String getJarFile() {
         return IO.getExecutingJar(Context.class);
+    }
+    
+    
+    
+    public static String getPythonHome() {
+         String ret = System.getenv("PYTHONHOME");
+         if ((ret==null) || ret.isBlank()){
+             return null;
+         }
+         return ret.trim();
+    }        
+    
+    public static boolean isPythonInstalled(){
+        try{
+            Path path = Paths.get(getPythonHome());
+            if (path.toFile().isDirectory()){
+                String version = Miniconda.getVersion(path);
+                return (version == null) ? false : true;                
+            }
+        } catch (Exception ex){            
+        }
+        return false;
     }
 
     /**

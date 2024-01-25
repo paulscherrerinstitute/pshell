@@ -265,6 +265,7 @@ public class PlotPanel extends MonitoredPanel {
         }
         volatile Scan currentScan;
         volatile int currentPass;
+        final List<Boolean> unsigned = new ArrayList<>();
                  
         void startPlot(final Scan scan, Map pars) {
             clear();
@@ -420,11 +421,15 @@ public class PlotPanel extends MonitoredPanel {
                              attr.put("height", ((Readable.ReadableMatrix)r).getHeight());
                              if (r instanceof Readable.ReadableCalibratedMatrix) {
                                  attr.put("calibration", ((Readable.ReadableCalibratedMatrix) r).getCalibration());
-                             }
+                             } 
                          }
-                         attrs.put(r.getAlias(), attr);
+                         attrs.put(r.getAlias(), attr);                         
                     }
-                    pars.put("attrs", attrs);
+                    pars.put("attrs", attrs);                                        
+                }
+                unsigned.clear();
+                for (Readable r : scan.getReadables()){
+                    unsigned.add(Boolean.TRUE.equals(r.isElementUnsigned()));
                 }
                 if (!offscreen && !SwingUtilities.isEventDispatchThread()) {
                     SwingUtilities.invokeLater(() -> {
@@ -533,14 +538,10 @@ public class PlotPanel extends MonitoredPanel {
                     } else if (val instanceof Boolean) {
                         val = ((Boolean) val) ? 1.0 : 0.0;
                     }
-                    
-                    try{
-                        if (Boolean.TRUE.equals(scan.getReadables()[readableIndex].isElementUnsigned())){
-                            val = Convert.toUnsigned(val);
-                        }
-                    } catch (Exception ex) {
-                        Logger.getLogger(PlotPanel.class.getName()).log(Level.FINE, null, ex);
-                    }
+                     
+                    if ((readableIndex<unsigned.size())  && (unsigned.get(readableIndex))){
+                        val = Convert.toUnsigned(val);
+                    }                    
                         
                     if (scan.getDimensions() == 3) {
                         if (val instanceof Number) {
@@ -658,7 +659,7 @@ public class PlotPanel extends MonitoredPanel {
                                                 series.appendData(xValue, yValue, zValue);
                                             }
                                         }
-                                    } else if (plot instanceof LinePlotBase) {
+                                    } else if (plot instanceof LinePlotBase) {                                        
                                         Readable r = scan.getReadables()[readableIndex];
                                         val = Convert.toDouble(val);
                                         double[] xdata = null;
