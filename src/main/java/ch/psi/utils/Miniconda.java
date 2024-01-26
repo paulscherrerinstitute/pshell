@@ -6,13 +6,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.logging.Logger;
 
-
-/**
- *
- */
-
-
 /*
+Installers:
 Miniconda3-latest-Windows-x86_64.exe	
 Miniconda3-latest-MacOSX-x86_64.sh	
 Miniconda3-latest-MacOSX-x86_64.pkg	
@@ -78,13 +73,11 @@ public class Miniconda {
         
         
         String minicondaDownloadLink = downloadLink +installer;                   
-        // Run the installation command
         ProcessBuilder processBuilder;
 
         if (Sys.isWindows()) {
             processBuilder = new ProcessBuilder("cmd.exe", "/c", "curl", "-O", minicondaDownloadLink, "&&", "start", installer, "/S", "/D=" + installationPath);
         } else {
-            // For Linux and macOS, use the shell script
             processBuilder = new ProcessBuilder("sh", "-c", "curl -O " + minicondaDownloadLink + " && bash " + installer + " -b -p " + installationPath);
         }
 
@@ -101,19 +94,20 @@ public class Miniconda {
     }
      
     public static String execute(Path folder, String cmd) throws IOException, InterruptedException{
-        logger.info("Executiong: " +cmd);
+        logger.info("Executing: " +cmd);
         String installationPath = getInstallationPath(folder);
         ProcessBuilder processBuilder;
-        if (Sys.isWindows()) {
-            // For Windows, use the executable directly
+        if (Sys.isWindows()) {            
+            String path = installationPath + "\\";
+            if (!cmd.startsWith("python")){
+                path +=  "Scripts\\";
+            }
             processBuilder = new ProcessBuilder(
-                "cmd.exe", "/c", installationPath + "\\Scripts\\" + cmd
+                "cmd.exe", "/c", path + cmd
             );
         } else {
-            // For Linux and macOS, use the shell script
             processBuilder = new ProcessBuilder(
                 "sh", "-c", 
-               //"unset $(env | grep '^CONDA' | awk -F= '{print $1}')", "&&",  
                installationPath + "/bin/" + cmd);
         }   
         return Processing.run(processBuilder);
