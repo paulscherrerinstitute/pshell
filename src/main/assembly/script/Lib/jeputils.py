@@ -1,5 +1,5 @@
 ###################################################################################################
-# Facade to JEP: Embedded Python
+# Facade to JEP: Embedded CPython
 ###################################################################################################
 
 #Matplotlib won't work out of the box because it's default backend (Qt) uses signals, which only works in
@@ -9,18 +9,16 @@
 #import matplotlib
 #matplotlib.use('TkAgg') 
 
-
-#In principle just add JEP jar and library to the extensions folder.
+#In general the only pre-condition is the environment variable "PYTHONHOME" to be be set with a Python 
+#environment having JEP installed.
 #
-#Alternatively on Linux:
-#   Python 2:
-#       - Add <python home>/lib/python3.X/site-packages/jep to LD_LIBRARY_PATH
-#       - Add <python home>/lib/python3.X/site-packages/jep/jep-X.X.X.jar to the class path
+#Optionally one may use the config option PythonHome or command line argument -pyhm. In this case the
+#software will try to set "PYTHONHOME".
 #
-#Python3:
+#In some platforms it may be needed:
 #       - Add JEP library folder to LD_LIBRARY_PATH
-#       - If using OpenJDK, add also python <python home>/lib folder to LD_LIBRARY_PATH			
-#	- Set LD_PRELOAD=<python home>/lib/libpython3.5m.so
+#       - Add <python home>/lib folder to LD_LIBRARY_PATH			
+#	- Set LD_PRELOAD=<python home>/lib/libpython*.so
 
 
 import sys

@@ -20,7 +20,7 @@ public class StatementException extends ScriptException {
         se = ex;
     }
 
-    //Unfoetunatelly cannot get the original message directly, need this hack
+    //Unfortunatelly cannot get the original message directly, need this hack
     static String getRawMessage(String msg) {
         if (msg != null) {
             String mark = " in ";

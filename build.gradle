@@ -335,7 +335,6 @@ task(debug, dependsOn: 'classes', type: JavaExec) {
     //systemProperty 'java.awt.headless' ,true        
     systemProperty 'pshell.build.time', timestamp
     systemProperty 'pshell.build.type', type    
-    //environment 'PYTHONHOME', "/Users/gobbo_a/dev/pshell/config/home/cpython"
     mainClass = main_class
     classpath = sourceSets.main.runtimeClasspath
     args arguments

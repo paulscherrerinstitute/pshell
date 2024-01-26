@@ -1,6 +1,5 @@
 package ch.psi.pshell.scripting;
 
-import static ch.psi.pshell.scripting.ScriptManager.logger;
 import ch.psi.utils.Threading;
 import java.io.BufferedReader;
 import java.io.File;
@@ -16,6 +15,8 @@ import java.util.concurrent.Executors;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.script.Bindings;
 import javax.script.Compilable;
@@ -26,6 +27,7 @@ import javax.script.ScriptEngineFactory;
 import javax.script.ScriptException;
 import javax.script.SimpleBindings;
 import jep.Jep;
+import jep.JepException;
 import jep.SharedInterpreter;
 import jep.python.PyCallable;
 
@@ -85,7 +87,7 @@ public class JepScriptEngine implements ScriptEngine, AutoCloseable, Compilable 
                 return null;
             });
         } catch (Exception e) {
-            throw (ScriptException) new ScriptException(e.getMessage()).initCause(e);
+            throw (ScriptException) new ScriptException(formatExceptionMessage(e)).initCause(e);
         }
     }
     
@@ -144,7 +146,7 @@ public class JepScriptEngine implements ScriptEngine, AutoCloseable, Compilable 
         try {
             this.jep.set("context", c);
         } catch (Exception e) {
-            throw (ScriptException) new ScriptException(e.getMessage()).initCause(e);
+            throw (ScriptException) new ScriptException(formatExceptionMessage(e)).initCause(e);
         }
     }
 
@@ -167,7 +169,7 @@ public class JepScriptEngine implements ScriptEngine, AutoCloseable, Compilable 
         } catch (IOException e) {
             throw new ScriptException("Error writing to file: " + e.getMessage());
         } catch (Exception e) {
-            throw (ScriptException) new ScriptException(e.getMessage()).initCause(e);
+            throw (ScriptException) new ScriptException(formatExceptionMessage(e)).initCause(e);
         }
     }
 
@@ -178,7 +180,7 @@ public class JepScriptEngine implements ScriptEngine, AutoCloseable, Compilable 
             this.jep.runScript(file.getAbsolutePath());
             return null;
         } catch (Exception e) {
-            throw (ScriptException) new ScriptException(e.getMessage()).initCause(e);
+            throw (ScriptException) new ScriptException(formatExceptionMessage(e)).initCause(e);
         }
     }
     
@@ -224,10 +226,46 @@ public class JepScriptEngine implements ScriptEngine, AutoCloseable, Compilable 
                 jep.eval(line);
                 return null;
             } catch (Exception e) {
-                throw (ScriptException) new ScriptException(e.getMessage()).initCause(e);
+                throw (ScriptException) new ScriptException(formatExceptionMessage(e)).initCause(e);
             }
         });
     }
+    
+    // Converts <class 'TypeError'>: Message" into TypeError: Message
+    public static String formatExceptionMessage(Exception ex) {       
+        if (ex instanceof JepException){
+            try{
+                Pattern pattern = Pattern.compile("<class '(\\w+)'>: (.+)");
+                Matcher matcher = pattern.matcher(ex.getMessage());
+
+                if (matcher.matches()) {
+                    String className = matcher.group(1);
+                    String result = className + ": " + matcher.group(2);
+                    return result;
+                }
+            } catch (Exception e){            
+            }
+        }
+        return ex.getMessage();
+    }
+    
+    
+    public static String formatString(String input) {
+        // Define the pattern for matching
+        Pattern pattern = Pattern.compile("<class '(\\w+)'>: (.+)");
+        Matcher matcher = pattern.matcher(input);
+
+        // Check if the pattern matches
+        if (matcher.matches()) {
+            // Extract and format the matched parts
+            String className = matcher.group(1);
+            String result = className + ": " + matcher.group(2);
+            return result;
+        }
+
+        // Return the original string if no match
+        return input;
+    }    
 
     @Override
     public ScriptEngineFactory getFactory() {
