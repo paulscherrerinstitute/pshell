@@ -2826,7 +2826,7 @@ def show_panel(device, title=None):
         device(Device or str or BufferedImage): device
         title only apply to BufferedImage objects. For devices the title is the device name.
     """
-    if type(device) is BufferedImage:
+    if isinstance(device, BufferedImage):
         device = DirectSource(title, device)
         device.initialize()
     if is_string(device):
