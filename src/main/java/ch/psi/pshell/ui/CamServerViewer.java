@@ -2909,22 +2909,34 @@ public class CamServerViewer extends MonitoredPanel {
                     if (id.equals(CHANNEL_IMAGE)) {
                     } else if (id.equals(CHANNEL_PARAMETERS)) {
                         Map<String, Object> pars = getProcessingParameters(first);
-                        for (String key : pars.keySet()) {
+                        for (String key : pars.keySet()) {                            
                             if ((pars.get(key) != null) && (pars.get(key) instanceof Map)) {
                                 for (Object k : ((Map) pars.get(key)).keySet()) {
                                     Object v = ((Map) pars.get(key)).get(k);
-                                    dm.setAttribute(pathImage, key + " " + k, (v == null) ? "" : v);
-                                }
+                                    String keyName = key + " " + k;
+                                    try{
+                                        dm.setAttribute(pathImage, keyName, (v == null) ? "" : v);
+                                    } catch (Exception ex) {
+                                        Logger.getLogger(CamServerViewer.class.getName()).warning("Error set image attribute " + keyName + " to " + v + ": " + ex.getMessage());
+                                    }                                        }
                             } else {
                                 Object value = pars.get(key);
-                                if (value == null) {
-                                    value = "";
-                                } else if (value instanceof List) {
-                                    Class cls = (((List) value).size() > 0) ? ((List) value).get(0).getClass() : double.class;
-                                    value = Convert.toPrimitiveArray(value, cls);
-                                    //value = Convert.toDouble(value);
-                                }
-                                dm.setAttribute(pathImage, key, value);
+                                try{
+                                    if (value == null) {
+                                        value = "";
+                                    } else if (value instanceof List) {
+                                        Class cls = (((List) value).size() > 0) ? ((List) value).get(0).getClass() : double.class;
+                                        if (cls == String.class){
+                                            value = Convert.toStringArray(value);
+                                        } else {
+                                            value = Convert.toPrimitiveArray(value, cls);
+                                        }
+                                        //value = Convert.toDouble(value);
+                                    }
+                                    dm.setAttribute(pathImage, key, value);
+                                } catch (Exception ex) {
+                                    Logger.getLogger(CamServerViewer.class.getName()).warning("Error set image attribute " + key + " to " + value + ": " + ex.getMessage());
+                                }                                         
                             }
                         }
                     } else if (val.getClass().isArray()) {
