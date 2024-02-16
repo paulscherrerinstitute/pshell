@@ -298,8 +298,7 @@ public class Preferences {
             new DefaultPanel(StreamChannel.class.getName(), StreamChannelPanel.class.getName()),   
             new DefaultPanel(CamServerStream.class.getName(), CamServerStreamPanel.class.getName()),   
             new DefaultPanel(CamServerService.class.getName(), CamServerServicePanel.class.getName()),               
-            new DefaultPanel(ReadonlyRegister.ReadonlyRegisterArray.class.getName(), DeviceValueChart.class.getName()),
-            new DefaultPanel(ReadonlyRegister.ReadonlyRegisterMatrix.class.getName(), DeviceValueChart.class.getName()),            
+            new DefaultPanel(ReadonlyRegister.class.getName(), DeviceValueChart.class.getName())
         };
     }
 

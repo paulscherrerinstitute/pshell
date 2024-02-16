@@ -4,6 +4,7 @@ import ch.psi.pshell.core.Configuration;
 import ch.psi.pshell.core.Context;
 import ch.psi.pshell.core.ContextAdapter;
 import ch.psi.pshell.core.DevicePool;
+import ch.psi.pshell.core.InlineDevice;
 import ch.psi.pshell.core.LogManager;
 import ch.psi.pshell.swing.HelpContentsDialog;
 import ch.psi.pshell.swing.OutputPanel;
@@ -19,6 +20,7 @@ import ch.psi.pshell.core.Setup;
 import ch.psi.pshell.core.UserInterface;
 import ch.psi.pshell.data.DataManager;
 import ch.psi.pshell.data.PlotDescriptor;
+import ch.psi.pshell.device.Device;
 import ch.psi.pshell.device.GenericDevice;
 import ch.psi.pshell.epics.Epics;
 import ch.psi.pshell.plot.Plot;
@@ -31,6 +33,7 @@ import ch.psi.pshell.scan.ScanRecord;
 import ch.psi.pshell.scan.ScanResult;
 import ch.psi.pshell.scripting.ViewPreference;
 import ch.psi.pshell.swing.DataPanel;
+import ch.psi.pshell.swing.DevicePanel;
 import ch.psi.pshell.swing.PlotPanel;
 import ch.psi.pshell.swing.ScanEditorPanel;
 import java.util.logging.Level;
@@ -489,7 +492,7 @@ public class App extends ObservableBase<AppListener> {
         sb.append("\n\t-help        \tStart the GUI help window");
         sb.append("\n\t-full        \tStart in full screen mode");
         sb.append("\n\t-dual        \tStart GUI and command line interface (not allowed if running in the background)");
-        sb.append("\n\t-dvpn=<cls>  \tShow a device panel, giving a class name and args, if it has a main metho");
+        sb.append("\n\t-dvpn=<cls>  \tShow a device panel giving a class name and args or an inline device string");
         sb.append("\n\t-extr=<value>\tForce (true) or disable (false) extraction of startup and utility scrips");
         sb.append("\n\t-vers=<value>\tForce versioning enabled (true) or disabled (false)");
         sb.append("\n\t-nbcf=<value>\tForce disabling (true) or enabling (false) the use of bytecode files");
@@ -502,6 +505,7 @@ public class App extends ObservableBase<AppListener> {
         sb.append("\n\t-laf=<name>  \tLook and feel: system, metal, nimbus, darcula, flat, or dark");
         sb.append("\n\t-size=WxH    \tSet application window size if GUI state not persisted");
         sb.append("\n\t-args=<...>  \tProvide arguments to interpreter");
+        sb.append("\n\t-eval=<...>  \tEvaluate the script statement");
         sb.append("\n\t-f=<...>     \tFile to run (together with -c option) or open in file in editor");
         sb.append("\n\t-t=<...>     \tStart a task using the format script,delay,interval");
         sb.append("\n\t-p=<...>     \tLoad a plugin");
@@ -741,6 +745,17 @@ public class App extends ObservableBase<AppListener> {
             return null;
         }
     }
+    
+    static public String getEvalArg() {
+        try {
+            String str = getArgumentValue("eval");
+            if ((str!=null) && (!str.isBlank())){
+                return str;
+            }
+        } catch (Exception ex) {            
+        }
+        return null;
+    }    
 
     static public List<File> getFileArgs() {
         ArrayList<File> ret = new ArrayList<File>();
@@ -1156,17 +1171,28 @@ public class App extends ObservableBase<AppListener> {
             } else if (isCamServerViewer()) {
                 JPanel panel = CamServerViewer.create(null, getSize());
             } else if (isDeviceViewer()){
+                App.createDetachedEpicsContext();
+                String pars = getDeviceViewerArgs();                    
                 try {
-                    App.createDetachedEpicsContext();
-                    String pars = getDeviceViewerArgs();                    
                     String[] tokens = Str.splitIgnoringQuotesAndMultSpaces(pars);
                     String className = tokens[0];
                     String[] args = Arr.getSubArray(tokens, 1);
                     Method main = Class.forName(className).getMethod("main", String[].class);
                     main.invoke(null, new Object[]{args});
-                    //DevicePanel.createFrame(dev.getDevice());
                 } catch (Exception ex) {
-                    ex.printStackTrace();
+                    //try an inline device string 
+                    try{
+                        Device device = InlineDevice.create(pars, null);
+                        device.initialize();
+                        DevicePanel pn = DevicePanel.createFrame(device);                
+                        
+                        //TODO: Not working, must wait/handle window close
+                        while(!pn.isShowing()){
+                            Thread.sleep(10);
+                        }
+                    } catch (Exception e) {                        
+                        e.printStackTrace();
+                    }                                        
                 }
             } else {
                 if (isDual()) {
@@ -1214,12 +1240,23 @@ public class App extends ObservableBase<AppListener> {
                     context.start();
                     if (isPlotOnly() || isConsole()) {
                         File file = getFileArg();
-                        if (file != null) {
-                            runFile(file, false);
+                        String eval = getEvalArg();
+                        if ((file != null)  || (eval != null)){
+                            if (eval != null) {
+                                runStatement(eval);
+                            }                                                     
+                            if (file != null) {
+                                runFile(file, false);
+                            } 
                             if (isAutoClose()) {
                                 exit(this);
-                            }
+                            }                        
                         }
+                    } else{
+                        String eval = getEvalArg();
+                        if (eval != null) {
+                            runStatement(eval);
+                        }     
                     }
                 }, "Context startup").start();
             } else {
@@ -1232,9 +1269,18 @@ public class App extends ObservableBase<AppListener> {
             } else {
                 context.start();
                 File file = getFileArg();
-                if (file != null) {
-                    runFile(file, !isServerMode());
-                    exit(this);
+                String eval = getEvalArg();
+                if ((file != null)  || (eval != null)){  
+                    if (eval != null) {
+                        runStatement(eval);
+                    }                      
+                    if (file != null) {
+                        runFile(file, !isServerMode());
+                    }
+                    if (!hasArgument("a") || isAutoClose()) { //By default closes app
+                        exit(this);
+                    }
+                    
                 } else {
                     setConsolePlotEnvironment(null);
                     if (isCli()) {
@@ -1559,6 +1605,17 @@ public class App extends ObservableBase<AppListener> {
         }
         return context.evalFile(file.getPath(), args);
     }
+    
+    
+    public void runStatement(String statement){
+        try {
+            evalStatement(statement);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            logger.log(Level.WARNING, null, ex);
+        }
+    }
+    
     
     public Object evalStatement(String statement) throws Exception {
         logger.log(Level.INFO, "Eval statement: " + statement);

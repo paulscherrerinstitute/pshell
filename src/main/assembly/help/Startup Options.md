@@ -61,7 +61,7 @@
 | -help                    | Start the GUI help window.|
 | -full                    | Start in full screen mode.|
 | -dual                    | Start GUI and command line terminal: cannot be used if running in the background.|
-| -dvpn=[cls, ...]         | how a device panel, giving a class name and arguments, if it has a main method.|
+| -dvpn=[cls, ...]         | Show a device panel, giving a class name and arguments (if the class has a main method) or else an inline device string.|
 | -extr=[value]            | Force (value=true) or disable (value=false) extraction of startup and utility scrips (default disabled in local mode).|
 | -vers=[value]            | Force versioning enabled (value=true) or disabled (value=false) (default disabled in local mode).|
 | -nbcf=[value]            | Force disabling (true) or enabling (false) the use of bytecode files (default defined in configuration).|
@@ -74,6 +74,7 @@
 | -laf=[name]              | Set application Look and Feel: system (s), metal (m), nimbus (n), darcula (d), flat (f), or dark (b).|
 | -size=WxH                | Set application window size if GUI state not persisted. |
 | -args=id:val, ...        | Provide arguments to interpreter.|
+| -eval=...                | Evaluate the script statement.|
 | -f=[name]                | File to run (together with -c option) or open in file in editor.|
 | -t=[name,delay,interval] | Start a task in the background.|
 | -p=[name]                | Load a plugin at startup.|

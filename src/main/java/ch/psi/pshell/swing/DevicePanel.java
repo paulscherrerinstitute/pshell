@@ -1,7 +1,5 @@
 package ch.psi.pshell.swing;
 
-import ch.psi.pshell.bs.ProviderConfig;
-import ch.psi.pshell.bs.Stream;
 import ch.psi.pshell.core.Context;
 import ch.psi.pshell.core.ContextAdapter;
 import ch.psi.pshell.device.Device;
@@ -22,6 +20,7 @@ import javax.swing.SwingUtilities;
 import javax.swing.Timer;
 import javax.swing.border.TitledBorder;
 import ch.psi.pshell.core.ContextListener;
+import ch.psi.pshell.core.InlineDevice;
 import ch.psi.pshell.device.GenericDevice;
 import ch.psi.pshell.device.ReadonlyRegister;
 import ch.psi.pshell.device.Startable;
@@ -494,5 +493,20 @@ public class DevicePanel extends MonitoredPanel {
             }
         });
         return devicePanel;        
+    }    
+    
+
+    public static void main(String[] args) {
+        try {
+            App.init(args);
+            App.createDetachedEpicsContext();
+            String url = args[0];
+            //url = "ca://TESTIOC:TESTSINUS:SinCalc?monitored=true";            
+            Device device = InlineDevice.create(url, null);
+            device.initialize();
+            createFrame(device);
+        } catch (Exception ex) {
+            SwingUtils.showException(null, ex);
+        }
     }    
 }
