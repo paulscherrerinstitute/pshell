@@ -936,6 +936,26 @@ public class Stream extends DeviceBase implements Readable<StreamValue>, Cacheab
         }
     }
 
+    public Device getChildFromChannelName(String channel) {    
+        if (channel!=null){
+            for (Device dev: getChildren()){
+                if (dev instanceof StreamChannel){
+                    if (channel.equals(((StreamChannel)dev).getChannelName())){
+                        return dev;
+                    }
+                }
+            }
+            for (Device dev: getChildren()){
+                if (dev instanceof StreamChannel){
+                    if (channel.equals(((StreamChannel)dev).getId())){
+                        return dev;
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
     @Override
     protected void doClose() throws IOException {
         stop();

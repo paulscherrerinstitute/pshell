@@ -156,7 +156,7 @@ public class StreamPanel extends DevicePanel {
         String channel = getCurrentChannel();
         Stream device = getDevice();
         if ((device != null) && (channel != null)) {
-            Device child = device.getChild(channel);
+            Device child = device.getChildFromChannelName(channel);
             showDevicePanel(child);
         }
     }
