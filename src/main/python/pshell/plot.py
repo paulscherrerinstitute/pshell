@@ -7,7 +7,7 @@ class PlotClient:
     """
     A Python client to PShell plot server
     """
-    def __init__(self, address = "localhost", port=7777, context = "0", timeout=None):        
+    def __init__(self, address = "localhost", port=7777, context = None, timeout=None):        
         self.set_context(context)
         self.context = zmq.Context()      
         self.url = "tcp://" + address + (":%s" % port)
@@ -50,7 +50,7 @@ class PlotClient:
         self.context.term()
 
     def set_context(self, context):
-        self.ctx = context
+        self.ctx = context if context else "0"
 
     def get_contexts(self):
         ret = self.execute("GetContexts", {})
