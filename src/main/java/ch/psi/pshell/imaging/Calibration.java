@@ -38,7 +38,7 @@ public class Calibration implements Serializable {
         if ((xAxis != null) && (xAxis.getClass().isArray()) && ((lenght = Array.getLength(xAxis)) > 1)) {
             Double first = (Double) Convert.toDouble(Array.get(xAxis, 0));
             Double last = (Double) Convert.toDouble(Array.get(xAxis, lenght - 1));
-            offsetX = (first / (last - first)) * lenght;
+            offsetX = (first / (last - first)) *  (lenght - 1);
             scaleX = (last - first) / (lenght - 1);
         } else {
             offsetX = 0.0;
@@ -47,7 +47,7 @@ public class Calibration implements Serializable {
         if ((yAxis != null) && (yAxis.getClass().isArray()) && ((lenght = Array.getLength(yAxis)) > 1)) {
             Double first = (Double) Convert.toDouble(Array.get(yAxis, 0));
             Double last = (Double) Convert.toDouble(Array.get(yAxis, lenght - 1));
-            offsetY = (first / (last - first)) * lenght;
+            offsetY = (first / (last - first)) *  (lenght - 1);
             scaleY = (last - first) / (lenght - 1);
         } else {
             offsetY = 0.0;
