@@ -25,9 +25,10 @@ class PlotClient:
         self.socket.connect(self.url)
 
     def execute (self, cmd_name, cmd_data):
-        if self.debug: print ("Sending: " +   cmd_name + "...")
-        self.socket.send_string(cmd_name, flags = zmq.SNDMORE)        
-        self.socket.send_string(json.dumps(cmd_data))
+        if self.debug: print("Sending " + cmd_name + "...")
+        json_str = json.dumps(cmd_data)
+        self.socket.send_string(cmd_name, flags=zmq.SNDMORE)
+        self.socket.send_string(json_str)
         if self.debug: print ("Receiving...")
          
         if not self.timeout is None:

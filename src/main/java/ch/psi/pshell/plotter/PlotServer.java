@@ -75,6 +75,9 @@ public class PlotServer implements AutoCloseable {
                         //socket.send(String.valueOf(response));
                         //ret = response;
                     } catch (Throwable ex) {
+                        if (debug){
+                            ex.printStackTrace();
+                        }
                         if (ex instanceof InterruptedException) {
                             Logger.getLogger(PlotServer.class.getName()).fine("Thread interrupted");
                             break;
@@ -83,19 +86,28 @@ public class PlotServer implements AutoCloseable {
                         //socket.send("ERROR: " + c);
                         error = ex.getMessage();
                     }
-                    String tx;
+                    String tx = null;
                     try {
                         tx = EncoderJson.encode(new Response(ret, error), false);
                     } catch (Exception ex) {
-                        Logger.getLogger(PlotServer.class.getName()).log(Level.WARNING, null, ex);
-                        continue;
-                    }
+                        Logger.getLogger(PlotServer.class.getName()).log(Level.WARNING, null, ex);                            
+                        //continue; Must return something otherwise break send/rec
+                        tx = Response.UNKNOWN_ERROR;
+                        
+                   }
                     if (debug) {
                         System.out.println("TX: " + commandType + " - " + tx);
                     }
                     socket.send(tx);
                 }
+            } catch (Throwable t) {
+                if (debug){
+                    t.printStackTrace();
+                }
             } finally {
+                if (debug){
+                    System.out.println("Quitting server thread. Interrupted: " + Thread.currentThread().isInterrupted());    
+                }
                 socket.close();
                 context.term();
                 Logger.getLogger(PlotServer.class.getName()).log(Level.INFO, "Quitting");
