@@ -5,7 +5,9 @@ import ch.psi.pshell.core.ContextAdapter;
 import ch.psi.pshell.core.ContextListener;
 import ch.psi.pshell.device.Averager;
 import ch.psi.pshell.device.DescStatsDouble;
+import ch.psi.pshell.imaging.Colormap;
 import ch.psi.pshell.plot.LinePlot.Style;
+import ch.psi.pshell.plot.MatrixPlot;
 import ch.psi.pshell.scan.Scan;
 import ch.psi.pshell.scan.ScanListener;
 import ch.psi.pshell.scan.ScanRecord;
@@ -15,6 +17,9 @@ import ch.psi.utils.State;
 import java.util.Arrays;
 import java.util.HashMap;
 import ch.psi.pshell.ui.App;
+import ch.psi.utils.Convert;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -46,16 +51,20 @@ public class PlotterBinder implements AutoCloseable {
             pm.setProgress(plotTitle, 0.0);
             scans.put(scan, plotTitle);
             for (ch.psi.pshell.device.Readable r : scan.getReadables()) {
-                String name = r.getAlias();
-                if (r instanceof ch.psi.pshell.device.Readable.ReadableMatrix) {
-                    pm.addMatrixPlot(plotTitle, name, null, null);
-                    pm.addMatrixSeries(plotTitle + "/" + name, name, null, null, null, null, null, null);
-                } else if (r instanceof ch.psi.pshell.device.Readable.ReadableArray) {
-                    pm.addMatrixPlot(plotTitle, name, null, null);
-                    pm.addMatrixSeries(plotTitle + "/" + name, name, scan.getStart()[0], scan.getEnd()[0], scan.getNumberOfSteps()[0] + 1, 0.0, (double) ((ch.psi.pshell.device.Readable.ReadableArray) r).getSize() - 1, ((ch.psi.pshell.device.Readable.ReadableArray) r).getSize());
-                } else {
-                    pm.addLinePlot(plotTitle, name, Averager.isAverager(r) ? Style.ErrorY : Style.Normal);
-                    pm.addLineSeries(plotTitle + "/" + name, name, null, null, null, null, null);
+                try{
+                    String name = r.getAlias();
+                    if (r instanceof ch.psi.pshell.device.Readable.ReadableMatrix) {
+                        pm.addMatrixPlot(plotTitle, name,  MatrixPlot.Style.Normal, Colormap.Temperature);
+                        pm.addMatrixSeries(plotTitle + "/" + name, name, null, null, null, null, null, null);
+                    } else if (r instanceof ch.psi.pshell.device.Readable.ReadableArray) {
+                        pm.addMatrixPlot(plotTitle, name,  MatrixPlot.Style.Normal, Colormap.Temperature);
+                        pm.addMatrixSeries(plotTitle + "/" + name, name, scan.getStart()[0], scan.getEnd()[0], scan.getNumberOfSteps()[0] + 1, 0.0, (double) ((ch.psi.pshell.device.Readable.ReadableArray) r).getSize() - 1, ((ch.psi.pshell.device.Readable.ReadableArray) r).getSize());
+                    } else {
+                        pm.addLinePlot(plotTitle, name, Averager.isAverager(r) ? Style.ErrorY : Style.Normal);
+                        pm.addLineSeries(plotTitle + "/" + name, name, null, null, null, null, null);
+                    }
+                } catch (Exception ex){
+                    Logger.getLogger(PlotterBinder.class.getName()).log(Level.WARNING, null, ex);
                 }
             }
         }
@@ -67,22 +76,26 @@ public class PlotterBinder implements AutoCloseable {
                 pm.setProgress(title, record.getIndex() * (1.0 / scan.getNumberOfRecords()));
                 double x = (record.getPositions().length > 0) ? record.getPositions()[0].doubleValue() : record.getIndex();
                 for (int i = 0; i < scan.getReadables().length; i++) {
-                    ch.psi.pshell.device.Readable r = scan.getReadables()[i];
-                    String name = r.getAlias();
-                    String series = title + "/" + name + "/0";
-                    if (r instanceof ch.psi.pshell.device.Readable.ReadableMatrix) {
-                        pm.setMatrixSeriesData(series, (double[][]) record.getReadables()[i], null, null);
-                    } else if (r instanceof ch.psi.pshell.device.Readable.ReadableArray) {
-                        double[] z = (double[]) record.getReadables()[i];
-                        double[] ax = new double[z.length];
-                        Arrays.fill(ax, x);
-                        double[] ay = Arr.indexesDouble(z.length);
-                        pm.appendMatrixSeriesDataArray(series, ax, ay, z);
-                    } else {
-                        Number y = ((Number) record.getReadables()[i]);
-                        pm.appendLineSeriesData(series, x, y.doubleValue(), (y instanceof DescStatsDouble) ? ((DescStatsDouble) y).getStdev() : 0);
+                    try{
+                        ch.psi.pshell.device.Readable r = scan.getReadables()[i];
+                        String name = r.getAlias();
+                        String series = title + "/" + name + "/0";
+                        if (r instanceof ch.psi.pshell.device.Readable.ReadableMatrix) {
+                            pm.setMatrixSeriesData(series, (double[][]) Convert.toDouble(record.getReadables()[i]), null, null);
+                        } else if (r instanceof ch.psi.pshell.device.Readable.ReadableArray) {
+                            double[] z = (double[]) record.getReadables()[i];
+                            double[] ax = new double[z.length];
+                            Arrays.fill(ax, x);
+                            double[] ay = Arr.indexesDouble(z.length);
+                            pm.appendMatrixSeriesDataArray(series, ax, ay, z);
+                        } else {
+                            Number y = ((Number) record.getReadables()[i]);
+                            pm.appendLineSeriesData(series, x, y.doubleValue(), (y instanceof DescStatsDouble) ? ((DescStatsDouble) y).getStdev() : 0);
+                        }
+                    } catch (Exception ex){
+                        Logger.getLogger(PlotterBinder.class.getName()).log(Level.FINER, null, ex);
                     }
-                }
+                }                
             }
         }
 

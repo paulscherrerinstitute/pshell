@@ -44,8 +44,6 @@ public class View extends MainFrame {
         pm = new DesktopPlotter(plotPane);
         if (port > 0){
             ps = new PlotServer(port, pm);
-        } else if (App.hasArgument(ARG_SERVER_PORT)){
-            ps = new PlotServer(Integer.valueOf(App.getArgumentValue(ARG_SERVER_PORT)), pm);
         } else {
             ps = new PlotServer(pm);
         }
@@ -65,17 +63,17 @@ public class View extends MainFrame {
         logManager.setConsoleLoggerLevel(Level.OFF);
         loggerPanel.setVisible(false);
 
+        boolean persist  = (App.isPlotServer() && App.isDetachedPersisted()) || !App.isLocalMode();
         //After ps is instantiated-> the context file depends on the port & host.
-        if (App.isLocalMode()){
+        if (persist){
+             restoreState();
+        } else {
             if (App.getSize()!=null){
                 SwingUtilities.invokeLater(()->{
                     View.this.setSize(App.getSize());
                     SwingUtils.centerComponent(null, View.this);                    
                 });
             }
-        }
-        else {
-            restoreState();
         }
         
         logger.info("Listening socket: " + ps.getAddress());
@@ -390,6 +388,17 @@ public class View extends MainFrame {
         }
     }//GEN-LAST:event_menuSetupActionPerformed
     
+    public static void create(int port){
+        if (App.isDebug()){
+            PlotServer.debug = true;
+        }
+        /* Create and display the form */
+        java.awt.EventQueue.invokeLater(new Runnable() {
+            public void run() {
+               new View(port).setVisible(true);
+            }
+        });        
+    }
     /**
      * @param args the command line arguments
      */
@@ -406,16 +415,12 @@ public class View extends MainFrame {
             System.out.println(getHelpMessage());
             return;            
         }
-        
-        if (App.isDebug()){
-            PlotServer.debug = true;
+        int port = -1;
+        if (App.hasArgument(ARG_SERVER_PORT)){
+            port = Integer.valueOf(App.getArgumentValue(ARG_SERVER_PORT));
         }
-        /* Create and display the form */
-        java.awt.EventQueue.invokeLater(new Runnable() {
-            public void run() {
-               new View().setVisible(true);
-            }
-        });
+        
+        create(port);
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables

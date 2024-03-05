@@ -62,6 +62,8 @@
 | -full                    | Start in full screen mode.|
 | -dual                    | Start GUI and command line terminal: cannot be used if running in the background.|
 | -dvpn=[cls, ...]         | Show a device panel, giving a class name and arguments (if the class has a main method) or else an inline device string.|
+| -psrv=[url]              | URL of a plot server (plots are externalized adding '-dspt -hide=tabPlots').|
+| -plot=[port]             | Start a plot server on the given port.|
 | -extr=[value]            | Force (value=true) or disable (value=false) extraction of startup and utility scrips (default disabled in local mode).|
 | -vers=[value]            | Force versioning enabled (value=true) or disabled (value=false) (default disabled in local mode).|
 | -nbcf=[value]            | Force disabling (true) or enabling (false) the use of bytecode files (default defined in configuration).|

@@ -25,6 +25,7 @@ import ch.psi.pshell.device.GenericDevice;
 import ch.psi.pshell.epics.Epics;
 import ch.psi.pshell.plot.Plot;
 import ch.psi.pshell.plotter.Client;
+import ch.psi.pshell.plotter.PlotServer;
 import ch.psi.pshell.plotter.Plotter;
 import ch.psi.pshell.plotter.PlotterBinder;
 import ch.psi.pshell.scan.Scan;
@@ -493,6 +494,8 @@ public class App extends ObservableBase<AppListener> {
         sb.append("\n\t-full        \tStart in full screen mode");
         sb.append("\n\t-dual        \tStart GUI and command line interface (not allowed if running in the background)");
         sb.append("\n\t-dvpn=<cls>  \tShow a device panel giving a class name and args or an inline device string");
+        sb.append("\n\t-psrv=<url>  \tURL of a plot server (plots are externalized adding '-dspt -hide=tabPlots')");
+        sb.append("\n\t-plot=<port> \tStart a plot server on the given port");
         sb.append("\n\t-extr=<value>\tForce (true) or disable (false) extraction of startup and utility scrips");
         sb.append("\n\t-vers=<value>\tForce versioning enabled (true) or disabled (false)");
         sb.append("\n\t-nbcf=<value>\tForce disabling (true) or enabling (false) the use of bytecode files");
@@ -536,7 +539,7 @@ public class App extends ObservableBase<AppListener> {
     }
 
     static public boolean isLocalMode() {
-        return getBoolArgumentValue("l") || isPlotOnly() || isHelpOnly() || isDataPanel() || isStripChart() || isOffline() || isVolatile() || isSingleViewer();
+        return getBoolArgumentValue("l") || isPlotOnly() || isHelpOnly() || isDataPanel() || isStripChart() || isOffline() || isVolatile() || isSingleViewer() || isPlotServer();
     }
 
     static public boolean isBareMode() {
@@ -807,6 +810,17 @@ public class App extends ObservableBase<AppListener> {
 
     static public String getPlotServer() {
         return App.getArgumentValue("psrv");
+    }
+
+    static public boolean isPlotServer() {
+        return App.hasArgument("plot");
+    }
+
+    static public int getPlotServerPort() {
+        if (isArgumentDefined("plot")){
+            return Integer.valueOf(App.getArgumentValue("plot"));
+        } 
+        return -1;
     }
 
     static public Map<String, Object> getInterpreterArgs() {
@@ -1168,6 +1182,8 @@ public class App extends ObservableBase<AppListener> {
                 }
             } else if (isDataPanel()) {
                 DataPanel.createPanel(getFileArg());
+            } else if (isPlotServer()){                
+                ch.psi.pshell.plotter.View.create(getPlotServerPort());
             } else if (isCamServerViewer()) {
                 JPanel panel = CamServerViewer.create(null, getSize());
             } else if (isDeviceViewer()){

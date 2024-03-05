@@ -439,6 +439,14 @@ public class View extends MainFrame {
         nextStagesPanel = new NextStagesPanel();
     }
 
+    public boolean isHidden(Component component){
+        if (component==null){
+            return true;
+        }
+        return App.getArgumentValues("hide").contains(component.getName());
+    }
+       
+    
     //TODO: This flag is used to re-inject detached windows to original tabs.
     //Better doing with drad/drop instead of double/click + ctrl+close
     boolean ctrlPressed;
@@ -2069,21 +2077,25 @@ public class View extends MainFrame {
     }
 
     void setScanPlotVisible(boolean value) {
-        if (isPlotsVisible() != value) {
-            setTabPlotVisible(value);
-            if (plotsDetached) {
-                plotFrame.setVisible(value);
-            } else if (value) {
-                if ((splitterHoriz.getDividerLocation() >= splitterHoriz.getWidth() - splitterHoriz.getDividerSize() - 10)) {
-                    splitterHoriz.setDividerLocation(0.70);
+        if (!isHidden(plotFrame)){
+            if (isPlotsVisible() != value) {
+                setTabPlotVisible(value);
+                if (plotsDetached) {
+                    plotFrame.setVisible(value);
+                } else if (value) {
+                    if ((splitterHoriz.getDividerLocation() >= splitterHoriz.getWidth() - splitterHoriz.getDividerSize() - 10)) {
+                        splitterHoriz.setDividerLocation(0.70);
+                    }
                 }
             }
         }
     }
 
     void setTabPlotVisible(boolean value) {
-        tabPlots.setVisible(value);
-        splitterHoriz.setDividerSize(value ? splitterVert.getDividerSize() : 0);
+        if (!isHidden(tabPlots)){
+            tabPlots.setVisible(value);
+            splitterHoriz.setDividerSize(value ? splitterVert.getDividerSize() : 0);
+        }
     }
 
     JFrame plotFrame;
@@ -2092,6 +2104,9 @@ public class View extends MainFrame {
     void setScanPlotDetached(boolean value) {
         if (plotsDetached != value) {
             if (App.isPlotOnly()) {
+                return;
+            }
+            if (isHidden(plotFrame)){
                 return;
             }
             boolean visible = isPlotsVisible();
@@ -2123,14 +2138,15 @@ public class View extends MainFrame {
     
     void setScanPanelVisible(boolean value){
         if (!App.isOffline()) {
-            
-            if (preferences.hideScanPanel != (tabStatus.indexOfComponent(scanPanel)<0)){
-                if (preferences.hideScanPanel){
-                    tabStatus.remove(scanPanel);
-                } else {
-                    int index = Math.min(3, tabStatus.getTabCount());
-                    tabStatus.add(scanPanel, index); 
-                    tabStatus.setTitleAt(index, App.getResourceBundleValue(View.class, "View.scanPanel.TabConstraints.tabTitle"));                    
+            if (!isHidden(scanPanel)){
+                if (preferences.hideScanPanel != (tabStatus.indexOfComponent(scanPanel)<0)){
+                    if (preferences.hideScanPanel){
+                        tabStatus.remove(scanPanel);
+                    } else {
+                        int index = Math.min(3, tabStatus.getTabCount());
+                        tabStatus.add(scanPanel, index); 
+                        tabStatus.setTitleAt(index, App.getResourceBundleValue(View.class, "View.scanPanel.TabConstraints.tabTitle"));                    
+                    }
                 }
             }
         }                
@@ -2141,19 +2157,22 @@ public class View extends MainFrame {
     }
 
     void setOutputPanelVisible(boolean value){
-        if (!App.isOffline()) {
-            if (preferences.hideOutputPanel != (tabStatus.indexOfComponent(outputPanel)<0)){
-                if (preferences.hideOutputPanel) {
-                    tabStatus.remove(outputPanel);
-                } else {
-                    int index = Math.min(isScanPanelVisible()?4:3, tabStatus.getTabCount());
-                    tabStatus.add(outputPanel, index); 
-                    tabStatus.setTitleAt(index, App.getResourceBundleValue(View.class, "View.outputPanel.TabConstraints.tabTitle"));                    
+        if (!isHidden(outputPanel)){
+            if (!App.isOffline()) {
+                if (preferences.hideOutputPanel != (tabStatus.indexOfComponent(outputPanel)<0)){
+                    if (preferences.hideOutputPanel) {
+                        tabStatus.remove(outputPanel);
+                    } else {
+                        int index = Math.min(isScanPanelVisible()?4:3, tabStatus.getTabCount());
+                        tabStatus.add(outputPanel, index); 
+                        tabStatus.setTitleAt(index, App.getResourceBundleValue(View.class, "View.outputPanel.TabConstraints.tabTitle"));                    
+                    }
                 }
-            }
-        }           
+            }                       
+        }
     }
-    
+        
+     
     boolean isOutputPanelVisible(){
         return (tabStatus.indexOfComponent(outputPanel)>=0);
     }    
