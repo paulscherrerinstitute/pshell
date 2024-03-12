@@ -225,8 +225,8 @@ public class MatrixPlotRenderer extends MatrixPlotBase {
 
     @Override
     protected void onSetData(MatrixPlotSeries series, double[][] data, double[][] xdata, double[][] ydata) {
-        int width = data[0].length;
         int height = data.length;
+        int width = (height==0) ? 0 : data[0].length;
         dataBuffer = new DataBufferDouble((double[]) Convert.flatten(data), width);
         imageData = new Data(dataBuffer, width, height);
 
