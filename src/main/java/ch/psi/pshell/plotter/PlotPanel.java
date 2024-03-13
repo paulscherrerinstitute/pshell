@@ -18,6 +18,7 @@ import ch.psi.pshell.plot.PlotSeries;
 import ch.psi.pshell.plot.SlicePlotBase;
 import ch.psi.pshell.plot.SlicePlotDefault;
 import ch.psi.pshell.plot.SlicePlotSeries;
+import ch.psi.pshell.plot.SurfacePlotBase;
 import ch.psi.pshell.plot.TimePlot;
 import ch.psi.pshell.plot.TimePlotJFree;
 import ch.psi.pshell.plot.TimePlotSeries;
@@ -208,8 +209,8 @@ public class PlotPanel extends MonitoredPanel {
 
     void setMatrixPlotAttrs(MatrixPlotBase plot, Colormap colormap) {
         colormap = (colormap != null) ? colormap : getPreferences().colormap;
-        if (plot instanceof MatrixPlotJFree) {
-            ((MatrixPlotJFree) plot).setColormap(colormap);
+        if (!(plot instanceof SurfacePlotBase)) {
+            ((MatrixPlotBase) plot).setColormap(colormap);
         }
     }
 
@@ -396,7 +397,7 @@ public class PlotPanel extends MonitoredPanel {
         if (lineWidth != null) {
             if (lineWidth >= 0) {
                 series.setLinesVisible(true);
-                series.setLineWidth(markerSize);
+                series.setLineWidth(lineWidth);
             } else {
                 series.setLinesVisible(false);
             }

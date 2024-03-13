@@ -161,6 +161,9 @@ public class LinePlotSeries extends PlotSeries<LinePlot> {
 
     public void setMaxItemCount(int value) {
         maxItemCount = value;
+        if (getPlot() != null) {
+            ((LinePlotBase) getPlot()).setMaxItemCount(this, value);
+        }        
     }
 
     //Tools

@@ -116,6 +116,9 @@ abstract public class LinePlotBase extends PlotBase<LinePlotSeries> implements L
     protected void setPointSize(LinePlotSeries series, int value) {
     }
 
+    protected void setMaxItemCount(LinePlotSeries series, int value) {
+    }
+
     /**
      * Returns a token to reference underlying data from LinePlotSeries
      */

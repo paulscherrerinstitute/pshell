@@ -384,7 +384,7 @@ public class LinePlotJFree extends LinePlotBase {
                 ((XYSeriesCollection) data).addSeries((XYSeries) s);
         }
 
-        if (series.getMaxItemCount() > 0) {
+        if (series.getMaxItemCount() >= 0) {
             if (s instanceof ComparableObjectSeries) {
                 ((ComparableObjectSeries) s).setMaximumItemCount(series.getMaxItemCount());
             } else {
@@ -1334,6 +1334,20 @@ public class LinePlotJFree extends LinePlotBase {
             renderer.setSeriesShape(index, marker);
         }
     }
+    
+    @Override
+    protected void setMaxItemCount(LinePlotSeries series, int value) {
+        Series s = getSeries(series);
+        if (value<0){
+            value=Integer.MAX_VALUE;
+        }
+        if (s instanceof ComparableObjectSeries) {
+            ((ComparableObjectSeries) s).setMaximumItemCount(value);
+        } else {
+            ((XYSeries) s).setMaximumItemCount(value);
+        }
+    }
+    
 
     @Override
     public Object addMarker(double val, final AxisId axis, String label, Color color) {
