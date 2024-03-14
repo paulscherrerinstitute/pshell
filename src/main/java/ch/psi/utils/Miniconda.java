@@ -35,7 +35,7 @@ public class Miniconda {
     }
 
     public static String[] getDefaultPackages(){
-        return new String[] {"numpy", "scipy","pyarrow", "pandas", "numba", "matplotlib", "pillow", "scikit-image", "requests", "scikit-image", "h5py", "pyepics"};
+        return new String[] {"numpy", "scipy","pyarrow", "pandas", "numba", "matplotlib", "pillow", "requests", "scikit-image", "h5py", "pyepics"};
     }
     
     
