@@ -20,6 +20,7 @@ import java.util.Map;
 public class ProviderTIFF extends ProviderText {
     public static final String IMAGE_FILE_TYPE = "tiff";
     static String IMAGE_FILE_SUFIX = "_%04d." + IMAGE_FILE_TYPE;
+    static String STACK_FILE_SUFIX = "_." + IMAGE_FILE_TYPE;
     static boolean PARALLEL_WRITING = true;
     
 
@@ -66,13 +67,22 @@ public class ProviderTIFF extends ProviderText {
         Path filePath = getFilePath(root, path, false);        
         String dataset = filePath.toFile().getName();
         File file =  new File(filePath.toString() + String.format(IMAGE_FILE_SUFIX, 0));
+        File stack =  new File(filePath.toString() + STACK_FILE_SUFIX); 
         if (file.exists()) {         
             Object array = Tiff.load(file.toString());
             
             File folder = new File(file.getParent());        
             FilenameFilter filter = new FilenameFilter() {
                 public boolean accept(File dir, String name) {
-                    return name.startsWith(dataset) && name.endsWith(IMAGE_FILE_TYPE);
+                    if (name.startsWith(dataset) && name.endsWith(IMAGE_FILE_TYPE)){
+                        for (int i = dataset.length()+1; i < dataset.length()+5; i++) {
+                            if (!Character.isDigit(name.charAt(i))) {                      
+                                return false;
+                            }  
+                        }
+                        return true;
+                    }
+                    return false;
                 }
             };        
             int numImages = folder.listFiles(filter).length;
@@ -82,6 +92,15 @@ public class ProviderTIFF extends ProviderText {
             ret.put(INFO_RANK, 3);
             addClassInfo(Arr.getComponentType(array), ret);
             return ret;
+        } else if (stack.exists()) {    
+            Object array = Tiff.load(stack.toString());            
+            int numImages = 2;
+            int[] shape = Arr.getShape(array);
+            ret.put(INFO_TYPE, INFO_VAL_TYPE_DATASET);
+            ret.put(INFO_DIMENSIONS, new int[] {numImages, shape[0], shape[1]});
+            ret.put(INFO_RANK, 3);
+            addClassInfo(Arr.getComponentType(array), ret);
+            return ret;            
         } else {
             return super.getInfo(root, path);
         }
@@ -89,13 +108,20 @@ public class ProviderTIFF extends ProviderText {
 
     @Override
     public DataSlice getData(String root, String path, int index) throws IOException {
-        HashMap<String, Object> ret = new HashMap<>();
         Path filePath = getFilePath(root, path, false);        
-        File file =  new File(filePath.toString() + String.format(IMAGE_FILE_SUFIX, index));
+        File file =  new File(filePath.toString() + String.format(IMAGE_FILE_SUFIX, index));        
+        File stack =  new File(filePath.toString() + STACK_FILE_SUFIX);        
         if (file.exists()) {         
             Object array = Tiff.load(file.toString());            
-            int[] shape = Arr.getShape(array);
-            return new DataSlice(root, path,  new int[] {3, shape[0], shape[1]}, array, index, false);            
+            //int[] shape = Arr.getShape(array);
+            Map<String, Object>  info = getInfo(root, path);
+            int[] shape = (int[]) info.get(INFO_DIMENSIONS);
+            return new DataSlice(root, path,  new int[] {shape[0], shape[1], shape[2]}, array, index, false);            
+        } else if (stack.exists()) {        
+            Object array = Tiff.load(stack.toString(), index);                        
+            Map<String, Object>  info = getInfo(root, path);
+            int[] shape = (int[]) info.get(INFO_DIMENSIONS);
+            return new DataSlice(root, path,  new int[] {shape[0], shape[0], shape[1]}, array, index, false);            
         } else {
             return super.getData(root, path, index);
         }
@@ -106,15 +132,17 @@ public class ProviderTIFF extends ProviderText {
         if (dimensions.length <=2){
             super.createDataset(path, type, dimensions, true, features);
         } else if (dimensions.length == 3){
+        } else if (dimensions.length == 4){
         } else {
-            throw new UnsupportedOperationException("Only support up to 3 dimensional datasets");
+            throw new UnsupportedOperationException("Only support up to 4 dimensional datasets");
         }
     }
 
     @Override
     public void createDataset(String path, String[] names, Class[] types, int[] lengths, Map features) throws IOException {
         for (int i=0; i< names.length; i++){
-            if (Arr.getRank(types[i])==2){
+            int rank = Arr.getRank(types[i]);
+            if ((rank==2) || (rank==3)){
                 //Will be saved as String (filename)
                 lengths[i]=0;
                 types[i]=String.class;
@@ -122,7 +150,16 @@ public class ProviderTIFF extends ProviderText {
         }
         super.createDataset(path, names, types, lengths, features);
     }
-
+    
+    @Override
+    public void setDataset(String path, Object data, Class type, int rank, int[] dimensions, boolean unsigned, Map features) throws IOException {
+        if ((rank == 2) || (rank==3)) {            
+            setItem(path, data, type, 0);
+        } else {
+            super.setDataset(path, data, type, rank, dimensions, unsigned, features);
+        }
+    }
+    
     @Override
     public void setItem(String path, Object data, Class type, int index) throws IOException {
         int[] shape = Arr.getShape(data);
@@ -149,6 +186,10 @@ public class ProviderTIFF extends ProviderText {
             Path prefix = getFilePath(path, false);
             String filename = prefix.toString() + String.format(IMAGE_FILE_SUFIX, index);
             Tiff.save(data, filename, PARALLEL_WRITING, getMetadata());
+        } else if (rank == 3) {
+            Path prefix = getFilePath(path, false);
+            String filename = prefix.toString() + STACK_FILE_SUFIX;
+            Tiff.saveStack(data, filename, PARALLEL_WRITING, getMetadata() );
         } else {            
             throw new IllegalArgumentException("Cannot set data in CSV format with rank: " + rank);
         }
