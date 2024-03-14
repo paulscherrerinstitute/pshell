@@ -263,6 +263,7 @@ from ch.psi.pshell.data import Provider as  DataProvider
 from ch.psi.pshell.data import ProviderHDF5 as  ProviderHDF5
 from ch.psi.pshell.data import ProviderText as  ProviderText
 from ch.psi.pshell.data import ProviderCSV as  ProviderCSV
+from ch.psi.pshell.data import ProviderTIFF as  ProviderTIFF
 from ch.psi.pshell.data import ProviderFDA as  ProviderFDA
 from ch.psi.pshell.data import Converter as  DataConverter
 from ch.psi.pshell.data import Layout as  Layout

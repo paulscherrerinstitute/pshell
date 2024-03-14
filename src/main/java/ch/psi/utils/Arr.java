@@ -296,7 +296,7 @@ public class Arr {
     public static int getRank(Object array) {
         int rank = 0;
         if (array != null) {
-            Class type = array.getClass();
+            Class type = (array instanceof Class) ? (Class)array : array.getClass();
             while (type.isArray()) {
                 rank++;
                 type = type.getComponentType();
@@ -305,6 +305,7 @@ public class Arr {
         return rank;
     }
 
+    
     public static <T> T[] getColumn(T[][] matrix, int index) {
         if (matrix == null) {
             return null;

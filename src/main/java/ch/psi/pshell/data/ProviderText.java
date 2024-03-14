@@ -64,6 +64,16 @@ public class ProviderText implements Provider {
     static String ARRAY_SEPARATOR;
     static String LINE_SEPARATOR;
 
+    static String NULL_VALUE = " ";
+
+    public static void setNullValue(String str) {
+        NULL_VALUE = str;
+    }
+
+    public static String getNullValue() {
+        return NULL_VALUE;
+    }
+    
     static boolean IDENTIFY_SEPARATOR = true;
 
     public static void setDefaultItemSeparator(String str) {
@@ -885,12 +895,12 @@ public class ProviderText implements Provider {
 
     void writeElement(Appendable out, Object value) throws IOException {
         if (value == null) {
-            out.append("");
+            out.append(NULL_VALUE);
         } else if (value.getClass().isArray()) {
             int rank = Arr.getRank(value);
             //
             if (rank > 1) {
-                out.append("");
+                out.append(NULL_VALUE);
             } else {
                 int length = Array.getLength(value);
                 for (int i = 0; i < length; i++) {

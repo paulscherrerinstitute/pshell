@@ -31,7 +31,7 @@ public class Configuration extends Config {
     public boolean saveConsoleSessionFiles;
 
     public String dataPath = TOKEN_DATA + "/" + TOKEN_YEAR + "_" + TOKEN_MONTH + "/" + TOKEN_DATE + "/" + TOKEN_DATE + "_" + TOKEN_TIME + "_" + TOKEN_EXEC_NAME;
-    @Defaults(values = {"h5", "txt", "csv", "fda"})
+    @Defaults(values = {"h5", "txt", "csv", "fda", "tiff"})
     public String dataProvider = "h5";
     @Defaults(values = {"default", "table", "sf", "fda", "nx"})
     public String dataLayout = "default";

@@ -133,6 +133,8 @@ public class DataManager implements AutoCloseable {
             providerClass = ProviderText.class;
         } else if (providerName.equals("csv")) {
             providerClass = ProviderCSV.class;
+        } else if (providerName.equals("tiff")) {
+            providerClass = ProviderTIFF.class;
         } else if (providerName.equals("fda")) {
             providerClass = ProviderFDA.class;
         } else {

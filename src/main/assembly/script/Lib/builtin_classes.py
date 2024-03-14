@@ -46,6 +46,7 @@ import ch.psi.pshell.data.Provider as  DataProvider
 import ch.psi.pshell.data.ProviderHDF5 as  ProviderHDF5
 import ch.psi.pshell.data.ProviderText as  ProviderText
 import ch.psi.pshell.data.ProviderCSV as  ProviderCSV
+import ch.psi.pshell.data.ProviderTIFF as  ProviderTIFF
 import ch.psi.pshell.data.ProviderFDA as  ProviderFDA
 import ch.psi.pshell.data.Converter as  DataConverter
 import ch.psi.pshell.data.Layout as  Layout
