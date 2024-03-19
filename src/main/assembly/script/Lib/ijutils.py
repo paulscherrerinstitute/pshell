@@ -11,6 +11,7 @@ import ch.psi.utils.Convert as Convert
 import ch.psi.pshell.imaging.Utils as ImagingUtils
 from startup import get_context, expand_path, is_string
 import java.awt.image.BufferedImage as BufferedImage
+import org.python.core.PyArray as PyArray
 import jarray
 import os
 
@@ -107,6 +108,13 @@ def load_array(array, width=None, height=None, title = "img"):
         elif array.typecode in ['i','f','d']: proc = FloatProcessor(width, height, array)
         else: raise Exception("Invalid array type")   
     return ImagePlus(title, proc)
+
+def to_ip(img):
+    if isinstance (img, ImagePlus):
+        return img
+    if isinstance(img,PyArray):
+        return load_array(img)
+    return load_image(img)
 
 def save_image(ip, path=None, format = None, metadata={}):
     """
@@ -780,3 +788,41 @@ def average_ips (ips, roi=None, as_float=True):
     aux = integrate_ips(ips, as_float)     
     op_const(aux, "divide", float(len(ips)), in_place=True)    
     return aux
+
+
+###############################################################################
+# Composite images
+###############################################################################
+
+def create_composite_image(ref, slots_x, slots_y, name="Composite"):
+    ref = to_ip(ref)
+    proc=ref.getProcessor()
+    combined_image = ImagePlus(name, proc.createProcessor(proc.width*slots_x, proc.height*slots_y))
+    return combined_image
+
+
+def append_composite_image(composite, img, slot_x, slot_y):
+    img = to_ip(img)
+    proc=img.getProcessor()
+    cproc = composite.getProcessor()
+    if cproc.width < (slot_x+1) * proc.width or cproc.height < (slot_y+1) * proc.height:
+        raise Exception("Invalid composite image slot: " + str ((slot_x, slot_y)))
+    cproc.insert(proc, slot_x * proc.width, slot_y * proc.height)
+
+
+def display_composite_image(composite_image, title=None):
+    import ch.psi.pshell.plot.MatrixPlot as MatrixPlot
+    from builtin_functions import get_plots, plot
+    composite_image =  to_ip(composite_image)
+    #title = composite_image.getTitle()
+    data = Convert.toDouble(Convert.transpose(get_ip_array(composite_image)))
+    plots = get_plots(title)
+    if len(plots)==1:
+       p = plots[0]
+       if isinstance(p,MatrixPlot):
+            s=p.getSeries(0)
+            x,y = s.getNumberOfBinsX(), s.getNumberOfBinsY()
+            if x == composite_image.getWidth() and y== composite_image.getHeight():
+                s.setData(data)
+                return 
+    p=plot(data, title=title)[0]
