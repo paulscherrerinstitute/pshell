@@ -11,6 +11,7 @@ import ch.psi.utils.Convert as Convert
 import ch.psi.pshell.imaging.Utils as ImagingUtils
 from startup import get_context, expand_path, is_string
 import java.awt.image.BufferedImage as BufferedImage
+import java.lang.System as System
 import org.python.core.PyArray as PyArray
 import jarray
 import os
@@ -810,19 +811,32 @@ def append_composite_image(composite, img, slot_x, slot_y):
     cproc.insert(proc, slot_x * proc.width, slot_y * proc.height)
 
 
-def display_composite_image(composite_image, title=None):
+def display_composite_image(composite_image, title=None, reset=False, transpose=False, force_renderer=False):
     import ch.psi.pshell.plot.MatrixPlot as MatrixPlot
+    import ch.psi.pshell.swing.PlotPanel as PlotPanel
     from builtin_functions import get_plots, plot
     composite_image =  to_ip(composite_image)
     #title = composite_image.getTitle()
-    data = Convert.toDouble(Convert.transpose(get_ip_array(composite_image)))
-    plots = get_plots(title)
-    if len(plots)==1:
-       p = plots[0]
-       if isinstance(p,MatrixPlot):
-            s=p.getSeries(0)
-            x,y = s.getNumberOfBinsX(), s.getNumberOfBinsY()
-            if x == composite_image.getWidth() and y== composite_image.getHeight():
-                s.setData(data)
-                return 
-    p=plot(data, title=title)[0]
+    data = get_ip_array(composite_image)
+    if transpose:
+        data = Convert.transpose(data)
+    data = Convert.toDouble(data)
+    if not reset:
+        plots = get_plots(title)
+        if len(plots)==1:
+           p = plots[0]
+           print p
+           if isinstance(p,MatrixPlot):
+                s=p.getSeries(0)
+                x,y = (s.getNumberOfBinsX(), s.getNumberOfBinsY()) if transpose  else (s.getNumberOfBinsY(), s.getNumberOfBinsX())                
+                if x == composite_image.getWidth() and y== composite_image.getHeight():
+                    s.setData(data)
+                    return 
+    if force_renderer:
+        matrix_plot = System.getProperty(PlotPanel.PROPERTY_PLOT_IMPL_MATRIX)
+        System.setProperty(PlotPanel.PROPERTY_PLOT_IMPL_MATRIX, "ch.psi.pshell.plot.MatrixPlotRenderer")
+    try:
+        p=plot(data, title=title)[0]
+    finally:
+        if force_renderer:
+            System.setProperty(PlotPanel.PROPERTY_PLOT_IMPL_MATRIX, matrix_plot)
