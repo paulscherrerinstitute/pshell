@@ -172,38 +172,45 @@ public class Setup extends Config {
         }
         fileName = fileName.replace(TOKEN_SYS_HOME, Sys.getUserHome());
         fileName = fileName.replace(TOKEN_SYS_USER, Sys.getUserName());
-        super.load(fileName);
-
+        
+        IOException saveException = null;
+        try{
+            super.load(fileName);
+        } catch (IOException ex) {
+            //Cannot write
+            saveException =ex;
+        }
+        boolean setDefault = false;
         //Backward compatibility
         if (Str.toString(configFileSettings).equals((Str.toString(null)))) {
             configFileSettings = TOKEN_CONFIG + "/settings.properties";
-            save();
+            setDefault = true;
         }
         if (Str.toString(configFileVariables).equals((Str.toString(null)))) {
             configFileVariables = TOKEN_CONFIG + "/variables.properties";
-            save();
+            setDefault = true;
         }
         if (Str.toString(configFileSessions).equals((Str.toString(null)))) {
             configFileSessions = TOKEN_CONFIG + "/sessions.properties";
-            save();
+            setDefault = true;
         }
         if (Str.toString(consoleSessionsPath).equals((Str.toString(null)))) {
             consoleSessionsPath = TOKEN_SESSIONS + "/console";
-            save();
+            setDefault = true;
         }
         if (Str.toString(userSessionsPath).equals((Str.toString(null)))) {
             userSessionsPath = TOKEN_SESSIONS + "/user";
-            save();
+            setDefault = true;
         }
         if (Str.toString(xscanPath).equals((Str.toString(null)))) {
             xscanPath = TOKEN_SCRIPT;
-            save();
+            setDefault = true;
         }        
         if (Str.toString(queuePath).equals((Str.toString(null)))) {
             queuePath = TOKEN_SCRIPT;
-            save();
+            setDefault = true;
         }        
- 
+         
         if (System.getProperty(PROPERTY_DATA_PATH) != null) {
             dataPath = System.getProperty(PROPERTY_DATA_PATH);
         }
@@ -281,6 +288,18 @@ public class Setup extends Config {
         }
         originalScriptPath = scriptPath;
         originalDataPath = dataPath;
+        if (saveException!=null){
+            //Let caller decide if can work read-only
+            throw saveException;
+        }
+        if (setDefault){
+            try {
+                save();
+            } catch (IOException ex) {
+                Logger.getLogger(Setup.class.getName()).warning("Cannot save Setup default values");
+            }
+        }
+        
     }
 
     String user = User.DEFAULT_USER_NAME;

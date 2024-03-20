@@ -235,14 +235,22 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
         try {
             setup.load(System.getProperty(PROPERTY_SETUP_FILE));
         } catch (IOException ex) {
-            throw new RuntimeException("Cannot generate setup file");
+            if (!isLocalMode()){
+                throw new RuntimeException("Cannot generate setup file");
+            } else {
+                logger.warning("Cannot generate setup file");
+            }
         }
 
         config = new Configuration();
         try {
             config.load(setup.getConfigFile());
         } catch (IOException ex) {
-            throw new RuntimeException("Cannot generate configuration file");
+            if (!isLocalMode()){
+                throw new RuntimeException("Cannot generate configuration file");
+            } else {
+                logger.warning("Cannot generate configuration file");
+            }
         }
                 
         Config.setDefaultPermissions(config.filePermissionsConfig);
@@ -3537,6 +3545,10 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
                         IO.setFilePermissions(lockFilePath.toString(), getConfig().filePermissionsConfig);
                         lock.release();
                         lock = lockFile.getChannel().tryLock(0, Long.MAX_VALUE, true); //So other process can read active process
+                    } catch (FileNotFoundException ex) {
+                        String message = "Error acessing lock file: "+ ex.toString();
+                        message += ".\nApplication can be started in local mode (-l option)";
+                        exit(message);                        
                     } catch (Exception ex) {
                         String message = "Another instance of this application is running";
                         String processName = "";

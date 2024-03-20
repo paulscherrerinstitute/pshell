@@ -222,7 +222,8 @@ public class Config extends ObservableBase<Config.ConfigListener> {
             try {
                 save();
             } catch (IOException ex) {
-                this.fileName = null;
+                //this.fileName = null;
+                Logger.getLogger(Config.class.getName()).warning("Cannot save config to " + this.fileName);
                 throw ex;
             }
         }

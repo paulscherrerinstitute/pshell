@@ -129,12 +129,16 @@ public class LogManager {
                     new Folder(folder).cleanup(millisToLive, true, false, false);
                 }
             }
-
-            addHandler(lastLogsHandler);
-
         } catch (Exception ex) {
-            ex.printStackTrace();
+            System.out.println("Error acessing log file: " + ex.toString());
         }
+        
+        try {
+             addHandler(lastLogsHandler);
+        } catch (Exception ex) {
+            System.out.println("Error adding last logs handler: " + ex.toString());
+        }        
+
     }
 
     final Handler lastLogsHandler = new Handler() {
