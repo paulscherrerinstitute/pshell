@@ -825,7 +825,6 @@ def display_composite_image(composite_image, title=None, reset=False, transpose=
         plots = get_plots(title)
         if len(plots)==1:
            p = plots[0]
-           print p
            if isinstance(p,MatrixPlot):
                 s=p.getSeries(0)
                 x,y = (s.getNumberOfBinsX(), s.getNumberOfBinsY()) if transpose  else (s.getNumberOfBinsY(), s.getNumberOfBinsX())                
