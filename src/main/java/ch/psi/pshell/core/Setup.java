@@ -108,7 +108,7 @@ public class Setup extends Config {
     public String sessionsPath = TOKEN_HOMEDATA + "/sessions";
     public String logPath = TOKEN_HOMEDATA + "/log";
     public String dataPath = TOKEN_HOMEDATA + "/data";
-    public String imagesPath = TOKEN_HOMEDATA + "/images";
+    public String imagesPath = TOKEN_DATA;
 
     public String configFile = TOKEN_CONFIG + "/config.properties";
     public String configFilePlugins = TOKEN_CONFIG + "/plugins.properties";
@@ -210,7 +210,7 @@ public class Setup extends Config {
             queuePath = TOKEN_SCRIPT;
             setDefault = true;
         }        
-         
+        
         if (System.getProperty(PROPERTY_DATA_PATH) != null) {
             dataPath = System.getProperty(PROPERTY_DATA_PATH);
         }

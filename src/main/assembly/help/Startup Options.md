@@ -35,7 +35,7 @@
 | -extp=[path]             | Set the extensions folder (default is {home}/extensions).|
 | -logp=[path]             | Set the log folder (default is {home}/logs).|
 | -ctxp=[path]             | Set the log folder (default is {home}/logs).|
-| -imgp=[path]             | Set the image folder (default is {home}/image).|
+| -imgp=[path]             | Set the image folder (default is {data}).|
 | -sesp=[path]             | Set the sessions folder (default is {home}/sessions).|
 | -setp=[path]             | Override the setup file, which contains all path definitions (default is {config}/setup.properties).|
 | -conf=[path]             | Override the config file, which stors user options (default is {config}/config.properties).|

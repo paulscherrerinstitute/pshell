@@ -465,7 +465,7 @@ public class App extends ObservableBase<AppListener> {
         sb.append("\n\t-extp=<path>\tSet the extensions folder (default is {home}/extensions)");
         sb.append("\n\t-logp=<path>\tSet the log folder (default is {home}/logs)");
         sb.append("\n\t-ctxp=<path>\tSet the context folder (default is {home}/context)");
-        sb.append("\n\t-imgp=<path>\tSet the image folder (default is {home}/image)");
+        sb.append("\n\t-imgp=<path>\tSet the image folder (default is {data})");
         sb.append("\n\t-sesp=<path>\tSet the sessions folder (default is {home}/sessions)");
         sb.append("\n\t-setp=<path>\tOverride the setup file(default is {config}/setup.properties)");
         sb.append("\n\t-conf=<path>\tOverride the config file(default is {config}/config.properties)");
