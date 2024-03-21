@@ -602,7 +602,7 @@ public class CamServerViewer extends MonitoredPanel {
         return profileOv;
     }
 
-    public Overlay getErrorOverlays(){
+    public Overlay getErrorOverlay(){
         return errorOverlay;
     }
     
@@ -1264,7 +1264,7 @@ public class CamServerViewer extends MonitoredPanel {
 
     protected void manageFit(BufferedImage bi, Data data) {
         Overlay[][] fo = null;
-        if ((showFit || showProfile)) {
+        if ((showFit || showProfile) && isDataValid() ) {
             try {
                 ImageData id = getFrame(data);
                  boolean hasServerFit = (id.x_profile != null);   
@@ -1345,7 +1345,7 @@ public class CamServerViewer extends MonitoredPanel {
         System.out.println("Initializing: " + stream);
 
         parseUserOverlays();
-        errorOverlay = null;
+        clearErrorOverlay();
         lastFrame = null;
         lastPipelinePars = null;
         
@@ -1588,10 +1588,7 @@ public class CamServerViewer extends MonitoredPanel {
             renderer.clearOverlays();
             updatePipelineControls();
             if (renderer.getDevice() == null) {
-                errorOverlay = new Text(renderer.getPenErrorText(), ex.toString(), new Font("Verdana", Font.PLAIN, 12), new Point(20, 20));
-                errorOverlay.setFixed(true);
-                errorOverlay.setAnchor(Overlay.ANCHOR_VIEWPORT_TOP_LEFT);
-                renderer.addOverlay(errorOverlay);
+                addErrorOverlay(ex.toString());
             }
         } finally {
             //checkReticle();
@@ -1617,6 +1614,27 @@ public class CamServerViewer extends MonitoredPanel {
         return stream;
     }
     
+    String processingError;
+    public void clearErrorOverlay(){
+        try{
+            renderer.removeOverlay(errorOverlay);        
+        } catch(Exception ex){            
+        }
+        errorOverlay = null;
+        processingError=null;
+    }
+    
+    public boolean isDataValid(){
+        return processingError==null;
+    }
+    
+    public void addErrorOverlay(String str){
+        Overlay former = errorOverlay;
+        errorOverlay = new Text(renderer.getPenErrorText(), str, new Font("Verdana", Font.PLAIN, 12), new Point(20, 20));
+        errorOverlay.setFixed(true);
+        errorOverlay.setAnchor(Overlay.ANCHOR_VIEWPORT_TOP_LEFT);
+        renderer.updateOverlays(errorOverlay, former);        
+    }
     
     public Map<String, Object> getConfig(String instanceName) throws IOException, InterruptedException {
         if (server == null) {
@@ -1919,7 +1937,7 @@ public class CamServerViewer extends MonitoredPanel {
     }
 
     Frame lastFrame = null;
-    Map lastPipelinePars = null;
+    Map lastPipelinePars = null;    
 
     protected void onTimer() {
         try {
@@ -1933,12 +1951,21 @@ public class CamServerViewer extends MonitoredPanel {
 
             Frame frame = getCurrentFrame();
             if (frame != lastFrame) {
-                lastFrame = frame;
+                lastFrame = frame;                
                 if (frame != null) {
                     Map<String, Object> pars = getProcessingParameters(frame.cache);
                     if ((lastPipelinePars == null) || !lastPipelinePars.equals(pars)) {
                         lastPipelinePars = pars;
                         updatePipelineControls();
+                        String processingError = (String) lastPipelinePars.getOrDefault("processing_error", null);                        
+                        if (processingError!= this.processingError){
+                            if ((processingError !=null) && (!processingError.isBlank())){                            
+                                addErrorOverlay(processingError);
+                            } else {
+                                clearErrorOverlay();
+                            }
+                            this.processingError =processingError;
+                        }                        
                     }
                 }
             }
