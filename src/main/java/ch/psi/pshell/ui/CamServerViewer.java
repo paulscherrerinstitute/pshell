@@ -1087,10 +1087,12 @@ public class CamServerViewer extends MonitoredPanel {
         boolean threshold;
         boolean goodRegion;
         boolean slicing;
+        boolean valid;
 
         ImageData(Stream stream, Renderer renderer) {
             if (stream != null) {
-                cache = stream.take();
+                cache = stream.take();                
+                valid = true;
                 try {
                     Map<String, Object> pars = getProcessingParameters(cache);
                     background = (boolean) pars.get("image_background_enable");
@@ -1098,71 +1100,74 @@ public class CamServerViewer extends MonitoredPanel {
                     threshold = (th != null) && (th.doubleValue() > 0);
                     goodRegion = ((Map<String, Object>) pars.get("image_good_region")) != null;
                     slicing = ((Map<String, Object>) (pars.get("image_slices"))) != null;
+                    String processingError = (String) pars.getOrDefault("processing_error", null);   
+                    valid = (processingError==null) || (processingError.isBlank());
                 } catch (Exception ex) {
                 }
-
-                String prefix = goodRegion ? "gr_" : "";
-                x_fit_mean = getDouble(prefix + "x_fit_mean");
-                y_fit_mean = getDouble(prefix + "y_fit_mean");
-                x_fit_standard_deviation = getDouble(prefix + "x_fit_standard_deviation");
-                y_fit_standard_deviation = getDouble(prefix + "y_fit_standard_deviation");
-                x_fit_gauss_function = getDoubleArray(prefix + "x_fit_gauss_function");
-                y_fit_gauss_function = getDoubleArray(prefix + "y_fit_gauss_function");
-                x_profile = getDoubleArray("x_profile");
-                y_profile = getDoubleArray("y_profile");
-                x_center_of_mass = getDouble("x_center_of_mass");
-                y_center_of_mass = getDouble("y_center_of_mass");
-                x_rms = getDouble("x_rms");
-                y_rms = getDouble("y_rms");
-                if (goodRegion) {
-                    double[] gX2 = new double[x_profile.length];
-                    Arrays.fill(gX2, Double.NaN);
-                    try {
-                        double[] axis = getDoubleArray("x_axis");
-                        gr_x_axis = getDoubleArray("gr_x_axis");
-                        double x = gr_x_axis[0];
-                        gr_size_x = x_fit_gauss_function.length;
-                        //If gr axis values are not identical, calculate the index...
-                        gr_pos_x = (int) ((renderer.getCalibration() != null) ? renderer.getCalibration().convertToImageX(x) : x);
-                        //But prefer checking the value to avoid raounding errors
-                        for (int i = 0; i < axis.length; i++) {
-                            if (almostEqual(axis[i], x, 10e-6)) {
-                                gr_pos_x = i;
-                            }
-                        }
-                        System.arraycopy(x_fit_gauss_function, 0, gX2, gr_pos_x, gr_size_x);
-                    } catch (Exception ex) {
-                    }
-                    x_fit_gauss_function = gX2;
-                    double[] gY2 = new double[y_profile.length];
-                    Arrays.fill(gY2, Double.NaN);
-                    try {
-                        double[] axis = getDoubleArray("y_axis");
-                        gr_y_axis = getDoubleArray("gr_y_axis");
-                        double y = gr_y_axis[0];
-                        gr_size_y = y_fit_gauss_function.length;
-                        //If gr axis values are not identical, calculate the index...
-                        gr_pos_y = (int) ((renderer.getCalibration() != null) ? renderer.getCalibration().convertToImageY(y) : y);
-                        //But prefer checking the value to avoid raounding errors
-                        for (int i = 0; i < axis.length; i++) {
-                            if (almostEqual(axis[i], y, 10e-6)) {
-                                gr_pos_y = i;
-                            }
-                        }
-                        System.arraycopy(y_fit_gauss_function, 0, gY2, gr_pos_y, gr_size_y);
-                    } catch (Exception ex) {
-                    }
-                    y_fit_gauss_function = gY2;
-                    if (slicing) {
+                if (valid){
+                    String prefix = goodRegion ? "gr_" : "";
+                    x_fit_mean = getDouble(prefix + "x_fit_mean");
+                    y_fit_mean = getDouble(prefix + "y_fit_mean");
+                    x_fit_standard_deviation = getDouble(prefix + "x_fit_standard_deviation");
+                    y_fit_standard_deviation = getDouble(prefix + "y_fit_standard_deviation");
+                    x_fit_gauss_function = getDoubleArray(prefix + "x_fit_gauss_function");
+                    y_fit_gauss_function = getDoubleArray(prefix + "y_fit_gauss_function");
+                    x_profile = getDoubleArray("x_profile");
+                    y_profile = getDoubleArray("y_profile");
+                    x_center_of_mass = getDouble("x_center_of_mass");
+                    y_center_of_mass = getDouble("y_center_of_mass");
+                    x_rms = getDouble("x_rms");
+                    y_rms = getDouble("y_rms");
+                    if (goodRegion) {
+                        double[] gX2 = new double[x_profile.length];
+                        Arrays.fill(gX2, Double.NaN);
                         try {
-                            int slices = getDouble("slice_amount").intValue();
-                            sliceCenters = new PointDouble[slices];
-                            for (int i = 0; i < slices; i++) {
-                                double x = getDouble("slice_" + i + "_center_x");
-                                double y = getDouble("slice_" + i + "_center_y");
-                                sliceCenters[i] = new PointDouble(x, y);
+                            double[] axis = getDoubleArray("x_axis");
+                            gr_x_axis = getDoubleArray("gr_x_axis");
+                            double x = gr_x_axis[0];
+                            gr_size_x = x_fit_gauss_function.length;
+                            //If gr axis values are not identical, calculate the index...
+                            gr_pos_x = (int) ((renderer.getCalibration() != null) ? renderer.getCalibration().convertToImageX(x) : x);
+                            //But prefer checking the value to avoid raounding errors
+                            for (int i = 0; i < axis.length; i++) {
+                                if (almostEqual(axis[i], x, 10e-6)) {
+                                    gr_pos_x = i;
+                                }
                             }
+                            System.arraycopy(x_fit_gauss_function, 0, gX2, gr_pos_x, gr_size_x);
                         } catch (Exception ex) {
+                        }
+                        x_fit_gauss_function = gX2;
+                        double[] gY2 = new double[y_profile.length];
+                        Arrays.fill(gY2, Double.NaN);
+                        try {
+                            double[] axis = getDoubleArray("y_axis");
+                            gr_y_axis = getDoubleArray("gr_y_axis");
+                            double y = gr_y_axis[0];
+                            gr_size_y = y_fit_gauss_function.length;
+                            //If gr axis values are not identical, calculate the index...
+                            gr_pos_y = (int) ((renderer.getCalibration() != null) ? renderer.getCalibration().convertToImageY(y) : y);
+                            //But prefer checking the value to avoid raounding errors
+                            for (int i = 0; i < axis.length; i++) {
+                                if (almostEqual(axis[i], y, 10e-6)) {
+                                    gr_pos_y = i;
+                                }
+                            }
+                            System.arraycopy(y_fit_gauss_function, 0, gY2, gr_pos_y, gr_size_y);
+                        } catch (Exception ex) {
+                        }
+                        y_fit_gauss_function = gY2;
+                        if (slicing) {
+                            try {
+                                int slices = getDouble("slice_amount").intValue();
+                                sliceCenters = new PointDouble[slices];
+                                for (int i = 0; i < slices; i++) {
+                                    double x = getDouble("slice_" + i + "_center_x");
+                                    double y = getDouble("slice_" + i + "_center_y");
+                                    sliceCenters[i] = new PointDouble(x, y);
+                                }
+                            } catch (Exception ex) {
+                            }
                         }
                     }
                 }
@@ -1203,6 +1208,9 @@ public class CamServerViewer extends MonitoredPanel {
             } catch (Exception ex) {
                 return null;
             }
+        }
+        boolean isValid(){
+            return valid;
         }
     }
 
