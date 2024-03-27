@@ -167,7 +167,7 @@ public class Threading {
 
         void setRunningThread() {
             runningThread = Thread.currentThread();
-
+            
             synchronized (lock) {
                 lock.notifyAll();
             }
@@ -188,6 +188,14 @@ public class Threading {
             }
             return runningThread;
         }
+        
+        public void interrupt(){
+            try {
+                Thread runningThread = waitRunningThread(0);
+                runningThread.interrupt();
+            } catch (InterruptedException ex) {                
+            }            
+        }
     }
 
     //CompletableFuture generation settting completeExceptionally 
@@ -195,8 +203,12 @@ public class Threading {
         return getFuture(supplier, ForkJoinPool.commonPool());
     }
 
-    public static CompletableFuture<?> getPrivateThreadFuture(final SupplierWithException<?> supplier) {
-        return getFuture(supplier, Executors.newSingleThreadExecutor());
+    public static CompletableFuture<?> getPrivateThreadFuture(final SupplierWithException<?> supplier) {        
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        CompletableFuture ret =  getFuture(supplier, Executors.newSingleThreadExecutor());
+        executor.shutdown();
+        return ret;
+        
     }
 
     public static CompletableFuture<?> getFuture(final SupplierWithException<?> supplier, Executor executor) {
@@ -230,7 +242,10 @@ public class Threading {
     }
 
     public static CompletableFuture<?> getPrivateThreadFuture(final RunnableWithException runnable) {
-        return getFuture(runnable, Executors.newSingleThreadExecutor());
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        CompletableFuture ret =  getFuture(runnable, executor);
+        executor.shutdown();
+        return ret;
     }
     
     public static CompletableFuture<?> getFuture(RunnableWithException runnable, Executor executor) {
