@@ -29,8 +29,13 @@ import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.util.Collections;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.logging.Logger;
 
 /**
  * Access to Daqbuf service.
@@ -56,10 +61,18 @@ public class Daqbuf implements ChannelQueryAPI {
     static final String PRINT_SEARCH_FORMAT = "%-16s %-48s %-12s %-36s %-8s %-8s %-12s %-12s\n";
 
     public static final String FIELD_TIMESTAMP = "timestamp";
+    public static final String FIELD_START = "start";
+    public static final String FIELD_END = "end";
     public static final String FIELD_ID = "id";
     public static final String FIELD_VALUE = "value";
+    public static final String FIELD_MIN = "min";
+    public static final String FIELD_MAX = "max";
+    public static final String FIELD_COUNT = "count";
     public static final String[] QUERY_FIELDS = new String[]{FIELD_NAME, FIELD_TIMESTAMP, FIELD_ID, FIELD_VALUE};
+    public static final String[] BINNED_QUERY_FIELDS = new String[]{FIELD_NAME, FIELD_START, FIELD_END, FIELD_COUNT, FIELD_MIN, FIELD_MAX, FIELD_VALUE};
+
     static final String PRINT_QUERY_FORMAT = "%-32s %-24s %-12s %-40s\n";
+    static final String PRINT_BINNED_QUERY_FORMAT = "%-32s %-24s %-24s %-6s %-20s %-20s %-20s\n";
 
     static final String COLOR_CYAN = "\033[96m";
     static final String COLOR_RESET = "\033[0m";
@@ -118,8 +131,6 @@ public class Daqbuf implements ChannelQueryAPI {
         }
         Response r = resource.request().accept(MediaType.APPLICATION_JSON).get();
         String json = r.readEntity(String.class);
-        //List<Map<String, Object>> ret = (List) EncoderJson.decode(json, List.class);
-
         Map<String, Object> ret = (Map) EncoderJson.decode(json, Map.class);
         List<Map<String, Object>> list = (List<Map<String, Object>>) ret.getOrDefault("channels", null);
 
@@ -215,13 +226,13 @@ public class Daqbuf implements ChannelQueryAPI {
 
     public interface QueryBinnedListener extends QueryListener {
 
-        default void onMessage(Map<String, Object> query, List<Double> averages, List<Double> min, List<Double> max, List<Integer> count, List<Long> timestamps1, List<Long> timestamps2) {
+        default void onMessage(Map<String, Object> query, List<Double> average, List<Double> min, List<Double> max, List<Integer> count, List<Long> start, List<Long> end) {
         }
     }
 
     public interface QueryBinnedRecordListener extends QueryBinnedListener {
 
-        default void onRecord(Map<String, Object> query, Double average, Double min, Double max, Integer count, Long timestamps1, Long timestamps2) {
+        default void onRecord(Map<String, Object> query, Double average, Double min, Double max, Integer count, Long start, Long end) {
         }
     }
 
@@ -230,7 +241,9 @@ public class Daqbuf implements ChannelQueryAPI {
     }
 
     void doQuery(String channel, String start, String end, QueryListener listener, Integer binCount) throws IOException, InterruptedException {
-        boolean cbor = binCount == null;
+        Logger.getLogger(Daqbuf.class.getName()).finer("Enter query task for channel: " + channel);
+        
+        boolean cbor = binCount == null;        
         Map<String, Object> query = new HashMap<>();
         query.put("channelName", channel);
         query.put("backend", backend);
@@ -303,17 +316,17 @@ public class Daqbuf implements ChannelQueryAPI {
                 List<Double> maxs = (List) frame.getOrDefault("maxs", null);
                 List<Double> mins = (List) frame.getOrDefault("mins", null);
                 List<Integer> ts1Ms = (List) frame.getOrDefault("ts1Ms", null);
-                List<Integer> ts1Ns = (List) frame.getOrDefault("avgs", null);
+                List<Integer> ts1Ns = (List) frame.getOrDefault("ts1Ns", null);
                 List<Integer> ts2Ms = (List) frame.getOrDefault("ts2Ms", null);
                 List<Integer> ts2Ns = (List) frame.getOrDefault("ts2Ns", null);
                 Integer tsAnchor = (Integer) frame.getOrDefault("tsAnchor", null);
                 Boolean rangeFinal = (Boolean) frame.getOrDefault("rangeFinal", false);
-
+                long anchor = ((long)tsAnchor) * 1_0000_00_000L;
                 List<Long> ts1 = ts1Ms.stream()
-                        .map(num -> (long) num + tsAnchor)
+                        .map(num -> num * 100_000L + anchor)
                         .collect(Collectors.toList());
                 List<Long> ts2 = ts2Ms.stream()
-                        .map(num -> (long) num + tsAnchor)
+                        .map(num -> num * 100_000L + anchor)
                         .collect(Collectors.toList());
 
                 if (listener instanceof QueryBinnedListener) {
@@ -337,56 +350,29 @@ public class Daqbuf implements ChannelQueryAPI {
             }
             throw new IOException(ex);
         } finally {
-            System.out.println("Quit query task for channel: " + channel);
+            Logger.getLogger(Daqbuf.class.getName()).finer("Quit query task for channel: " + channel);
         }
-    }
-
-    public Map doQueryJson(String channel, String start, String end) throws IOException, InterruptedException {
-        return doQueryJson(channel, start, end, null);
-    }
-
-    public Map doQueryJson(String channel, String start, String end, Integer binCount) throws IOException, InterruptedException {
-
-        Map<String, Object> query = new HashMap<>();
-        query.put("channelName", channel);
-        query.put("backend", backend);
-        query.put("begDate", start);
-        query.put("endDate", end);
-        String path = "/events";
-        if (binCount != null) {
-            query.put("binCount", binCount);
-            path = "/binned";
-        }
-
-        //accept="application/cbor-framed"
-        WebTarget resource = client.target(url + path);
-        for (String paramName : query.keySet()) {
-            resource = resource.queryParam(paramName, query.get(paramName));
-        }
-        //Map ret = resource.request().accept(MediaType.APPLICATION_JSON).get(HashMap.class);
-        Response response = resource.request().accept(MediaType.APPLICATION_JSON).get();
-
-        if (response.getStatus() != 200) {
-            throw new IOException(String.format("Unable to retrieve data from server: %s [%d]", response.getStatusInfo().getReasonPhrase(), response.getStatus()));
-        }
-
-        String json = response.readEntity(String.class);
-        Map ret = (Map) EncoderJson.decode(json, Map.class);
-
-        return ret;
     }
 
     public CompletableFuture startQuery(String channel, String start, String end, QueryListener listener) {
+        return startQuery(channel, start, end, listener, null);
+    }
+
+    public CompletableFuture startQuery(String channel, String start, String end, QueryListener listener, Integer binCount) {
         return (CompletableFuture) Threading.getPrivateThreadFuture(()
-                -> doQuery(channel, start, end, listener)
+                -> doQuery(channel, start, end, listener, binCount)
         );
     }
 
     public CompletableFuture startQuery(String[] channels, String start, String end, QueryListener listener) {
+        return startQuery(channels, start, end, listener, null);
+    }
+    
+    public CompletableFuture startQuery(String[] channels, String start, String end, QueryListener listener, Integer binCount) {
         return (CompletableFuture) Threading.getPrivateThreadFuture(() -> {
             List<CompletableFuture> futures = new ArrayList<>();
             for (String channel : channels) {
-                futures.add(startQuery(channel, start, end, listener));
+                futures.add(startQuery(channel, start, end, listener, binCount));
             }
             boolean finished = false;
 
@@ -410,85 +396,137 @@ public class Daqbuf implements ChannelQueryAPI {
         }
         );
     }
-
-    public CompletableFuture printQuery(String channel, String start, String end) throws IOException {
-        QueryListener listener = new QueryRecordListener() {
-            @Override
-            public void onStarted(Map<String, Object> query) {
-                System.out.printf("%s%s%s", COLOR_CYAN, String.format(PRINT_QUERY_FORMAT, (Object[]) QUERY_FIELDS), COLOR_RESET);
-            }
-
+    
+    QueryListener getPrintListener(Integer binSize, String format){
+    return (binSize==null) ? 
+        new QueryRecordListener() {
             @Override
             public void onRecord(Map<String, Object> query, Object value, Long id, Long timestamp) {
-                System.out.printf("%s", String.format(PRINT_QUERY_FORMAT, query.get("channelName"), timestampToStr(timestamp, false), id.toString(), value.toString()));
+                System.out.printf("%s", String.format(format, query.get("channelName"), timestampToStr(timestamp, false), id.toString(), value.toString()));
             }
+        } : 
+        new QueryBinnedRecordListener() {
+            @Override
+            public void onRecord(Map<String, Object> query, Double average, Double min, Double max, Integer count, Long start, Long end) {
+                System.out.printf("%s", String.format(format, query.get("channelName"), 
+                        timestampToStr(start, false), timestampToStr(end, false), count.toString(), min.toString(), max.toString(), average.toString()));
+            };
+        };        
+    }
 
-        };
-        return startQuery(channel, start, end, listener);
+    public CompletableFuture printQuery(String channel, String start, String end) throws IOException {
+        return printQuery(channel, start, end, null);
+    }
+    
+    public CompletableFuture printQuery(String channel, String start, String end, Integer binSize) throws IOException {
+        Object[] fields  = (binSize==null) ? QUERY_FIELDS : BINNED_QUERY_FIELDS;
+        String format  = (binSize==null) ? PRINT_QUERY_FORMAT : PRINT_BINNED_QUERY_FORMAT;
+        System.out.printf("%s%s%s", COLOR_CYAN, String.format(format, fields), COLOR_RESET);        
+        QueryListener listener = getPrintListener(binSize, format);
+        return startQuery(channel, start, end, listener, binSize);
     }
 
     public CompletableFuture printQuery(String[] channels, String start, String end) throws IOException {
-        System.out.printf("%s%s%s", COLOR_CYAN, String.format(PRINT_QUERY_FORMAT, (Object[]) QUERY_FIELDS), COLOR_RESET);
-        QueryListener listener = new QueryRecordListener() {
-            @Override
-            public void onRecord(Map<String, Object> query, Object value, Long id, Long timestamp) {
-                System.out.printf("%s", String.format(PRINT_QUERY_FORMAT, query.get("channelName"), timestampToStr(timestamp, false), id.toString(), value.toString()));
-            }
-
-        };
-        return startQuery(channels, start, end, listener);
+        return printQuery(channels, start, end, null);
+    }
+    
+    public CompletableFuture printQuery(String[] channels, String start, String end, Integer binSize) throws IOException {
+        Object[] fields  = (binSize==null) ? QUERY_FIELDS : BINNED_QUERY_FIELDS;
+        String format  = (binSize==null) ? PRINT_QUERY_FORMAT : PRINT_BINNED_QUERY_FORMAT;
+        System.out.printf("%s%s%s", COLOR_CYAN, String.format(format, fields), COLOR_RESET);        
+        QueryListener listener = getPrintListener(binSize, format);
+        return startQuery(channels, start, end, listener, binSize);
     }
 
     public Map<String, List> query(String channel, String start, String end) throws IOException, InterruptedException {
-        List retValues = new ArrayList();
-        List<Long> retIds = new ArrayList<>();
-        List<Long> retTimestamps = new ArrayList<>();
-        QueryListener listener = new QueryListener() {
-            @Override
-            public void onMessage(Map<String, Object> query, List values, List<Long> ids, List<Long> timestamps) {
-                retValues.addAll(values);
-                retIds.addAll(ids);
-                retTimestamps.addAll(timestamps);
-            }
-        };
-        doQuery(channel, start, end, listener);
-        Map ret = new HashMap();
-        ret.put(FIELD_VALUE, retValues);
-        ret.put(FIELD_TIMESTAMP, retTimestamps);
-        ret.put(FIELD_ID, retIds);
+        return query(channel, start, end, null);
+    }
+    
+    public Map<String, List> query(String channel, String start, String end, Integer binSize) throws IOException, InterruptedException {
+        Map ret = new HashMap();        
+        QueryListener listener = null;
+        String[] fields  = Arr.getSubArray((binSize==null) ? QUERY_FIELDS : BINNED_QUERY_FIELDS, 1); //Remove FIELD_NAME
+        for (String field:fields){
+            ret.put(field, new ArrayList());
+        }
+                
+        if (binSize==null){
+            listener = new QueryListener() {
+                @Override
+                public void onMessage(Map<String, Object> query, List values, List<Long> ids, List<Long> timestamps) {
+                    ((List)ret.get(FIELD_VALUE)).addAll(values);
+                    ((List<Long>)ret.get(FIELD_TIMESTAMP)).addAll(ids);
+                    ((List<Long>)ret.get(FIELD_ID)).addAll(timestamps);
+                }
+            };
+        } else {
+            listener = new QueryBinnedListener() {
+                @Override
+                public void onMessage(Map<String, Object> query, List<Double> averages, List<Double> min, List<Double> max, List<Integer> count, List<Long> start, List<Long> end){
+                    //Single message in JSON frame
+                    ret.put(FIELD_VALUE, averages);
+                    ret.put(FIELD_MIN, min);
+                    ret.put(FIELD_MAX, max);
+                    ret.put(FIELD_START, start);
+                    ret.put(FIELD_END, end);       
+                    ret.put(FIELD_COUNT, count);
+
+                }
+            };            
+        }
+        doQuery(channel, start, end, listener, binSize);        
         return ret;
     }
 
-    public Map<String, Map<String, List>> query(String[] channels, String start, String end) throws IOException, InterruptedException, ExecutionException {
-        Map<String, Map<String, List>> ret = new HashMap();
-        QueryListener listener = new QueryListener() {
-            @Override
-            synchronized public void onStarted(Map<String, Object> query) {
-                String channel = (String) query.get("channelName");
-                Map<String, List> map = new HashMap<>();
-                map.put(FIELD_VALUE, new ArrayList());
-                map.put(FIELD_TIMESTAMP, new ArrayList());
-                map.put(FIELD_ID, new ArrayList());
-                ret.put(channel, map);
-            }
+    private ExecutorService executor;
 
-            @Override
-            synchronized public void onMessage(Map<String, Object> query, List values, List<Long> ids, List<Long> timestamps) {
-                String channel = (String) query.get("channelName");
-                ret.get(channel).get(FIELD_VALUE).addAll(values);
-                ret.get(channel).get(FIELD_ID).addAll(ids);
-                ret.get(channel).get(FIELD_TIMESTAMP).addAll(timestamps);
-            }
-
-            @Override
-            public void onFinished(Map<String, Object> query, Exception ex) {
-            }
-
-        };
-        CompletableFuture future = startQuery(channels, start, end, listener);
-        future.get();
-        return ret;
+    public Map<String, Map<String, List>> query(String[] channels, String start, String end) throws IOException, InterruptedException {
+        return query(channels, start, end, null);
     }
+
+    public Map<String, Map<String, List>> query(String[] channels, String start, String end, Integer binSize) throws IOException, InterruptedException {
+        if (executor==null){
+            executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+        }
+        Map<String, CompletableFuture<Map<String, List>>> futures = new HashMap<>();
+        
+        // Submit tasks for each channel
+        for (String channel : channels) {
+            CompletableFuture<Map<String, List>> future = CompletableFuture.supplyAsync(() -> {
+                try {
+                    return query(channel, start, end);
+                } catch (IOException | InterruptedException e) {
+                    throw new CompletionException(e);
+                }
+            }, executor).exceptionally(ex -> {
+                return Collections.emptyMap();
+            });
+            futures.put(channel, future);
+        }
+
+        // Wait for all tasks to complete and collect results
+        Map<String, Map<String, List>> results = new HashMap<>();
+        for (Map.Entry<String, CompletableFuture<Map<String, List>>> entry : futures.entrySet()) {
+            String channel = entry.getKey();
+            CompletableFuture<Map<String, List>> future = entry.getValue();
+            try {
+                results.put(channel, future.get());
+            } catch (InterruptedException ex) {
+                throw ex;
+            } catch ( ExecutionException ex){                
+                if (ex.getCause() instanceof InterruptedException){
+                    throw (InterruptedException)ex.getCause();
+                }
+                if (ex.getCause() instanceof IOException){
+                    throw (IOException)ex.getCause();
+                }
+                throw new IOException(ex.getCause());
+            }
+        }
+        return results;
+    }
+
+    
 
     public static LocalDateTime fromNanoseconds(long nanoseconds, boolean utc) {
         long seconds = nanoseconds / 1_000_000_000L;
@@ -571,6 +609,16 @@ public class Daqbuf implements ChannelQueryAPI {
                 
     public static void main(String[] args) throws Exception {
         Daqbuf daqbuf = new Daqbuf();
+        
+        //Map<String, Map<String,List>> ret = daqbuf.query(new String[]{"S10BC01-DBPM010:Q1", "S10BC01-DBPM010:X1"}, "2024-03-15 10:00:00", "2024-03-15 10:00:01");
+        daqbuf.printQuery(new String[]{"S10BC01-DBPM010:Q1", "S10BC01-DBPM010:X1"}, "2024-03-15 10:00:00", "2024-03-15 11:00:00", 1000).get();
+        daqbuf.printQuery("S10BC01-DBPM010:Q1", "2024-03-15 10:00:00", "2024-03-15 11:00:00", 1000).get();
+        daqbuf.printQuery(new String[]{"S10BC01-DBPM010:Q1", "S10BC01-DBPM010:X1"}, "2024-03-15 10:00:00", "2024-03-15 10:00:01").get();
+        daqbuf.printQuery("S10BC01-DBPM010:X1", "2024-03-15 10:00:00", "2024-03-15 10:00:01").get();
+        Map<String, List> ret1 = daqbuf.query("S10BC01-DBPM010:X1", "2024-03-15 10:00:00", "2024-03-15 10:00:01");
+        Map<String, List> ret2 = daqbuf.query("S10BC01-DBPM010:Q1", "2024-03-15 10:00:00", "2024-03-15 11:00:00", 1000);
+        
+        
         System.out.println(convertToUTC("2024-03-27T14:52:10.779Z" ));
         System.out.println(convertToUTC("2024-03-27 14:36:25.878Z" ));
         System.out.println(convertToUTC("2024-03-15 10:00:00Z" ));
@@ -590,31 +638,26 @@ public class Daqbuf implements ChannelQueryAPI {
         System.out.println(timestampToStr(1711547646404175889L, false));
         
         
-        //System.out.println(millisToPulseId(null));
-        //System.out.println(pulseIdToStr(20702107897L));
+        System.out.println(millisToPulseId(null));
+        System.out.println(pulseIdToStr(20702107897L, false));
 
         CompletableFuture cf = daqbuf.printQuery("S10BC01-DBPM010:Q1", "2024-03-15 10:00:00", "2024-03-15 10:00:01");
-        //CompletableFuture cf = daqbuf.printQuery("S10BC01-DBPM010:Q1", "2024-02-15T00:00:00Z", "2024-02-15T12:00:00Z");    
-        //CompletableFuture future = daqbuf.startQuery(new String[] {"S10BC01-DBPM010:Q1", "S10BC01-DBPM010:X1"}, "2024-03-15T12:41:00Z", "2024-03-15T12:41:01Z", new QueryListener(){}) ;
-        //daqbuf.doQuery("S10BC01-DBPM010:Q1", "2024-03-14T12:41:00Z", "2024-03-15T12:41:01Z", new QueryListener(){}) ;
-        //Map ret1 = daqbuf.doQueryJson("S10BC01-DBPM010:Q1", "2024-03-15T00:00:00Z", "2024-03-15T00:00:50Z", null);    
-
-        //Map ret2 = daqbuf.doQueryJson("S10BC01-DBPM010:Q1", "2024-03-15T00:00:00Z", "2024-03-15T00:00:01Z", 500);      
-        //daqbuf.doQuery("S10BC01-DBPM010:Q1", "2024-02-15T00:00:00Z", "2024-02-15T12:00:00Z", new QueryListener(){}, 500); 
-        //Thread.sleep(1);
-        //((VisibleCompletableFuture)future).interrupt();
-        //Map ret =  daqbuf.query(new String[] {"S10BC01-DBPM010:Q1", "S10BC01-DBPM010:X1"}, "2024-03-15T12:41:00Z", "2024-03-15T12:41:01Z") ;
-        //future.get();
-        //Map<String, List> ret =  daqbuf.query("S10BC01-DBPM010:Q1", "2024-03-15T12:41:00Z", "2024-03-15T12:42:00Z") ;
-        //CompletableFuture future = daqbuf.startQuery("S10BC01-DBPM010:Q1", "2024-03-15T12:41:00Z", "2024-03-15T15:42:00Z", new QueryListener(){}) ;
-        //CompletableFuture future = daqbuf.startQuery(new String[] {"S10BC01-DBPM010:Q1", "S10BC01-DBPM010:X1"}, "2024-03-15T12:41:00Z", "2024-03-15T15:42:00Z", new QueryListener(){}) ;
-        //((VisibleCompletableFuture)cf).interrupt();
-        //Object o = future.get();
+        CompletableFuture future = daqbuf.startQuery(new String[] {"S10BC01-DBPM010:Q1", "S10BC01-DBPM010:X1"}, "2024-03-15T12:41:00Z", "2024-03-15T12:41:01Z", new QueryListener(){}) ;
+        daqbuf.doQuery("S10BC01-DBPM010:Q1", "2024-03-14T12:41:00Z", "2024-03-15T12:41:01Z", new QueryListener(){}) ;
+        daqbuf.doQuery("S10BC01-DBPM010:Q1", "2024-02-15T00:00:00Z", "2024-02-15T12:00:00Z", new QueryListener(){}, 500); 
+        Thread.sleep(1);
+        ((VisibleCompletableFuture)future).interrupt();
+        Map ret =  daqbuf.query(new String[] {"S10BC01-DBPM010:Q1", "S10BC01-DBPM010:X1"}, "2024-03-15T12:41:00Z", "2024-03-15T12:41:01Z") ;
+        future.get();
+        ret =  daqbuf.query("S10BC01-DBPM010:Q1", "2024-03-15T12:41:00Z", "2024-03-15T12:42:00Z") ;
+        future = daqbuf.startQuery("S10BC01-DBPM010:Q1", "2024-03-15T12:41:00Z", "2024-03-15T15:42:00Z", new QueryListener(){}) ;
+        future = daqbuf.startQuery(new String[] {"S10BC01-DBPM010:Q1", "S10BC01-DBPM010:X1"}, "2024-03-15T12:41:00Z", "2024-03-15T15:42:00Z", new QueryListener(){}) ;
+        ((VisibleCompletableFuture)cf).interrupt();
+        Object o = future.get();
         List search = daqbuf.search("PSSS");
-        // daqbuf.printSearch(search);
-        //search = daqbuf.queryChannels("PSSS", daqbuf.backend, 10);
-        //search = daqbuf.queryChannels("PSSSx", daqbuf.backend, 10);
-
+         daqbuf.printSearch(search);
+        search = daqbuf.queryChannels("PSSS", daqbuf.backend, 10);
+        search = daqbuf.queryChannels("PSSSx", daqbuf.backend, 10);
     }
 
 }
