@@ -509,7 +509,7 @@ public class Daqbuf implements ChannelQueryAPI {
         LocalDateTime currentTime = fromNanoseconds(timestamp, utc);
         String ret = currentTime.format(timeFormatter);
         if (utc){
-            ret=convertToUTC(ret + "Z");
+            ret=ret + "Z";
         }
         return ret;
     }    
@@ -537,7 +537,7 @@ public class Daqbuf implements ChannelQueryAPI {
         LocalDateTime currentTime = fromMilliseconds(timestamp, utc);
         String ret = currentTime.format(timeFormatter);
         if (utc){
-            ret=convertToUTC(ret + "Z");
+            ret=ret + "Z";
         }
         return ret;
     }    
