@@ -205,7 +205,7 @@ public class Threading {
 
     public static CompletableFuture<?> getPrivateThreadFuture(final SupplierWithException<?> supplier) {        
         ExecutorService executor = Executors.newSingleThreadExecutor();
-        CompletableFuture ret =  getFuture(supplier, Executors.newSingleThreadExecutor());
+        CompletableFuture ret =  getFuture(supplier, executor);
         executor.shutdown();
         return ret;
         
