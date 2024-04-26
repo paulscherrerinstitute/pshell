@@ -43,6 +43,7 @@ import java.util.logging.Logger;
  */
 public class Daqbuf implements ChannelQueryAPI {
 
+    final static boolean SEARCH_HANDLE_BACKEND = false;
     final String url;
     final String backend;
     final Client client;
@@ -128,17 +129,26 @@ public class Daqbuf implements ChannelQueryAPI {
     }
 
     public List<Map<String, Object>> search(String regex, Boolean caseInsensitive, Integer limit) throws IOException {
+        String backend = this.backend;
+        if (regex.contains(BACKEND_SEPARATOR)) {
+            String[] tokens = regex.split(BACKEND_SEPARATOR);
+            backend = (tokens.length>1) ? tokens[1] : null;
+            regex = tokens[0];
+        }        
         return search(backend, regex, caseInsensitive, limit);
     }
-
+    
     public List<Map<String, Object>> search(String backend, String regex, Boolean caseInsensitive, Integer limit) throws IOException {
+        
         Map<String, Object> params = new HashMap<>();
         params.put("nameRegex", regex);
         if (caseInsensitive != null) {
             params.put("icase", caseInsensitive);
         }
-        if (backend != null) {
-            params.put("backend", backend);
+        if (SEARCH_HANDLE_BACKEND){
+            if (backend != null) {
+                params.put("backend", backend);
+            }
         }
         WebTarget resource = client.target(url + "/search/channel");
         for (String paramName : params.keySet()) {
@@ -148,6 +158,14 @@ public class Daqbuf implements ChannelQueryAPI {
         String json = r.readEntity(String.class);
         Map<String, Object> ret = (Map) EncoderJson.decode(json, Map.class);
         List<Map<String, Object>> list = (List<Map<String, Object>>) ret.getOrDefault("channels", null);
+        
+        if (!SEARCH_HANDLE_BACKEND){
+            if ((backend!=null) && (!backend.isBlank())){
+                list = list.stream()
+                        .filter(map -> backend.equals(map.get("backend")))
+                        .collect(Collectors.toList());        
+            }
+        }
         return list;
     }
 
@@ -292,7 +310,7 @@ public class Daqbuf implements ChannelQueryAPI {
         String backend = this.backend;
         if (channel.contains(BACKEND_SEPARATOR)) {
             String[] tokens = channel.split(BACKEND_SEPARATOR);
-            backend = tokens[1];
+            backend = (tokens.length>1) ? tokens[1] : null;
             channel = tokens[0];
         }
         Query query = new Query(channel, backend, start, end, bins);
