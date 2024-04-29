@@ -32,6 +32,18 @@ import javax.swing.JScrollPane;
 import javax.swing.text.JTextComponent;
 import ch.psi.utils.ChannelQueryAPI;
 import ch.psi.utils.Daqbuf;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
+import java.awt.event.MouseEvent;
+import java.io.Serializable;
+import java.util.EventObject;
+import javax.swing.AbstractCellEditor;
+import javax.swing.JComponent;
+import javax.swing.JTable;
+import javax.swing.JTextField;
+import javax.swing.JTree;
+import javax.swing.table.TableCellEditor;
+import javax.swing.tree.TreeCellEditor;
 
 /**
  *
@@ -67,7 +79,6 @@ public class ChannelSelector extends MonitoredPanel {
 
     public ChannelSelector() {
         initComponents();
-
         updating = new AtomicBoolean(false);
         listScrollPanel = new javax.swing.JScrollPane();
         list = new javax.swing.JList<>();
@@ -77,7 +88,6 @@ public class ChannelSelector extends MonitoredPanel {
                 textKeyReleased(evt);
             }
         });
-
         list.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
         list.addListSelectionListener(new javax.swing.event.ListSelectionListener() {
             public void valueChanged(javax.swing.event.ListSelectionEvent evt) {
@@ -107,19 +117,19 @@ public class ChannelSelector extends MonitoredPanel {
         } else if (type == Type.Daqbuf) {
             channelNameSource = new Daqbuf(url, null);
         } else if (type == Type.IocInfo) {
-            channelNameSource = new IocInfoAPI( url);
+            channelNameSource = new IocInfoAPI(url);
         } else if (type == Type.Camera) {
             pipelineServer = new PipelineSource(null, url);
             channelNameSource = new ChannelQueryAPI() {
                 @Override
                 public List<String> queryChannels(String text, String backend, int limit) throws IOException {
-                     List<String> ret = pipelineServer.getInstances();
+                    List<String> ret = pipelineServer.getInstances();
                     Collections.sort(ret);
                     return ret;
 
                 }
             };
-            
+
         } else {
             channelNameSource = (type == Type.DataAPI) ? new DataAPI(url) : new DispatcherAPI(url);
         }
@@ -181,7 +191,7 @@ public class ChannelSelector extends MonitoredPanel {
                 String path = (Context.getInstance() != null) ? Context.getInstance().getSetup().expandPath("{context}") : Sys.getUserHome();
                 history = new History(path + "/ChannelSelector" + getName() + ".dat", historySize, true);
                 List entries = history.get();
-                Collections.reverse(entries);                
+                Collections.reverse(entries);
                 combo.setModel(new DefaultComboBoxModel(entries.toArray()));
             } else {
                 layout.replace(combo, text);
@@ -191,13 +201,13 @@ public class ChannelSelector extends MonitoredPanel {
 
         }
     }
-    
+
     @Override
-    public void setEnabled(boolean enabled){
+    public void setEnabled(boolean enabled) {
         super.setEnabled(enabled);
         list.setEnabled(enabled);
         text.setEnabled(enabled);
-        if (combo!=null){
+        if (combo != null) {
             combo.setEnabled(enabled);
         }
     }
@@ -215,7 +225,11 @@ public class ChannelSelector extends MonitoredPanel {
         if (listMode == ListMode.Popup) {
             if ((dialogList == null) || (!dialogList.isShowing())) {
                 Component editor = getEditor();
-                dialogList = new JDialog(getWindow());
+                if (getWindow() == null) {
+                    dialogList = new JDialog(getFrame());
+                } else {
+                    dialogList = new JDialog(getWindow());
+                }
                 dialogList.getContentPane().setLayout(new BorderLayout());
                 dialogList.getContentPane().add(listScrollPanel, BorderLayout.CENTER);
                 dialogList.setSize(new Dimension(editor.getWidth(), 200));
@@ -233,14 +247,15 @@ public class ChannelSelector extends MonitoredPanel {
                 //        getEditorComponent().requestFocus();
                 //    }
                 //});
-               //this.update();
+                //this.update();
                 //dialogList.setFocusable(false);
                 SwingUtils.invokeDelayed(() -> {
-                    getWindow().requestFocus();
+                    if (getWindow() != null) {
+                        getWindow().requestFocus();
+                    }
                     getEditor().requestFocus();
                 }, 100);
-                
-                
+
             }
         }
     }
@@ -249,7 +264,7 @@ public class ChannelSelector extends MonitoredPanel {
         component.addFocusListener(new java.awt.event.FocusAdapter() {
             public void focusLost(java.awt.event.FocusEvent evt) {
                 if (listMode == ListMode.Popup) {
-                    Object[] aux =  new Object[]{getWindow(), getEditor(), list, listScrollPanel, dialogList, getEditorComponent()};
+                    Object[] aux = new Object[]{getWindow(), getEditor(), list, listScrollPanel, dialogList, getEditorComponent()};
                     //System.out.println((!Arr.contains(aux, evt.getOppositeComponent())) + " - " + evt.getOppositeComponent());
                     if (!Arr.contains(aux, evt.getOppositeComponent())) {
                         closeListDialog();
@@ -259,11 +274,11 @@ public class ChannelSelector extends MonitoredPanel {
         });
     }
 
-    Component getEditor() {
+    public Component getEditor() {
         return (combo != null) ? combo : text;
     }
 
-    JTextComponent getEditorComponent() {
+    public JTextComponent getEditorComponent() {
         return (combo != null) ? (JTextComponent) combo.getEditor().getEditorComponent() : text;
     }
 
@@ -323,9 +338,9 @@ public class ChannelSelector extends MonitoredPanel {
             } else {
                 try {
                     List<String> ret = channelNameSource.queryChannels(str, backend, limit);
-                    if ((limit > 0)&&(ret.size() > limit)) {
+                    if ((limit > 0) && (ret.size() > limit)) {
                         ret = ret.subList(0, limit);
-                    }                    
+                    }
                     setData(ret);
                 } catch (Exception ex) {
                     setData(null);
@@ -416,14 +431,129 @@ public class ChannelSelector extends MonitoredPanel {
         //cs.configure(Type.DataAPI, "https://data-api.psi.ch/sf", "sf-databuffer", 5000);
         //cs.configure(Type.DispatcherAPI,"https://dispatcher-api.psi.ch/sf", "sf-databuffer", 5000);
         //cs.configure(Type.Epics, "https://epics-boot-info.psi.ch", "swissfel", 5000);
-        cs.configure(Type.IocInfo, "http://iocinfo.psi.ch/api/v2", "swissfel", 5000);
+        //cs.configure(Type.IocInfo, "http://iocinfo.psi.ch/api/v2", "swissfel", 5000);
+        cs.configure(Type.Daqbuf, null, "sf-databuffer", 5000);
         cs.setName("Test");
-        cs.setHistorySize(10);
+        cs.setHistorySize(0);
         cs.setListMode(ListMode.Popup);
         JDialog dlg = SwingUtils.showDialog(null, "Channel Selection", new Dimension(300, cs.getPreferredSize().height + 30), cs);
         SwingUtils.centerComponent(null, dlg);
         dlg.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
         //});
+    }
+
+    public static class ChannelSelectorCellEditor extends AbstractCellEditor
+            implements TableCellEditor, TreeCellEditor {
+
+        protected JComponent editorComponent;
+        protected EditorDelegate delegate;
+        protected int clickCountToStart = 2;
+
+        public ChannelSelectorCellEditor(final ChannelSelector channelSelector) {
+            editorComponent = channelSelector;
+            this.clickCountToStart = 2;
+            delegate = new EditorDelegate() {
+                public void setValue(Object value) {
+                    channelSelector.setText((value != null) ? value.toString() : "");
+                }
+
+                public Object getCellEditorValue() {
+                    return channelSelector.getText();
+                }
+            };
+            ((JTextField) channelSelector.getEditorComponent()).addActionListener(delegate);
+        }
+
+        public Component getComponent() {
+            return editorComponent;
+        }
+
+        public Object getCellEditorValue() {
+            return delegate.getCellEditorValue();
+        }
+
+        public boolean isCellEditable(EventObject anEvent) {
+            return delegate.isCellEditable(anEvent);
+        }
+
+        public boolean shouldSelectCell(EventObject anEvent) {
+            return delegate.shouldSelectCell(anEvent);
+        }
+
+        public boolean stopCellEditing() {
+            return delegate.stopCellEditing();
+        }
+
+        public void cancelCellEditing() {
+            delegate.cancelCellEditing();
+        }
+
+        public Component getTreeCellEditorComponent(JTree tree, Object value,
+                boolean isSelected,
+                boolean expanded,
+                boolean leaf, int row) {
+            String stringValue = tree.convertValueToText(value, isSelected,
+                    expanded, leaf, row, false);
+
+            delegate.setValue(stringValue);
+            return editorComponent;
+        }
+
+        public Component getTableCellEditorComponent(JTable table, Object value,
+                boolean isSelected,
+                int row, int column) {
+            delegate.setValue(value);
+            editorComponent.setOpaque(false);
+            return editorComponent;
+        }
+
+        protected class EditorDelegate implements ActionListener, ItemListener, Serializable {
+
+            protected Object value;
+
+            protected EditorDelegate() {
+            }
+
+            public Object getCellEditorValue() {
+                return value;
+            }
+
+            public void setValue(Object value) {
+                this.value = value;
+            }
+
+            public boolean isCellEditable(EventObject anEvent) {
+                if (anEvent instanceof MouseEvent) {
+                    return ((MouseEvent) anEvent).getClickCount() >= clickCountToStart;
+                }
+                return true;
+            }
+
+            public boolean shouldSelectCell(EventObject anEvent) {
+                return true;
+            }
+
+            public boolean startCellEditing(EventObject anEvent) {
+                return true;
+            }
+
+            public boolean stopCellEditing() {
+                fireEditingStopped();
+                return true;
+            }
+
+            public void cancelCellEditing() {
+                fireEditingCanceled();
+            }
+
+            public void actionPerformed(ActionEvent e) {
+                ChannelSelectorCellEditor.this.stopCellEditing();
+            }
+
+            public void itemStateChanged(ItemEvent e) {
+                ChannelSelectorCellEditor.this.stopCellEditing();
+            }
+        }
     }
 
     /**

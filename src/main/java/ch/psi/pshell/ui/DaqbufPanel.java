@@ -21,10 +21,16 @@ import java.awt.Component;
 import java.awt.Font;
 import java.awt.Toolkit;
 import java.awt.Window;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.beans.ConstructorProperties;
 import java.io.File;
 import java.io.IOException;
+import java.io.Serializable;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.EventObject;
@@ -37,6 +43,7 @@ import javax.swing.BoxLayout;
 import javax.swing.DefaultCellEditor;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JColorChooser;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
@@ -45,6 +52,7 @@ import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
+import javax.swing.JTree;
 import javax.swing.SwingConstants;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
@@ -53,6 +61,7 @@ import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableCellEditor;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
+import javax.swing.tree.TreeCellEditor;
 
 /**
  *
@@ -71,6 +80,7 @@ public class DaqbufPanel extends StandardDialog {
 
     final ArrayList<TimePlotBase> plots = new ArrayList<>();
     final HashMap<Device, Long> appendTimestamps = new HashMap<>();
+    volatile boolean started = false;
 
     Color backgroundColor;
     Color gridColor;
@@ -157,7 +167,6 @@ public class DaqbufPanel extends StandardDialog {
     }
     
     
-
     public void initializeTable() {
         //Fix bug of nimbus rendering Boolean in table
         ((JComponent) tableSeries.getDefaultRenderer(Boolean.class)).setOpaque(true);
@@ -168,12 +177,15 @@ public class DaqbufPanel extends StandardDialog {
 
         TableColumn colName = tableSeries.getColumnModel().getColumn(1);
         JTextField textNameEditor = new JTextField();
-        //ChannelSelector selector = new ChannelSelector();
-        //selector.configure(ChannelSelector.Type.Daqbuf, null,  null, 50);
+        ChannelSelector selector = new ChannelSelector();
+        selector.configure(ChannelSelector.Type.Daqbuf, null,  null, 1000);
+        selector.setHistorySize(0);
+        selector.setListMode(ChannelSelector.ListMode.Popup);
+        
         
         colName.setPreferredWidth(320);
-        colName.setCellEditor(new DefaultCellEditor(textNameEditor));
-
+        colName.setCellEditor(new ChannelSelector.ChannelSelectorCellEditor(selector));    
+        
         TableColumn colType = tableSeries.getColumnModel().getColumn(2);
         colType.setPreferredWidth(120);
         DefaultComboBoxModel modelType = new DefaultComboBoxModel();
@@ -307,14 +319,16 @@ public class DaqbufPanel extends StandardDialog {
     TableModelListener modelSeriesListener = new TableModelListener() {
         @Override
         public void tableChanged(TableModelEvent e) {
-            try {
-                int index = e.getFirstRow();
-                if (e.getColumn() == 5) {
-                    final Color color = Preferences.getColorFromString((String) modelSeries.getValueAt(index, 5));
-                    getTimePlotSeries(index).setColor(color);
+            if (started) {
+                try {
+                    int index = e.getFirstRow();
+                    if (e.getColumn() == 5) {
+                        final Color color = Preferences.getColorFromString((String) modelSeries.getValueAt(index, 5));
+                        getTimePlotSeries(index).setColor(color);
+                    }
+                } catch (Exception ex) {
+                    showException(ex);
                 }
-            } catch (Exception ex) {
-                showException(ex);
             }
         }
     };
@@ -322,21 +336,23 @@ public class DaqbufPanel extends StandardDialog {
     TableModelListener modelChartsListener = new TableModelListener() {
         @Override
         public void tableChanged(TableModelEvent e) {
-            for (int i = 0; i < plots.size(); i++) {
-                Double y1min = (Double) modelCharts.getValueAt(i, 1);
-                Double y1max = (Double) modelCharts.getValueAt(i, 2);
-                Double y2min = (Double) modelCharts.getValueAt(i, 3);
-                Double y2max = (Double) modelCharts.getValueAt(i, 4);
-                Double duration = (Double) modelCharts.getValueAt(i, 5);
-                Boolean markers = (Boolean) modelCharts.getValueAt(i, 6);
-                TimePlotBase plot = plots.get(i);
-                plot.setMarkersVisible(Boolean.TRUE.equals(markers));
-                plot.setDurationMillis((duration == null) ? 60000 : (int) (duration * 1000));
-                if ((y1min != null) && (y1max != null)) {
-                    plot.setY1AxisScale(y1min, y1max);
-                }
-                if ((y2min != null) && (y2max != null)) {
-                    plot.setY2AxisScale(y2min, y2max);
+            if (started) {
+                for (int i = 0; i < plots.size(); i++) {
+                    Double y1min = (Double) modelCharts.getValueAt(i, 1);
+                    Double y1max = (Double) modelCharts.getValueAt(i, 2);
+                    Double y2min = (Double) modelCharts.getValueAt(i, 3);
+                    Double y2max = (Double) modelCharts.getValueAt(i, 4);
+                    Double duration = (Double) modelCharts.getValueAt(i, 5);
+                    Boolean markers = (Boolean) modelCharts.getValueAt(i, 6);
+                    TimePlotBase plot = plots.get(i);
+                    plot.setMarkersVisible(Boolean.TRUE.equals(markers));
+                    plot.setDurationMillis((duration == null) ? 60000 : (int) (duration * 1000));
+                    if ((y1min != null) && (y1max != null)) {
+                        plot.setY1AxisScale(y1min, y1max);
+                    }
+                    if ((y2min != null) && (y2max != null)) {
+                        plot.setY2AxisScale(y2min, y2max);
+                    }
                 }
             }
         }
@@ -523,6 +539,7 @@ public class DaqbufPanel extends StandardDialog {
             plots.add(plot);
             pnGraphs.add(plot);
         }
+        started = true;
         update();
 
         Vector[] rows = (Vector[]) vector.toArray(new Vector[0]);
