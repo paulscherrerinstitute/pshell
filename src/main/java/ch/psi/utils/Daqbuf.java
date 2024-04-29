@@ -36,6 +36,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
@@ -43,7 +44,7 @@ import java.util.logging.Logger;
  */
 public class Daqbuf implements ChannelQueryAPI {
 
-    final static boolean SEARCH_HANDLE_BACKEND = false;
+    final static boolean SEARCH_HANDLES_BACKEND = false;
     final String url;
     final String backend;
     final Client client;
@@ -95,14 +96,41 @@ public class Daqbuf implements ChannelQueryAPI {
         return System.getenv().getOrDefault("DAQBUF_DEFAULT_BACKEND", "sf-databuffer");
     }
 
+    public String[] getBackends() {
+        try{
+            Map<String, Object> params = new HashMap<>();
+            WebTarget resource = client.target(url + "/backend/list");
+            Response r = resource.request().accept(MediaType.APPLICATION_JSON).get();
+            String json = r.readEntity(String.class);
+            Map<String, Object> ret = (Map) EncoderJson.decode(json, Map.class);
+            List<Map<String, Object>> list = (List<Map<String, Object>>) ret.getOrDefault("backends_available", null);
+
+            List<String> backends = new ArrayList();
+            for (Map m : list){
+                backends.add((String) m.get("name"));
+            }
+            return backends.toArray(new String[0]);
+        } catch (Exception ex){
+            Logger.getLogger(Daqbuf.class.getName()).log(Level.SEVERE, null, ex);
+            return  new String[] {getDefaultBackend()};
+        }
+        
+    }
+
     ObjectMapper mapper;
 
     public Daqbuf() {
-        this(getDefaultUrl(), getDefaultBackend());
-        mapper = new ObjectMapper(new CBORFactory());
+        this(getDefaultUrl());        
+    }
+
+    public Daqbuf(String url) {
+        this(url, getDefaultBackend());        
     }
 
     public Daqbuf(String url, String backend) {
+        if (url==null){
+            url = getDefaultUrl();
+        }
         if (!url.contains("://")) {
             url = "http://" + url;
         }
@@ -110,6 +138,7 @@ public class Daqbuf implements ChannelQueryAPI {
         this.backend = backend;
         ClientConfig config = new ClientConfig().register(JacksonFeature.class);
         client = ClientBuilder.newClient(config);
+        mapper = new ObjectMapper(new CBORFactory());
     }
 
     public String getUrl() {
@@ -145,7 +174,7 @@ public class Daqbuf implements ChannelQueryAPI {
         if (caseInsensitive != null) {
             params.put("icase", caseInsensitive);
         }
-        if (SEARCH_HANDLE_BACKEND){
+        if (SEARCH_HANDLES_BACKEND){
             if (backend != null) {
                 params.put("backend", backend);
             }
@@ -159,12 +188,15 @@ public class Daqbuf implements ChannelQueryAPI {
         Map<String, Object> ret = (Map) EncoderJson.decode(json, Map.class);
         List<Map<String, Object>> list = (List<Map<String, Object>>) ret.getOrDefault("channels", null);
         
-        if (!SEARCH_HANDLE_BACKEND){
+        if (!SEARCH_HANDLES_BACKEND){
             if ((backend!=null) && (!backend.isBlank())){
                 list = list.stream()
                         .filter(map -> backend.equals(map.get("backend")))
                         .collect(Collectors.toList());        
             }
+        }
+        if ((limit!=null) && (limit>=0) &&(list.size()>limit)){
+            list = list.subList(0, limit);
         }
         return list;
     }
@@ -693,4 +725,73 @@ public class Daqbuf implements ChannelQueryAPI {
         }
     }
 
+    
+    
+    public static void main(String[] args) throws Exception {
+        CompletableFuture cf;
+        Map ret;
+        Object obj;
+        Daqbuf daqbuf = new Daqbuf();
+        System.out.println(daqbuf.getBackends());
+        String[] channels = new String[]{"S10BC01-DBPM010:Q1@sf-databuffer", "S10BC01-DBPM010:X1@sf-databuffer"};
+        String channel = "S10BC01-DBPM010:Q1";
+        String start = "2024-04-15 10:00:00"; //"2024-03-15T12:41:00Z", "2024-03-15T15:42:00Z"
+        String end = "2024-04-15 10:00:01";
+        int bins = 20;
+        //start = "2024-04-15T12:41:00Z";
+        //end = "2024-04-15T15:42:00Z";
+        
+        cf = daqbuf.startQuery("S10BC01-DBPM010:Q1", start, end , new QueryListener(){}) ;
+
+        
+        cf = daqbuf.printQuery(channel, start, end );
+        cf = daqbuf.printQuery(channel, start, end ,bins);
+        cf = daqbuf.printQuery(channels, start, end );
+        cf = daqbuf.printQuery(channels, start, end , bins);
+        
+
+        ret = daqbuf.fetchQuery(channel, start, end );
+        ret = daqbuf.fetchQuery(channel, start, end, bins);
+        ret = daqbuf.fetchQuery(channels, start, end );
+        ret = daqbuf.fetchQuery(channels, start, end ,bins);
+
+
+        cf = daqbuf.startFetchQuery(channel, start, end);
+        cf.handle((val, ex) -> {
+                if (ex==null){
+                    System.out.println(val);
+                }
+                return val;
+        });
+        obj = cf.get();
+        System.out.println(obj);
+        
+        QueryListener listener = new  QueryRecordListener() {
+            public void onRecord(Query query, Object value, Long id, Long timestamp) {
+                System.out.println(query.channel + " - " + timestamp + " - " + value);
+            }   
+        };
+        cf = daqbuf.startQuery(channels, start, end, listener);         
+        cf.get();
+        
+        List search = daqbuf.search("PSSS@sf-imagebuffer");
+        daqbuf.printSearch(search);
+        search = daqbuf.search("PSSS@");
+        daqbuf.printSearch(search);
+        search = daqbuf.queryChannels("PSSS", daqbuf.backend, 10);
+        search = daqbuf.queryChannels("PSSSx", daqbuf.backend, 10);
+        
+        cf = daqbuf.startSearch("PSSS");
+        cf.handle((val, ex) -> {
+                if (ex==null){
+                    System.out.println(val);
+                }
+                return val;
+        });
+        obj = cf.get();
+        System.out.println(obj);
+
+    }
+
+        
 }

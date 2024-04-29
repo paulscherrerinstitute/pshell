@@ -31,6 +31,7 @@ import javax.swing.JList;
 import javax.swing.JScrollPane;
 import javax.swing.text.JTextComponent;
 import ch.psi.utils.ChannelQueryAPI;
+import ch.psi.utils.Daqbuf;
 
 /**
  *
@@ -60,7 +61,8 @@ public class ChannelSelector extends MonitoredPanel {
         DispatcherAPI,
         Epics,
         IocInfo,
-        Camera
+        Camera,
+        Daqbuf
     }
 
     public ChannelSelector() {
@@ -102,6 +104,8 @@ public class ChannelSelector extends MonitoredPanel {
         this.type = type;
         if (type == Type.Epics) {
             channelNameSource = new EpicsBootInfoAPI(url);
+        } else if (type == Type.Daqbuf) {
+            channelNameSource = new Daqbuf(url, null);
         } else if (type == Type.IocInfo) {
             channelNameSource = new IocInfoAPI( url);
         } else if (type == Type.Camera) {
