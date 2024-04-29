@@ -178,7 +178,7 @@ public class DaqbufPanel extends StandardDialog {
         TableColumn colName = tableSeries.getColumnModel().getColumn(1);
         JTextField textNameEditor = new JTextField();
         ChannelSelector selector = new ChannelSelector();
-        selector.configure(ChannelSelector.Type.Daqbuf, null,  null, 1000);
+        //selector.configure(ChannelSelector.Type.Daqbuf, null,  null, 1000);
         selector.setHistorySize(0);
         selector.setListMode(ChannelSelector.ListMode.Popup);
         
@@ -192,15 +192,22 @@ public class DaqbufPanel extends StandardDialog {
         for (String backend: daqbuf.getBackends()) {
             modelType.addElement(backend);
         }        
-        JComboBox comboType = new JComboBox();
+        JComboBox comboType = new JComboBox();      
         tableSeries.setRowHeight(Math.max(tableSeries.getRowHeight(), comboType.getPreferredSize().height - 3));
         comboType.setModel(modelType);
         DefaultCellEditor cellEditor = new DefaultCellEditor(comboType);
         cellEditor.setClickCountToStart(2);
-        colType.setCellEditor(cellEditor);            
+        colType.setCellEditor(cellEditor);
         
-
-        TableColumn colPlot = tableSeries.getColumnModel().getColumn(3);
+        comboType.addActionListener((e)->{
+            selector.configure(ChannelSelector.Type.Daqbuf, null,  comboType.getSelectedItem().toString(), 1000);
+        });   
+        comboType.setSelectedIndex(0);
+        
+        TableColumn colShape = tableSeries.getColumnModel().getColumn(3);
+        colShape.setPreferredWidth(60);
+        
+        TableColumn colPlot = tableSeries.getColumnModel().getColumn(4);
         colPlot.setPreferredWidth(60);
         JComboBox comboPlot = new JComboBox();
         DefaultComboBoxModel model = new DefaultComboBoxModel();
@@ -212,7 +219,7 @@ public class DaqbufPanel extends StandardDialog {
         cellEditor.setClickCountToStart(2);
         colPlot.setCellEditor(cellEditor);
 
-        TableColumn colY = tableSeries.getColumnModel().getColumn(4);
+        TableColumn colY = tableSeries.getColumnModel().getColumn(5);
         colY.setPreferredWidth(60);
         JComboBox comboY = new JComboBox();
         model = new DefaultComboBoxModel();
@@ -223,7 +230,7 @@ public class DaqbufPanel extends StandardDialog {
         cellEditor.setClickCountToStart(2);
         colY.setCellEditor(cellEditor);
 
-        TableColumn colColors = tableSeries.getColumnModel().getColumn(5);
+        TableColumn colColors = tableSeries.getColumnModel().getColumn(6);
         colColors.setPreferredWidth(60);
 
         class ColorEditor extends AbstractCellEditor implements TableCellEditor {
@@ -548,10 +555,11 @@ public class DaqbufPanel extends StandardDialog {
             if (info.get(0).equals(true)) {
                 final String name = getChannelAlias(((String) info.get(1)).trim());
                 final String backend = info.get(2).toString();
-                final int plotIndex = ((Integer) info.get(3)) - 1;
-                final int axis = (Integer) info.get(4);
+                final String shape = info.get(3).toString();
+                final int plotIndex = ((Integer) info.get(4)) - 1;
+                final int axis = (Integer) info.get(5);
                 final TimePlotBase plot = plots.get(plotIndex);
-                final Color color = Preferences.getColorFromString((String) info.get(5));
+                final Color color = Preferences.getColorFromString((String) info.get(6));
 
                 TimePlotSeries graph = (color != null) ? new TimePlotSeries(name, color, axis) : new TimePlotSeries(name, axis);
                 seriesIndexes.put(info, plot.getNumberOfSeries());
@@ -727,11 +735,11 @@ public class DaqbufPanel extends StandardDialog {
 
             },
             new String [] {
-                "Enabled", "Name", "Backend", "Plot", "Y Axis", "Color"
+                "Enabled", "Name", "Backend", "Shape", "Plot", "Y Axis", "Color"
             }
         ) {
             Class[] types = new Class [] {
-                java.lang.Boolean.class, java.lang.String.class, java.lang.Object.class, java.lang.Object.class, java.lang.Object.class, java.lang.Object.class
+                java.lang.Boolean.class, java.lang.String.class, java.lang.Object.class, java.lang.Object.class, java.lang.Object.class, java.lang.Object.class, java.lang.Object.class
             };
 
             public Class getColumnClass(int columnIndex) {
@@ -1127,7 +1135,7 @@ public class DaqbufPanel extends StandardDialog {
     }//GEN-LAST:event_buttonDownActionPerformed
 
     private void buttonInsertActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonInsertActionPerformed
-        Object[] data = new Object[]{Boolean.TRUE, "", Daqbuf.getDefaultBackend(), 1, 1};
+        Object[] data = new Object[]{Boolean.TRUE, "", Daqbuf.getDefaultBackend(), "", 1, 1};
         if (tableSeries.getSelectedRow() >= 0) {
             modelSeries.insertRow(tableSeries.getSelectedRow() + 1, data);
         } else {

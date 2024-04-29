@@ -44,7 +44,7 @@ import java.util.logging.Logger;
  */
 public class Daqbuf implements ChannelQueryAPI {
 
-    final static boolean SEARCH_HANDLES_BACKEND = false;
+    final static boolean SEARCH_HANDLES_BACKEND = true;
     final String url;
     final String backend;
     final Client client;
@@ -217,11 +217,25 @@ public class Daqbuf implements ChannelQueryAPI {
         return (CompletableFuture) Threading.getPrivateThreadFuture(() -> search(backend, regex, caseInsensitive, limit));
     }
 
+    String getChannelDesc(Map queryEntry){
+        String desc = queryEntry.get("name").toString() ;
+        //String backend = queryEntry.get("backend").toString() ;
+        String shape = queryEntry.get("shape").toString() ;
+        String type = queryEntry.get("type").toString() ;
+        //desc = desc + " " + backend;
+        //desc = desc + " " + type;
+        //if ((shape != null) && (!shape.isBlank()) && !shape.trim().equals("[]")){
+        //    desc = desc + " " + shape;
+        //} 
+        return desc;
+    }
+    
     @Override
     public List<String> queryChannels(String text, String backend, int limit) throws IOException {
         List<Map<String, Object>> ret = search(backend, text, null, limit);
         return ret.stream()
-                .map(map -> map.get("name").toString())
+                //.map(map -> map.get("name").toString() )
+                .map(map -> getChannelDesc(map))
                 .collect(Collectors.toList());
     }
 
@@ -307,7 +321,7 @@ public class Daqbuf implements ChannelQueryAPI {
     public static class Query {
 
         public final String channel;
-        public final String backend;
+        public final String backend; 
         public final String start;
         public final String end;
         public final Integer bins;
