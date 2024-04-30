@@ -167,6 +167,12 @@ public class Daqbuf implements ChannelQueryAPI {
         return search(backend, regex, caseInsensitive, limit);
     }
     
+    volatile List<Map<String, Object>> lastSearch;
+    
+    public  List<Map<String, Object>> getLastSearch(){
+        return lastSearch;
+    }
+    
     public List<Map<String, Object>> search(String backend, String regex, Boolean caseInsensitive, Integer limit) throws IOException {
         
         Map<String, Object> params = new HashMap<>();
@@ -198,6 +204,7 @@ public class Daqbuf implements ChannelQueryAPI {
         if ((limit!=null) && (limit>=0) &&(list.size()>limit)){
             list = list.subList(0, limit);
         }
+        lastSearch = list;
         return list;
     }
 
@@ -218,10 +225,12 @@ public class Daqbuf implements ChannelQueryAPI {
     }
 
     String getChannelDesc(Map queryEntry){
-        String desc = queryEntry.get("name").toString() ;
+        String name = queryEntry.get("name").toString() ;
         //String backend = queryEntry.get("backend").toString() ;
         String shape = queryEntry.get("shape").toString() ;
         String type = queryEntry.get("type").toString() ;
+        
+        String desc = name;
         //desc = desc + " " + backend;
         //desc = desc + " " + type;
         //if ((shape != null) && (!shape.isBlank()) && !shape.trim().equals("[]")){
@@ -749,11 +758,12 @@ public class Daqbuf implements ChannelQueryAPI {
         System.out.println(daqbuf.getBackends());
         String[] channels = new String[]{"S10BC01-DBPM010:Q1@sf-databuffer", "S10BC01-DBPM010:X1@sf-databuffer"};
         String channel = "S10BC01-DBPM010:Q1";
-        String start = "2024-04-15 10:00:00"; //"2024-03-15T12:41:00Z", "2024-03-15T15:42:00Z"
-        String end = "2024-04-15 10:00:01";
+        String start = "2024-04-28 10:00:00"; //"2024-03-15T12:41:00Z", "2024-03-15T15:42:00Z"
+        String end = "2024-04-28 10:00:01";
         int bins = 20;
         //start = "2024-04-15T12:41:00Z";
         //end = "2024-04-15T15:42:00Z";
+        ret = daqbuf.fetchQuery(channel, start, end);
         
         cf = daqbuf.startQuery("S10BC01-DBPM010:Q1", start, end , new QueryListener(){}) ;
 

@@ -383,6 +383,7 @@ public class ChannelSelector extends MonitoredPanel {
             } else {
                 text.setText(str);
             }
+            
         }
     }
 

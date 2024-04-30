@@ -4,6 +4,12 @@ import ch.psi.pshell.core.Context;
 import ch.psi.pshell.data.ProviderCSV;
 import ch.psi.pshell.data.ProviderText;
 import ch.psi.pshell.device.Device;
+import ch.psi.pshell.plot.LinePlot;
+import ch.psi.pshell.plot.LinePlotErrorSeries;
+import ch.psi.pshell.plot.LinePlotJFree;
+import ch.psi.pshell.plot.LinePlotSeries;
+import ch.psi.pshell.plot.Plot;
+import ch.psi.pshell.plot.Plot.AxisId;
 import ch.psi.pshell.plot.PlotBase;
 import ch.psi.pshell.plot.TimePlotBase;
 import ch.psi.pshell.plot.TimePlotJFree;
@@ -12,13 +18,20 @@ import ch.psi.pshell.plotter.Preferences;
 import ch.psi.pshell.swing.ChannelSelector;
 import ch.psi.pshell.swing.HistoryChart;
 import ch.psi.pshell.swing.PlotPanel;
+import static ch.psi.pshell.ui.Preferences.PanelLocation.Plot;
 import ch.psi.utils.Arr;
+import ch.psi.utils.Convert;
 import ch.psi.utils.Daqbuf;
+import ch.psi.utils.Str;
 import ch.psi.utils.swing.StandardDialog;
 import ch.psi.utils.swing.SwingUtils;
+import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Font;
+import java.awt.Paint;
+import java.awt.Shape;
+import java.awt.Stroke;
 import java.awt.Toolkit;
 import java.awt.Window;
 import java.awt.event.ActionEvent;
@@ -32,9 +45,14 @@ import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
 import java.text.DecimalFormat;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.EventObject;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Vector;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -54,6 +72,11 @@ import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.JTree;
 import javax.swing.SwingConstants;
+import javax.swing.SwingUtilities;
+import javax.swing.event.CellEditorListener;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 import javax.swing.table.DefaultTableCellRenderer;
@@ -61,7 +84,15 @@ import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableCellEditor;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
+import javax.swing.text.JTextComponent;
 import javax.swing.tree.TreeCellEditor;
+import org.jfree.chart.axis.DateAxis;
+import org.jfree.chart.plot.XYPlot;
+import org.jfree.chart.renderer.xy.XYErrorRenderer;
+import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
+import org.jfree.data.xy.XYDataset;
+import org.jfree.data.xy.YIntervalSeries;
+import org.jfree.data.xy.YIntervalSeriesCollection;
 
 /**
  *
@@ -78,7 +109,7 @@ public class DaqbufPanel extends StandardDialog {
     final DefaultTableModel modelSeries;
     final DefaultTableModel modelCharts;
 
-    final ArrayList<TimePlotBase> plots = new ArrayList<>();
+    final ArrayList<LinePlotJFree> plots = new ArrayList<>();
     final HashMap<Device, Long> appendTimestamps = new HashMap<>();
     volatile boolean started = false;
 
@@ -186,6 +217,40 @@ public class DaqbufPanel extends StandardDialog {
         colName.setPreferredWidth(320);
         colName.setCellEditor(new ChannelSelector.ChannelSelectorCellEditor(selector));    
         
+        colName.getCellEditor().addCellEditorListener(new CellEditorListener() {
+            @Override
+            public void editingStopped(ChangeEvent e) {
+                int row = tableSeries.getSelectedRow();
+                if (row>=0){
+                    String channel = (String) modelSeries.getValueAt(row, 1);
+                    String backend = (String) modelSeries.getValueAt(row, 2);
+                    try {
+                        daqbuf.startSearch(backend, channel, null, 1).handle((ret,ex)->{
+                            if (ex!=null){
+                                showException((Exception)ex);
+                            } else {
+                                List<Map<String, Object>> list = (List<Map<String, Object>>) ret;
+                                SwingUtilities.invokeLater(()->{
+                                    if (channel.equals(modelSeries.getValueAt(row, 1)) && backend.equals(modelSeries.getValueAt(row, 2))){
+                                        String shape = (list.size()>0) ?  Str.toString(list.get(0).getOrDefault("shape", "")) : "";
+                                        modelSeries.setValueAt(shape, row, 3);
+                                    }
+                                });
+                            }
+                            return ret;
+                        });
+                    } catch (Exception ex) {
+                        showException(ex);
+                    }
+                }
+            }
+
+            @Override
+            public void editingCanceled(ChangeEvent e) {
+            }
+        });
+        
+        
         TableColumn colType = tableSeries.getColumnModel().getColumn(2);
         colType.setPreferredWidth(120);
         DefaultComboBoxModel modelType = new DefaultComboBoxModel();
@@ -198,6 +263,7 @@ public class DaqbufPanel extends StandardDialog {
         DefaultCellEditor cellEditor = new DefaultCellEditor(comboType);
         cellEditor.setClickCountToStart(2);
         colType.setCellEditor(cellEditor);
+                 
         
         comboType.addActionListener((e)->{
             selector.configure(ChannelSelector.Type.Daqbuf, null,  comboType.getSelectedItem().toString(), 1000);
@@ -329,9 +395,10 @@ public class DaqbufPanel extends StandardDialog {
             if (started) {
                 try {
                     int index = e.getFirstRow();
-                    if (e.getColumn() == 5) {
-                        final Color color = Preferences.getColorFromString((String) modelSeries.getValueAt(index, 5));
+                    if (e.getColumn() == 6) {
+                        final Color color = Preferences.getColorFromString((String) modelSeries.getValueAt(index, 6));
                         getTimePlotSeries(index).setColor(color);
+                        updateSeriesPaint(getTimePlotSeries(index));
                     }
                 } catch (Exception ex) {
                     showException(ex);
@@ -351,15 +418,15 @@ public class DaqbufPanel extends StandardDialog {
                     Double y2max = (Double) modelCharts.getValueAt(i, 4);
                     Double duration = (Double) modelCharts.getValueAt(i, 5);
                     Boolean markers = (Boolean) modelCharts.getValueAt(i, 6);
-                    TimePlotBase plot = plots.get(i);
-                    plot.setMarkersVisible(Boolean.TRUE.equals(markers));
-                    plot.setDurationMillis((duration == null) ? 60000 : (int) (duration * 1000));
+                    LinePlotJFree plot = plots.get(i);
+                    //plot.setMarkersVisible(Boolean.TRUE.equals(markers));
+                    //plot.setDurationMillis((duration == null) ? 60000 : (int) (duration * 1000));
                     if ((y1min != null) && (y1max != null)) {
-                        plot.setY1AxisScale(y1min, y1max);
+                       plot.getAxis(AxisId.Y).setRange(y1min, y1max);
                     }
                     if ((y2min != null) && (y2max != null)) {
-                        plot.setY2AxisScale(y2min, y2max);
-                    }
+                        plot.getAxis(AxisId.Y2).setRange(y2min, y2max);
+                    }                                 
                 }
             }
         }
@@ -406,6 +473,10 @@ public class DaqbufPanel extends StandardDialog {
         comboFormat.setSelectedItem(getInitFormat());
         comboLayout.setSelectedItem(getInitLayout());
         modelSeries.setRowCount(0);
+modelSeries.addRow(new Object[]{true,"S10BC01-DBPM010:Q1", "sf-databuffer", "[]", 1,1,null});
+modelSeries.addRow(new Object[]{true,"S10BC01-DBPM010:X1", "sf-databuffer", "[]", 1,1,null});
+modelSeries.addRow(new Object[]{true,"SARFE10-PSSS059:FIT-COM", "sf-databuffer", "[]", 1,2,null});
+        
         modelCharts.setDataVector(new Object[][]{
             {"1", null, null, null, null, null, false},
             {"2", null, null, null, null, null, false},
@@ -438,9 +509,9 @@ public class DaqbufPanel extends StandardDialog {
     
     final ArrayList<Device> devices = new ArrayList<>();
     final HashMap<Vector, Integer> seriesIndexes = new HashMap<>();
-    final ArrayList<TimePlotSeries> timePlotSeries = new ArrayList<>();
+    final ArrayList<LinePlotErrorSeries> timePlotSeries = new ArrayList<>();
 
-    TimePlotSeries getTimePlotSeries(int row) {
+    LinePlotErrorSeries getTimePlotSeries(int row) {
         int index = 0;
         for (int i = 0; i < modelSeries.getRowCount(); i++) {
             if (modelSeries.getValueAt(i, 0).equals(Boolean.TRUE)) {
@@ -498,7 +569,7 @@ public class DaqbufPanel extends StandardDialog {
         }
         return getChannelName(str);               
     }
-
+    
     public void query() throws Exception {
         reset();
 
@@ -507,6 +578,12 @@ public class DaqbufPanel extends StandardDialog {
         }
         int numPlots = 1;
         Vector vector = modelSeries.getDataVector();
+        for (Vector info : (Vector[]) vector.toArray(new Vector[0])) {
+            if (info.get(0).equals(true)) {
+                numPlots = Integer.max(numPlots, (Integer) info.get(4));
+            }
+        }
+
         for (int i = 0; i < numPlots; i++) {
             Double y1min = (Double) modelCharts.getValueAt(i, 1);
             Double y1max = (Double) modelCharts.getValueAt(i, 2);
@@ -516,21 +593,30 @@ public class DaqbufPanel extends StandardDialog {
             Boolean markers = (Boolean) modelCharts.getValueAt(i, 6);
             Boolean localTime = (Boolean) modelCharts.getValueAt(i, 7);
 
-            TimePlotBase plot = (TimePlotBase) Class.forName(HistoryChart.getTimePlotImpl()).newInstance();
+            LinePlotJFree plot = new LinePlotJFree();
+            plot.setTitle(null);
+            plot.setStyle(LinePlot.Style.ErrorY);
+            DateAxis axis = new DateAxis(null); //("Time");
+            axis.setLabelFont(plot.getLabelFont());
+
+            axis.setLabelPaint(plot.getAxisTextColor());
+            axis.setTickLabelPaint(plot.getAxisTextColor());
+            plot.getChart().getXYPlot().setDomainAxis(axis);
+            
             plot.setQuality(PlotPanel.getQuality());
-            plot.setTimeAxisLabel(null);
+            //plot.setTimeAxisLabel(null);
             plot.setLegendVisible(true);
-            plot.setMarkersVisible(Boolean.TRUE.equals(markers));
-            plot.setDurationMillis((duration == null) ? 60000 : (int) (duration * 1000));
+            //plot.setMarkersVisible(Boolean.TRUE.equals(markers));
+            //plot.setDurationMillis((duration == null) ? 60000 : (int) (duration * 1000));
             if ((y1min != null) && (y1max != null)) {
-                plot.setY1AxisScale(y1min, y1max);
+                plot.getAxis(AxisId.Y).setRange(y1min, y1max);
             }
             if ((y2min != null) && (y2max != null)) {
-                plot.setY2AxisScale(y2min, y2max);
+                plot.getAxis(AxisId.Y2).setRange(y2min, y2max);
             }
-            if (numPlots > 1) {
-                plot.setAxisSize(50);
-            }
+            //if (numPlots > 1) {
+            //    plot.setAxisSize(50);
+            //}
 
             if (backgroundColor != null) {
                 plot.setPlotBackgroundColor(backgroundColor);
@@ -538,10 +624,10 @@ public class DaqbufPanel extends StandardDialog {
             if (gridColor != null) {
                 plot.setPlotGridColor(gridColor);
             }
-            if ((tickLabelFont != null) && (plot instanceof TimePlotJFree)) {
-                ((TimePlotJFree) plot).setLabelFont(tickLabelFont);
-                ((TimePlotJFree) plot).setTickLabelFont(tickLabelFont);
-            }
+            if (tickLabelFont != null) {
+                plot.setLabelFont(tickLabelFont);
+                plot.setTickLabelFont(tickLabelFont);
+            }            
 
             plots.add(plot);
             pnGraphs.add(plot);
@@ -558,18 +644,88 @@ public class DaqbufPanel extends StandardDialog {
                 final String shape = info.get(3).toString();
                 final int plotIndex = ((Integer) info.get(4)) - 1;
                 final int axis = (Integer) info.get(5);
-                final TimePlotBase plot = plots.get(plotIndex);
+                final LinePlotJFree plot = plots.get(plotIndex);
                 final Color color = Preferences.getColorFromString((String) info.get(6));
+                
+                final String start = textFrom.getText();
+                final String end = textTo.getText();
+                
+                final int bins = 500;
 
-                TimePlotSeries graph = (color != null) ? new TimePlotSeries(name, color, axis) : new TimePlotSeries(name, axis);
+                LinePlotErrorSeries series = new LinePlotErrorSeries(name, color, axis);
                 seriesIndexes.put(info, plot.getNumberOfSeries());
-                timePlotSeries.add(graph);
-                plot.addSeries(graph);
+                timePlotSeries.add(series);
+                plot.addSeries(series);
+                
+                XYPlot xyplot = plot.getChart().getXYPlot();
+                XYErrorRenderer renderer = (XYErrorRenderer) plot.getSeriesRenderer(series);            
+                
+                renderer.setDrawYError(true);
+                renderer.setErrorStroke(new BasicStroke());
+                
+                
+                //series.setLinesVisible(true);
+                //series.setLineWidth(5);
+                //series.setPointSize(4);
+                //series.setPointsVisible(true);
                 
                 //TODO
+                    try {
+                        daqbuf.startFetchQuery(name + Daqbuf.BACKEND_SEPARATOR + backend, start, end, bins).handle((ret,ex)->{
+                            if (ex!=null){
+                                showException((Exception)ex);
+                            } else {
+                                Map<String, List>  map = (Map<String, List>) ret;                                
+                                List<Double> average   = map.get(Daqbuf.FIELD_AVERAGE);
+                                List<Double> min   = map.get(Daqbuf.FIELD_MIN);
+                                List<Double> max   = map.get(Daqbuf.FIELD_MAX);
+                                List<Long> t1   = map.get(Daqbuf.FIELD_START);
+                                List<Long> t2   = map.get(Daqbuf.FIELD_END);
+                                
+                                //double[] average = (double[])Convert.toDouble(map.get(Daqbuf.FIELD_AVERAGE));
+                                //double[] min = (double[])Convert.toDouble(map.get(Daqbuf.FIELD_MIN));
+                                //double[] max = (double[])Convert.toDouble(map.get(Daqbuf.FIELD_MAX));
+                                //double[] time = new double[average.length];
+                                //graph.setData(max, max, time);
+                                //SwingUtilities.invokeLater(()->{
+                                    long now = System.currentTimeMillis();                                    
+                                    
+                                    for (int j=0; j< average.size(); j++){
+                                        double timestamp = (t1.get(j) + t2.get(j))/2.0/1e6;
+                                        series.appendData( timestamp,  average.get(j),min.get(j), max.get(j));      
+                                    }
+                                    updateSeriesPaint(series);
+                                    
+                                //});
+                            }
+                            return ret;
+                        });
+                    } catch (Exception ex) {
+                        showException(ex);
+                    }                
+                
             }
         }
 
+    }
+    
+    void updateSeriesPaint(LinePlotErrorSeries series){
+        LinePlotJFree plot = series.getPlot();
+        XYErrorRenderer renderer = (XYErrorRenderer) plot.getSeriesRenderer(series);            
+        Paint paint = renderer.getSeriesPaint(plot.getSeriesIndex(series));                          
+        YIntervalSeriesCollection dataset= (YIntervalSeriesCollection) plot.getDataset(series.getAxisY());
+        
+        if ((paint instanceof Color) 
+            //&& (dataset.getSeriesCount() ==1)
+                ){
+            Color c = (Color)paint;
+            paint = new Color(c.getRed(), c.getGreen(), c.getBlue(), 0x40); 
+        } else {
+            paint = new Color(0xA0, 0xA0, 0xA0, 0x40); 
+        }
+        
+        renderer.setErrorPaint(paint);
+        
     }
 
     String[] getNames() throws IOException {
@@ -699,6 +855,12 @@ public class DaqbufPanel extends StandardDialog {
         jLabel5 = new javax.swing.JLabel();
         comboLayout = new javax.swing.JComboBox<>();
         buttonSaveData = new javax.swing.JButton();
+        jPanel3 = new javax.swing.JPanel();
+        jLabel2 = new javax.swing.JLabel();
+        textFrom = new javax.swing.JTextField();
+        textTo = new javax.swing.JTextField();
+        jLabel3 = new javax.swing.JLabel();
+        buttonSetRange = new javax.swing.JButton();
         panelCharts = new javax.swing.JPanel();
         jScrollPane3 = new javax.swing.JScrollPane();
         tableCharts = new JTable() {
@@ -732,7 +894,7 @@ public class DaqbufPanel extends StandardDialog {
 
         tableSeries.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
-
+                { new Boolean(true), "S10BC01-DBPM010:Q1", "sf-databuffer", "[]", "1", "1", null}
             },
             new String [] {
                 "Enabled", "Name", "Backend", "Shape", "Plot", "Y Axis", "Color"
@@ -907,6 +1069,62 @@ public class DaqbufPanel extends StandardDialog {
                 .addContainerGap())
         );
 
+        jPanel3.setBorder(javax.swing.BorderFactory.createTitledBorder("Range"));
+
+        jLabel2.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
+        jLabel2.setText("From:");
+
+        textFrom.setText("2024-04-28 10:00:00");
+
+        textTo.setText("2024-04-28 11:00:00");
+
+        jLabel3.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
+        jLabel3.setText("To:");
+
+        buttonSetRange.setText("Set");
+        buttonSetRange.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                buttonSetRangeActionPerformed(evt);
+            }
+        });
+
+        javax.swing.GroupLayout jPanel3Layout = new javax.swing.GroupLayout(jPanel3);
+        jPanel3.setLayout(jPanel3Layout);
+        jPanel3Layout.setHorizontalGroup(
+            jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel3Layout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                    .addGroup(jPanel3Layout.createSequentialGroup()
+                        .addComponent(jLabel3)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(textTo))
+                    .addGroup(jPanel3Layout.createSequentialGroup()
+                        .addComponent(jLabel2)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(textFrom, javax.swing.GroupLayout.PREFERRED_SIZE, 220, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(buttonSetRange)
+                .addGap(43, 43, 43))
+        );
+
+        jPanel3Layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {jLabel2, jLabel3});
+
+        jPanel3Layout.setVerticalGroup(
+            jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel3Layout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel2)
+                    .addComponent(textFrom, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(buttonSetRange))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel3)
+                    .addComponent(textTo, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addContainerGap(42, Short.MAX_VALUE))
+        );
+
         javax.swing.GroupLayout panelSeriesLayout = new javax.swing.GroupLayout(panelSeries);
         panelSeries.setLayout(panelSeriesLayout);
         panelSeriesLayout.setHorizontalGroup(
@@ -914,12 +1132,18 @@ public class DaqbufPanel extends StandardDialog {
             .addComponent(panelSerie, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
             .addComponent(panelFile, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
             .addComponent(jPanel2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+            .addGroup(panelSeriesLayout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(jPanel3, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addContainerGap())
         );
         panelSeriesLayout.setVerticalGroup(
             panelSeriesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, panelSeriesLayout.createSequentialGroup()
                 .addComponent(panelSerie, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 177, Short.MAX_VALUE)
+                .addGap(32, 32, 32)
+                .addComponent(jPanel3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 15, Short.MAX_VALUE)
                 .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(panelFile, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -1169,6 +1393,9 @@ public class DaqbufPanel extends StandardDialog {
     }//GEN-LAST:event_tableSeriesKeyReleased
 
     private void buttonQueryActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonQueryActionPerformed
+        if (tableSeries.isEditing()) {
+            tableSeries.getCellEditor().stopCellEditing();
+        }        
         try {
             if (modelSeries.getRowCount() > 0) {
                 query();
@@ -1185,7 +1412,7 @@ public class DaqbufPanel extends StandardDialog {
         if (c != null) {
             backgroundColor = c;
             panelColorBackground.setBackground(backgroundColor);
-            for (TimePlotBase plot : plots) {
+            for (Plot plot : plots) {
                 plot.setPlotBackgroundColor(backgroundColor);
             }
         }
@@ -1196,7 +1423,7 @@ public class DaqbufPanel extends StandardDialog {
         if (c != null) {
             gridColor = c;
             panelColorGrid.setBackground(gridColor);
-            for (TimePlotBase plot : plots) {
+            for (Plot plot : plots) {
                 plot.setPlotGridColor(gridColor);
             }
         }
@@ -1207,7 +1434,7 @@ public class DaqbufPanel extends StandardDialog {
         gridColor = defaultGridColor;
         panelColorBackground.setBackground(backgroundColor);
         panelColorGrid.setBackground(gridColor);
-        for (TimePlotBase plot : plots) {
+        for (Plot plot : plots) {
             plot.setPlotGridColor(PlotBase.getGridColor());
             plot.setPlotBackgroundColor(PlotBase.getPlotBackground());
         }
@@ -1225,6 +1452,16 @@ public class DaqbufPanel extends StandardDialog {
         // TODO add your handling code here:
     }//GEN-LAST:event_comboFormatActionPerformed
 
+    private void buttonSetRangeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonSetRangeActionPerformed
+        //DateTimeFormatter formatter = DateTimeFormatter.ISO_DATE_TIME;
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
+        LocalDateTime currentTime = LocalDateTime.now(ZoneOffset.UTC);
+        LocalDateTime oneHourAgo = currentTime.minusHours(1);
+
+        textFrom.setText(oneHourAgo.format(formatter));
+        textTo.setText(currentTime.format(formatter));
+    }//GEN-LAST:event_buttonSetRangeActionPerformed
+
     /**
      */
     public static void main(String args[]) {
@@ -1239,15 +1476,19 @@ public class DaqbufPanel extends StandardDialog {
     private javax.swing.JButton buttonInsert;
     private javax.swing.JButton buttonQuery;
     private javax.swing.JButton buttonSaveData;
+    private javax.swing.JButton buttonSetRange;
     private javax.swing.JButton buttonUp;
     private javax.swing.JComboBox<String> comboFormat;
     private javax.swing.JComboBox<String> comboLayout;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel15;
     private javax.swing.JLabel jLabel17;
+    private javax.swing.JLabel jLabel2;
+    private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel5;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel2;
+    private javax.swing.JPanel jPanel3;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane3;
     private javax.swing.JPanel panelCharts;
@@ -1263,5 +1504,7 @@ public class DaqbufPanel extends StandardDialog {
     private javax.swing.JTable tableCharts;
     private javax.swing.JTable tableSeries;
     private javax.swing.JTextField textFileName;
+    private javax.swing.JTextField textFrom;
+    private javax.swing.JTextField textTo;
     // End of variables declaration//GEN-END:variables
 }

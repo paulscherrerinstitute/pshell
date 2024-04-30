@@ -85,6 +85,7 @@ import org.jfree.chart.ui.Layer;
 import org.jfree.chart.ui.RectangleAnchor;
 import org.jfree.chart.ui.RectangleEdge;
 import org.jfree.chart.ui.TextAnchor;
+import org.jfree.data.xy.XYDataset;
 
 public class LinePlotJFree extends LinePlotBase {
 
@@ -337,8 +338,14 @@ public class LinePlotJFree extends LinePlotBase {
         }
         return (XYLineAndShapeRenderer) plot.getRenderer();
     }
+    
 
-    int getSeriesIndex(LinePlotSeries series) {
+    public XYDataset getDataset(int axis) {
+        XYPlot plot = (XYPlot) chart.getPlot(); 
+        return plot.getDataset(axis-1);
+    }       
+
+    public int getSeriesIndex(LinePlotSeries series) {
         if (getStyle().isError()) {
             //indexOf not working for XIntervalSeriesCollection
             int index = 0;
@@ -360,6 +367,11 @@ public class LinePlotJFree extends LinePlotBase {
         return data.indexOf(xys);
     }
 
+    public XYLineAndShapeRenderer getSeriesRenderer(LinePlotSeries series) {
+        return getRenderer(series.getAxisY());
+    }     
+
+    
     @Override
     protected Object onAddedSeries(LinePlotSeries series) {
         //TODO: LinePlotErrorSeries is specific to JFree
