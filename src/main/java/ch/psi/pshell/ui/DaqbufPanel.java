@@ -8,9 +8,14 @@ import ch.psi.pshell.plot.LinePlot;
 import ch.psi.pshell.plot.LinePlotErrorSeries;
 import ch.psi.pshell.plot.LinePlotJFree;
 import ch.psi.pshell.plot.LinePlotSeries;
+import ch.psi.pshell.plot.MatrixPlotRenderer;
 import ch.psi.pshell.plot.Plot;
 import ch.psi.pshell.plot.Plot.AxisId;
 import ch.psi.pshell.plot.PlotBase;
+import ch.psi.pshell.plot.PlotSeries;
+import ch.psi.pshell.plot.SlicePlotDefault;
+import ch.psi.pshell.plot.SlicePlotSeries;
+import ch.psi.pshell.plot.SlicePlotSeries.SlicePlotSeriesListener;
 import ch.psi.pshell.plot.TimePlotBase;
 import ch.psi.pshell.plot.TimePlotJFree;
 import ch.psi.pshell.plot.TimePlotSeries;
@@ -22,6 +27,10 @@ import static ch.psi.pshell.ui.Preferences.PanelLocation.Plot;
 import ch.psi.utils.Arr;
 import ch.psi.utils.Convert;
 import ch.psi.utils.Daqbuf;
+import ch.psi.utils.Daqbuf.Query;
+import ch.psi.utils.Daqbuf.QueryListener;
+import ch.psi.utils.Daqbuf.QueryRecordListener;
+import ch.psi.utils.EncoderJson;
 import ch.psi.utils.Str;
 import ch.psi.utils.swing.StandardDialog;
 import ch.psi.utils.swing.SwingUtils;
@@ -49,8 +58,13 @@ import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
 import java.text.DecimalFormat;
+import java.time.DayOfWeek;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.YearMonth;
 import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.EventObject;
@@ -100,6 +114,7 @@ import org.jfree.chart.event.PlotChangeEvent;
 import org.jfree.chart.event.PlotChangeListener;
 import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.renderer.xy.XYErrorRenderer;
+import org.jfree.chart.renderer.xy.XYItemRenderer;
 import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
 import org.jfree.data.xy.XYDataset;
 import org.jfree.data.xy.XYSeries;
@@ -111,7 +126,8 @@ import org.jfree.data.xy.YIntervalSeriesCollection;
  */
 public class DaqbufPanel extends StandardDialog {
 
-    public static final String FILE_EXTENSION = "scd";
+    public static final String PLOT_PRIVATE = "Private";
+    public static final String PLOT_SHARED = "Shared";
 
     Color defaultBackgroundColor = null;
     Color defaultGridColor = null;
@@ -121,13 +137,14 @@ public class DaqbufPanel extends StandardDialog {
     final DefaultTableModel modelSeries;
     final DefaultTableModel modelCharts;
 
-    final ArrayList<LinePlotJFree> plots = new ArrayList<>();
+    final ArrayList<PlotBase> plots = new ArrayList<>();
     final HashMap<Device, Long> appendTimestamps = new HashMap<>();
     volatile boolean started = false;
 
     Color backgroundColor;
     Color gridColor;
     final Daqbuf daqbuf;
+    int numPlots = 0;
     
     class ChartElement {
 
@@ -269,18 +286,16 @@ public class DaqbufPanel extends StandardDialog {
         for (String backend: daqbuf.getBackends()) {
             modelType.addElement(backend);
         }        
-        JComboBox comboType = new JComboBox();      
-        tableSeries.setRowHeight(Math.max(tableSeries.getRowHeight(), comboType.getPreferredSize().height - 3));
-        comboType.setModel(modelType);
-        DefaultCellEditor cellEditor = new DefaultCellEditor(comboType);
+        JComboBox comboBackend = new JComboBox();      
+        tableSeries.setRowHeight(Math.max(tableSeries.getRowHeight(), comboBackend.getPreferredSize().height - 3));
+        comboBackend.setModel(modelType);
+        DefaultCellEditor cellEditor = new DefaultCellEditor(comboBackend);
         cellEditor.setClickCountToStart(2);
-        colType.setCellEditor(cellEditor);
-                 
-        
-        comboType.addActionListener((e)->{
-            selector.configure(ChannelSelector.Type.Daqbuf, null,  comboType.getSelectedItem().toString(), 1000);
+        colType.setCellEditor(cellEditor);                         
+        comboBackend.addActionListener((e)->{
+            selector.configure(ChannelSelector.Type.Daqbuf, null,  comboBackend.getSelectedItem().toString(), 1000);
         });   
-        comboType.setSelectedIndex(0);
+        comboBackend.setSelectedIndex(0);
         
         TableColumn colShape = tableSeries.getColumnModel().getColumn(3);
         colShape.setPreferredWidth(60);
@@ -289,9 +304,8 @@ public class DaqbufPanel extends StandardDialog {
         colPlot.setPreferredWidth(60);
         JComboBox comboPlot = new JComboBox();
         DefaultComboBoxModel model = new DefaultComboBoxModel();
-        for (int i = 1; i <= 5; i++) {
-            model.addElement(i);
-        }
+        model.addElement(PLOT_PRIVATE);
+        model.addElement(PLOT_SHARED);
         comboPlot.setModel(model);
         cellEditor = new DefaultCellEditor(comboPlot);
         cellEditor.setClickCountToStart(2);
@@ -381,7 +395,7 @@ public class DaqbufPanel extends StandardDialog {
             }
         });
         final DecimalFormat formatter = new DecimalFormat("#.############");
-        for (int i = 1; i <= 5; i++) {
+        for (int i = 1; i <= 4; i++) {
             tableCharts.getColumnModel().getColumn(i).setPreferredWidth(90);
             tableCharts.getColumnModel().getColumn(i).setCellRenderer((TableCellRenderer) new DefaultTableCellRenderer() {
                 @Override
@@ -394,11 +408,9 @@ public class DaqbufPanel extends StandardDialog {
             });
         }
 
-        TableColumn colMarkers = tableCharts.getColumnModel().getColumn(6);
+        TableColumn colMarkers = tableCharts.getColumnModel().getColumn(5);
         colMarkers.setPreferredWidth(80);
 
-        TableColumn colLocalTime = tableCharts.getColumnModel().getColumn(7);
-        colLocalTime.setPreferredWidth(90);
     }
 
     TableModelListener modelSeriesListener = new TableModelListener() {
@@ -409,8 +421,11 @@ public class DaqbufPanel extends StandardDialog {
                     int index = e.getFirstRow();
                     if (e.getColumn() == 6) {
                         final Color color = Preferences.getColorFromString((String) modelSeries.getValueAt(index, 6));
-                        getTimePlotSeries(index).setColor(color);
-                        updateSeriesPaint(getTimePlotSeries(index));
+                        PlotSeries series = (PlotSeries) getPlotSeries(index);
+                        if (series instanceof LinePlotErrorSeries){                         
+                            ((LinePlotErrorSeries)series).setColor(color);
+                            updateSeriesPaint((LinePlotErrorSeries)series);
+                        }
                     }
                 } catch (Exception ex) {
                     showException(ex);
@@ -423,28 +438,40 @@ public class DaqbufPanel extends StandardDialog {
         @Override
         public void tableChanged(TableModelEvent e) {
             if (started) {
-                for (int i = 0; i < plots.size(); i++) {
+                if (e.getType() == TableModelEvent.UPDATE){
+                    int i = e.getFirstRow();
                     Double y1min = (Double) modelCharts.getValueAt(i, 1);
                     Double y1max = (Double) modelCharts.getValueAt(i, 2);
                     Double y2min = (Double) modelCharts.getValueAt(i, 3);
                     Double y2max = (Double) modelCharts.getValueAt(i, 4);
-                    Double duration = (Double) modelCharts.getValueAt(i, 5);
-                    Boolean markers = (Boolean) modelCharts.getValueAt(i, 6);
-                    LinePlotJFree plot = plots.get(i);
-                    //plot.setMarkersVisible(Boolean.TRUE.equals(markers));
-                    //plot.setDurationMillis((duration == null) ? 60000 : (int) (duration * 1000));
-                    if ((y1min != null) && (y1max != null)) {
-                       plot.getAxis(AxisId.Y).setRange(y1min, y1max);
+                    Boolean markers = (Boolean) modelCharts.getValueAt(i, 5);
+                    Boolean range = (Boolean) modelCharts.getValueAt(i, 6);
+                    PlotBase plotBase = plots.get(i);
+                    if (plotBase instanceof LinePlotJFree){
+                        LinePlotJFree plot = (LinePlotJFree)plotBase;
+                        //plot.setMarkersVisible(Boolean.TRUE.equals(markers));
+                        if ((y1min != null) && (y1max != null)) {
+                           plot.getAxis(AxisId.Y).setRange(y1min, y1max);                       
+                        }
+                        if ((y2min != null) && (y2max != null)) {
+                            plot.getAxis(AxisId.Y2).setRange(y2min, y2max);
+                        }                                 
+                        for (LinePlotSeries s : plot.getAllSeries()){
+                            s.setPointsVisible(markers);
+                        }
+
+                        for (XYItemRenderer r : plot.getChart().getXYPlot().getRenderers().values()){                        
+                           ((XYErrorRenderer)r).setDrawYError(range);
+                        }
                     }
-                    if ((y2min != null) && (y2max != null)) {
-                        plot.getAxis(AxisId.Y2).setRange(y2min, y2max);
-                    }                                 
                 }
             }
         }
     };
 
     public void initializePlots() {
+        numPlots=0;
+        modelCharts.setRowCount(0);
         pnGraphs.removeAll();
         plots.clear();
     }
@@ -485,17 +512,15 @@ public class DaqbufPanel extends StandardDialog {
         comboFormat.setSelectedItem(getInitFormat());
         comboLayout.setSelectedItem(getInitLayout());
         modelSeries.setRowCount(0);
-modelSeries.addRow(new Object[]{true,"S10BC01-DBPM010:Q1", "sf-databuffer", "[]", 1,1,null});
-modelSeries.addRow(new Object[]{true,"S10BC01-DBPM010:X1", "sf-databuffer", "[]", 1,1,null});
-modelSeries.addRow(new Object[]{true,"SARFE10-PSSS059:FIT-COM", "sf-databuffer", "[]", 1,2,null});
+modelSeries.addRow(new Object[]{true,"S10BC01-DBPM010:Q1", "sf-databuffer", "[]", PLOT_SHARED,1,null});
+modelSeries.addRow(new Object[]{true,"S10BC01-DBPM010:X1", "sf-databuffer", "[]", PLOT_SHARED,2,null});
+modelSeries.addRow(new Object[]{true,"SARFE10-PSSS059-LB:FIT-COM", "sf-databuffer", "[]", PLOT_PRIVATE,1,null});
+modelSeries.addRow(new Object[]{false,"SARES11-SPEC125-M1:FPICTURE", "sf-imagebuffer", "[2048, 2048]", PLOT_PRIVATE,1,null});
+
+
+textFrom.setText("2024-05-02 09:00:00");
+textTo.setText("2024-05-02 10:00:00");
         
-        modelCharts.setDataVector(new Object[][]{
-            {"1", null, null, null, null, null, false},
-            {"2", null, null, null, null, null, false},
-            {"3", null, null, null, null, null, false},
-            {"4", null, null, null, null, null, false},
-            {"5", null, null, null, null, null, false}
-        }, SwingUtils.getTableColumnNames(tableCharts));
         file = null;
         initializeTable();
         update();
@@ -520,15 +545,14 @@ modelSeries.addRow(new Object[]{true,"SARFE10-PSSS059:FIT-COM", "sf-databuffer",
     File file;
     
     final ArrayList<Device> devices = new ArrayList<>();
-    final HashMap<Vector, Integer> seriesIndexes = new HashMap<>();
-    final ArrayList<LinePlotErrorSeries> timePlotSeries = new ArrayList<>();
+    final ArrayList<PlotSeries> plotSeries = new ArrayList<>();
 
-    LinePlotErrorSeries getTimePlotSeries(int row) {
+    PlotSeries getPlotSeries(int row) {
         int index = 0;
         for (int i = 0; i < modelSeries.getRowCount(); i++) {
             if (modelSeries.getValueAt(i, 0).equals(Boolean.TRUE)) {
                 if (row == i) {
-                    return timePlotSeries.get(index);
+                    return plotSeries.get(index);
                 }
                 index++;
             }
@@ -582,161 +606,259 @@ modelSeries.addRow(new Object[]{true,"SARFE10-PSSS059:FIT-COM", "sf-databuffer",
         return getChannelName(str);               
     }
     
+    void addPlot(PlotBase plot){
+        if (backgroundColor != null) {
+            plot.setPlotBackgroundColor(backgroundColor);
+        }
+        if (gridColor != null) {
+            plot.setPlotGridColor(gridColor);
+        }
+        if (tickLabelFont != null) {
+            plot.setLabelFont(tickLabelFont);
+            plot.setTickLabelFont(tickLabelFont);
+        }                               
+        plot.setTitle(null);    
+        plot.setQuality(PlotPanel.getQuality());
+        plots.add(plot);
+        pnGraphs.add(plot);
+        modelCharts.addRow(new Object[]{numPlots+1, null, null, null, null, true, true});
+        numPlots++;        
+    }
+    
+    LinePlotJFree addLinePlot(boolean range){
+        Double y1min = null;
+        Double y1max = null;
+        Double y2min = null;
+        Double y2max = null;
+
+        LinePlotJFree plot = new LinePlotJFree();
+        if (range){
+            plot.setStyle(LinePlot.Style.ErrorY);
+        }
+        DateAxis axis = new DateAxis(null); //("Time");
+        axis.setLabelFont(plot.getLabelFont());
+        axis.setLabelPaint(plot.getAxisTextColor());
+        axis.setTickLabelPaint(plot.getAxisTextColor());
+        plot.getChart().getXYPlot().setDomainAxis(axis);            
+        
+        //plot.setTimeAxisLabel(null);
+        plot.setLegendVisible(true);
+        //plot.setMarkersVisible(Boolean.TRUE.equals(markers));
+        //plot.setDurationMillis((duration == null) ? 60000 : (int) (duration * 1000));
+        if ((y1min != null) && (y1max != null)) {
+            plot.getAxis(AxisId.Y).setRange(y1min, y1max);
+        }
+        if ((y2min != null) && (y2max != null)) {
+            plot.getAxis(AxisId.Y2).setRange(y2min, y2max);
+        }
+        //if (numPlots > 1) {
+        //    plot.setAxisSize(50);
+        //}
+
+        // Add an axis change listener to dynamically update the cap length
+        axis.addChangeListener(new AxisChangeListener() {
+            @Override
+            public void axisChanged(AxisChangeEvent event) {
+                updateCapLength(plot);
+            }
+        });           
+        plot.getChartPanel().addComponentListener(new ComponentAdapter() {
+            @Override
+            public void componentResized(ComponentEvent e) {
+                updateCapLength(plot);
+            }
+        });
+
+        addPlot(plot);
+        return plot;
+    }
+           
+    
+    LinePlotErrorSeries addBinnedSeries(LinePlotJFree plot, String name, String backend, String start, String end, int bins, int axis, Color color){        
+        LinePlotErrorSeries series = new LinePlotErrorSeries(name, color, axis);
+        plotSeries.add(series);
+        plot.addSeries(series);
+
+        XYPlot xyplot = plot.getChart().getXYPlot();
+        XYErrorRenderer renderer = (XYErrorRenderer) plot.getSeriesRenderer(series);            
+        renderer.setDrawYError(true);
+        renderer.setErrorStroke(new BasicStroke());
+
+        try {
+            daqbuf.startFetchQuery(name + Daqbuf.BACKEND_SEPARATOR + backend, start, end, bins).handle((ret,ex)->{
+                if (ex!=null){
+                    showException((Exception)ex);
+                } else {
+                    Map<String, List>  map = (Map<String, List>) ret;                                
+                    List<Double> average   = map.get(Daqbuf.FIELD_AVERAGE);
+                    List<Double> min   = map.get(Daqbuf.FIELD_MIN);
+                    List<Double> max   = map.get(Daqbuf.FIELD_MAX);
+                    List<Long> t1   = map.get(Daqbuf.FIELD_START);
+                    List<Long> t2   = map.get(Daqbuf.FIELD_END);
+                    //SwingUtilities.invokeLater(()->{
+                        long now = System.currentTimeMillis();                                    
+
+                        try{
+                            plot.setUpdatesEnabled(false);
+                            updateSeriesPaint(series);
+                            updateCapLength(plot);                                    
+                            for (int j=0; j< average.size(); j++){
+                                double timestamp = (t1.get(j) + t2.get(j))/2.0/1e6;
+                                series.appendData( timestamp,  average.get(j),min.get(j), max.get(j));      
+                            }
+                        } finally{
+                            plot.update(true);
+                            plot.setUpdatesEnabled(true);
+                        }
+
+                    //});
+                }
+                return ret;
+            });
+        } catch (Exception ex) {
+            showException(ex);
+        }                
+        return series;
+    }
+
+    LinePlotSeries addLineSeries(LinePlotJFree plot, String name, String backend,String start, String end, int axis, Color color){        
+        LinePlotSeries series = new LinePlotSeries(name, color, axis);
+        //LinePlotErrorSeries series = new LinePlotErrorSeries(name, color, axis);
+        plotSeries.add(series);
+        plot.addSeries(series);
+        series.setMaxItemCount((Integer)spinnerSize.getValue());
+                
+        //((XYErrorRenderer)plot.getSeriesRenderer(series)).setDrawYError(false);
+               
+        try {
+            daqbuf.startQuery(name + Daqbuf.BACKEND_SEPARATOR + backend, start, end, new QueryListener(){                
+                public void onMessage(Query query, List values, List<Long> ids, List<Long> timestamps) {
+                    try{
+                        plot.setUpdatesEnabled(false);
+                        List<Number> aux = (List<Number>)values;                                                
+                        if (series.getCount() >= series.getMaxItemCount()){
+                            throw new RuntimeException ("Series too big for plotting: " + name);
+                        }
+                        for (int j=0; j< values.size(); j++){
+                            series.appendData( timestamps.get(j).doubleValue()/1e6,  aux.get(j).doubleValue());      
+                        }
+                    //} catch (Exception ex){
+                    //    showException(ex);
+                    } finally{
+                        plot.update(true);
+                        plot.setUpdatesEnabled(true);
+                    }                    
+               }
+            }).handle((ret,ex)->{
+                if (ex!=null){
+                    showException((Exception)ex);
+                };
+                return ret;
+            });                                        
+        } catch (Exception ex) {
+            showException(ex);
+        }                
+        return series;
+    }
+    
+    
+    SlicePlotDefault addSlicePlot(){
+        SlicePlotDefault plot = new SlicePlotDefault(new MatrixPlotRenderer());        
+
+        addPlot(plot);
+        return plot;
+    }
+    
+    SlicePlotSeries addImageSeries(SlicePlotDefault plot, String name, String backend, String start, String end){        
+        SlicePlotSeries series = new SlicePlotSeries(name);
+        plotSeries.add(series);
+        plot.addSeries(series);
+        
+        series.setListener(new SlicePlotSeriesListener() {
+            @Override
+            public void onPageChanged(SlicePlotSeries series, int page) {
+                System.out.println(page);
+            }
+        });
+
+        
+        try {
+            daqbuf.startQuery(name + Daqbuf.BACKEND_SEPARATOR + backend, start, end, new QueryRecordListener() {
+                 public void onRecord(Query query, Object value, Long id, Long timestamp){
+                     System.out.println(timestamp + " - " + value);
+                 }
+            });
+        } catch (Exception ex) {
+            showException(ex);
+        }                
+        return series;
+    }
+
+    String toUTC(String str){
+        //if (!str.endsWith("Z")) {
+        //    LocalDateTime localDateTime = LocalDateTime.parse(str, DateTimeFormatter.ISO_LOCAL_DATE_TIME);
+        //    ZonedDateTime zonedDateTime = localDateTime.atZone(ZoneOffset.systemDefault());
+        //    ZonedDateTime utcZonedDateTime = zonedDateTime.withZoneSameInstant(ZoneOffset.UTC);
+        //    str = utcZonedDateTime.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME);
+        //}      
+        return str;
+    }
+    
     public void query() throws Exception {
         reset();
         
         if (modelSeries.getRowCount() == 0) {
             return;
         }
-        int numPlots = 1;
+        numPlots = 0;
+
+        final String start = toUTC(textFrom.getText());
+        final String end = toUTC(textTo.getText());        
+        
         Vector vector = modelSeries.getDataVector();
-        for (Vector info : (Vector[]) vector.toArray(new Vector[0])) {
-            if (info.get(0).equals(true)) {
-                numPlots = Integer.max(numPlots, (Integer) info.get(4));
-            }
-        }
 
-        for (int i = 0; i < numPlots; i++) {
-            Double y1min = (Double) modelCharts.getValueAt(i, 1);
-            Double y1max = (Double) modelCharts.getValueAt(i, 2);
-            Double y2min = (Double) modelCharts.getValueAt(i, 3);
-            Double y2max = (Double) modelCharts.getValueAt(i, 4);
-            Double duration = (Double) modelCharts.getValueAt(i, 5);
-            Boolean markers = (Boolean) modelCharts.getValueAt(i, 6);
-            Boolean localTime = (Boolean) modelCharts.getValueAt(i, 7);
-
-            LinePlotJFree plot = new LinePlotJFree();
-            plot.setTitle(null);
-            plot.setStyle(LinePlot.Style.ErrorY);
-            DateAxis axis = new DateAxis(null); //("Time");
-            axis.setLabelFont(plot.getLabelFont());
-
-            axis.setLabelPaint(plot.getAxisTextColor());
-            axis.setTickLabelPaint(plot.getAxisTextColor());
-            plot.getChart().getXYPlot().setDomainAxis(axis);            
-            
-            plot.setQuality(PlotPanel.getQuality());
-            //plot.setTimeAxisLabel(null);
-            plot.setLegendVisible(true);
-            //plot.setMarkersVisible(Boolean.TRUE.equals(markers));
-            //plot.setDurationMillis((duration == null) ? 60000 : (int) (duration * 1000));
-            if ((y1min != null) && (y1max != null)) {
-                plot.getAxis(AxisId.Y).setRange(y1min, y1max);
-            }
-            if ((y2min != null) && (y2max != null)) {
-                plot.getAxis(AxisId.Y2).setRange(y2min, y2max);
-            }
-            //if (numPlots > 1) {
-            //    plot.setAxisSize(50);
-            //}
-
-            if (backgroundColor != null) {
-                plot.setPlotBackgroundColor(backgroundColor);
-            }
-            if (gridColor != null) {
-                plot.setPlotGridColor(gridColor);
-            }
-            if (tickLabelFont != null) {
-                plot.setLabelFont(tickLabelFont);
-                plot.setTickLabelFont(tickLabelFont);
-            }                       
-            
-            // Add an axis change listener to dynamically update the cap length
-            axis.addChangeListener(new AxisChangeListener() {
-                @Override
-                public void axisChanged(AxisChangeEvent event) {
-                    updateCapLength(plot);
-                }
-            });           
-            plot.getChartPanel().addComponentListener(new ComponentAdapter() {
-                @Override
-                public void componentResized(ComponentEvent e) {
-                    updateCapLength(plot);
-                }
-            });
-            
-            plots.add(plot);
-            pnGraphs.add(plot);
-        }
         started = true;
         update();
 
         Vector[] rows = (Vector[]) vector.toArray(new Vector[0]);
+        Plot currentPlot = null;
         for (int i = 0; i < rows.length; i++) {
             Vector info = rows[i];
             if (info.get(0).equals(true)) {
+                final Integer bins = checkBins.isSelected() ? (Integer)spinnerBins.getValue() : null;
                 final String name = getChannelAlias(((String) info.get(1)).trim());
                 final String backend = info.get(2).toString();
-                final String shape = info.get(3).toString();
-                final int plotIndex = ((Integer) info.get(4)) - 1;
-                final int axis = (Integer) info.get(5);
-                final LinePlotJFree plot = plots.get(plotIndex);
+                final boolean  shared = info.get(4).equals(PLOT_SHARED);
+                final int axis = (Integer) info.get(5);                
                 final Color color = Preferences.getColorFromString((String) info.get(6));
-                
-                final String start = textFrom.getText();
-                final String end = textTo.getText();
-                
-                final int bins = 500;
-
-                LinePlotErrorSeries series = new LinePlotErrorSeries(name, color, axis);
-                seriesIndexes.put(info, plot.getNumberOfSeries());
-                timePlotSeries.add(series);
-                plot.addSeries(series);
-                
-                
-                XYPlot xyplot = plot.getChart().getXYPlot();
-                XYErrorRenderer renderer = (XYErrorRenderer) plot.getSeriesRenderer(series);            
-                
-                renderer.setDrawYError(true);
-                renderer.setErrorStroke(new BasicStroke());
-                
-                
-                //series.setLinesVisible(true);
-                //series.setLineWidth(5);
-                //series.setPointSize(4);
-                //series.setPointsVisible(true);
-                
-                //TODO
-                    try {
-                        daqbuf.startFetchQuery(name + Daqbuf.BACKEND_SEPARATOR + backend, start, end, bins).handle((ret,ex)->{
-                            if (ex!=null){
-                                showException((Exception)ex);
-                            } else {
-                                Map<String, List>  map = (Map<String, List>) ret;                                
-                                List<Double> average   = map.get(Daqbuf.FIELD_AVERAGE);
-                                List<Double> min   = map.get(Daqbuf.FIELD_MIN);
-                                List<Double> max   = map.get(Daqbuf.FIELD_MAX);
-                                List<Long> t1   = map.get(Daqbuf.FIELD_START);
-                                List<Long> t2   = map.get(Daqbuf.FIELD_END);
+                List<Integer> shape = new ArrayList<>();
+                try{
+                    shape = (List<Integer>) EncoderJson.decode(info.get(3).toString(), List.class);
+                } catch (Exception ex){                    
+                }
                                 
-                                //double[] average = (double[])Convert.toDouble(map.get(Daqbuf.FIELD_AVERAGE));
-                                //double[] min = (double[])Convert.toDouble(map.get(Daqbuf.FIELD_MIN));
-                                //double[] max = (double[])Convert.toDouble(map.get(Daqbuf.FIELD_MAX));
-                                //double[] time = new double[average.length];
-                                //graph.setData(max, max, time);
-                                //SwingUtilities.invokeLater(()->{
-                                    long now = System.currentTimeMillis();                                    
-                                    
-                                    try{
-                                        plot.setUpdatesEnabled(false);
-                                        updateSeriesPaint(series);
-                                        updateCapLength(plot);                                    
-                                        for (int j=0; j< average.size(); j++){
-                                            double timestamp = (t1.get(j) + t2.get(j))/2.0/1e6;
-                                            series.appendData( timestamp,  average.get(j),min.get(j), max.get(j));      
-                                        }
-                                    } finally{
-                                        plot.update(true);
-                                        plot.setUpdatesEnabled(true);
-                                    }
-                                    
-                                //});
-                            }
-                            return ret;
-                        });
-                    } catch (Exception ex) {
-                        showException(ex);
-                    }                
+                Plot plot = null;
+                PlotSeries series= null;
+                switch (shape.size()){
+                    case 0:
+                        if (shared && (currentPlot!=null) && (currentPlot instanceof LinePlotJFree)){
+                            plot = currentPlot;
+                        } else {
+                            plot = addLinePlot(bins!=null);
+                        }
+                        if (bins==null){
+                            series = addLineSeries((LinePlotJFree)plot, name, backend, start, end, axis, color);                            
+                        } else {
+                            series = addBinnedSeries((LinePlotJFree)plot, name, backend, start, end, bins, axis, color);
+                        }
+                        break;
+                    case 2:
+                        plot = addSlicePlot();
+                        series = addImageSeries((SlicePlotDefault)plot, name, start, end, backend);
+                }                
+                
+                
+                currentPlot = plot;                                                
                 
             }
         }
@@ -768,8 +890,8 @@ modelSeries.addRow(new Object[]{true,"SARFE10-PSSS059:FIT-COM", "sf-databuffer",
     }
     
     
-    void updateSeriesPaint(LinePlotErrorSeries series){
-        LinePlotJFree plot = series.getPlot();
+    void updateSeriesPaint(LinePlotSeries series){
+        LinePlotJFree plot = (LinePlotJFree) series.getPlot();
         XYErrorRenderer renderer = (XYErrorRenderer) plot.getSeriesRenderer(series);            
         Paint paint = renderer.getSeriesPaint(plot.getSeriesIndex(series));                          
         YIntervalSeriesCollection dataset= (YIntervalSeriesCollection) plot.getDataset(series.getAxisY());
@@ -781,10 +903,7 @@ modelSeries.addRow(new Object[]{true,"SARFE10-PSSS059:FIT-COM", "sf-databuffer",
             paint = new Color(0xA0, 0xA0, 0xA0, 0x40); 
         }
        
-        renderer.setErrorPaint(paint);
-        
-        
-        
+        renderer.setErrorPaint(paint);        
     }
 
     String[] getNames() throws IOException {
@@ -846,8 +965,7 @@ modelSeries.addRow(new Object[]{true,"SARFE10-PSSS059:FIT-COM", "sf-databuffer",
         synchronized (lock) {
             lock.notifyAll();
         }
-        seriesIndexes.clear();
-        timePlotSeries.clear();
+        plotSeries.clear();
         initializePlots();
         appendTimestamps.clear();
     }
@@ -907,19 +1025,28 @@ modelSeries.addRow(new Object[]{true,"SARFE10-PSSS059:FIT-COM", "sf-databuffer",
         buttonDown = new javax.swing.JButton();
         panelFile = new javax.swing.JPanel();
         buttonQuery = new javax.swing.JButton();
-        jPanel2 = new javax.swing.JPanel();
-        textFileName = new javax.swing.JTextField();
-        jLabel1 = new javax.swing.JLabel();
-        comboFormat = new javax.swing.JComboBox<>();
-        jLabel5 = new javax.swing.JLabel();
-        comboLayout = new javax.swing.JComboBox<>();
-        buttonSaveData = new javax.swing.JButton();
         jPanel3 = new javax.swing.JPanel();
         jLabel2 = new javax.swing.JLabel();
         textFrom = new javax.swing.JTextField();
         textTo = new javax.swing.JTextField();
         jLabel3 = new javax.swing.JLabel();
-        buttonSetRange = new javax.swing.JButton();
+        jLabel6 = new javax.swing.JLabel();
+        comboTime = new javax.swing.JComboBox<>();
+        jLabel9 = new javax.swing.JLabel();
+        jPanel4 = new javax.swing.JPanel();
+        checkBins = new javax.swing.JCheckBox();
+        jLabel4 = new javax.swing.JLabel();
+        spinnerBins = new javax.swing.JSpinner();
+        jLabel7 = new javax.swing.JLabel();
+        spinnerSize = new javax.swing.JSpinner();
+        panelData = new javax.swing.JPanel();
+        comboFormat = new javax.swing.JComboBox<>();
+        jLabel1 = new javax.swing.JLabel();
+        jLabel5 = new javax.swing.JLabel();
+        comboLayout = new javax.swing.JComboBox<>();
+        textFileName = new javax.swing.JTextField();
+        jLabel8 = new javax.swing.JLabel();
+        buttonSaveData = new javax.swing.JButton();
         panelCharts = new javax.swing.JPanel();
         jScrollPane3 = new javax.swing.JScrollPane();
         tableCharts = new JTable() {
@@ -953,7 +1080,7 @@ modelSeries.addRow(new Object[]{true,"SARFE10-PSSS059:FIT-COM", "sf-databuffer",
 
         tableSeries.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
-                { new Boolean(true), "S10BC01-DBPM010:Q1", "sf-databuffer", "[]", "1", "1", null}
+
             },
             new String [] {
                 "Enabled", "Name", "Backend", "Shape", "Plot", "Y Axis", "Color"
@@ -1016,7 +1143,7 @@ modelSeries.addRow(new Object[]{true,"SARFE10-PSSS059:FIT-COM", "sf-databuffer",
             .addGroup(panelSerieLayout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(panelSerieLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jScrollPane1)
+                    .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 563, Short.MAX_VALUE)
                     .addGroup(panelSerieLayout.createSequentialGroup()
                         .addGap(0, 0, Short.MAX_VALUE)
                         .addComponent(buttonUp)
@@ -1060,9 +1187,9 @@ modelSeries.addRow(new Object[]{true,"SARFE10-PSSS059:FIT-COM", "sf-databuffer",
         panelFile.setLayout(panelFileLayout);
         panelFileLayout.setHorizontalGroup(
             panelFileLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(panelFileLayout.createSequentialGroup()
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, panelFileLayout.createSequentialGroup()
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addComponent(buttonQuery, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(buttonQuery, javax.swing.GroupLayout.PREFERRED_SIZE, 140, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         panelFileLayout.setVerticalGroup(
@@ -1073,79 +1200,25 @@ modelSeries.addRow(new Object[]{true,"SARFE10-PSSS059:FIT-COM", "sf-databuffer",
                 .addGap(0, 0, 0))
         );
 
-        jPanel2.setBorder(javax.swing.BorderFactory.createTitledBorder("Persistence"));
-
-        jLabel1.setText("Format:");
-
-        comboFormat.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "h5", "txt", "csv" }));
-        comboFormat.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                comboFormatActionPerformed(evt);
-            }
-        });
-
-        jLabel5.setText("Layout:");
-
-        comboLayout.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "default", "table", "sf" }));
-        comboLayout.setSelectedIndex(1);
-
-        buttonSaveData.setText("Save");
-        buttonSaveData.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                buttonSaveDataActionPerformed(evt);
-            }
-        });
-
-        javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
-        jPanel2.setLayout(jPanel2Layout);
-        jPanel2Layout.setHorizontalGroup(
-            jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel2Layout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(buttonSaveData)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(textFileName, javax.swing.GroupLayout.DEFAULT_SIZE, 227, Short.MAX_VALUE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jLabel1)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(comboFormat, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jLabel5)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(comboLayout, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap())
-        );
-        jPanel2Layout.setVerticalGroup(
-            jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel2Layout.createSequentialGroup()
-                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.CENTER)
-                    .addComponent(textFileName, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabel1)
-                    .addComponent(comboFormat, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabel5)
-                    .addComponent(comboLayout, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(buttonSaveData))
-                .addContainerGap())
-        );
-
         jPanel3.setBorder(javax.swing.BorderFactory.createTitledBorder("Range"));
 
         jLabel2.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
         jLabel2.setText("From:");
 
-        textFrom.setText("2024-04-28 10:00:00");
-
-        textTo.setText("2024-04-28 11:00:00");
-
         jLabel3.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
         jLabel3.setText("To:");
 
-        buttonSetRange.setText("Set");
-        buttonSetRange.addActionListener(new java.awt.event.ActionListener() {
+        jLabel6.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
+
+        comboTime.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { " ", "Last 1min", "Last 10min", "Last 1h", "Last 12h", "Last 24h", "Last 7d", "Yesterday", "Today", "Last Week", "This Week", "Last Month", "This Month" }));
+        comboTime.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                buttonSetRangeActionPerformed(evt);
+                comboTimeActionPerformed(evt);
             }
         });
+
+        jLabel9.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
+        jLabel9.setText("Set:");
 
         javax.swing.GroupLayout jPanel3Layout = new javax.swing.GroupLayout(jPanel3);
         jPanel3.setLayout(jPanel3Layout);
@@ -1153,18 +1226,25 @@ modelSeries.addRow(new Object[]{true,"SARFE10-PSSS059:FIT-COM", "sf-databuffer",
             jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel3Layout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                    .addGroup(jPanel3Layout.createSequentialGroup()
-                        .addComponent(jLabel3)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(textTo))
+                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(jPanel3Layout.createSequentialGroup()
                         .addComponent(jLabel2)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(textFrom, javax.swing.GroupLayout.PREFERRED_SIZE, 220, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addComponent(buttonSetRange)
-                .addGap(43, 43, 43))
+                        .addComponent(textFrom, javax.swing.GroupLayout.PREFERRED_SIZE, 220, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(jLabel9))
+                    .addGroup(jPanel3Layout.createSequentialGroup()
+                        .addComponent(jLabel3)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(textTo, javax.swing.GroupLayout.PREFERRED_SIZE, 220, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                .addGap(12, 12, 12)
+                .addComponent(comboTime, javax.swing.GroupLayout.PREFERRED_SIZE, 171, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap())
+            .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addGroup(jPanel3Layout.createSequentialGroup()
+                    .addGap(19, 19, 19)
+                    .addComponent(jLabel6)
+                    .addContainerGap(544, Short.MAX_VALUE)))
         );
 
         jPanel3Layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {jLabel2, jLabel3});
@@ -1176,12 +1256,70 @@ modelSeries.addRow(new Object[]{true,"SARFE10-PSSS059:FIT-COM", "sf-databuffer",
                 .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel2)
                     .addComponent(textFrom, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(buttonSetRange))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                    .addComponent(comboTime, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jLabel9))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel3)
                     .addComponent(textTo, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap(42, Short.MAX_VALUE))
+                .addContainerGap())
+            .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel3Layout.createSequentialGroup()
+                    .addContainerGap(15, Short.MAX_VALUE)
+                    .addComponent(jLabel6, javax.swing.GroupLayout.PREFERRED_SIZE, 46, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addGap(15, 15, 15)))
+        );
+
+        jPanel4.setBorder(javax.swing.BorderFactory.createTitledBorder("Bins"));
+
+        checkBins.setSelected(true);
+        checkBins.setText("Binned Data");
+        checkBins.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                checkBinsActionPerformed(evt);
+            }
+        });
+
+        jLabel4.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
+        jLabel4.setText("Bins:");
+
+        spinnerBins.setModel(new javax.swing.SpinnerNumberModel(500, 1, 10000, 1));
+
+        jLabel7.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
+        jLabel7.setText("Max size: ");
+
+        spinnerSize.setModel(new javax.swing.SpinnerNumberModel(10000, 1, 200000, 1));
+        spinnerSize.setEnabled(false);
+
+        javax.swing.GroupLayout jPanel4Layout = new javax.swing.GroupLayout(jPanel4);
+        jPanel4.setLayout(jPanel4Layout);
+        jPanel4Layout.setHorizontalGroup(
+            jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel4Layout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(checkBins)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(jLabel4)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(spinnerBins, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(18, 18, 18)
+                .addComponent(jLabel7)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(spinnerSize, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap())
+        );
+        jPanel4Layout.setVerticalGroup(
+            jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel4Layout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel4)
+                    .addComponent(checkBins)
+                    .addComponent(spinnerBins, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                        .addComponent(jLabel7)
+                        .addComponent(spinnerSize, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                .addContainerGap())
         );
 
         javax.swing.GroupLayout panelSeriesLayout = new javax.swing.GroupLayout(panelSeries);
@@ -1190,44 +1328,120 @@ modelSeries.addRow(new Object[]{true,"SARFE10-PSSS059:FIT-COM", "sf-databuffer",
             panelSeriesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addComponent(panelSerie, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
             .addComponent(panelFile, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-            .addComponent(jPanel2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-            .addGroup(panelSeriesLayout.createSequentialGroup()
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, panelSeriesLayout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jPanel3, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addGroup(panelSeriesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addComponent(jPanel4, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(jPanel3, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addContainerGap())
         );
         panelSeriesLayout.setVerticalGroup(
             panelSeriesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, panelSeriesLayout.createSequentialGroup()
                 .addComponent(panelSerie, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(32, 32, 32)
-                .addComponent(jPanel3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 15, Short.MAX_VALUE)
-                .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jPanel3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jPanel4, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(18, 18, Short.MAX_VALUE)
                 .addComponent(panelFile, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap())
         );
 
         tabPane.addTab("Series", panelSeries);
 
+        comboFormat.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "h5", "txt", "csv" }));
+        comboFormat.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                comboFormatActionPerformed(evt);
+            }
+        });
+
+        jLabel1.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
+        jLabel1.setText("Format:");
+
+        jLabel5.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
+        jLabel5.setText("Layout:");
+
+        comboLayout.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "default", "table", "sf" }));
+        comboLayout.setSelectedIndex(1);
+
+        jLabel8.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
+        jLabel8.setText("File name:");
+
+        buttonSaveData.setText("Save");
+        buttonSaveData.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                buttonSaveDataActionPerformed(evt);
+            }
+        });
+
+        javax.swing.GroupLayout panelDataLayout = new javax.swing.GroupLayout(panelData);
+        panelData.setLayout(panelDataLayout);
+        panelDataLayout.setHorizontalGroup(
+            panelDataLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(panelDataLayout.createSequentialGroup()
+                .addGroup(panelDataLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(panelDataLayout.createSequentialGroup()
+                        .addGap(29, 29, 29)
+                        .addGroup(panelDataLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                            .addComponent(jLabel5)
+                            .addComponent(jLabel8))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addGroup(panelDataLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(panelDataLayout.createSequentialGroup()
+                                .addComponent(comboLayout, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGap(0, 363, Short.MAX_VALUE))
+                            .addComponent(textFileName)))
+                    .addGroup(panelDataLayout.createSequentialGroup()
+                        .addGap(30, 30, 30)
+                        .addComponent(jLabel1)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(comboFormat, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                .addContainerGap())
+            .addGroup(panelDataLayout.createSequentialGroup()
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(buttonSaveData)
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+        );
+
+        panelDataLayout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {jLabel1, jLabel5, jLabel8});
+
+        panelDataLayout.setVerticalGroup(
+            panelDataLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(panelDataLayout.createSequentialGroup()
+                .addGap(66, 66, 66)
+                .addGroup(panelDataLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(textFileName, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jLabel8))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addGroup(panelDataLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.CENTER)
+                    .addComponent(jLabel5)
+                    .addComponent(comboLayout, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(18, 18, 18)
+                .addGroup(panelDataLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.CENTER)
+                    .addComponent(jLabel1)
+                    .addComponent(comboFormat, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(18, 18, Short.MAX_VALUE)
+                .addComponent(buttonSaveData)
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+        );
+
+        tabPane.addTab("Data", panelData);
+
         tableCharts.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
-                {"1", null, null, null, null, null, null, null},
-                {"2", null, null, null, null, null, null, null},
-                {"3", null, null, null, null, null, null, null},
-                {"4", null, null, null, null, null, null, null},
-                {"5", null, null, null, null, null, null, null}
+
             },
             new String [] {
-                "Chart", "Y1min", "Y1max", "Y2min", "Y2max", "Duration(s)", "Markers", "Local Time"
+                "Chart", "Y1min", "Y1max", "Y2min", "Y2max", "Markers", "Range"
             }
         ) {
             Class[] types = new Class [] {
-                java.lang.String.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.Boolean.class, java.lang.Boolean.class
+                java.lang.String.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.Boolean.class, java.lang.Boolean.class
             };
             boolean[] canEdit = new boolean [] {
-                false, true, true, true, true, true, true, true
+                false, true, true, true, true, true, true
             };
 
             public Class getColumnClass(int columnIndex) {
@@ -1334,7 +1548,7 @@ modelSeries.addRow(new Object[]{true,"SARFE10-PSSS059:FIT-COM", "sf-databuffer",
             .addGroup(panelChartsLayout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(panelChartsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 573, Short.MAX_VALUE)
+                    .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 527, Short.MAX_VALUE)
                     .addComponent(jPanel1, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addContainerGap())
         );
@@ -1345,7 +1559,7 @@ modelSeries.addRow(new Object[]{true,"SARFE10-PSSS059:FIT-COM", "sf-databuffer",
                 .addComponent(jScrollPane3, javax.swing.GroupLayout.PREFERRED_SIZE, 209, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(18, 18, 18)
                 .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(182, Short.MAX_VALUE))
+                .addContainerGap(112, Short.MAX_VALUE))
         );
 
         tabPane.addTab("Charts", panelCharts);
@@ -1361,11 +1575,11 @@ modelSeries.addRow(new Object[]{true,"SARFE10-PSSS059:FIT-COM", "sf-databuffer",
         pnGraphs.setLayout(pnGraphsLayout);
         pnGraphsLayout.setHorizontalGroup(
             pnGraphsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 583, Short.MAX_VALUE)
+            .addGap(0, 537, Short.MAX_VALUE)
         );
         pnGraphsLayout.setVerticalGroup(
             pnGraphsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 469, Short.MAX_VALUE)
+            .addGap(0, 399, Short.MAX_VALUE)
         );
 
         scrollPane.setViewportView(pnGraphs);
@@ -1380,7 +1594,7 @@ modelSeries.addRow(new Object[]{true,"SARFE10-PSSS059:FIT-COM", "sf-databuffer",
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(tabPane)
+                .addComponent(tabPane, javax.swing.GroupLayout.DEFAULT_SIZE, 539, Short.MAX_VALUE)
                 .addContainerGap())
         );
         layout.setVerticalGroup(
@@ -1418,7 +1632,7 @@ modelSeries.addRow(new Object[]{true,"SARFE10-PSSS059:FIT-COM", "sf-databuffer",
     }//GEN-LAST:event_buttonDownActionPerformed
 
     private void buttonInsertActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonInsertActionPerformed
-        Object[] data = new Object[]{Boolean.TRUE, "", Daqbuf.getDefaultBackend(), "", 1, 1};
+        Object[] data = new Object[]{Boolean.TRUE, "", Daqbuf.getDefaultBackend(), "", PLOT_PRIVATE, 1};
         if (tableSeries.getSelectedRow() >= 0) {
             modelSeries.insertRow(tableSeries.getSelectedRow() + 1, data);
         } else {
@@ -1508,18 +1722,74 @@ modelSeries.addRow(new Object[]{true,"SARFE10-PSSS059:FIT-COM", "sf-databuffer",
     }//GEN-LAST:event_buttonSaveDataActionPerformed
 
     private void comboFormatActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_comboFormatActionPerformed
-        // TODO add your handling code here:
+        
     }//GEN-LAST:event_comboFormatActionPerformed
 
-    private void buttonSetRangeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonSetRangeActionPerformed
-        //DateTimeFormatter formatter = DateTimeFormatter.ISO_DATE_TIME;
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
-        LocalDateTime currentTime = LocalDateTime.now(ZoneOffset.UTC);
-        LocalDateTime oneHourAgo = currentTime.minusHours(1);
+    private void checkBinsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_checkBinsActionPerformed
+        spinnerBins.setEnabled(checkBins.isSelected());
+        spinnerSize.setEnabled(!checkBins.isSelected());
+    }//GEN-LAST:event_checkBinsActionPerformed
 
-        textFrom.setText(oneHourAgo.format(formatter));
-        textTo.setText(currentTime.format(formatter));
-    }//GEN-LAST:event_buttonSetRangeActionPerformed
+    private void comboTimeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_comboTimeActionPerformed
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");        
+        LocalDateTime now = LocalDateTime.now(ZoneOffset.UTC);
+        //DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS");
+        //LocalDateTime now = LocalDateTime.now();
+        LocalDateTime to = now;
+        LocalDateTime from = null;
+        
+        switch (comboTime.getSelectedIndex()){
+            case 1:
+                from = now.minusMinutes(1);
+                break;
+            case 2:
+                from = now.minusMinutes(10);
+                break;
+            case 3:
+                from = now.minusHours(1);
+                break;
+            case 4:
+                from = now.minusHours(12);
+                break;
+            case 5:
+                from = now.minusHours(24);
+                break;
+            case 6:
+                from = now.minusDays(7);
+                break;
+            case 7:                
+                LocalDate yesterdayDate = now.toLocalDate().minusDays(1);
+                from = LocalDateTime.of(yesterdayDate, LocalTime.MIN);                           
+                to = LocalDateTime.of(yesterdayDate, LocalTime.MAX);
+                break;
+            case 8:
+                from = LocalDateTime.of(now.toLocalDate(), LocalTime.MIN);           
+                break;
+            case 9:
+                LocalDate startOfCurrentWeek = now.toLocalDate().with(DayOfWeek.MONDAY);
+                LocalDate endOfLastWeek = startOfCurrentWeek.minusDays(1);
+                LocalDate startOfLastWeek = endOfLastWeek.minusDays(6);
+                from = LocalDateTime.of(startOfLastWeek, LocalTime.MIN);
+                to = LocalDateTime.of(endOfLastWeek, LocalTime.MAX);
+                break;
+            case 10:
+                from = LocalDateTime.of(now.toLocalDate().with(DayOfWeek.MONDAY), LocalTime.MIN);
+                break;
+            case 11:
+                YearMonth previousMonth = YearMonth.from(now.minusMonths(1));
+                LocalDate firstDayOfPreviousMonth = previousMonth.atDay(1);
+                LocalDate lastDayOfPreviousMonth = previousMonth.atEndOfMonth();
+                from = LocalDateTime.of(firstDayOfPreviousMonth, LocalTime.MIN);
+                to = LocalDateTime.of(lastDayOfPreviousMonth, LocalTime.MAX);
+                break;
+            case 12:
+                from = LocalDateTime.of(YearMonth.from(now).atDay(1), LocalTime.MIN);
+                break;
+        }
+
+        textFrom.setText(from.format(formatter));
+        textTo.setText(to.format(formatter));        
+    }//GEN-LAST:event_comboTimeActionPerformed
 
     /**
      */
@@ -1535,30 +1805,39 @@ modelSeries.addRow(new Object[]{true,"SARFE10-PSSS059:FIT-COM", "sf-databuffer",
     private javax.swing.JButton buttonInsert;
     private javax.swing.JButton buttonQuery;
     private javax.swing.JButton buttonSaveData;
-    private javax.swing.JButton buttonSetRange;
     private javax.swing.JButton buttonUp;
+    private javax.swing.JCheckBox checkBins;
     private javax.swing.JComboBox<String> comboFormat;
     private javax.swing.JComboBox<String> comboLayout;
+    private javax.swing.JComboBox<String> comboTime;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel15;
     private javax.swing.JLabel jLabel17;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
+    private javax.swing.JLabel jLabel4;
     private javax.swing.JLabel jLabel5;
+    private javax.swing.JLabel jLabel6;
+    private javax.swing.JLabel jLabel7;
+    private javax.swing.JLabel jLabel8;
+    private javax.swing.JLabel jLabel9;
     private javax.swing.JPanel jPanel1;
-    private javax.swing.JPanel jPanel2;
     private javax.swing.JPanel jPanel3;
+    private javax.swing.JPanel jPanel4;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane3;
     private javax.swing.JPanel panelCharts;
     private javax.swing.JPanel panelColorBackground;
     private javax.swing.JPanel panelColorGrid;
+    private javax.swing.JPanel panelData;
     private javax.swing.JPanel panelFile;
     private javax.swing.JPanel panelPlots;
     private javax.swing.JPanel panelSerie;
     private javax.swing.JPanel panelSeries;
     private javax.swing.JPanel pnGraphs;
     private javax.swing.JScrollPane scrollPane;
+    private javax.swing.JSpinner spinnerBins;
+    private javax.swing.JSpinner spinnerSize;
     private javax.swing.JTabbedPane tabPane;
     private javax.swing.JTable tableCharts;
     private javax.swing.JTable tableSeries;

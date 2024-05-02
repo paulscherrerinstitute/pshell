@@ -21,10 +21,21 @@ public class SlicePlotDefault extends SlicePlotBase {
 
     MatrixPlotBase matrixPlot;
 
-    /**
-     *
-     */
+
+    static MatrixPlotBase getDefaultMatrixPlot(){
+        try {
+            return (MatrixPlotBase) Plot.newPlot(PlotPanel.getMatrixPlotImpl());            
+        } catch (Exception ex) {
+            Logger.getLogger(SlicePlotDefault.class.getName()).log(Level.SEVERE, null, ex);
+            return null;
+        }        
+    }
+    
     public SlicePlotDefault() {
+        this(getDefaultMatrixPlot());
+    }
+    
+    public SlicePlotDefault(MatrixPlotBase matrixPlot) {
         initComponents();
 
         pageSelection.setMinValue(0);
@@ -37,12 +48,10 @@ public class SlicePlotDefault extends SlicePlotBase {
                 setPage((int) value);
             }
         });
-        try {
-            matrixPlot = (MatrixPlotBase) Plot.newPlot(PlotPanel.getMatrixPlotImpl());
+        this.matrixPlot = matrixPlot;
+        if (matrixPlot != null){
             panelPlot.add(matrixPlot);
-        } catch (Exception ex) {
-            Logger.getLogger(SlicePlotDefault.class.getName()).log(Level.SEVERE, null, ex);
-        }
+        }        
     }
 
     public MatrixPlotBase getMatrixPlot() {
