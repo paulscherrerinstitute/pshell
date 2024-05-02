@@ -28,6 +28,7 @@ import ch.psi.utils.swing.SwingUtils;
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Paint;
 import java.awt.Shape;
@@ -36,10 +37,13 @@ import java.awt.Toolkit;
 import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.geom.Rectangle2D;
 import java.beans.ConstructorProperties;
 import java.io.File;
 import java.io.IOException;
@@ -87,10 +91,18 @@ import javax.swing.table.TableColumn;
 import javax.swing.text.JTextComponent;
 import javax.swing.tree.TreeCellEditor;
 import org.jfree.chart.axis.DateAxis;
+import org.jfree.chart.event.AxisChangeEvent;
+import org.jfree.chart.event.AxisChangeListener;
+import org.jfree.chart.event.ChartChangeEvent;
+import org.jfree.chart.event.ChartChangeEventType;
+import org.jfree.chart.event.ChartChangeListener;
+import org.jfree.chart.event.PlotChangeEvent;
+import org.jfree.chart.event.PlotChangeListener;
 import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.renderer.xy.XYErrorRenderer;
 import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
 import org.jfree.data.xy.XYDataset;
+import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.YIntervalSeries;
 import org.jfree.data.xy.YIntervalSeriesCollection;
 
@@ -572,7 +584,7 @@ modelSeries.addRow(new Object[]{true,"SARFE10-PSSS059:FIT-COM", "sf-databuffer",
     
     public void query() throws Exception {
         reset();
-
+        
         if (modelSeries.getRowCount() == 0) {
             return;
         }
@@ -601,7 +613,7 @@ modelSeries.addRow(new Object[]{true,"SARFE10-PSSS059:FIT-COM", "sf-databuffer",
 
             axis.setLabelPaint(plot.getAxisTextColor());
             axis.setTickLabelPaint(plot.getAxisTextColor());
-            plot.getChart().getXYPlot().setDomainAxis(axis);
+            plot.getChart().getXYPlot().setDomainAxis(axis);            
             
             plot.setQuality(PlotPanel.getQuality());
             //plot.setTimeAxisLabel(null);
@@ -627,8 +639,22 @@ modelSeries.addRow(new Object[]{true,"SARFE10-PSSS059:FIT-COM", "sf-databuffer",
             if (tickLabelFont != null) {
                 plot.setLabelFont(tickLabelFont);
                 plot.setTickLabelFont(tickLabelFont);
-            }            
-
+            }                       
+            
+            // Add an axis change listener to dynamically update the cap length
+            axis.addChangeListener(new AxisChangeListener() {
+                @Override
+                public void axisChanged(AxisChangeEvent event) {
+                    updateCapLength(plot);
+                }
+            });           
+            plot.getChartPanel().addComponentListener(new ComponentAdapter() {
+                @Override
+                public void componentResized(ComponentEvent e) {
+                    updateCapLength(plot);
+                }
+            });
+            
             plots.add(plot);
             pnGraphs.add(plot);
         }
@@ -656,6 +682,7 @@ modelSeries.addRow(new Object[]{true,"SARFE10-PSSS059:FIT-COM", "sf-databuffer",
                 seriesIndexes.put(info, plot.getNumberOfSeries());
                 timePlotSeries.add(series);
                 plot.addSeries(series);
+                
                 
                 XYPlot xyplot = plot.getChart().getXYPlot();
                 XYErrorRenderer renderer = (XYErrorRenderer) plot.getSeriesRenderer(series);            
@@ -690,11 +717,18 @@ modelSeries.addRow(new Object[]{true,"SARFE10-PSSS059:FIT-COM", "sf-databuffer",
                                 //SwingUtilities.invokeLater(()->{
                                     long now = System.currentTimeMillis();                                    
                                     
-                                    for (int j=0; j< average.size(); j++){
-                                        double timestamp = (t1.get(j) + t2.get(j))/2.0/1e6;
-                                        series.appendData( timestamp,  average.get(j),min.get(j), max.get(j));      
+                                    try{
+                                        plot.setUpdatesEnabled(false);
+                                        updateSeriesPaint(series);
+                                        updateCapLength(plot);                                    
+                                        for (int j=0; j< average.size(); j++){
+                                            double timestamp = (t1.get(j) + t2.get(j))/2.0/1e6;
+                                            series.appendData( timestamp,  average.get(j),min.get(j), max.get(j));      
+                                        }
+                                    } finally{
+                                        plot.update(true);
+                                        plot.setUpdatesEnabled(true);
                                     }
-                                    updateSeriesPaint(series);
                                     
                                 //});
                             }
@@ -709,22 +743,47 @@ modelSeries.addRow(new Object[]{true,"SARFE10-PSSS059:FIT-COM", "sf-databuffer",
 
     }
     
+    void updateCapLength(LinePlotJFree plot){
+        try{
+            DateAxis axis = (DateAxis) plot.getChart().getXYPlot().getDomainAxis();        
+            for (int i=0; i<plot.getChart().getXYPlot().getRendererCount(); i++){
+                XYErrorRenderer renderer = (XYErrorRenderer) plot.getChart().getXYPlot().getRenderer(i);      
+                try{
+                    int bins = plot.getChart().getXYPlot().getDataset().getItemCount(0);
+                    double start = plot.getChart().getXYPlot().getDataset().getXValue(0, 0);
+                    double end = plot.getChart().getXYPlot().getDataset().getXValue(0, bins-1);
+                    double capLenghtMs = (end - start) / bins;
+                    double domainLenghtPixels = plot.getChartPanel().getScreenDataArea().getWidth();                
+                    domainLenghtPixels /= plot.getChartPanel().getScaleX();
+                    double domainLengthMs = axis.getRange().getLength();
+                    double capLength = (capLenghtMs * domainLenghtPixels ) / domainLengthMs    ;    
+                    renderer.setCapLength(capLength);      
+                } catch (Exception ex) {
+                    renderer.setCapLength(4.0);     
+                }
+            }
+        } catch (Exception ex) {
+        }
+            
+    }
+    
+    
     void updateSeriesPaint(LinePlotErrorSeries series){
         LinePlotJFree plot = series.getPlot();
         XYErrorRenderer renderer = (XYErrorRenderer) plot.getSeriesRenderer(series);            
         Paint paint = renderer.getSeriesPaint(plot.getSeriesIndex(series));                          
         YIntervalSeriesCollection dataset= (YIntervalSeriesCollection) plot.getDataset(series.getAxisY());
-        
-        if ((paint instanceof Color) 
-            //&& (dataset.getSeriesCount() ==1)
-                ){
+        YIntervalSeries yseries = (YIntervalSeries) series.getToken();
+        if ((paint instanceof Color) && (dataset.getSeriesCount() ==1)){
             Color c = (Color)paint;
             paint = new Color(c.getRed(), c.getGreen(), c.getBlue(), 0x40); 
         } else {
             paint = new Color(0xA0, 0xA0, 0xA0, 0x40); 
         }
-        
+       
         renderer.setErrorPaint(paint);
+        
+        
         
     }
 

@@ -1,8 +1,11 @@
 package ch.psi.pshell.plot;
 
 import java.awt.Color;
+import org.jfree.data.xy.XIntervalDataItem;
 import org.jfree.data.xy.XIntervalSeries;
+import org.jfree.data.xy.XYIntervalDataItem;
 import org.jfree.data.xy.XYIntervalSeries;
+import org.jfree.data.xy.YIntervalDataItem;
 import org.jfree.data.xy.YIntervalSeries;
 
 /**
@@ -33,16 +36,19 @@ public class LinePlotErrorSeries extends LinePlotSeries {
             switch (getPlot().getStyle()) {
                 case ErrorX:
                     XIntervalSeries sx = (XIntervalSeries) getToken();
-                    sx.add(x, low, high, y);
+                    //sx.add(x, low, high, y);
+                    sx.add(new XIntervalDataItem(x, low, high, y),  getPlot().isUpdatesEnabled());
                     break;
                 case ErrorY:
                     YIntervalSeries sy = (YIntervalSeries) getToken();
-                    sy.add(x, y, low, high);
+                    //sy.add(x, y, low, high);
+                    sy.add(new YIntervalDataItem(x, y, low, high),  getPlot().isUpdatesEnabled());
                     break;
                 //Consider low = errorx, high=errory
                 case ErrorXY:
                     XYIntervalSeries s = (XYIntervalSeries) getToken();
-                    s.add(x, x - low, x + low, y, y - high, y + high);
+                    //s.add(x, x - low, x + low, y, y - high, y + high);
+                    s.add(new XYIntervalDataItem(x, x, x, y, y - high, y + high),  getPlot().isUpdatesEnabled());
 
             }
         }
@@ -57,15 +63,17 @@ public class LinePlotErrorSeries extends LinePlotSeries {
         if (getPlot() != null) {
             switch (getPlot().getStyle()) {
                 case ErrorX:
-                    XIntervalSeries sx = (XIntervalSeries) getToken();
-                    sx.add(x, x - error, x + error, y);
+                    XIntervalSeries sx = (XIntervalSeries) getToken();                    
+                    //sx.add(x, x - error, x + error, y);
+                    sx.add(new XIntervalDataItem(x, x - error, x + error, y),  getPlot().isUpdatesEnabled());
                     break;
                 case ErrorY:
                     YIntervalSeries sy = (YIntervalSeries) getToken();
-                    sy.add(x, y, y - error, y + error);
+                    //sy.add(x, y, y - error, y + error);
+                    sy.add(new YIntervalDataItem(x, y, y - error, y + error),  getPlot().isUpdatesEnabled());
                     break;
                 case ErrorXY:
-                    appendData(x, y, error, error);
+                    appendData(x, x - error, x + error, y, y - error, y + error);
             }
         }
     }
@@ -74,7 +82,8 @@ public class LinePlotErrorSeries extends LinePlotSeries {
         if (getPlot() != null) {
             if (getPlot().getStyle() == LinePlot.Style.ErrorXY) {
                 XYIntervalSeries s = (XYIntervalSeries) getToken();
-                s.add(x, xLow, xHigh, y, yLow, yHigh);
+                //s.add(x, xLow, xHigh, y, yLow, yHigh);
+                s.add(new XYIntervalDataItem(x, xLow, xHigh, y, yLow, yHigh),  getPlot().isUpdatesEnabled());
             }
         }
     }
