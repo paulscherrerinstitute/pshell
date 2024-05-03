@@ -705,6 +705,7 @@ public class Daqbuf implements ChannelQueryAPI {
     }   
 
     void saveQuery(DataManager dm, String channel, String start, String end, Integer binSize) throws IOException, InterruptedException {
+long s = System.currentTimeMillis();
         String channelBackend = getChannelBackend(channel);
         String channelName = getChannelName(channel);                    
         String dataGroup = "/"+channelBackend+"/"+channelName+"/";
@@ -729,8 +730,23 @@ public class Daqbuf implements ChannelQueryAPI {
                                 Class type = Arr.getComponentType(obj);
                                 int[] shape =  Arr.getShape(obj);
                                 int[] dimensions = new int[shape.length+1];
+                                int[] chunks = new int[shape.length+1];
                                 System.arraycopy(shape, 0, dimensions, 0, shape.length);
-                                dm.createDataset(VALUE_DATASET, type, dimensions);
+                                System.arraycopy(shape, 0, chunks, 1, shape.length);
+                                Map features = new HashMap();
+                                features.put("compression", true);
+                                chunks[0] = 8 * 1024;
+                                if (shape.length==1){
+                                    chunks[0] = 16 * 1024;
+                                } else if (shape.length>1){
+                                    chunks[0] = 32 * 1024;
+                                }
+                                features.put("chunk", chunks);                                
+                                dm.createDataset(VALUE_DATASET, type, dimensions, features);
+                           //"compression": True, "max" or deflation level from 1 to 9
+                           //"shuffle": Byte shuffle before compressing.
+                           //"chunk": tuple, setting the chunk size
+                                
                                 dm.createDataset(ID_DATASET, Long.class);
                                 dm.createDataset(TIMESTAMP_DATASET, Long.class);
                             }
@@ -755,7 +771,8 @@ public class Daqbuf implements ChannelQueryAPI {
                     dm.setDataset(dataGroup +field, array);
                 }
             }            
-        }        
+        }   
+System.out.println(System.currentTimeMillis()-s);        
     }
 
     public void saveQuery(String filename, String[] channels, String start, String end) throws IOException, InterruptedException {
