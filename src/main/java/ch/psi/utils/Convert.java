@@ -1006,10 +1006,18 @@ public class Convert {
 
     //TODO: Optimize
     public static Object toPrimitiveArray(Object wrapperArray) {
+        Class listType = null;
         if (wrapperArray instanceof List) {
+            if (((List)wrapperArray).size()>0){
+                listType = ((List)wrapperArray).get(0).getClass();
+            }
             wrapperArray = ((List) wrapperArray).toArray();
+            
         }
         Class type = wrapperArray.getClass().getComponentType();
+        if (listType!=null){
+            type = listType;
+        }
         if (type.isArray()) {
             type = Arr.getComponentType(wrapperArray);
         }

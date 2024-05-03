@@ -727,6 +727,9 @@ public class DataManager implements AutoCloseable {
 
     public String getOutput() {
         assertOpen();
+        if (outputFile!=null){
+            return outputFile.getPath();
+        }
         return getExecutionPars().getOutput();
     }
 
@@ -1573,7 +1576,7 @@ public class DataManager implements AutoCloseable {
     }
     
     @Override
-    public void close() throws Exception {
+    public void close() throws IOException {
         closeOutput();
         synchronized (providerData) {
             providerData.clear();

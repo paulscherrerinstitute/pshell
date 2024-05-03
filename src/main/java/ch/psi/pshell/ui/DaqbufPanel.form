@@ -399,19 +399,20 @@
                 <Component class="javax.swing.JComboBox" name="comboTime">
                   <Properties>
                     <Property name="model" type="javax.swing.ComboBoxModel" editor="org.netbeans.modules.form.editors2.ComboBoxModelEditor">
-                      <StringArray count="12">
-                        <StringItem index="0" value="Last 1min"/>
-                        <StringItem index="1" value="Last 10min"/>
-                        <StringItem index="2" value="Last 1h"/>
-                        <StringItem index="3" value="Last 12h"/>
-                        <StringItem index="4" value="Last 24h"/>
-                        <StringItem index="5" value="Last 7d"/>
-                        <StringItem index="6" value="Yesterday"/>
-                        <StringItem index="7" value="Today"/>
-                        <StringItem index="8" value="Last Week"/>
-                        <StringItem index="9" value="This Week"/>
-                        <StringItem index="10" value="Last Month"/>
-                        <StringItem index="11" value="This Month"/>
+                      <StringArray count="13">
+                        <StringItem index="0" value=" "/>
+                        <StringItem index="1" value="Last 1min"/>
+                        <StringItem index="2" value="Last 10min"/>
+                        <StringItem index="3" value="Last 1h"/>
+                        <StringItem index="4" value="Last 12h"/>
+                        <StringItem index="5" value="Last 24h"/>
+                        <StringItem index="6" value="Last 7d"/>
+                        <StringItem index="7" value="Yesterday"/>
+                        <StringItem index="8" value="Today"/>
+                        <StringItem index="9" value="Last Week"/>
+                        <StringItem index="10" value="This Week"/>
+                        <StringItem index="11" value="Last Month"/>
+                        <StringItem index="12" value="This Month"/>
                       </StringArray>
                     </Property>
                   </Properties>
@@ -469,13 +470,15 @@
                   <Group type="103" groupAlignment="0" attributes="0">
                       <Group type="102" alignment="0" attributes="0">
                           <EmptySpace max="-2" attributes="0"/>
-                          <Group type="103" groupAlignment="3" attributes="0">
-                              <Component id="jLabel4" alignment="3" min="-2" max="-2" attributes="0"/>
-                              <Component id="checkBins" alignment="3" min="-2" max="-2" attributes="0"/>
-                              <Component id="spinnerBins" alignment="3" min="-2" max="-2" attributes="0"/>
-                              <Group type="103" alignment="3" groupAlignment="3" attributes="0">
+                          <Group type="103" groupAlignment="0" attributes="0">
+                              <Group type="103" alignment="0" groupAlignment="3" attributes="0">
                                   <Component id="jLabel7" alignment="3" min="-2" max="-2" attributes="0"/>
                                   <Component id="spinnerSize" alignment="3" min="-2" max="-2" attributes="0"/>
+                              </Group>
+                              <Group type="103" groupAlignment="3" attributes="0">
+                                  <Component id="jLabel4" alignment="3" min="-2" max="-2" attributes="0"/>
+                                  <Component id="checkBins" alignment="3" min="-2" max="-2" attributes="0"/>
+                                  <Component id="spinnerBins" alignment="3" min="-2" max="-2" attributes="0"/>
                               </Group>
                           </Group>
                           <EmptySpace max="-2" attributes="0"/>
@@ -502,7 +505,7 @@
                 <Component class="javax.swing.JSpinner" name="spinnerBins">
                   <Properties>
                     <Property name="model" type="javax.swing.SpinnerModel" editor="org.netbeans.modules.form.editors2.SpinnerModelEditor">
-                      <SpinnerModel initial="500" maximum="10000" minimum="1" numberType="java.lang.Integer" stepSize="1" type="number"/>
+                      <SpinnerModel initial="500" maximum="10000" minimum="1" numberType="java.lang.Integer" stepSize="10" type="number"/>
                     </Property>
                   </Properties>
                 </Component>
@@ -515,7 +518,7 @@
                 <Component class="javax.swing.JSpinner" name="spinnerSize">
                   <Properties>
                     <Property name="model" type="javax.swing.SpinnerModel" editor="org.netbeans.modules.form.editors2.SpinnerModelEditor">
-                      <SpinnerModel initial="10000" maximum="200000" minimum="1" numberType="java.lang.Integer" stepSize="1" type="number"/>
+                      <SpinnerModel initial="10000" maximum="200000" minimum="1" numberType="java.lang.Integer" stepSize="10000" type="number"/>
                     </Property>
                     <Property name="enabled" type="boolean" value="false"/>
                   </Properties>

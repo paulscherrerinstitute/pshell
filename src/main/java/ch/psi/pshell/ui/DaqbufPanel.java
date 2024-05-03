@@ -1013,6 +1013,8 @@ textTo.setText("2024-05-02 10:00:00");
     
     void saveQuery() throws IOException {
         try{
+            saveQuery(Sys.getUserHome() + "/tst.h5");
+            /*
             String path = (Context.getInstance() != null) ? Context.getInstance().getConfig().dataPath : Sys.getUserHome();
             JFileChooser chooser = new JFileChooser(path);
             FileNameExtensionFilter filter = new FileNameExtensionFilter("HDF5 files", "h5");
@@ -1025,6 +1027,7 @@ textTo.setText("2024-05-02 10:00:00");
                 }
                 saveQuery(fileName);
             }
+            */
         } catch (Exception ex) {
             showException(ex);
         }        
@@ -1248,7 +1251,7 @@ textTo.setText("2024-05-02 10:00:00");
 
         jLabel6.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
 
-        comboTime.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Last 1min", "Last 10min", "Last 1h", "Last 12h", "Last 24h", "Last 7d", "Yesterday", "Today", "Last Week", "This Week", "Last Month", "This Month" }));
+        comboTime.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { " ", "Last 1min", "Last 10min", "Last 1h", "Last 12h", "Last 24h", "Last 7d", "Yesterday", "Today", "Last Week", "This Week", "Last Month", "This Month" }));
         comboTime.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 comboTimeActionPerformed(evt);
@@ -1331,12 +1334,12 @@ textTo.setText("2024-05-02 10:00:00");
         jLabel4.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
         jLabel4.setText("Bins:");
 
-        spinnerBins.setModel(new javax.swing.SpinnerNumberModel(500, 1, 10000, 1));
+        spinnerBins.setModel(new javax.swing.SpinnerNumberModel(500, 1, 10000, 10));
 
         jLabel7.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
         jLabel7.setText("Max size: ");
 
-        spinnerSize.setModel(new javax.swing.SpinnerNumberModel(10000, 1, 200000, 1));
+        spinnerSize.setModel(new javax.swing.SpinnerNumberModel(10000, 1, 200000, 10000));
         spinnerSize.setEnabled(false);
 
         javax.swing.GroupLayout jPanel4Layout = new javax.swing.GroupLayout(jPanel4);
@@ -1360,13 +1363,14 @@ textTo.setText("2024-05-02 10:00:00");
             jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel4Layout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jLabel4)
-                    .addComponent(checkBins)
-                    .addComponent(spinnerBins, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                         .addComponent(jLabel7)
-                        .addComponent(spinnerSize, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        .addComponent(spinnerSize, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                        .addComponent(jLabel4)
+                        .addComponent(checkBins)
+                        .addComponent(spinnerBins, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
                 .addContainerGap())
         );
 

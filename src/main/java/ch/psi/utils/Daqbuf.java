@@ -1,5 +1,6 @@
 package ch.psi.utils;
 
+import ch.psi.pshell.data.DataManager;
 import ch.psi.utils.Threading.VisibleCompletableFuture;
 import java.io.IOException;
 import java.util.HashMap;
@@ -158,12 +159,8 @@ public class Daqbuf implements ChannelQueryAPI {
     }
 
     public List<Map<String, Object>> search(String regex, Boolean caseInsensitive, Integer limit) throws IOException {
-        String backend = this.backend;
-        if (regex.contains(BACKEND_SEPARATOR)) {
-            String[] tokens = regex.split(BACKEND_SEPARATOR);
-            backend = (tokens.length>1) ? tokens[1] : null;
-            regex = tokens[0];
-        }        
+        String backend = getChannelBackend(regex);
+        regex = getChannelName(regex);
         return search(backend, regex, caseInsensitive, limit);
     }
     
@@ -296,7 +293,7 @@ public class Daqbuf implements ChannelQueryAPI {
         }
         return data;
     }
-
+    
     public interface QueryListener {
 
         default void onStarted(Query query) {
@@ -360,14 +357,28 @@ public class Daqbuf implements ChannelQueryAPI {
         query(channel, start, end, listener, null);
     }
 
+    String getChannelName(String channel){
+        if (channel.contains(BACKEND_SEPARATOR)) {
+            return channel.split(BACKEND_SEPARATOR)[0];
+        }
+        return channel;
+    }
+
+    String getChannelBackend(String channel){
+        if (channel.contains(BACKEND_SEPARATOR)){
+            String[] tokens = channel.split(BACKEND_SEPARATOR);
+            if ((tokens.length)>1){
+                return tokens[1];
+            }
+        }
+        return backend;
+    }
+        
     void query(String channel, String start, String end, QueryListener listener, Integer bins) throws IOException, InterruptedException {
         boolean cbor = bins == null;
-        String backend = this.backend;
-        if (channel.contains(BACKEND_SEPARATOR)) {
-            String[] tokens = channel.split(BACKEND_SEPARATOR);
-            backend = (tokens.length>1) ? tokens[1] : null;
-            channel = tokens[0];
-        }
+        String backend = getChannelBackend(channel);
+        channel = getChannelName(channel);
+
         Query query = new Query(channel, backend, start, end, bins);
         String path = "/events";
         String accept = cbor ? "application/cbor-framed" : MediaType.APPLICATION_JSON;
@@ -675,25 +686,76 @@ public class Daqbuf implements ChannelQueryAPI {
         saveQuery(filename, channel, start, end, null);
     }
 
+    
     public void saveQuery(String filename, String channel, String start, String end, Integer binSize) throws IOException, InterruptedException {
-        QueryListener listener = null;
+        try (DataManager dm = getDataManager(filename)){
+            saveQuery(dm, channel, start, end, binSize);
+        } 
+    }
+            
+    DataManager getDataManager(String filename) throws IOException, InterruptedException {
+        try {
+            return new DataManager(filename, "h5");
+        } catch (InterruptedException | IOException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            throw new IOException(ex);
+        }
 
+    }   
+
+    void saveQuery(DataManager dm, String channel, String start, String end, Integer binSize) throws IOException, InterruptedException {
+        String channelBackend = getChannelBackend(channel);
+        String channelName = getChannelName(channel);                    
+        String dataGroup = "/"+channelBackend+"/"+channelName+"/";
+        dm.createGroup(dataGroup);                        
+
+        QueryListener listener = null;
         if (binSize == null) {
+            String VALUE_DATASET = dataGroup + "value";
+            String ID_DATASET = dataGroup + "id";
+            String TIMESTAMP_DATASET = dataGroup + "timestamp";
             listener = new QueryListener() {
                 @Override
                 public void onMessage(Query query, List values, List<Long> ids, List<Long> timestamps) {
-                    //TODO
-                }
+                    if (!values.isEmpty()){
+                        try{
+                            //Object value = Convert.toPrimitiveArray(values);
+                            //long[] id = (long[]) Convert.toPrimitiveArray(ids, Long.class);
+                            //long[] timestamp = (long[]) Convert.toPrimitiveArray(timestamps, Long.class);
+
+                            if (!dm.exists(VALUE_DATASET)) {
+                                Object obj = values.get(0);
+                                Class type = Arr.getComponentType(obj);
+                                int[] shape =  Arr.getShape(obj);
+                                int[] dimensions = new int[shape.length+1];
+                                System.arraycopy(shape, 0, dimensions, 0, shape.length);
+                                dm.createDataset(VALUE_DATASET, type, dimensions);
+                                dm.createDataset(ID_DATASET, Long.class);
+                                dm.createDataset(TIMESTAMP_DATASET, Long.class);
+                            }
+                            for (int i=0; i< values.size(); i++){
+                                dm.appendItem(VALUE_DATASET, values.get(i));
+                                dm.appendItem(ID_DATASET, ids.get(i));
+                                dm.appendItem(TIMESTAMP_DATASET, timestamps.get(i));
+                            } 
+                        } catch (Exception ex) {
+                            throw new RuntimeException(ex);
+                        }                    
+                    }
+                }                
             };
-        } else {
-            listener = new QueryBinnedListener() {
-                @Override
-                public void onMessage(Query query, List<Double> averages, List<Double> min, List<Double> max, List<Integer> count, List<Long> start, List<Long> end) {
-                    //TODO
+            query(channel, start, end, listener, binSize);
+        } else {            
+            Map<String, List> data = fetchQuery(channel, start, end, binSize);            
+            for (String field : data.keySet()){
+                List list = data.get(field);
+                if (!list.isEmpty()){
+                    Object array = Convert.toPrimitiveArray(list);
+                    dm.setDataset(dataGroup +field, array);
                 }
-            };
-        }
-        query(channel, start, end, listener, binSize);
+            }            
+        }        
     }
 
     public void saveQuery(String filename, String[] channels, String start, String end) throws IOException, InterruptedException {
@@ -703,38 +765,40 @@ public class Daqbuf implements ChannelQueryAPI {
     public void saveQuery(String filename, String[] channels, String start, String end, Integer binSize) throws IOException, InterruptedException {
         ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
         Map<String, CompletableFuture> futures = new HashMap<>();
+        
+        try (DataManager dm = getDataManager(filename)){
+            // Submit tasks for each channel
+            for (String channel : channels) {
+                CompletableFuture<Object> future = CompletableFuture.supplyAsync(() -> {
+                    try {
+                        saveQuery(dm, channel, start, end, binSize);
+                        return null;
+                    } catch (IOException | InterruptedException e) {
+                        throw new CompletionException(e);
+                    }
+                }, executor).exceptionally(ex -> {
+                    return ex;
+                });
+                futures.put(channel, future);
+            }
 
-        // Submit tasks for each channel
-        for (String channel : channels) {
-            CompletableFuture<Object> future = CompletableFuture.supplyAsync(() -> {
-                try {
-                    saveQuery(filename, channel, start, end, binSize);
-                    return null;
-                } catch (IOException | InterruptedException e) {
-                    throw new CompletionException(e);
+            executor.shutdown();
+
+            // Wait for all tasks to complete and collect results
+            Map<String, Map<String, List>> results = new HashMap<>();
+            for (Map.Entry<String, CompletableFuture> entry : futures.entrySet()) {
+                String channel = entry.getKey();
+                CompletableFuture<Boolean> future = entry.getValue();
+                try{
+                    Object ret = future.get();
+                    if (ret instanceof Exception){
+                        throw ((Exception)ret);
+                    }
+                } catch (InterruptedException ex) {
+                    throw ex;
+                } catch (Exception ex) {
+                    Logger.getLogger(Daqbuf.class.getName()).log(Level.SEVERE, null, ex);
                 }
-            }, executor).exceptionally(ex -> {
-                return ex;
-            });
-            futures.put(channel, future);
-        }
-
-        executor.shutdown();
-
-        // Wait for all tasks to complete and collect results
-        Map<String, Map<String, List>> results = new HashMap<>();
-        for (Map.Entry<String, CompletableFuture> entry : futures.entrySet()) {
-            String channel = entry.getKey();
-            CompletableFuture<Boolean> future = entry.getValue();
-            try{
-                Object ret = future.get();
-                if (ret instanceof Exception){
-                    throw ((Exception)ret);
-                }
-            } catch (InterruptedException ex) {
-                throw ex;
-            } catch (Exception ex) {
-                Logger.getLogger(Daqbuf.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
     }
