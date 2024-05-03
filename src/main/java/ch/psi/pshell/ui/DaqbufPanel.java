@@ -23,6 +23,7 @@ import ch.psi.pshell.plotter.Preferences;
 import ch.psi.pshell.swing.ChannelSelector;
 import ch.psi.pshell.swing.HistoryChart;
 import ch.psi.pshell.swing.PlotPanel;
+import ch.psi.pshell.swing.ScriptEditor;
 import static ch.psi.pshell.ui.Preferences.PanelLocation.Plot;
 import ch.psi.utils.Arr;
 import ch.psi.utils.Convert;
@@ -31,7 +32,9 @@ import ch.psi.utils.Daqbuf.Query;
 import ch.psi.utils.Daqbuf.QueryListener;
 import ch.psi.utils.Daqbuf.QueryRecordListener;
 import ch.psi.utils.EncoderJson;
+import ch.psi.utils.IO;
 import ch.psi.utils.Str;
+import ch.psi.utils.Sys;
 import ch.psi.utils.swing.StandardDialog;
 import ch.psi.utils.swing.SwingUtils;
 import java.awt.BasicStroke;
@@ -83,6 +86,8 @@ import javax.swing.JCheckBox;
 import javax.swing.JColorChooser;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
+import javax.swing.JDialog;
+import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
@@ -97,6 +102,7 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableCellEditor;
@@ -159,10 +165,13 @@ public class DaqbufPanel extends StandardDialog {
         double value;
         TimePlotBase plot;
     }
-    public DaqbufPanel(Window parent, String url, boolean modal) {
-        super(parent, modal);        
+    public DaqbufPanel(Window parent, String url, String title, boolean modal) {
+        super(parent, title, modal);        
         initComponents();
         daqbuf = new Daqbuf(url);
+        if (getTitle()==null){
+            setTitle(daqbuf.getUrl());
+        }
         if (App.hasArgument("background_color")) {
             try {
                 defaultBackgroundColor = Preferences.getColorFromString(App.getArgumentValue("background_color"));
@@ -190,13 +199,7 @@ public class DaqbufPanel extends StandardDialog {
             }
         }
 
-        buttonQuery.setEnabled(false);
-        textFileName.setEnabled(false);
-        comboFormat.setEnabled(false);
-        comboLayout.setEnabled(false);
-        textFileName.setText((Context.getInstance() != null) ? Context.getInstance().getConfig().dataPath : "");
-        comboFormat.setSelectedItem(getInitFormat());
-        comboLayout.setSelectedItem(getInitLayout());
+        buttonPlot.setEnabled(false);
         setCancelledOnEscape(false);
 
         //pnGraphs.setLayout(new GridBagLayout());
@@ -486,10 +489,7 @@ public class DaqbufPanel extends StandardDialog {
         buttonDown.setEnabled((rows > 0) && (cur >= 0) && (cur < (rows - 1)) && editing);
         buttonDelete.setEnabled((rows > 0) && (cur >= 0) && editing);
         buttonInsert.setEnabled(editing);
-        buttonQuery.setEnabled(modelSeries.getRowCount() > 0);
-        textFileName.setEnabled(true);
-        comboFormat.setEnabled(textFileName.isEnabled());
-        comboLayout.setEnabled(textFileName.isEnabled());
+        buttonPlot.setEnabled(modelSeries.getRowCount() > 0);
     }
 
     boolean isSeriesTableRowEditable(int row, int column) {
@@ -508,13 +508,10 @@ public class DaqbufPanel extends StandardDialog {
         gridColor = defaultGridColor;
         panelColorBackground.setBackground(backgroundColor);
         panelColorGrid.setBackground(gridColor);
-        textFileName.setText((Context.getInstance() != null) ? Context.getInstance().getConfig().dataPath : "");
-        comboFormat.setSelectedItem(getInitFormat());
-        comboLayout.setSelectedItem(getInitLayout());
         modelSeries.setRowCount(0);
 modelSeries.addRow(new Object[]{true,"S10BC01-DBPM010:Q1", "sf-databuffer", "[]", PLOT_SHARED,1,null});
 modelSeries.addRow(new Object[]{true,"S10BC01-DBPM010:X1", "sf-databuffer", "[]", PLOT_SHARED,2,null});
-modelSeries.addRow(new Object[]{true,"SARFE10-PSSS059-LB:FIT-COM", "sf-databuffer", "[]", PLOT_PRIVATE,1,null});
+modelSeries.addRow(new Object[]{true,"SARFE10-PSSS059:FIT-COM", "sf-databuffer", "[]", PLOT_PRIVATE,1,null});
 modelSeries.addRow(new Object[]{false,"SARES11-SPEC125-M1:FPICTURE", "sf-imagebuffer", "[2048, 2048]", PLOT_PRIVATE,1,null});
 
 
@@ -640,7 +637,7 @@ textTo.setText("2024-05-02 10:00:00");
         axis.setLabelPaint(plot.getAxisTextColor());
         axis.setTickLabelPaint(plot.getAxisTextColor());
         plot.getChart().getXYPlot().setDomainAxis(axis);            
-        
+        plot.getAxis(AxisId.Y).setLabel(null);
         //plot.setTimeAxisLabel(null);
         plot.setLegendVisible(true);
         //plot.setMarkersVisible(Boolean.TRUE.equals(markers));
@@ -794,17 +791,7 @@ textTo.setText("2024-05-02 10:00:00");
         return series;
     }
 
-    String toUTC(String str){
-        //if (!str.endsWith("Z")) {
-        //    LocalDateTime localDateTime = LocalDateTime.parse(str, DateTimeFormatter.ISO_LOCAL_DATE_TIME);
-        //    ZonedDateTime zonedDateTime = localDateTime.atZone(ZoneOffset.systemDefault());
-        //    ZonedDateTime utcZonedDateTime = zonedDateTime.withZoneSameInstant(ZoneOffset.UTC);
-        //    str = utcZonedDateTime.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME);
-        //}      
-        return str;
-    }
-    
-    public void query() throws Exception {
+    public void plotQuery() throws Exception {
         reset();
         
         if (modelSeries.getRowCount() == 0) {
@@ -812,16 +799,15 @@ textTo.setText("2024-05-02 10:00:00");
         }
         numPlots = 0;
 
-        final String start = toUTC(textFrom.getText());
-        final String end = toUTC(textTo.getText());        
-        
-        Vector vector = modelSeries.getDataVector();
-
+        final String start = textFrom.getText();
+        final String end = textTo.getText();        
+                
         started = true;
         update();
 
-        Vector[] rows = (Vector[]) vector.toArray(new Vector[0]);
         Plot currentPlot = null;
+        Vector vector = modelSeries.getDataVector();
+        Vector[] rows = (Vector[]) vector.toArray(new Vector[0]);
         for (int i = 0; i < rows.length; i++) {
             Vector info = rows[i];
             if (info.get(0).equals(true)) {
@@ -928,11 +914,6 @@ textTo.setText("2024-05-02 10:00:00");
         String id = ((String) info.get(1)).trim();
         String backend = ((String) info.get(2)).trim();
         
-        if (!comboFormat.getSelectedItem().equals("h5")) {
-            if (!Context.getInstance().getDataManager().getProvider().isPacked()) { //Filenames don't support ':'
-                id = id.replace(":", "_");
-            }
-        }
         id = id.replace("/", "_");
         return id;
     }
@@ -975,9 +956,9 @@ textTo.setText("2024-05-02 10:00:00");
     }
 
 
-    public static void create(String url, boolean modal) {
+    public static void create(String url, boolean modal, String title) {
         java.awt.EventQueue.invokeLater(() -> {
-            DaqbufPanel dialog = new DaqbufPanel(null, url, modal);
+            DaqbufPanel dialog = new DaqbufPanel(null, url, title, modal);
             dialog.setIconImage(Toolkit.getDefaultToolkit().getImage(App.getResourceUrl("IconSmall.png")));
             dialog.addWindowListener(new java.awt.event.WindowAdapter() {
                 @Override
@@ -996,8 +977,57 @@ textTo.setText("2024-05-02 10:00:00");
             dialog.requestFocus();
         });
     }
+    
+    void saveQuery(String filename) throws IOException, InterruptedException {
+        List<String> channels = new ArrayList<>();
+        Vector vector = modelSeries.getDataVector();
+        Vector[] rows = (Vector[]) vector.toArray(new Vector[0]);
+        for (int i = 0; i < rows.length; i++) {
+            Vector info = rows[i];
+            if (info.get(0).equals(true)) {
+                String name = getChannelAlias(((String) info.get(1)).trim());
+                String backend = info.get(2).toString();
+                channels.add(name + Daqbuf.BACKEND_SEPARATOR + backend);
+            }
+        }
+        if (channels.isEmpty()){
+            throw new IOException("No channel selected");
+        }
+        final Integer bins = checkBins.isSelected() ? (Integer)spinnerBins.getValue() : null;
+        final String start = textFrom.getText();
+        final String end = textTo.getText();        
 
-    void saveData() throws IOException {
+        buttonSaveData.setEnabled(false);
+        JDialog splash = SwingUtils.showSplash(this, "Save", new Dimension(400,200), "Saving data to " + filename);
+        daqbuf.startSaveQuery(filename, channels.toArray(new String[0]), start, end, bins).handle((ret, ex)->{
+            splash.setVisible(false);
+            if (ex!=null){
+                showException((Exception)ex);
+            } else {
+                this.showMessage("Save","Success saving data to " + filename);
+            }
+            buttonSaveData.setEnabled(true);
+            return ret;
+        });
+    }
+    
+    void saveQuery() throws IOException {
+        try{
+            String path = (Context.getInstance() != null) ? Context.getInstance().getConfig().dataPath : Sys.getUserHome();
+            JFileChooser chooser = new JFileChooser(path);
+            FileNameExtensionFilter filter = new FileNameExtensionFilter("HDF5 files", "h5");
+            chooser.setFileFilter(filter);
+            int rVal = chooser.showSaveDialog(this);
+            if (rVal == JFileChooser.APPROVE_OPTION) {
+                String fileName = chooser.getSelectedFile().getAbsolutePath();
+                if (IO.getExtension(fileName).isEmpty()){
+                    fileName += ".h5";
+                }
+                saveQuery(fileName);
+            }
+        } catch (Exception ex) {
+            showException(ex);
+        }        
     }
 
     /**
@@ -1024,7 +1054,8 @@ textTo.setText("2024-05-02 10:00:00");
         buttonInsert = new javax.swing.JButton();
         buttonDown = new javax.swing.JButton();
         panelFile = new javax.swing.JPanel();
-        buttonQuery = new javax.swing.JButton();
+        buttonPlot = new javax.swing.JButton();
+        buttonSaveData = new javax.swing.JButton();
         jPanel3 = new javax.swing.JPanel();
         jLabel2 = new javax.swing.JLabel();
         textFrom = new javax.swing.JTextField();
@@ -1033,20 +1064,13 @@ textTo.setText("2024-05-02 10:00:00");
         jLabel6 = new javax.swing.JLabel();
         comboTime = new javax.swing.JComboBox<>();
         jLabel9 = new javax.swing.JLabel();
+        checkUTC = new javax.swing.JCheckBox();
         jPanel4 = new javax.swing.JPanel();
         checkBins = new javax.swing.JCheckBox();
         jLabel4 = new javax.swing.JLabel();
         spinnerBins = new javax.swing.JSpinner();
         jLabel7 = new javax.swing.JLabel();
         spinnerSize = new javax.swing.JSpinner();
-        panelData = new javax.swing.JPanel();
-        comboFormat = new javax.swing.JComboBox<>();
-        jLabel1 = new javax.swing.JLabel();
-        jLabel5 = new javax.swing.JLabel();
-        comboLayout = new javax.swing.JComboBox<>();
-        textFileName = new javax.swing.JTextField();
-        jLabel8 = new javax.swing.JLabel();
-        buttonSaveData = new javax.swing.JButton();
         panelCharts = new javax.swing.JPanel();
         jScrollPane3 = new javax.swing.JScrollPane();
         tableCharts = new JTable() {
@@ -1163,7 +1187,7 @@ textTo.setText("2024-05-02 10:00:00");
             panelSerieLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(panelSerieLayout.createSequentialGroup()
                 .addGap(2, 2, 2)
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 143, Short.MAX_VALUE)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 147, Short.MAX_VALUE)
                 .addGap(4, 4, 4)
                 .addGroup(panelSerieLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(buttonDelete)
@@ -1175,11 +1199,18 @@ textTo.setText("2024-05-02 10:00:00");
 
         panelSerieLayout.linkSize(javax.swing.SwingConstants.VERTICAL, new java.awt.Component[] {buttonDelete, buttonDown, buttonInsert, buttonUp});
 
-        buttonQuery.setText("Query");
-        buttonQuery.setPreferredSize(new java.awt.Dimension(89, 23));
-        buttonQuery.addActionListener(new java.awt.event.ActionListener() {
+        buttonPlot.setText("Plot");
+        buttonPlot.setPreferredSize(new java.awt.Dimension(89, 23));
+        buttonPlot.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                buttonQueryActionPerformed(evt);
+                buttonPlotActionPerformed(evt);
+            }
+        });
+
+        buttonSaveData.setText("Save");
+        buttonSaveData.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                buttonSaveDataActionPerformed(evt);
             }
         });
 
@@ -1189,14 +1220,21 @@ textTo.setText("2024-05-02 10:00:00");
             panelFileLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, panelFileLayout.createSequentialGroup()
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addComponent(buttonQuery, javax.swing.GroupLayout.PREFERRED_SIZE, 140, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(buttonSaveData)
+                .addGap(18, 18, Short.MAX_VALUE)
+                .addComponent(buttonPlot, javax.swing.GroupLayout.PREFERRED_SIZE, 140, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
+
+        panelFileLayout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {buttonPlot, buttonSaveData});
+
         panelFileLayout.setVerticalGroup(
             panelFileLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(panelFileLayout.createSequentialGroup()
                 .addGap(4, 4, 4)
-                .addComponent(buttonQuery, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGroup(panelFileLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(buttonPlot, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(buttonSaveData))
                 .addGap(0, 0, 0))
         );
 
@@ -1210,7 +1248,7 @@ textTo.setText("2024-05-02 10:00:00");
 
         jLabel6.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
 
-        comboTime.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { " ", "Last 1min", "Last 10min", "Last 1h", "Last 12h", "Last 24h", "Last 7d", "Yesterday", "Today", "Last Week", "This Week", "Last Month", "This Month" }));
+        comboTime.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Last 1min", "Last 10min", "Last 1h", "Last 12h", "Last 24h", "Last 7d", "Yesterday", "Today", "Last Week", "This Week", "Last Month", "This Month" }));
         comboTime.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 comboTimeActionPerformed(evt);
@@ -1219,6 +1257,13 @@ textTo.setText("2024-05-02 10:00:00");
 
         jLabel9.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
         jLabel9.setText("Set:");
+
+        checkUTC.setText("UTC");
+        checkUTC.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                checkUTCActionPerformed(evt);
+            }
+        });
 
         javax.swing.GroupLayout jPanel3Layout = new javax.swing.GroupLayout(jPanel3);
         jPanel3.setLayout(jPanel3Layout);
@@ -1238,7 +1283,9 @@ textTo.setText("2024-05-02 10:00:00");
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(textTo, javax.swing.GroupLayout.PREFERRED_SIZE, 220, javax.swing.GroupLayout.PREFERRED_SIZE)))
                 .addGap(12, 12, 12)
-                .addComponent(comboTime, javax.swing.GroupLayout.PREFERRED_SIZE, 171, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(comboTime, javax.swing.GroupLayout.PREFERRED_SIZE, 171, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(checkUTC))
                 .addContainerGap())
             .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                 .addGroup(jPanel3Layout.createSequentialGroup()
@@ -1261,7 +1308,8 @@ textTo.setText("2024-05-02 10:00:00");
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel3)
-                    .addComponent(textTo, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(textTo, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(checkUTC))
                 .addContainerGap())
             .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                 .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel3Layout.createSequentialGroup()
@@ -1338,96 +1386,17 @@ textTo.setText("2024-05-02 10:00:00");
         panelSeriesLayout.setVerticalGroup(
             panelSeriesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, panelSeriesLayout.createSequentialGroup()
-                .addComponent(panelSerie, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(panelSerie, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jPanel3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jPanel4, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(18, 18, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addComponent(panelFile, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap())
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
         tabPane.addTab("Series", panelSeries);
-
-        comboFormat.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "h5", "txt", "csv" }));
-        comboFormat.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                comboFormatActionPerformed(evt);
-            }
-        });
-
-        jLabel1.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
-        jLabel1.setText("Format:");
-
-        jLabel5.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
-        jLabel5.setText("Layout:");
-
-        comboLayout.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "default", "table", "sf" }));
-        comboLayout.setSelectedIndex(1);
-
-        jLabel8.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
-        jLabel8.setText("File name:");
-
-        buttonSaveData.setText("Save");
-        buttonSaveData.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                buttonSaveDataActionPerformed(evt);
-            }
-        });
-
-        javax.swing.GroupLayout panelDataLayout = new javax.swing.GroupLayout(panelData);
-        panelData.setLayout(panelDataLayout);
-        panelDataLayout.setHorizontalGroup(
-            panelDataLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(panelDataLayout.createSequentialGroup()
-                .addGroup(panelDataLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(panelDataLayout.createSequentialGroup()
-                        .addGap(29, 29, 29)
-                        .addGroup(panelDataLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                            .addComponent(jLabel5)
-                            .addComponent(jLabel8))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addGroup(panelDataLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addGroup(panelDataLayout.createSequentialGroup()
-                                .addComponent(comboLayout, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addGap(0, 363, Short.MAX_VALUE))
-                            .addComponent(textFileName)))
-                    .addGroup(panelDataLayout.createSequentialGroup()
-                        .addGap(30, 30, 30)
-                        .addComponent(jLabel1)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(comboFormat, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addContainerGap())
-            .addGroup(panelDataLayout.createSequentialGroup()
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addComponent(buttonSaveData)
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-        );
-
-        panelDataLayout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {jLabel1, jLabel5, jLabel8});
-
-        panelDataLayout.setVerticalGroup(
-            panelDataLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(panelDataLayout.createSequentialGroup()
-                .addGap(66, 66, 66)
-                .addGroup(panelDataLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(textFileName, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabel8))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addGroup(panelDataLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.CENTER)
-                    .addComponent(jLabel5)
-                    .addComponent(comboLayout, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGap(18, 18, 18)
-                .addGroup(panelDataLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.CENTER)
-                    .addComponent(jLabel1)
-                    .addComponent(comboFormat, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGap(18, 18, Short.MAX_VALUE)
-                .addComponent(buttonSaveData)
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-        );
-
-        tabPane.addTab("Data", panelData);
 
         tableCharts.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
@@ -1548,18 +1517,18 @@ textTo.setText("2024-05-02 10:00:00");
             .addGroup(panelChartsLayout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(panelChartsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 527, Short.MAX_VALUE)
-                    .addComponent(jPanel1, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                    .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 573, Short.MAX_VALUE)
+                    .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addContainerGap())
         );
         panelChartsLayout.setVerticalGroup(
             panelChartsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(panelChartsLayout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jScrollPane3, javax.swing.GroupLayout.PREFERRED_SIZE, 209, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 332, Short.MAX_VALUE)
                 .addGap(18, 18, 18)
                 .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(112, Short.MAX_VALUE))
+                .addGap(13, 13, 13))
         );
 
         tabPane.addTab("Charts", panelCharts);
@@ -1575,11 +1544,11 @@ textTo.setText("2024-05-02 10:00:00");
         pnGraphs.setLayout(pnGraphsLayout);
         pnGraphsLayout.setHorizontalGroup(
             pnGraphsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 537, Short.MAX_VALUE)
+            .addGap(0, 583, Short.MAX_VALUE)
         );
         pnGraphsLayout.setVerticalGroup(
             pnGraphsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 399, Short.MAX_VALUE)
+            .addGap(0, 423, Short.MAX_VALUE)
         );
 
         scrollPane.setViewportView(pnGraphs);
@@ -1665,20 +1634,20 @@ textTo.setText("2024-05-02 10:00:00");
         update();
     }//GEN-LAST:event_tableSeriesKeyReleased
 
-    private void buttonQueryActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonQueryActionPerformed
+    private void buttonPlotActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonPlotActionPerformed
         if (tableSeries.isEditing()) {
             tableSeries.getCellEditor().stopCellEditing();
         }        
         try {
             if (modelSeries.getRowCount() > 0) {
-                query();
+                plotQuery();
                 tabPane.setSelectedComponent(panelPlots);
             }
         } catch (Exception ex) {
             showException(ex);
             ex.printStackTrace();
         }
-    }//GEN-LAST:event_buttonQueryActionPerformed
+    }//GEN-LAST:event_buttonPlotActionPerformed
 
     private void panelColorBackgroundMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_panelColorBackgroundMouseClicked
         Color c = JColorChooser.showDialog(this, "Choose a Color", backgroundColor);
@@ -1715,15 +1684,11 @@ textTo.setText("2024-05-02 10:00:00");
 
     private void buttonSaveDataActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonSaveDataActionPerformed
         try {
-            saveData();
+            saveQuery();
         } catch (Exception ex) {
             showException(ex);
         }
     }//GEN-LAST:event_buttonSaveDataActionPerformed
-
-    private void comboFormatActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_comboFormatActionPerformed
-        
-    }//GEN-LAST:event_comboFormatActionPerformed
 
     private void checkBinsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_checkBinsActionPerformed
         spinnerBins.setEnabled(checkBins.isSelected());
@@ -1731,10 +1696,12 @@ textTo.setText("2024-05-02 10:00:00");
     }//GEN-LAST:event_checkBinsActionPerformed
 
     private void comboTimeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_comboTimeActionPerformed
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");        
-        LocalDateTime now = LocalDateTime.now(ZoneOffset.UTC);
-        //DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS");
-        //LocalDateTime now = LocalDateTime.now();
+        DateTimeFormatter formatter = (checkUTC.isSelected()) ?
+                DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'") :
+                DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS");    
+        LocalDateTime now = (checkUTC.isSelected()) ? 
+                LocalDateTime.now(ZoneOffset.UTC) :
+                LocalDateTime.now();
         LocalDateTime to = now;
         LocalDateTime from = null;
         
@@ -1759,7 +1726,7 @@ textTo.setText("2024-05-02 10:00:00");
                 break;
             case 7:                
                 LocalDate yesterdayDate = now.toLocalDate().minusDays(1);
-                from = LocalDateTime.of(yesterdayDate, LocalTime.MIN);                           
+                from = LocalDateTime.of(yesterdayDate, LocalTime.MIN);           
                 to = LocalDateTime.of(yesterdayDate, LocalTime.MAX);
                 break;
             case 8:
@@ -1791,11 +1758,15 @@ textTo.setText("2024-05-02 10:00:00");
         textTo.setText(to.format(formatter));        
     }//GEN-LAST:event_comboTimeActionPerformed
 
+    private void checkUTCActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_checkUTCActionPerformed
+        comboTimeActionPerformed(null);
+    }//GEN-LAST:event_checkUTCActionPerformed
+
     /**
      */
     public static void main(String args[]) {
         App.init(args);
-        create(null, true);
+        create(null, true, null);
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
@@ -1803,23 +1774,19 @@ textTo.setText("2024-05-02 10:00:00");
     private javax.swing.JButton buttonDelete;
     private javax.swing.JButton buttonDown;
     private javax.swing.JButton buttonInsert;
-    private javax.swing.JButton buttonQuery;
+    private javax.swing.JButton buttonPlot;
     private javax.swing.JButton buttonSaveData;
     private javax.swing.JButton buttonUp;
     private javax.swing.JCheckBox checkBins;
-    private javax.swing.JComboBox<String> comboFormat;
-    private javax.swing.JComboBox<String> comboLayout;
+    private javax.swing.JCheckBox checkUTC;
     private javax.swing.JComboBox<String> comboTime;
-    private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel15;
     private javax.swing.JLabel jLabel17;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
-    private javax.swing.JLabel jLabel5;
     private javax.swing.JLabel jLabel6;
     private javax.swing.JLabel jLabel7;
-    private javax.swing.JLabel jLabel8;
     private javax.swing.JLabel jLabel9;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel3;
@@ -1829,7 +1796,6 @@ textTo.setText("2024-05-02 10:00:00");
     private javax.swing.JPanel panelCharts;
     private javax.swing.JPanel panelColorBackground;
     private javax.swing.JPanel panelColorGrid;
-    private javax.swing.JPanel panelData;
     private javax.swing.JPanel panelFile;
     private javax.swing.JPanel panelPlots;
     private javax.swing.JPanel panelSerie;
@@ -1841,7 +1807,6 @@ textTo.setText("2024-05-02 10:00:00");
     private javax.swing.JTabbedPane tabPane;
     private javax.swing.JTable tableCharts;
     private javax.swing.JTable tableSeries;
-    private javax.swing.JTextField textFileName;
     private javax.swing.JTextField textFrom;
     private javax.swing.JTextField textTo;
     // End of variables declaration//GEN-END:variables

@@ -432,19 +432,19 @@ public class Daqbuf implements ChannelQueryAPI {
                 List<Integer> counts = (List) frame.getOrDefault("counts", null);
                 List<Double> maxs = (List) frame.getOrDefault("maxs", null);
                 List<Double> mins = (List) frame.getOrDefault("mins", null);
-                List<Integer> ts1Ms = (List) frame.getOrDefault("ts1Ms", null);
-                List<Integer> ts1Ns = (List) frame.getOrDefault("ts1Ns", null);
-                List<Integer> ts2Ms = (List) frame.getOrDefault("ts2Ms", null);
-                List<Integer> ts2Ns = (List) frame.getOrDefault("ts2Ns", null);
+                List<Number> ts1Ms = (List) frame.getOrDefault("ts1Ms", null);
+                List<Number> ts1Ns = (List) frame.getOrDefault("ts1Ns", null);
+                List<Number> ts2Ms = (List) frame.getOrDefault("ts2Ms", null);
+                List<Number> ts2Ns = (List) frame.getOrDefault("ts2Ns", null);
                 Integer tsAnchor = (Integer) frame.getOrDefault("tsAnchor", null);
                 Boolean rangeFinal = (Boolean) frame.getOrDefault("rangeFinal", false);
                 long anchor_ms = tsAnchor.longValue() * 1000;
 
                 List<Long> ts1 = ts1Ms.stream()
-                        .map(num -> ((long) num + anchor_ms) * 1000000)
+                        .map(num -> (num.longValue() + anchor_ms) * 1000000)
                         .collect(Collectors.toList());
                 List<Long> ts2 = ts2Ms.stream()
-                        .map(num -> ((long) num + anchor_ms) * 1000000)
+                        .map(num -> (num.longValue() + anchor_ms) * 1000000)
                         .collect(Collectors.toList());
 
                 if (listener instanceof QueryBinnedListener) {
@@ -670,6 +670,92 @@ public class Daqbuf implements ChannelQueryAPI {
         return (CompletableFuture) Threading.getPrivateThreadFuture(() -> fetchQuery(channels, start, end, binSize));
     }
 
+    
+    public void saveQuery(String filename, String channel, String start, String end) throws IOException, InterruptedException {
+        saveQuery(filename, channel, start, end, null);
+    }
+
+    public void saveQuery(String filename, String channel, String start, String end, Integer binSize) throws IOException, InterruptedException {
+        QueryListener listener = null;
+
+        if (binSize == null) {
+            listener = new QueryListener() {
+                @Override
+                public void onMessage(Query query, List values, List<Long> ids, List<Long> timestamps) {
+                    //TODO
+                }
+            };
+        } else {
+            listener = new QueryBinnedListener() {
+                @Override
+                public void onMessage(Query query, List<Double> averages, List<Double> min, List<Double> max, List<Integer> count, List<Long> start, List<Long> end) {
+                    //TODO
+                }
+            };
+        }
+        query(channel, start, end, listener, binSize);
+    }
+
+    public void saveQuery(String filename, String[] channels, String start, String end) throws IOException, InterruptedException {
+        fetchQuery(channels, start, end, null);
+    }
+
+    public void saveQuery(String filename, String[] channels, String start, String end, Integer binSize) throws IOException, InterruptedException {
+        ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+        Map<String, CompletableFuture> futures = new HashMap<>();
+
+        // Submit tasks for each channel
+        for (String channel : channels) {
+            CompletableFuture<Object> future = CompletableFuture.supplyAsync(() -> {
+                try {
+                    saveQuery(filename, channel, start, end, binSize);
+                    return null;
+                } catch (IOException | InterruptedException e) {
+                    throw new CompletionException(e);
+                }
+            }, executor).exceptionally(ex -> {
+                return ex;
+            });
+            futures.put(channel, future);
+        }
+
+        executor.shutdown();
+
+        // Wait for all tasks to complete and collect results
+        Map<String, Map<String, List>> results = new HashMap<>();
+        for (Map.Entry<String, CompletableFuture> entry : futures.entrySet()) {
+            String channel = entry.getKey();
+            CompletableFuture<Boolean> future = entry.getValue();
+            try{
+                Object ret = future.get();
+                if (ret instanceof Exception){
+                    throw ((Exception)ret);
+                }
+            } catch (InterruptedException ex) {
+                throw ex;
+            } catch (Exception ex) {
+                Logger.getLogger(Daqbuf.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+    }
+
+    public CompletableFuture startSaveQuery(String filename, String channel, String start, String end) throws IOException, InterruptedException {
+        return (CompletableFuture) Threading.getPrivateThreadFuture(() -> saveQuery(filename, channel, start, end));
+    }
+
+    public CompletableFuture startSaveQuery(String filename, String channel, String start, String end, Integer binSize) throws IOException, InterruptedException {
+        return (CompletableFuture) Threading.getPrivateThreadFuture(() -> saveQuery(filename, channel, start, end, binSize));
+    }
+
+    public CompletableFuture startSaveQuery(String filename, String[] channels, String start, String end) throws IOException, InterruptedException {
+        return (CompletableFuture) Threading.getPrivateThreadFuture(() -> saveQuery(filename, channels, start, end));
+    }
+
+    public CompletableFuture startSaveQuery(String filename, String[] channels, String start, String end, Integer binSize) throws IOException, InterruptedException {
+        return (CompletableFuture) Threading.getPrivateThreadFuture(() -> saveQuery(filename, channels, start, end, binSize));
+    }
+    
+    
     public static LocalDateTime fromNanoseconds(long nanoseconds, boolean utc) {
         long seconds = nanoseconds / 1_000_000_000L;
         int nano = (int) (nanoseconds % 1_000_000_000L);
