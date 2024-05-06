@@ -20,6 +20,7 @@ import ch.psi.utils.Inventory as Inventory
 import ch.psi.utils.DataAPI as DataAPI
 import ch.psi.utils.DispatcherAPI as DispatcherAPI
 import ch.psi.utils.EpicsBootInfoAPI as EpicsBootInfoAPI
+import ch.psi.utils.Daqbuf as Daqbuf
 import ch.psi.utils.Mail as Mail
 import ch.psi.utils.Posix as Posix
 import ch.psi.utils.ProcessFactory as ProcessFactory

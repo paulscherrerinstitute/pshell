@@ -239,6 +239,7 @@ from ch.psi.utils import Inventory as Inventory
 from ch.psi.utils import DataAPI as DataAPI
 from ch.psi.utils import DispatcherAPI as DispatcherAPI
 from ch.psi.utils import EpicsBootInfoAPI as EpicsBootInfoAPI
+from ch.psi.utils import Daqbuf as Daqbuf
 from ch.psi.utils import Mail as Mail
 from ch.psi.utils import Posix as Posix
 from ch.psi.utils import ProcessFactory as ProcessFactory

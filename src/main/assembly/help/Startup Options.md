@@ -58,6 +58,7 @@
 | -dplt                    | Create plots for detached windows.|
 | -strp                    | Show strip chart window (can be used together with -f).|
 | -dtpn                    | Show data panel window only (can be used together with -f).|
+| -dbpn                    | Show Daqbuf panel.|
 | -help                    | Start the GUI help window.|
 | -full                    | Start in full screen mode.|
 | -dual                    | Start GUI and command line terminal: cannot be used if running in the background.|

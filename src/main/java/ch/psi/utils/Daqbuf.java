@@ -1,7 +1,6 @@
 package ch.psi.utils;
 
 import ch.psi.pshell.data.DataManager;
-import ch.psi.pshell.data.ProviderHDF5;
 import ch.psi.utils.Threading.VisibleCompletableFuture;
 import java.io.IOException;
 import java.util.HashMap;

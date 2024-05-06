@@ -489,6 +489,7 @@ public class App extends ObservableBase<AppListener> {
         sb.append("\n\t-dplt        \tCreate plots for detached windows");
         sb.append("\n\t-strp        \tShow strip chart window (can be used together with -f)");
         sb.append("\n\t-dtpn        \tShow data panel window only (can be used together with -f)");
+        sb.append("\n\t-dbpn        \tShow Daqbuf panel");
         sb.append("\n\t-csvw        \tShow CamServer viewer");
         sb.append("\n\t-help        \tStart the GUI help window");
         sb.append("\n\t-full        \tStart in full screen mode");
@@ -695,6 +696,19 @@ public class App extends ObservableBase<AppListener> {
     static public boolean isDataPanel() {
         return getBoolArgumentValue("dtpn");
     }
+    
+    static public boolean isDaqbufPanel() {
+        return getBoolArgumentValue("dbpn");
+    }
+    
+    static public String getDaqbufURL() {
+        String ret = getArgumentValue("dbpn");
+        if ((ret!=null) && !ret.isBlank()){
+            return ret.trim();
+        }
+        return null;
+    }    
+    
     
     static public boolean isScanPlottingDisabled() {
         return getBoolArgumentValue("dspt");
@@ -1182,6 +1196,8 @@ public class App extends ObservableBase<AppListener> {
                 }
             } else if (isDataPanel()) {
                 DataPanel.createPanel(getFileArg());
+            } else if (isDaqbufPanel()) {
+                DaqbufPanel.create(getDaqbufURL(), true, null);                
             } else if (isPlotServer()){                
                 ch.psi.pshell.plotter.View.create(getPlotServerPort());
             } else if (isCamServerViewer()) {
