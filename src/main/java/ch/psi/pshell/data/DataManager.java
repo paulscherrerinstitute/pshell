@@ -89,7 +89,12 @@ public class DataManager implements AutoCloseable {
         outputFile = null;
         setProvider(provider);
         setLayout(layout);
-        dataRootDepth = Paths.get(IO.getRelativePath(getExecutionPars().getPath(), getDataFolder())).getNameCount();
+        ExecutionParameters ep= getExecutionPars();
+        if (ep==null){
+            dataRootDepth = 0;
+        } else {
+            dataRootDepth = Paths.get(IO.getRelativePath(ep.getPath(), getDataFolder())).getNameCount();
+        }
     }
 
     int dataRootDepth;
@@ -204,7 +209,7 @@ public class DataManager implements AutoCloseable {
     }
 
     public void setLayout(Layout layout) throws Exception {
-        if (this == context.getDataManager()) {
+        if ((context!=null) && (this == context.getDataManager())) {
             logger.info("Setting data layout: " + layout.getClass().getName());
         } else {
             logger.fine("Setting data layout in auxiliary data manager: " + layout.getClass().getName());
@@ -214,7 +219,8 @@ public class DataManager implements AutoCloseable {
     }
 
     public Layout getLayout() {
-        Layout ret = getExecutionPars().getDataLayout();
+        ExecutionParameters ep = getExecutionPars();
+        Layout ret = (ep==null) ? null : ep.getDataLayout();
         return (ret == null) ? layout : ret;
     }
 
@@ -248,6 +254,9 @@ public class DataManager implements AutoCloseable {
     }
 
     public ExecutionParameters getExecutionPars() {
+        if (context==null){
+            return null;
+        }
         return context.getExecutionPars();
     }
 
@@ -293,6 +302,9 @@ public class DataManager implements AutoCloseable {
 
     public int getDepthDimension() {
         Context context = Context.getInstance();
+        if (context==null){
+            return 0;
+        }
         if (context.getState().isProcessing()) {
             return getExecutionPars().getDepthDimension();
         }
@@ -1442,7 +1454,7 @@ public class DataManager implements AutoCloseable {
         List<PlotDescriptor> plots = getLayout().getScanPlots(root, path, this);
         if (plots == null) {
             plots = new ArrayList<>();
-            DataManager dm = context.getDataManager();
+            DataManager dm = (context==null) ? this : context.getDataManager();
             if (dm.isGroup(root, path)) {
                 for (String child : dm.getChildren(root, path)) {
                     plots.addAll(getPlots(root, child));

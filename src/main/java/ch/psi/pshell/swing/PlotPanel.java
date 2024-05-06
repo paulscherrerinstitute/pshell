@@ -171,15 +171,18 @@ public class PlotPanel extends MonitoredPanel {
     }
 
     public void setActive(boolean value) {
-        if (value) {
-            Context.getInstance().addScanListener(scanListener);
-        } else {
-            Context.getInstance().removeScanListener(scanListener);
+        if (Context.getInstance()!=null){
+            if (value) {
+                Context.getInstance().addScanListener(scanListener);
+            } else {
+                Context.getInstance().removeScanListener(scanListener);
+            }
         }
     }
 
     public boolean isActive() {
-        return Context.getInstance().getScanListeners().contains(scanListener);
+        
+        return (Context.getInstance()!=null) && Context.getInstance().getScanListeners().contains(scanListener);
     }
 
     public PlotPreferences getPreferences() {
@@ -714,7 +717,14 @@ public class PlotPanel extends MonitoredPanel {
                 }
             }
             if (plotType instanceof String) {
-                plotType = Context.getInstance().getClassByName((String) plotType);
+                if (Context.getInstance()==null){
+                    try{
+                        plotType =  Class.forName((String) plotType);
+                    } catch (ClassNotFoundException ex) {                                                
+                    }
+                } else {                    
+                    plotType = Context.getInstance().getClassByName((String) plotType);
+                }
             }
             if (plotType instanceof Class) {
                 return (Class) plotType;

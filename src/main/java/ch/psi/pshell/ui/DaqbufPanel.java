@@ -17,16 +17,11 @@ import ch.psi.pshell.plot.SlicePlotDefault;
 import ch.psi.pshell.plot.SlicePlotSeries;
 import ch.psi.pshell.plot.SlicePlotSeries.SlicePlotSeriesListener;
 import ch.psi.pshell.plot.TimePlotBase;
-import ch.psi.pshell.plot.TimePlotJFree;
-import ch.psi.pshell.plot.TimePlotSeries;
 import ch.psi.pshell.plotter.Preferences;
 import ch.psi.pshell.swing.ChannelSelector;
-import ch.psi.pshell.swing.HistoryChart;
+import ch.psi.pshell.swing.DataPanel;
 import ch.psi.pshell.swing.PlotPanel;
-import ch.psi.pshell.swing.ScriptEditor;
-import static ch.psi.pshell.ui.Preferences.PanelLocation.Plot;
 import ch.psi.utils.Arr;
-import ch.psi.utils.Convert;
 import ch.psi.utils.Daqbuf;
 import ch.psi.utils.Daqbuf.Query;
 import ch.psi.utils.Daqbuf.QueryListener;
@@ -37,29 +32,22 @@ import ch.psi.utils.Str;
 import ch.psi.utils.Sys;
 import ch.psi.utils.swing.StandardDialog;
 import ch.psi.utils.swing.SwingUtils;
+import ch.psi.utils.swing.SwingUtils.OptionResult;
+import ch.psi.utils.swing.SwingUtils.OptionType;
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Paint;
-import java.awt.Shape;
-import java.awt.Stroke;
 import java.awt.Toolkit;
 import java.awt.Window;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
-import java.awt.event.ItemEvent;
-import java.awt.event.ItemListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.awt.geom.Rectangle2D;
-import java.beans.ConstructorProperties;
 import java.io.File;
 import java.io.IOException;
-import java.io.Serializable;
 import java.text.DecimalFormat;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
@@ -67,7 +55,6 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.YearMonth;
 import java.time.ZoneOffset;
-import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.EventObject;
@@ -82,7 +69,6 @@ import javax.swing.BoxLayout;
 import javax.swing.DefaultCellEditor;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JButton;
-import javax.swing.JCheckBox;
 import javax.swing.JColorChooser;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
@@ -93,13 +79,10 @@ import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
-import javax.swing.JTree;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.event.CellEditorListener;
 import javax.swing.event.ChangeEvent;
-import javax.swing.event.DocumentEvent;
-import javax.swing.event.DocumentListener;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 import javax.swing.filechooser.FileNameExtensionFilter;
@@ -108,22 +91,12 @@ import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableCellEditor;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
-import javax.swing.text.JTextComponent;
-import javax.swing.tree.TreeCellEditor;
 import org.jfree.chart.axis.DateAxis;
 import org.jfree.chart.event.AxisChangeEvent;
 import org.jfree.chart.event.AxisChangeListener;
-import org.jfree.chart.event.ChartChangeEvent;
-import org.jfree.chart.event.ChartChangeEventType;
-import org.jfree.chart.event.ChartChangeListener;
-import org.jfree.chart.event.PlotChangeEvent;
-import org.jfree.chart.event.PlotChangeListener;
 import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.renderer.xy.XYErrorRenderer;
 import org.jfree.chart.renderer.xy.XYItemRenderer;
-import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
-import org.jfree.data.xy.XYDataset;
-import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.YIntervalSeries;
 import org.jfree.data.xy.YIntervalSeriesCollection;
 
@@ -978,6 +951,18 @@ textTo.setText("2024-05-02 10:00:00");
         });
     }
     
+    void openFile(String fileName) {        
+        try {
+            DataPanel panel = new DataPanel();            
+            panel.load(fileName);            
+            panel.setDefaultDataPanelListener();            
+            panel.showFileProps();
+            SwingUtils.showDialog(this, fileName, new Dimension(800, 600), panel);    
+        } catch (Exception ex) {
+            showException(ex);
+        }        
+    }
+    
     void saveQuery(String filename) throws IOException, InterruptedException {
         List<String> channels = new ArrayList<>();
         Vector vector = modelSeries.getDataVector();
@@ -999,12 +984,14 @@ textTo.setText("2024-05-02 10:00:00");
 
         buttonSaveData.setEnabled(false);
         JDialog splash = SwingUtils.showSplash(this, "Save", new Dimension(400,200), "Saving data to " + filename);
-        daqbuf.startSaveQuery(filename, channels.toArray(new String[0]), start, end, bins).handle((ret, ex)->{
+        daqbuf.startSaveQuery(filename, channels.toArray(new String[0]), start, end, bins).handle((Object ret, Object ex)->{
             splash.setVisible(false);
             if (ex!=null){
                 showException((Exception)ex);
             } else {
-                this.showMessage("Save","Success saving data to " + filename);
+                if (SwingUtils.showOption(this, "Save", "Success saving data to " + filename + ".\nDo you want to open the file?" , OptionType.YesNo) == OptionResult.Yes) {
+                    openFile(filename);
+                }
             }
             buttonSaveData.setEnabled(true);
             return ret;
@@ -1013,8 +1000,6 @@ textTo.setText("2024-05-02 10:00:00");
     
     void saveQuery() throws IOException {
         try{
-            saveQuery(Sys.getUserHome() + "/tst.h5");
-            /*
             String path = (Context.getInstance() != null) ? Context.getInstance().getConfig().dataPath : Sys.getUserHome();
             JFileChooser chooser = new JFileChooser(path);
             FileNameExtensionFilter filter = new FileNameExtensionFilter("HDF5 files", "h5");
@@ -1025,9 +1010,8 @@ textTo.setText("2024-05-02 10:00:00");
                 if (IO.getExtension(fileName).isEmpty()){
                     fileName += ".h5";
                 }
-                saveQuery(fileName);
+                saveQuery(fileName);                
             }
-            */
         } catch (Exception ex) {
             showException(ex);
         }        

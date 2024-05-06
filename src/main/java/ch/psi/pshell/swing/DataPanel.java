@@ -541,7 +541,7 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
                                     }
                                 }
                             } else if (type.equals(Provider.INFO_VAL_TYPE_DATASET) || type.equals(Provider.INFO_VAL_TYPE_SOFTLINK)) {
-                                menuAssign.setVisible(Context.getInstance().getScriptManager() != null);
+                                menuAssign.setVisible((Context.getInstance() !=null) && (Context.getInstance().getScriptManager() != null));
                                 if (dataManager.isDisplayablePlot(info)) {
                                     menuConvert.removeAll();
                                     for (Converter converter : Converter.getServiceProviders()) {
@@ -807,10 +807,12 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
     String getCurrentRoot() {
         String root = currentFile.getPath();
         Context context = Context.getInstance();
-        if (IO.isSubPath(root, context.getSetup().getDataPath())) {
-            root = IO.getRelativePath(root, context.getSetup().getDataPath());
-        } else {
-            root = root.replace("\\", "\\\\");
+        if (context!=null){
+            if (IO.isSubPath(root, context.getSetup().getDataPath())) {
+                root = IO.getRelativePath(root, context.getSetup().getDataPath());
+            } else {
+                root = root.replace("\\", "\\\\");
+            }
         }
         return root;
     }
@@ -903,7 +905,7 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
 
     @Override
     public void update() {
-        WatchKey watchKey = watchService.poll();
+        WatchKey watchKey = (watchService == null) ? null : watchService.poll();
         if (watchKey == null) {
             return;
         }
@@ -1259,24 +1261,35 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
         }
     }
 
+    public void showFileProps() {        
+        if (fileName != null) {
+            doShowFileProps(new File(fileName), true);     
+        }
+    }
+        
     void showFileProps(File file, boolean calculateFolderSize) {
         textProperties.clear();
         if ((file != null) && (treeFolderModel != null)) {
             if (!file.equals(treeFolderModel.root)) { //Not to compute the whole folder size
-                textProperties.append("Type:     " + (file.isDirectory() ? "Folder" : IO.getExtension(file)) + "\n", Shell.getColorStdout());
-                try {
-                    BasicFileAttributes attr = Files.readAttributes(Paths.get(file.getPath()), BasicFileAttributes.class);
-                    textProperties.append("Creation: " + Chrono.getTimeStr(attr.creationTime().toMillis(), "dd/MM/YY HH:mm\n"), Shell.getColorStdout());
-                    textProperties.append("Accessed: " + Chrono.getTimeStr(attr.lastAccessTime().toMillis(), "dd/MM/YY HH:mm\n"), Shell.getColorStdout());
-                    textProperties.append("Modified: " + Chrono.getTimeStr(attr.lastModifiedTime().toMillis(), "dd/MM/YY HH:mm\n"), Shell.getColorStdout());
-                } catch (Exception ex) {
-                }
-                if (file.isFile() || calculateFolderSize) {
-                    textProperties.append("Size:     " + IO.getSize(file) / 1024 + "KB\n", Shell.getColorStdout());
-                }
-            }
-            textProperties.setCaretPosition(0);
+                doShowFileProps(file, calculateFolderSize);     
+            }            
         }
+    }
+    
+    void doShowFileProps(File file, boolean calculateFolderSize){
+        textProperties.clear();
+        textProperties.append("Type:     " + (file.isDirectory() ? "Folder" : IO.getExtension(file)) + "\n", Shell.getColorStdout());
+        try {
+            BasicFileAttributes attr = Files.readAttributes(Paths.get(file.getPath()), BasicFileAttributes.class);
+            textProperties.append("Creation: " + Chrono.getTimeStr(attr.creationTime().toMillis(), "dd/MM/YY HH:mm\n"), Shell.getColorStdout());
+            textProperties.append("Accessed: " + Chrono.getTimeStr(attr.lastAccessTime().toMillis(), "dd/MM/YY HH:mm\n"), Shell.getColorStdout());
+            textProperties.append("Modified: " + Chrono.getTimeStr(attr.lastModifiedTime().toMillis(), "dd/MM/YY HH:mm\n"), Shell.getColorStdout());
+        } catch (Exception ex) {
+        }
+        if (file.isFile() || calculateFolderSize) {
+            textProperties.append("Size:     " + IO.getSize(file) / 1024 + "KB\n", Shell.getColorStdout());
+        }
+        textProperties.setCaretPosition(0);
     }
 
     File currentFile;
@@ -1688,9 +1701,12 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
         this.fileName = fileName;
         scrollFolder.setVisible(false);
         splitFolder.setDividerSize(0);
-        initialize();
-        String provider = Context.getInstance().getConfig().getDataProvider();
-        dataManager = new DataManager(Context.getInstance(), file.isDirectory() ? provider : IO.getExtension(file), Context.getInstance().getConfig().getDataLayout());
+        if (Context.getInstance()!=null){
+            String provider = Context.getInstance().getConfig().getDataProvider();
+            dataManager = new DataManager(Context.getInstance(), file.isDirectory() ? provider : IO.getExtension(file), Context.getInstance().getConfig().getDataLayout());
+        } else {
+            dataManager = new DataManager(null, file.isDirectory() ? "txt" : IO.getExtension(file), "default");
+        }                
         setCurrentPath(file);
     }
 
