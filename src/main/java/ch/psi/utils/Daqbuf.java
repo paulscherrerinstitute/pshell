@@ -1,6 +1,7 @@
 package ch.psi.utils;
 
 import ch.psi.pshell.data.DataManager;
+import ch.psi.pshell.data.ProviderHDF5;
 import ch.psi.utils.Threading.VisibleCompletableFuture;
 import java.io.IOException;
 import java.util.HashMap;
@@ -705,7 +706,6 @@ public class Daqbuf implements ChannelQueryAPI {
     }   
 
     void saveQuery(DataManager dm, String channel, String start, String end, Integer binSize) throws IOException, InterruptedException {
-long s = System.currentTimeMillis();
         String channelBackend = getChannelBackend(channel);
         String channelName = getChannelName(channel);                    
         String dataGroup = "/"+channelBackend+"/"+channelName+"/";
@@ -721,40 +721,18 @@ long s = System.currentTimeMillis();
                 public void onMessage(Query query, List values, List<Long> ids, List<Long> timestamps) {
                     if (!values.isEmpty()){
                         try{
-                            //Object value = Convert.toPrimitiveArray(values);
-                            //long[] id = (long[]) Convert.toPrimitiveArray(ids, Long.class);
-                            //long[] timestamp = (long[]) Convert.toPrimitiveArray(timestamps, Long.class);
-
                             if (!dm.exists(VALUE_DATASET)) {
+                                dm.createCompressedDataset(ID_DATASET, Long.class, new int[0]);
+                                dm.createCompressedDataset(TIMESTAMP_DATASET, Long.class, new int[0]);
                                 Object obj = values.get(0);
-                                Class type = Arr.getComponentType(obj);
-                                int[] shape =  Arr.getShape(obj);
-                                int[] dimensions = new int[shape.length+1];
-                                int[] chunks = new int[shape.length+1];
-                                System.arraycopy(shape, 0, dimensions, 0, shape.length);
-                                System.arraycopy(shape, 0, chunks, 1, shape.length);
-                                Map features = new HashMap();
-                                features.put("compression", true);
-                                chunks[0] = 8 * 1024;
-                                if (shape.length==1){
-                                    chunks[0] = 16 * 1024;
-                                } else if (shape.length>1){
-                                    chunks[0] = 32 * 1024;
-                                }
-                                features.put("chunk", chunks);                                
-                                dm.createDataset(VALUE_DATASET, type, dimensions, features);
-                           //"compression": True, "max" or deflation level from 1 to 9
-                           //"shuffle": Byte shuffle before compressing.
-                           //"chunk": tuple, setting the chunk size
-                                
-                                dm.createDataset(ID_DATASET, Long.class);
-                                dm.createDataset(TIMESTAMP_DATASET, Long.class);
+                                dm.createCompressedDataset(VALUE_DATASET, obj);                                
                             }
-                            for (int i=0; i< values.size(); i++){
-                                dm.appendItem(VALUE_DATASET, values.get(i));
-                                dm.appendItem(ID_DATASET, ids.get(i));
-                                dm.appendItem(TIMESTAMP_DATASET, timestamps.get(i));
-                            } 
+                            Object value = Convert.toPrimitiveArray(values);
+                            long[] id = (long[]) Convert.toPrimitiveArray(ids, Long.class);
+                            long[] timestamp = (long[]) Convert.toPrimitiveArray(timestamps, Long.class);
+                            dm.appendItem(TIMESTAMP_DATASET, timestamp);
+                            dm.appendItem(ID_DATASET, id);
+                            dm.appendItem(VALUE_DATASET, value);
                         } catch (Exception ex) {
                             throw new RuntimeException(ex);
                         }                    
@@ -772,11 +750,10 @@ long s = System.currentTimeMillis();
                 }
             }            
         }   
-System.out.println(System.currentTimeMillis()-s);        
     }
 
     public void saveQuery(String filename, String[] channels, String start, String end) throws IOException, InterruptedException {
-        fetchQuery(channels, start, end, null);
+        saveQuery(filename, channels, start, end, null);
     }
 
     public void saveQuery(String filename, String[] channels, String start, String end, Integer binSize) throws IOException, InterruptedException {
@@ -922,11 +899,19 @@ System.out.println(System.currentTimeMillis()-s);
         Map ret;
         Object obj;
         Daqbuf daqbuf = new Daqbuf();
-        System.out.println(daqbuf.getBackends());
+                        
         String[] channels = new String[]{"S10BC01-DBPM010:Q1@sf-databuffer", "S10BC01-DBPM010:X1@sf-databuffer"};
         String channel = "S10BC01-DBPM010:Q1";
-        String start = "2024-04-28 10:00:00"; //"2024-03-15T12:41:00Z", "2024-03-15T15:42:00Z"
-        String end = "2024-04-28 10:00:01";
+        String start = "2024-05-02 09:00:00"; //"2024-03-15T12:41:00Z", "2024-03-15T15:42:00Z"
+        //String end = "2024-05-02 09:00:01";
+        String end = "2024-05-02 10:00:00";
+        
+        long s = System.currentTimeMillis();        
+        daqbuf.saveQuery("/Users/gobbo_a/pshell.h5", channels, start, end);
+        System.out.println(System.currentTimeMillis()-s);        
+        
+        /*
+        System.out.println(daqbuf.getBackends());
         int bins = 20;
         //start = "2024-04-15T12:41:00Z";
         //end = "2024-04-15T15:42:00Z";
@@ -981,6 +966,7 @@ System.out.println(System.currentTimeMillis()-s);
         });
         obj = cf.get();
         System.out.println(obj);
+        */
 
     }
 
