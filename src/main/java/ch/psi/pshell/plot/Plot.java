@@ -131,6 +131,10 @@ public interface Plot<T extends PlotSeries> {
 
     default Color getPlotOutlineColor() {return null;};      
     
+    default Color getPlotBackgroundColor() {return null;};      
+    
+    default Color getPlotGridColor() {return null;};                
+    
     default int getPlotOutlineWidth() {return -1;};
     
     default void setLabelFont(Font f) {}

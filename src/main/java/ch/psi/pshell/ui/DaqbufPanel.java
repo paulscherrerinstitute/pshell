@@ -28,6 +28,7 @@ import ch.psi.utils.Daqbuf.QueryListener;
 import ch.psi.utils.Daqbuf.QueryRecordListener;
 import ch.psi.utils.EncoderJson;
 import ch.psi.utils.IO;
+import ch.psi.utils.Range;
 import ch.psi.utils.Str;
 import ch.psi.utils.Sys;
 import ch.psi.utils.swing.StandardDialog;
@@ -39,9 +40,12 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Font;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
 import java.awt.Paint;
 import java.awt.Toolkit;
 import java.awt.Window;
+import java.awt.event.ActionEvent;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.awt.event.MouseAdapter;
@@ -69,12 +73,14 @@ import javax.swing.BoxLayout;
 import javax.swing.DefaultCellEditor;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JButton;
+import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JColorChooser;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
 import javax.swing.JDialog;
 import javax.swing.JFileChooser;
 import javax.swing.JLabel;
+import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
 import javax.swing.JTable;
@@ -114,7 +120,6 @@ public class DaqbufPanel extends StandardDialog {
     boolean pulse;
 
     final DefaultTableModel modelSeries;
-    final DefaultTableModel modelCharts;
 
     final ArrayList<PlotBase> plots = new ArrayList<>();
     final HashMap<Device, Long> appendTimestamps = new HashMap<>();
@@ -148,7 +153,6 @@ public class DaqbufPanel extends StandardDialog {
         if (App.hasArgument("background_color")) {
             try {
                 defaultBackgroundColor = Preferences.getColorFromString(App.getArgumentValue("background_color"));
-                panelColorBackground.setBackground(defaultBackgroundColor);
                 backgroundColor = defaultBackgroundColor;
             } catch (Exception ex) {
                 Logger.getLogger(DaqbufPanel.class.getName()).log(Level.WARNING, null, ex);
@@ -157,7 +161,6 @@ public class DaqbufPanel extends StandardDialog {
         if (App.hasArgument("grid_color")) {
             try {
                 defaultGridColor = Preferences.getColorFromString(App.getArgumentValue("grid_color"));
-                panelColorGrid.setBackground(defaultGridColor);
                 gridColor = defaultGridColor;
             } catch (Exception ex) {
                 Logger.getLogger(DaqbufPanel.class.getName()).log(Level.WARNING, null, ex);
@@ -180,8 +183,6 @@ public class DaqbufPanel extends StandardDialog {
 
         modelSeries = (DefaultTableModel) tableSeries.getModel();
         modelSeries.addTableModelListener(modelSeriesListener);
-        modelCharts = (DefaultTableModel) tableCharts.getModel();
-        modelCharts.addTableModelListener(modelChartsListener);
 
         initializeTable();
         clear();
@@ -360,33 +361,6 @@ public class DaqbufPanel extends StandardDialog {
         });
 
         update();
-
-        tableCharts.getColumnModel().getColumn(0).setPreferredWidth(60);
-        tableCharts.getColumnModel().getColumn(0).setCellRenderer((TableCellRenderer) new DefaultTableCellRenderer() {
-            @Override
-            public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
-                Component comp = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
-                ((JLabel) comp).setHorizontalAlignment(SwingConstants.CENTER);
-                return comp;
-            }
-        });
-        final DecimalFormat formatter = new DecimalFormat("#.############");
-        for (int i = 1; i <= 4; i++) {
-            tableCharts.getColumnModel().getColumn(i).setPreferredWidth(90);
-            tableCharts.getColumnModel().getColumn(i).setCellRenderer((TableCellRenderer) new DefaultTableCellRenderer() {
-                @Override
-                public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
-                    if (value != null) {
-                        value = formatter.format((Double) value);
-                    }
-                    return super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
-                }
-            });
-        }
-
-        TableColumn colMarkers = tableCharts.getColumnModel().getColumn(5);
-        colMarkers.setPreferredWidth(80);
-
     }
 
     TableModelListener modelSeriesListener = new TableModelListener() {
@@ -410,44 +384,8 @@ public class DaqbufPanel extends StandardDialog {
         }
     };
 
-    TableModelListener modelChartsListener = new TableModelListener() {
-        @Override
-        public void tableChanged(TableModelEvent e) {
-            if (started) {
-                if (e.getType() == TableModelEvent.UPDATE){
-                    int i = e.getFirstRow();
-                    Double y1min = (Double) modelCharts.getValueAt(i, 1);
-                    Double y1max = (Double) modelCharts.getValueAt(i, 2);
-                    Double y2min = (Double) modelCharts.getValueAt(i, 3);
-                    Double y2max = (Double) modelCharts.getValueAt(i, 4);
-                    Boolean markers = (Boolean) modelCharts.getValueAt(i, 5);
-                    Boolean range = (Boolean) modelCharts.getValueAt(i, 6);
-                    PlotBase plotBase = plots.get(i);
-                    if (plotBase instanceof LinePlotJFree){
-                        LinePlotJFree plot = (LinePlotJFree)plotBase;
-                        //plot.setMarkersVisible(Boolean.TRUE.equals(markers));
-                        if ((y1min != null) && (y1max != null)) {
-                           plot.getAxis(AxisId.Y).setRange(y1min, y1max);                       
-                        }
-                        if ((y2min != null) && (y2max != null)) {
-                            plot.getAxis(AxisId.Y2).setRange(y2min, y2max);
-                        }                                 
-                        for (LinePlotSeries s : plot.getAllSeries()){
-                            s.setPointsVisible(markers);
-                        }
-
-                        for (XYItemRenderer r : plot.getChart().getXYPlot().getRenderers().values()){                        
-                           ((XYErrorRenderer)r).setDrawYError(range);
-                        }
-                    }
-                }
-            }
-        }
-    };
-
     public void initializePlots() {
         numPlots=0;
-        modelCharts.setRowCount(0);
         pnGraphs.removeAll();
         plots.clear();
     }
@@ -479,12 +417,11 @@ public class DaqbufPanel extends StandardDialog {
         reset();
         backgroundColor = defaultBackgroundColor;
         gridColor = defaultGridColor;
-        panelColorBackground.setBackground(backgroundColor);
-        panelColorGrid.setBackground(gridColor);
         modelSeries.setRowCount(0);
 modelSeries.addRow(new Object[]{true,"S10BC01-DBPM010:Q1", "sf-databuffer", "[]", PLOT_SHARED,1,null});
 modelSeries.addRow(new Object[]{true,"S10BC01-DBPM010:X1", "sf-databuffer", "[]", PLOT_SHARED,2,null});
 modelSeries.addRow(new Object[]{true,"SARFE10-PSSS059:FIT-COM", "sf-databuffer", "[]", PLOT_PRIVATE,1,null});
+modelSeries.addRow(new Object[]{true,"SARFE10-PSSS059:SPECTRUM_X", "sf-databuffer", "[2560]", PLOT_PRIVATE,1,null});
 modelSeries.addRow(new Object[]{false,"SARES11-SPEC125-M1:FPICTURE", "sf-imagebuffer", "[2048, 2048]", PLOT_PRIVATE,1,null});
 
 
@@ -591,7 +528,6 @@ textTo.setText("2024-05-02 10:00:00");
         plot.setQuality(PlotPanel.getQuality());
         plots.add(plot);
         pnGraphs.add(plot);
-        modelCharts.addRow(new Object[]{numPlots+1, null, null, null, null, true, true});
         numPlots++;        
     }
     
@@ -639,10 +575,111 @@ textTo.setText("2024-05-02 10:00:00");
             }
         });
 
+        plot.addPopupMenuItem(null);
+        
+        JCheckBoxMenuItem menuMarkers = new JCheckBoxMenuItem("Show Markers");
+        menuMarkers.setSelected(true);
+        menuMarkers.addActionListener((ActionEvent e) -> {
+            boolean show = menuMarkers.isSelected();
+            for (LinePlotSeries s : plot.getAllSeries()){
+                s.setPointsVisible(show);
+            }            
+        });
+        plot.addPopupMenuItem(menuMarkers);
+        
+        
+        JCheckBoxMenuItem menuRanges = new JCheckBoxMenuItem("Show Ranges");
+        menuRanges.setSelected(range);
+        menuRanges.addActionListener((ActionEvent e) -> {
+            boolean show = menuRanges.isSelected();
+            for (XYItemRenderer r : plot.getChart().getXYPlot().getRenderers().values()){                        
+               ((XYErrorRenderer)r).setDrawYError(show);
+            }            
+        });
+        plot.addPopupMenuItem(menuRanges);        
+        menuRanges.setEnabled(range);
+
+        JMenuItem menuBackgroundColor = new JMenuItem("Set Background Color...");
+        menuBackgroundColor.addActionListener((ActionEvent e) -> {
+            Color color = JColorChooser.showDialog(this, "Choose a Color", plot.getPlotBackgroundColor());            
+            if (color != null) {
+                plot.setPlotBackgroundColor(color);
+            } else {
+                plot.setPlotBackgroundColor(PlotBase.getPlotBackground());
+            }           
+        });
+        plot.addPopupMenuItem(menuBackgroundColor);        
+
+        JMenuItem menuGridColor = new JMenuItem("Set Grid Color...");
+        menuGridColor.addActionListener((ActionEvent e) -> {                   
+            Color color = JColorChooser.showDialog(this, "Choose a Color", plot.getPlotGridColor());
+            if (color != null) {
+                plot.setPlotGridColor(color);
+            } else {
+                plot.setPlotGridColor(PlotBase.getGridColor());
+            }
+        });
+        plot.addPopupMenuItem(menuGridColor);        
+        
+        JMenuItem menuRangeY1 = new JMenuItem("Set Y1 Range...");
+        menuRangeY1.addActionListener((ActionEvent e) -> {                   
+            Range init = plot.getAxis(AxisId.Y).isAutoRange() ? null : new Range(plot.getAxis(AxisId.Y).getMin(), plot.getAxis(AxisId.Y).getMax());
+            Range r = getRange(init, "Enter Y1 Range");            
+            if (r!=null){
+                plot.getAxis(AxisId.Y).setRange(r.min, r.max);                       
+            } else {
+                plot.getAxis(AxisId.Y).setAutoRange();
+            }
+        });
+        plot.addPopupMenuItem(menuRangeY1);        
+        
+        JMenuItem menuRangeY2 = new JMenuItem("Set Y2 Range...");
+        menuRangeY2.addActionListener((ActionEvent e) -> {                   
+            Range init = plot.getAxis(AxisId.Y2).isAutoRange() ? null : new Range(plot.getAxis(AxisId.Y2).getMin(), plot.getAxis(AxisId.Y2).getMax());
+            Range r = getRange(init, "Enter Y2 Range");            
+            if (r!=null){
+                plot.getAxis(AxisId.Y2).setRange(r.min, r.max);                       
+            } else {
+                plot.getAxis(AxisId.Y2).setAutoRange();
+            }
+        });
+        plot.addPopupMenuItem(menuRangeY2);        
+
         addPlot(plot);
         return plot;
     }
            
+    
+    Range getRange(Range init, String title){
+        Range ret = null;
+        try {
+            JPanel panel = new JPanel();            
+            GridBagLayout layout = new GridBagLayout();
+            layout.columnWidths = new int[]{0, 180};   //Minimum width
+            panel.setLayout(layout);
+            JTextField min = new JTextField((init==null) ? "" : String.valueOf(init.min));
+            JTextField max = new JTextField((init==null) ? "" : String.valueOf(init.max));
+            GridBagConstraints c = new GridBagConstraints();
+            c.gridx = 0;
+            c.gridy = 0;
+            panel.add(new JLabel("Minimum:"), c);
+            c.gridy = 1;
+            panel.add(new JLabel("Maximum:"), c);
+            c.fill = GridBagConstraints.HORIZONTAL;
+            c.gridx = 1;
+            panel.add(max, c);
+            c.gridy = 0;
+            panel.add(min, c);
+
+            if (showOption((title==null) ? "Enter Range" : title, panel, OptionType.OkCancel) == OptionResult.Yes) {
+                return new Range(Double.valueOf(min.getText().trim()), Double.valueOf(max.getText().trim()));
+            }
+        } catch (Exception ex) {
+            ret = null;
+        }
+        return ret;
+    }
+    
     
     LinePlotErrorSeries addBinnedSeries(LinePlotJFree plot, String name, String backend, String start, String end, int bins, int axis, Color color){        
         LinePlotErrorSeries series = new LinePlotErrorSeries(name, color, axis);
@@ -810,6 +847,16 @@ textTo.setText("2024-05-02 10:00:00");
                         } else {
                             series = addBinnedSeries((LinePlotJFree)plot, name, backend, start, end, bins, axis, color);
                         }
+                        break;
+                    case 1:
+                        /*
+                        plot = addLinePlot(true);
+                        if (bins==null){
+                            series = addLineSeries((LinePlotJFree)plot, name, backend, start, end, axis, color);                            
+                        } else {
+                            series = addBinnedSeries((LinePlotJFree)plot, name, backend, start, end, bins, axis, color);
+                        }
+                        */
                         break;
                     case 2:
                         plot = addSlicePlot();
@@ -1058,20 +1105,6 @@ textTo.setText("2024-05-02 10:00:00");
         spinnerBins = new javax.swing.JSpinner();
         jLabel7 = new javax.swing.JLabel();
         spinnerSize = new javax.swing.JSpinner();
-        panelCharts = new javax.swing.JPanel();
-        jScrollPane3 = new javax.swing.JScrollPane();
-        tableCharts = new JTable() {
-            @Override
-            public boolean isCellEditable(int row, int column) {
-                return isChartTableRowEditable(row, column);
-            };
-        };
-        jPanel1 = new javax.swing.JPanel();
-        jLabel15 = new javax.swing.JLabel();
-        panelColorBackground = new javax.swing.JPanel();
-        jLabel17 = new javax.swing.JLabel();
-        panelColorGrid = new javax.swing.JPanel();
-        buttonDefaultColors = new javax.swing.JButton();
         panelPlots = new javax.swing.JPanel();
         scrollPane = new javax.swing.JScrollPane();
         pnGraphs = new javax.swing.JPanel();
@@ -1386,141 +1419,6 @@ textTo.setText("2024-05-02 10:00:00");
 
         tabPane.addTab("Series", panelSeries);
 
-        tableCharts.setModel(new javax.swing.table.DefaultTableModel(
-            new Object [][] {
-
-            },
-            new String [] {
-                "Chart", "Y1min", "Y1max", "Y2min", "Y2max", "Markers", "Range"
-            }
-        ) {
-            Class[] types = new Class [] {
-                java.lang.String.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.Double.class, java.lang.Boolean.class, java.lang.Boolean.class
-            };
-            boolean[] canEdit = new boolean [] {
-                false, true, true, true, true, true, true
-            };
-
-            public Class getColumnClass(int columnIndex) {
-                return types [columnIndex];
-            }
-
-            public boolean isCellEditable(int rowIndex, int columnIndex) {
-                return canEdit [columnIndex];
-            }
-        });
-        tableCharts.setRowSelectionAllowed(false);
-        tableCharts.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
-        tableCharts.getTableHeader().setReorderingAllowed(false);
-        jScrollPane3.setViewportView(tableCharts);
-
-        jPanel1.setBorder(javax.swing.BorderFactory.createTitledBorder("Colors"));
-
-        jLabel15.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
-        jLabel15.setText("Background:");
-
-        panelColorBackground.setBorder(new javax.swing.border.SoftBevelBorder(javax.swing.border.BevelBorder.RAISED));
-        panelColorBackground.setPreferredSize(new java.awt.Dimension(44, 23));
-        panelColorBackground.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mouseClicked(java.awt.event.MouseEvent evt) {
-                panelColorBackgroundMouseClicked(evt);
-            }
-        });
-
-        javax.swing.GroupLayout panelColorBackgroundLayout = new javax.swing.GroupLayout(panelColorBackground);
-        panelColorBackground.setLayout(panelColorBackgroundLayout);
-        panelColorBackgroundLayout.setHorizontalGroup(
-            panelColorBackgroundLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 44, Short.MAX_VALUE)
-        );
-        panelColorBackgroundLayout.setVerticalGroup(
-            panelColorBackgroundLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 20, Short.MAX_VALUE)
-        );
-
-        jLabel17.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
-        jLabel17.setText("Grid:");
-
-        panelColorGrid.setBorder(new javax.swing.border.SoftBevelBorder(javax.swing.border.BevelBorder.RAISED));
-        panelColorGrid.setPreferredSize(new java.awt.Dimension(44, 23));
-        panelColorGrid.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mouseClicked(java.awt.event.MouseEvent evt) {
-                panelColorGridMouseClicked(evt);
-            }
-        });
-
-        javax.swing.GroupLayout panelColorGridLayout = new javax.swing.GroupLayout(panelColorGrid);
-        panelColorGrid.setLayout(panelColorGridLayout);
-        panelColorGridLayout.setHorizontalGroup(
-            panelColorGridLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 44, Short.MAX_VALUE)
-        );
-        panelColorGridLayout.setVerticalGroup(
-            panelColorGridLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 20, Short.MAX_VALUE)
-        );
-
-        buttonDefaultColors.setText("Defaults");
-        buttonDefaultColors.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                buttonDefaultColorsActionPerformed(evt);
-            }
-        });
-
-        javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
-        jPanel1.setLayout(jPanel1Layout);
-        jPanel1Layout.setHorizontalGroup(
-            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel1Layout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(jLabel15)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(panelColorBackground, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(jLabel17)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(panelColorGrid, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addComponent(buttonDefaultColors)
-                .addContainerGap())
-        );
-        jPanel1Layout.setVerticalGroup(
-            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel1Layout.createSequentialGroup()
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addComponent(panelColorGrid, javax.swing.GroupLayout.PREFERRED_SIZE, 26, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabel15, javax.swing.GroupLayout.PREFERRED_SIZE, 26, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(panelColorBackground, javax.swing.GroupLayout.PREFERRED_SIZE, 26, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabel17, javax.swing.GroupLayout.PREFERRED_SIZE, 26, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(buttonDefaultColors, javax.swing.GroupLayout.PREFERRED_SIZE, 11, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap())
-        );
-
-        jPanel1Layout.linkSize(javax.swing.SwingConstants.VERTICAL, new java.awt.Component[] {buttonDefaultColors, jLabel15, jLabel17, panelColorBackground, panelColorGrid});
-
-        javax.swing.GroupLayout panelChartsLayout = new javax.swing.GroupLayout(panelCharts);
-        panelCharts.setLayout(panelChartsLayout);
-        panelChartsLayout.setHorizontalGroup(
-            panelChartsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(panelChartsLayout.createSequentialGroup()
-                .addContainerGap()
-                .addGroup(panelChartsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 573, Short.MAX_VALUE)
-                    .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                .addContainerGap())
-        );
-        panelChartsLayout.setVerticalGroup(
-            panelChartsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(panelChartsLayout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 332, Short.MAX_VALUE)
-                .addGap(18, 18, 18)
-                .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(13, 13, 13))
-        );
-
-        tabPane.addTab("Charts", panelCharts);
-
         panelPlots.setName("panelPlots"); // NOI18N
         panelPlots.setLayout(new java.awt.BorderLayout());
 
@@ -1637,39 +1535,6 @@ textTo.setText("2024-05-02 10:00:00");
         }
     }//GEN-LAST:event_buttonPlotActionPerformed
 
-    private void panelColorBackgroundMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_panelColorBackgroundMouseClicked
-        Color c = JColorChooser.showDialog(this, "Choose a Color", backgroundColor);
-        if (c != null) {
-            backgroundColor = c;
-            panelColorBackground.setBackground(backgroundColor);
-            for (Plot plot : plots) {
-                plot.setPlotBackgroundColor(backgroundColor);
-            }
-        }
-    }//GEN-LAST:event_panelColorBackgroundMouseClicked
-
-    private void panelColorGridMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_panelColorGridMouseClicked
-        Color c = JColorChooser.showDialog(this, "Choose a Color", gridColor);
-        if (c != null) {
-            gridColor = c;
-            panelColorGrid.setBackground(gridColor);
-            for (Plot plot : plots) {
-                plot.setPlotGridColor(gridColor);
-            }
-        }
-    }//GEN-LAST:event_panelColorGridMouseClicked
-
-    private void buttonDefaultColorsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonDefaultColorsActionPerformed
-        backgroundColor = defaultBackgroundColor;
-        gridColor = defaultGridColor;
-        panelColorBackground.setBackground(backgroundColor);
-        panelColorGrid.setBackground(gridColor);
-        for (Plot plot : plots) {
-            plot.setPlotGridColor(PlotBase.getGridColor());
-            plot.setPlotBackgroundColor(PlotBase.getPlotBackground());
-        }
-    }//GEN-LAST:event_buttonDefaultColorsActionPerformed
-
     private void buttonSaveDataActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonSaveDataActionPerformed
         try {
             saveQuery();
@@ -1758,7 +1623,6 @@ textTo.setText("2024-05-02 10:00:00");
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JButton buttonDefaultColors;
     private javax.swing.JButton buttonDelete;
     private javax.swing.JButton buttonDown;
     private javax.swing.JButton buttonInsert;
@@ -1768,22 +1632,15 @@ textTo.setText("2024-05-02 10:00:00");
     private javax.swing.JCheckBox checkBins;
     private javax.swing.JCheckBox checkUTC;
     private javax.swing.JComboBox<String> comboTime;
-    private javax.swing.JLabel jLabel15;
-    private javax.swing.JLabel jLabel17;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
     private javax.swing.JLabel jLabel6;
     private javax.swing.JLabel jLabel7;
     private javax.swing.JLabel jLabel9;
-    private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel3;
     private javax.swing.JPanel jPanel4;
     private javax.swing.JScrollPane jScrollPane1;
-    private javax.swing.JScrollPane jScrollPane3;
-    private javax.swing.JPanel panelCharts;
-    private javax.swing.JPanel panelColorBackground;
-    private javax.swing.JPanel panelColorGrid;
     private javax.swing.JPanel panelFile;
     private javax.swing.JPanel panelPlots;
     private javax.swing.JPanel panelSerie;
@@ -1793,7 +1650,6 @@ textTo.setText("2024-05-02 10:00:00");
     private javax.swing.JSpinner spinnerBins;
     private javax.swing.JSpinner spinnerSize;
     private javax.swing.JTabbedPane tabPane;
-    private javax.swing.JTable tableCharts;
     private javax.swing.JTable tableSeries;
     private javax.swing.JTextField textFrom;
     private javax.swing.JTextField textTo;

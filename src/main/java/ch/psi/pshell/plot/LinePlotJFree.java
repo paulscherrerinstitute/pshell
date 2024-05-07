@@ -194,13 +194,25 @@ public class LinePlotJFree extends LinePlotBase {
     public void setPlotBackgroundColor(Color c) {
         chart.getPlot().setBackgroundPaint(c);
     }
+    
+    @Override
+    public Color getPlotBackgroundColor() {
+        Paint ret =chart.getPlot().getBackgroundPaint();
+        return (ret instanceof Color) ? (Color) ret : null;
+    }    
 
     @Override
     public void setPlotGridColor(Color c) {
         ((XYPlot) chart.getPlot()).setDomainGridlinePaint(c);
         ((XYPlot) chart.getPlot()).setRangeGridlinePaint(c);
     }
-
+    
+    @Override
+    public Color getPlotGridColor() {
+        Paint ret = ((XYPlot) chart.getPlot()).getDomainGridlinePaint();
+        return (ret instanceof Color) ? (Color) ret : null;
+    }    
+    
     @Override
     public void setPlotOutlineColor(Color c) {
         chart.getPlot().setOutlinePaint((c==null) ? getOutlineColor() : c);        
