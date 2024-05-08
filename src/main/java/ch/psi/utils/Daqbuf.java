@@ -22,6 +22,7 @@ import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.jackson.JacksonFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.cbor.CBORFactory;
+import java.lang.reflect.Array;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
@@ -280,7 +281,7 @@ public class Daqbuf implements ChannelQueryAPI {
         while (bytesRead < dataSize) {
             int count = inputStream.read(data, bytesRead, dataSize - bytesRead);
             if (count == -1) {
-                throw new IOException("Unexpected end of stream.");
+                throw new IOException("Unexpected end of stream (%i of %i bytes).".formatted(bytesRead, dataSize));
             } else if (count == 0) {
                 if ((System.currentTimeMillis() - last) > timeout) {
                     throw new IOException("Timeout receiving from stream");
@@ -720,15 +721,15 @@ public class Daqbuf implements ChannelQueryAPI {
                 public void onMessage(Query query, List values, List<Long> ids, List<Long> timestamps) {
                     if (!values.isEmpty()){
                         try{
-                            if (!dm.exists(VALUE_DATASET)) {
-                                dm.createCompressedDataset(ID_DATASET, Long.class, new int[0]);
-                                dm.createCompressedDataset(TIMESTAMP_DATASET, Long.class, new int[0]);
-                                Object obj = values.get(0);
-                                dm.createCompressedDataset(VALUE_DATASET, obj);                                
-                            }
                             Object value = Convert.toPrimitiveArray(values);
                             long[] id = (long[]) Convert.toPrimitiveArray(ids, Long.class);
                             long[] timestamp = (long[]) Convert.toPrimitiveArray(timestamps, Long.class);
+                            if (!dm.exists(VALUE_DATASET)) {
+                                dm.createCompressedDataset(ID_DATASET, Long.class, new int[0]);
+                                dm.createCompressedDataset(TIMESTAMP_DATASET, Long.class, new int[0]);
+                                Object obj = Array.get(value, 0);
+                                dm.createCompressedDataset(VALUE_DATASET, obj);                                
+                            }
                             dm.appendItem(TIMESTAMP_DATASET, timestamp);
                             dm.appendItem(ID_DATASET, id);
                             dm.appendItem(VALUE_DATASET, value);
@@ -898,9 +899,12 @@ public class Daqbuf implements ChannelQueryAPI {
         Map ret;
         Object obj;
         Daqbuf daqbuf = new Daqbuf();
-                        
+                       
+        /*
         String[] channels = new String[]{"S10BC01-DBPM010:Q1@sf-databuffer", "S10BC01-DBPM010:X1@sf-databuffer"};
         String channel = "S10BC01-DBPM010:Q1";
+        
+        
         String start = "2024-05-02 09:00:00"; //"2024-03-15T12:41:00Z", "2024-03-15T15:42:00Z"
         //String end = "2024-05-02 09:00:01";
         String end = "2024-05-02 10:00:00";
@@ -908,14 +912,19 @@ public class Daqbuf implements ChannelQueryAPI {
         long s = System.currentTimeMillis();        
         daqbuf.saveQuery("/Users/gobbo_a/pshell.h5", channels, start, end);
         System.out.println(System.currentTimeMillis()-s);        
+        */
         
-        /*
+       
         System.out.println(daqbuf.getBackends());
         int bins = 20;
-        //start = "2024-04-15T12:41:00Z";
-        //end = "2024-04-15T15:42:00Z";
+        String start = "2024-05-07 16:00:00";
+        String end = "2024-05-07 16:00:01" ;
+        String channel = "SARFE10-PSSS059:SPECTRUM_X";
         ret = daqbuf.fetchQuery(channel, start, end);
+        System.out.println(ret);
         
+        
+ /*
         cf = daqbuf.startQuery("S10BC01-DBPM010:Q1", start, end , new QueryListener(){}) ;
 
         

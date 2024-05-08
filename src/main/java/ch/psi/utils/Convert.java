@@ -1006,14 +1006,21 @@ public class Convert {
 
     //TODO: Optimize
     public static Object toPrimitiveArray(Object wrapperArray) {
-        Class listType = null;
-        if (wrapperArray instanceof List) {
-            if (((List)wrapperArray).size()>0){
-                listType = ((List)wrapperArray).get(0).getClass();
+        Class listType = null;        
+        if (wrapperArray instanceof List) {   
+            listType = Object.class;
+            List aux = (List)wrapperArray;
+            while (aux.size()>0){
+                Object first = aux.get(0);
+                if (first instanceof List){
+                    aux = (List) first;
+                } else {
+                    listType = first.getClass();
+                    break;
+                }
             }
-            wrapperArray = ((List) wrapperArray).toArray();
-            
         }
+        
         Class type = wrapperArray.getClass().getComponentType();
         if (listType!=null){
             type = listType;
@@ -1026,8 +1033,33 @@ public class Convert {
 
     public static Object toPrimitiveArray(Object wrapperArray, Class type) {
         if (wrapperArray instanceof List) {
-            wrapperArray = ((List) wrapperArray).toArray();
+            List list = (List)wrapperArray;            
+            int listRank = 1;
+            
+            List aux = list;
+            while (aux.size()>0){
+                Object first = aux.get(0);
+                if (first instanceof List){
+                    aux = (List) first;
+                    listRank ++;
+                } else {
+                    break;
+                }
+            }
+            if ((listRank) == 1){
+                wrapperArray = list.toArray();
+            }   else {
+                int[] shape = new int[listRank];
+                shape[0] = list.size();
+                wrapperArray = Array.newInstance( getPrimitiveClass(type), shape);
+                for (int i=0; i<list.size(); i++){
+                    Array.set(wrapperArray, i, toPrimitiveArray(list.get(i), type));
+                }
+                return wrapperArray;
+            }                        
         }
+        
+        
         if (!wrapperArray.getClass().isArray()) {
             throw new IllegalArgumentException("Parameter is not an array");
         }
@@ -1523,9 +1555,6 @@ public class Convert {
         return ret;
     }
 
-    /**
-     * Recursivelly converts list to array of objects
-     */
     public static Object[] toArray(List list) {
         Object[] ret = list.toArray();
         for (int i = 0; i < ret.length; i++) {

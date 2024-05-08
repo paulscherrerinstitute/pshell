@@ -1137,6 +1137,7 @@ public class ProviderHDF5 implements Provider {
             index = (int)info.getDimensions()[0];
         }
         int rank = info.getRank();
+        boolean signed = info.isSigned();
         if (type == null) {
             //For float types don't leave default '0' when writing null: set NaN instead.
             switch (info.getTypeInformation().getDataClass()) {
@@ -1201,31 +1202,31 @@ public class ProviderHDF5 implements Provider {
         } else if (type == Float.class) {
             writer.float32().writeArrayBlockWithOffset(path, new float[]{(Float) data}, 1, index);
         } else if (type == BigInteger.class) {
-            if (writer.object().getDataSetInformation(path).isSigned()) {
+            if (signed) {
                 writer.int64().writeArrayBlockWithOffset(path, new long[]{((BigInteger) data).longValue()}, 1, index);
             } else {
                 writer.uint64().writeArrayBlockWithOffset(path, new long[]{((BigInteger) data).longValue()}, 1, index);
             }
         } else if (type == Long.class) {
-            if (writer.object().getDataSetInformation(path).isSigned()) {
+            if (signed) {
                 writer.int64().writeArrayBlockWithOffset(path, new long[]{(Long) data}, 1, index);
             } else {
                 writer.uint64().writeArrayBlockWithOffset(path, new long[]{(Long) data}, 1, index);
             }
         } else if (type == Integer.class) {
-            if (writer.object().getDataSetInformation(path).isSigned()) {
+            if (signed) {
                 writer.int32().writeArrayBlockWithOffset(path, new int[]{(Integer) data}, 1, index);
             } else {
                 writer.uint32().writeArrayBlockWithOffset(path, new int[]{(Integer) data}, 1, index);
             }
         } else if (type == Short.class) {
-            if (writer.object().getDataSetInformation(path).isSigned()) {
+            if (signed) {
                 writer.int16().writeArrayBlockWithOffset(path, new short[]{(Short) data}, 1, index);
             } else {
                 writer.uint16().writeArrayBlockWithOffset(path, new short[]{(Short) data}, 1, index);
             }
         } else if (type == Byte.class) {
-            if (writer.object().getDataSetInformation(path).isSigned()) {
+            if (signed) {
                 writer.int8().writeArrayBlockWithOffset(path, new byte[]{(Byte) data}, 1, index);
             } else {
                 writer.uint8().writeArrayBlockWithOffset(path, new byte[]{(Byte) data}, 1, index);
@@ -1257,12 +1258,13 @@ public class ProviderHDF5 implements Provider {
             }
         } else if ((type == long[].class)||(type==BigInteger[].class)) { 
             if (rank==1){
-                if (writer.object().getDataSetInformation(path).isSigned()) {
+                if (signed) {
                     writer.int64().writeArrayBlockWithOffset(path, (long[])data, ((long[])data).length, index);
                 } else {
-                    writer.uint64().writeArrayBlockWithOffset(path, (long[])data, ((long[])data).length, index);             }                
+                    writer.uint64().writeArrayBlockWithOffset(path, (long[])data, ((long[])data).length, index);             
+                }                
             } else {
-                if (writer.object().getDataSetInformation(path).isSigned()) {
+                if (signed) {
                     writer.int64().writeMatrixBlockWithOffset(path, new long[][]{(long[]) data}, index, 0);
                 } else {
                     writer.uint64().writeMatrixBlockWithOffset(path, new long[][]{(long[]) data}, index, 0);
@@ -1270,12 +1272,13 @@ public class ProviderHDF5 implements Provider {
             }
         } else if (type == int[].class) {
             if (rank==1){
-                if (writer.object().getDataSetInformation(path).isSigned()) {
+                if (signed) {
                     writer.int32().writeArrayBlockWithOffset(path, (int[])data, ((int[])data).length, index);
                 } else {
-                    writer.uint32().writeArrayBlockWithOffset(path, (int[])data, ((int[])data).length, index);             }                
+                    writer.uint32().writeArrayBlockWithOffset(path, (int[])data, ((int[])data).length, index);             
+                }                
             } else {
-                if (writer.object().getDataSetInformation(path).isSigned()) {
+                if (signed) {
                     writer.int32().writeMatrixBlockWithOffset(path, new int[][]{(int[]) data}, index, 0);
                 } else {
                     writer.uint32().writeMatrixBlockWithOffset(path, new int[][]{(int[]) data}, index, 0);
@@ -1283,12 +1286,13 @@ public class ProviderHDF5 implements Provider {
             }
         } else if (type == short[].class) {
             if (rank==1){
-                if (writer.object().getDataSetInformation(path).isSigned()) {
+                if (signed) {
                     writer.int16().writeArrayBlockWithOffset(path, (short[])data, ((short[])data).length, index);
                 } else {
-                    writer.uint16().writeArrayBlockWithOffset(path, (short[])data, ((short[])data).length, index);             }                
+                    writer.uint16().writeArrayBlockWithOffset(path, (short[])data, ((short[])data).length, index);             
+                }                
             } else {
-                if (writer.object().getDataSetInformation(path).isSigned()) {
+                if (signed) {
                     writer.int16().writeMatrixBlockWithOffset(path, new short[][]{(short[]) data}, index, 0);
                 } else {
                     writer.uint16().writeMatrixBlockWithOffset(path, new short[][]{(short[]) data}, index, 0);
@@ -1296,12 +1300,13 @@ public class ProviderHDF5 implements Provider {
             }
         } else if (type == byte[].class) {
             if (rank==1){
-                if (writer.object().getDataSetInformation(path).isSigned()) {
+                if (signed) {
                     writer.int8().writeArrayBlockWithOffset(path, (byte[])data, ((byte[])data).length, index);
                 } else {
-                    writer.uint8().writeArrayBlockWithOffset(path, (byte[])data, ((byte[])data).length, index);             }                
+                    writer.uint8().writeArrayBlockWithOffset(path, (byte[])data, ((byte[])data).length, index);             
+                }                
             } else {
-                if (writer.object().getDataSetInformation(path).isSigned()) {
+                if (signed) {
                     writer.int8().writeMatrixBlockWithOffset(path, new byte[][]{(byte[]) data}, index, 0);
                 } else {
                     writer.uint8().writeMatrixBlockWithOffset(path, new byte[][]{(byte[]) data}, index, 0);
@@ -1324,40 +1329,78 @@ public class ProviderHDF5 implements Provider {
                 writer.bool().writeBitFieldArrayBlockWithOffset(path, new BitSet[]{bs}, index, 0);                
             }            
         } else if (type == double[][].class) {
-            MDDoubleArray array = new MDDoubleArray((double[])Convert.flatten(data), getMatrixShape(data));
-            writer.float64().writeMDArrayBlockWithOffset(path, array, getMatrixOffset(index));  
+            if (rank==2){
+                writer.float64().writeMatrixBlockWithOffset(path, (double[][])data , index, 0);
+            } else {            
+                MDDoubleArray array = new MDDoubleArray((double[])Convert.flatten(data), getMatrixShape(data));
+                writer.float64().writeMDArrayBlockWithOffset(path, array, getMatrixOffset(index));  
+            }
         } else if (type == float[][].class) {
-            MDFloatArray array = new MDFloatArray((float[])Convert.flatten(data), getMatrixShape(data));
-            writer.float32().writeMDArrayBlockWithOffset(path, array, getMatrixOffset(index));            
-            
-        } else if ((type == long[][].class) || (type == BigInteger[][].class)) {        
-            MDLongArray array = new MDLongArray((long[])Convert.flatten(data), getMatrixShape(data));
-            if (writer.object().getDataSetInformation(path).isSigned()) {
-                writer.int64().writeMDArrayBlockWithOffset(path, array, getMatrixOffset(index));  
+            if (rank==2){
+                writer.float32().writeMatrixBlockWithOffset(path, (float[][])data , index, 0);
             } else {
-                writer.uint64().writeMDArrayBlockWithOffset(path, array, getMatrixOffset(index));  
+                MDFloatArray array = new MDFloatArray((float[])Convert.flatten(data), getMatrixShape(data));
+                writer.float32().writeMDArrayBlockWithOffset(path, array, getMatrixOffset(index));            
+            }            
+        } else if ((type == long[][].class) || (type == BigInteger[][].class)) {        
+            if (rank==2){
+                if (signed) {
+                    writer.int64().writeMatrixBlockWithOffset(path, (long[][])data , index, 0);  
+                } else {
+                    writer.uint64().writeMatrixBlockWithOffset(path, (long[][])data , index, 0);
+                }                                
+            } else {                        
+                MDLongArray array = new MDLongArray((long[])Convert.flatten(data), getMatrixShape(data));
+                if (signed) {
+                    writer.int64().writeMDArrayBlockWithOffset(path, array, getMatrixOffset(index));  
+                } else {
+                    writer.uint64().writeMDArrayBlockWithOffset(path, array, getMatrixOffset(index));  
+                }
             }
         } else if (type == int[][].class) {
-            MDIntArray array = new MDIntArray((int[])Convert.flatten(data), getMatrixShape(data));
-            if (writer.object().getDataSetInformation(path).isSigned()) {
-                writer.int32().writeMDArrayBlockWithOffset(path, array, getMatrixOffset(index));  
-            } else {
-                writer.uint32().writeMDArrayBlockWithOffset(path, array, getMatrixOffset(index));  
+            if (rank==2){
+                if (signed) {
+                    writer.int32().writeMatrixBlockWithOffset(path, (int[][])data , index, 0);  
+                } else {
+                    writer.uint32().writeMatrixBlockWithOffset(path, (int[][])data , index, 0);
+                }                                
+            } else {                                    
+                MDIntArray array = new MDIntArray((int[])Convert.flatten(data), getMatrixShape(data));
+                if (signed) {
+                    writer.int32().writeMDArrayBlockWithOffset(path, array, getMatrixOffset(index));  
+                } else {
+                    writer.uint32().writeMDArrayBlockWithOffset(path, array, getMatrixOffset(index));  
+                }
             }
         } else if (type == short[][].class) {
-            MDShortArray array = new MDShortArray((short[])Convert.flatten(data), getMatrixShape(data));
-            if (writer.object().getDataSetInformation(path).isSigned()) {
-                writer.int16().writeMDArrayBlockWithOffset(path, array, getMatrixOffset(index));  
-            } else {
-                writer.uint16().writeMDArrayBlockWithOffset(path, array, getMatrixOffset(index));  
+            if (rank==2){
+                if (signed) {
+                    writer.int16().writeMatrixBlockWithOffset(path, (short[][])data , index, 0);  
+                } else {
+                    writer.uint16().writeMatrixBlockWithOffset(path, (short[][])data , index, 0);
+                }                                
+            } else {                                                
+                MDShortArray array = new MDShortArray((short[])Convert.flatten(data), getMatrixShape(data));
+                if (signed) {
+                    writer.int16().writeMDArrayBlockWithOffset(path, array, getMatrixOffset(index));  
+                } else {
+                    writer.uint16().writeMDArrayBlockWithOffset(path, array, getMatrixOffset(index));  
+                }
             }
-
         } else if (type == byte[][].class) {
-            MDByteArray array = new MDByteArray((byte[])Convert.flatten(data), getMatrixShape(data));
-            if (writer.object().getDataSetInformation(path).isSigned()) {
-                writer.int8().writeMDArrayBlockWithOffset(path, array, getMatrixOffset(index));  
-            } else {
-                writer.uint8().writeMDArrayBlockWithOffset(path, array, getMatrixOffset(index));  
+            if (rank==2){
+                if (signed) {
+                    writer.int8().writeMatrixBlockWithOffset(path, (byte[][])data , index, 0);  
+                } else {
+                    writer.int8().writeMatrixBlockWithOffset(path, (byte[][])data , index, 0);
+                }                                
+            } else {                                                
+                MDByteArray array = new MDByteArray((byte[])Convert.flatten(data), getMatrixShape(data));
+                if (signed) {
+                    writer.int8().writeMDArrayBlockWithOffset(path, array, getMatrixOffset(index));  
+                } else {
+                    writer.uint8().writeMDArrayBlockWithOffset(path, array, getMatrixOffset(index));  
+                }
             }
         } else if (type == Object[].class) {
             HDF5CompoundType<Object[]> compoundType = null;

@@ -289,9 +289,9 @@ public class DataManager implements AutoCloseable {
         features.put("compression", true);
         chunks[0] = 8 * 1024;
         if (shape.length==1){
-            chunks[0] = 16 * 1024;
+            chunks[0] = 128; //16 * 1024;
         } else if (shape.length>1){
-            chunks[0] = 32 * 1024;
+            chunks[0] = 1; //32 * 1024;
         }        
         features.put("shuffle", shuffle);    
         features.put("chunk", chunks);    
@@ -1225,7 +1225,7 @@ public class DataManager implements AutoCloseable {
         Class type = Arr.getComponentType(element);
         int[] shape =  Arr.getShape(element);
         int[] dimensions = new int[shape.length+1];
-        System.arraycopy(shape, 0, dimensions, 0, shape.length);        
+        System.arraycopy(shape, 0, dimensions, 1, shape.length);        
         Map features = DataManager.createCompressionFeatures(element, shuffle);
         createDataset(path, type, dimensions, features);
     }
