@@ -8,7 +8,9 @@ import ch.psi.pshell.plot.LinePlot;
 import ch.psi.pshell.plot.LinePlotErrorSeries;
 import ch.psi.pshell.plot.LinePlotJFree;
 import ch.psi.pshell.plot.LinePlotSeries;
+import ch.psi.pshell.plot.MatrixPlotJFree;
 import ch.psi.pshell.plot.MatrixPlotRenderer;
+import ch.psi.pshell.plot.MatrixPlotSeries;
 import ch.psi.pshell.plot.Plot;
 import ch.psi.pshell.plot.Plot.AxisId;
 import ch.psi.pshell.plot.PlotBase;
@@ -22,6 +24,7 @@ import ch.psi.pshell.swing.ChannelSelector;
 import ch.psi.pshell.swing.DataPanel;
 import ch.psi.pshell.swing.PlotPanel;
 import ch.psi.utils.Arr;
+import ch.psi.utils.Convert;
 import ch.psi.utils.Daqbuf;
 import ch.psi.utils.Daqbuf.Query;
 import ch.psi.utils.Daqbuf.QueryListener;
@@ -531,14 +534,14 @@ textTo.setText("2024-05-02 10:00:00");
         numPlots++;        
     }
     
-    LinePlotJFree addLinePlot(boolean range){
+    LinePlotJFree addLinePlot(boolean binned){
         Double y1min = null;
         Double y1max = null;
         Double y2min = null;
         Double y2max = null;
 
         LinePlotJFree plot = new LinePlotJFree();
-        if (range){
+        if (binned){
             plot.setStyle(LinePlot.Style.ErrorY);
         }
         DateAxis axis = new DateAxis(null); //("Time");
@@ -589,7 +592,7 @@ textTo.setText("2024-05-02 10:00:00");
         
         
         JCheckBoxMenuItem menuRanges = new JCheckBoxMenuItem("Show Ranges");
-        menuRanges.setSelected(range);
+        menuRanges.setSelected(binned);
         menuRanges.addActionListener((ActionEvent e) -> {
             boolean show = menuRanges.isSelected();
             for (XYItemRenderer r : plot.getChart().getXYPlot().getRenderers().values()){                        
@@ -597,7 +600,7 @@ textTo.setText("2024-05-02 10:00:00");
             }            
         });
         plot.addPopupMenuItem(menuRanges);        
-        menuRanges.setEnabled(range);
+        menuRanges.setEnabled(binned);
 
         JMenuItem menuBackgroundColor = new JMenuItem("Set Background Color...");
         menuBackgroundColor.addActionListener((ActionEvent e) -> {
@@ -768,6 +771,93 @@ textTo.setText("2024-05-02 10:00:00");
         return series;
     }
     
+    //MatrixPlotRenderer
+    MatrixPlotJFree addMatrixPlot(boolean binned){
+        MatrixPlotJFree plot = new MatrixPlotJFree();
+        if (binned){
+            DateAxis axis = new DateAxis(null); //("Time");
+            axis.setLabelFont(PlotBase.getDefaultLabelFont());
+            axis.setLabelPaint(plot.getAxisTextColor());
+            axis.setTickLabelPaint(plot.getAxisTextColor());
+            plot.getChart().getXYPlot().setDomainAxis(axis);            
+        }
+        addPlot(plot);
+        return plot;
+    }
+
+
+    
+    MatrixPlotSeries addMatrixSeries(MatrixPlotJFree plot, String name, String backend,String start, String end){          
+        List value = new ArrayList();
+        List<Long> id = new ArrayList<>();
+        List<Long> timestamp = new ArrayList<>();
+        long maxSize = (Integer)spinnerSize.getValue();
+        
+        try {
+            daqbuf.query(name + Daqbuf.BACKEND_SEPARATOR + backend, start, end, new QueryListener(){                
+                public void onMessage(Query query, List values, List<Long> ids, List<Long> timestamps) {                                        
+                    if ((value.size()>0) && (((List)value.get(0)).size() * value.size()) > maxSize){
+                        throw new RuntimeException ("Series too big for plotting: " + name);
+                    }                                        
+                    value.addAll(values);
+                    id.addAll(ids);
+                    timestamp.addAll(timestamps);
+               }
+            });            
+        } catch (Exception ex) {
+            showException(ex);
+        }                
+                
+
+        MatrixPlotSeries series = new MatrixPlotSeries(name);
+        plot.addSeries(series);
+        if (value.size() > 0) {
+            double[][] data = (double[][])Convert.toPrimitiveArray(value, Double.class);        
+            series.setData(Convert.transpose(data));
+        }
+        plotSeries.add(series);        
+        return series;
+    }
+    
+    MatrixPlotSeries addMatrixSeriesBinned(MatrixPlotJFree plot, String name, String backend,String start, String end, int bins){  
+        List value = new ArrayList();
+        List<Long> id = new ArrayList<>();
+        List<Long> timestamp = new ArrayList<>();
+        long maxSize = (Integer)spinnerSize.getValue();
+        
+        try {
+            daqbuf.query(name + Daqbuf.BACKEND_SEPARATOR + backend, start, end, new QueryListener(){                
+                public void onMessage(Query query, List values, List<Long> ids, List<Long> timestamps) {                                        
+                    if ((value.size()>0) && (((List)value.get(0)).size() * value.size()) > maxSize){
+                        throw new RuntimeException ("Series too big for plotting: " + name);
+                    }                                        
+                    value.addAll(values);
+                    id.addAll(ids);
+                    timestamp.addAll(timestamps);
+               }
+            });            
+        } catch (Exception ex) {
+        }                
+                
+
+        MatrixPlotSeries series = new MatrixPlotSeries(name);
+        if (value.size()>0) {        
+            double max = timestamp.get(timestamp.size()-1)/1e6;
+            double min = timestamp.get(0)/1e6;
+            //min =0;
+            //max =2000;            
+            plot.getAxis(AxisId.X).setRange(min, max);        
+            double[][] data = (double[][])Convert.toPrimitiveArray(value, Double.class);        
+            series = new MatrixPlotSeries(name, min, max, data.length , 0, data[0].length-1, data[0].length);     
+            //series.setRangeX(min, max);            
+            plot.addSeries(series);        
+            series.setData(Convert.transpose(data));                
+        }
+        plot.getChartPanel().restoreAutoDomainBounds(); //Needed because changed domain axis to time
+        plotSeries.add(series);        
+        return series;
+    }
+
     
     SlicePlotDefault addSlicePlot(){
         SlicePlotDefault plot = new SlicePlotDefault(new MatrixPlotRenderer());        
@@ -848,15 +938,14 @@ textTo.setText("2024-05-02 10:00:00");
                             series = addBinnedSeries((LinePlotJFree)plot, name, backend, start, end, bins, axis, color);
                         }
                         break;
-                    case 1:
-                        /*
-                        plot = addLinePlot(true);
+                    case 1:                        
                         if (bins==null){
-                            series = addLineSeries((LinePlotJFree)plot, name, backend, start, end, axis, color);                            
+                            plot = addMatrixPlot(false);
+                            series = addMatrixSeries((MatrixPlotJFree)plot, name, backend, start, end);                            
                         } else {
-                            series = addBinnedSeries((LinePlotJFree)plot, name, backend, start, end, bins, axis, color);
+                            plot = addMatrixPlot(true);
+                            series = addMatrixSeriesBinned((MatrixPlotJFree)plot, name, backend, start, end, bins);
                         }
-                        */
                         break;
                     case 2:
                         plot = addSlicePlot();

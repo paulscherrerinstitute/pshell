@@ -807,6 +807,11 @@ public class MatrixPlotJFree extends MatrixPlotBase {
         return chart;
     }
 
+    @Hidden
+    public ChartPanel getChartPanel() {
+        return chartPanel;
+    }
+    
     @Override
     public BufferedImage getSnapshot(Dimension size) {
         if (size == null) {

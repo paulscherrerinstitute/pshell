@@ -281,7 +281,7 @@ public class Daqbuf implements ChannelQueryAPI {
         while (bytesRead < dataSize) {
             int count = inputStream.read(data, bytesRead, dataSize - bytesRead);
             if (count == -1) {
-                throw new IOException("Unexpected end of stream (%i of %i bytes).".formatted(bytesRead, dataSize));
+                throw new IOException("Unexpected end of stream (%d of %d bytes).".formatted(bytesRead, dataSize));
             } else if (count == 0) {
                 if ((System.currentTimeMillis() - last) > timeout) {
                     throw new IOException("Timeout receiving from stream");
@@ -354,7 +354,7 @@ public class Daqbuf implements ChannelQueryAPI {
         }
     }
 
-    void query(String channel, String start, String end, QueryListener listener) throws IOException, InterruptedException {
+    public void query(String channel, String start, String end, QueryListener listener) throws IOException, InterruptedException {
         query(channel, start, end, listener, null);
     }
 
@@ -375,7 +375,7 @@ public class Daqbuf implements ChannelQueryAPI {
         return backend;
     }
         
-    void query(String channel, String start, String end, QueryListener listener, Integer bins) throws IOException, InterruptedException {
+    public void query(String channel, String start, String end, QueryListener listener, Integer bins) throws IOException, InterruptedException {
         boolean cbor = bins == null;
         String backend = getChannelBackend(channel);
         channel = getChannelName(channel);
