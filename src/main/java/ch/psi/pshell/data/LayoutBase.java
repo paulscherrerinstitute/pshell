@@ -42,6 +42,7 @@ public abstract class LayoutBase implements Layout {
     public static String PATH_META = "meta/";   
 
     Boolean persistSetpoints;
+    Boolean persistTimestamps;
     boolean writeSessionMetadata=true;
     String sessionMetadataPath="/";
     boolean sessionMetadataAttributes=true;
@@ -56,6 +57,10 @@ public abstract class LayoutBase implements Layout {
         return createLogs;
     }
 
+    public boolean getPersistTimestamps() {
+        return (persistTimestamps == null) ? getDataManager().getExecutionPars().getSaveTimestamps() : persistTimestamps;
+    }
+
     public void setCreateLogs(boolean value) {
         createLogs = value;
     }
@@ -63,6 +68,10 @@ public abstract class LayoutBase implements Layout {
     public void setPersistSetpoints(boolean value) {
         persistSetpoints = value;
     }
+    
+    public void setPersistTimestamps(boolean value) {
+        persistTimestamps = value;
+    }    
     
     public void setWriteSessionMetadata(boolean value, String path, boolean attributes) {
         persistSetpoints = value;

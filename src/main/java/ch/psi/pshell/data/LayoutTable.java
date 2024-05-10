@@ -1,7 +1,9 @@
 package ch.psi.pshell.data;
 
+import ch.psi.pshell.device.Device;
 import ch.psi.pshell.device.Readable.ReadableArray;
 import ch.psi.pshell.device.Readable.ReadableMatrix;
+import ch.psi.pshell.device.TimestampedValue;
 import ch.psi.pshell.device.Writable;
 import ch.psi.pshell.scan.AreaScan;
 import ch.psi.pshell.scan.Scan;
@@ -60,6 +62,9 @@ public class LayoutTable extends LayoutBase {
         String path = getScanPath(scan);
 
         int fields = scan.getWritables().length + scan.getReadables().length;
+        if (getPersistTimestamps()) {
+            fields +=  scan.getReadables().length;
+        }
         String[] fieldNames = new String[fields];
         Class[] fieldTypes = new Class[fields];
         int[] fieldLength = new int[fields];
@@ -73,6 +78,10 @@ public class LayoutTable extends LayoutBase {
             fieldNames[index++] = writable.getAlias();
         }
         for (ch.psi.pshell.device.Readable readable : scan.getReadables()) {
+            if (getPersistTimestamps()) {
+                fieldTypes[index] = Long.TYPE;
+                fieldNames[index++] = readable.getAlias() + " timestamp";
+            }
             Class type = getDatasetType(readable);
             if (readable instanceof ReadableMatrix) {
                 fieldTypes[index] = Array.newInstance(Convert.getPrimitiveClass(type), new int[]{0, 0}).getClass();
@@ -99,6 +108,10 @@ public class LayoutTable extends LayoutBase {
         Number[] positions = record.getPositions();
         Object[] values = record.getReadables();
         int fields = scan.getWritables().length + scan.getReadables().length;
+        if (getPersistTimestamps()) {
+            fields +=  scan.getReadables().length;
+        }
+        
         Object[] data = new Object[fields];
 
         for (Writable writable : scan.getWritables()) {
@@ -107,6 +120,15 @@ public class LayoutTable extends LayoutBase {
 
         deviceIndex = 0;
         for (ch.psi.pshell.device.Readable readable : scan.getReadables()) {
+            if (getPersistTimestamps()) {
+                Long timestamp = record.getTimestamp();
+                if (values[deviceIndex] instanceof  TimestampedValue){
+                    timestamp = ((TimestampedValue)values[deviceIndex]).getTimestamp();
+                } else if (readable instanceof Device){
+                    timestamp = ((Device)readable).takeTimestamped().getTimestamp();
+                }                
+                data[index++] = timestamp;
+            }            
             data[index++] = values[deviceIndex++];
         }
         getDataManager().setItem(getScanPath(scan), data, getIndex(scan, record));

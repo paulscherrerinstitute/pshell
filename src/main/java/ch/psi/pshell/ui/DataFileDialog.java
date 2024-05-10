@@ -164,6 +164,7 @@ public class DataFileDialog extends StandardDialog {
                 || (ckSaveConsole.isSelected() != config.dataScanSaveOutput)
                 || (ckSaveScript.isSelected() != config.dataScanSaveScript)
                 || (ckSaveSetpoints.isSelected() != config.dataScanSaveSetpoints)
+                || (ckSaveTimestamps.isSelected() != config.dataScanSaveTimestamps)
                 || (ckScanLazy.isSelected() != config.dataScanLazyTableCreation)
                 || (ckXscanUsesFDASerialization.isSelected() != config.fdaSerialization)
                 || (ckConvert.isSelected() == config.dataScanPreserveTypes);
@@ -241,6 +242,7 @@ public class DataFileDialog extends StandardDialog {
         ckSaveConsole.setSelected(config.dataScanSaveOutput);
         ckSaveScript.setSelected(config.dataScanSaveScript);
         ckSaveSetpoints.setSelected(config.dataScanSaveSetpoints);
+        ckSaveTimestamps.setSelected(config.dataScanSaveTimestamps);
         ckXscanUsesFDASerialization.setSelected(config.fdaSerialization);
         spinnerDepthDim.setValue((config.depthDimension > 2) ? 0 : Math.max(config.depthDimension, 0));
         checkDataLogs.setSelected(!config.disableDataFileLogs);
@@ -364,6 +366,7 @@ public class DataFileDialog extends StandardDialog {
         ckSaveScript = new javax.swing.JCheckBox();
         ckXscanUsesFDASerialization = new javax.swing.JCheckBox();
         ckScanLazy = new javax.swing.JCheckBox();
+        ckSaveTimestamps = new javax.swing.JCheckBox();
         jPanel5 = new javax.swing.JPanel();
         jLabel18 = new javax.swing.JLabel();
         textTransferPath = new javax.swing.JTextField();
@@ -717,6 +720,13 @@ public class DataFileDialog extends StandardDialog {
             }
         });
 
+        ckSaveTimestamps.setText("Save sensor timestamps");
+        ckSaveTimestamps.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                ckAutoSaveActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout jPanel4Layout = new javax.swing.GroupLayout(jPanel4);
         jPanel4.setLayout(jPanel4Layout);
         jPanel4Layout.setHorizontalGroup(
@@ -732,8 +742,9 @@ public class DataFileDialog extends StandardDialog {
                     .addComponent(ckSaveSetpoints)
                     .addComponent(ckAutoSave)
                     .addComponent(ckXscanUsesFDASerialization)
-                    .addComponent(ckScanLazy))
-                .addContainerGap(26, Short.MAX_VALUE))
+                    .addComponent(ckScanLazy)
+                    .addComponent(ckSaveTimestamps))
+                .addContainerGap(54, Short.MAX_VALUE))
         );
         jPanel4Layout.setVerticalGroup(
             jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -752,6 +763,8 @@ public class DataFileDialog extends StandardDialog {
                 .addComponent(ckSaveConsole)
                 .addGap(0, 0, 0)
                 .addComponent(ckSaveSetpoints)
+                .addGap(0, 0, 0)
+                .addComponent(ckSaveTimestamps)
                 .addGap(0, 0, 0)
                 .addComponent(ckXscanUsesFDASerialization)
                 .addGap(0, 0, 0)
@@ -955,7 +968,7 @@ public class DataFileDialog extends StandardDialog {
                 .addGroup(jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel15)
                     .addComponent(textTasks, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap(96, Short.MAX_VALUE))
+                .addContainerGap(113, Short.MAX_VALUE))
         );
 
         jTabbedPane1.addTab("Notification", jPanel6);
@@ -1026,6 +1039,7 @@ public class DataFileDialog extends StandardDialog {
                 config.dataScanSaveOutput = ckSaveConsole.isSelected();
                 config.dataScanSaveScript = ckSaveScript.isSelected();
                 config.dataScanSaveSetpoints = ckSaveSetpoints.isSelected();
+                config.dataScanSaveTimestamps = ckSaveTimestamps.isSelected();
                 config.fdaSerialization = ckXscanUsesFDASerialization.isSelected();
                 config.depthDimension = (Integer) spinnerDepthDim.getValue();
                 config.disableDataFileLogs = !checkDataLogs.isSelected();
@@ -1214,6 +1228,7 @@ public class DataFileDialog extends StandardDialog {
     private javax.swing.JCheckBox ckSaveConsole;
     private javax.swing.JCheckBox ckSaveScript;
     private javax.swing.JCheckBox ckSaveSetpoints;
+    private javax.swing.JCheckBox ckSaveTimestamps;
     private javax.swing.JCheckBox ckScanLazy;
     private javax.swing.JCheckBox ckXscanUsesFDASerialization;
     private javax.swing.JComboBox<String> comboLayout;

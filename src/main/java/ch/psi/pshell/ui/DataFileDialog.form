@@ -441,8 +441,9 @@
                           <Component id="ckAutoSave" min="-2" max="-2" attributes="0"/>
                           <Component id="ckXscanUsesFDASerialization" min="-2" max="-2" attributes="0"/>
                           <Component id="ckScanLazy" min="-2" max="-2" attributes="0"/>
+                          <Component id="ckSaveTimestamps" min="-2" max="-2" attributes="0"/>
                       </Group>
-                      <EmptySpace pref="26" max="32767" attributes="0"/>
+                      <EmptySpace pref="54" max="32767" attributes="0"/>
                   </Group>
               </Group>
             </DimensionLayout>
@@ -463,6 +464,8 @@
                       <Component id="ckSaveConsole" min="-2" max="-2" attributes="0"/>
                       <EmptySpace min="0" pref="0" max="-2" attributes="0"/>
                       <Component id="ckSaveSetpoints" min="-2" max="-2" attributes="0"/>
+                      <EmptySpace min="0" pref="0" max="-2" attributes="0"/>
+                      <Component id="ckSaveTimestamps" min="-2" max="-2" attributes="0"/>
                       <EmptySpace min="0" pref="0" max="-2" attributes="0"/>
                       <Component id="ckXscanUsesFDASerialization" min="-2" max="-2" attributes="0"/>
                       <EmptySpace min="0" pref="0" max="-2" attributes="0"/>
@@ -540,6 +543,14 @@
             <Component class="javax.swing.JCheckBox" name="ckScanLazy">
               <Properties>
                 <Property name="text" type="java.lang.String" value="Lazy table creation (after reception of first record)"/>
+              </Properties>
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="ckAutoSaveActionPerformed"/>
+              </Events>
+            </Component>
+            <Component class="javax.swing.JCheckBox" name="ckSaveTimestamps">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="Save sensor timestamps"/>
               </Properties>
               <Events>
                 <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="ckAutoSaveActionPerformed"/>
@@ -786,7 +797,7 @@
                           <Component id="jLabel15" alignment="3" min="-2" max="-2" attributes="0"/>
                           <Component id="textTasks" alignment="3" min="-2" max="-2" attributes="0"/>
                       </Group>
-                      <EmptySpace pref="96" max="32767" attributes="0"/>
+                      <EmptySpace pref="113" max="32767" attributes="0"/>
                   </Group>
               </Group>
             </DimensionLayout>

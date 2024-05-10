@@ -3,11 +3,13 @@ package ch.psi.pshell.data;
 import ch.psi.pshell.device.ArrayCalibration;
 import ch.psi.pshell.device.Averager;
 import ch.psi.pshell.device.DescStatsDouble;
+import ch.psi.pshell.device.Device;
 import ch.psi.pshell.device.MatrixCalibration;
 import ch.psi.pshell.device.Readable.ReadableArray;
 import ch.psi.pshell.device.Readable.ReadableCalibratedArray;
 import ch.psi.pshell.device.Readable.ReadableMatrix;
 import ch.psi.pshell.device.Readable.ReadableCalibratedMatrix;
+import ch.psi.pshell.device.TimestampedValue;
 import ch.psi.pshell.device.Writable;
 import ch.psi.pshell.device.Writable.WritableArray;
 import ch.psi.pshell.scan.Scan;
@@ -40,6 +42,7 @@ public class LayoutDefault extends LayoutBase {
     public static final String DEVICE_STDEV_DATASET = "_stdev";
 
     public static final String SETPOINTS_DATASET_SUFFIX = "_setpoint";
+    public static final String TIMESTAMP_DATASET_SUFFIX = "_timestamp";
 
     @Override
     public void initialize() {
@@ -77,7 +80,6 @@ public class LayoutDefault extends LayoutBase {
                     dataManager.createDataset(getPath(scan, name) + SETPOINTS_DATASET_SUFFIX, Double.class, new int[]{samples});
                 }
             }
-
             dataManager.setAttribute(getPath(scan, name), ATTR_WRITABLE_INDEX, index++);
             dataManager.setAttribute(getPath(scan, name), ATTR_WRITABLE_DIMENSION, dimension);
 
@@ -119,8 +121,12 @@ public class LayoutDefault extends LayoutBase {
                     dataManager.createDataset(getPath(scan, getMetaPath() + name + DEVICE_STDEV_DATASET), Double.class, new int[]{samples});
                 }
             }
+            if (getPersistTimestamps()){
+                dataManager.createDataset(getPath(scan, name) + TIMESTAMP_DATASET_SUFFIX, Long.class, new int[]{samples});
+            }            
+            
             dataManager.setAttribute(getPath(scan, name), ATTR_READABLE_INDEX, index++);
-            writeDeviceMetadataAttrs(getPath(scan, name), readable);
+            writeDeviceMetadataAttrs(getPath(scan, name), readable);            
         }
         dataManager.setAttribute(group, ATTR_SCAN_DIMENSION, scan.getDimensions());
         dataManager.setAttribute(group, ATTR_SCAN_STEPS, (scan.getNumberOfSteps().length > 0) ? scan.getNumberOfSteps() : new int[]{-1});
@@ -151,6 +157,15 @@ public class LayoutDefault extends LayoutBase {
             String path = getPath(scan, name);
             Object value = values[deviceIndex++];
             dataManager.setItem(path, value, index);
+            if (getPersistTimestamps()) {
+                Long timestamp = record.getTimestamp();
+                if (value instanceof  TimestampedValue){
+                    timestamp = ((TimestampedValue)value).getTimestamp();
+                } else if (readable instanceof Device){
+                    timestamp = ((Device)readable).takeTimestamped().getTimestamp();
+                }
+                dataManager.setItem(path+ TIMESTAMP_DATASET_SUFFIX, timestamp, index);            
+            }
             if (Averager.isAverager(readable)) {
                 DescStatsDouble v = (DescStatsDouble) value;
                 dataManager.setItem(getPath(scan, getMetaPath() + name + DEVICE_MIN_DATASET), (v == null) ? null : v.getMin(), index);
