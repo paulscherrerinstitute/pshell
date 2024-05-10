@@ -46,6 +46,7 @@ import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Paint;
+import java.awt.Point;
 import java.awt.Toolkit;
 import java.awt.Window;
 import java.awt.event.ActionEvent;
@@ -53,10 +54,12 @@ import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.geom.Rectangle2D;
 import java.io.File;
 import java.io.IOException;
 import java.text.DecimalFormat;
 import java.time.DayOfWeek;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -100,12 +103,16 @@ import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableCellEditor;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
+import org.jfree.chart.ChartMouseEvent;
+import org.jfree.chart.ChartMouseListener;
+import org.jfree.chart.ChartPanel;
 import org.jfree.chart.axis.DateAxis;
 import org.jfree.chart.event.AxisChangeEvent;
 import org.jfree.chart.event.AxisChangeListener;
 import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.renderer.xy.XYErrorRenderer;
 import org.jfree.chart.renderer.xy.XYItemRenderer;
+import org.jfree.data.xy.DefaultXYZDataset;
 import org.jfree.data.xy.YIntervalSeries;
 import org.jfree.data.xy.YIntervalSeriesCollection;
 
@@ -706,20 +713,20 @@ textTo.setText("2024-05-02 10:00:00");
                     List<Long> t1   = map.get(Daqbuf.FIELD_START);
                     List<Long> t2   = map.get(Daqbuf.FIELD_END);
                     //SwingUtilities.invokeLater(()->{
-                        long now = System.currentTimeMillis();                                    
+                    long now = System.currentTimeMillis();                                    
 
-                        try{
-                            plot.setUpdatesEnabled(false);
-                            updateSeriesPaint(series);
-                            updateCapLength(plot);                                    
-                            for (int j=0; j< average.size(); j++){
-                                double timestamp = (t1.get(j) + t2.get(j))/2.0/1e6;
-                                series.appendData( timestamp,  average.get(j),min.get(j), max.get(j));      
-                            }
-                        } finally{
-                            plot.update(true);
-                            plot.setUpdatesEnabled(true);
+                    try{
+                        plot.setUpdatesEnabled(false);
+                        updateSeriesPaint(series);
+                        updateCapLength(plot);                                    
+                        for (int j=0; j< average.size(); j++){
+                            double timestamp = (t1.get(j) + t2.get(j))/2.0/1e6;
+                            series.appendData( timestamp,  average.get(j),min.get(j), max.get(j));      
                         }
+                    } finally{
+                        plot.update(true);
+                        plot.setUpdatesEnabled(true);
+                    }
 
                     //});
                 }
@@ -781,20 +788,85 @@ textTo.setText("2024-05-02 10:00:00");
             axis.setTickLabelPaint(plot.getAxisTextColor());
             plot.getChart().getXYPlot().setDomainAxis(axis);            
         }
+        
+        // Add a chart mouse listener to intercept double-click events
+        plot.getChartPanel().addChartMouseListener(new ChartMouseListener() {
+            @Override
+            public void chartMouseClicked(ChartMouseEvent event) {                
+                if (event.getTrigger().getClickCount() == 2) { // Check if it's a double-click
+                    XYPlot xyplot = plot.getChart().getXYPlot();
+                    ChartPanel chartPanel = plot.getChartPanel();
+                    Point p = SwingUtilities.convertPoint(event.getTrigger().getComponent(), event.getTrigger().getPoint(), chartPanel);                   
+                    Rectangle2D dataArea = plot.getChartPanel().getScreenDataArea();
+                    double chartX = xyplot.getDomainAxis().java2DToValue(p.getX(), dataArea, xyplot.getDomainAxisEdge());
+                    double chartY = xyplot.getRangeAxis().java2DToValue(p.getY(), dataArea, xyplot.getRangeAxisEdge());
+                    
+                    if ((chartX < xyplot.getDomainAxis().getRange().getLowerBound()) ||
+                        (chartX > xyplot.getDomainAxis().getRange().getUpperBound()) ||
+                        (chartY < xyplot.getRangeAxis().getRange().getLowerBound()) ||
+                        (chartY > xyplot.getRangeAxis().getRange().getUpperBound())  ){
+                        return;
+                    }
+                                        
+                    // Calculate the bin indices
+                    // Find the closest X value
+                    DefaultXYZDataset xyDataset = (DefaultXYZDataset) xyplot.getDataset();
+                    int seriesIndex = 0;
+                    int itemCount = xyDataset.getItemCount(seriesIndex);
+                    int closestIndex = -1;
+                    double minDistance = Double.MAX_VALUE;
+                    for (int i = 0; i < itemCount; i++) {
+                        double x = xyDataset.getXValue(seriesIndex, i);
+                        double distance = Math.abs(x - chartX);
+                        if (distance < minDistance) {
+                            minDistance = distance;
+                            closestIndex = i;
+                        }
+                    }
+                    onMatrixSeriesClicked(plot, plot.getSeries(seriesIndex), chartX, closestIndex);
+                    
+                }
+            }
+
+            @Override
+            public void chartMouseMoved(ChartMouseEvent event) {
+            }
+        });        
         addPlot(plot);
         return plot;
     }
 
 
+    void onMatrixSeriesClicked(MatrixPlotJFree plot, MatrixPlotSeries series, double timestamp, int index){
+        try {
+            double[] row = Convert.transpose(series.getData())[index];
+            double time = series.getX()[index][0];
+            String timestr = getTimeString(time, false);
+            LinePlotJFree lplot = new LinePlotJFree();
+            LinePlotSeries lseries = new LinePlotSeries(series.getName() + " " + timestr  + " ["+ index +"]");            
+            lplot.addSeries(lseries);
+            lplot.setTitle("");
+            lplot.setLegendVisible(true);
+            lseries.setData(row);
+            showDialog(series.getName(), new Dimension(800, 600), lplot);
+            
+        } catch (Exception ex) {
+            showException((Exception)ex);
+        }                
+                    
+    }
     
     MatrixPlotSeries addMatrixSeries(MatrixPlotJFree plot, String name, String backend,String start, String end){          
         List value = new ArrayList();
         List<Long> id = new ArrayList<>();
         List<Long> timestamp = new ArrayList<>();
         long maxSize = (Integer)spinnerSize.getValue();
+        MatrixPlotSeries series = new MatrixPlotSeries(name);
+        plot.addSeries(series);        
+        plotSeries.add(series);          
         
         try {
-            daqbuf.query(name + Daqbuf.BACKEND_SEPARATOR + backend, start, end, new QueryListener(){                
+            daqbuf.startQuery(name + Daqbuf.BACKEND_SEPARATOR + backend, start, end, new QueryListener(){                
                 public void onMessage(Query query, List values, List<Long> ids, List<Long> timestamps) {                                        
                     if ((value.size()>0) && (((List)value.get(0)).size() * value.size()) > maxSize){
                         throw new RuntimeException ("Series too big for plotting: " + name);
@@ -803,19 +875,20 @@ textTo.setText("2024-05-02 10:00:00");
                     id.addAll(ids);
                     timestamp.addAll(timestamps);
                }
-            });            
+            }).handle((ret,ex)->{
+                if (ex!=null){
+                    showException((Exception)ex);
+                };                                
+                if (value.size()>0) {        
+                    double[][] data = (double[][])Convert.toPrimitiveArray(value, Double.class);        
+                    series.setData(Convert.transpose(data));
+                }
+                plot.getChartPanel().restoreAutoDomainBounds(); //Needed because changed domain axis to time                
+                return ret;
+            });   ;            
         } catch (Exception ex) {
-            showException(ex);
+            showException((Exception)ex);
         }                
-                
-
-        MatrixPlotSeries series = new MatrixPlotSeries(name);
-        plot.addSeries(series);
-        if (value.size() > 0) {
-            double[][] data = (double[][])Convert.toPrimitiveArray(value, Double.class);        
-            series.setData(Convert.transpose(data));
-        }
-        plotSeries.add(series);        
         return series;
     }
     
@@ -824,9 +897,12 @@ textTo.setText("2024-05-02 10:00:00");
         List<Long> id = new ArrayList<>();
         List<Long> timestamp = new ArrayList<>();
         long maxSize = (Integer)spinnerSize.getValue();
+        MatrixPlotSeries series = new MatrixPlotSeries(name);
+        plot.addSeries(series);        
+        plotSeries.add(series);        
         
         try {
-            daqbuf.query(name + Daqbuf.BACKEND_SEPARATOR + backend, start, end, new QueryListener(){                
+            daqbuf.startQuery(name + Daqbuf.BACKEND_SEPARATOR + backend, start, end, new QueryListener(){                
                 public void onMessage(Query query, List values, List<Long> ids, List<Long> timestamps) {                                        
                     if ((value.size()>0) && (((List)value.get(0)).size() * value.size()) > maxSize){
                         throw new RuntimeException ("Series too big for plotting: " + name);
@@ -835,26 +911,29 @@ textTo.setText("2024-05-02 10:00:00");
                     id.addAll(ids);
                     timestamp.addAll(timestamps);
                }
-            });            
+            }).handle((ret,ex)->{
+                if (ex!=null){
+                    //showException((Exception)ex);
+                };                
+                if (value.size()>0) {        
+                    double max = timestamp.get(timestamp.size()-1)/1e6;
+                    double min = timestamp.get(0)/1e6;
+                    plot.getAxis(AxisId.X).setRange(min, max);        
+                    double[][] data = (double[][])Convert.toPrimitiveArray(value, Double.class);                                                
+                    series.setNumberOfBinsX(data.length);
+                    series.setNumberOfBinsY(data[0].length);
+                    series.setRangeX(min, max);            
+                    series.setRangeY(0, data[0].length-1);                    
+                    series.setData(Convert.transpose(data));                
+                }
+                plot.getChartPanel().restoreAutoDomainBounds(); //Needed because changed domain axis to time                
+                return ret;
+            });   ;            
         } catch (Exception ex) {
+            showException((Exception)ex);
         }                
-                
-
-        MatrixPlotSeries series = new MatrixPlotSeries(name);
-        if (value.size()>0) {        
-            double max = timestamp.get(timestamp.size()-1)/1e6;
-            double min = timestamp.get(0)/1e6;
-            //min =0;
-            //max =2000;            
-            plot.getAxis(AxisId.X).setRange(min, max);        
-            double[][] data = (double[][])Convert.toPrimitiveArray(value, Double.class);        
-            series = new MatrixPlotSeries(name, min, max, data.length , 0, data[0].length-1, data[0].length);     
-            //series.setRangeX(min, max);            
-            plot.addSeries(series);        
-            series.setData(Convert.transpose(data));                
-        }
-        plot.getChartPanel().restoreAutoDomainBounds(); //Needed because changed domain axis to time
-        plotSeries.add(series);        
+                        
+        
         return series;
     }
 
@@ -1093,7 +1172,7 @@ textTo.setText("2024-05-02 10:00:00");
             panel.load(fileName);            
             panel.setDefaultDataPanelListener();            
             panel.showFileProps();
-            SwingUtils.showDialog(this, fileName, new Dimension(800, 600), panel);    
+            showDialog(fileName, new Dimension(800, 600), panel);    
         } catch (Exception ex) {
             showException(ex);
         }        
@@ -1637,6 +1716,15 @@ textTo.setText("2024-05-02 10:00:00");
         spinnerSize.setEnabled(!checkBins.isSelected());
     }//GEN-LAST:event_checkBinsActionPerformed
 
+    String getTimeString(Number timestamp, boolean utc){
+        DateTimeFormatter formatter = (checkUTC.isSelected()) ?
+                DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'") :
+                DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS");    
+        
+        Instant instant = Instant.ofEpochMilli(timestamp.longValue());
+        LocalDateTime localDateTime = LocalDateTime.ofInstant(instant, utc ? ZoneOffset.UTC : ZoneOffset.systemDefault());
+        return localDateTime.format(formatter);
+    }
     private void comboTimeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_comboTimeActionPerformed
         DateTimeFormatter formatter = (checkUTC.isSelected()) ?
                 DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'") :
