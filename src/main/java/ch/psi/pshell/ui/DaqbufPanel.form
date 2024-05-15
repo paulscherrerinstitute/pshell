@@ -330,7 +330,7 @@
                                   <Component id="textTo" min="-2" pref="220" max="-2" attributes="0"/>
                               </Group>
                           </Group>
-                          <EmptySpace min="-2" pref="12" max="-2" attributes="0"/>
+                          <EmptySpace max="-2" attributes="0"/>
                           <Group type="103" groupAlignment="0" attributes="0">
                               <Component id="comboTime" min="-2" pref="171" max="-2" attributes="0"/>
                               <Component id="checkUTC" min="-2" max="-2" attributes="0"/>

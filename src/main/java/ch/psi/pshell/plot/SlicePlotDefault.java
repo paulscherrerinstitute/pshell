@@ -195,17 +195,22 @@ public class SlicePlotDefault extends SlicePlotBase {
         setPageTitle();
         return null;
     }
+    
+    protected String getPageSubtitle(SlicePlotSeries series, int page){
+        if ((series.hasRangeZ())) {
+            return " z=" + String.valueOf(Convert.roundDouble(series.getZ(page), 6));
+        }
+        return "";
+    }
 
     void setPageTitle() {
         if (matrixPlot != null) {
-            String title = getTitle();
+            String title = getTitle();                        
 
             SlicePlotSeries series = getSeries(0);
             if (series != null) {
                 int page = (int) pageSelection.getValue();
-                if ((series.hasRangeZ())) {
-                    title += " z=" + String.valueOf(Convert.roundDouble(series.getZ(page), 6));
-                }
+                title += getPageSubtitle(series, page);                
             }
             matrixPlot.setTitle(title);
         }

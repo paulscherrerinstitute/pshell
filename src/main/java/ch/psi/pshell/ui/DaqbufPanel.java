@@ -989,21 +989,49 @@ textTo.setText("2024-05-02 10:00:00");
 
     
     SlicePlotDefault addSlicePlot(){
-        SlicePlotDefault plot = new SlicePlotDefault(new MatrixPlotRenderer());        
+        SlicePlotDefault plot = new SlicePlotDefault(new MatrixPlotRenderer()) {
+            @Override
+            protected String getPageSubtitle(SlicePlotSeries series, int page){            
+                return " - " + page;
+            }
+        };     
 
         addPlot(plot);
         return plot;
     }
     
     SlicePlotSeries addImageSeries(SlicePlotDefault plot, String name, String backend, String start, String end){        
-        SlicePlotSeries series = new SlicePlotSeries(name);
+        SlicePlotSeries series = new SlicePlotSeries(name);        
         plotSeries.add(series);
         plot.addSeries(series);
+        plot.setTitle(name);
+        plot.setUpdatesEnabled(true);
         
-        series.setListener(new SlicePlotSeriesListener() {
-            @Override
-            public void onPageChanged(SlicePlotSeries series, int page) {
-                System.out.println(page);
+        
+        int[] shape = new int[]{200,100,10};
+        
+        double[][][]data = new  double[shape[2]][shape[1]][shape[0]];
+        for (int i=0;i<data.length; i++){
+            for (int j=0;j<data[0].length; j++){
+                for (int k=0;k<data[0][0].length; k++){
+                    data[i][j][k] = i*10000 + j*100 + k;
+                }
+            }
+        }
+
+        series.setNumberOfBinsX(shape[0]);
+        series.setNumberOfBinsY(shape[1]);
+        series.setRangeX(0, shape[0]-1);
+        series.setRangeY(0, shape[1]-1);
+        series.setNumberOfBinsZ(shape[2]);
+        series.setRangeZ(0, shape[2]-1);                
+        
+        series.setListener((SlicePlotSeries s, int page) -> {
+            if (page >= data.length) {
+                s.clear();
+            } else {
+                double[][] page_data = data[page];
+                s.setData(page_data);                                
             }
         });
 
@@ -1078,7 +1106,7 @@ textTo.setText("2024-05-02 10:00:00");
                         break;
                     case 2:
                         plot = addSlicePlot();
-                        series = addImageSeries((SlicePlotDefault)plot, name, start, end, backend);
+                        series = addImageSeries((SlicePlotDefault)plot, name, backend, start, end);
                 }                
                 
                 
@@ -1521,7 +1549,7 @@ textTo.setText("2024-05-02 10:00:00");
                         .addComponent(jLabel3)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(textTo, javax.swing.GroupLayout.PREFERRED_SIZE, 220, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addGap(12, 12, 12)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(comboTime, javax.swing.GroupLayout.PREFERRED_SIZE, 171, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(checkUTC))

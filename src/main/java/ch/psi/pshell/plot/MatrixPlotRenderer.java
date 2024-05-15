@@ -65,7 +65,7 @@ public class MatrixPlotRenderer extends MatrixPlotBase {
         title.setText((getTitle()==null) ? "" : getTitle());
     }
 
-    private Renderer getRenderer() {
+    public Renderer getRenderer() {
         if (renderer == null) {
             renderer = new Renderer();
             renderer.setMode(RendererMode.Fixed);
@@ -182,7 +182,7 @@ public class MatrixPlotRenderer extends MatrixPlotBase {
     }
 
     boolean showScale;
-    void showScale(boolean value){
+    public void showScale(boolean value){
         showScale = value;
         renderer.setShowColormapScale(value);
     }
@@ -197,7 +197,7 @@ public class MatrixPlotRenderer extends MatrixPlotBase {
 
     public boolean isGrayScale() {
         return grayScale;
-    }
+    }    
 
 
     @Override
@@ -334,6 +334,7 @@ public class MatrixPlotRenderer extends MatrixPlotBase {
     }    
     
     volatile boolean updatingScale;
+    volatile Range scale;
     @Override
     protected void updateScale(double scaleMin, double scaleMax) {
         if ((scaleMin!=this.scaleMin) || (scaleMax!=this.scaleMax)){
@@ -346,6 +347,9 @@ public class MatrixPlotRenderer extends MatrixPlotBase {
             SwingUtilities.invokeLater(()->{
                 renderer.updateColormapScale(getColormap(), new Range(scaleMin, scaleMax), isColormapLogarithmic());
                 updatingScale=false;
+                if ((scaleMin!=this.scaleMin) || (scaleMax!=this.scaleMax)){
+                    updateScale(this.scaleMin, this.scaleMax);
+                }
             });
         }        
         
