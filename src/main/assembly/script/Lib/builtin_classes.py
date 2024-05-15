@@ -144,6 +144,7 @@ import ch.psi.pshell.epics.DiscretePositioner as DiscretePositioner
 import ch.psi.pshell.epics.GenericChannel as GenericChannel
 import ch.psi.pshell.epics.GenericArray as GenericArray
 import ch.psi.pshell.epics.GenericMatrix as GenericMatrix
+import ch.psi.pshell.epics.InvalidValueAction as InvalidValueAction
 import ch.psi.pshell.epics.Manipulator as Manipulator
 import ch.psi.pshell.epics.Motor as EpicsMotor
 import ch.psi.pshell.epics.Positioner as Positioner
@@ -592,7 +593,7 @@ class Channel(java.beans.PropertyChangeListener, Writable, Readable, DeviceBase)
     def get(self, force = False):
         """Get channel value.
         """
-        ret = self.channel.getValue(force)
+            ret = self.channel.getValue(force)
         self.setCache(ret, None)
         return ret
 

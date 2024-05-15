@@ -140,6 +140,8 @@ public class DaqbufPanel extends StandardDialog {
     final Daqbuf daqbuf;
     int numPlots = 0;
     
+    final Color GRAYED_COLOR =new Color(0xA0, 0xA0, 0xA0, 0x40);
+    
     class ChartElement {
 
         ChartElement(TimePlotBase plot, int seriesIndex, long time, double value) {
@@ -837,19 +839,46 @@ textTo.setText("2024-05-02 10:00:00");
     }
 
 
+ 
+                        
     void onMatrixSeriesClicked(MatrixPlotJFree plot, MatrixPlotSeries series, double timestamp, int index){
         try {
-            double[] row = Convert.transpose(series.getData())[index];
-            double time = series.getX()[index][0];
+            boolean binned = (series instanceof MatrixPlotBinnedSeries);            
+            double time  = series.getX()[index][0];
             String timestr = getTimeString(time, false);
+            String name = series.getName() + " " + timestr  + " ["+ index +"]";
             LinePlotJFree lplot = new LinePlotJFree();
-            LinePlotSeries lseries = new LinePlotSeries(series.getName() + " " + timestr  + " ["+ index +"]");            
+            LinePlotSeries lseries;
+            if (binned){
+                lplot.setStyle(LinePlot.Style.ErrorY);
+                lseries = new LinePlotErrorSeries(name, Color.RED);                
+            }else {
+                lseries = new  LinePlotSeries(name, Color.RED);
+            }
             lplot.addSeries(lseries);
             lplot.setTitle("");
-            lplot.setLegendVisible(true);
-            lseries.setData(row);
-            showDialog(series.getName(), new Dimension(800, 600), lplot);
-            
+            lplot.setLegendVisible(true);            
+
+            try{
+                plot.setUpdatesEnabled(false);
+                if (binned){
+                    updateSeriesPaint(lseries);
+                    double[] min = ((MatrixPlotBinnedSeries)series).min[index];
+                    double[] max = ((MatrixPlotBinnedSeries)series).max[index];
+                    double[] average = ((MatrixPlotBinnedSeries)series).average[index];                    
+                    for (int i=0; i< average.length; i++){
+                        ((LinePlotErrorSeries)lseries).appendData( i,  average[i], min[i], max[i]);      
+                    }                
+                    updateSeriesPaint(lseries);
+                } else {
+                    double[] row = Convert.transpose(series.getData())[index];
+                    lseries.setData(row);
+                }                                
+            } finally{
+                plot.update(true);
+                plot.setUpdatesEnabled(true);
+            }
+            showDialog(series.getName(), new Dimension(800, 600), lplot);            
         } catch (Exception ex) {
             showException((Exception)ex);
         }                
@@ -892,12 +921,21 @@ textTo.setText("2024-05-02 10:00:00");
         return series;
     }
     
-    MatrixPlotSeries addMatrixSeriesBinned(MatrixPlotJFree plot, String name, String backend,String start, String end, int bins){  
+    static class MatrixPlotBinnedSeries extends MatrixPlotSeries{
+        MatrixPlotBinnedSeries(String name){
+            super(name);
+        }
+        double[][] average;
+        double[][] min;
+        double[][] max;
+    }
+    
+    MatrixPlotBinnedSeries addMatrixSeriesBinned(MatrixPlotJFree plot, String name, String backend,String start, String end, int bins){  
         List value = new ArrayList();
         List<Long> id = new ArrayList<>();
         List<Long> timestamp = new ArrayList<>();
         long maxSize = (Integer)spinnerSize.getValue();
-        MatrixPlotSeries series = new MatrixPlotSeries(name);
+        MatrixPlotBinnedSeries series = new MatrixPlotBinnedSeries(name);
         plot.addSeries(series);        
         plotSeries.add(series);        
         
@@ -924,6 +962,18 @@ textTo.setText("2024-05-02 10:00:00");
                     series.setNumberOfBinsY(data[0].length);
                     series.setRangeX(min, max);            
                     series.setRangeY(0, data[0].length-1);                    
+                    
+                    series.min  = new double[data.length][data[0].length];
+                    series.max  = new double[data.length][data[0].length];
+                    for (int i=0; i<data.length; i++){
+                        for (int j=0; j<data[0].length; j++){
+                            series.max[i][j] = data[i][j] + 1.0;
+                            series.min[i][j] = data[i][j] - 1.0;
+                        }                        
+                    }
+                    series.average = data;
+                    
+                    
                     series.setData(Convert.transpose(data));                
                 }
                 plot.getChartPanel().restoreAutoDomainBounds(); //Needed because changed domain axis to time                
@@ -1064,6 +1114,7 @@ textTo.setText("2024-05-02 10:00:00");
     }
     
     
+    
     void updateSeriesPaint(LinePlotSeries series){
         LinePlotJFree plot = (LinePlotJFree) series.getPlot();
         XYErrorRenderer renderer = (XYErrorRenderer) plot.getSeriesRenderer(series);            
@@ -1074,7 +1125,7 @@ textTo.setText("2024-05-02 10:00:00");
             Color c = (Color)paint;
             paint = new Color(c.getRed(), c.getGreen(), c.getBlue(), 0x40); 
         } else {
-            paint = new Color(0xA0, 0xA0, 0xA0, 0x40); 
+            paint = GRAYED_COLOR; 
         }
        
         renderer.setErrorPaint(paint);        
