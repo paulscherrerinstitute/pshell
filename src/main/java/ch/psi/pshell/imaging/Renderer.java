@@ -531,6 +531,10 @@ public class Renderer extends MonitoredPanel implements ImageListener, ImageBuff
         statusBar.update();
         checkPersistence();
     }
+    
+    public RendererStatusBar getStatusBar(){
+        return statusBar;
+    }
 
     public ColormapPanel getColormapPanel(){
         return colormapPanel;

@@ -315,13 +315,13 @@ public class Daqbuf implements ChannelQueryAPI {
 
     public interface QueryBinnedListener extends QueryListener {
 
-        default void onMessage(Query query, List<Double> average, List<Double> min, List<Double> max, List<Integer> count, List<Long> start, List<Long> end) {
+        default void onMessage(Query query, List average, List min, List max, List<Integer> count, List<Long> start, List<Long> end) {
         }
     }
 
     public interface QueryBinnedRecordListener extends QueryBinnedListener {
 
-        default void onRecord(Query query, Double average, Double min, Double max, Integer count, Long start, Long end) {
+        default void onRecord(Query query, Object average, Object min, Object max, Integer count, Long start, Long end) {
         }
     }
 
@@ -440,10 +440,10 @@ public class Daqbuf implements ChannelQueryAPI {
             } else {
                 String json = response.readEntity(String.class);
                 Map frame = (Map) EncoderJson.decode(json, Map.class);
-                List<Double> averages = (List) frame.getOrDefault("avgs", null);
+                List averages = (List) frame.getOrDefault("avgs", null);
+                List maxs = (List) frame.getOrDefault("maxs", null);
+                List mins = (List) frame.getOrDefault("mins", null);
                 List<Integer> counts = (List) frame.getOrDefault("counts", null);
-                List<Double> maxs = (List) frame.getOrDefault("maxs", null);
-                List<Double> mins = (List) frame.getOrDefault("mins", null);
                 List<Number> ts1Ms = (List) frame.getOrDefault("ts1Ms", null);
                 List<Number> ts1Ns = (List) frame.getOrDefault("ts1Ns", null);
                 List<Number> ts2Ms = (List) frame.getOrDefault("ts2Ms", null);
@@ -556,7 +556,7 @@ public class Daqbuf implements ChannelQueryAPI {
                 }
 
                 @Override
-                public void onRecord(Query query, Double average, Double min, Double max, Integer count, Long start, Long end) {
+                public void onRecord(Query query, Object average, Object min, Object max, Integer count, Long start, Long end) {
                     System.out.printf("%s", String.format(PRINT_BINNED_QUERY_FORMAT, query.channel, timestampToStr(start, false), timestampToStr(end, false),
                             average.toString(), min.toString(), max.toString(), count.toString()));
                 }
@@ -604,7 +604,7 @@ public class Daqbuf implements ChannelQueryAPI {
         } else {
             listener = new QueryBinnedListener() {
                 @Override
-                public void onMessage(Query query, List<Double> averages, List<Double> min, List<Double> max, List<Integer> count, List<Long> start, List<Long> end) {
+                public void onMessage(Query query, List averages, List min, List max, List<Integer> count, List<Long> start, List<Long> end) {
                     //Single message in JSON frame
                     ret.put(FIELD_AVERAGE, averages);
                     ret.put(FIELD_MIN, min);

@@ -709,9 +709,9 @@ textTo.setText("2024-05-02 10:00:00");
                     showException((Exception)ex);
                 } else {
                     Map<String, List>  map = (Map<String, List>) ret;                                
-                    List<Double> average   = map.get(Daqbuf.FIELD_AVERAGE);
-                    List<Double> min   = map.get(Daqbuf.FIELD_MIN);
-                    List<Double> max   = map.get(Daqbuf.FIELD_MAX);
+                    List<Number> average   = map.get(Daqbuf.FIELD_AVERAGE);
+                    List<Number> min   = map.get(Daqbuf.FIELD_MIN);
+                    List<Number> max   = map.get(Daqbuf.FIELD_MAX);
                     List<Long> t1   = map.get(Daqbuf.FIELD_START);
                     List<Long> t2   = map.get(Daqbuf.FIELD_END);
                     //SwingUtilities.invokeLater(()->{
@@ -723,7 +723,7 @@ textTo.setText("2024-05-02 10:00:00");
                         updateCapLength(plot);                                    
                         for (int j=0; j< average.size(); j++){
                             double timestamp = (t1.get(j) + t2.get(j))/2.0/1e6;
-                            series.appendData( timestamp,  average.get(j),min.get(j), max.get(j));      
+                            series.appendData( timestamp,  average.get(j).floatValue(), min.get(j).floatValue(), max.get(j).floatValue());      
                         }
                     } finally{
                         plot.update(true);
@@ -825,8 +825,9 @@ textTo.setText("2024-05-02 10:00:00");
                             closestIndex = i;
                         }
                     }
-                    onMatrixSeriesClicked(plot, plot.getSeries(seriesIndex), chartX, closestIndex);
-                    
+                    MatrixPlotSeries series = plot.getSeries(seriesIndex);
+                    //double time = series.getMinX() + closestIndex * series.getBinWidthX();
+                    onMatrixSeriesClicked(plot, series, chartX, closestIndex);                    
                 }
             }
 
@@ -844,7 +845,7 @@ textTo.setText("2024-05-02 10:00:00");
     void onMatrixSeriesClicked(MatrixPlotJFree plot, MatrixPlotSeries series, double timestamp, int index){
         try {
             boolean binned = (series instanceof MatrixPlotBinnedSeries);            
-            double time  = series.getX()[index][0];
+            double time  = series.getX()[index][index];
             String timestr = getTimeString(time, false);
             String name = series.getName() + " " + timestr  + " ["+ index +"]";
             LinePlotJFree lplot = new LinePlotJFree();
@@ -929,17 +930,65 @@ textTo.setText("2024-05-02 10:00:00");
         double[][] min;
         double[][] max;
     }
+        
+    
+    void setMatrixBinnedSeries(MatrixPlotJFree plot, MatrixPlotBinnedSeries series, List<List> average, List<List> min, List<List> max, List<Long> t1, List<Long> t2){
+        int bins = average.size();
+        if (bins>0) {                                
+            double[] timestamps = new double[bins];
+            for (int j=0; j< bins; j++){
+                timestamps[j]= (t1.get(j) + t2.get(j))/2.0/1e6;
+            }
+            double maxTime = timestamps[timestamps.length-1];
+            double minTime = timestamps[0];            
+            plot.getAxis(AxisId.X).setRange(minTime, maxTime);        
+            series.average = (double[][])Convert.toPrimitiveArray(average, Double.class);
+            series.min = (double[][])Convert.toPrimitiveArray(min, Double.class);
+            series.max = (double[][])Convert.toPrimitiveArray(max, Double.class);            
+            series.setNumberOfBinsX(series.average.length);
+            series.setNumberOfBinsY(series.average[0].length);
+            series.setRangeX(minTime, maxTime);            
+            series.setRangeY(0, series.average[0].length-1);                    
+            series.setData(Convert.transpose(series.average));                
+        }
+        plot.getChartPanel().restoreAutoDomainBounds(); //Needed because changed domain axis to time                
+    }
+    
     
     MatrixPlotBinnedSeries addMatrixSeriesBinned(MatrixPlotJFree plot, String name, String backend,String start, String end, int bins){  
-        List value = new ArrayList();
-        List<Long> id = new ArrayList<>();
-        List<Long> timestamp = new ArrayList<>();
         long maxSize = (Integer)spinnerSize.getValue();
         MatrixPlotBinnedSeries series = new MatrixPlotBinnedSeries(name);
         plot.addSeries(series);        
         plotSeries.add(series);        
         
         try {
+            /*
+            daqbuf.startFetchQuery(name + Daqbuf.BACKEND_SEPARATOR + backend, start, end, bins).handle((ret,ex)->{
+                if (ex!=null){
+                    showException((Exception)ex);
+                } else {
+                    Map<String, List>  map = (Map<String, List>) ret;                                
+                    List average   = map.get(Daqbuf.FIELD_AVERAGE);
+                    List min   = map.get(Daqbuf.FIELD_MIN);
+                    List max   = map.get(Daqbuf.FIELD_MAX);
+                    List<Long> t1   = map.get(Daqbuf.FIELD_START);
+                    List<Long> t2   = map.get(Daqbuf.FIELD_END);
+                    long now = System.currentTimeMillis();                                    
+
+                    try{
+                        plot.setUpdatesEnabled(false);
+                    } finally{
+                        plot.update(true);
+                        plot.setUpdatesEnabled(true);
+                    }
+                }
+                return ret;
+            });
+            */            
+           
+            List value = new ArrayList();
+            List<Long> id = new ArrayList<>();
+            List<Long> timestamp = new ArrayList<>();            
             daqbuf.startQuery(name + Daqbuf.BACKEND_SEPARATOR + backend, start, end, new QueryListener(){                
                 public void onMessage(Query query, List values, List<Long> ids, List<Long> timestamps) {                                        
                     if ((value.size()>0) && (((List)value.get(0)).size() * value.size()) > maxSize){
@@ -949,36 +998,33 @@ textTo.setText("2024-05-02 10:00:00");
                     id.addAll(ids);
                     timestamp.addAll(timestamps);
                }
-            }).handle((ret,ex)->{
+            }/*,bins*/).handle((ret,ex)->{
                 if (ex!=null){
                     //showException((Exception)ex);
-                };                
-                if (value.size()>0) {        
-                    double max = timestamp.get(timestamp.size()-1)/1e6;
-                    double min = timestamp.get(0)/1e6;
-                    plot.getAxis(AxisId.X).setRange(min, max);        
-                    double[][] data = (double[][])Convert.toPrimitiveArray(value, Double.class);                                                
-                    series.setNumberOfBinsX(data.length);
-                    series.setNumberOfBinsY(data[0].length);
-                    series.setRangeX(min, max);            
-                    series.setRangeY(0, data[0].length-1);                    
-                    
-                    series.min  = new double[data.length][data[0].length];
-                    series.max  = new double[data.length][data[0].length];
-                    for (int i=0; i<data.length; i++){
-                        for (int j=0; j<data[0].length; j++){
-                            series.max[i][j] = data[i][j] + 1.0;
-                            series.min[i][j] = data[i][j] - 1.0;
-                        }                        
-                    }
-                    series.average = data;
-                    
-                    
-                    series.setData(Convert.transpose(data));                
+                };            
+                List<List> average = value;
+                List<List> min = new ArrayList<>();
+                List<List> max = new ArrayList<>();
+                List<Long> t1 = new ArrayList<>();
+                List<Long> t2 = new ArrayList<>();
+                for (Long t: timestamp){
+                    t1.add(t);
+                    t2.add(t + 1000000);
                 }
-                plot.getChartPanel().restoreAutoDomainBounds(); //Needed because changed domain axis to time                
+                for (List<Number> l: average){
+                    List lmin = new ArrayList();
+                    List lmax = new ArrayList();
+                    for (Number n : l){
+                        lmin.add(n.doubleValue()-1.0);
+                        lmax.add(n.doubleValue()+1.0);
+                    }
+                    min.add(lmin);
+                    max.add(lmax);
+                }                
+                setMatrixBinnedSeries(plot, series, average, min,  max, t1, t2);
+                
                 return ret;
-            });   ;            
+            });    
         } catch (Exception ex) {
             showException((Exception)ex);
         }                
@@ -1000,6 +1046,28 @@ textTo.setText("2024-05-02 10:00:00");
         return plot;
     }
     
+    //TODO
+    int[] getShape(String name, String backend, String start, String end){
+        return  new int[]{200,100,10};
+    }
+
+    //TODO
+    double[][] getFrame(String name, String backend, String start, int index, int[]shape){
+        try {
+            Thread.sleep(500);
+            double[][]data = new  double[shape[1]][shape[0]];
+            for (int j=0;j<data.length; j++){
+                for (int k=0;k<data[0].length; k++){
+                    data[j][k] = index*10000 + j*100 + k;
+                }
+            }
+            return data;
+        } catch (Exception ex) {
+            return null;
+        }
+    }
+
+    
     SlicePlotSeries addImageSeries(SlicePlotDefault plot, String name, String backend, String start, String end){        
         SlicePlotSeries series = new SlicePlotSeries(name);        
         plotSeries.add(series);
@@ -1008,16 +1076,7 @@ textTo.setText("2024-05-02 10:00:00");
         plot.setUpdatesEnabled(true);
         
         
-        int[] shape = new int[]{200,100,10};
-        
-        double[][][]data = new  double[shape[2]][shape[1]][shape[0]];
-        for (int i=0;i<data.length; i++){
-            for (int j=0;j<data[0].length; j++){
-                for (int k=0;k<data[0][0].length; k++){
-                    data[i][j][k] = i*10000 + j*100 + k;
-                }
-            }
-        }
+        final int[] shape = getShape(name, backend, start, end);
 
         series.setNumberOfBinsX(shape[0]);
         series.setNumberOfBinsY(shape[1]);
@@ -1026,12 +1085,12 @@ textTo.setText("2024-05-02 10:00:00");
         series.setNumberOfBinsZ(shape[2]);
         series.setRangeZ(0, shape[2]-1);                
         
-        series.setListener((SlicePlotSeries s, int page) -> {
-            if (page >= data.length) {
-                s.clear();
-            } else {
-                double[][] page_data = data[page];
+        series.setListener((SlicePlotSeries s, int index) -> {
+            try{
+                double[][] page_data = getFrame(name, backend, start, index, shape);
                 s.setData(page_data);                                
+            } catch (Exception ex){
+                 s.clear();
             }
         });
 

@@ -50,6 +50,9 @@ public class SlicePlotDefault extends SlicePlotBase {
         });
         this.matrixPlot = matrixPlot;
         if (matrixPlot != null){
+            if (matrixPlot instanceof MatrixPlotRenderer){
+                ((MatrixPlotRenderer)matrixPlot).getRenderer().getStatusBar().setShowFrameRate(false);
+            }
             panelPlot.add(matrixPlot);
         }        
     }
