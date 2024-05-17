@@ -17,7 +17,6 @@ import ch.psi.pshell.plot.PlotBase;
 import ch.psi.pshell.plot.PlotSeries;
 import ch.psi.pshell.plot.SlicePlotDefault;
 import ch.psi.pshell.plot.SlicePlotSeries;
-import ch.psi.pshell.plot.SlicePlotSeries.SlicePlotSeriesListener;
 import ch.psi.pshell.plot.TimePlotBase;
 import ch.psi.pshell.plotter.Preferences;
 import ch.psi.pshell.swing.ChannelSelector;
@@ -57,7 +56,6 @@ import java.awt.event.MouseEvent;
 import java.awt.geom.Rectangle2D;
 import java.io.File;
 import java.io.IOException;
-import java.text.DecimalFormat;
 import java.time.DayOfWeek;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -91,7 +89,6 @@ import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
-import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.event.CellEditorListener;
 import javax.swing.event.ChangeEvent;
@@ -101,7 +98,6 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableCellEditor;
-import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
 import org.jfree.chart.ChartMouseEvent;
 import org.jfree.chart.ChartMouseListener;
@@ -132,6 +128,7 @@ public class DaqbufPanel extends StandardDialog {
     final DefaultTableModel modelSeries;
 
     final ArrayList<PlotBase> plots = new ArrayList<>();
+    final Map<Plot, List<SeriesInfo>> plotInfo = new HashMap<>();
     final HashMap<Device, Long> appendTimestamps = new HashMap<>();
     volatile boolean started = false;
 
@@ -139,9 +136,9 @@ public class DaqbufPanel extends StandardDialog {
     Color gridColor;
     final Daqbuf daqbuf;
     int numPlots = 0;
-    
-    final Color GRAYED_COLOR =new Color(0xA0, 0xA0, 0xA0, 0x40);
-    
+
+    final Color GRAYED_COLOR = new Color(0xA0, 0xA0, 0xA0, 0x40);
+
     class ChartElement {
 
         ChartElement(TimePlotBase plot, int seriesIndex, long time, double value) {
@@ -155,11 +152,12 @@ public class DaqbufPanel extends StandardDialog {
         double value;
         TimePlotBase plot;
     }
+
     public DaqbufPanel(Window parent, String url, String title, boolean modal) {
-        super(parent, title, modal);        
+        super(parent, title, modal);
         initComponents();
         daqbuf = new Daqbuf(url);
-        if (getTitle()==null){
+        if (getTitle() == null) {
             setTitle(daqbuf.getUrl());
         }
         if (App.hasArgument("background_color")) {
@@ -214,8 +212,7 @@ public class DaqbufPanel extends StandardDialog {
     public JPanel getConfigPanel() {
         return panelSeries;
     }
-    
-    
+
     public void initializeTable() {
         //Fix bug of nimbus rendering Boolean in table
         ((JComponent) tableSeries.getDefaultRenderer(Boolean.class)).setOpaque(true);
@@ -230,27 +227,26 @@ public class DaqbufPanel extends StandardDialog {
         //selector.configure(ChannelSelector.Type.Daqbuf, null,  null, 1000);
         selector.setHistorySize(0);
         selector.setListMode(ChannelSelector.ListMode.Popup);
-        
-        
+
         colName.setPreferredWidth(320);
-        colName.setCellEditor(new ChannelSelector.ChannelSelectorCellEditor(selector));    
-        
+        colName.setCellEditor(new ChannelSelector.ChannelSelectorCellEditor(selector));
+
         colName.getCellEditor().addCellEditorListener(new CellEditorListener() {
             @Override
             public void editingStopped(ChangeEvent e) {
                 int row = tableSeries.getSelectedRow();
-                if (row>=0){
+                if (row >= 0) {
                     String channel = (String) modelSeries.getValueAt(row, 1);
                     String backend = (String) modelSeries.getValueAt(row, 2);
                     try {
-                        daqbuf.startSearch(backend, channel, null, 1).handle((ret,ex)->{
-                            if (ex!=null){
-                                showException((Exception)ex);
+                        daqbuf.startSearch(backend, channel, null, 1).handle((ret, ex) -> {
+                            if (ex != null) {
+                                showException((Exception) ex);
                             } else {
                                 List<Map<String, Object>> list = (List<Map<String, Object>>) ret;
-                                SwingUtilities.invokeLater(()->{
-                                    if (channel.equals(modelSeries.getValueAt(row, 1)) && backend.equals(modelSeries.getValueAt(row, 2))){
-                                        String shape = (list.size()>0) ?  Str.toString(list.get(0).getOrDefault("shape", "")) : "";
+                                SwingUtilities.invokeLater(() -> {
+                                    if (channel.equals(modelSeries.getValueAt(row, 1)) && backend.equals(modelSeries.getValueAt(row, 2))) {
+                                        String shape = (list.size() > 0) ? Str.toString(list.get(0).getOrDefault("shape", "")) : "";
                                         modelSeries.setValueAt(shape, row, 3);
                                     }
                                 });
@@ -267,28 +263,27 @@ public class DaqbufPanel extends StandardDialog {
             public void editingCanceled(ChangeEvent e) {
             }
         });
-        
-        
+
         TableColumn colType = tableSeries.getColumnModel().getColumn(2);
         colType.setPreferredWidth(120);
         DefaultComboBoxModel modelType = new DefaultComboBoxModel();
-        for (String backend: daqbuf.getBackends()) {
+        for (String backend : daqbuf.getBackends()) {
             modelType.addElement(backend);
-        }        
-        JComboBox comboBackend = new JComboBox();      
+        }
+        JComboBox comboBackend = new JComboBox();
         tableSeries.setRowHeight(Math.max(tableSeries.getRowHeight(), comboBackend.getPreferredSize().height - 3));
         comboBackend.setModel(modelType);
         DefaultCellEditor cellEditor = new DefaultCellEditor(comboBackend);
         cellEditor.setClickCountToStart(2);
-        colType.setCellEditor(cellEditor);                         
-        comboBackend.addActionListener((e)->{
-            selector.configure(ChannelSelector.Type.Daqbuf, null,  comboBackend.getSelectedItem().toString(), 1000);
-        });   
+        colType.setCellEditor(cellEditor);
+        comboBackend.addActionListener((e) -> {
+            selector.configure(ChannelSelector.Type.Daqbuf, null, comboBackend.getSelectedItem().toString(), 1000);
+        });
         comboBackend.setSelectedIndex(0);
-        
+
         TableColumn colShape = tableSeries.getColumnModel().getColumn(3);
         colShape.setPreferredWidth(60);
-        
+
         TableColumn colPlot = tableSeries.getColumnModel().getColumn(4);
         colPlot.setPreferredWidth(60);
         JComboBox comboPlot = new JComboBox();
@@ -385,9 +380,9 @@ public class DaqbufPanel extends StandardDialog {
                     if (e.getColumn() == 6) {
                         final Color color = Preferences.getColorFromString((String) modelSeries.getValueAt(index, 6));
                         PlotSeries series = (PlotSeries) getPlotSeries(index);
-                        if (series instanceof LinePlotErrorSeries){                         
-                            ((LinePlotErrorSeries)series).setColor(color);
-                            updateSeriesPaint((LinePlotErrorSeries)series);
+                        if (series instanceof LinePlotErrorSeries) {
+                            ((LinePlotErrorSeries) series).setColor(color);
+                            updateSeriesPaint((LinePlotErrorSeries) series);
                         }
                     }
                 } catch (Exception ex) {
@@ -398,7 +393,7 @@ public class DaqbufPanel extends StandardDialog {
     };
 
     public void initializePlots() {
-        numPlots=0;
+        numPlots = 0;
         pnGraphs.removeAll();
         plots.clear();
     }
@@ -424,23 +419,21 @@ public class DaqbufPanel extends StandardDialog {
         return (column > 0);
     }
 
-
     public void clear() {
         Logger.getLogger(DaqbufPanel.class.getName()).info("Init");
         reset();
         backgroundColor = defaultBackgroundColor;
         gridColor = defaultGridColor;
         modelSeries.setRowCount(0);
-modelSeries.addRow(new Object[]{true,"S10BC01-DBPM010:Q1", "sf-databuffer", "[]", PLOT_SHARED,1,null});
-modelSeries.addRow(new Object[]{true,"S10BC01-DBPM010:X1", "sf-databuffer", "[]", PLOT_SHARED,2,null});
-modelSeries.addRow(new Object[]{true,"SARFE10-PSSS059:FIT-COM", "sf-databuffer", "[]", PLOT_PRIVATE,1,null});
-modelSeries.addRow(new Object[]{true,"SARFE10-PSSS059:SPECTRUM_X", "sf-databuffer", "[2560]", PLOT_PRIVATE,1,null});
-modelSeries.addRow(new Object[]{false,"SARES11-SPEC125-M1:FPICTURE", "sf-imagebuffer", "[2048, 2048]", PLOT_PRIVATE,1,null});
+        modelSeries.addRow(new Object[]{true, "S10BC01-DBPM010:Q1", "sf-databuffer", "[]", PLOT_SHARED, 1, null});
+        modelSeries.addRow(new Object[]{true, "S10BC01-DBPM010:X1", "sf-databuffer", "[]", PLOT_SHARED, 2, null});
+        modelSeries.addRow(new Object[]{true, "SARFE10-PSSS059:FIT-COM", "sf-databuffer", "[]", PLOT_PRIVATE, 1, null});
+        modelSeries.addRow(new Object[]{true, "SARFE10-PSSS059:SPECTRUM_X", "sf-databuffer", "[2560]", PLOT_PRIVATE, 1, null});
+        modelSeries.addRow(new Object[]{false, "SARES11-SPEC125-M1:FPICTURE", "sf-imagebuffer", "[2048, 2048]", PLOT_PRIVATE, 1, null});
 
+        textFrom.setText("2024-05-02 09:00:00");
+        textTo.setText("2024-05-02 10:00:00");
 
-textFrom.setText("2024-05-02 09:00:00");
-textTo.setText("2024-05-02 10:00:00");
-        
         file = null;
         initializeTable();
         update();
@@ -463,7 +456,7 @@ textTo.setText("2024-05-02 10:00:00");
     }
 
     File file;
-    
+
     final ArrayList<Device> devices = new ArrayList<>();
     final ArrayList<PlotSeries> plotSeries = new ArrayList<>();
 
@@ -479,54 +472,54 @@ textTo.setText("2024-05-02 10:00:00");
         }
         return null;
     }
-    
-    String removeAlias(String str){
-        str=str.trim();
+
+    String removeAlias(String str) {
+        str = str.trim();
         if (str.endsWith(">")) {
             int start = str.lastIndexOf('<');
-            if (start>=0){
-                str=str.substring(0, start);
+            if (start >= 0) {
+                str = str.substring(0, start);
             }
-        }    
+        }
         return str;
     }
-    
-    String getChannelName(String str){
-        str=removeAlias(str);
+
+    String getChannelName(String str) {
+        str = removeAlias(str);
         if (str.contains(" ")) {
             String[] tokens = str.split(" ");
             str = tokens[0];
         }
-        return str.trim();        
+        return str.trim();
     }
 
-    String[] getChannelArgs(String str){
-        str=removeAlias(str);
+    String[] getChannelArgs(String str) {
+        str = removeAlias(str);
         if (str.contains(" ")) {
             String[] tokens = str.split(" ");
             String[] args = Arr.remove(tokens, 0);
-            args=Arr.removeEquals(args, "");
+            args = Arr.removeEquals(args, "");
             return args;
         }
-        return new String[0];        
+        return new String[0];
     }
 
-    String getChannelAlias(String str){
-        str=str.trim();
+    String getChannelAlias(String str) {
+        str = str.trim();
         if (str.endsWith(">")) {
-            int end = str.lastIndexOf('>');            
+            int end = str.lastIndexOf('>');
             int start = str.lastIndexOf('<');
-            if (start>=0){
+            if (start >= 0) {
                 String alias = str.substring(start + 1, end);
-                if (!alias.isBlank()){
+                if (!alias.isBlank()) {
                     return alias;
                 }
             }
         }
-        return getChannelName(str);               
+        return getChannelName(str);
     }
-    
-    void addPlot(PlotBase plot){
+
+    void addPlot(PlotBase plot) {
         if (backgroundColor != null) {
             plot.setPlotBackgroundColor(backgroundColor);
         }
@@ -536,29 +529,32 @@ textTo.setText("2024-05-02 10:00:00");
         if (tickLabelFont != null) {
             plot.setLabelFont(tickLabelFont);
             plot.setTickLabelFont(tickLabelFont);
-        }                               
-        plot.setTitle(null);    
+        }
+        plot.setTitle(null);
         plot.setQuality(PlotPanel.getQuality());
         plots.add(plot);
         pnGraphs.add(plot);
-        numPlots++;        
+        Map<String, Object> info = new HashMap<>();
+        List<SeriesInfo> series =new ArrayList<>();
+        plotInfo.put(plot, series);
+        numPlots++;
     }
-    
-    LinePlotJFree addLinePlot(boolean binned){
+
+    LinePlotJFree addLinePlot(boolean binned) {
         Double y1min = null;
         Double y1max = null;
         Double y2min = null;
         Double y2max = null;
 
         LinePlotJFree plot = new LinePlotJFree();
-        if (binned){
+        if (binned) {
             plot.setStyle(LinePlot.Style.ErrorY);
         }
         DateAxis axis = new DateAxis(null); //("Time");
         axis.setLabelFont(plot.getLabelFont());
         axis.setLabelPaint(plot.getAxisTextColor());
         axis.setTickLabelPaint(plot.getAxisTextColor());
-        plot.getChart().getXYPlot().setDomainAxis(axis);            
+        plot.getChart().getXYPlot().setDomainAxis(axis);
         plot.getAxis(AxisId.Y).setLabel(null);
         //plot.setTimeAxisLabel(null);
         plot.setLegendVisible(true);
@@ -580,7 +576,7 @@ textTo.setText("2024-05-02 10:00:00");
             public void axisChanged(AxisChangeEvent event) {
                 updateCapLength(plot);
             }
-        });           
+        });
         plot.getChartPanel().addComponentListener(new ComponentAdapter() {
             @Override
             public void componentResized(ComponentEvent e) {
@@ -589,42 +585,41 @@ textTo.setText("2024-05-02 10:00:00");
         });
 
         plot.addPopupMenuItem(null);
-        
+
         JCheckBoxMenuItem menuMarkers = new JCheckBoxMenuItem("Show Markers");
         menuMarkers.setSelected(true);
         menuMarkers.addActionListener((ActionEvent e) -> {
             boolean show = menuMarkers.isSelected();
-            for (LinePlotSeries s : plot.getAllSeries()){
+            for (LinePlotSeries s : plot.getAllSeries()) {
                 s.setPointsVisible(show);
-            }            
+            }
         });
         plot.addPopupMenuItem(menuMarkers);
-        
-        
+
         JCheckBoxMenuItem menuRanges = new JCheckBoxMenuItem("Show Ranges");
         menuRanges.setSelected(binned);
         menuRanges.addActionListener((ActionEvent e) -> {
             boolean show = menuRanges.isSelected();
-            for (XYItemRenderer r : plot.getChart().getXYPlot().getRenderers().values()){                        
-               ((XYErrorRenderer)r).setDrawYError(show);
-            }            
+            for (XYItemRenderer r : plot.getChart().getXYPlot().getRenderers().values()) {
+                ((XYErrorRenderer) r).setDrawYError(show);
+            }
         });
-        plot.addPopupMenuItem(menuRanges);        
+        plot.addPopupMenuItem(menuRanges);
         menuRanges.setEnabled(binned);
 
         JMenuItem menuBackgroundColor = new JMenuItem("Set Background Color...");
         menuBackgroundColor.addActionListener((ActionEvent e) -> {
-            Color color = JColorChooser.showDialog(this, "Choose a Color", plot.getPlotBackgroundColor());            
+            Color color = JColorChooser.showDialog(this, "Choose a Color", plot.getPlotBackgroundColor());
             if (color != null) {
                 plot.setPlotBackgroundColor(color);
             } else {
                 plot.setPlotBackgroundColor(PlotBase.getPlotBackground());
-            }           
+            }
         });
-        plot.addPopupMenuItem(menuBackgroundColor);        
+        plot.addPopupMenuItem(menuBackgroundColor);
 
         JMenuItem menuGridColor = new JMenuItem("Set Grid Color...");
-        menuGridColor.addActionListener((ActionEvent e) -> {                   
+        menuGridColor.addActionListener((ActionEvent e) -> {
             Color color = JColorChooser.showDialog(this, "Choose a Color", plot.getPlotGridColor());
             if (color != null) {
                 plot.setPlotGridColor(color);
@@ -632,46 +627,90 @@ textTo.setText("2024-05-02 10:00:00");
                 plot.setPlotGridColor(PlotBase.getGridColor());
             }
         });
-        plot.addPopupMenuItem(menuGridColor);        
-        
+        plot.addPopupMenuItem(menuGridColor);
+
         JMenuItem menuRangeY1 = new JMenuItem("Set Y1 Range...");
-        menuRangeY1.addActionListener((ActionEvent e) -> {                   
+        menuRangeY1.addActionListener((ActionEvent e) -> {
             Range init = plot.getAxis(AxisId.Y).isAutoRange() ? null : new Range(plot.getAxis(AxisId.Y).getMin(), plot.getAxis(AxisId.Y).getMax());
-            Range r = getRange(init, "Enter Y1 Range");            
-            if (r!=null){
-                plot.getAxis(AxisId.Y).setRange(r.min, r.max);                       
+            Range r = getRange(init, "Enter Y1 Range");
+            if (r != null) {
+                plot.getAxis(AxisId.Y).setRange(r.min, r.max);
             } else {
                 plot.getAxis(AxisId.Y).setAutoRange();
             }
         });
-        plot.addPopupMenuItem(menuRangeY1);        
-        
+        plot.addPopupMenuItem(menuRangeY1);
+
         JMenuItem menuRangeY2 = new JMenuItem("Set Y2 Range...");
-        menuRangeY2.addActionListener((ActionEvent e) -> {                   
+        menuRangeY2.addActionListener((ActionEvent e) -> {
             Range init = plot.getAxis(AxisId.Y2).isAutoRange() ? null : new Range(plot.getAxis(AxisId.Y2).getMin(), plot.getAxis(AxisId.Y2).getMax());
-            Range r = getRange(init, "Enter Y2 Range");            
-            if (r!=null){
-                plot.getAxis(AxisId.Y2).setRange(r.min, r.max);                       
+            Range r = getRange(init, "Enter Y2 Range");
+            if (r != null) {
+                plot.getAxis(AxisId.Y2).setRange(r.min, r.max);
             } else {
                 plot.getAxis(AxisId.Y2).setAutoRange();
             }
         });
-        plot.addPopupMenuItem(menuRangeY2);        
+        plot.addPopupMenuItem(menuRangeY2);
+
+        JMenuItem menuRequery = new JMenuItem("Requery");
+        menuRequery.addActionListener((ActionEvent e) -> {
+            requery(plot);
+        });
+        plot.addPopupMenuItem(menuRequery);
 
         addPlot(plot);
         return plot;
     }
-           
-    
-    Range getRange(Range init, String title){
+
+    void requery(Plot plot) {
+        XYPlot xyplot =  (plot instanceof LinePlotJFree) ? 
+                ((LinePlotJFree)plot).getChart().getXYPlot() : 
+                ((MatrixPlotJFree)plot).getChart().getXYPlot();        
+        if (!(xyplot.getDomainAxis() instanceof DateAxis)){
+            return;
+        }
+        double xmin = xyplot.getDomainAxis().getRange().getLowerBound();
+        double xmax = xyplot.getDomainAxis().getRange().getUpperBound();        
+        String start = Daqbuf.millisToStr((long) xmin, false);
+        String end = Daqbuf.millisToStr((long) xmax, false);        
+        SeriesInfo[] formerInfo = plotInfo.get(plot).toArray(new SeriesInfo[0]);       
+        plotInfo.get(plot).clear();
+        plot.clear();        
+        for (SeriesInfo seriesInfo: formerInfo){
+            seriesInfo = new SeriesInfo(seriesInfo, start, end, seriesInfo.bins);
+            PlotSeries series = null;
+            switch (seriesInfo.shape.size()) {
+                case 0:
+                    if (seriesInfo.bins == null) {
+                        series = addLineSeries((LinePlotJFree) plot, seriesInfo);
+                    } else {
+                        series = addBinnedSeries((LinePlotJFree) plot, seriesInfo);
+                    }
+                    break;
+                case 1:
+                    if (seriesInfo.bins == null) {
+                        series = addMatrixSeries((MatrixPlotJFree) plot, seriesInfo);
+                    } else {
+                        series = addMatrixSeriesBinned((MatrixPlotJFree) plot, seriesInfo);
+                    }
+                    break;
+            }        
+            if (series!=null){
+                plotInfo.get(plot).add(seriesInfo);
+            }            
+        }
+    }
+
+    Range getRange(Range init, String title) {
         Range ret = null;
         try {
-            JPanel panel = new JPanel();            
+            JPanel panel = new JPanel();
             GridBagLayout layout = new GridBagLayout();
             layout.columnWidths = new int[]{0, 180};   //Minimum width
             panel.setLayout(layout);
-            JTextField min = new JTextField((init==null) ? "" : String.valueOf(init.min));
-            JTextField max = new JTextField((init==null) ? "" : String.valueOf(init.max));
+            JTextField min = new JTextField((init == null) ? "" : String.valueOf(init.min));
+            JTextField max = new JTextField((init == null) ? "" : String.valueOf(init.max));
             GridBagConstraints c = new GridBagConstraints();
             c.gridx = 0;
             c.gridy = 0;
@@ -684,7 +723,7 @@ textTo.setText("2024-05-02 10:00:00");
             c.gridy = 0;
             panel.add(min, c);
 
-            if (showOption((title==null) ? "Enter Range" : title, panel, OptionType.OkCancel) == OptionResult.Yes) {
+            if (showOption((title == null) ? "Enter Range" : title, panel, OptionType.OkCancel) == OptionResult.Yes) {
                 return new Range(Double.valueOf(min.getText().trim()), Double.valueOf(max.getText().trim()));
             }
         } catch (Exception ex) {
@@ -692,41 +731,44 @@ textTo.setText("2024-05-02 10:00:00");
         }
         return ret;
     }
-    
-    
-    LinePlotErrorSeries addBinnedSeries(LinePlotJFree plot, String name, String backend, String start, String end, int bins, int axis, Color color){        
+
+    LinePlotErrorSeries addBinnedSeries(LinePlotJFree plot, SeriesInfo si) {
+        return addBinnedSeries(plot, si.name, si.backend, si.start, si.end, si.bins, si.axis, si.color);
+    }
+
+    LinePlotErrorSeries addBinnedSeries(LinePlotJFree plot, String name, String backend, String start, String end, int bins, int axis, Color color) {
         LinePlotErrorSeries series = new LinePlotErrorSeries(name, color, axis);
         plotSeries.add(series);
         plot.addSeries(series);
 
         XYPlot xyplot = plot.getChart().getXYPlot();
-        XYErrorRenderer renderer = (XYErrorRenderer) plot.getSeriesRenderer(series);            
+        XYErrorRenderer renderer = (XYErrorRenderer) plot.getSeriesRenderer(series);
         renderer.setDrawYError(true);
         renderer.setErrorStroke(new BasicStroke());
 
         try {
-            daqbuf.startFetchQuery(name + Daqbuf.BACKEND_SEPARATOR + backend, start, end, bins).handle((ret,ex)->{
-                if (ex!=null){
-                    showException((Exception)ex);
+            daqbuf.startFetchQuery(name + Daqbuf.BACKEND_SEPARATOR + backend, start, end, bins).handle((ret, ex) -> {
+                if (ex != null) {
+                    showException((Exception) ex);
                 } else {
-                    Map<String, List>  map = (Map<String, List>) ret;                                
-                    List<Number> average   = map.get(Daqbuf.FIELD_AVERAGE);
-                    List<Number> min   = map.get(Daqbuf.FIELD_MIN);
-                    List<Number> max   = map.get(Daqbuf.FIELD_MAX);
-                    List<Long> t1   = map.get(Daqbuf.FIELD_START);
-                    List<Long> t2   = map.get(Daqbuf.FIELD_END);
+                    Map<String, List> map = (Map<String, List>) ret;
+                    List<Number> average = map.get(Daqbuf.FIELD_AVERAGE);
+                    List<Number> min = map.get(Daqbuf.FIELD_MIN);
+                    List<Number> max = map.get(Daqbuf.FIELD_MAX);
+                    List<Long> t1 = map.get(Daqbuf.FIELD_START);
+                    List<Long> t2 = map.get(Daqbuf.FIELD_END);
                     //SwingUtilities.invokeLater(()->{
-                    long now = System.currentTimeMillis();                                    
+                    long now = System.currentTimeMillis();
 
-                    try{
+                    try {
                         plot.setUpdatesEnabled(false);
                         updateSeriesPaint(series);
-                        updateCapLength(plot);                                    
-                        for (int j=0; j< average.size(); j++){
-                            double timestamp = (t1.get(j) + t2.get(j))/2.0/1e6;
-                            series.appendData( timestamp,  average.get(j).floatValue(), min.get(j).floatValue(), max.get(j).floatValue());      
+                        updateCapLength(plot);
+                        for (int j = 0; j < average.size(); j++) {
+                            double timestamp = (t1.get(j) + t2.get(j)) / 2.0 / 1e6;
+                            series.appendData(timestamp, average.get(j).floatValue(), min.get(j).floatValue(), max.get(j).floatValue());
                         }
-                    } finally{
+                    } finally {
                         plot.update(true);
                         plot.setUpdatesEnabled(true);
                     }
@@ -737,80 +779,83 @@ textTo.setText("2024-05-02 10:00:00");
             });
         } catch (Exception ex) {
             showException(ex);
-        }                
+        }
         return series;
     }
 
-    LinePlotSeries addLineSeries(LinePlotJFree plot, String name, String backend,String start, String end, int axis, Color color){        
+    LinePlotSeries addLineSeries(LinePlotJFree plot, SeriesInfo si) {
+        return addLineSeries(plot, si.name, si.backend, si.start, si.end, si.axis, si.color);
+    }
+
+    LinePlotSeries addLineSeries(LinePlotJFree plot, String name, String backend, String start, String end, int axis, Color color) {
         LinePlotSeries series = new LinePlotSeries(name, color, axis);
         //LinePlotErrorSeries series = new LinePlotErrorSeries(name, color, axis);
         plotSeries.add(series);
         plot.addSeries(series);
-        series.setMaxItemCount((Integer)spinnerSize.getValue());
-                
+        series.setMaxItemCount((Integer) spinnerSize.getValue());
+
         //((XYErrorRenderer)plot.getSeriesRenderer(series)).setDrawYError(false);
-               
         try {
-            daqbuf.startQuery(name + Daqbuf.BACKEND_SEPARATOR + backend, start, end, new QueryListener(){                
+            daqbuf.startQuery(name + Daqbuf.BACKEND_SEPARATOR + backend, start, end, new QueryListener() {
                 public void onMessage(Query query, List values, List<Long> ids, List<Long> timestamps) {
-                    try{
+                    try {
                         plot.setUpdatesEnabled(false);
-                        List<Number> aux = (List<Number>)values;                                                
-                        if (series.getCount() >= series.getMaxItemCount()){
-                            throw new RuntimeException ("Series too big for plotting: " + name);
+                        List<Number> aux = (List<Number>) values;
+                        if (series.getCount() >= series.getMaxItemCount()) {
+                            throw new RuntimeException("Series too big for plotting: " + name);
                         }
-                        for (int j=0; j< values.size(); j++){
-                            series.appendData( timestamps.get(j).doubleValue()/1e6,  aux.get(j).doubleValue());      
+                        for (int j = 0; j < values.size(); j++) {
+                            series.appendData(timestamps.get(j).doubleValue() / 1e6, aux.get(j).doubleValue());
                         }
-                    //} catch (Exception ex){
-                    //    showException(ex);
-                    } finally{
+                        //} catch (Exception ex){
+                        //    showException(ex);
+                    } finally {
                         plot.update(true);
                         plot.setUpdatesEnabled(true);
-                    }                    
-               }
-            }).handle((ret,ex)->{
-                if (ex!=null){
-                    showException((Exception)ex);
+                    }
+                }
+            }).handle((ret, ex) -> {
+                if (ex != null) {
+                    showException((Exception) ex);
                 };
                 return ret;
-            });                                        
+            });
         } catch (Exception ex) {
             showException(ex);
-        }                
+        }
         return series;
     }
-    
+
     //MatrixPlotRenderer
-    MatrixPlotJFree addMatrixPlot(boolean binned){
+    MatrixPlotJFree addMatrixPlot(boolean binned) {
         MatrixPlotJFree plot = new MatrixPlotJFree();
-        if (binned){
+        if (binned) {
             DateAxis axis = new DateAxis(null); //("Time");
             axis.setLabelFont(PlotBase.getDefaultLabelFont());
             axis.setLabelPaint(plot.getAxisTextColor());
             axis.setTickLabelPaint(plot.getAxisTextColor());
-            plot.getChart().getXYPlot().setDomainAxis(axis);            
+            plot.getChart().getXYPlot().setDomainAxis(axis);
         }
-        
+
         // Add a chart mouse listener to intercept double-click events
         plot.getChartPanel().addChartMouseListener(new ChartMouseListener() {
             @Override
-            public void chartMouseClicked(ChartMouseEvent event) {                
+            public void chartMouseClicked(ChartMouseEvent event) {
                 if (event.getTrigger().getClickCount() == 2) { // Check if it's a double-click
                     XYPlot xyplot = plot.getChart().getXYPlot();
                     ChartPanel chartPanel = plot.getChartPanel();
-                    Point p = SwingUtilities.convertPoint(event.getTrigger().getComponent(), event.getTrigger().getPoint(), chartPanel);                   
+                    Point p = SwingUtilities.convertPoint(event.getTrigger().getComponent(), event.getTrigger().getPoint(), chartPanel);
                     Rectangle2D dataArea = plot.getChartPanel().getScreenDataArea();
                     double chartX = xyplot.getDomainAxis().java2DToValue(p.getX(), dataArea, xyplot.getDomainAxisEdge());
                     double chartY = xyplot.getRangeAxis().java2DToValue(p.getY(), dataArea, xyplot.getRangeAxisEdge());
-                    
-                    if ((chartX < xyplot.getDomainAxis().getRange().getLowerBound()) ||
-                        (chartX > xyplot.getDomainAxis().getRange().getUpperBound()) ||
-                        (chartY < xyplot.getRangeAxis().getRange().getLowerBound()) ||
-                        (chartY > xyplot.getRangeAxis().getRange().getUpperBound())  ){
+
+                    if ((chartX < xyplot.getDomainAxis().getRange().getLowerBound())
+                            || (chartX > xyplot.getDomainAxis().getRange().getUpperBound())
+                            || (chartY < xyplot.getRangeAxis().getRange().getLowerBound())
+                            || (chartY > xyplot.getRangeAxis().getRange().getUpperBound())) {
                         return;
                     }
-                                        
+
                     // Calculate the bin indices
                     // Find the closest X value
                     DefaultXYZDataset xyDataset = (DefaultXYZDataset) xyplot.getDataset();
@@ -828,140 +873,151 @@ textTo.setText("2024-05-02 10:00:00");
                     }
                     MatrixPlotSeries series = plot.getSeries(seriesIndex);
                     //double time = series.getMinX() + closestIndex * series.getBinWidthX();
-                    onMatrixSeriesClicked(plot, series, chartX, closestIndex);                    
+                    onMatrixSeriesClicked(plot, series, chartX, closestIndex);
                 }
             }
 
             @Override
             public void chartMouseMoved(ChartMouseEvent event) {
             }
-        });        
+        });
+        
+        plot.addPopupMenuItem(null);       
+        JMenuItem menuRequery = new JMenuItem("Requery");
+        menuRequery.addActionListener((ActionEvent e) -> {
+            requery(plot);
+        });
+        plot.addPopupMenuItem(menuRequery);
         addPlot(plot);
         return plot;
     }
 
-
- 
-                        
-    void onMatrixSeriesClicked(MatrixPlotJFree plot, MatrixPlotSeries series, double timestamp, int index){
+    void onMatrixSeriesClicked(MatrixPlotJFree plot, MatrixPlotSeries series, double timestamp, int index) {
         try {
-            boolean binned = (series instanceof MatrixPlotBinnedSeries);            
-            double time  = series.getX()[index][index];
+            boolean binned = (series instanceof MatrixPlotBinnedSeries);
+            double time = series.getX()[index][0];
             String timestr = getTimeString(time, false);
-            String name = series.getName() + " " + timestr  + " ["+ index +"]";
+            String name = series.getName() + " " + timestr + " [" + index + "]";
             LinePlotJFree lplot = new LinePlotJFree();
             LinePlotSeries lseries;
-            if (binned){
+            if (binned) {
                 lplot.setStyle(LinePlot.Style.ErrorY);
-                lseries = new LinePlotErrorSeries(name, Color.RED);                
-            }else {
-                lseries = new  LinePlotSeries(name, Color.RED);
+                lseries = new LinePlotErrorSeries(name, Color.RED);
+            } else {
+                lseries = new LinePlotSeries(name, Color.RED);
             }
             lplot.addSeries(lseries);
             lplot.setTitle("");
-            lplot.setLegendVisible(true);            
+            lplot.setLegendVisible(true);
 
-            try{
+            try {
                 plot.setUpdatesEnabled(false);
-                if (binned){
+                if (binned) {
                     updateSeriesPaint(lseries);
-                    double[] min = ((MatrixPlotBinnedSeries)series).min[index];
-                    double[] max = ((MatrixPlotBinnedSeries)series).max[index];
-                    double[] average = ((MatrixPlotBinnedSeries)series).average[index];                    
-                    for (int i=0; i< average.length; i++){
-                        ((LinePlotErrorSeries)lseries).appendData( i,  average[i], min[i], max[i]);      
-                    }                
+                    double[] min = ((MatrixPlotBinnedSeries) series).min[index];
+                    double[] max = ((MatrixPlotBinnedSeries) series).max[index];
+                    double[] average = ((MatrixPlotBinnedSeries) series).average[index];
+                    for (int i = 0; i < average.length; i++) {
+                        ((LinePlotErrorSeries) lseries).appendData(i, average[i], min[i], max[i]);
+                    }
                     updateSeriesPaint(lseries);
                 } else {
                     double[] row = Convert.transpose(series.getData())[index];
                     lseries.setData(row);
-                }                                
-            } finally{
+                }
+            } finally {
                 plot.update(true);
                 plot.setUpdatesEnabled(true);
             }
-            showDialog(series.getName(), new Dimension(800, 600), lplot);            
+            showDialog(series.getName(), new Dimension(800, 600), lplot);
         } catch (Exception ex) {
-            showException((Exception)ex);
-        }                
-                    
+            showException((Exception) ex);
+        }
+
     }
-    
-    MatrixPlotSeries addMatrixSeries(MatrixPlotJFree plot, String name, String backend,String start, String end){          
+
+    MatrixPlotSeries addMatrixSeries(MatrixPlotJFree plot, SeriesInfo si) {
+        return addMatrixSeries(plot, si.name, si.backend, si.start, si.end);
+    }
+
+    MatrixPlotSeries addMatrixSeries(MatrixPlotJFree plot, String name, String backend, String start, String end) {
         List value = new ArrayList();
         List<Long> id = new ArrayList<>();
         List<Long> timestamp = new ArrayList<>();
-        long maxSize = (Integer)spinnerSize.getValue();
+        long maxSize = (Integer) spinnerSize.getValue();
         MatrixPlotSeries series = new MatrixPlotSeries(name);
-        plot.addSeries(series);        
-        plotSeries.add(series);          
-        
+        plot.addSeries(series);
+        plotSeries.add(series);
+
         try {
-            daqbuf.startQuery(name + Daqbuf.BACKEND_SEPARATOR + backend, start, end, new QueryListener(){                
-                public void onMessage(Query query, List values, List<Long> ids, List<Long> timestamps) {                                        
-                    if ((value.size()>0) && (((List)value.get(0)).size() * value.size()) > maxSize){
-                        throw new RuntimeException ("Series too big for plotting: " + name);
-                    }                                        
+            daqbuf.startQuery(name + Daqbuf.BACKEND_SEPARATOR + backend, start, end, new QueryListener() {
+                public void onMessage(Query query, List values, List<Long> ids, List<Long> timestamps) {
+                    if ((value.size() > 0) && (((List) value.get(0)).size() * value.size()) > maxSize) {
+                        throw new RuntimeException("Series too big for plotting: " + name);
+                    }
                     value.addAll(values);
                     id.addAll(ids);
                     timestamp.addAll(timestamps);
-               }
-            }).handle((ret,ex)->{
-                if (ex!=null){
-                    showException((Exception)ex);
-                };                                
-                if (value.size()>0) {        
-                    double[][] data = (double[][])Convert.toPrimitiveArray(value, Double.class);        
+                }
+            }).handle((ret, ex) -> {
+                if (ex != null) {
+                    showException((Exception) ex);
+                };
+                if (value.size() > 0) {
+                    double[][] data = (double[][]) Convert.toPrimitiveArray(value, Double.class);
                     series.setData(Convert.transpose(data));
                 }
                 plot.getChartPanel().restoreAutoDomainBounds(); //Needed because changed domain axis to time                
                 return ret;
-            });   ;            
+            });;
         } catch (Exception ex) {
-            showException((Exception)ex);
-        }                
+            showException((Exception) ex);
+        }
         return series;
     }
-    
-    static class MatrixPlotBinnedSeries extends MatrixPlotSeries{
-        MatrixPlotBinnedSeries(String name){
+
+    static class MatrixPlotBinnedSeries extends MatrixPlotSeries {
+
+        MatrixPlotBinnedSeries(String name) {
             super(name);
         }
         double[][] average;
         double[][] min;
         double[][] max;
     }
-        
-    
-    void setMatrixBinnedSeries(MatrixPlotJFree plot, MatrixPlotBinnedSeries series, List<List> average, List<List> min, List<List> max, List<Long> t1, List<Long> t2){
+
+    void setMatrixBinnedSeries(MatrixPlotJFree plot, MatrixPlotBinnedSeries series, List<List> average, List<List> min, List<List> max, List<Long> t1, List<Long> t2) {
         int bins = average.size();
-        if (bins>0) {                                
+        if (bins > 0) {
             double[] timestamps = new double[bins];
-            for (int j=0; j< bins; j++){
-                timestamps[j]= (t1.get(j) + t2.get(j))/2.0/1e6;
+            for (int j = 0; j < bins; j++) {
+                timestamps[j] = (t1.get(j) + t2.get(j)) / 2.0 / 1e6;
             }
-            double maxTime = timestamps[timestamps.length-1];
-            double minTime = timestamps[0];            
-            plot.getAxis(AxisId.X).setRange(minTime, maxTime);        
-            series.average = (double[][])Convert.toPrimitiveArray(average, Double.class);
-            series.min = (double[][])Convert.toPrimitiveArray(min, Double.class);
-            series.max = (double[][])Convert.toPrimitiveArray(max, Double.class);            
+            double maxTime = timestamps[timestamps.length - 1];
+            double minTime = timestamps[0];
+            plot.getAxis(AxisId.X).setRange(minTime, maxTime);
+            series.average = (double[][]) Convert.toPrimitiveArray(average, Double.class);
+            series.min = (double[][]) Convert.toPrimitiveArray(min, Double.class);
+            series.max = (double[][]) Convert.toPrimitiveArray(max, Double.class);
             series.setNumberOfBinsX(series.average.length);
             series.setNumberOfBinsY(series.average[0].length);
-            series.setRangeX(minTime, maxTime);            
-            series.setRangeY(0, series.average[0].length-1);                    
-            series.setData(Convert.transpose(series.average));                
+            series.setRangeX(minTime, maxTime);
+            series.setRangeY(0, series.average[0].length - 1);
+            series.setData(Convert.transpose(series.average));
         }
         plot.getChartPanel().restoreAutoDomainBounds(); //Needed because changed domain axis to time                
     }
-    
-    
-    MatrixPlotBinnedSeries addMatrixSeriesBinned(MatrixPlotJFree plot, String name, String backend,String start, String end, int bins){  
-        long maxSize = (Integer)spinnerSize.getValue();
+
+    MatrixPlotBinnedSeries addMatrixSeriesBinned(MatrixPlotJFree plot, SeriesInfo si) {
+        return addMatrixSeriesBinned(plot, si.name, si.backend, si.start, si.end, si.bins);
+    }
+
+    MatrixPlotBinnedSeries addMatrixSeriesBinned(MatrixPlotJFree plot, String name, String backend, String start, String end, int bins) {
+        long maxSize = (Integer) spinnerSize.getValue();
         MatrixPlotBinnedSeries series = new MatrixPlotBinnedSeries(name);
-        plot.addSeries(series);        
-        plotSeries.add(series);        
-        
+        plot.addSeries(series);
+        plotSeries.add(series);
+
         try {
             /*
             daqbuf.startFetchQuery(name + Daqbuf.BACKEND_SEPARATOR + backend, start, end, bins).handle((ret,ex)->{
@@ -985,81 +1041,79 @@ textTo.setText("2024-05-02 10:00:00");
                 }
                 return ret;
             });
-            */            
-           
+             */
+
             List value = new ArrayList();
             List<Long> id = new ArrayList<>();
-            List<Long> timestamp = new ArrayList<>();            
-            daqbuf.startQuery(name + Daqbuf.BACKEND_SEPARATOR + backend, start, end, new QueryListener(){                
-                public void onMessage(Query query, List values, List<Long> ids, List<Long> timestamps) {                                        
-                    if ((value.size()>0) && (((List)value.get(0)).size() * value.size()) > maxSize){
-                        throw new RuntimeException ("Series too big for plotting: " + name);
-                    }                                        
+            List<Long> timestamp = new ArrayList<>();
+            daqbuf.startQuery(name + Daqbuf.BACKEND_SEPARATOR + backend, start, end, new QueryListener() {
+                public void onMessage(Query query, List values, List<Long> ids, List<Long> timestamps) {
+                    if ((value.size() > 0) && (((List) value.get(0)).size() * value.size()) > maxSize) {
+                        throw new RuntimeException("Series too big for plotting: " + name);
+                    }
                     value.addAll(values);
                     id.addAll(ids);
                     timestamp.addAll(timestamps);
-               }
-            }/*,bins*/).handle((ret,ex)->{
-                if (ex!=null){
+                }
+            }/*,bins*/).handle((ret, ex) -> {
+                if (ex != null) {
                     //showException((Exception)ex);
-                };            
+                };
                 List<List> average = value;
                 List<List> min = new ArrayList<>();
                 List<List> max = new ArrayList<>();
                 List<Long> t1 = new ArrayList<>();
                 List<Long> t2 = new ArrayList<>();
-                for (Long t: timestamp){
+                for (Long t : timestamp) {
                     t1.add(t);
                     t2.add(t + 1000000);
                 }
-                for (List<Number> l: average){
+                for (List<Number> l : average) {
                     List lmin = new ArrayList();
                     List lmax = new ArrayList();
-                    for (Number n : l){
-                        lmin.add(n.doubleValue()-1.0);
-                        lmax.add(n.doubleValue()+1.0);
+                    for (Number n : l) {
+                        lmin.add(n.doubleValue() - 1.0);
+                        lmax.add(n.doubleValue() + 1.0);
                     }
                     min.add(lmin);
                     max.add(lmax);
-                }                
-                setMatrixBinnedSeries(plot, series, average, min,  max, t1, t2);
-                
+                }
+                setMatrixBinnedSeries(plot, series, average, min, max, t1, t2);
+
                 return ret;
-            });    
+            });
         } catch (Exception ex) {
-            showException((Exception)ex);
-        }                
-                        
-        
+            showException((Exception) ex);
+        }
+
         return series;
     }
 
-    
-    SlicePlotDefault addSlicePlot(){
+    SlicePlotDefault addSlicePlot() {
         SlicePlotDefault plot = new SlicePlotDefault(new MatrixPlotRenderer()) {
             @Override
-            protected String getPageSubtitle(SlicePlotSeries series, int page){            
+            protected String getPageSubtitle(SlicePlotSeries series, int page) {
                 return " - " + page;
             }
-        };     
+        };
 
         addPlot(plot);
         return plot;
     }
-    
+
     //TODO
-    int[] getShape(String name, String backend, String start, String end){
-        return  new int[]{200,100,10};
+    int[] getShape(String name, String backend, String start, String end) {
+        return new int[]{200, 100, 10};
     }
 
     //TODO
-    double[][] getFrame(String name, String backend, String start, int index, int[]shape){
+    double[][] getFrame(String name, String backend, String start, int index, int[] shape) {
         try {
             Thread.sleep(500);
-            double[][]data = new  double[shape[1]][shape[0]];
-            for (int j=0;j<data.length; j++){
-                for (int k=0;k<data[0].length; k++){
-                    data[j][k] = index*10000 + j*100 + k;
+            double[][] data = new double[shape[1]][shape[0]];
+            for (int j = 0; j < data.length; j++) {
+                for (int k = 0; k < data[0].length; k++) {
+                    data[j][k] = index * 10000 + j * 100 + k;
                 }
             }
             return data;
@@ -1068,155 +1122,188 @@ textTo.setText("2024-05-02 10:00:00");
         }
     }
 
-    
-    SlicePlotSeries addImageSeries(SlicePlotDefault plot, String name, String backend, String start, String end){        
-        SlicePlotSeries series = new SlicePlotSeries(name);        
+    SlicePlotSeries addImageSeries(SlicePlotDefault plot, SeriesInfo si) {
+        return addImageSeries((SlicePlotDefault) plot, si.name, si.backend, si.start, si.end);
+    }
+
+    SlicePlotSeries addImageSeries(SlicePlotDefault plot, String name, String backend, String start, String end) {
+        SlicePlotSeries series = new SlicePlotSeries(name);
         plotSeries.add(series);
         plot.addSeries(series);
         plot.setTitle(name);
         plot.setUpdatesEnabled(true);
-        
-        
+
         final int[] shape = getShape(name, backend, start, end);
 
         series.setNumberOfBinsX(shape[0]);
         series.setNumberOfBinsY(shape[1]);
-        series.setRangeX(0, shape[0]-1);
-        series.setRangeY(0, shape[1]-1);
+        series.setRangeX(0, shape[0] - 1);
+        series.setRangeY(0, shape[1] - 1);
         series.setNumberOfBinsZ(shape[2]);
-        series.setRangeZ(0, shape[2]-1);                
-        
+        series.setRangeZ(0, shape[2] - 1);
+
         series.setListener((SlicePlotSeries s, int index) -> {
-            try{
+            try {
                 double[][] page_data = getFrame(name, backend, start, index, shape);
-                s.setData(page_data);                                
-            } catch (Exception ex){
-                 s.clear();
+                s.setData(page_data);
+            } catch (Exception ex) {
+                s.clear();
             }
         });
 
-        
         try {
             daqbuf.startQuery(name + Daqbuf.BACKEND_SEPARATOR + backend, start, end, new QueryRecordListener() {
-                 public void onRecord(Query query, Object value, Long id, Long timestamp){
-                     System.out.println(timestamp + " - " + value);
-                 }
+                public void onRecord(Query query, Object value, Long id, Long timestamp) {
+                    System.out.println(timestamp + " - " + value);
+                }
             });
         } catch (Exception ex) {
             showException(ex);
-        }                
+        }
         return series;
+    }
+
+    class SeriesInfo {
+
+        final String start;
+        final String end;
+        final Integer bins;
+        final String name;
+        final String backend;
+        final boolean shared;
+        final int axis;
+        final Color color;
+        final List<Integer> shape;
+        final SeriesInfo parent;
+
+        SeriesInfo(Vector info) {
+            parent = null;
+            start = textFrom.getText();
+            end = textTo.getText();
+            bins = checkBins.isSelected() ? (Integer) spinnerBins.getValue() : null;            
+            name = getChannelAlias(((String) info.get(1)).trim());
+            backend = info.get(2).toString();
+            shared = info.get(4).equals(PLOT_SHARED);
+            axis = (info.get(5)).equals("X") ? -1 : (Integer) info.get(5);
+            color = Preferences.getColorFromString((String) info.get(6));
+            List<Integer> aux = new ArrayList<>();
+            try {
+                aux = (List<Integer>) EncoderJson.decode(info.get(3).toString(), List.class);
+            } catch (Exception ex) {
+            }
+            shape = aux;
+        }
+        
+        SeriesInfo(SeriesInfo parent, String start, String end, Integer bins) {
+            this.parent = parent;
+            this.start = start;
+            this.end = end;
+            this.bins = bins;            
+            name = parent.name;
+            backend = parent.backend;
+            shared = parent.shared;
+            axis = parent.axis;
+            color = parent.color;            
+            shape = parent.shape;
+        }
+        
     }
 
     public void plotQuery() throws Exception {
         reset();
-        
+
         if (modelSeries.getRowCount() == 0) {
             return;
         }
         numPlots = 0;
-
-        final String start = textFrom.getText();
-        final String end = textTo.getText();        
-                
         started = true;
         update();
 
         Plot currentPlot = null;
+        plotInfo.clear();
         Vector vector = modelSeries.getDataVector();
         Vector[] rows = (Vector[]) vector.toArray(new Vector[0]);
         for (int i = 0; i < rows.length; i++) {
             Vector info = rows[i];
             if (info.get(0).equals(true)) {
-                final Integer bins = checkBins.isSelected() ? (Integer)spinnerBins.getValue() : null;
-                final String name = getChannelAlias(((String) info.get(1)).trim());
-                final String backend = info.get(2).toString();
-                final boolean  shared = info.get(4).equals(PLOT_SHARED);
-                final int axis = (info.get(5)).equals("X") ? -1:  (Integer) info.get(5);                
-                final Color color = Preferences.getColorFromString((String) info.get(6));
-                List<Integer> shape = new ArrayList<>();
-                try{
-                    shape = (List<Integer>) EncoderJson.decode(info.get(3).toString(), List.class);
-                } catch (Exception ex){                    
-                }
-                                
+                SeriesInfo seriesInfo = new SeriesInfo(info);
                 Plot plot = null;
-                PlotSeries series= null;
-                switch (shape.size()){
+                PlotSeries series = null;
+                switch (seriesInfo.shape.size()) {
                     case 0:
-                        if (shared && (currentPlot!=null) && (currentPlot instanceof LinePlotJFree)){
+                        if (seriesInfo.shared && (currentPlot != null) && (currentPlot instanceof LinePlotJFree)) {
                             plot = currentPlot;
                         } else {
-                            plot = addLinePlot(bins!=null);
+                            plot = addLinePlot(seriesInfo.bins != null);
                         }
-                        if (bins==null){
-                            series = addLineSeries((LinePlotJFree)plot, name, backend, start, end, axis, color);                            
+                        if (seriesInfo.bins == null) {
+                            series = addLineSeries((LinePlotJFree) plot, seriesInfo);
                         } else {
-                            series = addBinnedSeries((LinePlotJFree)plot, name, backend, start, end, bins, axis, color);
+                            series = addBinnedSeries((LinePlotJFree) plot, seriesInfo);
                         }
                         break;
-                    case 1:                        
-                        if (bins==null){
+                    case 1:
+                        if (seriesInfo.bins == null) {
                             plot = addMatrixPlot(false);
-                            series = addMatrixSeries((MatrixPlotJFree)plot, name, backend, start, end);                            
+                            series = addMatrixSeries((MatrixPlotJFree) plot, seriesInfo);
                         } else {
                             plot = addMatrixPlot(true);
-                            series = addMatrixSeriesBinned((MatrixPlotJFree)plot, name, backend, start, end, bins);
+                            series = addMatrixSeriesBinned((MatrixPlotJFree) plot, seriesInfo);
                         }
                         break;
                     case 2:
                         plot = addSlicePlot();
-                        series = addImageSeries((SlicePlotDefault)plot, name, backend, start, end);
-                }                
-                
-                
-                currentPlot = plot;                                                
-                
+                        series = addImageSeries((SlicePlotDefault) plot, seriesInfo);
+                }
+                if ((plot!=null) && (series!=null)){
+                    plotInfo.get(plot).add(seriesInfo);
+                }
+
+                currentPlot = plot;
+
             }
         }
 
     }
-    
-    void updateCapLength(LinePlotJFree plot){
-        try{
-            DateAxis axis = (DateAxis) plot.getChart().getXYPlot().getDomainAxis();        
-            for (int i=0; i<plot.getChart().getXYPlot().getRendererCount(); i++){
-                XYErrorRenderer renderer = (XYErrorRenderer) plot.getChart().getXYPlot().getRenderer(i);      
-                try{
+
+    void updateCapLength(LinePlotJFree plot) {
+        try {
+            DateAxis axis = (DateAxis) plot.getChart().getXYPlot().getDomainAxis();
+            for (int i = 0; i < plot.getChart().getXYPlot().getRendererCount(); i++) {
+                XYErrorRenderer renderer = (XYErrorRenderer) plot.getChart().getXYPlot().getRenderer(i);
+                try {
                     int bins = plot.getChart().getXYPlot().getDataset().getItemCount(0);
                     double start = plot.getChart().getXYPlot().getDataset().getXValue(0, 0);
-                    double end = plot.getChart().getXYPlot().getDataset().getXValue(0, bins-1);
+                    double end = plot.getChart().getXYPlot().getDataset().getXValue(0, bins - 1);
                     double capLenghtMs = (end - start) / bins;
-                    double domainLenghtPixels = plot.getChartPanel().getScreenDataArea().getWidth();                
+                    double domainLenghtPixels = plot.getChartPanel().getScreenDataArea().getWidth();
                     domainLenghtPixels /= plot.getChartPanel().getScaleX();
                     double domainLengthMs = axis.getRange().getLength();
-                    double capLength = (capLenghtMs * domainLenghtPixels ) / domainLengthMs    ;    
-                    renderer.setCapLength(capLength);      
+                    double capLength = (capLenghtMs * domainLenghtPixels) / domainLengthMs;
+                    renderer.setCapLength(capLength);
                 } catch (Exception ex) {
-                    renderer.setCapLength(4.0);     
+                    renderer.setCapLength(4.0);
                 }
             }
         } catch (Exception ex) {
         }
-            
+
     }
-    
-    
-    
-    void updateSeriesPaint(LinePlotSeries series){
+
+    void updateSeriesPaint(LinePlotSeries series) {
         LinePlotJFree plot = (LinePlotJFree) series.getPlot();
-        XYErrorRenderer renderer = (XYErrorRenderer) plot.getSeriesRenderer(series);            
-        Paint paint = renderer.getSeriesPaint(plot.getSeriesIndex(series));                          
-        YIntervalSeriesCollection dataset= (YIntervalSeriesCollection) plot.getDataset(series.getAxisY());
+        XYErrorRenderer renderer = (XYErrorRenderer) plot.getSeriesRenderer(series);
+        Paint paint = renderer.getSeriesPaint(plot.getSeriesIndex(series));
+        YIntervalSeriesCollection dataset = (YIntervalSeriesCollection) plot.getDataset(series.getAxisY());
         YIntervalSeries yseries = (YIntervalSeries) series.getToken();
-        if ((paint instanceof Color) && (dataset.getSeriesCount() ==1)){
-            Color c = (Color)paint;
-            paint = new Color(c.getRed(), c.getGreen(), c.getBlue(), 0x40); 
+        if ((paint instanceof Color) && (dataset.getSeriesCount() == 1)) {
+            Color c = (Color) paint;
+            paint = new Color(c.getRed(), c.getGreen(), c.getBlue(), 0x40);
         } else {
-            paint = GRAYED_COLOR; 
+            paint = GRAYED_COLOR;
         }
-       
-        renderer.setErrorPaint(paint);        
+
+        renderer.setErrorPaint(paint);
     }
 
     String[] getNames() throws IOException {
@@ -1240,7 +1327,7 @@ textTo.setText("2024-05-02 10:00:00");
         }
         String id = ((String) info.get(1)).trim();
         String backend = ((String) info.get(2)).trim();
-        
+
         id = id.replace("/", "_");
         return id;
     }
@@ -1265,9 +1352,8 @@ textTo.setText("2024-05-02 10:00:00");
         return id;
     }
 
-
     final Object lock = new Object();
-    
+
     void reset() {
         update();
         synchronized (lock) {
@@ -1282,7 +1368,6 @@ textTo.setText("2024-05-02 10:00:00");
     protected void onClosed() {
     }
 
-
     public static void create(String url, boolean modal, String title) {
         java.awt.EventQueue.invokeLater(() -> {
             DaqbufPanel dialog = new DaqbufPanel(null, url, title, modal);
@@ -1293,30 +1378,30 @@ textTo.setText("2024-05-02 10:00:00");
                     dialog.onClosed();
                     if (modal) {
                         System.exit(0);
-                    } 
+                    }
                 }
             });
             SwingUtils.centerComponent(null, dialog);
-            if (dialog.getOwner()!=null){
+            if (dialog.getOwner() != null) {
                 dialog.getOwner().setIconImage(Toolkit.getDefaultToolkit().getImage(App.getResourceUrl("IconSmall.png")));
             }
             dialog.setVisible(true);
             dialog.requestFocus();
         });
     }
-    
-    void openFile(String fileName) {        
+
+    void openFile(String fileName) {
         try {
-            DataPanel panel = new DataPanel();            
-            panel.load(fileName);            
-            panel.setDefaultDataPanelListener();            
+            DataPanel panel = new DataPanel();
+            panel.load(fileName);
+            panel.setDefaultDataPanelListener();
             panel.showFileProps();
-            showDialog(fileName, new Dimension(800, 600), panel);    
+            showDialog(fileName, new Dimension(800, 600), panel);
         } catch (Exception ex) {
             showException(ex);
-        }        
+        }
     }
-    
+
     void saveQuery(String filename) throws IOException, InterruptedException {
         List<String> channels = new ArrayList<>();
         Vector vector = modelSeries.getDataVector();
@@ -1329,21 +1414,21 @@ textTo.setText("2024-05-02 10:00:00");
                 channels.add(name + Daqbuf.BACKEND_SEPARATOR + backend);
             }
         }
-        if (channels.isEmpty()){
+        if (channels.isEmpty()) {
             throw new IOException("No channel selected");
         }
-        final Integer bins = checkBins.isSelected() ? (Integer)spinnerBins.getValue() : null;
+        final Integer bins = checkBins.isSelected() ? (Integer) spinnerBins.getValue() : null;
         final String start = textFrom.getText();
-        final String end = textTo.getText();        
+        final String end = textTo.getText();
 
         buttonSaveData.setEnabled(false);
-        JDialog splash = SwingUtils.showSplash(this, "Save", new Dimension(400,200), "Saving data to " + filename);
-        daqbuf.startSaveQuery(filename, channels.toArray(new String[0]), start, end, bins).handle((Object ret, Object ex)->{
+        JDialog splash = SwingUtils.showSplash(this, "Save", new Dimension(400, 200), "Saving data to " + filename);
+        daqbuf.startSaveQuery(filename, channels.toArray(new String[0]), start, end, bins).handle((Object ret, Object ex) -> {
             splash.setVisible(false);
-            if (ex!=null){
-                showException((Exception)ex);
+            if (ex != null) {
+                showException((Exception) ex);
             } else {
-                if (SwingUtils.showOption(this, "Save", "Success saving data to " + filename + ".\nDo you want to open the file?" , OptionType.YesNo) == OptionResult.Yes) {
+                if (SwingUtils.showOption(this, "Save", "Success saving data to " + filename + ".\nDo you want to open the file?", OptionType.YesNo) == OptionResult.Yes) {
                     openFile(filename);
                 }
             }
@@ -1351,9 +1436,9 @@ textTo.setText("2024-05-02 10:00:00");
             return ret;
         });
     }
-    
+
     void saveQuery() throws IOException {
-        try{
+        try {
             String path = (Context.getInstance() != null) ? Context.getInstance().getConfig().dataPath : Sys.getUserHome();
             JFileChooser chooser = new JFileChooser(path);
             FileNameExtensionFilter filter = new FileNameExtensionFilter("HDF5 files", "h5");
@@ -1361,14 +1446,14 @@ textTo.setText("2024-05-02 10:00:00");
             int rVal = chooser.showSaveDialog(this);
             if (rVal == JFileChooser.APPROVE_OPTION) {
                 String fileName = chooser.getSelectedFile().getAbsolutePath();
-                if (IO.getExtension(fileName).isEmpty()){
+                if (IO.getExtension(fileName).isEmpty()) {
                     fileName += ".h5";
                 }
-                saveQuery(fileName);                
+                saveQuery(fileName);
             }
         } catch (Exception ex) {
             showException(ex);
-        }        
+        }
     }
 
     /**
@@ -1618,11 +1703,12 @@ textTo.setText("2024-05-02 10:00:00");
             jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel3Layout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jLabel2)
-                    .addComponent(comboTime, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabel9)
-                    .addComponent(textFrom, javax.swing.GroupLayout.PREFERRED_SIZE, 23, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(textFrom, javax.swing.GroupLayout.PREFERRED_SIZE, 23, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                        .addComponent(jLabel2)
+                        .addComponent(comboTime, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(jLabel9)))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel3)
@@ -1820,7 +1906,7 @@ textTo.setText("2024-05-02 10:00:00");
     private void buttonPlotActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonPlotActionPerformed
         if (tableSeries.isEditing()) {
             tableSeries.getCellEditor().stopCellEditing();
-        }        
+        }
         try {
             if (modelSeries.getRowCount() > 0) {
                 plotQuery();
@@ -1845,27 +1931,27 @@ textTo.setText("2024-05-02 10:00:00");
         spinnerSize.setEnabled(!checkBins.isSelected());
     }//GEN-LAST:event_checkBinsActionPerformed
 
-    String getTimeString(Number timestamp, boolean utc){
-        DateTimeFormatter formatter = (utc) ?
-                DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'") :
-                DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS");    
-        
+    String getTimeString(Number timestamp, boolean utc) {
+        DateTimeFormatter formatter = (utc)
+                ? DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
+                : DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS");
+
         Instant instant = Instant.ofEpochMilli(timestamp.longValue());
         LocalDateTime localDateTime = LocalDateTime.ofInstant(instant, utc ? ZoneOffset.UTC : ZoneOffset.systemDefault());
         return localDateTime.format(formatter);
     }
     private void comboTimeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_comboTimeActionPerformed
         boolean utc = false; //checkUTC.isSelected();
-        DateTimeFormatter formatter = (utc) ?
-                DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'") :
-                DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS");    
-        LocalDateTime now = (utc) ? 
-                LocalDateTime.now(ZoneOffset.UTC) :
-                LocalDateTime.now();
+        DateTimeFormatter formatter = (utc)
+                ? DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
+                : DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS");
+        LocalDateTime now = (utc)
+                ? LocalDateTime.now(ZoneOffset.UTC)
+                : LocalDateTime.now();
         LocalDateTime to = now;
         LocalDateTime from = null;
-        
-        switch (comboTime.getSelectedIndex()){
+
+        switch (comboTime.getSelectedIndex()) {
             case 1:
                 from = now.minusMinutes(1);
                 break;
@@ -1884,13 +1970,13 @@ textTo.setText("2024-05-02 10:00:00");
             case 6:
                 from = now.minusDays(7);
                 break;
-            case 7:                
+            case 7:
                 LocalDate yesterdayDate = now.toLocalDate().minusDays(1);
-                from = LocalDateTime.of(yesterdayDate, LocalTime.MIN);           
+                from = LocalDateTime.of(yesterdayDate, LocalTime.MIN);
                 to = LocalDateTime.of(yesterdayDate, LocalTime.MAX);
                 break;
             case 8:
-                from = LocalDateTime.of(now.toLocalDate(), LocalTime.MIN);           
+                from = LocalDateTime.of(now.toLocalDate(), LocalTime.MIN);
                 break;
             case 9:
                 LocalDate startOfCurrentWeek = now.toLocalDate().with(DayOfWeek.MONDAY);
@@ -1915,7 +2001,7 @@ textTo.setText("2024-05-02 10:00:00");
         }
 
         textFrom.setText(from.format(formatter));
-        textTo.setText(to.format(formatter));        
+        textTo.setText(to.format(formatter));
     }//GEN-LAST:event_comboTimeActionPerformed
 
     /**
