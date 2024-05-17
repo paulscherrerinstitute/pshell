@@ -306,6 +306,7 @@ public class DaqbufPanel extends StandardDialog {
         model = new DefaultComboBoxModel();
         model.addElement(1);
         model.addElement(2);
+        model.addElement("X");
         comboY.setModel(model);
         cellEditor = new DefaultCellEditor(comboY);
         cellEditor.setClickCountToStart(2);
@@ -1131,7 +1132,7 @@ textTo.setText("2024-05-02 10:00:00");
                 final String name = getChannelAlias(((String) info.get(1)).trim());
                 final String backend = info.get(2).toString();
                 final boolean  shared = info.get(4).equals(PLOT_SHARED);
-                final int axis = (Integer) info.get(5);                
+                final int axis = (info.get(5)).equals("X") ? -1:  (Integer) info.get(5);                
                 final Color color = Preferences.getColorFromString((String) info.get(6));
                 List<Integer> shape = new ArrayList<>();
                 try{
@@ -1432,7 +1433,7 @@ textTo.setText("2024-05-02 10:00:00");
 
             },
             new String [] {
-                "Enabled", "Name", "Backend", "Shape", "Plot", "Y Axis", "Color"
+                "Enabled", "Name", "Backend", "Shape", "Plot", "Axis", "Color"
             }
         ) {
             Class[] types = new Class [] {

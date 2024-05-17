@@ -159,7 +159,7 @@
                             <Column editable="true" title="Backend" type="java.lang.Object"/>
                             <Column editable="true" title="Shape" type="java.lang.Object"/>
                             <Column editable="true" title="Plot" type="java.lang.Object"/>
-                            <Column editable="true" title="Y Axis" type="java.lang.Object"/>
+                            <Column editable="true" title="Axis" type="java.lang.Object"/>
                             <Column editable="true" title="Color" type="java.lang.Object"/>
                           </Table>
                         </Property>
