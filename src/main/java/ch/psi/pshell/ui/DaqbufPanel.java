@@ -1404,7 +1404,6 @@ textTo.setText("2024-05-02 10:00:00");
         jLabel6 = new javax.swing.JLabel();
         comboTime = new javax.swing.JComboBox<>();
         jLabel9 = new javax.swing.JLabel();
-        checkUTC = new javax.swing.JCheckBox();
         jPanel4 = new javax.swing.JPanel();
         checkBins = new javax.swing.JCheckBox();
         jLabel4 = new javax.swing.JLabel();
@@ -1493,7 +1492,7 @@ textTo.setText("2024-05-02 10:00:00");
             .addGroup(panelSerieLayout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(panelSerieLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 563, Short.MAX_VALUE)
+                    .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
                     .addGroup(panelSerieLayout.createSequentialGroup()
                         .addGap(0, 0, Short.MAX_VALUE)
                         .addComponent(buttonUp)
@@ -1513,7 +1512,7 @@ textTo.setText("2024-05-02 10:00:00");
             panelSerieLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(panelSerieLayout.createSequentialGroup()
                 .addGap(2, 2, 2)
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 147, Short.MAX_VALUE)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 155, Short.MAX_VALUE)
                 .addGap(4, 4, 4)
                 .addGroup(panelSerieLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(buttonDelete)
@@ -1584,13 +1583,6 @@ textTo.setText("2024-05-02 10:00:00");
         jLabel9.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
         jLabel9.setText("Set:");
 
-        checkUTC.setText("UTC");
-        checkUTC.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                checkUTCActionPerformed(evt);
-            }
-        });
-
         javax.swing.GroupLayout jPanel3Layout = new javax.swing.GroupLayout(jPanel3);
         jPanel3.setLayout(jPanel3Layout);
         jPanel3Layout.setHorizontalGroup(
@@ -1602,22 +1594,21 @@ textTo.setText("2024-05-02 10:00:00");
                         .addComponent(jLabel2)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(textFrom, javax.swing.GroupLayout.PREFERRED_SIZE, 220, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(jLabel9))
+                        .addGap(18, 18, Short.MAX_VALUE)
+                        .addComponent(jLabel9)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(comboTime, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                     .addGroup(jPanel3Layout.createSequentialGroup()
                         .addComponent(jLabel3)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(textTo, javax.swing.GroupLayout.PREFERRED_SIZE, 220, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(comboTime, javax.swing.GroupLayout.PREFERRED_SIZE, 171, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(checkUTC))
+                        .addComponent(textTo, javax.swing.GroupLayout.PREFERRED_SIZE, 220, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(0, 0, Short.MAX_VALUE)))
                 .addContainerGap())
             .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                 .addGroup(jPanel3Layout.createSequentialGroup()
                     .addGap(19, 19, 19)
                     .addComponent(jLabel6)
-                    .addContainerGap(544, Short.MAX_VALUE)))
+                    .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
         );
 
         jPanel3Layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {jLabel2, jLabel3});
@@ -1628,18 +1619,17 @@ textTo.setText("2024-05-02 10:00:00");
                 .addContainerGap()
                 .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel2)
-                    .addComponent(textFrom, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(comboTime, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabel9))
+                    .addComponent(jLabel9)
+                    .addComponent(textFrom, javax.swing.GroupLayout.PREFERRED_SIZE, 23, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel3)
-                    .addComponent(textTo, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(checkUTC))
+                    .addComponent(textTo, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addContainerGap())
             .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                 .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel3Layout.createSequentialGroup()
-                    .addContainerGap(15, Short.MAX_VALUE)
+                    .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addComponent(jLabel6, javax.swing.GroupLayout.PREFERRED_SIZE, 46, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addGap(15, 15, 15)))
         );
@@ -1736,11 +1726,11 @@ textTo.setText("2024-05-02 10:00:00");
         pnGraphs.setLayout(pnGraphsLayout);
         pnGraphsLayout.setHorizontalGroup(
             pnGraphsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 583, Short.MAX_VALUE)
+            .addGap(0, 466, Short.MAX_VALUE)
         );
         pnGraphsLayout.setVerticalGroup(
             pnGraphsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 423, Short.MAX_VALUE)
+            .addGap(0, 419, Short.MAX_VALUE)
         );
 
         scrollPane.setViewportView(pnGraphs);
@@ -1755,7 +1745,7 @@ textTo.setText("2024-05-02 10:00:00");
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(tabPane, javax.swing.GroupLayout.DEFAULT_SIZE, 539, Short.MAX_VALUE)
+                .addComponent(tabPane)
                 .addContainerGap())
         );
         layout.setVerticalGroup(
@@ -1855,7 +1845,7 @@ textTo.setText("2024-05-02 10:00:00");
     }//GEN-LAST:event_checkBinsActionPerformed
 
     String getTimeString(Number timestamp, boolean utc){
-        DateTimeFormatter formatter = (checkUTC.isSelected()) ?
+        DateTimeFormatter formatter = (utc) ?
                 DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'") :
                 DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS");    
         
@@ -1864,10 +1854,11 @@ textTo.setText("2024-05-02 10:00:00");
         return localDateTime.format(formatter);
     }
     private void comboTimeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_comboTimeActionPerformed
-        DateTimeFormatter formatter = (checkUTC.isSelected()) ?
+        boolean utc = false; //checkUTC.isSelected();
+        DateTimeFormatter formatter = (utc) ?
                 DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'") :
                 DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS");    
-        LocalDateTime now = (checkUTC.isSelected()) ? 
+        LocalDateTime now = (utc) ? 
                 LocalDateTime.now(ZoneOffset.UTC) :
                 LocalDateTime.now();
         LocalDateTime to = now;
@@ -1926,10 +1917,6 @@ textTo.setText("2024-05-02 10:00:00");
         textTo.setText(to.format(formatter));        
     }//GEN-LAST:event_comboTimeActionPerformed
 
-    private void checkUTCActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_checkUTCActionPerformed
-        comboTimeActionPerformed(null);
-    }//GEN-LAST:event_checkUTCActionPerformed
-
     /**
      */
     public static void main(String args[]) {
@@ -1945,7 +1932,6 @@ textTo.setText("2024-05-02 10:00:00");
     private javax.swing.JButton buttonSaveData;
     private javax.swing.JButton buttonUp;
     private javax.swing.JCheckBox checkBins;
-    private javax.swing.JCheckBox checkUTC;
     private javax.swing.JComboBox<String> comboTime;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
