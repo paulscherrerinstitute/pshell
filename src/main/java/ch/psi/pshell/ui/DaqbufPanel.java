@@ -1055,6 +1055,7 @@ public class DaqbufPanel extends StandardDialog {
                 } else {
                     Map<String, List> map = (Map<String, List>) ret;
                     List<Number> y = map.keySet().contains(Daqbuf.FIELD_AVERAGE) ? map.get(Daqbuf.FIELD_AVERAGE) : map.get(Daqbuf.FIELD_VALUE);
+                    List<Number> count =  map.keySet().contains(Daqbuf.FIELD_COUNT) ? map.get(Daqbuf.FIELD_COUNT) : null;
                     List<Number> x = null;
                     try {
                         x = (List<Number>) domainAxisFuture.get();
@@ -1068,7 +1069,9 @@ public class DaqbufPanel extends StandardDialog {
                                 throw new RuntimeException("Series too big for plotting: " + name);
                             }
                             for (int j = 0; j < y.size(); j++) {
-                                series.appendData(x.get(j).doubleValue(), y.get(j).doubleValue());
+                                if ((count==null) || (count.get(j).longValue()>0)){
+                                    series.appendData(x.get(j).doubleValue(), y.get(j).doubleValue());
+                                }
                             }
                         } finally {
                             plot.update(true);
