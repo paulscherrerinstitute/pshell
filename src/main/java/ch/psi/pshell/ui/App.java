@@ -540,7 +540,7 @@ public class App extends ObservableBase<AppListener> {
     }
 
     static public boolean isLocalMode() {
-        return getBoolArgumentValue("l") || isPlotOnly() || isHelpOnly() || isDataPanel() || isStripChart() || isOffline() || isVolatile() || isSingleViewer() || isPlotServer();
+        return getBoolArgumentValue("l") || isPlotOnly() || isHelpOnly() || isDataPanel() || isStripChart() || isOffline() || isVolatile() || isSingleViewer() || isPlotServer() || isDaqbufPanel();
     }
 
     static public boolean isBareMode() {
@@ -556,7 +556,7 @@ public class App extends ObservableBase<AppListener> {
     }
 
     static public boolean isHandlingSessions() {
-        boolean disableSessions = getBoolArgumentValue("j") || isPlotOnly() || isHelpOnly() || isDataPanel() || isStripChart() || isVolatile() || isDetached() || isSingleViewer();
+        boolean disableSessions = getBoolArgumentValue("j") || isPlotOnly() || isHelpOnly() || isDataPanel() || isStripChart() || isVolatile() || isDetached() || isSingleViewer() || isPlotServer() || isDaqbufPanel();
         return !disableSessions;
     }
 
@@ -1197,7 +1197,7 @@ public class App extends ObservableBase<AppListener> {
             } else if (isDataPanel()) {
                 DataPanel.createPanel(getFileArg());
             } else if (isDaqbufPanel()) {
-                DaqbufPanel.create(getDaqbufURL(), true, null);                
+                DaqbufPanel.create(getDaqbufURL(), false, null);                
             } else if (isPlotServer()){                
                 ch.psi.pshell.plotter.View.create(getPlotServerPort());
             } else if (isCamServerViewer()) {

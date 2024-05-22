@@ -35,6 +35,7 @@ import ch.psi.utils.Range;
 import ch.psi.utils.Str;
 import ch.psi.utils.Sys;
 import ch.psi.utils.Threading;
+import ch.psi.utils.swing.MainFrame;
 import ch.psi.utils.swing.StandardDialog;
 import ch.psi.utils.swing.SwingUtils;
 import ch.psi.utils.swing.SwingUtils.OptionResult;
@@ -59,6 +60,8 @@ import java.awt.event.MouseEvent;
 import java.awt.geom.Rectangle2D;
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.nio.file.Files;
 import java.time.DayOfWeek;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -68,6 +71,7 @@ import java.time.YearMonth;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.EventObject;
 import java.util.HashMap;
@@ -82,6 +86,7 @@ import javax.swing.AbstractCellEditor;
 import javax.swing.BoxLayout;
 import javax.swing.DefaultCellEditor;
 import javax.swing.DefaultComboBoxModel;
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JColorChooser;
@@ -139,6 +144,7 @@ public class DaqbufPanel extends StandardDialog {
     final Map<Plot, List<SeriesInfo>> plotInfo = new HashMap<>();
     final HashMap<Device, Long> appendTimestamps = new HashMap<>();
     volatile boolean started = false;
+    volatile boolean updating = false;
     DefaultComboBoxModel modelComboY = new DefaultComboBoxModel();
 
     Color backgroundColor;
@@ -194,7 +200,7 @@ public class DaqbufPanel extends StandardDialog {
             }
         }
 
-        buttonPlot.setEnabled(false);
+        buttonPlotData.setEnabled(false);
         setCancelledOnEscape(false);
 
         //pnGraphs.setLayout(new GridBagLayout());
@@ -202,11 +208,28 @@ public class DaqbufPanel extends StandardDialog {
 
         modelSeries = (DefaultTableModel) tableSeries.getModel();
         modelSeries.addTableModelListener(modelSeriesListener);
+        
+        toolBar.setRollover(true);
+        toolBar.setFloatable(false); //By default true in nimbus        
 
         clear();
 
         onLafChange();
     }
+    
+    @Override
+    protected void onLafChange() {
+        for (Component b : SwingUtils.getComponentsByType(toolBar, JButton.class)) {
+            try{
+                if (MainFrame.isDark()) {
+                    ((JButton) b).setIcon(new ImageIcon(App.getResourceUrl("dark/" + new File(((JButton) b).getIcon().toString()).getName())));
+                } else {
+                    ((JButton) b).setIcon(new ImageIcon(App.getResourceUrl(new File(((JButton) b).getIcon().toString()).getName())));
+                }
+            } catch (Exception ex){                    
+            }
+        }        
+    } 
 
     //Access functions
     public JTabbedPane getTabbedPane() {
@@ -251,23 +274,8 @@ public class DaqbufPanel extends StandardDialog {
             public void editingStopped(ChangeEvent e) {
                 int row = tableSeries.getSelectedRow();
                 if (row >= 0) {
-                    String channel = (String) modelSeries.getValueAt(row, 1);
-                    String backend = (String) modelSeries.getValueAt(row, 2);
                     try {
-                        daqbuf.startSearch(backend, channel, null, 1).handle((ret, ex) -> {
-                            if (ex != null) {
-                                showException((Exception) ex);
-                            } else {
-                                List<Map<String, Object>> list = (List<Map<String, Object>>) ret;
-                                SwingUtilities.invokeLater(() -> {
-                                    if (channel.equals(modelSeries.getValueAt(row, 1)) && backend.equals(modelSeries.getValueAt(row, 2))) {
-                                        String shape = (list.size() > 0) ? Str.toString(list.get(0).getOrDefault("shape", "")) : "";
-                                        modelSeries.setValueAt(shape, row, 3);
-                                    }
-                                });
-                            }
-                            return ret;
-                        });
+                        updateShape(row);
                     } catch (Exception ex) {
                         showException(ex);
                     }
@@ -502,7 +510,8 @@ public class DaqbufPanel extends StandardDialog {
         buttonDown.setEnabled((rows > 0) && (cur >= 0) && (cur < (rows - 1)) && editing);
         buttonDelete.setEnabled((rows > 0) && (cur >= 0) && editing);
         buttonInsert.setEnabled(editing);
-        buttonPlot.setEnabled(modelSeries.getRowCount() > 0);
+        buttonPlotData.setEnabled(modelSeries.getRowCount() > 0);
+        buttonDumpData.setEnabled(buttonPlotData.isEnabled() && !dumping);
 
         int row = tableSeries.getSelectedRow();
         if (row >= 0) {
@@ -511,6 +520,31 @@ public class DaqbufPanel extends StandardDialog {
             configureModelComboY(getRowRank(row), shared && first);
         }
     }
+
+    CompletableFuture updateShape(int row) {
+        String channel = (String) modelSeries.getValueAt(row, 1);
+        String backend = (String) modelSeries.getValueAt(row, 2);
+        CompletableFuture cf = daqbuf.startSearch(backend, channel, null, 1).handle((ret, ex) -> {
+            if (ex != null) {
+                showException((Exception) ex);
+            } else {
+                List<Map<String, Object>> list = (List<Map<String, Object>>) ret;
+                try {
+                    SwingUtilities.invokeAndWait(() -> {
+                        if (channel.equals(modelSeries.getValueAt(row, 1)) && backend.equals(modelSeries.getValueAt(row, 2))) {
+                            String shape = (list.size() > 0) ? Str.toString(list.get(0).getOrDefault("shape", "")) : "";
+                            modelSeries.setValueAt(shape, row, 3);
+                        }
+                    });
+                } catch (Exception e) {
+                    showException((Exception) e);
+                }
+            }
+            return ret;
+        });
+        return cf;
+    }
+    
 
     boolean isSeriesTableRowEditable(int row, int column) {
         return true;
@@ -523,22 +557,34 @@ public class DaqbufPanel extends StandardDialog {
     public void clear() {
         Logger.getLogger(DaqbufPanel.class.getName()).info("Init");
         reset();
-        backgroundColor = defaultBackgroundColor;
-        gridColor = defaultGridColor;
+        updating=true;
+        try{
+            backgroundColor = defaultBackgroundColor;
+            gridColor = defaultGridColor;
 
-        modelSeries.setRowCount(0);
-        modelSeries.addRow(new Object[]{true, "S10BC01-DBPM010:Q1", "sf-databuffer", "[]", PLOT_SHARED, 1, null});
-        modelSeries.addRow(new Object[]{true, "S10BC01-DBPM010:X1", "sf-databuffer", "[]", PLOT_SHARED, 2, null});
-        modelSeries.addRow(new Object[]{true, "SARFE10-PSSS059:FIT-COM", "sf-databuffer", "[]", PLOT_PRIVATE, 1, null});
-        modelSeries.addRow(new Object[]{true, "SARFE10-PSSS059:SPECTRUM_Y", "sf-databuffer", "[2560]", PLOT_PRIVATE, "", null});
-        modelSeries.addRow(new Object[]{false, "SARES11-SPEC125-M1:FPICTURE", "sf-imagebuffer", "[2048, 2048]", PLOT_PRIVATE, "", null});
+            modelSeries.setRowCount(0);
+            textFrom.setText("");
+            textTo.setText("");
+            checkBins.setSelected(true);
+            spinnerBins.setValue(500);
+            spinnerSize.setValue(10000);
+            comboTime.setSelectedIndex(0);
 
-        textFrom.setText("2024-05-02 09:00:00");
-        textTo.setText("2024-05-02 10:00:00");
-
-        file = null;
-        initializeTable();
-        update();
+            /*
+            modelSeries.addRow(new Object[]{true, "S10BC01-DBPM010:Q1", "sf-databuffer", "[]", PLOT_SHARED, 1, null});
+            modelSeries.addRow(new Object[]{true, "S10BC01-DBPM010:X1", "sf-databuffer", "[]", PLOT_SHARED, 2, null});
+            modelSeries.addRow(new Object[]{true, "SARFE10-PSSS059:FIT-COM", "sf-databuffer", "[]", PLOT_PRIVATE, 1, null});
+            modelSeries.addRow(new Object[]{true, "SARFE10-PSSS059:SPECTRUM_Y", "sf-databuffer", "[2560]", PLOT_PRIVATE, "", null});
+            modelSeries.addRow(new Object[]{false, "SARES11-SPEC125-M1:FPICTURE", "sf-imagebuffer", "[2048, 2048]", PLOT_PRIVATE, "", null});
+            textFrom.setText("2024-05-02 09:00:00");
+            textTo.setText("2024-05-02 10:00:00");
+            */        
+        } finally {
+            updating = false;
+            file = null;
+            initializeTable();
+            update();
+        }
     }
 
     String getInitFormat() {
@@ -1622,17 +1668,17 @@ public class DaqbufPanel extends StandardDialog {
                 @Override
                 public void windowClosing(java.awt.event.WindowEvent e) {
                     dialog.onClosed();
-                    if (modal) {
-                        System.exit(0);
-                    }
+                    System.exit(0);
                 }
             });
             SwingUtils.centerComponent(null, dialog);
             if (dialog.getOwner() != null) {
                 dialog.getOwner().setIconImage(Toolkit.getDefaultToolkit().getImage(App.getResourceUrl("IconSmall.png")));
-            }
+            }            
+            dialog.setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+            dialog.openArgs();
             dialog.setVisible(true);
-            dialog.requestFocus();
+            dialog.requestFocus();            
         });
     }
 
@@ -1648,6 +1694,7 @@ public class DaqbufPanel extends StandardDialog {
         }
     }
 
+    volatile boolean dumping = false;
     void saveQuery(String filename) throws IOException, InterruptedException {
         List<String> channels = new ArrayList<>();
         Vector vector = modelSeries.getDataVector();
@@ -1667,8 +1714,9 @@ public class DaqbufPanel extends StandardDialog {
         final String start = textFrom.getText();
         final String end = textTo.getText();
 
-        buttonSaveData.setEnabled(false);
         JDialog splash = SwingUtils.showSplash(this, "Save", new Dimension(400, 200), "Saving data to " + filename);
+        dumping = true;
+        update();
         daqbuf.startSaveQuery(filename, channels.toArray(new String[0]), start, end, bins).handle((Object ret, Object ex) -> {
             splash.setVisible(false);
             if (ex != null) {
@@ -1678,7 +1726,8 @@ public class DaqbufPanel extends StandardDialog {
                     openFile(filename);
                 }
             }
-            buttonSaveData.setEnabled(true);
+            dumping = false;
+            update();
             return ret;
         });
     }
@@ -1689,6 +1738,7 @@ public class DaqbufPanel extends StandardDialog {
             JFileChooser chooser = new JFileChooser(path);
             FileNameExtensionFilter filter = new FileNameExtensionFilter("HDF5 files", "h5");
             chooser.setFileFilter(filter);
+            chooser.setDialogTitle("Dump Data");
             int rVal = chooser.showSaveDialog(this);
             if (rVal == JFileChooser.APPROVE_OPTION) {
                 String fileName = chooser.getSelectedFile().getAbsolutePath();
@@ -1701,7 +1751,165 @@ public class DaqbufPanel extends StandardDialog {
             showException(ex);
         }
     }
+    
+    
+    void plotData() throws Exception {
+        if (tableSeries.isEditing()) {
+            tableSeries.getCellEditor().stopCellEditing();
+        }
+        if (modelSeries.getRowCount() > 0) {
+            plotQuery();
+            tabPane.setSelectedComponent(panelPlots);
+        }
+    }
 
+
+    void saveConfig() throws Exception  {
+        JFileChooser chooser = new JFileChooser(file);
+        FileNameExtensionFilter filter = new FileNameExtensionFilter("Config files", "dbuf");
+        chooser.setFileFilter(filter);
+        chooser.setDialogTitle("Save Config");
+        int rVal = chooser.showSaveDialog(this);
+        if (rVal == JFileChooser.APPROVE_OPTION) {
+            String filename = chooser.getSelectedFile().getAbsolutePath();
+            if (IO.getExtension(filename).isEmpty()) {
+                filename += ".dbuf";
+            }
+            saveConfig(new File(filename));
+        }
+    }
+    
+    void openConfig() throws Exception  {
+        JFileChooser chooser = new JFileChooser(file);
+        FileNameExtensionFilter filter = new FileNameExtensionFilter("Config files", "dbuf");
+        chooser.setFileFilter(filter);
+        chooser.setDialogTitle("Open Config");
+        int rVal = chooser.showOpenDialog(this);
+        if (rVal == JFileChooser.APPROVE_OPTION) {
+            if (chooser.getSelectedFile().exists()){
+                openConfig(chooser.getSelectedFile());
+            }
+        }
+    }    
+    
+    void saveConfig(File file) throws Exception {
+        Map<String, Object> data = new HashMap();
+        data.put("series", modelSeries.getDataVector());
+        if (comboTime.getSelectedIndex()==0){
+            data.put("from", textFrom.getText());
+            data.put("to", textTo.getText());
+            data.put("range", null);
+        } else {
+            data.put("from", null);
+            data.put("to", null);
+            data.put("range", comboTime.getSelectedItem());            
+        }        
+        data.put("binned", checkBins.isSelected());            
+        data.put("bins",  spinnerBins.getValue() );            
+        data.put("maxsize", spinnerSize.getValue());                            
+        String json = EncoderJson.encode(data, true);
+        Files.write(file.toPath(), json.getBytes());
+        this.file = file;        
+    }
+    
+    void openConfig(File file) throws Exception  {
+        String json = new String(Files.readAllBytes(file.toPath()));
+        Map<String, Object> data = (Map<String, Object>) EncoderJson.decode(json, Map.class);
+
+        String from = (String) data.getOrDefault("from", null);
+        String to = (String) data.getOrDefault("to", null);
+        String range = (String) data.getOrDefault("range", null);
+        Boolean binned = (Boolean) data.getOrDefault("binned", null);
+        Integer bins = (Integer) data.getOrDefault("bins", null);
+        Integer maxsize = (Integer) data.getOrDefault("maxsize", null);
+        List<List> series = (List<List>) data.getOrDefault("series", new ArrayList());
+        
+        openConfig(series, from, to, range, binned, bins, maxsize);
+        this.file = file;
+    }
+    
+    void openConfig(List<List> series, String from, String to, String range, Boolean binned, Integer bins, Integer maxsize) {        
+        clear();
+        textFrom.setText((from==null) ? "" : from);
+        textTo.setText((to==null) ? "" : to);
+        if (range!=null){
+            comboTime.setSelectedItem(range);
+        }
+        if (bins!=null){
+            spinnerBins.setValue(bins);
+        }
+        if (maxsize!=null){
+            spinnerSize.setValue(maxsize);
+        }
+        if (binned!=null){
+            checkBins.setSelected(binned);
+        }
+        Object[][]dataVector =  Convert.to2dArray(Convert.toArray(series));        
+        modelSeries.setDataVector(dataVector, SwingUtils.getTableColumnNames(tableSeries));
+        initializeTable();
+        
+    }
+    
+    void openArgs() {
+        String from = App.getArgumentValue("from");
+        String to = App.getArgumentValue("to");
+        String range = App.getArgumentValue("range");
+        Integer bins = null;
+        Boolean binned = null;
+        if (App.hasArgument("bins")){
+            try{
+                bins = Integer.valueOf(App.getArgumentValue("bins"));
+                bins = (bins<1) ? null : bins;
+                binned = (bins != null);                
+            } catch (Exception ex){    
+                binned = false;
+            }
+        }
+        Integer maxsize = null;
+        try{
+            maxsize = Integer.valueOf(App.getArgumentValue("maxsize"));
+        } catch (Exception ex){            
+        }
+        openConfig(new ArrayList<List>(), from, to, range, binned, bins, maxsize);
+        
+        List<CompletableFuture> futures = new ArrayList<>();
+        for (String s: App.getArgumentValues("ch")){
+            String name = daqbuf.getChannelName(s);
+            String backend = daqbuf.getChannelBackend(s);
+            Object[]row = getEmptyRow();
+            row[1] = name;
+            row[2] = backend;
+            modelSeries.addRow(row);
+            futures.add(updateShape(modelSeries.getRowCount()-1));
+        }        
+        update();
+        
+        if (App.getBoolArgumentValue("plot")){
+            new Thread(()->{
+                try {
+                    for (CompletableFuture cf : futures){
+                        cf.get();
+                    }
+                    SwingUtilities.invokeLater(()->{
+                        try {
+                            plotData();
+                        } catch (Exception ex) {
+                             showException(ex);
+                        }
+                    });                    
+                } catch (Exception ex) {
+                   showException(ex);
+                }                
+            }).start();            
+        }
+    }    
+    
+    Object[] getEmptyRow(){
+        return new Object[]{Boolean.TRUE, "", Daqbuf.getDefaultBackend(), "", PLOT_PRIVATE, 1};
+    }
+    
+    
+    
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -1725,9 +1933,6 @@ public class DaqbufPanel extends StandardDialog {
         buttonUp = new javax.swing.JButton();
         buttonInsert = new javax.swing.JButton();
         buttonDown = new javax.swing.JButton();
-        panelFile = new javax.swing.JPanel();
-        buttonPlot = new javax.swing.JButton();
-        buttonSaveData = new javax.swing.JButton();
         jPanel3 = new javax.swing.JPanel();
         jLabel2 = new javax.swing.JLabel();
         textFrom = new javax.swing.JTextField();
@@ -1742,6 +1947,17 @@ public class DaqbufPanel extends StandardDialog {
         spinnerBins = new javax.swing.JSpinner();
         jLabel7 = new javax.swing.JLabel();
         spinnerSize = new javax.swing.JSpinner();
+        toolBar = new javax.swing.JToolBar();
+        buttonNew = new javax.swing.JButton();
+        buttonOpen = new javax.swing.JButton();
+        buttonSave = new javax.swing.JButton();
+        jSeparator1 = new javax.swing.JToolBar.Separator();
+        buttonDumpData = new javax.swing.JButton();
+        jSeparator2 = new javax.swing.JToolBar.Separator();
+        buttonPlotData = new javax.swing.JButton();
+        filler1 = new javax.swing.Box.Filler(new java.awt.Dimension(0, 0), new java.awt.Dimension(0, 0), new java.awt.Dimension(32767, 0));
+        labelUser = new javax.swing.JLabel();
+        filler2 = new javax.swing.Box.Filler(new java.awt.Dimension(8, 0), new java.awt.Dimension(8, 0), new java.awt.Dimension(8, 32767));
         panelPlots = new javax.swing.JPanel();
         scrollPane = new javax.swing.JScrollPane();
         pnGraphs = new javax.swing.JPanel();
@@ -1782,7 +1998,7 @@ public class DaqbufPanel extends StandardDialog {
                 return canEdit [columnIndex];
             }
         });
-        tableSeries.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
+        tableSeries.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_INTERVAL_SELECTION);
         tableSeries.getTableHeader().setReorderingAllowed(false);
         tableSeries.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseReleased(java.awt.event.MouseEvent evt) {
@@ -1851,7 +2067,7 @@ public class DaqbufPanel extends StandardDialog {
             panelSerieLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(panelSerieLayout.createSequentialGroup()
                 .addGap(2, 2, 2)
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 155, Short.MAX_VALUE)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 137, Short.MAX_VALUE)
                 .addGap(4, 4, 4)
                 .addGroup(panelSerieLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(buttonDelete)
@@ -1862,45 +2078,6 @@ public class DaqbufPanel extends StandardDialog {
         );
 
         panelSerieLayout.linkSize(javax.swing.SwingConstants.VERTICAL, new java.awt.Component[] {buttonDelete, buttonDown, buttonInsert, buttonUp});
-
-        buttonPlot.setText("Plot");
-        buttonPlot.setPreferredSize(new java.awt.Dimension(89, 23));
-        buttonPlot.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                buttonPlotActionPerformed(evt);
-            }
-        });
-
-        buttonSaveData.setText("Save");
-        buttonSaveData.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                buttonSaveDataActionPerformed(evt);
-            }
-        });
-
-        javax.swing.GroupLayout panelFileLayout = new javax.swing.GroupLayout(panelFile);
-        panelFile.setLayout(panelFileLayout);
-        panelFileLayout.setHorizontalGroup(
-            panelFileLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, panelFileLayout.createSequentialGroup()
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addComponent(buttonSaveData)
-                .addGap(18, 18, Short.MAX_VALUE)
-                .addComponent(buttonPlot, javax.swing.GroupLayout.PREFERRED_SIZE, 140, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-        );
-
-        panelFileLayout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {buttonPlot, buttonSaveData});
-
-        panelFileLayout.setVerticalGroup(
-            panelFileLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(panelFileLayout.createSequentialGroup()
-                .addGap(4, 4, 4)
-                .addGroup(panelFileLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(buttonPlot, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(buttonSaveData))
-                .addGap(0, 0, 0))
-        );
 
         jPanel3.setBorder(javax.swing.BorderFactory.createTitledBorder("Range"));
 
@@ -1966,7 +2143,7 @@ public class DaqbufPanel extends StandardDialog {
                 .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel3)
                     .addComponent(textTo, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap())
+                .addContainerGap(9, Short.MAX_VALUE))
             .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                 .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel3Layout.createSequentialGroup()
                     .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
@@ -2027,33 +2204,113 @@ public class DaqbufPanel extends StandardDialog {
                 .addContainerGap())
         );
 
+        buttonNew.setIcon(new javax.swing.ImageIcon(getClass().getResource("/ch/psi/pshell/ui/New.png"))); // NOI18N
+        java.util.ResourceBundle bundle = java.util.ResourceBundle.getBundle("ch/psi/pshell/ui/View"); // NOI18N
+        buttonNew.setText(bundle.getString("View.buttonNew.text")); // NOI18N
+        buttonNew.setToolTipText("Clear config");
+        buttonNew.setFocusable(false);
+        buttonNew.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+        buttonNew.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+        buttonNew.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                buttonNewActionPerformed(evt);
+            }
+        });
+        toolBar.add(buttonNew);
+
+        buttonOpen.setIcon(new javax.swing.ImageIcon(getClass().getResource("/ch/psi/pshell/ui/Open.png"))); // NOI18N
+        buttonOpen.setText(bundle.getString("View.buttonOpen.text")); // NOI18N
+        buttonOpen.setToolTipText("Open config");
+        buttonOpen.setFocusable(false);
+        buttonOpen.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+        buttonOpen.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+        buttonOpen.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                buttonOpenActionPerformed(evt);
+            }
+        });
+        toolBar.add(buttonOpen);
+
+        buttonSave.setIcon(new javax.swing.ImageIcon(getClass().getResource("/ch/psi/pshell/ui/Save.png"))); // NOI18N
+        buttonSave.setText(bundle.getString("View.buttonSave.text")); // NOI18N
+        buttonSave.setToolTipText("Save config");
+        buttonSave.setFocusable(false);
+        buttonSave.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+        buttonSave.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+        buttonSave.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                buttonSaveActionPerformed(evt);
+            }
+        });
+        toolBar.add(buttonSave);
+
+        jSeparator1.setMaximumSize(new java.awt.Dimension(20, 32767));
+        jSeparator1.setPreferredSize(new java.awt.Dimension(20, 0));
+        jSeparator1.setRequestFocusEnabled(false);
+        toolBar.add(jSeparator1);
+
+        buttonDumpData.setIcon(new javax.swing.ImageIcon(getClass().getResource("/ch/psi/pshell/ui/Rec.png"))); // NOI18N
+        buttonDumpData.setText(bundle.getString("View.buttonRun.text")); // NOI18N
+        buttonDumpData.setToolTipText("Dump data to file");
+        buttonDumpData.setFocusable(false);
+        buttonDumpData.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+        buttonDumpData.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+        buttonDumpData.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                buttonDumpDataActionPerformed(evt);
+            }
+        });
+        toolBar.add(buttonDumpData);
+
+        jSeparator2.setMaximumSize(new java.awt.Dimension(20, 32767));
+        jSeparator2.setPreferredSize(new java.awt.Dimension(20, 0));
+        toolBar.add(jSeparator2);
+
+        buttonPlotData.setIcon(new javax.swing.ImageIcon(getClass().getResource("/ch/psi/pshell/ui/Play.png"))); // NOI18N
+        buttonPlotData.setText(bundle.getString("View.buttonRestart.text")); // NOI18N
+        buttonPlotData.setToolTipText("Plot data");
+        buttonPlotData.setFocusable(false);
+        buttonPlotData.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+        buttonPlotData.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+        buttonPlotData.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                buttonPlotDataActionPerformed(evt);
+            }
+        });
+        toolBar.add(buttonPlotData);
+        toolBar.add(filler1);
+
+        labelUser.setText(bundle.getString("View.labelUser.text_1")); // NOI18N
+        toolBar.add(labelUser);
+        toolBar.add(filler2);
+
         javax.swing.GroupLayout panelSeriesLayout = new javax.swing.GroupLayout(panelSeries);
         panelSeries.setLayout(panelSeriesLayout);
         panelSeriesLayout.setHorizontalGroup(
             panelSeriesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addComponent(panelSerie, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-            .addComponent(panelFile, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, panelSeriesLayout.createSequentialGroup()
+            .addGroup(panelSeriesLayout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(panelSeriesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addComponent(jPanel4, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(jPanel3, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addGroup(panelSeriesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(toolBar, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(jPanel4, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(jPanel3, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addContainerGap())
         );
         panelSeriesLayout.setVerticalGroup(
             panelSeriesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, panelSeriesLayout.createSequentialGroup()
+                .addComponent(toolBar, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(0, 0, 0)
                 .addComponent(panelSerie, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGap(0, 0, 0)
                 .addComponent(jPanel3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jPanel4, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addComponent(panelFile, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addContainerGap())
         );
 
-        tabPane.addTab("Series", panelSeries);
+        tabPane.addTab("Config", panelSeries);
 
         panelPlots.setName("panelPlots"); // NOI18N
         panelPlots.setLayout(new java.awt.BorderLayout());
@@ -2070,7 +2327,7 @@ public class DaqbufPanel extends StandardDialog {
         );
         pnGraphsLayout.setVerticalGroup(
             pnGraphsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 419, Short.MAX_VALUE)
+            .addGap(0, 386, Short.MAX_VALUE)
         );
 
         scrollPane.setViewportView(pnGraphs);
@@ -2123,7 +2380,7 @@ public class DaqbufPanel extends StandardDialog {
     }//GEN-LAST:event_buttonDownActionPerformed
 
     private void buttonInsertActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonInsertActionPerformed
-        Object[] data = new Object[]{Boolean.TRUE, "", Daqbuf.getDefaultBackend(), "", PLOT_PRIVATE, 1};
+        Object[] data = getEmptyRow();
         if (tableSeries.getSelectedRow() >= 0) {
             modelSeries.insertRow(tableSeries.getSelectedRow() + 1, data);
         } else {
@@ -2156,29 +2413,6 @@ public class DaqbufPanel extends StandardDialog {
         update();
     }//GEN-LAST:event_tableSeriesKeyReleased
 
-    private void buttonPlotActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonPlotActionPerformed
-        if (tableSeries.isEditing()) {
-            tableSeries.getCellEditor().stopCellEditing();
-        }
-        try {
-            if (modelSeries.getRowCount() > 0) {
-                plotQuery();
-                tabPane.setSelectedComponent(panelPlots);
-            }
-        } catch (Exception ex) {
-            showException(ex);
-            ex.printStackTrace();
-        }
-    }//GEN-LAST:event_buttonPlotActionPerformed
-
-    private void buttonSaveDataActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonSaveDataActionPerformed
-        try {
-            saveQuery();
-        } catch (Exception ex) {
-            showException(ex);
-        }
-    }//GEN-LAST:event_buttonSaveDataActionPerformed
-
     private void checkBinsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_checkBinsActionPerformed
         spinnerBins.setEnabled(checkBins.isSelected());
         spinnerSize.setEnabled(!checkBins.isSelected());
@@ -2194,6 +2428,9 @@ public class DaqbufPanel extends StandardDialog {
         return localDateTime.format(formatter);
     }
     private void comboTimeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_comboTimeActionPerformed
+        if (updating){
+            return;
+        }
         boolean utc = false; //checkUTC.isSelected();
         DateTimeFormatter formatter = (utc)
                 ? DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
@@ -2257,22 +2494,68 @@ public class DaqbufPanel extends StandardDialog {
         textTo.setText(to.format(formatter));
     }//GEN-LAST:event_comboTimeActionPerformed
 
+    private void buttonNewActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonNewActionPerformed
+        try{
+            clear();
+        } catch (Exception ex){
+            showException(ex);
+        }
+    }//GEN-LAST:event_buttonNewActionPerformed
+
+    private void buttonOpenActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonOpenActionPerformed
+        try{
+            openConfig();
+        } catch (Exception ex){
+            showException(ex);
+        }
+    }//GEN-LAST:event_buttonOpenActionPerformed
+
+    private void buttonSaveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonSaveActionPerformed
+        try{
+            saveConfig();
+        } catch (Exception ex){
+            showException(ex);
+        }
+    }//GEN-LAST:event_buttonSaveActionPerformed
+
+    private void buttonPlotDataActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonPlotDataActionPerformed
+        try {
+            plotData();
+        } catch (Exception ex) {
+            showException(ex);
+            ex.printStackTrace();
+        }
+    }//GEN-LAST:event_buttonPlotDataActionPerformed
+
+    private void buttonDumpDataActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonDumpDataActionPerformed
+        try {
+            saveQuery();
+        } catch (Exception ex) {
+            showException(ex);
+        }
+    }//GEN-LAST:event_buttonDumpDataActionPerformed
+
     /**
      */
     public static void main(String args[]) {
         App.init(args);
-        create(null, true, null);
+        create(null, false, null);        
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton buttonDelete;
     private javax.swing.JButton buttonDown;
+    private javax.swing.JButton buttonDumpData;
     private javax.swing.JButton buttonInsert;
-    private javax.swing.JButton buttonPlot;
-    private javax.swing.JButton buttonSaveData;
+    private javax.swing.JButton buttonNew;
+    private javax.swing.JButton buttonOpen;
+    private javax.swing.JButton buttonPlotData;
+    private javax.swing.JButton buttonSave;
     private javax.swing.JButton buttonUp;
     private javax.swing.JCheckBox checkBins;
     private javax.swing.JComboBox<String> comboTime;
+    private javax.swing.Box.Filler filler1;
+    private javax.swing.Box.Filler filler2;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
@@ -2282,7 +2565,9 @@ public class DaqbufPanel extends StandardDialog {
     private javax.swing.JPanel jPanel3;
     private javax.swing.JPanel jPanel4;
     private javax.swing.JScrollPane jScrollPane1;
-    private javax.swing.JPanel panelFile;
+    private javax.swing.JToolBar.Separator jSeparator1;
+    private javax.swing.JToolBar.Separator jSeparator2;
+    private javax.swing.JLabel labelUser;
     private javax.swing.JPanel panelPlots;
     private javax.swing.JPanel panelSerie;
     private javax.swing.JPanel panelSeries;
@@ -2294,5 +2579,6 @@ public class DaqbufPanel extends StandardDialog {
     private javax.swing.JTable tableSeries;
     private javax.swing.JTextField textFrom;
     private javax.swing.JTextField textTo;
+    private javax.swing.JToolBar toolBar;
     // End of variables declaration//GEN-END:variables
 }

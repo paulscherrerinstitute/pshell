@@ -1554,6 +1554,27 @@ public class Convert {
         }
         return ret;
     }
+    
+    public static Object[][] to2dArray(Object[] arrayOfArrays) {
+        int numRows = arrayOfArrays.length;
+        int numCols = 0;
+        for (Object array : arrayOfArrays) {
+            if (array instanceof Object[]) {
+                numCols = Math.max(numCols, ((Object[]) array).length);
+            }
+        }
+
+        Object[][] twoDimArray = new Object[numRows][numCols];
+        for (int i = 0; i < numRows; i++) {
+            if (arrayOfArrays[i] instanceof Object[]) {
+                Object[] array = (Object[]) arrayOfArrays[i];
+                for (int j = 0; j < array.length; j++) {
+                    twoDimArray[i][j] = array[j];
+                }
+            }
+        }
+        return twoDimArray;
+    }
 
     public static Object[] toArray(List list) {
         Object[] ret = list.toArray();

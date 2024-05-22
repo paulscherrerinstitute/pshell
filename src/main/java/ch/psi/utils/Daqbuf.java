@@ -210,15 +210,15 @@ public class Daqbuf implements ChannelQueryAPI {
         return (CompletableFuture) Threading.getPrivateThreadFuture(() -> search(regex));
     }
 
-    public CompletableFuture startSearch(String regex, Boolean caseInsensitive) throws IOException {
+    public CompletableFuture startSearch(String regex, Boolean caseInsensitive) {
         return (CompletableFuture) Threading.getPrivateThreadFuture(() -> search(regex, caseInsensitive));
     }
 
-    public CompletableFuture startSearch(String regex, Boolean caseInsensitive, Integer limit) throws IOException {
+    public CompletableFuture startSearch(String regex, Boolean caseInsensitive, Integer limit) {
         return (CompletableFuture) Threading.getPrivateThreadFuture(() -> search(regex, caseInsensitive, limit));
     }
 
-    public CompletableFuture startSearch(String backend, String regex, Boolean caseInsensitive, Integer limit) throws IOException {
+    public CompletableFuture startSearch(String backend, String regex, Boolean caseInsensitive, Integer limit) {
         return (CompletableFuture) Threading.getPrivateThreadFuture(() -> search(backend, regex, caseInsensitive, limit));
     }
 
@@ -358,14 +358,14 @@ public class Daqbuf implements ChannelQueryAPI {
         query(channel, start, end, listener, null);
     }
 
-    String getChannelName(String channel){
+    public String getChannelName(String channel){
         if (channel.contains(BACKEND_SEPARATOR)) {
             return channel.split(BACKEND_SEPARATOR)[0];
         }
         return channel;
     }
 
-    String getChannelBackend(String channel){
+    public String getChannelBackend(String channel){
         if (channel.contains(BACKEND_SEPARATOR)){
             String[] tokens = channel.split(BACKEND_SEPARATOR);
             if ((tokens.length)>1){
@@ -488,7 +488,7 @@ public class Daqbuf implements ChannelQueryAPI {
         return startQuery(channel, start, end, listener, null);
     }
 
-    public CompletableFuture startQuery(String[] channels, String start, String end, QueryListener listener) throws IOException, InterruptedException {
+    public CompletableFuture startQuery(String[] channels, String start, String end, QueryListener listener)  {
         return startQuery(channels, start, end, listener, null);
     }
 
@@ -498,7 +498,7 @@ public class Daqbuf implements ChannelQueryAPI {
         );
     }
 
-    public CompletableFuture startQuery(String[] channels, String start, String end, QueryListener listener, Integer bins) throws IOException, InterruptedException {
+    public CompletableFuture startQuery(String[] channels, String start, String end, QueryListener listener, Integer bins) {
         return (CompletableFuture) Threading.getPrivateThreadFuture(() -> {
             List<CompletableFuture> futures = new ArrayList<>();
             for (String channel : channels) {
@@ -666,19 +666,19 @@ public class Daqbuf implements ChannelQueryAPI {
         return results;
     }
 
-    public CompletableFuture startFetchQuery(String channel, String start, String end) throws IOException, InterruptedException {
+    public CompletableFuture startFetchQuery(String channel, String start, String end) {
         return (CompletableFuture) Threading.getPrivateThreadFuture(() -> fetchQuery(channel, start, end));
     }
 
-    public CompletableFuture startFetchQuery(String channel, String start, String end, Integer binSize) throws IOException, InterruptedException {
+    public CompletableFuture startFetchQuery(String channel, String start, String end, Integer binSize) {
         return (CompletableFuture) Threading.getPrivateThreadFuture(() -> fetchQuery(channel, start, end, binSize));
     }
 
-    public CompletableFuture startFetchQuery(String[] channels, String start, String end) throws IOException, InterruptedException {
+    public CompletableFuture startFetchQuery(String[] channels, String start, String end) {
         return (CompletableFuture) Threading.getPrivateThreadFuture(() -> fetchQuery(channels, start, end));
     }
 
-    public CompletableFuture startFetchQuery(String[] channels, String start, String end, Integer binSize) throws IOException, InterruptedException {
+    public CompletableFuture startFetchQuery(String[] channels, String start, String end, Integer binSize) {
         return (CompletableFuture) Threading.getPrivateThreadFuture(() -> fetchQuery(channels, start, end, binSize));
     }
 
@@ -797,19 +797,19 @@ public class Daqbuf implements ChannelQueryAPI {
         }
     }
 
-    public CompletableFuture startSaveQuery(String filename, String channel, String start, String end) throws IOException, InterruptedException {
+    public CompletableFuture startSaveQuery(String filename, String channel, String start, String end) {
         return (CompletableFuture) Threading.getPrivateThreadFuture(() -> saveQuery(filename, channel, start, end));
     }
 
-    public CompletableFuture startSaveQuery(String filename, String channel, String start, String end, Integer binSize) throws IOException, InterruptedException {
+    public CompletableFuture startSaveQuery(String filename, String channel, String start, String end, Integer binSize) {
         return (CompletableFuture) Threading.getPrivateThreadFuture(() -> saveQuery(filename, channel, start, end, binSize));
     }
 
-    public CompletableFuture startSaveQuery(String filename, String[] channels, String start, String end) throws IOException, InterruptedException {
+    public CompletableFuture startSaveQuery(String filename, String[] channels, String start, String end) {
         return (CompletableFuture) Threading.getPrivateThreadFuture(() -> saveQuery(filename, channels, start, end));
     }
 
-    public CompletableFuture startSaveQuery(String filename, String[] channels, String start, String end, Integer binSize) throws IOException, InterruptedException {
+    public CompletableFuture startSaveQuery(String filename, String[] channels, String start, String end, Integer binSize) {
         return (CompletableFuture) Threading.getPrivateThreadFuture(() -> saveQuery(filename, channels, start, end, binSize));
     }
     
