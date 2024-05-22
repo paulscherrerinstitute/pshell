@@ -202,7 +202,7 @@ public class DaqbufPanel extends StandardDialog {
 
         modelSeries = (DefaultTableModel) tableSeries.getModel();
         modelSeries.addTableModelListener(modelSeriesListener);
-        
+
         clear();
 
         onLafChange();
@@ -225,14 +225,13 @@ public class DaqbufPanel extends StandardDialog {
         //Fix bug of nimbus rendering Boolean in table
         ((JComponent) tableSeries.getDefaultRenderer(Boolean.class)).setOpaque(true);
         tableSeries.getColumnModel().getColumn(0).setResizable(true);
-        
-        DefaultCellEditor disabledEditor = new DefaultCellEditor(new JTextField()){
+
+        DefaultCellEditor disabledEditor = new DefaultCellEditor(new JTextField()) {
             @Override
-            public boolean isCellEditable(EventObject anEvent){
+            public boolean isCellEditable(EventObject anEvent) {
                 return false;
             }
         };
-        
 
         TableColumn colEnabled = tableSeries.getColumnModel().getColumn(0);
         colEnabled.setPreferredWidth(60);
@@ -297,8 +296,8 @@ public class DaqbufPanel extends StandardDialog {
         });
         comboBackend.setSelectedIndex(0);
 
-        TableColumn colShape = tableSeries.getColumnModel().getColumn(3);                
-        colShape.setCellEditor(disabledEditor);        
+        TableColumn colShape = tableSeries.getColumnModel().getColumn(3);
+        colShape.setCellEditor(disabledEditor);
         colShape.setPreferredWidth(60);
 
         TableColumn colPlot = tableSeries.getColumnModel().getColumn(4);
@@ -314,13 +313,13 @@ public class DaqbufPanel extends StandardDialog {
 
         TableColumn colY = tableSeries.getColumnModel().getColumn(5);
         colY.setPreferredWidth(60);
-        JComboBox comboY = new JComboBox();        
-        configureModelComboY(0, false);        
+        JComboBox comboY = new JComboBox();
+        configureModelComboY(0, false);
         comboY.setModel(modelComboY);
         cellEditor = new DefaultCellEditor(comboY);
         cellEditor.setClickCountToStart(2);
         colY.setCellEditor(cellEditor);
-        
+
         TableColumn colColors = tableSeries.getColumnModel().getColumn(6);
         colColors.setPreferredWidth(60);
 
@@ -335,29 +334,29 @@ public class DaqbufPanel extends StandardDialog {
                 field.addMouseListener(new MouseAdapter() {
                     @Override
                     public void mousePressed(MouseEvent e) {
-                        if (e.getClickCount() == 2) {                            
-                            if (getRowRank(tableSeries.getSelectedRow())==0){
+                        if (e.getClickCount() == 2) {
+                            if (getRowRank(tableSeries.getSelectedRow()) == 0) {
                                 colormap = null;
                                 field.setText("");
-                                color = JColorChooser.showDialog(DaqbufPanel.this, "Choose a Color - Click 'Cancel for default", color);                                
+                                color = JColorChooser.showDialog(DaqbufPanel.this, "Choose a Color - Click 'Cancel for default", color);
                                 field.setBackground(color);
                             } else {
                                 color = null;
                                 //field.setBackground(null);                            
                                 JPanel panel = new JPanel();
-                                panel.setLayout(new BorderLayout(0,30));
-                                JLabel label = new JLabel("Select the Colormap:");     
-                                panel.add(label, BorderLayout.NORTH);        
-                                JComboBox  combo= new JComboBox();
-                                SwingUtils.setEnumCombo(combo, Colormap.class);                
+                                panel.setLayout(new BorderLayout(0, 30));
+                                JLabel label = new JLabel("Select the Colormap:");
+                                panel.add(label, BorderLayout.NORTH);
+                                JComboBox combo = new JComboBox();
+                                SwingUtils.setEnumCombo(combo, Colormap.class);
                                 combo.setSelectedItem(colormap);
-                                panel.add(combo, BorderLayout.CENTER);        
-                                if (showOption("Colormap", panel , OptionType.OkCancel) == OptionResult.Yes) {     
+                                panel.add(combo, BorderLayout.CENTER);
+                                if (showOption("Colormap", panel, OptionType.OkCancel) == OptionResult.Yes) {
                                     colormap = (Colormap) combo.getSelectedItem();
-                                    field.setText(colormap.toString());                                
+                                    field.setText(colormap.toString());
                                 } else {
                                     colormap = null;
-                                    field.setText("");                                
+                                    field.setText("");
                                 }
                                 field.setBackground(null);
                             }
@@ -367,29 +366,29 @@ public class DaqbufPanel extends StandardDialog {
                 });
             }
 
-            @Override   
+            @Override
             public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
-                try{
+                try {
                     colormap = Colormap.valueOf((String) value);
                     color = null;
                     field.setText(colormap.toString());
                     field.setBackground(null);
-                } catch (Exception ex){
+                } catch (Exception ex) {
                     colormap = null;
-                    color = Preferences.getColorFromString((String) value);                    
+                    color = Preferences.getColorFromString((String) value);
                     field.setText("");
                     field.setBackground(color);
-                }                                
+                }
                 field.setEditable(false);
                 return field;
             }
 
             @Override
             public Object getCellEditorValue() {
-                if (color != null){
+                if (color != null) {
                     return color.getRed() + "," + color.getGreen() + "," + color.getBlue();
                 }
-                if (colormap!=null){
+                if (colormap != null) {
                     return colormap.toString();
                 }
                 return "";
@@ -414,17 +413,17 @@ public class DaqbufPanel extends StandardDialog {
             @Override
             public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
                 Component comp = super.getTableCellRendererComponent(table, "", isSelected, hasFocus, row, column);
-                try{
+                try {
                     Colormap colormap = Colormap.valueOf((String) value);
                     ((JLabel) comp).setBackground(null);
-                    ((JLabel) comp).setText(colormap.toString());                    
+                    ((JLabel) comp).setText(colormap.toString());
                     ((JLabel) comp).setEnabled(true);
-                } catch (Exception ex){
+                } catch (Exception ex) {
                     Color color = Preferences.getColorFromString((String) value);
                     ((JLabel) comp).setBackground(color);
-                    ((JLabel) comp).setText("");                    
+                    ((JLabel) comp).setText("");
                     ((JLabel) comp).setEnabled(false);
-                }                                  
+                }
                 comp.setForeground(table.getForeground());
                 return comp;
             }
@@ -432,21 +431,20 @@ public class DaqbufPanel extends StandardDialog {
 
         update();
     }
-    
-    
-    void configureModelComboY(int rank, boolean x){        
-        int curRank = modelComboY.getSize()>=2 ? 0 : 1;
-        boolean curX = modelComboY.getSize()==3 ;
-        if ((rank!=curRank) || (x!=curX)){        
+
+    void configureModelComboY(int rank, boolean x) {
+        int curRank = modelComboY.getSize() >= 2 ? 0 : 1;
+        boolean curX = modelComboY.getSize() == 3;
+        if ((rank != curRank) || (x != curX)) {
             modelComboY.removeAllElements();
-            if (rank==0){
+            if (rank == 0) {
                 modelComboY.addElement(1);
-                modelComboY.addElement(2);        
-                if (x){
-                    modelComboY.addElement("X");       
+                modelComboY.addElement(2);
+                if (x) {
+                    modelComboY.addElement("X");
                 }
             } else {
-                modelComboY.addElement("");      
+                modelComboY.addElement("");
             }
         }
 
@@ -480,16 +478,16 @@ public class DaqbufPanel extends StandardDialog {
     }
 
     int getRowRank(int row) {
-        try{
+        try {
             String shape = modelSeries.getValueAt(row, 3).toString().trim();
-            if ((shape.isBlank() || shape.equals("[]"))){
+            if ((shape.isBlank() || shape.equals("[]"))) {
                 return 0;
             }
-            if (shape.indexOf(",") >=0){
+            if (shape.indexOf(",") >= 0) {
                 return 2;
             }
             return 1;
-        } catch(Exception ex){
+        } catch (Exception ex) {
             return 0;
         }
     }
@@ -505,11 +503,11 @@ public class DaqbufPanel extends StandardDialog {
         buttonDelete.setEnabled((rows > 0) && (cur >= 0) && editing);
         buttonInsert.setEnabled(editing);
         buttonPlot.setEnabled(modelSeries.getRowCount() > 0);
-        
+
         int row = tableSeries.getSelectedRow();
-        if (row>=0){
+        if (row >= 0) {
             boolean shared = PLOT_SHARED.equals(modelSeries.getValueAt(row, 4));
-            boolean first = (row==0) || (!PLOT_SHARED.equals(modelSeries.getValueAt(row-1, 4)));     
+            boolean first = (row == 0) || (!PLOT_SHARED.equals(modelSeries.getValueAt(row - 1, 4)));
             configureModelComboY(getRowRank(row), shared && first);
         }
     }
@@ -527,7 +525,7 @@ public class DaqbufPanel extends StandardDialog {
         reset();
         backgroundColor = defaultBackgroundColor;
         gridColor = defaultGridColor;
-        
+
         modelSeries.setRowCount(0);
         modelSeries.addRow(new Object[]{true, "S10BC01-DBPM010:Q1", "sf-databuffer", "[]", PLOT_SHARED, 1, null});
         modelSeries.addRow(new Object[]{true, "S10BC01-DBPM010:X1", "sf-databuffer", "[]", PLOT_SHARED, 2, null});
@@ -639,7 +637,7 @@ public class DaqbufPanel extends StandardDialog {
         plots.add(plot);
         pnGraphs.add(plot);
         Map<String, Object> info = new HashMap<>();
-        List<SeriesInfo> series =new ArrayList<>();
+        List<SeriesInfo> series = new ArrayList<>();
         plotInfo.put(plot, series);
         numPlots++;
     }
@@ -766,7 +764,7 @@ public class DaqbufPanel extends StandardDialog {
         addPlot(plot);
         return plot;
     }
-    
+
     LinePlotJFree addCorrelationPlot(boolean binned) {
         LinePlotJFree plot = new LinePlotJFree();
         plot.setLegendVisible(true);
@@ -808,23 +806,22 @@ public class DaqbufPanel extends StandardDialog {
         addPlot(plot);
         return plot;
     }
-    
 
     void requery(Plot plot) {
-        XYPlot xyplot =  (plot instanceof LinePlotJFree) ? 
-                ((LinePlotJFree)plot).getChart().getXYPlot() : 
-                ((MatrixPlotJFree)plot).getChart().getXYPlot();        
-        if (!(xyplot.getDomainAxis() instanceof DateAxis)){
+        XYPlot xyplot = (plot instanceof LinePlotJFree)
+                ? ((LinePlotJFree) plot).getChart().getXYPlot()
+                : ((MatrixPlotJFree) plot).getChart().getXYPlot();
+        if (!(xyplot.getDomainAxis() instanceof DateAxis)) {
             return;
         }
         double xmin = xyplot.getDomainAxis().getRange().getLowerBound();
-        double xmax = xyplot.getDomainAxis().getRange().getUpperBound();        
+        double xmax = xyplot.getDomainAxis().getRange().getUpperBound();
         String start = Daqbuf.millisToStr((long) xmin, false);
-        String end = Daqbuf.millisToStr((long) xmax, false);        
-        SeriesInfo[] formerInfo = plotInfo.get(plot).toArray(new SeriesInfo[0]);       
+        String end = Daqbuf.millisToStr((long) xmax, false);
+        SeriesInfo[] formerInfo = plotInfo.get(plot).toArray(new SeriesInfo[0]);
         plotInfo.get(plot).clear();
-        plot.clear();        
-        for (SeriesInfo seriesInfo: formerInfo){
+        plot.clear();
+        for (SeriesInfo seriesInfo : formerInfo) {
             seriesInfo = new SeriesInfo(seriesInfo, start, end, seriesInfo.bins);
             PlotSeries series = null;
             switch (seriesInfo.getRank()) {
@@ -842,10 +839,10 @@ public class DaqbufPanel extends StandardDialog {
                         series = addMatrixSeriesBinned((MatrixPlotJFree) plot, seriesInfo);
                     }
                     break;
-            }        
-            if (series!=null){
+            }
+            if (series != null) {
                 plotInfo.get(plot).add(seriesInfo);
-            }            
+            }
         }
     }
 
@@ -972,32 +969,30 @@ public class DaqbufPanel extends StandardDialog {
         }
         return series;
     }
-    
-    
+
     CompletableFuture setDomainAxis(LinePlotJFree plot, SeriesInfo si) {
         return setDomainAxis(plot, si.name, si.backend, si.start, si.end, si.bins, si.axis, si.color);
     }
 
-
     CompletableFuture setDomainAxis(LinePlotJFree plot, String name, String backend, String start, String end, Integer bins, int axis, Color color) {
         try {
             plot.getAxis(AxisId.X).setLabel(name);
-            return  Threading.getPrivateThreadFuture(() -> {
-                try{
-                    Map<String, List> map =  daqbuf.fetchQuery(name + Daqbuf.BACKEND_SEPARATOR + backend, start, end, bins);
-                    List<Number> values = map.keySet().contains(Daqbuf.FIELD_AVERAGE) ? map.get(Daqbuf.FIELD_AVERAGE) : map.get(Daqbuf.FIELD_VALUE);                    
+            return Threading.getPrivateThreadFuture(() -> {
+                try {
+                    Map<String, List> map = daqbuf.fetchQuery(name + Daqbuf.BACKEND_SEPARATOR + backend, start, end, bins);
+                    List<Number> values = map.keySet().contains(Daqbuf.FIELD_AVERAGE) ? map.get(Daqbuf.FIELD_AVERAGE) : map.get(Daqbuf.FIELD_VALUE);
                     return values;
-                } catch (Exception ex){
+                } catch (Exception ex) {
                     return null;
                 }
-                 
-            });          
+
+            });
         } catch (Exception ex) {
             showException(ex);
             return null;
-        }        
-   }
-    
+        }
+    }
+
     LinePlotSeries addCorrelationSeries(LinePlotJFree plot, SeriesInfo si, CompletableFuture domainAxisFuture) {
         return addCorrelationSeries(plot, si.name, si.backend, si.start, si.end, si.bins, si.axis, si.color, domainAxisFuture);
     }
@@ -1013,14 +1008,14 @@ public class DaqbufPanel extends StandardDialog {
                     showException((Exception) ex);
                 } else {
                     Map<String, List> map = (Map<String, List>) ret;
-                    List<Number> y = map.keySet().contains(Daqbuf.FIELD_AVERAGE) ? map.get(Daqbuf.FIELD_AVERAGE) : map.get(Daqbuf.FIELD_VALUE);    
-                    List<Number> x = null;                    
+                    List<Number> y = map.keySet().contains(Daqbuf.FIELD_AVERAGE) ? map.get(Daqbuf.FIELD_AVERAGE) : map.get(Daqbuf.FIELD_VALUE);
+                    List<Number> x = null;
                     try {
                         x = (List<Number>) domainAxisFuture.get();
                     } catch (Exception e) {
                         showException(e);
                     }
-                    if ((x!=null) && (x.size() == y.size())){                        
+                    if ((x != null) && (x.size() == y.size())) {
                         try {
                             plot.setUpdatesEnabled(false);
                             if (series.getCount() >= series.getMaxItemCount()) {
@@ -1032,7 +1027,7 @@ public class DaqbufPanel extends StandardDialog {
                         } finally {
                             plot.update(true);
                             plot.setUpdatesEnabled(true);
-                        }                        
+                        }
                     }
                 }
                 return ret;
@@ -1042,7 +1037,6 @@ public class DaqbufPanel extends StandardDialog {
         }
         return series;
     }
-    
 
     //MatrixPlotRenderer
     MatrixPlotJFree addMatrixPlot(boolean binned) {
@@ -1099,8 +1093,8 @@ public class DaqbufPanel extends StandardDialog {
             public void chartMouseMoved(ChartMouseEvent event) {
             }
         });
-        
-        plot.addPopupMenuItem(null);       
+
+        plot.addPopupMenuItem(null);
         JMenuItem menuRequery = new JMenuItem("Requery");
         menuRequery.addActionListener((ActionEvent e) -> {
             requery(plot);
@@ -1164,7 +1158,7 @@ public class DaqbufPanel extends StandardDialog {
         List<Long> timestamp = new ArrayList<>();
         long maxSize = (Integer) spinnerSize.getValue();
         MatrixPlotSeries series = new MatrixPlotSeries(name);
-        if (colormap!=null){
+        if (colormap != null) {
             plot.setColormap(colormap);
         }
         plot.addSeries(series);
@@ -1236,7 +1230,7 @@ public class DaqbufPanel extends StandardDialog {
     MatrixPlotBinnedSeries addMatrixSeriesBinned(MatrixPlotJFree plot, String name, String backend, String start, String end, int bins, Colormap colormap) {
         long maxSize = (Integer) spinnerSize.getValue();
         MatrixPlotBinnedSeries series = new MatrixPlotBinnedSeries(name);
-        if (colormap!=null){
+        if (colormap != null) {
             plot.setColormap(colormap);
         }
         plot.addSeries(series);
@@ -1295,8 +1289,8 @@ public class DaqbufPanel extends StandardDialog {
                 double off = 20.0;
                 for (List<Number> l : average) {
                     List lmin = new ArrayList();
-                    List lmax = new ArrayList();                    
-                    for (Number n : l) {                        
+                    List lmax = new ArrayList();
+                    for (Number n : l) {
                         lmin.add(n.doubleValue() - off);
                         lmax.add(n.doubleValue() + off);
                     }
@@ -1352,7 +1346,7 @@ public class DaqbufPanel extends StandardDialog {
 
     SlicePlotSeries addImageSeries(SlicePlotDefault plot, String name, String backend, String start, String end, Colormap colormap) {
         SlicePlotSeries series = new SlicePlotSeries(name);
-        if (colormap!=null){
+        if (colormap != null) {
             plot.setColormap(colormap);
         }
         plotSeries.add(series);
@@ -1408,19 +1402,19 @@ public class DaqbufPanel extends StandardDialog {
             parent = null;
             start = textFrom.getText();
             end = textTo.getText();
-            bins = checkBins.isSelected() ? (Integer) spinnerBins.getValue() : null;            
+            bins = checkBins.isSelected() ? (Integer) spinnerBins.getValue() : null;
             name = getChannelAlias(((String) info.get(1)).trim());
             backend = info.get(2).toString();
             shared = PLOT_SHARED.equals(info.get(4));
             axis = (info.get(5)).equals("X") ? AXIS_X : ((info.get(5)).equals("") ? AXIS_NONE : (Integer) info.get(5));
             Color cl;
             Colormap cm;
-            try{
+            try {
                 cm = Colormap.valueOf((String) info.get(6));
-                cl=null;
+                cl = null;
             } catch (Exception ex) {
                 cl = Preferences.getColorFromString((String) info.get(6));
-                cm=null;
+                cm = null;
             }
             colormap = cm;
             color = cl;
@@ -1431,12 +1425,12 @@ public class DaqbufPanel extends StandardDialog {
             }
             shape = aux;
         }
-        
+
         SeriesInfo(SeriesInfo parent, String start, String end, Integer bins) {
             this.parent = parent;
             this.start = start;
             this.end = end;
-            this.bins = bins;            
+            this.bins = bins;
             name = parent.name;
             backend = parent.backend;
             shared = parent.shared;
@@ -1445,11 +1439,11 @@ public class DaqbufPanel extends StandardDialog {
             colormap = parent.colormap;
             shape = parent.shape;
         }
-        
-        int getRank(){
+
+        int getRank() {
             return shape.size();
         }
-        
+
     }
 
     public void plotQuery() throws Exception {
@@ -1467,27 +1461,27 @@ public class DaqbufPanel extends StandardDialog {
         Vector vector = modelSeries.getDataVector();
         Vector[] rows = (Vector[]) vector.toArray(new Vector[0]);
         CompletableFuture cf = null;
-        
+
         for (int i = 0; i < rows.length; i++) {
             Vector info = rows[i];
             if (info.get(0).equals(true)) {
                 SeriesInfo seriesInfo = new SeriesInfo(info);
                 Plot plot = null;
-                PlotSeries series = null;                
+                PlotSeries series = null;
                 switch (seriesInfo.getRank()) {
                     case 0:
                         if (seriesInfo.shared && (sharedPlot != null) && (sharedPlot instanceof LinePlotJFree)) {
                             plot = sharedPlot;
                         } else {
                             cf = null;
-                            if (seriesInfo.axis<0){
+                            if (seriesInfo.axis < 0) {
                                 plot = addCorrelationPlot(seriesInfo.bins != null);
                             } else {
                                 plot = addLinePlot(seriesInfo.bins != null);
                             }
                             sharedPlot = seriesInfo.shared ? plot : null;
                         }
-                        if (seriesInfo.axis<0){
+                        if (seriesInfo.axis < 0) {
                             cf = setDomainAxis((LinePlotJFree) plot, seriesInfo);
                         } else if (cf != null) {
                             series = addCorrelationSeries((LinePlotJFree) plot, seriesInfo, cf);
@@ -1495,7 +1489,7 @@ public class DaqbufPanel extends StandardDialog {
                             series = addLineSeries((LinePlotJFree) plot, seriesInfo);
                         } else {
                             series = addBinnedSeries((LinePlotJFree) plot, seriesInfo);
-                        }                                                
+                        }
                         break;
                     case 1:
                         if (seriesInfo.bins == null) {
@@ -1510,9 +1504,9 @@ public class DaqbufPanel extends StandardDialog {
                         plot = addSlicePlot();
                         series = addImageSeries((SlicePlotDefault) plot, seriesInfo);
                 }
-                if ((plot!=null) && (series!=null)){
+                if ((plot != null) && (series != null)) {
                     plotInfo.get(plot).add(seriesInfo);
-                }                
+                }
             }
         }
 
