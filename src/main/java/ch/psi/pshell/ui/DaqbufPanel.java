@@ -2001,7 +2001,7 @@ public class DaqbufPanel extends StandardDialog {
                 return canEdit [columnIndex];
             }
         });
-        tableSeries.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_INTERVAL_SELECTION);
+        tableSeries.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
         tableSeries.getTableHeader().setReorderingAllowed(false);
         tableSeries.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseReleased(java.awt.event.MouseEvent evt) {
