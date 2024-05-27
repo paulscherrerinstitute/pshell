@@ -271,7 +271,25 @@ public class Daqbuf implements ChannelQueryAPI {
             System.out.printf("%s", String.format(PRINT_SEARCH_FORMAT, cols));
         }
     }
+    
+    public class EndOfStreamException extends IOException{
+        final int bytesRead;
+        final int dataSize;
+        
+        EndOfStreamException(int bytesRead, int dataSize){
+            super("Unexpected end of stream (%d of %d bytes).".formatted(bytesRead, dataSize));
+            this.bytesRead=bytesRead;
+            this.dataSize=dataSize;
+        }
+    }
 
+    public class TimeoutException extends IOException{
+        TimeoutException(){
+            super("Timeout receiving from stream");
+        }
+    }
+    
+    
     byte[] readStream(InputStream inputStream, int dataSize) throws IOException, InterruptedException {
         long last = System.currentTimeMillis();
         int timeout = 10000;
@@ -281,10 +299,10 @@ public class Daqbuf implements ChannelQueryAPI {
         while (bytesRead < dataSize) {
             int count = inputStream.read(data, bytesRead, dataSize - bytesRead);
             if (count == -1) {
-                throw new IOException("Unexpected end of stream (%d of %d bytes).".formatted(bytesRead, dataSize));
+                throw new EndOfStreamException(bytesRead, dataSize);
             } else if (count == 0) {
                 if ((System.currentTimeMillis() - last) > timeout) {
-                    throw new IOException("Timeout receiving from stream");
+                    throw new TimeoutException();
                 }
                 Thread.sleep(1);
             } else {
@@ -403,7 +421,15 @@ public class Daqbuf implements ChannelQueryAPI {
                 try (InputStream inputStream = response.readEntity(InputStream.class)) {
 
                     while (true) {
-                        byte[] sizeBytes = readStream(inputStream, 4);
+                        byte[] sizeBytes = null;
+                        try{
+                            sizeBytes = readStream(inputStream, 4);
+                        } catch(EndOfStreamException ex){
+                            if (ex.bytesRead>0){
+                                throw ex;
+                            }
+                            break;
+                        }
                         int dataSize = ByteBuffer.wrap(sizeBytes).order(ByteOrder.LITTLE_ENDIAN).getInt();
                         byte[] padding = readStream(inputStream, 12);
                         // Read the data blob of the specified size
@@ -411,29 +437,35 @@ public class Daqbuf implements ChannelQueryAPI {
                         padding = readStream(inputStream, (8 - (dataSize % 8)) % 8);
 
                         Map<String, Object> frame = mapper.readValue(new ByteArrayInputStream(data), Map.class);
-                        List timestamps = (List) frame.getOrDefault("tss", null);
-                        List ids = (List) frame.getOrDefault("pulses", null);
-                        List values = (List) frame.getOrDefault("values", null);
-                        String scalar_type = (String) frame.getOrDefault("scalar_type", null);
-                        Boolean rangeFinal = (Boolean) frame.getOrDefault("rangeFinal", false);
-                        if (scalar_type != null) {
-                            listener.onMessage(query, values, ids, timestamps);
-                            if (recordListener != null) {
-                                if (values != null) {
-                                    for (int i = 0; i < values.size(); i++) {
-                                        recordListener.onRecord(query, values.get(i), (Long) ids.get(i), (Long) timestamps.get(i));
+                        String error = (String) frame.getOrDefault("error", null);
+                        if ((error!=null) && (!error.isEmpty())){
+                            throw new IOException(error.trim());                    
+                        }
+                        if (!frame.getOrDefault("type","").equals("keepalive")){
+                            List timestamps = (List) frame.getOrDefault("tss", null);
+                            List ids = (List) frame.getOrDefault("pulses", null);
+                            List values = (List) frame.getOrDefault("values", null);
+                            String scalar_type = (String) frame.getOrDefault("scalar_type", null);
+                            Boolean rangeFinal = (Boolean) frame.getOrDefault("rangeFinal", false);
+                            if (scalar_type != null) {
+                                listener.onMessage(query, values, ids, timestamps);
+                                if (recordListener != null) {
+                                    if (values != null) {
+                                        for (int i = 0; i < values.size(); i++) {
+                                            recordListener.onRecord(query, values.get(i), (Long) ids.get(i), (Long) timestamps.get(i));
+                                        }
                                     }
                                 }
                             }
-                        }
-                        if (rangeFinal == true) {
-                            listener.onFinished(query, null);
-                            break;
-                        } else if (scalar_type == null) {
-                            throw new IOException("Invalid cbor frame keys: " + Str.toString(frame.keySet()));
-                        }
-                        if (Thread.currentThread().isInterrupted()) {
-                            throw new InterruptedException("Query has been aborted");
+                            if (rangeFinal == true) {
+                                listener.onFinished(query, null);
+                                break;
+                            } else if (scalar_type == null) {
+                                throw new IOException("Invalid cbor frame keys: " + Str.toString(frame.keySet()));
+                            }
+                            if (Thread.currentThread().isInterrupted()) {
+                                throw new InterruptedException("Query has been aborted");
+                            }
                         }
                     }
                 }

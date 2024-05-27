@@ -1847,6 +1847,7 @@ public class DaqbufPanel extends StandardDialog {
         if (binned!=null){
             checkBins.setSelected(binned);
         }
+        checkBinsActionPerformed(null);
         Object[][]dataVector =  Convert.to2dArray(Convert.toArray(series));        
         modelSeries.setDataVector(dataVector, SwingUtils.getTableColumnNames(tableSeries));
         initializeTable();
