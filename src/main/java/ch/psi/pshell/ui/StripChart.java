@@ -1044,7 +1044,7 @@ public class StripChart extends StandardDialog {
     String getChannelName(String str){
         str=removeAlias(str);
         if (str.contains(" ")) {
-            String[] tokens = str.split(" ");
+            String[] tokens = str.split(" ");            
             str = tokens[0];
         }
         return str.trim();        
@@ -1061,7 +1061,7 @@ public class StripChart extends StandardDialog {
         return new String[0];        
     }
 
-    String getChannelAlias(String str){
+    String getChannelAlias(String str, Type type){
         str=str.trim();
         if (str.endsWith(">")) {
             int end = str.lastIndexOf('>');            
@@ -1072,6 +1072,9 @@ public class StripChart extends StandardDialog {
                     return alias;
                 }
             }
+        }
+        if (type==Type.CamServer){
+            return str;
         }
         return getChannelName(str);               
     }
@@ -1173,9 +1176,9 @@ public class StripChart extends StandardDialog {
         Vector[] rows = (Vector[]) vector.toArray(new Vector[0]);
         for (int i = 0; i < rows.length; i++) {
             Vector info = rows[i];
-            if (info.get(0).equals(true)) {
-                final String name = getChannelAlias(((String) info.get(1)).trim());
+            if (info.get(0).equals(true)) {                
                 final Type type = Type.valueOf(info.get(2).toString());
+                final String name = getChannelAlias(((String) info.get(1)).trim(), type);
                 final int plotIndex = ((Integer) info.get(3)) - 1;
                 final int axis = (Integer) info.get(4);
                 final TimePlotBase plot = plots.get(plotIndex);
