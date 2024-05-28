@@ -82,6 +82,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Pattern;
 import javax.swing.AbstractCellEditor;
 import javax.swing.BoxLayout;
 import javax.swing.DefaultCellEditor;
@@ -1432,6 +1433,35 @@ public class DaqbufPanel extends StandardDialog {
         }
         return series;
     }
+    
+    String expandTime(String text){
+        text = text.trim();
+        if (Pattern.matches("^\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:$", text)){
+            return text + "00";
+        }
+        if (Pattern.matches("^\\d{4}-\\d{2}-\\d{2} \\d{2}:$", text)){
+            return text + "00";
+        }
+        if (Pattern.matches("^\\d{4}-\\d{2}-\\d{2} \\d{2}$", text)){
+            return text + ":00";
+        }
+        if (Pattern.matches("^\\d{4}-\\d{2}-\\d{2}", text)){
+            return text + " 00:00";
+        }
+        if (Pattern.matches("^\\d{4}-\\d{2}", text)){
+            return text + "-01 00:00";
+        }
+        if (Pattern.matches("^\\d{4}-\\d{2}-", text)){
+            return text + "01 00:00";
+        }
+        if (Pattern.matches("^\\d{4}", text)){
+            return text + "-01-01 00:00";
+        }
+        if (Pattern.matches("^\\d{4}-", text)){
+            return text + "01-01 00:00";
+        }
+        return text;
+    }
 
     class SeriesInfo {
 
@@ -1449,8 +1479,10 @@ public class DaqbufPanel extends StandardDialog {
 
         SeriesInfo(Vector info) {
             parent = null;
-            start = textFrom.getText();
-            end = textTo.getText();
+            start = expandTime(textFrom.getText());
+            end = expandTime(textTo.getText());
+            textFrom.setText(start);
+            textTo.setText(end);
             bins = checkBins.isSelected() ? (Integer) spinnerBins.getValue() : null;
             name = getChannelAlias(((String) info.get(1)).trim());
             backend = info.get(2).toString();
@@ -1714,8 +1746,11 @@ public class DaqbufPanel extends StandardDialog {
             throw new IOException("No channel selected");
         }
         final Integer bins = checkBins.isSelected() ? (Integer) spinnerBins.getValue() : null;
-        final String start = textFrom.getText();
-        final String end = textTo.getText();
+        final String start = expandTime(textFrom.getText());
+        final String end = expandTime(textTo.getText());
+        textFrom.setText(start);
+        textTo.setText(end);
+        
 
         JDialog splash = SwingUtils.showSplash(this, "Save", new Dimension(400, 200), "Saving data to " + filename);
         dumping = true;
