@@ -428,6 +428,7 @@ public class Daqbuf implements ChannelQueryAPI {
                             if (ex.bytesRead>0){
                                 throw ex;
                             }
+                            listener.onFinished(query, null);
                             break;
                         }
                         int dataSize = ByteBuffer.wrap(sizeBytes).order(ByteOrder.LITTLE_ENDIAN).getInt();
