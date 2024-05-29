@@ -60,7 +60,6 @@ import java.awt.event.MouseEvent;
 import java.awt.geom.Rectangle2D;
 import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Files;
 import java.time.DayOfWeek;
 import java.time.Instant;
@@ -71,15 +70,12 @@ import java.time.YearMonth;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.EventObject;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Vector;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
@@ -128,7 +124,8 @@ import org.jfree.data.xy.YIntervalSeriesCollection;
  *
  */
 public class DaqbufPanel extends StandardDialog {
-
+    public static final String ARG_DAQBUF_URL = "daqbuf";
+    
     public static final String PLOT_PRIVATE = "Private";
     public static final String PLOT_SHARED = "Shared";
     public static final int AXIS_NONE = 0;
@@ -258,7 +255,7 @@ public class DaqbufPanel extends StandardDialog {
         };
 
         TableColumn colEnabled = tableSeries.getColumnModel().getColumn(0);
-        colEnabled.setPreferredWidth(60);
+        colEnabled.setPreferredWidth(80);
 
         TableColumn colName = tableSeries.getColumnModel().getColumn(1);
         JTextField textNameEditor = new JTextField();
@@ -267,7 +264,7 @@ public class DaqbufPanel extends StandardDialog {
         selector.setHistorySize(0);
         selector.setListMode(ChannelSelector.ListMode.Popup);
 
-        colName.setPreferredWidth(320);
+        colName.setPreferredWidth(298);
         colName.setCellEditor(new ChannelSelector.ChannelSelectorCellEditor(selector));
 
         colName.getCellEditor().addCellEditorListener(new CellEditorListener() {
@@ -307,7 +304,7 @@ public class DaqbufPanel extends StandardDialog {
 
         TableColumn colShape = tableSeries.getColumnModel().getColumn(3);
         colShape.setCellEditor(disabledEditor);
-        colShape.setPreferredWidth(60);
+        colShape.setPreferredWidth(62);
 
         TableColumn colPlot = tableSeries.getColumnModel().getColumn(4);
         colPlot.setPreferredWidth(60);
@@ -1717,6 +1714,10 @@ public class DaqbufPanel extends StandardDialog {
         });
     }
 
+    public static void create(boolean modal, String title) {
+        create(App.getArgumentValue(ARG_DAQBUF_URL), modal, title);
+    }    
+
     void openFile(String fileName) {
         try {
             DataPanel panel = new DataPanel();
@@ -2037,6 +2038,7 @@ public class DaqbufPanel extends StandardDialog {
                 return canEdit [columnIndex];
             }
         });
+        tableSeries.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_INTERVAL_SELECTION);
         tableSeries.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
         tableSeries.getTableHeader().setReorderingAllowed(false);
         tableSeries.addMouseListener(new java.awt.event.MouseAdapter() {
@@ -2086,7 +2088,7 @@ public class DaqbufPanel extends StandardDialog {
             .addGroup(panelSerieLayout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(panelSerieLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
+                    .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 556, Short.MAX_VALUE)
                     .addGroup(panelSerieLayout.createSequentialGroup()
                         .addGap(0, 0, Short.MAX_VALUE)
                         .addComponent(buttonUp)
@@ -2327,13 +2329,13 @@ public class DaqbufPanel extends StandardDialog {
         panelSeries.setLayout(panelSeriesLayout);
         panelSeriesLayout.setHorizontalGroup(
             panelSeriesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(panelSerie, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-            .addGroup(panelSeriesLayout.createSequentialGroup()
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, panelSeriesLayout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(panelSeriesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(toolBar, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(jPanel4, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(jPanel3, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addGroup(panelSeriesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addComponent(panelSerie, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(toolBar, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(jPanel4, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(jPanel3, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addContainerGap())
         );
         panelSeriesLayout.setVerticalGroup(
@@ -2342,7 +2344,7 @@ public class DaqbufPanel extends StandardDialog {
                 .addComponent(toolBar, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(0, 0, 0)
                 .addComponent(panelSerie, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addGap(0, 0, 0)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jPanel3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jPanel4, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -2366,7 +2368,7 @@ public class DaqbufPanel extends StandardDialog {
         );
         pnGraphsLayout.setVerticalGroup(
             pnGraphsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 386, Short.MAX_VALUE)
+            .addGap(0, 392, Short.MAX_VALUE)
         );
 
         scrollPane.setViewportView(pnGraphs);
@@ -2380,15 +2382,15 @@ public class DaqbufPanel extends StandardDialog {
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                .addContainerGap()
+                .addGap(0, 0, 0)
                 .addComponent(tabPane)
-                .addContainerGap())
+                .addGap(0, 0, 0))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addComponent(tabPane)
-                .addContainerGap())
+                .addGap(0, 0, 0))
         );
 
         pack();
@@ -2578,7 +2580,7 @@ public class DaqbufPanel extends StandardDialog {
      */
     public static void main(String args[]) {
         App.init(args);
-        create(null, false, null);        
+        create(false, null);        
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables

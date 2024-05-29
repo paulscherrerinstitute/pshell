@@ -701,15 +701,6 @@ public class App extends ObservableBase<AppListener> {
         return getBoolArgumentValue("dbpn");
     }
     
-    static public String getDaqbufURL() {
-        String ret = getArgumentValue("dbpn");
-        if ((ret!=null) && !ret.isBlank()){
-            return ret.trim();
-        }
-        return null;
-    }    
-    
-    
     static public boolean isScanPlottingDisabled() {
         return getBoolArgumentValue("dspt");
     }
@@ -1197,7 +1188,7 @@ public class App extends ObservableBase<AppListener> {
             } else if (isDataPanel()) {
                 DataPanel.createPanel(getFileArg());
             } else if (isDaqbufPanel()) {
-                DaqbufPanel.create(getDaqbufURL(), false, null);                
+                DaqbufPanel.create(false, null);                
             } else if (isPlotServer()){                
                 ch.psi.pshell.plotter.View.create(getPlotServerPort());
             } else if (isCamServerViewer()) {

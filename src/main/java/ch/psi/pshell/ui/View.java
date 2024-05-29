@@ -141,6 +141,7 @@ import ch.psi.pshell.swing.MotorPanel;
 import ch.psi.pshell.swing.RepositoryChangesDialog;
 import ch.psi.pshell.swing.NextStagesPanel;
 import ch.psi.pshell.swing.ScanPanel;
+import static ch.psi.pshell.ui.DaqbufPanel.ARG_DAQBUF_URL;
 import ch.psi.pshell.xscan.ProcessorXScan;
 import ch.psi.utils.Config;
 import ch.psi.utils.Sys;
@@ -230,6 +231,7 @@ public class View extends MainFrame {
         menuVersioning.setVisible(false);             
         menuSessions.setVisible(context.isHandlingSessions());      
         menuCamServer.setVisible(App.hasArgument(CamServerViewer.ARG_PIPELINE_SERVER));
+        manuDaqbuf.setVisible(App.hasArgument(DaqbufPanel.ARG_DAQBUF_URL));
 
         fileHistory = new History(getSessionPath() + "/FileHistory.dat", 10, true);
         openedFiles = new Properties();
@@ -2959,6 +2961,8 @@ public class View extends MainFrame {
         menuCamServerViewer = new javax.swing.JMenuItem();
         menuCamServerCameras = new javax.swing.JMenuItem();
         menuCamServerPipelines = new javax.swing.JMenuItem();
+        menuArchiver = new javax.swing.JMenu();
+        manuDaqbuf = new javax.swing.JMenuItem();
         menuStripChart = new javax.swing.JMenuItem();
         menuSessions = new javax.swing.JMenu();
         menuSessionStart = new javax.swing.JMenuItem();
@@ -3846,6 +3850,20 @@ public class View extends MainFrame {
         menuCamServer.add(menuCamServerPipelines);
 
         menuDevices.add(menuCamServer);
+
+        menuArchiver.setText(bundle.getString("View.menuArchiver.text_1")); // NOI18N
+        menuArchiver.setName("menuArchiver"); // NOI18N
+
+        manuDaqbuf.setText(bundle.getString("View.manuDaqbuf.text")); // NOI18N
+        manuDaqbuf.setName("manuDaqbuf"); // NOI18N
+        manuDaqbuf.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                manuDaqbufActionPerformed(evt);
+            }
+        });
+        menuArchiver.add(manuDaqbuf);
+
+        menuDevices.add(menuArchiver);
 
         menuStripChart.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_F4, 0));
         menuStripChart.setText(bundle.getString("View.menuStripChart.text")); // NOI18N
@@ -5834,6 +5852,19 @@ public class View extends MainFrame {
         }
     }//GEN-LAST:event_menuCPythonActionPerformed
 
+    private void manuDaqbufActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_manuDaqbufActionPerformed
+        try {
+            String url = App.getArgumentValue(ARG_DAQBUF_URL);
+            if ("default".equals(url)){
+                url = null;
+            }
+            JDialog dlg = new DaqbufPanel(View.this, url, null, false);
+            showChildWindow(dlg);
+        } catch (Exception ex) {
+            showException(ex);
+        }
+    }//GEN-LAST:event_manuDaqbufActionPerformed
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton buttonAbort;
     private javax.swing.JButton buttonAbout;
@@ -5880,8 +5911,10 @@ public class View extends MainFrame {
     private javax.swing.JLabel labelUser;
     private ch.psi.pshell.swing.LoggerPanel loggerPanel;
     private javax.swing.JPanel mainPanel;
+    private javax.swing.JMenuItem manuDaqbuf;
     private javax.swing.JMenuItem menuAbort;
     private javax.swing.JMenu menuAddToQueue;
+    private javax.swing.JMenu menuArchiver;
     private javax.swing.JMenuBar menuBar;
     private javax.swing.JMenu menuBlock;
     private javax.swing.JMenuItem menuCPython;
