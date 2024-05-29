@@ -227,13 +227,16 @@ public class StripChart extends StandardDialog {
             }
         }
 
-        buttonStartStop.setEnabled(false);
+        buttonStart.setEnabled(false);
+        buttonStop.setEnabled(false);
         textFileName.setEnabled(false);
         comboFormat.setEnabled(false);
         comboLayout.setEnabled(false);
         textFileName.setText((Context.getInstance() != null) ? Context.getInstance().getConfig().dataPath : "");
         comboFormat.setSelectedItem(getInitFormat());
         comboLayout.setSelectedItem(getInitLayout());
+        toolBar.setRollover(true);
+        toolBar.setFloatable(false); //By default true in nimbus              
         updateTitle();
         setCancelledOnEscape(false);
 
@@ -361,7 +364,7 @@ public class StripChart extends StandardDialog {
         }
         onLafChange();
     }
-
+    
     //Access functions
     public JTabbedPane getTabbedPane() {
         return this.tabPane;
@@ -397,8 +400,16 @@ public class StripChart extends StandardDialog {
     @Override
     protected void onLafChange() {
         boolean paused = "Pause".equals(buttonPause.getToolTipText());
-        buttonPause.setIcon(new ImageIcon(App.getResourceUrl((MainFrame.isDark() ? "dark/" : "") + (paused ? "Pause.png" : "Play.png"))));
-        buttonSound.setIcon(new ImageIcon(App.getResourceUrl((MainFrame.isDark() ? "dark/" : "") + "Sound.png")));
+        String prefix = MainFrame.isDark() ? "dark/" : "";
+        buttonPause.setIcon(new ImageIcon(App.getResourceUrl(prefix + (paused ? "Pause.png" : "Play.png"))));
+        buttonSound.setIcon(new ImageIcon(App.getResourceUrl(prefix + "Sound.png")));        
+        
+        for (Component b : SwingUtils.getComponentsByType(toolBar, JButton.class)) {
+            try{
+                ((JButton) b).setIcon(new ImageIcon(App.getResourceUrl(prefix + new File(((JButton) b).getIcon().toString()).getName())));
+            } catch (Exception ex){                    
+            }
+        }            
     }  
 
     void updateTooltip(JComponent text, int row) {
@@ -440,11 +451,11 @@ public class StripChart extends StandardDialog {
         tableSeries.getColumnModel().getColumn(0).setResizable(true);
 
         TableColumn colEnabled = tableSeries.getColumnModel().getColumn(0);
-        colEnabled.setPreferredWidth(60);
+        colEnabled.setPreferredWidth(78);
 
         TableColumn colName = tableSeries.getColumnModel().getColumn(1);
         textNameEditor = new JTextField();
-        colName.setPreferredWidth(360);
+        colName.setPreferredWidth(332);
         colName.setCellEditor(new DefaultCellEditor(textNameEditor));
         colName.setCellRenderer(new DefaultTableCellRenderer() {
             @Override
@@ -544,7 +555,7 @@ public class StripChart extends StandardDialog {
         });
 
         TableColumn colAlarm = tableSeries.getColumnModel().getColumn(6);
-        colAlarm.setPreferredWidth(50);
+        colAlarm.setPreferredWidth(60);
         class AlarmEditor extends AbstractCellEditor implements TableCellEditor {
 
             private final JCheckBox check = new JCheckBox();
@@ -605,7 +616,7 @@ public class StripChart extends StandardDialog {
         });
         final DecimalFormat formatter = new DecimalFormat("#.############");
         for (int i = 1; i <= 5; i++) {
-            tableCharts.getColumnModel().getColumn(i).setPreferredWidth(90);
+            tableCharts.getColumnModel().getColumn(i).setPreferredWidth(89);
             tableCharts.getColumnModel().getColumn(i).setCellRenderer((TableCellRenderer) new DefaultTableCellRenderer() {
                 @Override
                 public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
@@ -616,12 +627,15 @@ public class StripChart extends StandardDialog {
                 }
             });
         }
+        
+        TableColumn colDuration = tableCharts.getColumnModel().getColumn(5);
+        colDuration.setPreferredWidth(94);
 
         TableColumn colMarkers = tableCharts.getColumnModel().getColumn(6);
-        colMarkers.setPreferredWidth(80);
+        colMarkers.setPreferredWidth(74);
 
         TableColumn colLocalTime = tableCharts.getColumnModel().getColumn(7);
-        colLocalTime.setPreferredWidth(90);
+        colLocalTime.setPreferredWidth(96);
 
         ((JComboBox) ((DefaultCellEditor) tableSeries.getColumnModel().getColumn(2).getCellEditor()).getComponent()).addActionListener((ActionEvent e) -> {
             updateTooltip();
@@ -689,11 +703,12 @@ public class StripChart extends StandardDialog {
         buttonDown.setEnabled((rows > 0) && (cur >= 0) && (cur < (rows - 1)) && editing);
         buttonDelete.setEnabled((rows > 0) && (cur >= 0) && editing);
         buttonInsert.setEnabled(editing);
-        buttonNew.setEnabled(editing);
-        buttonLoad.setEnabled(editing);
-        buttonNew.setEnabled(editing);
-        buttonStartStop.setEnabled((modelSeries.getRowCount() > 0) || (started));
-        buttonStartStop.setText(started ? "Stop" : "Start");
+        buttonNew1.setEnabled(editing);
+        buttonSave1.setEnabled(editing);
+        buttonOpen.setEnabled(editing);
+        
+        buttonStart.setEnabled(editing  && (modelSeries.getRowCount() > 0));
+        buttonStop.setEnabled(started);
 
         //tableSeries.setEnabled(editing);
         //tableCharts.setEnabled(editing);
@@ -1767,7 +1782,7 @@ public class StripChart extends StandardDialog {
                     dialog.open(config);
                 }
                 if (start) {
-                    dialog.buttonStartStopActionPerformed(null);
+                    dialog.buttonStartActionPerformed(null);
                 }
             } catch (IOException ex) {
                 Logger.getLogger(StripChart.class.getName()).log(Level.SEVERE, null, ex);
@@ -1847,11 +1862,6 @@ public class StripChart extends StandardDialog {
                 return isChartTableRowEditable(row, column);
             };
         };
-        panelFile = new javax.swing.JPanel();
-        buttonLoad = new javax.swing.JButton();
-        buttonSave = new javax.swing.JButton();
-        buttonNew = new javax.swing.JButton();
-        buttonStartStop = new javax.swing.JButton();
         jPanel2 = new javax.swing.JPanel();
         ckPersistence = new javax.swing.JCheckBox();
         textFileName = new javax.swing.JTextField();
@@ -1872,6 +1882,17 @@ public class StripChart extends StandardDialog {
         buttonDefaultColors = new javax.swing.JButton();
         jLabel4 = new javax.swing.JLabel();
         spinnerUpdate = new javax.swing.JSpinner();
+        toolBar = new javax.swing.JToolBar();
+        buttonNew1 = new javax.swing.JButton();
+        buttonOpen = new javax.swing.JButton();
+        buttonSave1 = new javax.swing.JButton();
+        jSeparator1 = new javax.swing.JToolBar.Separator();
+        buttonStop = new javax.swing.JButton();
+        jSeparator2 = new javax.swing.JToolBar.Separator();
+        buttonStart = new javax.swing.JButton();
+        filler1 = new javax.swing.Box.Filler(new java.awt.Dimension(0, 0), new java.awt.Dimension(0, 0), new java.awt.Dimension(32767, 0));
+        labelUser = new javax.swing.JLabel();
+        filler2 = new javax.swing.Box.Filler(new java.awt.Dimension(8, 0), new java.awt.Dimension(8, 0), new java.awt.Dimension(8, 32767));
         panelPlots = new javax.swing.JPanel();
         scrollPane = new javax.swing.JScrollPane();
         pnGraphs = new javax.swing.JPanel();
@@ -1974,8 +1995,8 @@ public class StripChart extends StandardDialog {
             panelSeriesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(panelSeriesLayout.createSequentialGroup()
                 .addGap(2, 2, 2)
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 103, Short.MAX_VALUE)
-                .addGap(4, 4, 4)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 107, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(panelSeriesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(buttonDelete)
                     .addComponent(buttonInsert)
@@ -2037,68 +2058,6 @@ public class StripChart extends StandardDialog {
                 .addContainerGap())
         );
 
-        buttonLoad.setText("Open");
-        buttonLoad.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                buttonLoadActionPerformed(evt);
-            }
-        });
-
-        buttonSave.setText("Save");
-        buttonSave.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                buttonSaveActionPerformed(evt);
-            }
-        });
-
-        buttonNew.setText("New");
-        buttonNew.setPreferredSize(new java.awt.Dimension(89, 23));
-        buttonNew.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                buttonNewActionPerformed(evt);
-            }
-        });
-
-        buttonStartStop.setText("Start");
-        buttonStartStop.setPreferredSize(new java.awt.Dimension(89, 23));
-        buttonStartStop.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                buttonStartStopActionPerformed(evt);
-            }
-        });
-
-        javax.swing.GroupLayout panelFileLayout = new javax.swing.GroupLayout(panelFile);
-        panelFile.setLayout(panelFileLayout);
-        panelFileLayout.setHorizontalGroup(
-            panelFileLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(panelFileLayout.createSequentialGroup()
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addComponent(buttonStartStop, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(buttonNew, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(buttonLoad)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(buttonSave)
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-        );
-
-        panelFileLayout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {buttonLoad, buttonNew, buttonSave, buttonStartStop});
-
-        panelFileLayout.setVerticalGroup(
-            panelFileLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(panelFileLayout.createSequentialGroup()
-                .addGap(4, 4, 4)
-                .addGroup(panelFileLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(buttonSave)
-                    .addComponent(buttonLoad)
-                    .addComponent(buttonNew, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(buttonStartStop, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGap(0, 0, 0))
-        );
-
-        panelFileLayout.linkSize(javax.swing.SwingConstants.VERTICAL, new java.awt.Component[] {buttonLoad, buttonNew, buttonSave, buttonStartStop});
-
         jPanel2.setBorder(javax.swing.BorderFactory.createTitledBorder("Persistence"));
 
         ckPersistence.setText("Save to:");
@@ -2125,8 +2084,8 @@ public class StripChart extends StandardDialog {
                 .addContainerGap()
                 .addComponent(ckPersistence)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(textFileName, javax.swing.GroupLayout.DEFAULT_SIZE, 240, Short.MAX_VALUE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(textFileName)
+                .addGap(18, 18, 18)
                 .addComponent(jLabel1)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(comboFormat, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -2200,7 +2159,7 @@ public class StripChart extends StandardDialog {
         panelColorBackground.setLayout(panelColorBackgroundLayout);
         panelColorBackgroundLayout.setHorizontalGroup(
             panelColorBackgroundLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 44, Short.MAX_VALUE)
+            .addGap(0, 38, Short.MAX_VALUE)
         );
         panelColorBackgroundLayout.setVerticalGroup(
             panelColorBackgroundLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -2222,7 +2181,7 @@ public class StripChart extends StandardDialog {
         panelColorGrid.setLayout(panelColorGridLayout);
         panelColorGridLayout.setHorizontalGroup(
             panelColorGridLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 44, Short.MAX_VALUE)
+            .addGap(0, 38, Short.MAX_VALUE)
         );
         panelColorGridLayout.setVerticalGroup(
             panelColorGridLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -2248,14 +2207,14 @@ public class StripChart extends StandardDialog {
                 .addContainerGap()
                 .addComponent(jLabel15)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(panelColorBackground, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(panelColorBackground, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(jLabel17)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(panelColorGrid, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(panelColorGrid, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(buttonDefaultColors)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addGap(18, 18, Short.MAX_VALUE)
                 .addComponent(jLabel4)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(spinnerUpdate, javax.swing.GroupLayout.PREFERRED_SIZE, 96, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -2279,20 +2238,116 @@ public class StripChart extends StandardDialog {
 
         jPanel1Layout.linkSize(javax.swing.SwingConstants.VERTICAL, new java.awt.Component[] {buttonDefaultColors, jLabel15, jLabel17, panelColorBackground, panelColorGrid});
 
+        buttonNew1.setIcon(new javax.swing.ImageIcon(getClass().getResource("/ch/psi/pshell/ui/New.png"))); // NOI18N
+        java.util.ResourceBundle bundle = java.util.ResourceBundle.getBundle("ch/psi/pshell/ui/View"); // NOI18N
+        buttonNew1.setText(bundle.getString("View.buttonNew.text")); // NOI18N
+        buttonNew1.setToolTipText("Clear config");
+        buttonNew1.setFocusable(false);
+        buttonNew1.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+        buttonNew1.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+        buttonNew1.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                buttonNewActionPerformed(evt);
+            }
+        });
+        toolBar.add(buttonNew1);
+
+        buttonOpen.setIcon(new javax.swing.ImageIcon(getClass().getResource("/ch/psi/pshell/ui/Open.png"))); // NOI18N
+        buttonOpen.setText(bundle.getString("View.buttonOpen.text")); // NOI18N
+        buttonOpen.setToolTipText("Open config");
+        buttonOpen.setFocusable(false);
+        buttonOpen.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+        buttonOpen.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+        buttonOpen.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                buttonLoadActionPerformed(evt);
+            }
+        });
+        toolBar.add(buttonOpen);
+
+        buttonSave1.setIcon(new javax.swing.ImageIcon(getClass().getResource("/ch/psi/pshell/ui/Save.png"))); // NOI18N
+        buttonSave1.setText(bundle.getString("View.buttonSave.text")); // NOI18N
+        buttonSave1.setToolTipText("Save config");
+        buttonSave1.setFocusable(false);
+        buttonSave1.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+        buttonSave1.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+        buttonSave1.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                buttonSaveActionPerformed(evt);
+            }
+        });
+        toolBar.add(buttonSave1);
+
+        jSeparator1.setMaximumSize(new java.awt.Dimension(20, 32767));
+        jSeparator1.setPreferredSize(new java.awt.Dimension(20, 0));
+        jSeparator1.setRequestFocusEnabled(false);
+        toolBar.add(jSeparator1);
+
+        buttonStop.setIcon(new javax.swing.ImageIcon(getClass().getResource("/ch/psi/pshell/ui/Stop.png"))); // NOI18N
+        buttonStop.setText(bundle.getString("View.buttonRun.text")); // NOI18N
+        buttonStop.setToolTipText("Dump data to file");
+        buttonStop.setFocusable(false);
+        buttonStop.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+        buttonStop.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+        buttonStop.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                buttonStopActionPerformed(evt);
+            }
+        });
+        toolBar.add(buttonStop);
+
+        jSeparator2.setMaximumSize(new java.awt.Dimension(20, 32767));
+        jSeparator2.setPreferredSize(new java.awt.Dimension(20, 0));
+        toolBar.add(jSeparator2);
+
+        buttonStart.setIcon(new javax.swing.ImageIcon(getClass().getResource("/ch/psi/pshell/ui/Play.png"))); // NOI18N
+        buttonStart.setText(bundle.getString("View.buttonRestart.text")); // NOI18N
+        buttonStart.setToolTipText("Plot data");
+        buttonStart.setFocusable(false);
+        buttonStart.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+        buttonStart.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+        buttonStart.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                buttonStartActionPerformed(evt);
+            }
+        });
+        toolBar.add(buttonStart);
+        toolBar.add(filler1);
+
+        labelUser.setText(bundle.getString("View.labelUser.text_1")); // NOI18N
+        toolBar.add(labelUser);
+        toolBar.add(filler2);
+
         javax.swing.GroupLayout panelConfigLayout = new javax.swing.GroupLayout(panelConfig);
         panelConfig.setLayout(panelConfigLayout);
         panelConfigLayout.setHorizontalGroup(
             panelConfigLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(panelSeries, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-            .addComponent(panelAxis, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-            .addComponent(panelFile, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-            .addComponent(jPanel2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-            .addComponent(jPanel3, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-            .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+            .addGroup(panelConfigLayout.createSequentialGroup()
+                .addGroup(panelConfigLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(panelConfigLayout.createSequentialGroup()
+                        .addContainerGap()
+                        .addGroup(panelConfigLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(toolBar, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(panelSeries, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, panelConfigLayout.createSequentialGroup()
+                        .addContainerGap()
+                        .addGroup(panelConfigLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(panelAxis, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(jPanel1, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, panelConfigLayout.createSequentialGroup()
+                        .addGap(6, 6, 6)
+                        .addComponent(jPanel3, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                    .addGroup(panelConfigLayout.createSequentialGroup()
+                        .addContainerGap()
+                        .addComponent(jPanel2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
+                .addContainerGap())
         );
         panelConfigLayout.setVerticalGroup(
             panelConfigLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, panelConfigLayout.createSequentialGroup()
+                .addGap(0, 0, 0)
+                .addComponent(toolBar, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(0, 0, 0)
                 .addComponent(panelSeries, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(panelAxis, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -2302,8 +2357,6 @@ public class StripChart extends StandardDialog {
                 .addComponent(jPanel3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(panelFile, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap())
         );
 
@@ -2320,11 +2373,11 @@ public class StripChart extends StandardDialog {
         pnGraphs.setLayout(pnGraphsLayout);
         pnGraphsLayout.setHorizontalGroup(
             pnGraphsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 642, Short.MAX_VALUE)
+            .addGap(0, 0, Short.MAX_VALUE)
         );
         pnGraphsLayout.setVerticalGroup(
             pnGraphsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 546, Short.MAX_VALUE)
+            .addGap(0, 0, Short.MAX_VALUE)
         );
 
         scrollPane.setViewportView(pnGraphs);
@@ -2337,7 +2390,7 @@ public class StripChart extends StandardDialog {
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(tabPane)
+            .addComponent(tabPane, javax.swing.GroupLayout.DEFAULT_SIZE, 590, Short.MAX_VALUE)
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -2446,22 +2499,6 @@ public class StripChart extends StandardDialog {
         update();
     }//GEN-LAST:event_ckPersistenceActionPerformed
 
-    private void buttonStartStopActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonStartStopActionPerformed
-        try {
-            if (!started) {
-                if (modelSeries.getRowCount() > 0) {
-                    start();
-                    tabPane.setSelectedComponent(panelPlots);
-                }
-            } else {
-                stop();
-            }
-        } catch (Exception ex) {
-            showException(ex);
-            ex.printStackTrace();
-        }
-    }//GEN-LAST:event_buttonStartStopActionPerformed
-
     private void panelColorBackgroundMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_panelColorBackgroundMouseClicked
         Color c = JColorChooser.showDialog(this, "Choose a Color", backgroundColor);
         if (c != null) {
@@ -2501,6 +2538,31 @@ public class StripChart extends StandardDialog {
         }
     }//GEN-LAST:event_buttonDefaultColorsActionPerformed
 
+    private void buttonStopActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonStopActionPerformed
+        try {
+            if (started) {
+                stop();
+            }
+        } catch (Exception ex) {
+            showException(ex);
+            ex.printStackTrace();
+        }
+    }//GEN-LAST:event_buttonStopActionPerformed
+
+    private void buttonStartActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonStartActionPerformed
+        try {
+            if (!started) {
+                if (modelSeries.getRowCount() > 0) {
+                    start();
+                    tabPane.setSelectedComponent(panelPlots);
+                }
+            }
+        } catch (Exception ex) {
+            showException(ex);
+            ex.printStackTrace();
+        }
+    }//GEN-LAST:event_buttonStartActionPerformed
+
     /**
      */
     public static void main(String args[]) {
@@ -2514,14 +2576,17 @@ public class StripChart extends StandardDialog {
     private javax.swing.JButton buttonDelete;
     private javax.swing.JButton buttonDown;
     private javax.swing.JButton buttonInsert;
-    private javax.swing.JButton buttonLoad;
-    private javax.swing.JButton buttonNew;
-    private javax.swing.JButton buttonSave;
-    private javax.swing.JButton buttonStartStop;
+    private javax.swing.JButton buttonNew1;
+    private javax.swing.JButton buttonOpen;
+    private javax.swing.JButton buttonSave1;
+    private javax.swing.JButton buttonStart;
+    private javax.swing.JButton buttonStop;
     private javax.swing.JButton buttonUp;
     private javax.swing.JCheckBox ckPersistence;
     private javax.swing.JComboBox<String> comboFormat;
     private javax.swing.JComboBox<String> comboLayout;
+    private javax.swing.Box.Filler filler1;
+    private javax.swing.Box.Filler filler2;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel15;
     private javax.swing.JLabel jLabel17;
@@ -2534,11 +2599,13 @@ public class StripChart extends StandardDialog {
     private javax.swing.JPanel jPanel3;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane3;
+    private javax.swing.JToolBar.Separator jSeparator1;
+    private javax.swing.JToolBar.Separator jSeparator2;
+    private javax.swing.JLabel labelUser;
     private javax.swing.JPanel panelAxis;
     private javax.swing.JPanel panelColorBackground;
     private javax.swing.JPanel panelColorGrid;
     private javax.swing.JPanel panelConfig;
-    private javax.swing.JPanel panelFile;
     private javax.swing.JPanel panelPlots;
     private javax.swing.JPanel panelSeries;
     private javax.swing.JPanel pnGraphs;
@@ -2550,5 +2617,6 @@ public class StripChart extends StandardDialog {
     private javax.swing.JTable tableSeries;
     private javax.swing.JTextField textFileName;
     private javax.swing.JTextField textStreamFilter;
+    private javax.swing.JToolBar toolBar;
     // End of variables declaration//GEN-END:variables
 }
