@@ -326,16 +326,18 @@ public class View extends MainFrame {
            
             JRadioButtonMenuItem lafItem = new JRadioButtonMenuItem(laf.toString());
             lafItem.addActionListener((java.awt.event.ActionEvent evt) -> {
-                if (!App.isLocalMode()) {
-                   App.userOptions.laf = laf.toString();
-                    try {
-                        App.userOptions.save();
-                    } catch (IOException ex) {
-                        showException(ex);
-                    }
-                } 
-                setLookAndFeel(laf.toString());
-                updateLafMenu();
+                if (!updatingLafMenu){
+                    if (!App.isLocalMode()) {
+                       App.userOptions.laf = laf.toString();
+                        try {
+                            App.userOptions.save();
+                        } catch (IOException ex) {
+                            showException(ex);
+                        }
+                    } 
+                    setLookAndFeel(laf.toString());
+                    updateLafMenu();
+                }
             });
             menuLaf.add(lafItem);
         }
@@ -663,16 +665,27 @@ public class View extends MainFrame {
         }
     }
 
+    boolean updatingLafMenu;
     void updateLafMenu(){
-        for (Component item : menuLaf.getMenuComponents()) {
-            try{
-                String text = ((JRadioButtonMenuItem) item).getText();
-                boolean enabled = text.equals(getLookAndFeelType().toString());
-                ((JRadioButtonMenuItem) item).setSelected(enabled);
-            } catch(Exception ex){
+        try{
+            updatingLafMenu=true;
+            for (Component item : menuLaf.getMenuComponents()) {            
+                if (item instanceof JRadioButtonMenuItem){
+                    String text = "";
+                    boolean enabled = false;
+                    try{
+                        text = ((JRadioButtonMenuItem) item).getText();
+                        enabled = text.equals(getLookAndFeelType().toString());
+                    } catch(Exception ex){                
+                    }
+                    ((JRadioButtonMenuItem) item).setSelected(enabled);
+                }
             }
+        } finally {
+            updatingLafMenu=false;
         }
     }
+            
     void onFirstStart() {
         //setupPanelsMenu()
         if (context.getConfig().instanceName.length() > 0) {

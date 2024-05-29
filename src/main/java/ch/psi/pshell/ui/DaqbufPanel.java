@@ -217,13 +217,10 @@ public class DaqbufPanel extends StandardDialog {
     
     @Override
     protected void onLafChange() {
+        String prefix = MainFrame.isDark() ? "dark/" : "";
         for (Component b : SwingUtils.getComponentsByType(toolBar, JButton.class)) {
             try{
-                if (MainFrame.isDark()) {
-                    ((JButton) b).setIcon(new ImageIcon(App.getResourceUrl("dark/" + new File(((JButton) b).getIcon().toString()).getName())));
-                } else {
-                    ((JButton) b).setIcon(new ImageIcon(App.getResourceUrl(new File(((JButton) b).getIcon().toString()).getName())));
-                }
+                ((JButton) b).setIcon(new ImageIcon(App.getResourceUrl(prefix + new File(((JButton) b).getIcon().toString()).getName())));
             } catch (Exception ex){                    
             }
         }        
