@@ -1188,7 +1188,7 @@ public class App extends ObservableBase<AppListener> {
             } else if (isDataPanel()) {
                 DataPanel.createPanel(getFileArg());
             } else if (isDaqbufPanel()) {
-                DaqbufPanel.create(false, null);                
+                DaqbufPanel.create(null,false, null);                
             } else if (isPlotServer()){                
                 ch.psi.pshell.plotter.View.create(getPlotServerPort());
             } else if (isCamServerViewer()) {

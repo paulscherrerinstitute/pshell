@@ -699,12 +699,12 @@ public class StripChart extends StandardDialog {
         boolean editing = !started;
         int rows = modelSeries.getRowCount();
         int cur = tableSeries.getSelectedRow();
-        buttonUp.setEnabled((rows > 0) && (cur > 0) && editing);
-        buttonDown.setEnabled((rows > 0) && (cur >= 0) && (cur < (rows - 1)) && editing);
-        buttonDelete.setEnabled((rows > 0) && (cur >= 0) && editing);
-        buttonInsert.setEnabled(editing);
-        buttonNew1.setEnabled(editing);
-        buttonSave1.setEnabled(editing);
+        buttonRowUp.setEnabled((rows > 0) && (cur > 0) && editing);
+        buttonRowDown.setEnabled((rows > 0) && (cur >= 0) && (cur < (rows - 1)) && editing);
+        buttonRowDelete.setEnabled((rows > 0) && (cur >= 0) && editing);
+        buttonRowInsert.setEnabled(editing);
+        buttonNew.setEnabled(editing);
+        buttonSave.setEnabled(editing);
         buttonOpen.setEnabled(editing);
         
         buttonStart.setEnabled(editing  && (modelSeries.getRowCount() > 0));
@@ -1850,10 +1850,6 @@ public class StripChart extends StandardDialog {
                 return isSeriesTableRowEditable(row, column);
             };
         };
-        buttonDelete = new javax.swing.JButton();
-        buttonUp = new javax.swing.JButton();
-        buttonInsert = new javax.swing.JButton();
-        buttonDown = new javax.swing.JButton();
         panelAxis = new javax.swing.JPanel();
         jScrollPane3 = new javax.swing.JScrollPane();
         tableCharts = new JTable() {
@@ -1883,10 +1879,15 @@ public class StripChart extends StandardDialog {
         jLabel4 = new javax.swing.JLabel();
         spinnerUpdate = new javax.swing.JSpinner();
         toolBar = new javax.swing.JToolBar();
-        buttonNew1 = new javax.swing.JButton();
+        buttonNew = new javax.swing.JButton();
         buttonOpen = new javax.swing.JButton();
-        buttonSave1 = new javax.swing.JButton();
+        buttonSave = new javax.swing.JButton();
         jSeparator1 = new javax.swing.JToolBar.Separator();
+        buttonRowDelete = new javax.swing.JButton();
+        buttonRowDown = new javax.swing.JButton();
+        buttonRowUp = new javax.swing.JButton();
+        buttonRowInsert = new javax.swing.JButton();
+        jSeparator3 = new javax.swing.JToolBar.Separator();
         buttonStop = new javax.swing.JButton();
         jSeparator2 = new javax.swing.JToolBar.Separator();
         buttonStart = new javax.swing.JButton();
@@ -1940,72 +1941,22 @@ public class StripChart extends StandardDialog {
         });
         jScrollPane1.setViewportView(tableSeries);
 
-        buttonDelete.setText("Delete");
-        buttonDelete.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                buttonDeleteActionPerformed(evt);
-            }
-        });
-
-        buttonUp.setText("Move Up");
-        buttonUp.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                buttonUpActionPerformed(evt);
-            }
-        });
-
-        buttonInsert.setText("Insert");
-        buttonInsert.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                buttonInsertActionPerformed(evt);
-            }
-        });
-
-        buttonDown.setText("Move Down");
-        buttonDown.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                buttonDownActionPerformed(evt);
-            }
-        });
-
         javax.swing.GroupLayout panelSeriesLayout = new javax.swing.GroupLayout(panelSeries);
         panelSeries.setLayout(panelSeriesLayout);
         panelSeriesLayout.setHorizontalGroup(
             panelSeriesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(panelSeriesLayout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(panelSeriesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jScrollPane1)
-                    .addGroup(panelSeriesLayout.createSequentialGroup()
-                        .addGap(0, 0, Short.MAX_VALUE)
-                        .addComponent(buttonUp)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(buttonDown)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(buttonInsert)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(buttonDelete)
-                        .addGap(0, 0, Short.MAX_VALUE)))
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 556, Short.MAX_VALUE)
                 .addContainerGap())
         );
-
-        panelSeriesLayout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {buttonDelete, buttonDown, buttonInsert, buttonUp});
-
         panelSeriesLayout.setVerticalGroup(
             panelSeriesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(panelSeriesLayout.createSequentialGroup()
                 .addGap(2, 2, 2)
                 .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 107, Short.MAX_VALUE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(panelSeriesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(buttonDelete)
-                    .addComponent(buttonInsert)
-                    .addComponent(buttonDown)
-                    .addComponent(buttonUp))
                 .addContainerGap())
         );
-
-        panelSeriesLayout.linkSize(javax.swing.SwingConstants.VERTICAL, new java.awt.Component[] {buttonDelete, buttonDown, buttonInsert, buttonUp});
 
         panelAxis.setBorder(javax.swing.BorderFactory.createTitledBorder("Charts"));
 
@@ -2238,19 +2189,19 @@ public class StripChart extends StandardDialog {
 
         jPanel1Layout.linkSize(javax.swing.SwingConstants.VERTICAL, new java.awt.Component[] {buttonDefaultColors, jLabel15, jLabel17, panelColorBackground, panelColorGrid});
 
-        buttonNew1.setIcon(new javax.swing.ImageIcon(getClass().getResource("/ch/psi/pshell/ui/New.png"))); // NOI18N
+        buttonNew.setIcon(new javax.swing.ImageIcon(getClass().getResource("/ch/psi/pshell/ui/New.png"))); // NOI18N
         java.util.ResourceBundle bundle = java.util.ResourceBundle.getBundle("ch/psi/pshell/ui/View"); // NOI18N
-        buttonNew1.setText(bundle.getString("View.buttonNew.text")); // NOI18N
-        buttonNew1.setToolTipText("Clear config");
-        buttonNew1.setFocusable(false);
-        buttonNew1.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
-        buttonNew1.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
-        buttonNew1.addActionListener(new java.awt.event.ActionListener() {
+        buttonNew.setText(bundle.getString("View.buttonNew.text")); // NOI18N
+        buttonNew.setToolTipText("Clear config");
+        buttonNew.setFocusable(false);
+        buttonNew.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+        buttonNew.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+        buttonNew.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 buttonNewActionPerformed(evt);
             }
         });
-        toolBar.add(buttonNew1);
+        toolBar.add(buttonNew);
 
         buttonOpen.setIcon(new javax.swing.ImageIcon(getClass().getResource("/ch/psi/pshell/ui/Open.png"))); // NOI18N
         buttonOpen.setText(bundle.getString("View.buttonOpen.text")); // NOI18N
@@ -2265,27 +2216,84 @@ public class StripChart extends StandardDialog {
         });
         toolBar.add(buttonOpen);
 
-        buttonSave1.setIcon(new javax.swing.ImageIcon(getClass().getResource("/ch/psi/pshell/ui/Save.png"))); // NOI18N
-        buttonSave1.setText(bundle.getString("View.buttonSave.text")); // NOI18N
-        buttonSave1.setToolTipText("Save config");
-        buttonSave1.setFocusable(false);
-        buttonSave1.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
-        buttonSave1.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
-        buttonSave1.addActionListener(new java.awt.event.ActionListener() {
+        buttonSave.setIcon(new javax.swing.ImageIcon(getClass().getResource("/ch/psi/pshell/ui/Save.png"))); // NOI18N
+        buttonSave.setText(bundle.getString("View.buttonSave.text")); // NOI18N
+        buttonSave.setToolTipText("Save config");
+        buttonSave.setFocusable(false);
+        buttonSave.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+        buttonSave.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+        buttonSave.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 buttonSaveActionPerformed(evt);
             }
         });
-        toolBar.add(buttonSave1);
+        toolBar.add(buttonSave);
 
         jSeparator1.setMaximumSize(new java.awt.Dimension(20, 32767));
         jSeparator1.setPreferredSize(new java.awt.Dimension(20, 0));
         jSeparator1.setRequestFocusEnabled(false);
         toolBar.add(jSeparator1);
 
+        buttonRowDelete.setIcon(new javax.swing.ImageIcon(getClass().getResource("/ch/psi/pshell/ui/Abort.png"))); // NOI18N
+        buttonRowDelete.setText(bundle.getString("View.buttonNew.text")); // NOI18N
+        buttonRowDelete.setToolTipText("Remove row");
+        buttonRowDelete.setFocusable(false);
+        buttonRowDelete.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+        buttonRowDelete.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+        buttonRowDelete.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                buttonDeleteActionPerformed(evt);
+            }
+        });
+        toolBar.add(buttonRowDelete);
+
+        buttonRowDown.setIcon(new javax.swing.ImageIcon(getClass().getResource("/ch/psi/pshell/ui/arrows/Down.png"))); // NOI18N
+        buttonRowDown.setText(bundle.getString("View.buttonNew.text")); // NOI18N
+        buttonRowDown.setToolTipText("Move row up");
+        buttonRowDown.setFocusable(false);
+        buttonRowDown.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+        buttonRowDown.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+        buttonRowDown.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                buttonDownActionPerformed(evt);
+            }
+        });
+        toolBar.add(buttonRowDown);
+
+        buttonRowUp.setIcon(new javax.swing.ImageIcon(getClass().getResource("/ch/psi/pshell/ui/arrows/Up.png"))); // NOI18N
+        buttonRowUp.setText(bundle.getString("View.buttonNew.text")); // NOI18N
+        buttonRowUp.setToolTipText("Move row up");
+        buttonRowUp.setFocusable(false);
+        buttonRowUp.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+        buttonRowUp.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+        buttonRowUp.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                buttonUpActionPerformed(evt);
+            }
+        });
+        toolBar.add(buttonRowUp);
+
+        buttonRowInsert.setIcon(new javax.swing.ImageIcon(getClass().getResource("/ch/psi/pshell/ui/Insert.png"))); // NOI18N
+        buttonRowInsert.setText(bundle.getString("View.buttonNew.text")); // NOI18N
+        buttonRowInsert.setToolTipText("Add new row");
+        buttonRowInsert.setFocusable(false);
+        buttonRowInsert.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+        buttonRowInsert.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+        buttonRowInsert.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                buttonInsertActionPerformed(evt);
+            }
+        });
+        toolBar.add(buttonRowInsert);
+
+        jSeparator3.setMaximumSize(new java.awt.Dimension(20, 32767));
+        jSeparator3.setPreferredSize(new java.awt.Dimension(20, 0));
+        jSeparator3.setRequestFocusEnabled(false);
+        toolBar.add(jSeparator3);
+
         buttonStop.setIcon(new javax.swing.ImageIcon(getClass().getResource("/ch/psi/pshell/ui/Stop.png"))); // NOI18N
         buttonStop.setText(bundle.getString("View.buttonRun.text")); // NOI18N
-        buttonStop.setToolTipText("Dump data to file");
+        buttonStop.setToolTipText("Stop");
         buttonStop.setFocusable(false);
         buttonStop.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
         buttonStop.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
@@ -2302,7 +2310,7 @@ public class StripChart extends StandardDialog {
 
         buttonStart.setIcon(new javax.swing.ImageIcon(getClass().getResource("/ch/psi/pshell/ui/Play.png"))); // NOI18N
         buttonStart.setText(bundle.getString("View.buttonRestart.text")); // NOI18N
-        buttonStart.setToolTipText("Plot data");
+        buttonStart.setToolTipText("Start data plotting");
         buttonStart.setFocusable(false);
         buttonStart.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
         buttonStart.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
@@ -2390,7 +2398,7 @@ public class StripChart extends StandardDialog {
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(tabPane, javax.swing.GroupLayout.DEFAULT_SIZE, 590, Short.MAX_VALUE)
+            .addComponent(tabPane)
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -2573,15 +2581,15 @@ public class StripChart extends StandardDialog {
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton buttonDefaultColors;
-    private javax.swing.JButton buttonDelete;
-    private javax.swing.JButton buttonDown;
-    private javax.swing.JButton buttonInsert;
-    private javax.swing.JButton buttonNew1;
+    private javax.swing.JButton buttonNew;
     private javax.swing.JButton buttonOpen;
-    private javax.swing.JButton buttonSave1;
+    private javax.swing.JButton buttonRowDelete;
+    private javax.swing.JButton buttonRowDown;
+    private javax.swing.JButton buttonRowInsert;
+    private javax.swing.JButton buttonRowUp;
+    private javax.swing.JButton buttonSave;
     private javax.swing.JButton buttonStart;
     private javax.swing.JButton buttonStop;
-    private javax.swing.JButton buttonUp;
     private javax.swing.JCheckBox ckPersistence;
     private javax.swing.JComboBox<String> comboFormat;
     private javax.swing.JComboBox<String> comboLayout;
@@ -2601,6 +2609,7 @@ public class StripChart extends StandardDialog {
     private javax.swing.JScrollPane jScrollPane3;
     private javax.swing.JToolBar.Separator jSeparator1;
     private javax.swing.JToolBar.Separator jSeparator2;
+    private javax.swing.JToolBar.Separator jSeparator3;
     private javax.swing.JLabel labelUser;
     private javax.swing.JPanel panelAxis;
     private javax.swing.JPanel panelColorBackground;

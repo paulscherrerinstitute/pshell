@@ -125,7 +125,7 @@ import org.jfree.data.xy.YIntervalSeriesCollection;
  */
 public class DaqbufPanel extends StandardDialog {
     public static final String ARG_DAQBUF_URL = "daqbuf";
-    
+
     public static final String PLOT_PRIVATE = "Private";
     public static final String PLOT_SHARED = "Shared";
     public static final int AXIS_NONE = 0;
@@ -206,7 +206,7 @@ public class DaqbufPanel extends StandardDialog {
 
         modelSeries = (DefaultTableModel) tableSeries.getModel();
         modelSeries.addTableModelListener(modelSeriesListener);
-        
+
         toolBar.setRollover(true);
         toolBar.setFloatable(false); //By default true in nimbus        
 
@@ -252,7 +252,7 @@ public class DaqbufPanel extends StandardDialog {
         };
 
         TableColumn colEnabled = tableSeries.getColumnModel().getColumn(0);
-        colEnabled.setPreferredWidth(80);
+        colEnabled.setPreferredWidth(60);
 
         TableColumn colName = tableSeries.getColumnModel().getColumn(1);
         JTextField textNameEditor = new JTextField();
@@ -261,7 +261,7 @@ public class DaqbufPanel extends StandardDialog {
         selector.setHistorySize(0);
         selector.setListMode(ChannelSelector.ListMode.Popup);
 
-        colName.setPreferredWidth(298);
+        colName.setPreferredWidth(320);
         colName.setCellEditor(new ChannelSelector.ChannelSelectorCellEditor(selector));
 
         colName.getCellEditor().addCellEditorListener(new CellEditorListener() {
@@ -301,7 +301,7 @@ public class DaqbufPanel extends StandardDialog {
 
         TableColumn colShape = tableSeries.getColumnModel().getColumn(3);
         colShape.setCellEditor(disabledEditor);
-        colShape.setPreferredWidth(62);
+        colShape.setPreferredWidth(60);
 
         TableColumn colPlot = tableSeries.getColumnModel().getColumn(4);
         colPlot.setPreferredWidth(60);
@@ -501,10 +501,10 @@ public class DaqbufPanel extends StandardDialog {
         boolean editing = true;
         int rows = modelSeries.getRowCount();
         int cur = tableSeries.getSelectedRow();
-        buttonUp.setEnabled((rows > 0) && (cur > 0) && editing);
-        buttonDown.setEnabled((rows > 0) && (cur >= 0) && (cur < (rows - 1)) && editing);
-        buttonDelete.setEnabled((rows > 0) && (cur >= 0) && editing);
-        buttonInsert.setEnabled(editing);
+        buttonRowUp.setEnabled((rows > 0) && (cur > 0) && editing);
+        buttonRowDown.setEnabled((rows > 0) && (cur >= 0) && (cur < (rows - 1)) && editing);
+        buttonRowDelete.setEnabled((rows > 0) && (cur >= 0) && editing);
+        buttonRowInsert.setEnabled(editing);
         buttonPlotData.setEnabled(modelSeries.getRowCount() > 0);
         buttonDumpData.setEnabled(buttonPlotData.isEnabled() && !dumping);
 
@@ -539,7 +539,7 @@ public class DaqbufPanel extends StandardDialog {
         });
         return cf;
     }
-    
+
 
     boolean isSeriesTableRowEditable(int row, int column) {
         return true;
@@ -552,8 +552,8 @@ public class DaqbufPanel extends StandardDialog {
     public void clear() {
         Logger.getLogger(DaqbufPanel.class.getName()).info("Init");
         reset();
-        updating=true;
-        try{
+        updating = true;
+        try {
             backgroundColor = defaultBackgroundColor;
             gridColor = defaultGridColor;
 
@@ -573,7 +573,7 @@ public class DaqbufPanel extends StandardDialog {
             modelSeries.addRow(new Object[]{false, "SARES11-SPEC125-M1:FPICTURE", "sf-imagebuffer", "[2048, 2048]", PLOT_PRIVATE, "", null});
             textFrom.setText("2024-05-02 09:00:00");
             textTo.setText("2024-05-02 10:00:00");
-            */        
+             */
         } finally {
             updating = false;
             file = null;
@@ -1427,7 +1427,7 @@ public class DaqbufPanel extends StandardDialog {
         }
         return series;
     }
-    
+
     String expandTime(String text){
         text = text.trim();
         if (Pattern.matches("^\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:$", text)){
@@ -1703,11 +1703,11 @@ public class DaqbufPanel extends StandardDialog {
             SwingUtils.centerComponent(null, dialog);
             if (dialog.getOwner() != null) {
                 dialog.getOwner().setIconImage(Toolkit.getDefaultToolkit().getImage(App.getResourceUrl("IconSmall.png")));
-            }            
+            }
             dialog.setDefaultCloseOperation(DISPOSE_ON_CLOSE);
             dialog.openArgs();
             dialog.setVisible(true);
-            dialog.requestFocus();            
+            dialog.requestFocus();
         });
     }
 
@@ -1748,7 +1748,7 @@ public class DaqbufPanel extends StandardDialog {
         final String end = expandTime(textTo.getText());
         textFrom.setText(start);
         textTo.setText(end);
-        
+
 
         JDialog splash = SwingUtils.showSplash(this, "Save", new Dimension(400, 200), "Saving data to " + filename);
         dumping = true;
@@ -1787,7 +1787,7 @@ public class DaqbufPanel extends StandardDialog {
             showException(ex);
         }
     }
-    
+
     
     void plotData() throws Exception {
         if (tableSeries.isEditing()) {
@@ -1814,7 +1814,7 @@ public class DaqbufPanel extends StandardDialog {
             saveConfig(new File(filename));
         }
     }
-    
+
     void openConfig() throws Exception  {
         JFileChooser chooser = new JFileChooser(file);
         FileNameExtensionFilter filter = new FileNameExtensionFilter("Config files", "dbuf");
@@ -1826,8 +1826,8 @@ public class DaqbufPanel extends StandardDialog {
                 openConfig(chooser.getSelectedFile());
             }
         }
-    }    
-    
+    }
+
     void saveConfig(File file) throws Exception {
         Map<String, Object> data = new HashMap();
         data.put("series", modelSeries.getDataVector());
@@ -1838,16 +1838,16 @@ public class DaqbufPanel extends StandardDialog {
         } else {
             data.put("from", null);
             data.put("to", null);
-            data.put("range", comboTime.getSelectedItem());            
-        }        
-        data.put("binned", checkBins.isSelected());            
+            data.put("range", comboTime.getSelectedItem());
+        }
+        data.put("binned", checkBins.isSelected());
         data.put("bins",  spinnerBins.getValue() );            
-        data.put("maxsize", spinnerSize.getValue());                            
+        data.put("maxsize", spinnerSize.getValue());
         String json = EncoderJson.encode(data, true);
         Files.write(file.toPath(), json.getBytes());
-        this.file = file;        
+        this.file = file;
     }
-    
+
     void openConfig(File file) throws Exception  {
         String json = new String(Files.readAllBytes(file.toPath()));
         Map<String, Object> data = (Map<String, Object>) EncoderJson.decode(json, Map.class);
@@ -1859,12 +1859,12 @@ public class DaqbufPanel extends StandardDialog {
         Integer bins = (Integer) data.getOrDefault("bins", null);
         Integer maxsize = (Integer) data.getOrDefault("maxsize", null);
         List<List> series = (List<List>) data.getOrDefault("series", new ArrayList());
-        
+
         openConfig(series, from, to, range, binned, bins, maxsize);
         this.file = file;
     }
-    
-    void openConfig(List<List> series, String from, String to, String range, Boolean binned, Integer bins, Integer maxsize) {        
+
+    void openConfig(List<List> series, String from, String to, String range, Boolean binned, Integer bins, Integer maxsize) {
         clear();
         textFrom.setText((from==null) ? "" : from);
         textTo.setText((to==null) ? "" : to);
@@ -1884,9 +1884,9 @@ public class DaqbufPanel extends StandardDialog {
         Object[][]dataVector =  Convert.to2dArray(Convert.toArray(series));        
         modelSeries.setDataVector(dataVector, SwingUtils.getTableColumnNames(tableSeries));
         initializeTable();
-        
+
     }
-    
+
     void openArgs() {
         String from = App.getArgumentValue("from");
         String to = App.getArgumentValue("to");
@@ -1897,7 +1897,7 @@ public class DaqbufPanel extends StandardDialog {
             try{
                 bins = Integer.valueOf(App.getArgumentValue("bins"));
                 bins = (bins<1) ? null : bins;
-                binned = (bins != null);                
+                binned = (bins != null);
             } catch (Exception ex){    
                 binned = false;
             }
@@ -1908,7 +1908,7 @@ public class DaqbufPanel extends StandardDialog {
         } catch (Exception ex){            
         }
         openConfig(new ArrayList<List>(), from, to, range, binned, bins, maxsize);
-        
+
         List<CompletableFuture> futures = new ArrayList<>();
         for (String s: App.getArgumentValues("ch")){
             String name = daqbuf.getChannelName(s);
@@ -1918,9 +1918,9 @@ public class DaqbufPanel extends StandardDialog {
             row[2] = backend;
             modelSeries.addRow(row);
             futures.add(updateShape(modelSeries.getRowCount()-1));
-        }        
+        }
         update();
-        
+
         if (App.getBoolArgumentValue("plot")){
             new Thread(()->{
                 try {
@@ -1931,20 +1931,20 @@ public class DaqbufPanel extends StandardDialog {
                         try {
                             plotData();
                         } catch (Exception ex) {
-                             showException(ex);
+                            showException(ex);
                         }
-                    });                    
+                    });
                 } catch (Exception ex) {
-                   showException(ex);
-                }                
-            }).start();            
+                    showException(ex);
+                }
+            }).start();
         }
-    }    
-    
+    }
+
     Object[] getEmptyRow(){
         return new Object[]{Boolean.TRUE, "", Daqbuf.getDefaultBackend(), "", PLOT_PRIVATE, 1};
     }
-    
+
     
     
     /**
@@ -1966,10 +1966,6 @@ public class DaqbufPanel extends StandardDialog {
                 return isSeriesTableRowEditable(row, column);
             };
         };
-        buttonDelete = new javax.swing.JButton();
-        buttonUp = new javax.swing.JButton();
-        buttonInsert = new javax.swing.JButton();
-        buttonDown = new javax.swing.JButton();
         jPanel3 = new javax.swing.JPanel();
         jLabel2 = new javax.swing.JLabel();
         textFrom = new javax.swing.JTextField();
@@ -1989,6 +1985,11 @@ public class DaqbufPanel extends StandardDialog {
         buttonOpen = new javax.swing.JButton();
         buttonSave = new javax.swing.JButton();
         jSeparator1 = new javax.swing.JToolBar.Separator();
+        buttonRowDelete = new javax.swing.JButton();
+        buttonRowDown = new javax.swing.JButton();
+        buttonRowUp = new javax.swing.JButton();
+        buttonRowInsert = new javax.swing.JButton();
+        jSeparator3 = new javax.swing.JToolBar.Separator();
         buttonDumpData = new javax.swing.JButton();
         jSeparator2 = new javax.swing.JToolBar.Separator();
         buttonPlotData = new javax.swing.JButton();
@@ -2035,7 +2036,6 @@ public class DaqbufPanel extends StandardDialog {
                 return canEdit [columnIndex];
             }
         });
-        tableSeries.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_INTERVAL_SELECTION);
         tableSeries.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
         tableSeries.getTableHeader().setReorderingAllowed(false);
         tableSeries.addMouseListener(new java.awt.event.MouseAdapter() {
@@ -2050,72 +2050,22 @@ public class DaqbufPanel extends StandardDialog {
         });
         jScrollPane1.setViewportView(tableSeries);
 
-        buttonDelete.setText("Delete");
-        buttonDelete.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                buttonDeleteActionPerformed(evt);
-            }
-        });
-
-        buttonUp.setText("Move Up");
-        buttonUp.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                buttonUpActionPerformed(evt);
-            }
-        });
-
-        buttonInsert.setText("Insert");
-        buttonInsert.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                buttonInsertActionPerformed(evt);
-            }
-        });
-
-        buttonDown.setText("Move Down");
-        buttonDown.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                buttonDownActionPerformed(evt);
-            }
-        });
-
         javax.swing.GroupLayout panelSerieLayout = new javax.swing.GroupLayout(panelSerie);
         panelSerie.setLayout(panelSerieLayout);
         panelSerieLayout.setHorizontalGroup(
             panelSerieLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(panelSerieLayout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(panelSerieLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 556, Short.MAX_VALUE)
-                    .addGroup(panelSerieLayout.createSequentialGroup()
-                        .addGap(0, 0, Short.MAX_VALUE)
-                        .addComponent(buttonUp)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(buttonDown)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(buttonInsert)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(buttonDelete)
-                        .addGap(0, 0, Short.MAX_VALUE)))
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
                 .addContainerGap())
         );
-
-        panelSerieLayout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {buttonDelete, buttonDown, buttonInsert, buttonUp});
-
         panelSerieLayout.setVerticalGroup(
             panelSerieLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(panelSerieLayout.createSequentialGroup()
                 .addGap(2, 2, 2)
                 .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 137, Short.MAX_VALUE)
-                .addGap(4, 4, 4)
-                .addGroup(panelSerieLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(buttonDelete)
-                    .addComponent(buttonInsert)
-                    .addComponent(buttonDown)
-                    .addComponent(buttonUp))
                 .addContainerGap())
         );
-
-        panelSerieLayout.linkSize(javax.swing.SwingConstants.VERTICAL, new java.awt.Component[] {buttonDelete, buttonDown, buttonInsert, buttonUp});
 
         jPanel3.setBorder(javax.swing.BorderFactory.createTitledBorder("Range"));
 
@@ -2189,10 +2139,10 @@ public class DaqbufPanel extends StandardDialog {
                     .addGap(15, 15, 15)))
         );
 
-        jPanel4.setBorder(javax.swing.BorderFactory.createTitledBorder("Bins"));
+        jPanel4.setBorder(javax.swing.BorderFactory.createTitledBorder("Data"));
 
         checkBins.setSelected(true);
-        checkBins.setText("Binned Data");
+        checkBins.setText("Binned ");
         checkBins.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 checkBinsActionPerformed(evt);
@@ -2217,7 +2167,7 @@ public class DaqbufPanel extends StandardDialog {
             .addGroup(jPanel4Layout.createSequentialGroup()
                 .addContainerGap()
                 .addComponent(checkBins)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addGap(18, 18, Short.MAX_VALUE)
                 .addComponent(jLabel4)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(spinnerBins, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -2287,6 +2237,62 @@ public class DaqbufPanel extends StandardDialog {
         jSeparator1.setRequestFocusEnabled(false);
         toolBar.add(jSeparator1);
 
+        buttonRowDelete.setIcon(new javax.swing.ImageIcon(getClass().getResource("/ch/psi/pshell/ui/Abort.png"))); // NOI18N
+        buttonRowDelete.setText(bundle.getString("View.buttonNew.text")); // NOI18N
+        buttonRowDelete.setToolTipText("Remove row");
+        buttonRowDelete.setFocusable(false);
+        buttonRowDelete.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+        buttonRowDelete.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+        buttonRowDelete.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                buttonDeleteActionPerformed(evt);
+            }
+        });
+        toolBar.add(buttonRowDelete);
+
+        buttonRowDown.setIcon(new javax.swing.ImageIcon(getClass().getResource("/ch/psi/pshell/ui/arrows/Down.png"))); // NOI18N
+        buttonRowDown.setText(bundle.getString("View.buttonNew.text")); // NOI18N
+        buttonRowDown.setToolTipText("Move row up");
+        buttonRowDown.setFocusable(false);
+        buttonRowDown.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+        buttonRowDown.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+        buttonRowDown.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                buttonDownActionPerformed(evt);
+            }
+        });
+        toolBar.add(buttonRowDown);
+
+        buttonRowUp.setIcon(new javax.swing.ImageIcon(getClass().getResource("/ch/psi/pshell/ui/arrows/Up.png"))); // NOI18N
+        buttonRowUp.setText(bundle.getString("View.buttonNew.text")); // NOI18N
+        buttonRowUp.setToolTipText("Move row up");
+        buttonRowUp.setFocusable(false);
+        buttonRowUp.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+        buttonRowUp.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+        buttonRowUp.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                buttonUpActionPerformed(evt);
+            }
+        });
+        toolBar.add(buttonRowUp);
+
+        buttonRowInsert.setIcon(new javax.swing.ImageIcon(getClass().getResource("/ch/psi/pshell/ui/Insert.png"))); // NOI18N
+        buttonRowInsert.setText(bundle.getString("View.buttonNew.text")); // NOI18N
+        buttonRowInsert.setToolTipText("Add new row");
+        buttonRowInsert.setFocusable(false);
+        buttonRowInsert.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+        buttonRowInsert.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+        buttonRowInsert.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                buttonInsertActionPerformed(evt);
+            }
+        });
+        toolBar.add(buttonRowInsert);
+
+        jSeparator3.setMaximumSize(new java.awt.Dimension(20, 32767));
+        jSeparator3.setPreferredSize(new java.awt.Dimension(20, 0));
+        toolBar.add(jSeparator3);
+
         buttonDumpData.setIcon(new javax.swing.ImageIcon(getClass().getResource("/ch/psi/pshell/ui/Rec.png"))); // NOI18N
         buttonDumpData.setText(bundle.getString("View.buttonRun.text")); // NOI18N
         buttonDumpData.setToolTipText("Dump data to file");
@@ -2326,13 +2332,13 @@ public class DaqbufPanel extends StandardDialog {
         panelSeries.setLayout(panelSeriesLayout);
         panelSeriesLayout.setHorizontalGroup(
             panelSeriesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, panelSeriesLayout.createSequentialGroup()
+            .addComponent(panelSerie, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+            .addGroup(panelSeriesLayout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(panelSeriesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addComponent(panelSerie, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(toolBar, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(jPanel4, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(jPanel3, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addGroup(panelSeriesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(toolBar, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(jPanel4, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(jPanel3, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addContainerGap())
         );
         panelSeriesLayout.setVerticalGroup(
@@ -2341,7 +2347,7 @@ public class DaqbufPanel extends StandardDialog {
                 .addComponent(toolBar, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(0, 0, 0)
                 .addComponent(panelSerie, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGap(0, 0, 0)
                 .addComponent(jPanel3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jPanel4, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -2365,7 +2371,7 @@ public class DaqbufPanel extends StandardDialog {
         );
         pnGraphsLayout.setVerticalGroup(
             pnGraphsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 392, Short.MAX_VALUE)
+            .addGap(0, 359, Short.MAX_VALUE)
         );
 
         scrollPane.setViewportView(pnGraphs);
@@ -2379,15 +2385,15 @@ public class DaqbufPanel extends StandardDialog {
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                .addGap(0, 0, 0)
+                .addContainerGap()
                 .addComponent(tabPane)
-                .addGap(0, 0, 0))
+                .addContainerGap())
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addComponent(tabPane)
-                .addGap(0, 0, 0))
+                .addContainerGap())
         );
 
         pack();
@@ -2577,19 +2583,19 @@ public class DaqbufPanel extends StandardDialog {
      */
     public static void main(String args[]) {
         App.init(args);
-        create(false, null);        
+        create(null, false, null);
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JButton buttonDelete;
-    private javax.swing.JButton buttonDown;
     private javax.swing.JButton buttonDumpData;
-    private javax.swing.JButton buttonInsert;
     private javax.swing.JButton buttonNew;
     private javax.swing.JButton buttonOpen;
     private javax.swing.JButton buttonPlotData;
+    private javax.swing.JButton buttonRowDelete;
+    private javax.swing.JButton buttonRowDown;
+    private javax.swing.JButton buttonRowInsert;
+    private javax.swing.JButton buttonRowUp;
     private javax.swing.JButton buttonSave;
-    private javax.swing.JButton buttonUp;
     private javax.swing.JCheckBox checkBins;
     private javax.swing.JComboBox<String> comboTime;
     private javax.swing.Box.Filler filler1;
@@ -2605,6 +2611,7 @@ public class DaqbufPanel extends StandardDialog {
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JToolBar.Separator jSeparator1;
     private javax.swing.JToolBar.Separator jSeparator2;
+    private javax.swing.JToolBar.Separator jSeparator3;
     private javax.swing.JLabel labelUser;
     private javax.swing.JPanel panelPlots;
     private javax.swing.JPanel panelSerie;

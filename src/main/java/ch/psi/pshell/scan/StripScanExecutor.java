@@ -44,6 +44,7 @@ public class StripScanExecutor {
                 pars.put("provider", provider);
                 pars.put("preserve", false); //Do not now types beforehand, cannot be true
                 pars.put("reset", true);
+                pars.put("setpoints", false);
                 pars.put("tag", name);
                 scan.setHidden(true);
                 Context.getInstance().setCommandPars(scan, pars);
