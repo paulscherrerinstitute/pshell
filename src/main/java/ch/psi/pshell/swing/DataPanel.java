@@ -105,7 +105,7 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
 
         void plotData(DataManager dataManager, String root, String path) throws Exception;
 
-        void plotData(Object array, Range range) throws Exception;
+        void plotData(Object array, Range range, String name, double[] x) throws Exception;
 
         JPanel openFile(String fileName) throws Exception;
 
@@ -410,6 +410,7 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
 
         JPopupMenu popupMenu = new JPopupMenu();
         JMenuItem menuPlotData = new JMenuItem("Plot data");
+        JMenu menuPlotAgainst = new JMenu("Plot against");
         JMenu menuConvert = new JMenu("Convert");
         menuPlotData.addActionListener((ActionEvent e) -> {
             try {
@@ -423,6 +424,7 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
             }
         });
         popupMenu.add(menuPlotData);
+        popupMenu.add(menuPlotAgainst);
 
         Separator menuPlotDataSeparator = new Separator();
         popupMenu.add(menuPlotDataSeparator);
@@ -525,9 +527,10 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
                         String dataPath = getDataPath(path);
                         if (dataPath == null) {
                             return;
-                        }
+                        }                       
                         Map<String, Object> info = dataManager.getInfo(currentFile.getPath(), dataPath);
                         menuPlotData.setVisible(false);
+                        menuPlotAgainst.setVisible(false);
                         menuAssign.setVisible(false);
                         menuConvert.setVisible(false);
                         if (info != null) {
@@ -561,9 +564,43 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
                                             menuConvert.add(item);
                                         }
                                     }
-
+                                    menuPlotAgainst.removeAll();
                                     menuConvert.setVisible(menuConvert.getMenuComponentCount() > 0);
                                     menuPlotData.setVisible(true);
+                                    try{
+                                        Integer rank = ((Number) info.getOrDefault(Provider.INFO_RANK, 0)).intValue();
+                                        Long elements = ((Number) info.getOrDefault(Provider.INFO_ELEMENTS, -1)).longValue();
+                                        if ((rank == 1) && (elements>0)){
+                                            String self = path.getLastPathComponent().toString();
+                                            String parentPath = getDataPath(path.getParentPath());
+                                            for (String sibling : dataManager.getChildren(currentFile.getPath(), parentPath)) {
+                                                String name = getShortName(sibling);
+                                                if (!name.equals(self)){
+                                                    Map siblingInfo = dataManager.getInfo(currentFile.getPath(), sibling);
+                                                    if (dataManager.isDisplayablePlot(info)) {
+                                                        if (siblingInfo.getOrDefault(Provider.INFO_RANK, 0) == Integer.valueOf(1)){
+                                                            if (siblingInfo.getOrDefault(Provider.INFO_ELEMENTS, -1).equals(elements)){                                                            
+                                                                JMenuItem item = new JMenuItem(name);
+                                                                item.addActionListener((ActionEvent ae) -> {
+                                                                    try{
+                                                                        Object array = dataManager.getData(currentFile.getPath(), dataPath).sliceData;                                                                
+                                                                        double[] x = (double[]) Convert.toDouble(dataManager.getData(currentFile.getPath(), sibling).sliceData);
+                                                                        listener.plotData(array, null, self + " (X axis: " + name + ")", x);
+                                                                    } catch (Exception ex){
+                                                                        showException(ex);
+                                                                    }
+                                                                });
+                                                                menuPlotAgainst.add(item);
+                                                                menuPlotAgainst.setVisible(true);
+                                                            }
+                                                        }                                                    
+                                                    }
+                                                }
+                                            }                                        
+                                        }
+                                    } catch (Exception ex){
+                                        showException(ex);
+                                    }
                                 }
                             }
                         }
@@ -605,10 +642,12 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
         
         JPopupMenu tableDataColPopupMenu = new JPopupMenu();
         JMenuItem menuPlotCol = new JMenuItem("Plot column");
+        JMenu menuPlotColAgainst = new JMenu("Plot against");
         menuPlotCol.addActionListener((ActionEvent ev) -> {
-            plotColumnData(selectedDataCol);
+            plotColumnData(selectedDataCol, null, null);
         });
         tableDataColPopupMenu.add(menuPlotCol);
+        tableDataColPopupMenu.add(menuPlotColAgainst);
         
         
         tableData.addMouseListener(new MouseAdapter() {
@@ -660,7 +699,7 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
                 if ((e.getClickCount() == 2) && (!e.isPopupTrigger()) && !tableDataColPopupMenu.isVisible()) {
                     int c = tableData.columnAtPoint(e.getPoint());
                     if (c >= 0 && c < tableData.getColumnCount()) {
-                        plotColumnData(c);
+                        plotColumnData(c, null, null);
                     }
                 }
             }
@@ -678,10 +717,43 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
             private void checkPopup(MouseEvent e) {
                 try {
                     if (e.isPopupTrigger()) {
+                        menuPlotColAgainst.setVisible(false);
                         int c = tableData.columnAtPoint(e.getPoint());
                         if (c >= 0 && c < tableData.getColumnCount()) {
                             selectedDataCol = c;
                             menuPlotCol.setEnabled(isTableSelectionPlottable(getColumnSelection(c)));
+                            try{
+                                if (menuPlotCol.isEnabled()){
+                                    if (tableData.getColumnCount()>1){
+                                        String self = getTableColHeader(selectedDataCol);
+                                        if (self!=null){
+                                            menuPlotColAgainst.removeAll();
+                                            for (int i=0;i<tableData.getColumnCount(); i++){
+                                                if (i!=selectedDataCol){
+                                                    int selectedDataColX=i;
+                                                    String name = getTableColHeader(selectedDataColX);
+                                                    if (name!=null){
+                                                        JMenuItem item = new JMenuItem(name);
+                                                        item.addActionListener((ActionEvent ae) -> {
+                                                            try{
+                                                                plotColumnData(selectedDataCol, null, selectedDataColX);
+                                                            } catch (Exception ex){
+                                                                showException(ex);
+                                                            }
+                                                        });
+                                                        menuPlotColAgainst.add(item);
+                                                        menuPlotColAgainst.setVisible(true);
+
+                                                    }
+                                                }
+                                            }
+                                        }
+
+                                    }
+                                }
+                            } catch (Exception ex){
+                                showException(ex);
+                            }                            
                             tableDataColPopupMenu.show(e.getComponent(), e.getX(), e.getY());
                         }
                     }
@@ -717,6 +789,11 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
         ((CardLayout) dataPanel.getLayout()).show(dataPanel, "table");
 
         ((DefaultTreeCellRenderer) treeFile.getCellRenderer()).setLeafIcon(new ImageIcon(App.getResourceImage("Data.png")));
+    }
+    
+    String getShortName(String path){
+        String[] tokens = path.split("/");
+        return tokens[tokens.length-1];
     }
 
     boolean embedded = true;
@@ -1434,17 +1511,46 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
         }
     }
 
-    void plotColumnData(int column) {
+    void plotColumnData(int colY, String name, Integer colX) {
         try {
-            Object selection = getColumnSelection(column);
-            if (isTableSelectionPlottable(selection)) {
+            Object y = getColumnSelection(colY);           
+            if (isTableSelectionPlottable(y)) {
+                if (name==null){
+                    name  = getTableColHeader(colY);
+                }
+                double[] x = null;
+                if (colX!=null){
+                    Object xdata =getColumnSelection(colX);           
+                    if (isTableSelectionPlottable(xdata)) {
+                        x =(double[]) Convert.toDouble(xdata);
+                        if (name!=null){
+                            String nameX = getTableColHeader(colX);
+                            if (nameX!=null){
+                                name = name + " (X axis: " + nameX + ")" ;
+                            }
+                        }
+                    }
+                }
                 if (listener != null) {
-                    listener.plotData(selection, null);
+                    listener.plotData(y, null, name, x);
                 }
             }
         } catch (Exception ex) {
             showException(ex);
         }
+    }
+    
+    String getTableColHeader(int index){
+        try{
+            if (headers != null){
+                String  header  = headers[index];
+                if ((header!=null) && (!header.isEmpty())){
+                    return header.trim();
+                }
+            }
+        } catch (Exception ex){                    
+        }
+        return null;
     }
 
     void plotTableSelection() {
@@ -1454,7 +1560,7 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
                 if (isTableSelectionPlottable(selection)) {
                     Range range = getTableSelectionRange();
                     //Simplify plotting if  showing only 1 element                
-                    listener.plotData(selection, range);
+                    listener.plotData(selection, range, null, null);
                 } else if (selection instanceof String) {
                     File file = new File((String) selection);
                     if (!file.exists()) {
@@ -1734,7 +1840,7 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
         }
 
         @Override
-        public void plotData(Object array, Range range) throws Exception {
+        public void plotData(Object array, Range range, String name, double[] x) throws Exception {
             Class type = Arr.getComponentType(array);
             if (type.isPrimitive()) {
                 type = Convert.getWrapperClass(type);
@@ -1747,16 +1853,20 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
                 array = Convert.transpose(Convert.toDouble(array));
             }
 
-            double[] x = null;
-            if (range != null) {
-                if (range.getExtent().intValue() == Array.getLength(array)) {
-                    x = new double[Array.getLength(array)];
-                    for (int i = 0; i < x.length; i++) {
-                        x[i] = i + range.min.intValue();
+            if (x==null){
+                if (range != null) {
+                    if (range.getExtent().intValue() == Array.getLength(array)) {
+                        x = new double[Array.getLength(array)];
+                        for (int i = 0; i < x.length; i++) {
+                            x[i] = i + range.min.intValue();
+                        }
                     }
                 }
             }
-            plot(getParent(), (range == null) ? "Array" : "Array range: " + range.toString(), new PlotDescriptor[]{new PlotDescriptor("", array, x)}, null);
+            if (name==null){
+                name = "";
+            }            
+            plot(getParent(), (range == null) ? "Array" : "Array range: " + range.toString(), new PlotDescriptor[]{new PlotDescriptor(name, array, x)}, null);
         }
 
         @Override

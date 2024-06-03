@@ -878,7 +878,7 @@ public class View extends MainFrame {
         }
 
         @Override
-        public void plotData(Object array, Range range) throws Exception {
+        public void plotData(Object array, Range range, String name, double[] x) throws Exception {
             Class type = Arr.getComponentType(array);
             if (type.isPrimitive()) {
                 type = Convert.getWrapperClass(type);
@@ -891,16 +891,20 @@ public class View extends MainFrame {
                 array = Convert.transpose(Convert.toDouble(array));
             }
 
-            double[] x = null;
-            if (range != null) {
-                if (range.getExtent().intValue() == Array.getLength(array)) {
-                    x = new double[Array.getLength(array)];
-                    for (int i = 0; i < x.length; i++) {
-                        x[i] = i + range.min.intValue();
+            if (x==null){
+                if (range != null) {
+                    if (range.getExtent().intValue() == Array.getLength(array)) {
+                        x = new double[Array.getLength(array)];
+                        for (int i = 0; i < x.length; i++) {
+                            x[i] = i + range.min.intValue();
+                        }
                     }
                 }
             }
-            View.this.plotData("Data", new PlotDescriptor[]{new PlotDescriptor("", array, x)}, null);
+            if (name==null){
+                name = "";
+            }
+            View.this.plotData("Data", new PlotDescriptor[]{new PlotDescriptor(name, array, x)}, null);
         }
 
         @Override
@@ -3844,6 +3848,7 @@ public class View extends MainFrame {
         });
         menuCamServer.add(menuCamServerViewer);
 
+        menuCamServerCameras.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_F4, java.awt.event.InputEvent.CTRL_DOWN_MASK));
         menuCamServerCameras.setText(bundle.getString("View.menuCamServerCameras.text")); // NOI18N
         menuCamServerCameras.setName("menuCamServerCameras"); // NOI18N
         menuCamServerCameras.addActionListener(new java.awt.event.ActionListener() {
@@ -3853,6 +3858,7 @@ public class View extends MainFrame {
         });
         menuCamServer.add(menuCamServerCameras);
 
+        menuCamServerPipelines.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_F4, java.awt.event.InputEvent.SHIFT_DOWN_MASK));
         menuCamServerPipelines.setText(bundle.getString("View.menuCamServerPipelines.text")); // NOI18N
         menuCamServerPipelines.setName("menuCamServerPipelines"); // NOI18N
         menuCamServerPipelines.addActionListener(new java.awt.event.ActionListener() {
@@ -3867,6 +3873,7 @@ public class View extends MainFrame {
         menuArchiver.setText(bundle.getString("View.menuArchiver.text_1")); // NOI18N
         menuArchiver.setName("menuArchiver"); // NOI18N
 
+        manuDaqbuf.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_F4, java.awt.event.InputEvent.ALT_DOWN_MASK));
         manuDaqbuf.setText(bundle.getString("View.manuDaqbuf.text")); // NOI18N
         manuDaqbuf.setName("manuDaqbuf"); // NOI18N
         manuDaqbuf.addActionListener(new java.awt.event.ActionListener() {
