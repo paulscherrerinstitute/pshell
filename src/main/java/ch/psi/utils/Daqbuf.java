@@ -752,14 +752,9 @@ public class Daqbuf implements ChannelQueryAPI {
         dm.setAttribute(dataGroup, "start", start);
         dm.setAttribute(dataGroup, "end", end);
         dm.setAttribute(dataGroup, "bins", isBinned(bins) ? bins : Integer.valueOf(0));
-        
-        dm.setAttribute(dataGroup, "Type", "Daqbuf");
-        dm.setAttribute(dataGroup, "Dimensions", 1);
-        dm.setAttribute(dataGroup, "Writables", new String[]{"timestamp"});        
-        
+               
         QueryListener listener = null;
         if (isBinned(bins)) {
-            dm.setAttribute(dataGroup, "Readables", new String[]{"value"});
             Map<String, List> data = fetchQuery(channel, start, end, bins);
             for (String field : data.keySet()) {
                 List list = data.get(field);
@@ -773,7 +768,6 @@ public class Daqbuf implements ChannelQueryAPI {
             String ID_DATASET = dataGroup + "id";
             String TIMESTAMP_DATASET = dataGroup + "timestamp";
             
-            dm.setAttribute(dataGroup, "Readables", new String[]{"value"});
             listener = new QueryListener() {
                 @Override
                 public void onMessage(Query query, List values, List<Long> ids, List<Long> timestamps) {
