@@ -29,14 +29,17 @@ public class PatternFileChooserAuxiliary extends JPanel {
 
     final GridBagConstraints gbc = new GridBagConstraints();
     final JFileChooser chooser;
+    final String tokenName;
     JCheckBox checkStdPath;
     String selectedPath;
     JTextField textFile;
 
-    public PatternFileChooserAuxiliary(JFileChooser chooser, boolean usePatternSelected) {
+    public PatternFileChooserAuxiliary(JFileChooser chooser, String tokenName, boolean usePatternSelected) {
         this.chooser = chooser;
+        this.tokenName = tokenName;
         String root = "{data}";
         String path = (Context.getInstance() != null) ? Context.getInstance().getSetup().expandPath(root) : Sys.getUserHome();
+        chooser.setCurrentDirectory(new File(path));
 
         this.setLayout(new GridBagLayout());
         gbc.fill = GridBagConstraints.HORIZONTAL;
@@ -118,7 +121,7 @@ public class PatternFileChooserAuxiliary extends JPanel {
         }
     }
 
-    public String getSelectedFile(String tokenName) {
+    public String getSelectedFile() {
         String fileName = chooser.getSelectedFile().getAbsolutePath();
         if ((fileName != null) && (!fileName.isBlank())) {
             if ((checkStdPath != null) && checkStdPath.isSelected()) {

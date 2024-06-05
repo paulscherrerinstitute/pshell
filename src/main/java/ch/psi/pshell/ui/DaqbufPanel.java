@@ -1758,28 +1758,20 @@ public class DaqbufPanel extends StandardDialog {
     
     void saveQuery() throws IOException {
         try {
-            String root = "{data}";
-            String path = (Context.getInstance() != null) ? Context.getInstance().getSetup().expandPath(root) : Sys.getUserHome();
-                                   
-            JFileChooser chooser = new JFileChooser(path);
+            JFileChooser chooser = new JFileChooser();
             FileNameExtensionFilter filter = new FileNameExtensionFilter("HDF5 files", "h5");
             chooser.setFileFilter(filter);
             chooser.setAcceptAllFileFilterUsed(true);
             chooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
             chooser.setDialogTitle("Dump Data");
             
-            PatternFileChooserAuxiliary auxiliary=null;
-            //if (Context.getInstance() != null) {
-                auxiliary = new PatternFileChooserAuxiliary(chooser, false);
-                chooser.setAccessory(auxiliary);          
-            //}            
+            PatternFileChooserAuxiliary auxiliary = new PatternFileChooserAuxiliary(chooser, "Daqbuf", false);
+            chooser.setAccessory(auxiliary);          
+
             int rVal = chooser.showSaveDialog(this);
             if (rVal == JFileChooser.APPROVE_OPTION) {
-                //String fileName = chooser.getSelectedFile().getAbsolutePath();
-                //if (auxiliary!=null){
-                    String fileName = auxiliary.getSelectedFile("Daqbuf");
-                    saveQuery(fileName);
-                //}
+                String fileName = auxiliary.getSelectedFile();
+                saveQuery(fileName);
             }
         } catch (Exception ex) {
             showException(ex);
