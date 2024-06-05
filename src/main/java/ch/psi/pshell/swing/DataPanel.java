@@ -7,6 +7,7 @@ import ch.psi.pshell.data.DataManager.DataAddress;
 import ch.psi.pshell.data.Provider;
 import ch.psi.pshell.data.DataSlice;
 import ch.psi.pshell.data.Layout;
+import ch.psi.pshell.data.LayoutBase;
 import ch.psi.pshell.data.PlotDescriptor;
 import ch.psi.pshell.data.ProviderFDA;
 import ch.psi.pshell.plot.Plot;
@@ -573,7 +574,9 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
                                         if ((rank == 1) && (elements>0)){
                                             String self = path.getLastPathComponent().toString();
                                             String parentPath = getDataPath(path.getParentPath());
-                                            for (String sibling : dataManager.getChildren(currentFile.getPath(), parentPath)) {
+                                            String[] siblings = dataManager.getChildren(currentFile.getPath(), parentPath);
+                                            siblings = Arr.append(siblings, dataManager.getChildren(currentFile.getPath(), parentPath+"/"+LayoutBase.PATH_META));
+                                            for (String sibling : siblings) {
                                                 String name = getShortName(sibling);
                                                 if (!name.equals(self)){
                                                     Map siblingInfo = dataManager.getInfo(currentFile.getPath(), sibling);

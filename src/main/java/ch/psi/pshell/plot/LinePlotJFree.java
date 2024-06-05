@@ -49,6 +49,7 @@ import org.jfree.chart.annotations.XYAnnotation;
 import org.jfree.chart.annotations.XYDrawableAnnotation;
 import org.jfree.chart.annotations.XYPointerAnnotation;
 import org.jfree.chart.annotations.XYTextAnnotation;
+import org.jfree.chart.axis.DateAxis;
 import org.jfree.chart.axis.NumberAxis;
 import org.jfree.chart.axis.NumberTickUnitSource;
 import org.jfree.chart.axis.LogarithmicAxis;
@@ -1202,12 +1203,35 @@ public class LinePlotJFree extends LinePlotBase {
         });
         chartPanel.getPopupMenu().add(contextMenuPointer);
 
+        // Show hide pointer
+        JCheckBoxMenuItem contextMenuTimeAxis = new JCheckBoxMenuItem("Time Domain Axis");        
+        contextMenuTimeAxis.addActionListener((ActionEvent e) -> {
+            boolean timeDomain = contextMenuTimeAxis.isSelected();
+            ValueAxis domainAxis = null;
+            if (timeDomain){
+                domainAxis = new DateAxis(null); //("Time");
+            } else {
+                domainAxis = new NumberAxis(null);
+                ((NumberAxis)domainAxis).setAutoRangeIncludesZero(false);
+            }
+            domainAxis.setLabelFont(getLabelFont());
+            domainAxis.setTickLabelFont(getTickLabelFont());
+            domainAxis.setLabelPaint(getAxisTextColor());
+            domainAxis.setTickLabelPaint(getAxisTextColor());           
+           
+            getChart().getXYPlot().setDomainAxis(domainAxis);                     
+            onAxisRangeChanged(Plot.AxisId.X);
+        });
+        chartPanel.getPopupMenu().add(contextMenuTimeAxis);
+        
+        
+        
         chartPanel.getPopupMenu().addPopupMenuListener(new PopupMenuListener() {
 
             @Override
             public void popupMenuWillBecomeVisible(PopupMenuEvent e) {
                 contextMenuItemColorLegendVisible.setSelected(isLegendVisible());
-                contextMenuItemToolTip.setSelected(getShowTooltips());
+                contextMenuItemToolTip.setSelected(getShowTooltips());                
                 menuStyle.setEnabled(!getStyle().isError());
                 for (Component c : menuStyle.getMenuComponents()) {
                     ((JRadioButtonMenuItem) c).setSelected(getStyle() == Style.valueOf(((JMenuItem) c).getText()));                
@@ -1217,7 +1241,11 @@ public class LinePlotJFree extends LinePlotBase {
                 menuScaleLogY2.setVisible(dataY2 != null);
                 menuScaleLogY2.setSelected(getAxis(AxisId.Y2).isLogarithmic());
                 menuScaleLogX2.setVisible(hasX2());
-                menuScaleLogX2.setSelected(hasX2() && getAxis(AxisId.X2).isLogarithmic());                
+                menuScaleLogX2.setSelected(hasX2() && getAxis(AxisId.X2).isLogarithmic());      
+                ValueAxis domainAxis = getChart().getXYPlot().getDomainAxis();
+                Range range = domainAxis.getRange();                                        
+                contextMenuTimeAxis.setVisible((range.getLowerBound()>=0) && (range.getUpperBound()<=32503680000000L));
+                contextMenuTimeAxis.setSelected( (domainAxis!=null) && (domainAxis instanceof DateAxis));
             }
 
             @Override
