@@ -9,6 +9,7 @@ import ch.psi.utils.swing.SwingUtils;
 import java.awt.Component;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.awt.event.ActionListener;
 import java.io.File;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -33,6 +34,8 @@ public class PatternFileChooserAuxiliary extends JPanel {
     JCheckBox checkStdPath;
     String selectedPath;
     JTextField textFile;
+    JComboBox comboFormat;
+    JComboBox comboLayout;
 
     public PatternFileChooserAuxiliary(JFileChooser chooser, String tokenName, boolean usePatternSelected) {
         this.chooser = chooser;
@@ -51,8 +54,8 @@ public class PatternFileChooserAuxiliary extends JPanel {
         if (Context.getInstance() != null) {
             selectedPath = Context.getInstance().getConfig().dataPath;
             checkStdPath = new JCheckBox("Use name pattern");
-            checkStdPath.addActionListener((e) -> {
-                boolean stdPath = ((JCheckBox) e.getSource()).isSelected();
+            ActionListener listener =(e) -> {
+                boolean stdPath = checkStdPath.isSelected();
                 if (stdPath) {
                     if (textFile == null) {
                         for (Component child : SwingUtils.getComponentsByType(chooser, JTextField.class)) {
@@ -77,10 +80,12 @@ public class PatternFileChooserAuxiliary extends JPanel {
                 for (Component child : SwingUtils.getComponentsByType(chooser, JList.class)) {
                     ((JList) child).setEnabled(!stdPath);
                 }
-            });
+            };
+            checkStdPath.addActionListener(listener);
             addComponent(checkStdPath);
             if (usePatternSelected) {
                 checkStdPath.setSelected(true);
+                listener.actionPerformed(null);
             }
         }
     }
@@ -96,7 +101,7 @@ public class PatternFileChooserAuxiliary extends JPanel {
         try {
             JLabel labelFormat = new JLabel("Format:");
             labelFormat.setHorizontalAlignment(SwingConstants.CENTER);
-            JComboBox comboFormat = new JComboBox();
+            comboFormat = new JComboBox();
             String[] formats = Configuration.class.getField("dataProvider").getAnnotation(Config.Defaults.class).values();
             comboFormat.setModel(new DefaultComboBoxModel(formats));
             addComponent(labelFormat);
@@ -112,7 +117,7 @@ public class PatternFileChooserAuxiliary extends JPanel {
             JLabel labelLayout = new JLabel("Layout:");
             labelLayout.setHorizontalAlignment(SwingConstants.CENTER);
             String[] layouts = Configuration.class.getField("dataLayout").getAnnotation(Config.Defaults.class).values();
-            JComboBox comboLayout = new JComboBox();
+            comboLayout = new JComboBox();
             comboLayout.setModel(new DefaultComboBoxModel(layouts));
             addComponent(labelLayout);
             addComponent(comboLayout);
@@ -140,4 +145,13 @@ public class PatternFileChooserAuxiliary extends JPanel {
         }
         return null;
     }
+    
+     public String getFormat() {
+         return (comboFormat==null) ? null : String.valueOf(comboFormat.getSelectedItem());
+     }
+     
+     public String getlayout() {
+         return  (comboLayout==null) ? null : String.valueOf(comboLayout.getSelectedItem());
+     }
+               
 }

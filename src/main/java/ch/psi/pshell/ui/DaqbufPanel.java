@@ -1703,18 +1703,6 @@ public class DaqbufPanel extends StandardDialog {
         create(App.getArgumentValue(ARG_DAQBUF_URL), modal, title);
     }    
 
-    void openFile(String fileName) {
-        try {
-            DataPanel panel = new DataPanel();
-            panel.load(fileName);
-            panel.setDefaultDataPanelListener();
-            panel.showFileProps();
-            showDialog(fileName, new Dimension(800, 600), panel);
-        } catch (Exception ex) {
-            showException(ex);
-        }
-    }
-
     volatile boolean dumping = false;
     void saveQuery(String filename) throws IOException, InterruptedException {
         List<String> channels = new ArrayList<>();
@@ -1747,7 +1735,7 @@ public class DaqbufPanel extends StandardDialog {
                 showException((Exception) ex);
             } else {
                 if (SwingUtils.showOption(this, "Save", "Success saving data to " + filename + ".\nDo you want to open the file?", OptionType.YesNo) == OptionResult.Yes) {
-                    openFile(filename);
+                    DataPanel.createDialog(this, filename, null, null);
                 }
             }
             dumping = false;
@@ -1771,7 +1759,9 @@ public class DaqbufPanel extends StandardDialog {
             int rVal = chooser.showSaveDialog(this);
             if (rVal == JFileChooser.APPROVE_OPTION) {
                 String fileName = auxiliary.getSelectedFile();
-                saveQuery(fileName);
+                if ((fileName!=null) && !fileName.isBlank()){
+                    saveQuery(fileName);
+                }
             }
         } catch (Exception ex) {
             showException(ex);

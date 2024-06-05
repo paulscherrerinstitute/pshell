@@ -70,6 +70,10 @@ public class StripScanExecutor {
     }
 
     public void finish() {
+        finish(false);
+    }
+    
+    public void finish(boolean wait) {
         if (!scans.isEmpty() && (persistenceExecutor!=null)) {
             Future future = persistenceExecutor.submit(() -> {
                     for (StripScan scan : scans.values()) {
@@ -84,12 +88,14 @@ public class StripScanExecutor {
 
             scans.clear();
             persistenceExecutor.shutdown();
-            //try {
-            //   future.get();
-            //} catch (Exception ex) {
-            //    Logger.getLogger(StripChart.class.getName()).log(Level.WARNING, null, ex);
-            //}            
+            if (wait){
+                try {
+                   future.get();
+                } catch (Exception ex) {
+                    Logger.getLogger(StripChart.class.getName()).log(Level.WARNING, null, ex);
+                }
+            }            
             persistenceExecutor = null;
         }
-    }    
+    }
 }

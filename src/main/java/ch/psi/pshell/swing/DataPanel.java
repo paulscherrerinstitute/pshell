@@ -1803,19 +1803,46 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
     String fileName;
 
     public void load(String fileName) throws Exception {
+        load(fileName, null, null);
+    }
+    
+    public void load(String fileName, String format, String layout) throws Exception {
+        File file = new File(fileName);
+        if ((format==null) || (format.isBlank())){
+            if (file.isFile()){
+               format =  IO.getExtension(file);
+            }             
+            if ((format==null) || (format.isBlank())){
+                if (Context.getInstance()!=null){
+                    format = Context.getInstance().getConfig().getDataProvider();
+                } else {
+                    if (file.isFile()){
+                        format = "h5";
+                    } else {
+                        format = "txt";
+                    }
+                }                
+            }
+        } 
+        if ((layout==null) || (layout.isBlank())){
+            if (Context.getInstance()!=null){
+                layout = Context.getInstance().getConfig().getDataLayout();
+            } else {
+                layout = "default";
+            }
+        }
+        load (fileName, new DataManager(fileName, format, layout));
+    }
+
+    public void load(String fileName, DataManager dm) throws Exception {
         File file = new File(fileName);
         this.fileName = fileName;
         scrollFolder.setVisible(false);
         splitFolder.setDividerSize(0);
-        if (Context.getInstance()!=null){
-            String provider = Context.getInstance().getConfig().getDataProvider();
-            dataManager = new DataManager(Context.getInstance(), file.isDirectory() ? provider : IO.getExtension(file), Context.getInstance().getConfig().getDataLayout());
-        } else {
-            dataManager = new DataManager(null, file.isDirectory() ? "txt" : IO.getExtension(file), "default");
-        }                
-        setCurrentPath(file);
+        dataManager = dm;
+        setCurrentPath(file);        
     }
-
+    
     public String getFileName() {
         return fileName;
     }
@@ -1926,6 +1953,21 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
         }
         return null;
     }
+    
+    
+    public static DataPanel createDialog(Window parent, String fileName, String format, String layout) {
+        try{
+            DataPanel panel = new DataPanel();
+            panel.load(fileName, format, layout);
+            panel.setDefaultDataPanelListener();
+            panel.showFileProps();
+            SwingUtils.showDialog(parent, fileName, new Dimension(800, 600), panel);
+            return panel;
+        } catch (Exception ex) {
+            SwingUtils.showException(parent, ex);
+        }
+        return null;
+    }
 
     static Path getWindowStatePath() {
         return Paths.get(Context.getInstance().getSetup().getContextPath(), DataPanel.class.getSimpleName() + "_" + "WindowState.xml");
@@ -2027,7 +2069,7 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
         App.init(args);
         createPanel(args.length > 1 ? new File(args[1]) : null);
     }
-
+        
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always

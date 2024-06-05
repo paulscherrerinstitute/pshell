@@ -3,6 +3,7 @@ package ch.psi.pshell.ui;
 import ch.psi.pshell.bs.StreamChannel;
 import ch.psi.pshell.bs.Stream;
 import ch.psi.pshell.camserver.PipelineSource;
+import ch.psi.pshell.core.Configuration;
 import ch.psi.pshell.core.Context;
 import ch.psi.pshell.core.ContextAdapter;
 import ch.psi.pshell.core.InlineDevice;
@@ -20,12 +21,15 @@ import ch.psi.pshell.plot.TimePlotJFree;
 import ch.psi.pshell.plot.TimePlotSeries;
 import ch.psi.pshell.plotter.Preferences;
 import ch.psi.pshell.scan.StripScanExecutor;
+import ch.psi.pshell.swing.DataPanel;
 import ch.psi.pshell.swing.HistoryChart;
+import ch.psi.pshell.swing.PatternFileChooserAuxiliary;
 import ch.psi.pshell.swing.PlotPanel;
 import ch.psi.pshell.ui.StripChartAlarmEditor.StripChartAlarmConfig;
 import ch.psi.utils.Arr;
 import ch.psi.utils.Audio;
 import ch.psi.utils.Chrono;
+import ch.psi.utils.Config;
 import ch.psi.utils.EncoderJson;
 import ch.psi.utils.IO;
 import ch.psi.utils.InvokingProducer;
@@ -39,6 +43,8 @@ import java.awt.Component;
 import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.Font;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.LayoutManager;
 import java.awt.Toolkit;
@@ -77,6 +83,7 @@ import javax.swing.JComponent;
 import javax.swing.JDialog;
 import javax.swing.JFileChooser;
 import javax.swing.JLabel;
+import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
 import javax.swing.JTable;
@@ -85,6 +92,7 @@ import javax.swing.JToggleButton;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.Timer;
+import javax.swing.border.EmptyBorder;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
@@ -693,7 +701,6 @@ public class StripChart extends StandardDialog {
         plots.clear();
     }
 
-    JButton saveButton;
 
     protected void update() {
         boolean editing = !started;
@@ -704,40 +711,22 @@ public class StripChart extends StandardDialog {
         buttonRowDelete.setEnabled((rows > 0) && (cur >= 0) && editing);
         buttonRowInsert.setEnabled(editing);
         buttonNew.setEnabled(editing);
-        buttonSave.setEnabled(editing);
-        buttonOpen.setEnabled(editing);
+        buttonSave.setEnabled(editing && (rows > 0));
+        buttonOpen.setEnabled(editing);        
         
         buttonStart.setEnabled(editing  && (modelSeries.getRowCount() > 0));
+        buttonSaveData.setEnabled(started && !persisting && (Context.getInstance()!=null));
         buttonStop.setEnabled(started);
 
         //tableSeries.setEnabled(editing);
         //tableCharts.setEnabled(editing);
         ckPersistence.setEnabled(editing && (Context.getInstance() != null));
-        textFileName.setEnabled((ckPersistence.isSelected() && editing) || !ckPersistence.isSelected());
+        textFileName.setEnabled(ckPersistence.isEnabled() && ckPersistence.isSelected());
         comboFormat.setEnabled(textFileName.isEnabled());
         comboLayout.setEnabled(textFileName.isEnabled());
         textStreamFilter.setEnabled(editing);
         spinnerDragInterval.setEnabled(editing);
         spinnerUpdate.setEnabled(editing);
-
-        boolean saveButtonVisible = started && !ckPersistence.isSelected();
-        if (saveButtonVisible && (saveButton == null)) {
-            saveButton = new JButton("Save");
-            saveButton.setEnabled(Context.getInstance() != null);
-            saveButton.addActionListener((ActionEvent e) -> {
-                try {
-                    saveData();
-                } catch (Exception ex) {
-                    showException(ex);
-                }
-            });
-            ((GroupLayout) jPanel2.getLayout()).replace(ckPersistence, saveButton);
-            saveButton.setMaximumSize(new Dimension(ckPersistence.getPreferredSize().width, comboFormat.getHeight()));
-            saveButton.setMinimumSize(new Dimension(ckPersistence.getPreferredSize().width, comboFormat.getHeight()));
-        } else if (!saveButtonVisible && (saveButton != null)) {
-            ((GroupLayout) jPanel2.getLayout()).replace(saveButton, ckPersistence);
-            saveButton = null;
-        }
     }
 
     boolean isSeriesTableRowEditable(int row, int column) {
@@ -1811,26 +1800,57 @@ public class StripChart extends StandardDialog {
         });
     }
 
-    void saveData() throws IOException {
-        if ((started) && (!persisting)) {
-            try {
-                persistenceExecutor = new StripScanExecutor();
-                String path = Context.getInstance().getSetup().expandPath(textFileName.getText().trim().replace("{name}", "StripChart"));
-                persistenceExecutor.start(path, getNames(), String.valueOf(comboFormat.getSelectedItem()), String.valueOf(comboLayout.getSelectedItem()), false);
-                for (DeviceTask task : tasks) {
-                    try {
-                        task.saveDataset();
-                    } catch (Exception ex) {
-                        Logger.getLogger(StripChart.class.getName()).log(Level.WARNING, null, ex);
+    JTextField textFile;
+    void saveData() throws IOException { 
+        if (started && ! persisting){
+            try{
+                JFileChooser chooser = new JFileChooser();
+                chooser.setAcceptAllFileFilterUsed(false);
+                chooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
+                chooser.setDialogTitle("Save Data");
+
+                PatternFileChooserAuxiliary auxiliary = new PatternFileChooserAuxiliary(chooser, "StripChart", true);
+                auxiliary.addFormat();
+                auxiliary.addlayout();
+                chooser.setAccessory(auxiliary);                          
+
+                int rVal = chooser.showSaveDialog(this);
+                if (rVal == JFileChooser.APPROVE_OPTION) {
+                    String fileName = auxiliary.getSelectedFile();
+                    if ((fileName!=null) && (!fileName.isBlank())){
+
+                        String format = auxiliary.getFormat();
+                        String layout = auxiliary.getlayout();
+                        if (IO.getExtension(fileName).isEmpty() && format.equals("h5")) {
+                            fileName += ".h5";
+                        }        
+                        
+                        try {
+                            persistenceExecutor = new StripScanExecutor();
+                            persistenceExecutor.start(fileName, getNames(), format, layout, false);
+                            for (DeviceTask task : tasks) {
+                                try {
+                                    task.saveDataset();
+                                } catch (Exception ex) {
+                                    Logger.getLogger(StripChart.class.getName()).log(Level.WARNING, null, ex);
+                                }
+                            }
+                        } finally {
+                            persistenceExecutor.finish(true);
+                        }
+                        
+                        if (showOption( "Save", "Success saving data to " + fileName + ".\nDo you want to open the file?", SwingUtils.OptionType.YesNo) == SwingUtils.OptionResult.Yes) {
+                            DataPanel.createDialog(this, fileName, format, layout);
+                        }                            
+
                     }
                 }
-                showMessage("Strip Chart", "Success saving data to: \n" + path);
-            } finally {
-                persistenceExecutor.finish();
+            } catch (Exception ex) {
+                showException(ex);
             }
         }
     }
-
+    
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -1888,6 +1908,8 @@ public class StripChart extends StandardDialog {
         buttonRowUp = new javax.swing.JButton();
         buttonRowInsert = new javax.swing.JButton();
         jSeparator3 = new javax.swing.JToolBar.Separator();
+        buttonSaveData = new javax.swing.JButton();
+        jSeparator4 = new javax.swing.JToolBar.Separator();
         buttonStop = new javax.swing.JButton();
         jSeparator2 = new javax.swing.JToolBar.Separator();
         buttonStart = new javax.swing.JButton();
@@ -2291,6 +2313,24 @@ public class StripChart extends StandardDialog {
         jSeparator3.setRequestFocusEnabled(false);
         toolBar.add(jSeparator3);
 
+        buttonSaveData.setIcon(new javax.swing.ImageIcon(getClass().getResource("/ch/psi/pshell/ui/Rec.png"))); // NOI18N
+        buttonSaveData.setText(bundle.getString("View.buttonRun.text")); // NOI18N
+        buttonSaveData.setToolTipText("Plot and save data to file");
+        buttonSaveData.setFocusable(false);
+        buttonSaveData.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+        buttonSaveData.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+        buttonSaveData.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                buttonSaveDataActionPerformed(evt);
+            }
+        });
+        toolBar.add(buttonSaveData);
+        buttonSaveData.getAccessibleContext().setAccessibleDescription("Save data to file");
+
+        jSeparator4.setMaximumSize(new java.awt.Dimension(20, 32767));
+        jSeparator4.setPreferredSize(new java.awt.Dimension(20, 0));
+        toolBar.add(jSeparator4);
+
         buttonStop.setIcon(new javax.swing.ImageIcon(getClass().getResource("/ch/psi/pshell/ui/Stop.png"))); // NOI18N
         buttonStop.setText(bundle.getString("View.buttonRun.text")); // NOI18N
         buttonStop.setToolTipText("Stop");
@@ -2571,6 +2611,14 @@ public class StripChart extends StandardDialog {
         }
     }//GEN-LAST:event_buttonStartActionPerformed
 
+    private void buttonSaveDataActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonSaveDataActionPerformed
+        try {
+            saveData();
+        } catch (Exception ex) {
+            showException(ex);
+        }
+    }//GEN-LAST:event_buttonSaveDataActionPerformed
+
     /**
      */
     public static void main(String args[]) {
@@ -2588,6 +2636,7 @@ public class StripChart extends StandardDialog {
     private javax.swing.JButton buttonRowInsert;
     private javax.swing.JButton buttonRowUp;
     private javax.swing.JButton buttonSave;
+    private javax.swing.JButton buttonSaveData;
     private javax.swing.JButton buttonStart;
     private javax.swing.JButton buttonStop;
     private javax.swing.JCheckBox ckPersistence;
@@ -2610,6 +2659,7 @@ public class StripChart extends StandardDialog {
     private javax.swing.JToolBar.Separator jSeparator1;
     private javax.swing.JToolBar.Separator jSeparator2;
     private javax.swing.JToolBar.Separator jSeparator3;
+    private javax.swing.JToolBar.Separator jSeparator4;
     private javax.swing.JLabel labelUser;
     private javax.swing.JPanel panelAxis;
     private javax.swing.JPanel panelColorBackground;

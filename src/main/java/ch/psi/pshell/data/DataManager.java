@@ -56,7 +56,8 @@ public class DataManager implements AutoCloseable {
     final File outputFile;
     FilePermissions filePermissions = FilePermissions.Default;
     DirectoryStream.Filter fileFilter;
-
+    String dataRoot;
+    
     /**
      * Constructor for online data management
      */
@@ -95,6 +96,11 @@ public class DataManager implements AutoCloseable {
         } else {
             dataRootDepth = Paths.get(IO.getRelativePath(ep.getPath(), getDataFolder())).getNameCount();
         }
+    }
+    
+    public DataManager(String dataRoot, String provider, String layout) throws Exception {
+        this((Context)null, provider, layout);
+        this.dataRoot=dataRoot;
     }
 
     int dataRootDepth;
@@ -518,6 +524,9 @@ public class DataManager implements AutoCloseable {
     }
 
     public String getDataFolder() {
+        if (dataRoot!=null){
+            return dataRoot;
+        }
         return context.getSetup().getDataPath();
     }
     
@@ -747,7 +756,8 @@ public class DataManager implements AutoCloseable {
     public boolean isRoot(String path) {
         try {
             String rel = IO.getRelativePath(path, getDataFolder());
-            return Paths.get(rel).getNameCount() == dataRootDepth;
+            int nameCount = rel.isBlank() ? 0 : Paths.get(rel).getNameCount();
+            return nameCount == dataRootDepth;
         } catch (Exception ex) {
         }
         return false;
