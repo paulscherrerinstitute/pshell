@@ -746,7 +746,7 @@
                 <MenuItem class="javax.swing.JMenuItem" name="menuCamServerPipelines">
                   <Properties>
                     <Property name="accelerator" type="javax.swing.KeyStroke" editor="org.netbeans.modules.form.editors.KeyStrokeEditor">
-                      <KeyStroke key="Shift+F4"/>
+                      <KeyStroke key="Alt+F4"/>
                     </Property>
                     <Property name="text" type="java.lang.String" editor="org.netbeans.modules.i18n.form.FormI18nStringEditor">
                       <ResourceString bundle="ch/psi/pshell/ui/View.properties" key="View.menuCamServerPipelines.text" replaceFormat="java.util.ResourceBundle.getBundle(&quot;{bundleNameSlashes}&quot;).getString(&quot;{key}&quot;)"/>
@@ -770,7 +770,7 @@
                 <MenuItem class="javax.swing.JMenuItem" name="manuDaqbuf">
                   <Properties>
                     <Property name="accelerator" type="javax.swing.KeyStroke" editor="org.netbeans.modules.form.editors.KeyStrokeEditor">
-                      <KeyStroke key="Alt+F4"/>
+                      <KeyStroke key="Shift+F4"/>
                     </Property>
                     <Property name="text" type="java.lang.String" editor="org.netbeans.modules.i18n.form.FormI18nStringEditor">
                       <ResourceString bundle="ch/psi/pshell/ui/View.properties" key="View.manuDaqbuf.text" replaceFormat="java.util.ResourceBundle.getBundle(&quot;{bundleNameSlashes}&quot;).getString(&quot;{key}&quot;)"/>

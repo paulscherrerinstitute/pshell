@@ -593,7 +593,7 @@ class Channel(java.beans.PropertyChangeListener, Writable, Readable, DeviceBase)
     def get(self, force = False):
         """Get channel value.
         """
-            ret = self.channel.getValue(force)
+        ret = self.channel.getValue(force)
         self.setCache(ret, None)
         return ret
 

@@ -1,5 +1,6 @@
 package ch.psi.pshell.ui;
 
+import ch.psi.pshell.core.Configuration;
 import ch.psi.pshell.core.Context;
 import ch.psi.pshell.data.ProviderCSV;
 import ch.psi.pshell.data.ProviderText;
@@ -24,6 +25,8 @@ import ch.psi.pshell.swing.ChannelSelector;
 import ch.psi.pshell.swing.DataPanel;
 import ch.psi.pshell.swing.PlotPanel;
 import ch.psi.utils.Arr;
+import ch.psi.utils.Config;
+import ch.psi.utils.Config.Defaults;
 import ch.psi.utils.Convert;
 import ch.psi.utils.Daqbuf;
 import ch.psi.utils.Daqbuf.Query;
@@ -60,6 +63,7 @@ import java.awt.event.MouseEvent;
 import java.awt.geom.Rectangle2D;
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.nio.file.Files;
 import java.time.DayOfWeek;
 import java.time.Instant;
@@ -85,6 +89,7 @@ import javax.swing.DefaultCellEditor;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JColorChooser;
 import javax.swing.JComboBox;
@@ -92,12 +97,16 @@ import javax.swing.JComponent;
 import javax.swing.JDialog;
 import javax.swing.JFileChooser;
 import javax.swing.JLabel;
+import javax.swing.JList;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
+import javax.swing.JTree;
+import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
+import javax.swing.border.EmptyBorder;
 import javax.swing.event.CellEditorListener;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.TableModelEvent;
@@ -1767,21 +1776,78 @@ public class DaqbufPanel extends StandardDialog {
             return ret;
         });
     }
-
+    
     void saveQuery() throws IOException {
         try {
-            String path = (Context.getInstance() != null) ? Context.getInstance().getConfig().dataPath : Sys.getUserHome();
+            String root = "{data}";
+            String path = (Context.getInstance() != null) ? Context.getInstance().getSetup().expandPath(root) : Sys.getUserHome();
+            final List<JTextField> textFile = new ArrayList<>();           
+            final List<String> selectedPath = new ArrayList<>();
+            selectedPath.add(Context.getInstance().getConfig().dataPath);
+            JCheckBox checkStdPath = null;
+                                   
             JFileChooser chooser = new JFileChooser(path);
             FileNameExtensionFilter filter = new FileNameExtensionFilter("HDF5 files", "h5");
             chooser.setFileFilter(filter);
+            chooser.setAcceptAllFileFilterUsed(true);
+            chooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
             chooser.setDialogTitle("Dump Data");
+            
+            if (Context.getInstance() != null) {
+                JPanel panel = new JPanel(new GridBagLayout());
+                GridBagConstraints gbc = new GridBagConstraints();
+                gbc.fill = GridBagConstraints.HORIZONTAL;
+                gbc.gridx = 0;
+                gbc.gridy = GridBagConstraints.RELATIVE;
+                gbc.weightx = 1.0;
+                gbc.ipady = 10;
+                panel.setBorder(new EmptyBorder(0, 10, 0, 10));           
+                checkStdPath = new JCheckBox("Use pattern");
+                checkStdPath.addActionListener((e)->{       
+                    boolean stdPath = ((JCheckBox)e.getSource()).isSelected();
+                    if (stdPath){
+                        if (textFile.isEmpty()){
+                            for (Component child : SwingUtils.getComponentsByType(chooser, JTextField.class)){
+                                JTextField textField = (JTextField)child;
+                                textField.addKeyListener(new java.awt.event.KeyAdapter() {
+                                    public void keyReleased(java.awt.event.KeyEvent evt) {
+                                        selectedPath.set(0, textField.getText());
+                                    }
+                                });
+                                textFile.add(textField);                                
+                                break;
+                            }
+                        }
+                        if (!textFile.isEmpty()){
+                            textFile.get(0).setText(Context.getInstance().getConfig().dataPath);
+                        }                                                
+                    } else {
+                        if (!textFile.isEmpty()){
+                            textFile.get(0).setText("");
+                        }
+                        chooser.setCurrentDirectory(new File(path));
+                    }      
+                    for (Component child : SwingUtils.getComponentsByType(chooser, JList.class)){
+                        ((JList)child).setEnabled(!stdPath);
+                    }                                    
+                });
+                panel.add(checkStdPath, gbc);                
+                chooser.setAccessory(panel);                  
+             }
+            
             int rVal = chooser.showSaveDialog(this);
             if (rVal == JFileChooser.APPROVE_OPTION) {
                 String fileName = chooser.getSelectedFile().getAbsolutePath();
-                if (IO.getExtension(fileName).isEmpty()) {
-                    fileName += ".h5";
+                if ((fileName!=null) && (!fileName.isBlank())){
+                    if ((checkStdPath!=null) && checkStdPath.isSelected()){                                     
+                        fileName = Context.getInstance().getSetup().expandPath(selectedPath.get(0).trim().replace("{name}", "Daqbuf"));                        
+                    }
+
+                    if (IO.getExtension(fileName).isEmpty()) {
+                        fileName += ".h5";
+                    }
+                    saveQuery(fileName);
                 }
-                saveQuery(fileName);
             }
         } catch (Exception ex) {
             showException(ex);

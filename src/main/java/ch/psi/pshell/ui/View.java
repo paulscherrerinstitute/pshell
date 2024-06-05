@@ -3858,7 +3858,7 @@ public class View extends MainFrame {
         });
         menuCamServer.add(menuCamServerCameras);
 
-        menuCamServerPipelines.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_F4, java.awt.event.InputEvent.SHIFT_DOWN_MASK));
+        menuCamServerPipelines.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_F4, java.awt.event.InputEvent.ALT_DOWN_MASK));
         menuCamServerPipelines.setText(bundle.getString("View.menuCamServerPipelines.text")); // NOI18N
         menuCamServerPipelines.setName("menuCamServerPipelines"); // NOI18N
         menuCamServerPipelines.addActionListener(new java.awt.event.ActionListener() {
@@ -3873,7 +3873,7 @@ public class View extends MainFrame {
         menuArchiver.setText(bundle.getString("View.menuArchiver.text_1")); // NOI18N
         menuArchiver.setName("menuArchiver"); // NOI18N
 
-        manuDaqbuf.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_F4, java.awt.event.InputEvent.ALT_DOWN_MASK));
+        manuDaqbuf.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_F4, java.awt.event.InputEvent.SHIFT_DOWN_MASK));
         manuDaqbuf.setText(bundle.getString("View.manuDaqbuf.text")); // NOI18N
         manuDaqbuf.setName("manuDaqbuf"); // NOI18N
         manuDaqbuf.addActionListener(new java.awt.event.ActionListener() {
