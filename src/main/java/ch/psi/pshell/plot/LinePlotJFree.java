@@ -106,6 +106,10 @@ public class LinePlotJFree extends LinePlotBase {
     //TODO: if smaller there are plot repainting problem in scans in JFreeChart > 1.0.18
     static final double AUTO_RANGE_MINIMUM_SIZE = 1e-12;
     static final double AUTO_RANGE_LOG_MINIMUM_SIZE = 1e-32;
+    
+    final long TIMESTAMP_2000 = 946681200000L;
+    final long TIMESTAMP_2100 = 4102441200000L;
+    
     JFreeChart chart;
 
     Rectangle2D.Double seriesMarker;
@@ -1243,8 +1247,8 @@ public class LinePlotJFree extends LinePlotBase {
                 menuScaleLogX2.setVisible(hasX2());
                 menuScaleLogX2.setSelected(hasX2() && getAxis(AxisId.X2).isLogarithmic());      
                 ValueAxis domainAxis = getChart().getXYPlot().getDomainAxis();
-                Range range = domainAxis.getRange();                                        
-                contextMenuTimeAxis.setVisible((range.getLowerBound()>=0) && (range.getUpperBound()<=32503680000000L));
+                Range range = domainAxis.getRange();                                  
+                contextMenuTimeAxis.setVisible((range.getLowerBound()>=TIMESTAMP_2000) && (range.getUpperBound()<=TIMESTAMP_2100));
                 contextMenuTimeAxis.setSelected( (domainAxis!=null) && (domainAxis instanceof DateAxis));
             }
 

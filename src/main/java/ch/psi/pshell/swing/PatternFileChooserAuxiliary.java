@@ -97,12 +97,14 @@ public class PatternFileChooserAuxiliary extends JPanel {
         add(component, gbc);
     }
 
-    public void addFormat() {
+    public void addFormat(String[] formats) {
         try {
             JLabel labelFormat = new JLabel("Format:");
             labelFormat.setHorizontalAlignment(SwingConstants.CENTER);
             comboFormat = new JComboBox();
-            String[] formats = Configuration.class.getField("dataProvider").getAnnotation(Config.Defaults.class).values();
+            if (formats==null){
+                formats = Configuration.class.getField("dataProvider").getAnnotation(Config.Defaults.class).values();
+            }
             comboFormat.setModel(new DefaultComboBoxModel(formats));
             addComponent(labelFormat);
             addComponent(comboFormat);
@@ -112,11 +114,13 @@ public class PatternFileChooserAuxiliary extends JPanel {
         }
     }
 
-    public void addlayout() {
+    public void addLayout(String[] layouts) {
         try {
             JLabel labelLayout = new JLabel("Layout:");
             labelLayout.setHorizontalAlignment(SwingConstants.CENTER);
-            String[] layouts = Configuration.class.getField("dataLayout").getAnnotation(Config.Defaults.class).values();
+            if (layouts==null){
+                layouts = Configuration.class.getField("dataLayout").getAnnotation(Config.Defaults.class).values();
+            }
             comboLayout = new JComboBox();
             comboLayout.setModel(new DefaultComboBoxModel(layouts));
             addComponent(labelLayout);

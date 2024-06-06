@@ -7,6 +7,7 @@ import ch.psi.pshell.core.Configuration;
 import ch.psi.pshell.core.Context;
 import ch.psi.pshell.core.ContextAdapter;
 import ch.psi.pshell.core.InlineDevice;
+import ch.psi.pshell.data.DataManager;
 import ch.psi.pshell.data.ProviderCSV;
 import ch.psi.pshell.data.ProviderText;
 import ch.psi.pshell.device.Device;
@@ -55,6 +56,7 @@ import java.awt.event.MouseEvent;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.lang.reflect.Array;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.text.DecimalFormat;
@@ -715,7 +717,7 @@ public class StripChart extends StandardDialog {
         buttonOpen.setEnabled(editing);        
         
         buttonStart.setEnabled(editing  && (modelSeries.getRowCount() > 0));
-        buttonSaveData.setEnabled(started && !persisting && (Context.getInstance()!=null));
+        buttonSaveData.setEnabled(started);
         buttonStop.setEnabled(started);
 
         //tableSeries.setEnabled(editing);
@@ -1387,6 +1389,14 @@ public class StripChart extends StandardDialog {
         long currentTimestamp = -1;
         final Object persistLock = new Object();
         boolean localTime;
+        
+        Type type;
+        int plotIndex;
+        int axis;
+        int seriesIndex;
+        TimePlotBase plot;
+        Device device;
+        
 
         boolean isAlarming() {
             final StripChartAlarmConfig alarmConfig = (StripChartAlarmConfig) info.get(6);
@@ -1398,7 +1408,7 @@ public class StripChart extends StandardDialog {
             return ((alarmConfig != null) && (alarmConfig.isEnabled()));
         }
 
-        void add(Device device, Object value, Long timestamp, TimePlotBase plot, int seriesIndex, boolean dragging) {
+        void add(Object value, Long timestamp,  boolean dragging) {
             try {
                 long now = System.currentTimeMillis();
                 if (localTime) {
@@ -1469,17 +1479,17 @@ public class StripChart extends StandardDialog {
 
         int sleep_ms;
 
-        void checkDrag(TimePlotBase plot, int seriesIndex, Device dev) {
+        void checkDrag() {
             long now = System.currentTimeMillis();
-            Long appendTimestamp = appendTimestamps.get(dev);
+            Long appendTimestamp = appendTimestamps.get(device);
             Long age = (appendTimestamp == null) ? null : now - appendTimestamp;
             if ((age == null) || (age >= sleep_ms)) {
-                Long devTimestamp = dev.getTimestamp();
+                Long devTimestamp = device.getTimestamp();
                 if (devTimestamp != null) {
                     now = (age!=null) ? devTimestamp + age : devTimestamp;
                 }
                 //System.out.println(seriesIndex + " | " + value + Chrono.getTimeStr(time, "dd/MM/YY HH:mm:ss.SSS"));
-                add(dev, dev.take(), now, plot, seriesIndex, true);
+                add(device.take(), now, true);
             }
         }
 
@@ -1489,13 +1499,12 @@ public class StripChart extends StandardDialog {
             String name=getChannelName(channel);
             String[] args=getChannelArgs(channel);
                 
-            final Type type = Type.valueOf(info.get(2).toString());
-            final int plotIndex = ((Integer) info.get(3)) - 1;
-            final int axis = (Integer) info.get(4);
-            final int seriesIndex = seriesIndexes.get(info);
-            final TimePlotBase plot = plots.get(plotIndex);
-
-            Device dev = null;
+            type = Type.valueOf(info.get(2).toString());
+            plotIndex = ((Integer) info.get(3)) - 1;
+            axis = (Integer) info.get(4);
+            seriesIndex = seriesIndexes.get(info);
+            plot = plots.get(plotIndex);
+            
             final DeviceListener deviceListener = new DeviceAdapter() {
                 //@Override
                 //public void onValueChanged(Device device, Object value, Object former) {
@@ -1503,7 +1512,7 @@ public class StripChart extends StandardDialog {
                 //}
                 @Override
                 public void onCacheChanged(Device device, Object value, Object former, long timestamp, boolean valueChange) {
-                    add(device, value, null, plot, seriesIndex, false);
+                    add(value, null, false);
                 }
             };
             Logger.getLogger(StripChart.class.getName()).finer("Starting device monitoring task: " + name);
@@ -1519,15 +1528,15 @@ public class StripChart extends StandardDialog {
                             precision = Integer.valueOf(args[1]);
                         } catch (Exception ex) {
                         }
-                        dev = new ChannelDouble(name, name, precision, timestamped);
+                        device = new ChannelDouble(name, name, precision, timestamped);
 
                         synchronized (instantiatedDevices) {
-                            instantiatedDevices.add(dev);
+                            instantiatedDevices.add(device);
                         }
                         if (polling <= 0) {
-                            dev.setMonitored(true);
+                            device.setMonitored(true);
                         } else {
-                            dev.setPolling(polling);
+                            device.setPolling(polling);
                         }
                         break;
                     case Device:
@@ -1538,13 +1547,13 @@ public class StripChart extends StandardDialog {
                                 Logger.getLogger(StripChart.class.getName()).fine("Waiting done");
                             }
                             try {
-                                dev = Context.getInstance().getDevicePool().getByName(name, Device.class);
-                                if (dev == null) {
-                                    dev = (Device) Context.getInstance().tryEvalLineBackground(name);
+                                device = Context.getInstance().getDevicePool().getByName(name, Device.class);
+                                if (device == null) {
+                                    device = (Device) Context.getInstance().tryEvalLineBackground(name);
                                 }
                             } catch (Exception ex) {
                                 try {
-                                    dev = InlineDevice.create(name, null);
+                                    device = InlineDevice.create(name, null);
                                 } catch (Exception e) {
                                 }
                             }
@@ -1560,9 +1569,9 @@ public class StripChart extends StandardDialog {
                             useGlobalTimestamp = !args[2].equalsIgnoreCase("false");
                         } catch (Exception ex) {
                         }
-                        dev = stream.addScalar(name, name, modulo, offset);
+                        device = stream.addScalar(name, name, modulo, offset);
                         Logger.getLogger(StripChart.class.getName()).finer("Adding channel to stream: " + name);
-                        ((StreamChannel) dev).setUseLocalTimestamp(!useGlobalTimestamp);
+                        ((StreamChannel) device).setUseLocalTimestamp(!useGlobalTimestamp);
                         streamDevices--;
                         break;
                     case CamServer:
@@ -1608,16 +1617,16 @@ public class StripChart extends StandardDialog {
                                     instantiatedDevices.add(p);
                                 }
                             }
-                            dev = s.getChild(channelName);
+                            device = s.getChild(channelName);
                         }
                         break;
                 }
-                if (dev == null) {
+                if (device == null) {
                     return;
                 }
-                dev.addListener(deviceListener);
-                if (!dev.isInitialized()) {
-                    dev.initialize();
+                device.addListener(deviceListener);
+                if (!device.isInitialized()) {
+                    device.initialize();
                 }
                 if ((type == Type.Stream) && (streamDevices == 0)) {
                     try {
@@ -1628,7 +1637,7 @@ public class StripChart extends StandardDialog {
                         Logger.getLogger(StripChart.class.getName()).log(Level.WARNING, null, ex);
                     }
                 } else if (type == Type.Channel) {
-                    dev.request();
+                    device.request();
                 }
 
                 dragInterval = (Integer) spinnerDragInterval.getValue();
@@ -1641,7 +1650,7 @@ public class StripChart extends StandardDialog {
                         lock.wait(sleep_ms);
                     }
                     if ((started) && (sleep_ms > 0)) {
-                        checkDrag(plot, seriesIndex, dev);
+                        checkDrag();
                     }
                 }
             } catch (InterruptedException ex) {
@@ -1649,36 +1658,29 @@ public class StripChart extends StandardDialog {
                 Logger.getLogger(StripChart.class.getName()).log(Level.FINE, null, ex);
             } finally {
                 Logger.getLogger(StripChart.class.getName()).finer("Exiting device monitoring task: " + name);
-                if (dev != null) {
-                    dev.removeListener(deviceListener);
+                if (device != null) {
+                    device.removeListener(deviceListener);
                 }
             }
         }
 
         void saveDataset() throws Exception {
             if (!persisting) {
-                String name = ((String) info.get(1)).trim();
-                final Type type = Type.valueOf(info.get(2).toString());
-                final int plotIndex = ((Integer) info.get(3)) - 1;
-                final int axis = (Integer) info.get(4);
-                final int seriesIndex = seriesIndexes.get(info);
-                final TimePlotBase plot = plots.get(plotIndex);
                 id = getId(row);
-
-                //TimestampedValue current = null;
-                Double current = null;
-                for (TimestampedValue<Double> item : plot.getSeriestData(seriesIndex)) {
+                for (TimestampedValue<Double> item : getSeriesData()) {
                     Double value = item.getValue();
                     if (value == null) {
                         value = Double.NaN;
                     }
                     //Todo: Find better way to filter dragging, this don't match continuous persistence 
                     persistenceExecutor.append(id, value, item.getTimestamp(), item.getTimestamp());
-                    //current = item;
-                    current = value;
                 }
 
             }
+        }
+        
+        List<TimestampedValue<Double>> getSeriesData(){
+            return plot.getSeriesData(seriesIndex);
         }
     };
 
@@ -1810,8 +1812,8 @@ public class StripChart extends StandardDialog {
                 chooser.setDialogTitle("Save Data");
 
                 PatternFileChooserAuxiliary auxiliary = new PatternFileChooserAuxiliary(chooser, "StripChart", true);
-                auxiliary.addFormat();
-                auxiliary.addlayout();
+                auxiliary.addFormat(new String[]{"h5", "txt", "csv"});
+                auxiliary.addLayout(new String[]{"default", "table"});
                 chooser.setAccessory(auxiliary);                          
 
                 int rVal = chooser.showSaveDialog(this);
@@ -1825,6 +1827,7 @@ public class StripChart extends StandardDialog {
                             fileName += ".h5";
                         }        
                         
+                        /*
                         try {
                             persistenceExecutor = new StripScanExecutor();
                             persistenceExecutor.start(fileName, getNames(), format, layout, false);
@@ -1838,10 +1841,48 @@ public class StripChart extends StandardDialog {
                         } finally {
                             persistenceExecutor.finish(true);
                         }
+                        */
+                          
+                        
+                        try (DataManager dm = new DataManager(fileName, format)){
+                            for (DeviceTask task : tasks) {
+
+                                List<TimestampedValue<Double>> data = task.getSeriesData();
+                                String name = task.id;
+                                boolean table = layout.equals("table");
+                                
+                                String dataGroup = "/" + task.id + "/";
+                                String datasetTimestamp = dataGroup + "timestamp";
+                                String datasetValue = dataGroup + "value";
+                                String datasetTable = "/" + task.id;                                
+
+                                if (table){
+                                    dm.createDataset(datasetTable, new String[]{"timestamp", "value"}, new Class[]{Long.class, Double.class}, null, null);
+                                } else {
+                                    dm.createGroup(dataGroup);
+                                    dm.createDataset(datasetTimestamp, Long.class, new int[]{data.size()});
+                                    dm.createDataset(datasetValue, Double.class, new int[]{data.size()});                                    
+                                }
+
+                                for (int i=0; i< data.size(); i++) {
+                                    TimestampedValue<Double> item =data.get(i);
+                                    Double value = item.getValue();
+                                    if (value == null) {
+                                        value = Double.NaN;
+                                    }
+                                    if (table){
+                                        dm.setItem(datasetTable, new Object[]{item.getTimestamp(), item.getValue()}, i);
+                                    } else {
+                                        dm.setItem(datasetTimestamp, item.getTimestamp(), i);
+                                        dm.setItem(datasetValue, item.getValue(), i);                                            
+                                    }
+                                }                           
+                            }
+                        } 
                         
                         if (showOption( "Save", "Success saving data to " + fileName + ".\nDo you want to open the file?", SwingUtils.OptionType.YesNo) == SwingUtils.OptionResult.Yes) {
-                            DataPanel.createDialog(this, fileName, format, layout);
-                        }                            
+                            DataPanel.createDialog(this, fileName, format, null);
+                        }
 
                     }
                 }

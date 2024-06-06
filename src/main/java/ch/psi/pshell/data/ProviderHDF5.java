@@ -1133,8 +1133,10 @@ public class ProviderHDF5 implements Provider {
         assertOpenOutput();     
         HDF5DataSetInformation info = writer.object().getDataSetInformation(path);
         if (index==-1){
-            //index = (int)info.getNumberOfElements();
-            index = (int)info.getDimensions()[0];
+            //TODO: Append only works for datasets with undetermined size
+            //if (info.getMaxDimensions()[0] <=0){  
+                index = (int)info.getDimensions()[0];
+            //}
         }
         int rank = info.getRank();
         boolean signed = info.isSigned();

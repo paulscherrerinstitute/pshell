@@ -329,7 +329,7 @@ public abstract class TimePlotBase extends PlotBase<TimePlotSeries> implements T
     
     abstract protected void removeDataPoint(int graphIndex, int index, boolean update);
 
-    abstract public List<TimestampedValue<Double>> getSeriestData(int index);
+    abstract public List<TimestampedValue<Double>> getSeriesData(int index);
 
     abstract public String getSeriesName(int index);
 
@@ -414,7 +414,7 @@ public abstract class TimePlotBase extends PlotBase<TimePlotSeries> implements T
     
     @Override
     public int getItemCount(int index) {
-       return getSeriestData(index).size();
+       return getSeriesData(index).size();
     }      
 
     @Override

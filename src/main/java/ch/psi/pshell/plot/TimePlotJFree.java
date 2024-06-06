@@ -228,7 +228,7 @@ public class TimePlotJFree extends TimePlotBase {
     protected String getDataAsString() {
         StringBuilder str = new StringBuilder(1024);
         for (int i = 0; i < series.size(); i++) {
-            List<TimestampedValue<Double>> values = getSeriestData(i);
+            List<TimestampedValue<Double>> values = getSeriesData(i);
             str.append("#Series: ").append(getSeriesName(i)).append(PlotBase.LINE_SEPARATOR);
             for (TimestampedValue<Double> item : values) {
                 Double val = item.getValue();
@@ -402,7 +402,7 @@ public class TimePlotJFree extends TimePlotBase {
     }  
 
     @Override
-    public List<TimestampedValue<Double>> getSeriestData(int index) {
+    public List<TimestampedValue<Double>> getSeriesData(int index) {
         TimeSeries s = series.get(index);
         List<TimestampedValue<Double>> ret = new ArrayList<>();
         for (TimeSeriesDataItem item : (List<TimeSeriesDataItem>) s.getItems()) {

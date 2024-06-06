@@ -481,6 +481,15 @@ public class ProviderText implements Provider {
                         }
                         index++;
                     }
+                    int[] dimensions = (int[]) ret.getOrDefault(INFO_DIMENSIONS, new int[0]);
+                    long elements = 0;
+                    if (dimensions.length>0){
+                        elements = 1;
+                        for (int l : dimensions){
+                            elements *= l;
+                        }
+                    }
+                    ret.put(INFO_ELEMENTS, elements);
                 }
             }
         } else {

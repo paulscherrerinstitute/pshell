@@ -764,9 +764,9 @@ public class Daqbuf implements ChannelQueryAPI {
                 }
             }            
         } else {
-            String VALUE_DATASET = dataGroup + "value";
-            String ID_DATASET = dataGroup + "id";
-            String TIMESTAMP_DATASET = dataGroup + "timestamp";
+            String datasetValue = dataGroup + "value";
+            String datasetId = dataGroup + "id";
+            String datasetTimestamp = dataGroup + "timestamp";
             
             listener = new QueryListener() {
                 @Override
@@ -776,15 +776,15 @@ public class Daqbuf implements ChannelQueryAPI {
                             Object value = Convert.toPrimitiveArray(values);
                             long[] id = (long[]) Convert.toPrimitiveArray(ids, Long.class);
                             long[] timestamp = (long[]) Convert.toPrimitiveArray(timestamps, Long.class);
-                            if (!dm.exists(VALUE_DATASET)) {
-                                dm.createCompressedDataset(ID_DATASET, Long.class, new int[0]);
-                                dm.createCompressedDataset(TIMESTAMP_DATASET, Long.class, new int[0]);
+                            if (!dm.exists(datasetValue)) {
+                                dm.createCompressedDataset(datasetId, Long.class, new int[0]);
+                                dm.createCompressedDataset(datasetTimestamp, Long.class, new int[0]);
                                 Object obj = Array.get(value, 0);
-                                dm.createCompressedDataset(VALUE_DATASET, obj);
+                                dm.createCompressedDataset(datasetValue, obj);
                             }
-                            dm.appendItem(TIMESTAMP_DATASET, timestamp);
-                            dm.appendItem(ID_DATASET, id);
-                            dm.appendItem(VALUE_DATASET, value);
+                            dm.appendItem(datasetTimestamp, timestamp);
+                            dm.appendItem(datasetId, id);
+                            dm.appendItem(datasetValue, value);
                         } catch (Exception ex) {
                             throw new RuntimeException(ex);
                         }

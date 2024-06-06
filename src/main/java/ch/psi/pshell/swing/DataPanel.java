@@ -582,7 +582,7 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
                                                     Map siblingInfo = dataManager.getInfo(currentFile.getPath(), sibling);
                                                     if (dataManager.isDisplayablePlot(info)) {
                                                         if (siblingInfo.getOrDefault(Provider.INFO_RANK, 0) == Integer.valueOf(1)){
-                                                            if (siblingInfo.getOrDefault(Provider.INFO_ELEMENTS, -1).equals(elements)){                                                            
+                                                            if (elements.equals(((Number)siblingInfo.getOrDefault(Provider.INFO_ELEMENTS, -1)).longValue())){                                                            
                                                                 JMenuItem item = new JMenuItem(name);
                                                                 item.addActionListener((ActionEvent ae) -> {
                                                                     try{
@@ -1809,6 +1809,10 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
         load(fileName, null, null);
     }
     
+    public void load(String fileName, String format) throws Exception {
+         load(fileName, format, null);
+    }
+    
     public void load(String fileName, String format, String layout) throws Exception {
         File file = new File(fileName);
         if ((format==null) || (format.isBlank())){
@@ -1896,7 +1900,14 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
             if (name==null){
                 name = "";
             }            
-            plot(getParent(), (range == null) ? "Array" : "Array range: " + range.toString(), new PlotDescriptor[]{new PlotDescriptor(name, array, x)}, null);
+            String title = "Array";
+            if (name!=null){
+                title = name;
+            }
+            if (range != null){
+                title += " range: " + range.toString();
+            }
+            plot(getParent(), title, new PlotDescriptor[]{new PlotDescriptor(name, array, x)}, null);
         }
 
         @Override
