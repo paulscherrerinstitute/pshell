@@ -347,7 +347,7 @@
                           <Component id="jLabel1" min="-2" max="-2" attributes="0"/>
                           <EmptySpace min="-2" max="-2" attributes="0"/>
                           <Component id="comboFormat" min="-2" max="-2" attributes="0"/>
-                          <EmptySpace min="-2" max="-2" attributes="0"/>
+                          <EmptySpace type="separate" max="-2" attributes="0"/>
                           <Component id="jLabel5" min="-2" max="-2" attributes="0"/>
                           <EmptySpace min="-2" max="-2" attributes="0"/>
                           <Component id="comboLayout" min="-2" max="-2" attributes="0"/>
@@ -427,7 +427,7 @@
               <Properties>
                 <Property name="border" type="javax.swing.border.Border" editor="org.netbeans.modules.form.editors2.BorderEditor">
                   <Border info="org.netbeans.modules.form.compat2.border.TitledBorderInfo">
-                    <TitledBorder title="Settings"/>
+                    <TitledBorder title="Stream"/>
                   </Border>
                 </Property>
               </Properties>
@@ -440,10 +440,6 @@
                           <Component id="jLabel2" min="-2" max="-2" attributes="0"/>
                           <EmptySpace max="-2" attributes="0"/>
                           <Component id="textStreamFilter" max="32767" attributes="0"/>
-                          <EmptySpace type="unrelated" max="-2" attributes="0"/>
-                          <Component id="jLabel3" linkSize="10" min="-2" max="-2" attributes="0"/>
-                          <EmptySpace max="-2" attributes="0"/>
-                          <Component id="spinnerDragInterval" min="-2" pref="96" max="-2" attributes="0"/>
                           <EmptySpace max="-2" attributes="0"/>
                       </Group>
                   </Group>
@@ -454,8 +450,6 @@
                           <Group type="103" groupAlignment="3" attributes="0">
                               <Component id="jLabel2" alignment="3" min="-2" max="-2" attributes="0"/>
                               <Component id="textStreamFilter" alignment="3" min="-2" max="-2" attributes="0"/>
-                              <Component id="jLabel3" alignment="3" min="-2" max="-2" attributes="0"/>
-                              <Component id="spinnerDragInterval" alignment="3" min="-2" max="-2" attributes="0"/>
                           </Group>
                           <EmptySpace max="-2" attributes="0"/>
                       </Group>
@@ -465,22 +459,10 @@
               <SubComponents>
                 <Component class="javax.swing.JLabel" name="jLabel2">
                   <Properties>
-                    <Property name="text" type="java.lang.String" value="Stream filter:"/>
+                    <Property name="text" type="java.lang.String" value="Filter:"/>
                   </Properties>
                 </Component>
                 <Component class="javax.swing.JTextField" name="textStreamFilter">
-                </Component>
-                <Component class="javax.swing.JLabel" name="jLabel3">
-                  <Properties>
-                    <Property name="text" type="java.lang.String" value="Drag Interval (ms):"/>
-                  </Properties>
-                </Component>
-                <Component class="javax.swing.JSpinner" name="spinnerDragInterval">
-                  <Properties>
-                    <Property name="model" type="javax.swing.SpinnerModel" editor="org.netbeans.modules.form.editors2.SpinnerModelEditor">
-                      <SpinnerModel initial="1000" maximum="99999" minimum="-1" numberType="java.lang.Integer" stepSize="100" type="number"/>
-                    </Property>
-                  </Properties>
                 </Component>
               </SubComponents>
             </Container>
@@ -488,7 +470,7 @@
               <Properties>
                 <Property name="border" type="javax.swing.border.Border" editor="org.netbeans.modules.form.editors2.BorderEditor">
                   <Border info="org.netbeans.modules.form.compat2.border.TitledBorderInfo">
-                    <TitledBorder title="Graphics"/>
+                    <TitledBorder title="Plot"/>
                   </Border>
                 </Property>
               </Properties>
@@ -501,14 +483,18 @@
                           <Component id="jLabel15" min="-2" max="-2" attributes="0"/>
                           <EmptySpace max="-2" attributes="0"/>
                           <Component id="panelColorBackground" min="-2" max="-2" attributes="0"/>
-                          <EmptySpace type="unrelated" max="-2" attributes="0"/>
+                          <EmptySpace type="separate" max="-2" attributes="0"/>
                           <Component id="jLabel17" min="-2" max="-2" attributes="0"/>
                           <EmptySpace max="-2" attributes="0"/>
                           <Component id="panelColorGrid" min="-2" max="-2" attributes="0"/>
                           <EmptySpace type="separate" max="32767" attributes="0"/>
+                          <Component id="jLabel3" linkSize="10" min="-2" max="-2" attributes="0"/>
+                          <EmptySpace max="-2" attributes="0"/>
+                          <Component id="spinnerDragInterval" min="-2" pref="80" max="-2" attributes="0"/>
+                          <EmptySpace type="separate" max="-2" attributes="0"/>
                           <Component id="jLabel4" min="-2" max="-2" attributes="0"/>
                           <EmptySpace max="-2" attributes="0"/>
-                          <Component id="spinnerUpdate" min="-2" pref="96" max="-2" attributes="0"/>
+                          <Component id="spinnerUpdate" min="-2" pref="80" max="-2" attributes="0"/>
                           <EmptySpace max="-2" attributes="0"/>
                       </Group>
                   </Group>
@@ -525,6 +511,10 @@
                                   <Group type="103" groupAlignment="3" attributes="0">
                                       <Component id="jLabel4" alignment="3" min="-2" max="-2" attributes="0"/>
                                       <Component id="spinnerUpdate" alignment="3" min="-2" max="-2" attributes="0"/>
+                                      <Group type="103" alignment="3" groupAlignment="3" attributes="0">
+                                          <Component id="jLabel3" alignment="3" min="-2" max="-2" attributes="0"/>
+                                          <Component id="spinnerDragInterval" alignment="3" min="-2" max="-2" attributes="0"/>
+                                      </Group>
                                   </Group>
                                   <EmptySpace min="-2" pref="3" max="-2" attributes="0"/>
                               </Group>
@@ -605,13 +595,25 @@
                 </Container>
                 <Component class="javax.swing.JLabel" name="jLabel4">
                   <Properties>
-                    <Property name="text" type="java.lang.String" value="Plot Update (ms):"/>
+                    <Property name="text" type="java.lang.String" value="Update:"/>
                   </Properties>
                 </Component>
                 <Component class="javax.swing.JSpinner" name="spinnerUpdate">
                   <Properties>
                     <Property name="model" type="javax.swing.SpinnerModel" editor="org.netbeans.modules.form.editors2.SpinnerModelEditor">
                       <SpinnerModel initial="100" maximum="60000" minimum="0" numberType="java.lang.Integer" stepSize="100" type="number"/>
+                    </Property>
+                  </Properties>
+                </Component>
+                <Component class="javax.swing.JLabel" name="jLabel3">
+                  <Properties>
+                    <Property name="text" type="java.lang.String" value="Drag:"/>
+                  </Properties>
+                </Component>
+                <Component class="javax.swing.JSpinner" name="spinnerDragInterval">
+                  <Properties>
+                    <Property name="model" type="javax.swing.SpinnerModel" editor="org.netbeans.modules.form.editors2.SpinnerModelEditor">
+                      <SpinnerModel initial="1000" maximum="99999" minimum="-1" numberType="java.lang.Integer" stepSize="100" type="number"/>
                     </Property>
                   </Properties>
                 </Component>

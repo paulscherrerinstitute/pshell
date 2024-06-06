@@ -1923,8 +1923,6 @@ public class StripChart extends StandardDialog {
         jPanel3 = new javax.swing.JPanel();
         jLabel2 = new javax.swing.JLabel();
         textStreamFilter = new javax.swing.JTextField();
-        jLabel3 = new javax.swing.JLabel();
-        spinnerDragInterval = new javax.swing.JSpinner();
         jPanel1 = new javax.swing.JPanel();
         jLabel15 = new javax.swing.JLabel();
         panelColorBackground = new javax.swing.JPanel();
@@ -1932,6 +1930,8 @@ public class StripChart extends StandardDialog {
         panelColorGrid = new javax.swing.JPanel();
         jLabel4 = new javax.swing.JLabel();
         spinnerUpdate = new javax.swing.JSpinner();
+        jLabel3 = new javax.swing.JLabel();
+        spinnerDragInterval = new javax.swing.JSpinner();
         toolBar = new javax.swing.JToolBar();
         buttonNew = new javax.swing.JButton();
         buttonOpen = new javax.swing.JButton();
@@ -2096,7 +2096,7 @@ public class StripChart extends StandardDialog {
                 .addComponent(jLabel1)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(comboFormat, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGap(18, 18, 18)
                 .addComponent(jLabel5)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(comboLayout, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -2115,13 +2115,9 @@ public class StripChart extends StandardDialog {
                 .addContainerGap())
         );
 
-        jPanel3.setBorder(javax.swing.BorderFactory.createTitledBorder("Settings"));
+        jPanel3.setBorder(javax.swing.BorderFactory.createTitledBorder("Stream"));
 
-        jLabel2.setText("Stream filter:");
-
-        jLabel3.setText("Drag Interval (ms):");
-
-        spinnerDragInterval.setModel(new javax.swing.SpinnerNumberModel(1000, -1, 99999, 100));
+        jLabel2.setText("Filter:");
 
         javax.swing.GroupLayout jPanel3Layout = new javax.swing.GroupLayout(jPanel3);
         jPanel3.setLayout(jPanel3Layout);
@@ -2132,10 +2128,6 @@ public class StripChart extends StandardDialog {
                 .addComponent(jLabel2)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(textStreamFilter)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(jLabel3)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(spinnerDragInterval, javax.swing.GroupLayout.PREFERRED_SIZE, 96, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap())
         );
         jPanel3Layout.setVerticalGroup(
@@ -2143,13 +2135,11 @@ public class StripChart extends StandardDialog {
             .addGroup(jPanel3Layout.createSequentialGroup()
                 .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel2)
-                    .addComponent(textStreamFilter, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabel3)
-                    .addComponent(spinnerDragInterval, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(textStreamFilter, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addContainerGap())
         );
 
-        jPanel1.setBorder(javax.swing.BorderFactory.createTitledBorder("Graphics"));
+        jPanel1.setBorder(javax.swing.BorderFactory.createTitledBorder("Plot"));
 
         jLabel15.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
         jLabel15.setText("Background:");
@@ -2195,9 +2185,13 @@ public class StripChart extends StandardDialog {
             .addGap(0, 20, Short.MAX_VALUE)
         );
 
-        jLabel4.setText("Plot Update (ms):");
+        jLabel4.setText("Update:");
 
         spinnerUpdate.setModel(new javax.swing.SpinnerNumberModel(100, 0, 60000, 100));
+
+        jLabel3.setText("Drag:");
+
+        spinnerDragInterval.setModel(new javax.swing.SpinnerNumberModel(1000, -1, 99999, 100));
 
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
@@ -2208,14 +2202,18 @@ public class StripChart extends StandardDialog {
                 .addComponent(jLabel15)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(panelColorBackground, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addGap(18, 18, 18)
                 .addComponent(jLabel17)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(panelColorGrid, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(18, 18, Short.MAX_VALUE)
+                .addComponent(jLabel3)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(spinnerDragInterval, javax.swing.GroupLayout.PREFERRED_SIZE, 80, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(18, 18, 18)
                 .addComponent(jLabel4)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(spinnerUpdate, javax.swing.GroupLayout.PREFERRED_SIZE, 96, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(spinnerUpdate, javax.swing.GroupLayout.PREFERRED_SIZE, 80, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap())
         );
         jPanel1Layout.setVerticalGroup(
@@ -2229,7 +2227,10 @@ public class StripChart extends StandardDialog {
                     .addGroup(jPanel1Layout.createSequentialGroup()
                         .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(jLabel4)
-                            .addComponent(spinnerUpdate, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addComponent(spinnerUpdate, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                .addComponent(jLabel3)
+                                .addComponent(spinnerDragInterval, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
                         .addGap(3, 3, 3)))
                 .addContainerGap())
         );
