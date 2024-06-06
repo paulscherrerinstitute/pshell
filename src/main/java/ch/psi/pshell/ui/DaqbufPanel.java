@@ -156,6 +156,7 @@ public class DaqbufPanel extends StandardDialog {
         super(parent, title, modal);
         initComponents();
         daqbuf = new Daqbuf(url);
+        daqbuf.setTimestampMillis(true);
         if (getTitle() == null) {
             setTitle(daqbuf.getUrl());
         }
@@ -933,7 +934,7 @@ public class DaqbufPanel extends StandardDialog {
                         updateSeriesPaint(series);
                         updateCapLength(plot);
                         for (int j = 0; j < average.size(); j++) {
-                            double timestamp = (t1.get(j) + t2.get(j)) / 2.0 / 1e6;
+                            double timestamp = (t1.get(j) + t2.get(j)) / 2.0;
                             series.appendData(timestamp, average.get(j).floatValue(), min.get(j).floatValue(), max.get(j).floatValue());
                         }
                     } finally {
@@ -973,7 +974,7 @@ public class DaqbufPanel extends StandardDialog {
                             throw new RuntimeException("Series too big for plotting: " + name);
                         }
                         for (int j = 0; j < values.size(); j++) {
-                            series.appendData(timestamps.get(j).doubleValue() / 1e6, aux.get(j).doubleValue());
+                            series.appendData(timestamps.get(j).doubleValue(), aux.get(j).doubleValue());
                         }
                         //} catch (Exception ex){
                         //    showException(ex);
@@ -1233,7 +1234,7 @@ public class DaqbufPanel extends StandardDialog {
         if (bins > 0) {
             double[] timestamps = new double[bins];
             for (int j = 0; j < bins; j++) {
-                timestamps[j] = (t1.get(j) + t2.get(j)) / 2.0 / 1e6;
+                timestamps[j] = (t1.get(j) + t2.get(j)) / 2.0;
             }
             double maxTime = timestamps[timestamps.length - 1];
             double minTime = timestamps[0];

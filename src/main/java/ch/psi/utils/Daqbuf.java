@@ -89,6 +89,8 @@ public class Daqbuf implements ChannelQueryAPI {
 
     static final Long PULSE_ID_START_TIME = 1504524711650L;
     static final double PULSE_ID_INTERVAL = 10;
+    
+    boolean timestampMillis = true;
 
     public static String getDefaultUrl() {
         return System.getenv().getOrDefault("DAQBUF_DEFAULT_URL", "https://data-api.psi.ch/api/4");
@@ -150,8 +152,17 @@ public class Daqbuf implements ChannelQueryAPI {
     public String getBackend() {
         return backend;
     }
+            
+    
+    public void setTimestampMillis(boolean value){
+        timestampMillis =value;
+    }
+    
+    public boolean getTimestampMillis(){
+        return timestampMillis;
+    }
 
-
+    
     static boolean isBinned(Integer bins) {
         return  (bins != null) && (bins > 0);
     }
@@ -449,12 +460,15 @@ public class Daqbuf implements ChannelQueryAPI {
                             throw new IOException(error.trim());
                         }
                         if (!frame.getOrDefault("type", "").equals("keepalive")) {
-                            List timestamps = (List) frame.getOrDefault("tss", null);
+                            List<Long> timestamps = (List) frame.getOrDefault("tss", null);
                             List ids = (List) frame.getOrDefault("pulses", null);
                             List values = (List) frame.getOrDefault("values", null);
                             String scalar_type = (String) frame.getOrDefault("scalar_type", null);
                             Boolean rangeFinal = (Boolean) frame.getOrDefault("rangeFinal", false);
                             if (scalar_type != null) {
+                                if (getTimestampMillis()){
+                                    timestamps.replaceAll(value -> value / 1_000_000);
+                                }
                                 listener.onMessage(query, values, ids, timestamps);
                                 if (recordListener != null) {
                                     if (values != null) {
@@ -490,12 +504,13 @@ public class Daqbuf implements ChannelQueryAPI {
                 Integer tsAnchor = (Integer) frame.getOrDefault("tsAnchor", null);
                 Boolean rangeFinal = (Boolean) frame.getOrDefault("rangeFinal", false);
                 long anchor_ms = tsAnchor.longValue() * 1000;
+                long aux =  getTimestampMillis() ? 1L : 1_000_000L;
 
                 List<Long> ts1 = ts1Ms.stream()
-                        .map(num -> (num.longValue() + anchor_ms) * 1000000)
+                        .map(num -> (num.longValue() + anchor_ms) * aux)
                         .collect(Collectors.toList());
                 List<Long> ts2 = ts2Ms.stream()
-                        .map(num -> (num.longValue() + anchor_ms) * 1000000)
+                        .map(num -> (num.longValue() + anchor_ms) * aux)
                         .collect(Collectors.toList());
 
                 if (listener instanceof QueryBinnedListener) {
