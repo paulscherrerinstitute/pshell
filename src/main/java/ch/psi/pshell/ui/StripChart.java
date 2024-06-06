@@ -3,7 +3,6 @@ package ch.psi.pshell.ui;
 import ch.psi.pshell.bs.StreamChannel;
 import ch.psi.pshell.bs.Stream;
 import ch.psi.pshell.camserver.PipelineSource;
-import ch.psi.pshell.core.Configuration;
 import ch.psi.pshell.core.Context;
 import ch.psi.pshell.core.ContextAdapter;
 import ch.psi.pshell.core.InlineDevice;
@@ -30,7 +29,6 @@ import ch.psi.pshell.ui.StripChartAlarmEditor.StripChartAlarmConfig;
 import ch.psi.utils.Arr;
 import ch.psi.utils.Audio;
 import ch.psi.utils.Chrono;
-import ch.psi.utils.Config;
 import ch.psi.utils.EncoderJson;
 import ch.psi.utils.IO;
 import ch.psi.utils.InvokingProducer;
@@ -44,8 +42,6 @@ import java.awt.Component;
 import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.Font;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.LayoutManager;
 import java.awt.Toolkit;
@@ -56,7 +52,6 @@ import java.awt.event.MouseEvent;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.lang.reflect.Array;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.text.DecimalFormat;
@@ -75,17 +70,14 @@ import javax.swing.AbstractCellEditor;
 import javax.swing.BoxLayout;
 import javax.swing.DefaultCellEditor;
 import javax.swing.DefaultComboBoxModel;
-import javax.swing.GroupLayout;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
-import javax.swing.JColorChooser;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
 import javax.swing.JDialog;
 import javax.swing.JFileChooser;
 import javax.swing.JLabel;
-import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
 import javax.swing.JTable;
@@ -94,7 +86,6 @@ import javax.swing.JToggleButton;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.Timer;
-import javax.swing.border.EmptyBorder;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
@@ -153,7 +144,7 @@ public class StripChart extends StandardDialog {
 
     Color backgroundColor;
     Color gridColor;
-
+    
     class ChartElement {
 
         ChartElement(TimePlotBase plot, int seriesIndex, long time, double value, boolean drag) {
@@ -517,8 +508,11 @@ public class StripChart extends StandardDialog {
                     @Override
                     public void mousePressed(MouseEvent e) {
                         if (e.getClickCount() == 2) {
-                            color = JColorChooser.showDialog(StripChart.this, "Choose a Color - Click 'Cancel for default", color);
-                            field.setBackground(color);
+                            Color c = SwingUtils.getColorWithDefault(StripChart.this, "Choose a Color", color);
+                            if (c!=null){
+                                color = (c==SwingUtils.DEFAULT_COLOR) ? null : c; 
+                                field.setBackground(color);
+                            }
                             stopCellEditing();
                         }
                     }
@@ -1936,7 +1930,6 @@ public class StripChart extends StandardDialog {
         panelColorBackground = new javax.swing.JPanel();
         jLabel17 = new javax.swing.JLabel();
         panelColorGrid = new javax.swing.JPanel();
-        buttonDefaultColors = new javax.swing.JButton();
         jLabel4 = new javax.swing.JLabel();
         spinnerUpdate = new javax.swing.JSpinner();
         toolBar = new javax.swing.JToolBar();
@@ -2202,13 +2195,6 @@ public class StripChart extends StandardDialog {
             .addGap(0, 20, Short.MAX_VALUE)
         );
 
-        buttonDefaultColors.setText("Defaults");
-        buttonDefaultColors.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                buttonDefaultColorsActionPerformed(evt);
-            }
-        });
-
         jLabel4.setText("Plot Update (ms):");
 
         spinnerUpdate.setModel(new javax.swing.SpinnerNumberModel(100, 0, 60000, 100));
@@ -2226,8 +2212,6 @@ public class StripChart extends StandardDialog {
                 .addComponent(jLabel17)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(panelColorGrid, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(buttonDefaultColors)
                 .addGap(18, 18, Short.MAX_VALUE)
                 .addComponent(jLabel4)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -2242,15 +2226,15 @@ public class StripChart extends StandardDialog {
                     .addComponent(jLabel15, javax.swing.GroupLayout.PREFERRED_SIZE, 26, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(panelColorBackground, javax.swing.GroupLayout.PREFERRED_SIZE, 26, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jLabel17, javax.swing.GroupLayout.PREFERRED_SIZE, 26, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(jPanel1Layout.createSequentialGroup()
                         .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(jLabel4)
                             .addComponent(spinnerUpdate, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addComponent(buttonDefaultColors, javax.swing.GroupLayout.PREFERRED_SIZE, 11, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        .addGap(3, 3, 3)))
                 .addContainerGap())
         );
 
-        jPanel1Layout.linkSize(javax.swing.SwingConstants.VERTICAL, new java.awt.Component[] {buttonDefaultColors, jLabel15, jLabel17, panelColorBackground, panelColorGrid});
+        jPanel1Layout.linkSize(javax.swing.SwingConstants.VERTICAL, new java.awt.Component[] {jLabel15, jLabel17, panelColorBackground, panelColorGrid});
 
         buttonNew.setIcon(new javax.swing.ImageIcon(getClass().getResource("/ch/psi/pshell/ui/New.png"))); // NOI18N
         java.util.ResourceBundle bundle = java.util.ResourceBundle.getBundle("ch/psi/pshell/ui/View"); // NOI18N
@@ -2589,10 +2573,11 @@ public class StripChart extends StandardDialog {
     }//GEN-LAST:event_ckPersistenceActionPerformed
 
     private void panelColorBackgroundMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_panelColorBackgroundMouseClicked
-        Color c = JColorChooser.showDialog(this, "Choose a Color", backgroundColor);
+        //Color c = JColorChooser.showDialog(this, "Choose a Color", backgroundColor);
+        Color c = SwingUtils.getColorWithDefault(this, "Choose a Color", backgroundColor);
         if (c != null) {
-            backgroundColor = c;
-            panelColorBackground.setBackground(backgroundColor);
+            panelColorBackground.setBackground((c == SwingUtils.DEFAULT_COLOR) ? null : c);
+            backgroundColor = (c == SwingUtils.DEFAULT_COLOR) ? PlotBase.getPlotBackground() : c;            
             if (started) {
                 for (TimePlotBase plot : plots) {
                     plot.setPlotBackgroundColor(backgroundColor);
@@ -2602,10 +2587,11 @@ public class StripChart extends StandardDialog {
     }//GEN-LAST:event_panelColorBackgroundMouseClicked
 
     private void panelColorGridMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_panelColorGridMouseClicked
-        Color c = JColorChooser.showDialog(this, "Choose a Color", gridColor);
+        //Color c = JColorChooser.showDialog(this, "Choose a Color", gridColor);
+        Color c = SwingUtils.getColorWithDefault(this, "Choose a Color", gridColor);
         if (c != null) {
-            gridColor = c;
-            panelColorGrid.setBackground(gridColor);
+            panelColorGrid.setBackground((c == SwingUtils.DEFAULT_COLOR) ? null: c);
+            gridColor = (c == SwingUtils.DEFAULT_COLOR) ? PlotBase.getGridColor(): c;            
             if (started) {
                 for (TimePlotBase plot : plots) {
                     plot.setPlotGridColor(gridColor);
@@ -2613,19 +2599,6 @@ public class StripChart extends StandardDialog {
             }
         }
     }//GEN-LAST:event_panelColorGridMouseClicked
-
-    private void buttonDefaultColorsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonDefaultColorsActionPerformed
-        backgroundColor = defaultBackgroundColor;
-        gridColor = defaultGridColor;
-        panelColorBackground.setBackground(backgroundColor);
-        panelColorGrid.setBackground(gridColor);
-        if (started) {
-            for (TimePlotBase plot : plots) {
-                plot.setPlotGridColor(PlotBase.getGridColor());
-                plot.setPlotBackgroundColor(PlotBase.getPlotBackground());
-            }
-        }
-    }//GEN-LAST:event_buttonDefaultColorsActionPerformed
 
     private void buttonStopActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonStopActionPerformed
         try {
@@ -2669,7 +2642,6 @@ public class StripChart extends StandardDialog {
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JButton buttonDefaultColors;
     private javax.swing.JButton buttonNew;
     private javax.swing.JButton buttonOpen;
     private javax.swing.JButton buttonRowDelete;

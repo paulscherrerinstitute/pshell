@@ -87,7 +87,6 @@ import javax.swing.DefaultComboBoxModel;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JCheckBoxMenuItem;
-import javax.swing.JColorChooser;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
 import javax.swing.JDialog;
@@ -328,8 +327,11 @@ public class DaqbufPanel extends StandardDialog {
                             if (getRowRank(tableSeries.getSelectedRow()) == 0) {
                                 colormap = null;
                                 field.setText("");
-                                color = JColorChooser.showDialog(DaqbufPanel.this, "Choose a Color - Click 'Cancel for default", color);
-                                field.setBackground(color);
+                                Color c = SwingUtils.getColorWithDefault(DaqbufPanel.this, "Choose a Color", color);
+                                if (c!=null){
+                                    color = (c == SwingUtils.DEFAULT_COLOR) ? null : c;
+                                    field.setBackground(color);
+                                }                                
                             } else {
                                 color = null;
                                 //field.setBackground(null);                            
@@ -740,23 +742,19 @@ public class DaqbufPanel extends StandardDialog {
 
         JMenuItem menuBackgroundColor = new JMenuItem("Set Background Color...");
         menuBackgroundColor.addActionListener((ActionEvent e) -> {
-            Color color = JColorChooser.showDialog(this, "Choose a Color", plot.getPlotBackgroundColor());
-            if (color != null) {
-                plot.setPlotBackgroundColor(color);
-            } else {
-                plot.setPlotBackgroundColor(PlotBase.getPlotBackground());
-            }
+            Color c = SwingUtils.getColorWithDefault(DaqbufPanel.this, "Choose a Color", plot.getPlotBackgroundColor());
+            if (c!=null){
+                plot.setPlotBackgroundColor((c == SwingUtils.DEFAULT_COLOR) ? PlotBase.getPlotBackground() : c);
+            }                                
         });
         plot.addPopupMenuItem(menuBackgroundColor);
 
         JMenuItem menuGridColor = new JMenuItem("Set Grid Color...");
         menuGridColor.addActionListener((ActionEvent e) -> {
-            Color color = JColorChooser.showDialog(this, "Choose a Color", plot.getPlotGridColor());
-            if (color != null) {
-                plot.setPlotGridColor(color);
-            } else {
-                plot.setPlotGridColor(PlotBase.getGridColor());
-            }
+            Color c = SwingUtils.getColorWithDefault(DaqbufPanel.this, "Choose a Color", plot.getPlotGridColor());
+            if (c!=null){
+                plot.setPlotGridColor((c == SwingUtils.DEFAULT_COLOR) ? PlotBase.getGridColor() : c);
+            }                                
         });
         plot.addPopupMenuItem(menuGridColor);
 
@@ -813,23 +811,20 @@ public class DaqbufPanel extends StandardDialog {
 
         JMenuItem menuBackgroundColor = new JMenuItem("Set Background Color...");
         menuBackgroundColor.addActionListener((ActionEvent e) -> {
-            Color color = JColorChooser.showDialog(this, "Choose a Color", plot.getPlotBackgroundColor());
-            if (color != null) {
-                plot.setPlotBackgroundColor(color);
-            } else {
-                plot.setPlotBackgroundColor(PlotBase.getPlotBackground());
-            }
+            Color c = SwingUtils.getColorWithDefault(DaqbufPanel.this, "Choose a Color", plot.getPlotBackgroundColor());
+            if (c!=null){
+                plot.setPlotBackgroundColor((c == SwingUtils.DEFAULT_COLOR) ? PlotBase.getPlotBackground() : c);
+            }   
         });
         plot.addPopupMenuItem(menuBackgroundColor);
 
         JMenuItem menuGridColor = new JMenuItem("Set Grid Color...");
         menuGridColor.addActionListener((ActionEvent e) -> {
-            Color color = JColorChooser.showDialog(this, "Choose a Color", plot.getPlotGridColor());
-            if (color != null) {
-                plot.setPlotGridColor(color);
-            } else {
-                plot.setPlotGridColor(PlotBase.getGridColor());
-            }
+            Color c = SwingUtils.getColorWithDefault(DaqbufPanel.this, "Choose a Color", plot.getPlotGridColor());
+            if (c!=null){
+                plot.setPlotGridColor((c == SwingUtils.DEFAULT_COLOR) ? PlotBase.getGridColor() : c);
+            }   
+            
         });
         plot.addPopupMenuItem(menuGridColor);
         addPlot(plot);

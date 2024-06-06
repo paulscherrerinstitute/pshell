@@ -349,9 +349,7 @@ public class TimePlotJFree extends TimePlotBase {
         if (series.getColor() != null) {
             getRenderer(series.axis).setSeriesPaint(index, series.getColor());
         }        
-        if (isMarkersVisible()) {
-            getRenderer(series.axis).setSeriesShapesVisible(index, true);
-        }          
+        getRenderer(series.axis).setSeriesShapesVisible(index, isMarkersVisible());
         return ts;
     }
 

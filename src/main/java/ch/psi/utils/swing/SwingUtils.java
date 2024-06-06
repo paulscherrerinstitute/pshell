@@ -53,6 +53,7 @@ import javax.swing.BorderFactory;
 import javax.swing.DefaultCellEditor;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JButton;
+import javax.swing.JColorChooser;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
 import javax.swing.JDialog;
@@ -81,6 +82,7 @@ import javax.swing.UIManager;
 import javax.swing.border.Border;
 import javax.swing.event.AncestorEvent;
 import javax.swing.event.AncestorListener;
+import javax.swing.plaf.basic.BasicArrowButton;
 import javax.swing.plaf.basic.BasicButtonUI;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.JTableHeader;
@@ -1428,6 +1430,43 @@ public class SwingUtils {
     public static int getPerceivedLuminance(Color color) {
         return (int) (0.299 * color.getRed() + 0.587 * color.getGreen() + 0.114 * color.getBlue());
     }
+    
+ 
+    //JColorChooser
+    public static final Color DEFAULT_COLOR = new Color(0);
+    public static Color getColorWithDefault(Component parent, String title, Color currentColor){       
+        List<Color> selection=new ArrayList<>();
+        JColorChooser colorChooser = new JColorChooser();
+        if (currentColor!=null){
+            colorChooser.setColor(currentColor);
+        }
+        JDialog dialog = JColorChooser.createDialog(parent, title, true, colorChooser, 
+                (e)->{
+                    selection.add(colorChooser.getColor()); 
+                }, 
+        null);
+        
+        String reset = UIManager.getString("ColorChooser.resetText", parent.getLocale());
+        for (Component component : SwingUtils.getComponentsByType(dialog, JButton.class)){            
+            JButton button = (JButton)component;
+            if (!(button instanceof BasicArrowButton)){                
+                if (reset.equals(button.getText())) {
+                    button.setText("Default");
+                    for (ActionListener al : button.getActionListeners()) {
+                        button.removeActionListener(al);
+                    }
+                    button.addActionListener(e -> {
+                        selection.add(DEFAULT_COLOR); 
+                        dialog.setVisible(false);
+                    });
+                }            
+            }
+        }
+        
+        dialog.setVisible(true);
+        return (selection.isEmpty()) ? null : selection.get(0);
+    }
+    
 
     //Image    
     static class ImageInvertFilter extends RGBImageFilter {
