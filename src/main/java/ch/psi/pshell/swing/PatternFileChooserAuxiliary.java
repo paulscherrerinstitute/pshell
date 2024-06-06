@@ -78,7 +78,10 @@ public class PatternFileChooserAuxiliary extends JPanel {
                     chooser.setCurrentDirectory(new File(path));
                 }
                 for (Component child : SwingUtils.getComponentsByType(chooser, JList.class)) {
-                    ((JList) child).setEnabled(!stdPath);
+                    child.setEnabled(!stdPath);
+                    ((JList)child).updateUI();   
+                    child.revalidate();
+                    child.repaint();                                        
                 }
             };
             checkStdPath.addActionListener(listener);
