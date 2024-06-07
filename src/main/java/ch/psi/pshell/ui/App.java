@@ -640,7 +640,7 @@ public class App extends ObservableBase<AppListener> {
     }
 
     static public boolean isOffline() {
-        return getBoolArgumentValue("o") || isDataPanel();
+        return getBoolArgumentValue("o") || isDataPanel() || isDaqbufPanel();
     }
 
     static public boolean isSimulation() {
