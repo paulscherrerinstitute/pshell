@@ -2228,7 +2228,7 @@ public class DaqbufPanel extends StandardDialog {
 
         buttonRowDown.setIcon(new javax.swing.ImageIcon(getClass().getResource("/ch/psi/pshell/ui/arrows/Down.png"))); // NOI18N
         buttonRowDown.setText(bundle.getString("View.buttonNew.text")); // NOI18N
-        buttonRowDown.setToolTipText("Move row up");
+        buttonRowDown.setToolTipText("Move row down");
         buttonRowDown.setFocusable(false);
         buttonRowDown.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
         buttonRowDown.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);

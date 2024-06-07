@@ -1837,7 +1837,8 @@ public class StripChart extends StandardDialog {
                         }
                         */
                           
-                        
+                        JDialog splash = SwingUtils.showSplash(this, "Save", new Dimension(400, 200), "Saving data to " + fileName);
+
                         try (DataManager dm = new DataManager(fileName, format)){
                             for (DeviceTask task : tasks) {
 
@@ -1872,8 +1873,9 @@ public class StripChart extends StandardDialog {
                                     }
                                 }                           
                             }
-                        } 
-                        
+                        } finally {
+                            splash.setVisible(false);
+                        }
                         if (showOption( "Save", "Success saving data to " + fileName + ".\nDo you want to open the file?", SwingUtils.OptionType.YesNo) == SwingUtils.OptionResult.Yes) {
                             DataPanel.createDialog(this, fileName, format, null);
                         }
@@ -2225,12 +2227,13 @@ public class StripChart extends StandardDialog {
                     .addComponent(panelColorBackground, javax.swing.GroupLayout.PREFERRED_SIZE, 26, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jLabel17, javax.swing.GroupLayout.PREFERRED_SIZE, 26, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(jLabel4)
-                            .addComponent(spinnerUpdate, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                                 .addComponent(jLabel3)
-                                .addComponent(spinnerDragInterval, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                                .addComponent(spinnerDragInterval, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                .addComponent(jLabel4)
+                                .addComponent(spinnerUpdate, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
                         .addGap(3, 3, 3)))
                 .addContainerGap())
         );
@@ -2297,7 +2300,7 @@ public class StripChart extends StandardDialog {
 
         buttonRowDown.setIcon(new javax.swing.ImageIcon(getClass().getResource("/ch/psi/pshell/ui/arrows/Down.png"))); // NOI18N
         buttonRowDown.setText(bundle.getString("View.buttonNew.text")); // NOI18N
-        buttonRowDown.setToolTipText("Move row up");
+        buttonRowDown.setToolTipText("Move row down");
         buttonRowDown.setFocusable(false);
         buttonRowDown.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
         buttonRowDown.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
