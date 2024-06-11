@@ -140,9 +140,12 @@ public class DaqbufPanel extends StandardDialog {
     final ArrayList<PlotBase> plots = new ArrayList<>();
     final Map<Plot, List<SeriesInfo>> plotInfo = new HashMap<>();
     final HashMap<Device, Long> appendTimestamps = new HashMap<>();
+    volatile String[] knownBackends;
+    
     volatile boolean started = false;
     volatile boolean updating = false;
     DefaultComboBoxModel modelComboY = new DefaultComboBoxModel();
+    ChannelSelector selector = new ChannelSelector();
 
     Color backgroundColor;
     Color gridColor;
@@ -153,13 +156,10 @@ public class DaqbufPanel extends StandardDialog {
 
 
     public DaqbufPanel(Window parent, String url, String title, boolean modal) {
-        super(parent, title, modal);
+        super(parent, null, modal);
         initComponents();
         daqbuf = new Daqbuf(url);
         daqbuf.setTimestampMillis(true);
-        if (getTitle() == null) {
-            setTitle(daqbuf.getUrl());
-        }
         if (App.hasArgument("background_color")) {
             try {
                 defaultBackgroundColor = Preferences.getColorFromString(App.getArgumentValue("background_color"));
@@ -196,10 +196,23 @@ public class DaqbufPanel extends StandardDialog {
 
         toolBar.setRollover(true);
         toolBar.setFloatable(false); //By default true in nimbus        
-
+        
+        onLafChange();                
+        
+        setTitle ("Connecting to " + daqbuf.getUrl() + "...");
+        Thread thread = new Thread(()->{
+            knownBackends = daqbuf.getBackends();
+            SwingUtilities.invokeLater(()->{
+                setTitle((title==null) ? daqbuf.getUrl() : title);
+                setComboBackends();            
+                if (knownBackends==null){
+                    this.showMessage("Error", "Cannot connect to server: " + daqbuf.getUrl());
+                }                            
+            });
+        });   
+        thread.setDaemon(true);
+        thread.start();
         clear();
-
-        onLafChange();
     }
     
     @Override
@@ -225,6 +238,24 @@ public class DaqbufPanel extends StandardDialog {
     public JPanel getConfigPanel() {
         return panelSeries;
     }
+    
+    void setComboBackends(){        
+        if (knownBackends != null){
+            TableColumn colType = tableSeries.getColumnModel().getColumn(2);
+            DefaultComboBoxModel modelType = new DefaultComboBoxModel();
+            for (String backend : knownBackends) {
+                modelType.addElement(backend);
+            }
+            JComboBox comboBackend = new JComboBox();
+            tableSeries.setRowHeight(Math.max(tableSeries.getRowHeight(), comboBackend.getPreferredSize().height - 3));
+            comboBackend.setModel(modelType);
+            DefaultCellEditor cellEditor = new DefaultCellEditor(comboBackend);
+            cellEditor.setClickCountToStart(2);
+            colType.setCellEditor(cellEditor);
+            comboBackend.setSelectedIndex(0);
+        }
+        
+    }
 
     public void initializeTable() {
         //Fix bug of nimbus rendering Boolean in table
@@ -243,7 +274,7 @@ public class DaqbufPanel extends StandardDialog {
 
         TableColumn colName = tableSeries.getColumnModel().getColumn(1);
         JTextField textNameEditor = new JTextField();
-        ChannelSelector selector = new ChannelSelector();
+        selector = new ChannelSelector();
         //selector.configure(ChannelSelector.Type.Daqbuf, null,  null, 1000);
         selector.setHistorySize(0);
         selector.setListMode(ChannelSelector.ListMode.Popup);
@@ -268,23 +299,11 @@ public class DaqbufPanel extends StandardDialog {
             public void editingCanceled(ChangeEvent e) {
             }
         });
+                        
 
         TableColumn colType = tableSeries.getColumnModel().getColumn(2);
         colType.setPreferredWidth(120);
-        DefaultComboBoxModel modelType = new DefaultComboBoxModel();
-        for (String backend : daqbuf.getBackends()) {
-            modelType.addElement(backend);
-        }
-        JComboBox comboBackend = new JComboBox();
-        tableSeries.setRowHeight(Math.max(tableSeries.getRowHeight(), comboBackend.getPreferredSize().height - 3));
-        comboBackend.setModel(modelType);
-        DefaultCellEditor cellEditor = new DefaultCellEditor(comboBackend);
-        cellEditor.setClickCountToStart(2);
-        colType.setCellEditor(cellEditor);
-        comboBackend.addActionListener((e) -> {
-            selector.configure(ChannelSelector.Type.Daqbuf, null, comboBackend.getSelectedItem().toString(), 1000);
-        });
-        comboBackend.setSelectedIndex(0);
+        setComboBackends();
 
         TableColumn colShape = tableSeries.getColumnModel().getColumn(3);
         colShape.setCellEditor(disabledEditor);
@@ -297,7 +316,7 @@ public class DaqbufPanel extends StandardDialog {
         model.addElement(PLOT_PRIVATE);
         model.addElement(PLOT_SHARED);
         comboPlot.setModel(model);
-        cellEditor = new DefaultCellEditor(comboPlot);
+        DefaultCellEditor cellEditor = new DefaultCellEditor(comboPlot);
         cellEditor.setClickCountToStart(2);
         colPlot.setCellEditor(cellEditor);
 
@@ -442,20 +461,35 @@ public class DaqbufPanel extends StandardDialog {
         }
 
     }
+    
+    void updateSelector(){
+        if (selector!=null){
+            int row = tableSeries.getSelectedRow();
+            if (row>=0){
+                Object value = modelSeries.getValueAt(row, 2);
+                selector.configure(ChannelSelector.Type.Daqbuf, null, value.toString(), 1000);
+            }
+        }
+    }
 
     TableModelListener modelSeriesListener = new TableModelListener() {
         @Override
         public void tableChanged(TableModelEvent e) {
             if (started) {
                 try {
-                    int index = e.getFirstRow();
-                    if (e.getColumn() == 6) {
-                        final Color color = Preferences.getColorFromString((String) modelSeries.getValueAt(index, 6));
-                        PlotSeries series = (PlotSeries) getPlotSeries(index);
-                        if (series instanceof LinePlotErrorSeries) {
-                            ((LinePlotErrorSeries) series).setColor(color);
-                            updateSeriesPaint((LinePlotErrorSeries) series);
-                        }
+                    int index = e.getFirstRow();                    
+                    switch (e.getColumn()){
+                        case 2:
+                            updateSelector();
+                            break;
+                        case 6:
+                            final Color color = Preferences.getColorFromString((String) modelSeries.getValueAt(index, 6));
+                            PlotSeries series = (PlotSeries) getPlotSeries(index);
+                            if (series instanceof LinePlotErrorSeries) {
+                                ((LinePlotErrorSeries) series).setColor(color);
+                                updateSeriesPaint((LinePlotErrorSeries) series);
+                            }
+                            break;
                     }
                 } catch (Exception ex) {
                     showException(ex);
@@ -488,7 +522,7 @@ public class DaqbufPanel extends StandardDialog {
     JButton saveButton;
 
     protected void update() {
-        boolean editing = true;
+        boolean editing = true; //(knownBackends!=null);
         int rows = modelSeries.getRowCount();
         int cur = tableSeries.getSelectedRow();
         buttonRowUp.setEnabled((rows > 0) && (cur > 0) && editing);
@@ -498,6 +532,16 @@ public class DaqbufPanel extends StandardDialog {
         buttonPlotData.setEnabled(modelSeries.getRowCount() > 0);
         buttonDumpData.setEnabled(buttonPlotData.isEnabled() && !dumping);
         buttonSave.setEnabled(rows > 0);
+        
+        textFrom.setEnabled(editing);
+        textTo.setEnabled(editing);
+        comboTime.setEnabled(editing);
+        checkBins.setEnabled(editing);
+        spinnerBins.setEnabled(editing);
+        spinnerSize.setEnabled(editing);
+        spinnerBins.setEnabled(checkBins.isSelected() && editing);
+        spinnerSize.setEnabled(!checkBins.isSelected() & editing);
+        
 
         int row = tableSeries.getSelectedRow();
         if (row >= 0) {
@@ -505,6 +549,8 @@ public class DaqbufPanel extends StandardDialog {
             boolean first = (row == 0) || (!PLOT_SHARED.equals(modelSeries.getValueAt(row - 1, 4)));
             configureModelComboY(getRowRank(row), shared && first);
         }
+        
+        updateSelector();
     }
 
     CompletableFuture updateShape(int row) {
@@ -2098,7 +2144,7 @@ public class DaqbufPanel extends StandardDialog {
             .addGroup(jPanel3Layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(textFrom, javax.swing.GroupLayout.PREFERRED_SIZE, 23, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(textFrom, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                         .addComponent(jLabel2)
                         .addComponent(comboTime, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -2114,6 +2160,8 @@ public class DaqbufPanel extends StandardDialog {
                     .addComponent(jLabel6, javax.swing.GroupLayout.PREFERRED_SIZE, 46, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addGap(15, 15, 15)))
         );
+
+        jPanel3Layout.linkSize(javax.swing.SwingConstants.VERTICAL, new java.awt.Component[] {comboTime, textFrom, textTo});
 
         jPanel4.setBorder(javax.swing.BorderFactory.createTitledBorder("Data"));
 
@@ -2133,7 +2181,7 @@ public class DaqbufPanel extends StandardDialog {
         jLabel7.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
         jLabel7.setText("Max size: ");
 
-        spinnerSize.setModel(new javax.swing.SpinnerNumberModel(10000, 1, 200000, 10000));
+        spinnerSize.setModel(new javax.swing.SpinnerNumberModel(10000, 1, 500000, 10000));
         spinnerSize.setEnabled(false);
 
         javax.swing.GroupLayout jPanel4Layout = new javax.swing.GroupLayout(jPanel4);
@@ -2343,7 +2391,7 @@ public class DaqbufPanel extends StandardDialog {
         pnGraphs.setLayout(pnGraphsLayout);
         pnGraphsLayout.setHorizontalGroup(
             pnGraphsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 466, Short.MAX_VALUE)
+            .addGap(0, 451, Short.MAX_VALUE)
         );
         pnGraphsLayout.setVerticalGroup(
             pnGraphsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -2434,8 +2482,7 @@ public class DaqbufPanel extends StandardDialog {
     }//GEN-LAST:event_tableSeriesKeyReleased
 
     private void checkBinsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_checkBinsActionPerformed
-        spinnerBins.setEnabled(checkBins.isSelected());
-        spinnerSize.setEnabled(!checkBins.isSelected());
+        update();
     }//GEN-LAST:event_checkBinsActionPerformed
 
     String getTimeString(Number timestamp, boolean utc) {

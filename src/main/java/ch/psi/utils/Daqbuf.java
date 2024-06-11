@@ -115,8 +115,7 @@ public class Daqbuf implements ChannelQueryAPI {
             }
             return backends.toArray(new String[0]);
         } catch (Exception ex) {
-            Logger.getLogger(Daqbuf.class.getName()).log(Level.SEVERE, null, ex);
-            return new String[]{getDefaultBackend()};
+            return null;
         }
 
     }
