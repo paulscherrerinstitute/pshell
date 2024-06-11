@@ -139,8 +139,7 @@ public class DaqbufPanel extends StandardDialog {
 
     final ArrayList<PlotBase> plots = new ArrayList<>();
     final Map<Plot, List<SeriesInfo>> plotInfo = new HashMap<>();
-    final HashMap<Device, Long> appendTimestamps = new HashMap<>();
-    volatile String[] knownBackends;
+    final HashMap<Device, Long> appendTimestamps = new HashMap<>();    
     
     volatile boolean started = false;
     volatile boolean updating = false;
@@ -205,10 +204,9 @@ public class DaqbufPanel extends StandardDialog {
         
         setTitle ("Connecting to " + daqbuf.getUrl() + "...");
         Thread thread = new Thread(()->{
-            knownBackends = daqbuf.getBackends();
+            String[] knownBackends = daqbuf.searchKnownBackends();
             SwingUtilities.invokeLater(()->{
-                setTitle((title==null) ? daqbuf.getUrl() : title);
-                
+                setTitle((title==null) ? daqbuf.getUrl() : title);                
                 if (knownBackends==null){
                     showMessage("Error", "Cannot retrieve known backends from server \n" + daqbuf.getUrl());
                 } else {
@@ -245,7 +243,8 @@ public class DaqbufPanel extends StandardDialog {
         return panelSeries;
     }
     
-    void setComboBackends(){        
+    void setComboBackends(){   
+        String[] knownBackends = daqbuf.getKnownBackends();
         if (knownBackends != null){
             TableColumn colType = tableSeries.getColumnModel().getColumn(2);
             DefaultComboBoxModel modelType = new DefaultComboBoxModel();
@@ -564,7 +563,8 @@ public class DaqbufPanel extends StandardDialog {
         String backend = (String) modelSeries.getValueAt(row, 2);
         CompletableFuture cf = daqbuf.startSearch(backend, channel, null, 1).handle((ret, ex) -> {
             if (ex != null) {
-                showException((Exception) ex);
+                //showException((Exception) ex);
+                modelSeries.setValueAt("", row, 3);
             } else {
                 List<Map<String, Object>> list = (List<Map<String, Object>>) ret;
                 try {
@@ -1970,13 +1970,7 @@ public class DaqbufPanel extends StandardDialog {
     }
 
     Object[] getEmptyRow(){
-        String defaultBackend =  Daqbuf.getDefaultBackend();
-        if (knownBackends!=null){
-            if (!Arr.containsEqual(knownBackends, defaultBackend)){
-                defaultBackend = knownBackends[0];
-            }
-        }
-        return new Object[]{Boolean.TRUE, "", defaultBackend, "", PLOT_PRIVATE, 1};
+        return new Object[]{Boolean.TRUE, "", daqbuf.getAvailableDefaultBackend(), "", PLOT_PRIVATE, 1};
     }
 
     
@@ -2193,7 +2187,7 @@ public class DaqbufPanel extends StandardDialog {
         jLabel7.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
         jLabel7.setText("Max size: ");
 
-        spinnerSize.setModel(new javax.swing.SpinnerNumberModel(10000, 1, 500000, 10000));
+        spinnerSize.setModel(new javax.swing.SpinnerNumberModel(10000, 1, 999999, 10000));
         spinnerSize.setEnabled(false);
 
         javax.swing.GroupLayout jPanel4Layout = new javax.swing.GroupLayout(jPanel4);

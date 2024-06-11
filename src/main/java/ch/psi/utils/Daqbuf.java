@@ -91,16 +91,28 @@ public class Daqbuf implements ChannelQueryAPI {
     static final double PULSE_ID_INTERVAL = 10;
     
     boolean timestampMillis = true;
+    volatile String[] knownBackends;
 
     public static String getDefaultUrl() {
         return System.getenv().getOrDefault("DAQBUF_DEFAULT_URL", "https://data-api.psi.ch/api/4");
     }
 
     public static String getDefaultBackend() {
-        return System.getenv().getOrDefault("DAQBUF_DEFAULT_BACKEND", "sf-databuffer");
+        return System.getenv().getOrDefault("DAQBUF_DEFAULT_BACKEND", "");
     }
 
-    public String[] getBackends() {
+
+    public String getAvailableDefaultBackend() {
+        if (knownBackends!=null){
+            if (!Arr.containsEqual(knownBackends, backend)){
+                return knownBackends[0];
+            }
+        }
+        return backend;
+    }
+    
+    
+    public String[] searchKnownBackends() {
         try {
             Map<String, Object> params = new HashMap<>();
             WebTarget resource = client.target(url + "/backend/list");
@@ -113,11 +125,15 @@ public class Daqbuf implements ChannelQueryAPI {
             for (Map m : list) {
                 backends.add((String) m.get("name"));
             }
-            return backends.toArray(new String[0]);
+            knownBackends = backends.toArray(new String[0]);
         } catch (Exception ex) {
-            return null;
-        }
-
+            knownBackends = null;
+        }         
+        return knownBackends;
+    }
+    
+    public String[] getKnownBackends() {
+        return knownBackends;
     }
 
     ObjectMapper mapper;
@@ -377,9 +393,11 @@ public class Daqbuf implements ChannelQueryAPI {
 
         WebTarget setResourceParams(WebTarget resource) {
             resource = resource.queryParam("channelName", channel);
-            resource = resource.queryParam("backend", backend);
             resource = resource.queryParam("begDate", start);
             resource = resource.queryParam("endDate", end);
+            if ((backend!=null) && !backend.isBlank()){
+                resource = resource.queryParam("backend", backend);
+            }
             if (isBinned(bins)) {
                 resource = resource.queryParam("binCount", bins);
             }
@@ -969,7 +987,7 @@ public class Daqbuf implements ChannelQueryAPI {
          */
         
        
-        System.out.println(daqbuf.getBackends());
+        System.out.println(daqbuf.searchKnownBackends());
         int bins = 20;
         String start = "2024-05-07 16:00:00";
         String end = "2024-05-07 16:00:01" ;
