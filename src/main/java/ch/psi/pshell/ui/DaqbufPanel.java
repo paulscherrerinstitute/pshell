@@ -158,6 +158,10 @@ public class DaqbufPanel extends StandardDialog {
     public DaqbufPanel(Window parent, String url, String title, boolean modal) {
         super(parent, null, modal);
         initComponents();
+        if ("default".equals(url)){
+            url = null;
+        }
+        
         daqbuf = new Daqbuf(url);
         daqbuf.setTimestampMillis(true);
         if (App.hasArgument("background_color")) {
@@ -204,10 +208,12 @@ public class DaqbufPanel extends StandardDialog {
             knownBackends = daqbuf.getBackends();
             SwingUtilities.invokeLater(()->{
                 setTitle((title==null) ? daqbuf.getUrl() : title);
-                setComboBackends();            
+                
                 if (knownBackends==null){
-                    this.showMessage("Error", "Cannot connect to server: " + daqbuf.getUrl());
-                }                            
+                    showMessage("Error", "Cannot retrieve known backends from server \n" + daqbuf.getUrl());
+                } else {
+                    setComboBackends();            
+                }                    
             });
         });   
         thread.setDaemon(true);
@@ -467,7 +473,7 @@ public class DaqbufPanel extends StandardDialog {
             int row = tableSeries.getSelectedRow();
             if (row>=0){
                 Object value = modelSeries.getValueAt(row, 2);
-                selector.configure(ChannelSelector.Type.Daqbuf, null, value.toString(), 1000);
+                selector.configure(ChannelSelector.Type.Daqbuf, daqbuf.getUrl(), value.toString(), 1000);
             }
         }
     }
@@ -1964,7 +1970,13 @@ public class DaqbufPanel extends StandardDialog {
     }
 
     Object[] getEmptyRow(){
-        return new Object[]{Boolean.TRUE, "", Daqbuf.getDefaultBackend(), "", PLOT_PRIVATE, 1};
+        String defaultBackend =  Daqbuf.getDefaultBackend();
+        if (knownBackends!=null){
+            if (!Arr.containsEqual(knownBackends, defaultBackend)){
+                defaultBackend = knownBackends[0];
+            }
+        }
+        return new Object[]{Boolean.TRUE, "", defaultBackend, "", PLOT_PRIVATE, 1};
     }
 
     

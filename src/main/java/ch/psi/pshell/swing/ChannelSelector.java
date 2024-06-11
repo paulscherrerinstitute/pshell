@@ -115,7 +115,7 @@ public class ChannelSelector extends MonitoredPanel {
         if (type == Type.Epics) {
             channelNameSource = new EpicsBootInfoAPI(url);
         } else if (type == Type.Daqbuf) {
-            channelNameSource = new Daqbuf(url, null);
+            channelNameSource = new Daqbuf(url, backend);
         } else if (type == Type.IocInfo) {
             channelNameSource = new IocInfoAPI(url);
         } else if (type == Type.Camera) {
