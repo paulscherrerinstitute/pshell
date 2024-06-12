@@ -79,6 +79,8 @@ import java.util.function.BiFunction;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import javax.swing.AbstractCellEditor;
 import javax.swing.BoxLayout;
 import javax.swing.DefaultCellEditor;
@@ -975,15 +977,12 @@ public class DaqbufPanel extends StandardDialog {
                     List<Number> max = map.get(Daqbuf.FIELD_MAX);
                     List<Long> t1 = map.get(Daqbuf.FIELD_START);
                     List<Long> t2 = map.get(Daqbuf.FIELD_END);
-                    //List<Long> t = IntStream.range(0, t1.size()).mapToObj(i -> (t1.get(i) + t2.get(i)) / 2).collect(Collectors.toList());                                        
+                    List<Long> t = IntStream.range(0, t1.size()).mapToObj(i -> (t1.get(i) + t2.get(i)) / 2).collect(Collectors.toList());                                        
                     try {
                         plot.disableUpdates();
                         updateSeriesPaint(series);
                         updateCapLength(plot);
-                        for (int j = 0; j < average.size(); j++) {
-                            double timestamp = (t1.get(j) + t2.get(j)) / 2.0;
-                            series.appendData(timestamp, average.get(j).floatValue(), min.get(j).floatValue(), max.get(j).floatValue());
-                        }
+                        series.appendData(t, average, min, max);
                     } finally {
                         plot.reenableUpdates();
                     }
@@ -1002,7 +1001,6 @@ public class DaqbufPanel extends StandardDialog {
 
     LinePlotSeries addLineSeries(LinePlotJFree plot, String name, String backend, String start, String end, int axis, Color color) {
         LinePlotSeries series = new LinePlotSeries(name, color, axis);
-        //LinePlotErrorSeries series = new LinePlotErrorSeries(name, color, axis);
         plotSeries.add(series);
         plot.addSeries(series);
         series.setMaxItemCount((Integer) spinnerSize.getValue());
@@ -1198,9 +1196,8 @@ public class DaqbufPanel extends StandardDialog {
                     double[] min = ((MatrixPlotBinnedSeries) series).min[index];
                     double[] max = ((MatrixPlotBinnedSeries) series).max[index];
                     double[] average = ((MatrixPlotBinnedSeries) series).average[index];
-                    for (int i = 0; i < average.length; i++) {
-                        ((LinePlotErrorSeries) lseries).appendData(i, average[i], min[i], max[i]);
-                    }
+                    double[] indexes = Arr.indexesDouble(average.length);
+                    ((LinePlotErrorSeries) lseries).appendData(indexes, average, min, max);
                     updateSeriesPaint(lseries);
                 } else {
                     double[] row = Convert.transpose(series.getData())[index];

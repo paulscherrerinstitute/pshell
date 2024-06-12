@@ -1,6 +1,12 @@
 package ch.psi.pshell.plot;
 
+import static ch.psi.pshell.plot.LinePlot.Style.ErrorX;
+import static ch.psi.pshell.plot.LinePlot.Style.ErrorXY;
+import static ch.psi.pshell.plot.LinePlot.Style.ErrorY;
 import java.awt.Color;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Collections;
 import org.jfree.data.xy.XIntervalDataItem;
 import org.jfree.data.xy.XIntervalSeries;
 import org.jfree.data.xy.XYIntervalDataItem;
@@ -33,57 +39,215 @@ public class LinePlotErrorSeries extends LinePlotSeries {
 
     public void appendData(double x, double y, double low, double high) {
         if (getPlot() != null) {
+            boolean updatesEnabled = getPlot().isUpdatesEnabled();
             switch (getPlot().getStyle()) {
                 case ErrorX:
                     XIntervalSeries sx = (XIntervalSeries) getToken();
                     //sx.add(x, low, high, y);
-                    sx.add(new XIntervalDataItem(x, low, high, y),  getPlot().isUpdatesEnabled());
+                    sx.add(new XIntervalDataItem(x, low, high, y), updatesEnabled);
                     break;
                 case ErrorY:
                     YIntervalSeries sy = (YIntervalSeries) getToken();
                     //sy.add(x, y, low, high);
-                    sy.add(new YIntervalDataItem(x, y, low, high),  getPlot().isUpdatesEnabled());
+                    sy.add(new YIntervalDataItem(x, y, low, high), updatesEnabled);
                     break;
                 //Consider low = errorx, high=errory
                 case ErrorXY:
                     XYIntervalSeries s = (XYIntervalSeries) getToken();
                     //s.add(x, x - low, x + low, y, y - high, y + high);
-                    s.add(new XYIntervalDataItem(x, x, x, y, y - high, y + high),  getPlot().isUpdatesEnabled());
+                    s.add(new XYIntervalDataItem(x, x, x, y, low, high), updatesEnabled);
+
+            }
+        }
+
+    }
+    
+    public void appendData(double[] x, double[]  y, double[]  low, double[]  high) {
+        if (getPlot() != null) {
+            boolean updatesEnabled = getPlot().isUpdatesEnabled();
+            switch (getPlot().getStyle()) {
+                case ErrorX:
+                    XIntervalSeries sx = (XIntervalSeries) getToken();
+                    for (int i = 0; i < x.length; i++) {
+                        sx.add(new XIntervalDataItem(x[i], low[i], high[i], y[i]), updatesEnabled);
+                    }
+                    break;
+                case ErrorY:
+                    YIntervalSeries sy = (YIntervalSeries) getToken();
+                    for (int i = 0; i < x.length; i++) {
+                        sy.add(new YIntervalDataItem(x[i], y[i], low[i], high[i]), updatesEnabled);
+                    }
+                    break;
+                //Consider low = errorx, high=errory
+                case ErrorXY:
+                    XYIntervalSeries s = (XYIntervalSeries) getToken();
+                    for (int i = 0; i < x.length; i++) {
+                        double ix = x[i];
+                        s.add(new XYIntervalDataItem(ix, ix, ix, y[i], low[i], high[i]), updatesEnabled);
+                    }
 
             }
         }
     }
     
+
+    public void appendData(List<? extends Number> x, List<? extends Number> y, List<? extends Number> low, List<? extends Number> high) {
+        if (getPlot() != null) {
+            boolean updatesEnabled = getPlot().isUpdatesEnabled();
+            switch (getPlot().getStyle()) {
+                case ErrorX:
+                    XIntervalSeries sx = (XIntervalSeries) getToken();
+                    for (int i = 0; i < x.size(); i++) {
+                        sx.add(new XIntervalDataItem(x.get(i).doubleValue(), low.get(i).doubleValue(), high.get(i).doubleValue(), y.get(i).doubleValue()), updatesEnabled);
+                    }
+                    break;
+                case ErrorY:
+                    YIntervalSeries sy = (YIntervalSeries) getToken();
+                    for (int i = 0; i < x.size(); i++) {
+                        sy.add(new YIntervalDataItem(x.get(i).doubleValue(), y.get(i).doubleValue(), low.get(i).doubleValue(), high.get(i).doubleValue()), updatesEnabled);
+                    }
+                    break;
+                //Consider low = errorx, high=errory
+                case ErrorXY:
+                    XYIntervalSeries s = (XYIntervalSeries) getToken();
+                    for (int i = 0; i < x.size(); i++) {
+                        double ix = x.get(i).doubleValue();
+                        s.add(new XYIntervalDataItem(ix, ix, ix, y.get(i).doubleValue(), low.get(i).doubleValue(), high.get(i).doubleValue()), updatesEnabled);
+                    }
+
+            }
+        }
+    }
+
     @Override
     public void appendData(double x, double y) {
         appendData(x, y, 0.0);
     }
 
+    public void appendData(double[] x, double[] y) {
+        appendData(x, y, new double[x.length]);
+    }
+    
+    public void appendData(List<? extends Number> x, List<? extends Number> y) {
+        List<Double> error = new ArrayList<>(Collections.nCopies(x.size(), 0.0));
+        appendData(x, y, error);
+    }
+    
+
     public void appendData(double x, double y, double error) {
         if (getPlot() != null) {
+            boolean updatesEnabled = getPlot().isUpdatesEnabled();
             switch (getPlot().getStyle()) {
                 case ErrorX:
-                    XIntervalSeries sx = (XIntervalSeries) getToken();                    
-                    //sx.add(x, x - error, x + error, y);
-                    sx.add(new XIntervalDataItem(x, x - error, x + error, y),  getPlot().isUpdatesEnabled());
-                    break;
+                    XIntervalSeries sx = (XIntervalSeries) getToken();
+                    sx.add(new XIntervalDataItem(x, x - error, x + error, y), updatesEnabled);
+                    break; 
                 case ErrorY:
                     YIntervalSeries sy = (YIntervalSeries) getToken();
-                    //sy.add(x, y, y - error, y + error);
-                    sy.add(new YIntervalDataItem(x, y, y - error, y + error),  getPlot().isUpdatesEnabled());
+                    sy.add(new YIntervalDataItem(x, y, y - error, y + error), updatesEnabled);
                     break;
                 case ErrorXY:
                     appendData(x, x - error, x + error, y, y - error, y + error);
             }
         }
     }
+    
+    public void appendData(double[] x, double[] y, double[] error){
+        if (getPlot() != null) {
+            boolean updatesEnabled = getPlot().isUpdatesEnabled();
+            switch (getPlot().getStyle()) {
+                case ErrorX:
+                    XIntervalSeries sx = (XIntervalSeries) getToken();
+                    for (int i = 0; i < x.length; i++) {
+                        double ix = x[i];
+                        double ie = error[i];
+                        sx.add(new XIntervalDataItem(ix, ix-ie, ix+ie, y[i]), updatesEnabled);
+                    }
+                    break; 
+                case ErrorY:
+                    YIntervalSeries sy = (YIntervalSeries) getToken();
+                    for (int i = 0; i < x.length; i++) {
+                        double iy = y[i];
+                        double ie = error[i];
+                        sy.add(new YIntervalDataItem(x[i], iy, iy - ie, iy + ie), updatesEnabled);
+                    }
+                    break;
+                case ErrorXY:
+                    XYIntervalSeries s = (XYIntervalSeries) getToken();
+                    for (int i = 0; i < x.length; i++) {
+                        double ix = x[i];
+                        double iy = y[i];
+                        double ie = error[i];
+                        s.add(new XYIntervalDataItem(ix, ix - ie, ix + ie, iy, iy - ie, iy + ie), updatesEnabled);
+                    }                    
+            }
+        }        
+    }    
+    
+    public void appendData(List<? extends Number> x, List<? extends Number> y, List<? extends Number> error){
+        if (getPlot() != null) {
+            boolean updatesEnabled = getPlot().isUpdatesEnabled();
+            switch (getPlot().getStyle()) {
+                case ErrorX:
+                    XIntervalSeries sx = (XIntervalSeries) getToken();
+                    for (int i = 0; i < x.size(); i++) {
+                        double ix = x.get(i).doubleValue();
+                        double ie = error.get(i).doubleValue();
+                        sx.add(new XIntervalDataItem(ix, ix-ie, ix+ie, y.get(i).doubleValue()), updatesEnabled);
+                    }
+                    break; 
+                case ErrorY:
+                    YIntervalSeries sy = (YIntervalSeries) getToken();
+                    for (int i = 0; i < x.size(); i++) {
+                        double iy = y.get(i).doubleValue();
+                        double ie = error.get(i).doubleValue();
+                        sy.add(new YIntervalDataItem(x.get(i).doubleValue(), iy, iy - ie, iy + ie), updatesEnabled);
+                    }
+                    break;
+                case ErrorXY:
+                    XYIntervalSeries s = (XYIntervalSeries) getToken();
+                    for (int i = 0; i < x.size(); i++) {
+                        double ix = x.get(i).doubleValue();
+                        double iy = y.get(i).doubleValue();
+                        double ie = error.get(i).doubleValue();
+                        s.add(new XYIntervalDataItem(ix, ix - ie, ix + ie, iy, iy - ie, iy + ie), updatesEnabled);
+                    }                    
+            }
+        }        
+    }
+    
 
     public void appendData(double x, double xLow, double xHigh, double y, double yLow, double yHigh) {
-        if (getPlot() != null) {
+        if (getPlot() != null) {            
+            boolean updatesEnabled = getPlot().isUpdatesEnabled();
             if (getPlot().getStyle() == LinePlot.Style.ErrorXY) {
                 XYIntervalSeries s = (XYIntervalSeries) getToken();
-                //s.add(x, xLow, xHigh, y, yLow, yHigh);
-                s.add(new XYIntervalDataItem(x, xLow, xHigh, y, yLow, yHigh),  getPlot().isUpdatesEnabled());
+                s.add(new XYIntervalDataItem(x, xLow, xHigh, y, yLow, yHigh), updatesEnabled);
+            }
+        }
+    }
+
+    public void appendData(double[] x, double[] xLow, double[] xHigh, double[] y, double[] yLow, double[] yHigh) {
+        if (getPlot() != null) {
+            boolean updatesEnabled = getPlot().isUpdatesEnabled();
+            if (getPlot().getStyle() == LinePlot.Style.ErrorXY) {
+                XYIntervalSeries s = (XYIntervalSeries) getToken();
+                for (int i = 0; i < x.length; i++) {
+                    s.add(new XYIntervalDataItem(x[i], xLow[i], xHigh[i], y[i], yLow[i], yHigh[i]), updatesEnabled);
+                }
+            }
+        }
+        
+    }
+    
+    public void appendData(List<? extends Number> x, List<? extends Number> xLow, List<? extends Number> xHigh, List<? extends Number> y, List<? extends Number> yLow, List<? extends Number> yHigh) {
+        if (getPlot() != null) {
+            boolean updatesEnabled = getPlot().isUpdatesEnabled();
+            if (getPlot().getStyle() == LinePlot.Style.ErrorXY) {
+                XYIntervalSeries s = (XYIntervalSeries) getToken();
+                for (int i = 0; i < x.size(); i++) {
+                    s.add(new XYIntervalDataItem(x.get(i).doubleValue(), xLow.get(i).doubleValue(), xHigh.get(i).doubleValue(), y.get(i).doubleValue(), yLow.get(i).doubleValue(), yHigh.get(i).doubleValue()), updatesEnabled);
+                }
             }
         }
     }
