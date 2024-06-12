@@ -980,9 +980,10 @@ public class DaqbufPanel extends StandardDialog {
                     List<Long> t = IntStream.range(0, t1.size()).mapToObj(i -> (t1.get(i) + t2.get(i)) / 2).collect(Collectors.toList());                                        
                     try {
                         plot.disableUpdates();
+                        series.appendData(t, average, min, max);
                         updateSeriesPaint(series);
                         updateCapLength(plot);
-                        series.appendData(t, average, min, max);
+                        plot.getChartPanel().restoreAutoBounds();
                     } finally {
                         plot.reenableUpdates();                        
                     }
@@ -1192,13 +1193,13 @@ public class DaqbufPanel extends StandardDialog {
             try {
                 plot.disableUpdates();
                 if (binned) {
-                    updateSeriesPaint(lseries);
                     double[] min = ((MatrixPlotBinnedSeries) series).min[index];
                     double[] max = ((MatrixPlotBinnedSeries) series).max[index];
                     double[] average = ((MatrixPlotBinnedSeries) series).average[index];
                     double[] indexes = Arr.indexesDouble(average.length);
                     ((LinePlotErrorSeries) lseries).appendData(indexes, average, min, max);
                     updateSeriesPaint(lseries);
+                    plot.getChartPanel().restoreAutoBounds();
                 } else {
                     double[] row = Convert.transpose(series.getData())[index];
                     lseries.setData(row);
@@ -1632,12 +1633,19 @@ public class DaqbufPanel extends StandardDialog {
     }
 
     void updateSeriesPaint(LinePlotSeries series) {
+        if (!SwingUtilities.isEventDispatchThread()){
+            SwingUtilities.invokeLater(()->{
+                updateSeriesPaint(series);
+            });
+            return;
+        }
         LinePlotJFree plot = (LinePlotJFree) series.getPlot();
         XYErrorRenderer renderer = (XYErrorRenderer) plot.getSeriesRenderer(series);
         Paint paint = renderer.getSeriesPaint(plot.getSeriesIndex(series));
         YIntervalSeriesCollection dataset = (YIntervalSeriesCollection) plot.getDataset(series.getAxisY());
         YIntervalSeries yseries = (YIntervalSeries) series.getToken();
-        if ((paint instanceof Color) && (dataset.getSeriesCount() == 1)) {
+        
+        if ((paint instanceof Color) && (dataset.getSeriesCount() < 2)) {
             Color c = (Color) paint;
             paint = new Color(c.getRed(), c.getGreen(), c.getBlue(), 0x40);
         } else {
@@ -2534,6 +2542,8 @@ public class DaqbufPanel extends StandardDialog {
         LocalDateTime from = null;
 
         switch (comboTime.getSelectedIndex()) {
+            case 0:
+                return;
             case 1:
                 from = now.minusMinutes(1);
                 break;
