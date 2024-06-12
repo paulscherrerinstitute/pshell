@@ -1001,7 +1001,11 @@ public class LinePlotJFree extends LinePlotBase {
 
             @Override
             public void actionPerformed(ActionEvent e) {
-                moverOverPlot(new XYDataItem(((NumberAxis) chart.getXYPlot().getDomainAxis()).getTickUnit().getSize(), 0.0));
+                if (chart.getXYPlot().getDomainAxis() instanceof DateAxis){
+                    moverOverPlot(new XYDataItem(((DateAxis) chart.getXYPlot().getDomainAxis()).getTickUnit().getSize(), 0.0));
+                } else {
+                    moverOverPlot(new XYDataItem(((NumberAxis) chart.getXYPlot().getDomainAxis()).getTickUnit().getSize(), 0.0));
+                }
             }
         });
 
@@ -1013,7 +1017,11 @@ public class LinePlotJFree extends LinePlotBase {
 
             @Override
             public void actionPerformed(ActionEvent e) {
-                moverOverPlot(new XYDataItem(-((NumberAxis) chart.getXYPlot().getDomainAxis()).getTickUnit().getSize(), 0.0));
+                if (chart.getXYPlot().getDomainAxis() instanceof DateAxis){
+                    moverOverPlot(new XYDataItem(-((DateAxis) chart.getXYPlot().getDomainAxis()).getTickUnit().getSize(), 0.0));
+                } else {
+                    moverOverPlot(new XYDataItem(-((NumberAxis) chart.getXYPlot().getDomainAxis()).getTickUnit().getSize(), 0.0));
+                }
             }
         });
 
