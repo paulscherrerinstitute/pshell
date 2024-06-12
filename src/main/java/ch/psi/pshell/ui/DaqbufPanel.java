@@ -984,7 +984,7 @@ public class DaqbufPanel extends StandardDialog {
                         updateCapLength(plot);
                         series.appendData(t, average, min, max);
                     } finally {
-                        plot.reenableUpdates();
+                        plot.reenableUpdates();                        
                     }
                 }
                 return ret;
@@ -1924,7 +1924,7 @@ public class DaqbufPanel extends StandardDialog {
             }
             openConfig(new ArrayList<List>(), from, to, range, binned, bins, maxsize);
             
-            if (App.hasArgument("ch")){
+            if (App.hasArgument("ch")){                
                 BiFunction channelTask = (ret, ex) ->{
                     if (ex==null){
                         for (String s: App.getArgumentValues("ch")){
@@ -1941,7 +1941,15 @@ public class DaqbufPanel extends StandardDialog {
                     update();
                     return ret;
                 };
-                if (daqbuf.isBackendDefined()){
+
+                boolean backendsDefined = true;                
+                for (String s: App.getArgumentValues("ch")){
+                    if (!daqbuf.isBackendDefined(daqbuf.getChannelBackend(s))){
+                        backendsDefined=false;
+                    }
+                }
+                                
+                if (backendsDefined){ //(daqbuf.isBackendDefined()){
                     channelTask.apply(null, null);                    
                 } else {                    
                     daqbuf.getInitialization().handle(channelTask);                    

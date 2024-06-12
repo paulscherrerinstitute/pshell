@@ -169,8 +169,12 @@ public class Daqbuf implements ChannelQueryAPI {
         return backend;
     }
     
-    public boolean isBackendDefined() {
+    public boolean isBackendDefined(String backend) {
         return (backend!=null) && !backend.isBlank();
+    }
+    
+    public boolean isBackendDefined() {
+        return isBackendDefined(backend);
     }
     
     public void setTimestampMillis(boolean value){
