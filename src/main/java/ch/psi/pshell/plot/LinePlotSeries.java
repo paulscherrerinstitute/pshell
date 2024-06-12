@@ -1,6 +1,7 @@
 package ch.psi.pshell.plot;
 
 import java.awt.Color;
+import java.util.List;
 
 /**
  * Data representation for LinePlot.
@@ -15,6 +16,19 @@ public class LinePlotSeries extends PlotSeries<LinePlot> {
         void onSeriesSetData(LinePlotSeries series, double[] x, double[] y);
 
         void onSeriesAppendData(LinePlotSeries series, double x, double y);
+        
+        default void onSeriesAppendData(LinePlotSeries series, double[] x, double[] y){
+            for (int i=0; i< x.length; i++){
+                onSeriesAppendData(series, x, y);
+            }
+        }
+        
+        default void onSeriesAppendData(LinePlotSeries series, List<? extends Number> x, List<? extends Number> y){
+            for (int i=0; i<x.size(); i++){
+                onSeriesAppendData(series, x.get(i).doubleValue(), y.get(i).doubleValue());
+            }
+        }
+        
     }
 
     public LinePlotSeries(String name) {
@@ -121,6 +135,20 @@ public class LinePlotSeries extends PlotSeries<LinePlot> {
     }
 
     public void appendData(double x, double y) {
+        Plot plot = getPlot();
+        if (plot != null) {
+            ((LinePlotBase) plot).seriesListener.onSeriesAppendData(this, x, y);          
+        }
+    }
+
+    public void appendData(double[] x, double[] y) {
+        Plot plot = getPlot();
+        if (plot != null) {
+            ((LinePlotBase) plot).seriesListener.onSeriesAppendData(this, x, y);          
+        }
+    }
+    
+    public void appendData(List<? extends Number> x, List<? extends Number> y) {
         Plot plot = getPlot();
         if (plot != null) {
             ((LinePlotBase) plot).seriesListener.onSeriesAppendData(this, x, y);          

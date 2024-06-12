@@ -23,6 +23,17 @@ public interface Plot<T extends PlotSeries> {
 
     public void setUpdatesEnabled(boolean value);
 
+    
+    default public void disableUpdates(){
+        setUpdatesEnabled(false);        
+    }
+
+    default public void reenableUpdates(){
+        update(true);
+        setUpdatesEnabled(true);        
+    }
+
+
     public boolean isUpdatesEnabled();
 
     //Generic properties

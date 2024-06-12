@@ -6,6 +6,7 @@ import ch.psi.pshell.plot.LinePlotSeries.LinePlotSeriesListener;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Frame;
+import java.util.List;
 import javax.swing.JDialog;
 
 /**
@@ -78,7 +79,28 @@ abstract public class LinePlotBase extends PlotBase<LinePlotSeries> implements L
                 requestSeriesUpdate(series);
             }
         }
-
+        
+        @Override
+        public void onSeriesAppendData(LinePlotSeries series, double[] x, double[] y){
+            for (int i=0; i< x.length; i++){
+                 onAppendData(series, x[i], y[i]);
+            }
+            if (getRequireUpdateOnAppend() && isUpdatesEnabled()) {
+                requestSeriesUpdate(series);
+            }            
+        }
+        
+        @Override
+        public void onSeriesAppendData(LinePlotSeries series, List<? extends Number> x, List<? extends Number> y){
+            for (int i=0; i< x.size(); i++){
+                 onAppendData(series, x.get(i).doubleValue(), y.get(i).doubleValue());
+            }
+            if (getRequireUpdateOnAppend() && isUpdatesEnabled()) {
+                requestSeriesUpdate(series);
+            }          
+        }
+        
+        
         @Override
         public void onSeriesSetData(LinePlotSeries series, double[] x, double[] y) {
             if (y == null) {

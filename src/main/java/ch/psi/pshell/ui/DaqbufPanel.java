@@ -18,7 +18,6 @@ import ch.psi.pshell.plot.PlotBase;
 import ch.psi.pshell.plot.PlotSeries;
 import ch.psi.pshell.plot.SlicePlotDefault;
 import ch.psi.pshell.plot.SlicePlotSeries;
-import ch.psi.pshell.plot.TimePlotBase;
 import ch.psi.pshell.plotter.Preferences;
 import ch.psi.pshell.swing.ChannelSelector;
 import ch.psi.pshell.swing.DataPanel;
@@ -34,7 +33,6 @@ import ch.psi.utils.EncoderJson;
 import ch.psi.utils.IO;
 import ch.psi.utils.Range;
 import ch.psi.utils.Str;
-import ch.psi.utils.Sys;
 import ch.psi.utils.Threading;
 import ch.psi.utils.swing.MainFrame;
 import ch.psi.utils.swing.StandardDialog;
@@ -77,6 +75,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Vector;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.BiFunction;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
@@ -152,6 +151,8 @@ public class DaqbufPanel extends StandardDialog {
     int numPlots = 0;
 
     final Color GRAYED_COLOR = new Color(0xA0, 0xA0, 0xA0, 0x40);
+    
+    volatile boolean initialized;
 
 
     public DaqbufPanel(Window parent, String url, String title, boolean modal) {
@@ -203,19 +204,15 @@ public class DaqbufPanel extends StandardDialog {
         onLafChange();                
         
         setTitle ("Connecting to " + daqbuf.getUrl() + "...");
-        Thread thread = new Thread(()->{
-            String[] knownBackends = daqbuf.searchKnownBackends();
-            SwingUtilities.invokeLater(()->{
-                setTitle((title==null) ? daqbuf.getUrl() : title);                
-                if (knownBackends==null){
-                    showMessage("Error", "Cannot retrieve known backends from server \n" + daqbuf.getUrl());
-                } else {
-                    setComboBackends();            
-                }                    
-            });
-        });   
-        thread.setDaemon(true);
-        thread.start();
+        daqbuf.getInitialization().handle((ret, ex) ->{
+            setTitle((title==null) ? daqbuf.getUrl() : title);   
+            if (daqbuf.getAvailableBackends()==null){
+                showMessage("Error", "Cannot retrieve known backends from server \n" + daqbuf.getUrl());
+            } else {
+                setComboBackends();            
+            }                    
+            return ret;
+        });
         clear();
     }
     
@@ -244,7 +241,7 @@ public class DaqbufPanel extends StandardDialog {
     }
     
     void setComboBackends(){   
-        String[] knownBackends = daqbuf.getKnownBackends();
+        String[] knownBackends = daqbuf.getAvailableBackends();
         if (knownBackends != null){
             TableColumn colType = tableSeries.getColumnModel().getColumn(2);
             DefaultComboBoxModel modelType = new DefaultComboBoxModel();
@@ -952,7 +949,7 @@ public class DaqbufPanel extends StandardDialog {
         }
         return ret;
     }
-
+    
     LinePlotErrorSeries addBinnedSeries(LinePlotJFree plot, SeriesInfo si) {
         return addBinnedSeries(plot, si.name, si.backend, si.start, si.end, si.bins, si.axis, si.color);
     }
@@ -978,11 +975,9 @@ public class DaqbufPanel extends StandardDialog {
                     List<Number> max = map.get(Daqbuf.FIELD_MAX);
                     List<Long> t1 = map.get(Daqbuf.FIELD_START);
                     List<Long> t2 = map.get(Daqbuf.FIELD_END);
-                    //SwingUtilities.invokeLater(()->{
-                    long now = System.currentTimeMillis();
-
+                    //List<Long> t = IntStream.range(0, t1.size()).mapToObj(i -> (t1.get(i) + t2.get(i)) / 2).collect(Collectors.toList());                                        
                     try {
-                        plot.setUpdatesEnabled(false);
+                        plot.disableUpdates();
                         updateSeriesPaint(series);
                         updateCapLength(plot);
                         for (int j = 0; j < average.size(); j++) {
@@ -990,11 +985,8 @@ public class DaqbufPanel extends StandardDialog {
                             series.appendData(timestamp, average.get(j).floatValue(), min.get(j).floatValue(), max.get(j).floatValue());
                         }
                     } finally {
-                        plot.update(true);
-                        plot.setUpdatesEnabled(true);
+                        plot.reenableUpdates();
                     }
-
-                    //});
                 }
                 return ret;
             });
@@ -1019,20 +1011,18 @@ public class DaqbufPanel extends StandardDialog {
         try {
             daqbuf.startQuery(name + Daqbuf.BACKEND_SEPARATOR + backend, start, end, new QueryListener() {
                 public void onMessage(Query query, List values, List<Long> ids, List<Long> timestamps) {
+                    List<Number> aux = (List<Number>) values;
+                    if (series.getCount() >= series.getMaxItemCount()) {
+                        throw new RuntimeException("Series too big for plotting: " + name);
+                    }
+                    
                     try {
-                        plot.setUpdatesEnabled(false);
-                        List<Number> aux = (List<Number>) values;
-                        if (series.getCount() >= series.getMaxItemCount()) {
-                            throw new RuntimeException("Series too big for plotting: " + name);
-                        }
-                        for (int j = 0; j < values.size(); j++) {
-                            series.appendData(timestamps.get(j).doubleValue(), aux.get(j).doubleValue());
-                        }
-                        //} catch (Exception ex){
-                        //    showException(ex);
+                        plot.disableUpdates();
+                        //synchronized(series){
+                            series.appendData(timestamps, aux);
+                        //}
                     } finally {
-                        plot.update(true);
-                        plot.setUpdatesEnabled(true);
+                         plot.reenableUpdates();
                     }
                 }
             }).handle((ret, ex) -> {
@@ -1079,6 +1069,7 @@ public class DaqbufPanel extends StandardDialog {
         plotSeries.add(series);
         plot.addSeries(series);
         series.setMaxItemCount((Integer) spinnerSize.getValue());
+        series.setLinesVisible(false);
         try {
             daqbuf.startFetchQuery(name + Daqbuf.BACKEND_SEPARATOR + backend, start, end, bins).handle((ret, ex) -> {
                 if (ex != null) {
@@ -1093,20 +1084,18 @@ public class DaqbufPanel extends StandardDialog {
                     } catch (Exception e) {
                         showException(e);
                     }
+                    if (series.getCount() >= series.getMaxItemCount()) {
+                        throw new RuntimeException("Series too big for plotting: " + name);
+                    }
                     if ((x != null) && (x.size() == y.size())) {
                         try {
-                            plot.setUpdatesEnabled(false);
-                            if (series.getCount() >= series.getMaxItemCount()) {
-                                throw new RuntimeException("Series too big for plotting: " + name);
+                            plot.disableUpdates();
+                            if (count!=null){
+                                Convert.removeElements(count, 0, x, y);
                             }
-                            for (int j = 0; j < y.size(); j++) {
-                                if ((count==null) || (count.get(j).longValue()>0)){
-                                    series.appendData(x.get(j).doubleValue(), y.get(j).doubleValue());
-                                }
-                            }
+                            series.appendData(x,y);
                         } finally {
-                            plot.update(true);
-                            plot.setUpdatesEnabled(true);
+                             plot.reenableUpdates();
                         }
                     }
                 }
@@ -1203,7 +1192,7 @@ public class DaqbufPanel extends StandardDialog {
             lplot.setLegendVisible(true);
 
             try {
-                plot.setUpdatesEnabled(false);
+                plot.disableUpdates();
                 if (binned) {
                     updateSeriesPaint(lseries);
                     double[] min = ((MatrixPlotBinnedSeries) series).min[index];
@@ -1218,8 +1207,7 @@ public class DaqbufPanel extends StandardDialog {
                     lseries.setData(row);
                 }
             } finally {
-                plot.update(true);
-                plot.setUpdatesEnabled(true);
+                plot.reenableUpdates();
             }
             showDialog(series.getName(), new Dimension(800, 600), lplot);
         } catch (Exception ex) {
@@ -1331,10 +1319,9 @@ public class DaqbufPanel extends StandardDialog {
                     long now = System.currentTimeMillis();                                    
 
                     try{
-                        plot.setUpdatesEnabled(false);
+                        plot.disableUpdates();
                     } finally{
-                        plot.update(true);
-                        plot.setUpdatesEnabled(true);
+                        plot.reenableUpdates();
                     }
                 }
                 return ret;
@@ -1741,8 +1728,8 @@ public class DaqbufPanel extends StandardDialog {
                 dialog.getOwner().setIconImage(Toolkit.getDefaultToolkit().getImage(App.getResourceUrl("IconSmall.png")));
             }
             dialog.setDefaultCloseOperation(DISPOSE_ON_CLOSE);
-            dialog.openArgs();
             dialog.setVisible(true);
+            dialog.openArgs();
             dialog.requestFocus();
         });
     }
@@ -1916,39 +1903,66 @@ public class DaqbufPanel extends StandardDialog {
     }
 
     void openArgs() {
-        String from = App.getArgumentValue("from");
-        String to = App.getArgumentValue("to");
-        String range = App.getArgumentValue("range");
-        Integer bins = null;
-        Boolean binned = null;
-        if (App.hasArgument("bins")){
-            try{
-                bins = Integer.valueOf(App.getArgumentValue("bins"));
-                bins = (bins<1) ? null : bins;
-                binned = (bins != null);
-            } catch (Exception ex){    
-                binned = false;
-            }
-        }
-        Integer maxsize = null;
-        try{
-            maxsize = Integer.valueOf(App.getArgumentValue("maxsize"));
-        } catch (Exception ex){            
-        }
-        openConfig(new ArrayList<List>(), from, to, range, binned, bins, maxsize);
-
+        File file = App.getFileArg();
         List<CompletableFuture> futures = new ArrayList<>();
-        for (String s: App.getArgumentValues("ch")){
-            String name = daqbuf.getChannelName(s);
-            String backend = daqbuf.getChannelBackend(s);
-            Object[]row = getEmptyRow();
-            row[1] = name;
-            row[2] = backend;
-            modelSeries.addRow(row);
-            futures.add(updateShape(modelSeries.getRowCount()-1));
+        if (file==null){        
+            String from = App.getArgumentValue("from");
+            String to = App.getArgumentValue("to");
+            String range = App.getArgumentValue("range");
+            Integer bins = null;
+            Boolean binned = null;
+            if (App.hasArgument("bins")){
+                try{
+                    bins = Integer.valueOf(App.getArgumentValue("bins"));
+                    bins = (bins<1) ? null : bins;
+                    binned = (bins != null);
+                } catch (Exception ex){    
+                    binned = false;
+                }
+            }
+            Integer maxsize = null;
+            try{
+                maxsize = Integer.valueOf(App.getArgumentValue("maxsize"));
+            } catch (Exception ex){            
+            }
+            openConfig(new ArrayList<List>(), from, to, range, binned, bins, maxsize);
+            
+            if (App.hasArgument("ch")){
+                BiFunction channelTask = (ret, ex) ->{
+                    if (ex==null){
+                        for (String s: App.getArgumentValues("ch")){
+                            String name = daqbuf.getChannelName(s);
+                            String backend = daqbuf.getChannelBackend(s);
+                            Object[]row = getEmptyRow();
+                            row[1] = name;
+                            row[2] = backend;
+                            modelSeries.addRow(row);
+                            futures.add(updateShape(modelSeries.getRowCount()-1));
+                        }
+                        checkPlotArg(futures);
+                    }
+                    update();
+                    return ret;
+                };
+                if (daqbuf.isBackendDefined()){
+                    channelTask.apply(null, null);                    
+                } else {                    
+                    daqbuf.getInitialization().handle(channelTask);                    
+                }
+                return;
+            }
+            update();
+        } else {
+            try{
+                openConfig(file);
+            } catch (Exception ex) {
+                showException(ex);
+            }                
         }
-        update();
-
+        checkPlotArg(futures);
+    }
+    
+    void checkPlotArg(List<CompletableFuture> futures){
         if (App.getBoolArgumentValue("plot")){
             new Thread(()->{
                 try {
@@ -1966,7 +1980,7 @@ public class DaqbufPanel extends StandardDialog {
                     showException(ex);
                 }
             }).start();
-        }
+        }        
     }
 
     Object[] getEmptyRow(){

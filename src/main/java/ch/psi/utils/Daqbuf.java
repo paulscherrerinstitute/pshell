@@ -91,7 +91,8 @@ public class Daqbuf implements ChannelQueryAPI {
     static final double PULSE_ID_INTERVAL = 10;
     
     boolean timestampMillis = true;
-    volatile String[] knownBackends;
+    volatile String[] availableBackends;
+    CompletableFuture initialization;
 
     public static String getDefaultUrl() {
         return System.getenv().getOrDefault("DAQBUF_DEFAULT_URL", "https://data-api.psi.ch/api/4");
@@ -103,16 +104,16 @@ public class Daqbuf implements ChannelQueryAPI {
 
 
     public String getAvailableDefaultBackend() {
-        if (knownBackends!=null){
-            if (!Arr.containsEqual(knownBackends, backend)){
-                return knownBackends[0];
+        if (availableBackends!=null){
+            if (!Arr.containsEqual(availableBackends, backend)){
+                return availableBackends[0];
             }
         }
         return backend;
     }
     
     
-    public String[] searchKnownBackends() {
+    public String[] searchAvailableBackends() {
         try {
             Map<String, Object> params = new HashMap<>();
             WebTarget resource = client.target(url + "/backend/list");
@@ -125,18 +126,17 @@ public class Daqbuf implements ChannelQueryAPI {
             for (Map m : list) {
                 backends.add((String) m.get("name"));
             }
-            knownBackends = backends.toArray(new String[0]);
+            return backends.toArray(new String[0]);
         } catch (Exception ex) {
-            knownBackends = null;
+            return null;
         }         
-        return knownBackends;
     }
     
-    public String[] getKnownBackends() {
-        return knownBackends;
+    public String[] getAvailableBackends() {
+        return availableBackends;
     }
 
-    ObjectMapper mapper;
+    ObjectMapper mapper;    
 
     public Daqbuf() {
         this(getDefaultUrl());
@@ -158,6 +158,7 @@ public class Daqbuf implements ChannelQueryAPI {
         ClientConfig config = new ClientConfig().register(JacksonFeature.class);
         client = ClientBuilder.newClient(config);
         mapper = new ObjectMapper(new CBORFactory());
+        initialize();
     }
 
     public String getUrl() {
@@ -167,7 +168,10 @@ public class Daqbuf implements ChannelQueryAPI {
     public String getBackend() {
         return backend;
     }
-            
+    
+    public boolean isBackendDefined() {
+        return (backend!=null) && !backend.isBlank();
+    }
     
     public void setTimestampMillis(boolean value){
         timestampMillis =value;
@@ -175,6 +179,24 @@ public class Daqbuf implements ChannelQueryAPI {
     
     public boolean getTimestampMillis(){
         return timestampMillis;
+    }
+    
+    public CompletableFuture initialize(){
+        if ((initialization==null) || initialization.isDone()){
+            initialization =  Threading.getPrivateThreadFuture(() -> {
+                availableBackends = searchAvailableBackends();
+            });
+        }
+        return initialization;
+    }
+    
+    
+    public CompletableFuture getInitialization(){
+        return initialization;
+    }
+    
+    public boolean isInitialized(){
+        return ((initialization!=null) && initialization.isDone());
     }
 
     
@@ -424,7 +446,7 @@ public class Daqbuf implements ChannelQueryAPI {
                 return tokens[1];
             }
         }
-        return backend;
+        return getAvailableDefaultBackend();
     }
 
     public void query(String channel, String start, String end, QueryListener listener, Integer bins) throws IOException, InterruptedException {
@@ -987,7 +1009,7 @@ public class Daqbuf implements ChannelQueryAPI {
          */
         
        
-        System.out.println(daqbuf.searchKnownBackends());
+        System.out.println(daqbuf.searchAvailableBackends());
         int bins = 20;
         String start = "2024-05-07 16:00:00";
         String end = "2024-05-07 16:00:01" ;

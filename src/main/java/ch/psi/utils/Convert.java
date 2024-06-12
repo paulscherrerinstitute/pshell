@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.StringJoiner;
 import java.math.BigInteger;
+import java.util.Iterator;
 
 /**
  * Utilities to convert scalar and array types.
@@ -1591,4 +1592,25 @@ public class Convert {
     public static Object[] toArray(Map map) {
         return toArray(new ArrayList(map.values()));
     }
+    
+    
+    public static void removeElements(List mask, Object value, List... lists) {
+        Iterator[] iters = new Iterator[lists.length];
+        for (int i=0; i<lists.length; i++){
+            iters[i] = lists[i].iterator();
+        }
+        Iterator<Number> iterMask = mask.iterator();
+
+        while (iterMask.hasNext()) {
+            Object maskValue = iterMask.next();
+            for (int i=0; i<lists.length; i++){
+                iters[i].next();
+            }
+            if (value.equals(maskValue)) {
+                for (int i=0; i<lists.length; i++){
+                    iters[i].remove();
+                }
+            }
+        }
+    }        
 }

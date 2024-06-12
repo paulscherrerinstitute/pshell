@@ -53,7 +53,7 @@ public class LinePlotErrorSeries extends LinePlotSeries {
             }
         }
     }
-
+    
     @Override
     public void appendData(double x, double y) {
         appendData(x, y, 0.0);
