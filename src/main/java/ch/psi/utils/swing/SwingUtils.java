@@ -1524,6 +1524,11 @@ public class SwingUtils {
         return "com.formdev.flatlaf.FlatIntelliJLaf";
     }
     
+    public static String getBlackLookAndFeel() {
+            return "com.formdev.flatlaf.themes.FlatMacDarkLaf";
+    }
+    
+    
     public static boolean isDark() {
         return isDark(UIManager.getLookAndFeel().getClass());            
     }    
@@ -1533,12 +1538,13 @@ public class SwingUtils {
     }      
     
     public static boolean isDark(String lafClassName) {
-        return Arr.containsEqual(new String[]{
-                    "com.bulenkov.darcula.DarculaLaf",
-                    "com.formdev.flatlaf.FlatDarculaLaf",
-                    "com.formdev.flatlaf.FlatDarkLaf",
-                },
-                lafClassName );     
+        if (lafClassName.contains("Dark")){
+            return true;
+        }
+        if (lafClassName.contains("Darcula")){
+            return true;
+        }
+        return false;
     }
     
     public static boolean isFlatLaf(String className){
