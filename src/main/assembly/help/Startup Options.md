@@ -74,7 +74,7 @@
 | -scrp=[path]             | Add to script path.|
 | -jcae=[path]             | Force EPICS configuration file (or, in volatile mode, EPICS configuration options separated by '|').|
 | -uisc=[value]            | UI Scale factor as factor (e.g 0.75, 75% or 72dpi).|
-| -laf=[name]              | Set application Look and Feel: system (s), metal (m), nimbus (n), darcula (d), flat (f), or dark (b).|
+| -laf=[name]              | Set application Look and Feel: system (s), metal (m), nimbus (n), flat (f), dark (d), or black (b).|
 | -size=WxH                | Set application window size if GUI state not persisted. |
 | -args=id:val, ...        | Provide arguments to interpreter.|
 | -eval=...                | Evaluate the script statement.|

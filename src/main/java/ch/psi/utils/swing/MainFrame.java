@@ -462,6 +462,10 @@ public abstract class MainFrame extends JFrame {
         return dark;
     }
 
+    public static boolean isBlack() {
+        return SwingUtils.isBlack();
+    }
+
     public static boolean isDarcula() {
         return getLookAndFeelType()==LookAndFeelType.darcula;
     }

@@ -2368,6 +2368,9 @@ public class View extends MainFrame {
             UIManager.put("Tree.openIcon", new ImageIcon(App.getResourceImage("FolderOpen.png")));
             UIManager.put("Tree.closedIcon", new ImageIcon(App.getResourceImage("FolderClosed.png")));
             UIManager.put("Tree.leafIcon", new ImageIcon(App.getResourceImage("File.png")));
+            if (isBlack()) {
+                UIManager.put("ComboBox.background",  UIManager.get("TextField.background"));
+            }
         }            
         try{
             View view = App.getInstance().getMainFrame();

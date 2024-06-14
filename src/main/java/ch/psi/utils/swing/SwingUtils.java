@@ -1532,6 +1532,10 @@ public class SwingUtils {
     public static boolean isDark() {
         return isDark(UIManager.getLookAndFeel().getClass());            
     }    
+    
+    public static boolean isBlack() {
+        return UIManager.getLookAndFeel().getClass().getName().equals(getBlackLookAndFeel());            
+    }
       
     public static boolean isDark(Class laf) {
         return isDark(laf.getName());            

@@ -506,7 +506,7 @@ public class App extends ObservableBase<AppListener> {
         sb.append("\n\t-scrp=<path> \tAdd to script path");
         sb.append("\n\t-jcae=<file> \tForce EPICS config file (or, in volatile mode, EPICS options separated by '|')");
         sb.append("\n\t-uisc=<value>\tUI Scale factor as factor (e.g 0.75, 75% or 72dpi)");
-        sb.append("\n\t-laf=<name>  \tLook and feel: system, metal, nimbus, darcula, flat, or dark");
+        sb.append("\n\t-laf=<name>  \tLook and feel: system, metal, nimbus, flat, dark or black");
         sb.append("\n\t-size=WxH    \tSet application window size if GUI state not persisted");
         sb.append("\n\t-args=<...>  \tProvide arguments to interpreter");
         sb.append("\n\t-eval=<...>  \tEvaluate the script statement");
