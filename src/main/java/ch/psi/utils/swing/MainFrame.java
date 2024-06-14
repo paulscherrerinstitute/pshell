@@ -397,6 +397,10 @@ public abstract class MainFrame extends JFrame {
     public static String getDarkLookAndFeel() {
         return SwingUtils.getDarkLookAndFeel();
     }
+    
+    public static String getBlackLookAndFeel() {
+        return SwingUtils.getBlackLookAndFeel();
+    }    
 
     public static String getFlatLookAndFeel() {
         return SwingUtils.getFlatLookAndFeel();
@@ -406,18 +410,19 @@ public abstract class MainFrame extends JFrame {
         s, system,
         m, metal,
         n, nimbus,
+        b, black,
         d, dark,
         f, flat,
         @Deprecated
         darcula;
         static public LookAndFeelType[] getFullNames(){
-            return new LookAndFeelType[]{system, metal, nimbus, darcula, flat, dark};
+            return new LookAndFeelType[]{system, metal, nimbus, darcula, flat, dark, black};
         }
         static public LookAndFeelType[] getShortNames(){
-            return new LookAndFeelType[]{s, m, n, d, f};
+            return new LookAndFeelType[]{s, m, n, d, f, b};
         }
         public boolean hasTabHoverEffect(){
-            return Arr.contains(new LookAndFeelType[]{n, nimbus, f, flat, d, dark}, this);
+            return Arr.contains(new LookAndFeelType[]{n, nimbus, f, flat, d, dark, b, black}, this);
         }
     }
 
@@ -443,6 +448,7 @@ public abstract class MainFrame extends JFrame {
             case n: case nimbus: return getNimbusLookAndFeel();
             case f: case flat: return MainFrame.getFlatLookAndFeel();
             case d: case dark: return MainFrame.getDarkLookAndFeel();
+            case b: case black: return MainFrame.getBlackLookAndFeel();
             case darcula: return MainFrame.getDarculaLookAndFeel();
         }
         return null;
