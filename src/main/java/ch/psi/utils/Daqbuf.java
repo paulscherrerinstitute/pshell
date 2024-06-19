@@ -335,7 +335,7 @@ public class Daqbuf implements ChannelQueryAPI {
         final int dataSize;
 
         EndOfStreamException(int bytesRead, int dataSize) {
-            super("Unexpected end of stream (%d of %d bytes).".formatted(bytesRead, dataSize));
+            super(String.format("Unexpected end of stream (%d of %d bytes).",bytesRead, dataSize));
             this.bytesRead = bytesRead;
             this.dataSize = dataSize;
         }
