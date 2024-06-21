@@ -95,6 +95,7 @@ import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
 import javax.swing.JTabbedPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
@@ -152,7 +153,7 @@ public class DaqbufPanel extends StandardDialog {
     final Daqbuf daqbuf;
     int numPlots = 0;
 
-    final Color GRAYED_COLOR = new Color(0xA0, 0xA0, 0xA0, 0x40);
+    final int ERROR_RANGE_TRANSPARENCY = 0x60;    
     
     volatile boolean initialized;
 
@@ -724,51 +725,21 @@ public class DaqbufPanel extends StandardDialog {
         plotInfo.put(plot, series);
         numPlots++;
     }
-
-    LinePlotJFree addLinePlot(boolean binned) {
-        Double y1min = null;
-        Double y1max = null;
-        Double y2min = null;
-        Double y2max = null;
-
-        LinePlotJFree plot = new LinePlotJFree();
-        if (binned) {
-            plot.setStyle(LinePlot.Style.ErrorY);
-        }
+    
+    DateAxis setDateDomainAxis(PlotBase plot){
         DateAxis axis = new DateAxis(null); //("Time");
-        axis.setLabelFont(plot.getLabelFont());
+        axis.setLabelFont((plot instanceof LinePlotJFree) ? ((LinePlotJFree)plot).getLabelFont() : PlotBase.getDefaultLabelFont());
         axis.setLabelPaint(plot.getAxisTextColor());
         axis.setTickLabelPaint(plot.getAxisTextColor());
-        plot.getChart().getXYPlot().setDomainAxis(axis);
-        plot.getAxis(AxisId.Y).setLabel(null);
-        //plot.setTimeAxisLabel(null);
-        plot.setLegendVisible(true);
-        //plot.setMarkersVisible(Boolean.TRUE.equals(markers));
-        //plot.setDurationMillis((duration == null) ? 60000 : (int) (duration * 1000));
-        if ((y1min != null) && (y1max != null)) {
-            plot.getAxis(AxisId.Y).setRange(y1min, y1max);
+        if (plot instanceof LinePlotJFree){
+            ((LinePlotJFree)plot).getChart().getXYPlot().setDomainAxis(axis);        
+        } else if (plot instanceof MatrixPlotJFree){
+            ((MatrixPlotJFree)plot).getChart().getXYPlot().setDomainAxis(axis);        
         }
-        if ((y2min != null) && (y2max != null)) {
-            plot.getAxis(AxisId.Y2).setRange(y2min, y2max);
-        }
-        //if (numPlots > 1) {
-        //    plot.setAxisSize(50);
-        //}
-
-        // Add an axis change listener to dynamically update the cap length
-        axis.addChangeListener(new AxisChangeListener() {
-            @Override
-            public void axisChanged(AxisChangeEvent event) {
-                updateCapLength(plot);
-            }
-        });
-        plot.getChartPanel().addComponentListener(new ComponentAdapter() {
-            @Override
-            public void componentResized(ComponentEvent e) {
-                updateCapLength(plot);
-            }
-        });
-
+        return axis;
+    }
+    
+    void setLinePlotPopupMenu(LinePlotJFree plot, boolean binned){
         plot.addPopupMenuItem(null);
 
         JCheckBoxMenuItem menuMarkers = new JCheckBoxMenuItem("Show Markers");
@@ -790,7 +761,7 @@ public class DaqbufPanel extends StandardDialog {
             }
         });
         plot.addPopupMenuItem(menuRanges);
-        menuRanges.setEnabled(binned);
+        menuRanges.setVisible(binned);
 
         JMenuItem menuBackgroundColor = new JMenuItem("Set Background Color...");
         menuBackgroundColor.addActionListener((ActionEvent e) -> {
@@ -834,12 +805,63 @@ public class DaqbufPanel extends StandardDialog {
         });
         plot.addPopupMenuItem(menuRangeY2);
 
+        JMenuItem menuUnbin = new JMenuItem("Unbinned");
+        menuUnbin.addActionListener((ActionEvent e) -> {
+            unbin(plot);
+        });
+        plot.addPopupMenuItem(menuUnbin);
+        menuUnbin.setVisible(binned);
+        
+
         JMenuItem menuRequery = new JMenuItem("Requery");
         menuRequery.addActionListener((ActionEvent e) -> {
             requery(plot);
         });
         plot.addPopupMenuItem(menuRequery);
 
+    }
+
+    LinePlotJFree addLinePlot(boolean binned) {
+        Double y1min = null;
+        Double y1max = null;
+        Double y2min = null;
+        Double y2max = null;
+
+        LinePlotJFree plot = new LinePlotJFree();
+        if (binned) {
+            plot.setStyle(LinePlot.Style.ErrorY);
+        }
+        DateAxis axis = setDateDomainAxis(plot);        
+        plot.getAxis(AxisId.Y).setLabel(null);
+        //plot.setTimeAxisLabel(null);
+        plot.setLegendVisible(true);
+        //plot.setMarkersVisible(Boolean.TRUE.equals(markers));
+        //plot.setDurationMillis((duration == null) ? 60000 : (int) (duration * 1000));
+        if ((y1min != null) && (y1max != null)) {
+            plot.getAxis(AxisId.Y).setRange(y1min, y1max);
+        }
+        if ((y2min != null) && (y2max != null)) {
+            plot.getAxis(AxisId.Y2).setRange(y2min, y2max);
+        }
+        //if (numPlots > 1) {
+        //    plot.setAxisSize(50);
+        //}
+
+        // Add an axis change listener to dynamically update the cap length
+        axis.addChangeListener(new AxisChangeListener() {
+            @Override
+            public void axisChanged(AxisChangeEvent event) {
+                updateCapLength(plot);
+            }
+        });
+        plot.getChartPanel().addComponentListener(new ComponentAdapter() {
+            @Override
+            public void componentResized(ComponentEvent e) {
+                updateCapLength(plot);
+            }
+        });
+
+        setLinePlotPopupMenu(plot, binned);                
         addPlot(plot);
         return plot;
     }
@@ -883,7 +905,7 @@ public class DaqbufPanel extends StandardDialog {
         return plot;
     }
 
-    void requery(Plot plot) {
+    void requery(PlotBase plot) {
         XYPlot xyplot = (plot instanceof LinePlotJFree)
                 ? ((LinePlotJFree) plot).getChart().getXYPlot()
                 : ((MatrixPlotJFree) plot).getChart().getXYPlot();
@@ -920,8 +942,55 @@ public class DaqbufPanel extends StandardDialog {
                 plotInfo.get(plot).add(seriesInfo);
             }
         }
+    }            
+    
+    void unbin(PlotBase plot) {
+        XYPlot xyplot = (plot instanceof LinePlotJFree)
+                ? ((LinePlotJFree) plot).getChart().getXYPlot()
+                : ((MatrixPlotJFree) plot).getChart().getXYPlot();
+        if (!(xyplot.getDomainAxis() instanceof DateAxis)) {
+            return;
+        }
+        double xmin = xyplot.getDomainAxis().getRange().getLowerBound();
+        double xmax = xyplot.getDomainAxis().getRange().getUpperBound();
+        String start = Daqbuf.millisToStr((long) xmin, false);
+        String end = Daqbuf.millisToStr((long) xmax, false);
+        SeriesInfo[] formerInfo = plotInfo.get(plot).toArray(new SeriesInfo[0]);
+        plotInfo.get(plot).clear();
+        plot.clear();
+        if ( plot instanceof LinePlotJFree){
+            ((LinePlotJFree)plot).setStyle(LinePlot.Style.Normal);
+            setDateDomainAxis(plot);
+            setLinePlotPopupMenu((LinePlotJFree)plot, false); 
+        } else {
+            JPopupMenu menu = ((MatrixPlotJFree)plot).getChartPanel().getPopupMenu();
+            int index = -1;
+            for (int i=0; i< menu.getComponentCount(); i++){
+                Component c = menu.getComponent(i);
+                if ((c instanceof JMenuItem) && "Unbinned".equals(((JMenuItem)c).getText())){
+                    menu.remove(i);
+                    break;
+                }
+            }
+            setDateDomainAxis(plot);
+        }
+        for (SeriesInfo seriesInfo : formerInfo) {
+            seriesInfo = new SeriesInfo(seriesInfo, start, end, null);
+            PlotSeries series = null;
+            switch (seriesInfo.getRank()) {
+                case 0:
+                    series = addLineSeries((LinePlotJFree) plot, seriesInfo);
+                    break;
+                case 1:
+                    series = addMatrixSeries((MatrixPlotJFree) plot, seriesInfo);
+                    break;
+            }
+            if (series != null) {
+                plotInfo.get(plot).add(seriesInfo);
+            }
+        }
     }
-
+    
     Range getRange(Range init, String title) {
         Range ret = null;
         try {
@@ -1110,11 +1179,7 @@ public class DaqbufPanel extends StandardDialog {
     MatrixPlotJFree addMatrixPlot(boolean binned) {
         MatrixPlotJFree plot = new MatrixPlotJFree();
         if (binned) {
-            DateAxis axis = new DateAxis(null); //("Time");
-            axis.setLabelFont(PlotBase.getDefaultLabelFont());
-            axis.setLabelPaint(plot.getAxisTextColor());
-            axis.setTickLabelPaint(plot.getAxisTextColor());
-            plot.getChart().getXYPlot().setDomainAxis(axis);
+            setDateDomainAxis(plot);
         }
 
         // Add a chart mouse listener to intercept double-click events
@@ -1160,16 +1225,27 @@ public class DaqbufPanel extends StandardDialog {
             @Override
             public void chartMouseMoved(ChartMouseEvent event) {
             }
-        });
-
+        });       
+        setMatrixPlotPopupMenu(plot, binned);
+        addPlot(plot);
+        return plot;
+    }
+    
+    void setMatrixPlotPopupMenu(MatrixPlotJFree plot, boolean binned){
+        
         plot.addPopupMenuItem(null);
+        JMenuItem menuUnbin = new JMenuItem("Unbinned");
+        menuUnbin.addActionListener((ActionEvent e) -> {
+            unbin(plot);
+        });
+        plot.addPopupMenuItem(menuUnbin);
+        menuUnbin.setVisible(binned);
+        
         JMenuItem menuRequery = new JMenuItem("Requery");
         menuRequery.addActionListener((ActionEvent e) -> {
             requery(plot);
         });
-        plot.addPopupMenuItem(menuRequery);
-        addPlot(plot);
-        return plot;
+        plot.addPopupMenuItem(menuRequery);    
     }
 
     void onMatrixSeriesClicked(MatrixPlotJFree plot, MatrixPlotSeries series, double timestamp, int index) {
@@ -1645,11 +1721,12 @@ public class DaqbufPanel extends StandardDialog {
         YIntervalSeriesCollection dataset = (YIntervalSeriesCollection) plot.getDataset(series.getAxisY());
         YIntervalSeries yseries = (YIntervalSeries) series.getToken();
         
+                
         if ((paint instanceof Color) && (dataset.getSeriesCount() < 2)) {
             Color c = (Color) paint;
-            paint = new Color(c.getRed(), c.getGreen(), c.getBlue(), 0x40);
+            paint = new Color(c.getRed(), c.getGreen(), c.getBlue(), ERROR_RANGE_TRANSPARENCY);
         } else {
-            paint = GRAYED_COLOR;
+            paint =  new Color(0xA0, 0xA0, 0xA0, ERROR_RANGE_TRANSPARENCY);
         }
 
         renderer.setErrorPaint(paint);
