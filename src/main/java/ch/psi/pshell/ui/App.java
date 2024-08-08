@@ -83,7 +83,6 @@ import javax.swing.event.SwingPropertyChangeSupport;
 import java.util.List;
 import java.util.Map;
 import javax.swing.ImageIcon;
-import java.lang.reflect.Field;
 
 /**
  * The application singleton object.
@@ -500,7 +499,8 @@ public class App extends ObservableBase<AppListener> {
         sb.append("\n\t-extr=<value>\tForce (true) or disable (false) extraction of startup and utility scrips");
         sb.append("\n\t-vers=<value>\tForce versioning enabled (true) or disabled (false)");
         sb.append("\n\t-nbcf=<value>\tForce disabling (true) or enabling (false) the use of bytecode files");
-        sb.append("\n\t-strh=<path> \tStrip chart default configuration folder");
+        sb.append("\n\t-strh=<path> \tStripChart default configuration folder");
+        sb.append("\n\t-dbfh=<path> \tDaqbuf Panel default configuration folder");        
         sb.append("\n\t-libp=<path> \tAdd to library path");
         sb.append("\n\t-clsp=<path> \tAdd to class path");
         sb.append("\n\t-scrp=<path> \tAdd to script path");
@@ -866,10 +866,10 @@ public class App extends ObservableBase<AppListener> {
         }
     }
 
-    public static File getStripChartFolderArg() {
+    static File getFolderArg(String arg) {
         File defaultFolder = null;
-        if (hasArgument("strh")) {
-            String defaultFolderName = getArgumentValue("strh");
+        if (hasArgument(arg)) {
+            String defaultFolderName = getArgumentValue(arg);
             if (defaultFolderName != null) {
                 if (Context.getInstance() != null) {
                     defaultFolderName = Context.getInstance().getSetup().expandPath(defaultFolderName);
@@ -885,7 +885,17 @@ public class App extends ObservableBase<AppListener> {
         }
         return defaultFolder;
     }
+    
+    
+    public static File getStripChartFolderArg() {
+        return getFolderArg("strh");
+    }
 
+    public static File getDaqbufFolderArg() {
+        return getFolderArg("dbfh");
+    }
+    
+    
     /**
      * If disabled the interpreter is not instantiated
      */
@@ -1188,7 +1198,7 @@ public class App extends ObservableBase<AppListener> {
             } else if (isDataPanel()) {
                 DataPanel.createPanel(getFileArg());
             } else if (isDaqbufPanel()) {
-                DaqbufPanel.create(false, null);                
+                DaqbufPanel.create(false, null, getDaqbufFolderArg());                
             } else if (isPlotServer()){                
                 ch.psi.pshell.plotter.View.create(getPlotServerPort());
             } else if (isCamServerViewer()) {

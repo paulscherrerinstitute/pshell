@@ -33,6 +33,7 @@ import ch.psi.utils.EncoderJson;
 import ch.psi.utils.IO;
 import ch.psi.utils.Range;
 import ch.psi.utils.Str;
+import ch.psi.utils.Sys;
 import ch.psi.utils.Threading;
 import ch.psi.utils.swing.MainFrame;
 import ch.psi.utils.swing.StandardDialog;
@@ -138,6 +139,7 @@ public class DaqbufPanel extends StandardDialog {
     Font tickLabelFont = null;
 
     final DefaultTableModel modelSeries;
+    final File defaultFolder;
 
     final ArrayList<PlotBase> plots = new ArrayList<>();
     final Map<Plot, List<SeriesInfo>> plotInfo = new HashMap<>();
@@ -158,9 +160,11 @@ public class DaqbufPanel extends StandardDialog {
     volatile boolean initialized;
 
 
-    public DaqbufPanel(Window parent, String url, String title, boolean modal) {
+    public DaqbufPanel(Window parent, String url, String title, boolean modal, File defaultFolder) {
         super(parent, null, modal);
         initComponents();
+        this.defaultFolder = defaultFolder;
+        
         if ("default".equals(url)){
             url = null;
         }
@@ -1794,9 +1798,9 @@ public class DaqbufPanel extends StandardDialog {
     protected void onClosed() {
     }
 
-    public static void create(String url, boolean modal, String title) {
+    public static void create(String url, boolean modal, String title, File defaultFolder) {
         java.awt.EventQueue.invokeLater(() -> {
-            DaqbufPanel dialog = new DaqbufPanel(null, url, title, modal);
+            DaqbufPanel dialog = new DaqbufPanel(null, url, title, modal, defaultFolder);
             dialog.setIconImage(Toolkit.getDefaultToolkit().getImage(App.getResourceUrl("IconSmall.png")));
             dialog.addWindowListener(new java.awt.event.WindowAdapter() {
                 @Override
@@ -1816,8 +1820,8 @@ public class DaqbufPanel extends StandardDialog {
         });
     }
 
-    public static void create(boolean modal, String title) {
-        create(App.getArgumentValue(ARG_DAQBUF_URL), modal, title);
+    public static void create(boolean modal, String title, File defaultFolder) {
+        create(App.getArgumentValue(ARG_DAQBUF_URL), modal, title, defaultFolder);
     }    
 
     volatile boolean dumping = false;
@@ -1863,7 +1867,8 @@ public class DaqbufPanel extends StandardDialog {
     
     void saveQuery() throws IOException {
         try {
-            JFileChooser chooser = new JFileChooser();
+            String dataHome = (Context.getInstance() != null) ? Context.getInstance().getSetup().getDataPath() : null;
+            JFileChooser chooser = new JFileChooser(dataHome);
             FileNameExtensionFilter filter = new FileNameExtensionFilter("HDF5 files", "h5");
             chooser.setFileFilter(filter);
             chooser.setAcceptAllFileFilterUsed(true);
@@ -1895,12 +1900,24 @@ public class DaqbufPanel extends StandardDialog {
             tabPane.setSelectedComponent(panelPlots);
         }
     }
-
+    
+    String getDefaultFolder() {
+        if (defaultFolder == null) {
+            return Sys.getUserHome();
+        }
+        return defaultFolder.getAbsolutePath();
+    }
 
     void saveConfig() throws Exception  {
-        JFileChooser chooser = new JFileChooser(file);
+        JFileChooser chooser = new JFileChooser(getDefaultFolder());
         FileNameExtensionFilter filter = new FileNameExtensionFilter("Config files", "dbuf");
         chooser.setFileFilter(filter);
+        if (file != null) {
+            try {
+                chooser.setSelectedFile(file);
+            } catch (Exception ex) {
+            }
+        }                
         chooser.setDialogTitle("Save Config");
         int rVal = chooser.showSaveDialog(this);
         if (rVal == JFileChooser.APPROVE_OPTION) {
@@ -1913,7 +1930,7 @@ public class DaqbufPanel extends StandardDialog {
     }
 
     void openConfig() throws Exception  {
-        JFileChooser chooser = new JFileChooser(file);
+        JFileChooser chooser = new JFileChooser(getDefaultFolder());
         FileNameExtensionFilter filter = new FileNameExtensionFilter("Config files", "dbuf");
         chooser.setFileFilter(filter);
         chooser.setDialogTitle("Open Config");
@@ -2718,7 +2735,7 @@ public class DaqbufPanel extends StandardDialog {
      */
     public static void main(String args[]) {
         App.init(args);
-        create(null, false, null);
+        create(null, false, null, null);
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables

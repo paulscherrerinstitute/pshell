@@ -5878,7 +5878,7 @@ public class View extends MainFrame {
     private void manuDaqbufActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_manuDaqbufActionPerformed
         try {
             String url = App.getArgumentValue(ARG_DAQBUF_URL);
-            JDialog dlg = new DaqbufPanel(View.this, url, null, false);
+            JDialog dlg = new DaqbufPanel(View.this, url, null, false, App.getDaqbufFolderArg());
             showChildWindow(dlg);
         } catch (Exception ex) {
             showException(ex);

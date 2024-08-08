@@ -2344,7 +2344,7 @@ public class StripChart extends StandardDialog {
 
         buttonSaveData.setIcon(new javax.swing.ImageIcon(getClass().getResource("/ch/psi/pshell/ui/Rec.png"))); // NOI18N
         buttonSaveData.setText(bundle.getString("View.buttonRun.text")); // NOI18N
-        buttonSaveData.setToolTipText("Plot and save data to file");
+        buttonSaveData.setToolTipText("Save plot data");
         buttonSaveData.setFocusable(false);
         buttonSaveData.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
         buttonSaveData.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
