@@ -535,6 +535,23 @@ public class App extends ObservableBase<AppListener> {
             sb.append("\n\t-pipeline_server=<..>\tAddress of CamServer pipeline proxy");
         }
         
+        if (isDaqbufPanel()){
+            sb.append("\n\nDaqbuf panel arguments:");
+            sb.append("\n\t-f=<..>       \tOpen a configuration file (.dbuf)");
+            sb.append("\n\t-daqbuf=<url> \tSet the address of the Daqbuf server (othrerwise defined by DAQBUF_DEFAULT_URL)");           
+            sb.append("\n\t-backend=<url>\tSet the default backend (othrerwise defined by DAQBUF_DEFAULT_BACKEND)");           
+            sb.append("\n\t-maxsize=<..> \tSet maximum size for unbinned data");
+            sb.append("\n\t-from=<..>    \tSet start of the query range in the format YYYY-MM-DD HH:mm:SS.sss");
+            sb.append("\n\t-to=<..>      \tSet end of the query range in the format YYYY-MM-DD HH:mm:SS.sss");
+            sb.append("\n\t-range=<..>   \tSet query range: Last 1min, Last 10min, Last 1h, Last 12h, Last 24h, Last 7d, Yesterday, Today, Last Week, This Week, Last Month, This Month");            
+            sb.append("\n\t-bins=<..>    \tSet the number of bins (0 for unbinned)");
+            sb.append("\n\t-ch=<..>      \tAdd a channel in the format: <NAME>@<BACKEND> or <NAME> (default backend)");
+            sb.append("\n\t-plot         \tExecute the query and plot the data immediately");
+            sb.append("\n\t-background_color=<..>    \tSet default plot background color");
+            sb.append("\n\t-grid_color=<..>          \tSet default plot grid color");                        
+            sb.append("\n\t-tick_label_font=name:size\tSet font for tick labels");
+        }
+        
         sb.append("\n");
         return sb.toString();
     }

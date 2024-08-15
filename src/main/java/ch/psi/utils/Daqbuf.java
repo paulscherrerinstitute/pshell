@@ -150,6 +150,9 @@ public class Daqbuf implements ChannelQueryAPI {
         if (url == null) {
             url = getDefaultUrl();
         }
+        if (backend == null) {
+            backend = getDefaultBackend();
+        }
         if (!url.contains("://")) {
             url = "http://" + url;
         }

@@ -141,7 +141,6 @@ import ch.psi.pshell.swing.MotorPanel;
 import ch.psi.pshell.swing.RepositoryChangesDialog;
 import ch.psi.pshell.swing.NextStagesPanel;
 import ch.psi.pshell.swing.ScanPanel;
-import static ch.psi.pshell.ui.DaqbufPanel.ARG_DAQBUF_URL;
 import ch.psi.pshell.xscan.ProcessorXScan;
 import ch.psi.utils.Config;
 import ch.psi.utils.Sys;
@@ -5877,8 +5876,9 @@ public class View extends MainFrame {
 
     private void manuDaqbufActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_manuDaqbufActionPerformed
         try {
-            String url = App.getArgumentValue(ARG_DAQBUF_URL);
-            JDialog dlg = new DaqbufPanel(View.this, url, null, false, App.getDaqbufFolderArg());
+            String url = App.getArgumentValue(DaqbufPanel.ARG_DAQBUF_URL);
+            String backend = App.getArgumentValue(DaqbufPanel.ARG_DAQBUF_BACKEND);
+            JDialog dlg = new DaqbufPanel(View.this, url, backend, null, false, App.getDaqbufFolderArg());
             showChildWindow(dlg);
         } catch (Exception ex) {
             showException(ex);

@@ -128,6 +128,7 @@ import org.jfree.data.xy.YIntervalSeriesCollection;
  */
 public class DaqbufPanel extends StandardDialog {
     public static final String ARG_DAQBUF_URL = "daqbuf";
+    public static final String ARG_DAQBUF_BACKEND = "backend";
 
     public static final String PLOT_PRIVATE = "Private";
     public static final String PLOT_SHARED = "Shared";
@@ -160,16 +161,20 @@ public class DaqbufPanel extends StandardDialog {
     volatile boolean initialized;
 
 
-    public DaqbufPanel(Window parent, String url, String title, boolean modal, File defaultFolder) {
+    public DaqbufPanel(Window parent, String url, String backend, String title, boolean modal, File defaultFolder) {
         super(parent, null, modal);
         initComponents();
         this.defaultFolder = defaultFolder;
         
-        if ("default".equals(url)){
+        if ("default".equals(url) || "".equals(url)){
             url = null;
         }
-        
-        daqbuf = new Daqbuf(url);
+
+        if ("default".equals(backend) || "".equals(backend)){
+            backend = null;
+        }
+                
+        daqbuf = new Daqbuf(url, backend);
         daqbuf.setTimestampMillis(true);
         if (App.hasArgument("background_color")) {
             try {
@@ -1798,9 +1803,9 @@ public class DaqbufPanel extends StandardDialog {
     protected void onClosed() {
     }
 
-    public static void create(String url, boolean modal, String title, File defaultFolder) {
+    public static void create(String url, String backend, boolean modal, String title, File defaultFolder) {
         java.awt.EventQueue.invokeLater(() -> {
-            DaqbufPanel dialog = new DaqbufPanel(null, url, title, modal, defaultFolder);
+            DaqbufPanel dialog = new DaqbufPanel(null, url, backend, title, modal, defaultFolder);
             dialog.setIconImage(Toolkit.getDefaultToolkit().getImage(App.getResourceUrl("IconSmall.png")));
             dialog.addWindowListener(new java.awt.event.WindowAdapter() {
                 @Override
@@ -1821,7 +1826,7 @@ public class DaqbufPanel extends StandardDialog {
     }
 
     public static void create(boolean modal, String title, File defaultFolder) {
-        create(App.getArgumentValue(ARG_DAQBUF_URL), modal, title, defaultFolder);
+        create(App.getArgumentValue(ARG_DAQBUF_URL), App.getArgumentValue(ARG_DAQBUF_BACKEND), modal, title, defaultFolder);
     }    
 
     volatile boolean dumping = false;
@@ -2735,7 +2740,7 @@ public class DaqbufPanel extends StandardDialog {
      */
     public static void main(String args[]) {
         App.init(args);
-        create(null, false, null, null);
+        create(null, null, false, null, null);
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
