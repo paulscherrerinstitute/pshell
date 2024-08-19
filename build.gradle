@@ -160,86 +160,52 @@ dependencies {
     testImplementation group: 'junit', name: 'junit', version: '4.10'
 }
 
+def opt_scope = (ext.type == 'light') ? 'provided' : 'implementation'
+
 if (ext.type == 'light'){ 
     dependencies {
         implementation 'org.glassfish.jersey.core:jersey-client:3.1.7'
-        provided 'org.glassfish.jersey.containers:jersey-container-grizzly2-http:3.1.7'
-        provided 'org.glassfish.jersey.media:jersey-media-sse:3.1.7'
-        provided 'org.glassfish.jersey.inject:jersey-hk2:3.1.7'
-        provided 'org.eclipse.jgit:org.eclipse.jgit:6.9.0.202403050737-r'
-        provided 'org.eclipse.jgit:org.eclipse.jgit.ssh.jsch:6.9.0.202403050737-r'
-        provided 'org.apache.commons:commons-math3:3.6.1'
-        provided 'org.clojars.nakkaya:darcula:1.0.0'  
-
-
-        provided 'com.neuronrobotics:nrjavaserial:5.2.1'
-        provided 'net.java.dev.jna:jna:5.14.0'
-        provided 'com.github.sarxos:webcam-capture:0.3.12'
-
-        provided 'org.commonmark:commonmark-ext-gfm-tables:0.22.0'
-        provided 'com.fifesoft:rsyntaxtextarea:3.4.0'
-        provided 'jline:jline:2.14.6'  
-
-        provided 'net.imagej:ij:1.54i'
-        provided 'javax.mail:javax.mail-api:1.6.2'
-        provided 'com.sun.mail:javax.mail:1.6.2'
-        provided 'black.ninia:jep:4.2.0' 
-
-        //jediterm dependencies
-        provided 'org.jetbrains.pty4j:pty4j:0.12.13' // Not updated because use of Gradle Kotlin build file adds Kotlin libraries to jar file
-        provided 'com.github.JetBrains:jediterm:ba1165965cac86a2c4fc18efa340822cc61830e7'
-
-        //XScan dependencies
-        provided 'jakarta.xml.bind:jakarta.xml.bind-api:4.0.2'
-        provided 'org.glassfish.jaxb:jaxb-runtime:4.0.5'
-        provided 'com.sun.xml.bind:jaxb-core:4.0.5'
-        provided 'com.sun.xml.bind:jaxb-impl:4.0.5'
-        provided 'com.sun.xml.messaging.saaj:saaj-impl:3.0.4'
-        provided 'net.sourceforge.jmatio:jmatio:1.0'
-
-        //TIFF support for ImageIO can be added installing JAI, or one of the following dependencies:
-        provided 'com.twelvemonkeys.imageio:imageio-tiff:3.11.0'            
     }
 }
-else {
-    dependencies {
-        //implementation fileTree(dir: './lib', include: '*.jar')
-        implementation 'org.glassfish.jersey.containers:jersey-container-grizzly2-http:3.1.7'
-        implementation 'org.glassfish.jersey.media:jersey-media-sse:3.1.7'
-        implementation 'org.glassfish.jersey.inject:jersey-hk2:3.1.7'
-        implementation 'org.eclipse.jgit:org.eclipse.jgit:6.9.0.202403050737-r'
-        implementation 'org.eclipse.jgit:org.eclipse.jgit.ssh.jsch:6.9.0.202403050737-r'
-        implementation 'org.apache.commons:commons-math3:3.6.1'
-        implementation 'org.commonmark:commonmark-ext-gfm-tables:0.22.0'  
-         //implementation 'org.rxtx:rxtx:2.1.7'
-        implementation 'com.neuronrobotics:nrjavaserial:5.2.1'
-        implementation 'net.java.dev.jna:jna:5.14.0'
-        implementation 'com.fifesoft:rsyntaxtextarea:3.4.0'
-        implementation 'jline:jline:2.14.6'  
 
-        implementation 'net.imagej:ij:1.54i'
-        implementation 'javax.mail:javax.mail-api:1.6.2'
-        implementation 'com.sun.mail:javax.mail:1.6.2'
-        implementation 'com.github.sarxos:webcam-capture:0.3.12'
-        implementation 'org.clojars.nakkaya:darcula:1.0.0'
-        implementation 'black.ninia:jep:4.2.0' 
-        
-        //jediterm dependencies
-        implementation 'org.jetbrains.pty4j:pty4j:0.12.13' // Not updated because use of Gradle Kotlin build file adds Kotlin libraries to jar file
-        implementation 'com.github.JetBrains:jediterm:ba1165965cac86a2c4fc18efa340822cc61830e7'
+dependencies {
+    //implementation fileTree(dir: './lib', include: '*.jar')
+    "$opt_scope" 'org.glassfish.jersey.containers:jersey-container-grizzly2-http:3.1.7'
+    "$opt_scope" 'org.glassfish.jersey.media:jersey-media-sse:3.1.7'
+    "$opt_scope" 'org.glassfish.jersey.inject:jersey-hk2:3.1.7'
+    "$opt_scope" 'org.eclipse.jgit:org.eclipse.jgit:6.9.0.202403050737-r'
+    "$opt_scope" 'org.eclipse.jgit:org.eclipse.jgit.ssh.jsch:6.9.0.202403050737-r'
+    "$opt_scope" 'org.apache.commons:commons-math3:3.6.1'
+    "$opt_scope" 'org.commonmark:commonmark-ext-gfm-tables:0.22.0'  
+     //"$opt_scope" 'org.rxtx:rxtx:2.1.7'
+    "$opt_scope" 'com.neuronrobotics:nrjavaserial:5.2.1'
+    "$opt_scope" 'net.java.dev.jna:jna:5.14.0'
+    "$opt_scope" 'com.fifesoft:rsyntaxtextarea:3.4.0'
+    "$opt_scope" 'jline:jline:2.14.6'  
 
-        //XScan dependencies
-        implementation 'jakarta.xml.bind:jakarta.xml.bind-api:4.0.2'
-        implementation 'org.glassfish.jaxb:jaxb-runtime:4.0.5'
-        implementation 'com.sun.xml.bind:jaxb-core:4.0.5'
-        implementation 'com.sun.xml.bind:jaxb-impl:4.0.5'
-        implementation 'com.sun.xml.messaging.saaj:saaj-impl:3.0.4'
-        implementation 'net.sourceforge.jmatio:jmatio:1.0'
+    "$opt_scope" 'net.imagej:ij:1.54i'
+    "$opt_scope" 'javax.mail:javax.mail-api:1.6.2'
+    "$opt_scope" 'com.sun.mail:javax.mail:1.6.2'
+    "$opt_scope" 'com.github.sarxos:webcam-capture:0.3.12'
+    "$opt_scope" 'org.clojars.nakkaya:darcula:1.0.0'
+    "$opt_scope" 'black.ninia:jep:4.2.0' 
 
-        //TIFF support for ImageIO can be added installing JAI, or one of the following dependencies:
-        implementation 'com.twelvemonkeys.imageio:imageio-tiff:3.11.0'            
-    }
+    //jediterm dependencies
+    "$opt_scope" 'org.jetbrains.pty4j:pty4j:0.12.13' // Not updated because use of Gradle Kotlin build file adds Kotlin libraries to jar file
+    "$opt_scope" 'com.github.JetBrains:jediterm:ba1165965cac86a2c4fc18efa340822cc61830e7'
+
+    //XScan dependencies
+    "$opt_scope" 'jakarta.xml.bind:jakarta.xml.bind-api:4.0.2'
+    "$opt_scope" 'org.glassfish.jaxb:jaxb-runtime:4.0.5'
+    "$opt_scope" 'com.sun.xml.bind:jaxb-core:4.0.5'
+    "$opt_scope" 'com.sun.xml.bind:jaxb-impl:4.0.5'
+    "$opt_scope" 'com.sun.xml.messaging.saaj:saaj-impl:3.0.4'
+    "$opt_scope" 'net.sourceforge.jmatio:jmatio:1.0'
+
+    //TIFF support for ImageIO can be added installing JAI, or one of the following dependencies:
+    "$opt_scope" 'com.twelvemonkeys.imageio:imageio-tiff:3.11.0'            
 }
+
 
 if (ext.jzy3d==true){
     dependencies {
