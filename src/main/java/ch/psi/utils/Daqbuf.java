@@ -411,12 +411,14 @@ public class Daqbuf implements ChannelQueryAPI {
         public final String start;
         public final String end;
         public final Integer bins;
+        public final Boolean addLast;
 
         Query(String channel, String backend, String start, String end, Integer bins) {
+            addLast = (end==null);
             this.channel = channel;
             this.backend = backend;
             this.start = convertToUTC(start);
-            this.end = convertToUTC(end);
+            this.end = (end==null) ? this.start: convertToUTC(end);
             this.bins = bins;
         }
 
@@ -429,6 +431,9 @@ public class Daqbuf implements ChannelQueryAPI {
             }
             if (isBinned(bins)) {
                 resource = resource.queryParam("binCount", bins);
+            }            
+            if (addLast){
+                resource = resource.queryParam("oneBeforeRange", "true");
             }
             return resource;
 
@@ -460,6 +465,7 @@ public class Daqbuf implements ChannelQueryAPI {
         boolean cbor = !isBinned(bins);
         String backend = getChannelBackend(channel);
         channel = getChannelName(channel);
+        //Query last value
 
         Query query = new Query(channel, backend, start, end, bins);
         String path = "/events";
@@ -933,7 +939,15 @@ public class Daqbuf implements ChannelQueryAPI {
         if (timestamp == null) {
             return "";
         }
-        LocalDateTime currentTime = fromNanoseconds(timestamp, utc);
+        LocalDateTime currentTime = null;
+        if (timestamp >= 1000000000000000L){
+            //nanos
+            currentTime = fromNanoseconds(timestamp, utc);
+        } else if (timestamp >= 1000000000){
+            //millis
+            currentTime = fromMilliseconds(timestamp, utc);
+        } 
+        //LocalDateTime currentTime = fromNanoseconds(timestamp, utc);
         String ret = currentTime.format(timeFormatter);
         if (utc) {
             ret = ret + "Z";
@@ -1018,19 +1032,19 @@ public class Daqbuf implements ChannelQueryAPI {
        
         System.out.println(daqbuf.searchAvailableBackends());
         int bins = 20;
-        String start = "2024-05-07 16:00:00";
-        String end = "2024-05-07 16:00:01" ;
+        String start = "2024-07-07 16:00:00";
+        String end = "2024-07-07 16:00:01" ;
         String channel = "SARFE10-PSSS059:SPECTRUM_X";
-        ret = daqbuf.fetchQuery(channel, start, end);
-        System.out.println(ret);
+        //ret = daqbuf.fetchQuery(channel, start, end);
+        //System.out.println(ret);
 
         
+        //cf = daqbuf.startQuery("S10BC01-DBPM010:Q1", start, end , new QueryListener(){}) ;
+
+        
+        //cf = daqbuf.printQuery(channel, start, end );
+        //cf = daqbuf.printQuery(channel, start, end ,bins);
         /*
-        cf = daqbuf.startQuery("S10BC01-DBPM010:Q1", start, end , new QueryListener(){}) ;
-
-        
-        cf = daqbuf.printQuery(channel, start, end );
-        cf = daqbuf.printQuery(channel, start, end ,bins);
         cf = daqbuf.printQuery(channels, start, end );
         cf = daqbuf.printQuery(channels, start, end , bins);
         
@@ -1076,6 +1090,7 @@ public class Daqbuf implements ChannelQueryAPI {
         obj = cf.get();
         System.out.println(obj);
          */
-    }      
+        
 
+    }      
 }

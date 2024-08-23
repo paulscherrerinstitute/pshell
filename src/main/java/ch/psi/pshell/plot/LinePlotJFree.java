@@ -565,14 +565,21 @@ public class LinePlotJFree extends LinePlotBase {
         s.fireSeriesChanged();
     }
 
-    XYSeries getXYSeries(LinePlotSeries series) {
+    @Reflection.Hidden
+    public XYSeries getXYSeries(LinePlotSeries series) {
         return (XYSeries) (series.getToken());
     }
 
-    Series getSeries(LinePlotSeries series) {
+    @Reflection.Hidden
+    public Series getSeries(LinePlotSeries series) {
         return (Series) (series.getToken());
     }
 
+    public void renameSeries(LinePlotSeries series, String newName) {
+        series.setName(newName);
+        getSeries(series).setKey(newName);        
+    }
+    
     /**
      * Get the chart panel of this plot. The chart panel will be lazily created
      * the first time this function is called

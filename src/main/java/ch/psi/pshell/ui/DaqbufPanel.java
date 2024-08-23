@@ -1068,11 +1068,29 @@ public class DaqbufPanel extends StandardDialog {
                     }
                 }
                 return ret;
-            });
+            });            
+            checkEgu(plot, series, backend, start);
         } catch (Exception ex) {
             showException(ex);
         }
         return series;
+    }
+    
+    void checkEgu(LinePlotJFree plot, LinePlotSeries series, String backend, String start){
+            daqbuf.startFetchQuery(series.getName() + ".EGU" + Daqbuf.BACKEND_SEPARATOR + backend, start, null).handle((ret, ex) -> {
+                if (ex != null) {
+                } else {
+                    Map<String, List> map = (Map<String, List>) ret;
+                    List<String> values = map.getOrDefault(Daqbuf.FIELD_VALUE, new ArrayList());
+                    if (values.size()>0){
+                        String egu = values.get(values.size()-1).toString();
+                        plot.renameSeries(series, series.getName() + " " + egu);
+                        plot.getSeries(series).setDescription(egu);
+                    }
+                }
+                return ret;
+            });            
+        
     }
 
     LinePlotSeries addLineSeries(LinePlotJFree plot, SeriesInfo si) {
@@ -1090,18 +1108,27 @@ public class DaqbufPanel extends StandardDialog {
             daqbuf.startQuery(name + Daqbuf.BACKEND_SEPARATOR + backend, start, end, new QueryListener() {
                 public void onMessage(Query query, List values, List<Long> ids, List<Long> timestamps) {
                     List<Number> aux = (List<Number>) values;
-                    if (series.getCount() >= series.getMaxItemCount()) {
-                        throw new RuntimeException("Series too big for plotting: " + name);
+                    boolean fits = true;
+                    if ((series.getCount()+ aux.size()) > series.getMaxItemCount()) {
+                        fits = false;
+                        int size = series.getMaxItemCount()-series.getCount();
+                        aux=aux.subList(0, size);
+                        timestamps=timestamps.subList(0, size);
+                    }
+                    if (aux.size()>0){
+                        //synchronized(series){
+                            try {
+                                plot.disableUpdates();
+                                series.appendData(timestamps, aux);
+                            } finally {
+                                 plot.reenableUpdates();
+                            }
+                        //}
                     }
                     
-                    try {
-                        plot.disableUpdates();
-                        //synchronized(series){
-                            series.appendData(timestamps, aux);
-                        //}
-                    } finally {
-                         plot.reenableUpdates();
-                    }
+                    if (!fits) {
+                        throw new RuntimeException("Series too big for plotting: " + name);
+                    }                                       
                 }
             }).handle((ret, ex) -> {
                 if (ex != null) {
@@ -1109,6 +1136,7 @@ public class DaqbufPanel extends StandardDialog {
                 };
                 return ret;
             });
+            checkEgu(plot, series, backend, start);
         } catch (Exception ex) {
             showException(ex);
         }
