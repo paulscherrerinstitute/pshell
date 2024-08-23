@@ -481,7 +481,8 @@ public class DaqbufPanel extends StandardDialog {
             int row = tableSeries.getSelectedRow();
             if (row>=0){
                 Object value = modelSeries.getValueAt(row, 2);
-                selector.configure(ChannelSelector.Type.Daqbuf, daqbuf.getUrl(), value.toString(), 1000);
+                String[] excludes = new String[]{"*.EGU"};
+                selector.configure(ChannelSelector.Type.Daqbuf, daqbuf.getUrl(), value.toString(), 1000, excludes);
             }
         }
     }

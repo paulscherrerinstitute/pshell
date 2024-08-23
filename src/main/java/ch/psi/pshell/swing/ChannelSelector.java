@@ -36,7 +36,9 @@ import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.awt.event.MouseEvent;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.EventObject;
+import java.util.HashSet;
 import javax.swing.AbstractCellEditor;
 import javax.swing.JComponent;
 import javax.swing.JTable;
@@ -67,6 +69,8 @@ public class ChannelSelector extends MonitoredPanel {
     JList<String> list;
     JScrollPane listScrollPanel;
     Type type;
+    
+    final HashSet<String> excludes = new HashSet<>();        
 
     public enum Type {
         DataAPI,
@@ -105,13 +109,21 @@ public class ChannelSelector extends MonitoredPanel {
         setFocusLostListener(text);
         listScrollPanel.setViewportView(list);
     }
-
+    
     public void configure(Type type, String url, String backend, int limit) {
+        configure(type, url, backend, limit, null);
+    }
+    
+    public void configure(Type type, String url, String backend, int limit, String[] excludes) {
         channelNameSource = null;
         this.url = url;
         this.backend = backend;
         this.limit = limit;
         this.type = type;
+        this.excludes.clear();
+        if (excludes!=null){
+            Collections.addAll(this.excludes, excludes);
+        }
         if (type == Type.Epics) {
             channelNameSource = new EpicsBootInfoAPI(url);
         } else if (type == Type.Daqbuf) {
@@ -338,6 +350,17 @@ public class ChannelSelector extends MonitoredPanel {
             } else {
                 try {
                     List<String> ret = channelNameSource.queryChannels(str, backend, limit);
+                    ret.removeIf(s -> s == null);
+                    for (String exclude : excludes){
+                        if (exclude.startsWith("*")){
+                            ret.removeIf(s -> (s.endsWith(exclude.substring(1))));
+                        } else if (exclude.endsWith("*")){
+                            ret.removeIf(s -> (s.startsWith(exclude.substring(0,exclude.length()-1))));
+                        } else {
+                            ret.removeIf(s -> (s.contains(exclude)));
+                        }
+                    }
+                    
                     if ((limit > 0) && (ret.size() > limit)) {
                         ret = ret.subList(0, limit);
                     }
