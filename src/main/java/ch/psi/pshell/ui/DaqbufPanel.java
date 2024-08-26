@@ -615,7 +615,7 @@ public class DaqbufPanel extends StandardDialog {
             textTo.setText("");
             checkBins.setSelected(true);
             spinnerBins.setValue(500);
-            spinnerSize.setValue(10000);
+            setMaxSeriesSize(DEFAULT_MAX_SERIES_SIZE);
             comboTime.setSelectedIndex(0);
 
             /*
@@ -714,6 +714,16 @@ public class DaqbufPanel extends StandardDialog {
         }
         return getChannelName(str);
     }
+    
+    public final static int DEFAULT_MAX_SERIES_SIZE = 250_000;
+    
+    int getMaxSeriesSize(){
+        return ((Integer) spinnerSize.getValue() * 1000);
+    }
+
+    void setMaxSeriesSize(Integer bytes){
+        spinnerSize.setValue(bytes / 1000);
+    }    
 
     void addPlot(PlotBase plot) {
         if (backgroundColor != null) {
@@ -1092,7 +1102,7 @@ public class DaqbufPanel extends StandardDialog {
             });            
         
     }
-
+    
     LinePlotSeries addLineSeries(LinePlotJFree plot, SeriesInfo si) {
         return addLineSeries(plot, si.name, si.backend, si.start, si.end, si.axis, si.color);
     }
@@ -1101,7 +1111,7 @@ public class DaqbufPanel extends StandardDialog {
         LinePlotSeries series = new LinePlotSeries(name, color, axis);
         plotSeries.add(series);
         plot.addSeries(series);
-        series.setMaxItemCount((Integer) spinnerSize.getValue());
+        series.setMaxItemCount(getMaxSeriesSize());
 
         //((XYErrorRenderer)plot.getSeriesRenderer(series)).setDrawYError(false);
         try {
@@ -1174,7 +1184,7 @@ public class DaqbufPanel extends StandardDialog {
         LinePlotSeries series = new LinePlotSeries(name, color, axis);
         plotSeries.add(series);
         plot.addSeries(series);
-        series.setMaxItemCount((Integer) spinnerSize.getValue());
+        series.setMaxItemCount(getMaxSeriesSize());
         series.setLinesVisible(false);
         try {
             daqbuf.startFetchQuery(name + Daqbuf.BACKEND_SEPARATOR + backend, start, end, bins).handle((ret, ex) -> {
@@ -1336,7 +1346,7 @@ public class DaqbufPanel extends StandardDialog {
         List value = new ArrayList();
         List<Long> id = new ArrayList<>();
         List<Long> timestamp = new ArrayList<>();
-        long maxSize = (Integer) spinnerSize.getValue();
+        long maxSize = getMaxSeriesSize();
         MatrixPlotSeries series = new MatrixPlotSeries(name);
         if (colormap != null) {
             plot.setColormap(colormap);
@@ -1408,7 +1418,7 @@ public class DaqbufPanel extends StandardDialog {
     }
 
     MatrixPlotBinnedSeries addMatrixSeriesBinned(MatrixPlotJFree plot, String name, String backend, String start, String end, int bins, Colormap colormap) {
-        long maxSize = (Integer) spinnerSize.getValue();
+        long maxSize = getMaxSeriesSize();
         MatrixPlotBinnedSeries series = new MatrixPlotBinnedSeries(name);
         if (colormap != null) {
             plot.setColormap(colormap);
@@ -1990,7 +2000,7 @@ public class DaqbufPanel extends StandardDialog {
         }
         data.put("binned", checkBins.isSelected());
         data.put("bins",  spinnerBins.getValue() );            
-        data.put("maxsize", spinnerSize.getValue());
+        data.put("maxsize", getMaxSeriesSize());
         String json = EncoderJson.encode(data, true);
         Files.write(file.toPath(), json.getBytes());
         this.file = file;
@@ -2023,7 +2033,7 @@ public class DaqbufPanel extends StandardDialog {
             spinnerBins.setValue(bins);
         }
         if (maxsize!=null){
-            spinnerSize.setValue(maxsize);
+            setMaxSeriesSize(maxsize);
         }
         if (binned!=null){
             checkBins.setSelected(binned);
@@ -2340,9 +2350,9 @@ public class DaqbufPanel extends StandardDialog {
         spinnerBins.setModel(new javax.swing.SpinnerNumberModel(500, 1, 10000, 10));
 
         jLabel7.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
-        jLabel7.setText("Max size: ");
+        jLabel7.setText("Max size (K): ");
 
-        spinnerSize.setModel(new javax.swing.SpinnerNumberModel(10000, 1, 999999, 10000));
+        spinnerSize.setModel(new javax.swing.SpinnerNumberModel(250, 50, 2500, 50));
         spinnerSize.setEnabled(false);
 
         javax.swing.GroupLayout jPanel4Layout = new javax.swing.GroupLayout(jPanel4);
@@ -2362,6 +2372,9 @@ public class DaqbufPanel extends StandardDialog {
                 .addComponent(spinnerSize, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap())
         );
+
+        jPanel4Layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {spinnerBins, spinnerSize});
+
         jPanel4Layout.setVerticalGroup(
             jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel4Layout.createSequentialGroup()
@@ -2552,7 +2565,7 @@ public class DaqbufPanel extends StandardDialog {
         pnGraphs.setLayout(pnGraphsLayout);
         pnGraphsLayout.setHorizontalGroup(
             pnGraphsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 494, Short.MAX_VALUE)
+            .addGap(0, 459, Short.MAX_VALUE)
         );
         pnGraphsLayout.setVerticalGroup(
             pnGraphsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -2571,8 +2584,7 @@ public class DaqbufPanel extends StandardDialog {
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(tabPane, javax.swing.GroupLayout.DEFAULT_SIZE, 496, Short.MAX_VALUE)
-                .addContainerGap())
+                .addComponent(tabPane))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)

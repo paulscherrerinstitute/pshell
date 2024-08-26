@@ -25,8 +25,7 @@
       <Group type="103" groupAlignment="0" attributes="0">
           <Group type="102" alignment="1" attributes="0">
               <EmptySpace max="-2" attributes="0"/>
-              <Component id="tabPane" pref="496" max="32767" attributes="0"/>
-              <EmptySpace max="-2" attributes="0"/>
+              <Component id="tabPane" max="32767" attributes="0"/>
           </Group>
       </Group>
     </DimensionLayout>
@@ -345,11 +344,11 @@
                           <EmptySpace type="separate" max="-2" attributes="0"/>
                           <Component id="jLabel4" min="-2" max="-2" attributes="0"/>
                           <EmptySpace max="-2" attributes="0"/>
-                          <Component id="spinnerBins" min="-2" max="-2" attributes="0"/>
+                          <Component id="spinnerBins" linkSize="15" min="-2" max="-2" attributes="0"/>
                           <EmptySpace type="separate" max="32767" attributes="0"/>
                           <Component id="jLabel7" min="-2" max="-2" attributes="0"/>
                           <EmptySpace max="-2" attributes="0"/>
-                          <Component id="spinnerSize" min="-2" max="-2" attributes="0"/>
+                          <Component id="spinnerSize" linkSize="15" min="-2" max="-2" attributes="0"/>
                           <EmptySpace max="-2" attributes="0"/>
                       </Group>
                   </Group>
@@ -400,13 +399,13 @@
                 <Component class="javax.swing.JLabel" name="jLabel7">
                   <Properties>
                     <Property name="horizontalAlignment" type="int" value="11"/>
-                    <Property name="text" type="java.lang.String" value="Max size: "/>
+                    <Property name="text" type="java.lang.String" value="Max size (K): "/>
                   </Properties>
                 </Component>
                 <Component class="javax.swing.JSpinner" name="spinnerSize">
                   <Properties>
                     <Property name="model" type="javax.swing.SpinnerModel" editor="org.netbeans.modules.form.editors2.SpinnerModelEditor">
-                      <SpinnerModel initial="10000" maximum="999999" minimum="1" numberType="java.lang.Integer" stepSize="10000" type="number"/>
+                      <SpinnerModel initial="250" maximum="2500" minimum="50" numberType="java.lang.Integer" stepSize="50" type="number"/>
                     </Property>
                     <Property name="enabled" type="boolean" value="false"/>
                   </Properties>
@@ -676,7 +675,7 @@
                   <Layout>
                     <DimensionLayout dim="0">
                       <Group type="103" groupAlignment="0" attributes="0">
-                          <EmptySpace min="0" pref="494" max="32767" attributes="0"/>
+                          <EmptySpace min="0" pref="459" max="32767" attributes="0"/>
                       </Group>
                     </DimensionLayout>
                     <DimensionLayout dim="1">
