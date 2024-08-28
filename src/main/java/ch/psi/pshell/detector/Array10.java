@@ -13,6 +13,7 @@ import ch.psi.utils.State;
 import ch.psi.utils.Type;
 import java.io.IOException;
 import java.lang.reflect.Array;
+import java.nio.ByteOrder;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -153,9 +154,11 @@ public class Array10 extends DeviceBase implements Readable, Cacheable, Readable
                         Map<String, Object> header = (Map) EncoderJson.decode(json, Map.class);                        
                         int[] shape = (int[]) Convert.toPrimitiveArray(header.getOrDefault("shape", new ArrayList()), int.class);
                         String dtype = (String) header.getOrDefault("type", "int8");
+                        String endianness = (String) header.getOrDefault("endianness", "little");
+                        ByteOrder byteOrder = (endianness.equalsIgnoreCase("big")) ? ByteOrder.BIG_ENDIAN : ByteOrder.LITTLE_ENDIAN;
                         byte[] data_arr = socket.recv(); 
                         if (data_arr!=null){
-                            Object data=BufferConverter.fromArray(data_arr, Type.fromKey(dtype));
+                            Object data=BufferConverter.fromArray(data_arr, Type.fromKey(dtype), byteOrder);
                             Map<String, Object> value = new HashMap<>();
                             value.put("header", header);
                             value.put("data", data);

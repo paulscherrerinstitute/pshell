@@ -7,18 +7,41 @@ import java.nio.LongBuffer;
 import java.nio.ShortBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.stream.IntStream;
+import java.nio.ByteOrder;
 
 public class BufferConverter {
 
     public static <V> V fromArray(byte[] array, String type) {
-        return fromArray(array, Type.fromString(type));
+        return fromArray(array, type, null);
     }
 
     public static <V> V fromArray(byte[] array, Type type) {
-        ByteBuffer buffer = ByteBuffer.wrap(array);
-        return fromBuffer(buffer, type, true);
+        return fromArray(array, type, null);
     }
 
+    public static <V> V fromArray(byte[] array, String type, String byteOrder) {
+        ByteOrder order = null;
+        if (byteOrder.equalsIgnoreCase("little")){
+            order = ByteOrder.LITTLE_ENDIAN;
+        }
+        if (byteOrder.equalsIgnoreCase("big")){
+            order = ByteOrder.BIG_ENDIAN;
+        }
+        if (byteOrder.equalsIgnoreCase("native")){
+            order = ByteOrder.nativeOrder();
+        }
+        return fromArray(array, Type.fromString(type), order);
+    }
+
+    public static <V> V fromArray(byte[] array, Type type, ByteOrder byteOrder) {
+        ByteBuffer buffer = ByteBuffer.wrap(array);
+        if (byteOrder != null){
+             buffer.order(byteOrder);
+        }
+        return fromBuffer(buffer, type, true);
+    }
+    
+    
     public static <V> V fromBuffer(ByteBuffer buffer, String type, boolean array) {
          return fromBuffer(buffer, Type.fromString(type), array);
     }
@@ -176,5 +199,4 @@ public class BufferConverter {
             return copyToByteArray(buffer);
         }
     }
-
-}
+}   
