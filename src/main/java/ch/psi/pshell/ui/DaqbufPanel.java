@@ -133,6 +133,8 @@ public class DaqbufPanel extends StandardDialog {
     public static final String PLOT_PRIVATE = "Private";
     public static final String PLOT_SHARED = "Shared";
     public static final int AXIS_NONE = 0;
+    public static final int AXIS_1 = 1;
+    public static final int AXIS_2 = 2;
     public static final int AXIS_X = -1;
 
     Color defaultBackgroundColor = null;
@@ -464,8 +466,8 @@ public class DaqbufPanel extends StandardDialog {
         if ((rank != curRank) || (x != curX)) {
             modelComboY.removeAllElements();
             if (rank == 0) {
-                modelComboY.addElement(1);
-                modelComboY.addElement(2);
+                modelComboY.addElement("Y1");
+                modelComboY.addElement("Y2");
                 if (x) {
                     modelComboY.addElement("X");
                 }
@@ -1625,8 +1627,23 @@ public class DaqbufPanel extends StandardDialog {
             bins = checkBins.isSelected() ? (Integer) spinnerBins.getValue() : null;
             name = getChannelAlias(((String) info.get(1)).trim());
             backend = info.get(2).toString();
-            shared = PLOT_SHARED.equals(info.get(4));
-            axis = (info.get(5)).equals("X") ? AXIS_X : ((info.get(5)).equals("") ? AXIS_NONE : (Integer) info.get(5));
+            shared = PLOT_SHARED.equals(info.get(4));            
+            switch(Str.toString(info.get(5))){
+                case "X":
+                    axis = AXIS_X;
+                    break;
+                case "Y1":
+                case "1":
+                    axis = AXIS_1;
+                    break;
+                case "Y2":
+                case "2":
+                    axis = AXIS_2;
+                    break;
+                default:
+                    axis = AXIS_NONE;            
+            }
+            
             Color cl;
             Colormap cm;
             try {
