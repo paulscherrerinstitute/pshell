@@ -35,6 +35,7 @@ import ch.psi.utils.Range;
 import ch.psi.utils.Str;
 import ch.psi.utils.Sys;
 import ch.psi.utils.Threading;
+import ch.psi.utils.Time;
 import ch.psi.utils.swing.MainFrame;
 import ch.psi.utils.swing.StandardDialog;
 import ch.psi.utils.swing.SwingUtils;
@@ -62,12 +63,10 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.time.DayOfWeek;
-import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.YearMonth;
-import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.EventObject;
@@ -1302,7 +1301,7 @@ public class DaqbufPanel extends StandardDialog {
         try {
             boolean binned = (series instanceof MatrixPlotBinnedSeries);
             double time = series.getX()[index][0];
-            String timestr = getTimeString(time, false);
+            String timestr = Time.getTimeString(time, false, false);
             String name = series.getName() + " " + timestr + " [" + index + "]";
             LinePlotJFree lplot = new LinePlotJFree();
             LinePlotSeries lseries;
@@ -1622,8 +1621,6 @@ public class DaqbufPanel extends StandardDialog {
             parent = null;
             start = expandTime(textFrom.getText());
             end = expandTime(textTo.getText());
-            textFrom.setText(start);
-            textTo.setText(end);
             bins = checkBins.isSelected() ? (Integer) spinnerBins.getValue() : null;
             name = getChannelAlias(((String) info.get(1)).trim());
             backend = info.get(2).toString();
@@ -1682,6 +1679,20 @@ public class DaqbufPanel extends StandardDialog {
         }
 
     }
+    
+    void checkTimeRange() throws IOException{
+        if (textFrom.getText().isBlank() && textTo.getText().isBlank()){
+            comboTime.setSelectedIndex(1);
+        }
+        
+        String start = expandTime(textFrom.getText());
+        String to = expandTime(textTo.getText());
+        textFrom.setText(start);
+        textTo.setText(to);        
+        if (Time.compare(to, start)<=0){
+            throw new IOException ("Invalid time range");
+        }
+    }
 
     public void plotQuery() throws Exception {
         reset();
@@ -1691,7 +1702,8 @@ public class DaqbufPanel extends StandardDialog {
         }
         numPlots = 0;
         started = true;
-        update();
+        checkTimeRange();                    
+        update();       
 
         Plot sharedPlot = null;
         plotInfo.clear();
@@ -1902,10 +1914,9 @@ public class DaqbufPanel extends StandardDialog {
             throw new IOException("No channel selected");
         }
         final Integer bins = checkBins.isSelected() ? (Integer) spinnerBins.getValue() : null;
-        final String start = expandTime(textFrom.getText());
-        final String end = expandTime(textTo.getText());
-        textFrom.setText(start);
-        textTo.setText(end);
+        checkTimeRange(); 
+        final String start = textFrom.getText();
+        final String end = textTo.getText();
 
 
         JDialog splash = SwingUtils.showSplash(this, "Save", new Dimension(400, 200), "Saving data to " + filename);
@@ -2675,26 +2686,12 @@ public class DaqbufPanel extends StandardDialog {
         update();
     }//GEN-LAST:event_checkBinsActionPerformed
 
-    String getTimeString(Number timestamp, boolean utc) {
-        DateTimeFormatter formatter = (utc)
-                ? DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
-                : DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS");
-
-        Instant instant = Instant.ofEpochMilli(timestamp.longValue());
-        LocalDateTime localDateTime = LocalDateTime.ofInstant(instant, utc ? ZoneOffset.UTC : ZoneOffset.systemDefault());
-        return localDateTime.format(formatter);
-    }
     private void comboTimeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_comboTimeActionPerformed
         if (updating){
             return;
         }
-        boolean utc = false; //checkUTC.isSelected();
-        DateTimeFormatter formatter = (utc)
-                ? DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
-                : DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS");
-        LocalDateTime now = (utc)
-                ? LocalDateTime.now(ZoneOffset.UTC)
-                : LocalDateTime.now();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS");
+        LocalDateTime now = LocalDateTime.now();
         LocalDateTime to = now;
         LocalDateTime from = null;
 
