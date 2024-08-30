@@ -899,6 +899,35 @@ public class SwingUtils {
         return color;
     }
 
+    public static String colorToString(Color color) {
+        if (color.getAlpha() == 255) {
+            return String.format("#%02x%02x%02x", color.getRed(), color.getGreen(), color.getBlue());
+        } else {
+            return String.format("#%02x%02x%02x%02x", color.getRed(), color.getGreen(), color.getBlue(), color.getAlpha());
+        }
+    }    
+    
+    public static Color stringToColor(String str) {
+        str = str.startsWith("#") ? str.substring(1) : str;
+        switch (str.length()) {
+            case 6: 
+                return new Color(
+                    Integer.parseInt(str.substring(0, 2), 16), // Red
+                    Integer.parseInt(str.substring(2, 4), 16), // Green
+                    Integer.parseInt(str.substring(4, 6), 16)  // Blue
+                );
+            case 8:
+                return new Color(
+                    Integer.parseInt(str.substring(0, 2), 16), // Red
+                    Integer.parseInt(str.substring(2, 4), 16), // Green
+                    Integer.parseInt(str.substring(4, 6), 16), // Blue
+                    Integer.parseInt(str.substring(6, 8), 16)  // Alpha
+                );
+            default:
+                throw new IllegalArgumentException("Invalid color format: " + str);
+        }
+    }    
+    
     //JComboBox
     public static void setEnumCombo(JComboBox combo, Class cls) {
         setEnumCombo(combo, cls, false);

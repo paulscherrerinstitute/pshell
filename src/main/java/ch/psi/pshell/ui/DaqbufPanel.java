@@ -69,6 +69,7 @@ import java.time.LocalTime;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.EventObject;
 import java.util.HashMap;
 import java.util.List;
@@ -156,6 +157,9 @@ public class DaqbufPanel extends StandardDialog {
     Color gridColor;
     final Daqbuf daqbuf;
     int numPlots = 0;
+    
+    final List plotProperties = new ArrayList();
+    List requestedProperties = new ArrayList();
 
     final int ERROR_RANGE_TRANSPARENCY = 0x60;    
     
@@ -735,10 +739,19 @@ public class DaqbufPanel extends StandardDialog {
         plot.setQuality(PlotPanel.getQuality());
         plots.add(plot);
         pnGraphs.add(plot);
-        Map<String, Object> info = new HashMap<>();
         List<SeriesInfo> series = new ArrayList<>();
         plotInfo.put(plot, series);
+        plotProperties.add(new HashMap());
         numPlots++;
+    }
+    
+    int getPlotIndex(PlotBase plot){
+        for (int i=0; i< plots.size(); i++){
+            if (plots.get(i) == plot){
+                return i;
+            }
+        }
+        return -1;
     }
     
     DateAxis setDateDomainAxis(PlotBase plot){
@@ -753,6 +766,100 @@ public class DaqbufPanel extends StandardDialog {
         }
         return axis;
     }
+
+    void setPlotArg(PlotBase plot, String name, Object value){
+        int index = getPlotIndex(plot);
+        if ((index>=0) && (index<plotProperties.size())){
+            ((HashMap)plotProperties.get(index)).put(name, value);
+        }                            
+    }
+    
+    void showMarkers(LinePlotJFree plot, boolean value){
+        for (LinePlotSeries s : plot.getAllSeries()) {
+            s.setPointsVisible(value);
+        }
+        setPlotArg(plot, "show_markers", value);
+    }
+    
+    
+    void showRanges(LinePlotJFree plot, boolean value){
+        for (XYItemRenderer r : plot.getChart().getXYPlot().getRenderers().values()) {
+            ((XYErrorRenderer) r).setDrawYError(value);
+        }
+        setPlotArg(plot, "show_ranges", value);                   
+    }
+    
+    void setBackgroundColor(LinePlotJFree plot, Color c){
+        plot.setPlotBackgroundColor((c == SwingUtils.DEFAULT_COLOR) ? PlotBase.getPlotBackground() : c);
+        setPlotArg(plot, "background_color",  SwingUtils.colorToString(c));
+    }
+
+    void setGridColor(LinePlotJFree plot, Color c){
+        plot.setPlotGridColor((c == SwingUtils.DEFAULT_COLOR) ? PlotBase.getGridColor() : c);
+        setPlotArg(plot, "grid_color",  SwingUtils.colorToString(c));
+    }
+
+    void setRangeY1(LinePlotJFree plot, Range r){
+        if (r != null) {
+            plot.getAxis(AxisId.Y).setRange(r.min, r.max);
+            setPlotArg(plot, "y1_range",  Arrays.asList(new Double[]{r.min, r.max}));
+        } else {
+            plot.getAxis(AxisId.Y).setAutoRange();
+            setPlotArg(plot, "y1_range",  null);
+        }                    
+    }
+    
+    void setRangeY2(LinePlotJFree plot, Range r){
+        if (r != null) {
+            plot.getAxis(AxisId.Y2).setRange(r.min, r.max);
+            setPlotArg(plot, "y2_range",  Arrays.asList(new Double[]{r.min, r.max}));
+        } else {
+            plot.getAxis(AxisId.Y2).setAutoRange();
+            setPlotArg(plot, "y2_range",  null);
+        }        
+    }
+    
+    void applyPlotPreferences(List plotPrefs){
+        try{
+            if (plotPrefs.size()!=plots.size()){
+                throw new Exception ("Invalid plot preferences format");
+            }
+            for (int i=0; i< plotPrefs.size();i++){                                
+                if (plots.get(i) instanceof LinePlotJFree){
+                    LinePlotJFree plot = (LinePlotJFree)plots.get(i);                
+                    Map prefs = (Map)plotPrefs.get(i);
+                    Boolean show_ranges =  (Boolean)prefs.getOrDefault("show_ranges", null);
+                    Boolean show_markers =  (Boolean)prefs.getOrDefault("show_markers", null);
+                    String background_color =  (String)prefs.getOrDefault("background_color", null);
+                    String grid_color =  (String)prefs.getOrDefault("grid_color", null);
+                    List y1_range =  (List)prefs.getOrDefault("y1_range",null);
+                    List y2_range =  (List)prefs.getOrDefault("y2_range", null);
+
+                    if (show_ranges!=null){
+                        showRanges(plot, show_ranges);
+                    }
+                    if (show_markers!=null){
+                        showMarkers(plot, show_markers);
+                    }
+                    if (background_color!=null){
+                        setBackgroundColor(plot, SwingUtils.stringToColor(background_color));
+                    }
+                    if (grid_color!=null){
+                        setGridColor(plot, SwingUtils.stringToColor(grid_color));
+                    }
+                    if ((y1_range!=null) && (y1_range.size()==2)){
+                        setRangeY1(plot, new Range(((Number)y1_range.get(0)).doubleValue(), ((Number)y1_range.get(1)).doubleValue()));
+                    }
+                    if ((y2_range!=null) && (y2_range.size()==2)){
+                        setRangeY2(plot, new Range(((Number)y2_range.get(0)).doubleValue(), ((Number)y2_range.get(1)).doubleValue()));
+                    }
+                }                
+             }
+        } catch (Exception ex){
+            showException(ex);
+        }
+    }    
+
     
     void setLinePlotPopupMenu(LinePlotJFree plot, boolean binned){
         plot.addPopupMenuItem(null);
@@ -761,9 +868,7 @@ public class DaqbufPanel extends StandardDialog {
         menuMarkers.setSelected(true);
         menuMarkers.addActionListener((ActionEvent e) -> {
             boolean show = menuMarkers.isSelected();
-            for (LinePlotSeries s : plot.getAllSeries()) {
-                s.setPointsVisible(show);
-            }
+            showMarkers(plot, show);
         });
         plot.addPopupMenuItem(menuMarkers);
 
@@ -771,9 +876,7 @@ public class DaqbufPanel extends StandardDialog {
         menuRanges.setSelected(binned);
         menuRanges.addActionListener((ActionEvent e) -> {
             boolean show = menuRanges.isSelected();
-            for (XYItemRenderer r : plot.getChart().getXYPlot().getRenderers().values()) {
-                ((XYErrorRenderer) r).setDrawYError(show);
-            }
+            showRanges(plot, show);
         });
         plot.addPopupMenuItem(menuRanges);
         menuRanges.setVisible(binned);
@@ -782,8 +885,8 @@ public class DaqbufPanel extends StandardDialog {
         menuBackgroundColor.addActionListener((ActionEvent e) -> {
             Color c = SwingUtils.getColorWithDefault(DaqbufPanel.this, "Choose a Color", plot.getPlotBackgroundColor());
             if (c!=null){
-                plot.setPlotBackgroundColor((c == SwingUtils.DEFAULT_COLOR) ? PlotBase.getPlotBackground() : c);
-            }                                
+                setBackgroundColor(plot, c);
+            }                                            
         });
         plot.addPopupMenuItem(menuBackgroundColor);
 
@@ -791,7 +894,7 @@ public class DaqbufPanel extends StandardDialog {
         menuGridColor.addActionListener((ActionEvent e) -> {
             Color c = SwingUtils.getColorWithDefault(DaqbufPanel.this, "Choose a Color", plot.getPlotGridColor());
             if (c!=null){
-                plot.setPlotGridColor((c == SwingUtils.DEFAULT_COLOR) ? PlotBase.getGridColor() : c);
+                setGridColor(plot, c);
             }                                
         });
         plot.addPopupMenuItem(menuGridColor);
@@ -800,11 +903,8 @@ public class DaqbufPanel extends StandardDialog {
         menuRangeY1.addActionListener((ActionEvent e) -> {
             Range init = plot.getAxis(AxisId.Y).isAutoRange() ? null : new Range(plot.getAxis(AxisId.Y).getMin(), plot.getAxis(AxisId.Y).getMax());
             Range r = getRange(init, "Enter Y1 Range");
-            if (r != null) {
-                plot.getAxis(AxisId.Y).setRange(r.min, r.max);
-            } else {
-                plot.getAxis(AxisId.Y).setAutoRange();
-            }
+            setRangeY1(plot,r);
+            
         });
         plot.addPopupMenuItem(menuRangeY1);
 
@@ -812,11 +912,7 @@ public class DaqbufPanel extends StandardDialog {
         menuRangeY2.addActionListener((ActionEvent e) -> {
             Range init = plot.getAxis(AxisId.Y2).isAutoRange() ? null : new Range(plot.getAxis(AxisId.Y2).getMin(), plot.getAxis(AxisId.Y2).getMax());
             Range r = getRange(init, "Enter Y2 Range");
-            if (r != null) {
-                plot.getAxis(AxisId.Y2).setRange(r.min, r.max);
-            } else {
-                plot.getAxis(AxisId.Y2).setAutoRange();
-            }
+            setRangeY2(plot,r);
         });
         plot.addPopupMenuItem(menuRangeY2);
 
@@ -1757,7 +1853,16 @@ public class DaqbufPanel extends StandardDialog {
                 }
             }
         }
-
+        if (requestedProperties!=null){
+            applyPlotPreferences(requestedProperties);           
+            modelSeries.addTableModelListener(new TableModelListener() {
+                @Override
+                public void tableChanged(TableModelEvent e) {
+                    requestedProperties=null;
+                    modelSeries.removeTableModelListener(this);
+                }
+            });
+        }
     }
 
     void updateCapLength(LinePlotJFree plot) {
@@ -1861,6 +1966,7 @@ public class DaqbufPanel extends StandardDialog {
         synchronized (lock) {
             lock.notifyAll();
         }
+        plotProperties.clear();
         plotSeries.clear();
         initializePlots();
         appendTimestamps.clear();
@@ -2028,6 +2134,7 @@ public class DaqbufPanel extends StandardDialog {
         data.put("binned", checkBins.isSelected());
         data.put("bins",  spinnerBins.getValue() );            
         data.put("maxsize", getMaxSeriesSize());
+        data.put("plots", plotProperties);        
         String json = EncoderJson.encode(data, true);
         Files.write(file.toPath(), json.getBytes());
         this.file = file;
@@ -2044,8 +2151,9 @@ public class DaqbufPanel extends StandardDialog {
         Integer bins = (Integer) data.getOrDefault("bins", null);
         Integer maxsize = (Integer) data.getOrDefault("maxsize", null);
         List<List> series = (List<List>) data.getOrDefault("series", new ArrayList());
-
-        openConfig(series, from, to, range, binned, bins, maxsize);
+        List<Map> plotProperties = (List<Map>) data.getOrDefault("plots", new ArrayList());
+        requestedProperties = plotProperties;
+        openConfig(series, from, to, range, binned, bins, maxsize);        
         this.file = file;
     }
 
@@ -2164,8 +2272,7 @@ public class DaqbufPanel extends StandardDialog {
     Object[] getEmptyRow(){
         return new Object[]{Boolean.TRUE, "", daqbuf.getAvailableDefaultBackend(), "", PLOT_NEW, 1};
     }
-
-    
+        
     
     /**
      * This method is called from within the constructor to initialize the form.
