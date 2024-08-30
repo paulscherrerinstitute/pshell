@@ -52,16 +52,5 @@ public class Time {
         } catch (DateTimeParseException e3) {
             throw new DateTimeParseException("Unable to parse time string: " + timeStr, timeStr, 0);
         }
-    }
-  
-    public static void main(String[] args) {
-        System.out.println(parseIsoTime("2024-08-23 11:01:06.439"));
-        System.out.println(parseIsoTime("2024-08-23 11:01:06"));
-        System.out.println(parseIsoTime("2024-08-23 11:01"));
-        System.out.println(parseIsoTime("2024-08-23T11:01:06.439Z"));
-        System.out.println(parseIsoTime("2024-08-23T11:01:06.439"));
-        System.out.println(parseIsoTime("2024-08-23T11:01:06"));
-        System.out.println(parseIsoTime("2024-08-23T11:01"));
-    }
-  
+    }    
 }

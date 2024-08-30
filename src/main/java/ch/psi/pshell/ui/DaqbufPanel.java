@@ -129,8 +129,8 @@ public class DaqbufPanel extends StandardDialog {
     public static final String ARG_DAQBUF_URL = "daqbuf";
     public static final String ARG_DAQBUF_BACKEND = "backend";
 
-    public static final String PLOT_PRIVATE = "Private";
-    public static final String PLOT_SHARED = "Shared";
+    public static final String PLOT_NEW = "New";
+    public static final String PLOT_SAME = "Same";
     public static final int AXIS_NONE = 0;
     public static final int AXIS_1 = 1;
     public static final int AXIS_2 = 2;
@@ -328,8 +328,8 @@ public class DaqbufPanel extends StandardDialog {
         colPlot.setPreferredWidth(60);
         JComboBox comboPlot = new JComboBox();
         DefaultComboBoxModel model = new DefaultComboBoxModel();
-        model.addElement(PLOT_PRIVATE);
-        model.addElement(PLOT_SHARED);
+        model.addElement(PLOT_NEW);
+        model.addElement(PLOT_SAME);
         comboPlot.setModel(model);
         DefaultCellEditor cellEditor = new DefaultCellEditor(comboPlot);
         cellEditor.setClickCountToStart(2);
@@ -561,8 +561,12 @@ public class DaqbufPanel extends StandardDialog {
 
         int row = tableSeries.getSelectedRow();
         if (row >= 0) {
-            boolean shared = PLOT_SHARED.equals(modelSeries.getValueAt(row, 4));
-            boolean first = (row == 0) || (!PLOT_SHARED.equals(modelSeries.getValueAt(row - 1, 4)));
+            //boolean shared = PLOT_SHARED.equals(modelSeries.getValueAt(row, 4));
+            //boolean first = (row == 0) || (!PLOT_SHARED.equals(modelSeries.getValueAt(row - 1, 4)));
+            
+            boolean first = PLOT_NEW.equals(modelSeries.getValueAt(row, 4));
+            boolean shared = (modelSeries.getRowCount() > (row+1))  &&  (PLOT_SAME.equals(modelSeries.getValueAt(row +1, 4)));
+            
             configureModelComboY(getRowRank(row), shared && first);
         }
         
@@ -618,16 +622,6 @@ public class DaqbufPanel extends StandardDialog {
             spinnerBins.setValue(500);
             setMaxSeriesSize(DEFAULT_MAX_SERIES_SIZE);
             comboTime.setSelectedIndex(0);
-
-            /*
-            modelSeries.addRow(new Object[]{true, "S10BC01-DBPM010:Q1", "sf-databuffer", "[]", PLOT_SHARED, 1, null});
-            modelSeries.addRow(new Object[]{true, "S10BC01-DBPM010:X1", "sf-databuffer", "[]", PLOT_SHARED, 2, null});
-            modelSeries.addRow(new Object[]{true, "SARFE10-PSSS059:FIT-COM", "sf-databuffer", "[]", PLOT_PRIVATE, 1, null});
-            modelSeries.addRow(new Object[]{true, "SARFE10-PSSS059:SPECTRUM_Y", "sf-databuffer", "[2560]", PLOT_PRIVATE, "", null});
-            modelSeries.addRow(new Object[]{false, "SARES11-SPEC125-M1:FPICTURE", "sf-imagebuffer", "[2048, 2048]", PLOT_PRIVATE, "", null});
-            textFrom.setText("2024-05-02 09:00:00");
-            textTo.setText("2024-05-02 10:00:00");
-             */
         } finally {
             updating = false;
             file = null;
@@ -1610,7 +1604,8 @@ public class DaqbufPanel extends StandardDialog {
         final Integer bins;
         final String name;
         final String backend;
-        final boolean shared;
+        //final boolean shared;
+        final boolean create;
         final int axis;
         final Color color;
         final Colormap colormap;
@@ -1624,7 +1619,9 @@ public class DaqbufPanel extends StandardDialog {
             bins = checkBins.isSelected() ? (Integer) spinnerBins.getValue() : null;
             name = getChannelAlias(((String) info.get(1)).trim());
             backend = info.get(2).toString();
-            shared = PLOT_SHARED.equals(info.get(4));            
+            create = !PLOT_SAME.equals(info.get(4));
+            
+            
             switch(Str.toString(info.get(5))){
                 case "X":
                     axis = AXIS_X;
@@ -1667,7 +1664,8 @@ public class DaqbufPanel extends StandardDialog {
             this.bins = bins;
             name = parent.name;
             backend = parent.backend;
-            shared = parent.shared;
+            //shared = parent.shared;
+            create = parent.create;
             axis = parent.axis;
             color = parent.color;
             colormap = parent.colormap;
@@ -1705,7 +1703,7 @@ public class DaqbufPanel extends StandardDialog {
         checkTimeRange();                    
         update();       
 
-        Plot sharedPlot = null;
+        Plot currentPlot = null;
         plotInfo.clear();
         Vector vector = modelSeries.getDataVector();
         Vector[] rows = (Vector[]) vector.toArray(new Vector[0]);
@@ -1713,14 +1711,15 @@ public class DaqbufPanel extends StandardDialog {
 
         for (int i = 0; i < rows.length; i++) {
             Vector info = rows[i];
+            Vector next = (i < rows.length-1) ? rows[i+1] : null;
             if (info.get(0).equals(true)) {
                 SeriesInfo seriesInfo = new SeriesInfo(info);
                 Plot plot = null;
                 PlotSeries series = null;
                 switch (seriesInfo.getRank()) {
                     case 0:
-                        if (seriesInfo.shared && (sharedPlot != null) && (sharedPlot instanceof LinePlotJFree)) {
-                            plot = sharedPlot;
+                        if (!seriesInfo.create && (currentPlot != null) && (currentPlot instanceof LinePlotJFree)) {
+                            plot = currentPlot;
                         } else {
                             cf = null;
                             if (seriesInfo.axis < 0) {
@@ -1728,7 +1727,7 @@ public class DaqbufPanel extends StandardDialog {
                             } else {
                                 plot = addLinePlot(seriesInfo.bins != null);
                             }
-                            sharedPlot = seriesInfo.shared ? plot : null;
+                            currentPlot = plot;
                         }
                         if (seriesInfo.axis < 0) {
                             cf = setDomainAxis((LinePlotJFree) plot, seriesInfo);
@@ -2163,7 +2162,7 @@ public class DaqbufPanel extends StandardDialog {
     }
 
     Object[] getEmptyRow(){
-        return new Object[]{Boolean.TRUE, "", daqbuf.getAvailableDefaultBackend(), "", PLOT_PRIVATE, 1};
+        return new Object[]{Boolean.TRUE, "", daqbuf.getAvailableDefaultBackend(), "", PLOT_NEW, 1};
     }
 
     
