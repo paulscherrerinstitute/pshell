@@ -62,14 +62,14 @@ public class Matrix<T> extends StreamChannel<T> implements ReadonlyRegisterMatri
             if ((shape==null) ||  (shape.length!=2)){
                 try{
                     int[] ashape = Arr.getShape(take());
-                    if  (shape.length==2){
-                        return ashape[0];
+                    if  (ashape.length==2){
+                        return ashape[1];
                     }                 
                 } catch (Exception ex){                    
                 }
                 throw new RuntimeException("Indefined matrix size");
             }
-            return shape[1];
+            return shape[0];
         }
         return width;
     }
@@ -81,14 +81,14 @@ public class Matrix<T> extends StreamChannel<T> implements ReadonlyRegisterMatri
             if ((shape==null) || (shape.length!=2)){
                 try{
                     int[] ashape = Arr.getShape(take());
-                    if  (shape.length==2){
-                        return ashape[1];
+                    if  (ashape.length==2){
+                        return ashape[0];
                     }                 
                 } catch (Exception ex){                    
                 }
                 throw new RuntimeException("Indefined matrix size");
             }
-            return shape[0];
+            return shape[1];
         }
         return height;
     }
