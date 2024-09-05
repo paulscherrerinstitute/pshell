@@ -1853,7 +1853,7 @@ public class DaqbufPanel extends StandardDialog {
                 }
             }
         }
-        if (requestedProperties!=null){
+        if ((requestedProperties!=null) && (requestedProperties.size()>0)){
             applyPlotPreferences(requestedProperties);           
             modelSeries.addTableModelListener(new TableModelListener() {
                 @Override

@@ -477,9 +477,24 @@ public class Daqbuf implements ChannelQueryAPI {
         WebTarget resource = client.target(url + path);
         resource = query.setResourceParams(resource);
         Response response = resource.request().header("Accept", accept).get();
+        IOException e = null;
 
         if (response.getStatus() != 200) {
-            throw new IOException(String.format("Unable to retrieve data from server: %s [%d]", response.getStatusInfo().getReasonPhrase(), response.getStatus()));
+            try{
+                String json = response.readEntity(String.class);
+                Map body = (Map) EncoderJson.decode(json, Map.class);                
+                String message = (String) body.get("message");
+                String id =  (String) body.get("requestid");                
+                if (message.isBlank()){
+                    throw new Exception();
+                }
+                message = Str.capitalizeFirst(message);                
+                e = new IOException(String.format("%s\nChannel: %s\nRequest ID: %s", message , channel, id));
+            } catch (Exception ex){
+                e = new IOException(String.format("Error retrieving data: %s [%d]\nChannel: %s",  response.getStatusInfo().getReasonPhrase(), response.getStatus(), channel));
+            } finally{
+                throw e;
+            }
         }
 
         listener.onStarted(query);
