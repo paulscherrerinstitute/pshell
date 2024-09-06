@@ -538,9 +538,10 @@ public class Daqbuf implements ChannelQueryAPI {
                                 }
                                 listener.onMessage(query, values, ids, timestamps);
                                 if (recordListener != null) {
+                                    boolean have_id = (ids!=null) && (ids.size()==values.size());
                                     if (values != null) {
                                         for (int i = 0; i < values.size(); i++) {
-                                            recordListener.onRecord(query, values.get(i), (Long) ids.get(i), (Long) timestamps.get(i));
+                                            recordListener.onRecord(query, values.get(i), have_id ? (Long) ids.get(i) : null, (Long) timestamps.get(i));
                                         }
                                     }
                                 }
