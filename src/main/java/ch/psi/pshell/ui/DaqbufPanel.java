@@ -2270,7 +2270,7 @@ public class DaqbufPanel extends StandardDialog {
     }
 
     Object[] getEmptyRow(){
-        return new Object[]{Boolean.TRUE, "", daqbuf.getAvailableDefaultBackend(), "", PLOT_NEW, 1};
+        return new Object[]{Boolean.TRUE, "", daqbuf.getAvailableDefaultBackend(), "", PLOT_NEW, "Y1"};
     }
         
     
