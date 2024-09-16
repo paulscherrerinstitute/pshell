@@ -34,6 +34,7 @@ import ij.process.FloatProcessor as FloatProcessor
 import ij.process.ImageConverter as ImageConverter
 import ij.process.AutoThresholder as AutoThresholder
 import ij.process.LUT as LUT
+import ij.process.Blitter as Blitter
 import ij.measure.Measurements as Measurements
 import ij.measure.ResultsTable as ResultsTable
 import ij.plugin.filter.Analyzer as Analyzer
@@ -540,32 +541,11 @@ def subtract_background(ip, radius = 50, create_background=False, dark_backgroun
 ###################################################################################################
 #FFT
 ###################################################################################################
-def image_fft(ip, show = True):   
-    WindowManager.setTempCurrentImage(ip)
-    fft = FFT()
-    fft.run("fft")    
-    #TODO: how to avoid it to be created?
-    #ret =  ImagePlus("FHT of " + ip.getTitle(), WindowManager.getCurrentImage().getProcessor())
-    ret = WindowManager.getCurrentImage()
-    if not show:
-        WindowManager.getCurrentImage().hide()
-    return ret
+def image_fft(ip):   
+    return FFT.forward(ip)
     
-
-def image_ffti(ip, show = True):   
-    WindowManager.setTempCurrentImage(ip)
-    fft = FFT()
-    fft.run("inverse")
-    #WindowManager.getCurrentImage().hide()
-    #TODO: how to avoid it to be created?
-    #ret = WindowManager.getCurrentImage()
-    #WindowManager.getCurrentImage().hide()
-    #ret =  ImagePlus(ip.getTitle() + " ffti", WindowManager.getCurrentImage().getProcessor())
-    ret = WindowManager.getCurrentImage()
-    if not show:
-        WindowManager.getCurrentImage().hide()
-    
-    return ret
+def image_ffti(ip):   
+    return FFT.inverse(ip)
 
 def bandpass_filter(ip, small_dia_px, large_dia_px, suppress_stripes = 0, stripes_tolerance_direction = 5.0, autoscale_after_filtering = False, saturate_if_autoscale = False, display_filter = False, in_place=True):
     """
