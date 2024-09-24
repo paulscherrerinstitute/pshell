@@ -19,6 +19,11 @@ public class Range {
         this.max = max.doubleValue();
     }
 
+    public Range(Long min, Long max) {
+        this.min = min.doubleValue();
+        this.max = max.doubleValue();
+    }
+
     public Double getExtent() {
         return max - min;
     }
