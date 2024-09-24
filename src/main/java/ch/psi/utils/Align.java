@@ -17,7 +17,7 @@ public class Align extends ObservableBase<Align.AlignListener>{
     final String[] channels;    
     final Boolean partial;
     final int buffer;
-    String filter = null;
+    Filter filter = null;
     final MaxLenHashMap.OrderedMap<Long, Map<String, Object>> data;
     final Boolean partialAfter;
     boolean firstComplete=false;
@@ -34,7 +34,7 @@ public class Align extends ObservableBase<Align.AlignListener>{
     }
     
     public void setFilter(String filter){
-        this.filter = filter;
+        this.filter = (filter==null) ? null : new Filter(filter);
     }
     
     public void add(Long id, Long timestamp, String channel, Object value){
@@ -100,10 +100,10 @@ public class Align extends ObservableBase<Align.AlignListener>{
         }
     }
 
-    public boolean isValid(Long id, Long timestamp, Object msg){
+    public boolean isValid(Long id, Long timestamp, Map<String, Object> msg){
         try{            
             if (filter!=null){
-                //return check_msg(msg, filter);
+                return filter.checkFilter(msg);
             }
             return true;
         } catch (Exception ex){

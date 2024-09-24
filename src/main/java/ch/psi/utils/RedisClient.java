@@ -15,6 +15,7 @@ public class RedisClient {
     private final int port;
     private final Integer db;
     private volatile boolean aborted = false;    
+    private volatile Filter filter;
     ObjectMapper mapper;
     
     Boolean partial;
@@ -48,7 +49,7 @@ public class RedisClient {
         this.bufferSize = bufferSize;
     }    
 
-    public void run(List<String> channels, AlignListener lisnener, String filter, boolean newMessages) {                        
+    public void run(List<String> channels, AlignListener lisnener, boolean newMessages, String filter) {                        
         _logger.info("Starting Redis streaming - channels: " + Str.toString(channels) + " - filter: " + Str.toString(filter));
         
         Align align = new Align(channels.toArray(new String[0]), getPartial(), getBufferSize());
@@ -148,12 +149,12 @@ public class RedisClient {
         return data;
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args) {        
         RedisClient client = new RedisClient("std-daq-build", 6379);
         AlignListener listener =  ((AlignListener) (Long id, Long timestamp, Object msg) -> {
             System.out.println(String.format("ID: %d, Timestamp: %d, Msg: %s", id, timestamp, Str.toString(msg)));
         });
         client.setPartial(false);
-        client.run(Arrays.asList("channel1", "channel2", "channel3"), listener, null, false);   
+        client.run(Arrays.asList("channel1", "channel2", "channel3"), listener, false, "channel1<0.3 AND channel2<0.1");   
     }
 }
