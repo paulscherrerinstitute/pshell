@@ -1025,8 +1025,8 @@ public class DaqbufPanel extends StandardDialog {
         }
         double xmin = xyplot.getDomainAxis().getRange().getLowerBound();
         double xmax = xyplot.getDomainAxis().getRange().getUpperBound();
-        String start = Daqbuf.millisToStr((long) xmin, false);
-        String end = Daqbuf.millisToStr((long) xmax, false);
+        String start = Time.millisToStr((long) xmin, false);
+        String end = Time.millisToStr((long) xmax, false);
         SeriesInfo[] formerInfo = plotInfo.get(plot).toArray(new SeriesInfo[0]);
         plotInfo.get(plot).clear();
         plot.clear();
@@ -1064,8 +1064,8 @@ public class DaqbufPanel extends StandardDialog {
         }
         double xmin = xyplot.getDomainAxis().getRange().getLowerBound();
         double xmax = xyplot.getDomainAxis().getRange().getUpperBound();
-        String start = Daqbuf.millisToStr((long) xmin, false);
-        String end = Daqbuf.millisToStr((long) xmax, false);
+        String start = Time.millisToStr((long) xmin, false);
+        String end = Time.millisToStr((long) xmax, false);
         SeriesInfo[] formerInfo = plotInfo.get(plot).toArray(new SeriesInfo[0]);
         plotInfo.get(plot).clear();
         plot.clear();

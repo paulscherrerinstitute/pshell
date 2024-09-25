@@ -85,8 +85,6 @@ public class Daqbuf implements ChannelQueryAPI {
 
     public static final String BACKEND_SEPARATOR = "@";
 
-    static final DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS");
-
     static final Long PULSE_ID_START_TIME = 1504524711650L;
     static final double PULSE_ID_INTERVAL = 10;
     
@@ -417,8 +415,8 @@ public class Daqbuf implements ChannelQueryAPI {
             addLast = (end==null);
             this.channel = channel;
             this.backend = backend;
-            this.start = convertToUTC(start);
-            this.end = (end==null) ? this.start: convertToUTC(end);
+            this.start = Time.convertToUTC(start);
+            this.end = (end==null) ? this.start: Time.convertToUTC(end);
             this.bins = bins;
         }
 
@@ -663,7 +661,7 @@ public class Daqbuf implements ChannelQueryAPI {
 
                 @Override
                 public void onRecord(Query query, Object average, Object min, Object max, Integer count, Long start, Long end) {
-                    System.out.printf("%s", String.format(PRINT_BINNED_QUERY_FORMAT, query.channel, timestampToStr(start, false), timestampToStr(end, false),
+                    System.out.printf("%s", String.format(PRINT_BINNED_QUERY_FORMAT, query.channel, Time.timestampToStr(start, false), Time.timestampToStr(end, false),
                             average.toString(), min.toString(), max.toString(), count.toString()));
                 }
             };
@@ -679,7 +677,7 @@ public class Daqbuf implements ChannelQueryAPI {
 
                 @Override
                 public void onRecord(Query query, Object value, Long id, Long timestamp) {
-                    System.out.printf("%s", String.format(PRINT_QUERY_FORMAT, query.channel, timestampToStr(timestamp, false), id.toString(), value.toString()));
+                    System.out.printf("%s", String.format(PRINT_QUERY_FORMAT, query.channel, Time.timestampToStr(timestamp, false), id.toString(), value.toString()));
                 }
             };
         }
@@ -939,37 +937,6 @@ public class Daqbuf implements ChannelQueryAPI {
         return (CompletableFuture) Threading.getPrivateThreadFuture(() -> saveQuery(filename, channels, start, end, bins));
     }
 
-    public static LocalDateTime fromNanoseconds(long nanoseconds, boolean utc) {
-        long seconds = nanoseconds / 1_000_000_000L;
-        int nano = (int) (nanoseconds % 1_000_000_000L);
-        Instant instant = Instant.ofEpochSecond(seconds, nano);
-        return LocalDateTime.ofInstant(instant, utc ? ZoneOffset.UTC : ZoneOffset.systemDefault());
-    }
-
-    public static LocalDateTime fromMilliseconds(long milliseconds, boolean utc) {
-        Instant instant = Instant.ofEpochMilli(milliseconds);
-        return LocalDateTime.ofInstant(instant, utc ? ZoneOffset.UTC : ZoneOffset.systemDefault());
-    }
-
-    public static String timestampToStr(Long timestamp, boolean utc) {
-        if (timestamp == null) {
-            return "";
-        }
-        LocalDateTime currentTime = null;
-        if (timestamp >= 1000000000000000L){
-            //nanos
-            currentTime = fromNanoseconds(timestamp, utc);
-        } else if (timestamp >= 1000000000){
-            //millis
-            currentTime = fromMilliseconds(timestamp, utc);
-        } 
-        //LocalDateTime currentTime = fromNanoseconds(timestamp, utc);
-        String ret = currentTime.format(timeFormatter);
-        if (utc) {
-            ret = ret + "Z";
-        }
-        return ret;
-    }
 
     public static long millisToPulseId(Long timestamp) {
         if (timestamp == null) {
@@ -987,43 +954,11 @@ public class Daqbuf implements ChannelQueryAPI {
         return (long) (PULSE_ID_START_TIME + offset);
     }
 
-    public static String millisToStr(Long timestamp, boolean utc) {
-        if (timestamp == null) {
-            timestamp = System.currentTimeMillis();
-        }
-        LocalDateTime currentTime = fromMilliseconds(timestamp, utc);
-        String ret = currentTime.format(timeFormatter);
-        if (utc) {
-            ret = ret + "Z";
-        }
-        return ret;
-    }
-
     public static String pulseIdToStr(Long pulseId, boolean utc) {
         long millis = pulseIdToMillis(pulseId);
-        return millisToStr(millis, utc);
+        return Time.millisToStr(millis, utc);
     }
 
-    public static String convertToUTC(String inputDateTime) {
-        try {
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("[yyyy-MM-dd['T'][ HH:mm[:ss][.SSS]][X]]");
-            OffsetDateTime offsetDateTime;
-            try {
-                offsetDateTime = OffsetDateTime.parse(inputDateTime, formatter);
-            } catch (DateTimeParseException e) {
-                LocalDateTime localDateTime = LocalDateTime.parse(inputDateTime, formatter);
-                ZonedDateTime zonedDateTime = localDateTime.atZone(ZoneId.systemDefault());
-                offsetDateTime = zonedDateTime.toOffsetDateTime();
-            }
-            if (inputDateTime.endsWith("Z")) {
-                return offsetDateTime.toInstant().toString();
-            }
-            Instant instant = offsetDateTime.withOffsetSameInstant(ZoneOffset.UTC).toInstant();
-            return instant.toString();
-        } catch (Exception ex) {
-            return inputDateTime;
-        }
-    }
 
     public static void main(String[] args) throws Exception {
         CompletableFuture cf;

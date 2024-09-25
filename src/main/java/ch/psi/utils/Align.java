@@ -21,6 +21,7 @@ public class Align extends ObservableBase<Align.AlignListener>{
     final MaxLenHashMap.OrderedMap<Long, Map<String, Object>> data;
     final Boolean partialAfter;
     boolean firstComplete=false;
+    volatile boolean added = false;
     
     long sent_id = -1;
     
@@ -37,7 +38,7 @@ public class Align extends ObservableBase<Align.AlignListener>{
         this.filter = (filter==null) ? null : new Filter(filter);
     }
     
-    public void add(Long id, Long timestamp, String channel, Object value){
+    public synchronized void add(Long id, Long timestamp, String channel, Object value){
         if (id==null){
             id = timestamp;
         }
@@ -47,55 +48,59 @@ public class Align extends ObservableBase<Align.AlignListener>{
             data.put(id, entry);
         }
         data.get(id).put(channel, value);
+        added = true;
     }
 
-    public void reset(){
+    public synchronized void reset(){
         data.clear();
         firstComplete = false;
         sent_id = -1;
     }
 
-    public void process(){        
-        NavigableSet<Long> keysInOrder =  data.navigableKeySet();
-        long last_complete_id = -1;  
-        for (long id : keysInOrder.reversed()){
-            if (data.get(id).size() == channels.length+1){
-                last_complete_id = id;
-                break;
-            }            
-        }
-
-        for (Long id : new ArrayList<>(keysInOrder)){
-            boolean complete = data.get(id).size() == channels.length+1;
-            boolean done = complete || (last_complete_id > id) || (data.size() > buffer);
-            if (!done) {
-                break;
+    public synchronized void process(){        
+        if (added){
+            added = false;
+            NavigableSet<Long> keysInOrder =  data.navigableKeySet();
+            long last_complete_id = -1;  
+            for (long id : keysInOrder.reversed()){
+                if (data.get(id).size() == channels.length+1){
+                    last_complete_id = id;
+                    break;
+                }            
             }
-            Map<String, Object> msg = data.remove(id);
-            if (complete || partial){  
-                if (complete){
-                    firstComplete = true;
+
+            for (Long id : new ArrayList<>(keysInOrder)){
+                boolean complete = data.get(id).size() == channels.length+1;
+                boolean done = complete || (last_complete_id > id) || (data.size() > buffer);
+                if (!done) {
+                    break;
                 }
-                if (!partialAfter || firstComplete){
-                    if (sent_id >= id){
-                         _logger.warning(String.format("Invalid ID %d - last sent ID %d", id, sent_id));
-                    } else{
-                        Long timestamp = (Long) msg.getOrDefault("timestamp", null);
-                        try{
-                            if ((filter==null) || (isValid(id, timestamp, msg))){
-                                for (AlignListener listener : getListeners()) {
-                                    listener.onMessage(id, timestamp, msg);
+                Map<String, Object> msg = data.remove(id);
+                if (complete || partial){  
+                    if (complete){
+                        firstComplete = true;
+                    }
+                    if (!partialAfter || firstComplete){
+                        if (sent_id >= id){
+                             _logger.warning(String.format("Invalid ID %d - last sent ID %d", id, sent_id));
+                        } else{
+                            Long timestamp = (Long) msg.getOrDefault("timestamp", null);
+                            try{
+                                if ((filter==null) || (isValid(id, timestamp, msg))){
+                                    for (AlignListener listener : getListeners()) {
+                                        listener.onMessage(id, timestamp, msg);
+                                    }
                                 }
                             }
+                            catch (Exception ex){
+                                _logger.warning("Error receiving data: " + ex.getMessage());
+                            }                    
+                            sent_id = id;
                         }
-                        catch (Exception ex){
-                            _logger.warning("Error receiving data: " + ex.getMessage());
-                        }                    
-                        sent_id = id;
                     }
+                } else {
+                    _logger.finest("Discarding partial message: " + id);
                 }
-            } else {
-                _logger.finest("Discarding partial message: " + id);
             }
         }
     }

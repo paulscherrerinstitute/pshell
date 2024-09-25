@@ -18,8 +18,9 @@ public class RedisClient {
     private volatile Filter filter;
     ObjectMapper mapper;
     
-    Boolean partial;
-    Integer bufferSize = 1000;    
+    int bufferSize = 1000;    
+    int readCount = 5;    
+    int readBlock = 10;    
     
     public RedisClient(String host, int port) {
         this(host, port, null);
@@ -30,39 +31,57 @@ public class RedisClient {
         this.port = port;
         this.db = db;
         mapper = new ObjectMapper(new CBORFactory());
-        partial = true;
     }    
-
-    public Boolean getPartial(){
-        return partial;
-    }
-
-    public void setPartial(Boolean partial){
-        this.partial =partial;
-    }
     
-    public Integer getBufferSize(){
+    public int getBufferSize(){
         return bufferSize;
     }
 
-    public void setBufferSize(Integer size){
+    public void setBufferSize(int size){
         this.bufferSize = bufferSize;
-    }    
+    }   
+    
+    
+    public int getReadBlock(){
+        return readBlock;
+    }
 
-    public void run(List<String> channels, AlignListener lisnener, boolean newMessages, String filter) {                        
+    public void setReadBlock(int size){
+        this.readBlock = readBlock;
+    }       
+    
+    public int getReadCount(){
+        return readCount;
+    }
+
+    public void setReadCount(int size){
+        this.readCount = readCount;
+    }       
+    
+    public enum InitialMsg{
+        all,
+        now,
+        newer        
+    }
+    
+
+    public void run(List<String> channels, AlignListener lisnener, Boolean partial, InitialMsg initialMsg, String filter) {                        
         _logger.info("Starting Redis streaming - channels: " + Str.toString(channels) + " - filter: " + Str.toString(filter));
         
-        Align align = new Align(channels.toArray(new String[0]), getPartial(), getBufferSize());
+        Align align = new Align(channels.toArray(new String[0]), partial, getBufferSize());
         align.setFilter(filter);
         align.addListener(lisnener);       
-        String initialId = newMessages ? "$" : "0";
+        if (initialMsg==null){
+            initialMsg = InitialMsg.all;
+        }
+        String initialId = initialMsg==InitialMsg.newer ? "$" : "0";
         
         try(Jedis jedis = new Jedis(host, port) ){       
             if (db!=null){
                 jedis.select(db);
             }
             
-            XReadParams params = XReadParams.xReadParams().count(5).block(10);            
+            XReadParams params = XReadParams.xReadParams().count(readCount).block(readBlock);            
             Map<String, String> streamIds = new HashMap<>();  // Track last message ID for each channel
             Map<String, Integer> channelIndexes = new HashMap<>();  // Track last message ID for each channel
             int index=0;
@@ -104,8 +123,11 @@ public class RedisClient {
                                         long timestamp = Long.parseLong((String)fields.get("timestamp"));
                                         long id = Long.parseLong((String)fields.get("id"));
                                         Object value = fields.get("value");
-                                        //System.out.println(String.format("ID: %d, Timestamp: %d, Channel: %s, Value: %s", id, timestamp, channel, Str.toString(value)));
-                                        align.add(id, timestamp, channel, value);                                        
+                                        
+                                        if ((initialMsg != InitialMsg.now) || (System.currentTimeMillis()>=Time.timestampToMillis(timestamp))){                                        
+                                            //System.out.println(String.format("ID: %d, Timestamp: %d, Channel: %s, Value: %s", id, timestamp, channel, Str.toString(value)));
+                                            align.add(id, timestamp, channel, value);                                        
+                                        }
                                     } catch (Exception ex){                                        
                                         _logger.warning("Deserialization error: " + ex.getMessage());
                                     }                                
@@ -113,8 +135,8 @@ public class RedisClient {
                             }
                         }
                     }
-                }
-                align.process();
+                    align.process();
+                }                
             }
         } catch (Exception ex){
             _logger.warning("redis streaming error: " + ex.getMessage());
@@ -148,13 +170,15 @@ public class RedisClient {
         }
         return data;
     }
-
+    static int count = 0;
     public static void main(String[] args) {        
         RedisClient client = new RedisClient("std-daq-build", 6379);
-        AlignListener listener =  ((AlignListener) (Long id, Long timestamp, Object msg) -> {
-            System.out.println(String.format("ID: %d, Timestamp: %d, Msg: %s", id, timestamp, Str.toString(msg)));
+        
+        AlignListener listener =  ((AlignListener) (Long id, Long timestamp, Object msg) -> {            
+            System.out.println(String.format("ID: %d, Timestamp: %s, Count: %d, Msg: %s", id, Time.timestampToStr(timestamp), count++, Str.toString(msg)));
+            //System.out.println(String.format("ID: %d, Timestamp: %d,  Now: %d,  Count: %d, Msg: %s", id, timestamp, System.currentTimeMillis(), count++, Str.toString(msg)));
         });
-        client.setPartial(false);
-        client.run(Arrays.asList("channel1", "channel2", "channel3"), listener, false, "channel1<0.3 AND channel2<0.1");   
+        String filter = null;//"channel1<0.3 AND channel2<0.1";      
+        client.run(Arrays.asList("channel1", "channel2", "channel3"), listener, false, InitialMsg.newer, filter);   
     }
 }
