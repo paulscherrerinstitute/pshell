@@ -1,32 +1,40 @@
 package ch.psi.utils;
 
 import ch.psi.utils.Align.AlignListener;
+import ch.psi.utils.Threading.VisibleCompletableFuture;
 import redis.clients.jedis.Jedis;
-import java.util.*;
 import java.util.logging.Logger;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.cbor.CBORFactory;
+import java.util.AbstractMap;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import redis.clients.jedis.params.XReadParams;
 
 
-public class RedisClient {
-    private static final Logger _logger = Logger.getLogger(RedisClient.class.getName());
+public class RedisStream implements AutoCloseable {
+    private static final Logger _logger = Logger.getLogger(RedisStream.class.getName());
     private final String host;
     private final int port;
     private final Integer db;
     private volatile boolean aborted = false;    
-    private volatile Filter filter;
     ObjectMapper mapper;
+    Set<VisibleCompletableFuture> futures = new HashSet<>();
     
     int bufferSize = 1000;    
     int readCount = 5;    
     int readBlock = 10;    
     
-    public RedisClient(String host, int port) {
+    public RedisStream(String host, int port) {
         this(host, port, null);
     }
     
-    public RedisClient(String host, int port, Integer db) {
+    public RedisStream(String host, int port, Integer db) {
         this.host = host;
         this.port = port;
         this.db = db;
@@ -58,6 +66,10 @@ public class RedisClient {
         this.readCount = readCount;
     }       
     
+    public void abort(){
+        this.aborted = true;
+    }           
+    
     public enum InitialMsg{
         all,
         now,
@@ -67,26 +79,25 @@ public class RedisClient {
 
     public void run(List<String> channels, AlignListener lisnener, Boolean partial, InitialMsg initialMsg, String filter) {                        
         _logger.info("Starting Redis streaming - channels: " + Str.toString(channels) + " - filter: " + Str.toString(filter));
-        
+        aborted = false;        
         Align align = new Align(channels.toArray(new String[0]), partial, getBufferSize());
         align.setFilter(filter);
         align.addListener(lisnener);       
         if (initialMsg==null){
             initialMsg = InitialMsg.all;
-        }
-        String initialId = initialMsg==InitialMsg.newer ? "$" : "0";
-        
+        }        
         try(Jedis jedis = new Jedis(host, port) ){       
+            String initialId = initialMsg==InitialMsg.newer ? "$" : "0";
             if (db!=null){
                 jedis.select(db);
             }
             
             XReadParams params = XReadParams.xReadParams().count(readCount).block(readBlock);            
-            Map<String, String> streamIds = new HashMap<>();  // Track last message ID for each channel
-            Map<String, Integer> channelIndexes = new HashMap<>();  // Track last message ID for each channel
+            Map<String, String> streamIds = new HashMap<>();  
+            Map<String, Integer> channelIndexes = new HashMap<>(); 
             int index=0;
             for (String channel : channels) {
-                streamIds.put(channel, initialId);  // New messages
+                streamIds.put(channel, initialId); 
                 channelIndexes.put(channel, index);
                 index++;
             }
@@ -95,9 +106,6 @@ public class RedisClient {
             for (String channel : channels) {
                 streams.add(new AbstractMap.SimpleEntry<>(channel.getBytes(), initialId.getBytes()));
             }            
-            //for (int i = 0; i < channels.size(); i++) {
-            //    streams.get(i).setValue(streamIds.get(channels.get(i)).getBytes());  // Update the message ID for the channel
-            //}                
 
             while (!aborted) {                       
                 AbstractMap.SimpleEntry[] sts = streams.toArray(new AbstractMap.SimpleEntry[0]);                
@@ -146,8 +154,7 @@ public class RedisClient {
             _logger.info("Stopping Redis streaming: " + Str.toString(channels));
         }               
     }
-
-           
+    
     private Map deserialize(List msg) {        
         Map data =  new HashMap();
         for (int i=0; i<msg.size(); i+=2){
@@ -170,16 +177,61 @@ public class RedisClient {
         }
         return data;
     }
-    static int count = 0;
-    public static void main(String[] args) {        
-        RedisClient client = new RedisClient("std-daq-build", 6379);
-        
-        AlignListener listener =  ((AlignListener) (Long id, Long timestamp, Object msg) -> {            
-            System.out.println(String.format("ID: %d, Timestamp: %s, Count: %d, Msg: %s", id, Time.timestampToStr(timestamp), count++, Str.toString(msg)));
-            //System.out.println(String.format("ID: %d, Timestamp: %d,  Now: %d,  Count: %d, Msg: %s", id, timestamp, System.currentTimeMillis(), count++, Str.toString(msg)));
+    
+    public VisibleCompletableFuture start(List<String> channels, AlignListener lisnener, Boolean partial, InitialMsg initialMsg, String filter) {
+        VisibleCompletableFuture future =  (VisibleCompletableFuture) Threading.getPrivateThreadFuture(() -> run(channels, lisnener, partial, initialMsg, filter));
+        futures.add(future);
+        future.handle((res, ex)->{
+            futures.remove(future);
+            return res;
         });
-        String filter = null;
-        filter = "channel1<0.3 AND channel2<0.1";      
-        client.run(Arrays.asList("channel1", "channel2", "channel3"), listener, false, InitialMsg.newer, filter);   
+        return future;
+    }
+    
+    public void join(long millis) throws InterruptedException{
+        for (VisibleCompletableFuture future: futures){
+            future.getRunningThread().join(millis);
+        }
+    }
+    
+    public boolean isRunning(){
+        for (VisibleCompletableFuture future: futures){
+            if (future.getRunningThread().isAlive()){
+                return true;
+            }
+        }
+        return false;
+    }             
+    
+    @Override
+    public void close() throws InterruptedException {
+        abort();
+        Thread.sleep(0);
+        for (VisibleCompletableFuture future: futures){
+            future.getRunningThread().interrupt();
+        }
+    }    
+    
+    static int count = 0;
+    public static void main(String[] args) throws InterruptedException {        
+        try (RedisStream stream = new RedisStream("std-daq-build", 6379)){
+
+            AlignListener listener =  ((AlignListener) (Long id, Long timestamp, Object msg) -> {            
+                System.out.println(String.format("ID: %d, Timestamp: %s, Count: %d, Msg: %s", id, Time.timestampToStr(timestamp), count++, Str.toString(msg)));
+                //System.out.println(String.format("ID: %d, Timestamp: %d,  Now: %d,  Count: %d, Msg: %s", id, timestamp, System.currentTimeMillis(), count++, Str.toString(msg)));
+            });
+            String filter = null;
+            //filter = "channel1<0.3 AND channel2<0.1";      
+            VisibleCompletableFuture future = stream.start(Arrays.asList("channel1", "channel2", "channel3"), listener, false, InitialMsg.newer, filter);   
+            Thread.sleep(2000);
+            stream.abort();
+            stream.join(0);
+            System.out.println(stream.isRunning());         
+            
+            stream.start(Arrays.asList("channel1"), listener, false, InitialMsg.newer, filter);   
+            stream.start(Arrays.asList("channel2"), listener, false, InitialMsg.newer, filter);   
+            Thread.sleep(2000);
+            System.out.println(stream.isRunning());         
+        }        
     }
 }

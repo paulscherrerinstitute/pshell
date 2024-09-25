@@ -8,7 +8,7 @@ import java.util.logging.Logger;
 
 
 public class Align extends ObservableBase<Align.AlignListener>{
-    private static final Logger _logger = Logger.getLogger(RedisClient.class.getName());
+    private static final Logger _logger = Logger.getLogger(RedisStream.class.getName());
     
     public static interface AlignListener {
         void onMessage(Long id, Long timestamp, Object msg);
