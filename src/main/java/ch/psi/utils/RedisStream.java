@@ -6,6 +6,7 @@ import redis.clients.jedis.Jedis;
 import java.util.logging.Logger;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.cbor.CBORFactory;
+import java.nio.ByteOrder;
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -167,6 +168,12 @@ public class RedisStream implements AutoCloseable {
                     value = frame.get("data");
                     List shape = (List) frame.get("shape");
                     String dtype = (String) frame.get("dtype");                    
+                    if ((dtype!=null) && (shape!=null) && (value instanceof byte[])){                                                
+                        ByteOrder byteOrder =  ByteOrder.LITTLE_ENDIAN;
+                        Object arr = BufferConverter.fromArray((byte[]) value, Type.fromKey(dtype), byteOrder);
+                        int[] sh = (int[]) Convert.toPrimitiveArray(shape, int.class);
+                        value = Convert.reshape(arr, sh);                        
+                    }
                 } catch (Exception ex){
                     _logger.warning("Deserialization error: " + ex.getMessage());
                 }
@@ -222,6 +229,13 @@ public class RedisStream implements AutoCloseable {
             });
             String filter = null;
             //filter = "channel1<0.3 AND channel2<0.1";      
+
+            stream.start(Arrays.asList("array1", "array2"), listener, false, InitialMsg.all, filter);   
+            Thread.sleep(2000);
+            System.out.println(stream.isRunning());         
+            stream.abort();
+            stream.join(0);
+
             VisibleCompletableFuture future = stream.start(Arrays.asList("channel1", "channel2", "channel3"), listener, false, InitialMsg.newer, filter);   
             Thread.sleep(2000);
             stream.abort();
