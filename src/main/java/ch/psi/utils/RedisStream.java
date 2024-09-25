@@ -71,24 +71,17 @@ public class RedisStream implements AutoCloseable {
         this.aborted = true;
     }           
     
-    public enum InitialMsg{
-        all,
-        now,
-        newer        
-    }
-    
 
-    public void run(List<String> channels, AlignListener lisnener, Boolean partial, InitialMsg initialMsg, String filter) {                        
+    public void run(List<String> channels, AlignListener lisnener, Boolean partial, Boolean  onlyNew, Range timeRange, Range idRange, String filter) {                        
         _logger.info("Starting Redis streaming - channels: " + Str.toString(channels) + " - filter: " + Str.toString(filter));
         aborted = false;        
         Align align = new Align(channels.toArray(new String[0]), partial, getBufferSize());
         align.setFilter(filter);
-        align.addListener(lisnener);       
-        if (initialMsg==null){
-            initialMsg = InitialMsg.all;
-        }        
+        align.setTimeRange(timeRange);
+        align.setIdRange(idRange);
+        align.addListener(lisnener);      
         try(Jedis jedis = new Jedis(host, port) ){       
-            String initialId = initialMsg==InitialMsg.newer ? "$" : "0";
+            String initialId = Boolean.TRUE.equals(onlyNew) ? "$" : "0";
             if (db!=null){
                 jedis.select(db);
             }
@@ -131,12 +124,8 @@ public class RedisStream implements AutoCloseable {
                                         String channel = (String)fields.get("channel"); 
                                         long timestamp = Long.parseLong((String)fields.get("timestamp"));
                                         long id = Long.parseLong((String)fields.get("id"));
-                                        Object value = fields.get("value");
-                                        
-                                        if ((initialMsg != InitialMsg.now) || (System.currentTimeMillis()>=Time.timestampToMillis(timestamp))){                                        
-                                            //System.out.println(String.format("ID: %d, Timestamp: %d, Channel: %s, Value: %s", id, timestamp, channel, Str.toString(value)));
-                                            align.add(id, timestamp, channel, value);                                        
-                                        }
+                                        Object value = fields.get("value");                                        
+                                        align.add(id, timestamp, channel, value);                                        
                                     } catch (Exception ex){                                        
                                         _logger.warning("Deserialization error: " + ex.getMessage());
                                     }                                
@@ -147,6 +136,8 @@ public class RedisStream implements AutoCloseable {
                     align.process();
                 }                
             }
+        } catch (Align.RangeException ex){
+            _logger.info("Stream range fisished");
         } catch (Exception ex){
             _logger.warning("redis streaming error: " + ex.getMessage());
             throw ex;
@@ -185,8 +176,8 @@ public class RedisStream implements AutoCloseable {
         return data;
     }
     
-    public VisibleCompletableFuture start(List<String> channels, AlignListener lisnener, Boolean partial, InitialMsg initialMsg, String filter) {
-        VisibleCompletableFuture future =  (VisibleCompletableFuture) Threading.getPrivateThreadFuture(() -> run(channels, lisnener, partial, initialMsg, filter));
+    public VisibleCompletableFuture start(List<String> channels, AlignListener lisnener, Boolean partial, Boolean  onlyNew, Range timeRange, Range idRange, String filter) {
+        VisibleCompletableFuture future =  (VisibleCompletableFuture) Threading.getPrivateThreadFuture(() -> run(channels, lisnener, partial, onlyNew, timeRange, idRange, filter));
         futures.add(future);
         future.handle((res, ex)->{
             futures.remove(future);
@@ -229,21 +220,27 @@ public class RedisStream implements AutoCloseable {
             });
             String filter = null;
             //filter = "channel1<0.3 AND channel2<0.1";      
-
-            stream.start(Arrays.asList("array1", "array2"), listener, false, InitialMsg.all, filter);   
-            Thread.sleep(2000);
-            System.out.println(stream.isRunning());         
-            stream.abort();
+            
+            Long now = System.currentTimeMillis() - 860075; //0ffset
+            VisibleCompletableFuture future = stream.start(Arrays.asList("channel1", "channel2", "channel3"), listener, true,  true, new Range(now, now+2000), null, filter);   
             stream.join(0);
+            System.out.println(stream.isRunning());         
 
-            VisibleCompletableFuture future = stream.start(Arrays.asList("channel1", "channel2", "channel3"), listener, false, InitialMsg.newer, filter);   
+
+            future = stream.start(Arrays.asList("channel1", "channel2", "channel3"), listener, false,  false, null, null, filter);   
             Thread.sleep(2000);
             stream.abort();
             stream.join(0);
             System.out.println(stream.isRunning());         
             
-            stream.start(Arrays.asList("channel1"), listener, false, InitialMsg.newer, filter);   
-            stream.start(Arrays.asList("channel2"), listener, false, InitialMsg.newer, filter);   
+            stream.start(Arrays.asList("array1", "array2"), listener, false, false, null, null, filter);   
+            Thread.sleep(2000);
+            System.out.println(stream.isRunning());         
+            stream.abort();
+            stream.join(0);
+
+            stream.start(Arrays.asList("channel1"), listener, false,  false, null, null, filter);   
+            stream.start(Arrays.asList("channel2"), listener, false,  false, null, null, filter);   
             Thread.sleep(2000);
             System.out.println(stream.isRunning());         
         }        

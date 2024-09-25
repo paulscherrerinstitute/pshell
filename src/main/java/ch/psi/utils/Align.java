@@ -10,6 +10,10 @@ import java.util.logging.Logger;
 public class Align extends ObservableBase<Align.AlignListener>{
     private static final Logger _logger = Logger.getLogger(RedisStream.class.getName());
     
+    
+    public static class RangeException extends Exception{        
+    }
+    
     public static interface AlignListener {
         void onMessage(Long id, Long timestamp, Object msg);
     }    
@@ -22,6 +26,8 @@ public class Align extends ObservableBase<Align.AlignListener>{
     final Boolean partialAfter;
     boolean firstComplete=false;
     volatile boolean added = false;
+    Range timeRange = null;
+    Range idRange = null;
     
     long sent_id = -1;
     
@@ -41,7 +47,23 @@ public class Align extends ObservableBase<Align.AlignListener>{
     public String getFilter(){
         return (filter==null) ? null : filter.get();
     }
+
+    public void setTimeRange(Range timeRange){
+        this.timeRange = (timeRange==null) ? null : new Range(Time.timestampToMillis(timeRange.min.longValue()), Time.timestampToMillis(timeRange.max.longValue()));
+    }
     
+    public Range getTimeRange(){
+        return timeRange;
+    }
+
+    public void setIdRange(Range idRange){
+        this.idRange = idRange;
+    }
+    
+    public Range getIdRange(){
+        return idRange;
+    }
+
     public synchronized void add(Long id, Long timestamp, String channel, Object value){
         if (id==null){
             id = timestamp;
@@ -61,7 +83,7 @@ public class Align extends ObservableBase<Align.AlignListener>{
         sent_id = -1;
     }
 
-    public synchronized void process(){        
+    public synchronized void process() throws RangeException{        
         if (added){
             added = false;
             NavigableSet<Long> keysInOrder =  data.navigableKeySet();
@@ -90,11 +112,14 @@ public class Align extends ObservableBase<Align.AlignListener>{
                         } else{
                             Long timestamp = (Long) msg.getOrDefault("timestamp", null);
                             try{
-                                if ((filter==null) || (isValid(id, timestamp, msg))){
+                                if (isValid(id, timestamp, msg)){
                                     for (AlignListener listener : getListeners()) {
                                         listener.onMessage(id, timestamp, msg);
                                     }
                                 }
+                            }
+                            catch (RangeException ex){
+                                throw ex;
                             }
                             catch (Exception ex){
                                 _logger.warning("Error receiving data: " + ex.getMessage());
@@ -109,12 +134,31 @@ public class Align extends ObservableBase<Align.AlignListener>{
         }
     }
 
-    public boolean isValid(Long id, Long timestamp, Map<String, Object> msg){
-        try{            
+    public boolean isValid(Long id, Long timestamp, Map<String, Object> msg) throws RangeException{
+        try{
+            if (timeRange!=null){
+               long tm = Time.timestampToMillis(timestamp);
+               if (tm>timeRange.max){
+                   throw new RangeException();
+               }
+               if (!timeRange.contains(tm)){
+                   return false;
+               }
+            }
+            if (idRange!=null){
+               if (id>idRange.min){
+                   throw new RangeException();
+               }
+               if (!idRange.contains(id)){
+                   return false;
+               }
+            }
             if (filter!=null){
                 return filter.check(msg);
             }
             return true;
+         } catch (RangeException ex){
+             throw ex;
         } catch (Exception ex){
             _logger.warning("Error processing filter: " + ex.getMessage());
             return false;

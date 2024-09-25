@@ -9,21 +9,16 @@ public class Range {
     final public Double max;
 
 
-    public Range(Double min, Double max) {
-        this.min = min;
-        this.max = max;
+    public Range(Number min, Number max) {
+        this.min =(min==null) ? Double.NEGATIVE_INFINITY : min.doubleValue();
+        this.max =(max==null) ? Double.POSITIVE_INFINITY : max.doubleValue();
     }
-
-    public Range(Integer min, Integer max) {
-        this.min = min.doubleValue();
-        this.max = max.doubleValue();
+    
+    
+    boolean contains(Number n) {
+        return (n.doubleValue()>=min) && (n.doubleValue()<=max);
     }
-
-    public Range(Long min, Long max) {
-        this.min = min.doubleValue();
-        this.max = max.doubleValue();
-    }
-
+    
     public Double getExtent() {
         return max - min;
     }
