@@ -38,6 +38,10 @@ public class Align extends ObservableBase<Align.AlignListener>{
         this.filter = (filter==null) ? null : new Filter(filter);
     }
     
+    public String getFilter(){
+        return (filter==null) ? null : filter.get();
+    }
+    
     public synchronized void add(Long id, Long timestamp, String channel, Object value){
         if (id==null){
             id = timestamp;
@@ -108,7 +112,7 @@ public class Align extends ObservableBase<Align.AlignListener>{
     public boolean isValid(Long id, Long timestamp, Map<String, Object> msg){
         try{            
             if (filter!=null){
-                return filter.checkFilter(msg);
+                return filter.check(msg);
             }
             return true;
         } catch (Exception ex){

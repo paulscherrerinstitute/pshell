@@ -26,9 +26,9 @@ public class Filter {
 
 
     public static class FilterCondition {
-        String id;
-        FilterOp op;
-        Object value;
+        public final String id;
+        public final FilterOp op;
+        public final Object value;
 
         FilterCondition(String str)  throws IllegalArgumentException{
             try {
@@ -51,6 +51,8 @@ public class Filter {
                 } else if (str.contains("<")) {
                     aux = "<";
                     op = FilterOp.less;
+                } else {
+                    op=null;
                 }
                 String[] tokens = str.split(aux);
                 id = tokens[0].trim();
@@ -69,7 +71,7 @@ public class Filter {
             }
         }
 
-        boolean check(Comparable c) {
+        public boolean check(Comparable c) {
             if (c instanceof Number) {
                 c = (Double) (((Number) c).doubleValue());
             }
@@ -110,8 +112,14 @@ public class Filter {
     public String get() {
         return filter;
     }
+    
+    
+    public ArrayList<FilterCondition> getConditions(){
+        return (ArrayList<FilterCondition>)filterConditions.clone();
+    }
+    
 
-    public boolean checkFilter(Map<String, Object> data) {
+    public boolean check(Map<String, ? extends Object> data) {
         if (filter != null) {
             try {
                 for (FilterCondition filterCondition : filterConditions) {
@@ -125,6 +133,7 @@ public class Filter {
             }
         }
         return true;
-    }
+    }        
+            
     
 }

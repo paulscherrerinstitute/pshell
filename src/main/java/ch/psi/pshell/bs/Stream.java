@@ -21,6 +21,8 @@ import ch.psi.pshell.device.Readable.ReadableType;
 import ch.psi.pshell.device.ReadonlyAsyncRegisterBase;
 import ch.psi.pshell.device.Startable;
 import ch.psi.utils.Arr;
+import ch.psi.utils.Filter;
+import ch.psi.utils.Filter.FilterCondition;
 import ch.psi.utils.Reflection.Hidden;
 import ch.psi.utils.State;
 import ch.psi.utils.Str;
@@ -59,6 +61,7 @@ public class Stream extends DeviceBase implements Readable<StreamValue>, Cacheab
     final Boolean privateProvider;
     boolean createMatrix;
     MainHeaderAnalyzer  mainHeaderAnalyzer;
+    Filter filter = null;
 
     @Override
     public StreamConfig getConfig() {
@@ -368,7 +371,7 @@ public class Stream extends DeviceBase implements Readable<StreamValue>, Cacheab
             addChild(scalar);
             if (isInitialized()) {
                 doInitialize();
-            }
+            }   
             return scalar;
         }
     }
@@ -435,10 +438,12 @@ public class Stream extends DeviceBase implements Readable<StreamValue>, Cacheab
                 minModulo = Math.min(minModulo, channels.get(channel).getModulo());
             }
 
-            for (FilterCondition filterCondition : filterConditions) {
-                if (!Arr.containsEqual(channels.keySet().toArray(), filterCondition.id)) {
-                    getLogger().info("Adding filter condition id to stream: " + filterCondition.id);
-                    channels.put(filterCondition.id, new Scalar(filterCondition.id, this, filterCondition.id, minModulo, DEFAULT_OFFSET));
+            if (filter!=null){
+                for (Filter.FilterCondition filterCondition : filter.getConditions()) {
+                    if (!Arr.containsEqual(channels.keySet().toArray(), filterCondition.id)) {
+                        getLogger().info("Adding filter condition id to stream: " + filterCondition.id);
+                        channels.put(filterCondition.id, new Scalar(filterCondition.id, this, filterCondition.id, minModulo, DEFAULT_OFFSET));
+                    }
                 }
             }
 
@@ -487,7 +492,7 @@ public class Stream extends DeviceBase implements Readable<StreamValue>, Cacheab
                     if (isMonitored() || reading) {
                         Map<String, ValueImpl> data = msg.getValues();
                         if (data != null) {
-                            if (checkFilter(data)) {
+                            if ((filter==null) || (filter.check(data))) {
                                 reading = false;
                                 long pulseId = msg.getMainHeader().getPulseId();
                                 long timestamp = msg.getMainHeader().getGlobalTimestamp().getAsMillis();
@@ -653,9 +658,6 @@ public class Stream extends DeviceBase implements Readable<StreamValue>, Cacheab
         return value != former;
     }
 
-    String filter;
-    ArrayList<FilterCondition> filterConditions = new ArrayList<>();
-
     @Override
     public StreamValue take() {
         return (StreamValue) super.take();
@@ -666,119 +668,33 @@ public class Stream extends DeviceBase implements Readable<StreamValue>, Cacheab
         return (StreamValue) super.request();
     }
 
-    enum FilterOp {
-        equal,
-        notEqual,
-        less,
-        greater,
-        greaterOrEqual,
-        lessOrEqual
-    }
-
-    class FilterCondition {
-
-        String id;
-        FilterOp op;
-        Object value;
-
-        FilterCondition(String str) throws InvalidValueException {
-            try {
-                String aux = null;
-                if (str.contains("==")) {
-                    aux = "==";
-                    op = FilterOp.equal;
-                } else if (str.contains("!=")) {
-                    aux = "!=";
-                    op = FilterOp.notEqual;
-                } else if (str.contains(">=")) {
-                    aux = ">=";
-                    op = FilterOp.greaterOrEqual;
-                } else if (str.contains("<=")) {
-                    aux = "<=";
-                    op = FilterOp.lessOrEqual;
-                } else if (str.contains(">")) {
-                    aux = ">";
-                    op = FilterOp.greater;
-                } else if (str.contains("<")) {
-                    aux = "<";
-                    op = FilterOp.less;
-                }
-                String[] tokens = str.split(aux);
-                id = tokens[0].trim();
-                aux = tokens[1].trim();
-                if ((aux.startsWith("\"") && aux.endsWith("\"")) || (aux.startsWith("'") && aux.endsWith("'"))) {
-                    value = aux.substring(1, aux.length() - 1);
-                } else if (aux.equalsIgnoreCase("false")) {
-                    value = Boolean.FALSE;
-                } else if (aux.equalsIgnoreCase("true")) {
-                    value = Boolean.TRUE;
-                } else {
-                    value = Double.valueOf(aux);
-                }
-            } catch (Exception ex) {
-                throw new InvalidValueException(str);
-            }
-        }
-
-        boolean check(Comparable c) {
-            if (c instanceof Number) {
-                c = (Double) (((Number) c).doubleValue());
-            }
-            switch (op) {
-                case equal:
-                    return c.compareTo(value) == 0;
-                case notEqual:
-                    return c.compareTo(value) != 0;
-                case greater:
-                    return c.compareTo(value) > 0;
-                case less:
-                    return c.compareTo(value) < 0;
-                case greaterOrEqual:
-                    return c.compareTo(value) >= 0;
-                case lessOrEqual:
-                    return c.compareTo(value) <= 0;
-            }
-            return false;
-        }
-    }
-
-    public final void setFilter(String filter) throws InvalidValueException {
-        this.filter = null;
-        filterConditions.clear();
-        if (filter != null) {
-            try {
-                for (String token : filter.split(" AND ")) {
-                    filterConditions.add(new FilterCondition(token));
-                }
-            } catch (InvalidValueException ex) {
-                filterConditions.clear();
-                throw ex;
-            }
-            this.filter = filter;
-        }
-    }
-
-    public String getFilter() {
-        return filter;
-    }
-
-    public boolean checkFilter(Map<String, ValueImpl> data) {
-        if (filter != null) {
-            try {
-                for (FilterCondition filterCondition : filterConditions) {
-                    ValueImpl v = data.get(filterCondition.id);
-                    Comparable val = (Comparable) v.getValue();
-                    if (!filterCondition.check(val)) {
-                        return false;
+    public void setFilter(String filter){
+        this.filter = ((filter==null)||(filter.isBlank())) ? null : new Filter(filter) {
+            @Override
+            //have to redefine the check method to get the value from ValueImpl
+            public boolean check(Map<String, ? extends Object> data) {
+                try {
+                    for (FilterCondition filterCondition : getConditions()) {
+                        ValueImpl v = (ValueImpl) data.get(filterCondition.id);
+                        Comparable val = (Comparable) v.getValue();
+                        if (!filterCondition.check(val)) {
+                            return false;
+                        }
                     }
+                } catch (Exception ex) {
+                    return false;
                 }
-            } catch (Exception ex) {
-                return false;
-            }
-        }
-        return true;
-    }
+                return true;
+             }
 
+        };
+    }    
+    
+    public String getFilter(){
+        return (filter==null) ? null : filter.get();
+    }
+       
+    
     LinkedHashMap<String, Object> streamCache = new LinkedHashMap<>();
 
     protected void onMessage(long pulse_id, long timestamp, long nanosOffset, Map<String, ValueImpl> data, Map<String, ChannelConfig> config) {

@@ -178,7 +178,8 @@ public class RedisClient {
             System.out.println(String.format("ID: %d, Timestamp: %s, Count: %d, Msg: %s", id, Time.timestampToStr(timestamp), count++, Str.toString(msg)));
             //System.out.println(String.format("ID: %d, Timestamp: %d,  Now: %d,  Count: %d, Msg: %s", id, timestamp, System.currentTimeMillis(), count++, Str.toString(msg)));
         });
-        String filter = null;//"channel1<0.3 AND channel2<0.1";      
+        String filter = null;
+        filter = "channel1<0.3 AND channel2<0.1";      
         client.run(Arrays.asList("channel1", "channel2", "channel3"), listener, false, InitialMsg.newer, filter);   
     }
 }
