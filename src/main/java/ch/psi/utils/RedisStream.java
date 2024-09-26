@@ -19,6 +19,11 @@ import redis.clients.jedis.params.XReadParams;
 
 
 public class RedisStream implements AutoCloseable {
+    public static String getDefaultAddress() {
+        return System.getenv().getOrDefault("REDIS_DEFAULT_URL", "localhost");
+    }    
+    public static int DEFAULT_PORT = 6379;
+    
     private static final Logger _logger = Logger.getLogger(RedisStream.class.getName());
     private final String host;
     private final int port;
@@ -30,6 +35,22 @@ public class RedisStream implements AutoCloseable {
     int bufferSize = 1000;    
     int readCount = 5;    
     int readBlock = 10;    
+    
+    public RedisStream() {
+        this(getDefaultAddress());
+    }
+    
+    public RedisStream(String address) {
+        if (address.contains(":")) {
+            String[] tokens = address.split(":");
+            this.host = tokens[0].trim();
+            this.port = Integer.valueOf(tokens[1]);        
+        } else {
+            this.host = address;
+            this.port = DEFAULT_PORT;                    
+        }
+        this.db = null;    
+    }
     
     public RedisStream(String host, int port) {
         this(host, port, null);
@@ -70,6 +91,19 @@ public class RedisStream implements AutoCloseable {
     public void abort(){
         this.aborted = true;
     }           
+    
+    
+    public String getHost(){
+        return host;
+    }
+
+    public int getPort(){
+        return port;
+    }
+
+    public String getAddress(){
+        return getHost() + ":" + getPort();
+    }
     
 
     public void run(List<String> channels, AlignListener lisnener, Boolean partial, Boolean  onlyNew, Range timeRange, Range idRange, String filter) {                        
