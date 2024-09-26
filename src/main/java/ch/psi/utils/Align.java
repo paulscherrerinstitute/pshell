@@ -146,7 +146,7 @@ public class Align extends ObservableBase<Align.AlignListener>{
                }
             }
             if (idRange!=null){
-               if (id>idRange.min){
+               if (id>idRange.max){
                    throw new RangeException();
                }
                if (!idRange.contains(id)){

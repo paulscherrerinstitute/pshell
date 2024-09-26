@@ -188,14 +188,20 @@ public class RedisStream implements AutoCloseable {
     
     public void join(long millis) throws InterruptedException{
         for (VisibleCompletableFuture future: futures){
-            future.getRunningThread().join(millis);
+            Thread t = future.getRunningThread();
+            if (t!=null){
+                t.join(millis);
+            }
         }
     }
     
     public boolean isRunning(){
         for (VisibleCompletableFuture future: futures){
-            if (future.getRunningThread().isAlive()){
-                return true;
+            Thread t = future.getRunningThread();
+            if (t!=null){
+                if (t.isAlive()){
+                    return true;
+                }                
             }
         }
         return false;
@@ -225,7 +231,12 @@ public class RedisStream implements AutoCloseable {
             VisibleCompletableFuture future = stream.start(Arrays.asList("channel1", "channel2", "channel3"), listener, true,  true, new Range(now, now+2000), null, filter);   
             stream.join(0);
             System.out.println(stream.isRunning());         
-
+            
+            //ong start = 22238570272L + 2000;
+            //System.out.println(start);
+            //future = stream.start(Arrays.asList("channel1", "channel2", "channel3"), listener, true,  true, null,  new Range(start, start+100), filter);   
+            //stream.join(0);
+            //System.out.println(stream.isRunning());                     
 
             future = stream.start(Arrays.asList("channel1", "channel2", "channel3"), listener, false,  false, null, null, filter);   
             Thread.sleep(2000);

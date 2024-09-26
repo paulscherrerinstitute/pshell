@@ -268,6 +268,9 @@ import ch.psi.pshell.bs.StreamChannelConfig as StreamChannelConfig
 import ch.psi.pshell.bs.WaveformConfig as WaveformConfig
 import ch.psi.pshell.bs.MatrixConfig as MatrixConfig
 
+import redis.clients.jedis.Jedis as Redis
+import ch.psi.utils.RedisStream as RedisStream
+
 import ch.psi.pshell.camserver.PipelineClient as PipelineClient
 import ch.psi.pshell.camserver.CameraClient as CameraClient
 import ch.psi.pshell.camserver.ProxyClient as ProxyClient
