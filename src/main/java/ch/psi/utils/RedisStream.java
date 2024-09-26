@@ -106,10 +106,10 @@ public class RedisStream implements AutoCloseable {
     }
     
 
-    public void run(List<String> channels, AlignListener lisnener, Boolean partial, Boolean  onlyNew, Range timeRange, Range idRange, String filter) {                        
+    public void run(List<String> channels, AlignListener lisnener, Boolean incomplete, Boolean  onlyNew, Range timeRange, Range idRange, String filter) {                        
         _logger.info("Starting Redis streaming - channels: " + Str.toString(channels) + " - filter: " + Str.toString(filter));
         aborted = false;        
-        Align align = new Align(channels.toArray(new String[0]), partial, getBufferSize());
+        Align align = new Align(channels.toArray(new String[0]), incomplete, getBufferSize());
         align.setFilter(filter);
         align.setTimeRange(timeRange);
         align.setIdRange(idRange);
@@ -210,8 +210,8 @@ public class RedisStream implements AutoCloseable {
         return data;
     }
     
-    public VisibleCompletableFuture start(List<String> channels, AlignListener lisnener, Boolean partial, Boolean  onlyNew, Range timeRange, Range idRange, String filter) {
-        VisibleCompletableFuture future =  (VisibleCompletableFuture) Threading.getPrivateThreadFuture(() -> run(channels, lisnener, partial, onlyNew, timeRange, idRange, filter));
+    public VisibleCompletableFuture start(List<String> channels, AlignListener lisnener, Boolean incomplete, Boolean  onlyNew, Range timeRange, Range idRange, String filter) {
+        VisibleCompletableFuture future =  (VisibleCompletableFuture) Threading.getPrivateThreadFuture(() -> run(channels, lisnener, incomplete, onlyNew, timeRange, idRange, filter));
         futures.add(future);
         future.handle((res, ex)->{
             futures.remove(future);

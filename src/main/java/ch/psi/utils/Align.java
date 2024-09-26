@@ -19,11 +19,11 @@ public class Align extends ObservableBase<Align.AlignListener>{
     }    
     
     final String[] channels;    
-    final Boolean partial;
+    final Boolean incomplete;
     final int buffer;
     Filter filter = null;
     final MaxLenHashMap.OrderedMap<Long, Map<String, Object>> data;
-    final Boolean partialAfter;
+    final Boolean incompleteAfter;
     boolean firstComplete=false;
     volatile boolean added = false;
     Range timeRange = null;
@@ -31,11 +31,11 @@ public class Align extends ObservableBase<Align.AlignListener>{
     
     long sent_id = -1;
     
-    public Align(String[] channels, Boolean partial, int buffer){
+    public Align(String[] channels, Boolean incomplete, int buffer){
         this.channels = channels;
         this.buffer = buffer;
-        partialAfter =  (partial==null);
-        this.partial = partialAfter || partial;
+        incompleteAfter =  (incomplete==null);
+        this.incomplete = incompleteAfter || incomplete;
         this.data = new MaxLenHashMap.OrderedMap<>((int)(buffer*1.2));
         this.sent_id = -1;
     }
@@ -102,11 +102,11 @@ public class Align extends ObservableBase<Align.AlignListener>{
                     break;
                 }
                 Map<String, Object> msg = data.remove(id);
-                if (complete || partial){  
+                if (complete || incomplete){  
                     if (complete){
                         firstComplete = true;
                     }
-                    if (!partialAfter || firstComplete){
+                    if (!incompleteAfter || firstComplete){
                         if (sent_id >= id){
                              _logger.warning(String.format("Invalid ID %d - last sent ID %d", id, sent_id));
                         } else{
@@ -128,7 +128,7 @@ public class Align extends ObservableBase<Align.AlignListener>{
                         }
                     }
                 } else {
-                    _logger.finest("Discarding partial message: " + id);
+                    _logger.finest("Discarding incomplete message: " + id);
                 }
             }
         }
