@@ -18,13 +18,13 @@ import java.util.Set;
 import redis.clients.jedis.params.XReadParams;
 
 
-public class RedisStream implements AutoCloseable {
+public class RedisX implements AutoCloseable {
     public static String getDefaultAddress() {
         return System.getenv().getOrDefault("REDIS_DEFAULT_URL", "localhost");
     }    
     public static int DEFAULT_PORT = 6379;
     
-    private static final Logger _logger = Logger.getLogger(RedisStream.class.getName());
+    private static final Logger _logger = Logger.getLogger(RedisX.class.getName());
     private final String host;
     private final int port;
     private final Integer db;
@@ -36,11 +36,11 @@ public class RedisStream implements AutoCloseable {
     int readCount = 5;    
     int readBlock = 10;    
     
-    public RedisStream() {
+    public RedisX() {
         this(getDefaultAddress());
     }
     
-    public RedisStream(String address) {
+    public RedisX(String address) {
         if (address.contains(":")) {
             String[] tokens = address.split(":");
             this.host = tokens[0].trim();
@@ -49,14 +49,15 @@ public class RedisStream implements AutoCloseable {
             this.host = address;
             this.port = DEFAULT_PORT;                    
         }
-        this.db = null;    
+        this.db = null;   
+        mapper = new ObjectMapper(new CBORFactory());
     }
     
-    public RedisStream(String host, int port) {
+    public RedisX(String host, int port) {
         this(host, port, null);
     }
     
-    public RedisStream(String host, int port, Integer db) {
+    public RedisX(String host, int port, Integer db) {
         this.host = host;
         this.port = port;
         this.db = db;
@@ -252,19 +253,19 @@ public class RedisStream implements AutoCloseable {
     
     static int count = 0;
     public static void main(String[] args) throws InterruptedException {        
-        try (RedisStream stream = new RedisStream("std-daq-build", 6379)){
+        try (RedisX stream = new RedisX("std-daq-build", 6379)){
 
-            AlignListener listener =  ((AlignListener) (Long id, Long timestamp, Object msg) -> {            
+            AlignListener listener =  ((AlignListener) (Long id, Long timestamp, Map<String, Object> msg) -> {            
                 System.out.println(String.format("ID: %d, Timestamp: %s, Count: %d, Msg: %s", id, Time.timestampToStr(timestamp), count++, Str.toString(msg)));
                 //System.out.println(String.format("ID: %d, Timestamp: %d,  Now: %d,  Count: %d, Msg: %s", id, timestamp, System.currentTimeMillis(), count++, Str.toString(msg)));
             });
             String filter = null;
             //filter = "channel1<0.3 AND channel2<0.1";      
             
-            Long now = System.currentTimeMillis() - 860075; //0ffset
-            VisibleCompletableFuture future = stream.start(Arrays.asList("channel1", "channel2", "channel3"), listener, true,  true, new Range(now, now+2000), null, filter);   
-            stream.join(0);
-            System.out.println(stream.isRunning());         
+            //Long now = System.currentTimeMillis() - 860075; //0ffset
+            //VisibleCompletableFuture future = stream.start(Arrays.asList("channel1", "channel2", "channel3"), listener, true,  true, new Range(now, now+2000), null, filter);   
+            //stream.join(0);
+            //System.out.println(stream.isRunning());         
             
             //ong start = 22238570272L + 2000;
             //System.out.println(start);
@@ -272,7 +273,7 @@ public class RedisStream implements AutoCloseable {
             //stream.join(0);
             //System.out.println(stream.isRunning());                     
 
-            future = stream.start(Arrays.asList("channel1", "channel2", "channel3"), listener, false,  false, null, null, filter);   
+            VisibleCompletableFuture future = stream.start(Arrays.asList("channel1", "channel2", "channel3"), listener, false,  false, null, null, filter);   
             Thread.sleep(2000);
             stream.abort();
             stream.join(0);

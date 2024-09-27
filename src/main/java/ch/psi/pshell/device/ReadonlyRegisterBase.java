@@ -3,7 +3,6 @@ package ch.psi.pshell.device;
 import ch.psi.pshell.core.LogManager;
 import ch.psi.utils.Chrono;
 import ch.psi.utils.Convert;
-import ch.psi.utils.Reflection;
 import ch.psi.utils.State;
 
 import java.io.IOException;

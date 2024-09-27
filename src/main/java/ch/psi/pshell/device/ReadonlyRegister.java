@@ -3,6 +3,7 @@ package ch.psi.pshell.device;
 import java.io.IOException;
 import java.lang.reflect.Array;
 import ch.psi.utils.Reflection.Hidden;
+import ch.psi.utils.Arr;
 
 /**
  * Interface for devices containing a readonly numeric or array value.
@@ -36,18 +37,34 @@ public interface ReadonlyRegister<T> extends Device, Cacheable<T> {
         default public int getSize() {
             Object cache;
             try {
-                cache = take(-1);
+                return Array.getLength(take(-1));
             } catch (Exception ex) {
-                cache = null;
-            }
-            if ((cache == null) || (!cache.getClass().isArray())) {
                 return 0;
             }
-            return Array.getLength(cache);
         }        
     }
 
     public interface ReadonlyRegisterMatrix<T> extends ReadonlyRegister<T>, Readable.ReadableMatrix<T>, Cacheable.CacheableMatrix<T> {
+        /**
+         * Derived classes may define width and height by overriding this method.
+         * Default implementation verifies cache.
+         */
+        
+        default public int getWidth(){
+            try {
+                return Array.getLength(Array.get(take(-1),0)); 
+            } catch (Exception ex) {
+                return 0;
+            }
+        }
+
+        default public int getHeight(){
+            try {
+                return Array.getLength(take(-1)); 
+            } catch (Exception ex) {
+                return 0;
+            }
+        }
 
     }
     

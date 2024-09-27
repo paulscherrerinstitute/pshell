@@ -2,6 +2,7 @@ package ch.psi.pshell.scan;
 
 import ch.psi.pshell.bs.StreamChannel;
 import ch.psi.pshell.bs.Stream;
+import ch.psi.pshell.bs.StreamDevice;
 import ch.psi.pshell.bs.StreamValue;
 import ch.psi.pshell.core.InlineDevice;
 import ch.psi.pshell.device.Device;
@@ -81,8 +82,8 @@ public class MonitorScan extends LineScan {
         return trigger;
     }
 
-    public Stream getStream(){
-        return ((trigger!=null) && (trigger instanceof Stream)) ? (Stream) trigger : null;
+    public StreamDevice getStream(){
+        return ((trigger!=null) && (trigger instanceof StreamDevice)) ? (StreamDevice) trigger : null;
     }
 
     @Override
@@ -223,7 +224,7 @@ public class MonitorScan extends LineScan {
                 timestamp =  0L;
             }
             long id = 0;
-            Stream stream = getStream();
+            StreamDevice stream = getStream();
             if (stream != null){
                 StreamValue val = stream.take();
                 if (val!=null){

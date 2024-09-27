@@ -12,8 +12,6 @@ import ch.psi.pshell.data.Provider;
 import ch.psi.pshell.device.*;
 import ch.psi.pshell.device.Readable;
 import ch.psi.pshell.scripting.JepUtils;
-import ch.psi.pshell.swing.PlotPanel;
-import ch.psi.pshell.ui.App;
 import ch.psi.utils.*;
 
 import java.io.IOException;

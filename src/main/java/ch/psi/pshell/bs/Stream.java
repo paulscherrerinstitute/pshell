@@ -44,7 +44,7 @@ import org.zeromq.ZMQ;
  * A device implementing a beam synchronous string, having, for each identifier,
  * a corresponding Scalar or Waveform child.
  */
-public class Stream extends DeviceBase implements Readable<StreamValue>, Cacheable<StreamValue>, ReadableType, AddressableDevice, Startable {
+public class Stream extends DeviceBase implements StreamDevice {
 
     public static final int TIMEOUT_START_STREAMING = 10000;
 
@@ -646,7 +646,7 @@ public class Stream extends DeviceBase implements Readable<StreamValue>, Cacheab
             try {
                 waitValueNot(cache, 100);
                 break;
-            } catch (DeviceTimeoutException ex) {
+            } catch (TimeoutException | DeviceTimeoutException ex) {
                 assertState(State.Busy);
             }
         }

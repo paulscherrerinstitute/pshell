@@ -1,7 +1,7 @@
 package ch.psi.pshell.data;
 
 import ch.psi.pshell.bs.BsScan;
-import ch.psi.pshell.bs.Stream;
+import ch.psi.pshell.bs.StreamDevice;
 import ch.psi.pshell.core.Context;
 import ch.psi.pshell.device.ArrayCalibration;
 import ch.psi.pshell.device.Averager;
@@ -220,7 +220,7 @@ public class LayoutSF extends LayoutBase {
         return scan.getTag();
     }
 
-    Stream getStream(Scan scan) {
+    StreamDevice getStream(Scan scan) {
         if (scan instanceof BsScan) {
             return ((BsScan) scan).getStream();
         }
@@ -230,7 +230,7 @@ public class LayoutSF extends LayoutBase {
         return null;
     }
 
-    Stream stream;
+    StreamDevice stream;
 
     @Override
     public void onStart(Scan scan) throws IOException {

@@ -8,14 +8,14 @@ import java.util.logging.Logger;
 
 
 public class Align extends ObservableBase<Align.AlignListener>{
-    private static final Logger _logger = Logger.getLogger(RedisStream.class.getName());
+    private static final Logger _logger = Logger.getLogger(RedisX.class.getName());
     
     
     public static class RangeException extends Exception{        
     }
     
     public static interface AlignListener {
-        void onMessage(Long id, Long timestamp, Object msg);
+        void onMessage(Long id, Long timestamp, Map<String, Object> msg);
     }    
     
     final String[] channels;    

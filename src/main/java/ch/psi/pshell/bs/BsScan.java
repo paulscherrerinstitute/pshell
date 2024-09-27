@@ -9,7 +9,6 @@ import ch.psi.pshell.device.Readable;
 import ch.psi.pshell.device.Writable;
 import ch.psi.pshell.scan.LineScan;
 import ch.psi.pshell.scan.ScanRecord;
-import ch.psi.utils.Arr;
 import ch.psi.utils.Chrono;
 import ch.psi.utils.State;
 import java.util.Arrays;
@@ -23,16 +22,16 @@ public class BsScan extends LineScan {
 
     final int records;
     final int time_ms;
-    Stream stream;
+    StreamDevice stream;
     Chrono chrono;
     long initialTimestamp;
     boolean addPid;
 
-    public BsScan(Stream stream, int records, int time_ms) {
+    public BsScan(StreamDevice stream, int records, int time_ms) {
         this(stream, records, time_ms, 1);                        
     }
     
-    public BsScan(Stream stream, int records, int time_ms, int passes) {
+    public BsScan(StreamDevice stream, int records, int time_ms, int passes) {
         this(stream.getReadables().toArray(new Readable[0]), records, time_ms, passes, stream);
         this.addPid = true; //stream.getReadables()  contains PID
     }
@@ -60,7 +59,7 @@ public class BsScan extends LineScan {
     }    
 
     
-     BsScan(Readable[] readables, int records, int time_ms, int passes, Stream stream) {
+     BsScan(Readable[] readables, int records, int time_ms, int passes, StreamDevice stream) {
         super(  (records > 0) ? new Writable[0] : new Writable[]{new DummyPositioner("Time")},
                 readables,
                 new double[]{0.0},
@@ -73,12 +72,12 @@ public class BsScan extends LineScan {
     }    
     
     
-    public Stream getStream(){
+    public StreamDevice getStream(){
         //innrerStream
         if (stream==null){
             for (Device dev : getInnerDevices()){
-                if (dev instanceof Stream){
-                    stream = (Stream)dev;
+                if (dev instanceof StreamDevice){
+                    stream = (StreamDevice)dev;
                     break;
                 }
             }

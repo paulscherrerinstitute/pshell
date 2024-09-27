@@ -89,6 +89,15 @@ public interface GenericDevice<T> extends Observable<T>, Timestamped, AutoClosea
     void setWaitSleep(int value);
     
     int getWaitSleep();    
+    
+    public void assertInitialized() throws IOException;
+    
+    public void assertNotInitialized() throws IOException;
+    
+    public void assertState(State state) throws IOException;
+    
+    public void assertStateNot(State state) throws IOException;
+    
 
     default CompletableFuture updateAsync() {
         return (CompletableFuture) Threading.getFuture(() -> update());
