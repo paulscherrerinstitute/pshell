@@ -36,9 +36,9 @@ public class Loader {
         } else {
             Sys.addToClassPath(folder, false);
             return loadClass(Sys.getClassLoader(), cls);
-        }
+        }    
     }    
-    
+
     public static Class compileClass(File file, boolean reloadable) throws Exception {
         logger.info("Compiling class file: " + file.getPath());
         JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();                     
@@ -46,13 +46,13 @@ public class Loader {
             throw new Exception("Java compiler is not present");
         }                  
         if (compiler.run(null, System.out, System.err, file.getPath()) == 0) {
-            File location = (file.getParentFile() == null) ? new File(".") : file.getParentFile();
+            File location = (file.getParentFile() == null) ? new File(".") : file.getParentFile();            
             File classFile = new File(file.getPath().replace(".java", ".class"));
             return Loader.loadClass(classFile, reloadable);
-        } else {
-            throw new Exception("Error compiling plugin: " + file);
-        }        
-    }    
+        } else {            
+               throw new Exception("Error compiling plugin: " + file);
+            }       
+        }
     
     public static Class[] loadJar(String fileName) throws Exception {
         return loadJar(fileName, false);

@@ -101,6 +101,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
     final Boolean enableExtract;
     final Boolean enableVersioning;
     final Boolean fileLockEnabled;
+    final Boolean dynamic;
     final LogManager logManager;
     final PluginManager pluginManager;
     final UsersManager usersManager;
@@ -152,7 +153,8 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
     public static final String PROPERTY_SIMULATION = "ch.psi.pshell.simulation";
     public static final String PROPERTY_PACKAGES = "ch.psi.pshell.packages";
     public static final String PROPERTY_VOLATILE = "ch.psi.pshell.volatile";
-    
+    public static final String PROPERTY_DYNAMIC = "ch.psi.pshell.dynamic";
+
     public static final String INTERPRETER_THREAD = "MainThread";
 
     private static Context instance;
@@ -182,11 +184,17 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
         } else {
             genericMode = false;
         }
-        
+
         if (System.getProperty(PROPERTY_VOLATILE) != null) {
             volatileMode = Boolean.valueOf(System.getProperty(PROPERTY_VOLATILE));
         } else {
             volatileMode = false;
+        }
+
+        if (System.getProperty(PROPERTY_DYNAMIC) != null) {
+            dynamic = Boolean.valueOf(System.getProperty(PROPERTY_DYNAMIC));
+        } else {
+            dynamic = true;
         }
 
         if (System.getProperty(PROPERTY_SESSIONS_ENABLED) != null) {
@@ -235,7 +243,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
         try {
             setup.load(System.getProperty(PROPERTY_SETUP_FILE));
         } catch (IOException ex) {
-            if (!isLocalMode()){
+            if (!isLocalMode()) {
                 throw new RuntimeException("Cannot generate setup file");
             } else {
                 logger.warning("Cannot generate setup file");
@@ -246,13 +254,13 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
         try {
             config.load(setup.getConfigFile());
         } catch (IOException ex) {
-            if (!isLocalMode()){
+            if (!isLocalMode()) {
                 throw new RuntimeException("Cannot generate configuration file");
             } else {
                 logger.warning("Cannot generate configuration file");
             }
         }
-                
+
         Config.setDefaultPermissions(config.filePermissionsConfig);
         History.setDefaultPermissions(config.filePermissionsConfig);
 
@@ -589,6 +597,10 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
     public boolean isDataStreamerEnabled() {
         return /*(serverMode || config.serverEnabled) && */ (config.dataServerPort > 0) && !isLocalMode();
     }
+    
+    public boolean isDynamic(){
+        return dynamic;
+    }
 
     public boolean isHandlingSessions() {
         if (handlingSessions) {
@@ -650,7 +662,6 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
         return thread == interpreterThread;
     }
 
-    
     public Thread getInterpreterThread() {
         return interpreterThread;
     }
@@ -944,7 +955,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
             }
         }
     }
-    
+
     public void addScriptStdio(ScriptStdio scriptStdio) {
         if (scriptStdioListener != null) {
             scriptStdio.setListener(scriptStdioListener);
@@ -1114,25 +1125,25 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
         boolean firstRun = (getState() == State.Invalid);
         filePermissionsConfig = config.filePermissionsConfig;
         Config.setDefaultPermissions(filePermissionsConfig);
-        
-        String configuredPythonHome = config.getPythonHome();
-        if (configuredPythonHome != null) {           
-            try { 
-                logger.warning("Attempt to override variable PYTHONHOME: " + configuredPythonHome);
-                Sys.setEnvironmentVariable("PYTHONHOME",configuredPythonHome);
-            } catch (Exception ex) { 
-                logger.severe("Cannot set PYTHONHOME: " + ex.getMessage());
-            }             
-        }         
 
-        if (scriptManager!=null){
+        String configuredPythonHome = config.getPythonHome();
+        if (configuredPythonHome != null) {
             try {
-                if (!scriptManager.isThreaded()){
-                    if (getState().isProcessing()){
+                logger.warning("Attempt to override variable PYTHONHOME: " + configuredPythonHome);
+                Sys.setEnvironmentVariable("PYTHONHOME", configuredPythonHome);
+            } catch (Exception ex) {
+                logger.severe("Cannot set PYTHONHOME: " + ex.getMessage());
+            }
+        }
+
+        if (scriptManager != null) {
+            try {
+                if (!scriptManager.isThreaded()) {
+                    if (getState().isProcessing()) {
                         abort();
                         waitStateNotProcessing(20000);
                     }
-                    if (getState().isProcessing()){
+                    if (getState().isProcessing()) {
                         logger.warning("Error aborting running task in single-threaded interpreter");
                     } else {
                         evalLine(CommandSource.ctr, "on_system_restart()");
@@ -1142,9 +1153,9 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
                 }
             } catch (Exception ex) {
                 Logger.getLogger(CommandManager.class.getName()).log(Level.WARNING, null, ex);
-            }    
+            }
         }
-        
+
         setState(State.Initializing);
         aborted = false;
         foregroundException = null;
@@ -1321,7 +1332,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
                             }
                         }
                     }
-                    try{    
+                    try {
                         Object obj = scriptManager.eval("_getBuiltinFunctionNames()").result;
                         Object[] array = null;
                         if (obj instanceof List) {
@@ -1331,14 +1342,14 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
                         } else {
                             array = (Object[]) obj;
                         }
-                        builtinFunctionsNames = (array == null) ? null : Convert.toStringArray(array);   
-                        if (!scriptManager.isThreaded()){
-                            for (String name: builtinFunctionsNames){
+                        builtinFunctionsNames = (array == null) ? null : Convert.toStringArray(array);
+                        if (!scriptManager.isThreaded()) {
+                            for (String name : builtinFunctionsNames) {
                                 String doc = String.valueOf(scriptManager.eval("_getFunctionDoc(" + name + ")").result);
                                 builtinFunctionsDoc.put(name, doc);
                             }
                         }
-                    } catch (Exception ex){
+                    } catch (Exception ex) {
                         logger.log(Level.SEVERE, null, ex);
                         builtinFunctionsNames = new String[0];
                         builtinFunctionsDoc.clear();
@@ -1351,7 +1362,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
                     if (extractedUtilities) {
                         //TODO: remove this  when Jython fixes this: https://github.com/jython/jython/issues/93                
                         if (!getConfig().noBytecodeFiles && !volatileMode) {
-                            new Thread(() -> {                                
+                            new Thread(() -> {
                                 scriptManager.fixClassFilesPermissions();
                             }).start();
                         }
@@ -1416,7 +1427,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
     public Map getResult(long commandId) throws Exception {
         return commandManager.getResult(commandId);
     }
-    
+
     public Map getResult() throws Exception {
         return getResult(-1);
     }
@@ -1495,7 +1506,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
             }
         }
     }
-    
+
     Object evalLine(final CommandSource source, final String command) throws ScriptException, IOException, ContextStateException, InterruptedException {
         assertInterpreterEnabled();
         synchronized (stdinInput) {
@@ -1661,9 +1672,9 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
             commandManager.finishCommandInfo(info, result);
         }
     }
-    
+
     Object tryEvalLineBackground(final CommandSource source, final String line) throws ScriptException, IOException, ContextStateException, InterruptedException {
-        if (scriptManager.isThreaded()){
+        if (scriptManager.isThreaded()) {
             return evalLineBackground(source, line);
         } else {
             return evalLine(source, line);
@@ -1783,12 +1794,12 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
     public File getScriptFile(String script) {
         if ((script != null) && (scriptManager != null)) {
             if (scriptManager.getLibrary() != null) {
-                try{
-                    if (!scriptManager.isThreaded()){        
+                try {
+                    if (!scriptManager.isThreaded()) {
                         String aux = script;
-                        script = (String) runInInterpreterThread(null,(Callable<String>)() ->{
+                        script = (String) runInInterpreterThread(null, (Callable<String>) () -> {
                             return scriptManager.getLibrary().resolveFile(aux);
-                        });  
+                        });
                     } else {
                         script = scriptManager.getLibrary().resolveFile(script);
                     }
@@ -1802,7 +1813,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
                             return ret;
                         }
                     }
-                } catch (Exception ex){
+                } catch (Exception ex) {
                     logger.warning("Error getting script file: " + ex.getMessage());
                 }
             }
@@ -2024,47 +2035,47 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
     }
 
     public Object getLastEvalResult() {
-        if (scriptManager == null){
+        if (scriptManager == null) {
             return null;
         }
         try {
-            if (!scriptManager.isThreaded()){        
-                return runInInterpreterThread(null,(Callable<Object>)() ->{
+            if (!scriptManager.isThreaded()) {
+                return runInInterpreterThread(null, (Callable<Object>) () -> {
                     return scriptManager.getLastResult();
-                }); 
-            }            
+                });
+            }
             return scriptManager.getLastResult();
-            } catch (Exception ex) {
+        } catch (Exception ex) {
             return null;
         }
     }
-    
+
     public Object getLastScriptResult() {
-        if (scriptManager == null){
+        if (scriptManager == null) {
             return null;
         }
         try {
-            if (!scriptManager.isThreaded()){        
-                return runInInterpreterThread(null,(Callable<Object>)() ->{
+            if (!scriptManager.isThreaded()) {
+                return runInInterpreterThread(null, (Callable<Object>) () -> {
                     return scriptManager.getScriptResult();
-                }); 
-            }            
+                });
+            }
             return scriptManager.getScriptResult();
-            } catch (Exception ex) {
+        } catch (Exception ex) {
             return null;
         }
-    }    
+    }
 
     public Object getInterpreterVariable(String name) {
-        if (scriptManager == null){
+        if (scriptManager == null) {
             return null;
         }
-        try{
-            if (!scriptManager.isThreaded()){        
-                return runInInterpreterThread(null,(Callable<Object>)() ->{
+        try {
+            if (!scriptManager.isThreaded()) {
+                return runInInterpreterThread(null, (Callable<Object>) () -> {
                     return scriptManager.getVar(name);
-                }); 
-            }            
+                });
+            }
             return scriptManager.getVar(name);
         } catch (Exception ex) {
             return null;
@@ -2073,36 +2084,36 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
 
     public void setInterpreterVariable(String name, Object value) {
         if (scriptManager != null) {
-            try{
-                if (!scriptManager.isThreaded()){        
-                        runInInterpreterThread(null,() ->{
-                            scriptManager.setVar(name, value);
-                            return null;
-                        }); 
-                } else {        
+            try {
+                if (!scriptManager.isThreaded()) {
+                    runInInterpreterThread(null, () -> {
+                        scriptManager.setVar(name, value);
+                        return null;
+                    });
+                } else {
                     scriptManager.setVar(name, value);
                 }
-            } catch (Exception ex){
+            } catch (Exception ex) {
                 logger.warning("Error setting interpreter variable: " + name);
             }
         }
     }
-        
-    public String interpreterVariableToString(Object obj){
-        if (obj==null){
+
+    public String interpreterVariableToString(Object obj) {
+        if (obj == null) {
             return null;
-        }        
+        }
         try {
-                if (!scriptManager.isThreaded()){        
-                    return (String) runInInterpreterThread(null,(Callable<String>)() ->{
-                        return obj.toString();
-                    }); 
-                }    
-                return obj.toString();
+            if (!scriptManager.isThreaded()) {
+                return (String) runInInterpreterThread(null, (Callable<String>) () -> {
+                    return obj.toString();
+                });
+            }
+            return obj.toString();
         } catch (Exception ex) {
             return null;
         }
-    }    
+    }
 
     void injectVars(final CommandSource source) {
         onCommand(Command.injectVars, null, source);
@@ -2174,13 +2185,13 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
         onCommand(Command.pause, null, source);
         for (Scan scan : getRunningScans()) {
             scan.pause();
-        }     
-        if (getState()==State.Busy){
+        }
+        if (getState() == State.Busy) {
             try {
-                setState(State.Paused);                   
+                setState(State.Paused);
             } catch (ContextStateException ex) {
             }
-        }        
+        }
         if (isRunningStatements()) {
             scriptManager.pauseStatementListExecution();
         }
@@ -2190,10 +2201,10 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
         onCommand(Command.resume, null, source);
         for (Scan scan : getRunningScans()) {
             scan.resume();
-        }   
-        if (getState()==State.Paused){
+        }
+        if (getState() == State.Paused) {
             try {
-                setState(State.Busy);                   
+                setState(State.Busy);
             } catch (ContextStateException ex) {
             }
         }
@@ -2207,11 +2218,11 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
     void step(final CommandSource source) throws InterruptedException {
         onCommand(Command.step, null, source);
         if (isRunningStatements()) {
-            if (hasPausedScan()){
+            if (hasPausedScan()) {
                 for (Scan scan : getRunningScans()) {
                     scan.resume();
-                }          
-            } else {      
+                }
+            } else {
                 if (scriptManager.isStatementListExecutionPaused()) {
                     scriptManager.stepStatementListExecution();
                 }
@@ -2706,22 +2717,21 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
     public List plot(PlotDescriptor plot, String title) throws Exception {
         return plot(new PlotDescriptor[]{plot}, title);
     }
-    
-   
-    public List<String> getPlotTitles(){
+
+    public List<String> getPlotTitles() {
         if (plotListener != null) {
             try {
                 return plotListener.getTitles();
             } catch (Exception ex) {
                 logger.log(Level.FINE, null, ex);
             }
-        }           
+        }
         return Arrays.asList(new String[]{PlotListener.DEFAULT_PLOT_TITLE});
     }
-    
-    public boolean removePlotContext(String context){
-        if ((context!=null) && (!context.isEmpty()) && (!context.equals(PlotListener.DEFAULT_PLOT_TITLE))){
-            if (!getPlotTitles().contains(context)){
+
+    public boolean removePlotContext(String context) {
+        if ((context != null) && (!context.isEmpty()) && (!context.equals(PlotListener.DEFAULT_PLOT_TITLE))) {
+            if (!getPlotTitles().contains(context)) {
                 return false;
             }
             if (plotListener != null) {
@@ -2730,7 +2740,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
                 } catch (Exception ex) {
                     logger.log(Level.FINE, null, ex);
                 }
-            }                                        
+            }
             if (serverPlotListener != null) {
                 try {
                     serverPlotListener.onTitleClosed(context);
@@ -2742,7 +2752,6 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
         }
         return false;
     }
-    
 
     //TODO: manage 2d & 3d scan plots
     @Hidden
@@ -2823,39 +2832,38 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
     }
 
     //Public properties
-    
     @Hidden
     public boolean hasPausedScan() {
         for (Scan scan : getRunningScans()) {
-            if (scan.isPaused() && !scan.isAborted()){
+            if (scan.isPaused() && !scan.isAborted()) {
                 return true;
             }
-        }             
+        }
         return false;
-    }    
-    
+    }
+
     @Hidden
     public boolean hasRunningScan() {
         for (Scan scan : getRunningScans()) {
-            if (!scan.isPaused() && !scan.isAborted()){
+            if (!scan.isPaused() && !scan.isAborted()) {
                 return true;
             }
-        }             
+        }
         return false;
-    }       
-        
+    }
+
     public boolean hasPausableScan() {
         for (Scan scan : getRunningScans()) {
-            if (!scan.isPaused() && !scan.isAborted() && scan.canPause()){
+            if (!scan.isPaused() && !scan.isAborted() && scan.canPause()) {
                 return true;
             }
-        }             
+        }
         return false;
-    }       
-    
+    }
+
     @Hidden
     public boolean canPause() {
-        if (hasPausableScan()){
+        if (hasPausableScan()) {
             return true;
         }
         if (isRunningStatements()) {
@@ -2864,13 +2872,14 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
             }
         }
         return false;
-    }        
+    }
+
     @Hidden
-    public boolean canStep() {    
+    public boolean canStep() {
         if (isRunningStatements()) {
-            if (hasPausedScan()){
+            if (hasPausedScan()) {
                 return true;
-            }            
+            }
             if (scriptManager.isStatementListExecutionPaused()) {
                 if (!isExecutingStatement()) {
                     return true;
@@ -2892,7 +2901,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
 
     @Hidden
     public boolean isRunningStatements() {
-        if (scriptManager != null){
+        if (scriptManager != null) {
             if ((getState() == State.Busy) || (getState() == State.Paused)) {
                 if (scriptManager.isRunningStatementList()) {
                     return true;
@@ -2921,10 +2930,10 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
     @Hidden
     public Statement[] parseFile(String fileName) throws ScriptException, IOException, InterruptedException {
         assertInterpreterEnabled();
-        if (!scriptManager.isThreaded()){        
-            return (Statement[]) runInInterpreterThread(null,(Callable<Statement[]>)() ->{
+        if (!scriptManager.isThreaded()) {
+            return (Statement[]) runInInterpreterThread(null, (Callable<Statement[]>) () -> {
                 return scriptManager.parse(fileName);
-            });  
+            });
         }
         return scriptManager.parse(fileName);
     }
@@ -2932,10 +2941,10 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
     @Hidden
     public Statement[] parseString(String script, String name) throws ScriptException, IOException, InterruptedException {
         assertInterpreterEnabled();
-        if (!scriptManager.isThreaded()){        
-            return (Statement[]) runInInterpreterThread(null,(Callable<Statement[]>)() ->{
+        if (!scriptManager.isThreaded()) {
+            return (Statement[]) runInInterpreterThread(null, (Callable<Statement[]>) () -> {
                 return scriptManager.parse(script, name);
-            });  
+            });
         }
         return scriptManager.parse(script, name);
     }
@@ -3002,13 +3011,13 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
                 break;
             case login:
                 try {
-                if (args.length == 1) {
-                    usersManager.selectUser(usersManager.getUser(args[0]), source);
+                    if (args.length == 1) {
+                        usersManager.selectUser(usersManager.getUser(args[0]), source);
+                    }
+                } catch (Exception ex) {
+                    sb.append(ex.getMessage());
                 }
-            } catch (Exception ex) {
-                sb.append(ex.getMessage());
-            }
-            break;
+                break;
             case history:
                 if (args.length > 0) {
                     for (String s : searchHistory(args[0])) {
@@ -3070,18 +3079,18 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
 
     @Hidden
     public String getBuiltinFunctionDoc(String name) {
-        if (scriptManager.isThreaded()){
-            if (Arr.containsEqual(builtinFunctionsNames, name)){
-                if (!builtinFunctionsDoc.containsKey(name)){
+        if (scriptManager.isThreaded()) {
+            if (Arr.containsEqual(builtinFunctionsNames, name)) {
+                if (!builtinFunctionsDoc.containsKey(name)) {
                     try {
-                        builtinFunctionsDoc.put(name, (String)evalLineBackground("_getFunctionDoc(" + String.valueOf(name) + ")"));
+                        builtinFunctionsDoc.put(name, (String) evalLineBackground("_getFunctionDoc(" + String.valueOf(name) + ")"));
                     } catch (Exception ex) {
                         Logger.getLogger(Context.class.getName()).log(Level.WARNING, null, ex);
-                    }                    
-                }                
+                    }
+                }
             }
         }
-        if (builtinFunctionsDoc.containsKey(name)){
+        if (builtinFunctionsDoc.containsKey(name)) {
             return builtinFunctionsDoc.get(name);
         } else {
             return "";
@@ -3426,7 +3435,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
             }
         }
     }
-    
+
     //Scans
     final List<ScanListener> scanListeners = new ArrayList<>();
 
@@ -3502,7 +3511,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
             scanStreamer.sendEvent(type, data);
         }
     }
-       
+
     Thread restartThread;
     RandomAccessFile lockFile;
 
@@ -3546,9 +3555,9 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
                         lock.release();
                         lock = lockFile.getChannel().tryLock(0, Long.MAX_VALUE, true); //So other process can read active process
                     } catch (FileNotFoundException ex) {
-                        String message = "Error acessing lock file: "+ ex.toString();
+                        String message = "Error acessing lock file: " + ex.toString();
                         message += ".\nApplication can be started in local mode (-l option)";
-                        exit(message);                        
+                        exit(message);
                     } catch (Exception ex) {
                         String message = "Another instance of this application is running";
                         String processName = "";
@@ -3634,9 +3643,9 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
                     && //(IO.isSubPath(setup.getScriptPath(), setup.getHomePath())) &&
                     (IO.isSubPath(startupScript.getParent(), setup.getScriptPath()));
             //Only extracts binary files if startup script is inside script path
-            if (defaultLibPathConfig) {                
+            if (defaultLibPathConfig) {
                 //Only extracts the full library contents in the first run
-                if ((new File(setup.getScriptPath())).listFiles().length == 0) {                    
+                if ((new File(setup.getScriptPath())).listFiles().length == 0) {
                     logger.warning("Extracting script library folder");
                     extractedUtilities = true;
                     try {
@@ -3721,15 +3730,15 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
         }
         return new Plugin[0];
     }
-    
+
     public Plugin getPlugin(String name) {
-        for (Plugin p: getPlugins()) {
-            if (IO.getPrefix(p.getPluginName()).equals(name)){
+        for (Plugin p : getPlugins()) {
+            if (IO.getPrefix(p.getPluginName()).equals(name)) {
                 return p;
             }
         }
         return null;
-    }    
+    }
 
     public File[] getExtensions() {
         if (pluginManager != null) {
@@ -3737,7 +3746,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
         }
         return new File[0];
     }
-
+    
     /**
      * Search class in system class loader and plugins
      */
@@ -3750,8 +3759,8 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
                 if (cls != null) {
                     return cls;
                 }
-                for (Plugin p: pluginManager.getLoadedPlugins()){
-                    if (p.getClass().getName().equals(className)){
+                for (Plugin p : pluginManager.getLoadedPlugins()) {
+                    if (p.getClass().getName().equals(className)) {
                         return p.getClass();
                     }
                 }
@@ -3834,7 +3843,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
     public void restart() throws ContextStateException {
         restart(getPublicCommandSource());
     }
-    
+
     public void startRestart() throws ContextStateException {
         new Thread(() -> {
             try {
@@ -3843,8 +3852,8 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
                 Logger.getLogger(Context.class.getName()).log(Level.SEVERE, null, ex);
             }
         }, "Restart task").start();
-        
-    }    
+
+    }
 
     public Object evalLine(String line) throws ScriptException, IOException, ContextStateException, InterruptedException {
         return evalLine(getPublicCommandSource(), line);
@@ -3861,7 +3870,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
     public Object tryEvalLineBackground(String line) throws ScriptException, IOException, ContextStateException, InterruptedException {
         return tryEvalLineBackground(getPublicCommandSource(), line);
     }
-    
+
     public CompletableFuture<?> evalLineBackgroundAsync(final String line) {
         return evalLineBackgroundAsync(getPublicCommandSource(), line);
     }
@@ -4140,7 +4149,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
         }
         if (scriptManager != null) {
             //TODO: remove this  when Jython fixes this: https://github.com/jython/jython/issues/93                
-            if (!getConfig().noBytecodeFiles && !volatileMode) {                
+            if (!getConfig().noBytecodeFiles && !volatileMode) {
                 scriptManager.startFixClassFilesPermissions();
             }
         }

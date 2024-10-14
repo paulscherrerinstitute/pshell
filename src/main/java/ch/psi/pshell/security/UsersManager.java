@@ -20,7 +20,7 @@ import java.util.logging.Logger;
 /**
  *
  */
-public class UsersManager extends ObservableBase<UsersManagerListener> implements AutoCloseable {
+ public class UsersManager extends ObservableBase<UsersManagerListener> implements AutoCloseable {
 
     final String configFolder;
     final HashMap<AccessLevel, Rights> rights = new HashMap<>();

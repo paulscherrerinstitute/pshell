@@ -154,8 +154,16 @@ public class Sys {
         }
     }    
  
-        
-    public static DynamicClassLoader newClassLoader(String[] folderNames) throws MalformedURLException {
+    public static ClassLoader newClassLoader() {
+        try {
+            return newClassLoader(new String[0]);
+        } catch (MalformedURLException ex) {
+            //Should not happen
+            return null;
+        }
+    }
+    
+    public static ClassLoader newClassLoader(String[] folderNames) throws MalformedURLException {
         URL[] urls = new URL[folderNames.length];
         for (int i = 0; i < folderNames.length; i++) {
             urls[i] = new File(folderNames[i]).toURI().toURL();
@@ -186,11 +194,21 @@ public class Sys {
             }
         }
     }
-    static final ClassLoader classLoader =  (Sys.getJavaVersion()>=10) ? new DynamicClassLoader(new URL[0]) : ClassLoader.getSystemClassLoader();
     
-    public static ClassLoader getClassLoader(){        
+    
+    static boolean useThreadContextClassLoader = false;
+    public static void setUseThreadContextClassLoader(boolean value){
+        useThreadContextClassLoader = value;
+    }
+
+    static final ClassLoader classLoader =  (Sys.getJavaVersion()>=10) ? newClassLoader(): ClassLoader.getSystemClassLoader();
+    public static ClassLoader getClassLoader(){     
+        if (useThreadContextClassLoader){
+            return Thread.currentThread().getContextClassLoader();
+        }
         return classLoader;       
     }
+    
     
     public static void addToClassPath(File file)  throws Exception {        
         addToClassPath(file.getPath());
@@ -212,8 +230,8 @@ public class Sys {
                     Method method = urlClass.getDeclaredMethod("addURL", new Class[]{URL.class});
                     method.setAccessible(true);
                     method.invoke(urlClassLoader, new Object[]{u});                     
-                } else {                    
-                    ((DynamicClassLoader)classLoader).addURL(u);
+                } else  if (getClassLoader() instanceof DynamicClassLoader){
+                    ((DynamicClassLoader)getClassLoader()).addURL(u);
                     //Dynamic classes should not set global class loader otherwise plugins that reference them are not reloadable
                     if (asExtension){
                         if (Sys.getJavaVersion()<14){   

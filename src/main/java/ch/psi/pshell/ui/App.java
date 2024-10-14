@@ -25,7 +25,6 @@ import ch.psi.pshell.device.GenericDevice;
 import ch.psi.pshell.epics.Epics;
 import ch.psi.pshell.plot.Plot;
 import ch.psi.pshell.plotter.Client;
-import ch.psi.pshell.plotter.PlotServer;
 import ch.psi.pshell.plotter.Plotter;
 import ch.psi.pshell.plotter.PlotterBinder;
 import ch.psi.pshell.scan.Scan;
@@ -346,6 +345,12 @@ public class App extends ObservableBase<AppListener> {
 
         if (isSimulation()) {
             System.setProperty(Context.PROPERTY_SIMULATION, "true");
+        }
+        
+        if (isDynamic()){
+            System.setProperty(Context.PROPERTY_DYNAMIC, "true");
+        } else {
+            Sys.setUseThreadContextClassLoader(true);
         }
 
         if (isScanPlottingDisabled()) {
@@ -705,6 +710,12 @@ public class App extends ObservableBase<AppListener> {
         return null;
     }    
 
+    static public boolean isDynamic() {
+       if (hasArgument("dynamic")){
+           return getBoolArgumentValue("dynamic");
+        }
+       return true;
+    }        
     
     static public boolean isStripChartServer() {
         return isStripChart() && ((isAttach() || (isServerMode())));

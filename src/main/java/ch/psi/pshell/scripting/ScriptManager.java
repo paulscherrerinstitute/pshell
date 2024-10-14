@@ -98,7 +98,12 @@ public class ScriptManager implements AutoCloseable {
             manager.registerEngineName("jep", new JepScriptEngineFactory(libraryPath));
             engine =  manager.getEngineByName("jep");
         } else {
-            engine = manager.getEngineByExtension(type.toString());
+            ScriptEngine engine = manager.getEngineByExtension(type.toString());
+            if (engine==null){
+                manager = new ScriptEngineManager(Thread.currentThread().getContextClassLoader());
+                engine = manager.getEngineByExtension(type.toString());
+            }
+            this.engine = engine;
         }
 
         if (engine == null) {

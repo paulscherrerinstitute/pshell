@@ -1,5 +1,6 @@
 package ch.psi.pshell.ui;
 
+import ch.psi.pshell.core.Context;
 import ch.psi.utils.Sys;
 import java.io.File;
 import java.util.ArrayList;
