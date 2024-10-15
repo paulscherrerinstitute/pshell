@@ -1213,7 +1213,7 @@ public class App extends ObservableBase<AppListener> {
                     } catch (Exception ex) {
                         if ((ex.getCause() != null) && (ex.getCause() instanceof ConnectException)) {
                             System.out.println("Server not found");
-                            StripChart.create(getFileArg(), getArgumentValue("config"), getStripChartFolderArg(), getBoolArgumentValue("start"), false);
+                            StripChart.create(getFileArg(), getArgumentValue("config"), getStripChartFolderArg(), getBoolArgumentValue("start"), false, getSize());
                             stripChartServer = new StripChartServer();
                         } else {
                             ex.printStackTrace();
@@ -1221,14 +1221,14 @@ public class App extends ObservableBase<AppListener> {
                         }
                     }
                 } else {
-                    StripChart.create(getFileArg(), getArgumentValue("config"), getStripChartFolderArg(), getBoolArgumentValue("start"), true);
+                    StripChart.create(getFileArg(), getArgumentValue("config"), getStripChartFolderArg(), getBoolArgumentValue("start"), true, getSize());
                 }
             } else if (isDataPanel()) {
-                DataPanel.createPanel(getFileArg());
+                DataPanel.create(getFileArg(), getSize());
             } else if (isDaqbufPanel()) {
-                DaqbufPanel.create(false, null, getDaqbufFolderArg());                
+                DaqbufPanel.create(false, null, getDaqbufFolderArg(), getSize());                
             } else if (isPlotServer()){                
-                ch.psi.pshell.plotter.View.create(getPlotServerPort());
+                ch.psi.pshell.plotter.View.create(getPlotServerPort(), getSize());
             } else if (isCamServerViewer()) {
                 JPanel panel = CamServerViewer.create(null, getSize());
             } else if (isDeviceViewer()){

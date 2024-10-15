@@ -1975,11 +1975,18 @@ public class DaqbufPanel extends StandardDialog {
     @Override
     protected void onClosed() {
     }
-
+    
     public static void create(String url, String backend, boolean modal, String title, File defaultFolder) {
+        create(url, backend, modal, title, defaultFolder, null);
+    }
+    
+    public static void create(String url, String backend, boolean modal, String title, File defaultFolder, Dimension size) {
         java.awt.EventQueue.invokeLater(() -> {
             DaqbufPanel dialog = new DaqbufPanel(null, url, backend, title, modal, defaultFolder);
             dialog.setIconImage(Toolkit.getDefaultToolkit().getImage(App.getResourceUrl("IconSmall.png")));
+            if (size!=null){
+                dialog.setSize(size);
+            }            
             dialog.addWindowListener(new java.awt.event.WindowAdapter() {
                 @Override
                 public void windowClosing(java.awt.event.WindowEvent e) {
@@ -1998,8 +2005,8 @@ public class DaqbufPanel extends StandardDialog {
         });
     }
 
-    public static void create(boolean modal, String title, File defaultFolder) {
-        create(App.getArgumentValue(ARG_DAQBUF_URL), App.getArgumentValue(ARG_DAQBUF_BACKEND), modal, title, defaultFolder);
+    public static void create(boolean modal, String title, File defaultFolder, Dimension size) {
+        create(App.getArgumentValue(ARG_DAQBUF_URL), App.getArgumentValue(ARG_DAQBUF_BACKEND), modal, title, defaultFolder, size);
     }    
 
     volatile boolean dumping = false;

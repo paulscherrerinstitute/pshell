@@ -1987,14 +1987,14 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
         return Paths.get(Context.getInstance().getSetup().getContextPath(), DataPanel.class.getSimpleName() + "_" + "WindowState.xml");
     }
 
-    public static DataPanel createPanel(File path) {
+    public static DataPanel create(File path, Dimension size) {
         DataPanel panel = new DataPanel();
         java.awt.EventQueue.invokeLater(() -> {
             Context.createInstance();
             JFrame frame = new JFrame(App.getApplicationTitle());
             frame.setIconImage(App.getIconSmall());
             frame.add(panel);
-            frame.setSize(1000, 800);
+            frame.setSize((size==null) ? new Dimension(1000, 800): size);
             SwingUtils.centerComponent(null, frame);
             //frame.pack();
             if (App.isDetachedPersisted()) {
@@ -2081,7 +2081,7 @@ public final class DataPanel extends MonitoredPanel implements UpdatablePanel {
 
     public static void main(String args[]) {
         App.init(args);
-        createPanel(args.length > 1 ? new File(args[1]) : null);
+        create(args.length > 1 ? new File(args[1]) : null, null);
     }
         
     /**

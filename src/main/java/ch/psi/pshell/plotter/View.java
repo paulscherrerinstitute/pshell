@@ -9,6 +9,7 @@ import ch.psi.utils.swing.ConfigDialog;
 import ch.psi.utils.swing.MainFrame;
 import ch.psi.utils.swing.StandardDialog;
 import ch.psi.utils.swing.SwingUtils;
+import java.awt.Dimension;
 import java.awt.Window;
 import java.io.File;
 import java.util.logging.Level;
@@ -389,13 +390,21 @@ public class View extends MainFrame {
     }//GEN-LAST:event_menuSetupActionPerformed
     
     public static void create(int port){
+        create(port, null);
+    }
+    
+    public static void create(int port, Dimension size){
         if (App.isDebug()){
             PlotServer.debug = true;
         }
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
-               new View(port).setVisible(true);
+               View view = new View(port);
+               if (size!=null){
+                   view.setSize(size);
+               }
+               view.setVisible(true);
             }
         });        
     }

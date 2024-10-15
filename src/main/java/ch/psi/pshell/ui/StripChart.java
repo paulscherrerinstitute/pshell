@@ -1756,9 +1756,16 @@ public class StripChart extends StandardDialog {
     }
 
     public static void create(File file, String config, File defaultFolder, boolean start, boolean modal) {
+        create(file, config, defaultFolder, start, modal, null);
+    }
+    
+    public static void create(File file, String config, File defaultFolder, boolean start, boolean modal, Dimension size) {
         java.awt.EventQueue.invokeLater(() -> {
             StripChart dialog = new StripChart(null, modal, defaultFolder);
             dialog.setIconImage(Toolkit.getDefaultToolkit().getImage(App.getResourceUrl("IconSmall.png")));
+            if (size!=null){
+                dialog.setSize(size);
+            }
             try {
                 if (file != null) {
                     File f = resolveFile(file, defaultFolder);
