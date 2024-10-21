@@ -51,10 +51,15 @@ public class Time {
             // Parse without offset and assume the system default time zone
             LocalDateTime localDateTime = LocalDateTime.parse(timeStr, formatter);
             return localDateTime.atZone(ZoneId.systemDefault()).toOffsetDateTime();
-        } catch (DateTimeParseException e3) {
+        } catch (DateTimeParseException e) {
             throw new DateTimeParseException("Unable to parse time string: " + timeStr, timeStr, 0);
         }
     }    
+  
+   public static long getTimestamp(String timeStr) {
+       OffsetDateTime odt = parseIsoTime(timeStr);
+       return odt.toInstant().toEpochMilli();
+   }
   
     public static LocalDateTime fromNanoseconds(long nanoseconds, boolean utc) {
         long seconds = nanoseconds / 1_000_000_000L;

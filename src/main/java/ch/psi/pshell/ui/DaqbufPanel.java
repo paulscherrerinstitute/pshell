@@ -161,8 +161,8 @@ public class DaqbufPanel extends StandardDialog {
     final List plotProperties = new ArrayList();
     List requestedProperties = new ArrayList();
 
-    final int ERROR_RANGE_TRANSPARENCY = 0x60;    
-    
+    final int ERROR_RANGE_TRANSPARENCY = 0x60;        
+    Range queryRange;
     volatile boolean initialized;
 
 
@@ -201,6 +201,14 @@ public class DaqbufPanel extends StandardDialog {
             try {
                 String[] tokens = App.getArgumentValue("tick_label_font").split(":");
                 tickLabelFont = new Font(tokens[0], Font.PLAIN, Integer.valueOf(tokens[1]));
+            } catch (Exception ex) {
+                Logger.getLogger(DaqbufPanel.class.getName()).log(Level.WARNING, null, ex);
+            }
+        }
+        
+        if (App.hasArgument("auto_range")) {
+            try {
+                ckAutoRange.setSelected(App.getBoolArgumentValue("auto_range"));
             } catch (Exception ex) {
                 Logger.getLogger(DaqbufPanel.class.getName()).log(Level.WARNING, null, ex);
             }
@@ -725,6 +733,10 @@ public class DaqbufPanel extends StandardDialog {
     }    
 
     void addPlot(PlotBase plot) {
+        addPlot(plot, ckAutoRange.isSelected());
+    }
+    
+    void addPlot(PlotBase plot, boolean autoRange) {
         if (backgroundColor != null) {
             plot.setPlotBackgroundColor(backgroundColor);
         }
@@ -737,6 +749,9 @@ public class DaqbufPanel extends StandardDialog {
         }
         plot.setTitle(null);
         plot.setQuality(PlotPanel.getQuality());
+        if ((!autoRange) && (queryRange!=null)){
+            plot.getAxis(AxisId.X).setRange(queryRange.min, queryRange.max);
+        }
         plots.add(plot);
         pnGraphs.add(plot);
         List<SeriesInfo> series = new ArrayList<>();
@@ -1012,7 +1027,7 @@ public class DaqbufPanel extends StandardDialog {
             
         });
         plot.addPopupMenuItem(menuGridColor);
-        addPlot(plot);
+        addPlot(plot, false);
         return plot;
     }
 
@@ -1366,7 +1381,7 @@ public class DaqbufPanel extends StandardDialog {
             }
         });       
         setMatrixPlotPopupMenu(plot, binned);
-        addPlot(plot);
+        addPlot(plot, false);
         return plot;
     }
     
@@ -1596,7 +1611,7 @@ public class DaqbufPanel extends StandardDialog {
             }
         };
 
-        addPlot(plot);
+        addPlot(plot, false);
         return plot;
     }
 
@@ -1775,6 +1790,7 @@ public class DaqbufPanel extends StandardDialog {
     }
     
     void checkTimeRange() throws IOException{
+        queryRange = null;
         if (textFrom.getText().isBlank() && textTo.getText().isBlank()){
             comboTime.setSelectedIndex(1);
         }
@@ -1782,10 +1798,13 @@ public class DaqbufPanel extends StandardDialog {
         String start = expandTime(textFrom.getText());
         String to = expandTime(textTo.getText());
         textFrom.setText(start);
-        textTo.setText(to);        
+        textTo.setText(to);                
+        
         if (Time.compare(to, start)<=0){
             throw new IOException ("Invalid time range");
         }
+        
+        queryRange = new Range(Time.getTimestamp(start), Time.getTimestamp(to));
     }
 
     public void plotQuery() throws Exception {
@@ -2030,7 +2049,6 @@ public class DaqbufPanel extends StandardDialog {
         final String start = textFrom.getText();
         final String end = textTo.getText();
 
-
         JDialog splash = SwingUtils.showSplash(this, "Save", new Dimension(400, 200), "Saving data to " + filename);
         dumping = true;
         update();
@@ -2138,6 +2156,7 @@ public class DaqbufPanel extends StandardDialog {
             data.put("to", null);
             data.put("range", comboTime.getSelectedItem());
         }
+        data.put("autorange", ckAutoRange.isSelected());
         data.put("binned", checkBins.isSelected());
         data.put("bins",  spinnerBins.getValue() );            
         data.put("maxsize", getMaxSeriesSize());
@@ -2154,17 +2173,19 @@ public class DaqbufPanel extends StandardDialog {
         String from = (String) data.getOrDefault("from", null);
         String to = (String) data.getOrDefault("to", null);
         String range = (String) data.getOrDefault("range", null);
-        Boolean binned = (Boolean) data.getOrDefault("binned", null);
+        Boolean binned = (Boolean) data.getOrDefault("binned", null);        
         Integer bins = (Integer) data.getOrDefault("bins", null);
         Integer maxsize = (Integer) data.getOrDefault("maxsize", null);
         List<List> series = (List<List>) data.getOrDefault("series", new ArrayList());
+        Boolean autoRange = (Boolean) data.getOrDefault("autorange", null);
         List<Map> plotProperties = (List<Map>) data.getOrDefault("plots", new ArrayList());
+        
         requestedProperties = plotProperties;
-        openConfig(series, from, to, range, binned, bins, maxsize);        
+        openConfig(series, from, to, range, binned, bins, maxsize, autoRange);        
         this.file = file;
     }
 
-    void openConfig(List<List> series, String from, String to, String range, Boolean binned, Integer bins, Integer maxsize) {
+    void openConfig(List<List> series, String from, String to, String range, Boolean binned, Integer bins, Integer maxsize, Boolean autoRange) {
         clear();
         textFrom.setText((from==null) ? "" : from);
         textTo.setText((to==null) ? "" : to);
@@ -2180,6 +2201,7 @@ public class DaqbufPanel extends StandardDialog {
         if (binned!=null){
             checkBins.setSelected(binned);
         }
+        ckAutoRange.setSelected(Boolean.TRUE.equals(autoRange));
         checkBinsActionPerformed(null);
         Object[][]dataVector =  Convert.to2dArray(Convert.toArray(series));        
         modelSeries.setDataVector(dataVector, SwingUtils.getTableColumnNames(tableSeries));
@@ -2210,7 +2232,8 @@ public class DaqbufPanel extends StandardDialog {
                 maxsize = Integer.valueOf(App.getArgumentValue("maxsize"));
             } catch (Exception ex){            
             }
-            openConfig(new ArrayList<List>(), from, to, range, binned, bins, maxsize);
+            Boolean autoRange = App.getBoolArgumentValue("auto_range");
+            openConfig(new ArrayList<List>(), from, to, range, binned, bins, maxsize, autoRange);
             
             if (App.hasArgument("ch")){                
                 BiFunction channelTask = (ret, ex) ->{
@@ -2308,6 +2331,7 @@ public class DaqbufPanel extends StandardDialog {
         jLabel6 = new javax.swing.JLabel();
         comboTime = new javax.swing.JComboBox<>();
         jLabel9 = new javax.swing.JLabel();
+        ckAutoRange = new javax.swing.JCheckBox();
         jPanel4 = new javax.swing.JPanel();
         checkBins = new javax.swing.JCheckBox();
         jLabel4 = new javax.swing.JLabel();
@@ -2421,6 +2445,13 @@ public class DaqbufPanel extends StandardDialog {
         jLabel9.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
         jLabel9.setText("Set:");
 
+        ckAutoRange.setText("Auto Range");
+        ckAutoRange.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                ckAutoRangeActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout jPanel3Layout = new javax.swing.GroupLayout(jPanel3);
         jPanel3.setLayout(jPanel3Layout);
         jPanel3Layout.setHorizontalGroup(
@@ -2433,14 +2464,16 @@ public class DaqbufPanel extends StandardDialog {
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(textFrom, javax.swing.GroupLayout.PREFERRED_SIZE, 220, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addGap(18, 18, Short.MAX_VALUE)
-                        .addComponent(jLabel9)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(comboTime, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addComponent(jLabel9))
                     .addGroup(jPanel3Layout.createSequentialGroup()
                         .addComponent(jLabel3)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(textTo, javax.swing.GroupLayout.PREFERRED_SIZE, 220, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addGap(0, 0, Short.MAX_VALUE)))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(comboTime, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(ckAutoRange))
                 .addContainerGap())
             .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                 .addGroup(jPanel3Layout.createSequentialGroup()
@@ -2462,9 +2495,11 @@ public class DaqbufPanel extends StandardDialog {
                         .addComponent(comboTime, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addComponent(jLabel9)))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jLabel3)
-                    .addComponent(textTo, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                        .addComponent(jLabel3)
+                        .addComponent(textTo, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(ckAutoRange))
                 .addContainerGap(9, Short.MAX_VALUE))
             .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                 .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel3Layout.createSequentialGroup()
@@ -2904,6 +2939,10 @@ public class DaqbufPanel extends StandardDialog {
         }
     }//GEN-LAST:event_buttonDumpDataActionPerformed
 
+    private void ckAutoRangeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ckAutoRangeActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_ckAutoRangeActionPerformed
+
     /**
      */
     public static void main(String args[]) {
@@ -2922,6 +2961,7 @@ public class DaqbufPanel extends StandardDialog {
     private javax.swing.JButton buttonRowUp;
     private javax.swing.JButton buttonSave;
     private javax.swing.JCheckBox checkBins;
+    private javax.swing.JCheckBox ckAutoRange;
     private javax.swing.JComboBox<String> comboTime;
     private javax.swing.Box.Filler filler1;
     private javax.swing.Box.Filler filler2;
