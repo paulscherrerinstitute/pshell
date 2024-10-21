@@ -404,7 +404,10 @@ public class Daqbuf implements ChannelQueryAPI {
         public final Boolean addLast;
 
         Query(String channel, String backend, String start, String end, Integer bins) {
-            addLast = (end==null);
+            addLast = (end==null) || (start.startsWith("<"));
+            if (start.startsWith("<")){
+                start=start.substring(1);
+            }
             this.channel = channel;
             this.backend = backend;
             this.start = Time.convertToUTC(start);

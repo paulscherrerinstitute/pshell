@@ -1218,7 +1218,8 @@ public class DaqbufPanel extends StandardDialog {
         plotSeries.add(series);
         plot.addSeries(series);
         series.setMaxItemCount(getMaxSeriesSize());
-
+                
+        
         //((XYErrorRenderer)plot.getSeriesRenderer(series)).setDrawYError(false);
         try {
             daqbuf.startQuery(name + Daqbuf.BACKEND_SEPARATOR + backend, start, end, new QueryListener() {
@@ -1246,6 +1247,34 @@ public class DaqbufPanel extends StandardDialog {
                         throw new RuntimeException("Series too big for plotting: " + name);
                     }                                       
                 }
+                
+                public void onFinished(Query query, Exception ex) {
+                    if (ex==null){
+                        if (series.getCount()==0){
+                            daqbuf.startQuery(name + Daqbuf.BACKEND_SEPARATOR + backend,  start, null, new QueryListener() {
+                                public void onMessage(Query query, List values, List<Long> ids, List<Long> timestamps) {                            
+                                    if (values.size()>0){
+                                        try {
+                                            plot.disableUpdates();
+                                            if (!plot.getAxis(AxisId.X).isAutoRange()){
+                                                plot.getAxis(AxisId.X).setRange(timestamps.get(0), plot.getAxis(AxisId.X).getMax());
+                                            }
+                                            series.appendData(timestamps, values);
+                                        } finally {
+                                             plot.reenableUpdates();
+                                        }
+                                    }                                    
+                                }
+                            }).handle((ret, e) -> {
+                                if (e != null) {
+                                    showException((Exception) e);
+                                };
+                                return ret;
+                            });                        
+                        }
+                    }
+                }
+                
             }).handle((ret, ex) -> {
                 if (ex != null) {
                     showException((Exception) ex);
