@@ -1027,7 +1027,7 @@ public class DaqbufPanel extends StandardDialog {
             
         });
         plot.addPopupMenuItem(menuGridColor);
-        addPlot(plot, false);
+        addPlot(plot, true);
         return plot;
     }
 
@@ -1381,7 +1381,7 @@ public class DaqbufPanel extends StandardDialog {
             }
         });       
         setMatrixPlotPopupMenu(plot, binned);
-        addPlot(plot, false);
+        addPlot(plot);
         return plot;
     }
     
@@ -1483,7 +1483,7 @@ public class DaqbufPanel extends StandardDialog {
             });;
         } catch (Exception ex) {
             showException((Exception) ex);
-        }
+        }   
         return series;
     }
 
@@ -1503,9 +1503,10 @@ public class DaqbufPanel extends StandardDialog {
             double[] timestamps = new double[bins];
             for (int j = 0; j < bins; j++) {
                 timestamps[j] = (t1.get(j) + t2.get(j)) / 2.0;
-            }
+            }                        
             double maxTime = timestamps[timestamps.length - 1];
             double minTime = timestamps[0];
+            //TODO: use queryRange if !autoRange?
             plot.getAxis(AxisId.X).setRange(minTime, maxTime);
             series.average = (double[][]) Convert.toPrimitiveArray(average, Double.class);
             series.min = (double[][]) Convert.toPrimitiveArray(min, Double.class);
@@ -1611,7 +1612,7 @@ public class DaqbufPanel extends StandardDialog {
             }
         };
 
-        addPlot(plot, false);
+        addPlot(plot, true);
         return plot;
     }
 
