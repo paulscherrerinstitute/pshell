@@ -80,6 +80,8 @@ public class Daqbuf implements ChannelQueryAPI {
     static final Long PULSE_ID_START_TIME = 1504524711650L;
     static final double PULSE_ID_INTERVAL = 10;
     
+    public static final String ADD_LAST_PREFIX = "<";     
+    
     boolean timestampMillis = true;
     volatile String[] availableBackends;
     CompletableFuture initialization;
@@ -392,8 +394,8 @@ public class Daqbuf implements ChannelQueryAPI {
 
         default void onRecord(Query query, Object average, Object min, Object max, Integer count, Long start, Long end) {
         }
-    }
-
+    }   
+            
     public static class Query {
 
         public final String channel;
@@ -404,8 +406,8 @@ public class Daqbuf implements ChannelQueryAPI {
         public final Boolean addLast;
 
         Query(String channel, String backend, String start, String end, Integer bins) {
-            addLast = (end==null) || (start.startsWith("<"));
-            if (start.startsWith("<")){
+            addLast = (end==null) || (start.startsWith(ADD_LAST_PREFIX));
+            if (start.startsWith(ADD_LAST_PREFIX)){
                 start=start.substring(1);
             }
             this.channel = channel;

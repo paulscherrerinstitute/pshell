@@ -26,6 +26,7 @@ import ch.psi.pshell.swing.PatternFileChooserAuxiliary;
 import ch.psi.utils.Arr;
 import ch.psi.utils.Convert;
 import ch.psi.utils.Daqbuf;
+import static ch.psi.utils.Daqbuf.ADD_LAST_PREFIX;
 import ch.psi.utils.Daqbuf.Query;
 import ch.psi.utils.Daqbuf.QueryListener;
 import ch.psi.utils.Daqbuf.QueryRecordListener;
@@ -1222,7 +1223,7 @@ public class DaqbufPanel extends StandardDialog {
         
         //((XYErrorRenderer)plot.getSeriesRenderer(series)).setDrawYError(false);
         try {
-            daqbuf.startQuery(name + Daqbuf.BACKEND_SEPARATOR + backend, start, end, new QueryListener() {
+            daqbuf.startQuery(name + Daqbuf.BACKEND_SEPARATOR + backend, start.startsWith(ADD_LAST_PREFIX) ? start : ADD_LAST_PREFIX+start, end, new QueryListener() {
                 public void onMessage(Query query, List values, List<Long> ids, List<Long> timestamps) {
                     List<Number> aux = (List<Number>) values;
                     boolean fits = true;
@@ -1247,7 +1248,7 @@ public class DaqbufPanel extends StandardDialog {
                         throw new RuntimeException("Series too big for plotting: " + name);
                     }                                       
                 }
-                
+                /*
                 public void onFinished(Query query, Exception ex) {
                     if (ex==null){
                         if (series.getCount()==0){
@@ -1274,6 +1275,7 @@ public class DaqbufPanel extends StandardDialog {
                         }
                     }
                 }
+                */
                 
             }).handle((ret, ex) -> {
                 if (ex != null) {
