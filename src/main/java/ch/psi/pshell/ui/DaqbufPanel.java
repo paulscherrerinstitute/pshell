@@ -47,6 +47,7 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
+import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
@@ -102,6 +103,7 @@ import javax.swing.JTabbedPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
+import javax.swing.border.EmptyBorder;
 import javax.swing.event.CellEditorListener;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.TableModelEvent;
@@ -130,6 +132,8 @@ import org.jfree.data.xy.YIntervalSeriesCollection;
 public class DaqbufPanel extends StandardDialog {
     public static final String ARG_DAQBUF_URL = "daqbuf";
     public static final String ARG_DAQBUF_BACKEND = "backend";
+    
+    public static final String[] CHANNEL_SEARCH_EXCLUDES = new String[]{"*.EGU"};
 
     public static final String PLOT_NEW = "New";
     public static final String PLOT_SAME = "Same";
@@ -165,7 +169,7 @@ public class DaqbufPanel extends StandardDialog {
     final int ERROR_RANGE_TRANSPARENCY = 0x60;        
     Range queryRange;
     volatile boolean initialized;
-
+    JDialog channelSearchDialog; 
 
     public DaqbufPanel(Window parent, String url, String backend, String title, boolean modal, File defaultFolder) {
         super(parent, null, modal);
@@ -495,8 +499,7 @@ public class DaqbufPanel extends StandardDialog {
             int row = tableSeries.getSelectedRow();
             if (row>=0){
                 Object value = modelSeries.getValueAt(row, 2);
-                String[] excludes = new String[]{"*.EGU"};
-                selector.configure(ChannelSelector.Type.Daqbuf, daqbuf.getUrl(), value.toString(), 1000, excludes);
+                selector.configure(ChannelSelector.Type.Daqbuf, daqbuf.getUrl(), value.toString(), 1000, CHANNEL_SEARCH_EXCLUDES);
             }
         }
     }
@@ -2124,6 +2127,79 @@ public class DaqbufPanel extends StandardDialog {
         }
     }
 
+    void searchChannels() throws Exception {
+        if((channelSearchDialog!=null) && channelSearchDialog.isShowing()){
+            channelSearchDialog.setLocationRelativeTo(this);
+            channelSearchDialog.requestFocus();
+            return;
+        }
+        selector.setHistorySize(0);
+        selector.setListMode(ChannelSelector.ListMode.Popup);                                
+        ChannelSelector selector = new ChannelSelector();
+        selector.setHistorySize(0);
+        selector.setListMode(ChannelSelector.ListMode.Visible);
+        selector.setMultipleSelection(true);
+               
+        JPanel panel = new JPanel(new BorderLayout());                    
+        ((BorderLayout) panel.getLayout()).setHgap(10);       
+        
+        JPanel p1 = new JPanel(new FlowLayout());
+        //((BorderLayout) p1.getLayout()).setHgap(5);       
+        JComboBox comboBackend = new JComboBox();
+        DefaultComboBoxModel modelBackend  = (DefaultComboBoxModel) comboBackend.getModel();
+        modelBackend.addAll(Arrays.asList(daqbuf.getAvailableBackends()));                
+        modelBackend.setSelectedItem(daqbuf.getAvailableDefaultBackend());
+        p1.add(new JLabel("Backend:"));
+        selector.setBorder(new EmptyBorder(0, 8, 0, 8));
+        p1.add(comboBackend);
+        panel.add(p1, BorderLayout.NORTH);
+        panel.add(selector, BorderLayout.CENTER);
+        JPanel p2 = new JPanel(new FlowLayout());
+        JButton buttonCancel = new JButton("Cancel");
+        JButton buttonOk = new JButton("Ok");
+        p2.add(buttonCancel);
+        p2.add(buttonOk);
+        panel.add(p2, BorderLayout.SOUTH);
+               
+        Runnable configureSelector = () -> selector.configure(ChannelSelector.Type.Daqbuf, daqbuf.getUrl(), (String) comboBackend.getSelectedItem(), 1000, CHANNEL_SEARCH_EXCLUDES);
+        modelBackend.addListDataListener(comboTime);
+        comboBackend.addActionListener((e) -> {
+            configureSelector.run();
+        }); 
+        configureSelector.run();
+        
+        channelSearchDialog  = SwingUtils.showDialog(this, "Channel Search", new Dimension(350, 500), panel);
+        SwingUtils.centerComponent(null, channelSearchDialog);        
+        buttonCancel.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                channelSearchDialog.dispose();
+            }
+        });                
+
+        buttonOk.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                try{
+                    List<String> channels = selector.getSelection();
+                    String backend = (String) modelBackend.getSelectedItem();
+                    if ((backend!=null) && !channels.isEmpty()){
+                        for (String ch : channels){
+                            Object[] data = getEmptyRow();
+                            data[1] = ch;
+                            data[2] = backend;
+                            modelSeries.addRow(data);
+                            updateShape(modelSeries.getRowCount()-1);
+                        }
+                        modelSeries.fireTableDataChanged();                        
+                        update();                    
+                    }                    
+                } catch (Exception ex){                    
+                    showException(ex);
+                }
+                channelSearchDialog.dispose();
+            }
+        });                  
+    }
+    
     
     void plotData() throws Exception {
         if (tableSeries.isEditing()) {
@@ -2380,6 +2456,8 @@ public class DaqbufPanel extends StandardDialog {
         buttonRowUp = new javax.swing.JButton();
         buttonRowInsert = new javax.swing.JButton();
         jSeparator3 = new javax.swing.JToolBar.Separator();
+        buttonSearchChannels = new javax.swing.JButton();
+        jSeparator4 = new javax.swing.JToolBar.Separator();
         buttonDumpData = new javax.swing.JButton();
         jSeparator2 = new javax.swing.JToolBar.Separator();
         buttonPlotData = new javax.swing.JButton();
@@ -2699,6 +2777,23 @@ public class DaqbufPanel extends StandardDialog {
         jSeparator3.setPreferredSize(new java.awt.Dimension(20, 0));
         toolBar.add(jSeparator3);
 
+        buttonSearchChannels.setIcon(new javax.swing.ImageIcon(getClass().getResource("/ch/psi/pshell/ui/Search.png"))); // NOI18N
+        buttonSearchChannels.setText(bundle.getString("View.buttonNew.text")); // NOI18N
+        buttonSearchChannels.setToolTipText("Multiple channel search");
+        buttonSearchChannels.setFocusable(false);
+        buttonSearchChannels.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+        buttonSearchChannels.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+        buttonSearchChannels.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                buttonSearchChannelsActionPerformed(evt);
+            }
+        });
+        toolBar.add(buttonSearchChannels);
+
+        jSeparator4.setMaximumSize(new java.awt.Dimension(20, 32767));
+        jSeparator4.setPreferredSize(new java.awt.Dimension(20, 0));
+        toolBar.add(jSeparator4);
+
         buttonDumpData.setIcon(new javax.swing.ImageIcon(getClass().getResource("/ch/psi/pshell/ui/Rec.png"))); // NOI18N
         buttonDumpData.setText(bundle.getString("View.buttonRun.text")); // NOI18N
         buttonDumpData.setToolTipText("Dump data to file");
@@ -2975,6 +3070,14 @@ public class DaqbufPanel extends StandardDialog {
         // TODO add your handling code here:
     }//GEN-LAST:event_ckAutoRangeActionPerformed
 
+    private void buttonSearchChannelsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonSearchChannelsActionPerformed
+        try {
+            searchChannels();
+        } catch (Exception ex) {
+            showException(ex);
+        }
+    }//GEN-LAST:event_buttonSearchChannelsActionPerformed
+
     /**
      */
     public static void main(String args[]) {
@@ -2992,6 +3095,7 @@ public class DaqbufPanel extends StandardDialog {
     private javax.swing.JButton buttonRowInsert;
     private javax.swing.JButton buttonRowUp;
     private javax.swing.JButton buttonSave;
+    private javax.swing.JButton buttonSearchChannels;
     private javax.swing.JCheckBox checkBins;
     private javax.swing.JCheckBox ckAutoRange;
     private javax.swing.JComboBox<String> comboTime;
@@ -3009,6 +3113,7 @@ public class DaqbufPanel extends StandardDialog {
     private javax.swing.JToolBar.Separator jSeparator1;
     private javax.swing.JToolBar.Separator jSeparator2;
     private javax.swing.JToolBar.Separator jSeparator3;
+    private javax.swing.JToolBar.Separator jSeparator4;
     private javax.swing.JLabel labelUser;
     private javax.swing.JPanel panelPlots;
     private javax.swing.JPanel panelSerie;

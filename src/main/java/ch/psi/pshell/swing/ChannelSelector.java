@@ -44,6 +44,7 @@ import javax.swing.JComponent;
 import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.JTree;
+import javax.swing.ListSelectionModel;
 import javax.swing.table.TableCellEditor;
 import javax.swing.tree.TreeCellEditor;
 
@@ -70,6 +71,8 @@ public class ChannelSelector extends MonitoredPanel {
     JScrollPane listScrollPanel;
     Type type;
     
+    boolean multipleSelection;
+    
     final HashSet<String> excludes = new HashSet<>();        
 
     public enum Type {
@@ -95,15 +98,18 @@ public class ChannelSelector extends MonitoredPanel {
         list.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
         list.addListSelectionListener(new javax.swing.event.ListSelectionListener() {
             public void valueChanged(javax.swing.event.ListSelectionEvent evt) {
-                if (!updatingList) {
-                    String str = list.getSelectedValue();
-                    if ((str != null) && !str.isEmpty()) {
-                        setText(str);
+                if (!multipleSelection){
+                    if (!updatingList) {
+                        String str = list.getSelectedValue();
+                        if ((str != null) && !str.isEmpty()) {
+                            setText(str);
+                        }
+                        closeListDialog();
                     }
-                    closeListDialog();
                 }
             }
         });
+        list.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
         setFocusLostListener(list);
         setFocusLostListener(listScrollPanel);
         setFocusLostListener(text);
@@ -306,6 +312,16 @@ public class ChannelSelector extends MonitoredPanel {
         Popup;
     }
 
+    
+    public void setMultipleSelection(boolean value) {
+        multipleSelection = value;
+    }
+
+    public boolean getMultipleSelection() {
+        return multipleSelection;
+    }
+
+            
     //final JPanel dummy = new JPanel();
     public void setListMode(ListMode value) {
         if (listMode != value) {
@@ -410,6 +426,10 @@ public class ChannelSelector extends MonitoredPanel {
         }
     }
 
+    public List<String> getSelection() {
+        return list.getSelectedValuesList();
+    }
+    
     public String getText() {
         return getEditorComponent().getText();
     }
@@ -459,10 +479,13 @@ public class ChannelSelector extends MonitoredPanel {
         cs.configure(Type.Daqbuf, null, "sf-databuffer", 5000);
         cs.setName("Test");
         cs.setHistorySize(0);
+        //s.setMultipleSelection(true);
         cs.setListMode(ListMode.Popup);
         JDialog dlg = SwingUtils.showDialog(null, "Channel Selection", new Dimension(300, cs.getPreferredSize().height + 30), cs);
         SwingUtils.centerComponent(null, dlg);
         dlg.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+        
+        System.out.println(cs.getSelection());
         //});
     }
 
