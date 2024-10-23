@@ -2194,15 +2194,18 @@ public class DaqbufPanel extends StandardDialog {
         buttonOk.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 try{
+                    
                     List<String> channels = selector.getSelection();
                     String backend = (String) modelBackend.getSelectedItem();
                     if ((backend!=null) && !channels.isEmpty()){
                         for (String ch : channels){
-                            Object[] data = getEmptyRow();
-                            data[1] = ch;
-                            data[2] = backend;
-                            modelSeries.addRow(data);
-                            updateShape(modelSeries.getRowCount()-1);
+                            if (!isChannelPresent(ch, backend)){
+                                Object[] data = getEmptyRow();
+                                data[1] = ch;
+                                data[2] = backend;
+                                modelSeries.addRow(data);
+                                updateShape(modelSeries.getRowCount()-1);
+                            }
                         }
                         modelSeries.fireTableDataChanged();                        
                         update();                    
@@ -2215,6 +2218,14 @@ public class DaqbufPanel extends StandardDialog {
         });                  
     }
     
+    public boolean isChannelPresent(String channel, String backend) {
+        for (int row = 0; row < modelSeries.getRowCount(); row++) {
+            if (channel.equals(modelSeries.getValueAt(row, 1)) && backend.equals(modelSeries.getValueAt(row, 2))){
+                return true; 
+            }
+        }
+        return false; 
+    }    
     
     void plotData() throws Exception {
         if (tableSeries.isEditing()) {
