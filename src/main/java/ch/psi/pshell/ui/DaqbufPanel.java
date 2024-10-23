@@ -747,6 +747,7 @@ public class DaqbufPanel extends StandardDialog {
         if (gridColor != null) {
             plot.setPlotGridColor(gridColor);
         }
+        //plot.setMinimumSize(new Dimension (plot.getMinimumSize().width, 150));
         if (tickLabelFont != null) {
             plot.setLabelFont(tickLabelFont);
             plot.setTickLabelFont(tickLabelFont);
@@ -2871,12 +2872,12 @@ public class DaqbufPanel extends StandardDialog {
 
         tabPane.addTab("Config", panelSeries);
 
+        panelPlots.setMaximumSize(new java.awt.Dimension(32767, 32767));
+        panelPlots.setMinimumSize(new java.awt.Dimension(0, 0));
         panelPlots.setName("panelPlots"); // NOI18N
         panelPlots.setLayout(new java.awt.BorderLayout());
 
         scrollPane.setPreferredSize(new java.awt.Dimension(356, 303));
-
-        pnGraphs.setPreferredSize(new java.awt.Dimension(354, 301));
 
         javax.swing.GroupLayout pnGraphsLayout = new javax.swing.GroupLayout(pnGraphs);
         pnGraphs.setLayout(pnGraphsLayout);
@@ -2900,14 +2901,14 @@ public class DaqbufPanel extends StandardDialog {
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                .addContainerGap()
+                .addGap(0, 0, 0)
                 .addComponent(tabPane))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addComponent(tabPane)
-                .addContainerGap())
+                .addGap(0, 0, 0))
         );
 
         pack();
