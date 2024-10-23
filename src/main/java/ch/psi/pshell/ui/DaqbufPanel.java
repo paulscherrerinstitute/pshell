@@ -948,6 +948,7 @@ public class DaqbufPanel extends StandardDialog {
             requery(plot);
         });
         plot.addPopupMenuItem(menuRequery);
+        menuRequery.setVisible(binned);
 
     }
 
@@ -1049,6 +1050,9 @@ public class DaqbufPanel extends StandardDialog {
         SeriesInfo[] formerInfo = plotInfo.get(plot).toArray(new SeriesInfo[0]);
         plotInfo.get(plot).clear();
         plot.clear();
+        if (!plot.getAxis(AxisId.X).isAutoRange()){
+            plot.getAxis(AxisId.X).setRange(xmin, xmax);
+        }
         for (SeriesInfo seriesInfo : formerInfo) {
             seriesInfo = new SeriesInfo(seriesInfo, start, end, seriesInfo.bins);
             PlotSeries series = null;
@@ -1095,15 +1099,18 @@ public class DaqbufPanel extends StandardDialog {
         } else {
             JPopupMenu menu = ((MatrixPlotJFree)plot).getChartPanel().getPopupMenu();
             int index = -1;
-            for (int i=0; i< menu.getComponentCount(); i++){
-                Component c = menu.getComponent(i);
-                if ((c instanceof JMenuItem) && "Unbinned".equals(((JMenuItem)c).getText())){
-                    menu.remove(i);
-                    break;
+            for (Component c : List.of(menu.getComponents())){                
+                if ((c instanceof JMenuItem)){
+                    if (("Unbinned".equals(((JMenuItem)c).getText())) || ("Requery".equals(((JMenuItem)c).getText()))){ 
+                        menu.remove(c);
+                    }
                 }
             }
             setDateDomainAxis(plot);
         }
+        if (!plot.getAxis(AxisId.X).isAutoRange()){
+            plot.getAxis(AxisId.X).setRange(xmin, xmax);
+        }        
         for (SeriesInfo seriesInfo : formerInfo) {
             seriesInfo = new SeriesInfo(seriesInfo, start, end, null);
             PlotSeries series = null;
@@ -1491,7 +1498,8 @@ public class DaqbufPanel extends StandardDialog {
         if (colormap != null) {
             plot.setColormap(colormap);
         }
-        plot.addSeries(series);
+        plot.getAxis(AxisId.X).setAutoRange();
+        plot.addSeries(series);                
         plotSeries.add(series);
 
         try {
@@ -1540,8 +1548,11 @@ public class DaqbufPanel extends StandardDialog {
             }                        
             double maxTime = timestamps[timestamps.length - 1];
             double minTime = timestamps[0];
-            //TODO: use queryRange if !autoRange?
-            plot.getAxis(AxisId.X).setRange(minTime, maxTime);
+            if (!plot.getAxis(AxisId.X).isAutoRange() && (queryRange!=null)){
+                plot.getAxis(AxisId.X).setRange(queryRange.min, queryRange.max);
+            } else {
+                plot.getAxis(AxisId.X).setRange(minTime, maxTime);
+            }
             series.average = (double[][]) Convert.toPrimitiveArray(average, Double.class);
             series.min = (double[][]) Convert.toPrimitiveArray(min, Double.class);
             series.max = (double[][]) Convert.toPrimitiveArray(max, Double.class);
@@ -1551,7 +1562,7 @@ public class DaqbufPanel extends StandardDialog {
             series.setRangeY(0, series.average[0].length - 1);
             series.setData(Convert.transpose(series.average));
         }
-        plot.getChartPanel().restoreAutoDomainBounds(); //Needed because changed domain axis to time                
+        plot.getChartPanel().restoreAutoDomainBounds(); //Needed because changed domain axis to time       
     }
 
     MatrixPlotBinnedSeries addMatrixSeriesBinned(MatrixPlotJFree plot, SeriesInfo si) {
@@ -2149,6 +2160,9 @@ public class DaqbufPanel extends StandardDialog {
         DefaultComboBoxModel modelBackend  = (DefaultComboBoxModel) comboBackend.getModel();
         modelBackend.addAll(Arrays.asList(daqbuf.getAvailableBackends()));                
         modelBackend.setSelectedItem(daqbuf.getAvailableDefaultBackend());
+        comboBackend.addActionListener((e)->{
+            selector.update();
+        });
         p1.add(new JLabel("Backend:"));
         selector.setBorder(new EmptyBorder(0, 8, 0, 8));
         p1.add(comboBackend);

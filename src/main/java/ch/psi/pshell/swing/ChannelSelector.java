@@ -411,7 +411,7 @@ public class ChannelSelector extends MonitoredPanel {
         }
     }
 
-    void update() {
+    public void update() {
         update(getText().trim());
     }
 
