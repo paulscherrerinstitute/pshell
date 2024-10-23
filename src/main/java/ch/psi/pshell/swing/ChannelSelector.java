@@ -354,6 +354,10 @@ public class ChannelSelector extends MonitoredPanel {
     }
 
     void setData(List<String> data) throws InterruptedException, InvocationTargetException {
+        if (data!=null){
+            data = new ArrayList<>(data);
+            Collections.sort(data);                
+        }
         //SwingUtilities.invokeAndWait(() -> {
         setContents(data);
         //});
