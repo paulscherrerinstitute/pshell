@@ -1,5 +1,6 @@
 package ch.psi.pshell.plot;
 
+import static ch.psi.pshell.plot.Plot.AxisId.Y2;
 import ch.psi.utils.Reflection;
 import ch.psi.utils.Time;
 import ch.psi.utils.swing.MainFrame;
@@ -844,14 +845,48 @@ public class LinePlotJFree extends LinePlotBase {
         if (axis != null) {
             boolean isLog = axis instanceof LogarithmicAxis;
             if (isLog != getAxis(axisId).isLogarithmic()) {
-                axis = (getAxis(axisId).isLogarithmic()) ? new LogarithmicAxis(getAxis(axisId).getLabel()) : new NumberAxis(getAxis(axisId).getLabel());
+                axis = (getAxis(axisId).isLogarithmic()) ? new LogarithmicAxis(getAxis(axisId).getLabel()) {                    
+                    Range getLogRange(){                        
+                        double min = AUTO_RANGE_LOG_MINIMUM_SIZE;
+                        double max = AUTO_RANGE_LOG_MINIMUM_SIZE;
+                        double aux=Double.POSITIVE_INFINITY;
+                        for (LinePlotSeries series : getAllSeries()){
+                            if (series.getAxisY() ==  axisId.ordinal()-1){
+                                for (double d : series.getY()){
+                                    if (!Double.isNaN(d)){
+                                        if ((d>AUTO_RANGE_LOG_MINIMUM_SIZE) && (d<aux)){
+                                            aux=d;
+                                        } 
+                                        if (d>max){
+                                            max=d;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        if (!Double.isInfinite(aux)){
+                            min = aux;
+                        }
+                        return new Range(min, Math.max(max, 10*min));                               
+                    }
+                    @Override
+                    public Range getRange() {
+                        Range range = super.getRange();
+                        if (range.getLowerBound() <= 0){
+                            range = getLogRange();
+                            setRange(range);
+                        }
+                        return range;
+                    }
+                    
+                }: new NumberAxis(getAxis(axisId).getLabel());
                 if (getAxis(axisId).isLogarithmic()){
                     ((LogarithmicAxis)axis).setAllowNegativesFlag(false);
                     ((LogarithmicAxis)axis).setStrictValuesFlag(false);
                     ((LogarithmicAxis)axis).setLog10TickLabelsFlag(true); //TODO: only used to axis Y
                     ((LogarithmicAxis)axis).setAutoRangeMinimumSize(AUTO_RANGE_LOG_MINIMUM_SIZE);
                 }                
-                XYPlot plot = (XYPlot) chart.getPlot();
+                XYPlot plot = (XYPlot) chart.getPlot();                
                 axis.setLabelFont(labelFont);
                 axis.setTickLabelFont(tickLabelFont);
                 axis.setLabelPaint(getAxisTextColor());
@@ -864,7 +899,7 @@ public class LinePlotJFree extends LinePlotBase {
                         plot.setDomainAxis(1, axis);
                         break;                        
                     case Y:
-                        plot.setRangeAxis(0, axis);
+                        plot.setRangeAxis(0, axis);                                                
                         break;
                     case Y2:
                         plot.setRangeAxis(1, axis);
