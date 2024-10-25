@@ -28,6 +28,7 @@ import ch.psi.utils.Convert;
 import ch.psi.utils.Daqbuf;
 import static ch.psi.utils.Daqbuf.ADD_LAST_PREFIX;
 import ch.psi.utils.Daqbuf.Query;
+import ch.psi.utils.Daqbuf.QueryBinnedListener;
 import ch.psi.utils.Daqbuf.QueryListener;
 import ch.psi.utils.Daqbuf.QueryRecordListener;
 import ch.psi.utils.EncoderJson;
@@ -78,6 +79,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Vector;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiFunction;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -1168,35 +1170,62 @@ public class DaqbufPanel extends StandardDialog {
         plotSeries.add(series);
         plot.addSeries(series);
 
-        XYPlot xyplot = plot.getChart().getXYPlot();
         XYErrorRenderer renderer = (XYErrorRenderer) plot.getSeriesRenderer(series);
         renderer.setDrawYError(true);
         renderer.setErrorStroke(new BasicStroke());
 
         try {
-            daqbuf.startFetchQuery(name + Daqbuf.BACKEND_SEPARATOR + backend, start, end, bins).handle((ret, ex) -> {
-                if (ex != null) {
-                    showException((Exception) ex);
-                } else {
-                    Map<String, List> map = (Map<String, List>) ret;
-                    List<Number> average = map.get(Daqbuf.FIELD_AVERAGE);
-                    List<Number> min = map.get(Daqbuf.FIELD_MIN);
-                    List<Number> max = map.get(Daqbuf.FIELD_MAX);
-                    List<Long> t1 = map.get(Daqbuf.FIELD_START);
-                    List<Long> t2 = map.get(Daqbuf.FIELD_END);
-                    List<Long> t = IntStream.range(0, t1.size()).mapToObj(i -> (t1.get(i) + t2.get(i)) / 2).collect(Collectors.toList());                                        
-                    try {
-                        plot.disableUpdates();
-                        series.appendData(t, average, min, max);
-                        updateSeriesPaint(series);
-                        updateCapLength(plot);
-                        plot.getChartPanel().restoreAutoBounds();
-                    } finally {
-                        plot.reenableUpdates();                        
+            if (daqbuf.isStreamed()){
+                AtomicBoolean first= new AtomicBoolean(true);
+                daqbuf.startQuery(name + Daqbuf.BACKEND_SEPARATOR + backend, start, end, new QueryBinnedListener() {
+                    public void onMessage(Query query, List average, List min, List max, List<Integer> count, List<Long> t1, List<Long> t2) {                                                
+                        if (average.size()>0){
+                            List<Long> t = IntStream.range(0, t1.size()).mapToObj(i -> (t1.get(i) + t2.get(i)) / 2).collect(Collectors.toList());    
+                            try {
+                                plot.disableUpdates();
+                                series.appendData(t, average, min, max);
+                                if (first.compareAndSet(true, false)){
+                                    updateSeriesPaint(series);
+                                    updateCapLength(plot);
+                                    plot.getChartPanel().restoreAutoBounds();
+                                } 
+                            } finally {
+                                 plot.reenableUpdates();
+                            }
+                        }                                    
                     }
-                }
-                return ret;
-            });            
+                }, bins).handle((ret, ex) -> {
+                    if (ex != null) {
+                        showException((Exception) ex);
+                    };
+                    return ret;
+                });                
+                
+            } else {
+                daqbuf.startFetchQuery(name + Daqbuf.BACKEND_SEPARATOR + backend, start, end, bins).handle((ret, ex) -> {
+                    if (ex != null) {
+                        showException((Exception) ex);
+                    } else {
+                        Map<String, List> map = (Map<String, List>) ret;
+                        List<Number> average = map.get(Daqbuf.FIELD_AVERAGE);
+                        List<Number> min = map.get(Daqbuf.FIELD_MIN);
+                        List<Number> max = map.get(Daqbuf.FIELD_MAX);
+                        List<Long> t1 = map.get(Daqbuf.FIELD_START);
+                        List<Long> t2 = map.get(Daqbuf.FIELD_END);
+                        List<Long> t = IntStream.range(0, t1.size()).mapToObj(i -> (t1.get(i) + t2.get(i)) / 2).collect(Collectors.toList());                                        
+                        try {
+                            plot.disableUpdates();
+                            series.appendData(t, average, min, max);
+                            updateSeriesPaint(series);
+                            updateCapLength(plot);
+                            plot.getChartPanel().restoreAutoBounds();
+                        } finally {
+                            plot.reenableUpdates();                        
+                        }
+                    }
+                    return ret;
+                });            
+            }
             checkEgu(plot, series, backend, start);
         } catch (Exception ex) {
             showException(ex);

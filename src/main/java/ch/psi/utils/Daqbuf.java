@@ -84,6 +84,7 @@ public class Daqbuf implements ChannelQueryAPI {
     
     boolean timestampMillis = true;
     volatile String[] availableBackends;
+    boolean streamed = true;
     CompletableFuture initialization;
 
     public static String getDefaultUrl() {
@@ -178,7 +179,15 @@ public class Daqbuf implements ChannelQueryAPI {
     
     public boolean getTimestampMillis(){
         return timestampMillis;
+    }    
+        
+    public void setStreamed(boolean value){
+        streamed =value;
     }
+    
+    public boolean isStreamed(){
+        return streamed;
+    }    
     
     public CompletableFuture initialize(){
         if ((initialization==null) || initialization.isDone()){
@@ -365,6 +374,23 @@ public class Daqbuf implements ChannelQueryAPI {
         }
         return data;
     }
+    
+    String readStreamLine(InputStream inputStream) throws IOException, InterruptedException {
+        long start = System.currentTimeMillis();    
+        StringBuilder ret = new StringBuilder();
+        int timeout = 10000;
+        while(true){
+            char c = (char)readStream(inputStream,1)[0];
+            if (c == '\n'){
+                break;
+            }
+            if ((System.currentTimeMillis() - start) > timeout) {
+                throw new TimeoutException();
+            }      
+            ret.append(c);
+        }        
+        return ret.toString();
+    }
 
     public interface QueryListener {
 
@@ -445,7 +471,6 @@ public class Daqbuf implements ChannelQueryAPI {
         }
         return channel;
     }
-
     public String getChannelBackend(String channel) {
         if (channel.contains(BACKEND_SEPARATOR)) {
             String[] tokens = channel.split(BACKEND_SEPARATOR);
@@ -464,7 +489,7 @@ public class Daqbuf implements ChannelQueryAPI {
 
         Query query = new Query(channel, backend, start, end, bins);
         String path = "/events";
-        String accept = cbor ? "application/cbor-framed" : MediaType.APPLICATION_JSON;
+        String accept = cbor ? "application/cbor-framed" : (isStreamed() ? "application/json-framed" : MediaType.APPLICATION_JSON);
         if (isBinned(bins)) {
             path = "/binned";
         }
@@ -493,7 +518,7 @@ public class Daqbuf implements ChannelQueryAPI {
         }
 
         listener.onStarted(query);
-
+        Exception queryException = null;
         try {
             if (cbor) {
                 final QueryRecordListener recordListener = (listener instanceof QueryRecordListener) ? (QueryRecordListener) listener : null;
@@ -507,7 +532,6 @@ public class Daqbuf implements ChannelQueryAPI {
                             if (ex.bytesRead > 0) {
                                 throw ex;
                             }
-                            listener.onFinished(query, null);
                             break;
                         }
                         int dataSize = ByteBuffer.wrap(sizeBytes).order(ByteOrder.LITTLE_ENDIAN).getInt();
@@ -522,30 +546,10 @@ public class Daqbuf implements ChannelQueryAPI {
                             throw new IOException(error.trim());
                         }
                         if (!frame.getOrDefault("type", "").equals("keepalive")) {
-                            List<Long> timestamps = (List) frame.getOrDefault("tss", null);
-                            List ids = (List) frame.getOrDefault("pulses", null);
-                            List values = (List) frame.getOrDefault("values", null);
-                            String scalar_type = (String) frame.getOrDefault("scalar_type", null);
                             Boolean rangeFinal = (Boolean) frame.getOrDefault("rangeFinal", false);
-                            if (scalar_type != null) {
-                                if (getTimestampMillis()){
-                                    timestamps.replaceAll(value -> value / 1_000_000);
-                                }
-                                listener.onMessage(query, values, ids, timestamps);
-                                if (recordListener != null) {
-                                    boolean have_id = (ids!=null) && (ids.size()==values.size());
-                                    if (values != null) {
-                                        for (int i = 0; i < values.size(); i++) {
-                                            recordListener.onRecord(query, values.get(i), have_id ? (Long) ids.get(i) : null, (Long) timestamps.get(i));
-                                        }
-                                    }
-                                }
-                            }
+                            readCborEvents(query, listener, recordListener, frame);
                             if (rangeFinal == true) {
-                                listener.onFinished(query, null);
                                 break;
-                            } else if (scalar_type == null) {
-                                throw new IOException("Invalid cbor frame keys: " + Str.toString(frame.keySet()));
                             }
                             if (Thread.currentThread().isInterrupted()) {
                                 throw new InterruptedException("Query has been aborted");
@@ -554,50 +558,108 @@ public class Daqbuf implements ChannelQueryAPI {
                     }
                 }
             } else {
-                String json = response.readEntity(String.class);
-                Map frame = (Map) EncoderJson.decode(json, Map.class);
-                List averages = (List) frame.getOrDefault("avgs", null);
-                List maxs = (List) frame.getOrDefault("maxs", null);
-                List mins = (List) frame.getOrDefault("mins", null);
-                List<Integer> counts = (List) frame.getOrDefault("counts", null);
-                List<Number> ts1Ms = (List) frame.getOrDefault("ts1Ms", null);
-                List<Number> ts1Ns = (List) frame.getOrDefault("ts1Ns", null);
-                List<Number> ts2Ms = (List) frame.getOrDefault("ts2Ms", null);
-                List<Number> ts2Ns = (List) frame.getOrDefault("ts2Ns", null);
-                Integer tsAnchor = (Integer) frame.getOrDefault("tsAnchor", null);
-                Boolean rangeFinal = (Boolean) frame.getOrDefault("rangeFinal", false);
-                long anchor_ms = tsAnchor.longValue() * 1000;
-                long aux =  getTimestampMillis() ? 1L : 1_000_000L;
-
-                List<Long> ts1 = ts1Ms.stream()
-                        .map(num -> (num.longValue() + anchor_ms) * aux)
-                        .collect(Collectors.toList());
-                List<Long> ts2 = ts2Ms.stream()
-                        .map(num -> (num.longValue() + anchor_ms) * aux)
-                        .collect(Collectors.toList());
-
-                if (listener instanceof QueryBinnedListener) {
-                    ((QueryBinnedListener) listener).onMessage(query, averages, mins, maxs, counts, ts1, ts2);
-                    if (listener instanceof QueryBinnedRecordListener) {
-                        QueryBinnedRecordListener recordListener = (QueryBinnedRecordListener) listener;
-                        if (averages != null) {
-                            for (int i = 0; i < averages.size(); i++) {
-                                recordListener.onRecord(query, averages.get(i), mins.get(i), maxs.get(i), counts.get(i), ts1.get(i), ts2.get(i));
+                if (isStreamed()){
+                    try (InputStream inputStream = response.readEntity(InputStream.class)) {
+                        while (true) {
+                            int dataSize=0;                            
+                            try {
+                                String line = readStreamLine(inputStream).trim();
+                                dataSize = Integer.valueOf(line);
+                            } catch (EndOfStreamException ex) {
+                                break;
                             }
-                        }
+                            byte[] bytes = readStream(inputStream, dataSize);
+                            byte[] lf  = readStream(inputStream, 1);
+                            String json = new String(bytes);
+                            Map<String, Object>  frame = (Map<String, Object> ) EncoderJson.decode(json, Map.class);                                    
+                            String error = (String) frame.getOrDefault("error", null);
+                            if ((error != null) && (!error.isEmpty())) {
+                                throw new IOException(error.trim());
+                            }
+                            if (!frame.getOrDefault("type", "").equals("keepalive")) {
+                                Boolean rangeFinal = (Boolean) frame.getOrDefault("rangeFinal", false);
+                                readJsonBinned(query, listener, frame);
+                                if (rangeFinal == true) {
+                                    break;
+                                }
+                                if (Thread.currentThread().isInterrupted()) {
+                                    throw new InterruptedException("Query has been aborted");
+                                }
+                            }
+                        }                   
+                    }
+                } else {
+                    String json = response.readEntity(String.class);
+                    Map<String, Object>  frame = (Map<String, Object> ) EncoderJson.decode(json, Map.class);
+                    readJsonBinned(query, listener, frame);
+                }
+            }
+        } catch (InterruptedException|IOException ex) {
+            queryException = ex;
+            throw ex;
+        } catch (Exception ex) {
+            queryException = ex;
+            throw new IOException(ex);
+        } finally {
+            listener.onFinished(query, queryException);
+            Logger.getLogger(Daqbuf.class.getName()).finer("Quit query task for channel: " + channel);
+        }
+    }
+    
+    protected void readJsonBinned(Query query, QueryListener listener, Map<String, Object>  frame) throws IOException{        
+        List averages = (List) frame.getOrDefault("avgs", null);
+        List maxs = (List) frame.getOrDefault("maxs", null);
+        List mins = (List) frame.getOrDefault("mins", null);
+        List<Integer> counts = (List) frame.getOrDefault("counts", null);
+        List<Number> ts1Ms = (List) frame.getOrDefault("ts1Ms", null);
+        List<Number> ts1Ns = (List) frame.getOrDefault("ts1Ns", null);
+        List<Number> ts2Ms = (List) frame.getOrDefault("ts2Ms", null);
+        List<Number> ts2Ns = (List) frame.getOrDefault("ts2Ns", null);
+        Integer tsAnchor = (Integer) frame.getOrDefault("tsAnchor", null);
+        Boolean rangeFinal = (Boolean) frame.getOrDefault("rangeFinal", false);
+        long anchor_ms = tsAnchor.longValue() * 1000;
+        long aux =  getTimestampMillis() ? 1L : 1_000_000L;
+
+        List<Long> ts1 = ts1Ms.stream()
+                .map(num -> (num.longValue() + anchor_ms) * aux)
+                .collect(Collectors.toList());
+        List<Long> ts2 = ts2Ms.stream()
+                .map(num -> (num.longValue() + anchor_ms) * aux)
+                .collect(Collectors.toList());
+
+        if (listener instanceof QueryBinnedListener) {
+            ((QueryBinnedListener) listener).onMessage(query, averages, mins, maxs, counts, ts1, ts2);
+            if (listener instanceof QueryBinnedRecordListener) {
+                QueryBinnedRecordListener recordListener = (QueryBinnedRecordListener) listener;
+                if (averages != null) {
+                    for (int i = 0; i < averages.size(); i++) {
+                        recordListener.onRecord(query, averages.get(i), mins.get(i), maxs.get(i), counts.get(i), ts1.get(i), ts2.get(i));
                     }
                 }
             }
-        } catch (InterruptedException ex) {
-            throw ex;
-        } catch (Exception ex) {
-            listener.onFinished(query, ex);
-            if (ex instanceof IOException) {
-                throw (IOException) ex;
+        }        
+    }
+    
+    protected void readCborEvents(Query query, QueryListener listener, QueryRecordListener recordListener, Map<String, Object>  frame) throws IOException{        
+        List<Long> timestamps = (List) frame.getOrDefault("tss", null);
+        List ids = (List) frame.getOrDefault("pulses", null);
+        List values = (List) frame.getOrDefault("values", null);
+        String scalar_type = (String) frame.getOrDefault("scalar_type", null);
+        if (scalar_type != null) {
+            if (getTimestampMillis()){
+                timestamps.replaceAll(value -> value / 1_000_000);
             }
-            throw new IOException(ex);
-        } finally {
-            Logger.getLogger(Daqbuf.class.getName()).finer("Quit query task for channel: " + channel);
+            listener.onMessage(query, values, ids, timestamps);
+            if (recordListener != null) {
+                boolean have_id = (ids!=null) && (ids.size()==values.size());
+                if (values != null) {
+                    for (int i = 0; i < values.size(); i++) {
+                        recordListener.onRecord(query, values.get(i), have_id ? (Long) ids.get(i) : null, (Long) timestamps.get(i));
+                    }
+                }
+            }
+        } else if (scalar_type == null) {
+            throw new IOException("Invalid cbor frame keys: " + Str.toString(frame.keySet()));
         }
     }
 
@@ -712,15 +774,13 @@ public class Daqbuf implements ChannelQueryAPI {
         if (isBinned(bins)) {
             listener = new QueryBinnedListener() {
                 @Override
-                public void onMessage(Query query, List averages, List min, List max, List<Integer> count, List<Long> start, List<Long> end) {
-                    //Single message in JSON frame
-                    ret.put(FIELD_AVERAGE, averages);
-                    ret.put(FIELD_MIN, min);
-                    ret.put(FIELD_MAX, max);
-                    ret.put(FIELD_START, start);
-                    ret.put(FIELD_END, end);
-                    ret.put(FIELD_COUNT, count);
-
+                public void onMessage(Query query, List averages, List min, List max, List<Integer> count, List<Long> start, List<Long> end) {                   
+                    ((List) ret.get(FIELD_AVERAGE)).addAll(averages);
+                    ((List) ret.get(FIELD_MIN)).addAll(min);
+                    ((List) ret.get(FIELD_MAX)).addAll(max);
+                    ((List) ret.get(FIELD_START)).addAll(start);
+                    ((List) ret.get(FIELD_END)).addAll(end);
+                    ((List) ret.get(FIELD_COUNT)).addAll(count);                    
                 }
             };
         } else {
