@@ -843,39 +843,38 @@ public class DaqbufPanel extends StandardDialog {
     
     void applyPlotPreferences(List plotPrefs){
         try{
-            if (plotPrefs.size()!=plots.size()){
-                throw new Exception ("Invalid plot preferences format");
-            }
-            for (int i=0; i< plotPrefs.size();i++){                                
-                if (plots.get(i) instanceof LinePlotJFree){
-                    LinePlotJFree plot = (LinePlotJFree)plots.get(i);                
-                    Map prefs = (Map)plotPrefs.get(i);
-                    Boolean show_ranges =  (Boolean)prefs.getOrDefault("show_ranges", null);
-                    Boolean show_markers =  (Boolean)prefs.getOrDefault("show_markers", null);
-                    String background_color =  (String)prefs.getOrDefault("background_color", null);
-                    String grid_color =  (String)prefs.getOrDefault("grid_color", null);
-                    List y1_range =  (List)prefs.getOrDefault("y1_range",null);
-                    List y2_range =  (List)prefs.getOrDefault("y2_range", null);
+            if (plotPrefs.size()==plots.size()){
+                for (int i=0; i< plotPrefs.size();i++){                                
+                    if (plots.get(i) instanceof LinePlotJFree){
+                        LinePlotJFree plot = (LinePlotJFree)plots.get(i);                
+                        Map prefs = (Map)plotPrefs.get(i);
+                        Boolean show_ranges =  (Boolean)prefs.getOrDefault("show_ranges", null);
+                        Boolean show_markers =  (Boolean)prefs.getOrDefault("show_markers", null);
+                        String background_color =  (String)prefs.getOrDefault("background_color", null);
+                        String grid_color =  (String)prefs.getOrDefault("grid_color", null);
+                        List y1_range =  (List)prefs.getOrDefault("y1_range",null);
+                        List y2_range =  (List)prefs.getOrDefault("y2_range", null);
 
-                    if (show_ranges!=null){
-                        showRanges(plot, show_ranges);
-                    }
-                    if (show_markers!=null){
-                        showMarkers(plot, show_markers);
-                    }
-                    if (background_color!=null){
-                        setBackgroundColor(plot, SwingUtils.stringToColor(background_color));
-                    }
-                    if (grid_color!=null){
-                        setGridColor(plot, SwingUtils.stringToColor(grid_color));
-                    }
-                    if ((y1_range!=null) && (y1_range.size()==2)){
-                        setRangeY1(plot, new Range(((Number)y1_range.get(0)).doubleValue(), ((Number)y1_range.get(1)).doubleValue()));
-                    }
-                    if ((y2_range!=null) && (y2_range.size()==2)){
-                        setRangeY2(plot, new Range(((Number)y2_range.get(0)).doubleValue(), ((Number)y2_range.get(1)).doubleValue()));
-                    }
-                }                
+                        if (show_ranges!=null){
+                            showRanges(plot, show_ranges);
+                        }
+                        if (show_markers!=null){
+                            showMarkers(plot, show_markers);
+                        }
+                        if (background_color!=null){
+                            setBackgroundColor(plot, SwingUtils.stringToColor(background_color));
+                        }
+                        if (grid_color!=null){
+                            setGridColor(plot, SwingUtils.stringToColor(grid_color));
+                        }
+                        if ((y1_range!=null) && (y1_range.size()==2)){
+                            setRangeY1(plot, new Range(((Number)y1_range.get(0)).doubleValue(), ((Number)y1_range.get(1)).doubleValue()));
+                        }
+                        if ((y2_range!=null) && (y2_range.size()==2)){
+                            setRangeY2(plot, new Range(((Number)y2_range.get(0)).doubleValue(), ((Number)y2_range.get(1)).doubleValue()));
+                        }
+                    }                
+                }
              }
         } catch (Exception ex){
             showException(ex);
