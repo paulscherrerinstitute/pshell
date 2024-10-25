@@ -1181,16 +1181,18 @@ public class DaqbufPanel extends StandardDialog {
                     public void onMessage(Query query, List average, List min, List max, List<Integer> count, List<Long> t1, List<Long> t2) {                                                
                         if (average.size()>0){
                             List<Long> t = IntStream.range(0, t1.size()).mapToObj(i -> (t1.get(i) + t2.get(i)) / 2).collect(Collectors.toList());    
-                            try {
-                                plot.disableUpdates();
-                                series.appendData(t, average, min, max);
-                                if (first.compareAndSet(true, false)){
-                                    updateSeriesPaint(series);
-                                    updateCapLength(plot);
-                                    plot.getChartPanel().restoreAutoBounds();
-                                } 
-                            } finally {
-                                 plot.reenableUpdates();
+                            synchronized(plot){
+                                try {
+                                    plot.disableUpdates();
+                                    series.appendData(t, average, min, max);
+                                    if (first.compareAndSet(true, false)){
+                                        updateSeriesPaint(series);
+                                        updateCapLength(plot);
+                                        plot.getChartPanel().restoreAutoBounds();
+                                    } 
+                                } finally {
+                                     plot.reenableUpdates();
+                                }
                             }
                         }                                    
                     }
@@ -1213,14 +1215,16 @@ public class DaqbufPanel extends StandardDialog {
                         List<Long> t1 = map.get(Daqbuf.FIELD_START);
                         List<Long> t2 = map.get(Daqbuf.FIELD_END);
                         List<Long> t = IntStream.range(0, t1.size()).mapToObj(i -> (t1.get(i) + t2.get(i)) / 2).collect(Collectors.toList());                                        
-                        try {
-                            plot.disableUpdates();
-                            series.appendData(t, average, min, max);
-                            updateSeriesPaint(series);
-                            updateCapLength(plot);
-                            plot.getChartPanel().restoreAutoBounds();
-                        } finally {
-                            plot.reenableUpdates();                        
+                        synchronized(plot){
+                            try {
+                                plot.disableUpdates();
+                                series.appendData(t, average, min, max);
+                                updateSeriesPaint(series);
+                                updateCapLength(plot);
+                                plot.getChartPanel().restoreAutoBounds();
+                            } finally {
+                                plot.reenableUpdates();                        
+                            }
                         }
                     }
                     return ret;
@@ -1274,14 +1278,14 @@ public class DaqbufPanel extends StandardDialog {
                         timestamps=timestamps.subList(0, size);
                     }
                     if (aux.size()>0){
-                        //synchronized(series){
+                        synchronized(plot){
                             try {
                                 plot.disableUpdates();
                                 series.appendData(timestamps, aux);
                             } finally {
                                  plot.reenableUpdates();
                             }
-                        //}
+                        }
                     }
                     
                     if (!fits) {
@@ -1295,14 +1299,16 @@ public class DaqbufPanel extends StandardDialog {
                             daqbuf.startQuery(name + Daqbuf.BACKEND_SEPARATOR + backend,  start, null, new QueryListener() {
                                 public void onMessage(Query query, List values, List<Long> ids, List<Long> timestamps) {                            
                                     if (values.size()>0){
-                                        try {
-                                            plot.disableUpdates();
-                                            if (!plot.getAxis(AxisId.X).isAutoRange()){
-                                                plot.getAxis(AxisId.X).setRange(timestamps.get(0), plot.getAxis(AxisId.X).getMax());
+                                        synchronized(plot){
+                                            try {
+                                                plot.disableUpdates();
+                                                if (!plot.getAxis(AxisId.X).isAutoRange()){
+                                                    plot.getAxis(AxisId.X).setRange(timestamps.get(0), plot.getAxis(AxisId.X).getMax());
+                                                }
+                                                series.appendData(timestamps, values);
+                                            } finally {
+                                                 plot.reenableUpdates();
                                             }
-                                            series.appendData(timestamps, values);
-                                        } finally {
-                                             plot.reenableUpdates();
                                         }
                                     }                                    
                                 }
@@ -1381,14 +1387,16 @@ public class DaqbufPanel extends StandardDialog {
                         throw new RuntimeException("Series too big for plotting: " + name);
                     }
                     if ((x != null) && (x.size() == y.size())) {
-                        try {
-                            plot.disableUpdates();
-                            if (count!=null){
-                                Convert.removeElements(count, 0, x, y);
+                        synchronized(plot){
+                            try {
+                                plot.disableUpdates();
+                                if (count!=null){
+                                    Convert.removeElements(count, 0, x, y);
+                                }
+                                series.appendData(x,y);
+                            } finally {
+                                 plot.reenableUpdates();
                             }
-                            series.appendData(x,y);
-                        } finally {
-                             plot.reenableUpdates();
                         }
                     }
                 }
@@ -1491,22 +1499,24 @@ public class DaqbufPanel extends StandardDialog {
             lplot.setTitle("");
             lplot.setLegendVisible(true);
 
-            try {
-                plot.disableUpdates();
-                if (binned) {
-                    double[] min = ((MatrixPlotBinnedSeries) series).min[index];
-                    double[] max = ((MatrixPlotBinnedSeries) series).max[index];
-                    double[] average = ((MatrixPlotBinnedSeries) series).average[index];
-                    double[] indexes = Arr.indexesDouble(average.length);
-                    ((LinePlotErrorSeries) lseries).appendData(indexes, average, min, max);
-                    updateSeriesPaint(lseries);
-                    plot.getChartPanel().restoreAutoBounds();
-                } else {
-                    double[] row = Convert.transpose(series.getData())[index];
-                    lseries.setData(row);
+            synchronized(plot){
+                try {
+                    plot.disableUpdates();
+                    if (binned) {
+                        double[] min = ((MatrixPlotBinnedSeries) series).min[index];
+                        double[] max = ((MatrixPlotBinnedSeries) series).max[index];
+                        double[] average = ((MatrixPlotBinnedSeries) series).average[index];
+                        double[] indexes = Arr.indexesDouble(average.length);
+                        ((LinePlotErrorSeries) lseries).appendData(indexes, average, min, max);
+                        updateSeriesPaint(lseries);
+                        plot.getChartPanel().restoreAutoBounds();
+                    } else {
+                        double[] row = Convert.transpose(series.getData())[index];
+                        lseries.setData(row);
+                    }
+                } finally {
+                    plot.reenableUpdates();
                 }
-            } finally {
-                plot.reenableUpdates();
             }
             showDialog(series.getName(), new Dimension(800, 600), lplot);
         } catch (Exception ex) {
