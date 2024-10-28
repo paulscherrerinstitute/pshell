@@ -18,6 +18,9 @@ ext.run_addopens = 'java.base/jdk.internal.loader=ALL-UNNAMED java.base/java.uti
 ext.run_addexports = "java.desktop/sun.awt=ALL-UNNAMED"
 ext.run_jvargs = ["--add-opens", "java.base/jdk.internal.loader=ALL-UNNAMED", "--add-opens", "java.base/java.util=ALL-UNNAMED", "--add-exports", "java.desktop/sun.awt=ALL-UNNAMED"]
 
+if (ext.type != 'py'){
+    version = version + "-" + ext.type
+}
 
 java {
     sourceCompatibility = JavaVersion.VERSION_11
