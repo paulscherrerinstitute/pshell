@@ -1977,6 +1977,7 @@ public class DaqbufPanel extends StandardDialog {
         try {
             DateAxis axis = (DateAxis) plot.getChart().getXYPlot().getDomainAxis();            
             XYErrorRenderer renderer = (XYErrorRenderer) plot.getChart().getXYPlot().getRenderer(yxis);
+            double capLength = renderer.getCapLength();
             try {
                 int bins = plot.getChart().getXYPlot().getDataset().getItemCount(0);
                 double start = plot.getChart().getXYPlot().getDataset().getXValue(0, 0);
@@ -1986,15 +1987,14 @@ public class DaqbufPanel extends StandardDialog {
                 if (domainLenghtPixels>0){
                     domainLenghtPixels /= plot.getChartPanel().getScaleX();
                     double domainLengthMs = axis.getRange().getLength();
-                    double capLength = (capLenghtMs * domainLenghtPixels) / domainLengthMs;
-
-                    double change = (renderer.getCapLength()<=0) ? 0.0 : capLength/renderer.getCapLength();
-                    if ((change<0.95) | (change>1.05)){
-                        renderer.setCapLength(capLength);
-                    }
+                    capLength = (capLenghtMs * domainLenghtPixels) / domainLengthMs;
                 }
             } catch (Exception ex) {
-                renderer.setCapLength(4.0);
+                capLength = 4.0;
+            }
+            double change = (renderer.getCapLength()<=0) ? 0.0 : capLength/renderer.getCapLength();
+            if ((change<0.99) | (change>1.01)){
+                renderer.setCapLength(capLength);
             }
         } catch (Exception ex) {
         }
