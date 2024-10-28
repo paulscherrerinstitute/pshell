@@ -160,6 +160,7 @@ public class DaqbufPanel extends StandardDialog {
     Color gridColor;
     final Daqbuf daqbuf;
     int numPlots = 0;
+    Integer plotHeight = null;
     
     final List plotProperties = new ArrayList();
     List requestedProperties = new ArrayList();
@@ -196,6 +197,13 @@ public class DaqbufPanel extends StandardDialog {
             try {
                 defaultGridColor = Preferences.getColorFromString(App.getArgumentValue("grid_color"));
                 gridColor = defaultGridColor;
+            } catch (Exception ex) {
+                Logger.getLogger(DaqbufPanel.class.getName()).log(Level.WARNING, null, ex);
+            }
+        }
+        if (App.hasArgument("plot_height")) {
+            try {
+                plotHeight = Integer.valueOf(App.getArgumentValue("plot_height"));
             } catch (Exception ex) {
                 Logger.getLogger(DaqbufPanel.class.getName()).log(Level.WARNING, null, ex);
             }
@@ -744,7 +752,9 @@ public class DaqbufPanel extends StandardDialog {
         if (gridColor != null) {
             plot.setPlotGridColor(gridColor);
         }
-        //plot.setMinimumSize(new Dimension (plot.getMinimumSize().width, 150));
+        if ((plotHeight!=null) && (plotHeight>=0)){
+            plot.setPreferredSize(new Dimension (plot.getPreferredSize().width, plotHeight));
+        }
         if (tickLabelFont != null) {
             plot.setLabelFont(tickLabelFont);
             plot.setTickLabelFont(tickLabelFont);

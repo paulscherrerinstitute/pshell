@@ -556,6 +556,7 @@ public class App extends ObservableBase<AppListener> {
             sb.append("\n\t-background_color=<..>    \tSet default plot background color");
             sb.append("\n\t-grid_color=<..>          \tSet default plot grid color");                        
             sb.append("\n\t-tick_label_font=name:size\tSet font for tick labels");
+            sb.append("\n\t-plot_height==<..>        \tSet minimum plot height");            
         }
         
         sb.append("\n");
