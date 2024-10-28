@@ -52,7 +52,6 @@ import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
-import java.awt.Paint;
 import java.awt.Point;
 import java.awt.Toolkit;
 import java.awt.Window;
@@ -79,7 +78,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Vector;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiFunction;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -125,8 +123,6 @@ import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.renderer.xy.XYErrorRenderer;
 import org.jfree.chart.renderer.xy.XYItemRenderer;
 import org.jfree.data.xy.DefaultXYZDataset;
-import org.jfree.data.xy.YIntervalSeries;
-import org.jfree.data.xy.YIntervalSeriesCollection;
 
 /**
  *
@@ -135,7 +131,7 @@ public class DaqbufPanel extends StandardDialog {
     public static final String ARG_DAQBUF_URL = "daqbuf";
     public static final String ARG_DAQBUF_BACKEND = "backend";
     
-    public static final String[] CHANNEL_SEARCH_EXCLUDES = new String[]{"*.EGU"};
+    public static final String[] CHANNEL_SEARCH_EXCLUDES = new String[]{"*.EGU", "*.DESC"};
 
     public static final String PLOT_NEW = "New";
     public static final String PLOT_SAME = "Same";
@@ -636,7 +632,7 @@ public class DaqbufPanel extends StandardDialog {
             textFrom.setText("");
             textTo.setText("");
             checkBins.setSelected(true);
-            spinnerBins.setValue(500);
+            spinnerBins.setValue(200);
             setMaxSeriesSize(DEFAULT_MAX_SERIES_SIZE);
             comboTime.setSelectedIndex(0);
         } finally {
@@ -1232,15 +1228,22 @@ public class DaqbufPanel extends StandardDialog {
     }
     
     void checkEgu(LinePlotJFree plot, LinePlotSeries series, String backend, String start){
-            daqbuf.startFetchQuery(series.getName() + ".EGU" + Daqbuf.BACKEND_SEPARATOR + backend, start, null).handle((ret, ex) -> {
+            String name = series.getName();
+            //Strip field if present.
+            if (name.contains(".")){
+                name = name.substring(0, name.lastIndexOf("."));
+            }
+            daqbuf.startFetchQuery(name + ".EGU" + Daqbuf.BACKEND_SEPARATOR + backend, start, null).handle((ret, ex) -> {
                 if (ex != null) {
                 } else {
                     Map<String, List> map = (Map<String, List>) ret;
                     List<String> values = map.getOrDefault(Daqbuf.FIELD_VALUE, new ArrayList());
                     if (values.size()>0){
-                        String egu = values.get(values.size()-1).toString();
-                        plot.renameSeries(series, series.getName() + " " + egu);
-                        plot.getSeries(series).setDescription(egu);
+                        String egu = Str.toString(values.get(values.size()-1));                        
+                        if (!egu.isBlank()){
+                            plot.renameSeries(series, series.getName() + " [" + egu + "]");
+                            plot.getSeries(series).setDescription(egu);
+                        }
                     }
                 }
                 return ret;
@@ -2678,7 +2681,7 @@ public class DaqbufPanel extends StandardDialog {
         jLabel4.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
         jLabel4.setText("Bins:");
 
-        spinnerBins.setModel(new javax.swing.SpinnerNumberModel(500, 1, 10000, 10));
+        spinnerBins.setModel(new javax.swing.SpinnerNumberModel(200, 1, 10000, 10));
 
         jLabel7.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
         jLabel7.setText("Max size (K): ");
@@ -2902,7 +2905,6 @@ public class DaqbufPanel extends StandardDialog {
 
         tabPane.addTab("Config", panelSeries);
 
-        panelPlots.setMaximumSize(new java.awt.Dimension(32767, 32767));
         panelPlots.setMinimumSize(new java.awt.Dimension(0, 0));
         panelPlots.setName("panelPlots"); // NOI18N
         panelPlots.setLayout(new java.awt.BorderLayout());

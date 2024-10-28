@@ -617,6 +617,9 @@ public class Daqbuf implements ChannelQueryAPI {
         List<Number> ts2Ns = (List) frame.getOrDefault("ts2Ns", null);
         Integer tsAnchor = (Integer) frame.getOrDefault("tsAnchor", null);
         Boolean rangeFinal = (Boolean) frame.getOrDefault("rangeFinal", false);
+        if ((averages==null) || (averages.size()==0) || ((averages.size()==1) && (averages.get(0)==null))){
+            return;
+        }
         long anchor_ms = tsAnchor.longValue() * 1000;
         long aux =  getTimestampMillis() ? 1L : 1_000_000L;
 
