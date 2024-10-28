@@ -168,7 +168,7 @@ public class DaqbufPanel extends StandardDialog {
     final List plotProperties = new ArrayList();
     List requestedProperties = new ArrayList();
 
-    final int ERROR_RANGE_TRANSPARENCY = 0x60;        
+    final int ERROR_RANGE_ALPHA= 0x60;        
     Range queryRange;
     volatile boolean initialized;
     JDialog channelSearchDialog; 
@@ -521,7 +521,6 @@ public class DaqbufPanel extends StandardDialog {
                             PlotSeries series = (PlotSeries) getPlotSeries(index);
                             if (series instanceof LinePlotErrorSeries) {
                                 ((LinePlotErrorSeries) series).setColor(color);
-                                updateSeriesPaint((LinePlotErrorSeries) series);
                             }
                             break;
                     }
@@ -963,6 +962,7 @@ public class DaqbufPanel extends StandardDialog {
         LinePlotJFree plot = new LinePlotJFree();
         if (binned) {
             plot.setStyle(LinePlot.Style.ErrorY);
+            plot.setErrorRangeAlpha(ERROR_RANGE_ALPHA);
         }
         DateAxis axis = setDateDomainAxis(plot);        
         plot.getAxis(AxisId.Y).setLabel(null);
@@ -1175,7 +1175,6 @@ public class DaqbufPanel extends StandardDialog {
 
         try {
             if (daqbuf.isStreamed()){
-                AtomicBoolean first= new AtomicBoolean(true);
                 daqbuf.startQuery(name + Daqbuf.BACKEND_SEPARATOR + backend, start, end, new QueryBinnedListener() {
                     public void onMessage(Query query, List average, List min, List max, List<Integer> count, List<Long> t1, List<Long> t2) {                                                
                         if (average.size()>0){
@@ -1183,12 +1182,9 @@ public class DaqbufPanel extends StandardDialog {
                             synchronized(plot){
                                 try {
                                     plot.disableUpdates();
-                                    series.appendData(t, average, min, max);
-                                    if (first.compareAndSet(true, false)){
-                                        updateSeriesPaint(series);
-                                        updateCapLength(plot);
-                                        plot.getChartPanel().restoreAutoBounds();
-                                    } 
+                                    series.appendData(t, average, min, max);                                    
+                                    updateCapLength(plot, series.getAxisY()-1);
+                                    //plot.getChartPanel().restoreAutoBounds();
                                 } finally {
                                      plot.reenableUpdates();
                                 }
@@ -1218,7 +1214,6 @@ public class DaqbufPanel extends StandardDialog {
                             try {
                                 plot.disableUpdates();
                                 series.appendData(t, average, min, max);
-                                updateSeriesPaint(series);
                                 updateCapLength(plot);
                                 plot.getChartPanel().restoreAutoBounds();
                             } finally {
@@ -1490,6 +1485,7 @@ public class DaqbufPanel extends StandardDialog {
             LinePlotSeries lseries;
             if (binned) {
                 lplot.setStyle(LinePlot.Style.ErrorY);
+                lplot.setErrorRangeAlpha(ERROR_RANGE_ALPHA);
                 lseries = new LinePlotErrorSeries(name, Color.RED);
             } else {
                 lseries = new LinePlotSeries(name, Color.RED);
@@ -1507,7 +1503,6 @@ public class DaqbufPanel extends StandardDialog {
                         double[] average = ((MatrixPlotBinnedSeries) series).average[index];
                         double[] indexes = Arr.indexesDouble(average.length);
                         ((LinePlotErrorSeries) lseries).appendData(indexes, average, min, max);
-                        updateSeriesPaint(lseries);
                         plot.getChartPanel().restoreAutoBounds();
                     } else {
                         double[] row = Convert.transpose(series.getData())[index];
@@ -1970,51 +1965,37 @@ public class DaqbufPanel extends StandardDialog {
     }
 
     void updateCapLength(LinePlotJFree plot) {
+        for (int i = 0; i < plot.getChart().getXYPlot().getRendererCount(); i++) {
+            updateCapLength(plot,i);
+        }
+    }
+    
+    void updateCapLength(LinePlotJFree plot, int yxis) {
         try {
-            DateAxis axis = (DateAxis) plot.getChart().getXYPlot().getDomainAxis();
-            for (int i = 0; i < plot.getChart().getXYPlot().getRendererCount(); i++) {
-                XYErrorRenderer renderer = (XYErrorRenderer) plot.getChart().getXYPlot().getRenderer(i);
-                try {
-                    int bins = plot.getChart().getXYPlot().getDataset().getItemCount(0);
-                    double start = plot.getChart().getXYPlot().getDataset().getXValue(0, 0);
-                    double end = plot.getChart().getXYPlot().getDataset().getXValue(0, bins - 1);
-                    double capLenghtMs = (end - start) / bins;
-                    double domainLenghtPixels = plot.getChartPanel().getScreenDataArea().getWidth();
+            DateAxis axis = (DateAxis) plot.getChart().getXYPlot().getDomainAxis();            
+            XYErrorRenderer renderer = (XYErrorRenderer) plot.getChart().getXYPlot().getRenderer(yxis);
+            try {
+                int bins = plot.getChart().getXYPlot().getDataset().getItemCount(0);
+                double start = plot.getChart().getXYPlot().getDataset().getXValue(0, 0);
+                double end = plot.getChart().getXYPlot().getDataset().getXValue(0, bins - 1);
+                double capLenghtMs = (end - start) / bins;
+                double domainLenghtPixels = plot.getChartPanel().getScreenDataArea().getWidth();
+                if (domainLenghtPixels>0){
                     domainLenghtPixels /= plot.getChartPanel().getScaleX();
                     double domainLengthMs = axis.getRange().getLength();
                     double capLength = (capLenghtMs * domainLenghtPixels) / domainLengthMs;
-                    renderer.setCapLength(capLength);
-                } catch (Exception ex) {
-                    renderer.setCapLength(4.0);
+
+                    double change = (renderer.getCapLength()<=0) ? 0.0 : capLength/renderer.getCapLength();
+                    if ((change<0.95) | (change>1.05)){
+                        renderer.setCapLength(capLength);
+                    }
                 }
+            } catch (Exception ex) {
+                renderer.setCapLength(4.0);
             }
         } catch (Exception ex) {
         }
 
-    }
-
-    void updateSeriesPaint(LinePlotSeries series) {
-        if (!SwingUtilities.isEventDispatchThread()){
-            SwingUtilities.invokeLater(()->{
-                updateSeriesPaint(series);
-            });
-            return;
-        }
-        LinePlotJFree plot = (LinePlotJFree) series.getPlot();
-        XYErrorRenderer renderer = (XYErrorRenderer) plot.getSeriesRenderer(series);
-        Paint paint = renderer.getSeriesPaint(plot.getSeriesIndex(series));
-        YIntervalSeriesCollection dataset = (YIntervalSeriesCollection) plot.getDataset(series.getAxisY());
-        YIntervalSeries yseries = (YIntervalSeries) series.getToken();
-        
-                
-        if ((paint instanceof Color) && (dataset.getSeriesCount() < 2)) {
-            Color c = (Color) paint;
-            paint = new Color(c.getRed(), c.getGreen(), c.getBlue(), ERROR_RANGE_TRANSPARENCY);
-        } else {
-            paint =  new Color(0xA0, 0xA0, 0xA0, ERROR_RANGE_TRANSPARENCY);
-        }
-
-        renderer.setErrorPaint(paint);
     }
 
     String[] getNames() throws IOException {

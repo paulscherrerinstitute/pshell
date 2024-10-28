@@ -59,16 +59,20 @@ import org.jfree.chart.axis.NumberTickUnitSource;
 import org.jfree.chart.axis.LogarithmicAxis;
 import org.jfree.chart.axis.TickUnit;
 import org.jfree.chart.axis.ValueAxis;
+import org.jfree.chart.entity.EntityCollection;
 import org.jfree.chart.entity.StandardEntityCollection;
 import org.jfree.chart.labels.StandardXYToolTipGenerator;
+import org.jfree.chart.plot.CrosshairState;
 import org.jfree.chart.plot.IntervalMarker;
 import org.jfree.chart.plot.Marker;
 import static org.jfree.chart.plot.Plot.DEFAULT_OUTLINE_STROKE;
 import org.jfree.chart.plot.PlotOrientation;
+import org.jfree.chart.plot.PlotRenderingInfo;
 import org.jfree.chart.plot.ValueMarker;
 import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.renderer.xy.XYErrorRenderer;
 import org.jfree.chart.renderer.xy.XYItemRenderer;
+import org.jfree.chart.renderer.xy.XYItemRendererState;
 import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
 import org.jfree.chart.renderer.xy.XYSplineRenderer;
 import org.jfree.data.ComparableObjectSeries;
@@ -90,6 +94,7 @@ import org.jfree.chart.ui.Layer;
 import org.jfree.chart.ui.RectangleAnchor;
 import org.jfree.chart.ui.RectangleEdge;
 import org.jfree.chart.ui.TextAnchor;
+import org.jfree.data.xy.IntervalXYDataset;
 import org.jfree.data.xy.XYDataset;
 
 public class LinePlotJFree extends LinePlotBase {
@@ -113,7 +118,7 @@ public class LinePlotJFree extends LinePlotBase {
     
     final long TIMESTAMP_2000 = 946681200000L;
     final long TIMESTAMP_2100 = 4102441200000L;
-    
+        
     JFreeChart chart;
 
     Rectangle2D.Double seriesMarker;
@@ -123,6 +128,7 @@ public class LinePlotJFree extends LinePlotBase {
     public LinePlotJFree() {
         super();
         setMarkerSize(getMarkerSize());
+        setErrorRangeAlpha(255);
     }
 
     void setMarkerSize(double size) {
@@ -188,6 +194,158 @@ public class LinePlotJFree extends LinePlotBase {
             g2.draw(line1);
             g2.draw(line2);
         }
+    }
+      
+    
+    
+    int errorRangeAlpha;
+    Color defaultErrorPaint;
+    
+    public int 
+        RangeAlpha(){
+        return errorRangeAlpha;
+    }
+    
+    public void setErrorRangeAlpha(int value){
+        errorRangeAlpha = value;
+        defaultErrorPaint =  new Color(0xA0, 0xA0, 0xA0, errorRangeAlpha);
+    }
+    
+    
+    class ErrorRenderer extends XYErrorRenderer {              
+        final HashMap<Integer, Paint> errorPaints = new HashMap<>();       
+         //@Override
+        public XYItemRendererState initialise(Graphics2D g2, Rectangle2D dataArea, XYPlot plot, XYDataset data, PlotRenderingInfo info){                        
+            errorPaints.clear();
+            for (int i=0; i<data.getSeriesCount(); i++){
+                    Paint p= getSeriesPaint(i); 
+                    Color c = defaultErrorPaint;
+                    if ((p!=null) && (p instanceof Color)){
+                        c = (Color) p;
+                        c = new Color(c.getRed(), c.getGreen(), c.getBlue(), errorRangeAlpha);            
+                    }
+                    errorPaints.put(i, c);        
+                
+            }
+            return super.initialise(g2, dataArea, plot, data, info);
+        }
+                
+
+        //@Override
+        public void drawItem(Graphics2D g2, XYItemRendererState state,
+            Rectangle2D dataArea, PlotRenderingInfo info, XYPlot plot,
+            ValueAxis domainAxis, ValueAxis rangeAxis, XYDataset dataset,
+            int series, int item, CrosshairState crosshairState, int pass) {        
+            // do nothing if item is not visible
+            if (!getItemVisible(series, item)) {
+                return;
+            }
+            
+            if (pass == 0 && dataset instanceof IntervalXYDataset) {                                    
+                IntervalXYDataset ixyd = (IntervalXYDataset) dataset;
+                PlotOrientation orientation = plot.getOrientation();
+                if (getDrawXError()) {
+                    // draw the error bar for the x-interval
+                    double x0 = ixyd.getStartXValue(series, item);
+                    double x1 = ixyd.getEndXValue(series, item);
+                    double y = ixyd.getYValue(series, item);
+                    RectangleEdge edge = plot.getDomainAxisEdge();
+                    double xx0 = domainAxis.valueToJava2D(x0, dataArea, edge);
+                    double xx1 = domainAxis.valueToJava2D(x1, dataArea, edge);
+                    double yy = rangeAxis.valueToJava2D(y, dataArea,
+                            plot.getRangeAxisEdge());
+                    Line2D line;
+                    Line2D cap1;
+                    Line2D cap2;
+                    double adj = this.getCapLength() / 2.0;
+                    if (orientation == PlotOrientation.VERTICAL) {
+                        line = new Line2D.Double(xx0, yy, xx1, yy);
+                        cap1 = new Line2D.Double(xx0, yy - adj, xx0, yy + adj);
+                        cap2 = new Line2D.Double(xx1, yy - adj, xx1, yy + adj);
+                    }
+                    else {  // PlotOrientation.HORIZONTAL
+                        line = new Line2D.Double(yy, xx0, yy, xx1);
+                        cap1 = new Line2D.Double(yy - adj, xx0, yy + adj, xx0);
+                        cap2 = new Line2D.Double(yy - adj, xx1, yy + adj, xx1);
+                    }
+                    Paint errorPaint = errorPaints.getOrDefault(series, defaultErrorPaint);
+                    g2.setPaint(errorPaint);
+                    if (this.getErrorStroke() != null) {
+                        g2.setStroke(this.getErrorStroke());
+                    }
+                    else {
+                        g2.setStroke(getItemStroke(series, item));
+                    }
+                    g2.draw(line);
+                    g2.draw(cap1);
+                    g2.draw(cap2);
+                }
+                if (getDrawYError()) {
+                    // draw the error bar for the y-interval
+                    double y0 = ixyd.getStartYValue(series, item);
+                    double y1 = ixyd.getEndYValue(series, item);
+                    double x = ixyd.getXValue(series, item);
+                    RectangleEdge edge = plot.getRangeAxisEdge();
+                    double yy0 = rangeAxis.valueToJava2D(y0, dataArea, edge);
+                    double yy1 = rangeAxis.valueToJava2D(y1, dataArea, edge);
+                    double xx = domainAxis.valueToJava2D(x, dataArea,
+                            plot.getDomainAxisEdge());
+                    Line2D line;
+                    Line2D cap1;
+                    Line2D cap2;
+                    double adj = this.getCapLength() / 2.0;
+                    if (orientation == PlotOrientation.VERTICAL) {
+                        line = new Line2D.Double(xx, yy0, xx, yy1);
+                        cap1 = new Line2D.Double(xx - adj, yy0, xx + adj, yy0);
+                        cap2 = new Line2D.Double(xx - adj, yy1, xx + adj, yy1);
+                    }
+                    else {  // PlotOrientation.HORIZONTAL
+                        line = new Line2D.Double(yy0, xx, yy1, xx);
+                        cap1 = new Line2D.Double(yy0, xx - adj, yy0, xx + adj);
+                        cap2 = new Line2D.Double(yy1, xx - adj, yy1, xx + adj);
+                    }
+                    Paint errorPaint = errorPaints.getOrDefault(series, defaultErrorPaint);
+                    g2.setPaint(errorPaint);
+                    if (this.getErrorStroke() != null) {
+                        g2.setStroke(this.getErrorStroke());
+                    }
+                    else {
+                        g2.setStroke(getItemStroke(series, item));
+                    }
+                    g2.draw(line);
+                    g2.draw(cap1);
+                    g2.draw(cap2);
+                }
+            }
+            //super.drawItem(g2, state, dataArea, info, plot, domainAxis, rangeAxis, dataset, series, item, crosshairState, pass);
+            
+
+            // first pass draws the background (lines, for instance)
+            if (isLinePass(pass)) {
+                if (getItemLineVisible(series, item)) {
+                    if (this.getDrawSeriesLineAsPath()) {
+                        drawPrimaryLineAsPath(state, g2, plot, dataset, pass,
+                                series, item, domainAxis, rangeAxis, dataArea);
+                    }
+                    else {
+                        drawPrimaryLine(state, g2, plot, dataset, pass, series,
+                                item, domainAxis, rangeAxis, dataArea);
+                    }
+                }
+            }
+            // second pass adds shapes where the items are ..
+            else if (isItemPass(pass)) {
+
+                // setup for collecting optional entity info...
+                EntityCollection entities = null;
+                if (info != null && info.getOwner() != null) {
+                    entities = info.getOwner().getEntityCollection();
+                }
+
+                drawSecondaryPass(g2, plot, dataset, pass, series, item,
+                        domainAxis, dataArea, rangeAxis, crosshairState, entities);
+            }                        
+        }                        
     }
 
     @Override
@@ -305,7 +463,12 @@ public class LinePlotJFree extends LinePlotBase {
             axis2.setLabelFont(labelFont);
             axis2.setTickLabelFont(tickLabelFont);
             plot.setRangeAxis(1, axis2);
-            XYLineAndShapeRenderer renderer2 = getStyle().isError() ? new XYErrorRenderer() : new XYLineAndShapeRenderer();
+            XYLineAndShapeRenderer renderer2 = getStyle().isError() ? new ErrorRenderer() : new XYLineAndShapeRenderer();
+            if (getStyle()==Style.ErrorY){
+                ((XYErrorRenderer)renderer2).setDrawXError(false);
+            } else if (getStyle()==Style.ErrorX){
+                ((XYErrorRenderer)renderer2).setDrawYError(false);
+            }            
             plot.setRenderer(1, renderer2);
             plot.setDataset(1, dataY2);
             plot.mapDatasetToRangeAxis(1, 1);
@@ -705,11 +868,11 @@ public class LinePlotJFree extends LinePlotBase {
         return tickLabelFont;
     }
     
-    boolean hasY2(){
+    public boolean hasY2(){
         return (dataY2 != null);
     }
     
-    boolean hasX2(){
+    public boolean hasX2(){
         return (chart!=null) && chart.getXYPlot().getDomainAxis(1) != null;
     }    
 
@@ -971,7 +1134,13 @@ public class LinePlotJFree extends LinePlotBase {
                 NumberAxis xAxis = new NumberAxis(getAxis(AxisId.X).getLabel());
                 xAxis.setAutoRangeIncludesZero(false);
                 NumberAxis yAxis = new NumberAxis(getAxis(AxisId.Y).getLabel());
-                XYErrorRenderer renderer = new XYErrorRenderer();
+                XYErrorRenderer renderer = new ErrorRenderer();
+                    if (getStyle()==Style.ErrorY){
+                    renderer.setDrawXError(false);
+                } else if (getStyle()==Style.ErrorX){
+                    renderer.setDrawYError(false);
+                }
+                
                 XYPlot plot = new XYPlot(dataY1, xAxis, yAxis, renderer);
                 plot.setOrientation(PlotOrientation.VERTICAL);
                 ret = new JFreeChart(title, JFreeChart.DEFAULT_TITLE_FONT, plot, true);
@@ -1423,7 +1592,7 @@ public class LinePlotJFree extends LinePlotBase {
         XYLineAndShapeRenderer renderer = getRenderer(series.getAxisY());
         renderer.setSeriesPaint(getSeriesIndex(series), color);
     }
-
+    
     @Override
     protected void setLinesVisible(LinePlotSeries series, boolean value) {
         XYLineAndShapeRenderer renderer = getRenderer(series.getAxisY());
