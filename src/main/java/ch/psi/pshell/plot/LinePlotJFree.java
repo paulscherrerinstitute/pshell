@@ -213,19 +213,25 @@ public class LinePlotJFree extends LinePlotBase {
     
     
     class ErrorRenderer extends XYErrorRenderer {              
-        final HashMap<Integer, Paint> errorPaints = new HashMap<>();       
+        Color[] errorColors = new Color[0];       
          //@Override
         public XYItemRendererState initialise(Graphics2D g2, Rectangle2D dataArea, XYPlot plot, XYDataset data, PlotRenderingInfo info){                        
-            errorPaints.clear();
+            Paint errorPaint = getErrorPaint();
+            if (errorColors.length<data.getSeriesCount()){
+                errorColors = new Color[data.getSeriesCount()];  
+            }            
             for (int i=0; i<data.getSeriesCount(); i++){
                     Paint p= getSeriesPaint(i); 
                     Color c = defaultErrorPaint;
-                    if ((p!=null) && (p instanceof Color)){
-                        c = (Color) p;
-                        c = new Color(c.getRed(), c.getGreen(), c.getBlue(), errorRangeAlpha);            
+                    if ((errorPaint!=null) && (errorPaint instanceof Color)){
+                        c = (Color)errorPaint;
+                    } else {
+                        if ((p!=null) && (p instanceof Color)){
+                            c = (Color) p;
+                            c = new Color(c.getRed(), c.getGreen(), c.getBlue(), errorRangeAlpha);            
+                        }
                     }
-                    errorPaints.put(i, c);        
-                
+                    errorColors[i] = c;                        
             }
             return super.initialise(g2, dataArea, plot, data, info);
         }
@@ -240,6 +246,8 @@ public class LinePlotJFree extends LinePlotBase {
             if (!getItemVisible(series, item)) {
                 return;
             }
+            Color errorColor = (series < errorColors.length) ? errorColors[series] : defaultErrorPaint;
+            
             
             if (pass == 0 && dataset instanceof IntervalXYDataset) {                                    
                 IntervalXYDataset ixyd = (IntervalXYDataset) dataset;
@@ -267,9 +275,8 @@ public class LinePlotJFree extends LinePlotBase {
                         line = new Line2D.Double(yy, xx0, yy, xx1);
                         cap1 = new Line2D.Double(yy - adj, xx0, yy + adj, xx0);
                         cap2 = new Line2D.Double(yy - adj, xx1, yy + adj, xx1);
-                    }
-                    Paint errorPaint = errorPaints.getOrDefault(series, defaultErrorPaint);
-                    g2.setPaint(errorPaint);
+                    }                    
+                    g2.setPaint(errorColor);
                     if (this.getErrorStroke() != null) {
                         g2.setStroke(this.getErrorStroke());
                     }
@@ -304,8 +311,7 @@ public class LinePlotJFree extends LinePlotBase {
                         cap1 = new Line2D.Double(yy0, xx - adj, yy0, xx + adj);
                         cap2 = new Line2D.Double(yy1, xx - adj, yy1, xx + adj);
                     }
-                    Paint errorPaint = errorPaints.getOrDefault(series, defaultErrorPaint);
-                    g2.setPaint(errorPaint);
+                    g2.setPaint(errorColor);
                     if (this.getErrorStroke() != null) {
                         g2.setStroke(this.getErrorStroke());
                     }
