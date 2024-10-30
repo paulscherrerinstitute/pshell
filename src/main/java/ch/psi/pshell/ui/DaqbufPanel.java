@@ -8,6 +8,7 @@ import ch.psi.pshell.imaging.Colormap;
 import ch.psi.pshell.plot.LinePlot;
 import ch.psi.pshell.plot.LinePlotErrorSeries;
 import ch.psi.pshell.plot.LinePlotJFree;
+import ch.psi.pshell.plot.LinePlotJFree.ZoomListener;
 import ch.psi.pshell.plot.LinePlotSeries;
 import ch.psi.pshell.plot.MatrixPlotJFree;
 import ch.psi.pshell.plot.MatrixPlotRenderer;
@@ -84,6 +85,7 @@ import java.util.logging.Logger;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import javax.swing.AbstractButton;
 import javax.swing.AbstractCellEditor;
 import javax.swing.BoxLayout;
 import javax.swing.DefaultCellEditor;
@@ -168,6 +170,7 @@ public class DaqbufPanel extends StandardDialog {
     final int ERROR_RANGE_ALPHA= 0x60;        
     Range queryRange;
     volatile boolean initialized;
+    volatile boolean chainZoomLevels;
     JDialog channelSearchDialog; 
 
     public DaqbufPanel(Window parent, String url, String backend, String title, boolean modal, File defaultFolder) {
@@ -255,9 +258,9 @@ public class DaqbufPanel extends StandardDialog {
     @Override
     protected void onLafChange() {
         String prefix = MainFrame.isDark() ? "dark/" : "";
-        for (Component b : SwingUtils.getComponentsByType(toolBar, JButton.class)) {
+        for (Component b : SwingUtils.getComponentsByType(toolBar, AbstractButton.class)) {
             try{
-                ((JButton) b).setIcon(new ImageIcon(App.getResourceUrl(prefix + new File(((JButton) b).getIcon().toString()).getName())));
+                ((AbstractButton) b).setIcon(new ImageIcon(App.getResourceUrl(prefix + new File(((AbstractButton) b).getIcon().toString()).getName())));
             } catch (Exception ex){                    
             }
         }        
@@ -959,6 +962,28 @@ public class DaqbufPanel extends StandardDialog {
 
     }
 
+    boolean updatingZoom;
+            
+    final ZoomListener zoomListener = (LinePlotJFree source, Range rangeX, Range rangeY) -> {      
+        if (chainZoomLevels){
+            if (!updatingZoom){
+                updatingZoom=true;
+                try{
+                    for (PlotBase p: plots){
+                        if ((p instanceof LinePlotJFree)){
+                            LinePlotJFree lp = (LinePlotJFree)p;
+                            if ((source!=lp) && (lp.getZoomListener()!=null)){
+                                lp.zoomDomain(rangeX);
+                            }
+                        }
+                    }
+                }finally{
+                    updatingZoom = false;
+                }
+            }
+        }
+    };
+        
     LinePlotJFree addLinePlot(boolean binned) {
         Double y1min = null;
         Double y1max = null;
@@ -966,6 +991,7 @@ public class DaqbufPanel extends StandardDialog {
         Double y2max = null;
 
         LinePlotJFree plot = new LinePlotJFree();
+        plot.setZoomListener(zoomListener);
         if (binned) {
             plot.setStyle(LinePlot.Style.ErrorY);
             plot.setErrorRangeAlpha(ERROR_RANGE_ALPHA);
@@ -2515,6 +2541,7 @@ public class DaqbufPanel extends StandardDialog {
         buttonRowInsert = new javax.swing.JButton();
         jSeparator3 = new javax.swing.JToolBar.Separator();
         buttonSearchChannels = new javax.swing.JButton();
+        buttonChain = new javax.swing.JToggleButton();
         jSeparator4 = new javax.swing.JToolBar.Separator();
         buttonDumpData = new javax.swing.JButton();
         jSeparator2 = new javax.swing.JToolBar.Separator();
@@ -2848,6 +2875,18 @@ public class DaqbufPanel extends StandardDialog {
         });
         toolBar.add(buttonSearchChannels);
 
+        buttonChain.setIcon(new javax.swing.ImageIcon(getClass().getResource("/ch/psi/pshell/ui/Chain.png"))); // NOI18N
+        buttonChain.setToolTipText("Lock plot zoom levels");
+        buttonChain.setFocusable(false);
+        buttonChain.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+        buttonChain.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+        buttonChain.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                buttonChainActionPerformed(evt);
+            }
+        });
+        toolBar.add(buttonChain);
+
         jSeparator4.setMaximumSize(new java.awt.Dimension(20, 32767));
         jSeparator4.setPreferredSize(new java.awt.Dimension(20, 0));
         toolBar.add(jSeparator4);
@@ -2895,7 +2934,7 @@ public class DaqbufPanel extends StandardDialog {
             .addGroup(panelSeriesLayout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(panelSeriesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(toolBar, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(toolBar, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
                     .addComponent(jPanel4, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addComponent(jPanel3, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addContainerGap())
@@ -3135,6 +3174,10 @@ public class DaqbufPanel extends StandardDialog {
         }
     }//GEN-LAST:event_buttonSearchChannelsActionPerformed
 
+    private void buttonChainActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonChainActionPerformed
+        chainZoomLevels=buttonChain.isSelected();
+    }//GEN-LAST:event_buttonChainActionPerformed
+
     /**
      */
     public static void main(String args[]) {
@@ -3143,6 +3186,7 @@ public class DaqbufPanel extends StandardDialog {
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JToggleButton buttonChain;
     private javax.swing.JButton buttonDumpData;
     private javax.swing.JButton buttonNew;
     private javax.swing.JButton buttonOpen;
