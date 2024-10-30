@@ -10,7 +10,7 @@ version = '1.21.0'
 group = 'ch.psi'
 ext.timestamp = new Date().format("yyMMddHHmm")
 
-ext.type = 'py'     //py, groovy, js, all or light
+ext.type = project.hasProperty('type') ? project.type : 'py'     //py, groovy, js, all or light
 ext.javafx = false
 ext.jzy3d = false
 ext.manif_addopens = 'java.base/sun.nio.ch java.base/java.io java.desktop/sun.awt java.desktop/javax.swing.text.html java.desktop/sun.swing java.base/jdk.internal.loader jdk.nashorn.internal.runtime java.base/java.util'
