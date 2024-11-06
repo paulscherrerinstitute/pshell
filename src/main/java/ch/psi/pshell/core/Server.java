@@ -6,6 +6,7 @@ import java.net.UnknownHostException;
 import java.util.logging.Logger;
 
 import jakarta.ws.rs.core.UriBuilder;
+import java.util.logging.Level;
 
 import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
 import org.glassfish.jersey.jackson.JacksonFeature;
@@ -30,7 +31,15 @@ public class Server implements AutoCloseable {
     }
 
     public String getInterfaceURL() {
-        return String.format("%sstatic/", getBaseURL());
+        String url = getBaseURL();
+        if (url.contains("http://0.0.0.0")){
+            try {
+                url = url.replaceFirst("0.0.0.0", InetAddress.getLocalHost().getHostName());
+            } catch (Exception ex) {
+            }
+        }
+        String ret =  String.format("%sstatic/", url);
+        return ret;
     }
 
     public String getBaseURL() {
@@ -40,7 +49,7 @@ public class Server implements AutoCloseable {
     public Server(String hostname, Integer port) throws UnknownHostException {
         logger.info("Initializing " + getClass().getSimpleName());
         if (hostname == null) {
-            hostname = InetAddress.getLocalHost().getHostName();
+            hostname = "0.0.0.0"; 
         }
         if (port == null) {
             port = 8080;
