@@ -15,7 +15,6 @@ import java.awt.Frame;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Paint;
-import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
@@ -1088,28 +1087,15 @@ public class LinePlotJFree extends LinePlotBase {
             }
         }
     }
-
-    public interface ZoomListener{
-        public void onZoom(LinePlotJFree plot, ch.psi.utils.Range rangeX, ch.psi.utils.Range rangeY);
-    }
     
-    ZoomListener zoomListener;
-    public void setZoomListener(ZoomListener listener){
-        zoomListener = listener;
-    }
-        
-    public ZoomListener getZoomListener(){
-        return zoomListener;
-    }
     
     void notifyZoomListener(){
         if (zoomListener!=null){
             try{
                 Range rangeX = getValueAxis(AxisId.X).getRange();
                 Range rangeY = getValueAxis(AxisId.Y).getRange();
-                zoomListener.onZoom(LinePlotJFree.this, 
-                    new ch.psi.utils.Range(rangeX.getLowerBound(), rangeX.getUpperBound()),
-                    new ch.psi.utils.Range(rangeY.getLowerBound(), rangeY.getUpperBound()));
+                super.notifyZoomListener( new ch.psi.utils.Range(rangeX.getLowerBound(), rangeX.getUpperBound()),
+                                          new ch.psi.utils.Range(rangeY.getLowerBound(), rangeY.getUpperBound()));
             } catch (Exception ex){          
                 logger.log(Level.WARNING, null, ex);
             }

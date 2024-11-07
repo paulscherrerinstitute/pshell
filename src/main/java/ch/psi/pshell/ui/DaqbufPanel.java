@@ -8,7 +8,6 @@ import ch.psi.pshell.imaging.Colormap;
 import ch.psi.pshell.plot.LinePlot;
 import ch.psi.pshell.plot.LinePlotErrorSeries;
 import ch.psi.pshell.plot.LinePlotJFree;
-import ch.psi.pshell.plot.LinePlotJFree.ZoomListener;
 import ch.psi.pshell.plot.LinePlotSeries;
 import ch.psi.pshell.plot.MatrixPlotJFree;
 import ch.psi.pshell.plot.MatrixPlotRenderer;
@@ -16,6 +15,7 @@ import ch.psi.pshell.plot.MatrixPlotSeries;
 import ch.psi.pshell.plot.Plot;
 import ch.psi.pshell.plot.Plot.AxisId;
 import ch.psi.pshell.plot.PlotBase;
+import ch.psi.pshell.plot.PlotBase.ZoomListener;
 import ch.psi.pshell.plot.PlotSeries;
 import ch.psi.pshell.plot.SlicePlotDefault;
 import ch.psi.pshell.plot.SlicePlotSeries;
@@ -119,6 +119,7 @@ import org.jfree.chart.ChartMouseEvent;
 import org.jfree.chart.ChartMouseListener;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.axis.DateAxis;
+import org.jfree.chart.axis.NumberAxis;
 import org.jfree.chart.event.AxisChangeEvent;
 import org.jfree.chart.event.AxisChangeListener;
 import org.jfree.chart.plot.XYPlot;
@@ -170,7 +171,7 @@ public class DaqbufPanel extends StandardDialog {
     final int ERROR_RANGE_ALPHA= 0x60;        
     Range queryRange;
     volatile boolean initialized;
-    volatile boolean chainZoomLevels;
+    volatile boolean lockZoomLevels;
     JDialog channelSearchDialog; 
 
     public DaqbufPanel(Window parent, String url, String backend, String title, boolean modal, File defaultFolder) {
@@ -188,6 +189,7 @@ public class DaqbufPanel extends StandardDialog {
                 
         daqbuf = new Daqbuf(url, backend);
         daqbuf.setTimestampMillis(true);
+        
         if (App.hasArgument("background_color")) {
             try {
                 defaultBackgroundColor = Preferences.getColorFromString(App.getArgumentValue("background_color"));
@@ -196,6 +198,7 @@ public class DaqbufPanel extends StandardDialog {
                 Logger.getLogger(DaqbufPanel.class.getName()).log(Level.WARNING, null, ex);
             }
         }
+        
         if (App.hasArgument("grid_color")) {
             try {
                 defaultGridColor = Preferences.getColorFromString(App.getArgumentValue("grid_color"));
@@ -211,6 +214,7 @@ public class DaqbufPanel extends StandardDialog {
                 Logger.getLogger(DaqbufPanel.class.getName()).log(Level.WARNING, null, ex);
             }
         }
+        
         if (App.hasArgument("tick_label_font")) {
             try {
                 String[] tokens = App.getArgumentValue("tick_label_font").split(":");
@@ -227,6 +231,15 @@ public class DaqbufPanel extends StandardDialog {
                 Logger.getLogger(DaqbufPanel.class.getName()).log(Level.WARNING, null, ex);
             }
         }
+        
+        if (App.hasArgument("lock_zooms")) {
+            try {
+                lockZoomLevels = App.getBoolArgumentValue("lock_zooms");
+                buttonLockZooms.setSelected(lockZoomLevels);                        
+            } catch (Exception ex) {
+                Logger.getLogger(DaqbufPanel.class.getName()).log(Level.WARNING, null, ex);
+            }
+        }        
 
         buttonPlotData.setEnabled(false);
         setCancelledOnEscape(false);
@@ -789,12 +802,37 @@ public class DaqbufPanel extends StandardDialog {
         axis.setLabelFont((plot instanceof LinePlotJFree) ? ((LinePlotJFree)plot).getLabelFont() : PlotBase.getDefaultLabelFont());
         axis.setLabelPaint(plot.getAxisTextColor());
         axis.setTickLabelPaint(plot.getAxisTextColor());
+        axis.setAutoRange(plot.getAxis(AxisId.X).isAutoRange());
         if (plot instanceof LinePlotJFree){
             ((LinePlotJFree)plot).getChart().getXYPlot().setDomainAxis(axis);        
         } else if (plot instanceof MatrixPlotJFree){
             ((MatrixPlotJFree)plot).getChart().getXYPlot().setDomainAxis(axis);        
         }
         return axis;
+    }
+
+    NumberAxis setNumberDomainAxis(PlotBase plot){
+        NumberAxis axis = new NumberAxis(null); 
+        axis.setLabelFont((plot instanceof LinePlotJFree) ? ((LinePlotJFree)plot).getLabelFont() : PlotBase.getDefaultLabelFont());
+        axis.setLabelPaint(plot.getAxisTextColor());
+        axis.setTickLabelPaint(plot.getAxisTextColor());
+        axis.setAutoRange(plot.getAxis(AxisId.X).isAutoRange());
+        if (plot instanceof LinePlotJFree){
+            ((LinePlotJFree)plot).getChart().getXYPlot().setDomainAxis(axis);        
+        } else if (plot instanceof MatrixPlotJFree){
+            ((MatrixPlotJFree)plot).getChart().getXYPlot().setDomainAxis(axis);        
+        }
+        return axis;
+    }
+    
+    
+    boolean isDateDomainAxis(PlotBase plot){
+        if (plot instanceof LinePlotJFree){
+            return ((LinePlotJFree)plot).getChart().getXYPlot().getDomainAxis() instanceof DateAxis;        
+        } else if (plot instanceof MatrixPlotJFree){
+            return ((MatrixPlotJFree)plot).getChart().getXYPlot().getDomainAxis() instanceof DateAxis;  
+        }
+        return false;
     }
 
     void setPlotArg(PlotBase plot, String name, Object value){
@@ -948,6 +986,15 @@ public class DaqbufPanel extends StandardDialog {
         JMenuItem menuUnbin = new JMenuItem("Unbinned");
         menuUnbin.addActionListener((ActionEvent e) -> {
             unbin(plot);
+            if (lockZoomLevels){
+                for (PlotBase p: plots){
+                    if (p!=plot){
+                        if (isBinnedPlot(p)){
+                            unbin(p);
+                        }
+                    }
+                }
+            }            
         });
         plot.addPopupMenuItem(menuUnbin);
         menuUnbin.setVisible(binned);
@@ -956,6 +1003,15 @@ public class DaqbufPanel extends StandardDialog {
         JMenuItem menuRequery = new JMenuItem("Requery");
         menuRequery.addActionListener((ActionEvent e) -> {
             requery(plot);
+            if (lockZoomLevels){
+                for (PlotBase p: plots){
+                    if (p!=plot){
+                        if (isBinnedPlot(p)){
+                            requery(p);
+                        }
+                    }
+                }
+            }
         });
         plot.addPopupMenuItem(menuRequery);
         menuRequery.setVisible(binned);
@@ -963,26 +1019,38 @@ public class DaqbufPanel extends StandardDialog {
     }
 
     boolean updatingZoom;
-            
-    final ZoomListener zoomListener = (LinePlotJFree source, Range rangeX, Range rangeY) -> {      
-        if (chainZoomLevels){
+    void lockZooms(PlotBase source, Range rangeX, Range rangeY){
             if (!updatingZoom){
                 updatingZoom=true;
-                try{
-                    for (PlotBase p: plots){
-                        if ((p instanceof LinePlotJFree)){
-                            LinePlotJFree lp = (LinePlotJFree)p;
-                            if ((source!=lp) && (lp.getZoomListener()!=null)){
-                                lp.zoomDomain(rangeX);
+                //Invoke kater to update first plot that was zoomed
+                SwingUtilities.invokeLater(()->{
+                    try{
+                        for (PlotBase p: plots){
+                            if ((source!=p) && (p.getZoomListener() == zoomListener)){
+                                if (isDateDomainAxis(p)){
+                                    if (p instanceof LinePlotJFree){
+                                        ((LinePlotJFree)p).zoomDomain(rangeX);
+                                    }  else if (p instanceof MatrixPlotJFree){
+                                        ((MatrixPlotJFree)p).zoomDomain(rangeX);
+                                    }
+                                }
                             }
                         }
+                    } finally {
+                        updatingZoom = false;
                     }
-                }finally{
-                    updatingZoom = false;
-                }
+                });
+            }        
+    }
+            
+    final ZoomListener zoomListener = (PlotBase source, Range rangeX, Range rangeY) -> {      
+        if (lockZoomLevels){
+            if (isDateDomainAxis(source)){
+                lockZooms(source, rangeX, rangeY);
             }
         }
     };
+       
         
     LinePlotJFree addLinePlot(boolean binned) {
         Double y1min = null;
@@ -1130,6 +1198,9 @@ public class DaqbufPanel extends StandardDialog {
             ((LinePlotJFree)plot).setStyle(LinePlot.Style.Normal);
             setDateDomainAxis(plot);
             setLinePlotPopupMenu((LinePlotJFree)plot, false); 
+            if (!plot.getAxis(AxisId.X).isAutoRange()){
+                plot.getAxis(AxisId.X).setRange(xmin, xmax);
+            }        
         } else {
             JPopupMenu menu = ((MatrixPlotJFree)plot).getChartPanel().getPopupMenu();
             int index = -1;
@@ -1140,11 +1211,8 @@ public class DaqbufPanel extends StandardDialog {
                     }
                 }
             }
-            setDateDomainAxis(plot);
+            setNumberDomainAxis(plot);
         }
-        if (!plot.getAxis(AxisId.X).isAutoRange()){
-            plot.getAxis(AxisId.X).setRange(xmin, xmax);
-        }        
         for (SeriesInfo seriesInfo : formerInfo) {
             seriesInfo = new SeriesInfo(seriesInfo, start, end, null);
             PlotSeries series = null;
@@ -1446,6 +1514,7 @@ public class DaqbufPanel extends StandardDialog {
         MatrixPlotJFree plot = new MatrixPlotJFree();
         if (binned) {
             setDateDomainAxis(plot);
+            plot.setZoomListener(zoomListener);
         }
 
         // Add a chart mouse listener to intercept double-click events
@@ -1509,9 +1578,28 @@ public class DaqbufPanel extends StandardDialog {
         
         JMenuItem menuRequery = new JMenuItem("Requery");
         menuRequery.addActionListener((ActionEvent e) -> {
-            requery(plot);
+            requery(plot);                        
         });
         plot.addPopupMenuItem(menuRequery);    
+    }
+    
+    boolean isBinnedPlot(PlotBase plot){
+        if (plot!=null){
+            if (plot instanceof LinePlotJFree){
+                if (((LinePlotJFree) plot).getStyle() == LinePlot.Style.ErrorY){
+                    XYPlot xyplot =  ((LinePlotJFree) plot).getChart().getXYPlot();
+                    if (xyplot.getDomainAxis() instanceof DateAxis){
+                        return true;
+                    }
+                }
+            } else if (plot instanceof MatrixPlotJFree){
+                 XYPlot xyplot =  ((MatrixPlotJFree) plot).getChart().getXYPlot();
+                 if (xyplot.getDomainAxis() instanceof DateAxis){
+                     return true;
+                 }
+            } 
+        }
+        return false;
     }
 
     void onMatrixSeriesClicked(MatrixPlotJFree plot, MatrixPlotSeries series, double timestamp, int index) {
@@ -1570,7 +1658,7 @@ public class DaqbufPanel extends StandardDialog {
         MatrixPlotSeries series = new MatrixPlotSeries(name);
         if (colormap != null) {
             plot.setColormap(colormap);
-        }
+        }        
         plot.getAxis(AxisId.X).setAutoRange();
         plot.addSeries(series);                
         plotSeries.add(series);
@@ -1591,9 +1679,17 @@ public class DaqbufPanel extends StandardDialog {
                 };
                 if (value.size() > 0) {
                     double[][] data = (double[][]) Convert.toPrimitiveArray(value, Double.class);
-                    series.setData(Convert.transpose(data));
+                                        
+                    synchronized(plot){
+                        try{
+                            plot.disableUpdates();
+                            series.setData(Convert.transpose(data));
+                        } finally {
+                             plot.reenableUpdates();
+                        }                    
+                    }
                 }
-                plot.getChartPanel().restoreAutoDomainBounds(); //Needed because changed domain axis to time                
+                plot.getChartPanel().restoreAutoDomainBounds(); //Needed because changed domain axis to time       
                 return ret;
             });;
         } catch (Exception ex) {
@@ -1621,21 +1717,33 @@ public class DaqbufPanel extends StandardDialog {
             }                        
             double maxTime = timestamps[timestamps.length - 1];
             double minTime = timestamps[0];
-            if (!plot.getAxis(AxisId.X).isAutoRange() && (queryRange!=null)){
-                plot.getAxis(AxisId.X).setRange(queryRange.min, queryRange.max);
-            } else {
-                plot.getAxis(AxisId.X).setRange(minTime, maxTime);
+            synchronized(plot){
+                try{
+                    plot.disableUpdates();
+                    series.average = (double[][]) Convert.toPrimitiveArray(average, Double.class);
+                    series.min = (double[][]) Convert.toPrimitiveArray(min, Double.class);
+                    series.max = (double[][]) Convert.toPrimitiveArray(max, Double.class);
+                    series.setNumberOfBinsX(series.average.length);
+                    series.setNumberOfBinsY(series.average[0].length);
+                    if (!plot.getAxis(AxisId.X).isAutoRange() && (queryRange!=null)){
+                        plot.getAxis(AxisId.X).setRange(queryRange.min, queryRange.max);
+                        series.setRangeX(queryRange.min, queryRange.max);
+                    } else {
+                        plot.getAxis(AxisId.X).setRange(minTime, maxTime);                        
+                        series.setRangeX(minTime, maxTime);
+                    }                                        
+                    series.setRangeY(0, series.average[0].length - 1);
+                    series.setData(Convert.transpose(series.average));                    
+                } finally {
+                     plot.reenableUpdates();
+                }
             }
-            series.average = (double[][]) Convert.toPrimitiveArray(average, Double.class);
-            series.min = (double[][]) Convert.toPrimitiveArray(min, Double.class);
-            series.max = (double[][]) Convert.toPrimitiveArray(max, Double.class);
-            series.setNumberOfBinsX(series.average.length);
-            series.setNumberOfBinsY(series.average[0].length);
-            series.setRangeX(minTime, maxTime);
-            series.setRangeY(0, series.average[0].length - 1);
-            series.setData(Convert.transpose(series.average));
-        }
-        plot.getChartPanel().restoreAutoDomainBounds(); //Needed because changed domain axis to time       
+        }        
+        if (!plot.getAxis(AxisId.X).isAutoRange() && (queryRange!=null)){
+            plot.zoomDomain(new Range(queryRange.min, queryRange.max));
+        } else{
+            plot.getChartPanel().restoreAutoDomainBounds(); //Needed because changed domain axis to time       
+        }                        
     }
 
     MatrixPlotBinnedSeries addMatrixSeriesBinned(MatrixPlotJFree plot, SeriesInfo si) {
@@ -1690,15 +1798,20 @@ public class DaqbufPanel extends StandardDialog {
             }/*,bins*/).handle((ret, ex) -> {
                 if (ex != null) {
                     //showException((Exception)ex);
-                };
-                List<List> average = value;
+                };                
+                //List<List> average = value;
+                List<List> average = new ArrayList<>();
                 List<List> min = new ArrayList<>();
                 List<List> max = new ArrayList<>();
                 List<Long> t1 = new ArrayList<>();
                 List<Long> t2 = new ArrayList<>();
-                for (Long t : timestamp) {
-                    t1.add(t);
-                    t2.add(t + 1000000);
+                long s = Time.getTimestamp(start);
+                long e = Time.getTimestamp(end);  
+                double w = ((double)e-s)/bins;
+                for (int i=0; i<bins; i++){
+                    average.add(((List)value.get(i % value.size())));
+                    t1.add(s+(long)(i * w));
+                    t2.add(s+(long)((i+1) * w));
                 }
                 double off = 20.0;
                 for (List<Number> l : average) {
@@ -2541,7 +2654,7 @@ public class DaqbufPanel extends StandardDialog {
         buttonRowInsert = new javax.swing.JButton();
         jSeparator3 = new javax.swing.JToolBar.Separator();
         buttonSearchChannels = new javax.swing.JButton();
-        buttonChain = new javax.swing.JToggleButton();
+        buttonLockZooms = new javax.swing.JToggleButton();
         jSeparator4 = new javax.swing.JToolBar.Separator();
         buttonDumpData = new javax.swing.JButton();
         jSeparator2 = new javax.swing.JToolBar.Separator();
@@ -2875,17 +2988,17 @@ public class DaqbufPanel extends StandardDialog {
         });
         toolBar.add(buttonSearchChannels);
 
-        buttonChain.setIcon(new javax.swing.ImageIcon(getClass().getResource("/ch/psi/pshell/ui/Chain.png"))); // NOI18N
-        buttonChain.setToolTipText("Lock plot zoom levels");
-        buttonChain.setFocusable(false);
-        buttonChain.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
-        buttonChain.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
-        buttonChain.addActionListener(new java.awt.event.ActionListener() {
+        buttonLockZooms.setIcon(new javax.swing.ImageIcon(getClass().getResource("/ch/psi/pshell/ui/Chain.png"))); // NOI18N
+        buttonLockZooms.setToolTipText("Lock plot zoom levels");
+        buttonLockZooms.setFocusable(false);
+        buttonLockZooms.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+        buttonLockZooms.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+        buttonLockZooms.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                buttonChainActionPerformed(evt);
+                buttonLockZoomsActionPerformed(evt);
             }
         });
-        toolBar.add(buttonChain);
+        toolBar.add(buttonLockZooms);
 
         jSeparator4.setMaximumSize(new java.awt.Dimension(20, 32767));
         jSeparator4.setPreferredSize(new java.awt.Dimension(20, 0));
@@ -3174,9 +3287,9 @@ public class DaqbufPanel extends StandardDialog {
         }
     }//GEN-LAST:event_buttonSearchChannelsActionPerformed
 
-    private void buttonChainActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonChainActionPerformed
-        chainZoomLevels=buttonChain.isSelected();
-    }//GEN-LAST:event_buttonChainActionPerformed
+    private void buttonLockZoomsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonLockZoomsActionPerformed
+        lockZoomLevels=buttonLockZooms.isSelected();
+    }//GEN-LAST:event_buttonLockZoomsActionPerformed
 
     /**
      */
@@ -3186,8 +3299,8 @@ public class DaqbufPanel extends StandardDialog {
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JToggleButton buttonChain;
     private javax.swing.JButton buttonDumpData;
+    private javax.swing.JToggleButton buttonLockZooms;
     private javax.swing.JButton buttonNew;
     private javax.swing.JButton buttonOpen;
     private javax.swing.JButton buttonPlotData;

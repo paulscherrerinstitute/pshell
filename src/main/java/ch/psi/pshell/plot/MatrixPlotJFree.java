@@ -41,10 +41,12 @@ import static ch.psi.pshell.plot.PlotBase.SNAPSHOT_WIDTH;
 import static ch.psi.pshell.plot.PlotBase.getOutlineColor;
 import ch.psi.utils.Reflection.Hidden;
 import ch.psi.utils.swing.SwingUtils;
-
+import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.jfree.chart.annotations.XYTextAnnotation;
 import static org.jfree.chart.plot.Plot.DEFAULT_OUTLINE_STROKE;
 
@@ -53,6 +55,7 @@ import static org.jfree.chart.plot.Plot.DEFAULT_OUTLINE_STROKE;
  */
 public class MatrixPlotJFree extends MatrixPlotBase {
 
+    static final Logger logger = Logger.getLogger(MatrixPlotJFree.class.getName());
     private boolean legendVisible;
     private boolean showTooltips;
     private double scaleMin;
@@ -593,6 +596,21 @@ public class MatrixPlotJFree extends MatrixPlotBase {
         }
     }
 
+    
+    void notifyZoomListener(){
+        if (zoomListener!=null){
+            try{
+                Range rangeX = chart.getXYPlot().getDomainAxis().getRange();
+                Range rangeY = chart.getXYPlot().getRangeAxis().getRange();
+                super.notifyZoomListener( new ch.psi.utils.Range(rangeX.getLowerBound(), rangeX.getUpperBound()),
+                                          new ch.psi.utils.Range(rangeY.getLowerBound(), rangeY.getUpperBound()));
+            } catch (Exception ex){          
+                logger.log(Level.WARNING, null, ex);
+            }
+
+        }        
+    }
+        
     /**
      * Get the chart panel
      *
@@ -663,7 +681,19 @@ public class MatrixPlotJFree extends MatrixPlotBase {
         updateColorScale(0, 1);
 
         //Create the Chartpanel where the chart will be plotted
-        chartPanel = new ChartPanel(chart, getOffscreenBuffer());
+        chartPanel = new ChartPanel(chart, getOffscreenBuffer()){
+            @Override
+            public void restoreAutoRangeBounds() {
+                super.restoreAutoRangeBounds();             
+                notifyZoomListener();
+            }
+            
+            @Override
+            public void zoom(Rectangle2D selection) {
+                super.zoom(selection);
+                notifyZoomListener();
+            }            
+        };
 
         //Fonts will be distorted if greater than this value. Default values are 1024x728
         chartPanel.setMaximumDrawHeight(2000);
@@ -763,6 +793,20 @@ public class MatrixPlotJFree extends MatrixPlotBase {
         return marker;
     }
 
+    public void resetZoom(){
+        chartPanel.restoreAutoBounds();
+    }
+    
+    public void zoom(Rectangle2D selection){
+        chartPanel.zoom(selection);
+    }
+
+    public void zoomDomain(ch.psi.utils.Range range){
+        XYPlot plot = chart.getXYPlot();        
+        ValueAxis domainAxis = plot.getDomainAxis();
+        domainAxis.setRange(range.min, range.max);        
+    }
+    
     @Override
     public void removeMarker(final Object marker) {
         invokeLater(() -> {
@@ -801,6 +845,8 @@ public class MatrixPlotJFree extends MatrixPlotBase {
         }
         return ret;
     }
+    
+    
 
     @Hidden
     public JFreeChart getChart() {

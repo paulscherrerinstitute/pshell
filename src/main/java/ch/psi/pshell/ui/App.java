@@ -553,10 +553,12 @@ public class App extends ObservableBase<AppListener> {
             sb.append("\n\t-auto_range   \tSet auto-range plots: based on the data, and not fixed to the given time range");            
             sb.append("\n\t-ch=<..>      \tAdd a channel in the format: <NAME>@<BACKEND> or <NAME> (default backend)");
             sb.append("\n\t-plot         \tExecute the query and plot the data immediately");
+            sb.append("\n\t-lock_zooms   \tSet the default state of the zoom lock button");  
             sb.append("\n\t-background_color=<..>    \tSet default plot background color");
             sb.append("\n\t-grid_color=<..>          \tSet default plot grid color");                        
-            sb.append("\n\t-tick_label_font=name:size\tSet font for tick labels");
-            sb.append("\n\t-plot_height==<..>        \tSet minimum plot height");            
+            sb.append("\n\t-tick_label_font=name:size\tSet font for tick labels");            
+            sb.append("\n\t-plot_height==<..>        \tSet minimum plot height");  
+            
         }
         
         sb.append("\n");

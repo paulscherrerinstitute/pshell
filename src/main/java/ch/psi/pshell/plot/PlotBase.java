@@ -2,6 +2,7 @@ package ch.psi.pshell.plot;
 
 import ch.psi.pshell.imaging.Colormap;
 import ch.psi.pshell.imaging.Utils;
+import static ch.psi.pshell.plot.LinePlotJFree.logger;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
@@ -746,6 +747,27 @@ abstract public class PlotBase<T extends PlotSeries> extends MonitoredPanel impl
         }
         return 2;
     }
+    
+    public interface ZoomListener{
+        public void onZoom(PlotBase plot, Range rangeX, Range rangeY);
+    }
+    
+    ZoomListener zoomListener;
+    public void setZoomListener(ZoomListener listener){
+        zoomListener = listener;
+    }
+        
+    public ZoomListener getZoomListener(){
+        return zoomListener;
+    }
+    
+    protected void notifyZoomListener(Range rangeX, Range rangeY){
+        try{
+            zoomListener.onZoom(this, rangeX, rangeY);
+        } catch (Exception ex){          
+            logger.log(Level.WARNING, null, ex);
+        }        
+    }    
 
     @Override
     public String toString() {
