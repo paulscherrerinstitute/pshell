@@ -654,10 +654,21 @@ public class Renderer extends MonitoredPanel implements ImageListener, ImageBuff
         }
     }
     
+    public void updateReticle(Dimension size, double tickUnits){
+        configureReticle(size, tickUnits);
+        if (reticle != null) {
+            setShowReticle(false, false);            
+            setShowReticle(true, false);
+        }
+    }
+    
     public static final Dimension DEFAULT_RETICLE_SIZE = new Dimension(400, 200); 
     public static final double DEFAULT_RETICLE_TICK_UNITS = 1; 
     
     public void setShowReticle(boolean value) {
+        setShowReticle(value, true);
+    }
+    void setShowReticle(boolean value, boolean persist) {
         if (value != getShowReticle()) {
             if (value) {
                 if (getCalibration() != null) {
@@ -673,7 +684,9 @@ public class Renderer extends MonitoredPanel implements ImageListener, ImageBuff
                 removeOverlay(reticle);
                 reticle = null;
             }
-            checkPersistence();
+            if (persist){
+                checkPersistence();
+            }
         }
     }
 
@@ -2589,12 +2602,17 @@ public class Renderer extends MonitoredPanel implements ImageListener, ImageBuff
     public void restoreState(Path file) {
         try {
             restoringState = true;
-            RendererState state = (RendererState) Serializer.decode(Files.readAllBytes(file));
+            RendererState state = getState(file);
+            boolean updateReticule = ((state.reticle) && !getShowReticle());
             setShowStatus(state.status);
             setShowColormapScale(state.scale);
             setCalibration(state.calibration);
             setMode(state.mode);
-            setZoom(state.zoom);
+            setZoom(state.zoom);           
+            double units =(state.reticleTickUnits>0) ? state.reticleTickUnits : DEFAULT_RETICLE_TICK_UNITS;
+            Dimension size = (state.reticleSize == null) ? DEFAULT_RETICLE_SIZE: state.reticleSize;
+            configureReticle(size,units);
+            setShowReticle(state.reticle, false);
             formerMode = state.formerMode;
             if (state.marker != null) {
                 setMarker(state.marker);
@@ -2610,12 +2628,9 @@ public class Renderer extends MonitoredPanel implements ImageListener, ImageBuff
                         if (state.imagePosition!=null){
                             setViewPosition(state.imagePosition);
                         }
-                        //If state had no reticule, but a reticule has been enabled, do nothing.
-                        if ((state.reticle) && !getShowReticle()) {
-                            double units =(state.reticleTickUnits>0) ? state.reticleTickUnits : DEFAULT_RETICLE_TICK_UNITS;
-                            Dimension size = (state.reticleSize == null) ? DEFAULT_RETICLE_SIZE: state.reticleSize;
-                            configureReticle(size,units);
-                            setShowReticle(true);
+                        if (updateReticule) {
+                            setShowReticle(false, false);
+                            setShowReticle(true, false);
                         }
                     }, 100);
                 } catch (TimeoutException ex) {
@@ -2632,6 +2647,10 @@ public class Renderer extends MonitoredPanel implements ImageListener, ImageBuff
         restoringState = false;
     }
 
+    RendererState getState(Path file) throws IOException {
+        return (RendererState) Serializer.decode(Files.readAllBytes(file));
+    }
+    
     Path persistenceFile;
 
     public void setPersistenceFile(Path file) {
@@ -2645,6 +2664,19 @@ public class Renderer extends MonitoredPanel implements ImageListener, ImageBuff
         return persistenceFile;
     }
 
+    
+    public RendererState getState()  {
+        if (persistenceFile != null) {
+            try {
+                return getState(persistenceFile);
+            } catch (IOException ex) {
+                return null;
+            }
+        }
+        return null;
+    }
+
+    
     void checkPersistence() {
         if (persistenceFile != null) {
             if (!restoringState) {

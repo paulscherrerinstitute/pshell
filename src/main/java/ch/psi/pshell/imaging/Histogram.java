@@ -25,6 +25,7 @@ import java.util.HashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JDialog;
+import javax.swing.SwingUtilities;
 
 /**
  *
@@ -183,13 +184,17 @@ public class Histogram extends MonitoredPanel implements RendererListener, Image
         for (int i = 0; i < y.length; i++) {
             x[i] = hist_min + i * stepSize;
         }
-        series.setData(x, y);
+        SwingUtilities.invokeLater(()->{
+            series.setData(x, y);
+        });        
         return histogram;
 
     }
 
     public void clear() {
-        series.clear();
+        SwingUtilities.invokeLater(()->{
+            series.clear();
+        });
         origin = null;
     }
 

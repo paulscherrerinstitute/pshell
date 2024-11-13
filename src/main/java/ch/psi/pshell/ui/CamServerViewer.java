@@ -26,6 +26,7 @@ import ch.psi.pshell.imaging.PointDouble;
 import ch.psi.pshell.imaging.Renderer;
 import ch.psi.pshell.imaging.RendererListener;
 import ch.psi.pshell.imaging.RendererMode;
+import ch.psi.pshell.imaging.RendererState;
 import ch.psi.pshell.swing.CameraCalibrationDialog;
 import ch.psi.pshell.swing.DevicePanel;
 import ch.psi.pshell.swing.ValueSelection;
@@ -162,6 +163,7 @@ public class CamServerViewer extends MonitoredPanel {
 
     SourceSelecionMode sourceSelecionMode;
     Console console;
+    boolean requestReticle;
     
     public static interface CamServerViewerListener{
         default void onOpenedStream(String name, String instance) throws Exception {};
@@ -942,6 +944,13 @@ public class CamServerViewer extends MonitoredPanel {
             renderer.setPersistenceFile(path);
         } catch (Exception ex) {
             Logger.getLogger(getClass().getName()).log(Level.WARNING, null, ex);
+        } finally{
+            try {
+                requestReticle = renderer.getState().reticle;                
+            } catch (Exception ex) {
+                requestReticle = false;
+            }
+            updateButtons();
         }
     }
     
@@ -1027,8 +1036,9 @@ public class CamServerViewer extends MonitoredPanel {
                     buttonProfileActionPerformed(null);
                     buttonFit.setSelected(state.showFit);
                     buttonFitActionPerformed(null);
-                    buttonReticle.setSelected(state.showReticle);
-                    buttonReticleActionPerformed(null);
+                    requestReticle = state.showReticle;                    
+                    buttonReticle.setSelected(requestReticle);
+                    buttonReticleActionPerformed(null); //Will be done asynchronously, we must keep button pressed
                     buttonScale.setSelected(state.showScale);
                     buttonScaleActionPerformed(null);
                     buttonTitle.setSelected(state.showTitle);
@@ -1580,14 +1590,9 @@ public class CamServerViewer extends MonitoredPanel {
             });
             camera.getConfig().addListener(new ConfigListener(){
                 public void onSave(Config config) {
-                    boolean reticle = renderer.getShowReticle();
-                    if (reticle){
-                        renderer.setShowReticle(false);
-                        SwingUtilities.invokeLater(()->{
-                            renderer.setShowReticle(true);
-                        });
-                    }            
-                    
+                    SwingUtilities.invokeLater(()->{
+                        updateReticle();
+                    });
                 }                
             });
 
@@ -1754,17 +1759,27 @@ public class CamServerViewer extends MonitoredPanel {
 
     volatile Dimension imageSize;
 
+    public static final Dimension RETICLE_SIZE = new Dimension(800, 800); 
+    public static final double RETICLE_TICK_UNITS = 200; 
+    
     protected void checkReticle() {
         if ((renderer.getDevice() != null) && (camera != null) && (camera.getConfig().isCalibrated()) && buttonReticle.isSelected()) {
             //renderer.setCalibration(camera.getCalibration());
-            renderer.configureReticle(new Dimension(800, 800), 200);
-            renderer.setShowReticle(true);
+            renderer.configureReticle(RETICLE_SIZE, RETICLE_TICK_UNITS);
+            renderer.setShowReticle(true);            
         } else {
             //renderer.setCalibration(null);
             renderer.setShowReticle(false);
         }
         renderer.refresh();
     }
+
+    protected void updateReticle() {
+        if (renderer.getShowReticle()) {
+            renderer.updateReticle(RETICLE_SIZE, RETICLE_TICK_UNITS);
+        }
+    }
+    
 
     protected void checkMarker(Point p) throws IOException {
         if (camera != null) {
@@ -1929,8 +1944,9 @@ public class CamServerViewer extends MonitoredPanel {
                 buttonPause.setSelected(renderer.isPaused());
                 buttonPauseActionPerformed(null);
             }
-            if (renderer.getShowReticle() != buttonReticle.isSelected()) {
-                buttonReticle.setSelected(renderer.getShowReticle());
+            boolean buttonReticleState = renderer.getShowReticle() || requestReticle;
+            if (buttonReticleState != buttonReticle.isSelected()) {                
+                buttonReticle.setSelected(buttonReticleState);
             }
             if ((renderer.getMarker() == null) && buttonMarker.isSelected()) {
                 buttonMarker.setSelected(false);
@@ -2838,7 +2854,8 @@ public class CamServerViewer extends MonitoredPanel {
     }
     
     public void setShowReticle(boolean value) {
-        buttonReticle.setSelected(value);
+        requestReticle = value;
+        buttonReticle.setSelected(value);        
         updateButtons();
     }    
     
@@ -3980,7 +3997,7 @@ public class CamServerViewer extends MonitoredPanel {
             .addContainerGap())
     );
 
-    panelColormapLayout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {spinnerMax, spinnerMin});
+    panelColormapLayout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {btFixColormapRange, spinnerMax, spinnerMin});
 
     panelColormapLayout.setVerticalGroup(
         panelColormapLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -3991,21 +4008,26 @@ public class CamServerViewer extends MonitoredPanel {
                 .addComponent(jLabel3)
                 .addComponent(checkHistogram))
             .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-            .addGroup(panelColormapLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                .addComponent(buttonAutomatic)
-                .addComponent(jLabel4)
-                .addComponent(btFixColormapRange, javax.swing.GroupLayout.PREFERRED_SIZE, 26, javax.swing.GroupLayout.PREFERRED_SIZE))
-            .addGap(0, 0, 0)
             .addGroup(panelColormapLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.CENTER)
+                .addComponent(buttonAutomatic)
+                .addComponent(btFixColormapRange, javax.swing.GroupLayout.PREFERRED_SIZE, 20, javax.swing.GroupLayout.PREFERRED_SIZE))
+            .addGap(2, 2, 2)
+            .addGroup(panelColormapLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.CENTER)
+                .addComponent(buttonFullRange)
                 .addComponent(labelMin)
-                .addComponent(spinnerMin, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addComponent(buttonFullRange))
+                .addComponent(spinnerMin, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+            .addGap(2, 2, 2)
             .addGroup(panelColormapLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.CENTER)
                 .addComponent(buttonManual)
                 .addComponent(labelMax)
-                .addComponent(spinnerMax, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-            .addContainerGap())
+                .addComponent(spinnerMax, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
+        .addGroup(panelColormapLayout.createSequentialGroup()
+            .addGap(38, 38, 38)
+            .addComponent(jLabel4)
+            .addGap(52, 52, 52))
     );
+
+    panelColormapLayout.linkSize(javax.swing.SwingConstants.VERTICAL, new java.awt.Component[] {btFixColormapRange, buttonAutomatic, buttonFullRange, buttonManual, labelMax, labelMin, spinnerMax, spinnerMin});
 
     panelCustom.setLayout(new java.awt.BorderLayout());
 
@@ -4063,6 +4085,7 @@ public class CamServerViewer extends MonitoredPanel {
     private void buttonReticleActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonReticleActionPerformed
         try {
             if (!updatingButtons){
+                requestReticle = buttonReticle.isSelected();
                 checkReticle();
             }
         } catch (Exception ex) {
@@ -4437,8 +4460,7 @@ public class CamServerViewer extends MonitoredPanel {
                 renderer.setPenReticle(new Pen(colorReticule));
                 renderer.setPenProfile(new Pen(colorReticule, 0));
                 renderer.setPenMarker(new Pen(colorMarker, 2));
-                renderer.setShowReticle(false);
-                checkReticle();
+                updateReticle();
                 source.getConfig().colormapAutomatic = buttonAutomatic.isSelected();
                 source.getConfig().colormapMin = buttonFullRange.isSelected() ? Double.NaN : (Integer) spinnerMin.getValue();
                 source.getConfig().colormapMax = buttonFullRange.isSelected() ? Double.NaN : (Integer) spinnerMax.getValue();
@@ -4484,8 +4506,7 @@ public class CamServerViewer extends MonitoredPanel {
                 renderer.setPenReticle(new Pen(colorReticule));
                 renderer.setPenProfile(new Pen(colorReticule, 0));
                 renderer.setPenMarker(new Pen(colorMarker, 2));
-                renderer.setShowReticle(false);
-                checkReticle();
+                updateReticle();
                 source.getConfig().colormapAutomatic = buttonAutomatic.isSelected();
                 source.getConfig().colormapMin = buttonFullRange.isSelected() ? Double.NaN : (Integer) spinnerMin.getValue();
                 source.getConfig().colormapMax = buttonFullRange.isSelected() ? Double.NaN : (Integer) spinnerMax.getValue();
@@ -4578,8 +4599,7 @@ public class CamServerViewer extends MonitoredPanel {
                 renderer.setPenReticle(new Pen(colorReticule));
                 renderer.setPenProfile(new Pen(colorReticule, 0));
                 renderer.setPenMarker(new Pen(colorMarker, 2));
-                renderer.setShowReticle(false);
-                checkReticle();
+                updateReticle();
                 source.getConfig().colormapAutomatic = buttonAutomatic.isSelected();
                 source.getConfig().colormapMin = buttonFullRange.isSelected() ? Double.NaN : (Integer) spinnerMin.getValue();
                 source.getConfig().colormapMax = buttonFullRange.isSelected() ? Double.NaN : (Integer) spinnerMax.getValue();
