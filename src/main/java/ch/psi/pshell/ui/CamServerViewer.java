@@ -3587,6 +3587,8 @@ public class CamServerViewer extends MonitoredPanel {
                 .addComponent(labelSlOrientation)))
     );
 
+    panelSlicingLayout.linkSize(javax.swing.SwingConstants.VERTICAL, new java.awt.Component[] {spinnerSlNumber, spinnerSlOrientation, spinnerSlScale});
+
     checkRotation.setText("Rotation");
     checkRotation.addActionListener(new java.awt.event.ActionListener() {
         public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -3685,7 +3687,7 @@ public class CamServerViewer extends MonitoredPanel {
                     .addGap(2, 2, 2)
                     .addGroup(panelPipelineLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                         .addComponent(spinnerAvFrames, javax.swing.GroupLayout.Alignment.TRAILING)
-                        .addComponent(spinnerAvMode, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 85, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        .addComponent(spinnerAvMode, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
                 .addGroup(panelPipelineLayout.createSequentialGroup()
                     .addGroup(panelPipelineLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                         .addGroup(panelPipelineLayout.createSequentialGroup()
@@ -3781,6 +3783,12 @@ public class CamServerViewer extends MonitoredPanel {
             .addComponent(panelSlicing, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
             .addContainerGap())
     );
+
+    panelPipelineLayout.linkSize(javax.swing.SwingConstants.VERTICAL, new java.awt.Component[] {spinnerGrScale, spinnerGrThreshold});
+
+    panelPipelineLayout.linkSize(javax.swing.SwingConstants.VERTICAL, new java.awt.Component[] {spinnerRotationAngle, spinnerRotationConstant, spinnerRotationMode, spinnerRotationOrder});
+
+    panelPipelineLayout.linkSize(javax.swing.SwingConstants.VERTICAL, new java.awt.Component[] {spinnerAvFrames, spinnerAvMode, spinnerBackground, spinnerThreshold});
 
     panelZoom.setBorder(javax.swing.BorderFactory.createTitledBorder("Zoom"));
 

@@ -421,7 +421,7 @@
                               <EmptySpace min="2" pref="2" max="-2" attributes="0"/>
                               <Group type="103" groupAlignment="0" max="-2" attributes="0">
                                   <Component id="spinnerAvFrames" linkSize="4" alignment="1" max="32767" attributes="0"/>
-                                  <Component id="spinnerAvMode" linkSize="4" alignment="1" min="-2" pref="85" max="-2" attributes="0"/>
+                                  <Component id="spinnerAvMode" linkSize="4" alignment="1" min="-2" max="-2" attributes="0"/>
                               </Group>
                           </Group>
                           <Group type="102" attributes="0">
@@ -486,54 +486,54 @@
                       <EmptySpace min="-2" max="-2" attributes="0"/>
                       <Group type="103" groupAlignment="3" attributes="0">
                           <Component id="checkBackground" alignment="3" min="-2" max="-2" attributes="0"/>
-                          <Component id="spinnerBackground" alignment="3" min="-2" max="-2" attributes="0"/>
+                          <Component id="spinnerBackground" linkSize="8" alignment="3" min="-2" max="-2" attributes="0"/>
                       </Group>
                       <EmptySpace min="-2" pref="2" max="-2" attributes="0"/>
                       <Group type="103" groupAlignment="3" attributes="0">
                           <Component id="checkThreshold" alignment="3" min="-2" max="-2" attributes="0"/>
-                          <Component id="spinnerThreshold" alignment="3" min="-2" max="-2" attributes="0"/>
+                          <Component id="spinnerThreshold" linkSize="8" alignment="3" min="-2" max="-2" attributes="0"/>
                       </Group>
                       <EmptySpace min="-2" pref="2" max="-2" attributes="0"/>
                       <Group type="103" groupAlignment="3" attributes="0">
                           <Component id="checkAveraging" alignment="3" min="-2" max="-2" attributes="0"/>
-                          <Component id="spinnerAvFrames" alignment="3" min="-2" max="-2" attributes="0"/>
+                          <Component id="spinnerAvFrames" linkSize="8" alignment="3" min="-2" max="-2" attributes="0"/>
                           <Component id="labelAvFrames" alignment="3" min="-2" max="-2" attributes="0"/>
                       </Group>
                       <EmptySpace min="-2" pref="2" max="-2" attributes="0"/>
                       <Group type="103" groupAlignment="3" attributes="0">
-                          <Component id="spinnerAvMode" alignment="3" min="-2" max="-2" attributes="0"/>
+                          <Component id="spinnerAvMode" linkSize="8" alignment="3" min="-2" max="-2" attributes="0"/>
                           <Component id="labelAvMode" alignment="3" min="-2" max="-2" attributes="0"/>
                       </Group>
                       <EmptySpace min="-2" pref="2" max="-2" attributes="0"/>
                       <Group type="103" groupAlignment="3" attributes="0">
                           <Component id="checkRotation" alignment="3" min="-2" max="-2" attributes="0"/>
-                          <Component id="spinnerRotationAngle" alignment="3" min="-2" max="-2" attributes="0"/>
+                          <Component id="spinnerRotationAngle" linkSize="7" alignment="3" min="-2" max="-2" attributes="0"/>
                           <Component id="labelAngle" alignment="3" min="-2" max="-2" attributes="0"/>
                       </Group>
                       <EmptySpace min="0" pref="0" max="-2" attributes="0"/>
                       <Group type="103" groupAlignment="3" attributes="0">
-                          <Component id="spinnerRotationOrder" alignment="3" min="-2" max="-2" attributes="0"/>
+                          <Component id="spinnerRotationOrder" linkSize="7" alignment="3" min="-2" max="-2" attributes="0"/>
                           <Component id="labelOrder" alignment="3" min="-2" max="-2" attributes="0"/>
                       </Group>
                       <EmptySpace min="0" pref="0" max="-2" attributes="0"/>
                       <Group type="103" groupAlignment="3" attributes="0">
-                          <Component id="spinnerRotationMode" alignment="3" min="-2" max="-2" attributes="0"/>
+                          <Component id="spinnerRotationMode" linkSize="7" alignment="3" min="-2" max="-2" attributes="0"/>
                           <Component id="labelMode" alignment="3" min="-2" max="-2" attributes="0"/>
                       </Group>
                       <EmptySpace min="0" pref="0" max="-2" attributes="0"/>
                       <Group type="103" groupAlignment="3" attributes="0">
-                          <Component id="spinnerRotationConstant" alignment="3" min="-2" max="-2" attributes="0"/>
+                          <Component id="spinnerRotationConstant" linkSize="7" alignment="3" min="-2" max="-2" attributes="0"/>
                           <Component id="labelConstant" alignment="3" min="-2" max="-2" attributes="0"/>
                       </Group>
                       <EmptySpace min="-2" pref="2" max="-2" attributes="0"/>
                       <Group type="103" groupAlignment="3" attributes="0">
                           <Component id="checkGoodRegion" alignment="3" min="-2" max="-2" attributes="0"/>
-                          <Component id="spinnerGrScale" alignment="3" min="-2" max="-2" attributes="0"/>
+                          <Component id="spinnerGrScale" linkSize="5" alignment="3" min="-2" max="-2" attributes="0"/>
                           <Component id="labelGrScale" alignment="3" min="-2" max="-2" attributes="0"/>
                       </Group>
                       <EmptySpace min="0" pref="0" max="-2" attributes="0"/>
                       <Group type="103" groupAlignment="3" attributes="0">
-                          <Component id="spinnerGrThreshold" alignment="3" min="-2" max="-2" attributes="0"/>
+                          <Component id="spinnerGrThreshold" linkSize="5" alignment="3" min="-2" max="-2" attributes="0"/>
                           <Component id="labelGrThreshold" alignment="3" min="-2" max="-2" attributes="0"/>
                       </Group>
                       <EmptySpace min="-2" pref="2" max="-2" attributes="0"/>
@@ -655,19 +655,19 @@
                               <Component id="checkSlicing" alignment="0" min="-2" max="-2" attributes="0"/>
                               <Group type="102" alignment="0" attributes="0">
                                   <Group type="103" groupAlignment="3" attributes="0">
-                                      <Component id="spinnerSlNumber" alignment="3" min="-2" max="-2" attributes="0"/>
+                                      <Component id="spinnerSlNumber" linkSize="6" alignment="3" min="-2" max="-2" attributes="0"/>
                                       <Component id="labelSlNumber" alignment="3" min="-2" max="-2" attributes="0"/>
                                   </Group>
                                   <EmptySpace min="0" pref="0" max="-2" attributes="0"/>
                                   <Group type="103" groupAlignment="3" attributes="0">
-                                      <Component id="spinnerSlScale" alignment="3" min="-2" max="-2" attributes="0"/>
+                                      <Component id="spinnerSlScale" linkSize="6" alignment="3" min="-2" max="-2" attributes="0"/>
                                       <Component id="labelSlScale" alignment="3" min="-2" max="-2" attributes="0"/>
                                   </Group>
                               </Group>
                           </Group>
                           <EmptySpace min="0" pref="0" max="-2" attributes="0"/>
                           <Group type="103" groupAlignment="3" attributes="0">
-                              <Component id="spinnerSlOrientation" alignment="3" min="-2" max="-2" attributes="0"/>
+                              <Component id="spinnerSlOrientation" linkSize="6" alignment="3" min="-2" max="-2" attributes="0"/>
                               <Component id="labelSlOrientation" alignment="3" min="-2" max="-2" attributes="0"/>
                           </Group>
                       </Group>
