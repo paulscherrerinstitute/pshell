@@ -12,6 +12,7 @@ import ch.psi.pshell.data.ProviderText;
 import ch.psi.pshell.device.Device;
 import ch.psi.pshell.device.DeviceAdapter;
 import ch.psi.pshell.device.DeviceListener;
+import ch.psi.pshell.device.ReadbackDevice;
 import ch.psi.pshell.device.TimestampedValue;
 import ch.psi.pshell.epics.ChannelDouble;
 import ch.psi.pshell.plot.LinePlotBase;
@@ -111,6 +112,7 @@ import javax.swing.table.TableColumn;
 public class StripChart extends StandardDialog {
 
     public static final String FILE_EXTENSION = "scd";
+    public static final String SUFFIX_READBACK = ".rbv";
 
     int dragInterval = 1000;
     final int disableAlarmTimer = 30 * 60 * 1000; //30 minutes
@@ -1542,8 +1544,16 @@ public class StripChart extends StandardDialog {
                             }
                             try {
                                 device = Context.getInstance().getDevicePool().getByName(name, Device.class);
-                                if (device == null) {
-                                    device = (Device) Context.getInstance().tryEvalLineBackground(name);
+                                if (device == null) {                                    
+                                    if (name.toLowerCase().endsWith(SUFFIX_READBACK)){
+                                        Device aux = Context.getInstance().getDevicePool().getByName(name.substring(0, name.length()-SUFFIX_READBACK.length()), Device.class);
+                                        if (aux instanceof ReadbackDevice){
+                                            device = ((ReadbackDevice)aux).getReadback();
+                                        }
+                                    }
+                                    if (device == null) {
+                                        device = (Device) Context.getInstance().tryEvalLineBackground(name);
+                                    }
                                 }
                             } catch (Exception ex) {
                                 try {
