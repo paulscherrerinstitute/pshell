@@ -43,13 +43,6 @@ import org.zeromq.ZMQ;
  * a corresponding Scalar or Waveform child.
  */
 public class Stream extends DeviceBase implements StreamDevice {
-
-    //If using light jar scripting
-    final static boolean hasJython;
-    static{        
-        hasJython = Sys.hasJython();
-    }
-
     
     public static final int TIMEOUT_START_STREAMING = 10000;
 
@@ -793,7 +786,7 @@ public class Stream extends DeviceBase implements StreamDevice {
         }
         
         StreamValue streamValue;
-        if (hasJython){
+        if (Sys.hasJython()){
             streamValue=new StreamValueSubscriptable(pulse_id, timestamp, nanosOffset, identifiers, values,config);
         } else {
             streamValue=new StreamValue(pulse_id, timestamp, nanosOffset, identifiers, values,config);

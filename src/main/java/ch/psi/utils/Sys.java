@@ -23,6 +23,18 @@ import java.util.logging.Logger;
  */
 public class Sys {
 
+    final static Boolean hasJython;
+    static {
+        boolean aux=false;
+        try{
+            Class.forName("org.python.core.PyObject");            
+            aux=true;
+        } catch (Throwable t){                        
+        }
+        hasJython = aux;
+    }
+        
+            
     public enum OSFamily {
 
         Windows,
@@ -423,11 +435,6 @@ public class Sys {
     } 
      
     public static boolean hasJython(){
-        try{
-            Class.forName("org.python.core.PyObject");
-            return true;
-        } catch (Throwable t){            
-        }
-        return false;
-    }                    
+        return hasJython;
+    }                                  
 }

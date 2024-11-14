@@ -2,6 +2,7 @@ package ch.psi.pshell.device;
 
 import ch.psi.utils.Config;
 import ch.psi.pshell.scripting.JythonUtils;
+import ch.psi.utils.Sys;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -26,7 +27,10 @@ public class DeviceConfig extends Config {
     }
 
     boolean isJythonObj() {
-        return this instanceof org.python.core.PyProxy;
+        if (Sys.hasJython()){
+            return this instanceof org.python.core.PyProxy;
+        }
+        return false;
     }
 
     @Override
@@ -38,8 +42,10 @@ public class DeviceConfig extends Config {
     }
 
     Map<String, Object> getJythonFieldDict() {
-        if (this instanceof org.python.core.PyProxy) {
-            return JythonUtils.getFields(((org.python.core.PyProxy) this)._getPyInstance());
+        if (Sys.hasJython()){
+            if (this instanceof org.python.core.PyProxy) {
+                return JythonUtils.getFields(((org.python.core.PyProxy) this)._getPyInstance());
+            }
         }
         return null;
     }
