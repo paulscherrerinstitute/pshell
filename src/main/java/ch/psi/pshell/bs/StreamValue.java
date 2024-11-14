@@ -2,7 +2,6 @@ package ch.psi.pshell.bs;
 
 import ch.psi.bsread.message.ChannelConfig;
 import ch.psi.bsread.message.Type;
-import ch.psi.pshell.scripting.Subscriptable;
 import ch.psi.utils.Reflection.Hidden;
 import java.util.ArrayList;
 import java.util.List;
@@ -11,7 +10,7 @@ import java.util.List;
  * Entity containing the current value for a stream, including a list of identifiers, their values,
  * a pulse id and a timestamp.
  */
-public class StreamValue extends Number implements Subscriptable.MappedList<String, Object>{
+public class StreamValue extends Number{
 
     final long pulseId;
     final long timestamp;
@@ -19,7 +18,7 @@ public class StreamValue extends Number implements Subscriptable.MappedList<Stri
     final List<String> identifiers;
     final List values;
     final java.util.Map<String, ChannelConfig> config;
-
+    
     StreamValue(long pulseId, long timestamp, List<String> identifiers, List values, java.util.Map<String, ChannelConfig> config) {
         this(pulseId, timestamp, 0, identifiers, values, config);
     }
@@ -59,22 +58,25 @@ public class StreamValue extends Number implements Subscriptable.MappedList<Stri
         return getKeys();
     }
 
-    @Override
+    //@Override
     public java.util.List<String> getKeys(){
         return new ArrayList<>(identifiers);
     }  
     
-    @Override
+    //Override
     public List getValues() {
         return new ArrayList(values);
     }
 
     public Object getValue(String id) {
-        return __getitem__(id);
+        return getValue(toItemIndex(id));
     }
 
     public Object getValue(int index) {
-        return __getitem__(index);
+        if ((index<0) || (index>=values.size())){
+            return null;
+        }
+        return values.get(index);
     }
     
     public  ChannelConfig  getChannelConfig(String id) {
@@ -134,7 +136,7 @@ public class StreamValue extends Number implements Subscriptable.MappedList<Stri
         return pulseId;
     }
 
-    @Override
+    //@Override
     @Hidden
     public int toItemIndex(String itemKey){
         for (int i = 0; i < identifiers.size(); i++) {

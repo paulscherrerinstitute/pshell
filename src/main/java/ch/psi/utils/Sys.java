@@ -421,5 +421,13 @@ public class Sys {
             Map<String, String> writableEnv = (Map<String, String>) field.get(env); 
             writableEnv.put(key, value); 
     } 
-               
+     
+    public static boolean hasJython(){
+        try{
+            Class.forName("org.python.core.PyObject");
+            return true;
+        } catch (Throwable t){            
+        }
+        return false;
+    }                    
 }

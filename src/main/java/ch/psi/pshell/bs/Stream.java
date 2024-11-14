@@ -16,16 +16,14 @@ import ch.psi.pshell.bs.ProviderConfig.SocketType;
 import static ch.psi.pshell.bs.StreamChannel.DEFAULT_MODULO;
 import static ch.psi.pshell.bs.StreamChannel.DEFAULT_OFFSET;
 import ch.psi.pshell.bs.StreamConfig.Incomplete;
-import ch.psi.pshell.device.Cacheable;
-import ch.psi.pshell.device.Readable.ReadableType;
 import ch.psi.pshell.device.ReadonlyAsyncRegisterBase;
-import ch.psi.pshell.device.Startable;
 import ch.psi.utils.Arr;
 import ch.psi.utils.Filter;
 import ch.psi.utils.Filter.FilterCondition;
 import ch.psi.utils.Reflection.Hidden;
 import ch.psi.utils.State;
 import ch.psi.utils.Str;
+import ch.psi.utils.Sys;
 import ch.psi.utils.Threading;
 import java.text.MessageFormat;
 import java.util.ArrayList;
@@ -46,6 +44,13 @@ import org.zeromq.ZMQ;
  */
 public class Stream extends DeviceBase implements StreamDevice {
 
+    //If using light jar scripting
+    final static boolean hasJython;
+    static{        
+        hasJython = Sys.hasJython();
+    }
+
+    
     public static final int TIMEOUT_START_STREAMING = 10000;
 
     Thread thread;
@@ -769,19 +774,31 @@ public class Stream extends DeviceBase implements StreamDevice {
             setCache((DeviceBase) timestampReader, (Object) timestamp, timestamp, nanosOffset);
         }
 
+        
+        List<String> identifiers = channelNames;
+        List values;
         if (fixedChildren) {
             //If ids are declared, value list is fixed and ordered 
             if (getIncomplete() == Incomplete.fill_null) {
                 //Null values are cached
-                setCache(new StreamValue(pulse_id, timestamp, nanosOffset, channelNames, new ArrayList(streamCache.values()),config), timestamp, nanosOffset);
+                values = new ArrayList(streamCache.values());
             } else {
                 //If received null value caches last value
-                setCache(new StreamValue(pulse_id, timestamp, nanosOffset, channelNames, Arrays.asList(getChildrenValues()), config), timestamp, nanosOffset);
+               values = Arrays.asList(getChildrenValues());
             }
         } else {
             //Else caches everything received            
-            setCache(new StreamValue(pulse_id, timestamp, nanosOffset, new ArrayList(streamCache.keySet()), new ArrayList(streamCache.values()), config), timestamp, nanosOffset);
+            identifiers =  new ArrayList(streamCache.keySet());
+            values =  new ArrayList(streamCache.values());
         }
+        
+        StreamValue streamValue;
+        if (hasJython){
+            streamValue=new StreamValueSubscriptable(pulse_id, timestamp, nanosOffset, identifiers, values,config);
+        } else {
+            streamValue=new StreamValue(pulse_id, timestamp, nanosOffset, identifiers, values,config);
+        }
+        setCache(streamValue, timestamp, nanosOffset);
     }
 
     public List<Readable> getReadables() {

@@ -960,7 +960,7 @@ public class StreamCameraViewer extends MonitoredPanel {
 
         Double getDouble(String name) {
             try {
-                return (Double) Convert.toDouble(cache.__getitem__(name));
+                return (Double) Convert.toDouble(cache.getValue(name));
             } catch (Exception ex) {
                 return null;
             }
@@ -968,7 +968,7 @@ public class StreamCameraViewer extends MonitoredPanel {
 
         double[] getDoubleArray(String name) {
             try {
-                return (double[]) Convert.toDouble(cache.__getitem__(name));
+                return (double[]) Convert.toDouble(cache.getValue(name));
             } catch (Exception ex) {
                 return null;
             }

@@ -55,6 +55,7 @@ import java.awt.Rectangle;
 import java.awt.Toolkit;
 import java.awt.Window;
 import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
 import java.io.FileInputStream;
 import java.lang.reflect.Array;
@@ -404,15 +405,6 @@ public class CamServerViewer extends MonitoredPanel {
                         menu.add(menuFrameIntegration);
                     }
                 }
-                JMenuItem menuHistogram = new JMenuItem("Show Histogram");
-                menuHistogram.addActionListener((ActionEvent e) -> {
-                    try {
-                        setHistogramVisible(true);
-                    } catch (Exception ex) {
-                        showException(ex);
-                    }
-                });
-                
                 menuConfig.add(menuPipelineConfig);                
                 menuConfig.add(menuPipelineDetach);                
                 menuConfig.addSeparator();
@@ -421,10 +413,26 @@ public class CamServerViewer extends MonitoredPanel {
                 menuConfig.addSeparator();
                 menuConfig.add(menuRendererConfig);
                 menuConfig.add(menuSetImageBufferSize);
+               
+                for (Component c: renderer.getPopupMenu().getComponents()){
+                    if (c instanceof JMenuItem){
+                        if(((JMenuItem)c).getText().equals("Histogram")){
+                            for (ActionListener listener : ((JMenuItem)c).getActionListeners()) {
+                                ((JMenuItem)c).removeActionListener(listener);
+                             }                            
+                            ((JMenuItem)c).addActionListener((ActionEvent e) -> {
+                                try {
+                                    setHistogramVisible(true);
+                                } catch (Exception ex) {
+                                    showException(ex);
+                                }                                
+                            });                            
+                        }
+                    }
+                }
 
                 
                 renderer.getPopupMenu().add(menuSaveStack);                
-                renderer.getPopupMenu().add(menuHistogram);
                 renderer.getPopupMenu().addSeparator();
                 renderer.getPopupMenu().add(menuConfig);                
                 renderer.getPopupMenu().addSeparator();                                    
@@ -1206,7 +1214,7 @@ public class CamServerViewer extends MonitoredPanel {
 
         Double getDouble(String name) {
             try {
-                return (Double) Convert.toDouble(cache.__getitem__(name));
+                return (Double) Convert.toDouble(cache.getValue(name));
             } catch (Exception ex) {
                 return null;
             }
@@ -1214,7 +1222,7 @@ public class CamServerViewer extends MonitoredPanel {
 
         double[] getDoubleArray(String name) {
             try {
-                return (double[]) Convert.toDouble(cache.__getitem__(name));
+                return (double[]) Convert.toDouble(cache.getValue(name));
             } catch (Exception ex) {
                 return null;
             }

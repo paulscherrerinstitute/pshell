@@ -9,9 +9,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import org.python.core.Py;
-import org.python.core.PyObject;
 import org.python.core.PySlice;
-import org.python.core.PyTuple;
 import org.python.core.PyNone;
 
 /**
