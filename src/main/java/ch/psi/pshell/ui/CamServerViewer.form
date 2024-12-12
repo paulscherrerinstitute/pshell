@@ -139,7 +139,7 @@
                   <Connection code="getIcon(&quot;Save&quot;)" type="code"/>
                 </Property>
                 <Property name="text" type="java.lang.String" value=" "/>
-                <Property name="toolTipText" type="java.lang.String" value="Show Data Window"/>
+                <Property name="toolTipText" type="java.lang.String" value="Save Snapshot"/>
                 <Property name="focusable" type="boolean" value="false"/>
                 <Property name="horizontalTextPosition" type="int" value="0"/>
               </Properties>

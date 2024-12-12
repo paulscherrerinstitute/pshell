@@ -3294,7 +3294,7 @@ public class CamServerViewer extends MonitoredPanel {
 
         buttonSave.setIcon(getIcon("Save"));
         buttonSave.setText(" ");
-        buttonSave.setToolTipText("Show Data Window");
+        buttonSave.setToolTipText("Save Snapshot");
         buttonSave.setFocusable(false);
         buttonSave.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
         buttonSave.addActionListener(new java.awt.event.ActionListener() {
