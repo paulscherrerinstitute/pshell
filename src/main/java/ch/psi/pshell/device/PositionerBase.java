@@ -27,21 +27,58 @@ public abstract class PositionerBase extends ControlledVariableBase implements P
             getReadback().request();
         }
     }
-
+    
+    double adjustRotationPos(double pos){        
+        if (getConfig().isRangeDefined()){
+            if (!getConfig().isInRange(pos)){
+                pos = Convert.toDegreesMin180To180(pos);
+                if (!Double.isNaN(getConfig().minValue)){
+                    if (pos < getConfig().minValue) {
+                        pos += 360.0;
+                    }
+                } 
+                if (!Double.isNaN(getConfig().maxValue)){
+                    if (pos > getConfig().maxValue) {
+                        pos -= 360.0;
+                    } 
+                }
+            }
+        }
+        return pos;
+    }
+    
+    @Override
+    protected Double convertFromRead(Double value) {
+        Double ret = super.convertFromRead(value);
+        if (getConfig().rotation) {
+            if (ret!=null){
+                ret = adjustRotationPos(ret);
+            }
+        }
+        return ret;
+    }
+       
+    @Override
+    public void write(Double value) throws IOException, InterruptedException {
+        if (getConfig().rotation) {
+            if (getConfig().isRangeDefined()){
+                double current = read();
+                double offset = Convert.toDegreesMin180To180(value - current);
+                value = current + offset;
+                if (value < getConfig().minValue) {
+                    value += 360.0;
+                    }
+                if (value > getConfig().maxValue) {
+                    value -= 360.0;
+                }
+            }
+        }       
+        super.write(value);
+    }
+    
     @Override
     public void move(Double destination, int timeout) throws IOException, InterruptedException {
         assertWriteEnabled();
-        if (getConfig().rotation) {
-            double current = read();
-            double offset = Convert.toDegreesMin180To180(destination - current);
-            destination = current + offset;
-            if (destination < getConfig().minValue) {
-                destination += 360.0;
-            }
-            if (destination > getConfig().maxValue) {
-                destination -= 360.0;
-            }
-        }
         write(destination);
         waitReady(timeout);
         assertInPosition(destination);
@@ -88,6 +125,15 @@ public abstract class PositionerBase extends ControlledVariableBase implements P
         processState();
     }
 
+    @Override
+    public Double getPosition() throws IOException, InterruptedException {
+        Double pos = super.getPosition();
+        if (getConfig().rotation) {
+            pos = adjustRotationPos(pos);
+        }        
+        return pos;
+    }
+    
     @Override
     public boolean isInPosition(Double pos) throws IOException, InterruptedException {
         Double offset = getPosition() - pos;
