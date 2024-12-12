@@ -39,6 +39,15 @@ public class LinePlotErrorSeries extends LinePlotSeries {
 
     public void appendData(double x, double y, double low, double high) {
         if (getPlot() != null) {
+            if (Double.isInfinite(y)){
+                y=Double.NaN;
+            }            
+            if (Double.isInfinite(low)){
+                low=Double.NaN;
+            }            
+            if (Double.isInfinite(high)){
+                high=Double.NaN;
+            }            
             boolean updatesEnabled = getPlot().isUpdatesEnabled();
             switch (getPlot().getStyle()) {
                 case ErrorX:
@@ -144,6 +153,13 @@ public class LinePlotErrorSeries extends LinePlotSeries {
 
     public void appendData(double x, double y, double error) {
         if (getPlot() != null) {
+            if (Double.isInfinite(y)){
+                y=Double.NaN;
+            }            
+            if (Double.isInfinite(error)){
+                error=Double.NaN;
+            }            
+             
             boolean updatesEnabled = getPlot().isUpdatesEnabled();
             switch (getPlot().getStyle()) {
                 case ErrorX:
@@ -235,6 +251,15 @@ public class LinePlotErrorSeries extends LinePlotSeries {
 
     public void appendData(double x, double xLow, double xHigh, double y, double yLow, double yHigh) {
         if (getPlot() != null) {            
+            if (Double.isInfinite(y)){
+                y=Double.NaN;
+            }            
+            if (Double.isInfinite(yLow)){
+                yLow=Double.NaN;
+            }   
+            if (Double.isInfinite(yHigh)){
+                yHigh=Double.NaN;
+            }               
             boolean updatesEnabled = getPlot().isUpdatesEnabled();
             if (getPlot().getStyle() == LinePlot.Style.ErrorXY) {
                 XYIntervalSeries s = (XYIntervalSeries) getToken();

@@ -620,6 +620,16 @@ public class Daqbuf implements ChannelQueryAPI {
         if ((averages==null) || (averages.size()==0) || ((averages.size()==1) && (averages.get(0)==null))){
             return;
         }
+        if ((mins==null) || (mins.size()!=averages.size())){
+            return;
+        }
+        if ((maxs==null) || (maxs.size()!=averages.size())){
+            return;
+        }        
+        averages.replaceAll(e -> e == null ? Double.NaN : e);
+        mins.replaceAll(e -> e == null ? Double.NaN : e);
+        maxs.replaceAll(e -> e == null ? Double.NaN : e);
+        
         long anchor_ms = tsAnchor.longValue() * 1000;
         long aux =  getTimestampMillis() ? 1L : 1_000_000L;
 
@@ -648,16 +658,34 @@ public class Daqbuf implements ChannelQueryAPI {
         List ids = (List) frame.getOrDefault("pulses", null);
         List values = (List) frame.getOrDefault("values", null);
         String scalar_type = (String) frame.getOrDefault("scalar_type", null);
+        
+        if ((values==null) || (values.size()==0) || ((values.size()==1) && (values.get(0)==null))){
+            return;
+        }
+        if ((timestamps==null) || (timestamps.size()!=values.size())){
+            return;
+        }
+        
         if (scalar_type != null) {
             if (getTimestampMillis()){
                 timestamps.replaceAll(value -> value / 1_000_000);
             }
+            switch (scalar_type){
+                case "f64":
+                    values.replaceAll(e -> e == null ? Double.NaN : e);
+                    break;
+                case "f32":
+                    values.replaceAll(e -> e == null ? Float.NaN : e);
+                    break;
+            }
+            
             listener.onMessage(query, values, ids, timestamps);
             if (recordListener != null) {
                 boolean have_id = (ids!=null) && (ids.size()==values.size());
+                boolean have_timestamp = (timestamps!=null) && (timestamps.size()==values.size());
                 if (values != null) {
                     for (int i = 0; i < values.size(); i++) {
-                        recordListener.onRecord(query, values.get(i), have_id ? (Long) ids.get(i) : null, (Long) timestamps.get(i));
+                        recordListener.onRecord(query, values.get(i), have_id ? (Long) ids.get(i) : null, have_timestamp ? (Long) timestamps.get(i): null);
                     }
                 }
             }
@@ -813,7 +841,7 @@ public class Daqbuf implements ChannelQueryAPI {
             CompletableFuture<Map<String, List>> future = CompletableFuture.supplyAsync(() -> {
                 try {
                     return fetchQuery(channel, start, end, bins);
-                } catch (IOException | InterruptedException e) {
+                } catch (Exception e) {
                     throw new CompletionException(e);
                 }
             }, executor).exceptionally(ex -> {
@@ -900,7 +928,7 @@ public class Daqbuf implements ChannelQueryAPI {
             for (String field : data.keySet()) {
                 List list = data.get(field);
                 if (!list.isEmpty()) {
-                    Object array = Convert.toPrimitiveArray(list);
+                    Object array = Convert.toPrimitiveArray(list);                    
                     dm.setDataset(dataGroup + field, array);
                 }
             }            
@@ -913,18 +941,22 @@ public class Daqbuf implements ChannelQueryAPI {
                 @Override
                 public void onMessage(Query query, List values, List<Long> ids, List<Long> timestamps) {
                     if (!values.isEmpty()) {
-                        try {
-                            Object value = Convert.toPrimitiveArray(values);
-                            long[] id = (long[]) Convert.toPrimitiveArray(ids, Long.class);
-                            long[] timestamp = (long[]) Convert.toPrimitiveArray(timestamps, Long.class);
+                    try {                                                    
+                            Object value = Convert.toPrimitiveArray(values);                                                                                    
                             if (!dm.exists(datasetValue)) {
                                 dm.createCompressedDataset(datasetId, Long.class, new int[0]);
                                 dm.createCompressedDataset(datasetTimestamp, Long.class, new int[0]);
                                 Object obj = Array.get(value, 0);
                                 dm.createCompressedDataset(datasetValue, obj);
                             }
-                            dm.appendItem(datasetTimestamp, timestamp);
-                            dm.appendItem(datasetId, id);
+                            if (timestamps!=null){
+                                long[] timestamp = (long[]) Convert.toPrimitiveArray(timestamps, Long.class);
+                                dm.appendItem(datasetTimestamp, timestamp);
+                            }                            
+                            if (ids!=null){
+                                long[] id = (long[]) Convert.toPrimitiveArray(ids, Long.class);
+                                dm.appendItem(datasetId, id);
+                            }
                             dm.appendItem(datasetValue, value);
                         } catch (Exception ex) {
                             throw new RuntimeException(ex);
@@ -951,7 +983,7 @@ public class Daqbuf implements ChannelQueryAPI {
                     try {
                         saveQuery(dm, channel, start, end, bins);
                         return null;
-                    } catch (IOException | InterruptedException e) {
+                    } catch (Exception e) {
                         throw new CompletionException(e);
                     }
                 }, executor).exceptionally(ex -> {

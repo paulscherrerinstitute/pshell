@@ -415,6 +415,9 @@ public class LinePlotJFree extends LinePlotBase {
     @Override
     protected void onAppendData(LinePlotSeries series, double x, double y) {
         XYSeries s = getXYSeries(series);
+        if (Double.isInfinite(y)){
+            y=Double.NaN;
+        }
         s.add(new XYDataItem(x, y), false);
     }
 
@@ -429,11 +432,19 @@ public class LinePlotJFree extends LinePlotBase {
         //Separated loop for performance (not checking inside the loop)
         if (x == null) {
             for (int i = 0; i < y.length; i++) {
-                s.add(new XYDataItem(i, y[i]), false);
+                if (Double.isInfinite(y[i])){
+                    s.add(new XYDataItem(i, Double.NaN), false);
+                } else {
+                    s.add(new XYDataItem(i, y[i]), false);
+                }
             }
         } else {
             for (int i = 0; i < y.length; i++) {
-                s.add(new XYDataItem(x[i], y[i]), false);
+                if (Double.isInfinite(y[i])){
+                    s.add(new XYDataItem(x[i], Double.NaN), false);
+                } else {
+                    s.add(new XYDataItem(x[i], y[i]), false);
+                }
             }
         }
         s.setNotify(true);
