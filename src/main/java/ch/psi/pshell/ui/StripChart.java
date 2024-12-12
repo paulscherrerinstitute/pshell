@@ -84,6 +84,7 @@ import javax.swing.JTabbedPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.JToggleButton;
+import javax.swing.SpinnerNumberModel;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.Timer;
@@ -725,6 +726,8 @@ public class StripChart extends StandardDialog {
         textStreamFilter.setEnabled(editing);
         spinnerDragInterval.setEnabled(editing);
         spinnerUpdate.setEnabled(editing);
+        checkPolling.setEnabled(editing);
+        spinnerPolling.setEnabled(editing && checkPolling.isSelected());
     }
 
     boolean isSeriesTableRowEditable(int row, int column) {
@@ -781,7 +784,8 @@ public class StripChart extends StandardDialog {
         String background = (c == null) ? "" : c.getRed() + "," + c.getGreen() + "," + c.getBlue();
         c = gridColor;
         String grid = (c == null) ? "" : c.getRed() + "," + c.getGreen() + "," + c.getBlue();
-        state.add(new Object[][]{new Object[]{textStreamFilter.getText().trim(), spinnerDragInterval.getValue(), spinnerUpdate.getValue()},
+        Integer polling =  checkPolling.isSelected() ? (Integer)spinnerPolling.getValue() : -1;
+        state.add(new Object[][]{new Object[]{textStreamFilter.getText().trim(), spinnerDragInterval.getValue(), spinnerUpdate.getValue(), polling},
         new Object[]{background, grid}});
 
         String json = EncoderJson.encode(state, true);
@@ -804,6 +808,8 @@ public class StripChart extends StandardDialog {
         textFileName.setText((Context.getInstance() != null) ? Context.getInstance().getConfig().dataPath : "");
         comboFormat.setSelectedItem(getInitFormat());
         comboLayout.setSelectedItem(getInitLayout());
+        spinnerPolling.setValue(1000);
+        checkPolling.setSelected(false);        
         modelSeries.setRowCount(0);
         modelCharts.setDataVector(new Object[][]{
             {"1", null, null, null, null, null, false},
@@ -953,6 +959,8 @@ public class StripChart extends StandardDialog {
         textStreamFilter.setText("");
         spinnerDragInterval.setValue(1000);
         spinnerUpdate.setValue(100);
+        spinnerPolling.setValue(1000);
+        checkPolling.setSelected(false);        
         backgroundColor = defaultBackgroundColor;
         gridColor = defaultGridColor;
         panelColorBackground.setBackground(backgroundColor);
@@ -995,6 +1003,15 @@ public class StripChart extends StandardDialog {
             }
             if ((settings.length > 2) && (settings[2] != null) && (settings[2] instanceof Integer)) {
                 spinnerUpdate.setValue((Integer) settings[2]);
+            }
+            if ((settings.length > 3) && (settings[3] != null) && (settings[3] instanceof Integer)) {
+                int value = (Integer) settings[3];
+                Integer min = (Integer)((SpinnerNumberModel)spinnerPolling.getModel()).getMinimum();
+                Integer max = (Integer)((SpinnerNumberModel)spinnerPolling.getModel()).getMaximum();
+                if ((value>=min) && (value<=max)){
+                    spinnerPolling.setValue(value);
+                    checkPolling.setSelected(true);
+                }
             }
             if (((Object[][]) state[3]).length > 1) {
                 //Loading colors
@@ -1516,7 +1533,7 @@ public class StripChart extends StandardDialog {
                 id = getId(row);
                 switch (type) {
                     case Channel:
-                        int polling = -1;
+                        int polling= checkPolling.isSelected() ? ((Number)spinnerPolling.getValue()).intValue(): -1;
                         boolean timestamped = true;
                         int precision = -1;                                
                         try {
@@ -1942,6 +1959,8 @@ public class StripChart extends StandardDialog {
         jPanel3 = new javax.swing.JPanel();
         jLabel2 = new javax.swing.JLabel();
         textStreamFilter = new javax.swing.JTextField();
+        spinnerPolling = new javax.swing.JSpinner();
+        checkPolling = new javax.swing.JCheckBox();
         jPanel1 = new javax.swing.JPanel();
         jLabel15 = new javax.swing.JLabel();
         panelColorBackground = new javax.swing.JPanel();
@@ -2134,9 +2153,19 @@ public class StripChart extends StandardDialog {
                 .addContainerGap())
         );
 
-        jPanel3.setBorder(javax.swing.BorderFactory.createTitledBorder("Stream"));
+        jPanel3.setBorder(javax.swing.BorderFactory.createTitledBorder("Data"));
 
-        jLabel2.setText("Filter:");
+        jLabel2.setText("Stream Filter:");
+
+        spinnerPolling.setModel(new javax.swing.SpinnerNumberModel(1000, 10, 60000, 100));
+        spinnerPolling.setEnabled(false);
+
+        checkPolling.setText("Channel Polling:");
+        checkPolling.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                checkPollingActionPerformed(evt);
+            }
+        });
 
         javax.swing.GroupLayout jPanel3Layout = new javax.swing.GroupLayout(jPanel3);
         jPanel3.setLayout(jPanel3Layout);
@@ -2147,6 +2176,10 @@ public class StripChart extends StandardDialog {
                 .addComponent(jLabel2)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(textStreamFilter)
+                .addGap(18, 18, 18)
+                .addComponent(checkPolling)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(spinnerPolling, javax.swing.GroupLayout.PREFERRED_SIZE, 80, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap())
         );
         jPanel3Layout.setVerticalGroup(
@@ -2154,7 +2187,9 @@ public class StripChart extends StandardDialog {
             .addGroup(jPanel3Layout.createSequentialGroup()
                 .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel2)
-                    .addComponent(textStreamFilter, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(textStreamFilter, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(spinnerPolling, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(checkPolling))
                 .addContainerGap())
         );
 
@@ -2654,6 +2689,10 @@ public class StripChart extends StandardDialog {
         }
     }//GEN-LAST:event_buttonSaveDataActionPerformed
 
+    private void checkPollingActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_checkPollingActionPerformed
+        update();
+    }//GEN-LAST:event_checkPollingActionPerformed
+
     /**
      */
     public static void main(String args[]) {
@@ -2673,6 +2712,7 @@ public class StripChart extends StandardDialog {
     private javax.swing.JButton buttonSaveData;
     private javax.swing.JButton buttonStart;
     private javax.swing.JButton buttonStop;
+    private javax.swing.JCheckBox checkPolling;
     private javax.swing.JCheckBox ckPersistence;
     private javax.swing.JComboBox<String> comboFormat;
     private javax.swing.JComboBox<String> comboLayout;
@@ -2704,6 +2744,7 @@ public class StripChart extends StandardDialog {
     private javax.swing.JPanel pnGraphs;
     private javax.swing.JScrollPane scrollPane;
     private javax.swing.JSpinner spinnerDragInterval;
+    private javax.swing.JSpinner spinnerPolling;
     private javax.swing.JSpinner spinnerUpdate;
     private javax.swing.JTabbedPane tabPane;
     private javax.swing.JTable tableCharts;
