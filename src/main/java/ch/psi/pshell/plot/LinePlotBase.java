@@ -82,7 +82,8 @@ abstract public class LinePlotBase extends PlotBase<LinePlotSeries> implements L
         
         @Override
         public void onSeriesAppendData(LinePlotSeries series, double[] x, double[] y){
-            for (int i=0; i< x.length; i++){
+            int length = Math.min(x.length, y.length);
+            for (int i=0; i<length; i++){
                  onAppendData(series, x[i], y[i]);
             }
             if (getRequireUpdateOnAppend() && isUpdatesEnabled()) {
@@ -92,8 +93,13 @@ abstract public class LinePlotBase extends PlotBase<LinePlotSeries> implements L
         
         @Override
         public void onSeriesAppendData(LinePlotSeries series, List<? extends Number> x, List<? extends Number> y){
-            for (int i=0; i< x.size(); i++){
-                 onAppendData(series, x.get(i).doubleValue(), y.get(i).doubleValue());
+            int length = Math.min(x.size(), y.size());
+            for (int i=0; i<length; i++){
+                Number vx = x.get(i);
+                Number vy = y.get(i);
+                if ((vx!=null) && (vy!=null)){
+                    onAppendData(series, vx.doubleValue(), vy.doubleValue());
+                }
             }
             if (getRequireUpdateOnAppend() && isUpdatesEnabled()) {
                 requestSeriesUpdate(series);

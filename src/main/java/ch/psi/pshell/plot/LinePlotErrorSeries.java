@@ -64,24 +64,25 @@ public class LinePlotErrorSeries extends LinePlotSeries {
     
     public void appendData(double[] x, double[]  y, double[]  low, double[]  high) {
         if (getPlot() != null) {
+            int length = Math.min(Math.min(Math.min(x.length, y.length), low.length), high.length);
             boolean updatesEnabled = getPlot().isUpdatesEnabled();
             switch (getPlot().getStyle()) {
                 case ErrorX:
                     XIntervalSeries sx = (XIntervalSeries) getToken();
-                    for (int i = 0; i < x.length; i++) {
+                    for (int i = 0; i < length; i++) {
                         sx.add(new XIntervalDataItem(x[i], low[i], high[i], y[i]), updatesEnabled);
                     }
                     break;
                 case ErrorY:
                     YIntervalSeries sy = (YIntervalSeries) getToken();
-                    for (int i = 0; i < x.length; i++) {
+                    for (int i = 0; i < length; i++) {
                         sy.add(new YIntervalDataItem(x[i], y[i], low[i], high[i]), updatesEnabled);
                     }
                     break;
                 //Consider low = errorx, high=errory
                 case ErrorXY:
                     XYIntervalSeries s = (XYIntervalSeries) getToken();
-                    for (int i = 0; i < x.length; i++) {
+                    for (int i = 0; i < length; i++) {
                         double ix = x[i];
                         s.add(new XYIntervalDataItem(ix, ix, ix, y[i], low[i], high[i]), updatesEnabled);
                     }
@@ -94,25 +95,32 @@ public class LinePlotErrorSeries extends LinePlotSeries {
     public void appendData(List<? extends Number> x, List<? extends Number> y, List<? extends Number> low, List<? extends Number> high) {
         if (getPlot() != null) {
             boolean updatesEnabled = getPlot().isUpdatesEnabled();
+            int length = Math.min(Math.min(Math.min(x.size(), y.size()), low.size()), high.size());
             switch (getPlot().getStyle()) {
                 case ErrorX:
                     XIntervalSeries sx = (XIntervalSeries) getToken();
-                    for (int i = 0; i < x.size(); i++) {
-                        sx.add(new XIntervalDataItem(x.get(i).doubleValue(), low.get(i).doubleValue(), high.get(i).doubleValue(), y.get(i).doubleValue()), updatesEnabled);
+                    for (int i = 0; i < length; i++) {
+                        if (x.get(i) != null && y.get(i) != null && low.get(i) != null && high.get(i) != null){
+                            sx.add(new XIntervalDataItem(x.get(i).doubleValue(), low.get(i).doubleValue(), high.get(i).doubleValue(), y.get(i).doubleValue()), updatesEnabled);
+                        }
                     }
                     break;
                 case ErrorY:
                     YIntervalSeries sy = (YIntervalSeries) getToken();
-                    for (int i = 0; i < x.size(); i++) {
-                        sy.add(new YIntervalDataItem(x.get(i).doubleValue(), y.get(i).doubleValue(), low.get(i).doubleValue(), high.get(i).doubleValue()), updatesEnabled);
+                    for (int i = 0; i < length; i++) {
+                        if (x.get(i) != null && y.get(i) != null && low.get(i) != null && high.get(i) != null){
+                            sy.add(new YIntervalDataItem(x.get(i).doubleValue(), y.get(i).doubleValue(), low.get(i).doubleValue(), high.get(i).doubleValue()), updatesEnabled);
+                        }
                     }
                     break;
                 //Consider low = errorx, high=errory
                 case ErrorXY:
                     XYIntervalSeries s = (XYIntervalSeries) getToken();
-                    for (int i = 0; i < x.size(); i++) {
-                        double ix = x.get(i).doubleValue();
-                        s.add(new XYIntervalDataItem(ix, ix, ix, y.get(i).doubleValue(), low.get(i).doubleValue(), high.get(i).doubleValue()), updatesEnabled);
+                    for (int i = 0; i < length; i++) {
+                        if (x.get(i) != null && y.get(i) != null && low.get(i) != null && high.get(i) != null){
+                            double ix = x.get(i).doubleValue();
+                            s.add(new XYIntervalDataItem(ix, ix, ix, y.get(i).doubleValue(), low.get(i).doubleValue(), high.get(i).doubleValue()), updatesEnabled);
+                        }
                     }
 
             }
@@ -155,10 +163,11 @@ public class LinePlotErrorSeries extends LinePlotSeries {
     public void appendData(double[] x, double[] y, double[] error){
         if (getPlot() != null) {
             boolean updatesEnabled = getPlot().isUpdatesEnabled();
+            int length = Math.min(Math.min(x.length, y.length), error.length);
             switch (getPlot().getStyle()) {
                 case ErrorX:
                     XIntervalSeries sx = (XIntervalSeries) getToken();
-                    for (int i = 0; i < x.length; i++) {
+                    for (int i = 0; i < length; i++) {
                         double ix = x[i];
                         double ie = error[i];
                         sx.add(new XIntervalDataItem(ix, ix-ie, ix+ie, y[i]), updatesEnabled);
@@ -166,7 +175,7 @@ public class LinePlotErrorSeries extends LinePlotSeries {
                     break; 
                 case ErrorY:
                     YIntervalSeries sy = (YIntervalSeries) getToken();
-                    for (int i = 0; i < x.length; i++) {
+                    for (int i = 0; i < length; i++) {
                         double iy = y[i];
                         double ie = error[i];
                         sy.add(new YIntervalDataItem(x[i], iy, iy - ie, iy + ie), updatesEnabled);
@@ -174,7 +183,7 @@ public class LinePlotErrorSeries extends LinePlotSeries {
                     break;
                 case ErrorXY:
                     XYIntervalSeries s = (XYIntervalSeries) getToken();
-                    for (int i = 0; i < x.length; i++) {
+                    for (int i = 0; i < length; i++) {
                         double ix = x[i];
                         double iy = y[i];
                         double ie = error[i];
@@ -187,30 +196,37 @@ public class LinePlotErrorSeries extends LinePlotSeries {
     public void appendData(List<? extends Number> x, List<? extends Number> y, List<? extends Number> error){
         if (getPlot() != null) {
             boolean updatesEnabled = getPlot().isUpdatesEnabled();
+            int length = Math.min(Math.min(x.size(), y.size()), error.size());
             switch (getPlot().getStyle()) {
                 case ErrorX:
                     XIntervalSeries sx = (XIntervalSeries) getToken();
-                    for (int i = 0; i < x.size(); i++) {
-                        double ix = x.get(i).doubleValue();
-                        double ie = error.get(i).doubleValue();
-                        sx.add(new XIntervalDataItem(ix, ix-ie, ix+ie, y.get(i).doubleValue()), updatesEnabled);
+                    for (int i = 0; i < length; i++) {
+                        if (x.get(i) != null && y.get(i) != null && error.get(i) != null){
+                            double ix = x.get(i).doubleValue();
+                            double ie = error.get(i).doubleValue();
+                            sx.add(new XIntervalDataItem(ix, ix-ie, ix+ie, y.get(i).doubleValue()), updatesEnabled);
+                        }
                     }
                     break; 
                 case ErrorY:
                     YIntervalSeries sy = (YIntervalSeries) getToken();
-                    for (int i = 0; i < x.size(); i++) {
-                        double iy = y.get(i).doubleValue();
-                        double ie = error.get(i).doubleValue();
-                        sy.add(new YIntervalDataItem(x.get(i).doubleValue(), iy, iy - ie, iy + ie), updatesEnabled);
+                    for (int i = 0; i < length; i++) {
+                        if (x.get(i) != null && y.get(i) != null && error.get(i) != null){
+                            double iy = y.get(i).doubleValue();
+                            double ie = error.get(i).doubleValue();
+                            sy.add(new YIntervalDataItem(x.get(i).doubleValue(), iy, iy - ie, iy + ie), updatesEnabled);
+                        }
                     }
                     break;
                 case ErrorXY:
                     XYIntervalSeries s = (XYIntervalSeries) getToken();
-                    for (int i = 0; i < x.size(); i++) {
-                        double ix = x.get(i).doubleValue();
-                        double iy = y.get(i).doubleValue();
-                        double ie = error.get(i).doubleValue();
-                        s.add(new XYIntervalDataItem(ix, ix - ie, ix + ie, iy, iy - ie, iy + ie), updatesEnabled);
+                    for (int i = 0; i < length; i++) {
+                        if (x.get(i) != null && y.get(i) != null && error.get(i) != null){
+                            double ix = x.get(i).doubleValue();
+                            double iy = y.get(i).doubleValue();
+                            double ie = error.get(i).doubleValue();
+                            s.add(new XYIntervalDataItem(ix, ix - ie, ix + ie, iy, iy - ie, iy + ie), updatesEnabled);                            
+                        }
                     }                    
             }
         }        
@@ -230,9 +246,10 @@ public class LinePlotErrorSeries extends LinePlotSeries {
     public void appendData(double[] x, double[] xLow, double[] xHigh, double[] y, double[] yLow, double[] yHigh) {
         if (getPlot() != null) {
             boolean updatesEnabled = getPlot().isUpdatesEnabled();
+            int length = Math.min( Math.min(Math.min(Math.min(Math.min(x.length, y.length), xLow.length), xHigh.length), yLow.length), yHigh.length);
             if (getPlot().getStyle() == LinePlot.Style.ErrorXY) {
                 XYIntervalSeries s = (XYIntervalSeries) getToken();
-                for (int i = 0; i < x.length; i++) {
+                for (int i = 0; i < length; i++) {
                     s.add(new XYIntervalDataItem(x[i], xLow[i], xHigh[i], y[i], yLow[i], yHigh[i]), updatesEnabled);
                 }
             }
@@ -243,10 +260,13 @@ public class LinePlotErrorSeries extends LinePlotSeries {
     public void appendData(List<? extends Number> x, List<? extends Number> xLow, List<? extends Number> xHigh, List<? extends Number> y, List<? extends Number> yLow, List<? extends Number> yHigh) {
         if (getPlot() != null) {
             boolean updatesEnabled = getPlot().isUpdatesEnabled();
+            int length = Math.min( Math.min(Math.min(Math.min(Math.min(x.size(), y.size()), xLow.size()), xHigh.size()), yLow.size()), yHigh.size());
             if (getPlot().getStyle() == LinePlot.Style.ErrorXY) {
                 XYIntervalSeries s = (XYIntervalSeries) getToken();
-                for (int i = 0; i < x.size(); i++) {
-                    s.add(new XYIntervalDataItem(x.get(i).doubleValue(), xLow.get(i).doubleValue(), xHigh.get(i).doubleValue(), y.get(i).doubleValue(), yLow.get(i).doubleValue(), yHigh.get(i).doubleValue()), updatesEnabled);
+                for (int i = 0; i < length; i++) {
+                    if (x.get(i) != null && xLow.get(i) != null && xHigh.get(i) != null && y.get(i) != null && yLow.get(i) != null && yHigh.get(i) != null){
+                        s.add(new XYIntervalDataItem(x.get(i).doubleValue(), xLow.get(i).doubleValue(), xHigh.get(i).doubleValue(), y.get(i).doubleValue(), yLow.get(i).doubleValue(), yHigh.get(i).doubleValue()), updatesEnabled);
+                    }
                 }
             }
         }
@@ -267,25 +287,26 @@ public class LinePlotErrorSeries extends LinePlotSeries {
 
     public void setData(double[] x, double[] y, double[] error, double[] errorY) {
         if (getPlot() != null) {
+            int length = Math.min(Math.min(Math.min(x.length, y.length), error.length), errorY.length);
             switch (getPlot().getStyle()) {
                 case ErrorX:
                     XIntervalSeries sx = (XIntervalSeries) getToken();
                     sx.clear();
-                    for (int i = 0; i < y.length; i++) {
+                    for (int i = 0; i < length; i++) {
                         appendData(x == null ? i : x[i], y[i], error == null ? 0.0 : error[i]);
                     }
                     break;
                 case ErrorY:
                     YIntervalSeries sy = (YIntervalSeries) getToken();
                     sy.clear();
-                    for (int i = 0; i < y.length; i++) {
+                    for (int i = 0; i < length; i++) {
                         appendData(x == null ? i : x[i], y[i], error == null ? 0.0 : error[i]);
                     }
                     break;
                 case ErrorXY:
                     XYIntervalSeries sxy = (XYIntervalSeries) getToken();
                     sxy.clear();
-                    for (int i = 0; i < y.length; i++) {
+                    for (int i = 0; i < length; i++) {
                         appendData(x == null ? i : x[i], y[i], error == null ? 0.0 : error[i], errorY == null ? 0.0 : errorY[i]);
                     }
             }
