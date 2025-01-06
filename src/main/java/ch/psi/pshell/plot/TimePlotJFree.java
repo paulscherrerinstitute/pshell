@@ -672,7 +672,8 @@ public class TimePlotJFree extends TimePlotBase {
         }
     }
 
-    int getSeriesIndex(TimePlotSeries series) {
+    @Override
+    public int getSeriesIndex(TimePlotSeries series) {
         //return this.series.indexOf(series);
 
         TimeSeries xys = getTimeSeries(series);

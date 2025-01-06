@@ -1281,6 +1281,49 @@ public class SwingUtils {
         tc.setHeaderValue(title);
         th.repaint();    
     }
+    
+    public static void removeColumn(DefaultTableModel model, JTable table, int index) {
+        // Create a new custom table model to preserve attributes
+        DefaultTableModel newModel = new DefaultTableModel() {
+            @Override
+            public Class<?> getColumnClass(int columnIndex) {
+                if (columnIndex >= index) {
+                    return model.getColumnClass(columnIndex + 1); // Adjust for removed column
+                }
+                return model.getColumnClass(columnIndex);
+            }
+
+            @Override
+            public boolean isCellEditable(int rowIndex, int columnIndex) {
+                if (columnIndex >= index) {
+                    return model.isCellEditable(rowIndex, columnIndex + 1); // Adjust for removed column
+                }
+                return model.isCellEditable(rowIndex, columnIndex);
+            }
+        };
+
+        // Add columns to the new model, excluding the removed column
+        for (int col = 0; col < model.getColumnCount(); col++) {
+            if (col != index) {
+                newModel.addColumn(model.getColumnName(col));
+            }
+        }
+
+        // Add rows to the new model
+        for (int row = 0; row < model.getRowCount(); row++) {
+            Object[] rowData = new Object[newModel.getColumnCount()];
+            int newColIndex = 0;
+
+            for (int col = 0; col < model.getColumnCount(); col++) {
+                if (col != index) {
+                    rowData[newColIndex++] = model.getValueAt(row, col);
+                }
+            }
+            newModel.addRow(rowData);
+        }
+
+        // Set the new model to the table
+        table.setModel(newModel);    }       
         
     //JTree
     public static void expandAll(JTree tree) {

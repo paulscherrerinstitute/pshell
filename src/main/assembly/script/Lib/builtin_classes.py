@@ -221,6 +221,8 @@ import ch.psi.pshell.plot.LinePlotJFree as LinePlotJFree
 import ch.psi.pshell.plot.MatrixPlotJFree as MatrixPlotJFree
 import ch.psi.pshell.plot.TimePlotJFree as TimePlotJFree
 import ch.psi.pshell.plot.SlicePlotDefault as SlicePlotDefault
+import ch.psi.pshell.plot.LinePlotTable as LinePlotTable
+import ch.psi.pshell.plot.MatrixPlotTable as MatrixPlotTable
 
 import ch.psi.pshell.plot.LinePlotSeries as LinePlotSeries
 import ch.psi.pshell.plot.LinePlotErrorSeries as LinePlotErrorSeries

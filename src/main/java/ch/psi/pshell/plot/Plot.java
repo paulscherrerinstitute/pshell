@@ -83,6 +83,8 @@ public interface Plot<T extends PlotSeries> {
     public T getSeries(String name);
 
     public T getSeries(int index);
+    
+    public int getSeriesIndex(T series);
 
     public int getNumberOfSeries();
 

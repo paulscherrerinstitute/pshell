@@ -452,6 +452,20 @@ abstract public class PlotBase<T extends PlotSeries> extends MonitoredPanel impl
             return getAllSeries()[index];
         }
     }
+    
+    
+    @Override
+    public int getSeriesIndex(T series){
+        synchronized (seriesList) {
+            T[] allSeries = getAllSeries();
+            for (int i = 0; i<allSeries.length; i++) {
+                if (allSeries[i] == series){
+                    return i;
+                }                
+            }
+        }
+        return -1;
+    }
 
     @Override
     public String[] getSeriesNames() {
