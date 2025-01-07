@@ -88,7 +88,8 @@ public class Align extends ObservableBase<Align.AlignListener>{
             added = false;
             NavigableSet<Long> keysInOrder =  data.navigableKeySet();
             long last_complete_id = -1;  
-            for (long id : keysInOrder.reversed()){
+            //for (long id : keysInOrder.reversed()){            //Onlyt Java 21
+            for (long id : keysInOrder.descendingSet()) {
                 if (data.get(id).size() == channels.length+1){
                     last_complete_id = id;
                     break;
