@@ -11,9 +11,11 @@ import ch.psi.pshell.plot.LinePlotErrorSeries;
 import ch.psi.pshell.plot.LinePlotJFree;
 import ch.psi.pshell.plot.LinePlotSeries;
 import ch.psi.pshell.plot.LinePlotTable;
+import ch.psi.pshell.plot.MatrixPlotBase;
 import ch.psi.pshell.plot.MatrixPlotJFree;
 import ch.psi.pshell.plot.MatrixPlotRenderer;
 import ch.psi.pshell.plot.MatrixPlotSeries;
+import ch.psi.pshell.plot.MatrixPlotTable;
 import ch.psi.pshell.plot.Plot;
 import ch.psi.pshell.plot.Plot.AxisId;
 import ch.psi.pshell.plot.PlotBase;
@@ -1104,7 +1106,7 @@ public class DaqbufPanel extends StandardDialog {
         return plot;
     }
 
-    LinePlotTable addTablePlot(boolean binned) {
+    LinePlotTable addLineTablePlot(boolean binned) {
         LinePlotTable plot = new LinePlotTable();
         plot.getAxis(AxisId.X).setLabel("Timestamp");
         plot.setZoomListener(zoomListener);
@@ -1182,9 +1184,9 @@ public class DaqbufPanel extends StandardDialog {
                     break;
                 case 1:
                     if (seriesInfo.bins == null) {
-                        series = addMatrixSeries((MatrixPlotJFree) plot, seriesInfo);
+                        series = addMatrixSeries((MatrixPlotBase) plot, seriesInfo);
                     } else {
-                        series = addMatrixSeriesBinned((MatrixPlotJFree) plot, seriesInfo);
+                        series = addMatrixSeriesBinned((MatrixPlotBase) plot, seriesInfo);
                     }
                     break;
             }
@@ -1546,8 +1548,7 @@ public class DaqbufPanel extends StandardDialog {
         }
         return series;
     }
-
-    //MatrixPlotRenderer
+    
     MatrixPlotJFree addMatrixPlot(boolean binned) {
         MatrixPlotJFree plot = new MatrixPlotJFree();
         if (binned) {
@@ -1600,6 +1601,12 @@ public class DaqbufPanel extends StandardDialog {
             }
         });       
         setMatrixPlotPopupMenu(plot, binned);
+        addPlot(plot);
+        return plot;
+    }
+    
+    MatrixPlotTable addMatrixTablePlot(boolean binned) {
+        MatrixPlotTable plot = new MatrixPlotTable();
         addPlot(plot);
         return plot;
     }
@@ -1684,11 +1691,11 @@ public class DaqbufPanel extends StandardDialog {
 
     }
 
-    MatrixPlotSeries addMatrixSeries(MatrixPlotJFree plot, SeriesInfo si) {
+    MatrixPlotSeries addMatrixSeries(MatrixPlotBase plot, SeriesInfo si) {
         return addMatrixSeries(plot, si.name, si.backend, si.start, si.end, si.colormap);
     }
 
-    MatrixPlotSeries addMatrixSeries(MatrixPlotJFree plot, String name, String backend, String start, String end, Colormap colormap) {
+    MatrixPlotSeries addMatrixSeries(MatrixPlotBase plot, String name, String backend, String start, String end, Colormap colormap) {
         List value = new ArrayList();
         List<Long> id = new ArrayList<>();
         List<Long> timestamp = new ArrayList<>();
@@ -1727,7 +1734,9 @@ public class DaqbufPanel extends StandardDialog {
                         }                    
                     }
                 }
-                plot.getChartPanel().restoreAutoDomainBounds(); //Needed because changed domain axis to time       
+                if (plot instanceof MatrixPlotJFree){
+                     ((MatrixPlotJFree)plot).getChartPanel().restoreAutoDomainBounds(); //Needed because changed domain axis to time       
+                }
                 return ret;
             });;
         } catch (Exception ex) {
@@ -1746,7 +1755,7 @@ public class DaqbufPanel extends StandardDialog {
         double[][] max;
     }
 
-    void setMatrixBinnedSeries(MatrixPlotJFree plot, MatrixPlotBinnedSeries series, List<List> average, List<List> min, List<List> max, List<Long> t1, List<Long> t2) {
+    void setMatrixBinnedSeries(MatrixPlotBase plot, MatrixPlotBinnedSeries series, List<List> average, List<List> min, List<List> max, List<Long> t1, List<Long> t2) {
         int bins = average.size();
         if (bins > 0) {
             double[] timestamps = new double[bins];
@@ -1777,18 +1786,20 @@ public class DaqbufPanel extends StandardDialog {
                 }
             }
         }        
-        if (!plot.getAxis(AxisId.X).isAutoRange() && (queryRange!=null)){
-            plot.zoomDomain(new Range(queryRange.min, queryRange.max));
-        } else{
-            plot.getChartPanel().restoreAutoDomainBounds(); //Needed because changed domain axis to time       
-        }                        
+        if (plot instanceof MatrixPlotJFree){
+            if (!plot.getAxis(AxisId.X).isAutoRange() && (queryRange!=null)){
+                ((MatrixPlotJFree)plot).zoomDomain(new Range(queryRange.min, queryRange.max));
+            } else{
+                ((MatrixPlotJFree)plot).getChartPanel().restoreAutoDomainBounds(); //Needed because changed domain axis to time       
+            }                        
+        }
     }
 
-    MatrixPlotBinnedSeries addMatrixSeriesBinned(MatrixPlotJFree plot, SeriesInfo si) {
+    MatrixPlotBinnedSeries addMatrixSeriesBinned(MatrixPlotBase plot, SeriesInfo si) {
         return addMatrixSeriesBinned(plot, si.name, si.backend, si.start, si.end, si.bins, si.colormap);
     }
 
-    MatrixPlotBinnedSeries addMatrixSeriesBinned(MatrixPlotJFree plot, String name, String backend, String start, String end, int bins, Colormap colormap) {
+    MatrixPlotBinnedSeries addMatrixSeriesBinned(MatrixPlotBase plot, String name, String backend, String start, String end, int bins, Colormap colormap) {
         long maxSize = getMaxSeriesSize();
         MatrixPlotBinnedSeries series = new MatrixPlotBinnedSeries(name);
         if (colormap != null) {
@@ -1852,12 +1863,12 @@ public class DaqbufPanel extends StandardDialog {
                     t2.add(s+(long)((i+1) * w));
                 }
                 double off = 20.0;
-                for (List<Number> l : average) {
+                for (List l : average) {
                     List lmin = new ArrayList();
                     List lmax = new ArrayList();
-                    for (Number n : l) {
-                        lmin.add(n.doubleValue() - off);
-                        lmax.add(n.doubleValue() + off);
+                    for (double n : (double[])Convert.toPrimitiveArray(l, Double.class)) {
+                        lmin.add(n - off);
+                        lmax.add(n + off);
                     }
                     min.add(lmin);
                     max.add(lmax);
@@ -2112,7 +2123,7 @@ public class DaqbufPanel extends StandardDialog {
                                 plot = addCorrelationPlot(seriesInfo.bins != null);
                             } else {
                                 if (seriesInfo.table){
-                                    plot = addTablePlot(seriesInfo.bins != null);
+                                    plot = addLineTablePlot(seriesInfo.bins != null);
                                 } else {
                                     plot = addLinePlot(seriesInfo.bins != null);
                                 }
@@ -2131,11 +2142,19 @@ public class DaqbufPanel extends StandardDialog {
                         break;
                     case 1:
                         if (seriesInfo.bins == null) {
-                            plot = addMatrixPlot(false);
-                            series = addMatrixSeries((MatrixPlotJFree) plot, seriesInfo);
+                            if (seriesInfo.table){
+                                plot = addMatrixTablePlot(true);
+                            } else {
+                                plot = addMatrixPlot(false);
+                            }
+                            series = addMatrixSeries((MatrixPlotBase) plot, seriesInfo);
                         } else {
-                            plot = addMatrixPlot(true);
-                            series = addMatrixSeriesBinned((MatrixPlotJFree) plot, seriesInfo);
+                            if (seriesInfo.table){
+                                plot = addMatrixTablePlot(true);
+                            } else {
+                                plot = addMatrixPlot(true);
+                            }
+                            series = addMatrixSeriesBinned((MatrixPlotBase) plot, seriesInfo);
                         }
                         break;
                     case 2:
