@@ -1097,13 +1097,27 @@ public class Convert {
             if (ret == null) {
                 throw new IllegalArgumentException("Not a wrapper type");
             }
-            if (primitiveComponentClass == destinationClass) {
-                for (int i = 0; i < size; i++) {
-                    Array.set(ret, i, Array.get(wrapperArray, i));
-                }
-            } else {
-                for (int i = 0; i < size; i++) {
-                    Array.set(ret, i, toType((Number) Array.get(wrapperArray, i), destinationClass));
+            if (size>0){
+                Class cls =  Array.get(wrapperArray, 0).getClass();
+                
+                
+                if (primitiveComponentClass == destinationClass) {
+                    for (int i = 0; i < size; i++) {
+                        Array.set(ret, i, Array.get(wrapperArray, i));
+                    }
+                } else {
+                    if (Number.class.isAssignableFrom(cls)){
+                        for (int i = 0; i < size; i++) {
+                            Array.set(ret, i, toType((Number) Array.get(wrapperArray, i), destinationClass));
+                        }
+                    } else if (Boolean.class.isAssignableFrom(cls)){
+                        for (int i = 0; i < size; i++) {
+                            Array.set(ret, i, toType(((Boolean)Array.get(wrapperArray, i)) ? 1: 0, destinationClass));
+                        }
+                        
+                    } else {
+                        throw new IllegalArgumentException("Not suppoerted array type: " + cls);
+                    }
                 }
             }
         }

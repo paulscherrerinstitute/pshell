@@ -1,18 +1,14 @@
 package ch.psi.pshell.plot;
 
-import static ch.psi.pshell.plot.PlotBase.DETACHED_WIDTH;
 import ch.psi.utils.Arr;
 import ch.psi.utils.swing.SwingUtils;
 import java.awt.BorderLayout;
-import java.awt.Dimension;
-import java.awt.Frame;
 import java.awt.event.ActionEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.text.DecimalFormat;
 import java.util.Vector;
 import javax.swing.JCheckBoxMenuItem;
-import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
@@ -55,7 +51,7 @@ public class LinePlotTable extends LinePlotBase {
         JScrollPane scrollPane = new JScrollPane();
         scrollPane.setPreferredSize(new java.awt.Dimension(PREFERRED_WIDTH, PREFERRED_HEIGHT));
         scrollPane.setViewportView(table);
-        model =newModel();
+        model =newModel();        
         add(scrollPane);
         
         setScientificNotation(false);
@@ -70,8 +66,7 @@ public class LinePlotTable extends LinePlotBase {
             }
         };
         doubleRenderer.setHorizontalAlignment(SwingConstants.RIGHT); // Align numbers to the right
-        
-        model.addColumn("domain");
+                
         table.setModel(model);
         setRenderers();
         
@@ -211,6 +206,18 @@ public class LinePlotTable extends LinePlotBase {
             remove(title);
         }
     }
+    
+    @Override
+    protected void onAxisLabelChanged(AxisId axis) {
+        switch (axis) {
+            case X:
+                if (table.getColumnCount()>0) {
+                    SwingUtils.setColumTitle(table, 0, getDomainLabel());
+                }
+                break;
+        }
+    }
+    
 
     public void setData(String[] header, String[][] data) {
         if ((header == null) && (data != null) && (data[0] != null)) {
@@ -228,20 +235,46 @@ public class LinePlotTable extends LinePlotBase {
     }
 
     @Override
-    protected Object onAddedSeries(LinePlotSeries series) {        
-        model.addColumn(series.getName());
+    protected Object onAddedSeries(LinePlotSeries series) {       
+        if (model.getColumnCount()==0){
+            model.addColumn(getDomainLabel());
+        }
+        model.addColumn(getSeriesLabel(series));
         setRenderers();
         return series.getName();
     }
+    
+    String getDomainLabel(){
+        String label = getAxis(AxisId.X).getLabel();
+        if ((label==null) || label.isBlank()){
+            label = "Domain";
+        }        
+        return label;
+    }
+
+    String getSeriesLabel(LinePlotSeries series){
+        String label = series.getName();
+        if ((label==null) || label.isBlank()){
+            label = "Series " + series.id;
+        }        
+        return label;
+    }
+    
+    
     
     @Override
     protected void onRemovedSeries(LinePlotSeries series) {
         int index = getSeriesIndex(series);
         if (index>=0){
-            int column= getSeriesIndex(series)+1;
-            SwingUtils.removeColumn(model, table, column);
-            model = (DefaultTableModel) table.getModel();            
-            setRenderers();        
+            if (model.getColumnCount()<=2){
+                model =newModel();    
+                table.setModel(model);
+            } else {
+                int column= getSeriesIndex(series)+1;
+                SwingUtils.removeColumn(model, table, column);
+                model = (DefaultTableModel) table.getModel();                       
+                setRenderers();        
+            }
         }
     }
     

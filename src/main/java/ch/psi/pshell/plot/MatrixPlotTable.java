@@ -71,7 +71,6 @@ public class MatrixPlotTable extends MatrixPlotBase {
         };
         doubleRenderer.setHorizontalAlignment(SwingConstants.RIGHT); // Align numbers to the right
         
-        model.addColumn("domain");
         table.setModel(model);
         setRenderers();
         JMenuItem menuPlotRow = new JMenuItem("Plot row");

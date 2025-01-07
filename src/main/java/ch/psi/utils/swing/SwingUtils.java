@@ -1276,11 +1276,26 @@ public class SwingUtils {
     }    
     
     public static void setColumTitle(JTable table, int columnIndex, String title) {
+        String[] names = getColumnNames(table);
+        names[columnIndex] = title;
+        
+        if (table.getModel() instanceof DefaultTableModel){
+            ((DefaultTableModel)table.getModel()).setColumnIdentifiers(names);
+        }
         JTableHeader th = table.getTableHeader();
         TableColumn tc = th.getColumnModel().getColumn(columnIndex);
         tc.setHeaderValue(title);
         th.repaint();    
     }
+    
+    public static String[] getColumnNames(JTable table) {
+        int columnCount = table.getColumnCount();
+        String[] columnNamesArray = new String[columnCount];
+        for (int i = 0; i < columnCount; i++) {
+            columnNamesArray[i] = table.getColumnName(i); 
+        }
+        return columnNamesArray;
+    }    
     
     public static void removeColumn(DefaultTableModel model, JTable table, int index) {
         // Create a new custom table model to preserve attributes

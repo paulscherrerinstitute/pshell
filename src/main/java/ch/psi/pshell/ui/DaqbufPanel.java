@@ -6,9 +6,11 @@ import ch.psi.pshell.data.ProviderText;
 import ch.psi.pshell.device.Device;
 import ch.psi.pshell.imaging.Colormap;
 import ch.psi.pshell.plot.LinePlot;
+import ch.psi.pshell.plot.LinePlotBase;
 import ch.psi.pshell.plot.LinePlotErrorSeries;
 import ch.psi.pshell.plot.LinePlotJFree;
 import ch.psi.pshell.plot.LinePlotSeries;
+import ch.psi.pshell.plot.LinePlotTable;
 import ch.psi.pshell.plot.MatrixPlotJFree;
 import ch.psi.pshell.plot.MatrixPlotRenderer;
 import ch.psi.pshell.plot.MatrixPlotSeries;
@@ -138,6 +140,8 @@ public class DaqbufPanel extends StandardDialog {
 
     public static final String PLOT_NEW = "New";
     public static final String PLOT_SAME = "Same";
+    public static final String PLOT_TABLE = "Table";
+    
     public static final int AXIS_NONE = 0;
     public static final int AXIS_1 = 1;
     public static final int AXIS_2 = 2;
@@ -369,6 +373,7 @@ public class DaqbufPanel extends StandardDialog {
         DefaultComboBoxModel model = new DefaultComboBoxModel();
         model.addElement(PLOT_NEW);
         model.addElement(PLOT_SAME);
+        model.addElement(PLOT_TABLE);
         comboPlot.setModel(model);
         DefaultCellEditor cellEditor = new DefaultCellEditor(comboPlot);
         cellEditor.setClickCountToStart(2);
@@ -1099,6 +1104,15 @@ public class DaqbufPanel extends StandardDialog {
         return plot;
     }
 
+    LinePlotTable addTablePlot(boolean binned) {
+        LinePlotTable plot = new LinePlotTable();
+        plot.getAxis(AxisId.X).setLabel("Timestamp");
+        plot.setZoomListener(zoomListener);
+        addPlot(plot);
+        return plot;
+    }
+    
+    
     LinePlotJFree addCorrelationPlot(boolean binned) {
         LinePlotJFree plot = new LinePlotJFree();
         plot.setLegendVisible(true);
@@ -1260,18 +1274,30 @@ public class DaqbufPanel extends StandardDialog {
         return ret;
     }
     
-    LinePlotErrorSeries addBinnedSeries(LinePlotJFree plot, SeriesInfo si) {
+    LinePlotSeries addBinnedSeries(LinePlotBase plot, SeriesInfo si) {
         return addBinnedSeries(plot, si.name, si.backend, si.start, si.end, si.bins, si.axis, si.color);
     }
 
-    LinePlotErrorSeries addBinnedSeries(LinePlotJFree plot, String name, String backend, String start, String end, int bins, int axis, Color color) {
-        LinePlotErrorSeries series = new LinePlotErrorSeries(name, color, axis);
-        plotSeries.add(series);
-        plot.addSeries(series);
+    LinePlotSeries addBinnedSeries(LinePlotBase plot, String name, String backend, String start, String end, int bins, int axis, Color color) {
+        LinePlotSeries series;                
+        LinePlotJFree linePlot  = plot instanceof LinePlotTable ? null : (LinePlotJFree) plot;        
+        LinePlotErrorSeries errorSeries;
 
-        XYErrorRenderer renderer = (XYErrorRenderer) plot.getSeriesRenderer(series);
-        renderer.setDrawYError(true);
-        renderer.setErrorStroke(new BasicStroke());
+        if (linePlot != null){
+            series = new LinePlotErrorSeries(name, color, axis);
+            errorSeries = (LinePlotErrorSeries)series;
+            plot.addSeries(series);
+            XYErrorRenderer renderer = (XYErrorRenderer) linePlot.getSeriesRenderer(series);
+            renderer.setDrawYError(true);
+            renderer.setErrorStroke(new BasicStroke());            
+        } else {            
+            series = new LinePlotSeries(name, color, axis);
+            plot.addSeries(series);
+            errorSeries = null;
+        }
+        plotSeries.add(series);
+        
+       
 
         try {
             if (daqbuf.isStreamed()){
@@ -1281,10 +1307,14 @@ public class DaqbufPanel extends StandardDialog {
                             List<Long> t = IntStream.range(0, t1.size()).mapToObj(i -> (t1.get(i) + t2.get(i)) / 2).collect(Collectors.toList());    
                             synchronized(plot){
                                 try {
-                                    plot.disableUpdates();
-                                    series.appendData(t, average, min, max);                                    
-                                    updateCapLength(plot, series.getAxisY()-1);
-                                    //plot.getChartPanel().restoreAutoBounds();
+                                    plot.disableUpdates();                                    
+                                    if (errorSeries!=null){
+                                        errorSeries.appendData(t, average, min, max);   
+                                        updateCapLength(linePlot, series.getAxisY()-1);
+                                        //plot.getChartPanel().restoreAutoBounds();
+                                    } else {
+                                        series.appendData(t, average);
+                                    }
                                 } finally {
                                      plot.reenableUpdates();
                                 }
@@ -1312,10 +1342,14 @@ public class DaqbufPanel extends StandardDialog {
                         List<Long> t = IntStream.range(0, t1.size()).mapToObj(i -> (t1.get(i) + t2.get(i)) / 2).collect(Collectors.toList());                                        
                         synchronized(plot){
                             try {
-                                plot.disableUpdates();
-                                series.appendData(t, average, min, max);
-                                updateCapLength(plot);
-                                plot.getChartPanel().restoreAutoBounds();
+                                plot.disableUpdates();                                
+                                if (errorSeries!=null){
+                                    errorSeries.appendData(t, average, min, max);
+                                    updateCapLength(linePlot);
+                                    linePlot.getChartPanel().restoreAutoBounds();
+                                } else {
+                                    series.appendData(t, average);
+                                }
                             } finally {
                                 plot.reenableUpdates();                        
                             }
@@ -1324,7 +1358,9 @@ public class DaqbufPanel extends StandardDialog {
                     return ret;
                 });            
             }
-            checkEgu(plot, series, backend, start);
+            if (linePlot!=null){
+                checkEgu(linePlot, series, backend, start);
+            }
         } catch (Exception ex) {
             showException(ex);
         }
@@ -1355,11 +1391,11 @@ public class DaqbufPanel extends StandardDialog {
         
     }
     
-    LinePlotSeries addLineSeries(LinePlotJFree plot, SeriesInfo si) {
+    LinePlotSeries addLineSeries(LinePlotBase plot, SeriesInfo si) {
         return addLineSeries(plot, si.name, si.backend, si.start, si.end, si.axis, si.color);
     }
 
-    LinePlotSeries addLineSeries(LinePlotJFree plot, String name, String backend, String start, String end, int axis, Color color) {
+    LinePlotSeries addLineSeries(LinePlotBase plot, String name, String backend, String start, String end, int axis, Color color) {
         LinePlotSeries series = new LinePlotSeries(name, color, axis);
         plotSeries.add(series);
         plot.addSeries(series);
@@ -1430,7 +1466,9 @@ public class DaqbufPanel extends StandardDialog {
                 };
                 return ret;
             });
-            checkEgu(plot, series, backend, start);
+            if (plot instanceof LinePlotJFree){
+                checkEgu((LinePlotJFree)plot, series, backend, start);
+            }
         } catch (Exception ex) {
             showException(ex);
         }
@@ -1460,11 +1498,11 @@ public class DaqbufPanel extends StandardDialog {
         }
     }
 
-    LinePlotSeries addCorrelationSeries(LinePlotJFree plot, SeriesInfo si, CompletableFuture domainAxisFuture) {
+    LinePlotSeries addCorrelationSeries(LinePlotBase plot, SeriesInfo si, CompletableFuture domainAxisFuture) {
         return addCorrelationSeries(plot, si.name, si.backend, si.start, si.end, si.bins, si.axis, si.color, domainAxisFuture);
     }
 
-    LinePlotSeries addCorrelationSeries(LinePlotJFree plot, String name, String backend, String start, String end, Integer bins, int axis, Color color, CompletableFuture domainAxisFuture) {
+    LinePlotSeries addCorrelationSeries(LinePlotBase plot, String name, String backend, String start, String end, Integer bins, int axis, Color color, CompletableFuture domainAxisFuture) {
         LinePlotSeries series = new LinePlotSeries(name, color, axis);
         plotSeries.add(series);
         plot.addSeries(series);
@@ -1949,6 +1987,7 @@ public class DaqbufPanel extends StandardDialog {
         final String backend;
         //final boolean shared;
         final boolean create;
+        final boolean table;
         final int axis;
         final Color color;
         final Colormap colormap;
@@ -1963,7 +2002,7 @@ public class DaqbufPanel extends StandardDialog {
             name = getChannelAlias(((String) info.get(1)).trim());
             backend = info.get(2).toString();
             create = !PLOT_SAME.equals(info.get(4));
-            
+            table = PLOT_TABLE.equals(info.get(4));
             
             switch(Str.toString(info.get(5))){
                 case "X":
@@ -2007,7 +2046,7 @@ public class DaqbufPanel extends StandardDialog {
             this.bins = bins;
             name = parent.name;
             backend = parent.backend;
-            //shared = parent.shared;
+            table = parent.table;
             create = parent.create;
             axis = parent.axis;
             color = parent.color;
@@ -2065,25 +2104,29 @@ public class DaqbufPanel extends StandardDialog {
                 PlotSeries series = null;
                 switch (seriesInfo.getRank()) {
                     case 0:
-                        if (!seriesInfo.create && (currentPlot != null) && (currentPlot instanceof LinePlotJFree)) {
+                        if (!seriesInfo.create && (currentPlot != null) && (currentPlot instanceof LinePlotBase)) {
                             plot = currentPlot;
                         } else {
                             cf = null;
                             if (seriesInfo.axis < 0) {
                                 plot = addCorrelationPlot(seriesInfo.bins != null);
                             } else {
-                                plot = addLinePlot(seriesInfo.bins != null);
+                                if (seriesInfo.table){
+                                    plot = addTablePlot(seriesInfo.bins != null);
+                                } else {
+                                    plot = addLinePlot(seriesInfo.bins != null);
+                                }
                             }
                             currentPlot = plot;
                         }
                         if (seriesInfo.axis < 0) {
                             cf = setDomainAxis((LinePlotJFree) plot, seriesInfo);
                         } else if (cf != null) {
-                            series = addCorrelationSeries((LinePlotJFree) plot, seriesInfo, cf);
+                            series = addCorrelationSeries((LinePlotBase) plot, seriesInfo, cf);
                         } else if (seriesInfo.bins == null) {
-                            series = addLineSeries((LinePlotJFree) plot, seriesInfo);
+                            series = addLineSeries((LinePlotBase) plot, seriesInfo);
                         } else {
-                            series = addBinnedSeries((LinePlotJFree) plot, seriesInfo);
+                            series = addBinnedSeries((LinePlotBase) plot, seriesInfo);
                         }
                         break;
                     case 1:
