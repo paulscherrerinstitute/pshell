@@ -1,14 +1,18 @@
 package ch.psi.pshell.plot;
 
+import static ch.psi.pshell.plot.PlotBase.DETACHED_WIDTH;
 import ch.psi.utils.Arr;
 import ch.psi.utils.swing.SwingUtils;
 import java.awt.BorderLayout;
+import java.awt.Dimension;
+import java.awt.Frame;
 import java.awt.event.ActionEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.text.DecimalFormat;
 import java.util.Vector;
 import javax.swing.JCheckBoxMenuItem;
+import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
@@ -104,14 +108,18 @@ public class LinePlotTable extends LinePlotBase {
         addPopupMenuItem(menuScientificNotation);
         
         
-        JMenuItem menuPlotCol = new JMenuItem("Plot col");
+        JMenuItem menuPlotCol = new JMenuItem("Plot column");
         menuPlotCol.addActionListener((ActionEvent e) -> {
             int col = selectedDataCol;
             if (col>=0){
                 double[] y = getColumn(col);
+                String columnName = table.getColumnName(col);
+                if ((columnName==null) || (columnName.isBlank())){
+                    columnName = "Column " + col;
+                }
                 if (y!=null){
                     double[] x = (col>=0) ? getColumn(0) : null;
-                    //plotData("Column " + col, x, y);
+                    LinePlotJFree.showDialog(getFrame(), columnName, x, y);
                 }
             }
         });
@@ -160,6 +168,7 @@ public class LinePlotTable extends LinePlotBase {
             }
         };        
     }
+            
     
     protected static DefaultTableModel newModel(Object[][] data, Object[] columnNames){
         return new DefaultTableModel(data, columnNames) {

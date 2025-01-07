@@ -1908,4 +1908,24 @@ public class LinePlotJFree extends LinePlotBase {
         return chart.createBufferedImage(size.width, size.height);
     }
 
+    
+    public static JDialog showDialog(Frame parent, String title, double[] x, double[] y) {
+        LinePlotJFree p = new LinePlotJFree();
+        p.setTitle(null);
+        p.getAxis(AxisId.X).setLabel(null);
+        p.getAxis(AxisId.Y).setLabel(null);
+        p.setName("plot");
+        LinePlotSeries series = new LinePlotSeries(title);        
+        p.addSeries(series);
+        series.setData(x, y);        
+        JDialog dlg = new JDialog(parent, title, false);
+        p.setPreferredSize(new Dimension(DETACHED_WIDTH, DETACHED_HEIGHT));
+        dlg.setContentPane(p);
+        dlg.pack();
+        dlg.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+        SwingUtils.centerComponent(parent, dlg);
+        dlg.setVisible(true);
+        dlg.requestFocus();       
+        return dlg;
+    }    
 }

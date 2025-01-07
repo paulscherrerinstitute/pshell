@@ -74,6 +74,7 @@ public class MatrixPlotTable extends MatrixPlotBase {
         model.addColumn("domain");
         table.setModel(model);
         setRenderers();
+        JMenuItem menuPlotRow = new JMenuItem("Plot row");
         
         tableMouseAdapter = new MouseAdapter() {
             @Override
@@ -87,6 +88,7 @@ public class MatrixPlotTable extends MatrixPlotBase {
             }
 
             void checkPopup(MouseEvent e) {
+                menuPlotRow.setEnabled(table.getSelectedRow()>=0);
                 try {
                     if (e.isPopupTrigger()) {
                         popupMenu.show(e.getComponent(), e.getX(), e.getY());
@@ -94,26 +96,25 @@ public class MatrixPlotTable extends MatrixPlotBase {
                 } catch (Exception ex) {
                     showException(ex);
                 }
-            }
+            }            
 
         };
         table.addMouseListener(tableMouseAdapter);        
-        
-        JMenuItem menuPlotRow = new JMenuItem("Plot row");
+                
         menuPlotRow.addActionListener((ActionEvent e) -> {
             int row = table.getSelectedRow();
             double[] data = getRow(row);
             if (data!=null){
-                plotData("Row "+ row, data);
+                LinePlotJFree.showDialog(getFrame(), "Row "+ row, null, data);
             }
         });
 
-        JMenuItem menuPlotCol = new JMenuItem("Plot col");
+        JMenuItem menuPlotCol = new JMenuItem("Plot column");
         menuPlotCol.addActionListener((ActionEvent e) -> {
             int col = selectedDataCol;
             double[] data = getColumn(col);
             if (data!=null){
-                plotData("Column " + col, data);
+                LinePlotJFree.showDialog(getFrame(), "Column " + col, null, data);
             }
         });
 
@@ -139,7 +140,7 @@ public class MatrixPlotTable extends MatrixPlotBase {
                     if (e.isPopupTrigger()) {
                         int c = table.columnAtPoint(e.getPoint());
                         if (c >= 0 && c < table.getColumnCount()) {
-                            selectedDataCol = c;
+                            selectedDataCol = c;                            
                             tableDataColPopupMenu.show(e.getComponent(), e.getX(), e.getY());
                         }
                     }
@@ -151,25 +152,6 @@ public class MatrixPlotTable extends MatrixPlotBase {
         
     }
     
-    
-    void plotData(String title, double[] data){
-        LinePlotJFree p = new LinePlotJFree();
-        p.setTitle(null);
-        p.getAxis(AxisId.X).setLabel(null);
-        p.getAxis(AxisId.Y).setLabel(null);
-        LinePlotSeries series = new LinePlotSeries(title);        
-        p.addSeries(series);
-        series.setData(data);
-        Frame frame = getFrame();
-        JDialog dlg = new JDialog(frame, title, false);
-        p.setPreferredSize(new Dimension(DETACHED_WIDTH, DETACHED_HEIGHT));
-        dlg.setContentPane(p);
-        dlg.pack();
-        SwingUtils.centerComponent(frame, dlg);
-        dlg.setVisible(true);
-        dlg.requestFocus();
-        
-    }
 
     public void setScientificNotation(boolean value){
         scientificNotation = value;
