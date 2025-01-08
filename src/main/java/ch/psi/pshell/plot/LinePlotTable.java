@@ -35,7 +35,7 @@ public class LinePlotTable extends LinePlotBase {
     JCheckBoxMenuItem menuScientificNotation;
     final MouseAdapter tableMouseAdapter;
     int selectedDataCol;
-    
+     
     public LinePlotTable() {
         super();
         BorderLayout layout = new BorderLayout();
@@ -44,16 +44,17 @@ public class LinePlotTable extends LinePlotBase {
         table = new JTable();
         table.setSelectionMode(ListSelectionModel.SINGLE_INTERVAL_SELECTION);
         table.getTableHeader().setReorderingAllowed(false);
-        table.getTableHeader().setResizingAllowed(true);
+        table.getTableHeader().setResizingAllowed(true);        
+        table.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
         
         title = new JLabel();
         title.setHorizontalAlignment(JLabel.CENTER);
         JScrollPane scrollPane = new JScrollPane();
         scrollPane.setPreferredSize(new java.awt.Dimension(PREFERRED_WIDTH, PREFERRED_HEIGHT));
         scrollPane.setViewportView(table);
-        model =newModel();        
-        add(scrollPane);
-        
+        add(scrollPane);        
+
+        model =newModel();                
         setScientificNotation(false);
         doubleRenderer = new DefaultTableCellRenderer() {
             @Override
@@ -240,7 +241,7 @@ public class LinePlotTable extends LinePlotBase {
             model.addColumn(getDomainLabel());
         }
         model.addColumn(getSeriesLabel(series));
-        setRenderers();
+        setRenderers();        
         return series.getName();
     }
     
@@ -274,7 +275,7 @@ public class LinePlotTable extends LinePlotBase {
                 SwingUtils.removeColumn(model, table, column);
                 model = (DefaultTableModel) table.getModel();                       
                 setRenderers();        
-            }
+            }                        
         }
     }
     

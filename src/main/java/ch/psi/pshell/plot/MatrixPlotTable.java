@@ -1,19 +1,13 @@
 package ch.psi.pshell.plot;
 
-import static ch.psi.pshell.plot.PlotBase.DETACHED_HEIGHT;
-import static ch.psi.pshell.plot.PlotBase.DETACHED_WIDTH;
 import ch.psi.utils.Arr;
 import ch.psi.utils.Convert;
-import ch.psi.utils.swing.SwingUtils;
 import java.awt.BorderLayout;
-import java.awt.Dimension;
-import java.awt.Frame;
 import java.awt.event.ActionEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.text.DecimalFormat;
 import java.util.Vector;
-import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
@@ -46,17 +40,21 @@ public class MatrixPlotTable extends MatrixPlotBase {
         layout.setVgap(4);
         setLayout(layout);
         table = new JTable();
-        table.setSelectionMode(ListSelectionModel.SINGLE_INTERVAL_SELECTION);
+        table.setSelectionMode(ListSelectionModel.SINGLE_INTERVAL_SELECTION);        
         table.getTableHeader().setReorderingAllowed(false);
         table.getTableHeader().setResizingAllowed(true);
+        table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
         
         title = new JLabel();
         title.setHorizontalAlignment(JLabel.CENTER);
         JScrollPane scrollPane = new JScrollPane();
         scrollPane.setPreferredSize(new java.awt.Dimension(PREFERRED_WIDTH, PREFERRED_HEIGHT));
-        scrollPane.setViewportView(table);
-        model = LinePlotTable.newModel(); 
+        scrollPane.setViewportView(table);                
+        //scrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED);
+        //scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS);
         add(scrollPane);
+        
+        model = LinePlotTable.newModel(); 
         
         setScientificNotation(false);
         doubleRenderer = new DefaultTableCellRenderer() {
