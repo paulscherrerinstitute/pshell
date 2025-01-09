@@ -9,6 +9,8 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Vector;
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JLabel;
@@ -63,7 +65,7 @@ public class LinePlotTable extends LinePlotBase {
             @Override
             protected void setValue(Object value) {
                 if (value instanceof Double) {
-                    setText(decimalFormat.format((Double) value)); // Format the Double value
+                    super.setValue(decimalFormat.format((Double) value)); // Format the Double value
                 } else {
                     super.setValue(value); // Default behavior for non-Double values
                 }
@@ -301,10 +303,28 @@ public class LinePlotTable extends LinePlotBase {
     }
     
     protected void setRenderers(){
-        for (int col = 0; col < table.getColumnCount(); col++) {
+        for (int col = 0; col < table.getColumnCount(); col++) {            
             DefaultTableCellRenderer renderer = (timeString && (col ==0)) ? stringRenderer : doubleRenderer;
+            if (col>0){
+                LinePlotSeries series= getAllSeries()[col-1];
+                DefaultTableCellRenderer colRenderer = seriesRenderers.getOrDefault(series, null);
+                if (colRenderer!=null){
+                    renderer = colRenderer;
+                }
+            }
             table.getColumnModel().getColumn(col).setCellRenderer(renderer);
         }                    
+    }
+    
+    
+    Map<LinePlotSeries, DefaultTableCellRenderer> seriesRenderers =  new HashMap<>();
+    public void setSeriesRenderer(LinePlotSeries series, DefaultTableCellRenderer renderer){
+        if (renderer==null){
+            seriesRenderers.remove(series);
+        } else {
+            seriesRenderers.put(series, renderer);
+        }
+         setRenderers();
     }
 
     @Override

@@ -653,11 +653,47 @@ public class Daqbuf implements ChannelQueryAPI {
         }        
     }
     
+    public static class EnumValue extends Number{
+        final Number value;
+        final String string;
+        
+        EnumValue(Number value, String string){
+            this.value = value;            
+            this.string = string;
+        }
+
+        public String stringValue() {
+            return string;
+        }
+        
+        @Override
+        public int intValue() {
+            return value.intValue();
+        }
+
+        @Override
+        public long longValue() {
+            return value.longValue();
+        }
+
+        @Override
+        public float floatValue() {
+            return value.floatValue();
+        }
+
+        @Override
+        public double doubleValue() {
+            return value.doubleValue();
+        }
+        
+    }
+    
     protected void readCborEvents(Query query, QueryListener listener, QueryRecordListener recordListener, Map<String, Object>  frame) throws IOException{        
         List<Long> timestamps = (List) frame.getOrDefault("tss", null);
         List ids = (List) frame.getOrDefault("pulses", null);
         List values = (List) frame.getOrDefault("values", null);
         String scalar_type = (String) frame.getOrDefault("scalar_type", null);
+        List valuestrings = (List) frame.getOrDefault("valuestrings", null);
         
         if ((values==null) || (values.size()==0) || ((values.size()==1) && (values.get(0)==null))){
             return;
@@ -676,6 +712,13 @@ public class Daqbuf implements ChannelQueryAPI {
                     break;
                 case "f32":
                     values.replaceAll(e -> e == null ? Float.NaN : e);
+                    break;
+                case "enum":
+                    if ((valuestrings!=null) && (valuestrings.size()==values.size())){
+                        for (int i=0; i<values.size();i++){
+                            values.set(i, new EnumValue((Number)values.get(i), valuestrings.get(i).toString()));
+                        }
+                    }
                     break;
             }
             

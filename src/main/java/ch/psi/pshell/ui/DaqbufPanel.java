@@ -108,6 +108,7 @@ import javax.swing.JPopupMenu;
 import javax.swing.JTabbedPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
+import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.border.EmptyBorder;
 import javax.swing.event.CellEditorListener;
@@ -1416,14 +1417,15 @@ public class DaqbufPanel extends StandardDialog {
     }
     
     LinePlotSeries addLineSeries(LinePlotBase plot, SeriesInfo si) {
-        return addLineSeries(plot, si.name, si.backend, si.start, si.end, si.axis, si.color);
+        return addLineSeries(plot, si.name, si.backend, si.start, si.end, si.axis, si.color, si.type);
     }
 
-    LinePlotSeries addLineSeries(LinePlotBase plot, String name, String backend, String start, String end, int axis, Color color) {
+    LinePlotSeries addLineSeries(LinePlotBase plot, String name, String backend, String start, String end, int axis, Color color, String type) {
         LinePlotSeries series = new LinePlotSeries(name, color, axis);
         plotSeries.add(series);
         plot.addSeries(series);
         series.setMaxItemCount(getMaxSeriesSize());
+        final Map<Number,String> valueStrings =  (plot instanceof LinePlotTable) ? new HashMap<>() : null;
                 
         
         //((XYErrorRenderer)plot.getSeriesRenderer(series)).setDrawYError(false);
@@ -1439,6 +1441,16 @@ public class DaqbufPanel extends StandardDialog {
                         timestamps=timestamps.subList(0, size);
                     }
                     if (aux.size()>0){
+                        if  (plot instanceof LinePlotTable){
+                            for (Object value : values){
+                                if (value instanceof Daqbuf.EnumValue){
+                                    Daqbuf.EnumValue enumValue = (Daqbuf.EnumValue) value;
+                                    valueStrings.put(enumValue.intValue(), enumValue.stringValue());
+                                } else {
+                                    break;
+                                }
+                            }
+                        }
                         synchronized(plot){
                             try {
                                 plot.disableUpdates();
@@ -1492,7 +1504,24 @@ public class DaqbufPanel extends StandardDialog {
             });
             if (plot instanceof LinePlotJFree){
                 checkEgu((LinePlotJFree)plot, series, backend, start);
+            } else if (plot instanceof LinePlotTable){
+                if (type.equals("enum")){
+                    DefaultTableCellRenderer renderer = new DefaultTableCellRenderer() {
+                        @Override
+                        protected void setValue(Object value) {
+                            String string = "";
+                            if (value instanceof Number){
+                                int intval = ((Number) value).intValue();
+                                string = intval + ":" + valueStrings.getOrDefault(intval, "?");
+                            }
+                            super.setValue(string);
+                        };
+                    };
+                    renderer.setHorizontalAlignment(SwingConstants.RIGHT);
+                   ((LinePlotTable)plot).setSeriesRenderer(series, renderer);
+                }
             }
+                    
         } catch (Exception ex) {
             showException(ex);
         }

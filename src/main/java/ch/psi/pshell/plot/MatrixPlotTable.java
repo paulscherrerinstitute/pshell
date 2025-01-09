@@ -61,7 +61,7 @@ public class MatrixPlotTable extends MatrixPlotBase {
             @Override
             protected void setValue(Object value) {
                 if (value instanceof Double) {
-                    setText(decimalFormat.format((Double) value)); // Format the Double value
+                    super.setValue(decimalFormat.format((Double) value)); // Format the Double value
                 } else {
                     super.setValue(value); // Default behavior for non-Double values
                 }
