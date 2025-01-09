@@ -116,10 +116,7 @@ public class LinePlotJFree extends LinePlotBase {
     //TODO: if smaller there are plot repainting problem in scans in JFreeChart > 1.0.18
     static final double AUTO_RANGE_MINIMUM_SIZE = 1e-12;
     static final double AUTO_RANGE_LOG_MINIMUM_SIZE = 1e-32;
-    
-    final long TIMESTAMP_2000 = 946681200000L;
-    final long TIMESTAMP_2100 = 4102441200000L;
-        
+            
     JFreeChart chart;
 
     Rectangle2D.Double seriesMarker;

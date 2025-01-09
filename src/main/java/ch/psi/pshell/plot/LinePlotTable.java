@@ -1,12 +1,14 @@
 package ch.psi.pshell.plot;
 
 import ch.psi.utils.Arr;
+import ch.psi.utils.Time;
 import ch.psi.utils.swing.SwingUtils;
 import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.text.DecimalFormat;
+import java.util.ArrayList;
 import java.util.Vector;
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JLabel;
@@ -31,10 +33,11 @@ public class LinePlotTable extends LinePlotBase {
     DecimalFormat decimalFormat;
     boolean scientificNotation;
     final DefaultTableCellRenderer doubleRenderer;
+    final DefaultTableCellRenderer stringRenderer;
     JPopupMenu popupMenu;    
-    JCheckBoxMenuItem menuScientificNotation;
     final MouseAdapter tableMouseAdapter;
     int selectedDataCol;
+    boolean timeString;
      
     public LinePlotTable() {
         super();
@@ -67,10 +70,24 @@ public class LinePlotTable extends LinePlotBase {
             }
         };
         doubleRenderer.setHorizontalAlignment(SwingConstants.RIGHT); // Align numbers to the right
+        
+        stringRenderer = new DefaultTableCellRenderer();
+        stringRenderer.setHorizontalAlignment(SwingConstants.RIGHT); // Align strings to the right
                 
         table.setModel(model);
         setRenderers();
         
+        JCheckBoxMenuItem menuShowTimeStr = new JCheckBoxMenuItem("Show Time as String");
+        menuShowTimeStr.addActionListener((ActionEvent e) -> {
+            setTimeString(menuShowTimeStr.isSelected());
+        });                
+        
+        JCheckBoxMenuItem menuScientificNotation = new JCheckBoxMenuItem("Scientific Notation");
+        menuScientificNotation.addActionListener((ActionEvent e) -> {
+            setScientificNotation(menuScientificNotation.isSelected());
+        });
+        
+
         tableMouseAdapter = new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
@@ -85,6 +102,15 @@ public class LinePlotTable extends LinePlotBase {
             void checkPopup(MouseEvent e) {
                 try {
                     if (e.isPopupTrigger()) {
+                        menuShowTimeStr.setEnabled(timeString);
+                        menuShowTimeStr.setSelected(timeString);
+                        if (!timeString){
+                            if (model.getRowCount()>0){
+                                Double v = (Double)model.getValueAt(0, 0);
+                                menuShowTimeStr.setEnabled((v>=TIMESTAMP_2000) && (v<=TIMESTAMP_2100));      
+                            }                                                               
+                        }
+                        
                         popupMenu.show(e.getComponent(), e.getX(), e.getY());
                     }
                 } catch (Exception ex) {
@@ -95,13 +121,10 @@ public class LinePlotTable extends LinePlotBase {
         };
         table.addMouseListener(tableMouseAdapter);      
         
-        menuScientificNotation = new JCheckBoxMenuItem("Scientific Notation");
-        menuScientificNotation.addActionListener((ActionEvent e) -> {
-            setScientificNotation(menuScientificNotation.isSelected());
-        });
 
         addPopupMenuItem(null);
         addPopupMenuItem(menuScientificNotation);
+        addPopupMenuItem(menuShowTimeStr);        
         
         
         JMenuItem menuPlotCol = new JMenuItem("Plot column");
@@ -118,10 +141,10 @@ public class LinePlotTable extends LinePlotBase {
                     LinePlotJFree.showDialog(getFrame(), columnName, x, y);
                 }
             }
-        });
+        });                
 
         JPopupMenu tableDataColPopupMenu = new JPopupMenu();
-        tableDataColPopupMenu.add(menuPlotCol);        
+        tableDataColPopupMenu.add(menuPlotCol);                
         
         table.getTableHeader().addMouseListener(new MouseAdapter() {
             @Override
@@ -139,7 +162,7 @@ public class LinePlotTable extends LinePlotBase {
                     if (e.isPopupTrigger()) {
                         int c = table.columnAtPoint(e.getPoint());
                         if (c >= 0 && c < table.getColumnCount()) {
-                            selectedDataCol = c;
+                            selectedDataCol = c;                                                                                   
                             tableDataColPopupMenu.show(e.getComponent(), e.getX(), e.getY());
                         }
                     }
@@ -151,10 +174,49 @@ public class LinePlotTable extends LinePlotBase {
         
     }
     
-    protected static DefaultTableModel newModel(){
+    public void setTimeString(boolean value){
+        if (timeString != value){
+            timeString = value;
+            if (model!=null){
+                DefaultTableModel m = newModel();
+
+                // Add columns to the new model, excluding the removed column
+                for (int col = 0; col < model.getColumnCount(); col++) {
+                    m.addColumn(model.getColumnName(col));
+                }
+
+                // Add rows to the new model
+                for (int row = 0; row < model.getRowCount(); row++) {
+                    Object[] rowData = new Object[m.getColumnCount()];
+                    for (int col = 0; col < model.getColumnCount(); col++) {
+                        Object v =  model.getValueAt(row, col);
+                        if (col==0){
+                            if (timeString){
+                                rowData[col] = Time.timestampToStr(((Double)v).longValue());
+                            } else {
+                                rowData[col] = ((Long)Time.getTimestamp((String)v)).doubleValue();
+                            }
+                        } else {
+                            rowData[col] = v;
+                        }
+                    }
+                    m.addRow(rowData);
+                }
+                // Set the new model to the table
+                table.setModel(m);    
+                model = m;
+                setRenderers();        
+            }
+        }
+    }       
+    
+    protected DefaultTableModel newModel(){
         return new DefaultTableModel() {
             @Override
             public Class getColumnClass(int columnIndex) {
+                if (timeString && (columnIndex==0)){
+                    return String.class;
+                }
                 return Double.class;
             }
 
@@ -167,9 +229,18 @@ public class LinePlotTable extends LinePlotBase {
             
     
     protected static DefaultTableModel newModel(Object[][] data, Object[] columnNames){
+        ArrayList<Class> classes= new ArrayList<>();
+        if (data.length>0){
+            for (Object o: data[0]){
+                classes.add(o.getClass());
+            }
+        }
         return new DefaultTableModel(data, columnNames) {
             @Override
             public Class getColumnClass(int columnIndex) {
+                if (classes.size()>columnIndex){
+                    return classes.get(columnIndex);
+                }
                 return Double.class;
             }
 
@@ -220,7 +291,7 @@ public class LinePlotTable extends LinePlotBase {
     }
     
 
-    public void setData(String[] header, String[][] data) {
+    public void setData(String[] header, Object[][] data) {
         if ((header == null) && (data != null) && (data[0] != null)) {
             header = new String[data[0].length];
         }
@@ -231,7 +302,8 @@ public class LinePlotTable extends LinePlotBase {
     
     protected void setRenderers(){
         for (int col = 0; col < table.getColumnCount(); col++) {
-            table.getColumnModel().getColumn(col).setCellRenderer(doubleRenderer);
+            DefaultTableCellRenderer renderer = (timeString && (col ==0)) ? stringRenderer : doubleRenderer;
+            table.getColumnModel().getColumn(col).setCellRenderer(renderer);
         }                    
     }
 
@@ -279,6 +351,15 @@ public class LinePlotTable extends LinePlotBase {
         }
     }
     
+    protected double getDomainValue(int row){
+        Object timestamp = model.getValueAt(row, 0);
+        if (timeString){
+            return ((Long)Time.getTimestamp((String)timestamp)).doubleValue();
+        } else {
+            return (Double)timestamp;
+        }
+        
+    }
 
     protected void appendData(int column, double domain, double value) {
         if (column <= 0) {
@@ -288,7 +369,7 @@ public class LinePlotTable extends LinePlotBase {
         // Search for the row with the matching domain value
         int rowCount = model.getRowCount();
         for (int row = 0; row < rowCount; row++) {
-            Double existingTimestamp = (Double) model.getValueAt(row, 0); // Get domain from column 0
+            Double existingTimestamp = getDomainValue(row);
             if (existingTimestamp != null && existingTimestamp.equals(domain)) {
                 // domain exists, update the value in the specified column
                 model.setValueAt(value, row, column);
@@ -298,7 +379,12 @@ public class LinePlotTable extends LinePlotBase {
 
         // domain not found, create a new row
         Vector<Object> newRow = new Vector<>();
-        newRow.add(domain); // Add domain to the first column
+        // Add domain to the first column
+        if (timeString){
+            newRow.add(Time.timestampToStr(((Double)domain).longValue()));        
+        } else {
+            newRow.add(domain); 
+        }
 
         // Fill other columns with null values (sparse table)
         for (int i = 1; i < model.getColumnCount(); i++) {
@@ -347,9 +433,9 @@ public class LinePlotTable extends LinePlotBase {
             x = new double[rows];
             y = new double[rows];
             for (int i =0; i<rows; i++){            
-                Double domain = (Double)model.getValueAt(i, 0);
+                Double domain = getDomainValue(i);
                 Double value = (Double)model.getValueAt(i, column);
-                x[i]=domain;
+                x[i]= domain;
                 y[i]=(value==null) ? Double.NaN : value;
             }            
         }
@@ -385,6 +471,10 @@ public class LinePlotTable extends LinePlotBase {
 
         for (int i = 0; i<rowCount; i++) {
             Object value = dataVector.get(i).get(index);
+            if (timeString && (index==0)){
+                value = ((Long)Time.getTimestamp((String)value)).doubleValue();
+            }
+                    
             if (value == null) {
                 ret[i] = Double.NaN; // Convert null to NaN
             } else if (value instanceof Number) {

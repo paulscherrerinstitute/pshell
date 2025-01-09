@@ -73,6 +73,10 @@ abstract public class PlotBase<T extends PlotSeries> extends MonitoredPanel impl
     
     public static boolean UPDATE_IMAGE_FOLDER = true;
     
+    final long TIMESTAMP_2000 = 946681200000L;
+    final long TIMESTAMP_2100 = 4102441200000L;
+    
+    
     final Class seriesType;
 
     protected PlotBase(Class<T> seriesType) {

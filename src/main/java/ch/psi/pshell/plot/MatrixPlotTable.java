@@ -28,7 +28,7 @@ public class MatrixPlotTable extends MatrixPlotBase {
     JLabel title;
     DefaultTableModel model;    
     DecimalFormat decimalFormat;
-    boolean scientificNotation;
+    boolean scientificNotation;    
     final DefaultTableCellRenderer doubleRenderer;
     JPopupMenu popupMenu;
     final MouseAdapter tableMouseAdapter;
@@ -54,7 +54,7 @@ public class MatrixPlotTable extends MatrixPlotBase {
         //scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS);
         add(scrollPane);
         
-        model = LinePlotTable.newModel(); 
+        model = newModel(); 
         
         setScientificNotation(false);
         doubleRenderer = new DefaultTableCellRenderer() {
@@ -114,12 +114,12 @@ public class MatrixPlotTable extends MatrixPlotBase {
                 LinePlotJFree.showDialog(getFrame(), "Column " + col, null, data);
             }
         });
-
+                
         addPopupMenuItem(null);
         addPopupMenuItem(menuPlotRow);
         JPopupMenu tableDataColPopupMenu = new JPopupMenu();
         tableDataColPopupMenu.add(menuPlotCol);
-        
+                
         
         table.getTableHeader().addMouseListener(new MouseAdapter() {
             @Override
@@ -137,7 +137,7 @@ public class MatrixPlotTable extends MatrixPlotBase {
                     if (e.isPopupTrigger()) {
                         int c = table.columnAtPoint(e.getPoint());
                         if (c >= 0 && c < table.getColumnCount()) {
-                            selectedDataCol = c;                            
+                            selectedDataCol = c;                        
                             tableDataColPopupMenu.show(e.getComponent(), e.getX(), e.getY());
                         }
                     }
@@ -147,6 +147,19 @@ public class MatrixPlotTable extends MatrixPlotBase {
             }
         });
         
+    }
+    
+    protected DefaultTableModel newModel(){
+        return new DefaultTableModel() {
+            @Override
+            public Class getColumnClass(int columnIndex) {
+                return Double.class;
+            }
+            @Override
+            public boolean isCellEditable(int rowIndex, int columnIndex) {
+                return false;
+            }
+        };        
     }
     
 
@@ -178,7 +191,7 @@ public class MatrixPlotTable extends MatrixPlotBase {
         }
     }
 
-    public void setData(String[] header, String[][] data) {
+    public void setData(String[] header, Object[][] data) {
         if ((header == null) && (data != null) && (data[0] != null)) {
             header = new String[data[0].length];
         }
@@ -212,7 +225,7 @@ public class MatrixPlotTable extends MatrixPlotBase {
 
     @Override
     protected Object onAddedSeries(MatrixPlotSeries series) {
-        model = LinePlotTable.newModel();
+        model = newModel();
         model.setColumnCount(series.getNumberOfBinsX());
         model.setRowCount(series.getNumberOfBinsY());
         table.setModel(model);        
@@ -222,7 +235,7 @@ public class MatrixPlotTable extends MatrixPlotBase {
 
     @Override
     protected void onRemovedSeries(MatrixPlotSeries series) {
-        model = LinePlotTable.newModel();
+        model = newModel();
         table.setModel(model);        
     }
     

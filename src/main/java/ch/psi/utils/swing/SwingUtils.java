@@ -1338,7 +1338,8 @@ public class SwingUtils {
         }
 
         // Set the new model to the table
-        table.setModel(newModel);    }       
+        table.setModel(newModel);   
+    }       
         
     //JTree
     public static void expandAll(JTree tree) {
