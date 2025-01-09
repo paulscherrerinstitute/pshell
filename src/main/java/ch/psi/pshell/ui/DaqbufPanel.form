@@ -136,7 +136,7 @@
                             <Column editable="true" title="Enabled" type="java.lang.Boolean"/>
                             <Column editable="false" title="Name" type="java.lang.String"/>
                             <Column editable="true" title="Backend" type="java.lang.Object"/>
-                            <Column editable="false" title="Shape" type="java.lang.Object"/>
+                            <Column editable="false" title="Format" type="java.lang.Object"/>
                             <Column editable="true" title="Plot" type="java.lang.Object"/>
                             <Column editable="true" title="Axis" type="java.lang.Object"/>
                             <Column editable="true" title="Color" type="java.lang.Object"/>

@@ -567,6 +567,11 @@ public class DaqbufPanel extends StandardDialog {
     int getRowRank(int row) {
         try {
             String shape = modelSeries.getValueAt(row, 3).toString().trim();
+            if (shape.contains("[")){
+                shape = shape.substring(shape.lastIndexOf("["));
+            } else {
+                shape = "[]";
+            }
             if ((shape.isBlank() || shape.equals("[]"))) {
                 return 0;
             }
@@ -577,6 +582,18 @@ public class DaqbufPanel extends StandardDialog {
         } catch (Exception ex) {
             return 0;
         }
+    }
+    
+    String getRowType(int row) {
+        try {
+            String shape = modelSeries.getValueAt(row, 3).toString().trim();
+            if (shape.contains("[")){
+                shape = shape.substring(0,shape.lastIndexOf("["));
+            } 
+            return shape.trim();
+        } catch (Exception ex) {            
+        }        
+        return null;
     }
 
     JButton saveButton;
@@ -612,8 +629,7 @@ public class DaqbufPanel extends StandardDialog {
             boolean shared = (modelSeries.getRowCount() > (row+1))  &&  (PLOT_SAME.equals(modelSeries.getValueAt(row +1, 4)));
             
             configureModelComboY(getRowRank(row), shared && first);
-        }
-        
+        }        
         updateSelector();
     }
 
@@ -629,7 +645,12 @@ public class DaqbufPanel extends StandardDialog {
                 try {
                     SwingUtilities.invokeAndWait(() -> {
                         if (channel.equals(modelSeries.getValueAt(row, 1)) && backend.equals(modelSeries.getValueAt(row, 2))) {
-                            String shape = (list.size() > 0) ? Str.toString(list.get(0).getOrDefault("shape", "")) : "";
+                            String shape = (list.size() > 0) ? Str.toString(list.get(0).getOrDefault("shape", "[]")) : "[]";
+                            String type = (list.size() > 0) ? Str.toString(list.get(0).getOrDefault("type", "")) : "";
+                            boolean is_enum = (list.size() > 0) ? "enum".equalsIgnoreCase(type) : false;
+                            if ((type!=null) & (!type.isBlank())){
+                                shape = type + shape;
+                            }
                             modelSeries.setValueAt(shape, row, 3);
                         }
                     });
@@ -1029,7 +1050,7 @@ public class DaqbufPanel extends StandardDialog {
     void lockZooms(PlotBase source, Range rangeX, Range rangeY){
             if (!updatingZoom){
                 updatingZoom=true;
-                //Invoke kater to update first plot that was zoomed
+                //Invoke later to update first plot that was zoomed
                 SwingUtilities.invokeLater(()->{
                     try{
                         for (PlotBase p: plots){
@@ -1110,6 +1131,7 @@ public class DaqbufPanel extends StandardDialog {
         LinePlotTable plot = new LinePlotTable();
         plot.getAxis(AxisId.X).setLabel("Timestamp");
         plot.setZoomListener(zoomListener);
+        plot.setTimeString(true);
         addPlot(plot);
         return plot;
     }
@@ -2003,6 +2025,7 @@ public class DaqbufPanel extends StandardDialog {
         final Color color;
         final Colormap colormap;
         final List<Integer> shape;
+        final String type;
         final SeriesInfo parent;
 
         SeriesInfo(Vector info) {
@@ -2042,12 +2065,21 @@ public class DaqbufPanel extends StandardDialog {
             }
             colormap = cm;
             color = cl;
-            List<Integer> aux = new ArrayList<>();
+            List<Integer> s = new ArrayList<>();            
+            String t=null;
             try {
-                aux = (List<Integer>) EncoderJson.decode(info.get(3).toString(), List.class);
+                String sh = info.get(3).toString();                
+                if (sh.contains("[")){
+                    t =  sh.substring(0,sh.lastIndexOf("["));
+                    sh = sh.substring(sh.lastIndexOf("["));                    
+                } else {
+                    t = sh.trim();
+                }
+                s = (List<Integer>) EncoderJson.decode(sh, List.class);
             } catch (Exception ex) {
             }
-            shape = aux;
+            type = t;
+            shape = s;
         }
 
         SeriesInfo(SeriesInfo parent, String start, String end, Integer bins) {
@@ -2063,6 +2095,7 @@ public class DaqbufPanel extends StandardDialog {
             color = parent.color;
             colormap = parent.colormap;
             shape = parent.shape;
+            type = parent.type;
         }
 
         int getRank() {
@@ -2746,7 +2779,7 @@ public class DaqbufPanel extends StandardDialog {
 
             },
             new String [] {
-                "Enabled", "Name", "Backend", "Shape", "Plot", "Axis", "Color"
+                "Enabled", "Name", "Backend", "Format", "Plot", "Axis", "Color"
             }
         ) {
             Class[] types = new Class [] {
