@@ -1,5 +1,52 @@
 # Changelog
 
+## 1.21.0
+
+### Added
+ 
+* Line plot can switch to time axis, if in range.
+
+* "Light" jar for running standalone tools.
+
+* Support to Redis streams.
+
+
+### Changed
+
+* Align StripChart and Archiver Viewer styles.
+
+
+### Fixed
+
+* PShell server binds to all network adapters.
+
+* Multiple bug fixes
+
+
+
+## 1.20.*
+
+### Added
+
+* Daqbuf client.
+ 
+* Archiver viewer (Daqbuf panel).
+
+* TIFF data provider.
+
+### Changed
+
+* Option to build with embedded JZY3D.
+
+* Update dependencies.
+
+
+### Fixed
+
+* Mutiple bugs in plots.
+
+
+
 ## 1.19.1
 
 ### Added
