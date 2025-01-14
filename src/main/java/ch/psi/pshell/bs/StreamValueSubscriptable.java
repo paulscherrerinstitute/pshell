@@ -30,6 +30,17 @@ public class StreamValueSubscriptable extends StreamValue implements Subscriptab
     }
     
     @Override
+    public final java.util.List<String> keys(){
+        return super.getKeys();
+    }  
+    
+    //Override
+    @Override
+    public final List values() {
+        return super.getValues();
+    }
+    
+    @Override
     @Hidden
     public int toItemIndex(String itemKey){
         for (int i = 0; i < identifiers.size(); i++) {
@@ -38,5 +49,5 @@ public class StreamValueSubscriptable extends StreamValue implements Subscriptab
             }
         }
         return -1;
-    }      
+    }              
 }
