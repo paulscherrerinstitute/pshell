@@ -321,7 +321,7 @@ public class LinePlotJFree extends LinePlotBase {
                     g2.draw(cap2);
                 }
             }
-            //super.drawItem(g2, state, dataArea, info, plot, domainAxis, rangeAxis, dataset, series, item, crosshairState, pass);
+            //super.drawItem(g2, state, dataArea, info, plot, domainAxis, rangeAxis, dataset, series, item, crosshairState, pass);            
             
 
             // first pass draws the background (lines, for instance)
@@ -336,6 +336,29 @@ public class LinePlotJFree extends LinePlotBase {
                                 item, domainAxis, rangeAxis, dataArea);
                     }
                 }
+                if (getLineExtension()){
+                    // If this is the last item in the series, extend the line to the plot's edge
+                    if (item == dataset.getItemCount(series) - 1) {
+                        double x1 = dataset.getXValue(series, item);
+                        double y1 = dataset.getYValue(series, item);
+
+                        // Transform the last data point to Java2D space
+                        double xx1 = domainAxis.valueToJava2D(x1, dataArea, plot.getDomainAxisEdge());
+                        double yy1 = rangeAxis.valueToJava2D(y1, dataArea, plot.getRangeAxisEdge());
+
+                        // Extend the series
+                        Double xEnd = getExtensionThreshold();
+                        if (xEnd==null){
+                            xEnd = getAxis(AxisId.X).isAutoRange() ? domainAxis.getUpperBound() : getAxis(AxisId.X).getMax();                
+                        }
+                        double xx2 = domainAxis.valueToJava2D(xEnd, dataArea, plot.getDomainAxisEdge());
+
+                        g2.setPaint(getSeriesPaint(series));
+                        g2.setStroke(getSeriesStroke(series));
+                        Line2D line = new Line2D.Double(xx1, yy1, xx2, yy1);
+                        g2.draw(line);
+                    }                           
+                }
             }
             // second pass adds shapes where the items are ..
             else if (isItemPass(pass)) {
@@ -348,10 +371,85 @@ public class LinePlotJFree extends LinePlotBase {
 
                 drawSecondaryPass(g2, plot, dataset, pass, series, item,
                         domainAxis, dataArea, rangeAxis, crosshairState, entities);
-            }                        
+            }      
         }                        
     }
+    
+  class LineAndShapeRenderer extends XYLineAndShapeRenderer {
 
+      public LineAndShapeRenderer() {
+          this(true, false);
+      }
+
+      public LineAndShapeRenderer(boolean lines, boolean shapes) {
+          super(lines, shapes);
+      }
+
+      @Override
+        public void drawItem(Graphics2D g2, 
+                             XYItemRendererState state, 
+                             Rectangle2D dataArea, 
+                             PlotRenderingInfo info, 
+                             XYPlot plot, 
+                             ValueAxis domainAxis, 
+                             ValueAxis rangeAxis, 
+                             XYDataset dataset, 
+                             int series, 
+                             int item, 
+                             CrosshairState crosshairState, 
+                             int pass) {
+            // Draw the usual item
+            super.drawItem(g2, state, dataArea, info, plot, domainAxis, rangeAxis, dataset, series, item, crosshairState, pass);
+            if (getLineExtension()){
+                // If this is the last item in the series, extend the line to the plot's edge
+                if ((item == dataset.getItemCount(series) - 1) && isLinePass(pass)) {
+                    double x1 = dataset.getXValue(series, item);
+                    double y1 = dataset.getYValue(series, item);
+
+                    // Transform the last data point to Java2D space
+                    double xx1 = domainAxis.valueToJava2D(x1, dataArea, plot.getDomainAxisEdge());
+                    double yy1 = rangeAxis.valueToJava2D(y1, dataArea, plot.getRangeAxisEdge());
+
+                    // Extend the series
+                    Double xEnd = getExtensionThreshold();
+                    if (xEnd==null){
+                        xEnd = getAxis(AxisId.X).isAutoRange() ? domainAxis.getUpperBound() : getAxis(AxisId.X).getMax();                
+                    }
+                    double xx2 = domainAxis.valueToJava2D(xEnd, dataArea, plot.getDomainAxisEdge());
+
+                    g2.setPaint(getSeriesPaint(series));
+                    g2.setStroke(getSeriesStroke(series));
+                    g2.draw(new Line2D.Double(xx1, yy1, xx2, yy1));        
+                }
+            }
+        }
+    }    
+  
+    boolean lineExtension;
+    Double extensionThreshold;
+    
+    
+    public void setLineExtension(boolean value){
+        lineExtension = value;
+    }
+        
+
+    public boolean getLineExtension(){      
+        return lineExtension;
+    }
+    
+    public void setExtensionThreshold(Double value){
+        extensionThreshold = value;
+    }
+        
+
+    public Double getExtensionThreshold(){
+        if (Double.isNaN(extensionThreshold)){
+            return null;
+        }
+        return extensionThreshold;
+    }
+  
     @Override
     public void setBackground(Color c) {
         super.setBackground(c);
@@ -478,7 +576,7 @@ public class LinePlotJFree extends LinePlotBase {
             axis2.setLabelFont(labelFont);
             axis2.setTickLabelFont(tickLabelFont);
             plot.setRangeAxis(1, axis2);
-            XYLineAndShapeRenderer renderer2 = getStyle().isError() ? new ErrorRenderer() : new XYLineAndShapeRenderer();
+            XYLineAndShapeRenderer renderer2 = getStyle().isError() ? new ErrorRenderer() : new LineAndShapeRenderer();
             if (getStyle()==Style.ErrorY){
                 ((XYErrorRenderer)renderer2).setDrawXError(false);
             } else if (getStyle()==Style.ErrorX){
@@ -565,6 +663,27 @@ public class LinePlotJFree extends LinePlotBase {
         XYSeriesCollection data = (XYSeriesCollection) getYData(series.getAxisY());
         return data.indexOf(xys);
     }
+    
+    public LinePlotSeries getSeriesByAxisIndex(int axis, int index){
+        int count = 0;        
+        for (LinePlotSeries s : this.getAllSeries()) {           
+            if (axis == s.getAxisY()){
+                if (count == index) {
+                    return s;
+                }
+                count++;
+            }
+        }
+        return null;        
+    }
+    
+    protected LinePlotSeries getSeriesByAxisIndex(ValueAxis axis, int index){
+        ValueAxis y1 = chart.getXYPlot().getRangeAxis(1);               
+        ValueAxis y2 =chart.getXYPlot().getRangeAxisCount() >1 ? chart.getXYPlot().getRangeAxis(1) : null;
+        int axisId = (axis==y2) ? 2 : 1;   
+        return getSeriesByAxisIndex(axisId, index);
+    }    
+    
 
     public XYLineAndShapeRenderer getSeriesRenderer(LinePlotSeries series) {
         return getRenderer(series.getAxisY());
@@ -1183,9 +1302,20 @@ public class LinePlotJFree extends LinePlotBase {
                 ChartFactory.getChartTheme().apply(ret);
                 break;
             default:
-                ret = ChartFactory.createXYLineChart(getTitle(), getAxis(AxisId.X).getLabel(), getAxis(AxisId.Y).getLabel(), dataY1, PlotOrientation.VERTICAL, true, showTooltips, false);
+                //ret = ChartFactory.createXYLineChart(getTitle(), getAxis(AxisId.X).getLabel(), getAxis(AxisId.Y).getLabel(), dataY1, PlotOrientation.VERTICAL, true, showTooltips, false);
+                NumberAxis xa = new NumberAxis(getAxis(AxisId.X).getLabel());
+                xa.setAutoRangeIncludesZero(false);
+                NumberAxis ya = new NumberAxis(getAxis(AxisId.Y).getLabel());
+                XYLineAndShapeRenderer r = new LineAndShapeRenderer();                
+                XYPlot xyplot = new XYPlot(dataY1, xa, ya, r);
+                xyplot.setOrientation(PlotOrientation.VERTICAL);
+                if (showTooltips) {
+                    r.setDefaultToolTipGenerator(new StandardXYToolTipGenerator());
+                }
+                ret = new JFreeChart(title, JFreeChart.DEFAULT_TITLE_FONT, xyplot, true);
+                ChartFactory.getChartTheme().apply(ret);                
         }
-
+                    
         return ret;
     }
 
