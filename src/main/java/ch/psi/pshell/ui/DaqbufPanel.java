@@ -2234,6 +2234,10 @@ public class DaqbufPanel extends StandardDialog {
                     domainLenghtPixels /= plot.getChartPanel().getScaleX();
                     double domainLengthMs = axis.getRange().getLength();
                     capLength = (capLenghtMs * domainLenghtPixels) / domainLengthMs;
+                    if (capLength>1000){
+                        throw new Exception("Invalid cap size");
+                    }
+                    capLength =Math.max(capLength, 1);
                 }
             } catch (Exception ex) {
                 capLength = 4.0;
