@@ -1157,6 +1157,9 @@ public class PlotPanel extends MonitoredPanel {
                     ((LinePlotJFree) plot).addSeries(series);
                     series.setData(x, (double[]) data, descriptor.error);
                 } else {
+                    if (data instanceof Number){
+                        data = new double[]{((Number)data).doubleValue()};
+                    }
                     ((LinePlotSeries) plot.getSeries(0)).setData(x, (double[]) data);
                 }
             } else if (plot instanceof MatrixPlot) {
