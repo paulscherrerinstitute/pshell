@@ -311,7 +311,15 @@ public class Preferences {
         FontSpec plotLabelFont = new FontSpec(Font.SANS_SERIF, 0, 11);        
         FontSpec plotTickFont = new FontSpec(Font.SANS_SERIF, 0, 10); 
         FontSpec plotTitleFont =  new FontSpec(Font.SANS_SERIF, Font.BOLD, 13);
-        FontSpec terminalFont = FontSpec.fromFont(Terminal.getDefaultFont());
+        FontSpec terminalFont = null;
+
+        try{
+            //Terminal is not present in light jar
+            terminalFont = FontSpec.fromFont(Terminal.getDefaultFont());
+        } catch (Throwable t){
+            terminalFont = new FontSpec(Font.MONOSPACED, 0, 13);
+        }
+        
 
         return new FontSpec[]{
             editorFont,
