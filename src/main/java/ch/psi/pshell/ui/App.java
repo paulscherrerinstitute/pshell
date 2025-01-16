@@ -404,7 +404,11 @@ public class App extends ObservableBase<AppListener> {
                 ex.printStackTrace();
                 System.exit(0);
             }
-        }               
+        }                  
+    }
+    
+    public static boolean isLightJar(){
+        return !Sys.hasJython();
     }
 
     final static String defaultJcaeProperties = "ch.psi.jcae.ContextFactory.autoAddressList=true\n"

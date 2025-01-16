@@ -17,9 +17,9 @@ import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 import ch.psi.pshell.device.GenericDevice;
-import ch.psi.pshell.device.ProcessVariable;
 import ch.psi.pshell.device.ReadbackDevice;
 import ch.psi.pshell.device.ReadonlyProcessVariable;
+import ch.psi.pshell.ui.App;
 import ch.psi.utils.Arr;
 import ch.psi.utils.Convert;
 import java.io.BufferedReader;
@@ -182,8 +182,20 @@ public class LogManager {
         for (Handler handler : Logger.getLogger("").getHandlers()) {
             if (handler instanceof ConsoleHandler) {
                 handler.setLevel(level);
+                if (App.isLightJar()){
+                    //Disable NonInjectionManager warning in light jar
+                    handler.setFilter(new java.util.logging.Filter() {
+                        @Override
+                        public boolean isLoggable(LogRecord record) {
+                            if (record.getLoggerName().startsWith("org.glassfish")){
+                                return record.getLevel() == Level.SEVERE;
+                            }
+                            return true;
+                        }
+                    });
+                }
             }
-        }
+        }        
     }
 
     public static String[] parseLogRecord(LogRecord record) {
