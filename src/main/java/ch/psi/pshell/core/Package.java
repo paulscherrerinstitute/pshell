@@ -27,7 +27,7 @@ public class Package implements AutoCloseable {
     Package(Setup  setup, String path) throws IOException {
         File file = new File(setup.expandPath(path));
         if (!file.isDirectory()){
-            throw new IOException("Invalid pachage path: " + path);
+            throw new IOException("Invalid package path: " + path);
         }
         this.path = file.getCanonicalPath();
         scriptPath = Paths.get(path, "script");

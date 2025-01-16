@@ -1853,9 +1853,11 @@ public class App extends ObservableBase<AppListener> {
     void loadCommandLinePlugins() {
         if (hasArgument("p")) {
             for (String arg : getArgumentValues("p")) {
-                for (String pluginName : arg.split(",")) {
+                for (String pluginName : arg.split(",")) {                    
                     if (new File(pluginName).exists()) {
                         context.getPluginManager().loadPlugin(pluginName);
+                    } else if (new File(Setup.expand(pluginName)).exists()) {
+                        context.getPluginManager().loadPlugin(Setup.expand(pluginName));
                     } else if (Paths.get(context.getSetup().getPluginsPath(), pluginName).toFile().exists()) {
                         context.getPluginManager().loadPlugin(Paths.get(context.getSetup().getPluginsPath(), pluginName).toString());
                     } else {
