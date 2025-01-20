@@ -547,6 +547,7 @@ public class App extends ObservableBase<AppListener> {
         if (isDaqbufPanel()){
             sb.append("\n\nDaqbuf panel arguments:");
             sb.append("\n\t-f=<..>       \tOpen a configuration file (.dbuf)");
+            sb.append("\n\t-config=<..>  \tJSON configuration string (as in .dbuf file)");
             sb.append("\n\t-daqbuf=<url> \tSet the address of the Daqbuf server (othrerwise defined by DAQBUF_DEFAULT_URL)");           
             sb.append("\n\t-backend=<url>\tSet the default backend (othrerwise defined by DAQBUF_DEFAULT_BACKEND)");           
             sb.append("\n\t-maxsize=<..> \tSet maximum size for unbinned data");
@@ -556,15 +557,13 @@ public class App extends ObservableBase<AppListener> {
             sb.append("\n\t-bins=<..>    \tSet the number of bins (0 for unbinned)");
             sb.append("\n\t-auto_range   \tSet auto-range plots: based on the data, and not fixed to the given time range");            
             sb.append("\n\t-ch=<..>      \tAdd a channel in the format: <NAME>@<BACKEND> or <NAME> (default backend)");
-            sb.append("\n\t-plot         \tExecute the query and plot the data immediately");
+            sb.append("\n\t-start        \tExecute the query and plot the data immediately");
             sb.append("\n\t-lock_zooms   \tSet the default state of the zoom lock button");  
             sb.append("\n\t-background_color=<..>    \tSet default plot background color");
             sb.append("\n\t-grid_color=<..>          \tSet default plot grid color");                        
             sb.append("\n\t-tick_label_font=name:size\tSet font for tick labels");            
-            sb.append("\n\t-plot_height==<..>        \tSet minimum plot height");  
-            
+            sb.append("\n\t-plot_height==<..>        \tSet minimum plot height");              
         }
-        
         sb.append("\n");
         return sb.toString();
     }
@@ -788,6 +787,17 @@ public class App extends ObservableBase<AppListener> {
         } catch (Exception ex) {
             return null;
         }
+    }
+    
+    static public String getConfigArg() {
+        if (!hasArgument("config")) {
+            return null;
+        }
+        return getArgumentValue("config");
+    }
+    
+    static public boolean getStartArg() {
+        return getBoolArgumentValue("start");
     }
     
     static public String getEvalArg() {
@@ -1215,13 +1225,13 @@ public class App extends ObservableBase<AppListener> {
             } else if (isStripChart()) {
                 if (isAttach()) {
                     try {
-                        String ret = StripChartServer.create(getFileArg(), getArgumentValue("config"), getBoolArgumentValue("start"));
+                        String ret = StripChartServer.create(getFileArg(), getConfigArg(), getStartArg());
                         System.out.println("Panel handled by server: " + ret);
                         System.exit(0);
                     } catch (Exception ex) {
                         if ((ex.getCause() != null) && (ex.getCause() instanceof ConnectException)) {
                             System.out.println("Server not found");
-                            StripChart.create(getFileArg(), getArgumentValue("config"), getStripChartFolderArg(), getBoolArgumentValue("start"), false, getSize());
+                            StripChart.create(getFileArg(), getConfigArg(), getStripChartFolderArg(), getStartArg(), false, getSize());
                             stripChartServer = new StripChartServer();
                         } else {
                             ex.printStackTrace();
@@ -1229,7 +1239,7 @@ public class App extends ObservableBase<AppListener> {
                         }
                     }
                 } else {
-                    StripChart.create(getFileArg(), getArgumentValue("config"), getStripChartFolderArg(), getBoolArgumentValue("start"), true, getSize());
+                    StripChart.create(getFileArg(), getConfigArg(), getStripChartFolderArg(), getStartArg(), true, getSize());
                 }
             } else if (isDataPanel()) {
                 DataPanel.create(getFileArg(), getSize());

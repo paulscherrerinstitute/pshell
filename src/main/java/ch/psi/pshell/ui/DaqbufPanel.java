@@ -2644,11 +2644,13 @@ public class DaqbufPanel extends StandardDialog {
         Files.write(file.toPath(), json.getBytes());
         this.file = file;
     }
-
     void openConfig(File file) throws Exception  {
-        String json = new String(Files.readAllBytes(file.toPath()));
+       String json = new String(Files.readAllBytes(file.toPath()));
+       openConfig(json);
+    }
+    
+    void openConfig(String json) throws Exception  {        
         Map<String, Object> data = (Map<String, Object>) EncoderJson.decode(json, Map.class);
-
         String from = (String) data.getOrDefault("from", null);
         String to = (String) data.getOrDefault("to", null);
         String range = (String) data.getOrDefault("range", null);
@@ -2690,8 +2692,22 @@ public class DaqbufPanel extends StandardDialog {
 
     void openArgs() {
         File file = App.getFileArg();
+        String config = App.getConfigArg();
         List<CompletableFuture> futures = new ArrayList<>();
-        if (file==null){        
+        if (file!=null){ 
+           try{
+               openConfig(file);
+           } catch (Exception ex) {
+               showException(ex);
+           }                
+        } else if (config!=null){        
+           try{
+               openConfig(config);
+           } catch (Exception ex) {
+               showException(ex);
+           }                
+        }
+        else {
             String from = App.getArgumentValue("from");
             String to = App.getArgumentValue("to");
             String range = App.getArgumentValue("range");
@@ -2747,18 +2763,12 @@ public class DaqbufPanel extends StandardDialog {
                 return;
             }
             update();
-        } else {
-            try{
-                openConfig(file);
-            } catch (Exception ex) {
-                showException(ex);
-            }                
-        }
+        } 
         checkPlotArg(futures);
     }
     
     void checkPlotArg(List<CompletableFuture> futures){
-        if (App.getBoolArgumentValue("plot")){
+        if (App.getStartArg()){ 
             new Thread(()->{
                 try {
                     for (CompletableFuture cf : futures){
