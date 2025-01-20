@@ -26,5 +26,14 @@ public interface LinePlot extends Plot<LinePlotSeries> {
 
     default public void setStyle(Style style) {
     }  
+    
+    default public AxisId getAxisId(LinePlotSeries series){        
+        return (series.getAxisY() == 2) ? AxisId.Y2 : AxisId.Y;
+    }
+    
+    default public Axis getAxis(LinePlotSeries series){        
+        AxisId axisId = getAxisId(series);
+        return getAxis(axisId);
+    }
 
 }

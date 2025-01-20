@@ -36,6 +36,7 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.AbstractAction;
+import javax.swing.AbstractButton;
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JComponent;
 import javax.swing.JDialog;
@@ -1740,6 +1741,25 @@ public class LinePlotJFree extends LinePlotBase {
             chartPanel.getPopupMenu().add(item);
         }
     }
+    
+    public void removePopupMenuItem(int index) {
+        chartPanel.getPopupMenu().remove(index);
+    }    
+
+    public void removePopupMenuItem(JMenuItem item) {
+        chartPanel.getPopupMenu().remove(item);
+    }    
+
+    public void removePopupMenuItem(String text) {
+        for (Component c : chartPanel.getPopupMenu().getComponents().clone()) {
+            if (c instanceof AbstractButton){
+                if (((AbstractButton)c).getText().equals(text)){
+                    chartPanel.getPopupMenu().remove(c);
+                    return;
+                }
+            }
+        }
+    }    
 
     @Override
     public int print(Graphics g, PageFormat pf, int page) throws PrinterException {

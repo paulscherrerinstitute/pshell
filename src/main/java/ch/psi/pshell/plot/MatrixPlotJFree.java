@@ -47,6 +47,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.AbstractButton;
 import org.jfree.chart.annotations.XYTextAnnotation;
 import static org.jfree.chart.plot.Plot.DEFAULT_OUTLINE_STROKE;
 
@@ -282,12 +283,31 @@ public class MatrixPlotJFree extends MatrixPlotBase {
         }
         return ret;
     }
+    
+    public void removePopupMenuItem(int index) {
+        chartPanel.getPopupMenu().remove(index);
+    }    
+
+    public void removePopupMenuItem(JMenuItem item) {
+        chartPanel.getPopupMenu().remove(item);
+    }    
+
+    public void removePopupMenuItem(String text) {
+        for (Component c : chartPanel.getPopupMenu().getComponents().clone()) {
+            if (c instanceof AbstractButton){
+                if (((AbstractButton)c).getText().equals(text)){
+                    chartPanel.getPopupMenu().remove(c);
+                    return;
+                }
+            }
+        }
+    }          
 
     @Override
     protected void createPopupMenu() {
         //Remove copy/save as/print menus: copy is buggy, save is limited 
         for (int index = 6; index >= 2; index--) {
-            chartPanel.getPopupMenu().remove(index);
+            removePopupMenuItem(index);
         }
 
         // Colormap configuration

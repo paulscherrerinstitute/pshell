@@ -107,7 +107,7 @@ public interface Plot<T extends PlotSeries> {
     };
 
     public Axis getAxis(AxisId id);
-    
+        
     public Range getAxisRange(AxisId axis);
     
     //Markers and text are optional

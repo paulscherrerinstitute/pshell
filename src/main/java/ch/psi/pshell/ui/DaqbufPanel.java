@@ -5,6 +5,7 @@ import ch.psi.pshell.data.ProviderCSV;
 import ch.psi.pshell.data.ProviderText;
 import ch.psi.pshell.device.Device;
 import ch.psi.pshell.imaging.Colormap;
+import ch.psi.pshell.plot.Axis;
 import ch.psi.pshell.plot.LinePlot;
 import ch.psi.pshell.plot.LinePlotBase;
 import ch.psi.pshell.plot.LinePlotErrorSeries;
@@ -57,6 +58,7 @@ import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.awt.Insets;
 import java.awt.Point;
 import java.awt.Toolkit;
 import java.awt.Window;
@@ -96,6 +98,7 @@ import javax.swing.DefaultCellEditor;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
@@ -172,7 +175,7 @@ public class DaqbufPanel extends StandardDialog {
     int numPlots = 0;
     Integer plotHeight = null;
     
-    final List plotProperties = new ArrayList();
+    final List<HashMap> plotProperties = new ArrayList<>();
     List requestedProperties = new ArrayList();
 
     final int ERROR_RANGE_ALPHA= 0x60;        
@@ -916,6 +919,17 @@ public class DaqbufPanel extends StandardDialog {
         }        
     }
     
+    void setLogY1(LinePlotJFree plot, boolean log){
+        plot.getAxis(AxisId.Y).setLogarithmic(log);
+        setPlotArg(plot, "y1_log",  log);
+    }
+
+    void setLogY2(LinePlotJFree plot, boolean log){
+        plot.getAxis(AxisId.Y2).setLogarithmic(log);
+        setPlotArg(plot, "y2_log",  log);
+    }
+    
+    
     void applyPlotPreferences(List plotPrefs){
         try{
             if (plotPrefs.size()==plots.size()){
@@ -929,6 +943,8 @@ public class DaqbufPanel extends StandardDialog {
                         String grid_color =  (String)prefs.getOrDefault("grid_color", null);
                         List y1_range =  (List)prefs.getOrDefault("y1_range",null);
                         List y2_range =  (List)prefs.getOrDefault("y2_range", null);
+                        Boolean y1_log =  (Boolean)prefs.getOrDefault("y1_log", null);
+                        Boolean y2_log =  (Boolean)prefs.getOrDefault("y2_log", null);
 
                         if (show_ranges!=null){
                             showRanges(plot, show_ranges);
@@ -948,6 +964,12 @@ public class DaqbufPanel extends StandardDialog {
                         if ((y2_range!=null) && (y2_range.size()==2)){
                             setRangeY2(plot, new Range(((Number)y2_range.get(0)).doubleValue(), ((Number)y2_range.get(1)).doubleValue()));
                         }
+                        if (y1_log!=null){
+                            setLogY1(plot, y1_log);
+                        }
+                        if (y2_log!=null){
+                            setLogY2(plot, y2_log);
+                        }                        
                     }                
                 }
              }
@@ -958,7 +980,7 @@ public class DaqbufPanel extends StandardDialog {
 
     
     void setLinePlotPopupMenu(LinePlotJFree plot, boolean binned){
-        plot.addPopupMenuItem(null);
+        plot.addPopupMenuItem(null);        
 
         JCheckBoxMenuItem menuMarkers = new JCheckBoxMenuItem("Show Markers");
         menuMarkers.setSelected(true);
@@ -998,8 +1020,12 @@ public class DaqbufPanel extends StandardDialog {
         JMenuItem menuRangeY1 = new JMenuItem("Set Y1 Range...");
         menuRangeY1.addActionListener((ActionEvent e) -> {
             Range init = plot.getAxis(AxisId.Y).isAutoRange() ? null : new Range(plot.getAxis(AxisId.Y).getMin(), plot.getAxis(AxisId.Y).getMax());
-            Range r = getRange(init, "Enter Y1 Range");
-            setRangeY1(plot,r);
+            boolean log =  plot.getAxis(AxisId.Y).isLogarithmic();
+            RangeLog ret = getRange(init, log, "Enter Y1 Range");
+            if (ret!=null){
+                setRangeY1(plot, ret.range);
+                setLogY1(plot, ret.log);
+            }
             
         });
         plot.addPopupMenuItem(menuRangeY1);
@@ -1007,8 +1033,12 @@ public class DaqbufPanel extends StandardDialog {
         JMenuItem menuRangeY2 = new JMenuItem("Set Y2 Range...");
         menuRangeY2.addActionListener((ActionEvent e) -> {
             Range init = plot.getAxis(AxisId.Y2).isAutoRange() ? null : new Range(plot.getAxis(AxisId.Y2).getMin(), plot.getAxis(AxisId.Y2).getMax());
-            Range r = getRange(init, "Enter Y2 Range");
-            setRangeY2(plot,r);
+            boolean log =  plot.getAxis(AxisId.Y2).isLogarithmic();
+            RangeLog ret = getRange(init, log, "Enter Y2 Range");
+            if (ret!=null){
+                setRangeY2(plot, ret.range);
+                setLogY2(plot, ret.log);
+            }            
         });
         plot.addPopupMenuItem(menuRangeY2);
 
@@ -1044,7 +1074,7 @@ public class DaqbufPanel extends StandardDialog {
         });
         plot.addPopupMenuItem(menuRequery);
         menuRequery.setVisible(binned);
-
+        //plot.removePopupMenuItem("Logarithmic Scale");
     }
 
     boolean updatingZoom;
@@ -1271,8 +1301,16 @@ public class DaqbufPanel extends StandardDialog {
         }
     }
     
-    Range getRange(Range init, String title) {
-        Range ret = null;
+    class RangeLog{
+        final Range range;
+        final boolean log;
+        RangeLog(Range range, boolean log){
+            this.range = range;
+            this.log=log;
+        }
+    }
+    
+    RangeLog getRange(Range init, boolean logarithmic, String title) {
         try {
             JPanel panel = new JPanel();
             GridBagLayout layout = new GridBagLayout();
@@ -1280,25 +1318,36 @@ public class DaqbufPanel extends StandardDialog {
             panel.setLayout(layout);
             JTextField min = new JTextField((init == null) ? "" : String.valueOf(init.min));
             JTextField max = new JTextField((init == null) ? "" : String.valueOf(init.max));
+            JCheckBox log = new JCheckBox("", logarithmic);
             GridBagConstraints c = new GridBagConstraints();
             c.gridx = 0;
             c.gridy = 0;
             panel.add(new JLabel("Minimum:"), c);
             c.gridy = 1;
             panel.add(new JLabel("Maximum:"), c);
+            c.gridy = 2;
+            c.insets = new Insets(8,0,0,0);
+            panel.add(new JLabel("Logarithmic:"), c);
             c.fill = GridBagConstraints.HORIZONTAL;
             c.gridx = 1;
+            panel.add(log, c);
+            c.insets = new Insets(0,0,0,0);
+            c.gridy = 1;
             panel.add(max, c);
-            c.gridy = 0;
+            c.gridy = 0;            
             panel.add(min, c);
 
             if (showOption((title == null) ? "Enter Range" : title, panel, OptionType.OkCancel) == OptionResult.Yes) {
-                return new Range(Double.valueOf(min.getText().trim()), Double.valueOf(max.getText().trim()));
+                Range range = null;
+                try{
+                    range = new Range(Double.valueOf(min.getText().trim()), Double.valueOf(max.getText().trim()));
+                } catch (Exception ex) {            
+                }                
+                return new RangeLog(range, log.isSelected());
             }
-        } catch (Exception ex) {
-            ret = null;
+        } catch (Exception ex) {            
         }
-        return ret;
+        return null;
     }
     
     LinePlotSeries addBinnedSeries(LinePlotBase plot, SeriesInfo si) {
@@ -1351,7 +1400,15 @@ public class DaqbufPanel extends StandardDialog {
                 }, bins).handle((ret, ex) -> {
                     if (ex != null) {
                         showException((Exception) ex);
-                    };
+                    } else {
+                        if (linePlot!=null){
+                            synchronized(plot){
+                                if (plot.getAxis(series).isLogarithmic()){
+                                    linePlot.getChartPanel().restoreAutoBounds();
+                                }
+                            }
+                        }
+                    }                    
                     return ret;
                 });                
                 
@@ -1379,6 +1436,11 @@ public class DaqbufPanel extends StandardDialog {
                                 }
                             } finally {
                                 plot.reenableUpdates();                        
+                            }
+                            if (linePlot!=null) {
+                                if (plot.getAxis(series).isLogarithmic()){
+                                    linePlot.getChartPanel().restoreAutoBounds();
+                                }                            
                             }
                         }
                     }
@@ -1428,6 +1490,7 @@ public class DaqbufPanel extends StandardDialog {
         plot.addSeries(series);
         series.setMaxItemCount(getMaxSeriesSize());
         final Map<Number,String> valueStrings =  (plot instanceof LinePlotTable) && type.equals("enum") ? new HashMap<>() : null;
+        LinePlotJFree linePlot  = plot instanceof LinePlotTable ? null : (LinePlotJFree) plot;        
                         
         try {
             daqbuf.startQuery(name + Daqbuf.BACKEND_SEPARATOR + backend, start.startsWith(ADD_LAST_PREFIX) ? start : ADD_LAST_PREFIX+start, end, new QueryListener() {
@@ -1468,7 +1531,15 @@ public class DaqbufPanel extends StandardDialog {
             }).handle((ret, ex) -> {
                 if (ex != null) {
                     showException((Exception) ex);
-                };
+                } else {
+                    if (linePlot!=null){
+                        synchronized(plot){
+                            if (plot.getAxis(series).isLogarithmic()){
+                                linePlot.getChartPanel().restoreAutoBounds();
+                            }
+                        }
+                    }
+                }
                 return ret;
             });
             if (plot instanceof LinePlotJFree){
@@ -2568,7 +2639,7 @@ public class DaqbufPanel extends StandardDialog {
         data.put("binned", checkBins.isSelected());
         data.put("bins",  spinnerBins.getValue() );            
         data.put("maxsize", getMaxSeriesSize());
-        data.put("plots", plotProperties);        
+        data.put("plots", plotProperties);               
         String json = EncoderJson.encode(data, true);
         Files.write(file.toPath(), json.getBytes());
         this.file = file;
