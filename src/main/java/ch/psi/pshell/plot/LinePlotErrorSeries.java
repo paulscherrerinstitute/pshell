@@ -312,7 +312,13 @@ public class LinePlotErrorSeries extends LinePlotSeries {
 
     public void setData(double[] x, double[] y, double[] error, double[] errorY) {
         if (getPlot() != null) {
-            int length = Math.min(Math.min(Math.min(x.length, y.length), error.length), errorY.length);
+            int length = Math.min(x.length, y.length);
+            if (error!=null){
+                length = Math.min(length, error.length);
+            }
+            if (errorY!=null){
+                length = Math.min(length, errorY.length);
+            }
             switch (getPlot().getStyle()) {
                 case ErrorX:
                     XIntervalSeries sx = (XIntervalSeries) getToken();

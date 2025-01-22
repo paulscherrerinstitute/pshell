@@ -6,7 +6,7 @@ plugins {
     //id 'org.openjfx.javafxplugin' version '0.0.10'
 }
 
-version = '1.21.0'
+version = '1.21.1'
 group = 'ch.psi'
 ext.timestamp = new Date().format("yyMMddHHmm")
 
