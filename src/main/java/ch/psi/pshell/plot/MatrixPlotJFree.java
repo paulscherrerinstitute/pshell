@@ -405,8 +405,7 @@ public class MatrixPlotJFree extends MatrixPlotBase {
         super.createPopupMenu();
     }
 
-    static DecimalFormat tooltipGeneratorFormat = new DecimalFormat("0.##########");
-    static XYZToolTipGenerator tooltipGenerator = new StandardXYZToolTipGenerator("x={1} y={2} z={3}", tooltipGeneratorFormat, tooltipGeneratorFormat, tooltipGeneratorFormat);
+    static XYZToolTipGenerator tooltipGenerator = new StandardXYZToolTipGenerator("x={1} y={2} z={3}", displayFormatValue, displayFormatValue, displayFormatValue);
     private void showTooltips() {
         //Tooltips are quit expensive
         if (series!=null){

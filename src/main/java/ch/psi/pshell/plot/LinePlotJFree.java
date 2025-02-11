@@ -1658,10 +1658,8 @@ public class LinePlotJFree extends LinePlotBase {
     }
     
     
-    static DecimalFormat tooltipGeneratorFormat = new DecimalFormat("0.##########");
-    static DateFormat tooltipGeneratorFormatDate = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
-    static StandardXYToolTipGenerator tooltipGenerator = new StandardXYToolTipGenerator("x={1} y={2}", tooltipGeneratorFormat, tooltipGeneratorFormat);
-    static StandardXYToolTipGenerator tooltipGeneratorDate = new StandardXYToolTipGenerator("x={1} y={2}", tooltipGeneratorFormatDate, tooltipGeneratorFormat);
+    static StandardXYToolTipGenerator tooltipGenerator = new StandardXYToolTipGenerator("x={1} y={2}", displayFormatValue, displayFormatValue);
+    static StandardXYToolTipGenerator tooltipGeneratorDate = new StandardXYToolTipGenerator("x={1} y={2}", displayFormatDate, displayFormatValue);
     static int MINIMUM_TOOLTIP_MARKER_SIZE = 3;
 
     void showTooltips() {
@@ -1987,9 +1985,9 @@ public class LinePlotJFree extends LinePlotBase {
                         for (int i = 0; i < series; i++) {
                             double f = DatasetUtils.findYValue(plot.getDataset(), i, x);
                             String strX = (chart.getXYPlot().getDomainAxis() instanceof DateAxis)? 
-                                    Time.getTimeString(x, false, false): 
-                                    getDisplayableValue(x);
-                            String text = String.format("x=%s y=%s", strX, getDisplayableValue(f));
+                                    getDisplayDateValue(x) : //Time.getTimeString(x, false, false): 
+                                    getDisplayValue(x);
+                            String text = String.format("x=%s y=%s", strX, getDisplayValue(f));
                             if (pointers[i] == null) {
                                 if (mouseListener == null) {
                                     return;

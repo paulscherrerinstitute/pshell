@@ -106,9 +106,9 @@ abstract public class MatrixPlotBase extends PlotBase<MatrixPlotSeries> implemen
                 double z = data[i][j];
                 double y = (ydata == null) ? series.getMinY() + i * series.getBinWidthY() : ydata[i][j];
                 double x = (xdata == null) ? series.getMinX() + j * series.getBinWidthX() : xdata[i][j];
-                str.append(String.format("%1.6f", x)).append(FIELD_SEPARATOR);
-                str.append(String.format("%1.6f", y)).append(FIELD_SEPARATOR);
-                str.append(String.format("%1.6f", z)).append(LINE_SEPARATOR);
+                str.append(getPersistenceValue(x)).append(FIELD_SEPARATOR);
+                str.append(getPersistenceValue(y)).append(FIELD_SEPARATOR);
+                str.append(getPersistenceValue(z)).append(LINE_SEPARATOR);
             }
         }
         return str.toString();

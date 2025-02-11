@@ -56,11 +56,11 @@ abstract public class LinePlotBase extends PlotBase<LinePlotSeries> implements L
             for (int i = 0; i < data[0].length; i++) {
                 double x = data[0][i];
                 double y = data[1][i];
-                str.append(String.format("%1.6f", x)).append(FIELD_SEPARATOR);
+                str.append(getPersistenceValue(x)).append(FIELD_SEPARATOR);
                 for (int j = 0; j < seriesIndex; j++) {
                     str.append(String.format("NaN", x)).append(FIELD_SEPARATOR);
                 }
-                str.append(String.format("%1.6f", y)).append(FIELD_SEPARATOR);
+                str.append(getPersistenceValue(y)).append(FIELD_SEPARATOR);
                 for (int j = seriesIndex + 1; j < numberSeries; j++) {
                     str.append(String.format("NaN", x)).append(FIELD_SEPARATOR);
                 }

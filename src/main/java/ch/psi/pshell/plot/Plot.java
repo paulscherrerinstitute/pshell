@@ -9,6 +9,16 @@ import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
+import java.text.DateFormat;
+import java.text.DecimalFormat;
+import java.text.FieldPosition;
+import java.text.NumberFormat;
+import java.text.ParsePosition;
+import java.text.SimpleDateFormat;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -124,15 +134,48 @@ public interface Plot<T extends PlotSeries> {
     public void removeText(Object text);
 
     public List getTexts();
-
-    default public String getDisplayableValue(double value) {
-        if ((value > 100000) || ((Math.abs(value) < 0.0001) && (Math.abs(value) > 0))) {
-            return String.format("%1.6e", value);
-        } else {
-            value = Convert.roundDouble(value, 4);
-            return String.format("%1.4f", value);
+    
+    public final static DateFormat displayFormatDate = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
+    
+    public final static NumberFormat displayFormatValue =  new NumberFormat(){
+        final DecimalFormat simpleFormat = new DecimalFormat("#,##0.######");
+        final DecimalFormat scientificFormat = new DecimalFormat("0.######E0");
+        @Override
+        public StringBuffer format(double number, StringBuffer toAppendTo, FieldPosition pos) {
+            // Adaptive formatting logic: No scientific notation for simple values
+            String formatted;
+            double aux = Math.abs(number);
+            if (aux >= 0.0001 && aux < 1_000_000) {
+                formatted = simpleFormat.format(number);
+            } else {
+                formatted = scientificFormat.format(number);
+            }
+            return toAppendTo.append(formatted);
         }
+
+        @Override
+        public StringBuffer format(long number, StringBuffer toAppendTo, FieldPosition pos) {
+            return format((double) number, toAppendTo, pos);
+        }
+        
+        @Override
+        public Number parse(String source, ParsePosition pos) {
+            return new DecimalFormat().parse(source, pos); // Fallback parsing
+        }        
+    };       
+
+    default public String getDisplayValue(double value) {        
+        return displayFormatValue.format(value);        
     }
+
+    default public String getDisplayDateValue(double value) {
+        Instant instant = Instant.ofEpochMilli(Double.valueOf(value).longValue());       
+        return displayFormatDate.format(Date.from(instant));
+    }
+
+    default public String getPersistenceValue(double value) {
+        return String.valueOf(value);
+    }            
     
     default void setPlotBackgroundColor(Color c) {};
 
