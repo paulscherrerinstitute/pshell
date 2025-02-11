@@ -8,7 +8,6 @@ import ch.psi.pshell.camserver.PipelineStream;
 import ch.psi.pshell.camserver.ProxyClient;
 import ch.psi.pshell.device.Device;
 import ch.psi.pshell.device.DeviceAdapter;
-import ch.psi.pshell.device.DeviceListener;
 import static ch.psi.pshell.swing.DevicePanel.createFrame;
 import ch.psi.pshell.ui.App;
 import ch.psi.utils.EncoderJson;

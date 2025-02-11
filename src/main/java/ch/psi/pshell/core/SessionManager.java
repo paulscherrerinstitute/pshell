@@ -3,7 +3,6 @@ package ch.psi.pshell.core;
 import ch.psi.pshell.core.Configuration.DataTransferMode;
 import ch.psi.pshell.core.Configuration.SessionHandling;
 import ch.psi.pshell.data.RSync;
-import ch.psi.pshell.swing.MetadataEditor;
 import ch.psi.utils.Arr;
 import ch.psi.utils.EncoderJson;
 import ch.psi.utils.Folder;
@@ -663,7 +662,7 @@ public class SessionManager extends ObservableBase<SessionManager.SessionManager
             properties.load(in);
         } catch (FileNotFoundException ex) {
         } catch (Exception ex) {
-            Logger.getLogger(MetadataEditor.class.getName()).log(Level.WARNING, null, ex);
+            Logger.getLogger(SessionManager.class.getName()).log(Level.WARNING, null, ex);
         }
 
         return properties.entrySet();
@@ -758,7 +757,7 @@ public class SessionManager extends ObservableBase<SessionManager.SessionManager
                 setMetadata(newMetadata);
             }
         } catch (Exception ex) {
-            Logger.getLogger(MetadataEditor.class.getName()).log(Level.WARNING, null, ex);
+            Logger.getLogger(SessionManager.class.getName()).log(Level.WARNING, null, ex);
         }
     }
 

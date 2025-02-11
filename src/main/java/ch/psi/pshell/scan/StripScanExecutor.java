@@ -1,7 +1,6 @@
 package ch.psi.pshell.scan;
 
 import ch.psi.pshell.core.Context;
-import ch.psi.pshell.ui.StripChart;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
@@ -24,7 +23,7 @@ public class StripScanExecutor {
             persistenceExecutor.shutdown();
         }
         persistenceExecutor = Executors.newSingleThreadExecutor((Runnable runnable) -> {
-            persistenceThread = new Thread(Thread.currentThread().getThreadGroup(), runnable, "StripChart Persistence Thread");
+            persistenceThread = new Thread(Thread.currentThread().getThreadGroup(), runnable, "StripScanExecutor Persistence Thread");
             return persistenceThread;
         });
         persistenceExecutor.submit(() -> {
@@ -52,7 +51,7 @@ public class StripScanExecutor {
                 try {
                     scan.start();
                 } catch (Exception ex) {
-                    Logger.getLogger(StripChart.class.getName()).log(Level.WARNING, null, ex);
+                    Logger.getLogger(StripScanExecutor.class.getName()).log(Level.WARNING, null, ex);
                 }
             }
         });
@@ -80,7 +79,7 @@ public class StripScanExecutor {
                         try {
                             scan.end();
                         } catch (Exception ex) {
-                            Logger.getLogger(StripChart.class.getName()).log(Level.WARNING, null, ex);
+                            Logger.getLogger(StripScanExecutor.class.getName()).log(Level.WARNING, null, ex);
                         }
                     }
                     Context.getInstance().disposeExecutionContext();
@@ -92,7 +91,7 @@ public class StripScanExecutor {
                 try {
                    future.get();
                 } catch (Exception ex) {
-                    Logger.getLogger(StripChart.class.getName()).log(Level.WARNING, null, ex);
+                    Logger.getLogger(StripScanExecutor.class.getName()).log(Level.WARNING, null, ex);
                 }
             }            
             persistenceExecutor = null;
