@@ -2441,16 +2441,17 @@ public class DaqbufPanel extends StandardDialog {
         final String start = textFrom.getText();
         final String end = textTo.getText();
 
-        JDialog splash = SwingUtils.showSplash(this, "Save", new Dimension(400, 200), "Saving data to " + filename);
+        String finalFilename = IO.getExtension(filename).isEmpty() ? filename + ".h5" : filename;
+        JDialog splash = SwingUtils.showSplash(this, "Save", new Dimension(400, 200), "Saving data to " + finalFilename);
         dumping = true;
         update();
-        daqbuf.startSaveQuery(filename, channels.toArray(new String[0]), start, end, bins).handle((Object ret, Object ex) -> {
+        daqbuf.startSaveQuery(finalFilename, channels.toArray(new String[0]), start, end, bins).handle((Object ret, Object ex) -> {
             splash.setVisible(false);
             if (ex != null) {
                 showException((Exception) ex);
             } else {
-                if (SwingUtils.showOption(this, "Save", "Success saving data to " + filename + ".\nDo you want to open the file?", OptionType.YesNo) == OptionResult.Yes) {
-                    DataPanel.createDialog(this, filename, null, null);
+                if (SwingUtils.showOption(this, "Save", "Success saving data to " + finalFilename + ".\nDo you want to open the file?", OptionType.YesNo) == OptionResult.Yes) {
+                    DataPanel.createDialog(this, finalFilename, null, null);
                 }
             }
             dumping = false;
