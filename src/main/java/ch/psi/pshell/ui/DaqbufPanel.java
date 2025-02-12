@@ -1118,7 +1118,7 @@ public class DaqbufPanel extends StandardDialog {
         Double y2max = null;
 
         LinePlotJFree plot = new LinePlotJFree();
-        plot.setLineExtension(true);
+        plot.setLineExtension(!binned);
         plot.setExtensionThreshold(queryRange.max);
         plot.setZoomListener(zoomListener);
         if (binned) {
