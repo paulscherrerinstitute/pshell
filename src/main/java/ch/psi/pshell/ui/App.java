@@ -1688,7 +1688,11 @@ public class App extends ObservableBase<AppListener> {
     
     public void runStatement(String statement){
         try {
-            evalStatement(statement);
+            Object ret = evalStatement(statement);
+            if (ret != null) {
+                System.out.println(ret);
+            }   
+            
         } catch (Exception ex) {
             ex.printStackTrace();
             logger.log(Level.WARNING, null, ex);
