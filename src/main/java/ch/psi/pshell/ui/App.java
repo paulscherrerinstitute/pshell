@@ -1371,6 +1371,8 @@ public class App extends ObservableBase<AppListener> {
                             console.run(System.in, System.out, !isServerMode());
                         } catch (Exception ex) {
                             logger.log(Level.WARNING, null, ex);
+                        } finally {
+                            console.close();
                         }
                     } else if (isServerMode()) {
                         logger.log(Level.INFO, "Start server");
@@ -1640,9 +1642,8 @@ public class App extends ObservableBase<AppListener> {
     void runFile(File file, boolean printScan) {
         logger.log(Level.INFO, "Run file: " + file.getPath());
         registerProcessors();
+        ch.psi.pshell.core.Console console =  (this.console==null) ? new ch.psi.pshell.core.Console() : null;
         try {
-            console = new ch.psi.pshell.core.Console();
-            console.attachInterpreterOutput();
             setScanPrintingActive(printScan && !isScanPrintingDisabled());
             Object ret = evalFile(file, getInterpreterArgs(), true);
 
@@ -1652,6 +1653,10 @@ public class App extends ObservableBase<AppListener> {
         } catch (Exception ex) {
             ex.printStackTrace();
             logger.log(Level.WARNING, null, ex);
+        } finally{
+            if (console!=null){
+                console.close();
+            }
         }
     }
 
@@ -1687,6 +1692,8 @@ public class App extends ObservableBase<AppListener> {
     
     
     public void runStatement(String statement){
+        ch.psi.pshell.core.Console console =  (this.console==null) ? new ch.psi.pshell.core.Console() : null;
+        
         try {
             Object ret = evalStatement(statement);
             if (ret != null) {
@@ -1696,6 +1703,10 @@ public class App extends ObservableBase<AppListener> {
         } catch (Exception ex) {
             ex.printStackTrace();
             logger.log(Level.WARNING, null, ex);
+        } finally{
+            if (console!=null){
+                console.close();
+            }
         }
     }
     

@@ -44,12 +44,15 @@ import jline.internal.NonBlockingInputStream;
  * Implement PShell command-line interface. If Console.run() is called with the advanced parameter
  * set to true, uses JLine to provide advanced capabilities as command history.
  */
-public class Console {
+public class Console implements AutoCloseable{
     
     static final boolean INCLUDE_IMMUTABLE_ATTRS_SIGNATURES = false;
-
-    public void run(InputStream in, PrintStream out, boolean advanced) throws IOException {
+    
+    public Console(){
         attachInterpreterOutput();
+    }
+
+    public void run(InputStream in, PrintStream out, boolean advanced) throws IOException {        
         if (advanced) {
             runAdvancedConsole();
         } else {
@@ -61,6 +64,10 @@ public class Console {
         Context.getInstance().addListener(contextListener);
     }
 
+    public void detachInterpreterOutput() {
+        Context.getInstance().removeListener(contextListener);
+    }
+    
     //Pure Java, no history and headless: suited for server
     void runStandardConsole() throws IOException {
         Context context = Context.getInstance();
@@ -376,5 +383,10 @@ public class Console {
             }
             return ret;
         }
+    }
+
+    @Override
+    public void close() {
+         detachInterpreterOutput();
     }
 }
