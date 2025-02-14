@@ -29,7 +29,6 @@ public class Server implements AutoCloseable {
     public int getPort() {
         return port;
     }
-
     public String getInterfaceURL() {
         String url = getBaseURL();
         if (url.contains("http://0.0.0.0")){
@@ -38,8 +37,10 @@ public class Server implements AutoCloseable {
             } catch (Exception ex) {
             }
         }
-        String ret =  String.format("%sstatic/", url);
-        return ret;
+        return url;
+    }    
+    public String getStaticURL() {
+        return String.format("%sstatic/", getInterfaceURL());
     }
 
     public String getBaseURL() {
@@ -67,7 +68,7 @@ public class Server implements AutoCloseable {
         // Static content
         String home = Context.getInstance().getSetup().getWwwPath();
         server.getServerConfiguration().addHttpHandler(new StaticHttpHandler(home), "/static");
-        String msg = String.format("Interface available at %s", getInterfaceURL());
+        String msg = String.format("Interface available at %s", getStaticURL());
         logger.info(msg);
         System.out.println(msg);
     }

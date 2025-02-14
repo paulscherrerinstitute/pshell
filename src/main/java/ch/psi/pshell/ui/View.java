@@ -5151,7 +5151,7 @@ public class View extends MainFrame {
                 {"Settings file", setup.getSettingsFile()},
                 {"Device pool", setup.getDevicePoolFile()},
                 {"Preferences", Preferences.getFile().toString()},
-                {"Server URL", server == null ? "" : server.getInterfaceURL()},};
+                {"Server URL", server == null ? "" : server.getStaticURL()},};
 
             JTable table = new JTable();
             table.setModel(new DefaultTableModel(

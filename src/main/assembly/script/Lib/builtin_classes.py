@@ -809,7 +809,8 @@ class EpicsServerUrl(ReadonlyRegisterBase, RegisterArray):
         super(EpicsServerURL, self).doClose()        
 
     def doRead(self):
+        url = get_context().server.interfaceURL
         if self.as_string:
-            return get_context().server.baseURL  
+            return url  
         else:
-            return string_to_list(get_context().server.baseURL)
+            return string_to_list(url)
