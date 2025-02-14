@@ -532,6 +532,7 @@ public class App extends ObservableBase<AppListener> {
             sb.append("\n\t-v\tCreate a StripChart server");
             sb.append("\n\t-attach\tShared mode: try connecting to existing server, or create one if not available");
             sb.append("\n\t-background_color=<..>\tSet default plot background color");
+            sb.append("\n\t-default_duration=<..>\tSet the plots defaut duration (default 60000ms)");
             sb.append("\n\t-grid_color=<..>\tSet default plot grid color");
             sb.append("\n\t-tick_label_font=name:size\tSet font for time plot tick labels");
             sb.append("\n\t-alarm_interval=<..>\tSet the alarm timer interval (default 1000ms)");

@@ -123,6 +123,7 @@ public class StripChart extends StandardDialog {
     Font tickLabelFont = null;
     int alarmInterval = 1000;
     File alarmFile = null;
+    int defaultDuration = 60000;
     boolean pulse;
 
     enum Type {
@@ -204,6 +205,14 @@ public class StripChart extends StandardDialog {
                 Logger.getLogger(StripChart.class.getName()).log(Level.WARNING, null, ex);
             }
         }
+        if (App.hasArgument("default_duration")) {
+            try {
+                defaultDuration = Integer.valueOf(App.getArgumentValue("default_duration"));
+            } catch (Exception ex) {
+                Logger.getLogger(StripChart.class.getName()).log(Level.WARNING, null, ex);
+            }
+        }
+
         if (App.hasArgument("tick_label_font")) {
             try {
                 String[] tokens = App.getArgumentValue("tick_label_font").split(":");
@@ -683,7 +692,7 @@ public class StripChart extends StandardDialog {
                     Boolean markers = (Boolean) modelCharts.getValueAt(i, 6);
                     TimePlotBase plot = plots.get(i);
                     plot.setMarkersVisible(Boolean.TRUE.equals(markers));
-                    plot.setDurationMillis((duration == null) ? 60000 : (int) (duration * 1000));
+                    plot.setDurationMillis((duration == null) ? defaultDuration : (int) (duration * 1000));
                     if ((y1min != null) && (y1max != null)) {
                         plot.setY1AxisScale(y1min, y1max);
                     }
@@ -1134,7 +1143,7 @@ public class StripChart extends StandardDialog {
             plot.setTimeAxisLabel(null);
             plot.setLegendVisible(true);
             plot.setMarkersVisible(Boolean.TRUE.equals(markers));
-            plot.setDurationMillis((duration == null) ? 60000 : (int) (duration * 1000));
+            plot.setDurationMillis((duration == null) ? defaultDuration : (int) (duration * 1000));
             if ((y1min != null) && (y1max != null)) {
                 plot.setY1AxisScale(y1min, y1max);
             }
