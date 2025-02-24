@@ -211,4 +211,11 @@ public class Str {
         }
         return array;
     }
+    
+    public static boolean isDigit(String str){
+        if (str==null){
+            return false;
+        }
+        return str.matches("\\d+");
+    }
 }

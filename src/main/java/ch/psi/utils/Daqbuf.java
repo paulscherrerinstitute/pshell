@@ -444,7 +444,11 @@ public class Daqbuf implements ChannelQueryAPI {
         }
 
         WebTarget setResourceParams(WebTarget resource) {
-            resource = resource.queryParam("channelName", channel);
+            if (Str.isDigit(channel)){
+                resource = resource.queryParam("seriesId", channel);
+            } else {
+                resource = resource.queryParam("channelName", channel);
+            }            
             resource = resource.queryParam("begDate", start);
             resource = resource.queryParam("endDate", end);
             if ((backend!=null) && !backend.isBlank()){
