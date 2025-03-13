@@ -639,8 +639,9 @@ public class DaqbufPanel extends StandardDialog {
 
     CompletableFuture updateShape(int row) {
         String channel = (String) modelSeries.getValueAt(row, 1);
+        String exactName = "^" + channel + "$";
         String backend = (String) modelSeries.getValueAt(row, 2);
-        CompletableFuture cf = daqbuf.startSearch(backend, channel, null, 1).handle((ret, ex) -> {
+        CompletableFuture cf = daqbuf.startSearch(backend, exactName, null, 1).handle((ret, ex) -> {
             if (ex != null) {
                 //showException((Exception) ex);
                 modelSeries.setValueAt("", row, 3);
