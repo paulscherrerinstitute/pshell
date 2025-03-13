@@ -326,6 +326,7 @@ public class LayoutDefault extends LayoutBase {
 
     @Override
     public boolean isScanDataset(String root, String path, DataManager dm) {
+        dm = (dm == null) ? getDataManager() : dm;
         return ((dm.getAttribute(root, path, ATTR_READABLE_INDEX) != null)
                 || (dm.getAttribute(root, path, ATTR_WRITABLE_INDEX) != null));
     }

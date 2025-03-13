@@ -525,7 +525,7 @@ public class PluginManager implements AutoCloseable {
             if (!file.exists()) {
                 file = Paths.get(Context.getInstance().getSetup().getPluginsPath(), fileName).toFile();
             }
-            for (ch.psi.pshell.core.Plugin p : Context.getInstance().getPlugins()) {
+            for (ch.psi.pshell.core.Plugin p : getLoadedPlugins()) {
                 if (p.getPluginFile().getCanonicalPath().equals(file.getCanonicalPath())) {
                     return true;
                 }

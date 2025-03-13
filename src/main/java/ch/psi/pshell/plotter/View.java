@@ -429,7 +429,7 @@ public class View extends MainFrame {
             port = Integer.valueOf(App.getArgumentValue(ARG_SERVER_PORT));
         }
         
-        create(port);
+        create(port, App.getSize());
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables

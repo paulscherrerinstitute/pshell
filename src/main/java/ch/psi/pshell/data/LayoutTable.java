@@ -235,6 +235,7 @@ public class LayoutTable extends LayoutBase {
 
     @Override
     public boolean isScanDataset(String root, String path, DataManager dm) {
+        dm = (dm == null) ? getDataManager() : dm;
         if (!path.contains("/")) {
             return false;
         }

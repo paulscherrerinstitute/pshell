@@ -74,7 +74,7 @@ public abstract class LayoutBase implements Layout {
     }    
     
     public void setWriteSessionMetadata(boolean value, String path, boolean attributes) {
-        persistSetpoints = value;
+        writeSessionMetadata = value;
         sessionMetadataPath = path;
         sessionMetadataAttributes = attributes;
     }    
@@ -149,7 +149,9 @@ public abstract class LayoutBase implements Layout {
 
     @Override
     public void writeSessionMetadata() throws IOException {
-        Context.getInstance().writeSessionMetadata(sessionMetadataPath, sessionMetadataAttributes);
+        if(writeSessionMetadata){
+            Context.getInstance().writeSessionMetadata(sessionMetadataPath, sessionMetadataAttributes);
+        }
     }    
 
     @Override

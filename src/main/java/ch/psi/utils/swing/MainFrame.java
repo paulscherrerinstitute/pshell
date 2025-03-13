@@ -1,6 +1,5 @@
 package ch.psi.utils.swing;
 
-import static ch.psi.pshell.ui.App.getResourceImage;
 import ch.psi.utils.Arr;
 import ch.psi.utils.IO;
 import ch.psi.utils.IO.FilePermissions;

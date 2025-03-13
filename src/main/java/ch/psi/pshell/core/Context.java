@@ -417,7 +417,7 @@ public class Context extends ObservableBase<ContextListener> implements AutoClos
 
     public static void assertInstantiated() {
         if (instance == null) {
-            throw new RuntimeException("Contect no instantiated");
+            throw new RuntimeException("Context not instantiated");
         }
     }
 

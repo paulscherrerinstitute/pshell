@@ -180,7 +180,7 @@ public interface Layout {
             DataManager.DataAddress scanPath = DataManager.getAddress(scan.getPath());
             String path = Layout.this.getSnapPathName(scan, name);
             dm = (dm == null) ? getDataManager() : dm;
-            Object sliceData = getDataManager().getData(scanPath.root, path).sliceData;  
+            Object sliceData = dm.getData(scanPath.root, path).sliceData;  
             return sliceData;
         } catch (Exception ex){    
             Logger.getLogger(Layout.class.getName()).log(Level.WARNING, null, ex);
@@ -241,7 +241,7 @@ public interface Layout {
             DataManager.DataAddress scanPath = DataManager.getAddress(scan.getPath());
             String path = getDiagPathName(scan, name);
             dm = (dm == null) ? getDataManager() : dm;
-            return getDataManager().getData(scanPath.root, path).sliceData;          
+            return dm.getData(scanPath.root, path).sliceData;          
         } catch (Exception ex){    
             Logger.getLogger(Layout.class.getName()).log(Level.WARNING, null, ex);
         }            
@@ -285,7 +285,7 @@ public interface Layout {
             Device dev = scan.getMonitors()[scan.getMonitorIndex(device)];
             String path = getMonitorPathName(scan, dev);
             dm = (dm == null) ? getDataManager() : dm;
-            Object sliceData = getDataManager().getData(scanPath.root, path).sliceData;  
+            Object sliceData = dm.getData(scanPath.root, path).sliceData;  
             try{
                 Object[][] data = (Object[][]) sliceData;  
                 if (data.length>0){
@@ -314,8 +314,9 @@ public interface Layout {
         try{
             DataManager.DataAddress scanPath = DataManager.getAddress(scan.getPath());                    
             String timestamps = getTimestampsDataset(scan.getPath());
+            dm = (dm == null) ? getDataManager() : dm;
             if (timestamps != null) {
-                return (long[]) Convert.toPrimitiveArray(Context.getInstance().getDataManager().getData(timestamps).sliceData, Long.class);
+                return (long[]) Convert.toPrimitiveArray(dm.getData(timestamps).sliceData, Long.class);
             }    
         } catch (Exception ex){    
             Logger.getLogger(Layout.class.getName()).log(Level.WARNING, null, ex);

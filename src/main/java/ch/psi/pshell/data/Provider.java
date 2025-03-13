@@ -167,7 +167,7 @@ public interface Provider {
     
     /**
     * Returns the actual file path for the relative location. 
-    * The defualt implementation returns the output file (valid for packed providers as hdf5).  
+    * The default implementation returns the output file (valid for packed providers as hdf5).  
     */
     default public Path getFilePath(String path) {        
         Context.assertInstantiated();
@@ -176,7 +176,7 @@ public interface Provider {
 
     /**
      * Returns the actual file path for the relative location.
-     * The defualt implementation returns the File path (true for packed data and for embedded attributes).
+     * The default implementation returns the File path (true for packed data and for embedded attributes).
      */
     default public Path getAttributePath(String path) {
         return getFilePath(path);
