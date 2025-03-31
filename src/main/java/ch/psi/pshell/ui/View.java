@@ -231,9 +231,9 @@ public class View extends MainFrame {
         menuCamServer.setVisible(App.hasArgument(CamServerViewer.ARG_PIPELINE_SERVER));
         manuDaqbuf.setVisible(App.hasArgument(DaqbufPanel.ARG_DAQBUF_URL));
 
-        fileHistory = new History(getSessionPath() + "/FileHistory.dat", 10, true);
+        fileHistory = new History(getPersistencePath() + "/FileHistory.dat", 10, true);
         openedFiles = new Properties();
-        openedFilesFileName = getSessionPath() + "/OpenedFiles.dat";
+        openedFilesFileName = getPersistencePath() + "/OpenedFiles.dat";
         try (FileInputStream in = new FileInputStream(openedFilesFileName)) {
             openedFiles.load(in);
         } catch (Throwable ex) {
@@ -454,7 +454,7 @@ public class View extends MainFrame {
     boolean ctrlPressed;
 
     @Override
-    public String getSessionPath() {
+    public String getPersistencePath() {
         return context.getSetup().getContextPath();
     }
 

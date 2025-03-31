@@ -382,24 +382,26 @@ public class SwingUtils {
         return (getComponentIndex(parent, component) >= 0);
     }
 
-    public static Component[] getComponentsByType(Container parent, Class type) {
-        boolean is_menu = (parent instanceof JMenu);
-        int componentCount = is_menu ? ((JMenu) parent).getMenuComponentCount() : parent.getComponentCount();
-        ArrayList<Component> ret = new ArrayList<>();
+    public static <T extends Component> T[] getComponentsByType(Container parent, Class<T> type) {
+        boolean isMenu = (parent instanceof JMenu);
+        int componentCount = isMenu ? ((JMenu) parent).getMenuComponentCount() : parent.getComponentCount();
+        ArrayList<T> ret = new ArrayList<>();
+
         for (int i = 0; i < componentCount; i++) {
-            Component component = is_menu ? ((JMenu) parent).getMenuComponent(i) : parent.getComponent(i);
+            Component component = isMenu ? ((JMenu) parent).getMenuComponent(i) : parent.getComponent(i);
             if (type.isAssignableFrom(component.getClass())) {
-                ret.add(component);
+                ret.add(type.cast(component));
             }
         }
 
         for (int i = 0; i < componentCount; i++) {
-            Component component = is_menu ? ((JMenu) parent).getMenuComponent(i) : parent.getComponent(i);
+            Component component = isMenu ? ((JMenu) parent).getMenuComponent(i) : parent.getComponent(i);
             if (component instanceof Container) {
                 ret.addAll(Arrays.asList(getComponentsByType((Container) component, type)));
             }
         }
-        return ret.toArray(new Component[0]);
+
+        return ret.toArray((T[]) java.lang.reflect.Array.newInstance(type, ret.size()));
     }
 
     public static void updateAllFrames() {

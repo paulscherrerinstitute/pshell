@@ -497,7 +497,7 @@ public abstract class MainFrame extends JFrame {
     }    
     
     //Window state persistence
-    public String getSessionPath() {
+    public String getPersistencePath() {
         return Paths.get(Sys.getUserHome(), "." + getClass().getName()).toString();
     }
 
@@ -566,7 +566,7 @@ public abstract class MainFrame extends JFrame {
         persistedWindowNames = new ArrayList<String>();
         String fileName = "Windows." + sessionEncoder.toString();
         try {
-            byte[] array = Files.readAllBytes(Paths.get(getSessionPath(), fileName));
+            byte[] array = Files.readAllBytes(Paths.get(getPersistencePath(), fileName));
             persistedWindowNames = (ArrayList<String>) Serializer.decode(array);
         } catch (FileNotFoundException | NoSuchFileException ex) {
             logger.log(Level.FINE, null, ex);
@@ -584,7 +584,7 @@ public abstract class MainFrame extends JFrame {
         }
         String fileName = "Windows." + sessionEncoder.toString();
         try {
-            Path path = Paths.get(getSessionPath(), fileName);
+            Path path = Paths.get(getPersistencePath(), fileName);
             Files.write(path, Serializer.encode(persistedWindowNames, sessionEncoder));    
             IO.setFilePermissions(path.toString(), persistenceFilesPermissions);
         } catch (Exception ex) {
@@ -622,7 +622,7 @@ public abstract class MainFrame extends JFrame {
         if (window == null) {
             return;
         }
-        String fileName = getSessionFilename(window);
+        String fileName = getPersistenceFilename(window);
         if (fileName != null) {
             try {
                 save(window, fileName);
@@ -636,10 +636,10 @@ public abstract class MainFrame extends JFrame {
         if (window == null) {
             return;
         }
-        String fileName = getSessionFilename(window);
+        String fileName = getPersistenceFilename(window);
         if (fileName != null) {
             try {
-                Path stateFile = Paths.get(getSessionPath(), fileName);
+                Path stateFile = Paths.get(getPersistencePath(), fileName);
                 if (Files.exists(stateFile)) {
                     Files.delete(stateFile);
                 }
@@ -682,9 +682,9 @@ public abstract class MainFrame extends JFrame {
         if (window == null) {
             return false;
         }
-        String fileName = getSessionFilename(window);
+        String fileName = getPersistenceFilename(window);
         if (fileName != null) {
-            return (new File(getSessionPath(), fileName).exists());
+            return (new File(getPersistencePath(), fileName).exists());
         }
         return false;
     }
@@ -694,9 +694,9 @@ public abstract class MainFrame extends JFrame {
             return;
         }
         try {
-            String fileName = getSessionFilename(window);
+            String fileName = getPersistenceFilename(window);
             if (fileName != null) {
-                if (!(new File(getSessionPath(), fileName).exists())) {
+                if (!(new File(getPersistencePath(), fileName).exists())) {
                     logger.fine("No session file for window " + getComponentName(window));
                 } else {
                     restore(window, fileName);
@@ -712,13 +712,13 @@ public abstract class MainFrame extends JFrame {
             if (component == null) {
                 return null;
             }
-            String fileName = getSessionFilename(this);
+            String fileName = getPersistenceFilename(this);
             if (fileName != null) {
-                if (!(new File(getSessionPath(), fileName).exists())) {
+                if (!(new File(getPersistencePath(), fileName).exists())) {
                     logger.fine("No session file for component " + getComponentName(component));
                 } else {
                     checkSaveRestoreArgs(component, fileName);
-                    byte[] array = Files.readAllBytes(Paths.get(getSessionPath(), fileName));
+                    byte[] array = Files.readAllBytes(Paths.get(getPersistencePath(), fileName));
                     Map<String, Object> stateMap = (Map<String, Object>) Serializer.decode(array);
                     return stateMap;
                 }
@@ -745,18 +745,18 @@ public abstract class MainFrame extends JFrame {
         }
     }
 
-    protected String getSessionFilename(Window window) {
-        return getComponentName(window) + ".session." + sessionEncoder.toString();
+    protected String getPersistenceFilename(Window window) {
+        return getComponentName(window) + ".state." + sessionEncoder.toString();
     }
 
     public void save(Component root, String fileName) {
         checkSaveRestoreArgs(root, fileName);
-        save(root, Paths.get(getSessionPath(), fileName));
+        save(root, Paths.get(getPersistencePath(), fileName));
     }
 
     public void restore(Component root, String fileName) {
         checkSaveRestoreArgs(root, fileName);
-        restore(root, Paths.get(getSessionPath(), fileName));
+        restore(root, Paths.get(getPersistencePath(), fileName));
     }
 
     void checkSaveRestoreArgs(Component root, String fileName) {
@@ -984,7 +984,9 @@ public abstract class MainFrame extends JFrame {
             Window w = (Window) c;
             WindowState windowState = (WindowState) state;
             if (windowState.fullScreen) {
-                SwingUtils.setFullScreen((Frame) w, true);
+                if (w instanceof Frame) {
+                    SwingUtils.setFullScreen((Frame) w, true);
+                }
             } else if (windowState.isDefined()) {
                 putWindowNormalBounds(w, windowState.bounds);
                 if (!w.isLocationByPlatform() && (state != null)) {

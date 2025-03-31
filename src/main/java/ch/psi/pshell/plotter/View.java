@@ -110,12 +110,12 @@ public class View extends MainFrame {
     }
 
     @Override
-    public String getSessionPath() {
+    public String getPersistencePath() {
         return Sys.getUserHome();
     }
 
     @Override
-    protected String getSessionFilename(Window window) {
+    protected String getPersistenceFilename(Window window) {
         return "." + getComponentName(window) + "." + Sys.getLocalHost() + "_" + ps.port + ".session." + sessionEncoder.toString();
     }
 

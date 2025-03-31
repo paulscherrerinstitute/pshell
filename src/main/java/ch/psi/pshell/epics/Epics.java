@@ -88,7 +88,7 @@ public class Epics {
     }
 
     public static String getConfigFile() {
-        return System.getProperty("ch.psi.jcae.config.file");
+        return System.getProperty(PROPERTY_JCAE_CONFIG_FILE);
     }
 
     public static DefaultChannelService getChannelFactory() {

@@ -179,8 +179,9 @@ public class Config extends ObservableBase<Config.ConfigListener> {
         ArrayList<Field> ret = new ArrayList<>();
         for (Field f : getClass().getFields()) {
             if (f.getDeclaringClass() != Config.class) {
-                if (Modifier.isPublic(f.getModifiers())) {
-                    if (!Modifier.isTransient(f.getModifiers())) {
+                int modifiers = f.getModifiers();
+                if (Modifier.isPublic(modifiers) && !Modifier.isStatic(modifiers)) {
+                    if (!Modifier.isTransient(modifiers)) {
                         ret.add(f);
                     }
                 }

@@ -305,19 +305,19 @@ public class Convert {
         } else if (data instanceof byte[][]) {
             double[][] ret = new double[arrayLength][];
             for (int i = 0; i < arrayLength; i++) {
-                ret[i] = intToDouble(((int[][]) data)[i]);
+                ret[i] = byteToDouble(((byte[][]) data)[i]);
             }
             return ret;
         } else if (data instanceof short[][]) {
             double[][] ret = new double[arrayLength][];
             for (int i = 0; i < arrayLength; i++) {
-                ret[i] = intToDouble(((int[][]) data)[i]);
+                ret[i] = shortToDouble(((short[][]) data)[i]);
             }
             return ret;
         } else if (data instanceof long[][]) {
             double[][] ret = new double[arrayLength][];
             for (int i = 0; i < arrayLength; i++) {
-                ret[i] = intToDouble(((int[][]) data)[i]);
+                ret[i] = longToDouble(((long[][]) data)[i]);
             }
             return ret;
         } else if (data instanceof BigInteger[][]) {
@@ -329,7 +329,7 @@ public class Convert {
         } else if (data instanceof float[][]) {
             double[][] ret = new double[arrayLength][];
             for (int i = 0; i < arrayLength; i++) {
-                ret[i] = intToDouble(((int[][]) data)[i]);
+                ret[i] = floatToDouble(((float[][]) data)[i]);
             }
             return ret;
         } else if (data instanceof boolean[][]) {
