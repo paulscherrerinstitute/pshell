@@ -1101,7 +1101,7 @@ public class DataManager implements AutoCloseable {
         int[] shape = Arr.getShape(data);
         int rank = shape.length;
 
-        logger.finer(String.format("Set \"%s\" type = %s dims = %s", path, type.getSimpleName(), rank, Str.toString(shape, 10)));
+        logger.finer(String.format("Set \"%s\" type = %s dims = %s", path, type.getSimpleName(), Str.toString(shape, 10)));
         createGroup(group);              
         getProvider().setDataset(path, data, type, rank, shape, unsigned, features);
         if (!getProvider().isPacked()){
