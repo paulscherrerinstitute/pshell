@@ -1795,7 +1795,6 @@ public class DaqbufPanel extends StandardDialog {
 
     MatrixPlotSeries addMatrixSeries(MatrixPlotBase plot, String name, String backend, String start, String end, Colormap colormap) {
         List value = new ArrayList();
-        List<Long> id = new ArrayList<>();
         List<Long> timestamp = new ArrayList<>();
         long maxSize = getMaxSeriesSize();
         MatrixPlotSeries series = new MatrixPlotSeries(name);
@@ -1813,7 +1812,6 @@ public class DaqbufPanel extends StandardDialog {
                         throw new RuntimeException("Series too big for plotting: " + name);
                     }
                     value.addAll(values);
-                    id.addAll(ids);
                     timestamp.addAll(timestamps);
                 }
             }).handle((ret, ex) -> {
@@ -1931,7 +1929,6 @@ public class DaqbufPanel extends StandardDialog {
              */
 
             List value = new ArrayList();
-            List<Long> id = new ArrayList<>();
             List<Long> timestamp = new ArrayList<>();
             daqbuf.startQuery(name + Daqbuf.BACKEND_SEPARATOR + backend, start, end, new QueryListener() {
                 public void onMessage(Query query, List values, List<Long> ids, List<Long> timestamps) {
@@ -1939,7 +1936,6 @@ public class DaqbufPanel extends StandardDialog {
                         throw new RuntimeException("Series too big for plotting: " + name);
                     }
                     value.addAll(values);
-                    id.addAll(ids);
                     timestamp.addAll(timestamps);
                 }
             }/*,bins*/).handle((ret, ex) -> {
