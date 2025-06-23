@@ -109,6 +109,7 @@ public class Interpreter {
                         //A correct partial statement
                         ret.complete = false;
                     } else {
+                        ret.complete = true;
                         try {
                             statementNumber++;
                             ret.result = cs.eval(bindings);
