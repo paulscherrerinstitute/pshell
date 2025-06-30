@@ -51,7 +51,7 @@ if (!hasProperty('runArgs')) {
 } 
 
 
-repositories {
+repositories {    
     mavenCentral()
     maven { 
             credentials {
@@ -67,10 +67,11 @@ repositories {
             }
             url = "https://maven.pkg.github.com/paulscherrerinstitute/bsread_java"
         }       
-    maven { url "https://maven.scijava.org/content/repositories/public/" }         
-    maven { url "https://maven.scijava.org/" }
     //maven { url "https://artifacts.psi.ch/artifactory/libs-snapshots-local/" }
-    maven { url 'https://www.jitpack.io' }
+    maven { url 'https://www.jitpack.io' }    
+    maven { url 'https://repo.clojars.org' }
+    maven { url "https://maven.scijava.org/" }
+    maven { url "https://maven.scijava.org/content/repositories/public/" }         
 }
 
 configurations {
