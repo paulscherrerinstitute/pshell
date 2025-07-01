@@ -1,0 +1,28 @@
+description = 'fda'
+
+ext.mainClass = hasProperty('mainClass') ? mainClass : 'ch.psi.pshell.xscan.App'
+
+createDefaultTasks(project)
+
+dependencies {
+    implementation project(':base')
+    implementation project(':devices')
+    implementation project(':control')   
+    implementation 'jakarta.xml.bind:jakarta.xml.bind-api:4.0.2'
+    implementation 'org.glassfish.jaxb:jaxb-runtime:4.0.5'
+    implementation 'com.sun.xml.bind:jaxb-core:4.0.5'
+    implementation 'com.sun.xml.bind:jaxb-impl:4.0.5'
+    implementation 'com.sun.xml.messaging.saaj:saaj-impl:3.0.4'
+    implementation 'net.sourceforge.jmatio:jmatio:1.0'
+}
+
+tasks {
+    shadowJar {
+        shadowJarSetup(delegate)
+        shadowJarExcludeFrameworkFiles(delegate)
+        shadowJarExcludeJzy3dFiles(delegate)
+        dependencies {
+            shadowJarExcludeJzy3d(delegate)    
+        }             
+    } 
+}

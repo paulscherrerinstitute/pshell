@@ -1,0 +1,28 @@
+description = 'dataviewer'
+
+ext.mainClass = hasProperty('mainClass') ? mainClass : 'ch.psi.pshell.dataviewer.App'
+
+dependencies {
+    implementation project(':base')    
+    implementation project(':devices')    
+    implementation project(':control')    
+}
+
+createDefaultTasks(project)
+
+tasks {
+    shadowJar {
+        shadowJarSetup(delegate)
+        minimize{
+             shadowJarMinimizeKeepFlatLaf(delegate)
+        }                           
+        shadowJarExcludeFrameworkFiles(delegate)
+        shadowJarExcludeJzy3dFiles(delegate)
+        dependencies {
+            shadowJarExcludeDevices(delegate)
+            shadowJarExcludeFramework(delegate)
+            shadowJarExcludeJzy3d(delegate)    
+        }             
+    }
+}
+

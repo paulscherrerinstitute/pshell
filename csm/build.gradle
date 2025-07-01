@@ -1,0 +1,38 @@
+description = 'csm'
+
+ext.mainClass = hasProperty('mainClass') ? mainClass : 'ch.psi.pshell.csm.App'
+
+dependencies {
+    implementation project(':base')
+    implementation project(':devices')
+    implementation 'ch.psi:bsread:4.5.0'
+    implementation 'org.eclipse.jgit:org.eclipse.jgit:6.9.0.202403050737-r'
+    implementation 'org.eclipse.jgit:org.eclipse.jgit.ssh.jsch:6.9.0.202403050737-r'    
+    implementation 'com.fifesoft:rsyntaxtextarea:3.4.0'    
+}
+
+createDefaultTasks(project)
+
+tasks {
+    shadowJar {
+        shadowJarSetup(delegate)
+        minimize{
+             shadowJarMinimizeKeepJersey(delegate)
+             shadowJarMinimizeKeepFlatLaf(delegate)
+             shadowJarMinimizeKeepRsyntaxtextarea(delegate)
+             shadowJarMinimizeKeepDevices(delegate)
+        }                   
+        
+        shadowJarExcludeFrameworkFiles(delegate)
+        shadowJarExcludeJzy3dFiles(delegate)
+        shadowJarExcludeJhdf5Files(delegate)
+        dependencies {
+            shadowJarExcludeFramework(delegate)
+            shadowJarExcludeJzy3d(delegate)                  
+            shadowJarExcludeJhdf5(delegate)    
+        }             
+    }
+}
+
+
+

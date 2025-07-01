@@ -1,0 +1,37 @@
+description = 'archiverviewer'
+
+ext.mainClass = hasProperty('mainClass') ? mainClass : 'ch.psi.pshell.archiverviewer.App'
+
+dependencies {
+    implementation project(':base')
+    implementation project(':devices')    
+    implementation project(':control')    
+    implementation project(':dataviewer')   
+    implementation 'org.jfree:jfreechart:1.5.4'
+}
+
+createDefaultTasks(project)
+
+tasks {
+    shadowJar {
+        shadowJarSetup(delegate)
+        //minimize()
+        minimize{
+             shadowJarMinimizeKeepJersey(delegate)
+             shadowJarMinimizeKeepFlatLaf(delegate)
+        }                   
+        shadowJarExcludeFrameworkFiles(delegate)
+        shadowJarExcludeJzy3dFiles(delegate)
+        dependencies {
+            shadowJarExcludeFramework(delegate)
+            shadowJarExcludeJzy3d(delegate)    
+        }             
+    }
+    
+    //build {
+    //    dependsOn(shadowJar)
+    //}
+}
+
+
+

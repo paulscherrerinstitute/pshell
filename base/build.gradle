@@ -1,0 +1,19 @@
+description = 'base' 
+
+dependencies {
+    implementation 'net.java.dev.jna:jna:5.14.0'  
+    implementation 'javax.mail:javax.mail-api:1.6.2'
+    implementation 'com.sun.mail:javax.mail:1.6.2'
+    implementation 'com.fifesoft:rsyntaxtextarea:3.4.0'
+    implementation 'org.jetbrains.pty4j:pty4j:0.12.13' // Not updated because use of Gradle Kotlin build file adds Kotlin libraries to jar file
+    implementation 'com.github.JetBrains:jediterm:ba1165965cac86a2c4fc18efa340822cc61830e7'
+    implementation 'redis.clients:jedis:5.1.5'
+    implementation 'org.jfree:jfreechart:1.5.4'
+    implementation 'com.formdev:flatlaf:3.4.1'
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.17.1'
+    implementation 'cisd:jhdf5:19.04.1'
+    implementation 'org.jzy3d:jzy3d-native-jogl-awt:2.2.1'      
+    implementation 'org.eclipse.jgit:org.eclipse.jgit:6.9.0.202403050737-r'
+    implementation 'org.eclipse.jgit:org.eclipse.jgit.ssh.jsch:6.9.0.202403050737-r'    
+    implementation "commons-cli:commons-cli:1.9.0"
+}

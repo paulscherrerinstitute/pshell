@@ -1,0 +1,45 @@
+description = 'workbench'
+
+ext.mainClass = hasProperty('mainClass') ? mainClass : 'ch.psi.pshell.workbench.App'
+
+dependencies {
+    implementation project(':base')
+    implementation project(':devices')
+    implementation project(':plotter') 
+    implementation project(':control')       
+    implementation project(':fda')    
+    implementation project(':stripchart') 
+    implementation project(':screenpanel') 
+    implementation project(':archiverviewer') 
+    implementation project(':dataviewer') 
+    implementation 'org.commonmark:commonmark-ext-gfm-tables:0.22.0'
+    implementation  'com.twelvemonkeys.imageio:imageio-tiff:3.11.0'            
+
+    implementation 'org.jfree:jfreechart:1.5.4'  
+    implementation 'org.glassfish.jersey.containers:jersey-container-grizzly2-http:3.1.7'
+    implementation 'org.glassfish.jersey.media:jersey-media-sse:3.1.7'
+    implementation 'org.glassfish.jersey.inject:jersey-hk2:3.1.7'
+    implementation 'org.eclipse.jgit:org.eclipse.jgit:6.9.0.202403050737-r'
+    implementation 'org.eclipse.jgit:org.eclipse.jgit.ssh.jsch:6.9.0.202403050737-r'      
+}
+
+createDefaultTasks(project)
+        
+tasks {
+    shadowJar {
+        shadowJarSetup(delegate)
+    }   
+}
+
+
+//Not needed after pshell project separation
+//afterEvaluate {
+//    tasks.named("rpm").configure {
+//        def pshell_jar = "/usr/local/lib/pshell_" + version+ ".jar"
+//        def pshell_bin = "/usr/local/bin/pshell_" + version                
+//        link( pshell_jar, app_path + '/lib/' + app_name + "-all.jar")   
+//        link(sys_lib + "pshell.jar", pshell_jar)                 
+//        link(pshell_bin, app_path + '/bin/' + app_name + "_" + version)         
+//        link("/usr/local/bin/pshell" + "pshell", pshell_bin) 
+//    }
+//}

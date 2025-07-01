@@ -1,406 +1,320 @@
 plugins {
-    id 'java-library'
-    id 'eclipse'
-    id 'maven-publish'
-    id 'com.netflix.nebula.rpm' version '11.6.0'
-    //id 'org.openjfx.javafxplugin' version '0.0.10'
+    id("com.gradleup.shadow") version "8.3.5"
+    id("com.netflix.nebula.rpm") version "11.6.0"
 }
 
-version = '1.21.3'
-group = 'ch.psi'
-ext.timestamp = new Date().format("yyMMddHHmm")
-
-ext.type = project.hasProperty('type') ? project.type : 'py'     //py, groovy, js, all or light
-ext.javafx = false
-ext.jzy3d = false
-ext.manif_addopens = 'java.base/sun.nio.ch java.base/java.io java.desktop/sun.awt java.desktop/javax.swing.text.html java.desktop/sun.swing java.base/jdk.internal.loader jdk.nashorn.internal.runtime java.base/java.util'
-ext.run_addopens = 'java.base/jdk.internal.loader=ALL-UNNAMED java.base/java.util=ALL-UNNAMED'
-ext.run_addexports = "java.desktop/sun.awt=ALL-UNNAMED"
-ext.run_jvargs = ["--add-opens", "java.base/jdk.internal.loader=ALL-UNNAMED", "--add-opens", "java.base/java.util=ALL-UNNAMED", "--add-exports", "java.desktop/sun.awt=ALL-UNNAMED"]
-
-if (ext.type != 'py'){
-    version = version + "-" + ext.type
-}
-
-java {
-    sourceCompatibility = JavaVersion.VERSION_11
-}
-
-ext.hdf5 = '1.10' // '1.10' or '1.8
-
-[compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
-
-if (!hasProperty('mainClass')) {
-    ext.mainClass = 'ch.psi.pshell.ui.App' 
-}
-ext.main_class = ext.mainClass
-
-
-if (hasProperty('java_exec_jdk')) {
-    ext.java_exec_jdk= java_exec_jdk
-    if (java_exec_jdk!=null) System.out.println "Execution JDK:" + java_exec_jdk
-} else {
-    ext.java_exec_jdk = null
-}
-
-
-if (!hasProperty('runArgs')) {
-    ext.arguments = ''
-} else {
-    ext.arguments = runArgs.split (" ")
-} 
-
-
-repositories {    
-    mavenCentral()
-    maven { 
-            credentials {
-                username = githubUser 
-                password = githubPwd
-            }
-            url "https://maven.pkg.github.com/paulscherrerinstitute/jcae" 
-        }    
-        maven {
-            credentials {
-                username = githubUser 
-                password = githubPwd
-            }
-            url = "https://maven.pkg.github.com/paulscherrerinstitute/bsread_java"
-        }       
-    //maven { url "https://artifacts.psi.ch/artifactory/libs-snapshots-local/" }
-    maven { url 'https://www.jitpack.io' }    
-    maven { url 'https://repo.clojars.org' }
-    maven { url "https://maven.scijava.org/" }
-    maven { url "https://maven.scijava.org/content/repositories/public/" }         
-}
-
-configurations {
-    provided
-}
-
-sourceSets {
-    main.compileClasspath += configurations.provided
-    test.compileClasspath += configurations.provided
-    test.runtimeClasspath += configurations.provided
-}
-
-
-ext.jython_lib = 'org.python:jython-standalone:2.7.4'
-ext.groovy_lib = 'org.codehaus.groovy:groovy-all:2.4.8'
-ext.js_lib = 'org.openjdk.nashorn:nashorn-core:15.4' 
+allprojects {
+    version = '2.0.0'    
+    group = 'ch.psi'
+    ext.release = '1'
+    ext.app_jdk = '21'
     
-if (ext.type == 'all'){
-    dependencies {
-        implementation jython_lib
-        implementation js_lib         //TODO: Error instantiating script managers other tat the first
-        implementation groovy_lib
-    }
-} else if (ext.type == 'py'){
-    dependencies {
-        implementation jython_lib 
-        provided groovy_lib
-        provided js_lib
-    }    
-} else if (ext.type == 'groovy'){    
-    dependencies {
-        implementation groovy_lib
-        implementation jython_lib //TODO: For lighter jar should remove direct dependency to Jython (org.python)
-        provided js_lib
-    }    
-} else if (ext.type == 'js'){    
-    dependencies {              
-        implementation js_lib
-        implementation jython_lib   //TODO: For lighter jar should remove direct dependency to Jython (org.python)
-        provided groovy_lib
-    }
-} else if (ext.type == 'light'){    
-    dependencies {              
-        provided js_lib
-        provided jython_lib   //TODO: For lighter jar should remove direct dependency to Jython (org.python)
-        provided groovy_lib
-    }
-}
-
-if (ext.hdf5 == '1.10'){
-    dependencies {
-        implementation 'cisd:jhdf5:19.04.1'
-        //implementation 'cisd:base:18.09.0'
-        //implementation 'commons-io:commons-io:2.8.0'
-    }
-} else {
-    dependencies {
-        implementation 'cisd:jhdf5:14.12.6'
-    }
-}
-
-def urlFile = { url, name ->
-    File file = new File("$buildDir/download/${name}.jar")
-    file.parentFile.mkdirs()
-    if (!file.exists()) {
-        new URL(url).withInputStream { downloadStream ->
-            file.withOutputStream { fileOut ->
-                fileOut << downloadStream
-            }
-        }
-    }
-    files(file.absolutePath)
-}
-
-
-dependencies {
-    implementation 'ch.psi:jcae:3.0.0'
-    implementation 'org.jfree:jfreechart:1.5.4'
-    implementation 'com.formdev:flatlaf:3.4.1'
-    implementation 'ch.psi:bsread:4.5.0'
-    implementation 'ch.psi:bitshuffle-lz4:1.1.2'
-    implementation 'org.zeromq:jeromq:0.6.0'   
-    implementation 'net.jpountz.lz4:lz4:1.3.0'
-    implementation 'org.apache.commons:commons-lang3:3.13.0'    
-    implementation 'org.apache.commons:commons-math3:3.6.1'
-    implementation 'net.imagej:ij:1.54i'
-    implementation 'com.fifesoft:rsyntaxtextarea:3.4.0'
-    implementation 'com.fasterxml.jackson.core:jackson-databind:2.17.1'
-    implementation 'org.glassfish.jersey.media:jersey-media-json-jackson:3.1.7'
-    implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-cbor:2.17.1'
-    implementation 'net.wimpi:jamod:1.2'
-    implementation 'org.slf4j:slf4j-nop:2.0.13'
-    implementation 'redis.clients:jedis:5.1.5'
-    implementation 'black.ninia:jep:4.2.0'
-
-    testImplementation group: 'junit', name: 'junit', version: '4.10'
-}
-
-def opt_scope = (ext.type == 'light') ? 'provided' : 'implementation'
-
-if (ext.type == 'light'){ 
-    dependencies {
-        implementation 'org.glassfish.jersey.core:jersey-client:3.1.7'
-    }
-}
-
-dependencies {
-    //implementation fileTree(dir: './lib', include: '*.jar')
-    "$opt_scope" 'org.glassfish.jersey.containers:jersey-container-grizzly2-http:3.1.7'
-    "$opt_scope" 'org.glassfish.jersey.media:jersey-media-sse:3.1.7'
-    "$opt_scope" 'org.glassfish.jersey.inject:jersey-hk2:3.1.7'
-    "$opt_scope" 'org.eclipse.jgit:org.eclipse.jgit:6.9.0.202403050737-r'
-    "$opt_scope" 'org.eclipse.jgit:org.eclipse.jgit.ssh.jsch:6.9.0.202403050737-r'
-    "$opt_scope" 'org.commonmark:commonmark-ext-gfm-tables:0.22.0'  
-     //"$opt_scope" 'org.rxtx:rxtx:2.1.7'
-    "$opt_scope" 'com.neuronrobotics:nrjavaserial:5.2.1'
-    "$opt_scope" 'net.java.dev.jna:jna:5.14.0'
-    "$opt_scope" 'jline:jline:2.14.6'  
-
-    "$opt_scope" 'javax.mail:javax.mail-api:1.6.2'
-    "$opt_scope" 'com.sun.mail:javax.mail:1.6.2'
-    "$opt_scope" 'com.github.sarxos:webcam-capture:0.3.12'
-    "$opt_scope" 'org.clojars.nakkaya:darcula:1.0.0'     
-
-    //jediterm dependencies
-    "$opt_scope" 'org.jetbrains.pty4j:pty4j:0.12.13' // Not updated because use of Gradle Kotlin build file adds Kotlin libraries to jar file
-    "$opt_scope" 'com.github.JetBrains:jediterm:ba1165965cac86a2c4fc18efa340822cc61830e7'
-
-    //XScan dependencies
-    "$opt_scope" 'jakarta.xml.bind:jakarta.xml.bind-api:4.0.2'
-    "$opt_scope" 'org.glassfish.jaxb:jaxb-runtime:4.0.5'
-    "$opt_scope" 'com.sun.xml.bind:jaxb-core:4.0.5'
-    "$opt_scope" 'com.sun.xml.bind:jaxb-impl:4.0.5'
-    "$opt_scope" 'com.sun.xml.messaging.saaj:saaj-impl:3.0.4'
-    "$opt_scope" 'net.sourceforge.jmatio:jmatio:1.0'
-
-    //TIFF support for ImageIO can be added installing JAI, or one of the following dependencies:
-    "$opt_scope" 'com.twelvemonkeys.imageio:imageio-tiff:3.11.0'            
-}
-
-
-if (ext.jzy3d==true){
-    dependencies {
-        implementation 'org.jzy3d:jzy3d-native-jogl-awt:2.2.1'       
-    }
-} else {
-    dependencies {
-        provided 'org.jzy3d:jzy3d-native-jogl-awt:2.2.1'       
-    }
-}
-
-if (ext.javafx==true){
-    dependencies {
-    implementation 'org.openjfx:javafx-controls:11'
-    implementation 'org.openjfx:javafx-embed-swing:11'
-    }
-   javafx {
-        version = "11"
-        modules = [ 'javafx.controls', 'javafx.swing']
-    }
-}
-
-task sourcesJar(type: Jar, dependsOn: classes) {
-    archiveClassifier = 'sources'
-    from sourceSets.main.allSource
-}
-
-task javadocJar(type: Jar, dependsOn: javadoc) {
-    archiveClassifier = 'javadoc'
-    from javadoc.destinationDir
-}
-
-task fatJar(type: Jar, dependsOn: jar) {
-    archiveClassifier = 'fat'
-    duplicatesStrategy = 'exclude'  
-    manifest {
-        attributes (
-            'Main-Class': mainClass,
-            'Implementation-Version': archiveVersion,
-            'Build-Time': timestamp,
-            'Build-Type': type,
-            'Add-Opens': manif_addopens
-            //,'Class-Path': configurations.compile.collect { it.getName() }.join(' ')
-        )
-    }    
-    doFirst {
-        from { configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) } } 
-    }
-    exclude 'META-INF/*.RSA', 'META-INF/*.SF','META-INF/*.DSA', 'MANIFEST.MF', '*.INFO' , 'LICENSE'   
-        
-    with jar
-}
-
-def app_name = project.name
-def app_path = '/opt/' + project.name + "/" + version
-def jar_file = app_path + '/lib/' + fatJar.archiveFileName
-def sys_bin ='/usr/local/bin/'
-def sys_lib ='/usr/local/lib/'
-
-task generateRpm(type: Rpm) {
-    packageName project.name
-    requires 'java'
-    release = 1
-    //version '1.0.0'    
-    arch 'noarch'
-    os LINUX
-  
-    user='root'
-    permissionGroup 'root'
-    addParentDirs true
-
-    directory(app_path, 755)
-    directory(app_path + '/lib', 755)
-    directory(app_path + '/bin', 755)
-    
-    into app_path  
-
-    from ('build/libs') {
-        into 'lib'
-        fileMode 0644
-    }
-    if (type != 'light'){ 
-        from ('src/main/assembly/www') {
-            into 'lib/www'
-            fileMode 0644
-        }
-    }
-
-    from('scripts') {
-        into 'bin'
-        //Add version to startup script name
-        rename { String fileName ->
-            if (fileName == "startup"){
-                app_name + "_" + version
-            }
-        }
-        expand([
-            "app_name": app_name,
-            "app_version": version,
-            "jar_file": jar_file
-        ])
-        fileMode 0755
-    }
-
-    link(sys_bin + app_name +   "_" + version, app_path + '/bin/' + app_name + "_" + version)   
-    link(sys_bin + app_name, sys_bin + app_name + "_" + version) 
-
-    link(sys_lib + fatJar.archiveFileName, app_path + '/lib/' + fatJar.archiveFileName)   
-    link(sys_lib + "pshell.jar", sys_lib + fatJar.archiveFileName) 
-}
-
-compileJava {
-    //So we have parameter names for reflection
-    options.compilerArgs << '-parameters'    
-    if (project.javafx == false){
-        exclude '**/LinePlotJavaFx.java'
-    }
-    //if (project.jzy3d == false){
-    //    exclude '**/SurfacePlotJzy3d.java'
-    //}
- }    
-
-
-jar {
-    archiveBaseName = project.name
-    if (type != 'light'){ 
-        from('src/main/assembly') {
-            include '**/*'
-            exclude '**/assembly.xml'
-            exclude '**/script/**/*.class'
-        }
-    }
-    manifest {
-        attributes (
-            'Main-Class': mainClass, 
-            'Implementation-Version': version,
-            'Build-Time': timestamp,
-            'Add-Opens': manif_addopens
-        )
-    }       
-}
-
-task(debug, dependsOn: 'classes', type: JavaExec) {    
-    //systemProperty 'java.awt.headless' ,true        
-    systemProperty 'pshell.build.time', timestamp
-    systemProperty 'pshell.build.type', type    
-    mainClass = main_class
-    classpath = sourceSets.main.runtimeClasspath
-    args arguments
-    ignoreExitValue = true
-    debug true
-    executable=java_exec_jdk
-    jvmArgs = run_jvargs
-}
-
-task(run, dependsOn: 'classes', type: JavaExec) {      
-    systemProperty 'pshell.build.time', timestamp
-    systemProperty 'pshell.build.type', type
-    mainClass = main_class
-    classpath = sourceSets.main.runtimeClasspath
-    args arguments 
-    ignoreExitValue = true
-    debug false
-    executable=java_exec_jdk
-    jvmArgs = run_jvargs
-}
-
-
-publishing {
     repositories {
-        maven {
+        mavenCentral()
+        maven { url "https://maven.scijava.org/" }
+        //maven { url 'https://www.jitpack.io' }
+        maven { 
             credentials {
-                username artifactoryUser 
-                password artifactoryPwd
-            }
-            url = artifactoryUrlRel
-        }
+                username = githubUser 
+                password = githubPwd
+            }            
+                url "https://maven.pkg.github.com/paulscherrerinstitute/jcae" 
+            }    
+        maven { 
+            credentials {
+                username = githubUser 
+                password = githubPwd
+            }            
+                url = "https://maven.pkg.github.com/paulscherrerinstitute/bsread_java"
+            }       
+        maven { url "https://maven.scijava.org/content/repositories/public/" }         
+        //maven { url "https://artifacts.psi.ch/artifactory/libs-snapshots-local/" }
+    }
+}
+
+subprojects { 
+    apply plugin: 'java'
+    apply plugin: 'com.gradleup.shadow'
+    apply plugin: 'com.netflix.nebula.rpm'
+
+    configurations {
+        provided
     }
 
-    publications {
-        MyPublication(MavenPublication) {
-            from components.java
-            artifact sourcesJar
-            //artifact javadocJar
-            artifact fatJar
-            //artifact generateRpm
-            groupId group
-            artifactId project.name
-            version version
+    ext.timestamp = new Date().format("yyMMddHHmm")
+    ext.manif_addopens = 'java.base/sun.nio.ch java.base/java.io java.desktop/sun.awt java.desktop/javax.swing.text.html java.desktop/sun.swing java.base/jdk.internal.loader jdk.nashorn.internal.runtime java.base/java.util'
+    ext.run_addopens = 'java.base/jdk.internal.loader=ALL-UNNAMED java.base/java.util=ALL-UNNAMED'
+    ext.run_addexports = "java.desktop/sun.awt=ALL-UNNAMED"
+    ext.run_jvargs = ["--add-opens", "java.base/jdk.internal.loader=ALL-UNNAMED", "--add-opens", "java.base/java.util=ALL-UNNAMED", "--add-exports", "java.desktop/sun.awt=ALL-UNNAMED"]
+
+    if (hasProperty('java_exec_jdk')) {
+        ext.java_exec_jdk= java_exec_jdk
+        if (java_exec_jdk!=null) System.out.println "Execution JDK:" + java_exec_jdk
+    } else {
+        ext.java_exec_jdk = null
+    }
+
+    if (!hasProperty('runArgs')) {
+        ext.arguments = ''
+    } else {
+        ext.arguments = runArgs.split (" ")
+    } 
+    
+    ext.createDefaultTasks = { Project project ->
+        ['run', 'debug'].each { taskName ->
+            project.tasks.register(taskName, JavaExec) {
+                dependsOn 'classes'
+                systemProperty 'build.time', project.timestamp
+                mainClass = project.mainClass
+                classpath = project.sourceSets.main.runtimeClasspath
+                args project.hasProperty('arguments') ? project.arguments : []
+                ignoreExitValue = true
+                debug = (taskName == 'debug')
+                executable = project.java_exec_jdk
+                jvmArgs = project.run_jvargs
+            }
+        }           
+        
+        
+        def app_name = project.name
+        def app_version = project.version.toString()
+        def app_release = project.ext.release.toString()
+        def app_path = '/opt/' + project.name + "/" + app_version
+        def app_jdk = project.ext.app_jdk.toString()
+        def jar_file_name = app_name + "-" + app_version + "-all.jar";
+        def jar_file_path = app_path + '/lib/' + jar_file_name;
+        def sys_bin ='/usr/local/bin/'
+        def sys_lib ='/usr/local/lib/'
+
+        project.tasks.register("rpm", Rpm) {
+            requires 'java-' + app_jdk + '-openjdk'
+            dependsOn 'shadowJar'            
+            packageName project.name            
+            release = app_release
+            version  app_version
+            arch 'noarch'
+            os LINUX
+            
+            // Metadata for "rpm -qi"    
+            def propsFile = file("src/main/resources/ch/psi/pshell/ui/App.properties")
+            def appProps = new Properties()            
+            def title = app_name
+            def description = title
+            if (propsFile.exists()) {
+                propsFile.withInputStream { stream -> appProps.load(stream) }
+                title = appProps.getProperty("Application.title", app_name)
+                description = title + " - " + appProps.getProperty("Application.description", description)                
+            }                        
+            
+            summary = description
+            url = 'https://github.com/paulscherrerinstitute/jstriptool'
+            vendor = 'Paul Scherrer Institute' 
+            license = 'GPL'
+            packageGroup = 'Applications'
+            packageDescription = 'This application is part of PShell scripting environment for experiments.'
+
+
+            user='root'
+            permissionGroup 'root'
+            addParentDirs true
+
+            directory(app_path, 755)
+            directory(app_path + '/lib', 755)
+            directory(app_path + '/bin', 755)
+
+            into app_path  
+
+            from ('build/libs') {
+                print(jar_file_name )
+                include jar_file_name                 
+                into 'lib'
+                fileMode 0644
+            }
+            
+            from('../scripts') {
+                into 'bin'
+                //Add version to startup script name
+                rename { String fileName ->
+                    fileName == "app_startup" ? "${app_name}_${app_version}" : fileName
+                }
+                expand([
+                    "app_name": app_name,
+                    "app_version": app_version,
+                    "app_jdk": app_jdk,
+                    "jar_file": jar_file_path
+                ])
+                fileMode 0755
+            }
+            
+
+            link(sys_bin + app_name +   "_" + app_version, app_path + '/bin/' + app_name + "_" + app_version)   
+            link(sys_bin + app_name, sys_bin + app_name + "_" + app_version) 
+        }            
+    }    
+    
+    ext.shadowJarMinimizeKeepJersey = { d ->
+       d.exclude(d.dependency("org.glassfish.jersey.core:.*:.*"))
+       d.exclude(d.dependency("org.glassfish.jersey.inject:.*:.*"))
+       d.exclude(d.dependency("org.glassfish.jersey.media:.*:.*"))
+    }
+    
+    ext.shadowJarMinimizeKeepFlatLaf = { d ->
+       d.exclude(d.dependency("com.formdev:.*:.*"))
+    }
+    
+    ext.shadowJarMinimizeKeepRsyntaxtextarea = { d ->
+        d.exclude(d.dependency("com.fifesoft:rsyntaxtextarea:.*"))
+    }
+
+    ext.shadowJarMinimizeKeepDevices = { d ->
+        d.exclude(d.dependency("org.zeromq:.*:.*"))
+        d.exclude(d.dependency("ch.psi:bsread:.*"))
+        d.exclude(d.dependency("ch.psi:bitshuffle-lz4:.*"))   
+        d.exclude(d.dependency("ch.psi:jcae:.*"))      
+    }
+
+    ext.shadowJarExcludeJzy3d = { d ->
+        d.exclude(d.dependency("org.jzy3d:.*:.*"))                
+    }
+    
+    ext.shadowJarExcludeJzy3dFiles = {  d ->
+        d.exclude("jogamp/**")
+        d.exclude("jogl/**")
+        d.exclude("newt/**")
+        d.exclude("gluegen/**")
+        d.exclude("natives/**")         
+        d.exclude("com/jogamp/**")
+    }               
+                      
+                    
+    ext.shadowJarExcludeFramework = { d ->
+        d.exclude(d.dependency("redis.clients:.*:.*"))
+        d.exclude(d.dependency("net.imagej:.*:.*"))
+        d.exclude(d.dependency("javax.mail::.*:.*"))            
+        d.exclude(d.dependency("com.sun.mail:.*:.*"))            
+        d.exclude(d.dependency("jline:.*:.*"))            
+        d.exclude(d.dependency("com.neuronrobotics:.*:.*"))
+        d.exclude(d.dependency("com.github.sarxos:.*:.*"))
+        d.exclude(d.dependency("org.python:.*:.*"))
+        d.exclude(d.dependency("org.eclipse.jgit:.*:.*"))    
+        d.exclude(d.dependency("org.glassfish.jersey.containers:.*:.*"))
+        d.exclude(d.dependency("org.glassfish.jersey.media:jersey-media-sse:.*"))       
+        //d.exclude(d.dependency("org.apache.commons:commons-math3:.*"))     
+    }
+    
+    ext.shadowJarExcludeFrameworkFiles = {  d ->
+        d.exclude("www/**")
+        d.exclude("script/**")
+        d.exclude("templates/**")
+        d.exclude("help/**")
+        d.exclude("images/**")        
+        d.exclude("resources/**")                
+        d.exclude 'Log4j*'   
+        d.exclude("macros/**")
+        d.exclude("Lib/**")   
+        d.exclude 'META-INF/*.RSA', 'META-INF/*.SF','META-INF/*.DSA', 'MANIFEST.MF', '*.INFO' , 'LICENSE'   
+        d.exclude("JCALibrary.properties") //!!! Can be removed if using JCAE?
+    }                    
+    
+    ext.shadowJarExcludeDevices = { d ->
+        d.exclude(d.dependency("ch.psi:bsread:.*"))
+        d.exclude(d.dependency("ch.psi:bitshuffle-lz4:.*"))   
+        d.exclude(d.dependency("ch.psi:jcae:.*"))     
+    }
+    
+    ext.shadowJarExcludeJhdf5 = { d -> 
+        d.exclude(d.dependency("cisd:jhdf5::.*"))
+        d.exclude(d.dependency("black.ninia:.*:.*"))                        
+    }
+    
+    ext.shadowJarExcludeJhdf5Files = {  d ->
+        d.exclude("jep/**")
+        d.exclude("native/**")
+    }                    
+    
+    ext.shadowJarSetup = { jarTask ->
+        def mainClassName = project.hasProperty('mainClass') ? project.mainClass : ''
+        def buildTime = project.hasProperty('timestamp') ? project.timestamp : new Date().format("yyMMddHHmm")
+        def manif_addopens = project.hasProperty('manif_addopens') ? project.manif_addopens : ''
+        jarTask.manifest {
+            attributes(
+                'Main-Class': mainClassName,
+                'Implementation-Version': project.version,
+                'Build-Time': buildTime,
+                'Add-Opens': manif_addopens
+            )
+        }
+        
+        //jarTask.archiveClassifier.set("")  // optional: avoid "-all" suffix
+        jarTask.mergeServiceFiles()        // important for things like logging, META-INF/services        
+    }        
+
+    java {
+        sourceCompatibility = JavaVersion.VERSION_21
+    }
+
+
+    dependencies {
+        implementation 'commons-io:commons-io:2.18.0'
+        implementation 'org.apache.commons:commons-lang3:3.13.0'    
+        implementation 'org.apache.commons:commons-math3:3.6.1'
+        implementation 'org.python:jython-standalone:2.7.4'        
+        implementation 'black.ninia:jep:4.2.0'
+        implementation 'net.imagej:ij:1.54i'
+        implementation 'org.zeromq:jeromq:0.6.0'   
+        implementation 'org.glassfish.jersey.media:jersey-media-json-jackson:3.1.7'
+        implementation 'org.glassfish.jersey.core:jersey-client:3.1.7'
+        implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-cbor:2.17.1'
+        implementation 'ch.psi:jcae:3.0.0'
+        
+        compileOnly 'org.codehaus.groovy:groovy-all:2.4.8'
+        testImplementation group: 'junit', name: 'junit', version: '4.13.2'
+    }                 
+}
+
+def fatJarsTask = tasks.register('fatJars') {
+    description = 'Generates all fat JARs for app subprojects'
+    group = 'build'
+}
+
+def rpmsTask = tasks.register('rpms') {
+    description = 'Generates all RPMs for app subprojects'
+    group = 'rpm'
+}
+    
+
+// Populate it after all projects are evaluated
+/*
+gradle.projectsEvaluated {
+    subprojects.each { subproj ->        
+        if (subproj.hasProperty('mainClass')){
+            def shadowTask = subproj.tasks.findByName('shadowJar')
+            if (shadowTask != null) {
+                fatJarsTask.configure {
+                    print(shadowTask)
+                    dependsOn shadowTask
+                }
+            }
+        }
+    }
+}
+*/
+afterEvaluate {
+    tasks.named('fatJars') {
+        subprojects.each { subproj ->
+            if (subproj.hasProperty('mainClass')) {
+                dependsOn("${subproj.path}:shadowJar")
+            }
+        }
+    }
+}
+
+afterEvaluate {
+    tasks.named('rpms') {
+        subprojects.each { subproj ->
+            if (subproj.hasProperty('mainClass')) {
+                dependsOn("${subproj.path}:rpm")
+            }
         }
     }
 }

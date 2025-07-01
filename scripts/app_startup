@@ -1,0 +1,13 @@
+#!/bin/sh
+
+JAVA_HOME="/usr/lib/jvm/java-${app_jdk}-openjdk"
+
+# If JAVA_HOME is found, use its java binary; otherwise, fall back to system java
+if [ -x "\$JAVA_HOME/bin/java" ]; then
+    JAVA_CMD="\$JAVA_HOME/bin/java"
+else
+    JAVA_CMD="java"
+fi
+
+# Run the JAR with all passed arguments
+exec "\$JAVA_CMD" -jar ${jar_file} "\$@"

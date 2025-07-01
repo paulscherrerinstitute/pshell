@@ -1,1 +1,15 @@
-rootProject.name = 'pshell'
+rootProject.name = 'root'
+
+include ':base'
+include ':devices'
+include ':control'
+include ':dataviewer'
+include ':plotter'
+include ':fda'
+include ':csm'
+include ':stripchart'
+include ':screenpanel'
+include ':archiverviewer'
+include ':workbench'
+include ':pshell'
+

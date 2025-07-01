@@ -1,0 +1,35 @@
+description = 'pshell'
+
+
+ext.mainClass = hasProperty('mainClass') ? mainClass : 'ch.psi.pshell.App'
+ext.type = 'py'     //py, groovy, js, all or light
+
+dependencies {
+    implementation project(':base')
+    implementation project(':devices')
+    implementation project(':plotter') 
+    implementation project(':control')       
+    implementation project(':fda')    
+    implementation project(':stripchart') 
+    implementation project(':screenpanel') 
+    implementation project(':archiverviewer') 
+    implementation project(':dataviewer') 
+    implementation project(':workbench') 
+}
+
+createDefaultTasks(project)
+
+jar {
+    manifest {
+        attributes (
+            'Build-Type': type,
+        )
+    }       
+}
+        
+tasks {
+    shadowJar {
+        shadowJarSetup(delegate)
+    }   
+}
+
