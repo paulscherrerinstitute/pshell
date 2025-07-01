@@ -22,6 +22,7 @@ Netbeans is required for visually editing graphical plugins.
  * Version from 1.15 to 1.*  require Netbeans 11.3 or superior. 
  * Versions up to 1.14 require Netbeans 8 or superior. 
 
+ __Note__: Version 1.x of this project is available on the v1 branch. Version 2.0 introduces major architectural changes and is not backward compatible.
 
 
 # Building
@@ -46,7 +47,24 @@ Or else just  double-click the jar file, if the  system has an automatic java ap
 
  __Note__: Check the help contents for the other startup options.
 
- __Note__: Version 1.x of this project is available on the v1 branch. Version 2.0 introduces major architectural changes and is not backward compatible.
+
+# Utilities
+
+
+PShell utilities are, starting with version 2, organized in sub-projects, with indifidual build of RPMs and fat jars:
+
+
+| Utility          | Description |
+|------------------|-------------|
+| ArchiverViewer   | Archiver data retrieval and plotting using DaqBuf service.| 
+| CSM              | CamServer Manager - configuration and monitoring of CamServer.| 
+| DataViewer       | HDF5 and text file browser.| 
+| FDA              | Port of FDA applicatin to PShell app framework.| 
+| Plotter          | PShell plotting server - used by PyScan and Datahub.| 
+| ScreenPanel      | CamServer image client - image rendering, data saving, metrics and metadata displaying.| 
+| StripChart       | History plots of EPICS channels, devices and streams (BSREAD, CamServer).| 
+| Workbench        | The PShell CLI and IDE (without the utilitues).| 
+
 
 
 # Help
