@@ -8,6 +8,7 @@ allprojects {
     group = 'ch.psi'
     ext.release = '1'
     ext.app_jdk = '21'
+    ext.jar_suffix = 'fat'
     
     repositories {
         mavenCentral()
@@ -79,9 +80,10 @@ subprojects {
         def app_name = project.name
         def app_version = project.version.toString()
         def app_release = project.ext.release.toString()
+        def jar_suffix = project.ext.jar_suffix.toString()
         def app_path = '/opt/' + project.name + "/" + app_version
         def app_jdk = project.ext.app_jdk.toString()
-        def jar_file_name = app_name + "-" + app_version + "-all.jar";
+        def jar_file_name = app_name + "-" + app_version + "-" + jar_suffix + ".jar";
         def jar_file_path = app_path + '/lib/' + jar_file_name;
         def sys_bin ='/usr/local/bin/'
         def sys_lib ='/usr/local/lib/'
@@ -236,6 +238,7 @@ subprojects {
         def mainClassName = project.hasProperty('mainClass') ? project.mainClass : ''
         def buildTime = project.hasProperty('timestamp') ? project.timestamp : new Date().format("yyMMddHHmm")
         def manif_addopens = project.hasProperty('manif_addopens') ? project.manif_addopens : ''
+        def jar_suffix = project.ext.jar_suffix.toString()
         jarTask.manifest {
             attributes(
                 'Main-Class': mainClassName,
@@ -245,7 +248,7 @@ subprojects {
             )
         }
         
-        //jarTask.archiveClassifier.set("")  // optional: avoid "-all" suffix
+        jarTask.archiveClassifier.set(jar_suffix)
         jarTask.mergeServiceFiles()        // important for things like logging, META-INF/services        
     }        
 
@@ -272,7 +275,7 @@ subprojects {
     }                 
 }
 
-def fatJarsTask = tasks.register('fatJars') {
+def jarsTask = tasks.register('jars') {
     description = 'Generates all fat JARs for app subprojects'
     group = 'build'
 }
@@ -290,7 +293,7 @@ gradle.projectsEvaluated {
         if (subproj.hasProperty('mainClass')){
             def shadowTask = subproj.tasks.findByName('shadowJar')
             if (shadowTask != null) {
-                fatJarsTask.configure {
+                jarsTask.configure {
                     print(shadowTask)
                     dependsOn shadowTask
                 }
@@ -300,7 +303,7 @@ gradle.projectsEvaluated {
 }
 */
 afterEvaluate {
-    tasks.named('fatJars') {
+    tasks.named('jars') {
         subprojects.each { subproj ->
             if (subproj.hasProperty('mainClass')) {
                 dependsOn("${subproj.path}:shadowJar")
