@@ -33,7 +33,7 @@ public class App extends ch.psi.pshell.framework.App{
     
     public static void create(){        
         Dimension size = Setup.isFullScreen() ? SwingUtils.getDefaultScreenUsableArea().getSize() : Setup.getSize();        
-        create(null, new File(Setup.getFileArg()), Setup.getConfigArg(), null, Setup.getStartArg(), true, size);
+        create(null, (Setup.getFileArg()==null) ? null : new File(Setup.getFileArg()), Setup.getConfigArg(), null, Setup.getStartArg(), true, size);
     }
     
     public static void create(String title, File file, String config, File defaultFolder, boolean start, boolean modal, Dimension size) {
