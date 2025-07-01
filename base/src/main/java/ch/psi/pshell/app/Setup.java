@@ -453,9 +453,25 @@ public class Setup{
         return Options.CONTEXT_PATH.getStringList();
     }          
 
+    public static String getFileArg(){
+        List<String> args = getFileArgs();
+        if ((args==null) || (args.size()==0)){
+            return null;
+        }
+        return args.get(0);
+    }
+
     public static List<String> getFileArgs(){
         return Options.FILE.getStringList();
     }
+    
+    public static String getEvalArg(){
+        List<String> args = getEvalArgs();
+        if ((args==null) || (args.size()==0)){
+            return null;
+        }
+        return args.get(0);
+    }    
     
     public static List<String> getEvalArgs(){
         return Options.EVAL.getStringList();

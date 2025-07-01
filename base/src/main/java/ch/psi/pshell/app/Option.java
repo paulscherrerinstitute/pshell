@@ -142,7 +142,7 @@ public interface Option {
     }
     
     default public File getPath() {
-        String option = toString();
+        String option = getString(null);
         if (option != null) {
             option =Setup.expandPath(option);
             File f = new File(option);

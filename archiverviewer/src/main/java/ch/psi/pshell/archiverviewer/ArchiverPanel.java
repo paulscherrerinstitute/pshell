@@ -67,6 +67,7 @@ import java.awt.geom.Rectangle2D;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -147,6 +148,8 @@ public class ArchiverPanel extends StandardDialog {
     public static final int AXIS_1 = 1;
     public static final int AXIS_2 = 2;
     public static final int AXIS_X = -1;
+    
+    public static final int DEFAULT_BINS = 200;
 
     Color defaultBackgroundColor = null;
     Color defaultGridColor = null;
@@ -180,7 +183,8 @@ public class ArchiverPanel extends StandardDialog {
     public ArchiverPanel(Window parent, String url, String backend, String title, boolean modal, File defaultFolder) {
         super(parent, null, modal);        
         initComponents();        
-        this.defaultFolder = (defaultFolder==null) ? getDaqbufFolderArg() : defaultFolder;
+        defaultFolder = (defaultFolder==null) ? getDaqbufFolderArg() : defaultFolder;
+        this.defaultFolder = (defaultFolder == null) ?  new File(Sys.getUserHome()) : defaultFolder;        
         
         if ("default".equals(url) || "".equals(url)){
             url = null;
@@ -272,7 +276,7 @@ public class ArchiverPanel extends StandardDialog {
     }
     
     public static File getDaqbufFolderArg() {
-        return App.getFolderArg("archpanel_home");
+        return Options.ARCHIVER_VIEWER_HOME.getPath();
     }
     
     
@@ -686,7 +690,7 @@ public class ArchiverPanel extends StandardDialog {
             textFrom.setText("");
             textTo.setText("");
             checkBins.setSelected(true);
-            spinnerBins.setValue(200);
+            spinnerBins.setValue(DEFAULT_BINS);
             setMaxSeriesSize(DEFAULT_MAX_SERIES_SIZE);
             comboTime.setSelectedIndex(0);
         } finally {
@@ -2530,9 +2534,6 @@ public class ArchiverPanel extends StandardDialog {
     }
     
     String getDefaultFolder() {
-        if (defaultFolder == null) {
-            return Sys.getUserHome();
-        }
         return defaultFolder.getAbsolutePath();
     }
 
@@ -2645,15 +2646,26 @@ public class ArchiverPanel extends StandardDialog {
         initializeTable();
 
     }
+    
+    public File getFileArg() {
+        File file = App.getFileArg();
+        if (((file==null) || !file.isFile()) && (Setup.getFileArg()!=null)){
+            File f = new File(Setup.expandPath(Paths.get(getDefaultFolder(), Setup.getFileArg()).toString()));               
+            if (f.exists()){
+                file = f;
+            }
+        }
+        return file;
+    }    
 
     void openArgs() {
-        File file = App.getFileArg();
+        File file = getFileArg();
         String config = Setup.getConfigArg();
         List<CompletableFuture> futures = new ArrayList<>();
         if (file!=null){ 
            try{
                openConfig(file);
-           } catch (Exception ex) {
+           } catch (Exception ex) {               
                showException(ex);
            }                
         } else if (config!=null){        
@@ -2667,7 +2679,7 @@ public class ArchiverPanel extends StandardDialog {
             String from = Options.FROM.getString(null);
             String to = Options.TO.getString(null);
             String range =Options.RANGE.getString(null);
-            Integer bins = Options.BINS.getInt(0);
+            Integer bins = Options.BINS.getInt(DEFAULT_BINS);
             bins = (bins<1) ? null : bins;
             Boolean binned  = (bins != null);;
             Integer maxsize = Options.MAXSIZE.getInt(null);

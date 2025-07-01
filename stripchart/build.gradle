@@ -21,6 +21,7 @@ tasks {
         minimize{
              shadowJarMinimizeKeepFlatLaf(delegate)
              shadowJarMinimizeKeepDevices(delegate)
+             shadowJarMinimizeKeepJersey(delegate)
         }                   
         
         shadowJarExcludeFrameworkFiles(delegate)

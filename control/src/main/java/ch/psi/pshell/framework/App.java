@@ -434,6 +434,14 @@ public class App extends ch.psi.pshell.devices.App {
         }
     }    
 
+    static public File getFileArg() {
+        List<File> args = getFileArgs();
+        if ((args==null) || (args.size()==0)){
+            return null;
+        }
+        return args.get(0);
+    }
+    
     static public List<File> getFileArgs() {
         ArrayList<File> ret = new ArrayList<File>();
         var files = Setup.getFileArgs();
