@@ -5,7 +5,7 @@ ext.mainClass = hasProperty('mainClass') ? mainClass : 'ch.psi.pshell.dataviewer
 dependencies {
     implementation project(':base')    
     implementation project(':devices')    
-    implementation project(':control')    
+    implementation project(':console')       
 }
 
 createDefaultTasks(project)

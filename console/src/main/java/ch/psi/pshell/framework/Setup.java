@@ -533,11 +533,11 @@ public class Setup extends ch.psi.pshell.devices.Setup {
     }
     
     public static boolean isRunningInIde() {
-        return isRunningInIde("control");
+        return isRunningInIde("console");
     }
 
     public static String getSourceAssemblyFolder() {
-        return getSourceAssemblyFolder("control");
+        return getSourceAssemblyFolder("console");
     }        
 
     

@@ -459,9 +459,11 @@ public final class ProcessorXScan extends MonitoredPanel implements Processor {
 
     @Override
     public void execute(String file, Map<String, Object> vars) throws Exception {
+        file = Setup.expandPath(file);
         if (!new File(file).exists()) {
             file = Paths.get(getHomePath(), file).toString();
         }
+        file = Setup.expandPath(file);
         if (!new File(file).exists()) {
             throw new IOException("Invalid file: " + file);
         }
@@ -553,7 +555,9 @@ public final class ProcessorXScan extends MonitoredPanel implements Processor {
             ModelUtil.getInstance().setConfigurationPanel(panelConfig);
             EventBus ebus = new EventBus(Config.eventBusModeAcq);
             acquisition = new Acquisition(channelService, getConfiguration(), vars);
-            Context.getView().updateViewState();   //Update pause button state
+            if (Context.getView()!=null){
+                Context.getView().updateViewState();   //Update pause button state
+            }
 
             injectVariables();
 

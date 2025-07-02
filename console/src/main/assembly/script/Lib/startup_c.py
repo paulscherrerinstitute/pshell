@@ -491,8 +491,10 @@ from javax.swing import SwingUtilities
 
 from org.jfree.chart.ui import RectangleAnchor as RectangleAnchor
 from org.jfree.chart.ui import RectangleAnchor as TextAnchor
-
-from ch.psi.pshell.xscan import ProcessorXScan as ProcessorXScan
+try:
+    from ch.psi.pshell.xscan import ProcessorXScan as ProcessorXScan
+except:
+    ProcessorXScan = None
 
 def string_to_obj(o):
     if is_string(o):
@@ -1425,7 +1427,9 @@ def xscan(file_name, arguments={}):
         arguments(dict):  map of of XScan variables 
                           E.g: in a linear positioner  {"idXXXX.start":0.0, "idXXXX.end":5.0, "idXXXX.step_size":0.1})
         
-    """    
+    """ 
+    if ProcessorXScan is None:
+        raise Exception("XScan is not present in class path")   
     ProcessorXScan().startExecute(file_name,arguments)
 
 

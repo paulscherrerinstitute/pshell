@@ -304,7 +304,10 @@ from javax.swing.SwingUtilities import invokeLater, invokeAndWait
 import org.jfree.chart.ui.RectangleAnchor as RectangleAnchor
 import org.jfree.chart.ui.TextAnchor as TextAnchor
 
-import ch.psi.pshell.xscan.ProcessorXScan as ProcessorXScan
+try:
+    import ch.psi.pshell.xscan.ProcessorXScan as ProcessorXScan
+except:
+    ProcessorXScan = None
 
 
 def string_to_obj(o):

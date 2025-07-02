@@ -7,13 +7,12 @@ dependencies {
     implementation project(':base')
     implementation project(':devices')
     implementation project(':plotter') 
-    implementation project(':control')       
+    implementation project(':console')          
     implementation project(':fda')    
     implementation project(':stripchart') 
     implementation project(':screenpanel') 
     implementation project(':archiverviewer') 
     implementation project(':dataviewer') 
-    implementation project(':console') 
     implementation 'org.commonmark:commonmark-ext-gfm-tables:0.22.0'
     implementation 'org.eclipse.jgit:org.eclipse.jgit:6.9.0.202403050737-r'
     implementation 'org.eclipse.jgit:org.eclipse.jgit.ssh.jsch:6.9.0.202403050737-r'      

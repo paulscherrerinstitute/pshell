@@ -463,7 +463,7 @@ def escan(name, **pars):
 
 
 def xscan(file_name, arguments={}):
-    """ Run FDA's XScan (devined in XML file)
+    """ Run FDA's XScan (defined in XML file)
 
     Args:
         file_name(string): Name of the file (relative to XScan base folder)
@@ -471,6 +471,8 @@ def xscan(file_name, arguments={}):
                           E.g: in a linear positioner  {"idXXXX.start":0.0, "idXXXX.end":5.0, "idXXXX.step_size":0.1})
         
     """    
+    if ProcessorXScan is None:
+        raise Exception("XScan is not present in class path")
     ProcessorXScan().execute(file_name,arguments)
 
 

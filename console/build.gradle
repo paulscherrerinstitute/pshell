@@ -6,13 +6,13 @@ ext.package_prefix = "pshell"
 dependencies {
     implementation project(':base')
     implementation project(':devices')
-    implementation project(':plotter') 
-    implementation project(':control')       
-    implementation project(':fda')    
-    implementation project(':stripchart') 
-    implementation project(':screenpanel') 
-    implementation project(':archiverviewer') 
-    implementation project(':dataviewer') 
+    implementation project(':plotter')   
+    implementation 'ch.psi:bsread:4.5.0'
+    implementation 'com.fifesoft:rsyntaxtextarea:3.4.0'
+    implementation 'org.glassfish.jersey.containers:jersey-container-grizzly2-http:3.1.7'
+    implementation 'org.glassfish.jersey.media:jersey-media-sse:3.1.7'
+    implementation 'org.glassfish.jersey.inject:jersey-hk2:3.1.7'
+    implementation 'jline:jline:2.14.6' 
     implementation  'com.twelvemonkeys.imageio:imageio-tiff:3.11.0'            
     implementation 'org.jfree:jfreechart:1.5.4'  
     implementation 'org.glassfish.jersey.containers:jersey-container-grizzly2-http:3.1.7'
@@ -35,5 +35,10 @@ tasks {
     }
 }
 
-
-
+jar {
+    archiveBaseName = project.name
+    from('src/main/assembly') {
+        include '**/*'
+        exclude '**/script/**/*.class'
+    }
+}
