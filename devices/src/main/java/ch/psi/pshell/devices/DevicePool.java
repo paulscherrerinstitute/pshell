@@ -2,7 +2,6 @@ package ch.psi.pshell.devices;
 
 import ch.psi.pshell.device.*;
 import ch.psi.pshell.device.Readable;
-import ch.psi.pshell.epics.Epics;
 import ch.psi.pshell.logging.LogManager;
 import ch.psi.pshell.plugin.PluginManager;
 import ch.psi.pshell.utils.Arr;
@@ -82,15 +81,10 @@ public class DevicePool extends ObservableBase<DevicePoolListener> implements Au
                     
     public void initialize(String fileName) throws FileNotFoundException, IOException, InterruptedException {
         initialized = false;
-        logger.log(Level.INFO, "Initializing {0}", getClass().getSimpleName());
-        parallelInitialization = Setup.isParallelInit();        
+        logger.log(Level.INFO, "Initializing {0}", getClass().getSimpleName());           
                 
         close();
-        
-        Epics.create(parallelInitialization);
-        if (Setup.isSimulation()) {
-            Epics.getChannelFactory().setDryrun(true);
-        }        
+                
         synchronized (deviceList) {
             deviceList.clear();
             orderedDeviceNames.clear();
@@ -854,8 +848,7 @@ public class DevicePool extends ObservableBase<DevicePoolListener> implements Au
             orderedDeviceNames.clear();
         }
         Nameable.clear(); //Clear aliases
-        Interlock.clear();        
-        Epics.destroy();
+        Interlock.clear();                
     }    
     
     //Information for displaying tables

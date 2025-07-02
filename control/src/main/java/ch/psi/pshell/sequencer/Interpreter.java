@@ -706,11 +706,7 @@ public class Interpreter extends ObservableBase<InterpreterListener> implements 
         if (disableLocalStartupScript){
             return null;
         }              
-        String ret = getLocalStartupFilePrefix();        
-        if (!ret.endsWith(getScriptType().getExtension())){
-            ret = ret + "." + getScriptType().getExtension();
-        }
-        return ret;
+        return Setup.expandPath(Setup.getLocalStartupScript());
     }    
 
     //Stdio management
@@ -1006,7 +1002,9 @@ public class Interpreter extends ObservableBase<InterpreterListener> implements 
                                     scriptManager.resetLineNumber(); //So first statement will be number 1
                                 } catch (Exception ex) {
                                     if ((ex instanceof FileNotFoundException) && ex.getMessage().equals(localStartupScript)) {
-                                        logger.warning("Local initialization script is not present");
+                                        if (!Setup.isVolatile() || Setup.redefinedStartupScript()){
+                                            logger.warning("Local initialization script is not present");
+                                        }
                                     } else {
                                         ex.printStackTrace();
                                         logger.log(Level.SEVERE, null, ex);

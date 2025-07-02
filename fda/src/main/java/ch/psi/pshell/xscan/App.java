@@ -56,7 +56,7 @@ public class App extends ch.psi.pshell.framework.App {
     
     @Override
     protected void onStart() {
-        Epics.create(true);
+        Epics.create(Setup.getDefaultEpicsConfigFile(), true);
         super.onStart();
         try {            
             launchApp(View.class);                        

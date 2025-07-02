@@ -14,6 +14,7 @@ import ch.psi.pshell.utils.NumberComparator;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -33,11 +34,48 @@ public class Epics {
     static Integer maxArrayBytes;
     static InvalidValueAction defaultInvalidValueAction = InvalidValueAction.Nullify;
 
-    public static final String PROPERTY_EPICS_CONFIG_FILE  = "ch.psi.jcae.config.file";    
-    public static final String PROPERTY_EPICS_DEFAULT_CONFIG  = "ch.psi.pshell.epics.default.config";  
+    static String configFile  = null;    
+    static String configString  = null;  
+    
+    public static final String PROPERTY_JCAE_CONFIG_FILE  = "ch.psi.jcae.config.file"; 
+    
+    public final static String defaultJcaeProperties = "ch.psi.jcae.ContextFactory.autoAddressList=true\n"
+            + "ch.psi.jcae.ContextFactory.useShellVariables=true\n"
+            + "ch.psi.jcae.ContextFactory.maxArrayBytes=20000000\n"
+            + "ch.psi.jcae.ContextFactory.maxSendArrayBytes=100000";
+    
+    public static String DEFAULT_JCAE_FILENAME = "jcae.properties";
     
     public static String getDefaultConfigFile(){
-        return Paths.get(Setup.getConfigPath(), "jcae.properties").toString();
+        return Paths.get(Setup.getConfigPath(), Epics.DEFAULT_JCAE_FILENAME).toString();
+    }
+    
+
+    public static void setDefaultJcaeProperties(){
+       configString = defaultJcaeProperties;       
+    }    
+            
+    public static String getConfigFile() {
+        return configFile;
+    }
+
+    public static String getConfigString() {
+        return configString;
+    }
+    
+    static void parseOptions(){
+        String epicsConfig = Setup.getEpicsConfig();
+        if ((epicsConfig!=null) && !epicsConfig.isBlank()) {
+            epicsConfig = epicsConfig.trim();
+            String fileName = Setup.expandPath(epicsConfig);
+            if (new File(fileName).isFile()) {
+                configFile = fileName;
+            } else if (new File(fileName +".properties").isFile()) {
+                configFile = fileName + ".properties";
+            } else if (epicsConfig.contains("=")) {
+                configString =  epicsConfig.replaceAll("\\|", "\n");
+            }
+        }                              
     }
     
     public static boolean parallelCreation;
@@ -50,31 +88,41 @@ public class Epics {
         create(null, parallelCreation);
     }
 
-    public static void create(String configFile) {
-        create(null, parallelCreation);
+    public static void create(String configFileName) {
+        create(configFileName, false);
     }
             
-    public static void create(String configFile, boolean parallelCreation) {        
+    public static void create(String configFileName, boolean parallelCreation) {        
         destroy();             
-        if (configFile==null){
-            configFile = System.getProperty(PROPERTY_EPICS_CONFIG_FILE);
-        }        
-        if (configFile==null){
-            configFile = getDefaultConfigFile();
-        }
-        String defaultProperties= System.getProperty(PROPERTY_EPICS_DEFAULT_CONFIG);        
+        parseOptions();
         
-        System.setProperty(PROPERTY_EPICS_CONFIG_FILE, configFile);
+        if (configFileName!=null){
+            configFile = configFileName;
+        }        
+        if (configFile==null && configString==null){
+            setDefaultJcaeProperties();            
+        }
+        if (configFile==null){
+            try {
+                Path folder = Files.createTempDirectory("epics");
+                Path file = Path.of(folder.toString(), DEFAULT_JCAE_FILENAME);
+                configFile = file.toString();
+            } catch (Exception ex) {
+                Logger.getLogger(Epics.class.getName()).log(Level.SEVERE, null, ex);
+            }                            
+        }
+                                
         File file = new File(configFile);
-        if (! file.exists()){
-            if (defaultProperties!=null){
+        if (!file.exists()){
+            if (configString!=null){
                 try {
-                    Files.writeString(file.toPath(), defaultProperties);
+                    Files.writeString(file.toPath(), configString);
                 } catch (IOException ex) {
                     Logger.getLogger(Epics.class.getName()).log(Level.SEVERE, null, ex);
                 }
             }
         }        
+        System.setProperty(PROPERTY_JCAE_CONFIG_FILE, configFile);
         try {
             factory = new DefaultChannelService();
         } catch (Exception ex) {
@@ -85,6 +133,10 @@ public class Epics {
         } catch (Exception ex) {
         }
         Epics.parallelCreation = parallelCreation;    
+        
+        if (Setup.isSimulation()) {
+            Epics.getChannelFactory().setDryrun(true);
+        }                
     }
 
     public static void destroy() {
@@ -99,19 +151,6 @@ public class Epics {
 
     }
     
-    public final static String defaultJcaeProperties = "ch.psi.jcae.ContextFactory.autoAddressList=true\n"
-            + "ch.psi.jcae.ContextFactory.useShellVariables=true\n"
-            + "ch.psi.jcae.ContextFactory.maxArrayBytes=20000000\n"
-            + "ch.psi.jcae.ContextFactory.maxSendArrayBytes=100000";
-    
-    public static void setDefaultJcaeProperties(){
-        System.setProperty(PROPERTY_EPICS_DEFAULT_CONFIG, defaultJcaeProperties);            
-    }    
-
-    public static String getConfigFile() {
-        return System.getProperty(PROPERTY_EPICS_CONFIG_FILE);
-    }
-
     public static DefaultChannelService getChannelFactory() {
         if (factory == null) {
             throw new RuntimeException("Epics context not initialized");

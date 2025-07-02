@@ -1,5 +1,6 @@
 package ch.psi.pshell.framework;
 
+import ch.psi.pshell.epics.Epics;
 import ch.psi.pshell.scripting.ScriptType;
 import ch.psi.pshell.sequencer.ExecutionParameters;
 import ch.psi.pshell.utils.Arr;
@@ -256,6 +257,10 @@ public class Setup extends ch.psi.pshell.devices.Setup {
         return ScriptType.valueOf(type);
     }    
     
+    public static boolean redefinedStartupScript() {
+        return Options.LOCAL_STARTUP.hasValue();
+    }
+    
     public static String getLocalStartupScript() {
         String ret = Options.LOCAL_STARTUP.getString(DEFAULT_LOCAL_STARTUP_FILE_PREFIX);
         if (!ret.endsWith(getScriptType().getExtension())){
@@ -449,6 +454,9 @@ public class Setup extends ch.psi.pshell.devices.Setup {
         return null; //Default
     }    
     
+    public static String getDefaultEpicsConfigFile(){
+        return isVolatile() ? null : Epics.getDefaultConfigFile();
+    }
     
     /**
      * Entity class holding a help element type and content.

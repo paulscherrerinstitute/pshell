@@ -4,6 +4,7 @@ import ch.psi.pshell.data.DataManager;
 import ch.psi.pshell.data.DataServer;
 import ch.psi.pshell.device.Interlock;
 import ch.psi.pshell.devices.DevicePool;
+import ch.psi.pshell.epics.Epics;
 import ch.psi.pshell.framework.Context;
 import ch.psi.pshell.framework.Setup;
 import ch.psi.pshell.notification.NotificationManager;
@@ -177,7 +178,7 @@ public class Shell extends ch.psi.pshell.framework.App implements Configurable{
                 logger.log(Level.WARNING, null, ex);
             }
         }
-
+        Epics.destroy();
         Nameable.clear();
         Interlock.clear();
 
@@ -219,6 +220,8 @@ public class Shell extends ch.psi.pshell.framework.App implements Configurable{
             notificationManager.initialize();
             interpreter.setNotificationLevel(config.notificationLevel);
             interpreter.setNotifiedTasks(config.getNotifiedTasks());
+            
+            Epics.create(Setup.getDefaultEpicsConfigFile(), Setup.isParallelInit());
                         
             devicePool = new DevicePool();
             logger.log(Level.INFO, "Loading Device Pool");
@@ -270,6 +273,7 @@ public class Shell extends ch.psi.pshell.framework.App implements Configurable{
                 logger.log(Level.WARNING, null, ex);
             }
         }        
+        Epics.destroy();
     }    
    
     @Override
@@ -284,6 +288,7 @@ public class Shell extends ch.psi.pshell.framework.App implements Configurable{
                 logger.log(Level.WARNING, null, ex);
             }
         }
+        Epics.destroy();
         if (versioningManager != null) {
             if (!getConfig().versionTrackingManual) {
                 versioningManager.startPushUpstream(true, false);  //In different process

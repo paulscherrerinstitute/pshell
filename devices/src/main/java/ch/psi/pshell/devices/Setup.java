@@ -41,5 +41,5 @@ public class Setup extends ch.psi.pshell.app.Setup {
     
     public static String getEpicsConfig() {
         return Options.EPICS_CONFIG.getString(null);
-    }                    
+    }                                   
 }

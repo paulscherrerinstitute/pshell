@@ -6,7 +6,6 @@ import ch.psi.pshell.data.DataAddress;
 import ch.psi.pshell.data.PlotDescriptor;
 import ch.psi.pshell.device.GenericDevice;
 import ch.psi.pshell.devices.DevicePanelManager;
-import ch.psi.pshell.epics.Epics;
 import ch.psi.pshell.logging.LogManager;
 import ch.psi.pshell.plot.Plot;
 import ch.psi.pshell.plotter.Client;
@@ -83,18 +82,10 @@ public class App extends ch.psi.pshell.devices.App {
     }            
         
     protected App(){
-    }
-
-    public void start() throws Exception {        
         if (Setup.isServerMode()) {
             SwingUtils.setHeadless();
-        } 
-
-        //Raise exception if wrong formatting;
-        getTaskArgs();
-
-        if (Setup.isVolatile()) {
-            Epics.setDefaultJcaeProperties();
+        }         
+        if (Setup.isVolatile()) {            
             try {
                 Path tempDir = Files.createTempDirectory("pshell_home");
                 IO.deleteFolderOnExit(tempDir.toFile());
@@ -104,8 +95,12 @@ public class App extends ch.psi.pshell.devices.App {
                 ex.printStackTrace();
                 System.exit(0);
             }
-        }                  
-        
+        }                          
+    }
+
+    public void start() throws Exception {        
+        //Raise exception if wrong formatting;
+        getTaskArgs();
         super.start(Setup.isCli());
     }    
     

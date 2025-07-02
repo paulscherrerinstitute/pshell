@@ -57,12 +57,17 @@ public class Package implements AutoCloseable {
         if (Context.hasInterpreter() && Context.getInterpreter().isInterpreterEnabled()) {
             if (scriptPath.toFile().isDirectory()){
                 Context.getInterpreter().addLibraryPath(scriptPath.toString());                                
-                String scriptFile = Context.getInterpreter().getLocalStartupScript();
+                String scriptFile = Setup.getLocalStartupScript();
                 if (scriptFile!=null){
-                    Path startupScript = Paths.get(scriptPath.toString(), scriptFile);
+                    Path startupScript = Paths.get(scriptFile);
+                    if (!startupScript.toFile().isFile()){
+                        startupScript = Paths.get(scriptPath.toString(), scriptFile);
+                    }
                     if (startupScript.toFile().isFile()){
                         Context.getInterpreter().getScriptManager().evalFile(startupScript.toString());
-                         Logger.getLogger(Package.class.getName()).info("Executed package startup script: " + startupScript);                    
+                        Logger.getLogger(Package.class.getName()).info("Executed package startup script: " + startupScript);                    
+                    } else {
+                        Logger.getLogger(Package.class.getName()).warning("Invalud package startup script: " + scriptFile);                    
                     }
                 }
             }
