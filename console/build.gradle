@@ -1,6 +1,7 @@
 description = 'console'
 
 ext.mainClass = hasProperty('mainClass') ? mainClass : 'ch.psi.pshell.console.App'
+ext.package_prefix = "pshell"
 
 dependencies {
     implementation project(':base')
