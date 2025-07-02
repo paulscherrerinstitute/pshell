@@ -13,6 +13,7 @@ import java.util.logging.Logger;
  */
 public class App extends ch.psi.pshell.workbench.App{    
     public static final String COMAMND_WORBENCH = "workbench (default)";
+    public static final String COMAMND_CONSOLE = "console";
     public static final String COMAMND_STRIP_CHART = "strip_chart";
     public static final String COMAMND_SCREEN_PANEL = "screen_panel";
     public static final String COMAMND_ARCHIVER_VIEWER = "archiver_viewer";
@@ -21,7 +22,7 @@ public class App extends ch.psi.pshell.workbench.App{
     public static final String COMAMND_DEVICE_PANEL = "device";
     public static final String COMAMND_HELP_PANEL = "help_panel";
     
-    public static final String[] COMMAND_LINE_COMMANDS = new String[]{COMAMND_WORBENCH, COMAMND_STRIP_CHART, 
+    public static final String[] COMMAND_LINE_COMMANDS = new String[]{COMAMND_WORBENCH, COMAMND_CONSOLE, COMAMND_STRIP_CHART, 
         COMAMND_SCREEN_PANEL, COMAMND_ARCHIVER_VIEWER, COMAMND_DATA_VIEWER, COMAMND_PLOT_SERVER, COMAMND_DEVICE_PANEL, COMAMND_HELP_PANEL};
        
     private static final Logger logger = Logger.getLogger(App.class.getName());
@@ -86,6 +87,8 @@ public class App extends ch.psi.pshell.workbench.App{
             } else if (isDeviceViewer()){
                 forceDisabled();
                 ch.psi.pshell.screenpanel.App.create();
+            } else if (isConsole()){                
+                ch.psi.pshell.console.App.create();
             } else  {
                 super.launchApp();
             }
@@ -146,6 +149,10 @@ public class App extends ch.psi.pshell.workbench.App{
         return getCommand().equals(COMAMND_PLOT_SERVER);
     }
     
+    static public boolean isConsole() {
+        return getCommand().equals(COMAMND_CONSOLE);
+    }
+
     static public boolean isHelpPanel() {
         return getCommand().equals(COMAMND_HELP_PANEL);
     }
@@ -158,6 +165,7 @@ public class App extends ch.psi.pshell.workbench.App{
             case COMAMND_PLOT_SERVER -> ch.psi.pshell.plotter.Options.add();
             case COMAMND_SCREEN_PANEL -> ch.psi.pshell.screenpanel.Options.add();
             case COMAMND_DATA_VIEWER -> ch.psi.pshell.dataviewer.Options.add();
+            case COMAMND_CONSOLE -> ch.psi.pshell.console.Options.add();
             default -> ch.psi.pshell.workbench.Options.add();
         }
     }    

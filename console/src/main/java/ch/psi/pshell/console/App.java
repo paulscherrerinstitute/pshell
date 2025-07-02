@@ -1,4 +1,4 @@
-package ch.psi.pshell.workbench;
+package ch.psi.pshell.console;
 
 import ch.psi.pshell.data.DataManager;
 import ch.psi.pshell.data.DataServer;
@@ -35,9 +35,9 @@ import java.util.logging.Logger;
 /**
  * The application singleton object.
  */
-public class Shell extends ch.psi.pshell.framework.App implements Configurable{    
+public class App extends ch.psi.pshell.framework.App implements Configurable{    
 
-    private static final Logger logger = Logger.getLogger(Shell.class.getName());
+    private static final Logger logger = Logger.getLogger(App.class.getName());
     
     Setup setup;
     final Configuration config;    
@@ -54,15 +54,15 @@ public class Shell extends ch.psi.pshell.framework.App implements Configurable{
     DataServer dataStreamer;
         
     
-    static public Shell getInstance() {
-        return (Shell) instance;
+    static public App getInstance() {
+        return (App) instance;
     }
 
-    private static Shell createInstance() {
+    private static App createInstance() {
         if (instance==null){
-            instance = new Shell();
+            instance = new App();
         }
-        return (Shell) instance;
+        return (App) instance;
     }
        
     
@@ -70,7 +70,7 @@ public class Shell extends ch.psi.pshell.framework.App implements Configurable{
         return config;
     }
         
-    protected Shell() {
+    protected App() {
         Setup.mkdirs();
         config = new Configuration();
         try {
@@ -304,6 +304,10 @@ public class Shell extends ch.psi.pshell.framework.App implements Configurable{
     
     static public void create() {
        try {            
+            if (!Setup.isCli()){
+                ch.psi.pshell.framework.Options.SERVER.set();
+            }
+           
             createInstance().start();            
         } catch (Exception ex) {
             logger.log(Level.SEVERE, null, ex);
@@ -311,7 +315,7 @@ public class Shell extends ch.psi.pshell.framework.App implements Configurable{
     }
     
     static public void main(String[] args) {
-        Options.addShell();
+        Options.add();
         init(args);            
         create();            
     }

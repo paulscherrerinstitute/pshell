@@ -101,7 +101,7 @@ public class App extends ch.psi.pshell.devices.App {
     public void start() throws Exception {        
         //Raise exception if wrong formatting;
         getTaskArgs();
-        super.start(Setup.isCli());
+        super.start(Setup.isConsole());
     }    
     
     @Override

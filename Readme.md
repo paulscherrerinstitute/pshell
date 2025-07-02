@@ -51,7 +51,7 @@ Or else just  double-click the jar file, if the  system has an automatic java ap
 # Utilities
 
 
-PShell utilities are, starting with version 2, organized in sub-projects, with indifidual build of RPMs and fat jars:
+Starting with version 2, PShell os organized in sub-projects, with indifidual build of RPMs and fat jars so that utilieitew can be installed intependently.
 
 
 | Utility          | Description |
@@ -63,8 +63,10 @@ PShell utilities are, starting with version 2, organized in sub-projects, with i
 | Plotter          | PShell plotting server - used by PyScan and Datahub.| 
 | ScreenPanel      | CamServer image client - image rendering, data saving, metrics and metadata displaying.| 
 | StripChart       | History plots of EPICS channels, devices and streams (BSREAD, CamServer).| 
-| Workbench        | The PShell CLI and IDE (without the utilitues).| 
+| Console          | The PShell command line interface and server.| 
+| Workbench        | The PShell IDE.| 
 
+ __Note__: PShell is an aggegator project, pshell-\<version\>-fat.jar can launch any of the utilities.
 
 
 # Help

@@ -14,6 +14,7 @@ dependencies {
     implementation project(':screenpanel') 
     implementation project(':archiverviewer') 
     implementation project(':dataviewer') 
+    implementation project(':console') 
     implementation project(':workbench') 
 }
 

@@ -1,5 +1,6 @@
 package ch.psi.pshell.workbench;
 
+import ch.psi.pshell.console.Configuration;
 import ch.psi.pshell.data.DataManager;
 import ch.psi.pshell.data.Format;
 import ch.psi.pshell.data.RSync;

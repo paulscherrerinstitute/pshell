@@ -1,4 +1,4 @@
-package ch.psi.pshell.workbench;
+package ch.psi.pshell.console;
 
 import ch.psi.pshell.framework.Config;
 import ch.psi.pshell.framework.Context.DataTransferMode;

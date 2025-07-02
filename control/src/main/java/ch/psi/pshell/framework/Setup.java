@@ -349,6 +349,10 @@ public class Setup extends ch.psi.pshell.devices.Setup {
          return Options.CLI.getBool(false);
     }
 
+    static public boolean isConsole() {
+         return isCli() || isServerMode() || isHeadless();
+    }
+
     static public boolean isOffscreenPlotting() {
         return isServerMode() || isHeadless();
     }

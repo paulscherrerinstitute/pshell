@@ -10,6 +10,7 @@ include ':csm'
 include ':stripchart'
 include ':screenpanel'
 include ':archiverviewer'
+include ':console'
 include ':workbench'
 include ':pshell'
 

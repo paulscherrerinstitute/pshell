@@ -8,7 +8,7 @@ import java.util.logging.Logger;
 /**
  * The application singleton object.
  */
-public class App extends Shell{    
+public class App extends ch.psi.pshell.console.App {    
 
     private static final Logger logger = Logger.getLogger(App.class.getName());      
     
