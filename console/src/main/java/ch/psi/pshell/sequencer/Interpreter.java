@@ -9,6 +9,7 @@ import ch.psi.pshell.framework.Context;
 import ch.psi.pshell.framework.Options;
 import ch.psi.pshell.framework.Setup;
 import ch.psi.pshell.notification.NotificationManager.NotificationLevel;
+import ch.psi.pshell.plot.Plot;
 import ch.psi.pshell.plugin.Plugin;
 import ch.psi.pshell.scan.PlotScan;
 import ch.psi.pshell.scan.Scan;
@@ -2140,7 +2141,7 @@ public class Interpreter extends ObservableBase<InterpreterListener> implements 
     }
 
     @Hidden
-    public List plot(PlotDescriptor plots[], String title) throws Exception {
+    public List<Plot> plot(PlotDescriptor plots[], String title) throws Exception {
         List ret = null;
         if (plots == null) {
             throw new IllegalArgumentException();
@@ -2164,7 +2165,7 @@ public class Interpreter extends ObservableBase<InterpreterListener> implements 
     }
 
     @Hidden
-    public List plot(PlotDescriptor plot, String title) throws Exception {
+    public List<Plot> plot(PlotDescriptor plot, String title) throws Exception {
         return plot(new PlotDescriptor[]{plot}, title);
     }
 

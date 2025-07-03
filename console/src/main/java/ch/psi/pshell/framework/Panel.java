@@ -28,6 +28,7 @@ import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -450,6 +451,8 @@ public class Panel extends MonitoredPanel implements Plugin {
                     }
                 }
             }
+        } catch (FileNotFoundException ex){
+            getLogger().log(Level.FINE, null, ex);        
         } catch (Exception ex) {
             getLogger().log(Level.WARNING, null, ex);
             clearComponentsState();
