@@ -3002,7 +3002,7 @@ public class Interpreter extends ObservableBase<InterpreterListener> implements 
      */
     public Class getClassByName(String className) throws ClassNotFoundException {
         try {
-            return Class.forName(className, true, Sys.getClassLoader());
+            return Class.forName(className, true, Sys.getDynamicClassLoader());
         } catch (ClassNotFoundException ex) {
             if (Context.hasPluginManager()) {
                 Class cls = Context.getPluginManager().getDynamicClass(className);

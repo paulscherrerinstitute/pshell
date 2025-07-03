@@ -246,7 +246,6 @@ public class App extends ch.psi.pshell.framework.App implements Configurable{
             }
             if (pluginManager != null) {
                 pluginManager.onInitialize(interpreter.getRunCount());
-                pluginManager.setReloadable(Setup.isReloadable());
             }
             //Only instantiate it if state goes ready
             if (packageManager != null) {

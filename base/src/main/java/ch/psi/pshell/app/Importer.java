@@ -39,7 +39,7 @@ public interface Importer {
             }
         }
         try{
-            for (Importer importer : ServiceLoader.load(Importer.class, Sys.getClassLoader())) {
+            for (Importer importer : ServiceLoader.load(Importer.class, Sys.getDynamicClassLoader())) {
                 ret.add(importer);
             }
         } catch (Throwable ex) {

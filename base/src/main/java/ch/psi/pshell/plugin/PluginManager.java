@@ -53,20 +53,7 @@ public class PluginManager implements AutoCloseable {
     final ArrayList<Plugin> plugins = new ArrayList<>();
     final ArrayList<Class> dynamicClasses = new ArrayList<>();
 
-    static final String JAR_EXTENSIONS_FOLDER = "extensions";
-    
-    
-    boolean reloadable = true;
-    
-    public boolean getReloadable(){
-        return reloadable;
-    }
-       
-    public void setReloadable(boolean value){
-        reloadable = value;
-    }
-    
-    
+    static final String JAR_EXTENSIONS_FOLDER = "extensions";    
 
     class PluginProperties {
 
@@ -124,7 +111,7 @@ public class PluginManager implements AutoCloseable {
     
     public static Class getClass(String className) throws ClassNotFoundException {
         try {
-            return Class.forName(className, true, Sys.getClassLoader());
+            return Class.forName(className, true, Sys.getDynamicClassLoader());
         } catch (ClassNotFoundException ex) {
             if (hasInstance()) {
                 Class cls = getInstance().getDynamicClass(className);
@@ -154,7 +141,7 @@ public class PluginManager implements AutoCloseable {
     //Public interface: adding plugins before context starts
     public Plugin loadPluginClass(String className) {
         try {
-            Class c = Class.forName(className, true, Sys.getClassLoader());
+            Class c = Class.forName(className, true, Sys.getDynamicClassLoader());
             return loadPluginClass(c, null);
         } catch (Exception ex) {
             logger.log(Level.WARNING, "Error resolving plugin class: {0} - {1}", new Object[]{className, ex.getMessage()});
@@ -205,7 +192,7 @@ public class PluginManager implements AutoCloseable {
             }
             switch (IO.getExtension(file)) {
                 case "jar":
-                    for (Class cls : Loader.loadJar(fileName, reloadable)) {
+                    for (Class cls : Loader.loadJar(fileName)) {
                         if (Modifier.isPublic(cls.getModifiers())) {
                             if (Plugin.class.isAssignableFrom(cls)) {
                                 //Only 1 plugin per jar file
@@ -415,7 +402,7 @@ public class PluginManager implements AutoCloseable {
         //Check if has been compiled and is more recent. In this case load .class        
         if ((classFile.exists()) && (classFile.lastModified() > file.lastModified())) {
             try {
-                cls = Loader.loadClass(classFile, reloadable);
+                cls = Loader.loadClass(classFile);
             } catch (Exception ex) {
                 //Let's recompile then
                 logger.log(Level.INFO, "Error loading class file: {0}", ex.getMessage());
@@ -423,7 +410,7 @@ public class PluginManager implements AutoCloseable {
         }
         if (cls == null) {
             // Compile source file.       
-            cls = Loader.compileClass(file, reloadable);
+            cls = Loader.compileClass(file);
         }         
         return cls;
     }

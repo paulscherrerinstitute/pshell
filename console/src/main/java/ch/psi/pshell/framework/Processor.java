@@ -212,7 +212,7 @@ public interface Processor extends Executor {
             }
         }
         try {
-            for (Processor processor : ServiceLoader.load(Processor.class, Sys.getClassLoader())) {
+            for (Processor processor : ServiceLoader.load(Processor.class, Sys.getDynamicClassLoader())) {
                 ret.add(processor);
             }        
         } catch (Throwable ex) {

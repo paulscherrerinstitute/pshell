@@ -155,22 +155,21 @@ public class Sys {
         }
     }    
  
-    public static ClassLoader newClassLoader() {
+    public static DynamicClassLoader newDynamicClassLoader() {
         try {
-            return newClassLoader(new String[0]);
+            return newDynamicClassLoader(new String[0]);
         } catch (MalformedURLException ex) {
             //Should not happen
             return null;
         }
     }
     
-    public static ClassLoader newClassLoader(String[] folderNames) throws MalformedURLException {
+    public static DynamicClassLoader newDynamicClassLoader(String[] folderNames) throws MalformedURLException {
         URL[] urls = new URL[folderNames.length];
         for (int i = 0; i < folderNames.length; i++) {
             urls[i] = new File(folderNames[i]).toURI().toURL();
         }
-        DynamicClassLoader classLoader = new  DynamicClassLoader(urls);
-        return classLoader;
+        return new  DynamicClassLoader(urls);
     }
     
     public static class DynamicClassLoader extends URLClassLoader {
@@ -184,7 +183,7 @@ public class Sys {
 
         @Override
         public void addURL(URL url) {
-            super.addURL(url);
+            super.addURL(url);            
         }
         
         public void addClass(Class cls) {
@@ -193,21 +192,13 @@ public class Sys {
             } catch (ClassNotFoundException ex) {
                 Logger.getLogger(Sys.class.getName()).log(Level.SEVERE, null, ex);
             }
-        }
+        }        
     }
     
     
-    static boolean useThreadContextClassLoader = false;
-    public static void setUseThreadContextClassLoader(boolean value){
-        useThreadContextClassLoader = value;
-    }
-
-    static final ClassLoader classLoader = newClassLoader();
-    public static ClassLoader getClassLoader(){     
-        if (useThreadContextClassLoader){
-            return Thread.currentThread().getContextClassLoader();
-        }
-        return classLoader;       
+    static final DynamicClassLoader dynamicClassLoader = newDynamicClassLoader();
+    public static DynamicClassLoader getDynamicClassLoader(){     
+        return dynamicClassLoader;       
     }
     
     
@@ -216,21 +207,13 @@ public class Sys {
     }
 
     public static void addToClassPath(String path) throws Exception {        
-        addToClassPath(path, true);
-    }
-    
-    static void addToClassPath(String path, boolean asExtension) throws Exception {        
         String[] classPath = getClassPath();
         if (!Arr.containsEqual(classPath, path)){  
             File f = new File(path);
             if (f.exists()){
                 URL u = f.toURI().toURL();
-                 if (getClassLoader() instanceof DynamicClassLoader dynamicClassLoader){
+                 if (getDynamicClassLoader() instanceof DynamicClassLoader dynamicClassLoader){
                     dynamicClassLoader.addURL(u);
-                    //Dynamic classes should not set global class loader otherwise plugins that reference them are not reloadable
-                    if (asExtension){
-                        //!!! Can it be possible on Java>=14?
-                    }
                     //Just to keep track, java.class.path is not parsed again by classloader.
                     System.setProperty("java.class.path", String.join(File.pathSeparator, Arr.append(classPath, path)));
                 }

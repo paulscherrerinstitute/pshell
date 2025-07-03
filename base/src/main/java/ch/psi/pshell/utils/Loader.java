@@ -14,16 +14,12 @@ public class Loader {
     static final Logger logger = Logger.getLogger(Loader.class.getName());
     
     public static Class loadClass(ClassLoader classLoader, String className) throws ClassNotFoundException {
-        boolean sys_cl = classLoader == Sys.getClassLoader();
+        boolean sys_cl = classLoader == Sys.getDynamicClassLoader();
         logger.log(Level.FINER, "Loading class: {0}{1}", new Object[]{className, sys_cl ? " (sys class loader)" : ""});
         return classLoader.loadClass(className);
     }
 
     public static Class loadClass(File file) throws Exception {
-        return loadClass(file, false);
-    }
-    
-    public static Class loadClass(File file, boolean reloadable) throws Exception {
         String fileName = file.getAbsolutePath();
         String extension = IO.getExtension(fileName);
         String cls = IO.getPrefix(fileName);
@@ -32,15 +28,10 @@ public class Loader {
         if (!extension.toLowerCase().equals("class")) {
             throw new IllegalArgumentException(fileName);
         }
-        if (reloadable){            
-            return loadClass(Sys.newClassLoader(new String[]{folder}), cls);
-        } else {
-            Sys.addToClassPath(folder, false);
-            return loadClass(Sys.getClassLoader(), cls);
-        }            
+        return loadClass(Sys.newDynamicClassLoader(new String[]{folder}), cls);
     }    
 
-    public static Class compileClass(File file, boolean reloadable) throws Exception {
+    public static Class compileClass(File file) throws Exception {
         logger.log(Level.INFO, "Compiling class file: {0}", file.getPath());
         JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();                     
         if (compiler == null) {
@@ -49,17 +40,13 @@ public class Loader {
         if (compiler.run(null, System.out, System.err, file.getPath()) == 0) {
             File location = (file.getParentFile() == null) ? new File(".") : file.getParentFile();            
             File classFile = new File(file.getPath().replace(".java", ".class"));
-            return Loader.loadClass(classFile, reloadable);
+            return Loader.loadClass(classFile);
         } else {            
                throw new Exception("Error compiling plugin: " + file);
             }       
         }
-    
-    public static Class[] loadJar(String fileName) throws Exception {
-        return loadJar(fileName, false);
-    }    
 
-    public static Class[] loadJar(String fileName, boolean reloadable) throws Exception {
+    public static Class[] loadJar(String fileName) throws Exception {
         String extension = IO.getExtension(fileName);
 
         if (!extension.toLowerCase().equals("jar")) {
@@ -76,17 +63,10 @@ public class Loader {
             }
         }
         Class[] ret = new Class[classes.size()];
-        ClassLoader cl;
-        if (reloadable){            
-            cl = Sys.newClassLoader(new String[]{fileName});
-        } else {
-            Sys.addToClassPath(fileName);            
-            cl = Sys.getClassLoader();
-        }
+        ClassLoader cl = Sys.newDynamicClassLoader(new String[]{fileName});
         for (int i = 0; i < classes.size(); i++) {
             ret[i] = loadClass(cl, classes.get(i));
-        }
-        
+        }        
         return ret;
     }
 }

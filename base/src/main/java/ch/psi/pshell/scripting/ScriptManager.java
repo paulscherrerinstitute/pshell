@@ -91,7 +91,7 @@ public class ScriptManager implements AutoCloseable {
         }
 
         //engine = new ScriptEngineManager().getEngineByExtension(type.toString());)
-        ScriptEngineManager manager = new ScriptEngineManager(Sys.getClassLoader());
+        ScriptEngineManager manager = new ScriptEngineManager(Sys.getDynamicClassLoader());
         if (type==ScriptType.cpy){
             try {
                 String jar = IO.getExecutingJar(ScriptManager.class);
@@ -104,13 +104,16 @@ public class ScriptManager implements AutoCloseable {
             manager.registerEngineName("jep", new JepScriptEngineFactory(libraryPath));
             engine =  manager.getEngineByName("jep");
         } else {
-            ScriptEngine engine = manager.getEngineByExtension(type.toString());
+            ClassLoader originalClassLoader = Thread.currentThread().getContextClassLoader();
+            Thread.currentThread().setContextClassLoader(Sys.getDynamicClassLoader());
+            ScriptEngine engine = manager.getEngineByExtension(type.toString());            
             if (engine==null){
-                manager = new ScriptEngineManager(Thread.currentThread().getContextClassLoader());
+                Thread.currentThread().setContextClassLoader(originalClassLoader);
+                manager = new ScriptEngineManager(originalClassLoader);
                 engine = manager.getEngineByExtension(type.toString());
             }
             this.engine = engine;
-        }
+        }        
 
         if (engine == null) {
             throw new RuntimeException("Error instantiating script engine");

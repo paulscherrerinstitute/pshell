@@ -198,7 +198,10 @@ def get_device_pool():
     return Context.getDevicePool()
 
 def get_session_manager():
-    Context.getSessionManager()
+    return Context.getSessionManager()
 
-def get_session_manager():
-    Context.getSessionManager()
+def get_plugin_manager():
+    return Context.getPluginManager()
+
+def get_state():
+    return Context.getState()

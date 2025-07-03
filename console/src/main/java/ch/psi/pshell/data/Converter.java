@@ -167,7 +167,7 @@ public interface Converter {
             }
         }
         try{
-            for (Converter importer : ServiceLoader.load(Converter.class, Sys.getClassLoader())) {
+            for (Converter importer : ServiceLoader.load(Converter.class, Sys.getDynamicClassLoader())) {
                 ret.add(importer);
             }
         } catch (Throwable ex) {

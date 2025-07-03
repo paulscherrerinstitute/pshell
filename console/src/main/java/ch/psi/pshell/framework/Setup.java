@@ -53,10 +53,7 @@ public class Setup extends ch.psi.pshell.devices.Setup {
     static String configFileSessions = TOKEN_CONFIG + "/sessions.properties";
     
         
-    static {
-        if (!isReloadable()){
-             Sys.setUseThreadContextClassLoader(true);
-        }                    
+    static {               
         if (isRunningInIde()) {
             standardLibraryPath = Paths.get(getSourceAssemblyFolder(),  "script", "Lib").toString();
         }            
@@ -306,10 +303,6 @@ public class Setup extends ch.psi.pshell.devices.Setup {
     
     static public boolean isVolatile() {
         return Options.VOLATILE.getBool(false);
-    }
-
-    static public boolean isReloadable() {
-        return true;
     }
 
     static public boolean isServerMode() {
