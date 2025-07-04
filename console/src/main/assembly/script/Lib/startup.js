@@ -18,10 +18,11 @@ Font = Java.type('java.awt.Font')
 Dimension = Java.type('java.awt.Dimension')
 File = Java.type('java.io.File')
 
-CommandSource = Java.type('ch.psi.pshell.core.CommandSource')
-ContextListener = Java.type('ch.psi.pshell.core.ContextAdapter')
-Context = Java.type('ch.psi.pshell.core.Context')
-InlineDevice = Java.type('ch.psi.pshell.core.InlineDevice')
+Context = Java.type('ch.psi.pshell.framework.Context')
+Setup = Java.type('ch.psi.pshell.framework.Setup')
+CommandSource = Java.type('ch.psi.pshell.sequencer.CommandSource')
+InterpreterListener = Java.type('ch.psi.pshell.sequencer.InterpreterListener')
+InlineDevice = Java.type('ch.psi.pshell.devices.InlineDevice')
 PlotDescriptor = Java.type('ch.psi.pshell.data.PlotDescriptor')
 Table = Java.type('ch.psi.pshell.data.Table')
 Device = Java.type('ch.psi.pshell.device.Device')
@@ -60,13 +61,12 @@ Stoppable = Java.type('ch.psi.pshell.device.Stoppable')
 Averager = Java.type('ch.psi.pshell.device.Averager') 
 ArrayAverager = Java.type('ch.psi.pshell.device.ArrayAverager') 
 Delta = Java.type('ch.psi.pshell.device.Delta') 
-DeviceListener = Java.type('ch.psi.pshell.device.DeviceAdapter') 
-ReadbackDeviceListener = Java.type('ch.psi.pshell.device.ReadbackDeviceAdapter') 
-MotorListener = Java.type('ch.psi.pshell.device.MotorAdapter') 
+DeviceListener = Java.type('ch.psi.pshell.device.DeviceListener') 
+ReadbackDeviceListener = Java.type('ch.psi.pshell.device.ReadbackDeviceListener') 
+MotorListener = Java.type('ch.psi.pshell.device.MotorListener') 
 MoveMode  = Java.type('ch.psi.pshell.device.MoveMode') 
 SettlingCondition = Java.type('ch.psi.pshell.device.SettlingCondition')
 Epics = Java.type('ch.psi.pshell.epics.Epics') 
-EpicsScan = Java.type('ch.psi.pshell.epics.EpicsScan') 
 ChannelSettlingCondition = Java.type('ch.psi.pshell.epics.ChannelSettlingCondition')
 Source = Java.type('ch.psi.pshell.imaging.Source') 
 SourceBase = Java.type('ch.psi.pshell.imaging.SourceBase') 
@@ -84,12 +84,13 @@ VectorScan = Java.type('ch.psi.pshell.scan.VectorScan')
 ManualScan = Java.type('ch.psi.pshell.scan.ManualScan')
 RegionScan = Java.type('ch.psi.pshell.scan.RegionScan')
 HardwareScan = Java.type('ch.psi.pshell.scan.HardwareScan')
+EpicsScan = Java.type('ch.psi.pshell.scan.EpicsScan') 
+BsScan = Java.type('ch.psi.pshell.scan.BsScan')
 TimeScan = Java.type('ch.psi.pshell.scan.TimeScan')
 MonitorScan = Java.type('ch.psi.pshell.scan.MonitorScan')
 BinarySearch = Java.type('ch.psi.pshell.scan.BinarySearch')
 HillClimbingSearch = Java.type('ch.psi.pshell.scan.HillClimbingSearch')
 ScanResult = Java.type('ch.psi.pshell.scan.ScanResult')
-BsScan = Java.type('ch.psi.pshell.bs.BsScan')
 Stream = Java.type('ch.psi.pshell.bs.Stream') 
 StreamMerger = Java.type('ch.psi.pshell.bs.StreamMerger') 
 Preference = Java.type('ch.psi.pshell.scripting.ViewPreference')
@@ -103,7 +104,43 @@ ProcessorXScan = Java.type('ch.psi.pshell.xscan.ProcessorXScan')
 
 
 function get_context() {
-    return Context.getInstance()
+    return Context
+}
+
+function get_app(){
+    return Context.getApp()
+}
+
+function get_view(){
+    return Context.getView()
+}
+
+function get_interpreter(){
+    return Context.getInterpreter()
+}
+
+function get_data_manager(){
+    return Context.getDataManager()
+}
+
+function get_versioning_manager(){
+    return Context.getVersioningManager()
+}
+
+function get_device_pool(){
+    return Context.getDevicePool()
+}
+
+function get_session_manager(){
+    return Context.getSessionManager()
+}
+
+function get_plugin_manager(){
+    return Context.getPluginManager()
+}
+
+function get_state(){
+    return Context.getState()
 }
 
 function on_command_started(info) {
@@ -914,11 +951,11 @@ function plot(data, name, xdata, ydata, title) {
             plots[i] = new PlotDescriptor(plotName, to_array(data[i], 'd'), to_array(x, 'd'), to_array(y, 'd'));
         }
         print (title)
-        return get_context().plot(plots, title);
+        return get_interpreter().plot(plots, title);
     } else {
         var plot = new PlotDescriptor(name, to_array(data, 'd'), to_array(xdata, 'd'), to_array(ydata, 'd'));
 
-        return get_context().plot(plot, title);
+        return get_interpreter().plot(plot, title);
     }
 
 }
@@ -936,7 +973,7 @@ function get_plots(title){
     */
     if (!is_defined(title))
         title = null;
-    return get_context().getPlots(title)
+    return get_interpreter().getPlots(title)
 }
 
 function get_plot_snapshots(title, file_type, temp_path){
@@ -954,7 +991,7 @@ function get_plot_snapshots(title, file_type, temp_path){
     */
     if (!is_defined(title))   title = null;
     if (!is_defined(file_type))   file_type = "png";   
-    if (!is_defined(temp_path))   temp_path = get_context().setup.getContextPath();
+    if (!is_defined(temp_path))   temp_path = Setup.getContextPath();
     sleep(0.1) //Give some time to plot to be finished - it is not sync  with acquisition
     var ret = []
     var plots = get_plots(title)
@@ -989,9 +1026,9 @@ function load_data(path, index, shape) {
         shape = null;
 
     if ((shape!==null) && (is_array(index)))
-        var slice = get_context().dataManager.getData(path, index, shape)
+        var slice = get_data_manager().getData(path, index, shape)
     else
-        var slice = get_context().dataManager.getData(path, index)
+        var slice = get_data_manager().getData(path, index)
     return slice.sliceData
 }
 
@@ -1006,7 +1043,7 @@ function get_attributes(path) {
          Dictionary
      
      */
-    return get_context().dataManager.getAttributes(path)
+    return get_data_manager().getAttributes(path)
 }
 
 function save_dataset(path, data, type, features) {
@@ -1030,7 +1067,7 @@ function save_dataset(path, data, type, features) {
         data = to_array(data, type)    
     if (!is_defined(features))
         features = null;
-    get_context().dataManager.setDataset(path, data, features)
+    get_data_manager().setDataset(path, data, features)
 }
 
 function create_group(path) {
@@ -1043,7 +1080,7 @@ function create_group(path) {
         null
      
      */
-    get_context().dataManager.createGroup(path)
+    get_data_manager().createGroup(path)
 }
 
 
@@ -1075,7 +1112,7 @@ function create_dataset(path, type, unsigned, dimensions, features) {
         type = null;    
     if (!is_defined(features))
         features = null;
-    get_context().dataManager.createDataset(path, ScriptingUtils.getType(type), unsigned, dimensions, features)
+    get_data_manager().createDataset(path, ScriptingUtils.getType(type), unsigned, dimensions, features)
 }
 
 function create_table(path, names, types, lengths, features) {
@@ -1107,7 +1144,7 @@ function create_table(path, names, types, lengths, features) {
             new_types.push(ScriptingUtils.getType(types[i]))
         }
     }
-    get_context().dataManager.createDataset(path, names, new_types, lengths, features)
+    get_data_manager().createDataset(path, names, new_types, lengths, features)
 }
 
 function append_dataset(path, data, index, type, shape) {
@@ -1139,12 +1176,12 @@ function append_dataset(path, data, index, type, shape) {
         data = to_array(data, type)
     }
     if (index === null)
-        get_context().dataManager.appendItem(path, data);
+        get_data_manager().appendItem(path, data);
     else {
         if (is_array(index))
-            get_context().dataManager.setItem(path, data, index, shape);
+            get_data_manager().setItem(path, data, index, shape);
         else
-            get_context().dataManager.setItem(path, data, index);
+            get_data_manager().setItem(path, data, index);
     }
 }
 
@@ -1168,7 +1205,7 @@ function append_table(path, data) {
         }
         data = to_array(data, 'o')
     }        
-    get_context().dataManager.appendItem(path, data)
+    get_data_manager().appendItem(path, data)
 }
 
 function flush_data() {
@@ -1180,7 +1217,7 @@ function flush_data() {
      Returns:
          null
      */
-    get_context().dataManager.flush()
+    get_data_manager().flush()
 }
 
 function set_attribute(path, name, value, unsigned) {
@@ -1197,7 +1234,7 @@ function set_attribute(path, name, value, unsigned) {
      */
     if (!is_defined(unsigned))
         unsigned = false;
-    get_context().dataManager.setAttribute(path, name, value, unsigned)
+    get_data_manager().setAttribute(path, name, value, unsigned)
 }
 
 function log(log, data_file){
@@ -1215,10 +1252,10 @@ function log(log, data_file){
     */  
     if (!is_defined(data_file))
         data_file = get_exec_pars().open
-    get_context().scriptingLog(String(log))
+    get_interpreter().scriptingLog(String(log))
     if (data_file){
        try{
-            get_context().dataManager.appendLog(String(log))
+            get_data_manager().appendLog(String(log))
         } catch(err){    
             //Do not generate exception if cannot write to data file
         }
@@ -1268,7 +1305,7 @@ function set_exec_pars(args){
 
         Shortcut entries: "line_plots": list of devices with enforced line plots.
     */
-    get_context().setExecutionPars(args)
+    get_interpreter().setExecutionPars(args)
 }
     
 function get_exec_pars(){
@@ -1293,7 +1330,7 @@ function get_exec_pars(){
             args (obj): return the arguments for the script.
             background (bool): return False if executing in main interpreter thread .
     */
-    return get_context().getExecutionPars()    
+    return get_interpreter().getExecutionPars()    
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1406,7 +1443,7 @@ function create_channel_device(channelName, type, size, deviceName){
     if (!is_defined(deviceName))
         deviceName = null;
     dev = Epics.newChannelDevice(deviceName, channelName,Epics.getChannelType(type))
-    if (get_context().isSimulation()){
+    if (Setup.isSimulation()){
         dev.setSimulated()
     }
     dev.initialize()
@@ -1424,11 +1461,11 @@ function _getCallable(func, args) {
     var callable = new java.util.concurrent.Callable() {
         call: function () {      
             try {
-                get_context().startedChildThread(_parent_thread)
+                get_interpreter().startedChildThread(_parent_thread)
                 return func.apply( this, args );
             }
             finally {
-                get_context().finishedChildThread(_parent_thread)
+                get_interpreter().finishedChildThread(_parent_thread)
             }     
             
         }
@@ -1503,10 +1540,10 @@ function run(script_name, args) {
      Returns:
         The script return value
     */
-    var script = get_context().scriptManager.library.resolveFile(script_name)
+    var script = get_interpreter().scriptManager.library.resolveFile(script_name)
     var file = script!==null ? new File(script) : null
     if ((file === null) ||  ( ! file.exists())) throw "Invalid script: " + script_name
-    var info = get_context().startScriptExecution(script_name, args)
+    var info = get_interpreter().startScriptExecution(script_name, args)
 
     if (is_defined(args) &&  (args!==null)){
         if (is_array(args)){
@@ -1518,20 +1555,20 @@ function run(script_name, args) {
         }
     }
     //eval(new String(Files.readAllBytes(file.toPath())))
-    //get_context().scriptManager.interpreter.evalFile(script);
+    //get_interpreter().scriptManager.interpreter.evalFile(script);
     load(script)
     
     try{
         var ret = load(script)
-        get_context().finishScriptExecution(info, ret) 
+        get_interpreter().finishScriptExecution(info, ret) 
     } catch(err){    
-        get_context().finishScriptExecution(info, err) 
+        get_interpreter().finishScriptExecution(info, err) 
     }
 }
 
 
 function _abort() {
-     get_context().abort()
+     Context.abort()
 }
 
 function abort() {
@@ -1566,8 +1603,8 @@ function start_task(script, delay, interval){
     if (!is_defined(interval))   interval = -1;
     var delay_ms = delay_ms * 1000
     var interval_ms = (interval>=0) ? interval_ms * 1000 : interval
-    get_context().taskManager.create(script, delay_ms, interval_ms)
-    get_context().taskManager.start(script)
+    get_task_manager().create(script, delay_ms, interval_ms)
+    get_task_manager().start(script)
 }
     
 function stop_task(script, force){
@@ -1582,7 +1619,7 @@ function stop_task(script, force){
         None
     */      
     if (!is_defined(force))   force = false;
-    get_context().taskManager.remove(script, force)
+    get_task_manager().remove(script, force)
 }
 
 function set_return(value){
@@ -1620,7 +1657,7 @@ function commit(message, force){
         None
     */
     if (!is_defined(force))   force = false;   
-    get_context().commit(message, force)
+    get_versioning_manager().commit(message, force)
 }
 
 function diff(){
@@ -1633,7 +1670,7 @@ function diff(){
     Returns:
         None
     */   
-    return get_context().diff()
+    return get_versioning_manager().diff()
 }
 
 function checkout_tag(tag){
@@ -1646,7 +1683,7 @@ function checkout_tag(tag){
     Returns:
         None
     */
-    get_context().checkoutTag(tag)
+    get_versioning_manager().checkoutTag(tag)
 }
 
 function checkout_branch(tag){
@@ -1659,7 +1696,7 @@ function checkout_branch(tag){
     Returns:
         None
     */
-    get_context().checkoutLocalBranch(tag)
+    get_versioning_manager().checkoutLocalBranch(tag)
 }
 
 function pull_repository(){
@@ -1673,7 +1710,7 @@ function pull_repository(){
     Returns:
         None
     */
-    get_context().pullFromUpstream()
+    get_versioning_manager().pullFromUpstream()
 }
 
 function push_repository(all_branches, force){
@@ -1690,7 +1727,7 @@ function push_repository(all_branches, force){
     if (!is_defined(all_branches))    all_branches = true;   
     if (!is_defined(force))    force = false;
     
-    get_context().pushToUpstream(all_branches, force)
+    get_versioning_manager().pushToUpstream(all_branches, force)
 }
 
 function cleanup_repository(){
@@ -1703,7 +1740,7 @@ function cleanup_repository(){
     Returns:
         None
     */    
-    get_context().cleanupRepository()
+    get_versioning_manager().cleanupRepository()
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1719,7 +1756,7 @@ function get_device(device_name){
     Returns:
         device
     */    
-    return get_context().devicePool.getByName(device_name)
+    return get_device_pool().getByName(device_name)
 }
 
 function add_device(device, force){
@@ -1735,15 +1772,15 @@ function add_device(device, force){
         True if device was added, false if was already in the pool, or exception in case of name clash.
     */
     if (!is_defined(force))    force = false;
-    if (get_context().devicePool.contains(device)){
+    if (get_device_pool().contains(device)){
         return false
     }
     if (force){
-        dev = get_context().devicePool.getByName(device.getName())
+        dev = get_device_pool().getByName(device.getName())
         if (dev!==null) 
             remove_device(dev)
     }
-    return get_context().devicePool.addDevice(device)
+    return get_device_pool().addDevice(device)
 }
 
 function remove_device(device){
@@ -1757,7 +1794,7 @@ function remove_device(device){
         bool: true if device was removed.
 
     */
-    return get_context().devicePool.removeDevice(device)
+    return get_device_pool().removeDevice(device)
 }
 
 function set_device_alias(device, alias){
@@ -1784,7 +1821,7 @@ function stop(){
     Returns:
         None
     */
-    get_context().stopAll()
+    get_interpreter().stopAll()
 }
     
 function update(){
@@ -1797,7 +1834,7 @@ function update(){
     Returns:
         None
     */
-    get_context().updateAll()
+    get_interpreter().updateAll()
 }
 
 function reinit(dev){
@@ -1812,7 +1849,7 @@ function reinit(dev){
         List with devices not initialized.
     */
     if (!is_defined(dev))    dev = null;
-    return to_array(get_context().reinit())
+    return to_array(get_interpreter().reinit())
 }
 
 
@@ -2054,9 +2091,9 @@ function get_setting(name){
     */
     if (!is_defined(name))    name = null
     if (name === null){
-        return get_context().getSettings()
+        return Context.getSettings()
     } else {
-        return get_context().getSetting(name)
+        return Context.getSetting(name)
     }
 }
 
@@ -2071,7 +2108,7 @@ function set_setting(name, value){
         None.
     */
     if (!is_defined(value))    value = null
-    get_context().setSetting(name, value)
+    Context.setSetting(name, value)
 }
 
 function exec_cmd(cmd){
@@ -2120,7 +2157,7 @@ function exec_cpython(script_name, args, python_name){
     if (!script_name.toLowerCase().endsWith(".py")){
             script_name += ".py"
     }
-    script = get_context().scriptManager.library.resolveFile(script_name)
+    script = get_interpreter().scriptManager.library.resolveFile(script_name)
     if (script === null){
         script= os.path.abspath(script_name)
     }
@@ -2214,7 +2251,7 @@ function inject(){
         None
 
     */  
-    get_context().injectVars()
+    get_interpreter().injectVars()
 }
 
 function notify(subject, text, attachments, to){
@@ -2231,7 +2268,7 @@ function notify(subject, text, attachments, to){
     */  
     if (!is_defined(attachments))    attachments = null
     if (!is_defined(to))    to = null
-    get_context().notify(subject, text, attachments, to)
+    Context.notify(subject, text, attachments, to)
 }
 
 function expand_path(path, timestamp){
@@ -2244,7 +2281,7 @@ function expand_path(path, timestamp){
               Expanded path name.
 
     */
-    return get_context().setup.expandPath(path, timestamp)
+    return Setup.expandPath(path, timestamp)
 }
 
 function sleep(seconds){
@@ -2378,7 +2415,7 @@ function set_preference(preference, value){
     if (get_rank(value)>0){
         value = to_array(value, 'o') 
     }
-    get_context().setPreference(preference, value)
+    get_interpreter().setPreference(preference, value)
 }
 
 function get_string(msg, default_value, alternatives, password){
@@ -2397,9 +2434,9 @@ function get_string(msg, default_value, alternatives, password){
     if (!is_defined(alternatives))    alternatives = null;
     if (!is_defined(password))    password = false;
     if (password){
-        return get_context().getPassword(msg, null)
+        return get_interpreter().getPassword(msg, null)
     }
-    return get_context().getString(msg, (default_value===null) ? null: default_value.toString(), alternatives)
+    return get_interpreter().getString(msg, (default_value===null) ? null: default_value.toString(), alternatives)
 }
 
 function get_option(msg, type ){
@@ -2414,7 +2451,7 @@ function get_option(msg, type ){
 
     */
     if (!is_defined(type))    type = "YesNoCancel";
-    return get_context().getOption(msg, type)
+    return get_interpreter().getOption(msg, type)
 }
 
 function show_message(msg, title, blocking){
@@ -2427,7 +2464,7 @@ function show_message(msg, title, blocking){
     */
     if (!is_defined(title))    title = null;
     if (!is_defined(blocking))    title = true;
-    get_context().showMessage(msg, title, blocking)
+    get_interpreter().showMessage(msg, title, blocking)
 }
 
 function show_panel(device, title){
@@ -2446,6 +2483,6 @@ function show_panel(device, title){
     if (typeof device == 'string'){
         device = get_device(device)
     }
-    return get_context().showPanel(device)
+    return get_interpreter().showPanel(device)
 }
 

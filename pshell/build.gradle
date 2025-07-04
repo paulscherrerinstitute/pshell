@@ -2,7 +2,6 @@ description = 'pshell'
 
 
 ext.mainClass = hasProperty('mainClass') ? mainClass : 'ch.psi.pshell.App'
-ext.type = 'py'     //py, groovy, js, all or light
 
 dependencies {
     implementation project(':base')
@@ -14,19 +13,12 @@ dependencies {
     implementation project(':screenpanel') 
     implementation project(':archiverviewer') 
     implementation project(':dataviewer') 
-    implementation project(':workbench') 
+    implementation project(':workbench')     
 }
 
 createDefaultTasks(project)
 
-jar {
-    manifest {
-        attributes (
-            'Build-Type': type,
-        )
-    }       
-}
-        
+
 tasks {
     shadowJar {
         shadowJarSetup(delegate)

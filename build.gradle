@@ -10,6 +10,7 @@ allprojects {
     ext.app_jdk = '21'
     ext.jar_suffix = 'fat'
     ext.package_prefix = ''
+    ext.build_type = 'py'     //py, groovy, js, all or light
    
     repositories {
         mavenCentral()
@@ -258,11 +259,13 @@ subprojects {
         def buildTime = project.hasProperty('timestamp') ? project.timestamp : new Date().format("yyMMddHHmm")
         def manif_addopens = project.hasProperty('manif_addopens') ? project.manif_addopens : ''
         def jar_suffix = project.ext.jar_suffix.toString()
+        def build_type = project.ext.build_type.toString()
         jarTask.manifest {
             attributes(
                 'Main-Class': mainClassName,
                 'Implementation-Version': project.version,
                 'Build-Time': buildTime,
+                'Build-Type': build_type,
                 'Add-Opens': manif_addopens
             )
         }
@@ -275,12 +278,47 @@ subprojects {
         sourceCompatibility = JavaVersion.VERSION_21
     }
 
+    ext.jython_lib = 'org.python:jython-standalone:2.7.4'
+    ext.groovy_lib = 'org.codehaus.groovy:groovy-all:2.4.8'
+    ext.js_lib = 'org.openjdk.nashorn:nashorn-core:15.4'     
 
+    
+    if (ext.build_type == 'all'){
+        dependencies {
+            implementation jython_lib
+            implementation js_lib      
+            implementation groovy_lib
+        }
+    } else if (ext.build_type == 'py'){
+        dependencies {
+            implementation jython_lib 
+            provided groovy_lib
+            provided js_lib
+        }    
+    } else if (ext.build_type == 'groovy'){    
+        dependencies {
+            implementation groovy_lib
+            implementation jython_lib
+            provided js_lib
+        }    
+    } else if (ext.build_type == 'js'){    
+        dependencies {              
+            implementation js_lib
+            implementation jython_lib
+            provided groovy_lib
+        }
+    } else if (ext.build_type == 'light'){    
+        dependencies {              
+            provided js_lib
+            provided jython_lib   
+            provided groovy_lib
+        }
+    }    
+    
     dependencies {
         implementation 'commons-io:commons-io:2.18.0'
         implementation 'org.apache.commons:commons-lang3:3.13.0'    
-        implementation 'org.apache.commons:commons-math3:3.6.1'
-        implementation 'org.python:jython-standalone:2.7.4'        
+        implementation 'org.apache.commons:commons-math3:3.6.1'               
         implementation 'black.ninia:jep:4.2.0'
         implementation 'net.imagej:ij:1.54i'
         implementation 'org.zeromq:jeromq:0.6.0'   
