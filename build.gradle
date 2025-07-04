@@ -76,7 +76,19 @@ subprojects {
                 jvmArgs = project.run_jvargs
             }
         }           
-        
+
+        tasks.named('jar') {
+            archiveBaseName.set(project.name)
+
+            // Only include 'src/main/assembly' if it exists
+            def assemblyDir = file('src/main/assembly')
+            if (assemblyDir.exists()) {
+                from(assemblyDir) {
+                    include '**/*'
+                    exclude '**/script/**/*.class'
+                }
+            }
+        }           
         
         def app_name = project.name
         def app_version = project.version.toString()

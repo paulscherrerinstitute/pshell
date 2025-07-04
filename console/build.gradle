@@ -35,10 +35,3 @@ tasks {
     }
 }
 
-jar {
-    archiveBaseName = project.name
-    from('src/main/assembly') {
-        include '**/*'
-        exclude '**/script/**/*.class'
-    }
-}

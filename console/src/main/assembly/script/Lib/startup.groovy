@@ -13,7 +13,8 @@ import java.lang.reflect.Array
 import ch.psi.pshell.utils.Threading as Threading
 import ch.psi.pshell.utils.State as State
 import ch.psi.pshell.utils.Convert as Convert
-import ch.psi.pshell.core.Context 
+import ch.psi.pshell.framework.Context 
+import ch.psi.pshell.framework.Setup 
 import ch.psi.pshell.data.PlotDescriptor as PlotDescriptor
 import ch.psi.pshell.device.Cacheable as Cacheable
 import ch.psi.pshell.device.Device as Device
@@ -27,7 +28,6 @@ import ch.psi.pshell.device.Writable as Writable
 import ch.psi.pshell.device.DeviceListener as DeviceListener
 import ch.psi.pshell.device.MoveMode as MoveMode
 import ch.psi.pshell.epics.Epics as Epics
-import ch.psi.pshell.epics.EpicsScan as EpicsScan
 import ch.psi.pshell.imaging.Source as Source
 import ch.psi.pshell.imaging.SourceBase as SourceBase
 import ch.psi.pshell.plot.LinePlotSeries as LinePlotSeries
@@ -41,7 +41,8 @@ import ch.psi.pshell.scan.RegionScan
 import ch.psi.pshell.scan.HardwareScan
 import ch.psi.pshell.scan.ScanRecord
 import ch.psi.pshell.scan.TimeScan
-import ch.psi.pshell.bs.BsScan
+import ch.psi.pshell.scan.EpicsScan
+import ch.psi.pshell.scan.BsScan
 import ch.psi.pshell.bs.Stream
 import ch.psi.pshell.bs.StreamMerger
 import ch.psi.pshell.scripting.ViewPreference as Preference
@@ -50,6 +51,42 @@ import ch.psi.pshell.scripting.ScriptUtils as ScriptUtils
 
 def get_context(){
     return ch.psi.pshell.core.Context.getInstance();
+}
+
+def get_app(){
+    return Context.getApp()
+}
+
+def get_view(){
+    return Context.getView()
+}
+
+def get_interpreter(){
+    return Context.getInterpreter()
+}
+
+def get_data_manager(){
+    return Context.getDataManager()
+}
+
+def get_versioning_manager(){
+    return Context.getVersioningManager()
+}
+
+def get_device_pool(){
+    return Context.getDevicePool()
+}
+
+def get_session_manager(){
+    return Context.getSessionManager()
+}
+
+def get_plugin_manager(){
+    return Context.getPluginManager()
+}
+
+def get_state(){
+    return Context.getState()
 }
 
 def on_command_started(info) {
@@ -557,10 +594,10 @@ def  plot(data, name= null, xdata= null, ydata= null, title=null) {
             }
             plots[i] = new PlotDescriptor(plotName, to_array(data[i], 'd'), to_array(x, 'd'), to_array(y, 'd'));
         }
-        return get_context().plot(plots, title);
+        return get_interpreter().plot(plots, title);
     } else {
         def plot = new PlotDescriptor(name, to_array(data, 'd'), to_array(xdata, 'd'), to_array(ydata, 'd'));
-        return get_context().plot(plot, title);
+        return get_interpreter().plot(plot, title);
     }
 }
 
@@ -580,7 +617,7 @@ def load_data(path, page=0) {
          Data array
      
      */
-    def slice = get_context().dataManager.getData(path, page)
+    def slice = get_data_manager().getData(path, page)
     return slice.sliceData
 }
 
@@ -595,7 +632,7 @@ def get_attributes(path) {
         Dictionary
      
      */
-    return get_context().dataManager.getAttributes(path)
+    return get_data_manager().getAttributes(path)
 }
 
 def save_dataset(path, data) {
@@ -609,7 +646,7 @@ def save_dataset(path, data) {
          Dictionary
      
      */
-    get_context().dataManager.setDataset(path, to_array(data, 'd'))
+    get_data_manager().setDataset(path, to_array(data, 'd'))
 }
 
 def create_dataset(path, type, unsigned=false, dimensions=null) {
@@ -626,7 +663,7 @@ def create_dataset(path, type, unsigned=false, dimensions=null) {
          null
      
      */
-    get_context().dataManager.createDataset(path, ScriptUtils.getType(type), unsigned, dimensions)
+    get_data_manager().createDataset(path, ScriptUtils.getType(type), unsigned, dimensions)
 }
 
 def create_table(path, names, types=null, lengths=null) {
@@ -648,7 +685,7 @@ def create_table(path, names, types=null, lengths=null) {
         for (i = 0; i < types.length; i++)
             types[i] = ScriptUtils.getType(types[i])
     }
-    get_context().dataManager.createDataset(path, names, types, lengths)
+    get_data_manager().createDataset(path, names, types, lengths)
 }
 
 def append_dataset(path, data, index=null) {
@@ -665,9 +702,9 @@ def append_dataset(path, data, index=null) {
      */
     data = to_array(data, 'd')
     if (index == null)
-        get_context().dataManager.appendItem(path, data);
+        get_data_manager().appendItem(path, data);
     else
-        get_context().dataManager.setItem(path, data, index);
+        get_data_manager().setItem(path, data, index);
 }
 
 def append_table(path, data) {
@@ -681,7 +718,7 @@ def append_table(path, data) {
          null
      
      */
-    get_context().dataManager.appendItem(path, data)
+    get_data_manager().appendItem(path, data)
 }
 
 def flush_data() {
@@ -692,7 +729,7 @@ def flush_data() {
     Returns:
         null
      */
-    get_context().dataManager.flush()
+    get_data_manager().flush()
 }
 
 def set_attribute(path, name, value, unsigned=false) {
@@ -710,7 +747,7 @@ def set_attribute(path, name, value, unsigned=false) {
     if (value.getClass()==java.math.BigDecimal){
         value = value.toDouble();
     }
-    get_context().dataManager.setAttribute(path, name, value, unsigned)
+    get_data_manager().setAttribute(path, name, value, unsigned)
 }
 
 def log(log){
@@ -724,8 +761,8 @@ def log(log){
     Returns:
         None
     */  
-    get_context().scriptingLog(String.valueOf(log))
-    get_context().dataManager.appendLog(String.valueOf(log))
+    get_interpreter().scriptingLog(String.valueOf(log))
+    get_data_manager().appendLog(String.valueOf(log))
 }
 
 def set_exec_pars(Map args){
@@ -772,7 +809,7 @@ def set_exec_pars(Map args){
         
         Shortcut entries: "line_plots": list of devices with enforced line plots.
     */
-    get_context().setExecutionPars(args)
+    get_interpreter().setExecutionPars(args)
 }
 
 def get_exec_pars(){
@@ -797,7 +834,7 @@ def get_exec_pars(){
             args (obj): return the arguments for the script.
             background (bool): return False if executing in main interpreter thread .
     */
-    return get_context().getExecutionPars()    
+    return get_interpreter().getExecutionPars()    
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1078,7 +1115,7 @@ Object run(script_name, args = null, locals = null) {
     Returns:
     The script return value (if set with set_return)
      */
-    get_context().scriptManager.evalFile(script_name)
+    get_interpreter().scriptManager.evalFile(script_name)
 }
 
 def abort() {
@@ -1093,7 +1130,7 @@ def abort() {
     */
     //Cannot be on script execution thread
     def task = {
-         get_context().abort()
+         Context.abort()
      }
     
     fork(task)  
@@ -1116,8 +1153,8 @@ def start_task(script, delay = 0.0, interval = -1){
     */      
     def delay_ms = delay * 1000
     def interval_ms = (interval>=0) ? interval * 1000 : interval
-    get_context().taskManager.create(script, (int)delay_ms, (int)interval_ms)
-    get_context().taskManager.start(script)
+    get_task_manager().create(script, (int)delay_ms, (int)interval_ms)
+    get_task_manager().start(script)
 }
     
 def stop_task(script, force=false){
@@ -1131,7 +1168,7 @@ def stop_task(script, force=false){
     Returns:
         None
     */      
-    get_context().taskManager.remove(script, force)
+    get_task_manager().remove(script, force)
 }
 
 def set_return(value){
@@ -1199,7 +1236,7 @@ def set_preference(preference, value){
     if (get_rank(value)>0){
         value = to_array(value, 'o') 
     }
-    get_context().setPreference(preference, value)
+    get_interpreter().setPreference(preference, value)
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1215,7 +1252,7 @@ def commit(message){
     Returns:
         None
     */
-    get_context().commit(message)
+    get_versioning_manager().commit(message)
 }
 
 def add_repository(path){
@@ -1228,7 +1265,7 @@ def add_repository(path){
     Returns:
         None
     */  
-    get_context().addRepository(path)
+    get_versioning_manager().addRepository(path)
 }
 
 def diff(){
@@ -1241,7 +1278,7 @@ def diff(){
     Returns:
         None
     */   
-    return get_context().diff()
+    return get_versioning_manager().diff()
 }
 
 
@@ -1255,7 +1292,7 @@ def checkout_tag(tag){
     Returns:
         None
     */
-    get_context().checkoutTag(tag)
+    get_versioning_manager().checkoutTag(tag)
 }
 
 def checkout_branch(tag){
@@ -1268,7 +1305,7 @@ def checkout_branch(tag){
     Returns:
         None
     */
-    get_context().checkoutLocalBranch(tag)
+    get_versioning_manager().checkoutLocalBranch(tag)
 }
 
 def pull_repository(){
@@ -1282,7 +1319,7 @@ def pull_repository(){
     Returns:
         None
     */
-    get_context().pullFromUpstream()
+    get_versioning_manager().pullFromUpstream()
 }
 
 def push_repository(all_branches=true, force=false){
@@ -1296,7 +1333,7 @@ def push_repository(all_branches=true, force=false){
     Returns:
         None
     */    
-    get_context().pushToUpstream(all_branches, force)
+    get_versioning_manager().pushToUpstream(all_branches, force)
 }
 
 def cleanup_repository(){
@@ -1309,7 +1346,7 @@ def cleanup_repository(){
     Returns:
         None
     */    
-    get_context().cleanupRepository()
+    get_versioning_manager().cleanupRepository()
 }
 
 
@@ -1327,7 +1364,7 @@ def get_device(device_name){
     Returns:
         device
     */    
-    return get_context().devicePool.getByName(device_name)
+    return get_device_pool().getByName(device_name)
 }
 
 def add_device(device, force = false){
@@ -1342,15 +1379,15 @@ def add_device(device, force = false){
     Returns:
         True if device was added, false if was already in the pool, or exception in case of name clash.
     */
-    if (get_context().devicePool.contains(device)){
+    if (get_device_pool().contains(device)){
         return false
     }
     if (force){
-        dev = get_context().devicePool.getByName(device.getName())
+        dev = get_device_pool().getByName(device.getName())
         if (dev != null) 
             remove_device(dev)
     }
-    return get_context().devicePool.addDevice(device)
+    return get_device_pool().addDevice(device)
 }
 
 def remove_device(device){
@@ -1364,7 +1401,7 @@ def remove_device(device){
         bool: true if device was removed.
 
     */
-    return get_context().devicePool.removeDevice(device)
+    return get_device_pool().removeDevice(device)
 }
 
 
@@ -1408,7 +1445,7 @@ def stop(){
     Returns:
         None
     */
-    get_context().stopAll()
+    get_interpreter().stopAll()
 }
     
 def update(){
@@ -1421,7 +1458,7 @@ def update(){
     Returns:
         None
     */
-    get_context().updateAll()
+    get_interpreter().updateAll()
 }
 
 def inject(){
@@ -1435,7 +1472,7 @@ def inject(){
         None
 
     */  
-    get_context().injectVars()
+    get_interpreter().injectVars()
 }
 
 
